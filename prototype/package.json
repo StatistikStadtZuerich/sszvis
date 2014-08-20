@@ -18,5 +18,11 @@
   },
   "devDependencies": {},
   "author": "Peter Gassner <peter@interactivethings.com>",
-  "license": ""
+  "license": "",
+  "engines": {
+    "node":  ">=0.8.0"
+  },
+  "scripts": {
+    "start": "webpack-dev-server -d --colors"
+  }
 }
