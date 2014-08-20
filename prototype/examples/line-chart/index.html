@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Line chart</title>
+  <script src="/assets/zvis.js"></script>
+</head>
+<body>
+  <div>
+    <a id="select-all" href="#">Alle Jahre</a>
+    <a id="select-1993" href="#">Nur 1993</a>
+  </div>
+
+  <script>
+  var d3 = zvis.d3;
+
+
+  //
+  // Register commands
+  //
+  zvis.commands.register({
+    startup: function() {
+      fetchData();
+    },
+    selectYear: function(year) {
+      zvis.state.set('selectedYear', year);
+    }
+  });
+
+
+  //
+  // Initialize application state
+  // Start application
+  //
+  zvis.init({
+    height: 500,
+    width: 700,
+    loadError: null,
+    data: null,
+    selectedYear: null
+  }, render);
+
+
+  //
+  // Render (idempotent)
+  //
+  function render(state) {
+    var data = state.data;
+
+    if (!data) return;
+
+    if (state.selectedYear) {
+      data = data.filter(function(d){return d.year === state.selectedYear})
+    }
+
+    var xScale = d3.time.scale();
+
+    var yScale = d3.scale.linear()
+      .range([state.height, 0])
+      .domain(d3.extent(data, _.property('value')));
+
+
+    var xAxis = zvis.layer()
+      .key('xAxis')
+      .className('x axis') // Doesn't need a class name, child needs it
+      .y(function(selection, context) { return context.height; })
+      .render(function(selection, context) {
+
+        var xLocal = xScale.copy()
+          .range([0, context.width])
+          .domain(d3.extent(data, _.property('date')));
+
+        selection.call(d3.svg.axis().scale(xLocal).orient('bottom'));
+      });
+
+    var yAxis = zvis.layer()
+      .key('yAxis')
+      .className('y axis')
+      .render(function(selection, context) {
+        var yLocal = yScale.copy().range([context.height, 0]);
+        selection.call(d3.svg.axis().scale(yLocal).orient("left"));
+      });
+
+    var lineChart = zvis.layer()
+      .key('lineChart')
+      .render(function(selection, context) {
+
+        var xLocal = xScale.copy()
+          .range([0, context.width])
+          .domain(d3.extent(data, _.property('date')));
+
+        var yLocal = yScale.copy().range([context.height, 0]);
+
+        var line = d3.svg.line()
+          .x(function(d) { return xLocal(d.date); })
+          .y(function(d) { return yLocal(d.value); });
+
+        var path = selection.selectAll('path')
+          .data([data])
+
+        path.enter()
+          .append('path')
+          .attr("class", "line")
+
+        path
+          .attr("d", line);
+
+      });
+
+    var chart = zvis.chart()
+      .height(state.height)
+      .width(state.width)
+      .padding({top: 20, right: 20, bottom: 30, left: 50})
+      .addLayer(xAxis)
+      .addLayer(yAxis)
+      .addLayer(lineChart)
+
+    d3.select('body').call(chart)
+
+  }
+
+
+  //
+  // Fetch data
+  //
+  function fetchData() {
+    zvis.DataService({
+      url: "../data/simple_line.csv",
+      format: 'csv',
+      schema: [
+        {
+          key: 'Datum',
+          as: 'date',
+          format: d3.time.format("%d.%m.%Y").parse
+        },
+        {
+          key: 'Datum',
+          as: 'year',
+          format: function(d) {
+            return d3.time.format("%d.%m.%Y").parse(d).getFullYear();
+          }
+        },
+        {
+          key: 'Wert',
+          as: 'value',
+          format: Number
+        }
+      ]
+    }).then(function(data){
+      zvis.state.set('data', data);
+    }).catch(function(err){
+      zvis.state.set('loadError', err);
+    });
+  }
+
+
+  //
+  // Handle UI events
+  //
+  d3.select('#select-all').on('click', function(){
+    zvis.commands.trigger('selectYear', null);
+  })
+
+  d3.select('#select-1993').on('click', function(){
+    zvis.commands.trigger('selectYear', 1993);
+  })
+
+  </script>
+
+</body>
+</html>
