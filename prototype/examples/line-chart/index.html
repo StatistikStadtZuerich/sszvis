@@ -28,11 +28,19 @@
     }
   });
 
+  // var commands = zvis.commands({
+
+  // });
+
+  // var legendCommands = zvis.commands({
+
+  // })
 
   //
   // Initialize application state
   // Start application
   //
+  // var appState = zvis.store({})
   zvis.init({
     height: 500,
     width: 700,
@@ -54,70 +62,47 @@
       data = data.filter(function(d){return d.year === state.selectedYear})
     }
 
-    var xScale = d3.time.scale();
-
-    var yScale = d3.scale.linear()
-      .range([state.height, 0])
-      .domain(d3.extent(data, _.property('value')));
-
-
-    var xAxis = zvis.layer()
-      .key('xAxis')
-      .className('x axis') // Doesn't need a class name, child needs it
-      .y(function(selection, context) { return context.height; })
-      .render(function(selection, context) {
-
-        var xLocal = xScale.copy()
-          .range([0, context.width])
-          .domain(d3.extent(data, _.property('date')));
-
-        selection.call(d3.svg.axis().scale(xLocal).orient('bottom'));
-      });
-
-    var yAxis = zvis.layer()
-      .key('yAxis')
-      .className('y axis')
-      .render(function(selection, context) {
-        var yLocal = yScale.copy().range([context.height, 0]);
-        selection.call(d3.svg.axis().scale(yLocal).orient("left"));
-      });
-
-    var lineChart = zvis.layer()
-      .key('lineChart')
-      .render(function(selection, context) {
-
-        var xLocal = xScale.copy()
-          .range([0, context.width])
-          .domain(d3.extent(data, _.property('date')));
-
-        var yLocal = yScale.copy().range([context.height, 0]);
-
-        var line = d3.svg.line()
-          .x(function(d) { return xLocal(d.date); })
-          .y(function(d) { return yLocal(d.value); });
-
-        var path = selection.selectAll('path')
-          .data([data])
-
-        path.enter()
-          .append('path')
-          .attr("class", "line")
-
-        path
-          .attr("d", line);
-
-      });
-
     var chart = zvis.chart()
       .height(state.height)
       .width(state.width)
       .padding({top: 20, right: 20, bottom: 30, left: 50})
-      .addLayer(xAxis)
-      .addLayer(yAxis)
-      .addLayer(lineChart)
+      .render(renderChart)
 
-    d3.select('body').call(chart)
+    d3.select('body')
+      .datum(data)
+      .call(chart)
+  }
 
+
+  function renderChart(data, props) {
+    var selection = d3.select(this).datum(data);
+
+    var lineChart = zvis.vis.lineChart()
+      .height(props.height)
+      .width(props.width)
+
+    var xScale = d3.time.scale()
+      .range([0, props.width])
+      .domain(d3.extent(data, function(d){return d.date}));
+
+    var yScale = d3.scale.linear()
+      .range([props.height, 0])
+      .domain(d3.extent(data, function(d){return d.value}));
+
+    var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
+    var yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+    selection.selectGroup('lineChart')
+      .call(lineChart)
+
+    selection.selectGroup('xAxis')
+      .attr('class', 'x axis')
+      .attr('transform', zvis.utils.translate(0, props.height))
+      .call(xAxis)
+
+    selection.selectGroup('yAxis')
+      .attr('class', 'y axis')
+      .call(yAxis)
   }
 
 

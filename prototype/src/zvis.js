@@ -1,8 +1,12 @@
 // Assets
 require('./zvis.scss');
 
-// Dependencies
+// D3 Dependencies
 var d3 = require('d3');
+         require('./lib/d3-component');
+         require('./lib/d3-selectgroup');
+
+// Core Dependencies
 var AppState = require('./core/AppState');
 var Controller = require('./core/Controller');
 var DataService = require('./core/DataService');
@@ -13,12 +17,7 @@ zvis = {
     return new DataService(config);
   },
 
-  // chart: function(config){
-  //   return new Chart(config);
-  // },
   chart: require('./core/chart'),
-
-  layer: require('./core/layer'),
 
   init: function(initialState, stateChangeHandler) {
     zvis.state = new AppState(initialState, stateChangeHandler);
@@ -28,7 +27,15 @@ zvis = {
   },
 
   state: null,
-  commands: new Controller()
+  commands: new Controller(),
+
+  vis: {
+    lineChart: require('./vis/lineChart')
+  },
+
+  utils: {
+    translate: require('./utils/translate')
+  }
 }
 
 

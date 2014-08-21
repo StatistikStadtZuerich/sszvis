@@ -1,14 +1,53 @@
 # Stadt Zürich Visualization Library
 
-## Agenda
+## Definitionen
 
-* Technologieentscheidungen vorstellen
-  - Core library
-  - Examples
-* Catalog vorstellen
+* Namespace: `sszvis`
 
-* Namespace: momentan `zvis`
-* Lokaler Server für Entwicklung der Produkte, z.B. `python -m SimpleHTTPServer`
+### Entscheidungen
+
+* D3: Deutsche Monatsnamen
+* Integration per `<script src=""></script>`
+  - `iframe` keine Option
+  - `iframe` per skript erstellen?
+  - CSS namespacing und CSS von StZH-Seite
+  - CORS-Probleme?
+* Versionierung der Skripts
+* `<noscript>` notwendig, evtl. conditional comments for IElt9
+* CMS: HTML-Komponente
+* iframe -> verweis auf layoutX.html?script=bla.js
+* `<link>` und `<style>` ist verboten
+* linting aktivieren
+
+Wünsche:
+
+* 1 Zeile Code für Line-Chart
+* Mit der Zeit verstehen, was Code macht
+* Z.B. auch Beispiele von D3 kopieren, soll bekannt aussehen
+* Möglich zu kopieren von D3?
+* möglichst nahe an online-beispielen bleiben
+
+* d3 evtl. als externe library
+* queue verwenden
+* catalog: copy-paste everything as standalone index.html to get started
+
+* daten: exakt vorbereiten wie es gebraucht wird
+
+bsp. line chart als komponente
+
+* christian zu git-repo einladen
+
+* lodash: lieber utils-lib
+* jsdoc, aber stzh würde im falle dass selber doc generieren
+
+this.selectOnce('g')
+selection.empty()
+
+scale nicht im store:
+  domain: allgemein
+  range: abhängig von component
+
+    zvis.csv([u1, u2, u3], function(u1, u2, u3){})
 
 
 ## Prinzipien
@@ -66,6 +105,8 @@ Um ein neues Chart zu entwickeln, steht folgendes zur Verfügung:
   - D3-Komponenten
 * Beispiele
 * Entwicklungsserver
+* fallback, browser-support
+
 
 ## Open questions
 
