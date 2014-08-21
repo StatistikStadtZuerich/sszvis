@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Line chart</title>
-  <script src="/assets/zvis.js"></script>
+  <script src="/assets/sszvis.js"></script>
 </head>
 <body>
   <div>
@@ -13,26 +13,26 @@
   </div>
 
   <script>
-  var d3 = zvis.d3;
+  var d3 = sszvis.d3;
 
 
   //
   // Register commands
   //
-  zvis.commands.register({
+  sszvis.commands.register({
     startup: function() {
       fetchData();
     },
     selectYear: function(year) {
-      zvis.state.set('selectedYear', year);
+      sszvis.state.set('selectedYear', year);
     }
   });
 
-  // var commands = zvis.commands({
+  // var commands = sszvis.commands({
 
   // });
 
-  // var legendCommands = zvis.commands({
+  // var legendCommands = sszvis.commands({
 
   // })
 
@@ -40,8 +40,8 @@
   // Initialize application state
   // Start application
   //
-  // var appState = zvis.store({})
-  zvis.init({
+  // var appState = sszvis.store({})
+  sszvis.init({
     height: 500,
     width: 700,
     loadError: null,
@@ -62,7 +62,7 @@
       data = data.filter(function(d){return d.year === state.selectedYear})
     }
 
-    var chart = zvis.chart()
+    var chart = sszvis.chart()
       .height(state.height)
       .width(state.width)
       .padding({top: 20, right: 20, bottom: 30, left: 50})
@@ -77,7 +77,7 @@
   function renderChart(data, props) {
     var selection = d3.select(this).datum(data);
 
-    var lineChart = zvis.vis.lineChart()
+    var lineChart = sszvis.vis.lineChart()
       .height(props.height)
       .width(props.width)
 
@@ -97,7 +97,7 @@
 
     selection.selectGroup('xAxis')
       .attr('class', 'x axis')
-      .attr('transform', zvis.utils.translate(0, props.height))
+      .attr('transform', sszvis.utils.translate(0, props.height))
       .call(xAxis)
 
     selection.selectGroup('yAxis')
@@ -110,7 +110,7 @@
   // Fetch data
   //
   function fetchData() {
-    zvis.DataService({
+    sszvis.DataService({
       url: "../data/simple_line.csv",
       format: 'csv',
       schema: [
@@ -133,9 +133,9 @@
         }
       ]
     }).then(function(data){
-      zvis.state.set('data', data);
+      sszvis.state.set('data', data);
     }).catch(function(err){
-      zvis.state.set('loadError', err);
+      sszvis.state.set('loadError', err);
     });
   }
 
@@ -144,11 +144,11 @@
   // Handle UI events
   //
   d3.select('#select-all').on('click', function(){
-    zvis.commands.trigger('selectYear', null);
+    sszvis.commands.trigger('selectYear', null);
   })
 
   d3.select('#select-1993').on('click', function(){
-    zvis.commands.trigger('selectYear', 1993);
+    sszvis.commands.trigger('selectYear', 1993);
   })
 
   </script>

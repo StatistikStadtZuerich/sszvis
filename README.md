@@ -47,7 +47,7 @@ scale nicht im store:
   domain: allgemein
   range: abhängig von component
 
-    zvis.csv([u1, u2, u3], function(u1, u2, u3){})
+    sszvis.csv([u1, u2, u3], function(u1, u2, u3){})
 
 
 ## Prinzipien
@@ -65,10 +65,10 @@ In Bezug auf D3
 Die verschiedenen Stile:
 
     // React-Stil
-    zvis.layer({width: 300, height: 100, y: 10}, function(context){})
+    sszvis.layer({width: 300, height: 100, y: 10}, function(context){})
 
     // D3-Stil
-    zvis.layer().width(300).height(100).y(10).render(function(context){})
+    sszvis.layer().width(300).height(100).y(10).render(function(context){})
 
 
 ## Architektur

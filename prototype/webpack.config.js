@@ -1,13 +1,13 @@
 var path = require('path');
 
 module.exports = {
-  entry: path.join(__dirname, 'src', 'zvis.js'),
+  entry: path.join(__dirname, 'src', 'sszvis.js'),
   output: {
     path: path.join(__dirname, "assets"),
     publicPath: 'assets/',
-    filename: 'zvis.js',
+    filename: 'sszvis.js',
     libraryTarget: 'var',
-    library: 'zvis'
+    library: 'sszvis'
   },
   module: {
     loaders: [
