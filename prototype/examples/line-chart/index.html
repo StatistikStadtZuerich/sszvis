@@ -15,26 +15,34 @@
   <script>
   var d3 = sszvis.d3;
 
+  //
+  // Register actions
+  //
 
-  //
-  // Register commands
-  //
-  sszvis.commands.register({
-    startup: function() {
-      fetchData();
-    },
-    selectYear: function(year) {
-      sszvis.state.set('selectedYear', year);
-    }
+  sszvis.actions.register('startup', function() {
+    fetchData();
   });
 
-  // var commands = sszvis.commands({
+  var uiActions = sszvis.actions
+    .register('clearYear', function() {
+      sszvis.state.set('selectedYear', null);
+    })
+    .register('selectYear', function(year) {
+      sszvis.state.set('selectedYear', year);
+    });
 
-  // });
 
-  // var legendCommands = sszvis.commands({
+  //
+  // Handle UI events
+  //
+  d3.select('#select-all').on('click', function(){
+    uiActions.clearYear();
+  })
 
-  // })
+  d3.select('#select-1993').on('click', function(){
+    uiActions.selectYear(1993);
+  })
+
 
   //
   // Initialize application state
@@ -138,18 +146,6 @@
       sszvis.state.set('loadError', err);
     });
   }
-
-
-  //
-  // Handle UI events
-  //
-  d3.select('#select-all').on('click', function(){
-    sszvis.commands.trigger('selectYear', null);
-  })
-
-  d3.select('#select-1993').on('click', function(){
-    sszvis.commands.trigger('selectYear', 1993);
-  })
 
   </script>
 

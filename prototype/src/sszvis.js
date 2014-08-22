@@ -8,7 +8,6 @@ var d3 = require('d3');
 
 // Core Dependencies
 var AppState = require('./core/AppState');
-var Controller = require('./core/Controller');
 var DataService = require('./core/DataService');
 
 sszvis = {
@@ -17,22 +16,20 @@ sszvis = {
     return new DataService(config);
   },
 
-  chart: require('./core/chart'),
-
   init: function(initialState, stateChangeHandler) {
     sszvis.state = new AppState(initialState, stateChangeHandler);
     setTimeout(function(){
-      sszvis.commands.trigger('startup');
+      sszvis.actions.trigger('startup');
     }, 0);
   },
 
   state: null,
-  commands: new Controller(),
+  actions: require('./core/dispatcher'),
 
+  chart: require('./core/chart'),
   vis: {
     lineChart: require('./vis/lineChart')
   },
-
   utils: {
     translate: require('./utils/translate')
   }

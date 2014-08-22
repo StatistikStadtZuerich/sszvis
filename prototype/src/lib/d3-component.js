@@ -33,8 +33,8 @@
     }
   }
 
-  function identity(x) {
-    return x;
+  function identity(d) {
+    return d;
   }
 
 }());
