@@ -1,5 +1,13 @@
 # Stadt Zürich Visualization Library
 
+
+## Installation
+
+* Make sure you have [Node.js](http://nodejs.org/) installed
+* In a console, change into the `prototype` directory
+* Run `npm install` to install all dependencies
+* Run `npm start` to start the webserver at http://localhost:8080/
+
 ## Definitionen
 
 * Namespace: `sszvis`
