@@ -7,7 +7,6 @@ var d3 = require('d3');
          require('./lib/d3-selectgroup');
 
 // Core Dependencies
-var AppState = require('./core/AppState');
 var DataService = require('./core/DataService');
 
 sszvis = {
@@ -16,14 +15,9 @@ sszvis = {
     return new DataService(config);
   },
 
-  init: function(initialState, stateChangeHandler) {
-    sszvis.state = new AppState(initialState, stateChangeHandler);
-    setTimeout(function(){
-      sszvis.actions.trigger('startup');
-    }, 0);
-  },
+  start: startup,
 
-  state: null,
+  store: require('./core/store'),
   actions: require('./core/dispatcher'),
 
   chart: require('./core/chart'),
@@ -35,5 +29,25 @@ sszvis = {
   }
 }
 
+
+function startup(selector, initialState, render) {
+  var chart = sszvis.chart();
+
+  var updateChart = function(state) {
+    chart
+      .height(state.chart.height)
+      .width(state.chart.width)
+      .padding(state.chart.padding)
+      .render(render);
+
+    d3.select(selector)
+      .datum(state)
+      .call(chart);
+  }
+
+  initialState.change(updateChart);
+  updateChart(initialState.toJS());
+  sszvis.actions.trigger('startup');
+}
 
 module.exports = sszvis;

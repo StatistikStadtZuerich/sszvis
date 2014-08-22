@@ -32,7 +32,9 @@ module.exports = function() {
     var childProps = _.clone(props);
     childProps.height = props.height - props.padding.top - props.padding.bottom;
     childProps.width = props.width - props.padding.left - props.padding.right;
-    renderer.call(frame.node(), data, childProps);
+    var context = frame.node();
+    context.props = childProps;
+    renderer.call(context, data);
   })
 
   // Redefine render for the chart component

@@ -8,60 +8,71 @@
 </head>
 <body>
   <div>
-    <a id="select-all" href="#">Alle Jahre</a>
-    <a id="select-1993" href="#">Nur 1993</a>
+    <button data-clearYear>Alle Jahre</button>
+    <button data-selectYear data-year="1993">1993</button>
+    <button data-selectYear data-year="1995">1995</button>
   </div>
 
   <script>
   var d3 = sszvis.d3;
+  var vis = sszvis.vis;
+  var utils = sszvis.utils;
+
 
   //
-  // Register actions
+  // Initialization
   //
-
-  sszvis.actions.register('startup', function() {
-    fetchData();
+  var appState = sszvis.store({
+    chart: {
+      height: 500,
+      width: 700,
+      padding: { top: 20, right: 20, bottom: 30, left: 50 }
+    },
+    loadError: null,
+    data: null,
+    selectedYear: null
   });
 
+  sszvis.actions
+    .register('startup', function() {
+      fetchData();
+    });
+
+  var dataActions = sszvis.actions
+    .channel('data')
+    .register('ready', function(data) {
+      appState.set('data', data);
+    })
+    .register('error', function(err) {
+      appState.set('loadError', err);
+    });
+
   var uiActions = sszvis.actions
+    .channel('ui')
     .register('clearYear', function() {
-      sszvis.state.set('selectedYear', null);
+      appState.set('selectedYear', null);
     })
     .register('selectYear', function(year) {
-      sszvis.state.set('selectedYear', year);
+      appState.set('selectedYear', year);
     });
 
 
   //
   // Handle UI events
   //
-  d3.select('#select-all').on('click', function(){
+  d3.selectAll('[data-clearYear]').on('click', function(){
     uiActions.clearYear();
   })
 
-  d3.select('#select-1993').on('click', function(){
-    uiActions.selectYear(1993);
+  d3.selectAll('[data-selectYear]').on('click', function() {
+    uiActions.selectYear(+this.getAttribute('data-year'));
   })
 
 
   //
-  // Initialize application state
-  // Start application
+  // Startup
   //
-  // var appState = sszvis.store({})
-  sszvis.init({
-    height: 500,
-    width: 700,
-    loadError: null,
-    data: null,
-    selectedYear: null
-  }, render);
-
-
-  //
-  // Render (idempotent)
-  //
-  function render(state) {
+  sszvis.start('body', appState, function(state) {
     var data = state.data;
 
     if (!data) return;
@@ -70,31 +81,18 @@
       data = data.filter(function(d){return d.year === state.selectedYear})
     }
 
-    var chart = sszvis.chart()
-      .height(state.height)
-      .width(state.width)
-      .padding({top: 20, right: 20, bottom: 30, left: 50})
-      .render(renderChart)
-
-    d3.select('body')
-      .datum(data)
-      .call(chart)
-  }
-
-
-  function renderChart(data, props) {
     var selection = d3.select(this).datum(data);
 
-    var lineChart = sszvis.vis.lineChart()
-      .height(props.height)
-      .width(props.width)
+    var lineChart = vis.lineChart()
+      .height(this.props.height)
+      .width(this.props.width)
 
     var xScale = d3.time.scale()
-      .range([0, props.width])
+      .range([0, this.props.width])
       .domain(d3.extent(data, function(d){return d.date}));
 
     var yScale = d3.scale.linear()
-      .range([props.height, 0])
+      .range([this.props.height, 0])
       .domain(d3.extent(data, function(d){return d.value}));
 
     var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
@@ -105,13 +103,13 @@
 
     selection.selectGroup('xAxis')
       .attr('class', 'x axis')
-      .attr('transform', sszvis.utils.translate(0, props.height))
+      .attr('transform', utils.translate(0, this.props.height))
       .call(xAxis)
 
     selection.selectGroup('yAxis')
       .attr('class', 'y axis')
       .call(yAxis)
-  }
+  });
 
 
   //
@@ -140,11 +138,9 @@
           format: Number
         }
       ]
-    }).then(function(data){
-      sszvis.state.set('data', data);
-    }).catch(function(err){
-      sszvis.state.set('loadError', err);
-    });
+    })
+    .then(dataActions.ready)
+    .catch(dataActions.error);
   }
 
   </script>
