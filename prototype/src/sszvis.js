@@ -4,6 +4,7 @@ require('./sszvis.scss');
 // D3 Dependencies
 var d3 = require('d3');
          require('./lib/d3-component');
+         require('./lib/d3-dimension');
          require('./lib/d3-selectgroup');
 
 // Core Dependencies
@@ -21,11 +22,19 @@ sszvis = {
   actions: require('./core/dispatcher'),
 
   chart: require('./core/chart'),
+
+  createChart: require('./utils/createChart'),
+
   vis: {
     lineChart: require('./vis/lineChart')
   },
+
   utils: {
     translate: require('./utils/translate')
+  },
+
+  error: function(msg) {
+    alert(msg); // Do something smart here
   }
 }
 
@@ -49,5 +58,6 @@ function startup(selector, initialState, render) {
   updateChart(initialState.toJS());
   sszvis.actions.trigger('startup');
 }
+
 
 module.exports = sszvis;
