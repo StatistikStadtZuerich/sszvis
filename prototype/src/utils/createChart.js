@@ -15,7 +15,6 @@ module.exports = function (selector, dimension) {
   var root = d3.select(selector);
   var svg = root.selectAll('svg').data([0]);
   svg.enter().append('svg');
-  svg.exit().remove();
 
   svg
     .attr('height', dimension.outerHeight)
