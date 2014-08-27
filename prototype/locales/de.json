@@ -2,7 +2,7 @@
   "decimal": ".",
   "thousands": " ",
   "grouping": [3],
-  "currency": ["$", ""],
+  "currency": ["CHF ", ""],
   "dateTime": "%a. %e. %B %X %Y",
   "date": "%d.%m.%Y",
   "time": "%H:%M:%S",
