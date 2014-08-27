@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Line chart</title>
+</head>
+<body>
+  <div id="minimal-vis"></div>
+  <script src="/assets/sszvis.js"></script>
+  <script>
+
+    var d3 = sszvis.d3;
+    var component = sszvis.component;
+    var utils = sszvis.utils;
+
+    d3.csv('/examples/line-chart/simple_line.csv')
+      .row(function(d) {
+        return {
+          date:  d3.time.format("%d.%m.%Y").parse(d['Datum']),
+          value: +d['Wert']
+        }
+      })
+      .get(function(error, data) {
+        error ? sszvis.error(error) : render(data);
+      });
+
+    function render(data) {
+      var dim = d3.dimension(700, 400, {top: 20, right: 20, bottom: 40, left: 60});
+
+      var chart = sszvis.createChart('#minimal-vis', dim)
+        .datum(data);
+
+      var xScale = d3.time.scale()
+        .range([0, dim.width])
+        .domain(d3.extent(data, _.property('date')));
+
+      var yScale = d3.scale.linear()
+        .range([dim.height, 0])
+        .domain(d3.extent(data, _.property('value')));
+
+      var lineChart = sszvis.chart.line()
+        .xScale(xScale)
+        .yScale(yScale);
+
+      chart.call(lineChart);
+    }
+
+  </script>
+</body>
+</html>

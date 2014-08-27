@@ -21,9 +21,11 @@ sszvis = {
   store: require('./core/store'),
   actions: require('./core/dispatcher'),
 
-  chart: require('./core/chart'),
-
   createChart: require('./utils/createChart'),
+
+  chart: {
+    line: require('./chart/line')
+  },
 
   component: {
     line: require('./component/line')
