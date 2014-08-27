@@ -28,9 +28,6 @@
     function render(data) {
       var dim = d3.dimension(700, 400, {top: 20, right: 20, bottom: 40, left: 60});
 
-      var chart = sszvis.createChart('#minimal-vis', dim)
-        .datum(data);
-
       var xScale = d3.time.scale()
         .range([0, dim.width])
         .domain(d3.extent(data, _.property('date')));
@@ -43,7 +40,9 @@
         .xScale(xScale)
         .yScale(yScale);
 
-      chart.call(lineChart);
+      sszvis.createChart('#minimal-vis', dim)
+        .datum(data)
+        .call(lineChart);
     }
 
   </script>

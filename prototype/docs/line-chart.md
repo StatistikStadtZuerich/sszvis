@@ -6,13 +6,53 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
 
 ```bg-plain|run-script
-<div data-vis="minimal"></div>
+<div id="line-chart"></div>
 <script>
-    initMinimal('[data-vis="minimal"]')
+    var d3 = sszvis.d3;
+    var component = sszvis.component;
+    var utils = sszvis.utils;
+
+    d3.csv('/examples/line-chart/simple_line.csv')
+      .row(function(d) {
+        return {
+          date:  d3.time.format("%d.%m.%Y").parse(d['Datum']),
+          value: +d['Wert']
+        }
+      })
+      .get(function(error, data) {
+        error ? sszvis.error(error) : render(data);
+      });
+
+    function render(data) {
+      var dim = d3.dimension(700, 400, {top: 20, right: 20, bottom: 40, left: 60});
+
+      var xScale = d3.time.scale()
+        .range([0, dim.width])
+        .domain(d3.extent(data, _.property('date')));
+
+      var yScale = d3.scale.linear()
+        .range([dim.height, 0])
+        .domain(d3.extent(data, _.property('value')));
+
+      var lineChart = sszvis.chart.line()
+        .xScale(xScale)
+        .yScale(yScale);
+
+      sszvis.createChart('#minimal-vis', dim)
+        .datum(data)
+        .call(lineChart);
+    }
 </script>
 ```
 
 [In eigenem Fenster öffnen](examples/line-chart/minimal.html)
+
+### Datenformat
+
+Dieses Chart benötigt zwei Datenreihen:
+
+* x-Achse
+* y-Achse
 
 ### Konfiguration
 
@@ -24,11 +64,43 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 ### Installation
 
 ```specimen-code
-&lt;div data-vis=&quot;minimal&quot;&gt;&lt;/div&gt;
+&lt;div id=&quot;line-chart&quot;&gt;&lt;/div&gt;
 &lt;script src=&quot;/assets/sszvis.js&quot;&gt;&lt;/script&gt;
-&lt;script src=&quot;minimal.js&quot;&gt;&lt;/script&gt;
 &lt;script&gt;
-  initMinimal('[data-vis=&quot;minimal&quot;]')
+    var d3 = sszvis.d3;
+    var component = sszvis.component;
+    var utils = sszvis.utils;
+
+    d3.csv('/examples/line-chart/simple_line.csv')
+      .row(function(d) {
+        return {
+          date:  d3.time.format(&quot;%d.%m.%Y&quot;).parse(d['Datum']),
+          value: +d['Wert']
+        }
+      })
+      .get(function(error, data) {
+        error ? sszvis.error(error) : render(data);
+      });
+
+    function render(data) {
+      var dim = d3.dimension(700, 400, {top: 20, right: 20, bottom: 40, left: 60});
+
+      var xScale = d3.time.scale()
+        .range([0, dim.width])
+        .domain(d3.extent(data, _.property('date')));
+
+      var yScale = d3.scale.linear()
+        .range([dim.height, 0])
+        .domain(d3.extent(data, _.property('value')));
+
+      var lineChart = sszvis.chart.line()
+        .xScale(xScale)
+        .yScale(yScale);
+
+      sszvis.createChart('#minimal-vis', dim)
+        .datum(data)
+        .call(lineChart);
+    }
 &lt;/script&gt;
 ```
 
