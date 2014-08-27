@@ -1,7 +1,7 @@
 // Assets
 require('./sszvis.scss');
 
-// D3 Dependencies
+// D3 setup
 var d3 = require('d3');
          require('./lib/d3-bounds');
          require('./lib/d3-component');
@@ -11,59 +11,25 @@ var localizedFormat = d3.locale(require('../locales/de.json'));
 d3.format = localizedFormat.numberFormat
 d3.time.format = localizedFormat.timeFormat
 
-// Core Dependencies
-var DataService = require('./core/DataService');
-
+// Public API
 sszvis = {
   d3: d3,
-  DataService: function(config) {
-    return new DataService(config);
-  },
-
-  start: startup,
-
-  store: require('./core/store'),
-  actions: require('./core/dispatcher'),
-
   createChart: require('./utils/createChart'),
 
   chart: {
     line: require('./chart/line')
   },
-
   component: {
     line: require('./component/line')
   },
-
   utils: {
     translate: require('./utils/translate')
   },
 
-  error: function(msg) {
-    alert(msg); // Do something smart here
-  }
+  // Experimental
+  error: function(msg) { alert(msg); }, // Do something smart here
+  store: require('./core/store'),
+  actions: require('./core/dispatcher')
 }
-
-
-function startup(selector, initialState, render) {
-  var chart = sszvis.chart();
-
-  var updateChart = function(state) {
-    chart
-      .height(state.chart.height)
-      .width(state.chart.width)
-      .padding(state.chart.padding)
-      .render(render);
-
-    d3.select(selector)
-      .datum(state)
-      .call(chart);
-  }
-
-  initialState.change(updateChart);
-  updateChart(initialState.toJS());
-  sszvis.actions.trigger('startup');
-}
-
 
 module.exports = sszvis;
