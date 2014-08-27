@@ -15,6 +15,10 @@ module.exports = {
         test: /\.scss$/,
         loader: "style!css!sass?outputStyle=compressed&includePaths[]=" +
           (path.resolve(__dirname, '../node_modules'))
+      },
+      {
+        test: /\.json$/,
+        loader: "json"
       }
     ]
   },

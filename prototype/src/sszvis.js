@@ -7,6 +7,10 @@ var d3 = require('d3');
          require('./lib/d3-component');
          require('./lib/d3-selectgroup');
 
+var localizedFormat = d3.locale(require('../locales/de.json'));
+d3.format = localizedFormat.numberFormat
+d3.time.format = localizedFormat.timeFormat
+
 // Core Dependencies
 var DataService = require('./core/DataService');
 
