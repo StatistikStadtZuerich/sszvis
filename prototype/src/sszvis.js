@@ -27,6 +27,7 @@ sszvis = {
   },
   utils: {
     f: require('./utils/f'),
+    format: require('./utils/format'),
     parse: require('./utils/parse'),
     translate: require('./utils/translate')
   },

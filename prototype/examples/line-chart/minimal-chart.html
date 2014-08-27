@@ -36,7 +36,7 @@
 
       var yScale = d3.scale.linear()
         .range([bounds.innerHeight, 0])
-        .domain(d3.extent(data, f.prop('value')));
+        .domain([0, d3.max(data, f.prop('value'))]);
 
       var lineChart = sszvis.chart.line()
         .x(f.prop('date'))
