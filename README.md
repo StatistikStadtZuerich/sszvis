@@ -1,6 +1,5 @@
 # Stadt Zürich Visualization Library
 
-
 ## Installation
 
 * Make sure you have [Node.js](http://nodejs.org/) installed
@@ -8,13 +7,8 @@
 * Run `npm install` to install all dependencies
 * Run `npm start` to start the webserver at http://localhost:8080/
 
-## Definitionen
+## Inputs
 
-* Namespace: `sszvis`
-
-### Entscheidungen
-
-* D3: Deutsche Monatsnamen
 * Integration per `<script src=""></script>`
   - `iframe` keine Option
   - `iframe` per skript erstellen?
@@ -33,30 +27,10 @@ Wünsche:
 * Mit der Zeit verstehen, was Code macht
 * Z.B. auch Beispiele von D3 kopieren, soll bekannt aussehen
 * Möglich zu kopieren von D3?
-* möglichst nahe an online-beispielen bleiben
 
 * d3 evtl. als externe library
 * queue verwenden
-* catalog: copy-paste everything as standalone index.html to get started
-
-* daten: exakt vorbereiten wie es gebraucht wird
-
-bsp. line chart als komponente
-
-* christian zu git-repo einladen
-
-* lodash: lieber utils-lib
 * jsdoc, aber stzh würde im falle dass selber doc generieren
-
-this.selectOnce('g')
-selection.empty()
-
-scale nicht im store:
-  domain: allgemein
-  range: abhängig von component
-
-    sszvis.csv([u1, u2, u3], function(u1, u2, u3){})
-
 
 ## Prinzipien
 
@@ -67,16 +41,17 @@ scale nicht im store:
 In Bezug auf D3
 
 * Nahe am Stil von D3 bleiben
+* Nahe an online verfügbaren Beispielen bleiben
 * Schlechte Abstraktionen vermeiden
 * Kontrolle vor Konfiguration
 
-Die verschiedenen Stile:
+In Bezug auf Daten
 
-    // React-Stil
-    sszvis.layer({width: 300, height: 100, y: 10}, function(context){})
+* Daten so vorbereiten wie sie gebraucht werden
 
-    // D3-Stil
-    sszvis.layer().width(300).height(100).y(10).render(function(context){})
+In Bezug auf die Anwendung
+
+* Copy/Paste everything as standalone index.html to get started
 
 
 ## Architektur
