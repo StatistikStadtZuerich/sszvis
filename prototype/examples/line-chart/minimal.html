@@ -18,7 +18,7 @@
     d3.csv('/examples/line-chart/simple_line.csv')
       .row(function(d) {
         return {
-          date:  d3.time.format("%d.%m.%Y").parse(d['Datum']),
+          date:  utils.parse.date(d['Datum']),
           value: utils.parse.number(d['Wert'])
         }
       })
