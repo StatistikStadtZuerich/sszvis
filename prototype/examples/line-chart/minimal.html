@@ -11,6 +11,7 @@
   <script>
 
     var d3 = sszvis.d3;
+    var axis = sszvis.axis;
     var component = sszvis.component;
     var utils = sszvis.utils;
 
@@ -43,7 +44,8 @@
         .xScale(xScale)
         .yScale(yScale)
 
-      var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
+      var xAxis = axis.time().scale(xScale)
+
       var yAxis = d3.svg.axis().scale(yScale).orient("left");
 
       chart.selectGroup('line')

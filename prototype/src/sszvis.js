@@ -16,6 +16,9 @@ sszvis = {
   d3: d3,
   createChart: require('./utils/createChart'),
 
+  axis: {
+    time: require('./axis/time')
+  },
   chart: {
     line: require('./chart/line')
   },
