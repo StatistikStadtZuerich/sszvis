@@ -15,22 +15,22 @@
     var component = sszvis.component;
     var utils = sszvis.utils;
 
-    d3.csv('/examples/line-chart/simple_line.csv')
+    d3.csv('/examples/line-chart/multi_line.csv')
       .row(function(d) {
         return {
           date:  utils.parse.date(d['Datum']),
-          value: utils.parse.number(d['Wert'])
+          value: utils.parse.number(d['Anzahl']),
+          category: d['Kategorie']
         }
       })
       .get(function(error, data) {
-        error ? sszvis.error(error) : render(data);
+         error ? sszvis.error(error) : render(data);
       });
 
     function render(data) {
       var bounds = d3.bounds({width: 700, height: 400, top: 20, right: 20, bottom: 40, left: 60});
 
-      var chart = sszvis.createChart('#minimal-vis', bounds)
-        .datum([data]);
+      var chart = sszvis.createChart('#minimal-vis', bounds);
 
       var xScale = d3.time.scale()
         .range([0, bounds.innerWidth])
@@ -51,6 +51,7 @@
       var yAxis = d3.svg.axis().scale(yScale).orient("left");
 
       chart.selectGroup('line')
+        .datum(valuesByCategory(data))
         .call(line)
 
       chart.selectGroup('xAxis')
@@ -61,6 +62,13 @@
       chart.selectGroup('yAxis')
         .attr('class', 'y axis')
         .call(yAxis)
+    }
+
+    function valuesByCategory(d) {
+      return d3.nest()
+        .key(_.property('category'))
+        .entries(d)
+        .map(_.property('values'));
     }
 
   </script>
