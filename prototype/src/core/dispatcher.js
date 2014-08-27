@@ -1,15 +1,16 @@
 var _ = require('underscore');
 var d3 = require('d3');
+var f = require('../utils/f');
 var assert = require('assert');
 var bus = (function() {
   var channels = {};
 
   var assertNoActionRedefinition = function(chan, action){
-    assert(!_.has(chan, action), 'Action "' + action + '" is already defined.');
+    assert(!f.has(chan, action), 'Action "' + action + '" is already defined.');
   }
 
   var assertActionIsDefined = function(chan, action) {
-    assert(_.has(chan, action), 'Action "' + action + '" is not defined.');
+    assert(f.has(chan, action), 'Action "' + action + '" is not defined.');
   }
 
   return {
@@ -49,12 +50,12 @@ var DEFAULT_CHANNEL = 'default';
 module.exports = {
   channel: function(channel) {
     return {
-      register: _.partial(registerAction, channel),
-      trigger:  _.partial(triggerAction,  channel)
+      register: f.partial(registerAction, channel),
+      trigger:  f.partial(triggerAction,  channel)
     }
   },
-  register: _.partial(registerAction, DEFAULT_CHANNEL),
-  trigger:  _.partial(triggerAction,  DEFAULT_CHANNEL)
+  register: f.partial(registerAction, DEFAULT_CHANNEL),
+  trigger:  f.partial(triggerAction,  DEFAULT_CHANNEL)
 }
 
 function registerAction(channel, action, handler) {
@@ -70,8 +71,8 @@ function actionChain(chain) {
   return function(channel, action, handler) {
     bus.subscribe(channel, action, handler);
     chain[action] = handler;
-    chain.register = _.partial(actionChain(_.clone(chain)), channel);
-    chain.trigger  = _.partial(triggerAction, channel);
+    chain.register = f.partial(actionChain(f.clone(chain)), channel);
+    chain.trigger  = f.partial(triggerAction, channel);
     return chain;
   }
 }

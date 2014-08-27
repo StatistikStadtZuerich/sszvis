@@ -14,6 +14,7 @@
     var axis = sszvis.axis;
     var component = sszvis.component;
     var utils = sszvis.utils;
+    var f = utils.f;
 
     d3.csv('/examples/line-chart/simple_line.csv')
       .row(function(d) {
@@ -31,15 +32,15 @@
 
       var xScale = d3.time.scale()
         .range([0, bounds.innerWidth])
-        .domain(d3.extent(data, _.property('date')));
+        .domain(d3.extent(data, f.prop('date')));
 
       var yScale = d3.scale.linear()
         .range([bounds.innerHeight, 0])
-        .domain(d3.extent(data, _.property('value')));
+        .domain(d3.extent(data, f.prop('value')));
 
       var lineChart = sszvis.chart.line()
-        .x(_.property('date'))
-        .y(_.property('value'))
+        .x(f.prop('date'))
+        .y(f.prop('value'))
         .xScale(xScale)
         .xAxis(axis.time())
         .yScale(yScale);

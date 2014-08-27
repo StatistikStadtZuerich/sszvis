@@ -14,6 +14,7 @@
     var axis = sszvis.axis;
     var component = sszvis.component;
     var utils = sszvis.utils;
+    var f = utils.f;
 
     d3.csv('/examples/line-chart/multi_line.csv')
       .row(function(d) {
@@ -34,15 +35,15 @@
 
       var xScale = d3.time.scale()
         .range([0, bounds.innerWidth])
-        .domain(d3.extent(data, _.property('date')));
+        .domain(d3.extent(data, f.prop('date')));
 
       var yScale = d3.scale.linear()
         .range([bounds.innerHeight, 0])
-        .domain(d3.extent(data, _.property('value')));
+        .domain(d3.extent(data, f.prop('value')));
 
       var line = component.line()
-        .x(_.property('date'))
-        .y(_.property('value'))
+        .x(f.prop('date'))
+        .y(f.prop('value'))
         .xScale(xScale)
         .yScale(yScale)
 
@@ -66,9 +67,9 @@
 
     function valuesByCategory(d) {
       return d3.nest()
-        .key(_.property('category'))
+        .key(f.prop('category'))
         .entries(d)
-        .map(_.property('values'));
+        .map(f.prop('values'));
     }
 
   </script>

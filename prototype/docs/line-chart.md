@@ -28,11 +28,11 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
       var xScale = d3.time.scale()
         .range([0, dim.innerWidth])
-        .domain(d3.extent(data, _.property('date')));
+        .domain(d3.extent(data, utils.f.prop('date')));
 
       var yScale = d3.scale.linear()
         .range([dim.innerHeight, 0])
-        .domain(d3.extent(data, _.property('value')));
+        .domain(d3.extent(data, utils.f.prop('value')));
 
       var lineChart = sszvis.chart.line()
         .xScale(xScale)
@@ -87,11 +87,11 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
       var xScale = d3.time.scale()
         .range([0, dim.innerWidth])
-        .domain(d3.extent(data, _.property('date')));
+        .domain(d3.extent(data, utils.f.prop('date')));
 
       var yScale = d3.scale.linear()
         .range([dim.innerHeight, 0])
-        .domain(d3.extent(data, _.property('value')));
+        .domain(d3.extent(data, utils.f.prop('value')));
 
       var lineChart = sszvis.chart.line()
         .xScale(xScale)
