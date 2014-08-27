@@ -19,7 +19,7 @@
       .row(function(d) {
         return {
           date:  d3.time.format("%d.%m.%Y").parse(d['Datum']),
-          value: +d['Wert']
+          value: utils.parse.number(d['Wert'])
         }
       })
       .get(function(error, data) {

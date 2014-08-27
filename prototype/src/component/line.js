@@ -12,8 +12,9 @@ module.exports = function() {
       var props = selection.props();
 
       var line = d3.svg.line()
+        .defined(function(d) { return !isNaN(d.value) })
         .x(function(d) { return props.xScale(d.date); })
-        .y(function(d) { return props.yScale(d.value); });
+        .y(function(d) { return props.yScale(d.value); })
 
       var path = selection.selectAll('path')
         .data([data])

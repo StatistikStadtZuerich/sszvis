@@ -26,6 +26,7 @@ sszvis = {
     line: require('./component/line')
   },
   utils: {
+    parse: require('./utils/parse'),
     translate: require('./utils/translate')
   },
 
