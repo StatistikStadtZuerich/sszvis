@@ -4,11 +4,17 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>sszvis</title>
-  <script src="/assets/sszvis.js"></script>
+  <script src="/node_modules/catalog-styleguide/dist/catalog.js"></script>
 </head>
 <body>
-  <ul>
-    <li><a href="examples/line-chart/minimal.html">line chart (minimal)</a></li>
-    <li><a href="examples/line-chart/state.html">line chart (state)</a></li>
-  </ul>
+  <script>
+    Catalog({
+      title: "SSZVIS",
+      scripts: ['assets/sszvis.js'],
+      pages: [
+        {name: 'intro', path: '/', title: 'Einführung', src: 'docs/intro.md'},
+        {name: 'line-chart', title: 'Line Chart', src: 'docs/line-chart.md', scripts: ["/assets/sszvis.js", "examples/line-chart/minimal.js"]}
+      ]
+    });
+  </script>
 </body>
