@@ -11,7 +11,7 @@
   <script>
 
     var d3 = sszvis.d3;
-    var vis = sszvis.vis;
+    var component = sszvis.component;
     var utils = sszvis.utils;
 
     d3.csv('/examples/line-chart/simple_line.csv')
@@ -39,15 +39,15 @@
         .range([dim.height, 0])
         .domain(d3.extent(data, _.property('value')));
 
-      var lineChart = vis.lineChart()
+      var line = component.line()
         .xScale(xScale)
         .yScale(yScale)
 
       var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
       var yAxis = d3.svg.axis().scale(yScale).orient("left");
 
-      chart.selectGroup('lineChart')
-        .call(lineChart)
+      chart.selectGroup('line')
+        .call(line)
 
       chart.selectGroup('xAxis')
         .attr('class', 'x axis')

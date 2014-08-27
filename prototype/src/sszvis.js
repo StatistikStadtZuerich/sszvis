@@ -25,8 +25,8 @@ sszvis = {
 
   createChart: require('./utils/createChart'),
 
-  vis: {
-    lineChart: require('./vis/lineChart')
+  component: {
+    line: require('./component/line')
   },
 
   utils: {
