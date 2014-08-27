@@ -24,21 +24,21 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
       });
 
     function render(data) {
-      var dim = d3.dimension(700, 400, {top: 20, right: 20, bottom: 40, left: 60});
+      var dim = d3.bounds({width: 700, height: 400, top: 20, right: 20, bottom: 40, left: 60});
 
       var xScale = d3.time.scale()
-        .range([0, dim.width])
+        .range([0, dim.innerWidth])
         .domain(d3.extent(data, _.property('date')));
 
       var yScale = d3.scale.linear()
-        .range([dim.height, 0])
+        .range([dim.innerHeight, 0])
         .domain(d3.extent(data, _.property('value')));
 
       var lineChart = sszvis.chart.line()
         .xScale(xScale)
         .yScale(yScale);
 
-      sszvis.createChart('#minimal-vis', dim)
+      sszvis.createChart('#line-chart', dim)
         .datum(data)
         .call(lineChart);
     }
@@ -83,21 +83,21 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
       });
 
     function render(data) {
-      var dim = d3.dimension(700, 400, {top: 20, right: 20, bottom: 40, left: 60});
+      var dim = d3.bounds({width: 700, height: 400, top: 20, right: 20, bottom: 40, left: 60});
 
       var xScale = d3.time.scale()
-        .range([0, dim.width])
+        .range([0, dim.innerWidth])
         .domain(d3.extent(data, _.property('date')));
 
       var yScale = d3.scale.linear()
-        .range([dim.height, 0])
+        .range([dim.innerHeight, 0])
         .domain(d3.extent(data, _.property('value')));
 
       var lineChart = sszvis.chart.line()
         .xScale(xScale)
         .yScale(yScale);
 
-      sszvis.createChart('#minimal-vis', dim)
+      sszvis.createChart('#line-chart', dim)
         .datum(data)
         .call(lineChart);
     }

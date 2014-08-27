@@ -26,21 +26,21 @@
       });
 
     function render(data) {
-      var dim = d3.dimension(700, 400, {top: 20, right: 20, bottom: 40, left: 60});
+      var bounds = d3.bounds({width: 700, height: 400, top: 20, right: 20, bottom: 40, left: 60});
 
       var xScale = d3.time.scale()
-        .range([0, dim.width])
+        .range([0, bounds.innerWidth])
         .domain(d3.extent(data, _.property('date')));
 
       var yScale = d3.scale.linear()
-        .range([dim.height, 0])
+        .range([bounds.innerHeight, 0])
         .domain(d3.extent(data, _.property('value')));
 
       var lineChart = sszvis.chart.line()
         .xScale(xScale)
         .yScale(yScale);
 
-      sszvis.createChart('#minimal-vis', dim)
+      sszvis.createChart('#minimal-vis', bounds)
         .datum(data)
         .call(lineChart);
     }

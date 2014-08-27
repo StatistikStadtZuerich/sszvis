@@ -3,8 +3,8 @@ require('./sszvis.scss');
 
 // D3 Dependencies
 var d3 = require('d3');
+         require('./lib/d3-bounds');
          require('./lib/d3-component');
-         require('./lib/d3-dimension');
          require('./lib/d3-selectgroup');
 
 // Core Dependencies
