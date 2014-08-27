@@ -14,8 +14,9 @@ module.exports = function() {
     })
 
   var internalRender = chart.render;
-  internalRender(function(data, props) {
+  internalRender(function(data) {
     var svg = d3.select(this).selectAll('svg').data([0]);
+    var props = svg.props();
 
     svg.enter().append('svg');
     svg.exit().remove();

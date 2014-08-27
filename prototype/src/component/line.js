@@ -7,10 +7,9 @@ module.exports = function() {
   return d3.component()
     .prop('xScale')
     .prop('yScale')
-
-    // -> 2nd arg is usually index, 3rd is parent index
-    .render(function(data, props) {
+    .render(function(data) {
       var selection = d3.select(this);
+      var props = selection.props();
 
       var line = d3.svg.line()
         .x(function(d) { return props.xScale(d.date); })
