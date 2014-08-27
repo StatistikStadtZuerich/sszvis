@@ -38,6 +38,8 @@
         .domain(d3.extent(data, _.property('value')));
 
       var lineChart = sszvis.chart.line()
+        .x(_.property('date'))
+        .y(_.property('value'))
         .xScale(xScale)
         .xAxis(axis.time())
         .yScale(yScale);

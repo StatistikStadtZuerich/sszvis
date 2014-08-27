@@ -30,7 +30,7 @@
       var bounds = d3.bounds({width: 700, height: 400, top: 20, right: 20, bottom: 40, left: 60});
 
       var chart = sszvis.createChart('#minimal-vis', bounds)
-        .datum(data);
+        .datum([data]);
 
       var xScale = d3.time.scale()
         .range([0, bounds.innerWidth])
@@ -41,6 +41,8 @@
         .domain(d3.extent(data, _.property('value')));
 
       var line = component.line()
+        .x(_.property('date'))
+        .y(_.property('value'))
         .xScale(xScale)
         .yScale(yScale)
 

@@ -5,16 +5,20 @@ var accessor = require('../utils/accessor');
 module.exports = function() {
 
   return d3.component()
-    .prop('xAxis', d3.svg.axis())
-    .prop('yAxis', d3.svg.axis())
+    .prop('x')
+    .prop('y')
     .prop('xScale')
     .prop('yScale')
+    .prop('xAxis', d3.svg.axis())
+    .prop('yAxis', d3.svg.axis())
     .render(function(data) {
       var chart = d3.select(this);
       var props = chart.props();
       var height = props.yScale.range()[0]
 
       var line = component.line()
+        .x(props.x)
+        .y(props.y)
         .xScale(props.xScale)
         .yScale(props.yScale);
 
