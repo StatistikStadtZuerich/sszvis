@@ -31,17 +31,17 @@
       var chart = sszvis.createChart('#minimal-vis', dim)
         .datum(data);
 
-      var lineChart = vis.lineChart()
-        .height(dim.height)
-        .width(dim.width)
-
       var xScale = d3.time.scale()
         .range([0, dim.width])
-        .domain(d3.extent(data, function(d){return d.date}));
+        .domain(d3.extent(data, _.property('date')));
 
       var yScale = d3.scale.linear()
         .range([dim.height, 0])
-        .domain(d3.extent(data, function(d){return d.value}));
+        .domain(d3.extent(data, _.property('value')));
+
+      var lineChart = vis.lineChart()
+        .xScale(xScale)
+        .yScale(yScale)
 
       var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
       var yAxis = d3.svg.axis().scale(yScale).orient("left");

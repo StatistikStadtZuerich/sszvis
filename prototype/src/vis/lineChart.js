@@ -5,22 +5,16 @@ var accessor = require('../utils/accessor');
 module.exports = function() {
 
   return d3.component()
-    .prop('height', 150)
-    .prop('width', 230)
+    .prop('xScale')
+    .prop('yScale')
+
+    // -> 2nd arg is usually index, 3rd is parent index
     .render(function(data, props) {
       var selection = d3.select(this);
 
-      var x = d3.time.scale()
-        .range([0, props.width])
-        .domain(d3.extent(data, _.property('date')));
-
-      var y = d3.scale.linear()
-        .range([props.height, 0])
-        .domain(d3.extent(data, _.property('value')));
-
       var line = d3.svg.line()
-        .x(function(d) { return x(d.date); })
-        .y(function(d) { return y(d.value); });
+        .x(function(d) { return props.xScale(d.date); })
+        .y(function(d) { return props.yScale(d.value); });
 
       var path = selection.selectAll('path')
         .data([data])
