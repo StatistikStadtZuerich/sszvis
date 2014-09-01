@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Line chart</title>
+  <link rel="stylesheet" type="text/css" href="../../sszvis.css">
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/d3-component/d3-component.js"></script>
+  <script src="../../vendor/d3-selectgroup/d3-selectgroup.js"></script>
+  <script src="../../sszvis.js"></script>
+  <script src="../../sszvis/chart/line.js"></script>
+</head>
+<body>
+  <div id="minimal-vis"></div>
+  <script>
+  (function() {
+
+    var fn = sszvis.fn;
+
+    var timeAxis = sszvis.axis.time;
+    var parseDate = sszvis.utils.parse.date;
+    var parseNumber = sszvis.utils.parse.number;
+
+    d3.csv('data.csv')
+      .row(function(d) {
+        return {
+          date:  parseDate(d['Datum']),
+          value: parseNumber(d['Wert'])
+        }
+      })
+      .get(function(error, data) {
+        error ? sszvis.error(error) : render(data);
+      });
+
+    function render(data) {
+      var bounds = sszvis.bounds({width: 700, height: 400, top: 20, right: 20, bottom: 40, left: 60});
+
+      var xScale = d3.time.scale()
+        .range([0, bounds.innerWidth])
+        .domain(d3.extent(data, fn.prop('date')));
+
+      var yScale = d3.scale.linear()
+        .range([bounds.innerHeight, 0])
+        .domain([0, d3.max(data, fn.prop('value'))]);
+
+      var lineChart = sszvis.chart.line()
+        .x(fn.prop('date'))
+        .y(fn.prop('value'))
+        .xScale(xScale)
+        .xAxis(timeAxis())
+        .yScale(yScale);
+
+      sszvis.createChart('#minimal-vis', bounds)
+        .datum([data])
+        .call(lineChart);
+    }
+
+  }());
+  </script>
+</body>
+</html>
