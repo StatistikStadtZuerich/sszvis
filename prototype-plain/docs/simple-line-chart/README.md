@@ -18,7 +18,7 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 }
 ```
 
-[Projekt herunterladen](docs/simple-line-chart/simple-line-chart.zip) (ZIP)
+[Projekt herunterladen](docs/simple-line-chart/simple-line-chart.zip) (ZIP. Nicht mehr aktuell, wird in Zukunft automatisch generiert)
 
 ### Datenformat
 
