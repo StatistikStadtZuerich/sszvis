@@ -1,19 +1,31 @@
+/* Scaffold
+----------------------------------------------- */
+
 body {
   font: 10px sans-serif;
 }
 
-.axis path,
-.axis line {
+
+/* Axis component
+----------------------------------------------- */
+.sszvis-Axis path,
+.sszvis-Axis line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
 }
 
-.x.axis path {
+/* Modifiers */
+.sszvis-Axis--horizontal path {
   display: none;
 }
 
-.line {
+.sszvis-Axis--vertical {}
+
+
+/* Line component
+----------------------------------------------- */
+.sszvis-Line {
   fill: none;
   stroke: steelblue;
   stroke-width: 1.5px;

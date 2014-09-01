@@ -23,7 +23,7 @@
 
         path.enter()
           .append('path')
-          .attr("class", "line")
+          .attr("class", "sszvis-Line")
 
         path
           .attr("d", line);
@@ -63,12 +63,12 @@
           .call(line);
 
         chart.selectGroup('xAxis')
-          .attr('class', 'x axis')
+          .attr('class', 'sszvis-Axis sszvis-Axis--horizontal')
           .attr('transform', sszvis.utils.translate(0, height))
           .call(xAxis);
 
         chart.selectGroup('yAxis')
-          .attr('class', 'y axis')
+          .attr('class', 'sszvis-Axis sszvis-Axis--vertical')
           .call(yAxis);
 
       });
