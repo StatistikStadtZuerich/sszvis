@@ -12,8 +12,8 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
         "docs/simple-line-chart/data.csv"
     ],
     "size": {
-        "height": 400,
-        "width": "100%"
+        "height": 442,
+        "width": 516
     }
 }
 ```
