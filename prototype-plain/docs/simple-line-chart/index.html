@@ -19,7 +19,6 @@
 
     var fn = sszvis.fn;
 
-    var timeAxis = sszvis.axis.time;
     var parseDate = sszvis.utils.parse.date;
     var parseNumber = sszvis.utils.parse.number;
 
@@ -35,7 +34,7 @@
       });
 
     function render(data) {
-      var bounds = sszvis.bounds({width: 700, height: 400, top: 20, right: 20, bottom: 40, left: 60});
+      var bounds = sszvis.bounds({width: 516, height: 442, top: 20, right: 0, bottom: 40, left: 0});
 
       var xScale = d3.time.scale()
         .range([0, bounds.innerWidth])
@@ -49,7 +48,7 @@
         .x(fn.prop('date'))
         .y(fn.prop('value'))
         .xScale(xScale)
-        .xAxis(timeAxis())
+        .xAxis(sszvis.axis.x.time())
         .yScale(yScale);
 
       sszvis.createChart('#minimal-vis', bounds)

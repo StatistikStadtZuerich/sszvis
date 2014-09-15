@@ -1,26 +1,29 @@
-/* Scaffold
------------------------------------------------ */
-
-body {
-  font: 10px sans-serif;
-}
-
-
 /* Axis component
 ----------------------------------------------- */
+
+.sszvis-Axis text {
+  fill: #B8B8B8;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: normal;
+}
+
 .sszvis-Axis path,
 .sszvis-Axis line {
   fill: none;
-  stroke: #000;
+  stroke: #B8B8B8;
   shape-rendering: crispEdges;
 }
 
 /* Modifiers */
-.sszvis-Axis--horizontal path {
-  display: none;
+.sszvis-Axis--horizontal line {
+  transform: translateY(3px);
 }
 
-.sszvis-Axis--vertical {}
+.sszvis-Axis--vertical path {
+  display: none;
+}
 
 
 /* Line component

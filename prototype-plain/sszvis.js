@@ -159,6 +159,11 @@
 
   /*--------------------------------------------------------------------------*/
 
+  /**
+   * Axis components
+   *
+   * @see https://github.com/mbostock/d3/wiki/SVG-Axes
+   */
   sszvis.axis = (function() {
 
     var axisTimeFormat = d3.time.format.multi([
@@ -172,12 +177,35 @@
       ["%Y", function() { return true; }]
     ]);
 
-    return {
-      time: function() {
-        return d3.svg.axis()
-          .tickFormat(axisTimeFormat);
-      }
+    var axis = d3.svg.axis;
+
+    axis.x = function() {
+      return axis()
+        .ticks(4)
+        .tickSize(4, 7)
+        .tickPadding(7)
+        .tickFormat(sszvis.utils.format.number)
+    };
+
+    axis.x.time = function() {
+      return axis.x().tickFormat(axisTimeFormat);
     }
+
+    axis.y = function() {
+      return axis()
+        .ticks(7)
+        .tickSize(0, 0)
+        .tickPadding(0)
+        .tickFormat(function(d) {
+          return 0 === d ? null : sszvis.utils.format.number(d);
+        });
+    }
+
+    axis.y.time = function() {
+      return axis.y().tickFormat(axisTimeFormat);
+    }
+
+    return axis;
 
   }());
 

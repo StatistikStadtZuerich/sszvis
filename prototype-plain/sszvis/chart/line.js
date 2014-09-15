@@ -11,8 +11,8 @@
       .prop('y')
       .prop('xScale')
       .prop('yScale')
-      .prop('xAxis', d3.svg.axis().tickFormat(sszvis.utils.format.number))
-      .prop('yAxis', d3.svg.axis().tickFormat(sszvis.utils.format.number))
+      .prop('xAxis', sszvis.axis.x())
+      .prop('yAxis', sszvis.axis.y())
       .render(function(data) {
         var chart = d3.select(this);
         var props = chart.props();
@@ -25,7 +25,7 @@
           .yScale(props.yScale);
 
         var xAxis = props.xAxis.scale(props.xScale).orient('bottom');
-        var yAxis = props.yAxis.scale(props.yScale).orient('left');
+        var yAxis = props.yAxis.scale(props.yScale).orient('right');
 
         chart.selectGroup('line')
           .call(line);
