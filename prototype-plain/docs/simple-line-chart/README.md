@@ -4,7 +4,7 @@
 
 Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung eines Wertes darzustellen.
 
-```specimen-project
+```project
 {
     "index": "docs/simple-line-chart/index.html",
     "readme": "docs/simple-line-chart/README.md",
