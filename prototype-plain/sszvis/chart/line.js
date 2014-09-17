@@ -1,4 +1,4 @@
-;(function() {
+;(function(d3, sszvis) {
   "use strict";
 
   // Namespace
@@ -43,4 +43,4 @@
 
   }
 
-}());
+}(d3, sszvis));

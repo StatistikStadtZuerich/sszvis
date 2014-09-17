@@ -1,4 +1,4 @@
-(function() {
+(function(d3) {
 
   var localizedFormat = d3.locale({
     "decimal": ".",
@@ -17,4 +17,4 @@
   d3.format = localizedFormat.numberFormat
   d3.time.format = localizedFormat.timeFormat
 
-}());
+}(d3));

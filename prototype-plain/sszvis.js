@@ -1,4 +1,4 @@
-;(function() {
+;(function(global, d3) {
   "use strict";
 
   // Namespace
@@ -294,5 +294,5 @@
 
 
   // Export library
-  window.sszvis = sszvis;
-}()); // EOF
+  global.sszvis = sszvis;
+}(window, d3)); // EOF
