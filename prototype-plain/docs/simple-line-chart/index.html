@@ -12,7 +12,7 @@
   <script src="../../sszvis.js"></script>
   <script src="../../sszvis/chart/line.js"></script>
 </head>
-<body>
+<body style="margin:0;padding:0;">
   <div id="minimal-vis"></div>
   <script>
   (function() {
@@ -34,7 +34,7 @@
       });
 
     function render(data) {
-      var bounds = sszvis.bounds({width: 516, height: 442, top: 20, right: 0, bottom: 40, left: 0});
+      var bounds = sszvis.bounds({width: 516, height: 442, top: 20, right: 1, bottom: 40, left: 1});
 
       var xScale = d3.time.scale()
         .range([0, bounds.innerWidth])

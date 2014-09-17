@@ -1,4 +1,4 @@
-;(function() {
+(function() {
 
   var localizedFormat = d3.locale({
     "decimal": ".",

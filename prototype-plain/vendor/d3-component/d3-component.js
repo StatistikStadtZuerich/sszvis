@@ -1,4 +1,4 @@
-;(function() {
+(function() {
 
   d3.component = function(def) {
     var props = {};
@@ -11,9 +11,9 @@
       });
     }
 
-    component.prop = function(prop, value, setter) {
-      component[prop] = accessor(props, prop, setter).bind(component);
-      component[prop](value);
+    component.prop = function(prop, setter) {
+      setter || (setter = identity);
+      component[prop] = accessor(props, prop, setter.bind(component)).bind(component);
       return component;
     }
 
@@ -40,16 +40,20 @@
   }
 
   function accessor(props, attr, setter) {
-    setter || (setter = identity);
-    return function(val) {
+    return function() {
       if (!arguments.length) return props[attr];
-      props[attr] = setter(val, props[attr]);
+
+      props[attr] = setter.apply(setter, slice(arguments));
       return this;
     }
   }
 
   function identity(d) {
     return d;
+  }
+
+  function slice(array) {
+    return Array.prototype.slice.call(array);
   }
 
   function clone(obj) {

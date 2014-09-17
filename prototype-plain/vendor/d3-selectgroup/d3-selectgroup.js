@@ -1,4 +1,4 @@
-;(function() {
+(function() {
 
   d3.selection.prototype.selectGroup = function(key) {
     var group = this.selectAll('[data-d3-selectgroup="' + key + '"]')

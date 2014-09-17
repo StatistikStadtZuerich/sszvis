@@ -11,8 +11,8 @@
       .prop('y')
       .prop('xScale')
       .prop('yScale')
-      .prop('xAxis', sszvis.axis.x())
-      .prop('yAxis', sszvis.axis.y())
+      .prop('xAxis').xAxis(sszvis.axis.x())
+      .prop('yAxis').yAxis(sszvis.axis.y())
       .render(function(data) {
         var chart = d3.select(this);
         var props = chart.props();

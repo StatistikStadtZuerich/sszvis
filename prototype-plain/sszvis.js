@@ -162,6 +162,7 @@
   /**
    * Axis components
    *
+   * @namespace axis
    * @see https://github.com/mbostock/d3/wiki/SVG-Axes
    */
   sszvis.axis = (function() {
@@ -177,21 +178,58 @@
       ["%Y", function() { return true; }]
     ]);
 
-    var axis = d3.svg.axis;
 
-    axis.x = function() {
+    var axis = function() {
+      var axisDelegate = d3.svg.axis();
+
+      return d3.component()
+        .prop('scale').scale(axisDelegate.scale())
+        .prop('orient').orient(axisDelegate.orient())
+        .prop('ticks').ticks(axisDelegate.ticks())
+        .prop('tickValues').tickValues(axisDelegate.tickValues())
+        .prop('tickSize', function(inner, outer) {
+          if (!arguments.length) return this.innerTickSize();
+          this.innerTickSize(inner);
+          this.outerTickSize(outer);
+          return inner;
+        })
+        .prop('innerTickSize').innerTickSize(axisDelegate.innerTickSize())
+        .prop('outerTickSize').outerTickSize(axisDelegate.outerTickSize())
+        .prop('tickPadding').tickPadding(axisDelegate.tickPadding())
+        .prop('tickFormat').tickFormat(axisDelegate.tickFormat())
+        .render(function() {
+          var selection = d3.select(this);
+          var props = selection.props();
+
+          axisDelegate
+            .scale(props.scale)
+            .orient(props.orient)
+            .ticks(props.ticks)
+            .tickValues(props.tickValues)
+            .innerTickSize(props.innerTickSize)
+            .outerTickSize(props.outerTickSize)
+            .tickPadding(props.tickPadding)
+            .tickFormat(props.tickFormat)
+
+          selection.selectGroup('sszvis-Axis-Wrapper')
+            .attr('transform', translate(0, 2))
+            .call(axisDelegate)
+        });
+    }
+
+    var axis_x = function() {
       return axis()
-        .ticks(4)
+        .ticks(3)
         .tickSize(4, 7)
         .tickPadding(7)
         .tickFormat(sszvis.utils.format.number)
     };
 
-    axis.x.time = function() {
-      return axis.x().tickFormat(axisTimeFormat);
+    axis_x.time = function() {
+      return axis_x().tickFormat(axisTimeFormat);
     }
 
-    axis.y = function() {
+    var axis_y = function() {
       return axis()
         .ticks(7)
         .tickSize(0, 0)
@@ -201,11 +239,14 @@
         });
     }
 
-    axis.y.time = function() {
-      return axis.y().tickFormat(axisTimeFormat);
+    axis_y.time = function() {
+      return axis_y().tickFormat(axisTimeFormat);
     }
 
-    return axis;
+    return {
+      x: axis_x,
+      y: axis_y
+    }
 
   }());
 
