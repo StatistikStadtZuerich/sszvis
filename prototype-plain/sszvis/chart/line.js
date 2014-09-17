@@ -1,10 +1,7 @@
-;(function(d3, sszvis) {
+;(function(d3, sszvis, exports) {
   "use strict";
 
-  // Namespace
-  sszvis.chart || (sszvis.chart = {});
-
-  sszvis.chart.line = function() {
+  exports.line = function() {
 
     return d3.component()
       .prop('x')
@@ -32,7 +29,7 @@
 
         chart.selectGroup('xAxis')
           .attr('class', 'sszvis-Axis sszvis-Axis--horizontal')
-          .attr('transform', sszvis.utils.translate(0, height))
+          .attr('transform', 'translate(0,' + height + ')')
           .call(xAxis);
 
         chart.selectGroup('yAxis')
@@ -43,4 +40,4 @@
 
   }
 
-}(d3, sszvis));
+}(d3, sszvis, (sszvis.chart || (sszvis.chart = {}))));

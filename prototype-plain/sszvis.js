@@ -1,143 +1,28 @@
 ;(function(global, d3) {
   "use strict";
 
-  // Namespace
-  var sszvis = {
+  /**
+   * The root of the sszvis library
+   *
+   * @namespace
+   * @module sszvis
+   */
+  var exports = global.sszvis = {
     version: "0.1.0"
   };
 
 
   /**
-   * fn - a collection of functional helpers
-   */
-  var fn = {
-    clone: function(obj) {
-      var copy = {};
-      for (var attr in obj) {
-        if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
-      }
-      return copy;
-    },
-
-    either: function(val, fallback) {
-      return (typeof val === "undefined") ? fallback : val;
-    },
-
-    has: function(obj, key) {
-      return obj ? Object.hasOwnProperty.call(obj, key) : false;
-    },
-
-    identity: function(value) {
-      return value;
-    },
-
-    partial: function(func, var_args) {
-      var argsArr = fn.slice(arguments, 1);
-      return function(){
-        return func.apply(this, argsArr.concat(fn.slice(arguments)));
-      };
-    },
-
-    prop: function(key) {
-      return function(object) {
-        return object[key];
-      }
-    },
-
-    slice: function(array, start, end) {
-      start || (start = 0);
-      if (typeof end == 'undefined') {
-        end = array ? array.length : 0;
-      }
-      var index = -1;
-      var length = end - start || 0;
-      var result = Array(length < 0 ? 0 : length);
-      while (++index < length) {
-        result[index] = array[start + index];
-      }
-      return result;
-    }
-  }
-  sszvis.fn = fn;
-
-
-  /*- UTILS ------------------------------------------------------------------*/
-
-  sszvis.utils = {};
-
-  var accessor = function(props, attr, setter) {
-    setter || (setter = f.identity);
-    return function(val) {
-      if (!arguments.length) return props[attr];
-      props[attr] = setter(val, props[attr]);
-      return this;
-    }
-  }
-  sszvis.utils.accessor = accessor;
-
-
-  var format = {
-    number: function(d) {
-      if (d >= 1e4) {
-        return d3.format(',.2r')(d);
-      } else if (d === 0) {
-        return 0;
-      } else {
-        return d3.format('.2r')(d);
-      }
-    }
-  }
-  sszvis.utils.format = format;
-
-
-  var parse = {
-    date: function(d) {
-      return d3.time.format("%d.%m.%Y").parse(d);
-    },
-    number: function(d) {
-      return (d.trim() === '') ? NaN : +d;
-    }
-  }
-  sszvis.utils.parse = parse;
-
-
-  var translate = function(x, y) {
-    return 'translate(' + x + ', ' + y + ')';
-  }
-  sszvis.utils.translate = translate;
-
-
-  /*--------------------------------------------------------------------------*/
-
-
-  /**
-   * Factory that returns a selection appended to
-   * the given target selector.
+   * Creates a bounds object to help with the construction of d3 charts
+   * that follow the d3 margin convention.
    *
-   * @param {string|d3.selection} selector
-   * @param {d3.bounds} bounds
+   * @module sszvis/bounds
+   * @see http://bl.ocks.org/mbostock/3019563
    *
-   * @returns {d3.selection}
+   * @param  {Object} bounds
+   * @return {Object}
    */
-  sszvis.createChart = function(selector, bounds) {
-    var root = d3.select(selector);
-    var svg = root.selectAll('svg').data([0]);
-    svg.enter().append('svg');
-
-    svg
-      .attr('height', bounds.height)
-      .attr('width',  bounds.width)
-
-    var viewport = svg.selectAll('[data-d3-chart]').data([0])
-    viewport.enter().append('g')
-      .attr('data-d3-chart', '')
-      .attr('transform', translate(bounds.padding.left, bounds.padding.right));
-
-    return viewport;
-  }
-
-
-  sszvis.bounds = function(bounds) {
+  exports.bounds = function(bounds) {
     var height  = fn.either(bounds.height, 100);
     var width   = fn.either(bounds.width, 100);
     var padding = {
@@ -157,15 +42,154 @@
   }
 
 
-  /*--------------------------------------------------------------------------*/
+  /**
+   * Factory that returns an SVG element appended to the given target selector,
+   * ensuring that it is only created once, even when run again.
+   *
+   * @module sszvis/createChart
+   *
+   * @param {string|d3.selection} selector
+   * @param {d3.bounds} bounds
+   *
+   * @returns {d3.selection}
+   */
+  exports.createChart = function(selector, bounds) {
+    var root = d3.select(selector);
+    var svg = root.selectAll('svg').data([0]);
+    svg.enter().append('svg');
+
+    svg
+      .attr('height', bounds.height)
+      .attr('width',  bounds.width)
+
+    var viewport = svg.selectAll('[data-d3-chart]').data([0])
+    viewport.enter().append('g')
+      .attr('data-d3-chart', '')
+      .attr('transform', 'translate(' + bounds.padding.left + ',' + bounds.padding.right + ')');
+
+    return viewport;
+  }
+
 
   /**
-   * Axis components
+   * A collection of functional helper functions
    *
-   * @namespace axis
-   * @see https://github.com/mbostock/d3/wiki/SVG-Axes
+   * @module sszvis/fn
    */
-  sszvis.axis = (function() {
+  var fn = exports.fn = (function() {
+    return {
+      /**
+       * Shallow cloning of objects
+       *
+       * @param  {Object} obj
+       * @return {Object} Shallow clone of obj
+       */
+      clone: function(obj) {
+        var copy = {};
+        for (var attr in obj) {
+          if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+        }
+        return copy;
+      },
+
+      either: function(val, fallback) {
+        return (typeof val === "undefined") ? fallback : val;
+      },
+
+      identity: function(value) {
+        return value;
+      },
+
+      partial: function(func, var_args) {
+        var argsArr = fn.slice(arguments, 1);
+        return function(){
+          return func.apply(this, argsArr.concat(fn.slice(arguments)));
+        };
+      },
+
+      prop: function(key) {
+        return function(object) {
+          return object[key];
+        }
+      },
+
+      slice: function(array, start, end) {
+        start || (start = 0);
+        if (typeof end == 'undefined') {
+          end = array ? array.length : 0;
+        }
+        var index = -1;
+        var length = end - start || 0;
+        var result = Array(length < 0 ? 0 : length);
+        while (++index < length) {
+          result[index] = array[start + index];
+        }
+        return result;
+      }
+    }
+  }());
+
+
+  /**
+   * Formatting functions
+   *
+   * @module sszvis/format
+   */
+  var format = exports.format = (function() {
+    return {
+      /**
+       * Format numbers according to the sszvis style guide
+       * @param  {Number} d
+       * @return {String} Fully formatted number
+       */
+      number: function(d) {
+        if (d >= 1e4) {
+          return d3.format(',.2r')(d);
+        } else if (d === 0) {
+          return 0;
+        } else {
+          return d3.format('.2r')(d);
+        }
+      }
+    }
+  }());
+
+
+  /**
+   * Parsing functions
+   *
+   * @module sszvis/parse
+   */
+  var parse = exports.parse = (function() {
+    return {
+      /**
+       * Parse Swiss date strings
+       * @param  {String} d A Swiss date string, e.g. 17.08.2014
+       * @return {Date}
+       */
+      date: function(d) {
+        return d3.time.format("%d.%m.%Y").parse(d);
+      },
+
+      /**
+       * Parse untyped input
+       * @param  {String} d A value that could be a number
+       * @return {Number}   If d is not a number, NaN is returned
+       */
+      number: function(d) {
+        return (d.trim() === '') ? NaN : +d;
+      }
+    }
+  }());
+
+
+  /**
+   * Axis component based on the d3.axis interface
+   *
+   * @see https://github.com/mbostock/d3/wiki/SVG-Axes
+   * @module sszvis/axis
+   */
+  exports.axis = (function() {
 
     var axisTimeFormat = d3.time.format.multi([
       [".%L", function(d) { return d.getMilliseconds(); }],
@@ -177,7 +201,6 @@
       ["%B", function(d) { return d.getMonth(); }],
       ["%Y", function() { return true; }]
     ]);
-
 
     var axis = function() {
       var axisDelegate = d3.svg.axis();
@@ -212,7 +235,7 @@
             .tickFormat(props.tickFormat)
 
           selection.selectGroup('sszvis-Axis-Wrapper')
-            .attr('transform', translate(0, 2))
+            .attr('transform', 'translate(0, 2)')
             .call(axisDelegate)
         });
     }
@@ -222,7 +245,7 @@
         .ticks(3)
         .tickSize(4, 7)
         .tickPadding(7)
-        .tickFormat(sszvis.utils.format.number)
+        .tickFormat(exports.format.number)
     };
 
     axis_x.time = function() {
@@ -235,7 +258,7 @@
         .tickSize(0, 0)
         .tickPadding(0)
         .tickFormat(function(d) {
-          return 0 === d ? null : sszvis.utils.format.number(d);
+          return 0 === d ? null : exports.format.number(d);
         });
     }
 
@@ -251,48 +274,46 @@
   }());
 
 
-  /*--------------------------------------------------------------------------*/
+  /**
+   * Ready-made components
+   *
+   * @module sszvis/component
+   */
+  var component = exports.component = (function(module) {
 
+    /**
+     * Line component
+     * @return {d3.component}
+     */
+    module.line = function() {
+      return d3.component()
+        .prop('x')
+        .prop('y')
+        .prop('xScale')
+        .prop('yScale')
+        .render(function(data) {
+          var selection = d3.select(this);
+          var props = selection.props();
 
-  sszvis.component = {};
+          var line = d3.svg.line()
+            .defined(function(d) { return !isNaN(props.y(d)); })
+            .x(function(d) { return props.xScale(props.x(d)); })
+            .y(function(d) { return props.yScale(props.y(d)); })
 
-  sszvis.component.line = function() {
-    return d3.component()
-      .prop('x')
-      .prop('y')
-      .prop('xScale')
-      .prop('yScale')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+          var path = selection.selectAll('path')
+            .data(data)
 
-        var line = d3.svg.line()
-          .defined(function(d) { return !isNaN(props.y(d)); })
-          .x(function(d) { return props.xScale(props.x(d)); })
-          .y(function(d) { return props.yScale(props.y(d)); })
+          path.enter()
+            .append('path')
+            .attr("class", "sszvis-Line")
 
-        var path = selection.selectAll('path')
-          .data(data)
+          path
+            .attr("d", line);
 
-        path.enter()
-          .append('path')
-          .attr("class", "sszvis-Line")
+        });
+    }
 
-        path
-          .attr("d", line);
+    return module;
+  }({}));
 
-      });
-  }
-
-
-  /*--------------------------------------------------------------------------*/
-
-
-  sszvis.error = function(msg) {
-    alert(msg); // Do something smart here
-  };
-
-
-  // Export library
-  global.sszvis = sszvis;
-}(window, d3)); // EOF
+}(window, d3));
