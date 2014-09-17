@@ -38,7 +38,7 @@
     function component(selection) {
       selection.each(function() {
         this.__props__ = clone(props);
-        renderer.apply(this, Array.prototype.slice.call(arguments));
+        renderer.apply(this, slice(arguments));
       });
     }
 

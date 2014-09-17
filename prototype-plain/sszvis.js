@@ -78,20 +78,6 @@
    */
   var fn = exports.fn = (function() {
     return {
-      /**
-       * Shallow cloning of objects
-       *
-       * @param  {Object} obj
-       * @return {Object} Shallow clone of obj
-       */
-      clone: function(obj) {
-        var copy = {};
-        for (var attr in obj) {
-          if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
-        }
-        return copy;
-      },
-
       either: function(val, fallback) {
         return (typeof val === "undefined") ? fallback : val;
       },
@@ -101,9 +87,9 @@
       },
 
       partial: function(func, var_args) {
-        var argsArr = fn.slice(arguments, 1);
+        var argsArr = Array.prototype.slice.call(arguments, 1);
         return function(){
-          return func.apply(this, argsArr.concat(fn.slice(arguments)));
+          return func.apply(this, argsArr.concat(Array.prototype.slice.call(arguments)));
         };
       },
 
@@ -111,20 +97,6 @@
         return function(object) {
           return object[key];
         }
-      },
-
-      slice: function(array, start, end) {
-        start || (start = 0);
-        if (typeof end == 'undefined') {
-          end = array ? array.length : 0;
-        }
-        var index = -1;
-        var length = end - start || 0;
-        var result = Array(length < 0 ? 0 : length);
-        while (++index < length) {
-          result[index] = array[start + index];
-        }
-        return result;
       }
     }
   }());
