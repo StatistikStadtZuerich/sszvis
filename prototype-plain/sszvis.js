@@ -65,7 +65,7 @@
     var viewport = svg.selectAll('[data-d3-chart]').data([0])
     viewport.enter().append('g')
       .attr('data-d3-chart', '')
-      .attr('transform', 'translate(' + bounds.padding.left + ',' + bounds.padding.right + ')');
+      .attr('transform', 'translate(' + bounds.padding.left + ',' + bounds.padding.top + ')');
 
     return viewport;
   }
@@ -97,6 +97,17 @@
         return function(object) {
           return object[key];
         }
+      },
+
+      compose: function() {
+        var fns = arguments,
+            start = arguments.length - 1;
+        return function() {
+          var i = start;
+          var result = fns[i].apply(this, arguments);
+          while (i--) result = fns[i].call(this, result);
+          return result;
+        };
       }
     }
   }());
@@ -109,6 +120,14 @@
    */
   var format = exports.format = (function() {
     return {
+      /**
+       * Default formatter for text
+       * @param  {Number} d
+       * @return {String}   Fully formatted text
+       */
+      text: function(d) {
+        return String(d);
+      },
       /**
        * Format numbers according to the sszvis style guide
        * @param  {Number} d
@@ -224,6 +243,10 @@
       return axis_x().tickFormat(axisTimeFormat);
     }
 
+    axis_x.ordinal = function() {
+      return axis_x().tickFormat(exports.format.text);
+    }
+
     var axis_y = function() {
       return axis()
         .ticks(7)
@@ -282,6 +305,35 @@
           path
             .attr("d", line);
 
+        });
+    }
+
+    module.bar = function() {
+      return d3.component()
+        .prop('x')
+        .prop('y')
+        .prop('width')
+        .prop('height')
+        .render(function(data) {
+          var selection = d3.select(this);
+          var props = selection.props();
+
+          var bars = selection.selectAll('rect')
+            .data(data);
+
+          bars.enter()
+            .append('rect')
+            .attr('class', 'sszvis-Bar');
+
+          bars
+            .attr('x', props.x)
+            .attr('y', props.y)
+            .attr('width', props.width)
+            .attr('height', props.height)
+            .attr('data-test', function(d) {
+              console.log(d);
+              return d.category;
+            });
         });
     }
 

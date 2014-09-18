@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vertical Bar Chart</title>
+
+  <link href='../../sszvis.css' rel='stylesheet' />
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/d3-de/d3-de.js"></script>
+  <script src="../../vendor/d3-component/d3-component.js"></script>
+  <script src="../../vendor/d3-selectgroup/d3-selectgroup.js"></script>
+  <script src="../../sszvis.js"></script>
+  <script src="../../sszvis/chart/verticalBar.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+<div id="minimal-vis"></div>
+<script>
+(function() {
+
+  var fn = sszvis.fn;
+
+  var parseNumber = sszvis.parse.number;
+
+  d3.csv('data.csv')
+    .row(function(d) {
+      return {
+        category: d['Altersklasse'],
+        value: parseNumber(d['Anzahl'])
+      }
+    })
+    .get(function(error, data) {
+      error ? sszvis.error(error) : render(data)
+    });
+
+  function render(data) {
+    var bounds = sszvis.bounds({width: 516, height: 442, top: 20, right: 1, bottom: 40, left: 1});
+
+    var xScale = d3.scale.ordinal()
+      .rangeBands([0, bounds.innerWidth], 0.55, 0.3)
+      .domain(data.map(fn.prop('category')));
+
+    var heightScale = d3.scale.linear()
+      .range([0, bounds.innerHeight])
+      .domain([0, d3.max(data, fn.prop('value'))]);
+
+    var verticalBarChart = sszvis.chart.verticalBar()
+      .x(fn.prop('category'))
+      .y(fn.prop('value'))
+      .xScale(xScale)
+      .xAxis(sszvis.axis.x.ordinal())
+      .heightScale(heightScale)
+      .yAxis(sszvis.axis.y());
+
+    sszvis.createChart('#minimal-vis', bounds)
+      .datum(data)
+      .call(verticalBarChart);
+  }
+
+}());
+</script>
+</body>
+</html>
