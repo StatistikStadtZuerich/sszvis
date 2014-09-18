@@ -51,10 +51,12 @@
         }
       })
       .get(function(error, data) {
+        if (error) {
+          console.error(error);
+          return
+        }
         state.data = data;
-        state.currentDate = d3.max(data.map(fn.prop('date')))
-
-        error ? console.error(error) : render(state);
+        actions.resetDate();
       });
 
     function render(state) {
