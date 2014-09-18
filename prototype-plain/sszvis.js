@@ -77,7 +77,24 @@
    * @module sszvis/fn
    */
   var fn = exports.fn = (function() {
+    var slice = function(list) {
+      var slice = Array.prototype.slice;
+      return slice.apply(list, slice.call(arguments, 1));
+    }
+
     return {
+      defined: function(val) {
+        return typeof val !== 'undefined';
+      },
+
+      find: function(predicate, list) {
+        var idx = -1;
+        var len = list.length;
+        while (++idx < len) {
+          if (predicate(list[idx])) return list[idx];
+        }
+      },
+
       either: function(val, fallback) {
         return (typeof val === "undefined") ? fallback : val;
       },
@@ -87,9 +104,9 @@
       },
 
       partial: function(func, var_args) {
-        var argsArr = Array.prototype.slice.call(arguments, 1);
+        var argsArr = slice(arguments, 1);
         return function(){
-          return func.apply(this, argsArr.concat(Array.prototype.slice.call(arguments)));
+          return func.apply(this, argsArr.concat(slice(arguments)));
         };
       },
 
@@ -276,6 +293,37 @@
    */
   var component = exports.component = (function(module) {
 
+    module.interactiveLayer = function() {
+      return d3.component()
+        .prop('x')
+        .prop('y')
+        .prop('width')
+        .prop('height')
+        .prop('mousemove').mousemove(fn.identity)
+        .prop('mouseout').mouseout(fn.identity)
+        .render(function(data) {
+          var selection = d3.select(this);
+          var props = selection.props();
+
+          var layer = selection.selectAll('.sszvis-InteractiveLayer')
+            .data([0]);
+
+          layer.enter()
+            .append('rect')
+            .attr('class', 'sszvis-InteractiveLayer');
+
+          layer
+            .attr('x', props.x).attr('width',  props.width)
+            .attr('y', props.y).attr('height', props.height)
+            .attr('fill', 'transparent')
+            .on('mousemove', function() {
+              var xy = d3.mouse(this), x = xy[0], y = xy[1];
+              props.mousemove(x, y);
+            })
+            .on('mouseout', props.mouseout);
+        });
+    }
+
     /**
      * Line component
      * @return {d3.component}
@@ -338,6 +386,42 @@
     }
 
     return module;
+  }({}));
+
+
+  var mark = exports.mark = (function(module){
+
+    module.dot = function() {
+      return d3.component()
+        .prop('x').x(fn.identity)
+        .prop('y').y(fn.identity)
+        .prop('xScale')
+        .prop('yScale')
+        .render(function(data) {
+          var selection = d3.select(this);
+          var props = selection.props();
+
+          var dot = selection.selectAll('circle')
+            .data(data, function(d){ return props.x(d) + '_' + props.y(d)});
+
+          dot.enter()
+            .append('circle');
+
+          dot
+            .attr('cx', function(d){return props.xScale(props.x(d))})
+            .attr('cy', function(d){return props.yScale(props.y(d))})
+            .attr('r', 3.5)
+            .attr('fill', '#6392C5')
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 1.5);
+
+          dot.exit().remove();
+
+        });
+    }
+
+    return module;
+
   }({}));
 
 }(window, d3));

@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Line chart</title>
+  <link rel="stylesheet" type="text/css" href="../../sszvis.css">
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/d3-de/d3-de.js"></script>
+  <script src="../../vendor/d3-component/d3-component.js"></script>
+  <script src="../../vendor/d3-selectgroup/d3-selectgroup.js"></script>
+  <script src="../../sszvis.js"></script>
+  <script src="../../sszvis/chart/line.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+  <div id="minimal-vis"></div>
+  <script>
+  (function() {
+
+    var fn = sszvis.fn;
+
+    var state = {
+      data: [],
+      selectedData: [],
+      currentDate: null
+    };
+
+    var actions = {
+      changeDate: function(date) {
+        if (state.currentDate === date) return;
+
+        state.currentDate = date;
+        state.selectedData = state.data.filter(function(d) {
+          return d.date === state.currentDate && !isNaN(d.value);
+        });
+
+        render(state);
+      },
+
+      resetDate: function() {
+        var mostRecentDate = d3.max(state.data.map(fn.prop('date')));
+        actions.changeDate(mostRecentDate);
+      }
+    };
+
+    d3.csv('data.csv')
+      .row(function(d) {
+        return {
+          date:  sszvis.parse.date(d['Datum']),
+          value: sszvis.parse.number(d['Wert'])
+        }
+      })
+      .get(function(error, data) {
+        state.data = data;
+        state.currentDate = d3.max(data.map(fn.prop('date')))
+
+        error ? console.error(error) : render(state);
+      });
+
+    function render(state) {
+      var bounds = sszvis.bounds({width: 516, height: 442, top: 20, right: 1, bottom: 40, left: 1});
+
+      var xScale = d3.time.scale()
+        .range([0, bounds.innerWidth])
+        .domain(d3.extent(state.data, fn.prop('date')));
+
+      var yScale = d3.scale.linear()
+        .range([bounds.innerHeight, 0])
+        .domain([0, d3.max(state.data, fn.prop('value'))]);
+
+      var lineChart = sszvis.chart.line()
+        .x(fn.prop('date'))
+        .y(fn.prop('value'))
+        .xScale(xScale)
+        .xAxis(sszvis.axis.x.time())
+        .yScale(yScale);
+
+      var highlightLayer = sszvis.mark.dot()
+        .x(fn.prop('date'))
+        .y(fn.prop('value'))
+        .xScale(xScale)
+        .yScale(yScale)
+
+      var interactiveLayer = sszvis.component.interactiveLayer()
+        .x(bounds.padding.left)
+        .y(0)
+        .width(bounds.innerWidth)
+        .height(bounds.height - bounds.padding.bottom)
+        .mousemove(function(x, y) {
+          var hoveredDate = xScale.invert(x);
+          var datum = closestDatum(state.data, fn.prop('date'), hoveredDate);
+          actions.changeDate(datum.date);
+        })
+        .mouseout(actions.resetDate);
+
+      var chart = sszvis.createChart('#minimal-vis', bounds);
+
+      chart.selectGroup('lineChart')
+        .datum([state.data])
+        .call(lineChart)
+
+      chart.selectGroup('highlight')
+        .datum(state.selectedData)
+        .call(highlightLayer);
+
+      chart.selectGroup('interaction')
+        .datum(state.data)
+        .call(interactiveLayer);
+    }
+
+    function closestDatum(data, accessor, datum) {
+      var i = d3.bisector(accessor).left(data, datum, 1);
+      var d0 = data[i - 1];
+      var d1 = data[i];
+      return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+    }
+
+  }());
+  </script>
+</body>
+</html>
