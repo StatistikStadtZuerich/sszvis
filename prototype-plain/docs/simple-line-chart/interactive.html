@@ -10,7 +10,6 @@
   <script src="../../vendor/d3-component/d3-component.js"></script>
   <script src="../../vendor/d3-selectgroup/d3-selectgroup.js"></script>
   <script src="../../sszvis.js"></script>
-  <script src="../../sszvis/chart/line.js"></script>
 </head>
 <body style="margin:0;padding:0;">
   <div id="minimal-vis"></div>
@@ -70,12 +69,19 @@
         .range([bounds.innerHeight, 0])
         .domain([0, d3.max(state.data, fn.prop('value'))]);
 
-      var lineChart = sszvis.chart.line()
+      var line = sszvis.component.line()
         .x(fn.prop('date'))
         .y(fn.prop('value'))
         .xScale(xScale)
-        .xAxis(sszvis.axis.x.time())
         .yScale(yScale);
+
+      var xAxis = sszvis.axis.x.time()
+        .scale(xScale)
+        .orient('bottom');
+
+      var yAxis = sszvis.axis.y()
+        .scale(yScale)
+        .orient('right');
 
       var highlightLayer = sszvis.component.verticalRuler()
         .x(fn.prop('date'))
@@ -97,9 +103,18 @@
 
       var chart = sszvis.createChart('#minimal-vis', bounds);
 
-      chart.selectGroup('lineChart')
-        .datum([state.data])
-        .call(lineChart)
+      var lineChart = chart.selectGroup('lineChart')
+        .datum([state.data]);
+
+      lineChart.selectGroup('line')
+        .call(line);
+
+      lineChart.selectGroup('xAxis')
+        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .call(xAxis);
+
+      lineChart.selectGroup('yAxis')
+        .call(yAxis);
 
       chart.selectGroup('highlight')
         .datum(state.selectedData)
