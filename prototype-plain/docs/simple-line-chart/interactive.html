@@ -77,7 +77,7 @@
         .xAxis(sszvis.axis.x.time())
         .yScale(yScale);
 
-      var highlightLayer = sszvis.mark.dot()
+      var highlightLayer = sszvis.component.verticalRuler()
         .x(fn.prop('date'))
         .y(fn.prop('value'))
         .xScale(xScale)
@@ -106,7 +106,6 @@
         .call(highlightLayer);
 
       chart.selectGroup('interaction')
-        .datum(state.data)
         .call(interactiveLayer);
     }
 

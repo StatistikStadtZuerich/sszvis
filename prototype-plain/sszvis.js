@@ -410,13 +410,7 @@
         });
     }
 
-    return module;
-  }({}));
-
-
-  var mark = exports.mark = (function(module){
-
-    module.dot = function() {
+    module.verticalRuler = function() {
       return d3.component()
         .prop('x').x(fn.identity)
         .prop('y').y(fn.identity)
@@ -426,6 +420,28 @@
           var selection = d3.select(this);
           var props = selection.props();
 
+          var maxDatum = d3.max(data.map(fn.compose(props.xScale, props.x)));
+
+          var x = fn.compose(props.xScale, props.x);
+          var y = fn.compose(props.yScale, props.y);
+          var baseline = d3.max(props.yScale.range());
+
+          var ruler = selection.selectAll('line')
+            .data(data);
+
+          ruler.enter()
+            .append('line')
+
+          ruler
+            .attr('x1', x) // sub -0.5
+            .attr('y1', y)
+            .attr('x2', x) // sub -0.5
+            .attr('y2', baseline)
+            .attr('stroke', '#B8B8B8')
+            .attr('shape-rendering', 'crispEdges')
+
+          ruler.exit().remove();
+
           var dot = selection.selectAll('circle')
             .data(data, function(d){ return props.x(d) + '_' + props.y(d)});
 
@@ -433,8 +449,8 @@
             .append('circle');
 
           dot
-            .attr('cx', fn.compose(props.xScale, props.x))
-            .attr('cy', fn.compose(props.yScale, props.y))
+            .attr('cx', x)
+            .attr('cy', y)
             .attr('r', 3.5)
             .attr('fill', '#6392C5')
             .attr('stroke', '#fff')
@@ -446,7 +462,7 @@
     }
 
     return module;
-
   }({}));
+
 
 }(window, d3));
