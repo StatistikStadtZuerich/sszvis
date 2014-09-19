@@ -377,11 +377,7 @@
             .attr('x', props.x)
             .attr('y', props.y)
             .attr('width', props.width)
-            .attr('height', props.height)
-            .attr('data-test', function(d) {
-              console.log(d);
-              return d.category;
-            });
+            .attr('height', props.height);
         });
     }
 

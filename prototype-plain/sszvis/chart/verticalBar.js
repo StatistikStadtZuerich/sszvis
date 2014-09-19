@@ -14,15 +14,18 @@
         var chart = d3.select(this);
         var props = chart.props();
         var height = props.heightScale.range()[1];
+        var yPosScale = props.heightScale
+          .copy()
+          .range(props.heightScale.range().slice().reverse());
 
         var barGen = sszvis.component.bar()
           .x(sszvis.fn.compose(props.xScale, props.x))
-          .y(function(d) {return height - sszvis.fn.compose(props.heightScale, props.y)(d) })
+          .y(sszvis.fn.compose(yPosScale, props.y))
           .width(props.xScale.rangeBand())
           .height(sszvis.fn.compose(props.heightScale, props.y))
 
         var xAxis = props.xAxis.scale(props.xScale).orient('bottom');
-        var yAxis = props.yAxis.scale(props.heightScale).orient('right');
+        var yAxis = props.yAxis.scale(yPosScale).orient('right');
 
         chart.selectGroup('bars')
           .call(barGen)

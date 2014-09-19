@@ -33,3 +33,14 @@
   stroke: #6392C5;
   stroke-width: 1.5px;
 }
+
+
+/* Bar component
+----------------------------------------------- */
+.sszvis-Bar {
+  fill: #6392C5;
+}
+
+.sszvis-Bar:hover {
+  fill: #3A75B2;
+}
