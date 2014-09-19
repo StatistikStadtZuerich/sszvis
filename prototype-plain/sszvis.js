@@ -115,6 +115,10 @@
         return typeof val !== 'undefined';
       },
 
+      either: function(val, fallback) {
+        return (typeof val === "undefined") ? fallback : val;
+      },
+
       find: function(predicate, list) {
         var idx = -1;
         var len = list.length;
@@ -123,12 +127,12 @@
         }
       },
 
-      either: function(val, fallback) {
-        return (typeof val === "undefined") ? fallback : val;
-      },
-
       identity: function(value) {
         return value;
+      },
+
+      last: function(arr) {
+        return arr[arr.length - 1];
       },
 
       not: function (f) {
@@ -146,10 +150,6 @@
         return function(object) {
           return object[key];
         }
-      },
-
-      last: function(arr) {
-        return arr[arr.length - 1];
       }
     }
   }());
@@ -327,6 +327,40 @@
    */
   var component = exports.component = (function(module) {
 
+    /**
+     * Bar component
+     * @return {d3.component}
+     */
+    module.bar = function() {
+      return d3.component()
+        .prop('x')
+        .prop('y')
+        .prop('width')
+        .prop('height')
+        .render(function(data) {
+          var selection = d3.select(this);
+          var props = selection.props();
+
+          var bars = selection.selectAll('rect')
+            .data(data);
+
+          bars.enter()
+            .append('rect')
+            .attr('class', 'sszvis-bar');
+
+          bars
+            .attr('x', props.x)
+            .attr('y', props.y)
+            .attr('width', props.width)
+            .attr('height', props.height);
+        });
+    }
+
+
+    /**
+     * Interactive Layer component
+     * @return {d3.component}
+     */
     module.interactiveLayer = function() {
       return d3.component()
         .prop('x')
@@ -358,6 +392,7 @@
         });
     }
 
+
     /**
      * Line component
      * @return {d3.component}
@@ -387,35 +422,6 @@
           path
             .attr("d", line);
 
-        });
-    }
-
-    /**
-     * Bar component
-     * @return {d3.component}
-     */
-    module.bar = function() {
-      return d3.component()
-        .prop('x')
-        .prop('y')
-        .prop('width')
-        .prop('height')
-        .render(function(data) {
-          var selection = d3.select(this);
-          var props = selection.props();
-
-          var bars = selection.selectAll('rect')
-            .data(data);
-
-          bars.enter()
-            .append('rect')
-            .attr('class', 'sszvis-bar');
-
-          bars
-            .attr('x', props.x)
-            .attr('y', props.y)
-            .attr('width', props.width)
-            .attr('height', props.height);
         });
     }
 
