@@ -12,10 +12,9 @@
   <script src="../../vendor/d3-component/d3-component.js"></script>
   <script src="../../vendor/d3-selectgroup/d3-selectgroup.js"></script>
   <script src="../../sszvis.js"></script>
-  <script src="../../sszvis/chart/horizontalBar.js"></script>
 </head>
 <body style="margin:0;padding:0;">
-<div id="minimal-vis"></div>
+<div id="chart"></div>
 <script>
 (function() {
 
@@ -37,25 +36,38 @@
   function render(data) {
     var bounds = sszvis.bounds({width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3});
 
+    var x = fn.prop('value');
+    var y = fn.prop('category');
+
     var widthScale = d3.scale.linear()
       .range([0, bounds.innerWidth])
-      .domain([0, d3.max(data, fn.prop('value'))]);
+      .domain([0, d3.max(data, x)]);
 
     var yScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerHeight], 0.55, 0.3)
-      .domain(data.map(fn.prop('category')));
+      .domain(data.map(y));
 
-    var horizontalBarChart = sszvis.chart.horizontalBar()
-      .x(fn.prop('value'))
-      .y(fn.prop('category'))
-      .widthScale(widthScale)
-      .xAxis(sszvis.axis.x())
-      .yScale(yScale)
-      .yAxis(sszvis.axis.y.ordinal());
+    var barGen = sszvis.component.bar()
+      .x(0)
+      .y(fn.compose(yScale, y))
+      .width(fn.compose(widthScale, x))
+      .height(yScale.rangeBand());
 
-    sszvis.createChart('#minimal-vis', bounds)
-      .datum(data)
-      .call(horizontalBarChart);
+    var xAxis = sszvis.axis.x().scale(widthScale).orient('bottom');
+    var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('right');
+
+    var chart = sszvis.createChart('#chart', bounds)
+      .datum(data);
+
+    chart.selectGroup('bars')
+      .call(barGen);
+
+    chart.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    chart.selectGroup('yAxis')
+      .call(yAxis);
   }
 
 }());
