@@ -57,14 +57,14 @@
 /**
  * Vertical Ruler component
  *
- * @module sszvis/component/verticalRuler
+ * @module sszvis/component/ruler
  */
-.sszvis-verticalRuler-ruler {
+.sszvis-ruler-rule {
   shape-rendering: crispEdges;
   stroke: #B8B8B8;
 }
 
-.sszvis-verticalRuler-dot {
+.sszvis-ruler-dot {
   fill: #6392C5;
   stroke: #FFFFFF;
   stroke-width: 1.5;

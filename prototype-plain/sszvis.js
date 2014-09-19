@@ -446,10 +446,10 @@
 
 
     /**
-     * Vertical Ruler component
+     * Ruler component
      * @return {d3.component}
      */
-    module.verticalRuler = function() {
+    module.ruler = function() {
       return d3.component()
         .prop('x').x(fn.identity)
         .prop('y').y(fn.identity)
@@ -465,12 +465,12 @@
           var y = fn.compose(props.yScale, props.y);
           var baseline = d3.max(props.yScale.range());
 
-          var ruler = selection.selectAll('.sszvis-verticalRuler-ruler')
+          var ruler = selection.selectAll('.sszvis-ruler-rule')
             .data(data);
 
           ruler.enter()
             .append('line')
-            .classed('sszvis-verticalRuler-ruler', true);
+            .classed('sszvis-ruler-rule', true);
 
           ruler
             .attr('x1', x)
@@ -480,12 +480,12 @@
 
           ruler.exit().remove();
 
-          var dot = selection.selectAll('.sszvis-verticalRuler-dot')
+          var dot = selection.selectAll('.sszvis-ruler-dot')
             .data(data, function(d){ return props.x(d) + '_' + props.y(d)});
 
           dot.enter()
             .append('circle')
-            .classed('sszvis-verticalRuler-dot', true);
+            .classed('sszvis-ruler-dot', true);
 
           dot
             .attr('cx', x)
