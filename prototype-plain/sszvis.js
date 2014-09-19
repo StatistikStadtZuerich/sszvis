@@ -321,6 +321,61 @@
 
 
   /**
+   * Ready-made behaviors
+   *
+   * @module sszvis/behavior
+   */
+  var behavior = exports.behavior = (function(module) {
+
+    /**
+     * Move behavior
+     * @return {d3.component}
+     */
+    module.move = function() {
+      var event = d3.dispatch('start', 'move', 'end');
+
+      var moveComponent = d3.component()
+        .prop('xScale')
+        .prop('yScale')
+        .render(function(data) {
+          var selection = d3.select(this);
+          var props = selection.props();
+
+          var xExtent = props.xScale.range();
+          var yExtent = props.yScale.range().sort();
+
+          var layer = selection.selectAll('[data-sszvis-behavior-move]')
+            .data([0]);
+
+          layer.enter()
+            .append('rect')
+            .attr('data-sszvis-behavior-move', '');
+
+          layer
+            .attr('x', xExtent[0])
+            .attr('y', yExtent[0])
+            .attr('width',  xExtent[1] - xExtent[0])
+            .attr('height', yExtent[1] - yExtent[0])
+            .attr('fill', 'transparent')
+            .on('mouseover', event.start)
+            .on('mouseout', event.end)
+            .on('mousemove', function() {
+              var xy = d3.mouse(this);
+              event.move(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+            });
+        });
+
+      d3.rebind(moveComponent, event, 'on');
+
+      return moveComponent;
+    }
+
+    return module;
+
+  }({}));
+
+
+  /**
    * Ready-made components
    *
    * @module sszvis/component
@@ -353,42 +408,6 @@
             .attr('y', props.y)
             .attr('width', props.width)
             .attr('height', props.height);
-        });
-    }
-
-
-    /**
-     * Interactive Layer component
-     * @return {d3.component}
-     */
-    module.interactiveLayer = function() {
-      return d3.component()
-        .prop('x')
-        .prop('y')
-        .prop('width')
-        .prop('height')
-        .prop('mousemove').mousemove(fn.identity)
-        .prop('mouseout').mouseout(fn.identity)
-        .render(function(data) {
-          var selection = d3.select(this);
-          var props = selection.props();
-
-          var layer = selection.selectAll('.sszvis-InteractiveLayer')
-            .data([0]);
-
-          layer.enter()
-            .append('rect')
-            .attr('class', 'sszvis-InteractiveLayer');
-
-          layer
-            .attr('x', props.x).attr('width',  props.width)
-            .attr('y', props.y).attr('height', props.height)
-            .attr('fill', 'transparent')
-            .on('mousemove', function() {
-              var xy = d3.mouse(this), x = xy[0], y = xy[1];
-              props.mousemove(x, y);
-            })
-            .on('mouseout', props.mouseout);
         });
     }
 
