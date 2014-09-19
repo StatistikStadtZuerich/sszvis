@@ -34,3 +34,14 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 * `xAxis` – eine `d3`-Achsenfunktion
 * `yAxis` – eine `d3`-Achsenfunktion
 
+## Interaktiv
+
+```project
+{
+    "index": "docs/simple-line-chart/interactive.html",
+    "size": {
+        "height": 442,
+        "width": 516
+    }
+}
+```
