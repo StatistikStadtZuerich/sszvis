@@ -83,6 +83,17 @@
     }
 
     return {
+      compose: function() {
+        var fns = arguments,
+            start = arguments.length - 1;
+        return function() {
+          var i = start;
+          var result = fns[i].apply(this, arguments);
+          while (i--) result = fns[i].call(this, result);
+          return result;
+        };
+      },
+
       defined: function(val) {
         return typeof val !== 'undefined';
       },
@@ -114,17 +125,6 @@
         return function(object) {
           return object[key];
         }
-      },
-
-      compose: function() {
-        var fns = arguments,
-            start = arguments.length - 1;
-        return function() {
-          var i = start;
-          var result = fns[i].apply(this, arguments);
-          while (i--) result = fns[i].call(this, result);
-          return result;
-        };
       }
     }
   }());
