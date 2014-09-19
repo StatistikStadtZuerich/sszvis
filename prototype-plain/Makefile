@@ -1,9 +1,6 @@
 .PHONY: watch
 
-all: watch
-
-watch:
-	python -m SimpleHTTPServer
+all: server
 
 server:
-	browser-sync start --server --files="**/*"
+	@browser-sync start --server --files="**/*"
