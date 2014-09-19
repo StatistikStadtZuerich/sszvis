@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
-  <title>Vertical Bar Chart</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Horizontal Bar Chart</title>
 
   <link href='../../sszvis.css' rel='stylesheet' />
 
@@ -11,7 +12,7 @@
   <script src="../../vendor/d3-component/d3-component.js"></script>
   <script src="../../vendor/d3-selectgroup/d3-selectgroup.js"></script>
   <script src="../../sszvis.js"></script>
-  <script src="../../sszvis/chart/verticalBar.js"></script>
+  <script src="../../sszvis/chart/horizontalBar.js"></script>
 </head>
 <body style="margin:0;padding:0;">
 <div id="minimal-vis"></div>
@@ -22,11 +23,11 @@
 
   var parseNumber = sszvis.parse.number;
 
-  d3.csv('data/SiVB_basic.csv')
+  d3.csv('data/SHB_13Categories.csv')
     .row(function(d) {
       return {
-        category: d['Altersklasse'],
-        value: parseNumber(d['Anzahl'])
+        category: d['Sektor'],
+        value: parseNumber(d['Zupendler'])
       }
     })
     .get(function(error, data) {
@@ -36,25 +37,25 @@
   function render(data) {
     var bounds = sszvis.bounds({width: 516, height: 442, top: 20, right: 1, bottom: 40, left: 1});
 
-    var xScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerWidth], 0.55, 0.3)
-      .domain(data.map(fn.prop('category')));
-
-    var heightScale = d3.scale.linear()
-      .range([0, bounds.innerHeight])
+    var widthScale = d3.scale.linear()
+      .range([0, bounds.innerWidth])
       .domain([0, d3.max(data, fn.prop('value'))]);
 
-    var verticalBarChart = sszvis.chart.verticalBar()
-      .x(fn.prop('category'))
-      .y(fn.prop('value'))
-      .xScale(xScale)
-      .xAxis(sszvis.axis.x.ordinal())
-      .heightScale(heightScale)
-      .yAxis(sszvis.axis.y());
+    var yScale = d3.scale.ordinal()
+      .rangeBands([0, bounds.innerHeight], 0.55, 0.3)
+      .domain(data.map(fn.prop('category')));
+
+    var horizontalBarChart = sszvis.chart.horizontalBar()
+      .x(fn.prop('value'))
+      .y(fn.prop('category'))
+      .widthScale(widthScale)
+      .xAxis(sszvis.axis.x())
+      .yScale(yScale)
+      .yAxis(sszvis.axis.y.ordinal());
 
     sszvis.createChart('#minimal-vis', bounds)
       .datum(data)
-      .call(verticalBarChart);
+      .call(horizontalBarChart);
   }
 
 }());

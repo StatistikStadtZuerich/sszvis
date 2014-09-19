@@ -1,13 +1,13 @@
 # Bar Chart
 
-## Simple Vertical Bar Chart
+## Simple Horizontal Bar Chart
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/index.html",
-    "readme": "docs/simple-vertical-bar-chart/README.md",
+    "index": "docs/simple-horizontal-bar-chart/index.html",
+    "readme": "docs/simple-horizontal-bar-chart/README.md",
     "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv"
+        "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv"
     ],
     "size": {
         "height": 442,

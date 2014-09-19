@@ -125,6 +125,10 @@
         return function(object) {
           return object[key];
         }
+      },
+
+      last: function(arr) {
+        return arr[arr.length - 1];
       }
     }
   }());
@@ -276,6 +280,10 @@
 
     axis_y.time = function() {
       return axis_y().tickFormat(axisTimeFormat);
+    }
+
+    axis_y.ordinal = function() {
+      return axis_y().tickFormat(exports.format.text);
     }
 
     return {
