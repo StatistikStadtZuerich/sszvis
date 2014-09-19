@@ -28,12 +28,10 @@
           .call(line);
 
         chart.selectGroup('xAxis')
-          .attr('class', 'sszvis-Axis sszvis-Axis--horizontal')
           .attr('transform', 'translate(0,' + height + ')')
           .call(xAxis);
 
         chart.selectGroup('yAxis')
-          .attr('class', 'sszvis-Axis sszvis-Axis--vertical')
           .call(yAxis);
 
       });

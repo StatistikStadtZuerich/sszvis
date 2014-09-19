@@ -253,6 +253,7 @@
         .prop('outerTickSize').outerTickSize(axisDelegate.outerTickSize())
         .prop('tickPadding').tickPadding(axisDelegate.tickPadding())
         .prop('tickFormat').tickFormat(axisDelegate.tickFormat())
+        .prop('vertical').vertical(false)
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -267,7 +268,10 @@
             .tickPadding(props.tickPadding)
             .tickFormat(props.tickFormat)
 
-          selection.selectGroup('sszvis-Axis-Wrapper')
+          selection.selectGroup('sszvis-axis-wrapper')
+            .classed('sszvis-axis', true)
+            .classed('sszvis-axis--horizontal', !props.vertical)
+            .classed('sszvis-axis--vertical', props.vertical)
             .attr('transform', 'translate(0, 2)')
             .call(axisDelegate)
         });
@@ -296,7 +300,8 @@
         .tickPadding(0)
         .tickFormat(function(d) {
           return 0 === d ? null : exports.format.number(d);
-        });
+        })
+        .vertical(true);
     }
 
     axis_y.time = function() {
@@ -372,12 +377,12 @@
             .x(fn.compose(props.xScale, props.x))
             .y(fn.compose(props.yScale, props.y))
 
-          var path = selection.selectAll('path')
+          var path = selection.selectAll('.sszvis-line')
             .data(data)
 
           path.enter()
             .append('path')
-            .attr("class", "sszvis-Line")
+            .classed("sszvis-line", true)
 
           path
             .attr("d", line);
@@ -385,6 +390,10 @@
         });
     }
 
+    /**
+     * Bar component
+     * @return {d3.component}
+     */
     module.bar = function() {
       return d3.component()
         .prop('x')
@@ -400,7 +409,7 @@
 
           bars.enter()
             .append('rect')
-            .attr('class', 'sszvis-Bar');
+            .attr('class', 'sszvis-bar');
 
           bars
             .attr('x', props.x)
@@ -410,6 +419,11 @@
         });
     }
 
+
+    /**
+     * Vertical Ruler component
+     * @return {d3.component}
+     */
     module.verticalRuler = function() {
       return d3.component()
         .prop('x').x(fn.identity)
@@ -426,35 +440,32 @@
           var y = fn.compose(props.yScale, props.y);
           var baseline = d3.max(props.yScale.range());
 
-          var ruler = selection.selectAll('line')
+          var ruler = selection.selectAll('.sszvis-verticalRuler-ruler')
             .data(data);
 
           ruler.enter()
             .append('line')
+            .classed('sszvis-verticalRuler-ruler', true);
 
           ruler
-            .attr('x1', x) // sub -0.5
+            .attr('x1', x)
             .attr('y1', y)
-            .attr('x2', x) // sub -0.5
+            .attr('x2', x)
             .attr('y2', baseline)
-            .attr('stroke', '#B8B8B8')
-            .attr('shape-rendering', 'crispEdges')
 
           ruler.exit().remove();
 
-          var dot = selection.selectAll('circle')
+          var dot = selection.selectAll('.sszvis-verticalRuler-dot')
             .data(data, function(d){ return props.x(d) + '_' + props.y(d)});
 
           dot.enter()
-            .append('circle');
+            .append('circle')
+            .classed('sszvis-verticalRuler-dot', true);
 
           dot
             .attr('cx', x)
             .attr('cy', y)
             .attr('r', 3.5)
-            .attr('fill', '#6392C5')
-            .attr('stroke', '#fff')
-            .attr('stroke-width', 1.5);
 
           dot.exit().remove();
 

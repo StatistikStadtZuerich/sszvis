@@ -1,7 +1,9 @@
-/* Axis component
------------------------------------------------ */
-
-.sszvis-Axis text {
+/**
+ * Axis component based on the d3.axis interface
+ *
+ * @module sszvis/axis
+ */
+.sszvis-axis text {
   fill: #B8B8B8;
   font-family: Arial, sans-serif;
   font-size: 10px;
@@ -9,38 +11,61 @@
   font-weight: normal;
 }
 
-.sszvis-Axis path,
-.sszvis-Axis line {
+.sszvis-axis path,
+.sszvis-axis line {
   fill: none;
   stroke: #B8B8B8;
   shape-rendering: crispEdges;
 }
 
 /* Modifiers */
-.sszvis-Axis--horizontal line {
+.sszvis-axis--horizontal line {
   transform: translateY(3px);
 }
 
-.sszvis-Axis--vertical path {
+.sszvis-axis--vertical path {
   display: none;
 }
 
 
-/* Line component
------------------------------------------------ */
-.sszvis-Line {
+/**
+ * Bar component
+ *
+ * @module sszvis/component/line
+ */
+.sszvis-bar {
+  fill: #6392C5;
+}
+
+.sszvis-bar:hover {
+  fill: #3A75B2;
+}
+
+
+/**
+ * Line component
+ *
+ * @module sszvis/component/line
+ */
+.sszvis-line {
   fill: none;
   stroke: #6392C5;
   stroke-width: 1.5px;
 }
 
 
-/* Bar component
------------------------------------------------ */
-.sszvis-Bar {
-  fill: #6392C5;
+/**
+ * Vertical Ruler component
+ *
+ * @module sszvis/component/verticalRuler
+ */
+.sszvis-verticalRuler-ruler {
+  shape-rendering: crispEdges;
+  stroke: #B8B8B8;
 }
 
-.sszvis-Bar:hover {
-  fill: #3A75B2;
+.sszvis-verticalRuler-dot {
+  fill: #6392C5;
+  stroke: #FFFFFF;
+  stroke-width: 1.5;
 }
