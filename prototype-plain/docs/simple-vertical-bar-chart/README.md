@@ -7,7 +7,10 @@
     "index": "docs/simple-vertical-bar-chart/index.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv"
+        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
+        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv",
+        "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv",
+        "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv"
     ],
     "size": {
         "height": 442,

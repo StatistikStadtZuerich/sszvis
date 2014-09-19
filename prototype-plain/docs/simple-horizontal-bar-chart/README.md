@@ -7,7 +7,9 @@
     "index": "docs/simple-horizontal-bar-chart/index.html",
     "readme": "docs/simple-horizontal-bar-chart/README.md",
     "files": [
-        "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv"
+        "docs/simple-horizontal-bar-chart/data/SHB_13Categories.csv",
+        "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv",
+        "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv"
     ],
     "size": {
         "height": 442,
