@@ -12,7 +12,7 @@
   <script src="../../sszvis.js"></script>
 </head>
 <body style="margin:0;padding:0;">
-  <div id="minimal-vis"></div>
+  <div id="chart"></div>
   <script>
   (function() {
 
@@ -96,7 +96,7 @@
         .on('move', actions.changeDate)
         .on('end', actions.resetDate);
 
-      var chart = sszvis.createChart('#minimal-vis', bounds);
+      var chart = sszvis.createChart('#chart', bounds);
 
       var lineChart = chart.selectGroup('lineChart')
         .datum([state.data]);
