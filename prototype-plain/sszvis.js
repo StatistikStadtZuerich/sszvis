@@ -131,6 +131,10 @@
         return value;
       },
 
+      not: function (f) {
+        return function(){ return !f.apply(this, arguments) };
+      },
+
       partial: function(func, var_args) {
         var argsArr = slice(arguments, 1);
         return function(){
@@ -364,9 +368,9 @@
           var props = selection.props();
 
           var line = d3.svg.line()
-            .defined(function(d) { return !isNaN(props.y(d)); })
-            .x(function(d) { return props.xScale(props.x(d)); })
-            .y(function(d) { return props.yScale(props.y(d)); })
+            .defined(fn.compose(fn.not(isNaN), props.y))
+            .x(fn.compose(props.xScale, props.x))
+            .y(fn.compose(props.yScale, props.y))
 
           var path = selection.selectAll('path')
             .data(data)
@@ -429,8 +433,8 @@
             .append('circle');
 
           dot
-            .attr('cx', function(d){return props.xScale(props.x(d))})
-            .attr('cy', function(d){return props.yScale(props.y(d))})
+            .attr('cx', fn.compose(props.xScale, props.x))
+            .attr('cy', fn.compose(props.yScale, props.y))
             .attr('r', 3.5)
             .attr('fill', '#6392C5')
             .attr('stroke', '#fff')
