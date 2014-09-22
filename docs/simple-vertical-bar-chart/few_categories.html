@@ -39,7 +39,7 @@
     var y = fn.prop('value');
 
     var xScale = d3.scale.ordinal()
-      .rangeBands([120, bounds.innerWidth - 120], 0.4, 0.3)
+      .rangeBands([40, bounds.innerWidth - 80], 0.68, 0.2)
       .domain(data.map(x));
 
     var heightScale = d3.scale.linear()
@@ -56,7 +56,7 @@
       .width(xScale.rangeBand())
       .height(fn.compose(heightScale, y))
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom').tickFormat(sszvis.format.none);
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
 
     var chart = sszvis.createChart('#chart', bounds)

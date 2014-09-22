@@ -25,11 +25,8 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     "index": "docs/simple-vertical-bar-chart/basic.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv"
-    ],
+        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv"
+   ],
     "size": {
         "height": 442,
         "width": 516
@@ -46,10 +43,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     "index": "docs/simple-vertical-bar-chart/few_categories.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv"
+        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv"
     ],
     "size": {
         "height": 442,
@@ -65,10 +59,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     "index": "docs/simple-vertical-bar-chart/long_names.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv"
+        "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv"
     ],
     "size": {
         "height": 442,
@@ -84,9 +75,6 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     "index": "docs/simple-vertical-bar-chart/many_years.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv",
-        "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv",
         "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv"
     ],
     "size": {
