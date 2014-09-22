@@ -22,7 +22,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/index.html?dataset=SiVB_basic.csv&cat=Altersklasse&val=Anzahl",
+    "index": "docs/simple-vertical-bar-chart/basic.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
         "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
@@ -39,9 +39,11 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ### Few Categories
 
+Suggestion: center bar group when smaller than 3 or 4 items to be consistent with heat table. Also: an x-axis that extends to the right if there are no values could be misunderstood as missing values. There are probably not many charts that use this edge-case
+
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/index.html?dataset=SiVB_fewCategories.csv&cat=Kategorie&val=Anzahl",
+    "index": "docs/simple-vertical-bar-chart/few_categories.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
         "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
@@ -60,7 +62,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/index.html?dataset=SiVB_longNames.csv&cat=Sektor&val=Anzahl&width=800",
+    "index": "docs/simple-vertical-bar-chart/long_names.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
         "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
@@ -79,7 +81,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/index.html?dataset=SiVB_yearly_many.csv&cat=Jahr&val=Hotel%3Fbernachtungen&width=1100",
+    "index": "docs/simple-vertical-bar-chart/many_years.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
         "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",

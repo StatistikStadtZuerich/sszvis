@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vertical Bar Chart</title>
+
+  <link href='../../sszvis.css' rel='stylesheet' />
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/d3-de/d3-de.js"></script>
+  <script src="../../vendor/d3-component/d3-component.js"></script>
+  <script src="../../vendor/d3-selectgroup/d3-selectgroup.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+<div id="chart"></div>
+<script>
+(function() {
+
+  var fn = sszvis.fn;
+
+  var parseNumber = sszvis.parse.number;
+
+  d3.csv('data/SiVB_yearly_many.csv')
+    .row(function(d) {
+      return {
+        category: d['Jahr'],
+        value: parseNumber(d['Hotel?bernachtungen'])
+      }
+    })
+    .get(function(error, data) {
+      error ? sszvis.error(error) : render(data)
+    });
+
+  function render(data) {
+    var bounds = sszvis.bounds({width: 1100, height: 442, top: 3, right: 3, bottom: 40, left: 3});
+
+    var x = fn.prop('category');
+    var y = fn.prop('value');
+
+    var xScale = d3.scale.ordinal()
+      .rangeBands([0, bounds.innerWidth], 0.55, 0.3)
+      .domain(data.map(x));
+
+    var heightScale = d3.scale.linear()
+      .range([0, bounds.innerHeight])
+      .domain([0, d3.max(data, y)]);
+
+    var yPosScale = heightScale
+      .copy()
+      .range(heightScale.range().slice().reverse());
+
+    var barGen = sszvis.component.bar()
+      .x(fn.compose(xScale, x))
+      .y(fn.compose(yPosScale, y))
+      .width(xScale.rangeBand())
+      .height(fn.compose(heightScale, y))
+
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
+    var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
+
+    var chart = sszvis.createChart('#chart', bounds)
+      .datum(data);
+
+    chart.selectGroup('bars')
+      .call(barGen);
+
+    chart.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    chart.selectGroup('yAxis')
+      .call(yAxis);
+
+  }
+
+}());
+</script>
+</body>
+</html>
