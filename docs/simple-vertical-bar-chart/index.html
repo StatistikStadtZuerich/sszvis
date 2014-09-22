@@ -21,11 +21,17 @@
 
   var parseNumber = sszvis.parse.number;
 
-  d3.csv('data/SiVB_basic.csv')
+  function getSearchParameter(name) {
+    var match = RegExp('[?&]' + name + '=([^&]*)')
+      .exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+  }
+
+  d3.csv('data/' + getSearchParameter('dataset'))
     .row(function(d) {
       return {
-        category: d['Altersklasse'],
-        value: parseNumber(d['Anzahl'])
+        category: d[getSearchParameter('cat')],
+        value: parseNumber(d[getSearchParameter('val')])
       }
     })
     .get(function(error, data) {
@@ -33,7 +39,7 @@
     });
 
   function render(data) {
-    var bounds = sszvis.bounds({width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3});
+    var bounds = sszvis.bounds({width: getSearchParameter('width') || 516, height: 442, top: 3, right: 3, bottom: 40, left: 3});
 
     var x = fn.prop('category');
     var y = fn.prop('value');
