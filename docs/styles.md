@@ -38,7 +38,7 @@
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
             <div class='sszvis-tooltip-header'>Example Header</div>
-            <div class='sszvis-tooltip-body'>Example Body</div>
+            <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the top</div>
         </div>
         <div class='sszvis-tooltip-tipholder tip-top'>
             <div class='sszvis-tooltip-tip tip-top'></div>
@@ -52,7 +52,7 @@
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
             <div class='sszvis-tooltip-header'>Example Header</div>
-            <div class='sszvis-tooltip-body'>Example Body</div>
+            <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the bottom</div>
         </div>
         <div class='sszvis-tooltip-tipholder tip-bot'>
             <div class='sszvis-tooltip-tip tip-bot'></div>
@@ -66,7 +66,7 @@
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
             <div class='sszvis-tooltip-header'>Example Header</div>
-            <div class='sszvis-tooltip-body'>Example Body</div>
+            <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the left</div>
         </div>
         <div class='sszvis-tooltip-tipholder tip-left'>
             <div class='sszvis-tooltip-tip tip-left'></div>
@@ -80,7 +80,7 @@
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
             <div class='sszvis-tooltip-header'>Example Header</div>
-            <div class='sszvis-tooltip-body'>Example Body</div>
+            <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the right</div>
         </div>
         <div class='sszvis-tooltip-tipholder tip-right'>
             <div class='sszvis-tooltip-tip tip-right'></div>
