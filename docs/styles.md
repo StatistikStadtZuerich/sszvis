@@ -30,3 +30,61 @@
     {"value": "#60bf97"}
 ]
 ```
+
+### Tooltip
+
+```
+<div class='sszvis-tooltip-outer'>
+    <div class='sszvis-tooltip'>
+        <div class='sszvis-tooltip-box'>
+            <div class='sszvis-tooltip-header'>Example Header</div>
+            <div class='sszvis-tooltip-body'>Example Body</div>
+        </div>
+        <div class='sszvis-tooltip-tipholder tip-top'>
+            <div class='sszvis-tooltip-tip tip-top'></div>
+        </div>
+    </div>
+</div>
+```
+
+```
+<div class='sszvis-tooltip-outer'>
+    <div class='sszvis-tooltip'>
+        <div class='sszvis-tooltip-box'>
+            <div class='sszvis-tooltip-header'>Example Header</div>
+            <div class='sszvis-tooltip-body'>Example Body</div>
+        </div>
+        <div class='sszvis-tooltip-tipholder tip-bot'>
+            <div class='sszvis-tooltip-tip tip-bot'></div>
+        </div>
+    </div>
+</div>
+```
+
+```
+<div class='sszvis-tooltip-outer'>
+    <div class='sszvis-tooltip'>
+        <div class='sszvis-tooltip-box'>
+            <div class='sszvis-tooltip-header'>Example Header</div>
+            <div class='sszvis-tooltip-body'>Example Body</div>
+        </div>
+        <div class='sszvis-tooltip-tipholder tip-left'>
+            <div class='sszvis-tooltip-tip tip-left'></div>
+        </div>
+    </div>
+</div>
+```
+
+```
+<div class='sszvis-tooltip-outer'>
+    <div class='sszvis-tooltip'>
+        <div class='sszvis-tooltip-box'>
+            <div class='sszvis-tooltip-header'>Example Header</div>
+            <div class='sszvis-tooltip-body'>Example Body</div>
+        </div>
+        <div class='sszvis-tooltip-tipholder tip-right'>
+            <div class='sszvis-tooltip-tip tip-right'></div>
+        </div>
+    </div>
+</div>
+```
