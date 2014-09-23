@@ -57,6 +57,15 @@
     }
 
     /**
+     * Get the props of this component
+     *
+     * @return {Object} this component's props
+     */
+    component.getProps = function() {
+      return props;
+    };
+
+    /**
      * Creates a render context for the given component. Implements the
      * d3.selection.each interface.
      *

@@ -424,6 +424,24 @@
       return moveComponent;
     }
 
+    module.mouseover = function() {
+
+      function addMouseOver() {
+
+      }
+
+      addMouseOver.mouseover = function() {
+        return this;
+      }
+
+      addMouseOver.mouseout = function() {
+        return this;
+      }
+
+      return addMouseOver;
+
+    }
+
     return module;
 
   }({}));
@@ -446,6 +464,7 @@
         .prop('y')
         .prop('width')
         .prop('height')
+        .prop('mouseover')
         .render(function(data) {
           var selection = d3.select(this);
           var props = selection.props();
@@ -461,7 +480,9 @@
             .attr('x', props.x)
             .attr('y', props.y)
             .attr('width', props.width)
-            .attr('height', props.height);
+            .attr('height', props.height)
+
+          if (props.mouseover) bars.on("mouseover", props.mouseover);
         });
     }
 
@@ -562,9 +583,17 @@
         .prop('y').y(fn.identity)
         .prop('header')
         .prop('body')
+        .prop('show').show(function() {
+
+        })
+        .prop('hide').hide(function() {
+
+        })
         .render(function(data) {
           var selection = d3.select(this);
           var props = selection.props();
+
+          console.log(this);
         });
      };
 

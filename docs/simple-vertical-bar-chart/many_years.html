@@ -33,31 +33,52 @@
     });
 
   function render(data) {
-    var bounds = sszvis.bounds({width: 1100, height: 442, top: 3, right: 3, bottom: 40, left: 3});
+    var bounds = sszvis.bounds({width: 900, height: 442, top: 3, right: 3, bottom: 40, left: 3});
 
-    var x = fn.prop('category');
-    var y = fn.prop('value');
+    var xAcc = fn.prop('category');
+    var yAcc = fn.prop('value');
 
     var xScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerWidth], 0.55, 0.3)
-      .domain(data.map(x));
+      .rangeBands([20, bounds.innerWidth], 0.4, 0.4)
+      .domain(data.map(xAcc));
 
     var heightScale = d3.scale.linear()
       .range([0, bounds.innerHeight])
-      .domain([0, d3.max(data, y)]);
+      .domain([0, d3.max(data, yAcc)]);
 
     var yPosScale = heightScale
       .copy()
       .range(heightScale.range().slice().reverse());
+      // y-[osition scale is the inverse of the height scale
+
+    var xValue = fn.compose(xScale, xAcc);
+    var yValue = fn.compose(yPosScale, yAcc);
 
     var barGen = sszvis.component.bar()
-      .x(fn.compose(xScale, x))
-      .y(fn.compose(yPosScale, y))
+      .x(xValue)
+      .y(yValue)
       .width(xScale.rangeBand())
-      .height(fn.compose(heightScale, y))
+      .height(fn.compose(heightScale, yAcc))
+
+    var hoverController = sszvis.behavior.mouseover()
+      .mouseover(function(d) {
+        tooltipBody
+          .x(xValue(d))
+          .y(yValue(d))
+          .header(tooltipText(d))
+          .render();
+      })
+      .mouseout(function(d) {
+        tooltipBody.hide();
+      });
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
+
+    var tooltipText = sszvis.component.modularText()
+      .bold(function(d) { return d.value });
+
+    var tooltipBody = sszvis.component.tooltip();
 
     var chart = sszvis.createChart('#chart', bounds)
       .datum(data);

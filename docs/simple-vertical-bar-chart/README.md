@@ -63,7 +63,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     ],
     "size": {
         "height": 442,
-        "width": 800
+        "width": 516
     }
 }
 ```
@@ -79,7 +79,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     ],
     "size": {
         "height": 442,
-        "width": 1100
+        "width": 900
     }
 }
 ```
