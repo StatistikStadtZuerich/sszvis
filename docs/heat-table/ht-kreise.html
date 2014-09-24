@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Heat Table</title>
+
+  <link href='../../sszvis.css' rel='stylesheet' />
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/d3-de/d3-de.js"></script>
+  <script src="../../vendor/d3-component/d3-component.js"></script>
+  <script src="../../vendor/d3-selectgroup/d3-selectgroup.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+<div id="chart"></div>
+<script>
+(function() {
+
+  var state = {
+    data: []
+  }
+
+  d3.csv('data/HT_kreise.csv')
+    .row(function(d) {
+      return {
+        kreis: d['KName'],
+        agegroup: d['Altersgruppe'],
+        value: sszvis.parse.number(d['Anzahl'])
+      }
+    })
+    .get(function(error, data) {
+      if (error) {
+        console.log('error loading data: ', error);
+        return;
+      }
+      state.data = data;
+      render(state);
+    });
+
+  var actions = {
+
+  }
+
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 540, height: 700, top: 10, right: 68, bottom: 10, left: 68 })
+
+    var xAcc = sszvis.fn.prop('kreis')
+    var yAcc = sszvis.fn.prop('agegroup')
+
+    var kreisList = state.data.map(xAcc)
+    kreisList.sort(function(a, b) {
+      var kA = a.replace('Kreis ', ''),
+          kB = b.replace('Kreis ', '');
+      return +kA - +kB;
+    })
+    kreisList = sszvis.fn.uniqueSorted(kreisList)
+
+    var agesList = state.data.map(yAcc)
+    agesList = sszvis.fn.uniqueUnsorted(agesList)
+
+    var xSide = bounds.innerWidth / kreisList.length
+    var ySide = bounds.innerHeight / agesList.length
+    var sideLength = Math.min(xSide, ySide) * 0.85
+
+    var xScale = d3.scale.ordinal()
+      .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
+      .domain(kreisList)
+
+    var yScale = d3.scale.ordinal()
+      .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
+      .domain(agesList)
+
+    var barGen = sszvis.component.bar()
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .width(xScale.rangeBand())
+      .height(yScale.rangeBand())
+
+    var chart = sszvis.createChart('#chart', bounds)
+      .datum(state.data)
+
+    var bars = chart.selectGroup('bars')
+      .call(barGen)
+
+  }
+
+}());
+</script>
+</body>
+</html>

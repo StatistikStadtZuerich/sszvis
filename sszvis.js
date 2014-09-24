@@ -171,6 +171,28 @@
         return function(object) {
           return object[key];
         }
+      },
+
+      uniqueSorted: function(arr) {
+        var seen, value, result = [];
+        for (var i = 0, l = arr.length; i < l; ++i) {
+          value = arr[i];
+          if (!i || seen !== value) result.push(value);
+          seen = value;
+        }
+        return result;
+      },
+
+      uniqueUnsorted: function(arr) {
+        var seen = [], value, result = [];
+        for (var i = 0, l = arr.length; i < l; ++i) {
+          value = arr[i];
+          if (seen.indexOf(value) < 0) {
+            seen.push(value);
+            result.push(value);
+          }
+        }
+        return result;
       }
     }
   }());
@@ -483,6 +505,7 @@
         .prop('y')
         .prop('width')
         .prop('height')
+        .prop('fill').fill(null)
         .prop('mouseover')
         .render(function(data) {
           var selection = d3.select(this);
@@ -500,6 +523,7 @@
             .attr('y', props.y)
             .attr('width', props.width)
             .attr('height', props.height)
+            .attr('fill', props.fill)
 
           if (props.mouseover) bars.on("mouseover", props.mouseover);
         });
