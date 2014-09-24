@@ -94,6 +94,8 @@
 
 .sszvis-tooltip-tipholder {
   position: absolute;
+  width: 0;
+  height: 0;
 }
 
 .sszvis-tooltip-tipholder.tip-top, .sszvis-tooltip-tipholder.tip-bot {
@@ -109,7 +111,7 @@
 }
 
 .sszvis-tooltip-tipholder.tip-bot {
-  bottom: -20px;
+  bottom: 0px;
 }
 
 .sszvis-tooltip-tipholder.tip-left {
@@ -117,7 +119,7 @@
 }
 
 .sszvis-tooltip-tipholder.tip-right {
-  right: -20px;
+  right: 0px;
 }
 
 .sszvis-tooltip-tip {
