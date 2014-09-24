@@ -328,6 +328,7 @@
         .prop('tickFormat').tickFormat(axisDelegate.tickFormat())
         .prop('vertical').vertical(false)
         .prop('alignOuterLabels').alignOuterLabels(false)
+        .prop('highlight')
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -348,6 +349,15 @@
             .classed('sszvis-axis--vertical', props.vertical)
             .attr('transform', 'translate(0, 2)')
             .call(axisDelegate);
+
+          if (props.highlight) {
+            group.selectAll('.tick')
+              .classed('active', function(d) {
+                return [].concat(props.highlight).reduce(function(found, highlight) {
+                  return found || stringEqual(highlight, d);
+                }, false)
+              });
+          }
 
           if (props.alignOuterLabels) {
             var extent = d3.extent(props.scale.domain());

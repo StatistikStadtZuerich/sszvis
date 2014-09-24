@@ -76,10 +76,15 @@
         .xScale(xScale)
         .yScale(yScale);
 
+      var xTickValues = xScale
+        .ticks(4)
+        .concat(state.selectedData.map(fn.prop('date')));
+
       var xAxis = sszvis.axis.x.time()
         .scale(xScale)
         .orient('bottom')
-        .ticks(4);
+        .tickValues(xTickValues)
+        .highlight(state.selectedData.map(fn.prop('date')));
 
       var yAxis = sszvis.axis.y()
         .scale(yScale)

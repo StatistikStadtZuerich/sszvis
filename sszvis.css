@@ -18,6 +18,12 @@
   shape-rendering: crispEdges;
 }
 
+/* States */
+.sszvis-axis .tick.active text {
+  fill: #545454;
+  font-weight: bold;
+}
+
 /* Modifiers */
 .sszvis-axis--horizontal line {
   transform: translateY(3px);
