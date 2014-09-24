@@ -293,6 +293,10 @@
    */
   exports.axis = (function() {
 
+    var stringEqual = function(a, b) {
+      return a.toString() === b.toString();
+    }
+
     var axisTimeFormat = d3.time.format.multi([
       [".%L", function(d) { return d.getMilliseconds(); }],
       [":%S", function(d) { return d.getSeconds(); }],
@@ -323,6 +327,7 @@
         .prop('tickPadding').tickPadding(axisDelegate.tickPadding())
         .prop('tickFormat').tickFormat(axisDelegate.tickFormat())
         .prop('vertical').vertical(false)
+        .prop('alignOuterLabels').alignOuterLabels(false)
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -337,12 +342,28 @@
             .tickPadding(props.tickPadding)
             .tickFormat(props.tickFormat)
 
-          selection.selectGroup('sszvis-axis')
+          var group = selection.selectGroup('sszvis-axis')
             .classed('sszvis-axis', true)
             .classed('sszvis-axis--horizontal', !props.vertical)
             .classed('sszvis-axis--vertical', props.vertical)
             .attr('transform', 'translate(0, 2)')
-            .call(axisDelegate)
+            .call(axisDelegate);
+
+          if (props.alignOuterLabels) {
+            var extent = d3.extent(props.scale.domain());
+            var min = extent[0];
+            var max = extent[1];
+
+            group.selectAll('g.tick text')
+              .style('text-anchor', function(d) {
+                if (stringEqual(d, min)) {
+                  return 'start';
+                } else if (stringEqual(d, max)) {
+                  return 'end';
+                }
+                return 'middle';
+              });
+          }
         });
     }
 
@@ -355,7 +376,9 @@
     };
 
     axis_x.time = function() {
-      return axis_x().tickFormat(axisTimeFormat);
+      return axis_x()
+        .tickFormat(axisTimeFormat)
+        .alignOuterLabels(true);
     }
 
     axis_x.ordinal = function() {
