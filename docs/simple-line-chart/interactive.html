@@ -123,7 +123,7 @@
     function closestDatum(data, accessor, datum) {
       var i = d3.bisector(accessor).left(data, datum, 1);
       var d0 = data[i - 1];
-      var d1 = data[i];
+      var d1 = data[i] || d0;
       return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
     }
 
