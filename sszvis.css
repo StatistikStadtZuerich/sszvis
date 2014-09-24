@@ -75,7 +75,7 @@
  *
  * @module sszvis/component/tooltip
  */
-.sszvis-tooltip-outer {
+.sszvis-tooltip-displaywrapper {
   position: relative;
   height: 50px;
 }

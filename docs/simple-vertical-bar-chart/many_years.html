@@ -19,20 +19,39 @@
 
   var fn = sszvis.fn;
 
-  var parseNumber = sszvis.parse.number;
+  var state = {
+    data: [],
+    tooltips: []
+  }
 
   d3.csv('data/SiVB_yearly_many.csv')
     .row(function(d) {
       return {
         category: d['Jahr'],
-        value: parseNumber(d['Hotel?bernachtungen'])
+        value: sszvis.parse.number(d['Hotel?bernachtungen'])
       }
     })
     .get(function(error, data) {
-      error ? sszvis.error(error) : render(data)
+      if (error) {
+        console.log('error loading data: ', error);
+        return
+      }
+      state.data = data;
+      render(state);
     });
 
-  function render(data) {
+  var actions = {
+    showTooltip: function(tooltip) {
+      state.tooltips = [tooltip];
+      render(state);
+    },
+    hideTooltip: function() {
+      state.tooltips = [];
+      render(state);
+    }
+  }
+
+  function render(state) {
     var bounds = sszvis.bounds({width: 900, height: 442, top: 3, right: 3, bottom: 40, left: 3});
 
     var xAcc = fn.prop('category');
@@ -40,16 +59,15 @@
 
     var xScale = d3.scale.ordinal()
       .rangeBands([20, bounds.innerWidth], 0.4, 0.4)
-      .domain(data.map(xAcc));
+      .domain(state.data.map(xAcc));
 
     var heightScale = d3.scale.linear()
       .range([0, bounds.innerHeight])
-      .domain([0, d3.max(data, yAcc)]);
+      .domain([0, d3.max(state.data, yAcc)]);
 
-    var yPosScale = heightScale
-      .copy()
+    var yPosScale = heightScale.copy()
       .range(heightScale.range().slice().reverse());
-      // y-[osition scale is the inverse of the height scale
+      // y-position scale is the inverse of the height scale
 
     var xValue = fn.compose(xScale, xAcc);
     var yValue = fn.compose(yPosScale, yAcc);
@@ -58,33 +76,39 @@
       .x(xValue)
       .y(yValue)
       .width(xScale.rangeBand())
-      .height(fn.compose(heightScale, yAcc))
-
-    var hoverController = sszvis.behavior.mouseover()
-      .mouseover(function(d) {
-        tooltipBody
-          .x(xValue(d))
-          .y(yValue(d))
-          .header(tooltipText(d))
-          .render();
-      })
-      .mouseout(function(d) {
-        tooltipBody.hide();
-      });
+      .height(fn.compose(heightScale, yAcc));
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
 
     var tooltipText = sszvis.component.modularText()
-      .bold(function(d) { return d.value });
+      .bold(fn.prop('value'))
+      .plain(' im ')
+      .bold(fn.prop('category'));
 
-    var tooltipBody = sszvis.component.tooltip();
+    var tooltipMaker = sszvis.component.tooltip()
+      .orientation('bottom')
+      .x(function(d) { return xValue(d) + xScale.rangeBand() / 2 })
+      .y(yValue)
+      .style({ 'white-space': 'nowrap' })
+      .body(tooltipText);
+
+    var hoverBehavior = sszvis.behavior.mouseover()
+      .mouseover(actions.showTooltip)
+      .mouseout(actions.hideTooltip);
 
     var chart = sszvis.createChart('#chart', bounds)
-      .datum(data);
+      .datum(state.data);
 
-    chart.selectGroup('bars')
+    var overlay = sszvis.createHtmlLayer('#chart', bounds)
+      .datum(state.tooltips)
+      .call(tooltipMaker);
+
+    var bars = chart.selectGroup('bars')
       .call(barGen);
+
+    bars.selectAll('rect')
+      .call(hoverBehavior);
 
     chart.selectGroup('xAxis')
       .attr('transform', 'translate(0,' + bounds.innerHeight + ')')

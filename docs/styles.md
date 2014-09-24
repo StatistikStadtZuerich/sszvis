@@ -34,7 +34,7 @@
 ## Tooltips
 
 ```html|plain
-<div class='sszvis-tooltip-outer'>
+<div class='sszvis-tooltip-displaywrapper'>
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
             <div class='sszvis-tooltip-header'>Example Header</div>
@@ -48,7 +48,7 @@
 ```
 
 ```html|plain
-<div class='sszvis-tooltip-outer'>
+<div class='sszvis-tooltip-displaywrapper'>
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
             <div class='sszvis-tooltip-header'>Example Header</div>
@@ -62,7 +62,7 @@
 ```
 
 ```html|plain
-<div class='sszvis-tooltip-outer'>
+<div class='sszvis-tooltip-displaywrapper'>
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
             <div class='sszvis-tooltip-header'>Example Header</div>
@@ -76,7 +76,7 @@
 ```
 
 ```html|plain
-<div class='sszvis-tooltip-outer'>
+<div class='sszvis-tooltip-displaywrapper'>
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
             <div class='sszvis-tooltip-header'>Example Header</div>

@@ -118,7 +118,7 @@
     return function() {
       if (!arguments.length) return props[prop];
 
-      props[prop] = setter.apply(setter, slice(arguments));
+      props[prop] = setter.apply(null, slice(arguments));
       return this;
     }
   }
