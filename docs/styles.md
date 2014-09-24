@@ -31,9 +31,9 @@
 ]
 ```
 
-### Tooltip
+## Tooltips
 
-```
+```html|plain
 <div class='sszvis-tooltip-outer'>
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
@@ -47,7 +47,7 @@
 </div>
 ```
 
-```
+```html|plain
 <div class='sszvis-tooltip-outer'>
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
@@ -61,7 +61,7 @@
 </div>
 ```
 
-```
+```html|plain
 <div class='sszvis-tooltip-outer'>
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
@@ -75,7 +75,7 @@
 </div>
 ```
 
-```
+```html|plain
 <div class='sszvis-tooltip-outer'>
     <div class='sszvis-tooltip'>
         <div class='sszvis-tooltip-box'>
