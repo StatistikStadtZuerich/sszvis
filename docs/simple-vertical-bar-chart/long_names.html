@@ -19,51 +19,100 @@
 
   var fn = sszvis.fn;
 
-  var parseNumber = sszvis.parse.number;
+  var state = {
+    data: [],
+    tooltips: []
+  };
+
+  var actions = {
+    showTooltip: function(tooltipData) {
+      state.tooltips = [tooltipData];
+      render(state);
+    },
+    hideTooltip: function() {
+      state.tooltips = [];
+      render(state);
+    }
+  }
 
   d3.csv('data/SiVB_longNames.csv')
     .row(function(d) {
       return {
         category: d['Sektor'],
-        value: parseNumber(d['Anzahl'])
+        value: sszvis.parse.number(d['Anzahl'])
       }
     })
     .get(function(error, data) {
-      error ? sszvis.error(error) : render(data)
+      if (error) {
+        console.log('error loading data: ', error);
+        return
+      }
+      state.data = data;
+      render(state);
     });
 
-  function render(data) {
-    var bounds = sszvis.bounds({width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3});
+  function render(state) {
+    var bounds = sszvis.bounds({width: 516, height: 442, top: 60, right: 20, bottom: 40, left: 3});
 
-    var x = fn.prop('category');
-    var y = fn.prop('value');
+    var xAccessor = fn.prop('category');
+    var yAccessor = fn.prop('value');
 
     var xScale = d3.scale.ordinal()
       .rangeBands([10, bounds.innerWidth], 0.55, 0.3)
-      .domain(data.map(x));
+      .domain(state.data.map(xAccessor));
 
     var heightScale = d3.scale.linear()
       .range([0, bounds.innerHeight])
-      .domain([0, d3.max(data, y)]);
+      .domain([0, d3.max(state.data, yAccessor)]);
 
     var yPosScale = heightScale
       .copy()
       .range(heightScale.range().slice().reverse());
 
+    var xValue = fn.compose(xScale, xAccessor);
+    var yValue = fn.compose(yPosScale, yAccessor);
+
     var barGen = sszvis.component.bar()
-      .x(fn.compose(xScale, x))
-      .y(fn.compose(yPosScale, y))
+      .x(xValue)
+      .y(yValue)
       .width(xScale.rangeBand())
-      .height(fn.compose(heightScale, y))
+      .height(fn.compose(heightScale, yAccessor));
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
 
-    var chart = sszvis.createChart('#chart', bounds)
-      .datum(data);
+    var tooltipText = sszvis.component.modularText()
+      .bold(yAccessor)
+      .plain(' im ')
+      .bold(xAccessor);
 
-    chart.selectGroup('bars')
+    var tooltipMaker = sszvis.component.tooltip()
+      .orientation('bottom')
+      .x(function(d) { return xValue(d) + xScale.rangeBand() / 2 })
+      .y(yValue)
+      .style({
+        'max-width': '100px',
+        'min-width': '70px',
+        'text-align': 'center'
+      })
+      .body(tooltipText);
+
+    var hoverBehavior = sszvis.behavior.mouseover()
+      .mouseover(actions.showTooltip)
+      .mouseout(actions.hideTooltip);
+
+    var chart = sszvis.createChart('#chart', bounds)
+      .datum(state.data);
+
+    var overlay = sszvis.createHtmlLayer('#chart', bounds)
+      .datum(state.tooltips)
+      .call(tooltipMaker);
+
+    var bars = chart.selectGroup('bars')
       .call(barGen);
+
+    bars.selectAll('rect')
+      .call(hoverBehavior);
 
     chart.selectGroup('xAxis')
       .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
