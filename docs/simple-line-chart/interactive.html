@@ -95,6 +95,9 @@
         .y(fn.prop('value'))
         .xScale(xScale)
         .yScale(yScale)
+        .label(function(d) {
+          return d.value + " Anteile";
+        })
 
       var interactionLayer = sszvis.behavior.move()
         .xScale(xScale)

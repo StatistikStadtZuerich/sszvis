@@ -582,9 +582,14 @@
         .prop('y').y(fn.identity)
         .prop('xScale')
         .prop('yScale')
+        .prop('label').label(fn.constant(''))
         .render(function(data) {
           var selection = d3.select(this);
           var props = selection.props();
+
+          var key = function(d) {
+            return props.x(d) + '_' + props.y(d);
+          }
 
           var maxDatum = d3.max(data.map(fn.compose(props.xScale, props.x)));
 
@@ -593,7 +598,7 @@
           var baseline = d3.max(props.yScale.range());
 
           var ruler = selection.selectAll('.sszvis-ruler-rule')
-            .data(data);
+            .data(data, key);
 
           ruler.enter()
             .append('line')
@@ -608,7 +613,7 @@
           ruler.exit().remove();
 
           var dot = selection.selectAll('.sszvis-ruler-dot')
-            .data(data, function(d){ return props.x(d) + '_' + props.y(d)});
+            .data(data, key);
 
           dot.enter()
             .append('circle')
@@ -620,6 +625,22 @@
             .attr('r', 3.5)
 
           dot.exit().remove();
+
+          var label = selection.selectAll('.sszvis-ruler-label')
+            .data(data, key);
+
+          label.enter()
+            .append('text')
+            .classed('sszvis-ruler-label', true);
+
+          label
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dx', 10)
+            .attr('dy', 5)
+            .text(props.label)
+
+          label.exit().remove();
 
         });
     }

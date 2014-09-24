@@ -76,6 +76,14 @@
   stroke-width: 1.5;
 }
 
+.sszvis-ruler-label {
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: bold;
+}
+
 /**
  * Tooltip component
  *
