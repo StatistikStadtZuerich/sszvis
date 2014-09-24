@@ -595,7 +595,8 @@
 
           var x = fn.compose(props.xScale, props.x);
           var y = fn.compose(props.yScale, props.y);
-          var baseline = d3.max(props.yScale.range());
+          var top = d3.min(props.yScale.range());
+          var bottom = d3.max(props.yScale.range());
 
           var ruler = selection.selectAll('.sszvis-ruler-rule')
             .data(data, key);
@@ -608,7 +609,7 @@
             .attr('x1', x)
             .attr('y1', y)
             .attr('x2', x)
-            .attr('y2', baseline)
+            .attr('y2', bottom)
 
           ruler.exit().remove();
 
@@ -637,7 +638,12 @@
             .attr('x', x)
             .attr('y', y)
             .attr('dx', 10)
-            .attr('dy', 5)
+            .attr('dy', function(d) {
+              var baselineShift = 5;
+              if (y(d) < top + baselineShift)    return 2 * baselineShift;
+              if (y(d) > bottom - baselineShift) return 0;
+              return baselineShift;
+            })
             .text(props.label)
 
           label.exit().remove();
