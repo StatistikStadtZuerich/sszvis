@@ -21,7 +21,7 @@
     var parseDate = sszvis.parse.date;
     var parseNumber = sszvis.parse.number;
 
-    d3.csv('data.csv')
+    d3.csv('data/SL_quarterly.csv')
       .row(function(d) {
         return {
           date:  parseDate(d['Datum']),
@@ -29,7 +29,7 @@
         }
       })
       .get(function(error, data) {
-        error ? sszvis.error(error) : render(data);
+        error ? console.error(error) : render(data);
       });
 
     function render(data) {
@@ -51,7 +51,8 @@
 
       var xAxis = sszvis.axis.x.time()
         .scale(xScale)
-        .orient('bottom');
+        .orient('bottom')
+        .ticks(4);
 
       var yAxis = sszvis.axis.y()
         .scale(yScale)

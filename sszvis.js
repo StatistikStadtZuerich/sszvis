@@ -315,6 +315,10 @@
    */
   exports.axis = (function() {
 
+    var stringEqual = function(a, b) {
+      return a.toString() === b.toString();
+    }
+
     var axisTimeFormat = d3.time.format.multi([
       [".%L", function(d) { return d.getMilliseconds(); }],
       [":%S", function(d) { return d.getSeconds(); }],
@@ -345,6 +349,8 @@
         .prop('tickPadding').tickPadding(axisDelegate.tickPadding())
         .prop('tickFormat').tickFormat(axisDelegate.tickFormat())
         .prop('vertical').vertical(false)
+        .prop('alignOuterLabels').alignOuterLabels(false)
+        .prop('highlight')
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -359,12 +365,37 @@
             .tickPadding(props.tickPadding)
             .tickFormat(props.tickFormat)
 
-          selection.selectGroup('sszvis-axis')
+          var group = selection.selectGroup('sszvis-axis')
             .classed('sszvis-axis', true)
             .classed('sszvis-axis--horizontal', !props.vertical)
             .classed('sszvis-axis--vertical', props.vertical)
             .attr('transform', 'translate(0, 2)')
-            .call(axisDelegate)
+            .call(axisDelegate);
+
+          if (props.highlight) {
+            group.selectAll('.tick')
+              .classed('active', function(d) {
+                return [].concat(props.highlight).reduce(function(found, highlight) {
+                  return found || stringEqual(highlight, d);
+                }, false)
+              });
+          }
+
+          if (props.alignOuterLabels) {
+            var extent = d3.extent(props.scale.domain());
+            var min = extent[0];
+            var max = extent[1];
+
+            group.selectAll('g.tick text')
+              .style('text-anchor', function(d) {
+                if (stringEqual(d, min)) {
+                  return 'start';
+                } else if (stringEqual(d, max)) {
+                  return 'end';
+                }
+                return 'middle';
+              });
+          }
         });
     }
 
@@ -377,7 +408,9 @@
     };
 
     axis_x.time = function() {
-      return axis_x().tickFormat(axisTimeFormat);
+      return axis_x()
+        .tickFormat(axisTimeFormat)
+        .alignOuterLabels(true);
     }
 
     axis_x.ordinal = function() {
@@ -573,18 +606,24 @@
         .prop('y').y(fn.identity)
         .prop('xScale')
         .prop('yScale')
+        .prop('label').label(fn.constant(''))
         .render(function(data) {
           var selection = d3.select(this);
           var props = selection.props();
+
+          var key = function(d) {
+            return props.x(d) + '_' + props.y(d);
+          }
 
           var maxDatum = d3.max(data.map(fn.compose(props.xScale, props.x)));
 
           var x = fn.compose(props.xScale, props.x);
           var y = fn.compose(props.yScale, props.y);
-          var baseline = d3.max(props.yScale.range());
+          var top = d3.min(props.yScale.range());
+          var bottom = d3.max(props.yScale.range());
 
           var ruler = selection.selectAll('.sszvis-ruler-rule')
-            .data(data);
+            .data(data, key);
 
           ruler.enter()
             .append('line')
@@ -594,12 +633,12 @@
             .attr('x1', x)
             .attr('y1', y)
             .attr('x2', x)
-            .attr('y2', baseline)
+            .attr('y2', bottom)
 
           ruler.exit().remove();
 
           var dot = selection.selectAll('.sszvis-ruler-dot')
-            .data(data, function(d){ return props.x(d) + '_' + props.y(d)});
+            .data(data, key);
 
           dot.enter()
             .append('circle')
@@ -611,6 +650,27 @@
             .attr('r', 3.5)
 
           dot.exit().remove();
+
+          var label = selection.selectAll('.sszvis-ruler-label')
+            .data(data, key);
+
+          label.enter()
+            .append('text')
+            .classed('sszvis-ruler-label', true);
+
+          label
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dx', 10)
+            .attr('dy', function(d) {
+              var baselineShift = 5;
+              if (y(d) < top + baselineShift)    return 2 * baselineShift;
+              if (y(d) > bottom - baselineShift) return 0;
+              return baselineShift;
+            })
+            .text(props.label)
+
+          label.exit().remove();
 
         });
     }
