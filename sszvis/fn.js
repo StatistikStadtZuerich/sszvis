@@ -89,7 +89,32 @@ namespace('sszvis.fn', function(module) {
         }
       }
       return result;
+    },
+
+    groupBy: function(arr, prop) {
+      var result = {}, value, key;
+      for (var i = 0, l = arr.length; i < l; ++i) {
+        value = arr[i];
+        key = value[prop];
+        if (result.hasOwnProperty(key)) {
+          result[key].push(value);
+        } else {
+          result[key] = [value];
+        }
+      }
+      return result;
+    },
+
+    objectValues: function(obj) {
+      var result = [], prop;
+      for (prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+          result.push(obj[prop]);
+        }
+      }
+      return result;
     }
+
   }
 
 });

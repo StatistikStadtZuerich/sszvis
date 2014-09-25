@@ -5,6 +5,8 @@
  */
 namespace('sszvis.parse', function(module) {
 
+  var yearParser = d3.time.format("%Y");
+
   module.exports = {
     /**
      * Parse Swiss date strings
@@ -13,6 +15,10 @@ namespace('sszvis.parse', function(module) {
      */
     date: function(d) {
       return d3.time.format("%d.%m.%Y").parse(d);
+    },
+
+    year: function(d) {
+      return yearParser.parse(d);
     },
 
     /**

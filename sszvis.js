@@ -498,7 +498,32 @@ namespace('sszvis.fn', function(module) {
         }
       }
       return result;
+    },
+
+    groupBy: function(arr, prop) {
+      var result = {}, value, key;
+      for (var i = 0, l = arr.length; i < l; ++i) {
+        value = arr[i];
+        key = value[prop];
+        if (result.hasOwnProperty(key)) {
+          result[key].push(value);
+        } else {
+          result[key] = [value];
+        }
+      }
+      return result;
+    },
+
+    objectValues: function(obj) {
+      var result = [], prop;
+      for (prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+          result.push(obj[prop]);
+        }
+      }
+      return result;
     }
+
   }
 
 });
@@ -564,6 +589,8 @@ namespace('sszvis.format', function(module) {
  */
 namespace('sszvis.parse', function(module) {
 
+  var yearParser = d3.time.format("%Y");
+
   module.exports = {
     /**
      * Parse Swiss date strings
@@ -572,6 +599,10 @@ namespace('sszvis.parse', function(module) {
      */
     date: function(d) {
       return d3.time.format("%d.%m.%Y").parse(d);
+    },
+
+    year: function(d) {
+      return yearParser.parse(d);
     },
 
     /**

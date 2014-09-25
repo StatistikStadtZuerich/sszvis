@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Area Chart</title>
+
+  <link href='../../sszvis.css' rel='stylesheet' />
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+<div id="chart"></div>
+<script>
+(function() {
+
+  var state = {
+    data: []
+  };
+
+  d3.csv('data/SA_2Categories_yearly.csv')
+    .row(function(d) {
+      return {
+        category: d['Nationalität'],
+        year: sszvis.parse.year(d['Jahr']),
+        value: sszvis.parse.number(d['Anzahl'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        console.log('error loading data: ', error);
+        return;
+      }
+      state.data = data;
+      render(state);
+    });
+
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 516, height: 442, top: 10, right: 10, bottom: 10, left: 10 });
+
+      var xAcc = sszvis.fn.prop('year');
+      var yAcc = sszvis.fn.prop('value');
+      var groupAcc = sszvis.fn.prop('category');
+      var valuesAcc = sszvis.fn.prop('values');
+
+      var stacks = state.data.reduce(function(stacks, datum) {
+        var group = groupAcc(datum);
+        if (!stacks.hasOwnProperty(group)) {
+          stacks[group] = {
+            group: group,
+            values: [datum]
+          };
+        } else {
+          stacks[group].values.push(datum);
+        }
+        return stacks;
+      }, {});
+
+      var layers = sszvis.fn.objectValues(stacks);
+
+      var xScale = d3.scale.linear()
+        .domain(d3.extent(state.data.map(xAcc)))
+        .range([0, bounds.innerWidth]);
+
+      // this awful concatenation calculates the largest combined y-value of all layers, when stacked.
+      // it assumes that the layers are sorted in the same manner, with data points for the same x-value located at the same array index.
+      var maxStacked = d3.max(d3.zip.apply(null, layers.map(valuesAcc).map(function(l) { return l.map(yAcc); })).map(function(arr) { return d3.sum(arr); }));
+
+      var yScale = d3.scale.linear()
+        .domain([0, maxStacked])
+        .range([0, bounds.innerHeight]);
+
+      var cScale = d3.scale.ordinal()
+        .domain(sszvis.fn.uniqueSorted(state.data.map(groupAcc).sort()))
+        .range(sszvis.color.ranges.qualitative.qual3);
+
+      var xValue = sszvis.fn.compose(xScale, xAcc);
+      var yValue = sszvis.fn.compose(yScale, yAcc);
+      var cValue = sszvis.fn.compose(cScale, groupAcc);
+
+      var stackLayout = d3.layout.stack()
+        .values(function(layer) { return layer.values; })
+        .x(xValue)
+        .y(yValue);
+
+      var areaGenerator = d3.svg.area()
+        .x(xValue)
+        // the stackLayout gives you x and y values in an arbitrary y-at-bottom coordinate space. Accessors must project y-values into screen pixels.
+        .y0(function(d) { return bounds.innerHeight - (d.y0); })
+        .y1(function(d) { return bounds.innerHeight - (d.y0 + d.y); });
+
+      var chart = sszvis.createChart('#chart', bounds);
+
+      var areas = chart.selectAll('path')
+        .data(stackLayout(layers))
+        .enter()
+        .append('path')
+        .attr('d', sszvis.fn.compose(areaGenerator, valuesAcc))
+        .attr('fill', sszvis.fn.compose(cScale, sszvis.fn.prop('group')));
+    }
+
+}());
+</script>
+</body>
+</html>

@@ -4,7 +4,19 @@
 
 ### Datenformat
 
+Minimum three dimensions
+* x-axis dimension
+* y-axis dimension
+* value (color) dimension
+
 ### Konfiguration
+
+The following configuration options are available:
+* Interaction - tooltips, highlighting, etc.
+* Color scale
+* x-axis
+* y-axis
+* dimensions of table squares (not necessarily squares)
 
 ### Examples
 
