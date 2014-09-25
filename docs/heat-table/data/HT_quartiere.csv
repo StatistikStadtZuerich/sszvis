@@ -2,7 +2,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 021,Wollishofen,Türkei,68
 021,Wollishofen,Tschechische Republik,26
 021,Wollishofen,Spanien,158
-021,Wollishofen,Serbien und Montenegro, Kosovo,168
+021,Wollishofen,"Serbien und Montenegro, Kosovo",168
 021,Wollishofen,Portugal,133
 021,Wollishofen,Polen,69
 021,Wollishofen,Österreich,148
@@ -15,7 +15,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 074,Witikon,Türkei,28
 074,Witikon,Tschechische Republik,17
 074,Witikon,Spanien,39
-074,Witikon,Serbien und Montenegro, Kosovo,54
+074,Witikon,"Serbien und Montenegro, Kosovo",54
 074,Witikon,Portugal,85
 074,Witikon,Polen,31
 074,Witikon,Österreich,116
@@ -28,7 +28,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 102,Wipkingen,Türkei,161
 102,Wipkingen,Tschechische Republik,14
 102,Wipkingen,Spanien,220
-102,Wipkingen,Serbien und Montenegro, Kosovo,261
+102,Wipkingen,"Serbien und Montenegro, Kosovo",261
 102,Wipkingen,Portugal,223
 102,Wipkingen,Polen,39
 102,Wipkingen,Österreich,206
@@ -41,7 +41,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 041,Werd,Türkei,45
 041,Werd,Tschechische Republik,6
 041,Werd,Spanien,74
-041,Werd,Serbien und Montenegro, Kosovo,42
+041,Werd,"Serbien und Montenegro, Kosovo",42
 041,Werd,Portugal,75
 041,Werd,Polen,20
 041,Werd,Österreich,43
@@ -54,7 +54,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 083,Weinegg,Türkei,23
 083,Weinegg,Tschechische Republik,2
 083,Weinegg,Spanien,34
-083,Weinegg,Serbien und Montenegro, Kosovo,42
+083,Weinegg,"Serbien und Montenegro, Kosovo",42
 083,Weinegg,Portugal,77
 083,Weinegg,Polen,12
 083,Weinegg,Österreich,88
@@ -67,7 +67,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 061,Unterstrass,Türkei,79
 061,Unterstrass,Tschechische Republik,16
 061,Unterstrass,Spanien,237
-061,Unterstrass,Serbien und Montenegro, Kosovo,192
+061,Unterstrass,"Serbien und Montenegro, Kosovo",192
 061,Unterstrass,Portugal,242
 061,Unterstrass,Polen,73
 061,Unterstrass,Österreich,246
@@ -80,7 +80,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 034,Sihlfeld,Türkei,196
 034,Sihlfeld,Tschechische Republik,31
 034,Sihlfeld,Spanien,393
-034,Sihlfeld,Serbien und Montenegro, Kosovo,434
+034,Sihlfeld,"Serbien und Montenegro, Kosovo",434
 034,Sihlfeld,Portugal,550
 034,Sihlfeld,Polen,52
 034,Sihlfeld,Österreich,214
@@ -93,7 +93,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 081,Seefeld,Türkei,15
 081,Seefeld,Tschechische Republik,8
 081,Seefeld,Spanien,83
-081,Seefeld,Serbien und Montenegro, Kosovo,6
+081,Seefeld,"Serbien und Montenegro, Kosovo",6
 081,Seefeld,Portugal,18
 081,Seefeld,Polen,25
 081,Seefeld,Österreich,84
@@ -106,7 +106,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 119,Seebach,Türkei,296
 119,Seebach,Tschechische Republik,37
 119,Seebach,Spanien,300
-119,Seebach,Serbien und Montenegro, Kosovo,823
+119,Seebach,"Serbien und Montenegro, Kosovo",823
 119,Seebach,Portugal,557
 119,Seebach,Polen,99
 119,Seebach,Österreich,246
@@ -119,7 +119,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 122,Schwamendingen-Mitte,Türkei,218
 122,Schwamendingen-Mitte,Tschechische Republik,17
 122,Schwamendingen-Mitte,Spanien,165
-122,Schwamendingen-Mitte,Serbien und Montenegro, Kosovo,571
+122,Schwamendingen-Mitte,"Serbien und Montenegro, Kosovo",571
 122,Schwamendingen-Mitte,Portugal,415
 122,Schwamendingen-Mitte,Polen,33
 122,Schwamendingen-Mitte,Österreich,93
@@ -132,7 +132,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 121,Saatlen,Türkei,106
 121,Saatlen,Tschechische Republik,3
 121,Saatlen,Spanien,86
-121,Saatlen,Serbien und Montenegro, Kosovo,275
+121,Saatlen,"Serbien und Montenegro, Kosovo",275
 121,Saatlen,Portugal,185
 121,Saatlen,Polen,17
 121,Saatlen,Österreich,49
@@ -145,7 +145,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 011,Rathaus,Türkei,8
 011,Rathaus,Tschechische Republik,3
 011,Rathaus,Spanien,45
-011,Rathaus,Serbien und Montenegro, Kosovo,6
+011,Rathaus,"Serbien und Montenegro, Kosovo",6
 011,Rathaus,Portugal,20
 011,Rathaus,Polen,4
 011,Rathaus,Österreich,48
@@ -158,7 +158,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 115,Oerlikon,Türkei,233
 115,Oerlikon,Tschechische Republik,35
 115,Oerlikon,Spanien,312
-115,Oerlikon,Serbien und Montenegro, Kosovo,344
+115,Oerlikon,"Serbien und Montenegro, Kosovo",344
 115,Oerlikon,Portugal,367
 115,Oerlikon,Polen,95
 115,Oerlikon,Österreich,261
@@ -171,7 +171,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 063,Oberstrass,Türkei,30
 063,Oberstrass,Tschechische Republik,7
 063,Oberstrass,Spanien,86
-063,Oberstrass,Serbien und Montenegro, Kosovo,32
+063,Oberstrass,"Serbien und Montenegro, Kosovo",32
 063,Oberstrass,Portugal,42
 063,Oberstrass,Polen,42
 063,Oberstrass,Österreich,161
@@ -184,7 +184,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 082,Mühlebach,Türkei,14
 082,Mühlebach,Tschechische Republik,8
 082,Mühlebach,Spanien,60
-082,Mühlebach,Serbien und Montenegro, Kosovo,22
+082,Mühlebach,"Serbien und Montenegro, Kosovo",22
 082,Mühlebach,Portugal,63
 082,Mühlebach,Polen,22
 082,Mühlebach,Österreich,94
@@ -197,7 +197,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 013,Lindenhof,Türkei,2
 013,Lindenhof,Tschechische Republik,2
 013,Lindenhof,Spanien,6
-013,Lindenhof,Serbien und Montenegro, Kosovo,2
+013,Lindenhof,"Serbien und Montenegro, Kosovo",2
 013,Lindenhof,Portugal,5
 013,Lindenhof,Österreich,12
 013,Lindenhof,Niederlande,5
@@ -209,7 +209,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 023,Leimbach,Türkei,63
 023,Leimbach,Tschechische Republik,9
 023,Leimbach,Spanien,52
-023,Leimbach,Serbien und Montenegro, Kosovo,58
+023,Leimbach,"Serbien und Montenegro, Kosovo",58
 023,Leimbach,Portugal,76
 023,Leimbach,Polen,8
 023,Leimbach,Österreich,40
@@ -222,7 +222,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 042,Langstrasse,Türkei,114
 042,Langstrasse,Tschechische Republik,12
 042,Langstrasse,Spanien,249
-042,Langstrasse,Serbien und Montenegro, Kosovo,154
+042,Langstrasse,"Serbien und Montenegro, Kosovo",154
 042,Langstrasse,Portugal,394
 042,Langstrasse,Polen,32
 042,Langstrasse,Österreich,128
@@ -235,7 +235,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 072,Hottingen,Türkei,31
 072,Hottingen,Tschechische Republik,9
 072,Hottingen,Spanien,106
-072,Hottingen,Serbien und Montenegro, Kosovo,43
+072,Hottingen,"Serbien und Montenegro, Kosovo",43
 072,Hottingen,Portugal,56
 072,Hottingen,Polen,39
 072,Hottingen,Österreich,131
@@ -248,7 +248,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 101,Höngg,Türkei,99
 101,Höngg,Tschechische Republik,40
 101,Höngg,Spanien,185
-101,Höngg,Serbien und Montenegro, Kosovo,170
+101,Höngg,"Serbien und Montenegro, Kosovo",170
 101,Höngg,Portugal,117
 101,Höngg,Polen,62
 101,Höngg,Österreich,229
@@ -261,7 +261,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 012,Hochschulen,Türkei,8
 012,Hochschulen,Tschechische Republik,2
 012,Hochschulen,Spanien,4
-012,Hochschulen,Serbien und Montenegro, Kosovo,2
+012,Hochschulen,"Serbien und Montenegro, Kosovo",2
 012,Hochschulen,Portugal,7
 012,Hochschulen,Polen,4
 012,Hochschulen,Österreich,22
@@ -274,7 +274,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 123,Hirzenbach,Türkei,225
 123,Hirzenbach,Tschechische Republik,11
 123,Hirzenbach,Spanien,136
-123,Hirzenbach,Serbien und Montenegro, Kosovo,568
+123,Hirzenbach,"Serbien und Montenegro, Kosovo",568
 123,Hirzenbach,Portugal,574
 123,Hirzenbach,Polen,26
 123,Hirzenbach,Österreich,75
@@ -287,7 +287,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 073,Hirslanden,Türkei,14
 073,Hirslanden,Tschechische Republik,5
 073,Hirslanden,Spanien,62
-073,Hirslanden,Serbien und Montenegro, Kosovo,35
+073,Hirslanden,"Serbien und Montenegro, Kosovo",35
 073,Hirslanden,Portugal,34
 073,Hirslanden,Polen,17
 073,Hirslanden,Österreich,104
@@ -300,7 +300,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 044,Hard,Türkei,228
 044,Hard,Tschechische Republik,11
 044,Hard,Spanien,282
-044,Hard,Serbien und Montenegro, Kosovo,462
+044,Hard,"Serbien und Montenegro, Kosovo",462
 044,Hard,Portugal,917
 044,Hard,Polen,27
 044,Hard,Österreich,113
@@ -313,7 +313,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 051,Gewerbeschule,Türkei,117
 051,Gewerbeschule,Tschechische Republik,16
 051,Gewerbeschule,Spanien,168
-051,Gewerbeschule,Serbien und Montenegro, Kosovo,227
+051,Gewerbeschule,"Serbien und Montenegro, Kosovo",227
 051,Gewerbeschule,Portugal,191
 051,Gewerbeschule,Polen,34
 051,Gewerbeschule,Österreich,103
@@ -326,7 +326,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 033,Friesenberg,Türkei,100
 033,Friesenberg,Tschechische Republik,8
 033,Friesenberg,Spanien,111
-033,Friesenberg,Serbien und Montenegro, Kosovo,168
+033,Friesenberg,"Serbien und Montenegro, Kosovo",168
 033,Friesenberg,Portugal,165
 033,Friesenberg,Polen,24
 033,Friesenberg,Österreich,81
@@ -339,7 +339,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 071,Fluntern,Türkei,12
 071,Fluntern,Tschechische Republik,7
 071,Fluntern,Spanien,60
-071,Fluntern,Serbien und Montenegro, Kosovo,17
+071,Fluntern,"Serbien und Montenegro, Kosovo",17
 071,Fluntern,Portugal,29
 071,Fluntern,Polen,20
 071,Fluntern,Österreich,130
@@ -352,7 +352,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 052,Escher Wyss,Türkei,8
 052,Escher Wyss,Tschechische Republik,5
 052,Escher Wyss,Spanien,27
-052,Escher Wyss,Serbien und Montenegro, Kosovo,21
+052,Escher Wyss,"Serbien und Montenegro, Kosovo",21
 052,Escher Wyss,Portugal,44
 052,Escher Wyss,Polen,13
 052,Escher Wyss,Österreich,28
@@ -365,7 +365,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 024,Enge,Türkei,25
 024,Enge,Tschechische Republik,12
 024,Enge,Spanien,113
-024,Enge,Serbien und Montenegro, Kosovo,43
+024,Enge,"Serbien und Montenegro, Kosovo",43
 024,Enge,Portugal,72
 024,Enge,Polen,40
 024,Enge,Österreich,125
@@ -378,7 +378,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 014,City,Türkei,3
 014,City,Tschechische Republik,2
 014,City,Spanien,8
-014,City,Serbien und Montenegro, Kosovo,13
+014,City,"Serbien und Montenegro, Kosovo",13
 014,City,Portugal,8
 014,City,Polen,2
 014,City,Österreich,17
@@ -391,7 +391,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 031,Alt-Wiedikon,Türkei,135
 031,Alt-Wiedikon,Tschechische Republik,23
 031,Alt-Wiedikon,Spanien,215
-031,Alt-Wiedikon,Serbien und Montenegro, Kosovo,170
+031,Alt-Wiedikon,"Serbien und Montenegro, Kosovo",170
 031,Alt-Wiedikon,Portugal,330
 031,Alt-Wiedikon,Polen,61
 031,Alt-Wiedikon,Österreich,178
@@ -404,7 +404,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 092,Altstetten,Türkei,561
 092,Altstetten,Tschechische Republik,44
 092,Altstetten,Spanien,625
-092,Altstetten,Serbien und Montenegro, Kosovo,920
+092,Altstetten,"Serbien und Montenegro, Kosovo",920
 092,Altstetten,Portugal,1324
 092,Altstetten,Polen,91
 092,Altstetten,Österreich,330
@@ -417,7 +417,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 091,Albisrieden,Türkei,162
 091,Albisrieden,Tschechische Republik,14
 091,Albisrieden,Spanien,212
-091,Albisrieden,Serbien und Montenegro, Kosovo,227
+091,Albisrieden,"Serbien und Montenegro, Kosovo",227
 091,Albisrieden,Portugal,407
 091,Albisrieden,Polen,48
 091,Albisrieden,Österreich,132
@@ -430,7 +430,7 @@ Qcode,Qname,Ländergruppe,Anzahl
 111,Affoltern,Türkei,354
 111,Affoltern,Tschechische Republik,40
 111,Affoltern,Spanien,325
-111,Affoltern,Serbien und Montenegro, Kosovo,708
+111,Affoltern,"Serbien und Montenegro, Kosovo",708
 111,Affoltern,Portugal,605
 111,Affoltern,Polen,88
 111,Affoltern,Österreich,304

@@ -18,7 +18,7 @@
         "docs/heat-table/data/HT_kreise.csv"
     ],
     "size": {
-        "width": 540,
+        "width": 460,
         "height": 700
     }
 }
@@ -34,8 +34,8 @@
         "docs/heat-table/data/HT_quartiere.csv"
     ],
     "size": {
-        "width": 540,
-        "height": 700
+        "width": 900,
+        "height": 375
     }
 }
 ```
@@ -50,8 +50,8 @@
         "docs/heat-table/data/HT_wermitwem.csv"
     ],
     "size": {
-        "width": 540,
-        "height": 700
+        "width": 600,
+        "height": 440
     }
 }
 ```
