@@ -18,35 +18,38 @@
 
   var state = {
     data: [],
-    tooltips: []
-  }
+    tooltips: [],
+    hoveredDatum: {}
+  };
 
   d3.csv('data/SiVB_yearly_many.csv')
     .row(function(d) {
       return {
         category: d['Jahr'],
         value: sszvis.parse.number(d['Hotel?bernachtungen'])
-      }
+      };
     })
     .get(function(error, data) {
       if (error) {
         console.log('error loading data: ', error);
-        return
+        return;
       }
       state.data = data;
       render(state);
     });
 
   var actions = {
-    showTooltip: function(tooltip) {
-      state.tooltips = [tooltip];
+    showTooltip: function(datum) {
+      state.tooltips = [datum];
+      state.hoveredDatum = datum;
       render(state);
     },
     hideTooltip: function() {
       state.tooltips = [];
+      state.hoveredDatum = {};
       render(state);
     }
-  }
+  };
 
   function render(state) {
     var bounds = sszvis.bounds({width: 900, height: 442, top: 3, right: 3, bottom: 40, left: 3});
@@ -73,7 +76,10 @@
       .x(xValue)
       .y(yValue)
       .width(xScale.rangeBand())
-      .height(fn.compose(heightScale, yAcc));
+      .height(fn.compose(heightScale, yAcc))
+      .fill(function(d) {
+        return d === state.hoveredDatum ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
+      });
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');

@@ -18,8 +18,10 @@
 (function() {
 
   var state = {
-    data: []
-  }
+    data: [],
+    tooltips: [],
+    hoveredDatum: {}
+  };
 
   d3.csv('data/HT_kreise.csv')
     .row(function(d) {
@@ -27,7 +29,7 @@
         kreis: d['KName'],
         agegroup: d['Altersgruppe'],
         value: sszvis.parse.number(d['Anzahl'])
-      }
+      };
     })
     .get(function(error, data) {
       if (error) {
@@ -39,49 +41,110 @@
     });
 
   var actions = {
-
-  }
+    showTooltip: function(datum) {
+      state.tooltips = [datum];
+      state.hoveredDatum = datum;
+      render(state);
+    },
+    hideTooltip: function() {
+      state.tooltips = [];
+      state.hoveredDatum = {};
+      render(state);
+    }
+  };
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 540, height: 700, top: 10, right: 68, bottom: 10, left: 68 })
+    var bounds = sszvis.bounds({ width: 540, height: 700, top: 50, right: 93, bottom: 50, left: 93 });
 
-    var xAcc = sszvis.fn.prop('kreis')
-    var yAcc = sszvis.fn.prop('agegroup')
+    var xAcc = sszvis.fn.prop('kreis');
+    var yAcc = sszvis.fn.prop('agegroup');
+    var cAcc = sszvis.fn.prop('value');
 
-    var kreisList = state.data.map(xAcc)
+    var kreisList = state.data.map(xAcc);
     kreisList.sort(function(a, b) {
       var kA = a.replace('Kreis ', ''),
           kB = b.replace('Kreis ', '');
       return +kA - +kB;
-    })
-    kreisList = sszvis.fn.uniqueSorted(kreisList)
+    });
+    kreisList = sszvis.fn.uniqueSorted(kreisList);
 
-    var agesList = state.data.map(yAcc)
-    agesList = sszvis.fn.uniqueUnsorted(agesList)
+    var agesList = state.data.map(yAcc);
+    agesList = sszvis.fn.uniqueUnsorted(agesList);
 
-    var xSide = bounds.innerWidth / kreisList.length
-    var ySide = bounds.innerHeight / agesList.length
-    var sideLength = Math.min(xSide, ySide) * 0.85
+    var xSide = bounds.innerWidth / kreisList.length;
+    var ySide = bounds.innerHeight / agesList.length;
+    var sideLength = Math.min(xSide, ySide) * 0.95;
 
     var xScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
-      .domain(kreisList)
+      .domain(kreisList);
 
     var yScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
-      .domain(agesList)
+      .domain(agesList);
+
+    var valueDomain = d3.extent(state.data.map(cAcc));
+    var colorDomain = [valueDomain[0], (valueDomain[0] + valueDomain[1]) / 2, valueDomain[1]];
+
+    var colorScale = d3.scale.linear()
+      .domain(colorDomain)
+      .range(sszvis.color.ranges.sequential.valued.blue.map(function(c) { return d3.lab(c); }));
+
+    var xValue = sszvis.fn.compose(xScale, xAcc);
+    var yValue = sszvis.fn.compose(yScale, yAcc);
+    var cValue = sszvis.fn.compose(colorScale, cAcc);
 
     var barGen = sszvis.component.bar()
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yScale, yAcc))
+      .x(xValue)
+      .y(yValue)
       .width(xScale.rangeBand())
       .height(yScale.rangeBand())
+      .fill(cValue)
+      .stroke(function(d) { return d === state.hoveredDatum ? d3.hsl(cValue(d)).darker(0.4) : "none" });
+
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('top').tickSize(0, 0).tickPadding(0);
+    var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
+
+    var tooltipHeaderText = sszvis.component.modularText()
+      .bold(sszvis.fn.prop('value'))
+      .plain(' Einwohner');
+
+    var tooltipBodyText = sszvis.component.modularText()
+      .plain('im ')
+      .plain(sszvis.fn.prop('kreis'));
+
+    var tooltipMaker = sszvis.component.tooltip()
+      .orientation('bottom')
+      .x(function(d) { return xValue(d) + xScale.rangeBand() / 2 })
+      .y(yValue)
+      .style({ 'white-space': 'nowrap' })
+      .header(tooltipHeaderText)
+      .body(tooltipBodyText);
+
+    var hoverBehavior = sszvis.behavior.mouseover()
+      .mouseover(actions.showTooltip)
+      .mouseout(actions.hideTooltip);
 
     var chart = sszvis.createChart('#chart', bounds)
-      .datum(state.data)
+      .datum(state.data);
+
+    var overlay = sszvis.createHtmlLayer('#chart', bounds)
+      .datum(state.tooltips)
+      .call(tooltipMaker)
 
     var bars = chart.selectGroup('bars')
-      .call(barGen)
+      .call(barGen);
+
+    bars.selectAll('rect')
+      .call(hoverBehavior);
+
+    chart.selectGroup('xAxis')
+      .attr('transform', 'translate(0, -10)')
+      .call(xAxis);
+
+    chart.selectGroup('yAxis')
+      .attr('transform', 'translate(-10, 0)')
+      .call(yAxis);
 
   }
 

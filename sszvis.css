@@ -40,13 +40,8 @@
  * @module sszvis/component/line
  */
 .sszvis-bar {
-  fill: #6392C5;
-}
 
-.sszvis-bar:hover {
-  fill: #3A75B2;
 }
-
 
 /**
  * Line component

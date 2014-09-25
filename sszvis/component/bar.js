@@ -11,7 +11,7 @@ namespace('sszvis.component.bar', function(module) {
       .prop('width')
       .prop('height')
       .prop('fill').fill(null)
-      .prop('mouseover')
+      .prop('stroke').stroke(null)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -28,10 +28,9 @@ namespace('sszvis.component.bar', function(module) {
           .attr('y', props.y)
           .attr('width', props.width)
           .attr('height', props.height)
-          .attr('fill', props.fill);
-
-        if (props.mouseover) bars.on("mouseover", props.mouseover);
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
       });
-  }
+  };
 
 });

@@ -52,6 +52,7 @@
       .y(fn.compose(yPosScale, y))
       .width(xScale.rangeBand())
       .height(fn.compose(heightScale, y))
+      .fill(sszvis.color.values.basicBlue)
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
