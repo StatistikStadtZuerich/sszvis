@@ -1,14 +1,54 @@
-.PHONY: watch
+#
+# make build
+#   - no dependencies
+#
+# make server
+#   - fswatch       <http://emcrisostomo.github.io/fswatch/>
+#   - browser-sync  <http://www.browsersync.io/>
+#
+
+.PHONY: build server
+
+CLI_SUCCESS = \033[1;32m✔
+CLI_RESET   = \033[0m
+
+BUILD_TARGET = sszvis.js
 
 SOURCE_FILES = \
 	vendor/d3-component/d3-component.js \
 	vendor/d3-de/d3-de.js \
-	vendor/d3-selectgroup/d3-selectgroup.js
+	vendor/d3-selectgroup/d3-selectgroup.js \
+	vendor/namespace/namespace.js \
+	sszvis/_head.js \
+	sszvis/bounds.js \
+	sszvis/color.js \
+	sszvis/fn.js \
+	sszvis/format.js \
+	sszvis/parse.js \
+	sszvis/scale.js \
+	sszvis/axis.js \
+	sszvis/createChart.js \
+	sszvis/createHtmlLayer.js \
+	sszvis/behavior/mouseover.js \
+	sszvis/behavior/move.js \
+	sszvis/component/bar.js \
+	sszvis/component/line.js \
+	sszvis/component/modularText.js \
+	sszvis/component/ruler.js \
+	sszvis/component/tooltip.js \
+	sszvis/_tail.js
 
 all: server
 
-server:
-	@browser-sync start --server --files="**/*"
+build:
+	@cat $(SOURCE_FILES) > $(BUILD_TARGET)
+	@echo "$(CLI_SUCCESS) Updated $(BUILD_TARGET)$(CLI_RESET)"
 
-compiled:
-	cat $(SOURCE_FILES) > sszvis_required_compiled.js
+server: build
+	@browser-sync start \
+	  --server \
+		--files=$(BUILD_TARGET) \
+		--files="index.html" \
+		--files="sszvis.css" \
+		--files="docs/**/*" \
+		& fswatch -o sszvis/ -o vendor/ | xargs -n1 -I{} make build
