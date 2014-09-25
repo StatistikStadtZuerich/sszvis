@@ -45,7 +45,6 @@ SOURCE_FILES_SEP = $(foreach file, $(SOURCE_FILES), $(call section, $(file)))
 all: server
 
 build:
-#	@cat $(SOURCE_FILES_SEP) > $(BUILD_TARGET)
 	@cat \
 		sszvis/banner/_index.js \
 		sszvis/banner/_vendor.js \
