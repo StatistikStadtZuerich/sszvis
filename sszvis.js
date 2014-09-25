@@ -1,3 +1,33 @@
+/**
+ * sszvis.js is the visualization library used by Statistik Stadt Zürich.
+ * It uses d3.js <http://d3js.org>
+ *
+ * The following modules are contained within this file:
+ *   @VENDOR - various external dependencies
+ *   @SSZVIS - the library itself
+ *
+ * Contact:
+ *   Product Owner     - Statistik Stadt Zürich <https://www.stadt-zuerich.ch/statistik>
+ *   Technical Contact - Interactive Things <http://interactivethings.com>
+ *
+ */
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  @VENDOR                                                                   //
+//                                                                            //
+//  External dependencies that need to be available for the                   //
+//  to run correctly.                                                         //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 (function(d3) {
 
   /**
@@ -140,6 +170,11 @@
   }
 
 }(d3));
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 (function(d3) {
 
   var localizedFormat = d3.locale({
@@ -160,6 +195,11 @@
   d3.time.format = localizedFormat.timeFormat
 
 }(d3));
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 (function(d3) {
 
   /**
@@ -183,6 +223,11 @@
   };
 
 }(d3));
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 (function(global){
 
   global.namespace = function(path, body) {
@@ -201,18 +246,22 @@
   }
 
 }(window));
-;(function(global, d3) {
-  "use strict";
 
-  /**
-   * The root of the sszvis library
-   *
-   * @namespace
-   * @module sszvis
-   */
-  var exports = global.sszvis = {
-    version: "0.1.0"
-  };
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  @SSZVIS                                                                   //
+//                                                                            //
+//  The main components of the library                                        //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Creates a bounds object to help with the construction of d3 charts
  * that follow the d3 margin convention.
@@ -245,6 +294,11 @@ namespace('sszvis.bounds', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 namespace('sszvis.color', function(module) {
 
   module.exports.ranges = {
@@ -265,6 +319,11 @@ namespace('sszvis.color', function(module) {
   };
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * A collection of functional helper functions
  *
@@ -360,6 +419,11 @@ namespace('sszvis.fn', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Formatting functions
  *
@@ -405,6 +469,11 @@ namespace('sszvis.format', function(module) {
   }());
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Parsing functions
  *
@@ -433,6 +502,11 @@ namespace('sszvis.parse', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Scale component - for implementing alternatives to d3.scale
  *
@@ -474,6 +548,11 @@ namespace('sszvis.scale', function(module) {
   }());
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Axis component based on the d3.axis interface
  *
@@ -483,6 +562,8 @@ namespace('sszvis.scale', function(module) {
 namespace('sszvis.axis', function(module) {
 
   module.exports = (function() {
+
+    var format = sszvis.format;
 
     var stringEqual = function(a, b) {
       return a.toString() === b.toString();
@@ -573,7 +654,7 @@ namespace('sszvis.axis', function(module) {
         .ticks(3)
         .tickSize(4, 7)
         .tickPadding(7)
-        .tickFormat(exports.format.number)
+        .tickFormat(format.number)
     };
 
     axis_x.time = function() {
@@ -583,7 +664,7 @@ namespace('sszvis.axis', function(module) {
     }
 
     axis_x.ordinal = function() {
-      return axis_x().tickFormat(exports.format.text);
+      return axis_x().tickFormat(format.text);
     }
 
     var axis_y = function() {
@@ -592,7 +673,7 @@ namespace('sszvis.axis', function(module) {
         .tickSize(0, 0)
         .tickPadding(0)
         .tickFormat(function(d) {
-          return 0 === d ? null : exports.format.number(d);
+          return 0 === d ? null : format.number(d);
         })
         .vertical(true);
     }
@@ -602,7 +683,7 @@ namespace('sszvis.axis', function(module) {
     }
 
     axis_y.ordinal = function() {
-      return axis_y().tickFormat(exports.format.text);
+      return axis_y().tickFormat(format.text);
     }
 
     return {
@@ -613,6 +694,11 @@ namespace('sszvis.axis', function(module) {
   }());
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Factory that returns an SVG element appended to the given target selector,
  * ensuring that it is only created once, even when run again.
@@ -644,6 +730,11 @@ namespace('sszvis.createChart', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 namespace('sszvis.createHtmlLayer', function(module) {
 
   module.exports = function(selector, bounds) {
@@ -661,6 +752,11 @@ namespace('sszvis.createHtmlLayer', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 namespace('sszvis.behavior.mouseover', function(module) {
 
   module.exports = function() {
@@ -689,6 +785,11 @@ namespace('sszvis.behavior.mouseover', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Move behavior
  * @return {d3.component}
@@ -735,6 +836,11 @@ namespace('sszvis.behavior.move', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Bar component
  * @return {d3.component}
@@ -772,6 +878,11 @@ namespace('sszvis.component.bar', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Line component
  * @return {d3.component}
@@ -810,6 +921,11 @@ namespace('sszvis.component.line', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * ModularText component
  *
@@ -878,6 +994,11 @@ namespace('sszvis.component.modularText', function(module) {
   };
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 
 /**
  * Ruler component
@@ -964,6 +1085,11 @@ namespace('sszvis.component.ruler', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Tooltip component
  *
@@ -1048,4 +1174,3 @@ namespace('sszvis.component.tooltip', function(module) {
    };
 
 });
-}(window, d3));

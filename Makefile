@@ -14,12 +14,13 @@ CLI_RESET   = \033[0m
 
 BUILD_TARGET = sszvis.js
 
-SOURCE_FILES = \
+VENDOR_FILES = \
 	vendor/d3-component/d3-component.js \
 	vendor/d3-de/d3-de.js \
 	vendor/d3-selectgroup/d3-selectgroup.js \
-	vendor/namespace/namespace.js \
-	sszvis/_head.js \
+	vendor/namespace/namespace.js
+
+SOURCE_FILES = \
 	sszvis/bounds.js \
 	sszvis/color.js \
 	sszvis/fn.js \
@@ -35,13 +36,23 @@ SOURCE_FILES = \
 	sszvis/component/line.js \
 	sszvis/component/modularText.js \
 	sszvis/component/ruler.js \
-	sszvis/component/tooltip.js \
-	sszvis/_tail.js
+	sszvis/component/tooltip.js
+
+section = sszvis/banner/_section.js $(1)
+VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
+SOURCE_FILES_SEP = $(foreach file, $(SOURCE_FILES), $(call section, $(file)))
 
 all: server
 
 build:
-	@cat $(SOURCE_FILES) > $(BUILD_TARGET)
+#	@cat $(SOURCE_FILES_SEP) > $(BUILD_TARGET)
+	@cat \
+		sszvis/banner/_index.js \
+		sszvis/banner/_vendor.js \
+		$(VENDOR_FILES_SEP) \
+		sszvis/banner/_sszvis.js \
+		$(SOURCE_FILES_SEP) \
+		> $(BUILD_TARGET)
 	@echo "$(CLI_SUCCESS) Updated $(BUILD_TARGET)$(CLI_RESET)"
 
 server: build

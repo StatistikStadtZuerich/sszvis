@@ -8,6 +8,8 @@ namespace('sszvis.axis', function(module) {
 
   module.exports = (function() {
 
+    var format = sszvis.format;
+
     var stringEqual = function(a, b) {
       return a.toString() === b.toString();
     }
@@ -97,7 +99,7 @@ namespace('sszvis.axis', function(module) {
         .ticks(3)
         .tickSize(4, 7)
         .tickPadding(7)
-        .tickFormat(exports.format.number)
+        .tickFormat(format.number)
     };
 
     axis_x.time = function() {
@@ -107,7 +109,7 @@ namespace('sszvis.axis', function(module) {
     }
 
     axis_x.ordinal = function() {
-      return axis_x().tickFormat(exports.format.text);
+      return axis_x().tickFormat(format.text);
     }
 
     var axis_y = function() {
@@ -116,7 +118,7 @@ namespace('sszvis.axis', function(module) {
         .tickSize(0, 0)
         .tickPadding(0)
         .tickFormat(function(d) {
-          return 0 === d ? null : exports.format.number(d);
+          return 0 === d ? null : format.number(d);
         })
         .vertical(true);
     }
@@ -126,7 +128,7 @@ namespace('sszvis.axis', function(module) {
     }
 
     axis_y.ordinal = function() {
-      return axis_y().tickFormat(exports.format.text);
+      return axis_y().tickFormat(format.text);
     }
 
     return {
