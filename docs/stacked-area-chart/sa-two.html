@@ -37,7 +37,7 @@
     });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 516, height: 442, top: 10, right: 10, bottom: 10, left: 10 });
+      var bounds = sszvis.bounds({ width: 516, height: 442, top: 10, right: 10, bottom: 24, left: 10 });
 
       var xAcc = sszvis.fn.prop('year');
       var yAcc = sszvis.fn.prop('value');
@@ -55,7 +55,7 @@
         }
       });
 
-      var xScale = d3.scale.linear()
+      var xScale = d3.time.scale()
         .domain(d3.extent(state.data.map(xAcc)))
         .range([0, bounds.innerWidth]);
 
@@ -93,12 +93,21 @@
         .categoryAccessor(cAcc)
         .fill(function(d, i) { return cScale(d.category); });
 
+      var xAxis = sszvis.axis.x.time().scale(xScale).orient('bottom');
+      var yAxis = sszvis.axis.y().scale(yScale).orient('right');
+
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.data);
 
       var stacked = chart.selectGroup('areachart')
         .call(stackedArea);
 
+      chart.selectGroup('xAxis')
+        .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
+        .call(xAxis);
+
+      chart.selectGroup('yAxis')
+        .call(yAxis);
     }
 
 }());
