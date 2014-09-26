@@ -37,7 +37,8 @@ SOURCE_FILES = \
 	sszvis/component/modularText.js \
 	sszvis/component/ruler.js \
 	sszvis/component/tooltip.js \
-	sszvis/component/stackedArea.js
+	sszvis/component/stackedArea.js \
+	sszvis/component/groupedBars.js
 
 section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
