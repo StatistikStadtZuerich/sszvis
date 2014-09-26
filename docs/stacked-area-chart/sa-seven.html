@@ -23,7 +23,7 @@
     .row(function(d) {
       return {
         category: d['Branche'],
-        year: sszvis.parse.date(d['Jahr']),
+        year: sszvis.parse.year(d['Jahr']),
         value: sszvis.parse.number(d['Wert'])
       }
     })
@@ -37,7 +37,51 @@
     });
 
     function render(state) {
-      
+      var bounds = sszvis.bounds({ width: 516, height: 442, top: 10, right: 10, bottom: 10, left: 10 });
+
+      var xAcc = sszvis.fn.prop('year');
+      var yAcc = sszvis.fn.prop('value');
+      var cAcc = sszvis.fn.prop('category');
+
+      var xScale = d3.scale.linear()
+        .domain(d3.extent(state.data.map(xAcc)))
+        .range([0, bounds.innerWidth]);
+
+      var dateValues = state.data.reduce(function(dv, value) {
+        var date = xAcc(value).toString();
+        if (!dv[date]) {
+          dv[date] = yAcc(value);
+        } else {
+          dv[date] += yAcc(value);
+        }
+        return dv;
+      }, {});
+
+      var maxStacked = d3.max(sszvis.fn.objectValues(dateValues));
+
+      var yScale = d3.scale.linear()
+        .domain([0, maxStacked])
+        .range([bounds.innerHeight, 0]);
+
+      var categories = sszvis.fn.uniqueUnsorted(state.data.map(cAcc));
+
+      var cScale = d3.scale.ordinal()
+        .domain(categories)
+        .range(sszvis.color.ranges.qualitative.qual12);
+
+      var stackedArea = sszvis.component.stacked.area()
+        .xAccessor(xAcc)
+        .xScale(xScale)
+        .yAccessor(yAcc)
+        .yScale(yScale)
+        .categoryAccessor(cAcc)
+        .fill(function(d, i) { return cScale(d.category); });
+
+      var chart = sszvis.createChart('#chart', bounds)
+        .datum(state.data);
+
+      var stacked = chart.selectGroup('areachart')
+        .call(stackedArea);
     }
 
 }());

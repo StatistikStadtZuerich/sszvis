@@ -47,6 +47,7 @@
         var ca = cAcc(a), cb = cAcc(b);
         if (ca !== cb) {
           // sort group 'Schweizer' to the start so it becomes the bottom layer
+          // (for visual effect)
           return ca === 'Schweizer' ? -1 : (cb === 'Schweizer' ? 1 : (ca < cb ? -1 : 1));
         } else {
           var xa = xAcc(a), xb = xAcc(b);
@@ -58,6 +59,8 @@
         .domain(d3.extent(state.data.map(xAcc)))
         .range([0, bounds.innerWidth]);
 
+      // compute the maximum value of stacked chart as a whole
+      // (the maximum y-value when all layers are combined)
       var dateValues = state.data.reduce(function(dv, value) {
         var date = xAcc(value).toString();
         if (!dv[date]) {
@@ -74,7 +77,7 @@
         .domain([0, maxStacked])
         .range([bounds.innerHeight, 0]);
 
-      // It's OK to use fn.uniqueSorted here, because state.data has already been sorted by category (lines 46 - 54)
+      // It's OK to use fn.uniqueSorted here, because state.data has already been sorted by category
       // so the categories in the output of mapping over state.data will also be sorted.
       var categories = sszvis.fn.uniqueSorted(state.data.map(cAcc));
 
