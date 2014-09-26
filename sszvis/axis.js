@@ -46,6 +46,7 @@ namespace('sszvis.axis', function(module) {
         .prop('vertical').vertical(false)
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('highlight')
+        .prop('halo')
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -64,6 +65,7 @@ namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis', true)
             .classed('sszvis-axis--horizontal', !props.vertical)
             .classed('sszvis-axis--vertical', props.vertical)
+            .classed('sszvis-axis--halo', props.halo)
             .attr('transform', 'translate(0, 2)')
             .call(axisDelegate);
 

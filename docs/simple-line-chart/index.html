@@ -53,7 +53,8 @@
 
       var yAxis = sszvis.axis.y()
         .scale(yScale)
-        .orient('right');
+        .orient('right')
+        .halo(true);
 
       var chart = sszvis.createChart('#chart', bounds)
         .datum([data]);

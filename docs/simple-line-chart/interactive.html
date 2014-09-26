@@ -85,7 +85,8 @@
 
       var yAxis = sszvis.axis.y()
         .scale(yScale)
-        .orient('right');
+        .orient('right')
+        .halo(true);
 
       var highlightLayer = sszvis.component.ruler()
         .x(fn.prop('date'))
