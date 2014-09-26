@@ -10,8 +10,8 @@ namespace('sszvis.component.bar', function(module) {
       .prop('y')
       .prop('width')
       .prop('height')
-      .prop('fill').fill(null)
-      .prop('stroke').stroke(null)
+      .prop('fill')
+      .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
