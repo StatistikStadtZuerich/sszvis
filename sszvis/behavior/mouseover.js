@@ -1,28 +1,17 @@
 namespace('sszvis.behavior.mouseover', function(module) {
 
   module.exports = function() {
-    var fn = sszvis.fn;
+    return d3.component()
+      .prop('mouseover').mouseover(sszvis.fn.identity)
+      .prop('mouseout').mouseout(sszvis.fn.identity)
+      .render(function() {
+        var selection = d3.select(this),
+            props = selection.props();
 
-    var overFunc = fn.identity;
-    var outFunc = fn.identity;
-
-    function addMouseOver(selection) {
-      selection
-        .on('mouseover', overFunc)
-        .on('mouseout', outFunc);
-    }
-
-    addMouseOver.mouseover = function(func) {
-      overFunc = func;
-      return this;
-    }
-
-    addMouseOver.mouseout = function(func) {
-      outFunc = func;
-      return this;
-    }
-
-    return addMouseOver;
+        selection
+          .on('mouseover', props.mouseover)
+          .on('mouseout', props.mouseout);
+      });
   }
 
 });
