@@ -99,7 +99,7 @@
 }
 
 .sszvis-tooltip-box {
-  background-color: rgba(242, 242, 242, 0.9);
+  background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 0 4px 0px rgba(177, 177, 177, 0.9);
   padding: 10px;
   font-size: 11px;
@@ -143,22 +143,22 @@
 
 .sszvis-tooltip-tip.tip-top {
   transform: translate(-50%, 0);
-  border-bottom-color: rgb(242, 242, 242);
+  border-bottom-color: rgb(255, 255, 255);
 }
 
 .sszvis-tooltip-tip.tip-bot {
   transform: translate(-50%, 0);
-  border-top-color: rgb(242, 242, 242);
+  border-top-color: rgb(255, 255, 255);
 }
 
 .sszvis-tooltip-tip.tip-left {
   transform: translate(0, -50%);
-  border-right-color: rgb(242, 242, 242);
+  border-right-color: rgb(255, 255, 255);
 }
 
 .sszvis-tooltip-tip.tip-right {
   transform: translate(0, -50%);
-  border-left-color: rgb(242, 242, 242);
+  border-left-color: rgb(255, 255, 255);
 }
 
 .sszvis-tooltip-header {
