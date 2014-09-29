@@ -26,7 +26,7 @@
 
 ```project
 {
-    "index": "docs/pie-chart/seven-cat.html",
+    "index": "docs/pie-chart/twelve-cat.html",
     "readme": "docs/pie-chart/README.md",
     "files": [
         "docs/pie-chart/data/P_7Categories.csv"

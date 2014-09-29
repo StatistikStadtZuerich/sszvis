@@ -19,11 +19,11 @@
     data: []
   };
 
-  d3.csv('data/P_subcategories.csv')
+  d3.csv('data/P_7Categories.csv')
     .row(function(d) {
       return {
         category: d['Kategorie'],
-        value: sszvis.parse.number(d['Anzahl'])
+        value: sszvis.parse.number(d['Schweiz Import'])
       };
     })
     .get(function(error, data) {
@@ -47,7 +47,7 @@
 
     var cScale = d3.scale.ordinal()
       .domain(sszvis.fn.uniqueUnsorted(state.data.map(cAcc)))
-      .range(sszvis.color.ranges.qualitative.qual6);
+      .range(sszvis.color.ranges.qualitative.qual12);
 
     var pieMaker = sszvis.component.pie()
       .radius(bounds.innerWidth / 2)
