@@ -8,6 +8,7 @@ namespace('sszvis.axis', function(module) {
 
   module.exports = (function() {
 
+    var fn = sszvis.fn;
     var format = sszvis.format;
 
     var stringEqual = function(a, b) {
@@ -47,6 +48,7 @@ namespace('sszvis.axis', function(module) {
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('highlight')
         .prop('halo')
+        .prop('textWrap')
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -92,6 +94,11 @@ namespace('sszvis.axis', function(module) {
                 }
                 return 'middle';
               });
+          }
+
+          if (fn.defined(props.textWrap)) {
+            group.selectAll('text')
+              .call(sszvis.component.textWrap, props.textWrap);
           }
         });
     }

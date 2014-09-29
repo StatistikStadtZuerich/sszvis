@@ -49,7 +49,7 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({width: 516, height: 442, top: 60, right: 20, bottom: 40, left: 3});
+    var bounds = sszvis.bounds({width: 516, height: 442, top: 60, right: 20, bottom: 60, left: 3});
 
     var xAccessor = fn.prop('category');
     var yAccessor = fn.prop('value');
@@ -76,7 +76,10 @@
       .height(fn.compose(heightScale, yAccessor))
       .fill(sszvis.color.values.basicBlue)
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
+    var xRange = xScale.range();
+    var labelWrapWidth = (d3.max(xRange) - d3.min(xRange)) / xRange.length;
+
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom').textWrap(labelWrapWidth);
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
 
     var tooltipText = sszvis.component.modularText()

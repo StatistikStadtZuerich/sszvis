@@ -33,13 +33,14 @@ SOURCE_FILES = \
 	sszvis/behavior/mouseover.js \
 	sszvis/behavior/move.js \
 	sszvis/component/bar.js \
+	sszvis/component/groupedBars.js \
 	sszvis/component/line.js \
 	sszvis/component/modularText.js \
 	sszvis/component/ruler.js \
 	sszvis/component/tooltip.js \
 	sszvis/component/stackedArea.js \
 	sszvis/component/stackedBar.js \
-	sszvis/component/groupedBars.js
+	sszvis/component/textWrap.js \
 
 section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
