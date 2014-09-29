@@ -87,6 +87,21 @@
     }
 
     /**
+     * Delegate a properties' accessors to a delegate object
+     *
+     * @param  {String} prop     The property's name
+     * @param  {Object} delegate The target having getter and setter methods for prop
+     * @return {d3.component}
+     */
+    component.delegate = function(prop, delegate) {
+      component[prop] = function() {
+        var result = delegate[prop].apply(delegate, slice(arguments));
+        return (arguments.length === 0) ? result : component;
+      }
+      return component;
+    }
+
+    /**
      * Get the props of this component
      *
      * @return {Object} this component's props
@@ -677,6 +692,7 @@ namespace('sszvis.axis', function(module) {
 
   module.exports = (function() {
 
+    var fn = sszvis.fn;
     var format = sszvis.format;
 
     var stringEqual = function(a, b) {
@@ -698,37 +714,23 @@ namespace('sszvis.axis', function(module) {
       var axisDelegate = d3.svg.axis();
 
       return d3.component()
-        .prop('scale').scale(axisDelegate.scale())
-        .prop('orient').orient(axisDelegate.orient())
-        .prop('ticks').ticks(axisDelegate.ticks())
-        .prop('tickValues').tickValues(axisDelegate.tickValues())
-        .prop('tickSize', function(inner, outer) {
-          if (!arguments.length) return this.innerTickSize();
-          this.innerTickSize(inner);
-          this.outerTickSize(outer);
-          return inner;
-        })
-        .prop('innerTickSize').innerTickSize(axisDelegate.innerTickSize())
-        .prop('outerTickSize').outerTickSize(axisDelegate.outerTickSize())
-        .prop('tickPadding').tickPadding(axisDelegate.tickPadding())
-        .prop('tickFormat').tickFormat(axisDelegate.tickFormat())
+        .delegate('scale', axisDelegate)
+        .delegate('orient', axisDelegate)
+        .delegate('ticks', axisDelegate)
+        .delegate('tickValues', axisDelegate)
+        .delegate('tickSize', axisDelegate)
+        .delegate('innerTickSize', axisDelegate)
+        .delegate('outerTickSize', axisDelegate)
+        .delegate('tickPadding', axisDelegate)
+        .delegate('tickFormat', axisDelegate)
         .prop('vertical').vertical(false)
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('highlight')
         .prop('halo')
+        .prop('textWrap')
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
-
-          axisDelegate
-            .scale(props.scale)
-            .orient(props.orient)
-            .ticks(props.ticks)
-            .tickValues(props.tickValues)
-            .innerTickSize(props.innerTickSize)
-            .outerTickSize(props.outerTickSize)
-            .tickPadding(props.tickPadding)
-            .tickFormat(props.tickFormat)
 
           var group = selection.selectGroup('sszvis-axis')
             .classed('sszvis-axis', true)
@@ -748,7 +750,7 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = d3.extent(props.scale.domain());
+            var extent = d3.extent(axisDelegate.scale().domain());
             var min = extent[0];
             var max = extent[1];
 
@@ -762,6 +764,21 @@ namespace('sszvis.axis', function(module) {
                 return 'middle';
               });
           }
+
+          if (fn.defined(props.textWrap)) {
+            group.selectAll('text')
+              .call(sszvis.component.textWrap, props.textWrap);
+          }
+
+          // specify specific line breaks
+          // {label1: ['first', 'second', 'line'], label6: ['a', 'b']}
+          // group.selectAll("text")
+          //   .style("text-anchor", "end")
+          //   .attr("dx", "-0.9em")
+          //   .attr("dy", "0em")
+          //   .attr("transform", function(d) {
+          //     return "rotate(-45)";
+          //   });
         });
     }
 
@@ -983,6 +1000,74 @@ namespace('sszvis.component.bar', function(module) {
 
 });
 
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Grouped Bars
+ * @return {d3.component}
+ */
+namespace('sszvis.component.groupedBars', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('groupAccessor')
+      .prop('groupScale')
+      .prop('groupWidth')
+      .prop('groupSpace').groupSpace(0.05)
+      .prop('y')
+      .prop('height')
+      .prop('fill')
+      .prop('stroke')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var groupNames = sszvis.fn.uniqueUnsorted(data.map(props.groupAccessor));
+        var groupedData = data.reduce(function(memo, value) {
+          var index = groupNames.indexOf(props.groupAccessor(value));
+          if (!memo[index]) {
+            memo[index] = [value];
+          } else {
+            memo[index].push(value);
+          }
+          return memo;
+        }, []);
+
+        var largestGroup = d3.max(groupedData.map(sszvis.fn.prop('length')));
+
+        var inGroupScale = d3.scale.ordinal()
+          .domain(d3.range(largestGroup))
+          .rangeBands([0, props.groupWidth], props.groupSpace, 0);
+
+        var groups = selection.selectAll('g')
+          .data(groupedData);
+
+        groups.enter()
+          .append('g')
+          .classed('sszvis-g', true);
+
+        var bars = groups.selectAll('rect')
+          .data(sszvis.fn.identity);
+
+        bars.enter()
+          .append('rect')
+          .classed('sszvis-bar', true);
+
+        bars
+          .attr('x', function(d, i) {
+            // first term is the x-position of the group, the second term is the x-position of the bar within the group
+            return props.groupScale(props.groupAccessor(d)) + inGroupScale(i);
+          })
+          .attr('width', inGroupScale.rangeBand())
+          .attr('y', props.y)
+          .attr('height', props.height)
+          .attr('fill', props.fill);
+      });
+  };
+
+});
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -1430,66 +1515,94 @@ namespace('sszvis.component.stacked.bar', function(module) {
 
 
 /**
- * Grouped Bars
- * @return {d3.component}
+ * Function allowing to 'wrap' the text from an SVG <text> element with <tspan>.
+ * Based on https://github.com/mbostock/d3/issues/1642
+ * @example svg.append("g")
+ *      .attr("class", "x axis")
+ *      .attr("transform", "translate(0," + height + ")")
+ *      .call(xAxis)
+ *      .selectAll(".tick text")
+ *          .call(d3TextWrap, x.rangeBand());
+ *
+ * @param text d3 selection for one or more <text> object
+ * @param width number - global width in which the text will be word-wrapped.
+ * @param paddingRightLeft integer - Padding right and left between the wrapped text and the 'invisible bax' of 'width' width
+ * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
+ * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
-namespace('sszvis.component.groupedBars', function(module) {
+namespace('sszvis.component.textWrap', function(module) {
 
-  module.exports = function() {
-    return d3.component()
-      .prop('groupAccessor')
-      .prop('groupScale')
-      .prop('groupWidth')
-      .prop('groupSpace').groupSpace(0.05)
-      .prop('y')
-      .prop('height')
-      .prop('fill')
-      .prop('stroke')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+  module.exports = function(text, width, paddingRightLeft, paddingTopBottom) {
+    paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
+    paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
+    var maxWidth = width; //I store the tooltip max width
+    width = width - (paddingRightLeft * 2); //Take the padding into account
 
-        var groupNames = sszvis.fn.uniqueUnsorted(data.map(props.groupAccessor));
-        var groupedData = data.reduce(function(memo, value) {
-          var index = groupNames.indexOf(props.groupAccessor(value));
-          if (!memo[index]) {
-            memo[index] = [value];
-          } else {
-            memo[index].push(value);
-          }
-          return memo;
-        }, []);
+    var arrLineCreatedCount = [];
+    text.each(function() {
+      var text = d3.select(this);
+      var words = text.text().split(/[ \f\n\r\t\v]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
+      var word;
+      var line = [];
+      var lineNumber = 0;
+      var lineHeight = 1.1; //Em
+      var x;
+      var y = text.attr("y");
+      var dy = parseFloat(text.attr("dy"));
+      var createdLineCount = 1; //Total line created count
+      var textAlign = text.style('text-anchor') || 'start'; //'start' by default (start, middle, end, inherit)
 
-        var largestGroup = d3.max(groupedData.map(sszvis.fn.prop('length')));
+      //Clean the data in case <text> does not define those values
+      if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
 
-        var inGroupScale = d3.scale.ordinal()
-          .domain(d3.range(largestGroup))
-          .rangeBands([0, props.groupWidth], props.groupSpace, 0);
+      //Offset the text position based on the text-anchor
+      var wrapTickLabels = d3.select(text.node().parentNode).classed('tick'); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
+      if (wrapTickLabels) {
+        switch (textAlign) {
+          case 'start':
+          x = -width / 2;
+          break;
+          case 'middle':
+          x = 0;
+          break;
+          case 'end':
+          x = width / 2;
+          break;
+          default :
+        }
+      } else { //untranslated <text> elements
+        switch (textAlign) {
+          case 'start':
+          x = paddingRightLeft;
+          break;
+          case 'middle':
+          x = maxWidth / 2;
+          break;
+          case 'end':
+          x = maxWidth - paddingRightLeft;
+          break;
+          default :
+        }
+      }
+      y = +((null === y)?paddingTopBottom:y);
 
-        var groups = selection.selectAll('g')
-          .data(groupedData);
+      var tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
 
-        groups.enter()
-          .append('g')
-          .classed('sszvis-g', true);
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (tspan.node().getComputedTextLength() > width && line.length > 1) {
+          line.pop();
+          tspan.text(line.join(" "));
+          line = [word];
+          tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+          ++createdLineCount;
+        }
+      }
 
-        var bars = groups.selectAll('rect')
-          .data(sszvis.fn.identity);
-
-        bars.enter()
-          .append('rect')
-          .classed('sszvis-bar', true);
-
-        bars
-          .attr('x', function(d, i) {
-            // first term is the x-position of the group, the second term is the x-position of the bar within the group
-            return props.groupScale(props.groupAccessor(d)) + inGroupScale(i);
-          })
-          .attr('width', inGroupScale.rangeBand())
-          .attr('y', props.y)
-          .attr('height', props.height)
-          .attr('fill', props.fill);
-      });
-  };
+      arrLineCreatedCount.push(createdLineCount); //Store the line count in the array
+    });
+    return arrLineCreatedCount;
+  }
 
 });
