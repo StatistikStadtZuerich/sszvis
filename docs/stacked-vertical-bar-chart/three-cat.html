@@ -22,7 +22,9 @@
   d3.csv('data/StVB_3Categories_yearly.csv')
     .row(function(d) {
       return {
-
+        year: d['Jahr'],
+        region: d['Region'],
+        value: sszvis.parse.number(d['Wert'])
       };
     })
     .get(function(error, data) {
@@ -35,9 +37,56 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 540, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
+    var bounds = sszvis.bounds({ width: 540, height: 500, top: 20, right: 20, bottom: 26, left: 10 });
 
+    var xAcc = sszvis.fn.prop('year');
+    var yAcc = sszvis.fn.prop('value');
+    var cAcc = sszvis.fn.prop('region');
 
+    var xScale = d3.scale.ordinal()
+      .domain(state.data.map(xAcc))
+      .rangeBands([30, bounds.innerWidth], 0.35, 0.15);
+
+    var stackedValues = state.data.reduce(function(memo, value) {
+      var xVal = String(xAcc(value));
+      memo[xVal] = memo[xVal] ? memo[xVal] + yAcc(value) : yAcc(value);
+      return memo;
+    }, {});
+
+    var maxStacked = d3.max(sszvis.fn.objectValues(stackedValues));
+
+    var yScale = d3.scale.linear()
+      .domain([0, maxStacked])
+      .range([bounds.innerHeight, 0]);
+
+    var cScale = d3.scale.ordinal()
+      .domain(sszvis.fn.uniqueUnsorted(state.data.map(cAcc)))
+      .range(sszvis.color.ranges.qualitative.qual3);
+
+    var stackedBars = sszvis.component.stacked.bar()
+      .xAccessor(xAcc)
+      .xScale(xScale)
+      .width(xScale.rangeBand())
+      .yAccessor(yAcc)
+      .yScale(yScale)
+      .categoryAccessor(cAcc)
+      .fill(function(d) { return cScale(cAcc(d)); });
+
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
+    var yAxis = sszvis.axis.y().scale(yScale).orient('right');
+
+    var chart = sszvis.createChart('#chart', bounds)
+      .datum(state.data);
+
+    var bars = chart.selectGroup('barchart')
+      .call(stackedBars);
+
+    chart.selectGroup('xAxis')
+      .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    chart.selectGroup('yAxis')
+      .call(yAxis);
   }
 
 }());

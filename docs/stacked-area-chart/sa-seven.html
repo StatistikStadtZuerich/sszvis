@@ -75,7 +75,7 @@
         .yAccessor(yAcc)
         .yScale(yScale)
         .categoryAccessor(cAcc)
-        .fill(function(d, i) { return cScale(d.category); });
+        .fill(function(d, i) { return cScale(d.category); }); // "d" here is an array representing the whole group
 
       var xAxis = sszvis.axis.x.time().scale(xScale).orient('bottom');
       var yAxis = sszvis.axis.y().scale(yScale).orient('right');

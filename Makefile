@@ -38,6 +38,7 @@ SOURCE_FILES = \
 	sszvis/component/ruler.js \
 	sszvis/component/tooltip.js \
 	sszvis/component/stackedArea.js \
+	sszvis/component/stackedBar.js \
 	sszvis/component/groupedBars.js
 
 section = sszvis/banner/_section.js $(1)
