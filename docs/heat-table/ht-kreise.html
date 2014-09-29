@@ -19,6 +19,8 @@
 
   var state = {
     data: [],
+    agesList: [],
+    kreisList: [],
     tooltips: [],
     hoveredDatum: {}
   };
@@ -36,7 +38,21 @@
         console.log('error loading data: ', error);
         return;
       }
+
       state.data = data;
+
+      state.agesList = d3.set(state.data.map(yAcc))
+        .values()
+        .sort(function(a, b) {
+          return d3.ascending(parseInt(a, 10), parseInt(b, 10));
+        });
+
+      state.kreisList = d3.set(state.data.map(xAcc))
+        .values()
+        .sort(function(a, b) {
+          return d3.ascending(parseKreisInt(a), parseKreisInt(b));
+        });
+
       render(state);
     });
 
@@ -53,35 +69,24 @@
     }
   };
 
+  var xAcc = sszvis.fn.prop('kreis');
+  var yAcc = sszvis.fn.prop('agegroup');
+  var cAcc = sszvis.fn.prop('value');
+
   function render(state) {
     var bounds = sszvis.bounds({ width: 460, height: 700, top: 50, right: 20, bottom: 10, left: 80 });
 
-    var xAcc = sszvis.fn.prop('kreis');
-    var yAcc = sszvis.fn.prop('agegroup');
-    var cAcc = sszvis.fn.prop('value');
-
-    var kreisList = state.data.map(xAcc);
-    kreisList.sort(function(a, b) {
-      var kA = a.replace('Kreis ', ''),
-          kB = b.replace('Kreis ', '');
-      return +kA - +kB;
-    });
-    kreisList = sszvis.fn.uniqueSorted(kreisList);
-
-    var agesList = state.data.map(yAcc);
-    agesList = sszvis.fn.uniqueUnsorted(agesList);
-
-    var xSide = bounds.innerWidth / kreisList.length;
-    var ySide = bounds.innerHeight / agesList.length;
+    var xSide = bounds.innerWidth / state.kreisList.length;
+    var ySide = bounds.innerHeight / state.agesList.length;
     var sideLength = Math.min(xSide, ySide) * 0.95;
 
     var xScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
-      .domain(kreisList);
+      .domain(state.kreisList);
 
     var yScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
-      .domain(agesList);
+      .domain(state.agesList);
 
     var valueDomain = d3.extent(state.data.map(cAcc));
     var colorDomain = [valueDomain[0], (valueDomain[0] + valueDomain[1]) / 2, valueDomain[1]];
@@ -146,6 +151,10 @@
       .attr('transform', 'translate(-10, 0)')
       .call(yAxis);
 
+  }
+
+  function parseKreisInt(k) {
+    return parseInt(k.replace('Kreis ', ''), 10);
   }
 
 }());
