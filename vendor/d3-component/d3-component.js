@@ -57,6 +57,21 @@
     }
 
     /**
+     * Delegate a properties' accessors to a delegate object
+     *
+     * @param  {String} prop     The property's name
+     * @param  {Object} delegate The target having getter and setter methods for prop
+     * @return {d3.component}
+     */
+    component.delegate = function(prop, delegate) {
+      component[prop] = function() {
+        var result = delegate[prop].apply(delegate, slice(arguments));
+        return (arguments.length === 0) ? result : component;
+      }
+      return component;
+    }
+
+    /**
      * Get the props of this component
      *
      * @return {Object} this component's props

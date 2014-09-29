@@ -30,20 +30,15 @@ namespace('sszvis.axis', function(module) {
       var axisDelegate = d3.svg.axis();
 
       return d3.component()
-        .prop('scale').scale(axisDelegate.scale())
-        .prop('orient').orient(axisDelegate.orient())
-        .prop('ticks').ticks(axisDelegate.ticks())
-        .prop('tickValues').tickValues(axisDelegate.tickValues())
-        .prop('tickSize', function(inner, outer) {
-          if (!arguments.length) return this.innerTickSize();
-          this.innerTickSize(inner);
-          this.outerTickSize(outer);
-          return inner;
-        })
-        .prop('innerTickSize').innerTickSize(axisDelegate.innerTickSize())
-        .prop('outerTickSize').outerTickSize(axisDelegate.outerTickSize())
-        .prop('tickPadding').tickPadding(axisDelegate.tickPadding())
-        .prop('tickFormat').tickFormat(axisDelegate.tickFormat())
+        .delegate('scale', axisDelegate)
+        .delegate('orient', axisDelegate)
+        .delegate('ticks', axisDelegate)
+        .delegate('tickValues', axisDelegate)
+        .delegate('tickSize', axisDelegate)
+        .delegate('innerTickSize', axisDelegate)
+        .delegate('outerTickSize', axisDelegate)
+        .delegate('tickPadding', axisDelegate)
+        .delegate('tickFormat', axisDelegate)
         .prop('vertical').vertical(false)
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('highlight')
@@ -52,16 +47,6 @@ namespace('sszvis.axis', function(module) {
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
-
-          axisDelegate
-            .scale(props.scale)
-            .orient(props.orient)
-            .ticks(props.ticks)
-            .tickValues(props.tickValues)
-            .innerTickSize(props.innerTickSize)
-            .outerTickSize(props.outerTickSize)
-            .tickPadding(props.tickPadding)
-            .tickFormat(props.tickFormat)
 
           var group = selection.selectGroup('sszvis-axis')
             .classed('sszvis-axis', true)
@@ -81,7 +66,7 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = d3.extent(props.scale.domain());
+            var extent = d3.extent(axisDelegate.scale().domain());
             var min = extent[0];
             var max = extent[1];
 
