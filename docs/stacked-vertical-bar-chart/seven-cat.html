@@ -16,7 +16,22 @@
 (function() {
 
   var state = {
-    data: []
+    data: [],
+    tooltips: [],
+    hoveredDatum: {}
+  };
+
+  var actions = {
+    showTooltip: function(datum) {
+      state.tooltips = [datum];
+      state.hoveredDatum = datum;
+      render(state);
+    },
+    hideTooltip: function() {
+      state.tooltips = [];
+      state.hoveredDatum = {};
+      render(state);
+    }
   };
 
   d3.csv('data/StVB_7Categories_yearly.csv')
@@ -70,16 +85,40 @@
       .yAccessor(yAcc)
       .yScale(yScale)
       .categoryAccessor(cAcc)
-      .fill(function(d) { return cScale(cAcc(d)); });
+      .fill(function(d) {
+        var color = cScale(cAcc(d));
+        return d === state.hoveredDatum ? d3.rgb(color).darker(0.4) : color;
+      });
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yScale).orient('right');
 
+    var tooltipText = sszvis.component.modularText()
+      .bold(yAcc);
+
+    var tooltipMaker = sszvis.component.tooltip()
+      .orientation('bottom')
+      .x(function(d) { return xScale(xAcc(d)) + xScale.rangeBand() / 2; })
+      .y(function(d) { return yScale(d.y0 + d.y); })
+      .style({ 'white-space': 'nowrap' })
+      .body(tooltipText);
+
+    var hoverBehavior = sszvis.behavior.mouseover()
+      .mouseover(actions.showTooltip)
+      .mouseout(actions.hideTooltip);
+
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.data);
 
+    var overlay = sszvis.createHtmlLayer('#chart', bounds)
+      .datum(state.tooltips)
+      .call(tooltipMaker);
+
     var bars = chart.selectGroup('barchart')
       .call(stackedBars);
+
+    bars.selectAll('rect')
+      .call(hoverBehavior);
 
     chart.selectGroup('xAxis')
       .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
