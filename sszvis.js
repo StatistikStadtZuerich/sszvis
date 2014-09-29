@@ -728,13 +728,15 @@ namespace('sszvis.axis', function(module) {
         .prop('highlight')
         .prop('halo')
         .prop('textWrap')
+        .prop('slant')
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
 
           var group = selection.selectGroup('sszvis-axis')
             .classed('sszvis-axis', true)
-            .classed('sszvis-axis--horizontal', !props.vertical)
+            .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
+            .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
             .classed('sszvis-axis--vertical', props.vertical)
             .classed('sszvis-axis--halo', props.halo)
             .attr('transform', 'translate(0, 2)')
@@ -769,6 +771,12 @@ namespace('sszvis.axis', function(module) {
             group.selectAll('text')
               .call(sszvis.component.textWrap, props.textWrap);
           }
+
+          if (props.slant) {
+            group.selectAll("text")
+              .call(slantLabel[axisDelegate.orient()][props.slant]);
+          }
+
         });
     }
 
@@ -815,6 +823,38 @@ namespace('sszvis.axis', function(module) {
     }
 
   }());
+
+
+  var slantLabel = {
+    top: {
+      vertical: function(selection) {
+        selection.style("text-anchor", "start")
+          .attr("dx", "0em")
+          .attr("dy", "0.35em")
+          .attr("transform", "rotate(-90)");
+      },
+      diagonal: function(selection) {
+        selection.style("text-anchor", "start")
+          .attr("dx", "0.1em")
+          .attr("dy", "0.1em")
+          .attr("transform", "rotate(-45)");
+      }
+    },
+    bottom: {
+      vertical: function(selection) {
+        selection.style("text-anchor", "end")
+          .attr("dx", "-1em")
+          .attr("dy", "-0.75em")
+          .attr("transform", "rotate(-90)");
+      },
+      diagonal:  function(selection) {
+        selection.style("text-anchor", "end")
+          .attr("dx", "-0.8em")
+          .attr("dy", "0em")
+          .attr("transform", "rotate(-45)");
+      }
+    }
+  }
 
 });
 

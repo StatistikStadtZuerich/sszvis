@@ -52,7 +52,7 @@
   };
 
   function render(state) {
-    var bounds = sszvis.bounds({width: 900, height: 442, top: 3, right: 3, bottom: 40, left: 3});
+    var bounds = sszvis.bounds({width: 1300, height: 442, top: 3, right: 3, bottom: 40, left: 3});
 
     var xAcc = fn.prop('category');
     var yAcc = fn.prop('value');
@@ -81,7 +81,7 @@
         return d === state.hoveredDatum ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
       });
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom').slant('vertical')
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
 
     var tooltipText = sszvis.component.modularText()

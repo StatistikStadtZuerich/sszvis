@@ -29,7 +29,11 @@
   text-shadow: #fff 1px 0 1px, #fff -1px 0 1px, #fff 0 1px 1px, #fff 0 -1px 1px;
 }
 
-.sszvis-axis--horizontal line {
+.sszvis-axis--top path {
+  display: none;
+}
+
+.sszvis-axis--bottom line {
   transform: translateY(3px);
 }
 

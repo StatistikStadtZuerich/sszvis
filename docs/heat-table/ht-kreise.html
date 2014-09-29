@@ -54,7 +54,7 @@
   };
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 460, height: 700, top: 50, right: 10, bottom: 10, left: 80 });
+    var bounds = sszvis.bounds({ width: 460, height: 700, top: 50, right: 20, bottom: 10, left: 80 });
 
     var xAcc = sszvis.fn.prop('kreis');
     var yAcc = sszvis.fn.prop('agegroup');
@@ -102,7 +102,7 @@
       .fill(cValue)
       .stroke(function(d) { return d === state.hoveredDatum ? d3.hsl(cValue(d)).darker(0.4) : "none" });
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('top').tickSize(0, 0).tickPadding(0);
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('top').slant('diagonal').tickSize(0, 0).tickPadding(0);
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
 
     var tooltipHeaderText = sszvis.component.modularText()
