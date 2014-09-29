@@ -18,8 +18,8 @@
         "docs/stacked-horizontal-bar-chart/data/SHB_basic_percent.csv"
     ],
     "size": {
-        "width": 500,
-        "height": 400
+        "width": 600,
+        "height": 300
     }
 }
 ```

@@ -64,6 +64,7 @@
       .range(sszvis.color.ranges.qualitative.qual3);
 
     var stackedBars = sszvis.component.stacked.bar()
+      .orientation('vertical')
       .xAccessor(xAcc)
       .xScale(xScale)
       .width(xScale.rangeBand())

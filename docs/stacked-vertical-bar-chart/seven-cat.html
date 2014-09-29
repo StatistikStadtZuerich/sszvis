@@ -63,7 +63,7 @@
       .rangeBands([30, bounds.innerWidth], 0.45, 0.15);
 
     var stackedValues = state.data.reduce(function(memo, value) {
-      var xVal = String(xAcc(value));
+      var xVal = xAcc(value);
       memo[xVal] = memo[xVal] ? memo[xVal] + yAcc(value) : yAcc(value);
       return memo;
     }, {});
@@ -79,6 +79,7 @@
       .range(sszvis.color.ranges.qualitative.qual9);
 
     var stackedBars = sszvis.component.stacked.bar()
+      .orientation('vertical')
       .xAccessor(xAcc)
       .xScale(xScale)
       .width(xScale.rangeBand())

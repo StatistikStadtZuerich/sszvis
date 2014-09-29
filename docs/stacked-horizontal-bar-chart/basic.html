@@ -37,7 +37,7 @@
   d3.csv('data/SHB_basic_percent.csv')
     .row(function(d) {
       return {
-        branch: d['Branche'],
+        sector: d['Branche'],
         area: d['Gebiet'],
         value: sszvis.parse.number(d['BIP'])
       };
@@ -52,9 +52,78 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 540, height: 500, top: 20, right: 20, bottom: 26, left: 10 });
+    var bounds = sszvis.bounds({ width: 600, height: 300, top: 40, right: 20, bottom: 32, left: 10 });
 
-    console.log(state.data);
+    var xAcc = sszvis.fn.prop('value');
+    var yAcc = sszvis.fn.prop('area');
+    var cAcc = sszvis.fn.prop('sector');
+
+    var stackedValues = state.data.reduce(function(memo, value) {
+      var stackName = yAcc(value);
+      memo[stackName] = memo[stackName] ? memo[stackName] + xAcc(value) : xAcc(value);
+      return memo;
+    }, {});
+
+    var maxStacked = d3.max(sszvis.fn.objectValues(stackedValues));
+
+    var xScale = d3.scale.linear()
+      .domain([0, maxStacked])
+      .range([110, bounds.innerWidth]);
+
+    var yScale = d3.scale.ordinal()
+      .domain(sszvis.fn.uniqueUnsorted(state.data.map(yAcc)))
+      .rangeBands([0, bounds.innerHeight], 0.45, 0.1);
+
+    var cScale = d3.scale.ordinal()
+      .domain(sszvis.fn.uniqueUnsorted(state.data.map(cAcc)))
+      .range(sszvis.color.ranges.qualitative.qual12);
+
+    var horizontalBars = sszvis.component.stacked.bar()
+      .orientation('horizontal')
+      .xAccessor(yAcc)
+      .xScale(yScale)
+      .width(yScale.rangeBand())
+      .yAccessor(xAcc)
+      .yScale(xScale)
+      .categoryAccessor(cAcc)
+      .fill(sszvis.fn.compose(cScale, cAcc));
+
+    var xAxis = sszvis.axis.x().scale(xScale).orient('bottom');
+    var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('right');
+
+    var tooltipText = sszvis.component.modularText()
+      .bold(function(d) { return xAcc(d) + '%'; });
+
+    var tooltipMaker = sszvis.component.tooltip()
+      .orientation('bottom')
+      .x(function(d) { return xScale(d.y0 + d.y) - (Math.abs(xScale(d.y0 + d.y) - xScale(d.y0)) / 2); })
+      .y(function(d) { return yScale(yAcc(d)); })
+      .style({ 'white-space': 'nowrap' })
+      .body(tooltipText);
+
+    var hoverBehavior = sszvis.behavior.mouseover()
+      .mouseover(actions.showTooltip)
+      .mouseout(actions.hideTooltip);
+
+    var chart = sszvis.createChart('#chart', bounds)
+      .datum(state.data);
+
+    var overlay = sszvis.createHtmlLayer('#chart', bounds)
+      .datum(state.tooltips)
+      .call(tooltipMaker);
+
+    var bars = chart.selectGroup('barchart')
+      .call(horizontalBars);
+
+    bars.selectAll('rect')
+      .call(hoverBehavior);
+
+    chart.selectGroup('xAxis')
+      .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    chart.selectGroup('yAxis')
+      .call(yAxis);
   }
 
 }());
