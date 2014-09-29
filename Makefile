@@ -40,7 +40,9 @@ SOURCE_FILES = \
 	sszvis/component/tooltip.js \
 	sszvis/component/stackedArea.js \
 	sszvis/component/stackedBar.js \
+	sszvis/component/groupedBars.js \
 	sszvis/component/textWrap.js \
+	sszvis/component/pie.js
 
 section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
