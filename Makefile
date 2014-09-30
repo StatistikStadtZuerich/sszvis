@@ -42,7 +42,8 @@ SOURCE_FILES = \
 	sszvis/component/stackedBar.js \
 	sszvis/component/groupedBars.js \
 	sszvis/component/textWrap.js \
-	sszvis/component/pie.js
+	sszvis/component/pie.js \
+	sszvis/component/multiples.js
 
 section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))

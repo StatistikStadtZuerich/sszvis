@@ -17,16 +17,10 @@
 
   var state = {
     data: [],
-    tooltips: [],
-    hoveredDatum: {}
+    tooltips: []
   };
 
   var bounds = sszvis.bounds({ width: 900, height: 600, top: 10, right: 10, bottom: 10, left: 10 });
-
-  var pieRows = 2;
-  var pieCols = 3;
-  var pieW = bounds.innerWidth / pieCols;
-  var pieH = bounds.innerHeight / pieRows;
 
   var gAcc = sszvis.fn.prop('group');
   var vAcc = sszvis.fn.prop('value');
@@ -50,17 +44,21 @@
       state.groups = d3.set(state.data.map(gAcc)).values();
 
       state.pieGroups = state.data.reduce(function(memo, value) {
-        var index = state.groups.indexOf(gAcc(value));
+        var gName = gAcc(value);
+        var index = state.groups.indexOf(gName);
         if (!memo[index]) {
-          memo[index] = [value];
+          memo[index] = {
+            group: gName,
+            values: [value]
+          };
         } else {
-          memo[index].push(value);
+          memo[index].values.push(value);
         }
         return memo;
       }, []);
 
       state.totalValues = state.pieGroups.reduce(function(memo, group, i) {
-        memo[state.groups[i]] = d3.sum(group.map(vAcc));
+        memo[group.group] = d3.sum(group.values.map(vAcc));
         return memo;
       }, {});
 
@@ -71,34 +69,40 @@
 
   var actions = {
     showTooltip: function(datum) {
-      state.tooltips = [datum];
-      state.hoveredDatum = datum;
+      state.tooltips = [{
+        d: datum,
+        g: state.pieGroups[state.groups.indexOf(gAcc(datum))]
+      }];
       render(state);
     },
     hideTooltip: function() {
       state.tooltips = [];
-      state.hoveredDatum = {};
       render(state);
     }
   };
+
+  // TODO: figure out some way to clean up and abstract this bonkers tooltip logic
 
   var hoverBehavior = sszvis.behavior.mouseover()
     .mouseover(actions.showTooltip)
     .mouseout(actions.hideTooltip);
 
-  var tooltipRadius = bounds.innerWidth / 3;
-  var tooltipOffset = bounds.innerWidth / 2;
-
   var headerText = sszvis.component.modularText()
-    .bold(sszvis.fn.compose(sszvis.format.percent, function(d) { return vAcc(d) / state.totalValue; }));
+    .bold(sszvis.fn.compose(sszvis.format.percent, function(tData) { return vAcc(tData.d) / state.totalValues[gAcc(tData.d)]; }));
 
   var tooltipMaker = sszvis.component.tooltip()
     .orientation('bottom')
-    .x(function(d) {
-      return Math.cos(d.a0 + Math.abs(d.a1 - d.a0) / 2 - (Math.PI / 2)) * tooltipRadius + tooltipOffset;
+    .x(function(tData) {
+      var d = tData.d, g = tData.g;
+      // calculate x-position of the tooltip
+      // (left edge of group) + (half the width of group) + (cosine of the angle of the center of the wedge) * (distance of the tooltip from center of group)
+      return g.gx + g.gw / 2 + Math.cos(d.a0 + Math.abs(d.a1 - d.a0) / 2 - (Math.PI / 2)) * Math.min(g.gw, g.gh) / 3;
     })
-    .y(function(d) {
-      return Math.sin(d.a0 + Math.abs(d.a1 - d.a0) / 2 - (Math.PI / 2)) * tooltipRadius + tooltipOffset;
+    .y(function(tData) {
+      var d = tData.d, g = tData.g;
+      // calculate y-position of the tooltip
+      // (top edge of group) + (half the height of group) + (sine of the angle of the center of the wedge) * (distance of the tooltip from center of group)
+      return g.gy + g.gh / 2 + Math.sin(d.a0 + Math.abs(d.a1 - d.a0) / 2 - (Math.PI / 2)) * Math.min(g.gw, g.gh) / 3;
     })
     .header(headerText);
 
@@ -108,43 +112,43 @@
 
     var cScale = d3.scale.ordinal()
       .domain(state.categories)
-      .range(sszvis.color.ranges.qualitative.qual6);
+      .range(sszvis.color.ranges.qualitative.qual12);
 
     var pieMaker = sszvis.component.pie()
-      .radius(Math.min(pieW, pieH) / 2)
       .fill(sszvis.fn.compose(cScale, cAcc));
 
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.pieGroups);
 
-/*
+
     var overlay = sszvis.createHtmlLayer('#chart', bounds)
       .datum(state.tooltips)
       .call(tooltipMaker);
-*/
 
-    var pieCharts = chart.selectGroup('piecharts');
+    var multiplesMaker = sszvis.component.multiples()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .paddingX(10)
+      .paddingY(10)
+      .rows(2)
+      .cols(3);
 
-    var pieGroups = pieCharts.selectAll('g')
-      .data(function(d) { return d; });
+    var pieCharts = chart.selectGroup('piecharts')
+      .call(multiplesMaker);
 
-    pieGroups.enter()
-      .append('g')
+    pieCharts.selectAll('.sszvis-multiple')
       .each(function(d, i) {
-        var group = gAcc(d[0]);
-        var scale = aScale.copy()
-          .domain([0, state.totalValues[group]]);
+        var groupScale = aScale.copy()
+          .domain([0, state.totalValues[d.group]]);
 
-        pieMaker.angle(sszvis.fn.compose(scale, vAcc));
+        pieMaker
+          .radius(Math.min(d.gw, d.gh) / 2)
+          .angle(sszvis.fn.compose(groupScale, vAcc));
 
-        d3.select(this).call(pieMaker);
+        d3.select(this).selectAll('.sszvis-multiple-chart').call(pieMaker);
       });
 
-    pieGroups.attr('transform', function(d, i) {
-      return 'translate(' + ((i % pieCols) * pieW) + ',' + (Math.floor(i / pieCols) * pieH) + ')';
-    });
-
-    var slices = pieGroups.selectAll('path')
+    var slices = pieCharts.selectAll('path')
       .call(hoverBehavior);
   }
 
