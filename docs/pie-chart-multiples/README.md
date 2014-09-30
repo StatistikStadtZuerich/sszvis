@@ -15,7 +15,7 @@
     "index": "docs/pie-chart-multiples/multiples.html",
     "readme": "docs/pie-chart-multiples/README.md",
     "files": [
-        "docs/pie-chart/data/P_multiples.csv"
+        "docs/pie-chart-multiples/data/P_multiples.csv"
     ],
     "size": {
         "width": 900,
