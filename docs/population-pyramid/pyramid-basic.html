@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Population Pyramid</title>
+
+  <link href='../../sszvis.css' rel='stylesheet' />
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+<div id="chart"></div>
+<script>
+(function() {
+
+  var state = {
+    data: []
+  };
+
+  d3.csv('data/BP_basic.csv')
+    .row(function(d) {
+      return {
+        age: sszvis.parse.number(d['Alter']),
+        gender: d['Geschlecht'],
+        value: sszvis.parse.number(d['Anzahl'])
+      }
+    })
+    .get(function(error, data) {
+      if (error) {
+        console.log('error loading data: ', error);
+        return;
+      }
+
+      state.data = data;
+
+      state.populations = [];
+
+      render(state);
+    });
+
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
+
+      console.log(state);
+    }
+
+}());
+</script>
+</body>
+</html>
