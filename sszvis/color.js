@@ -44,6 +44,10 @@ namespace('sszvis.color', function(module) {
         "#94bf69",
         "#b8e6d2",
         "#60bf97"
+      ],
+      neutralQual2: [
+        "#497f7b",
+        "#a57c59"
       ]
     },
     sequential: {

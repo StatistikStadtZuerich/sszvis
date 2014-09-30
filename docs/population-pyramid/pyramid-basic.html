@@ -19,6 +19,12 @@
     data: []
   };
 
+  var vAcc = sszvis.fn.prop('value');
+  var gAcc = sszvis.fn.prop('gender');
+  var aAcc = sszvis.fn.prop('age');
+  var g1 = sszvis.fn.prop('Frauen');
+  var g2 = sszvis.fn.prop('Maenner');
+
   d3.csv('data/BP_basic.csv')
     .row(function(d) {
       return {
@@ -35,7 +41,24 @@
 
       state.data = data;
 
-      state.populations = [];
+      state.ages = d3.set(state.data.map(aAcc)).values()
+        .sort(function(a, b) {
+          return d3.ascending(parseInt(a, 10), parseInt(b, 10));
+        });
+
+      state.groups = d3.set(state.data.map(gAcc)).values();
+
+      state.populations = state.data.reduce(function(memo, value) {
+        var group = gAcc(value);
+        if (!memo[group]) {
+          memo[group] = [value];
+        } else {
+          memo[group].push(value);
+        }
+        return memo;
+      }, {});
+
+      state.maxValue = d3.max(state.data.map(vAcc));
 
       render(state);
     });
@@ -43,7 +66,53 @@
     function render(state) {
       var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
 
-      console.log(state);
+      var group1Scale = d3.scale.linear()
+        .domain([0, state.maxValue])
+        .range([bounds.innerWidth / 2 - 1, 0]);
+
+      var group2Scale = d3.scale.linear()
+        .domain([0, state.maxValue])
+        .range([bounds.innerWidth / 2 + 1, bounds.innerWidth]);
+
+      var ageScale = d3.scale.ordinal()
+        .domain(state.ages)
+        .rangeBands([bounds.innerHeight, 0], 0.1, 0);
+
+      var colorScale = d3.scale.ordinal()
+        .domain(state.groups)
+        .range(sszvis.color.ranges.qualitative.neutralQual2);
+
+      // but... there has to be a better way!
+      var chart = sszvis.createChart('#chart', bounds)
+        .datum(state.populations);
+
+      var group1 = chart.selectGroup('group1')
+        .datum(g1);
+
+      var g1Bars = group1.selectAll('rect')
+        .data(sszvis.fn.identity);
+
+      g1Bars.enter()
+        .append('rect')
+        .attr('x', function(d) { return Math.abs(group1Scale(0) - group1Scale(vAcc(d))); })
+        .attr('y', sszvis.fn.compose(ageScale, aAcc))
+        .attr('width', sszvis.fn.compose(group1Scale, vAcc))
+        .attr('height', ageScale.rangeBand())
+        .attr('fill', colorScale('Frauen'));
+
+      var group2 = chart.selectGroup('group2')
+        .datum(g2);
+
+      var g2Bars = group2.selectAll('rect')
+        .data(sszvis.fn.identity);
+
+      g2Bars.enter()
+        .append('rect')
+        .attr('x', group2Scale(0))
+        .attr('y', sszvis.fn.compose(ageScale, aAcc))
+        .attr('width', sszvis.fn.compose(group1Scale, vAcc))
+        .attr('height', ageScale.rangeBand())
+        .attr('fill', colorScale('Maenner'));
     }
 
 }());
