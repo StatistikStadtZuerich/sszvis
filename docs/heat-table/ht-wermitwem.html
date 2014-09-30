@@ -101,20 +101,14 @@
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
 
     var tooltipHeaderText = sszvis.component.modularText()
-      .bold(sszvis.fn.prop('value'))
-      .plain(' Einwohner');
-
-    var tooltipBodyText = sszvis.component.modularText()
-      .plain('im ')
-      .plain(sszvis.fn.prop('quarter'));
+      .bold(sszvis.fn.prop('value'));
 
     var tooltipMaker = sszvis.component.tooltip()
       .orientation('bottom')
       .x(function(d) { return xValue(d) + xScale.rangeBand() / 2 })
       .y(yValue)
       .style({ 'white-space': 'nowrap' })
-      .header(tooltipHeaderText)
-      .body(tooltipBodyText);
+      .header(tooltipHeaderText);
 
     var hoverBehavior = sszvis.behavior.mouseover()
       .mouseover(actions.showTooltip)
