@@ -93,7 +93,6 @@
       .orientation('bottom')
       .x(function(d) { return xValue(d) + xScale.rangeBand() / 2 })
       .y(yValue)
-      .style({ 'white-space': 'nowrap' })
       .body(tooltipText);
 
     var hoverBehavior = sszvis.behavior.mouseover()

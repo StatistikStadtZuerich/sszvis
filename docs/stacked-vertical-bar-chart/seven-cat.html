@@ -101,7 +101,6 @@
       .orientation('bottom')
       .x(function(d) { return xScale(xAcc(d)) + xScale.rangeBand() / 2; })
       .y(function(d) { return yScale(d.y0 + d.y); })
-      .style({ 'white-space': 'nowrap' })
       .body(tooltipText);
 
     var hoverBehavior = sszvis.behavior.mouseover()

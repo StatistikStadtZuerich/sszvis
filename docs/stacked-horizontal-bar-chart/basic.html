@@ -98,7 +98,6 @@
       .orientation('bottom')
       .x(function(d) { return xScale(d.y0 + d.y) - (Math.abs(xScale(d.y0 + d.y) - xScale(d.y0)) / 2); })
       .y(function(d) { return yScale(yAcc(d)); })
-      .style({ 'white-space': 'nowrap' })
       .body(tooltipText);
 
     var hoverBehavior = sszvis.behavior.mouseover()
