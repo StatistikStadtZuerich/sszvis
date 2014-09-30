@@ -21,7 +21,7 @@ namespace('sszvis.component.pie', function(module) {
         }, 0);
 
         var arcGen = d3.svg.arc()
-          .innerRadius(0)
+          .innerRadius(4)
           .outerRadius(props.radius)
           .startAngle(function(d) { return d.a0; })
           .endAngle(function(d) { return d.a1; });

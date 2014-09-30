@@ -38,6 +38,16 @@ namespace('sszvis.format', function(module) {
         } else {
           return d3.format('.2r')(d);
         }
+      },
+
+      percent: function(d) {
+        if (d >= 1) {
+          return '100%';
+        } else if (d <= 0) {
+          return '0%';
+        } else {
+          return d3.format('%')(d);
+        }
       }
     }
   }());

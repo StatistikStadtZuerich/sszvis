@@ -587,6 +587,16 @@ namespace('sszvis.format', function(module) {
         } else {
           return d3.format('.2r')(d);
         }
+      },
+
+      percent: function(d) {
+        if (d >= 1) {
+          return '100%';
+        } else if (d <= 0) {
+          return '0%';
+        } else {
+          return d3.format('%')(d);
+        }
       }
     }
   }());
@@ -1732,7 +1742,7 @@ namespace('sszvis.component.pie', function(module) {
         }, 0);
 
         var arcGen = d3.svg.arc()
-          .innerRadius(0)
+          .innerRadius(4)
           .outerRadius(props.radius)
           .startAngle(function(d) { return d.a0; })
           .endAngle(function(d) { return d.a1; });
