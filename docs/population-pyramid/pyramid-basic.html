@@ -64,55 +64,52 @@
     });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
+      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 20 });
 
-      var group1Scale = d3.scale.linear()
+      var groupPadding = 0.5;
+
+      var lengthScale = d3.scale.linear()
         .domain([0, state.maxValue])
-        .range([bounds.innerWidth / 2 - 1, 0]);
+        .range([0, bounds.innerWidth / 2 - groupPadding]);
 
-      var group2Scale = d3.scale.linear()
-        .domain([0, state.maxValue])
-        .range([bounds.innerWidth / 2 + 1, bounds.innerWidth]);
-
-      var ageScale = d3.scale.ordinal()
+      var positionScale = d3.scale.ordinal()
         .domain(state.ages)
-        .rangeBands([bounds.innerHeight, 0], 0.1, 0);
+        .rangeBands([0, bounds.innerHeight], 0.1, 0);
 
       var colorScale = d3.scale.ordinal()
         .domain(state.groups)
         .range(sszvis.color.ranges.qualitative.neutralQual2);
 
-      // but... there has to be a better way!
+      var pyramidGen = sszvis.component.pyramid()
+        .renderMode('bar')
+        .width(bounds.innerWidth / 2)
+        .height(bounds.innerHeight)
+        .groupPadding(groupPadding)
+        .alignmentValue(sszvis.fn.compose(positionScale, aAcc))
+        .barWidth(positionScale.rangeBand())
+        .extentValue(sszvis.fn.compose(lengthScale, vAcc))
+        .fill(sszvis.fn.compose(colorScale, gAcc));
+
+      var yAxis = sszvis.axis.y().scale(positionScale).orient('right')
+
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.populations);
 
       var group1 = chart.selectGroup('group1')
         .datum(g1);
 
-      var g1Bars = group1.selectAll('rect')
-        .data(sszvis.fn.identity);
-
-      g1Bars.enter()
-        .append('rect')
-        .attr('x', function(d) { return Math.abs(group1Scale(0) - group1Scale(vAcc(d))); })
-        .attr('y', sszvis.fn.compose(ageScale, aAcc))
-        .attr('width', sszvis.fn.compose(group1Scale, vAcc))
-        .attr('height', ageScale.rangeBand())
-        .attr('fill', colorScale('Frauen'));
+      pyramidGen.direction('links');
+      group1.call(pyramidGen);
 
       var group2 = chart.selectGroup('group2')
         .datum(g2);
 
-      var g2Bars = group2.selectAll('rect')
-        .data(sszvis.fn.identity);
+      pyramidGen.direction('rechts');
+      group2.call(pyramidGen);
 
-      g2Bars.enter()
-        .append('rect')
-        .attr('x', group2Scale(0))
-        .attr('y', sszvis.fn.compose(ageScale, aAcc))
-        .attr('width', sszvis.fn.compose(group1Scale, vAcc))
-        .attr('height', ageScale.rangeBand())
-        .attr('fill', colorScale('Maenner'));
+      chart.selectGroup('yAxis')
+        .attr('transform', 'translate(-15, 0)')
+        .call(yAxis);
     }
 
 }());
