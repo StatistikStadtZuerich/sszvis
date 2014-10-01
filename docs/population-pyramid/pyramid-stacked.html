@@ -19,11 +19,23 @@
     data: []
   };
 
+  var vAcc = sszvis.fn.prop('value');
+  var gAcc = sszvis.fn.prop('gender');
+  var aAcc = sszvis.fn.prop('age');
+  var stackAcc = sszvis.fn.prop('group');
+  var g1 = sszvis.fn.prop('Frauen');
+  var g2 = sszvis.fn.prop('Maenner');
+
+  function groupAndStackAcc(d) {
+    return gAcc(d) + '-' + stackAcc(d);
+  }
+
   d3.csv('data/BP_stacked.csv')
     .row(function(d) {
       return {
         age: sszvis.parse.number(d['Alter']),
         gender: d['Geschlecht'],
+        group: d['Ausbildung'],
         value: sszvis.parse.number(d['Anzahl'])
       }
     })
@@ -35,15 +47,93 @@
 
       state.data = data;
 
-      state.populations = [];
+      state.ages = d3.set(state.data.map(aAcc)).values()
+        .sort(d3.ascending);
+
+      state.groups = d3.set(state.data.map(groupAndStackAcc)).values().sort();
+
+      state.populations = state.data.reduce(function(memo, value) {
+        var group = gAcc(value);
+        if (!memo[group]) {
+          memo[group] = [value];
+        } else {
+          memo[group].push(value);
+        }
+        return memo;
+      }, {});
+
+      for (var group in state.populations) {
+        var flat = state.populations[group];
+        flat.sort(function(a, b) {
+          return d3.ascending(aAcc(a), aAcc(b));
+        });
+        var stackNames = d3.set(flat.map(stackAcc)).values();
+        var stacks = flat.reduce(function(memo, value) {
+          var index = stackNames.indexOf(stackAcc(value));
+          if (!memo[index]) {
+            memo[index] = [value];
+          } else {
+            memo[index].push(value);
+          }
+          return memo;
+        }, []);
+        state.populations[group] = stacks;
+      }
+
+      state.maxStackedValue = d3.max(sszvis.fn.objectValues(state.populations).map(function(stacks) {
+        return d3.max(d3.zip.apply(null, stacks).map(function(s) { return d3.sum(s, vAcc); }));
+      }));
 
       render(state);
     });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
+      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 20 });
 
+      var groupPadding = 0.5;
 
+      var lengthScale = d3.scale.linear()
+        .domain([0, state.maxStackedValue])
+        .range([0, bounds.innerWidth / 2 - groupPadding]);
+
+      var positionScale = d3.scale.ordinal()
+        .domain(state.ages)
+        .rangeBands([0, bounds.innerHeight], 0.1, 0);
+
+      var colorScale = d3.scale.ordinal()
+        .domain(state.groups)
+        .range(sszvis.color.ranges.qualitative.qual6);
+
+      var pyramidGen = sszvis.component.pyramid()
+        .renderMode('stacked')
+        .width(bounds.innerWidth / 2)
+        .height(bounds.innerHeight)
+        .groupPadding(groupPadding)
+        .alignmentValue(sszvis.fn.compose(positionScale, aAcc))
+        .barWidth(positionScale.rangeBand())
+        .extentValue(sszvis.fn.compose(lengthScale, vAcc))
+        .fill(sszvis.fn.compose(colorScale, groupAndStackAcc));
+
+      var yAxis = sszvis.axis.y().scale(positionScale).orient('right');
+
+      var chart = sszvis.createChart('#chart', bounds)
+        .datum(state.populations);
+
+      var group1 = chart.selectGroup('group1')
+        .datum(g1);
+
+      pyramidGen.direction('links');
+      group1.call(pyramidGen);
+
+      var group2 = chart.selectGroup('group2')
+        .datum(g2);
+
+      pyramidGen.direction('rechts');
+      group2.call(pyramidGen);
+
+      chart.selectGroup('yAxis')
+        .attr('transform', 'translate(-15, 0)')
+        .call(yAxis);
     }
 
 }());

@@ -36,9 +36,44 @@ namespace('sszvis.component.pyramid', function(module) {
             .attr('height', props.extentValue)
             .attr('fill', props.fill);
         } else if (props.renderMode === 'stacked') {
+          var stackLayout = d3.layout.stack()
+            .x(props.alignmentValue)
+            .y(props.extentValue);
 
+          rendered = selection.selectAll('g.sszvis-g')
+            .data(stackLayout(data));
+
+          rendered.enter()
+            .append('g')
+            .classed('sszvis-g', true);
+
+          var bars = rendered.selectAll('rect')
+            .data(sszvis.fn.identity);
+
+          bars.enter()
+            .append('rect')
+            .classed('sszvis-bar', true);
+
+          bars
+            .attr('x', props.alignmentValue)
+            .attr('y', function(d) { return d.y0; })
+            .attr('width', props.barWidth)
+            .attr('height', function(d) { return d.y; })
+            .attr('fill', props.fill);
         } else if (props.renderMode === 'line') {
+          var lineGen = d3.svg.line()
+            .x(props.alignmentValue)
+            .y(props.extentValue);
 
+          rendered = selection.selectAll('path')
+            .data(data);
+
+          rendered.enter()
+            .append('path')
+            .classed('sszvis-path', true);
+
+          rendered
+            .attr('d', lineGen);
         }
 
         if (props.direction === 'links') {

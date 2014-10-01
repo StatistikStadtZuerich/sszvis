@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Population Pyramid</title>
+
+  <link href='../../sszvis.css' rel='stylesheet' />
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+<div id="chart"></div>
+<script>
+(function() {
+
+  var state = {
+    data: []
+  };
+
+  var vAcc = sszvis.fn.prop('value');
+  var gAcc = sszvis.fn.prop('gender');
+  var aAcc = sszvis.fn.prop('age');
+  var stackAcc = sszvis.fn.prop('group');
+  var g1 = sszvis.fn.prop('Frauen');
+  var g2 = sszvis.fn.prop('Maenner');
+
+  d3.csv('data/BP_reference.csv')
+    .row(function(d) {
+      return {
+        age: sszvis.parse.number(d['Alter']),
+        gender: d['Geschlecht'],
+        group: d['Ausbildung'],
+        value: sszvis.parse.number(d['Anzahl'])
+      }
+    })
+    .get(function(error, data) {
+      if (error) {
+        console.log('error loading data: ', error);
+        return;
+      }
+
+      state.data = data;
+
+      state.ages = d3.set(state.data.map(aAcc)).values()
+        .sort(d3.ascending);
+
+      state.groups = d3.set(state.data.map(gAcc)).values();
+
+      state.populations = [];
+
+      render(state);
+    });
+
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
+
+
+    }
+
+}());
+</script>
+</body>
+</html>

@@ -38,3 +38,16 @@
 }
 ```
 
+```project
+{
+    "index": "docs/population-pyramid/pyramid-reference.html",
+    "readme": "docs/population-pyramid/README.md",
+    "files": [
+        "docs/population-pyramid/data/BP_reference.csv"
+    ],
+    "size": {
+        "width": 600,
+        "height": 500
+    }
+}
+```
