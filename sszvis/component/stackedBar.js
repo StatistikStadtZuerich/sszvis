@@ -33,6 +33,7 @@ namespace('sszvis.component.stacked.bar', function(module) {
           layers[i].category = cat;
         });
 
+        // TODO: refactor this class to make more sense?
         var stackLayout = d3.layout.stack()
           .x(props.xAccessor)
           .y(props.yAccessor);
