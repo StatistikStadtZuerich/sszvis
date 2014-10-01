@@ -90,7 +90,7 @@
         .extentValue(sszvis.fn.compose(lengthScale, vAcc))
         .fill(sszvis.fn.compose(colorScale, gAcc));
 
-      var yAxis = sszvis.axis.y().scale(positionScale).orient('right')
+      var yAxis = sszvis.axis.y().scale(positionScale).orient('right');
 
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.populations);
