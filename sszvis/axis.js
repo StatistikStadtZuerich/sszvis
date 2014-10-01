@@ -110,6 +110,7 @@ namespace('sszvis.axis', function(module) {
         .alignOuterLabels(true);
     }
 
+    // TODO: create an ordinal axis that doesn't have to show every label
     axis_x.ordinal = function() {
       return axis_x().tickFormat(format.text);
     }
