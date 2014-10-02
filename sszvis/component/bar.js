@@ -16,12 +16,14 @@ namespace('sszvis.component.bar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var bars = selection.selectAll('rect')
+        var bars = selection.selectAll('rect.sszvis-bar')
           .data(data);
 
         bars.enter()
           .append('rect')
           .attr('class', 'sszvis-bar');
+
+        bars.exit().remove();
 
         bars
           .attr('x', props.x)

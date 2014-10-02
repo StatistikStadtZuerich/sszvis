@@ -22,12 +22,14 @@ namespace('sszvis.component.pyramid', function(module) {
 
         var rendered;
         if (props.renderMode === 'bar') {
-          rendered = selection.selectAll('rect')
+          rendered = selection.selectAll('rect.sszvis-bar')
             .data(data);
 
           rendered.enter()
             .append('rect')
             .classed('sszvis-bar', true);
+
+          rendered.exit().remove();
 
           rendered
             .attr('x', props.alignmentValue)
@@ -47,12 +49,16 @@ namespace('sszvis.component.pyramid', function(module) {
             .append('g')
             .classed('sszvis-g', true);
 
-          var bars = rendered.selectAll('rect')
+          rendered.exit().remove();
+
+          var bars = rendered.selectAll('rect.sszvis-bar')
             .data(function(d) { return d; });
 
           bars.enter()
             .append('rect')
             .classed('sszvis-bar', true);
+
+          bars.exit().remove();
 
           bars
             .attr('x', props.alignmentValue)
@@ -65,12 +71,14 @@ namespace('sszvis.component.pyramid', function(module) {
             .x(props.alignmentValue)
             .y(props.extentValue);
 
-          rendered = selection.selectAll('path')
+          rendered = selection.selectAll('path.sszvis-path')
             .data([data]);
 
           rendered.enter()
             .append('path')
             .classed('sszvis-path', true);
+
+          rendered.exit().remove();
 
           rendered
             .attr('d', lineGen)

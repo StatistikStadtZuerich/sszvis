@@ -40,12 +40,14 @@ namespace('sszvis.component.stacked.area', function(module) {
           .y0(function(d) { return props.yScale(d.y0); })
           .y1(function(d) { return props.yScale(d.y0 + d.y); });
 
-        var paths = selection.selectAll('path')
+        var paths = selection.selectAll('path.sszvis-path')
           .data(stackLayout(layers));
 
         paths.enter()
           .append('path')
           .classed('sszvis-path', true);
+
+        paths.exit().remove();
 
         paths
           .attr('d', areaGen)

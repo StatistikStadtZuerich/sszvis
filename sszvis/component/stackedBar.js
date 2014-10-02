@@ -67,12 +67,14 @@ namespace('sszvis.component.stacked.bar', function(module) {
           .fill(props.fill)
           .stroke(props.stroke);
 
-        var groups = selection.selectAll('g')
+        var groups = selection.selectAll('g.sszvis-g')
           .data(stackLayout(layers));
 
         groups.enter()
           .append('g')
           .classed('sszvis-g', true);
+
+        groups.exit().remove();
 
         var bars = groups.call(barGen);
 

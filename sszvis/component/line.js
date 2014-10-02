@@ -22,16 +22,17 @@ namespace('sszvis.component.line', function(module) {
           .x(fn.compose(props.xScale, props.x))
           .y(fn.compose(props.yScale, props.y))
 
-        var path = selection.selectAll('.sszvis-line')
+        var path = selection.selectAll('path.sszvis-line')
           .data(data)
 
         path.enter()
           .append('path')
           .classed("sszvis-line", true)
 
+        path.exit().remove();
+
         path
           .attr("d", line);
-
       });
   }
 

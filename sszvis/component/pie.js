@@ -27,12 +27,14 @@ namespace('sszvis.component.pie', function(module) {
           .startAngle(function(d) { return d.a0; })
           .endAngle(function(d) { return d.a1; });
 
-        var segments = selection.selectAll('path')
+        var segments = selection.selectAll('path.sszvis-path')
           .data(data);
 
         segments.enter()
           .append('path')
           .classed('sszvis-path', true);
+
+        segments.exit().remove();
 
         segments
           .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')

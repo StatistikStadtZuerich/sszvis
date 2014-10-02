@@ -1047,12 +1047,14 @@ namespace('sszvis.component.bar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var bars = selection.selectAll('rect')
+        var bars = selection.selectAll('rect.sszvis-bar')
           .data(data);
 
         bars.enter()
           .append('rect')
           .attr('class', 'sszvis-bar');
+
+        bars.exit().remove();
 
         bars
           .attr('x', props.x)
@@ -1107,19 +1109,23 @@ namespace('sszvis.component.groupedBars', function(module) {
           .domain(d3.range(largestGroup))
           .rangeBands([0, props.groupWidth], props.groupSpace, 0);
 
-        var groups = selection.selectAll('g')
+        var groups = selection.selectAll('g.sszvis-g')
           .data(groupedData);
 
         groups.enter()
           .append('g')
           .classed('sszvis-g', true);
 
-        var bars = groups.selectAll('rect')
+        groups.exit().remove();
+
+        var bars = groups.selectAll('rect.sszvis-bar')
           .data(sszvis.fn.identity);
 
         bars.enter()
           .append('rect')
           .classed('sszvis-bar', true);
+
+        bars.exit().remove();
 
         bars
           .attr('x', function(d, i) {
@@ -1162,16 +1168,17 @@ namespace('sszvis.component.line', function(module) {
           .x(fn.compose(props.xScale, props.x))
           .y(fn.compose(props.yScale, props.y))
 
-        var path = selection.selectAll('.sszvis-line')
+        var path = selection.selectAll('path.sszvis-line')
           .data(data)
 
         path.enter()
           .append('path')
           .classed("sszvis-line", true)
 
+        path.exit().remove();
+
         path
           .attr("d", line);
-
       });
   }
 
@@ -1476,12 +1483,14 @@ namespace('sszvis.component.stacked.area', function(module) {
           .y0(function(d) { return props.yScale(d.y0); })
           .y1(function(d) { return props.yScale(d.y0 + d.y); });
 
-        var paths = selection.selectAll('path')
+        var paths = selection.selectAll('path.sszvis-path')
           .data(stackLayout(layers));
 
         paths.enter()
           .append('path')
           .classed('sszvis-path', true);
+
+        paths.exit().remove();
 
         paths
           .attr('d', areaGen)
@@ -1564,12 +1573,14 @@ namespace('sszvis.component.stacked.bar', function(module) {
           .fill(props.fill)
           .stroke(props.stroke);
 
-        var groups = selection.selectAll('g')
+        var groups = selection.selectAll('g.sszvis-g')
           .data(stackLayout(layers));
 
         groups.enter()
           .append('g')
           .classed('sszvis-g', true);
+
+        groups.exit().remove();
 
         var bars = groups.call(barGen);
 
@@ -1618,19 +1629,23 @@ namespace('sszvis.component.groupedBars', function(module) {
           .domain(d3.range(largestGroup))
           .rangeBands([0, props.groupWidth], props.groupSpace, 0);
 
-        var groups = selection.selectAll('g')
+        var groups = selection.selectAll('g.sszvis-g')
           .data(groupedData);
 
         groups.enter()
           .append('g')
           .classed('sszvis-g', true);
 
-        var bars = groups.selectAll('rect')
+        groups.exit().remove();
+
+        var bars = groups.selectAll('rect.sszvis-bar')
           .data(sszvis.fn.identity);
 
         bars.enter()
           .append('rect')
           .classed('sszvis-bar', true);
+
+        bars.exit().remove();
 
         bars
           .attr('x', function(d, i) {
@@ -1775,12 +1790,14 @@ namespace('sszvis.component.pie', function(module) {
           .startAngle(function(d) { return d.a0; })
           .endAngle(function(d) { return d.a1; });
 
-        var segments = selection.selectAll('path')
+        var segments = selection.selectAll('path.sszvis-path')
           .data(data);
 
         segments.enter()
           .append('path')
           .classed('sszvis-path', true);
+
+        segments.exit().remove();
 
         segments
           .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
@@ -1826,7 +1843,9 @@ namespace('sszvis.component.multiples', function(module) {
           .append('g')
           .classed('sszvis-g sszvis-multiple', true);
 
-        var subGroups = multiples.selectAll('g')
+        multiples.exit().remove();
+
+        var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
           .data(function(d) {
             return [d.values];
           });
@@ -1834,6 +1853,8 @@ namespace('sszvis.component.multiples', function(module) {
         subGroups.enter()
           .append('g')
           .classed('sszvis-multiple-chart', true);
+
+        subGroups.exit().remove();
 
         multiples
           .datum(function(d, i) {
@@ -1879,12 +1900,14 @@ namespace('sszvis.component.pyramid', function(module) {
 
         var rendered;
         if (props.renderMode === 'bar') {
-          rendered = selection.selectAll('rect')
+          rendered = selection.selectAll('rect.sszvis-bar')
             .data(data);
 
           rendered.enter()
             .append('rect')
             .classed('sszvis-bar', true);
+
+          rendered.exit().remove();
 
           rendered
             .attr('x', props.alignmentValue)
@@ -1904,12 +1927,16 @@ namespace('sszvis.component.pyramid', function(module) {
             .append('g')
             .classed('sszvis-g', true);
 
-          var bars = rendered.selectAll('rect')
+          rendered.exit().remove();
+
+          var bars = rendered.selectAll('rect.sszvis-bar')
             .data(function(d) { return d; });
 
           bars.enter()
             .append('rect')
             .classed('sszvis-bar', true);
+
+          bars.exit().remove();
 
           bars
             .attr('x', props.alignmentValue)
@@ -1922,12 +1949,14 @@ namespace('sszvis.component.pyramid', function(module) {
             .x(props.alignmentValue)
             .y(props.extentValue);
 
-          rendered = selection.selectAll('path')
+          rendered = selection.selectAll('path.sszvis-path')
             .data([data]);
 
           rendered.enter()
             .append('path')
             .classed('sszvis-path', true);
+
+          rendered.exit().remove();
 
           rendered
             .attr('d', lineGen)

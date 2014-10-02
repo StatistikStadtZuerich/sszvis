@@ -29,7 +29,9 @@ namespace('sszvis.component.multiples', function(module) {
           .append('g')
           .classed('sszvis-g sszvis-multiple', true);
 
-        var subGroups = multiples.selectAll('g')
+        multiples.exit().remove();
+
+        var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
           .data(function(d) {
             return [d.values];
           });
@@ -37,6 +39,8 @@ namespace('sszvis.component.multiples', function(module) {
         subGroups.enter()
           .append('g')
           .classed('sszvis-multiple-chart', true);
+
+        subGroups.exit().remove();
 
         multiples
           .datum(function(d, i) {

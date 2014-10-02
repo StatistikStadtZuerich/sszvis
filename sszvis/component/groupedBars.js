@@ -35,19 +35,23 @@ namespace('sszvis.component.groupedBars', function(module) {
           .domain(d3.range(largestGroup))
           .rangeBands([0, props.groupWidth], props.groupSpace, 0);
 
-        var groups = selection.selectAll('g')
+        var groups = selection.selectAll('g.sszvis-g')
           .data(groupedData);
 
         groups.enter()
           .append('g')
           .classed('sszvis-g', true);
 
-        var bars = groups.selectAll('rect')
+        groups.exit().remove();
+
+        var bars = groups.selectAll('rect.sszvis-bar')
           .data(sszvis.fn.identity);
 
         bars.enter()
           .append('rect')
           .classed('sszvis-bar', true);
+
+        bars.exit().remove();
 
         bars
           .attr('x', function(d, i) {
