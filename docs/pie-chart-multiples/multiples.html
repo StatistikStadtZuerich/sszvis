@@ -43,24 +43,24 @@
 
       state.groups = sszvis.fn.set(state.data.map(gAcc));
 
-      state.pieGroups = state.data.reduce(function(memo, value) {
-        var gName = gAcc(value);
-        var index = state.groups.indexOf(gName);
-        if (!memo[index]) {
-          memo[index] = {
-            group: gName,
-            values: [value]
-          };
-        } else {
-          memo[index].values.push(value);
-        }
-        return memo;
-      }, []);
+      var cascader = sszvis.cascade()
+        .arrayBy(gAcc, function(g1, g2) {
+          return state.groups.indexOf(g1) - state.groups.indexOf(g2);
+        });
 
-      state.totalValues = state.pieGroups.reduce(function(memo, group, i) {
-        memo[group.group] = d3.sum(group.values.map(vAcc));
+      var grouped = cascader.apply(state.data);
+
+      state.totalValues = grouped.reduce(function(memo, group, i) {
+        memo[state.groups[i]] = d3.sum(group.map(vAcc));
         return memo;
       }, {});
+
+      state.pieGroups = grouped.map(function(g, i) {
+        return {
+          group: state.groups[i],
+          values: g
+        };
+      });
 
       state.categories = sszvis.fn.set(state.data.map(cAcc));
 
@@ -119,7 +119,6 @@
 
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.pieGroups);
-
 
     var overlay = sszvis.createHtmlLayer('#chart', bounds)
       .datum(state.tooltips)

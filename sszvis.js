@@ -1149,8 +1149,8 @@ namespace('sszvis.component.groupedBars', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('groupAccessor')
       .prop('groupScale')
+      .prop('groupSize')
       .prop('groupWidth')
       .prop('groupSpace').groupSpace(0.05)
       .prop('y')
@@ -1161,25 +1161,12 @@ namespace('sszvis.component.groupedBars', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var groupNames = sszvis.fn.set(data.map(props.groupAccessor));
-        var groupedData = data.reduce(function(memo, value) {
-          var index = groupNames.indexOf(props.groupAccessor(value));
-          if (!memo[index]) {
-            memo[index] = [value];
-          } else {
-            memo[index].push(value);
-          }
-          return memo;
-        }, []);
-
-        var largestGroup = d3.max(groupedData.map(sszvis.fn.prop('length')));
-
         var inGroupScale = d3.scale.ordinal()
-          .domain(d3.range(largestGroup))
+          .domain(d3.range(props.groupSize))
           .rangeBands([0, props.groupWidth], props.groupSpace, 0);
 
         var groups = selection.selectAll('g.sszvis-g')
-          .data(groupedData);
+          .data(data);
 
         groups.enter()
           .append('g')
@@ -1199,7 +1186,7 @@ namespace('sszvis.component.groupedBars', function(module) {
         bars
           .attr('x', function(d, i) {
             // first term is the x-position of the group, the second term is the x-position of the bar within the group
-            return props.groupScale(props.groupAccessor(d)) + inGroupScale(i);
+            return props.groupScale(d) + inGroupScale(i);
           })
           .attr('width', inGroupScale.rangeBand())
           .attr('y', props.y)
@@ -1522,26 +1509,11 @@ namespace('sszvis.component.stacked.area', function(module) {
       .prop('xScale')
       .prop('yAccessor')
       .prop('yScale')
-      .prop('categoryAccessor')
       .prop('fill')
       .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
-
-        var categories = sszvis.fn.set(data.map(props.categoryAccessor));
-        var layers = data.reduce(function(memo, value) {
-          var index = categories.indexOf(props.categoryAccessor(value));
-          if (!memo[index]) {
-            memo[index] = [value];
-          } else {
-            memo[index].push(value);
-          }
-          return memo;
-        }, []);
-        categories.forEach(function(cat, i) {
-          layers[i].category = cat;
-        });
 
         var stackLayout = d3.layout.stack()
           .x(props.xAccessor)
@@ -1553,7 +1525,7 @@ namespace('sszvis.component.stacked.area', function(module) {
           .y1(function(d) { return props.yScale(d.y0 + d.y); });
 
         var paths = selection.selectAll('path.sszvis-path')
-          .data(stackLayout(layers));
+          .data(stackLayout(data));
 
         paths.enter()
           .append('path')
@@ -1584,29 +1556,14 @@ namespace('sszvis.component.stacked.bar', function(module) {
       .prop('orientation')
       .prop('xAccessor')
       .prop('xScale')
+      .prop('width')
       .prop('yAccessor')
       .prop('yScale')
-      .prop('categoryAccessor')
-      .prop('width')
       .prop('fill')
       .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
-
-        var categories = sszvis.fn.set(data.map(props.categoryAccessor));
-        var layers = data.reduce(function(memo, value) {
-          var index = categories.indexOf(props.categoryAccessor(value));
-          if (!memo[index]) {
-            memo[index] = [value];
-          } else {
-            memo[index].push(value);
-          }
-          return memo;
-        }, []);
-        categories.forEach(function(cat, i) {
-          layers[i].category = cat;
-        });
 
         // TODO: refactor this class to make more sense?
         var stackLayout = d3.layout.stack()
@@ -1643,7 +1600,7 @@ namespace('sszvis.component.stacked.bar', function(module) {
           .stroke(props.stroke);
 
         var groups = selection.selectAll('g.sszvis-g')
-          .data(stackLayout(layers));
+          .data(stackLayout(data));
 
         groups.enter()
           .append('g')
@@ -1653,78 +1610,6 @@ namespace('sszvis.component.stacked.bar', function(module) {
 
         var bars = groups.call(barGen);
 
-      });
-  };
-
-});
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Grouped Bars
- * @return {d3.component}
- */
-namespace('sszvis.component.groupedBars', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('groupAccessor')
-      .prop('groupScale')
-      .prop('groupWidth')
-      .prop('groupSpace').groupSpace(0.05)
-      .prop('y')
-      .prop('height')
-      .prop('fill')
-      .prop('stroke')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var groupNames = sszvis.fn.set(data.map(props.groupAccessor));
-        var groupedData = data.reduce(function(memo, value) {
-          var index = groupNames.indexOf(props.groupAccessor(value));
-          if (!memo[index]) {
-            memo[index] = [value];
-          } else {
-            memo[index].push(value);
-          }
-          return memo;
-        }, []);
-
-        var largestGroup = d3.max(groupedData.map(sszvis.fn.prop('length')));
-
-        var inGroupScale = d3.scale.ordinal()
-          .domain(d3.range(largestGroup))
-          .rangeBands([0, props.groupWidth], props.groupSpace, 0);
-
-        var groups = selection.selectAll('g.sszvis-g')
-          .data(groupedData);
-
-        groups.enter()
-          .append('g')
-          .classed('sszvis-g', true);
-
-        groups.exit().remove();
-
-        var bars = groups.selectAll('rect.sszvis-bar')
-          .data(sszvis.fn.identity);
-
-        bars.enter()
-          .append('rect')
-          .classed('sszvis-bar', true);
-
-        bars.exit().remove();
-
-        bars
-          .attr('x', function(d, i) {
-            // first term is the x-position of the group, the second term is the x-position of the bar within the group
-            return props.groupScale(props.groupAccessor(d)) + inGroupScale(i);
-          })
-          .attr('width', inGroupScale.rangeBand())
-          .attr('y', props.y)
-          .attr('height', props.height)
-          .attr('fill', props.fill);
       });
   };
 

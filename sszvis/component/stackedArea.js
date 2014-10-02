@@ -10,26 +10,11 @@ namespace('sszvis.component.stacked.area', function(module) {
       .prop('xScale')
       .prop('yAccessor')
       .prop('yScale')
-      .prop('categoryAccessor')
       .prop('fill')
       .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
-
-        var categories = sszvis.fn.set(data.map(props.categoryAccessor));
-        var layers = data.reduce(function(memo, value) {
-          var index = categories.indexOf(props.categoryAccessor(value));
-          if (!memo[index]) {
-            memo[index] = [value];
-          } else {
-            memo[index].push(value);
-          }
-          return memo;
-        }, []);
-        categories.forEach(function(cat, i) {
-          layers[i].category = cat;
-        });
 
         var stackLayout = d3.layout.stack()
           .x(props.xAccessor)
@@ -41,7 +26,7 @@ namespace('sszvis.component.stacked.area', function(module) {
           .y1(function(d) { return props.yScale(d.y0 + d.y); });
 
         var paths = selection.selectAll('path.sszvis-path')
-          .data(stackLayout(layers));
+          .data(stackLayout(data));
 
         paths.enter()
           .append('path')

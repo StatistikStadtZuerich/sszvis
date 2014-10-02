@@ -9,29 +9,14 @@ namespace('sszvis.component.stacked.bar', function(module) {
       .prop('orientation')
       .prop('xAccessor')
       .prop('xScale')
+      .prop('width')
       .prop('yAccessor')
       .prop('yScale')
-      .prop('categoryAccessor')
-      .prop('width')
       .prop('fill')
       .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
-
-        var categories = sszvis.fn.set(data.map(props.categoryAccessor));
-        var layers = data.reduce(function(memo, value) {
-          var index = categories.indexOf(props.categoryAccessor(value));
-          if (!memo[index]) {
-            memo[index] = [value];
-          } else {
-            memo[index].push(value);
-          }
-          return memo;
-        }, []);
-        categories.forEach(function(cat, i) {
-          layers[i].category = cat;
-        });
 
         // TODO: refactor this class to make more sense?
         var stackLayout = d3.layout.stack()
@@ -68,7 +53,7 @@ namespace('sszvis.component.stacked.bar', function(module) {
           .stroke(props.stroke);
 
         var groups = selection.selectAll('g.sszvis-g')
-          .data(stackLayout(layers));
+          .data(stackLayout(data));
 
         groups.enter()
           .append('g')

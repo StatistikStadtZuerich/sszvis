@@ -19,6 +19,10 @@
     data: []
   };
 
+  var xAcc = sszvis.fn.prop('year');
+  var yAcc = sszvis.fn.prop('value');
+  var cAcc = sszvis.fn.prop('region');
+
   d3.csv('data/StVB_3Categories_yearly.csv')
     .row(function(d) {
       return {
@@ -32,35 +36,38 @@
         console.log('error loading data: ', error);
         return;
       }
+
       state.data = data;
+
+      state.years = state.data.map(xAcc);
+
+      var stacker = sszvis.cascade()
+        .arrayBy(cAcc);
+
+      state.stackedData = stacker.apply(state.data);
+
+      var stackedValues = sszvis.cascade().objectBy(xAcc).apply(state.data);
+
+      state.maxStacked = d3.max(sszvis.fn.objectValues(stackedValues).map(function(s) { return d3.sum(s.map(yAcc)); }));
+
+      state.categories = sszvis.fn.set(state.data.map(cAcc));
+
       render(state);
     });
 
   function render(state) {
     var bounds = sszvis.bounds({ width: 540, height: 500, top: 20, right: 20, bottom: 26, left: 10 });
 
-    var xAcc = sszvis.fn.prop('year');
-    var yAcc = sszvis.fn.prop('value');
-    var cAcc = sszvis.fn.prop('region');
-
     var xScale = d3.scale.ordinal()
-      .domain(state.data.map(xAcc))
+      .domain(state.years)
       .rangeBands([30, bounds.innerWidth], 0.35, 0.15);
 
-    var stackedValues = state.data.reduce(function(memo, value) {
-      var xVal = String(xAcc(value));
-      memo[xVal] = memo[xVal] ? memo[xVal] + yAcc(value) : yAcc(value);
-      return memo;
-    }, {});
-
-    var maxStacked = d3.max(sszvis.fn.objectValues(stackedValues));
-
     var yScale = d3.scale.linear()
-      .domain([0, maxStacked])
+      .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 0]);
 
     var cScale = d3.scale.ordinal()
-      .domain(sszvis.fn.set(state.data.map(cAcc)))
+      .domain(state.categories)
       .range(sszvis.color.ranges.qualitative.qual3);
 
     var stackedBars = sszvis.component.stacked.bar()
@@ -70,14 +77,13 @@
       .width(xScale.rangeBand())
       .yAccessor(yAcc)
       .yScale(yScale)
-      .categoryAccessor(cAcc)
-      .fill(function(d) { return cScale(cAcc(d)); });
+      .fill(sszvis.fn.compose(cScale, cAcc));
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yScale).orient('right');
 
     var chart = sszvis.createChart('#chart', bounds)
-      .datum(state.data);
+      .datum(state.stackedData);
 
     var bars = chart.selectGroup('barchart')
       .call(stackedBars);
