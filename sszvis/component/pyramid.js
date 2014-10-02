@@ -48,7 +48,7 @@ namespace('sszvis.component.pyramid', function(module) {
             .classed('sszvis-g', true);
 
           var bars = rendered.selectAll('rect')
-            .data(sszvis.fn.identity);
+            .data(function(d) { return d; });
 
           bars.enter()
             .append('rect')
@@ -66,14 +66,18 @@ namespace('sszvis.component.pyramid', function(module) {
             .y(props.extentValue);
 
           rendered = selection.selectAll('path')
-            .data(data);
+            .data([data]);
 
           rendered.enter()
             .append('path')
             .classed('sszvis-path', true);
 
           rendered
-            .attr('d', lineGen);
+            .attr('d', lineGen)
+            .attr('fill', 'none')
+            .attr('stroke', '#aaa')
+            .attr('stroke-width', 2)
+            .attr('stroke-dasharray', '3 3');
         }
 
         if (props.direction === 'links') {

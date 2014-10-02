@@ -22,7 +22,7 @@
   var vAcc = sszvis.fn.prop('value');
   var gAcc = sszvis.fn.prop('gender');
   var aAcc = sszvis.fn.prop('age');
-  var stackAcc = sszvis.fn.prop('group');
+  var refAcc = sszvis.fn.prop('group');
   var g1 = sszvis.fn.prop('Frauen');
   var g2 = sszvis.fn.prop('Maenner');
 
@@ -43,12 +43,20 @@
 
       state.data = data;
 
-      state.ages = d3.set(state.data.map(aAcc)).values()
-        .sort(d3.ascending);
+      state.ages = sszvis.fn.uniqueSorted(state.data.map(aAcc).sort(d3.ascending));
 
       state.groups = d3.set(state.data.map(gAcc)).values();
 
-      state.populations = [];
+      var nester = d3.nest()
+        .key(refAcc)
+        .key(gAcc)
+        .sortValues(function(a, b) {
+          return d3.ascending(aAcc(a), aAcc(b));
+        });
+
+      state.populations = nester.map(state.data, d3.map);
+
+      state.maxValue = d3.max(state.data.map(vAcc));
 
       render(state);
     });
@@ -56,7 +64,65 @@
     function render(state) {
       var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
 
+      var groupPadding = 0.5;
 
+      var positionScale = d3.scale.ordinal()
+        .domain(state.ages)
+        .rangeBands([0, bounds.innerHeight], 0.1, 0);
+
+      var lengthScale = d3.scale.linear()
+        .domain([0, state.maxValue])
+        .range([0, bounds.innerWidth / 2 - groupPadding]);
+
+      var colorScale = d3.scale.ordinal()
+        .domain(state.groups)
+        .range(sszvis.color.ranges.qualitative.neutralQual2);
+
+      var pyramidGen = sszvis.component.pyramid()
+        .renderMode('bar')
+        .width(bounds.innerWidth / 2)
+        .height(bounds.innerHeight)
+        .groupPadding(groupPadding)
+        .alignmentValue(sszvis.fn.compose(positionScale, aAcc))
+        .barWidth(positionScale.rangeBand())
+        .extentValue(sszvis.fn.compose(lengthScale, vAcc))
+        .fill(sszvis.fn.compose(colorScale, gAcc));
+
+      var yAxis = sszvis.axis.y.ordinal().scale(positionScale).orient('right');
+
+      var chart = sszvis.createChart('#chart', bounds)
+        .datum(state.populations);
+
+      var collegeEd = chart.selectGroup('collegeEd')
+        .datum(function(d) { return d.get('Hoschulabschluss'); });
+
+      var cGroup1 = collegeEd.selectGroup('college-group1')
+        .datum(function(d) { return d.get('Frauen'); });
+
+      pyramidGen.direction('links');
+      cGroup1.call(pyramidGen);
+
+      var cGroup2 = collegeEd.selectGroup('college-group2')
+        .datum(function(d) { return d.get('Maenner'); });
+
+      pyramidGen.direction('rechts');
+      cGroup2.call(pyramidGen);
+
+      var otherEd = chart.selectGroup('otherEd')
+        .datum(function(d) { return d.get('Andere'); });
+
+      var oGroup1 = otherEd.selectGroup('other-group1')
+        .datum(function(d) { return d.get('Frauen'); });
+
+      pyramidGen.renderMode('line');
+      pyramidGen.direction('links');
+      oGroup1.call(pyramidGen);
+
+      var oGroup2 = otherEd.selectGroup('other-group2')
+        .datum(function(d) { return d.get('Maenner'); });
+
+      pyramidGen.direction('rechts');
+      oGroup2.call(pyramidGen);
     }
 
 }());

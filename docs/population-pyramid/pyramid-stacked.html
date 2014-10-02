@@ -47,7 +47,7 @@
 
       state.data = data;
 
-      state.ages = d3.set(state.data.map(aAcc)).values()
+      state.ages = d3.set(state.data.map(aAcc)).values().map(sszvis.parse.number)
         .sort(d3.ascending);
 
       state.groups = d3.set(state.data.map(groupAndStackAcc)).values().sort();
