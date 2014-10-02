@@ -22,6 +22,12 @@ namespace('sszvis.fn', function(module) {
       };
     },
 
+    constant: function(value) {
+      return function() {
+        return value;
+      };
+    },
+
     defined: function(val) {
       return typeof val !== 'undefined';
     },
@@ -38,29 +44,45 @@ namespace('sszvis.fn', function(module) {
       }
     },
 
+    /**
+     * fn.hashableSet
+     *
+     * takes an array of elements and returns the unique elements of that array
+     * the returned array is ordered according to the elements' order of appearance
+     * in the input array. This function differs from fn.set in that the elements
+     * in the input array MUST be "hashable" - convertible to unique keys of a JavaScript object.
+     *
+     * @param  {Array} arr the Array of source elements
+     * @return {Array} an Array of unique elements
+     */
+    hashableSet: function(arr) {
+      var seen = {}, value, result = [];
+      for (var i = 0, l = arr.length; i < l; ++i) {
+        value = arr[i];
+        if (!seen[value]) {
+          seen[value] = true;
+          result.push(value);
+        }
+      }
+      return result;
+    },
+
     identity: function(value) {
       return value;
-    },
-
-    constant: function(value) {
-      return function() {
-        return value;
-      };
-    },
-
-    last: function(arr) {
-      return arr[arr.length - 1];
     },
 
     not: function (f) {
       return function(){ return !f.apply(this, arguments) };
     },
 
-    partial: function(func, var_args) {
-      var argsArr = slice(arguments, 1);
-      return function(){
-        return func.apply(this, argsArr.concat(slice(arguments)));
-      };
+    objectValues: function(obj) {
+      var result = [], prop;
+      for (prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+          result.push(obj[prop]);
+        }
+      }
+      return result;
     },
 
     prop: function(key) {
@@ -87,53 +109,6 @@ namespace('sszvis.fn', function(module) {
       return arr.reduce(function(m, value) {
         return m.indexOf(value) < 0 ? m.concat(value) : m;
       }, []);
-    },
-
-    /**
-     * fn.hashableSet
-     *
-     * takes an array of elements and returns the unique elements of that array
-     * the returned array is ordered according to the elements' order of appearance
-     * in the input array. This function differs from fn.set in that the elements
-     * in the input array MUST be "hashable" - convertible to unique keys of a JavaScript object.
-     *
-     * @param  {Array} arr the Array of source elements
-     * @return {Array} an Array of unique elements
-     */
-    hashableSet: function(arr) {
-      var seen = {}, value, result = [];
-      for (var i = 0, l = arr.length; i < l; ++i) {
-        value = arr[i];
-        if (!seen[value]) {
-          seen[value] = true;
-          result.push(value);
-        }
-      }
-      return result;
-    },
-
-    groupBy: function(arr, prop) {
-      var result = {}, value, key;
-      for (var i = 0, l = arr.length; i < l; ++i) {
-        value = arr[i];
-        key = value[prop];
-        if (result.hasOwnProperty(key)) {
-          result[key].push(value);
-        } else {
-          result[key] = [value];
-        }
-      }
-      return result;
-    },
-
-    objectValues: function(obj) {
-      var result = [], prop;
-      for (prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-          result.push(obj[prop]);
-        }
-      }
-      return result;
     }
 
   }

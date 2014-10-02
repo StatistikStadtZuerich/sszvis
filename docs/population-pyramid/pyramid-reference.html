@@ -23,8 +23,6 @@
   var gAcc = sszvis.fn.prop('gender');
   var aAcc = sszvis.fn.prop('age');
   var refAcc = sszvis.fn.prop('group');
-  var g1 = sszvis.fn.prop('Frauen');
-  var g2 = sszvis.fn.prop('Maenner');
 
   d3.csv('data/BP_reference.csv')
     .row(function(d) {
@@ -47,14 +45,11 @@
 
       state.groups = sszvis.fn.set(state.data.map(gAcc));
 
-      var nester = d3.nest()
-        .key(refAcc)
-        .key(gAcc)
-        .sortValues(function(a, b) {
-          return d3.ascending(aAcc(a), aAcc(b));
-        });
+      var cascade = sszvis.cascade()
+        .objectBy(refAcc)
+        .objectBy(gAcc);
 
-      state.populations = nester.map(state.data, d3.map);
+      state.populations = cascade.apply(state.data);
 
       state.maxValue = d3.max(state.data.map(vAcc));
 
@@ -90,36 +85,41 @@
 
       var yAxis = sszvis.axis.y.ordinal().scale(positionScale).orient('right');
 
+      var men = sszvis.fn.prop('Frauen');
+      var women = sszvis.fn.prop('Maenner');
+      var college = sszvis.fn.prop('Hoschulabschluss');
+      var other = sszvis.fn.prop('Andere');
+
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.populations);
 
       var collegeEd = chart.selectGroup('collegeEd')
-        .datum(function(d) { return d.get('Hoschulabschluss'); });
+        .datum(college);
 
       var cGroup1 = collegeEd.selectGroup('college-group1')
-        .datum(function(d) { return d.get('Frauen'); });
+        .datum(men);
 
       pyramidGen.direction('links');
       cGroup1.call(pyramidGen);
 
       var cGroup2 = collegeEd.selectGroup('college-group2')
-        .datum(function(d) { return d.get('Maenner'); });
+        .datum(women);
 
       pyramidGen.direction('rechts');
       cGroup2.call(pyramidGen);
 
       var otherEd = chart.selectGroup('otherEd')
-        .datum(function(d) { return d.get('Andere'); });
+        .datum(other);
 
       var oGroup1 = otherEd.selectGroup('other-group1')
-        .datum(function(d) { return d.get('Frauen'); });
+        .datum(men);
 
       pyramidGen.renderMode('line');
       pyramidGen.direction('links');
       oGroup1.call(pyramidGen);
 
       var oGroup2 = otherEd.selectGroup('other-group2')
-        .datum(function(d) { return d.get('Maenner'); });
+        .datum(women);
 
       pyramidGen.direction('rechts');
       oGroup2.call(pyramidGen);

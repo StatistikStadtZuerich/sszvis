@@ -22,8 +22,6 @@
   var vAcc = sszvis.fn.prop('value');
   var gAcc = sszvis.fn.prop('gender');
   var aAcc = sszvis.fn.prop('age');
-  var g1 = sszvis.fn.prop('Frauen');
-  var g2 = sszvis.fn.prop('Maenner');
 
   d3.csv('data/BP_basic.csv')
     .row(function(d) {
@@ -45,15 +43,10 @@
 
       state.groups = sszvis.fn.set(state.data.map(gAcc));
 
-      state.populations = state.data.reduce(function(memo, value) {
-        var group = gAcc(value);
-        if (!memo[group]) {
-          memo[group] = [value];
-        } else {
-          memo[group].push(value);
-        }
-        return memo;
-      }, {});
+      var cascader = sszvis.cascade()
+        .objectBy(gAcc);
+
+      state.populations = cascader.apply(state.data);
 
       state.maxValue = d3.max(state.data.map(vAcc));
 
@@ -93,13 +86,13 @@
         .datum(state.populations);
 
       var group1 = chart.selectGroup('group1')
-        .datum(g1);
+        .datum(sszvis.fn.prop('Frauen'));
 
       pyramidGen.direction('links');
       group1.call(pyramidGen);
 
       var group2 = chart.selectGroup('group2')
-        .datum(g2);
+        .datum(sszvis.fn.prop('Maenner'));
 
       pyramidGen.direction('rechts');
       group2.call(pyramidGen);

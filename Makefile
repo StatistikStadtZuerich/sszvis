@@ -21,6 +21,7 @@ VENDOR_FILES = \
 	vendor/namespace/namespace.js
 
 SOURCE_FILES = \
+	sszvis/cascade.js \
 	sszvis/bounds.js \
 	sszvis/color.js \
 	sszvis/fn.js \

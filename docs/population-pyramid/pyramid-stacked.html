@@ -23,8 +23,6 @@
   var gAcc = sszvis.fn.prop('gender');
   var aAcc = sszvis.fn.prop('age');
   var stackAcc = sszvis.fn.prop('group');
-  var g1 = sszvis.fn.prop('Frauen');
-  var g2 = sszvis.fn.prop('Maenner');
 
   function groupAndStackAcc(d) {
     return gAcc(d) + '-' + stackAcc(d);
@@ -51,33 +49,11 @@
 
       state.groups = sszvis.fn.set(state.data.map(groupAndStackAcc)).sort(d3.descending);
 
-      state.populations = state.data.reduce(function(memo, value) {
-        var group = gAcc(value);
-        if (!memo[group]) {
-          memo[group] = [value];
-        } else {
-          memo[group].push(value);
-        }
-        return memo;
-      }, {});
+      var cascader = sszvis.cascade()
+        .objectBy(gAcc)
+        .arrayBy(stackAcc);
 
-      for (var group in state.populations) {
-        var flat = state.populations[group];
-        flat.sort(function(a, b) {
-          return d3.ascending(aAcc(a), aAcc(b));
-        });
-        var stackNames = sszvis.fn.set(flat.map(stackAcc));
-        var stacks = flat.reduce(function(memo, value) {
-          var index = stackNames.indexOf(stackAcc(value));
-          if (!memo[index]) {
-            memo[index] = [value];
-          } else {
-            memo[index].push(value);
-          }
-          return memo;
-        }, []);
-        state.populations[group] = stacks;
-      }
+      state.populations = cascader.apply(state.data);
 
       state.maxStackedValue = d3.max(sszvis.fn.objectValues(state.populations).map(function(stacks) {
         return d3.max(d3.zip.apply(null, stacks).map(function(s) { return d3.sum(s, vAcc); }));
@@ -119,13 +95,13 @@
         .datum(state.populations);
 
       var group1 = chart.selectGroup('group1')
-        .datum(g1);
+        .datum(sszvis.fn.prop('Frauen'));
 
       pyramidGen.direction('links');
       group1.call(pyramidGen);
 
       var group2 = chart.selectGroup('group2')
-        .datum(g2);
+        .datum(sszvis.fn.prop('Maenner'));
 
       pyramidGen.direction('rechts');
       group2.call(pyramidGen);
