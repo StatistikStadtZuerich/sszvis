@@ -43,9 +43,9 @@
 
       state.data = data;
 
-      state.ages = sszvis.fn.uniqueSorted(state.data.map(aAcc).sort(d3.ascending));
+      state.ages = sszvis.fn.set(state.data.map(aAcc).sort(d3.ascending));
 
-      state.groups = d3.set(state.data.map(gAcc)).values();
+      state.groups = sszvis.fn.set(state.data.map(gAcc));
 
       var nester = d3.nest()
         .key(refAcc)

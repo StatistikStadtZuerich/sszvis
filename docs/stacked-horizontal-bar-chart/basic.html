@@ -71,11 +71,11 @@
       .range([110, bounds.innerWidth]);
 
     var yScale = d3.scale.ordinal()
-      .domain(sszvis.fn.uniqueUnsorted(state.data.map(yAcc)))
+      .domain(sszvis.fn.set(state.data.map(yAcc)))
       .rangeBands([0, bounds.innerHeight], 0.45, 0.1);
 
     var cScale = d3.scale.ordinal()
-      .domain(sszvis.fn.uniqueUnsorted(state.data.map(cAcc)))
+      .domain(sszvis.fn.set(state.data.map(cAcc)))
       .range(sszvis.color.ranges.qualitative.qual12);
 
     var horizontalBars = sszvis.component.stacked.bar()

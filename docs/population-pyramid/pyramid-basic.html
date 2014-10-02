@@ -41,12 +41,9 @@
 
       state.data = data;
 
-      state.ages = d3.set(state.data.map(aAcc)).values().map(sszvis.parse.number)
-        .sort(function(a, b) {
-          return d3.ascending(parseInt(a, 10), parseInt(b, 10));
-        });
+      state.ages = sszvis.fn.set(state.data.map(aAcc)).sort(d3.ascending);
 
-      state.groups = d3.set(state.data.map(gAcc)).values();
+      state.groups = sszvis.fn.set(state.data.map(gAcc));
 
       state.populations = state.data.reduce(function(memo, value) {
         var group = gAcc(value);

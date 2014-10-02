@@ -58,7 +58,7 @@
           yScale = d3.scale.linear()
             .domain([0, maxStacked])
             .range([bounds.innerHeight, 0]),
-          categories = sszvis.fn.uniqueUnsorted(state.data.map(cAcc)),
+          categories = sszvis.fn.set(state.data.map(cAcc)),
           cScale = d3.scale.ordinal()
             .domain(categories)
             .range(sszvis.color.ranges.qualitative.qual3),

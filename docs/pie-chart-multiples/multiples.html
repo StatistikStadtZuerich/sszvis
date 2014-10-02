@@ -41,7 +41,7 @@
       }
       state.data = data;
 
-      state.groups = d3.set(state.data.map(gAcc)).values();
+      state.groups = sszvis.fn.set(state.data.map(gAcc));
 
       state.pieGroups = state.data.reduce(function(memo, value) {
         var gName = gAcc(value);
@@ -62,7 +62,7 @@
         return memo;
       }, {});
 
-      state.categories = d3.set(state.data.map(cAcc)).values();
+      state.categories = sszvis.fn.set(state.data.map(cAcc));
 
       render(state);
     });

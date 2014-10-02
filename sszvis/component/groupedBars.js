@@ -18,7 +18,7 @@ namespace('sszvis.component.groupedBars', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var groupNames = sszvis.fn.uniqueUnsorted(data.map(props.groupAccessor));
+        var groupNames = sszvis.fn.set(data.map(props.groupAccessor));
         var groupedData = data.reduce(function(memo, value) {
           var index = groupNames.indexOf(props.groupAccessor(value));
           if (!memo[index]) {

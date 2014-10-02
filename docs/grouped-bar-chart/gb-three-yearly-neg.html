@@ -44,7 +44,7 @@
     var cAcc = sszvis.fn.prop('category');
 
     var xScale = d3.scale.ordinal()
-      .domain(sszvis.fn.uniqueUnsorted(state.data.map(xAcc)))
+      .domain(sszvis.fn.set(state.data.map(xAcc)))
       .rangeBands([0, bounds.innerWidth], 0.3, 0);
 
     var yScale = d3.scale.linear()
@@ -62,7 +62,7 @@
     };
 
     var cScale = d3.scale.ordinal()
-      .domain(sszvis.fn.uniqueUnsorted(state.data.map(cAcc)))
+      .domain(sszvis.fn.set(state.data.map(cAcc)))
       .range(sszvis.color.ranges.qualitative.qual3);
 
     var barLayout = sszvis.component.groupedBars()

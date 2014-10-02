@@ -60,7 +60,7 @@
       .range([bounds.innerHeight, 0]);
 
     var cScale = d3.scale.ordinal()
-      .domain(sszvis.fn.uniqueUnsorted(state.data.map(cAcc)))
+      .domain(sszvis.fn.set(state.data.map(cAcc)))
       .range(sszvis.color.ranges.qualitative.qual3);
 
     var stackedBars = sszvis.component.stacked.bar()

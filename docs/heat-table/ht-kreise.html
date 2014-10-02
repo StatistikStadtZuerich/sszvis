@@ -41,14 +41,12 @@
 
       state.data = data;
 
-      state.agesList = d3.set(state.data.map(yAcc))
-        .values()
+      state.agesList = sszvis.fn.set(state.data.map(yAcc))
         .sort(function(a, b) {
           return d3.ascending(parseInt(a, 10), parseInt(b, 10));
         });
 
-      state.kreisList = d3.set(state.data.map(xAcc))
-        .values()
+      state.kreisList = sszvis.fn.set(state.data.map(xAcc))
         .sort(function(a, b) {
           return d3.ascending(parseKreisInt(a), parseKreisInt(b));
         });

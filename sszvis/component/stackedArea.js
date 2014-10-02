@@ -17,7 +17,7 @@ namespace('sszvis.component.stacked.area', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var categories = sszvis.fn.uniqueUnsorted(data.map(props.categoryAccessor));
+        var categories = sszvis.fn.set(data.map(props.categoryAccessor));
         var layers = data.reduce(function(memo, value) {
           var index = categories.indexOf(props.categoryAccessor(value));
           if (!memo[index]) {

@@ -77,9 +77,7 @@
         .domain([0, maxStacked])
         .range([bounds.innerHeight, 0]);
 
-      // It's OK to use fn.uniqueSorted here, because state.data has already been sorted by category
-      // so the categories in the output of mapping over state.data will also be sorted.
-      var categories = sszvis.fn.uniqueSorted(state.data.map(cAcc));
+      var categories = sszvis.fn.set(state.data.map(cAcc));
 
       var cScale = d3.scale.ordinal()
         .domain(categories)

@@ -62,11 +62,11 @@
 
     var quarterList = state.data.map(xAcc);
     quarterList.sort();
-    quarterList = sszvis.fn.uniqueSorted(quarterList);
+    quarterList = sszvis.fn.set(quarterList);
 
     var groupsList = state.data.map(yAcc);
     groupsList.sort();
-    groupsList = sszvis.fn.uniqueSorted(groupsList);
+    groupsList = sszvis.fn.set(groupsList);
 
     var xSide = bounds.innerWidth / quarterList.length;
     var ySide = bounds.innerHeight / groupsList.length;

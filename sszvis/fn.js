@@ -69,22 +69,43 @@ namespace('sszvis.fn', function(module) {
       }
     },
 
-    uniqueSorted: function(arr) {
-      var seen, value, result = [];
-      for (var i = 0, l = arr.length; i < l; ++i) {
-        value = arr[i];
-        if (!i || seen !== value) result.push(value);
-        seen = value;
-      }
-      return result;
+    /**
+     * fn.set
+     *
+     * takes an array of elements and returns the unique elements of that array
+     * the returned array is ordered according to the elements' order of appearance
+     * in the input array, e.g.:
+     *
+     * [2,1,1,6,8,6,5,3] -> [2,1,6,8,5,3]
+     * ["b", a", "b", "b"] -> ["b", "a"]
+     * [{obj1}, {obj2}, {obj1}, {obj3}] -> [{obj1}, {obj2}, {obj3}]
+     *
+     * @param {Array} arr - the Array of source elements
+     * @return {Array} an Array of unique elements
+     */
+    set: function(arr) {
+      return arr.reduce(function(m, value) {
+        return m.indexOf(value) < 0 ? m.concat(value) : m;
+      }, []);
     },
 
-    uniqueUnsorted: function(arr) {
-      var seen = [], value, result = [];
+    /**
+     * fn.hashableSet
+     *
+     * takes an array of elements and returns the unique elements of that array
+     * the returned array is ordered according to the elements' order of appearance
+     * in the input array. This function differs from fn.set in that the elements
+     * in the input array MUST be "hashable" - convertible to unique keys of a JavaScript object.
+     *
+     * @param  {Array} arr the Array of source elements
+     * @return {Array} an Array of unique elements
+     */
+    hashableSet: function(arr) {
+      var seen = {}, value, result = [];
       for (var i = 0, l = arr.length; i < l; ++i) {
         value = arr[i];
-        if (seen.indexOf(value) < 0) {
-          seen.push(value);
+        if (!seen[value]) {
+          seen[value] = true;
           result.push(value);
         }
       }

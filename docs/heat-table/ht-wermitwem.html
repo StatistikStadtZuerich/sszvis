@@ -61,10 +61,10 @@
     var cAcc = sszvis.fn.prop('value');
 
     var manAgeList = state.data.map(xAcc);
-    manAgeList = sszvis.fn.uniqueUnsorted(manAgeList);
+    manAgeList = sszvis.fn.set(manAgeList);
 
     var womAgeList = state.data.map(yAcc);
-    womAgeList = sszvis.fn.uniqueUnsorted(womAgeList);
+    womAgeList = sszvis.fn.set(womAgeList);
 
     var xSide = bounds.innerWidth / manAgeList.length;
     var ySide = bounds.innerHeight / womAgeList.length;

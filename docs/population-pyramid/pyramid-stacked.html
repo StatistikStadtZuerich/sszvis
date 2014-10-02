@@ -47,10 +47,9 @@
 
       state.data = data;
 
-      state.ages = d3.set(state.data.map(aAcc)).values().map(sszvis.parse.number)
-        .sort(d3.ascending);
+      state.ages = sszvis.fn.set(state.data.map(aAcc)).sort(d3.ascending);
 
-      state.groups = d3.set(state.data.map(groupAndStackAcc)).values().sort();
+      state.groups = sszvis.fn.set(state.data.map(groupAndStackAcc)).sort(d3.descending);
 
       state.populations = state.data.reduce(function(memo, value) {
         var group = gAcc(value);
@@ -67,7 +66,7 @@
         flat.sort(function(a, b) {
           return d3.ascending(aAcc(a), aAcc(b));
         });
-        var stackNames = d3.set(flat.map(stackAcc)).values();
+        var stackNames = sszvis.fn.set(flat.map(stackAcc));
         var stacks = flat.reduce(function(memo, value) {
           var index = stackNames.indexOf(stackAcc(value));
           if (!memo[index]) {

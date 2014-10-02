@@ -63,7 +63,7 @@
         .domain([0, maxStacked])
         .range([bounds.innerHeight, 0]);
 
-      var categories = sszvis.fn.uniqueUnsorted(state.data.map(cAcc));
+      var categories = sszvis.fn.set(state.data.map(cAcc));
 
       var cScale = d3.scale.ordinal()
         .domain(categories)
