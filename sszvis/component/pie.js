@@ -14,11 +14,12 @@ namespace('sszvis.component.pie', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        data.reduce(function(a, value) {
-          value.a0 = a;
-          value.a1 = a + props.angle(value);
-          return value.a1;
-        }, 0);
+        var angle = 0;
+        data.forEach(function(value) {
+          value.a0 = angle;
+          angle += props.angle(value);
+          value.a1 = angle;
+        });
 
         var arcGen = d3.svg.arc()
           .innerRadius(4)
