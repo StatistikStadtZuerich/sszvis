@@ -23,8 +23,8 @@
     hoveredDatum: {}
   };
 
-  var xAcc = sszvis.fn.prop('quarter');
-  var yAcc = sszvis.fn.prop('group');
+  var xAcc = sszvis.fn.prop('group');
+  var yAcc = sszvis.fn.prop('quarter');
   var cAcc = sszvis.fn.prop('value');
 
   d3.csv('data/HT_quartiere.csv')
@@ -43,10 +43,10 @@
 
       state.data = data;
 
-      state.quarterList = sszvis.fn.set(state.data, xAcc)
+      state.groupsList = sszvis.fn.set(state.data, xAcc)
         .sort();
 
-      state.groupsList = sszvis.fn.set(state.data, yAcc)
+      state.quarterList = sszvis.fn.set(state.data, yAcc)
         .sort();
 
       state.valueDomain = d3.extent(state.data, cAcc);
@@ -68,19 +68,19 @@
   };
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 900, height: 375, top: 90, right: 30, bottom: 10, left: 160 });
+    var bounds = sszvis.bounds({ width: 450, height: 900, top: 160, right: 50, bottom: 30, left: 125 });
 
-    var xSide = bounds.innerWidth / state.quarterList.length;
-    var ySide = bounds.innerHeight / state.groupsList.length;
+    var xSide = bounds.innerWidth / state.groupsList.length;
+    var ySide = bounds.innerHeight / state.quarterList.length;
     var sideLength = Math.min(xSide, ySide) * 0.95;
 
     var xScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
-      .domain(state.quarterList);
+      .domain(state.groupsList);
 
     var yScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
-      .domain(state.groupsList);
+      .domain(state.quarterList);
 
     var colorDomain = [state.valueDomain[0], (state.valueDomain[0] + state.valueDomain[1]) / 2, state.valueDomain[1]];
 

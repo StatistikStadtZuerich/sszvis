@@ -46,13 +46,13 @@ The following configuration options are available:
         "docs/heat-table/data/HT_quartiere.csv"
     ],
     "size": {
-        "width": 900,
-        "height": 375
+        "width": 450,
+        "height": 900
     }
 }
 ```
 
-### Wemitwem
+### Wermitwem
 
 ```project
 {
