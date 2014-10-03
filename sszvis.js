@@ -455,9 +455,102 @@ namespace('sszvis.color', function(module) {
         "#b8e6d2",
         "#60bf97"
       ],
+      valuedQual2: [
+        "#3b76b3",
+        "#cc6171"
+      ],
       neutralQual2: [
         "#497f7b",
         "#a57c59"
+      ],
+      valuedBlue9: [
+        "#DDE9FE",
+        "#b5cceb",
+        "#8cb0d9",
+        "#6493c6",
+        "#3b76b3",
+        "#396899",
+        "#385b80",
+        "#364d66",
+        "#333e4c"
+      ],
+      valuedRed10: [
+        "#fdebeb",
+        "#f2c9cd",
+        "#e5a7af",
+        "#d98490",
+        "#cc6171",
+        "#ac5663",
+        "#8d4b56",
+        "#6d4048",
+        "#4d353a",
+        "#4c3439"
+      ],
+      neutralGreen9: [
+        "#d2dfde",
+        "#b0c7c6",
+        "#8eb0ad",
+        "#6c9894",
+        "#4a807c",
+        "#436f6d",
+        "#3b5e5e",
+        "#344d4e",
+        "#2c3c3f"
+      ],
+      neutralBrown9: [
+        "#e9dfd6",
+        "#d8c7b7",
+        "#c8ae98",
+        "#b79579",
+        "#a67d5a",
+        "#906b51",
+        "#795a48",
+        "#62493e",
+        "#4c3735"
+      ],
+      valuedBluWhtRed9: [
+        "#3b76b3",
+        "#3b76b3",
+        "#3b76b3",
+        "#ceddec",
+        "#ffffff",
+        "#f2d8dc",
+        "#e6b0b8",
+        "#d98994",
+        "#cc6171"
+      ],
+      valuedBluGryRed9: [
+        "#3b76b3",
+        "#6995c3",
+        "#97b4d3",
+        "#c5d4e3",
+        "#f3f3f3",
+        "#e9ced3",
+        "#e0aab2",
+        "#d68592",
+        "#cc6171"
+      ],
+      neutralGrnWhtBrn9: [
+        "#4a807c",
+        "#77a09d",
+        "#a5c0be",
+        "#d2dfde",
+        "#ffffff",
+        "#e9dfd6",
+        "#d3bead",
+        "#bc9e83",
+        "#a67d5a"
+      ],
+      neutralGrnGryBrn9: [
+        "#4a807c",
+        "#749d9a",
+        "#9fbab8",
+        "#c9d6d5",
+        "#f3f3f3",
+        "#e0d5cd",
+        "#cdb8a7",
+        "#b99b80",
+        "#a67d5a"
       ]
     },
     sequential: {
