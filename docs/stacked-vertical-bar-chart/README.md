@@ -19,7 +19,7 @@
     ],
     "size": {
         "height": 500,
-        "width": 540
+        "width": 500
     }
 }
 ```
@@ -33,7 +33,7 @@
     ],
     "size": {
         "height": 500,
-        "width": 540
+        "width": 280
     }
 }
 ```

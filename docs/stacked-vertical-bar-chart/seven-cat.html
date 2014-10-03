@@ -71,11 +71,11 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 540, height: 500, top: 20, right: 20, bottom: 26, left: 10 });
+    var bounds = sszvis.bounds({ width: 280, height: 500, top: 20, right: 10, bottom: 26, left: 10 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([30, bounds.innerWidth], 0.45, 0.15);
+      .rangeBands([40, bounds.innerWidth], 0.20, 0.1);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])
