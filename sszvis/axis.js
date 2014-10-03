@@ -45,6 +45,8 @@ namespace('sszvis.axis', function(module) {
         .prop('halo')
         .prop('textWrap')
         .prop('slant')
+        .prop('title')
+        .prop('titleOffset').titleOffset(0)
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -91,6 +93,45 @@ namespace('sszvis.axis', function(module) {
           if (props.slant) {
             group.selectAll("text")
               .call(slantLabel[axisDelegate.orient()][props.slant]);
+          }
+
+          if (props.title) {
+            var title = group.selectAll('.sszvis-axis--title')
+              .data([props.title]);
+
+            title.enter()
+              .append('text')
+              .classed('sszvis-axis--title', true);
+
+            title.exit().remove();
+
+            title
+              .text(function(d) { return d; })
+              .attr('transform', function(d) {
+                var scale = axisDelegate.scale(),
+                    extent = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range()),
+                    halfWay = (extent[0] + extent[1]) / 2,
+                    orientation = axisDelegate.orient();
+                if (orientation === 'left') {
+                  return 'translate(0, ' + -props.titleOffset + ')';
+                } else if (orientation === 'right') {
+                  return 'translate(0, ' + -props.titleOffset + ')';
+                } else if (orientation === 'top') {
+                  return 'translate(' + halfWay + ', ' + -props.titleOffset + ')';
+                } else if (orientation === 'bottom') {
+                  return 'translate(' + halfWay + ', ' + props.titleOffset + ')';
+                }
+              })
+              .style('text-anchor', function(d) {
+                var orientation = axisDelegate.orient();
+                if (orientation === 'left') {
+                  return 'end';
+                } else if (orientation === 'right') {
+                  return 'start';
+                } else if (orientation === 'top' || orientation === 'bottom') {
+                  return 'middle';
+                }
+              });
           }
 
         });
@@ -141,6 +182,10 @@ namespace('sszvis.axis', function(module) {
 
   }());
 
+  function scaleExtent(domain) { // borrowed from d3 source
+    var start = domain[0], stop = domain[domain.length - 1];
+    return start < stop ? [ start, stop ] : [ stop, start ];
+  }
 
   var slantLabel = {
     top: {

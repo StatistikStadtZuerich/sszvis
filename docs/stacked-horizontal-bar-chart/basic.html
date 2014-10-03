@@ -71,7 +71,7 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 180, top: 20, right: 14, bottom: 32, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 200, top: 20, right: 14, bottom: 52, left: 10 });
 
     var xScale = d3.scale.linear()
       .domain([0, state.maxStacked])
@@ -94,7 +94,12 @@
       .yScale(xScale)
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var xAxis = sszvis.axis.x().scale(xScale).orient('bottom');
+    var xAxis = sszvis.axis.x()
+      .scale(xScale)
+      .orient('bottom')
+      .title('Anzahl')
+      .titleOffset(40);
+
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('right');
 
     var tooltipText = sszvis.component.modularText()

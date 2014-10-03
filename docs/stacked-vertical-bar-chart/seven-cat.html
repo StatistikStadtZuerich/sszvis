@@ -7,7 +7,7 @@
 
   <link href='../../sszvis.css' rel='stylesheet' />
 
-  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/d3/d3.js"></script>
   <script src="../../sszvis.js"></script>
 </head>
 <body style="margin:0;padding:0;">
@@ -71,11 +71,11 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 280, height: 500, top: 20, right: 10, bottom: 26, left: 10 });
+    var bounds = sszvis.bounds({ width: 280, height: 500, top: 20, right: 10, bottom: 40, left: 10 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([40, bounds.innerWidth], 0.20, 0.1);
+      .rangeBands([50, bounds.innerWidth], 0.20, 0.1);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])
@@ -97,8 +97,17 @@
         return d === state.hoveredDatum ? d3.rgb(color).darker(0.4) : color;
       });
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
-    var yAxis = sszvis.axis.y().scale(yScale).orient('right');
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('bottom')
+      .title('Jahr')
+      .titleOffset(30);
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('left')
+      .title('Anzahl')
+      .titleOffset(0);
 
     var tooltipText = sszvis.component.modularText()
       .bold(yAcc);
@@ -131,6 +140,7 @@
       .call(xAxis);
 
     chart.selectGroup('yAxis')
+      .attr('transform', 'translate(40, 0)')
       .call(yAxis);
   }
 
