@@ -59,11 +59,11 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({width: 1300, height: 442, top: 3, right: 3, bottom: 40, left: 3});
+    var bounds = sszvis.bounds({ width: 550, height: 550, top: 40, right: 10, bottom: 40, left: 15 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([20, bounds.innerWidth], 0.4, 0.4);
+      .rangeBands([20, bounds.innerWidth], 0.3, 0);
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
@@ -122,6 +122,7 @@
       .call(xAxis);
 
     chart.selectGroup('yAxis')
+      .attr('transform', 'translate(-5, 0)')
       .call(yAxis);
 
   }

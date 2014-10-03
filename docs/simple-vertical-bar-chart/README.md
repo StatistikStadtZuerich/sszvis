@@ -28,8 +28,8 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
         "docs/simple-vertical-bar-chart/data/SiVB_basic.csv"
    ],
     "size": {
-        "height": 442,
-        "width": 516
+        "height": 500,
+        "width": 500
     }
 }
 ```
@@ -46,8 +46,8 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
         "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv"
     ],
     "size": {
-        "height": 442,
-        "width": 516
+        "height": 500,
+        "width": 480
     }
 }
 ```
@@ -62,8 +62,8 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
         "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv"
     ],
     "size": {
-        "height": 442,
-        "width": 516
+        "height": 500,
+        "width": 500
     }
 }
 ```
@@ -78,8 +78,8 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
         "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv"
     ],
     "size": {
-        "height": 442,
-        "width": 900
+        "height": 550,
+        "width": 550
     }
 }
 ```

@@ -16,7 +16,8 @@
 
   var state = {
     data: [],
-    tooltips: []
+    tooltips: [],
+    hoveredDatum: {}
   };
 
   var fn = sszvis.fn;
@@ -27,10 +28,12 @@
   var actions = {
     showTooltip: function(tooltipData) {
       state.tooltips = [tooltipData];
+      state.hoveredDatum = tooltipData;
       render(state);
     },
     hideTooltip: function() {
       state.tooltips = [];
+      state.hoveredDatum = {};
       render(state);
     }
   }
@@ -56,7 +59,7 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({width: 516, height: 442, top: 60, right: 20, bottom: 60, left: 3});
+    var bounds = sszvis.bounds({ width: 500, height: 500, top: 60, right: 20, bottom: 60, left: 15 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
@@ -78,7 +81,9 @@
       .y(yValue)
       .width(xScale.rangeBand())
       .height(fn.compose(heightScale, yAcc))
-      .fill(sszvis.color.values.basicBlue);
+      .fill(function(d) {
+        return d === state.hoveredDatum ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
+      });
 
     var xRange = xScale.range();
     var labelWrapWidth = (d3.max(xRange) - d3.min(xRange)) / xRange.length;
@@ -125,6 +130,7 @@
       .call(xAxis);
 
     chart.selectGroup('yAxis')
+      .attr('transform', 'translate(-5, 0)')
       .call(yAxis);
 
   }
