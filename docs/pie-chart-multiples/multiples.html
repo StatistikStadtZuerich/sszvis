@@ -15,6 +15,8 @@
 <script>
 (function() {
 
+  var fn = sszvis.fn;
+
   var state = {
     data: [],
     tooltips: []
@@ -22,9 +24,9 @@
 
   var bounds = sszvis.bounds({ width: 880, height: 680, top: 60, right: 60, bottom: 140, left: 60 });
 
-  var gAcc = sszvis.fn.prop('group');
-  var vAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('category');
+  var gAcc = fn.prop('group');
+  var vAcc = fn.prop('value');
+  var cAcc = fn.prop('category');
 
   d3.csv('data/P_multiples.csv')
     .row(function(d) {
@@ -41,7 +43,11 @@
       }
       state.data = data;
 
+<<<<<<< HEAD
       state.groups = sszvis.fn.set(state.data, gAcc);
+=======
+      state.groups = fn.set(state.data.map(gAcc));
+>>>>>>> Cleanup
 
       var cascader = sszvis.cascade()
         .arrayBy(gAcc, function(g1, g2) {
@@ -62,7 +68,11 @@
         };
       });
 
+<<<<<<< HEAD
       state.categories = sszvis.fn.set(state.data, cAcc);
+=======
+      state.categories = fn.set(state.data.map(cAcc));
+>>>>>>> Cleanup
 
       render(state);
     });
@@ -80,14 +90,6 @@
     }
   };
 
-  var tooltip = sszvis.component.tooltip2()
-    .visible(function(d) {
-      return state.tooltips.map(sszvis.fn.prop('category')).indexOf(d.category) >= 0;
-    });
-
-  var headerText = sszvis.component.modularText()
-    .bold(sszvis.fn.compose(sszvis.format.percent, function(tData) { return vAcc(tData.d) / state.totalValues[gAcc(tData.d)]; }));
-
   function render(state) {
     var aScale = d3.scale.linear()
       .range([0, 2 * Math.PI]);
@@ -97,7 +99,7 @@
       .range(sszvis.color.ranges.qualitative.qual12);
 
     var pieMaker = sszvis.component.pie()
-      .fill(sszvis.fn.compose(cScale, cAcc));
+      .fill(fn.compose(cScale, cAcc));
 
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.pieGroups);
@@ -125,7 +127,7 @@
 
         pieMaker
           .radius(Math.min(d.gw, d.gh) / 2)
-          .angle(sszvis.fn.compose(groupScale, vAcc));
+          .angle(fn.compose(groupScale, vAcc));
 
         d3.select(this).selectAll('.sszvis-multiple-chart').call(pieMaker);
       });
@@ -140,9 +142,19 @@
 
     var tooltipLayer = chart.selectGroup('tooltip');
 
+    var categories = state.tooltips.map(fn.prop('category'));
+    var tooltip = sszvis.component.tooltip2()
+      .renderInto(tooltipLayer)
+      .visible(function(d) {
+        return categories.indexOf(d.category) >= 0;
+      });
+
+    var headerText = sszvis.component.modularText()
+      .bold(fn.compose(sszvis.format.percent, function(tData) { return vAcc(tData.d) / state.totalValues[gAcc(tData.d)]; }));
+
     pieCharts
       .selectAll('[data-tooltip-anchor]')
-      .call(tooltip.renderInto(tooltipLayer));
+      .call(tooltip);
   }
 
 }());
