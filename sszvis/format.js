@@ -40,6 +40,10 @@ namespace('sszvis.format', function(module) {
         }
       },
 
+      age: function(d) {
+        return String(Math.round(d));
+      },
+
       percent: function(d) {
         if (d >= 1) {
           return '100%';

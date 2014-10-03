@@ -89,7 +89,10 @@
         .extentValue(sszvis.fn.compose(lengthScale, vAcc))
         .fill(sszvis.fn.compose(colorScale, groupAndStackAcc));
 
-      var yAxis = sszvis.axis.y().scale(positionScale).orient('right');
+      var yAxis = sszvis.axis.y.ordinal()
+        .scale(positionScale)
+        .orient('right')
+        .tickFormat(sszvis.format.age);
 
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.populations);
