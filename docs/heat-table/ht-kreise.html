@@ -19,11 +19,13 @@
 
   var state = {
     data: [],
-    agesList: [],
-    kreisList: [],
     tooltips: [],
     hoveredDatum: {}
   };
+
+  var xAcc = sszvis.fn.prop('kreis');
+  var yAcc = sszvis.fn.prop('agegroup');
+  var cAcc = sszvis.fn.prop('value');
 
   d3.csv('data/HT_kreise.csv')
     .row(function(d) {
@@ -51,6 +53,8 @@
           return d3.ascending(parseKreisInt(a), parseKreisInt(b));
         });
 
+      state.valueDomain = d3.extent(state.data, cAcc);
+
       render(state);
     });
 
@@ -67,10 +71,6 @@
     }
   };
 
-  var xAcc = sszvis.fn.prop('kreis');
-  var yAcc = sszvis.fn.prop('agegroup');
-  var cAcc = sszvis.fn.prop('value');
-
   function render(state) {
     var bounds = sszvis.bounds({ width: 460, height: 700, top: 50, right: 20, bottom: 10, left: 80 });
 
@@ -86,8 +86,7 @@
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
       .domain(state.agesList);
 
-    var valueDomain = d3.extent(state.data, cAcc);
-    var colorDomain = [valueDomain[0], (valueDomain[0] + valueDomain[1]) / 2, valueDomain[1]];
+    var colorDomain = [state.valueDomain[0], (state.valueDomain[0] + state.valueDomain[1]) / 2, state.valueDomain[1]];
 
     var colorScale = d3.scale.linear()
       .domain(colorDomain)
@@ -109,12 +108,12 @@
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
 
     var tooltipHeaderText = sszvis.component.modularText()
-      .bold(sszvis.fn.prop('value'))
+      .bold(cAcc)
       .plain(' Einwohner');
 
     var tooltipBodyText = sszvis.component.modularText()
       .plain('im ')
-      .plain(sszvis.fn.prop('kreis'));
+      .plain(xAcc);
 
     var tooltipMaker = sszvis.component.tooltip()
       .orientation('bottom')
@@ -132,7 +131,7 @@
 
     var overlay = sszvis.createHtmlLayer('#chart', bounds)
       .datum(state.tooltips)
-      .call(tooltipMaker)
+      .call(tooltipMaker);
 
     var bars = chart.selectGroup('bars')
       .call(barGen);

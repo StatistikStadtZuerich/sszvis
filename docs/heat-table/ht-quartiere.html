@@ -23,6 +23,10 @@
     hoveredDatum: {}
   };
 
+  var xAcc = sszvis.fn.prop('quarter');
+  var yAcc = sszvis.fn.prop('group');
+  var cAcc = sszvis.fn.prop('value');
+
   d3.csv('data/HT_quartiere.csv')
     .row(function(d) {
       return {
@@ -36,7 +40,17 @@
         console.log('error loading data: ', error);
         return;
       }
+
       state.data = data;
+
+      state.quarterList = sszvis.fn.set(state.data, xAcc)
+        .sort();
+
+      state.groupsList = sszvis.fn.set(state.data, yAcc)
+        .sort();
+
+      state.valueDomain = d3.extent(state.data, cAcc);
+
       render(state);
     });
 
@@ -56,32 +70,19 @@
   function render(state) {
     var bounds = sszvis.bounds({ width: 900, height: 375, top: 90, right: 30, bottom: 10, left: 160 });
 
-    var xAcc = sszvis.fn.prop('quarter');
-    var yAcc = sszvis.fn.prop('group');
-    var cAcc = sszvis.fn.prop('value');
-
-    var quarterList = state.data.map(xAcc);
-    quarterList.sort();
-    quarterList = sszvis.fn.set(quarterList);
-
-    var groupsList = state.data.map(yAcc);
-    groupsList.sort();
-    groupsList = sszvis.fn.set(groupsList);
-
-    var xSide = bounds.innerWidth / quarterList.length;
-    var ySide = bounds.innerHeight / groupsList.length;
+    var xSide = bounds.innerWidth / state.quarterList.length;
+    var ySide = bounds.innerHeight / state.groupsList.length;
     var sideLength = Math.min(xSide, ySide) * 0.95;
 
     var xScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
-      .domain(quarterList);
+      .domain(state.quarterList);
 
     var yScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
-      .domain(groupsList);
+      .domain(state.groupsList);
 
-    var valueDomain = d3.extent(state.data, cAcc);
-    var colorDomain = [valueDomain[0], (valueDomain[0] + valueDomain[1]) / 2, valueDomain[1]];
+    var colorDomain = [state.valueDomain[0], (state.valueDomain[0] + state.valueDomain[1]) / 2, state.valueDomain[1]];
 
     var colorScale = d3.scale.linear()
       .domain(colorDomain)
@@ -103,12 +104,12 @@
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
 
     var tooltipHeaderText = sszvis.component.modularText()
-      .bold(sszvis.fn.prop('value'))
+      .bold(cAcc)
       .plain(' Einwohner');
 
     var tooltipBodyText = sszvis.component.modularText()
       .plain('im ')
-      .plain(sszvis.fn.prop('quarter'));
+      .plain(xAcc);
 
     var tooltipMaker = sszvis.component.tooltip()
       .orientation('bottom')
@@ -126,7 +127,7 @@
 
     var overlay = sszvis.createHtmlLayer('#chart', bounds)
       .datum(state.tooltips)
-      .call(tooltipMaker)
+      .call(tooltipMaker);
 
     var bars = chart.selectGroup('bars')
       .call(barGen);

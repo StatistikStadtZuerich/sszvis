@@ -23,6 +23,10 @@
     hoveredDatum: {}
   };
 
+  var xAcc = sszvis.fn.prop('manAge');
+  var yAcc = sszvis.fn.prop('womAge');
+  var cAcc = sszvis.fn.prop('value');
+
   d3.csv('data/HT_wermitwem.csv')
     .row(function(d) {
       return {
@@ -36,7 +40,15 @@
         console.log('error loading data: ', error);
         return;
       }
+
       state.data = data;
+
+      state.manAgeList = sszvis.fn.set(state.data, xAcc);
+
+      state.womAgeList = sszvis.fn.set(state.data, yAcc);
+
+      state.valueDomain = d3.extent(state.data, cAcc);
+
       render(state);
     });
 
@@ -56,30 +68,19 @@
   function render(state) {
     var bounds = sszvis.bounds({ width: 600, height: 440, top: 50, right: 10, bottom: 10, left: 50 });
 
-    var xAcc = sszvis.fn.prop('manAge');
-    var yAcc = sszvis.fn.prop('womAge');
-    var cAcc = sszvis.fn.prop('value');
-
-    var manAgeList = state.data.map(xAcc);
-    manAgeList = sszvis.fn.set(manAgeList);
-
-    var womAgeList = state.data.map(yAcc);
-    womAgeList = sszvis.fn.set(womAgeList);
-
-    var xSide = bounds.innerWidth / manAgeList.length;
-    var ySide = bounds.innerHeight / womAgeList.length;
+    var xSide = bounds.innerWidth / state.manAgeList.length;
+    var ySide = bounds.innerHeight / state.womAgeList.length;
     var sideLength = Math.min(xSide, ySide) * 0.95;
 
     var xScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
-      .domain(manAgeList);
+      .domain(state.manAgeList);
 
     var yScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
-      .domain(womAgeList);
+      .domain(state.womAgeList);
 
-    var valueDomain = d3.extent(state.data, cAcc);
-    var colorDomain = [valueDomain[0], (valueDomain[0] + valueDomain[1]) / 2, valueDomain[1]];
+    var colorDomain = [state.valueDomain[0], (state.valueDomain[0] + state.valueDomain[1]) / 2, state.valueDomain[1]];
 
     var colorScale = d3.scale.linear()
       .domain(colorDomain)
@@ -101,7 +102,7 @@
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
 
     var tooltipHeaderText = sszvis.component.modularText()
-      .bold(sszvis.fn.prop('value'));
+      .bold(cAcc);
 
     var tooltipMaker = sszvis.component.tooltip()
       .orientation('bottom')
