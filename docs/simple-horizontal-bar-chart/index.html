@@ -31,7 +31,7 @@
     });
 
   function render(data) {
-    var bounds = sszvis.bounds({width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3});
+    var bounds = sszvis.bounds({ width: 500, height: 500, top: 15, right: 10, bottom: 30, left: 10 });
 
     var x = fn.prop('value');
     var y = fn.prop('category');
@@ -41,7 +41,7 @@
       .domain([0, d3.max(data, x)]);
 
     var yScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerHeight], 0.55, 0.3)
+      .rangeBands([0, bounds.innerHeight], 0.55, 0.1)
       .domain(data.map(y));
 
     var barGen = sszvis.component.bar()
@@ -65,6 +65,7 @@
       .call(xAxis);
 
     chart.selectGroup('yAxis')
+      .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
       .call(yAxis);
   }
 

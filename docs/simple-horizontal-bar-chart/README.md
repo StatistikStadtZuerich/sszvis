@@ -12,8 +12,8 @@
         "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv"
     ],
     "size": {
-        "height": 442,
-        "width": 516
+        "height": 500,
+        "width": 500
     }
 }
 ```
