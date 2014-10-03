@@ -50,7 +50,7 @@
 
       state.groupedData = cascader.apply(state.data);
 
-      state.longestGroup = d3.max(state.groupedData.map(sszvis.fn.prop('length')));
+      state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
 
       render(state);
     });

@@ -13,36 +13,49 @@
   <script>
   (function() {
 
-    var fn = sszvis.fn;
+    var state = {
+      data: []
+    };
 
-    var parseDate = sszvis.parse.date;
-    var parseNumber = sszvis.parse.number;
+    var xAcc = sszvis.fn.prop('date');
+    var yAcc = sszvis.fn.prop('value');
 
     d3.csv('data/SL_quarterly.csv')
       .row(function(d) {
         return {
-          date:  parseDate(d['Datum']),
-          value: parseNumber(d['Wert'])
+          date:  sszvis.parse.date(d['Datum']),
+          value: sszvis.parse.number(d['Wert'])
         }
       })
       .get(function(error, data) {
-        error ? console.error(error) : render(data);
+        if (error) {
+          console.log('error loading data: ', error);
+          return;
+        }
+
+        state.data = data;
+
+        state.years = d3.extent(state.data, xAcc);
+
+        state.lineData = [state.data];
+
+        render(state);
       });
 
-    function render(data) {
+    function render(state) {
       var bounds = sszvis.bounds({width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3});
 
       var xScale = d3.time.scale()
         .range([0, bounds.innerWidth])
-        .domain(d3.extent(data, fn.prop('date')));
+        .domain(state.years);
 
       var yScale = d3.scale.linear()
         .range([bounds.innerHeight, 0])
-        .domain([0, d3.max(data, fn.prop('value'))]);
+        .domain([0, d3.max(state.data, yAcc)]);
 
       var line = sszvis.component.line()
-        .x(fn.prop('date'))
-        .y(fn.prop('value'))
+        .x(xAcc)
+        .y(yAcc)
         .xScale(xScale)
         .yScale(yScale);
 
@@ -57,7 +70,7 @@
         .halo(true);
 
       var chart = sszvis.createChart('#chart', bounds)
-        .datum([data]);
+        .datum(state.lineData);
 
       chart.selectGroup('line')
         .call(line);

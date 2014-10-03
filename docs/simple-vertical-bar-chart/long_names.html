@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <title>Vertical Bar Chart</title>
@@ -14,12 +14,15 @@
 <script>
 (function() {
 
-  var fn = sszvis.fn;
-
   var state = {
     data: [],
     tooltips: []
   };
+
+  var fn = sszvis.fn;
+
+  var xAcc = fn.prop('category');
+  var yAcc = fn.prop('value');
 
   var actions = {
     showTooltip: function(tooltipData) {
@@ -37,44 +40,45 @@
       return {
         category: d['Sektor'],
         value: sszvis.parse.number(d['Anzahl'])
-      }
+      };
     })
     .get(function(error, data) {
       if (error) {
         console.log('error loading data: ', error);
         return
       }
+
       state.data = data;
+
+      state.categories = state.data.map(xAcc);
+
       render(state);
     });
 
   function render(state) {
     var bounds = sszvis.bounds({width: 516, height: 442, top: 60, right: 20, bottom: 60, left: 3});
 
-    var xAccessor = fn.prop('category');
-    var yAccessor = fn.prop('value');
-
     var xScale = d3.scale.ordinal()
-      .rangeBands([10, bounds.innerWidth], 0.55, 0.3)
-      .domain(state.data.map(xAccessor));
+      .domain(state.categories)
+      .rangeBands([10, bounds.innerWidth], 0.55, 0.3);
 
     var heightScale = d3.scale.linear()
-      .range([0, bounds.innerHeight])
-      .domain([0, d3.max(state.data, yAccessor)]);
+      .domain([0, d3.max(state.data, yAcc)])
+      .range([0, bounds.innerHeight]);
 
     var yPosScale = heightScale
       .copy()
       .range(heightScale.range().slice().reverse());
 
-    var xValue = fn.compose(xScale, xAccessor);
-    var yValue = fn.compose(yPosScale, yAccessor);
+    var xValue = fn.compose(xScale, xAcc);
+    var yValue = fn.compose(yPosScale, yAcc);
 
     var barGen = sszvis.component.bar()
       .x(xValue)
       .y(yValue)
       .width(xScale.rangeBand())
-      .height(fn.compose(heightScale, yAccessor))
-      .fill(sszvis.color.values.basicBlue)
+      .height(fn.compose(heightScale, yAcc))
+      .fill(sszvis.color.values.basicBlue);
 
     var xRange = xScale.range();
     var labelWrapWidth = (d3.max(xRange) - d3.min(xRange)) / xRange.length;
@@ -83,9 +87,9 @@
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
 
     var tooltipText = sszvis.component.modularText()
-      .bold(yAccessor)
+      .bold(yAcc)
       .plain(' im ')
-      .bold(xAccessor);
+      .bold(xAcc);
 
     var tooltipMaker = sszvis.component.tooltip()
       .orientation('bottom')
@@ -94,7 +98,8 @@
       .style({
         'max-width': '100px',
         'min-width': '70px',
-        'text-align': 'center'
+        'text-align': 'center',
+        'white-space': 'normal'
       })
       .body(tooltipText);
 

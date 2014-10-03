@@ -51,7 +51,7 @@
       var grouped = cascader.apply(state.data);
 
       state.totalValues = grouped.reduce(function(memo, group, i) {
-        memo[state.groups[i]] = d3.sum(group.map(vAcc));
+        memo[state.groups[i]] = d3.sum(group, vAcc);
         return memo;
       }, {});
 

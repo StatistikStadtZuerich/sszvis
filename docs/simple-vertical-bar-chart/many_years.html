@@ -14,29 +14,16 @@
 <script>
 (function() {
 
-  var fn = sszvis.fn;
-
   var state = {
     data: [],
     tooltips: [],
     hoveredDatum: {}
   };
 
-  d3.csv('data/SiVB_yearly_many.csv')
-    .row(function(d) {
-      return {
-        category: d['Jahr'],
-        value: sszvis.parse.number(d['Hotel?bernachtungen'])
-      };
-    })
-    .get(function(error, data) {
-      if (error) {
-        console.log('error loading data: ', error);
-        return;
-      }
-      state.data = data;
-      render(state);
-    });
+  var fn = sszvis.fn;
+
+  var xAcc = fn.prop('category');
+  var yAcc = fn.prop('value');
 
   var actions = {
     showTooltip: function(datum) {
@@ -51,21 +38,39 @@
     }
   };
 
+  d3.csv('data/SiVB_yearly_many.csv')
+    .row(function(d) {
+      return {
+        category: d['Jahr'],
+        value: sszvis.parse.number(d['Hotel?bernachtungen'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        console.log('error loading data: ', error);
+        return;
+      }
+
+      state.data = data;
+
+      state.categories = state.data.map(xAcc);
+
+      render(state);
+    });
+
   function render(state) {
     var bounds = sszvis.bounds({width: 1300, height: 442, top: 3, right: 3, bottom: 40, left: 3});
 
-    var xAcc = fn.prop('category');
-    var yAcc = fn.prop('value');
-
     var xScale = d3.scale.ordinal()
-      .rangeBands([20, bounds.innerWidth], 0.4, 0.4)
-      .domain(state.data.map(xAcc));
+      .domain(state.categories)
+      .rangeBands([20, bounds.innerWidth], 0.4, 0.4);
 
     var heightScale = d3.scale.linear()
-      .range([0, bounds.innerHeight])
-      .domain([0, d3.max(state.data, yAcc)]);
+      .domain([0, d3.max(state.data, yAcc)])
+      .range([0, bounds.innerHeight]);
 
-    var yPosScale = heightScale.copy()
+    var yPosScale = heightScale
+      .copy()
       .range(heightScale.range().slice().reverse());
       // y-position scale is the inverse of the height scale
 
@@ -81,7 +86,7 @@
         return d === state.hoveredDatum ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
       });
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom').slant('vertical')
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom').slant('vertical');
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
 
     var tooltipText = sszvis.component.modularText()

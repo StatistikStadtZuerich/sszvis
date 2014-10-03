@@ -50,7 +50,7 @@
 
       state.groupedData = cascader.apply(state.data);
 
-      state.longestGroup = d3.max(state.groupedData.map(sszvis.fn.prop('length')));
+      state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
 
       render(state);
     });
@@ -62,7 +62,7 @@
       .domain(state.years)
       .rangeBands([0, bounds.innerWidth], 0.3, 0);
 
-    var maxAbsVal = d3.max(state.valueExtent.map(Math.abs));
+    var maxAbsVal = d3.max(state.valueExtent, Math.abs);
 
     // Note that the bounds of the y-scale are different than in other examples.
     // Here, the bounds are the positive and negative values of the largest absolute value in the dataset.

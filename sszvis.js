@@ -1435,7 +1435,7 @@ namespace('sszvis.component.ruler', function(module) {
           return props.x(d) + '_' + props.y(d);
         }
 
-        var maxDatum = d3.max(data.map(fn.compose(props.xScale, props.x)));
+        var maxDatum = d3.max(data, fn.compose(props.xScale, props.x));
 
         var x = fn.compose(props.xScale, props.x);
         var y = fn.compose(props.yScale, props.y);

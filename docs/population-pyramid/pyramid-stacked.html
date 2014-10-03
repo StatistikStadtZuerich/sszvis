@@ -55,9 +55,9 @@
 
       state.populations = cascader.apply(state.data);
 
-      state.maxStackedValue = d3.max(sszvis.fn.objectValues(state.populations).map(function(stacks) {
-        return d3.max(d3.zip.apply(null, stacks).map(function(s) { return d3.sum(s, vAcc); }));
-      }));
+      state.maxStackedValue = d3.max(sszvis.fn.objectValues(state.populations), function(stacks) {
+        return d3.max(d3.transpose(stacks), function(s) { return d3.sum(s, vAcc); });
+      });
 
       render(state);
     });

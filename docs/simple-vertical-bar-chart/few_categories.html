@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8" />
   <title>Vertical Bar Chart</title>
@@ -14,51 +14,62 @@
 <script>
 (function() {
 
+  var state = {
+    data: []
+  };
+
   var fn = sszvis.fn;
 
-  var parseNumber = sszvis.parse.number;
+  var xAcc = fn.prop('category');
+  var yAcc = fn.prop('value');
 
   d3.csv('data/SiVB_fewCategories.csv')
     .row(function(d) {
       return {
         category: d['Kategorie'],
-        value: parseNumber(d['Anzahl'])
-      }
+        value: sszvis.parse.number(d['Anzahl'])
+      };
     })
     .get(function(error, data) {
-      error ? sszvis.error(error) : render(data)
+      if (error) {
+        console.log('error loading data: ', error);
+        return;
+      }
+
+      state.data = data;
+
+      state.categories = state.data.map(xAcc);
+
+      render(state);
     });
 
-  function render(data) {
+  function render(state) {
     var bounds = sszvis.bounds({width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3});
 
-    var x = fn.prop('category');
-    var y = fn.prop('value');
-
     var xScale = d3.scale.ordinal()
-      .rangeBands([40, bounds.innerWidth - 80], 0.68, 0.2)
-      .domain(data.map(x));
+      .domain(state.categories)
+      .rangeBands([40, bounds.innerWidth - 80], 0.68, 0.2);
 
     var heightScale = d3.scale.linear()
       .range([0, bounds.innerHeight])
-      .domain([0, d3.max(data, y)]);
+      .domain([0, d3.max(state.data, yAcc)]);
 
     var yPosScale = heightScale
       .copy()
       .range(heightScale.range().slice().reverse());
 
     var barGen = sszvis.component.bar()
-      .x(fn.compose(xScale, x))
-      .y(fn.compose(yPosScale, y))
+      .x(fn.compose(xScale, xAcc))
+      .y(fn.compose(yPosScale, yAcc))
       .width(xScale.rangeBand())
-      .height(fn.compose(heightScale, y))
-      .fill(sszvis.color.values.basicBlue)
+      .height(fn.compose(heightScale, yAcc))
+      .fill(sszvis.color.values.basicBlue);
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
     var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
 
     var chart = sszvis.createChart('#chart', bounds)
-      .datum(data);
+      .datum(state.data);
 
     chart.selectGroup('bars')
       .call(barGen);
@@ -69,7 +80,6 @@
 
     chart.selectGroup('yAxis')
       .call(yAxis);
-
   }
 
 }());

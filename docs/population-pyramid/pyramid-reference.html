@@ -51,7 +51,7 @@
 
       state.populations = cascade.apply(state.data);
 
-      state.maxValue = d3.max(state.data.map(vAcc));
+      state.maxValue = d3.max(state.data, vAcc);
 
       render(state);
     });
