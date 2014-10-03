@@ -63,7 +63,7 @@
 
       var positionScale = d3.scale.ordinal()
         .domain(state.ages)
-        .rangeBands([0, bounds.innerHeight], 0.1, 0);
+        .rangeBands([bounds.innerHeight, 0], 0.1, 0);
 
       var lengthScale = d3.scale.linear()
         .domain([0, state.maxValue])
@@ -99,13 +99,13 @@
       var cGroup1 = collegeEd.selectGroup('college-group1')
         .datum(men);
 
-      pyramidGen.direction('links');
+      pyramidGen.direction('left');
       cGroup1.call(pyramidGen);
 
       var cGroup2 = collegeEd.selectGroup('college-group2')
         .datum(women);
 
-      pyramidGen.direction('rechts');
+      pyramidGen.direction('right');
       cGroup2.call(pyramidGen);
 
       var otherEd = chart.selectGroup('otherEd')
@@ -115,13 +115,13 @@
         .datum(men);
 
       pyramidGen.renderMode('line');
-      pyramidGen.direction('links');
+      pyramidGen.direction('left');
       oGroup1.call(pyramidGen);
 
       var oGroup2 = otherEd.selectGroup('other-group2')
         .datum(women);
 
-      pyramidGen.direction('rechts');
+      pyramidGen.direction('right');
       oGroup2.call(pyramidGen);
 
       chart.selectGroup('yAxis')

@@ -2020,12 +2020,12 @@ namespace('sszvis.component.pyramid', function(module) {
             .attr('stroke-dasharray', '3 3');
         }
 
-        if (props.direction === 'links') {
-          // reflects the shape over the line y = -x plus +width and +height translation
-          rendered.attr('transform', 'matrix(0 -1 -1 0 ' + (props.width - props.groupPadding) + ' ' + props.height + ')');
-        } else if (props.direction === 'rechts') {
-          // -90deg rotation plus +width and +height translation
-          rendered.attr('transform', 'matrix(0 -1 1 0 ' + (props.width + props.groupPadding) + ' ' + props.height + ')');
+        if (props.direction === 'left') {
+          // 90deg rotation plus +width
+          rendered.attr('transform', 'matrix(0, 1, -1, 0, ' + (props.width - props.groupPadding) + ', 0)');
+        } else if (props.direction === 'right') {
+          // reflection around y = x plus +width
+          rendered.attr('transform', 'matrix(0, 1, 1, 0, ' + (props.width + props.groupPadding) + ', 0)');
         }
 
       });

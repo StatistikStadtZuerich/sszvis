@@ -73,7 +73,7 @@
 
       var positionScale = d3.scale.ordinal()
         .domain(state.ages)
-        .rangeBands([0, bounds.innerHeight], 0.1, 0);
+        .rangeBands([bounds.innerHeight, 0], 0.1, 0);
 
       var colorScale = d3.scale.ordinal()
         .domain(state.groups)
@@ -97,13 +97,13 @@
       var group1 = chart.selectGroup('group1')
         .datum(sszvis.fn.prop('Frauen'));
 
-      pyramidGen.direction('links');
+      pyramidGen.direction('left');
       group1.call(pyramidGen);
 
       var group2 = chart.selectGroup('group2')
         .datum(sszvis.fn.prop('Maenner'));
 
-      pyramidGen.direction('rechts');
+      pyramidGen.direction('right');
       group2.call(pyramidGen);
 
       chart.selectGroup('yAxis')
