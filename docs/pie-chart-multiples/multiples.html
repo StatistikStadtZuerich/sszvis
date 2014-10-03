@@ -20,7 +20,7 @@
     tooltips: []
   };
 
-  var bounds = sszvis.bounds({ width: 900, height: 600, top: 10, right: 10, bottom: 10, left: 10 });
+  var bounds = sszvis.bounds({ width: 880, height: 600, top: 60, right: 60, bottom: 60, left: 60 });
 
   var gAcc = sszvis.fn.prop('group');
   var vAcc = sszvis.fn.prop('value');
@@ -127,8 +127,8 @@
     var multiplesMaker = sszvis.component.multiples()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .paddingX(10)
-      .paddingY(10)
+      .paddingX(20)
+      .paddingY(40)
       .rows(2)
       .cols(3);
 

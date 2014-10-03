@@ -18,7 +18,7 @@
         "docs/pie-chart-multiples/data/P_multiples.csv"
     ],
     "size": {
-        "width": 900,
+        "width": 880,
         "height": 600
     }
 }

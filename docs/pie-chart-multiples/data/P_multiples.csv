@@ -1,11 +1,11 @@
 Gruppe,Kategorie,Anzahl
 G1,Landwirtschaftliche Produkte,40
 G1,Energieträger,77
-G1,Papier und Papierwaren,6
+G1,Papier und Papierwaren,40
 G1,Chemikalien,29
 G1,Steine und Erden,58
 G1,Metalle,14
-G1,Fahrzeuge,1
+G1,Fahrzeuge,27
 G1,Präzisionsinstrumente und Uhren,95
 G1,Wohnungseinrichtungen,35
 G2,Landwirtschaftliche Produkte,69
@@ -44,12 +44,3 @@ G5,Metalle,37
 G5,Fahrzeuge,24
 G5,Präzisionsinstrumente und Uhren,26
 G5,Wohnungseinrichtungen,96
-G6,Landwirtschaftliche Produkte,12
-G6,Energieträger,47
-G6,Papier und Papierwaren,26
-G6,Chemikalien,12
-G6,Steine und Erden,91
-G6,Metalle,74
-G6,Fahrzeuge,68
-G6,Präzisionsinstrumente und Uhren,31
-G6,Wohnungseinrichtungen,85
