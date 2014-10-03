@@ -56,15 +56,15 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 700, height: 440, top: 10, right: 10, bottom: 30, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 500, top: 10, right: 10, bottom: 30, left: 10 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, bounds.innerWidth], 0.3, 0);
+      .rangeBands([34, bounds.innerWidth], 0.26, 0);
 
     var yScale = d3.scale.linear()
       .domain(state.valueExtent)
-      .range([bounds.innerHeight, 0]);
+      .range([bounds.innerHeight - 10, 0]);
 
     // y-position and bar height scales are a little weird because of negative values
     // see also gb-two-small.html and http://bl.ocks.org/mbostock/2368837

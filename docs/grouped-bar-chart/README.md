@@ -18,8 +18,8 @@
         "docs/grouped-bar-chart/data/GB_2Categories_smallVals.csv"
     ],
     "size": {
-        "width": 700,
-        "height": 440
+        "width": 500,
+        "height": 560
     }
 }
 ```
@@ -32,8 +32,8 @@
         "docs/grouped-bar-chart/data/GB_2Categories_yearly_long.csv"
     ],
     "size": {
-        "width": 900,
-        "height": 440
+        "width": 500,
+        "height": 600
     }
 }
 ```
@@ -46,8 +46,8 @@
         "docs/grouped-bar-chart/data/GB_3Categories_yearly_negatives.csv"
     ],
     "size": {
-        "width": 700,
-        "height": 440
+        "width": 500,
+        "height": 500
     }
 }
 ```

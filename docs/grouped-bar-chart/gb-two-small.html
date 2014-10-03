@@ -56,17 +56,17 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 700, height: 440, top: 10, right: 10, bottom: 24, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 560, top: 10, right: 10, bottom: 110, left: 10 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, bounds.innerWidth], 0.3, 0);
+      .rangeBands([24, bounds.innerWidth], 0.26, 0);
 
     // because the dataset has negative values, scales for the y-axis are a little weird
     // see also: http://bl.ocks.org/mbostock/2368837 (http://stackoverflow.com/questions/10127402/bar-chart-with-negative-values)
     var yScale = d3.scale.linear()
       .domain(state.valueExtent)
-      .range([bounds.innerHeight, 0]);
+      .range([bounds.innerHeight - 10, 0]);
 
     var yPosScale = function(v) {
       // if the value is less than 0, position the bar's upper left as if it were 0
@@ -90,8 +90,14 @@
       .height(sszvis.fn.compose(hScale, yAcc))
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
-    var yAxis = sszvis.axis.y().scale(yScale).orient('right');
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('bottom')
+      .slant('diagonal');
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right');
 
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.groupedData);
