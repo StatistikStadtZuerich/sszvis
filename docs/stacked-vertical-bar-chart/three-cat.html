@@ -56,11 +56,11 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 500, top: 20, right: 20, bottom: 26, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 500, top: 20, right: 10, bottom: 46, left: 10 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([30, bounds.innerWidth], 0.35, 0.15);
+      .rangeBands([0, bounds.innerWidth], 0.35, 1.5);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])
@@ -68,7 +68,7 @@
 
     var cScale = d3.scale.ordinal()
       .domain(state.categories)
-      .range(sszvis.color.ranges.qualitative.qual3);
+      .range(sszvis.color.ranges.qualitative.valuedBlue9.slice(-7, -4).reverse());
 
     var stackedBars = sszvis.component.stacked.bar()
       .orientation('vertical')
@@ -79,7 +79,7 @@
       .yScale(yScale)
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
+    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom').slant('vertical');
     var yAxis = sszvis.axis.y().scale(yScale).orient('right');
 
     var chart = sszvis.createChart('#chart', bounds)
