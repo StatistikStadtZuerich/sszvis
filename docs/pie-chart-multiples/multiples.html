@@ -41,7 +41,7 @@
       }
       state.data = data;
 
-      state.groups = sszvis.fn.set(state.data.map(gAcc));
+      state.groups = sszvis.fn.set(state.data, gAcc);
 
       var cascader = sszvis.cascade()
         .arrayBy(gAcc, function(g1, g2) {
@@ -62,7 +62,7 @@
         };
       });
 
-      state.categories = sszvis.fn.set(state.data.map(cAcc));
+      state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
     });

@@ -42,7 +42,7 @@
 
       state.totalValue = d3.sum(state.data, vAcc);
 
-      state.categories = sszvis.fn.set(state.data.map(cAcc));
+      state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
     });

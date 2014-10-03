@@ -619,6 +619,7 @@ namespace('sszvis.color', function(module) {
  * @module sszvis/fn
  */
 namespace('sszvis.fn', function(module) {
+"use strict";
 
   var slice = function(list) {
     var slice = Array.prototype.slice;
@@ -662,18 +663,26 @@ namespace('sszvis.fn', function(module) {
     /**
      * fn.hashableSet
      *
-     * takes an array of elements and returns the unique elements of that array
+     * takes an array of elements and returns the unique elements of that array, optionally
+     * after passing them through an accessor function.
      * the returned array is ordered according to the elements' order of appearance
      * in the input array. This function differs from fn.set in that the elements
-     * in the input array MUST be "hashable" - convertible to unique keys of a JavaScript object.
+     * in the input array (or the values returned by the accessor function)
+     * MUST be "hashable" - convertible to unique keys of a JavaScript object.
      *
      * @param  {Array} arr the Array of source elements
+     * @param {Function} [acc(element, index, array)=(v) -> v] - an accessor function which
+     * is called on each element of the Array. Defaults to the identity function.
+     * The result is equivalent to calling array.map(acc) before computing the set.
+     * When the accessor function is invoked, it is passed the element from the input array,
+     * the element's index in the input array, and the input array itself.
      * @return {Array} an Array of unique elements
      */
-    hashableSet: function(arr) {
+    hashableSet: function(arr, acc) {
+      acc || (acc = sszvis.fn.identity);
       var seen = {}, value, result = [];
       for (var i = 0, l = arr.length; i < l; ++i) {
-        value = arr[i];
+        value = acc(arr[i], i, arr);
         if (!seen[value]) {
           seen[value] = true;
           result.push(value);
@@ -709,7 +718,8 @@ namespace('sszvis.fn', function(module) {
     /**
      * fn.set
      *
-     * takes an array of elements and returns the unique elements of that array
+     * takes an array of elements and returns the unique elements of that array, optionally
+     * after passing them through an accessor function.
      * the returned array is ordered according to the elements' order of appearance
      * in the input array, e.g.:
      *
@@ -718,11 +728,18 @@ namespace('sszvis.fn', function(module) {
      * [{obj1}, {obj2}, {obj1}, {obj3}] -> [{obj1}, {obj2}, {obj3}]
      *
      * @param {Array} arr - the Array of source elements
+     * @param {Function} [acc(element, index, array)=(v) -> v] - an accessor function which
+     * is called on each element of the Array. Defaults to the identity function.
+     * The result is equivalent to calling array.map(acc) before computing the set.
+     * When the accessor function is invoked, it is passed the element from the input array,
+     * the element's index in the input array, and the input array itself.
      * @return {Array} an Array of unique elements
      */
-    set: function(arr) {
-      return arr.reduce(function(m, value) {
-        return m.indexOf(value) < 0 ? m.concat(value) : m;
+    set: function(arr, acc) {
+      acc || (acc = sszvis.fn.identity);
+      return arr.reduce(function(m, value, i) {
+        var computed = acc(value, i, arr);
+        return m.indexOf(computed) < 0 ? m.concat(computed) : m;
       }, []);
     }
 

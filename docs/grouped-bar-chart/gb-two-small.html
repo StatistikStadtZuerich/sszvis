@@ -39,11 +39,11 @@
 
       state.data = data;
 
-      state.years = sszvis.fn.set(state.data.map(xAcc));
+      state.years = sszvis.fn.set(state.data, xAcc);
 
       state.valueExtent = d3.extent(state.data, yAcc);
 
-      state.groups = sszvis.fn.set(state.data.map(cAcc));
+      state.groups = sszvis.fn.set(state.data, cAcc);
 
       var cascader = sszvis.cascade()
         .arrayBy(xAcc);

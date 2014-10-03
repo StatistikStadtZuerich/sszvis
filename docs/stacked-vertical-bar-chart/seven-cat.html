@@ -65,7 +65,7 @@
 
       state.maxStacked = d3.max(sszvis.fn.objectValues(stackedValues), function(s) { return d3.sum(s, yAcc); });
 
-      state.categories = sszvis.fn.set(state.data.map(cAcc));
+      state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
     });

@@ -45,9 +45,9 @@
 
       state.data = data;
 
-      state.ages = sszvis.fn.set(state.data.map(aAcc)).sort(d3.ascending);
+      state.ages = sszvis.fn.set(state.data, aAcc).sort(d3.ascending);
 
-      state.groups = sszvis.fn.set(state.data.map(groupAndStackAcc)).sort(d3.descending);
+      state.groups = sszvis.fn.set(state.data, groupAndStackAcc).sort(d3.descending);
 
       var cascader = sszvis.cascade()
         .objectBy(gAcc)

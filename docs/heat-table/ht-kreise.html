@@ -41,12 +41,12 @@
 
       state.data = data;
 
-      state.agesList = sszvis.fn.set(state.data.map(yAcc))
+      state.agesList = sszvis.fn.set(state.data, yAcc)
         .sort(function(a, b) {
           return d3.ascending(parseInt(a, 10), parseInt(b, 10));
         });
 
-      state.kreisList = sszvis.fn.set(state.data.map(xAcc))
+      state.kreisList = sszvis.fn.set(state.data, xAcc)
         .sort(function(a, b) {
           return d3.ascending(parseKreisInt(a), parseKreisInt(b));
         });
@@ -147,7 +147,6 @@
     chart.selectGroup('yAxis')
       .attr('transform', 'translate(-10, 0)')
       .call(yAxis);
-
   }
 
   function parseKreisInt(k) {
