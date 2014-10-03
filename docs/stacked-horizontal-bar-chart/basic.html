@@ -71,15 +71,15 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 600, height: 300, top: 40, right: 20, bottom: 32, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 180, top: 20, right: 14, bottom: 32, left: 10 });
 
     var xScale = d3.scale.linear()
       .domain([0, state.maxStacked])
-      .range([110, bounds.innerWidth]);
+      .range([0, bounds.innerWidth]);
 
     var yScale = d3.scale.ordinal()
       .domain(state.areas)
-      .rangeBands([0, bounds.innerHeight], 0.45, 0.1);
+      .rangeBands([0, bounds.innerHeight], 0.40, 0.1);
 
     var cScale = d3.scale.ordinal()
       .domain(state.categories)
@@ -128,6 +128,7 @@
       .call(xAxis);
 
     chart.selectGroup('yAxis')
+      .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
       .call(yAxis);
   }
 
