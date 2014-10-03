@@ -699,16 +699,6 @@ namespace('sszvis.fn', function(module) {
       return function(){ return !f.apply(this, arguments) };
     },
 
-    objectValues: function(obj) {
-      var result = [], prop;
-      for (prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-          result.push(obj[prop]);
-        }
-      }
-      return result;
-    },
-
     prop: function(key) {
       return function(object) {
         return object[key];

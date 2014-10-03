@@ -63,7 +63,7 @@
 
       var stackedValues = sszvis.cascade().objectBy(yAcc).apply(state.data);
 
-      state.maxStacked = d3.max(sszvis.fn.objectValues(stackedValues), function(s) { return d3.sum(s, xAcc); });
+      state.maxStacked = d3.max(d3.values(stackedValues), function(s) { return d3.sum(s, xAcc); });
 
       state.categories = sszvis.fn.set(state.data, cAcc);
 
