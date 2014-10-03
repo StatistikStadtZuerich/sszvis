@@ -57,7 +57,7 @@
     });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
+      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 20 });
 
       var groupPadding = 0.5;
 
@@ -123,6 +123,10 @@
 
       pyramidGen.direction('rechts');
       oGroup2.call(pyramidGen);
+
+      chart.selectGroup('yAxis')
+        .attr('transform', 'translate(-15, 0)')
+        .call(yAxis);
     }
 
 }());
