@@ -27,7 +27,7 @@ namespace('sszvis.component.pie', function(module) {
           .startAngle(function(d) { return d.a0; })
           .endAngle(function(d) { return d.a1; });
 
-        var segments = selection.selectAll('path.sszvis-path')
+        var segments = selection.selectAll('.sszvis-path')
           .data(data);
 
         segments.enter()
@@ -42,25 +42,17 @@ namespace('sszvis.component.pie', function(module) {
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
 
-
-        var tipAnchors = selection.selectAll('[sszvis-tooltip-anchor]')
-          .data(data);
-
-        tipAnchors.enter()
-          .append('g')
-          .attr('data-tooltip-anchor', '');
-
-        tipAnchors
-          .attr('transform', function(d) {
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .debug(true)
+          .position(function(d) {
             var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
             var r = props.radius * 2/3;
-            var x = props.radius + Math.cos(a) * r;
-            var y = props.radius + Math.sin(a) * r;
-
-            return 'translate(' + x + ',' + y + ')';
+            return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
           });
 
-        tipAnchors.exit().remove();
+        selection
+          .datum(data)
+          .call(tooltipAnchor)
 
       });
   };
