@@ -41,7 +41,7 @@
 
       state.years = sszvis.fn.set(state.data.map(xAcc));
 
-      state.valueExtent = d3.extent(state.data.map(yAcc));
+      state.valueExtent = d3.extent(state.data, yAcc);
 
       state.groups = sszvis.fn.set(state.data.map(cAcc));
 

@@ -78,7 +78,7 @@
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
       .domain(womAgeList);
 
-    var valueDomain = d3.extent(state.data.map(cAcc));
+    var valueDomain = d3.extent(state.data, cAcc);
     var colorDomain = [valueDomain[0], (valueDomain[0] + valueDomain[1]) / 2, valueDomain[1]];
 
     var colorScale = d3.scale.linear()

@@ -39,7 +39,7 @@
 
       state.data = data;
 
-      state.timeExtent = d3.extent(state.data.map(xAcc));
+      state.timeExtent = d3.extent(state.data, xAcc);
 
       var stacker = sszvis.cascade()
         .arrayBy(cAcc)
