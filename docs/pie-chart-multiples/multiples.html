@@ -69,10 +69,9 @@
 
   var actions = {
     showTooltip: function(datum) {
-      state.tooltips = [{
-        d: datum,
-        g: state.pieGroups[state.groups.indexOf(gAcc(datum))]
-      }];
+      state.tooltips = state.data.filter(function(d) {
+        return datum.category === d.category;
+      });
       render(state);
     },
     hideTooltip: function() {
@@ -81,30 +80,13 @@
     }
   };
 
-  // TODO: figure out some way to clean up and abstract this bonkers tooltip logic
-
-  var hoverBehavior = sszvis.behavior.mouseover()
-    .mouseover(actions.showTooltip)
-    .mouseout(actions.hideTooltip);
+  var tooltip = sszvis.component.tooltip2()
+    .visible(function(d) {
+      return state.tooltips.map(sszvis.fn.prop('category')).indexOf(d.category) >= 0;
+    });
 
   var headerText = sszvis.component.modularText()
     .bold(sszvis.fn.compose(sszvis.format.percent, function(tData) { return vAcc(tData.d) / state.totalValues[gAcc(tData.d)]; }));
-
-  var tooltipMaker = sszvis.component.tooltip()
-    .orientation('bottom')
-    .x(function(tData) {
-      var d = tData.d, g = tData.g;
-      // calculate x-position of the tooltip
-      // (left edge of group) + (half the width of group) + (cosine of the angle of the center of the wedge) * (distance of the tooltip from center of group)
-      return g.gx + g.gw / 2 + Math.cos(d.a0 + Math.abs(d.a1 - d.a0) / 2 - (Math.PI / 2)) * Math.min(g.gw, g.gh) / 3;
-    })
-    .y(function(tData) {
-      var d = tData.d, g = tData.g;
-      // calculate y-position of the tooltip
-      // (top edge of group) + (half the height of group) + (sine of the angle of the center of the wedge) * (distance of the tooltip from center of group)
-      return g.gy + g.gh / 2 + Math.sin(d.a0 + Math.abs(d.a1 - d.a0) / 2 - (Math.PI / 2)) * Math.min(g.gw, g.gh) / 3;
-    })
-    .header(headerText);
 
   function render(state) {
     var aScale = d3.scale.linear()
@@ -119,10 +101,6 @@
 
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.pieGroups);
-
-    var overlay = sszvis.createHtmlLayer('#chart', bounds)
-      .datum(state.tooltips)
-      .call(tooltipMaker);
 
     var multiplesMaker = sszvis.component.multiples()
       .width(bounds.innerWidth)
@@ -152,12 +130,19 @@
         d3.select(this).selectAll('.sszvis-multiple-chart').call(pieMaker);
       });
 
-    var slices = pieCharts.selectAll('path')
-      .call(hoverBehavior);
-
     chart.selectGroup('colorLegend')
       .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
       .call(colorLegend);
+
+    var slices = pieCharts.selectAll('path')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
+
+    var tooltipLayer = chart.selectGroup('tooltip');
+
+    pieCharts
+      .selectAll('[data-tooltip-anchor]')
+      .call(tooltip.renderInto(tooltipLayer));
   }
 
 }());

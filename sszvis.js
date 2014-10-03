@@ -1885,6 +1885,78 @@ namespace('sszvis.component.tooltip', function(module) {
 
 
 /**
+ * Tooltip component
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.component.tooltip2', function(module) {
+
+  module.exports = function() {
+
+    var props = {
+      layer: null,
+      visible: sszvis.fn.constant(false)
+    }
+
+    var component = function(selection) {
+
+      var data = [];
+      selection.each(function(d) {
+        var pos = this.getBoundingClientRect();
+        if (props.visible(d)) {
+          data.push({
+            datum: d,
+            x: pos.left,
+            y: pos.top
+          })
+        }
+      });
+
+      var tooltip = props.layer.selectAll('.tooltip')
+        .data(data)
+
+      tooltip.enter()
+        .append('circle')
+        .attr('pointer-events', 'none')
+        .attr('class', 'tooltip');
+
+      var radius = 10;
+
+      tooltip
+        .attr('r', radius)
+        .attr('fill', '#f00')
+        .attr('cx', -radius)
+        .attr('cy', -radius)
+        .attr('transform', function(d) {
+          return 'translate(' + d.x + ',' + d.y + ')'
+        })
+
+      tooltip.exit().remove();
+
+    }
+
+    component.renderInto = function(layer) {
+      if (!arguments.length) return props.layer;
+      props.layer = layer;
+      return component;
+    }
+
+    component.visible = function(visible) {
+      if (!arguments.length) return props.visible;
+      props.visible = d3.functor(visible);
+      return component;
+    }
+
+    return component;
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Stacked Chart
  * @return {d3.component}
  */
@@ -2145,10 +2217,32 @@ namespace('sszvis.component.pie', function(module) {
           .attr('d', arcGen)
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
+
+
+        var tipAnchors = selection.selectAll('[sszvis-tooltip-anchor]')
+          .data(data);
+
+        tipAnchors.enter()
+          .append('g')
+          .attr('data-tooltip-anchor', '');
+
+        tipAnchors
+          .attr('transform', function(d) {
+            var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
+            var r = props.radius * 2/3;
+            var x = props.radius + Math.cos(a) * r;
+            var y = props.radius + Math.sin(a) * r;
+
+            return 'translate(' + x + ',' + y + ')';
+          });
+
+        tipAnchors.exit().remove();
+
       });
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

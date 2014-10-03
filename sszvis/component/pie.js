@@ -41,6 +41,27 @@ namespace('sszvis.component.pie', function(module) {
           .attr('d', arcGen)
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
+
+
+        var tipAnchors = selection.selectAll('[sszvis-tooltip-anchor]')
+          .data(data);
+
+        tipAnchors.enter()
+          .append('g')
+          .attr('data-tooltip-anchor', '');
+
+        tipAnchors
+          .attr('transform', function(d) {
+            var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
+            var r = props.radius * 2/3;
+            var x = props.radius + Math.cos(a) * r;
+            var y = props.radius + Math.sin(a) * r;
+
+            return 'translate(' + x + ',' + y + ')';
+          });
+
+        tipAnchors.exit().remove();
+
       });
   };
 
