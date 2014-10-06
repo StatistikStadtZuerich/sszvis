@@ -15,6 +15,7 @@ namespace('sszvis.component.ruler', function(module) {
       .prop('xScale')
       .prop('yScale')
       .prop('label').label(fn.constant(''))
+      .prop('color')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -41,7 +42,7 @@ namespace('sszvis.component.ruler', function(module) {
           .attr('x1', x)
           .attr('y1', y)
           .attr('x2', x)
-          .attr('y2', bottom)
+          .attr('y2', bottom);
 
         ruler.exit().remove();
 
@@ -56,6 +57,7 @@ namespace('sszvis.component.ruler', function(module) {
           .attr('cx', x)
           .attr('cy', y)
           .attr('r', 3.5)
+          .attr('fill', props.color);
 
         dot.exit().remove();
 

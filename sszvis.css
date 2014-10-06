@@ -71,7 +71,6 @@
  */
 .sszvis-line {
   fill: none;
-  stroke: #6392C5;
   stroke-width: 1.5px;
 }
 
@@ -87,7 +86,6 @@
 }
 
 .sszvis-ruler-dot {
-  fill: #6392C5;
   stroke: #FFFFFF;
   stroke-width: 1.5;
 }

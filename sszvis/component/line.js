@@ -13,6 +13,7 @@ namespace('sszvis.component.line', function(module) {
       .prop('y')
       .prop('xScale')
       .prop('yScale')
+      .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -32,7 +33,8 @@ namespace('sszvis.component.line', function(module) {
         path.exit().remove();
 
         path
-          .attr("d", line);
+          .attr("d", line)
+          .attr('stroke', props.stroke);
       });
   }
 
