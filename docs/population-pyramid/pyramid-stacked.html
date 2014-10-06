@@ -63,7 +63,7 @@
     });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 600, height: 500, top: 10, right: 10, bottom: 10, left: 20 });
+      var bounds = sszvis.bounds({ width: 600, height: 540, top: 10, right: 10, bottom: 60, left: 20 });
 
       var groupPadding = 0.5;
 
@@ -94,6 +94,12 @@
         .orient('right')
         .tickFormat(sszvis.format.age);
 
+      var colorLegend = sszvis.legend.color()
+        .scale(colorScale)
+        .orientation('vertical')
+        .rows(2)
+        .width(bounds.innerWidth * 2 / 3);
+
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.populations);
 
@@ -112,6 +118,10 @@
       chart.selectGroup('yAxis')
         .attr('transform', 'translate(-15, 0)')
         .call(yAxis);
+
+      chart.selectGroup('colorLegend')
+        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 15) + ')')
+        .call(colorLegend);
     }
 
 }());
