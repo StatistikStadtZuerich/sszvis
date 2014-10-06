@@ -253,6 +253,34 @@
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+(function(d3) {
+
+  /**
+   * d3.selection plugin to simplify creating idempotent divs that are not
+   * recreated when rendered again.
+   *
+   * @see https://github.com/mbostock/d3/wiki/Selections
+   *
+   * @param {String} key - the name of the group
+   * @return {d3.selection}
+   */
+  d3.selection.prototype.selectDiv = function(key) {
+    var div = this.selectAll('[data-d3-selectdiv="' + key + '"]')
+      .data(function(d) { return [d]; });
+
+    div.enter()
+      .append('div')
+      .attr('data-d3-selectdiv', key)
+      .style('position', 'absolute');
+
+    return div;
+  };
+
+}(d3));
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 (function(global){
 
   global.namespace = function(path, body) {
@@ -466,9 +494,102 @@ namespace('sszvis.color', function(module) {
         "#b8e6d2",
         "#60bf97"
       ],
+      valuedQual2: [
+        "#3b76b3",
+        "#cc6171"
+      ],
       neutralQual2: [
         "#497f7b",
         "#a57c59"
+      ],
+      valuedBlue9: [
+        "#DDE9FE",
+        "#b5cceb",
+        "#8cb0d9",
+        "#6493c6",
+        "#3b76b3",
+        "#396899",
+        "#385b80",
+        "#364d66",
+        "#333e4c"
+      ],
+      valuedRed10: [
+        "#fdebeb",
+        "#f2c9cd",
+        "#e5a7af",
+        "#d98490",
+        "#cc6171",
+        "#ac5663",
+        "#8d4b56",
+        "#6d4048",
+        "#4d353a",
+        "#4c3439"
+      ],
+      neutralGreen9: [
+        "#d2dfde",
+        "#b0c7c6",
+        "#8eb0ad",
+        "#6c9894",
+        "#4a807c",
+        "#436f6d",
+        "#3b5e5e",
+        "#344d4e",
+        "#2c3c3f"
+      ],
+      neutralBrown9: [
+        "#e9dfd6",
+        "#d8c7b7",
+        "#c8ae98",
+        "#b79579",
+        "#a67d5a",
+        "#906b51",
+        "#795a48",
+        "#62493e",
+        "#4c3735"
+      ],
+      valuedBluWhtRed9: [
+        "#3b76b3",
+        "#3b76b3",
+        "#3b76b3",
+        "#ceddec",
+        "#ffffff",
+        "#f2d8dc",
+        "#e6b0b8",
+        "#d98994",
+        "#cc6171"
+      ],
+      valuedBluGryRed9: [
+        "#3b76b3",
+        "#6995c3",
+        "#97b4d3",
+        "#c5d4e3",
+        "#f3f3f3",
+        "#e9ced3",
+        "#e0aab2",
+        "#d68592",
+        "#cc6171"
+      ],
+      neutralGrnWhtBrn9: [
+        "#4a807c",
+        "#77a09d",
+        "#a5c0be",
+        "#d2dfde",
+        "#ffffff",
+        "#e9dfd6",
+        "#d3bead",
+        "#bc9e83",
+        "#a67d5a"
+      ],
+      neutralGrnGryBrn9: [
+        "#4a807c",
+        "#749d9a",
+        "#9fbab8",
+        "#c9d6d5",
+        "#f3f3f3",
+        "#e0d5cd",
+        "#cdb8a7",
+        "#b99b80",
+        "#a67d5a"
       ]
     },
     sequential: {
@@ -537,6 +658,7 @@ namespace('sszvis.color', function(module) {
  * @module sszvis/fn
  */
 namespace('sszvis.fn', function(module) {
+"use strict";
 
   var slice = function(list) {
     var slice = Array.prototype.slice;
@@ -580,18 +702,26 @@ namespace('sszvis.fn', function(module) {
     /**
      * fn.hashableSet
      *
-     * takes an array of elements and returns the unique elements of that array
+     * takes an array of elements and returns the unique elements of that array, optionally
+     * after passing them through an accessor function.
      * the returned array is ordered according to the elements' order of appearance
      * in the input array. This function differs from fn.set in that the elements
-     * in the input array MUST be "hashable" - convertible to unique keys of a JavaScript object.
+     * in the input array (or the values returned by the accessor function)
+     * MUST be "hashable" - convertible to unique keys of a JavaScript object.
      *
      * @param  {Array} arr the Array of source elements
+     * @param {Function} [acc(element, index, array)=(v) -> v] - an accessor function which
+     * is called on each element of the Array. Defaults to the identity function.
+     * The result is equivalent to calling array.map(acc) before computing the set.
+     * When the accessor function is invoked, it is passed the element from the input array,
+     * the element's index in the input array, and the input array itself.
      * @return {Array} an Array of unique elements
      */
-    hashableSet: function(arr) {
+    hashableSet: function(arr, acc) {
+      acc || (acc = sszvis.fn.identity);
       var seen = {}, value, result = [];
       for (var i = 0, l = arr.length; i < l; ++i) {
-        value = arr[i];
+        value = acc(arr[i], i, arr);
         if (!seen[value]) {
           seen[value] = true;
           result.push(value);
@@ -608,16 +738,6 @@ namespace('sszvis.fn', function(module) {
       return function(){ return !f.apply(this, arguments) };
     },
 
-    objectValues: function(obj) {
-      var result = [], prop;
-      for (prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-          result.push(obj[prop]);
-        }
-      }
-      return result;
-    },
-
     prop: function(key) {
       return function(object) {
         return object[key];
@@ -627,7 +747,8 @@ namespace('sszvis.fn', function(module) {
     /**
      * fn.set
      *
-     * takes an array of elements and returns the unique elements of that array
+     * takes an array of elements and returns the unique elements of that array, optionally
+     * after passing them through an accessor function.
      * the returned array is ordered according to the elements' order of appearance
      * in the input array, e.g.:
      *
@@ -636,11 +757,18 @@ namespace('sszvis.fn', function(module) {
      * [{obj1}, {obj2}, {obj1}, {obj3}] -> [{obj1}, {obj2}, {obj3}]
      *
      * @param {Array} arr - the Array of source elements
+     * @param {Function} [acc(element, index, array)=(v) -> v] - an accessor function which
+     * is called on each element of the Array. Defaults to the identity function.
+     * The result is equivalent to calling array.map(acc) before computing the set.
+     * When the accessor function is invoked, it is passed the element from the input array,
+     * the element's index in the input array, and the input array itself.
      * @return {Array} an Array of unique elements
      */
-    set: function(arr) {
-      return arr.reduce(function(m, value) {
-        return m.indexOf(value) < 0 ? m.concat(value) : m;
+    set: function(arr, acc) {
+      acc || (acc = sszvis.fn.identity);
+      return arr.reduce(function(m, value, i) {
+        var computed = acc(value, i, arr);
+        return m.indexOf(computed) < 0 ? m.concat(computed) : m;
       }, []);
     }
 
@@ -692,6 +820,10 @@ namespace('sszvis.format', function(module) {
         } else {
           return d3.format('.2r')(d);
         }
+      },
+
+      age: function(d) {
+        return String(Math.round(d));
       },
 
       percent: function(d) {
@@ -844,6 +976,8 @@ namespace('sszvis.axis', function(module) {
         .prop('halo')
         .prop('textWrap')
         .prop('slant')
+        .prop('title')
+        .prop('titleOffset').titleOffset(0)
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -890,6 +1024,45 @@ namespace('sszvis.axis', function(module) {
           if (props.slant) {
             group.selectAll("text")
               .call(slantLabel[axisDelegate.orient()][props.slant]);
+          }
+
+          if (props.title) {
+            var title = group.selectAll('.sszvis-axis--title')
+              .data([props.title]);
+
+            title.enter()
+              .append('text')
+              .classed('sszvis-axis--title', true);
+
+            title.exit().remove();
+
+            title
+              .text(function(d) { return d; })
+              .attr('transform', function(d) {
+                var scale = axisDelegate.scale(),
+                    extent = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range()),
+                    halfWay = (extent[0] + extent[1]) / 2,
+                    orientation = axisDelegate.orient();
+                if (orientation === 'left') {
+                  return 'translate(0, ' + -props.titleOffset + ')';
+                } else if (orientation === 'right') {
+                  return 'translate(0, ' + -props.titleOffset + ')';
+                } else if (orientation === 'top') {
+                  return 'translate(' + halfWay + ', ' + -props.titleOffset + ')';
+                } else if (orientation === 'bottom') {
+                  return 'translate(' + halfWay + ', ' + props.titleOffset + ')';
+                }
+              })
+              .style('text-anchor', function(d) {
+                var orientation = axisDelegate.orient();
+                if (orientation === 'left') {
+                  return 'end';
+                } else if (orientation === 'right') {
+                  return 'start';
+                } else if (orientation === 'top' || orientation === 'bottom') {
+                  return 'middle';
+                }
+              });
           }
 
         });
@@ -940,6 +1113,10 @@ namespace('sszvis.axis', function(module) {
 
   }());
 
+  function scaleExtent(domain) { // borrowed from d3 source
+    var start = domain[0], stop = domain[domain.length - 1];
+    return start < stop ? [ start, stop ] : [ stop, start ];
+  }
 
   var slantLabel = {
     top: {
@@ -974,6 +1151,163 @@ namespace('sszvis.axis', function(module) {
 
 });
 
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Legend component
+ *
+ * @module sszvis/legend
+ */
+namespace('sszvis.legend.color', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('scale')
+      .prop('width').width(0)
+      .prop('rows').rows(3)
+      .prop('columns').columns(3)
+      .prop('orientation')
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var domain = props.scale.domain();
+
+        var rows, cols;
+        if (props.orientation === 'horizontal') {
+          cols = props.columns;
+          rows = Math.ceil(domain.length / cols);
+        } else if (props.orientation === 'vertical') {
+          rows = props.rows;
+          cols = Math.ceil(domain.length / rows);
+        }
+
+        var colWidth = props.width / cols,
+            rowHeight = 20;
+
+        var groups = selection.selectAll('.sszvis-legend--entry')
+          .data(domain);
+
+        groups.enter()
+          .append('g')
+          .classed('sszvis-legend--entry', true);
+
+        groups.attr('transform', function(d, i) {
+          if (props.orientation === 'horizontal') {
+            return 'translate(' + ((i % cols) * colWidth) + ',' + (Math.floor(i / cols) * rowHeight) + ')';
+          } else if (props.orientation === 'vertical') {
+            return 'translate(' + (Math.floor(i / rows) * colWidth) + ',' + ((i % rows) * rowHeight) + ')';
+          }
+        });
+
+        groups.exit().remove();
+
+        var marks = groups.selectAll('.sszvis-legend--mark')
+          .data(function(d) { return [d]; });
+
+        marks.enter()
+          .append('circle')
+          .classed('sszvis-legend--mark', true);
+
+        marks.exit().remove();
+
+        marks
+          .attr('cx', 7)
+          .attr('cy', rowHeight / 2 - 1) // magic number adjustment for nice alignment with text
+          .attr('r', 6)
+          .attr('fill', function(d) { return props.scale(d); });
+
+        var labels = groups.selectAll('.sszvis-legend--label')
+          .data(function(d) { return [d]; });
+
+        labels.enter()
+          .append('text')
+          .classed('sszvis-legend--label', true);
+
+        labels.exit().remove();
+
+        labels
+          .text(function(d) { return d; })
+          .attr('alignment-baseline', 'central')
+          .attr('transform', 'translate(18, ' + (rowHeight / 2) + ')');
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Legend component
+ *
+ * @module sszvis/legend
+ */
+namespace('sszvis.legend.colorRange', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('scale')
+      .prop('width')
+      .prop('segments').segments(8)
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var values = props.scale.ticks(props.segments);
+
+        var segWidth = props.width / values.length,
+            segHeight = 10;
+
+        var segments = selection.selectAll('rect.sszvis-legend--mark')
+          .data(values);
+
+        segments.enter()
+          .append('rect')
+          .classed('sszvis-legend--mark', true);
+
+        segments.exit().remove();
+
+        segments
+          .attr('x', function(d, i) { return i * segWidth; })
+          .attr('y', 0)
+          .attr('width', segWidth)
+          .attr('height', segHeight)
+          .attr('fill', function(d) { return props.scale(d); });
+
+        var startEnd = [values[0], values[values.length - 1]];
+
+        // rounded end caps for the segments
+        var endCaps = selection.selectAll('circle.ssvis-legend--mark')
+          .data(startEnd);
+
+        endCaps.enter()
+          .append('circle')
+          .attr('cx', function(d, i) { return i * props.width; })
+          .attr('cy', segHeight / 2)
+          .attr('r', segHeight / 2)
+          .attr('fill', function(d) { return props.scale(d); });
+
+        var labels = selection.selectAll('.sszvis-legend--label')
+          .data(startEnd);
+
+        labels.enter()
+          .append('text')
+          .classed('sszvis-legend--label', true);
+
+        labels.exit().remove();
+
+        labels
+          .attr('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
+          .attr('alignment-baseline', 'central')
+          .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * 18) + ', ' + (segHeight / 2) + ')'; })
+          .text(function(d) { return d; });
+      });
+  };
+
+});
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -1110,6 +1444,52 @@ namespace('sszvis.behavior.move', function(module) {
 
 
 /**
+ * Segmented Control for switching top-level filter values
+ *
+ * @module sszvis/control/segmented
+ */
+namespace('sszvis.control.segmented', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('values')
+      .prop('current')
+      .prop('width')
+      .prop('change').change(sszvis.fn.identity)
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var buttonWidth = props.width / props.values.length,
+            buttonHeight = 20;
+
+        var container = selection.selectDiv('.ssvis-control--segmented');
+
+        container.style('width', props.width + 'px');
+
+        var buttons = container.selectAll('.sszvis-control--segmentitem')
+          .data(props.values);
+
+        buttons.enter()
+          .append('div')
+          .classed('sszvis-control--segmentitem', true);
+
+        buttons.exit().remove();
+
+        buttons
+          .style('width', buttonWidth + 'px')
+          .classed('selected', function(d) { return d === props.current; })
+          .text(function(d) { return d; })
+          .on('click', props.change);
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Bar component
  * @return {d3.component}
  */
@@ -1137,12 +1517,15 @@ namespace('sszvis.component.bar', function(module) {
         bars.exit().remove();
 
         bars
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
+
+        bars
+          .transition()
           .attr('x', props.x)
           .attr('y', props.y)
           .attr('width', props.width)
-          .attr('height', props.height)
-          .attr('fill', props.fill)
-          .attr('stroke', props.stroke);
+          .attr('height', props.height);
       });
   };
 
@@ -1226,6 +1609,7 @@ namespace('sszvis.component.line', function(module) {
       .prop('y')
       .prop('xScale')
       .prop('yScale')
+      .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -1245,7 +1629,8 @@ namespace('sszvis.component.line', function(module) {
         path.exit().remove();
 
         path
-          .attr("d", line);
+          .attr("d", line)
+          .attr('stroke', props.stroke);
       });
   }
 
@@ -1345,6 +1730,7 @@ namespace('sszvis.component.ruler', function(module) {
       .prop('xScale')
       .prop('yScale')
       .prop('label').label(fn.constant(''))
+      .prop('color')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -1353,7 +1739,7 @@ namespace('sszvis.component.ruler', function(module) {
           return props.x(d) + '_' + props.y(d);
         }
 
-        var maxDatum = d3.max(data.map(fn.compose(props.xScale, props.x)));
+        var maxDatum = d3.max(data, fn.compose(props.xScale, props.x));
 
         var x = fn.compose(props.xScale, props.x);
         var y = fn.compose(props.yScale, props.y);
@@ -1371,7 +1757,7 @@ namespace('sszvis.component.ruler', function(module) {
           .attr('x1', x)
           .attr('y1', y)
           .attr('x2', x)
-          .attr('y2', bottom)
+          .attr('y2', bottom);
 
         ruler.exit().remove();
 
@@ -1386,6 +1772,7 @@ namespace('sszvis.component.ruler', function(module) {
           .attr('cx', x)
           .attr('cy', y)
           .attr('r', 3.5)
+          .attr('fill', props.color);
 
         dot.exit().remove();
 
@@ -2124,12 +2511,12 @@ namespace('sszvis.component.pyramid', function(module) {
             .attr('stroke-dasharray', '3 3');
         }
 
-        if (props.direction === 'links') {
-          // reflects the shape over the line y = -x plus +width and +height translation
-          rendered.attr('transform', 'matrix(0 -1 -1 0 ' + (props.width - props.groupPadding) + ' ' + props.height + ')');
-        } else if (props.direction === 'rechts') {
-          // -90deg rotation plus +width and +height translation
-          rendered.attr('transform', 'matrix(0 -1 1 0 ' + (props.width + props.groupPadding) + ' ' + props.height + ')');
+        if (props.direction === 'left') {
+          // 90deg rotation plus +width
+          rendered.attr('transform', 'matrix(0, 1, -1, 0, ' + (props.width - props.groupPadding) + ', 0)');
+        } else if (props.direction === 'right') {
+          // reflection around y = x plus +width
+          rendered.attr('transform', 'matrix(0, 1, 1, 0, ' + (props.width + props.groupPadding) + ', 0)');
         }
 
       });

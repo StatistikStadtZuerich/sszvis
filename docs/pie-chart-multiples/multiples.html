@@ -43,11 +43,7 @@
       }
       state.data = data;
 
-<<<<<<< HEAD
       state.groups = sszvis.fn.set(state.data, gAcc);
-=======
-      state.groups = fn.set(state.data.map(gAcc));
->>>>>>> Cleanup
 
       var cascader = sszvis.cascade()
         .arrayBy(gAcc, function(g1, g2) {
@@ -68,11 +64,7 @@
         };
       });
 
-<<<<<<< HEAD
       state.categories = sszvis.fn.set(state.data, cAcc);
-=======
-      state.categories = fn.set(state.data.map(cAcc));
->>>>>>> Cleanup
 
       render(state);
     });
