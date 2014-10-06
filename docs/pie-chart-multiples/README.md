@@ -19,7 +19,7 @@
     ],
     "size": {
         "width": 880,
-        "height": 600
+        "height": 680
     }
 }
 ```

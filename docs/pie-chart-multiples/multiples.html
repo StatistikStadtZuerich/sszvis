@@ -20,7 +20,7 @@
     tooltips: []
   };
 
-  var bounds = sszvis.bounds({ width: 880, height: 600, top: 60, right: 60, bottom: 60, left: 60 });
+  var bounds = sszvis.bounds({ width: 880, height: 680, top: 60, right: 60, bottom: 140, left: 60 });
 
   var gAcc = sszvis.fn.prop('group');
   var vAcc = sszvis.fn.prop('value');
@@ -134,7 +134,7 @@
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
-      .rows(state.categories.length)
+      .width(bounds.innerWidth)
       .orientation('vertical');
 
     var pieCharts = chart.selectGroup('piecharts')
@@ -156,7 +156,7 @@
       .call(hoverBehavior);
 
     chart.selectGroup('colorLegend')
-      .attr('transform', 'translate(' + (bounds.innerWidth - 200) + ', ' + (bounds.innerHeight - 190) + ')')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
       .call(colorLegend);
   }
 
