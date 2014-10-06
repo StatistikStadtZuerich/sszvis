@@ -18,16 +18,17 @@ namespace('sszvis.legend.color', function(module) {
 
         var domain = props.scale.domain();
 
-        var rows, cols, colWidth, rowHeight = 20;
+        var rows, cols;
         if (props.orientation === 'horizontal') {
-          cols = props.columns;
-          rows = Math.ceil(domain.length / cols);
-          colWidth = props.width / cols;
-        } else if (props.orientation === 'vertical') {
           rows = props.rows;
           cols = Math.ceil(domain.length / rows);
-          colWidth = props.width / cols;
+        } else if (props.orientation === 'vertical') {
+          cols = props.columns;
+          rows = Math.ceil(domain.length / cols);
         }
+
+        var colWidth = props.width / cols,
+            rowHeight = 20;
 
         var groups = selection.selectAll('.sszvis-legend--entry')
           .data(domain);
@@ -73,7 +74,7 @@ namespace('sszvis.legend.color', function(module) {
         labels
           .text(function(d) { return d; })
           .attr('alignment-baseline', 'central')
-          .attr('transform', 'translate(24, ' + (rowHeight / 2) + ')');
+          .attr('transform', 'translate(18, ' + (rowHeight / 2) + ')');
       });
   };
 

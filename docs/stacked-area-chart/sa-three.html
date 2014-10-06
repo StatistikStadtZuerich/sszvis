@@ -59,7 +59,7 @@
     });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 516, height: 442, top: 10, right: 10, bottom: 24, left: 10 });
+      var bounds = sszvis.bounds({ width: 500, height: 480, top: 10, right: 10, bottom: 60, left: 10 });
 
       var xScale = d3.time.scale()
         .domain(state.timeExtent)
@@ -83,6 +83,11 @@
       var xAxis = sszvis.axis.x.time().scale(xScale).orient('bottom');
       var yAxis = sszvis.axis.y().scale(yScale).orient('right');
 
+      var colorLegend = sszvis.legend.color()
+        .scale(cScale)
+        .width(bounds.innerWidth)
+        .orientation('vertical');
+
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.stackedData);
 
@@ -95,6 +100,10 @@
 
       var yAxisGroup = chart.selectGroup('yAxis')
         .call(yAxis);
+
+      chart.selectGroup('colorLegend')
+        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 30) + ')')
+        .call(colorLegend);
     }
 
 }());
