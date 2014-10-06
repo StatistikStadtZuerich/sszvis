@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Horizontal Bar Chart</title>
+
+  <link href='../../sszvis.css' rel='stylesheet' />
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+<div id="chart"></div>
+<script>
+(function() {
+
+  var state = {
+    data: [],
+    selectedArea: "Stadt Zürich"
+  };
+
+  var xAcc = sszvis.fn.prop('value');
+  var yAcc = sszvis.fn.prop('category');
+  var aAcc = sszvis.fn.prop('area');
+
+  d3.csv('data/SHB_basic_percent.csv')
+    .row(function(d) {
+      return {
+        category: d['Branche'],
+        value: sszvis.parse.number(d['BIP']),
+        area: d['Gebiet']
+      }
+    })
+    .get(function(error, data) {
+      if (error) {
+        console.log('error loading data: ', error);
+        return;
+      }
+
+      state.data = data;
+
+      var nester = sszvis.cascade()
+        .objectBy(aAcc);
+
+      state.dataByArea = nester.apply(state.data);
+
+      state.years = sszvis.fn.set(state.data, aAcc);
+
+      state.categories = sszvis.fn.set(state.data, yAcc);
+
+      render(state);
+    });
+
+  var actions = {
+    onYearChange: function(d) {
+      state.selectedArea = d;
+      render(state);
+    }
+  };
+
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 500, height: 540, top: 75, right: 10, bottom: 30, left: 10 });
+
+    var widthScale = d3.scale.linear()
+      .range([0, bounds.innerWidth])
+      .domain([0, d3.max(state.data, xAcc)]);
+
+    var yScale = d3.scale.ordinal()
+      .rangeBands([0, bounds.innerHeight], 0.55, 0.1)
+      .domain(state.categories);
+
+    var barGen = sszvis.component.bar()
+      .x(0)
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .width(sszvis.fn.compose(widthScale, xAcc))
+      .height(yScale.rangeBand())
+      .fill(sszvis.color.values.basicBlue);
+
+    var xAxis = sszvis.axis.x().scale(widthScale).orient('bottom').tickFormat(function(v) { return sszvis.format.percent(v / 100); });
+    var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('right');
+
+    var chart = sszvis.createChart('#chart', bounds)
+      .datum(state.dataByArea[state.selectedArea]);
+
+    var control = sszvis.control.segmented()
+      .values(state.years)
+      .width(bounds.width * 0.8)
+      .current(state.selectedArea)
+      .change(actions.onYearChange);
+
+    chart.selectGroup('bars')
+      .call(barGen);
+
+    chart.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    chart.selectGroup('yAxis')
+      .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
+      .call(yAxis);
+
+    var htmlLayer = sszvis.createHtmlLayer('#chart', bounds);
+
+    htmlLayer.selectDiv('controls')
+      .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
+      .style('top', (-60) + 'px')
+      .call(control);
+  }
+
+}());
+</script>
+</body>
+</html>

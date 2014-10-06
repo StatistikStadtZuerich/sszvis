@@ -26,12 +26,15 @@ namespace('sszvis.component.bar', function(module) {
         bars.exit().remove();
 
         bars
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
+
+        bars
+          .transition()
           .attr('x', props.x)
           .attr('y', props.y)
           .attr('width', props.width)
-          .attr('height', props.height)
-          .attr('fill', props.fill)
-          .attr('stroke', props.stroke);
+          .attr('height', props.height);
       });
   };
 

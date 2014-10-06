@@ -74,6 +74,47 @@
   stroke-width: 1.5px;
 }
 
+/**
+ * Segmented Control component
+ *
+ * @module sszvis/control/segmented
+ */
+.sszvis-control--segmented {
+  display: inline-block;
+  position: absolute;
+}
+
+.sszvis-control--segmentitem {
+  background-color: #FFFFFF;
+  border: 1px solid #7C7C7C;
+  border-left: none;
+  box-sizing: border-box;
+  color: #7C7C7C;
+  cursor: pointer;
+  display: table-cell;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  padding: 0.5em 1em;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.sszvis-control--segmentitem.selected {
+  background-color: #B8B8B8;
+  color: #FFFFFF;
+}
+
+.sszvis-control--segmentitem:first-child {
+  border-left: 1px solid #7C7C7C;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.sszvis-control--segmentitem:last-child {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
 
 /**
  * Vertical Ruler component

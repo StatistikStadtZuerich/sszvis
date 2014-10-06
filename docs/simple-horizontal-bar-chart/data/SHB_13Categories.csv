@@ -1,14 +1,40 @@
-Sektor,Zupendler
-Landwirtschaft,933
-Nahrungsmittel und Papier,5389
-Chemie und Metall,1563
-Maschinen und Geräte,3262
-Wasser und Energie,696
-Bau,6823
-Gross- und Detailhandel,20892
-Gastgewerbe,8135
-Transport und Kommunikation,12016
-Finanzsektor,39517
-"Immobilien, Informatik",33145
-Gesundheits- und Sozialwesen,41139
-sonstige Dienstleistungen,1609
+Sektor,Zupendler,Jahr
+Landwirtschaft,933,2012
+Nahrungsmittel und Papier,5389,2012
+Chemie und Metall,1563,2012
+Maschinen und Geräte,3262,2012
+Wasser und Energie,696,2012
+Bau,6823,2012
+Gross- und Detailhandel,20892,2012
+Gastgewerbe,8135,2012
+Transport und Kommunikation,12016,2012
+Finanzsektor,39517,2012
+"Immobilien, Informatik",33145,2012
+Gesundheits- und Sozialwesen,41139,2012
+sonstige Dienstleistungen,1609,2012
+Landwirtschaft,45626,2013
+Nahrungsmittel und Papier,22700,2013
+Chemie und Metall,5026,2013
+Maschinen und Geräte,36966,2013
+Wasser und Energie,16125,2013
+Bau,7413,2013
+Gross- und Detailhandel,7124,2013
+Gastgewerbe,20983,2013
+Transport und Kommunikation,12666,2013
+Finanzsektor,43590,2013
+"Immobilien, Informatik",5690,2013
+Gesundheits- und Sozialwesen,21628,2013
+sonstige Dienstleistungen,42574,2013
+Landwirtschaft,2047,2014
+Nahrungsmittel und Papier,16746,2014
+Chemie und Metall,31867,2014
+Maschinen und Geräte,403,2014
+Wasser und Energie,5894,2014
+Bau,45825,2014
+Gross- und Detailhandel,15437,2014
+Gastgewerbe,34928,2014
+Transport und Kommunikation,32103,2014
+Finanzsektor,13301,2014
+"Immobilien, Informatik",45762,2014
+Gesundheits- und Sozialwesen,10383,2014
+sonstige Dienstleistungen,38450,2014

@@ -2,22 +2,6 @@
 
 ## Simple Horizontal Bar Chart
 
-```project
-{
-    "index": "docs/simple-horizontal-bar-chart/index.html",
-    "readme": "docs/simple-horizontal-bar-chart/README.md",
-    "files": [
-        "docs/simple-horizontal-bar-chart/data/SHB_13Categories.csv",
-        "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv",
-        "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv"
-    ],
-    "size": {
-        "height": 500,
-        "width": 500
-    }
-}
-```
-
 ### Datenformat
 
 Dieses Chart benötigt zwei Datenreihen:
@@ -31,3 +15,47 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 * `xAxis` - eine `d3`-Achsenfunktion
 * `yAxis` - eine `d3`-Achsenfunktion
+
+## Beispielen
+
+```project
+{
+    "index": "docs/simple-horizontal-bar-chart/13-categories.html",
+    "readme": "docs/simple-horizontal-bar-chart/README.md",
+    "files": [
+        "docs/simple-horizontal-bar-chart/data/SHB_13Categories.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 500
+    }
+}
+```
+
+```project
+{
+    "index": "docs/simple-horizontal-bar-chart/basic_percent.html",
+    "readme": "docs/simple-horizontal-bar-chart/README.md",
+    "files": [
+        "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 540
+    }
+}
+```
+
+```project
+{
+    "index": "docs/simple-horizontal-bar-chart/long_names.html",
+    "readme": "docs/simple-horizontal-bar-chart/README.md",
+    "files": [
+        "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 500
+    }
+}
+```

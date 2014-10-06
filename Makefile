@@ -18,6 +18,7 @@ VENDOR_FILES = \
 	vendor/d3-component/d3-component.js \
 	vendor/d3-de/d3-de.js \
 	vendor/d3-selectgroup/d3-selectgroup.js \
+	vendor/d3-selectdiv/d3-selectdiv.js \
 	vendor/namespace/namespace.js
 
 SOURCE_FILES = \
@@ -35,6 +36,7 @@ SOURCE_FILES = \
 	sszvis/createHtmlLayer.js \
 	sszvis/behavior/mouseover.js \
 	sszvis/behavior/move.js \
+	sszvis/segmentedControl.js \
 	sszvis/component/bar.js \
 	sszvis/component/groupedBars.js \
 	sszvis/component/line.js \

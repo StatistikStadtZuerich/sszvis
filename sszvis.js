@@ -243,6 +243,34 @@
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+(function(d3) {
+
+  /**
+   * d3.selection plugin to simplify creating idempotent divs that are not
+   * recreated when rendered again.
+   *
+   * @see https://github.com/mbostock/d3/wiki/Selections
+   *
+   * @param {String} key - the name of the group
+   * @return {d3.selection}
+   */
+  d3.selection.prototype.selectDiv = function(key) {
+    var div = this.selectAll('[data-d3-selectdiv="' + key + '"]')
+      .data(function(d) { return [d]; });
+
+    div.enter()
+      .append('div')
+      .attr('data-d3-selectdiv', key)
+      .style('position', 'absolute');
+
+    return div;
+  };
+
+}(d3));
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 (function(global){
 
   global.namespace = function(path, body) {
@@ -1405,6 +1433,52 @@ namespace('sszvis.behavior.move', function(module) {
 
 
 /**
+ * Segmented Control for switching top-level filter values
+ *
+ * @module sszvis/control/segmented
+ */
+namespace('sszvis.control.segmented', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('values')
+      .prop('current')
+      .prop('width')
+      .prop('change').change(sszvis.fn.identity)
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var buttonWidth = props.width / props.values.length,
+            buttonHeight = 20;
+
+        var container = selection.selectDiv('.ssvis-control--segmented');
+
+        container.style('width', props.width + 'px');
+
+        var buttons = container.selectAll('.sszvis-control--segmentitem')
+          .data(props.values);
+
+        buttons.enter()
+          .append('div')
+          .classed('sszvis-control--segmentitem', true);
+
+        buttons.exit().remove();
+
+        buttons
+          .style('width', buttonWidth + 'px')
+          .classed('selected', function(d) { return d === props.current; })
+          .text(function(d) { return d; })
+          .on('click', props.change);
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Bar component
  * @return {d3.component}
  */
@@ -1432,12 +1506,15 @@ namespace('sszvis.component.bar', function(module) {
         bars.exit().remove();
 
         bars
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
+
+        bars
+          .transition()
           .attr('x', props.x)
           .attr('y', props.y)
           .attr('width', props.width)
-          .attr('height', props.height)
-          .attr('fill', props.fill)
-          .attr('stroke', props.stroke);
+          .attr('height', props.height);
       });
   };
 
