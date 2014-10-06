@@ -140,17 +140,14 @@
       .on('mouseover', actions.showTooltip)
       .on('mouseout',  actions.hideTooltip);
 
-    var tooltipLayer = chart.selectGroup('tooltip');
-
-    var categories = state.tooltips.map(fn.prop('category'));
+    // Tooltip
+    var tooltipLayer = sszvis.createHtmlLayer('#chart', bounds);
+    var tooltipCategories = state.tooltips.map(sszvis.fn.prop('category'));
     var tooltip = sszvis.component.tooltip2()
       .renderInto(tooltipLayer)
       .visible(function(d) {
-        return categories.indexOf(d.category) >= 0;
+        return tooltipCategories.indexOf(d.category) >= 0;
       });
-
-    var headerText = sszvis.component.modularText()
-      .bold(fn.compose(sszvis.format.percent, function(tData) { return vAcc(tData.d) / state.totalValues[gAcc(tData.d)]; }));
 
     pieCharts
       .selectAll('[data-tooltip-anchor]')
