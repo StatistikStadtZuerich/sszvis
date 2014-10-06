@@ -20,11 +20,11 @@ namespace('sszvis.legend.color', function(module) {
 
         var rows, cols;
         if (props.orientation === 'horizontal') {
-          rows = props.rows;
-          cols = Math.ceil(domain.length / rows);
-        } else if (props.orientation === 'vertical') {
           cols = props.columns;
           rows = Math.ceil(domain.length / cols);
+        } else if (props.orientation === 'vertical') {
+          rows = props.rows;
+          cols = Math.ceil(domain.length / rows);
         }
 
         var colWidth = props.width / cols,

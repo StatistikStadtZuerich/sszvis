@@ -23,6 +23,16 @@
   var yAcc = sszvis.fn.prop('value');
   var cAcc = sszvis.fn.prop('category');
 
+  function schweizerSorter(a, b) {
+    if (a !== b) {
+      // sort group 'Schweizer' to the start so it becomes the bottom layer
+      // (for visual effect)
+      return a === 'Schweizer' ? -1 : (b === 'Schweizer' ? 1 : (a < b ? -1 : 1));
+    } else {
+      return 0;
+    }
+  }
+
   d3.csv('data/SA_2Categories_yearly.csv')
     .row(function(d) {
       return {
@@ -42,18 +52,7 @@
       state.timeExtent = d3.extent(state.data, xAcc);
 
       var stacker = sszvis.cascade()
-        .arrayBy(cAcc)
-        .sort(function(a, b) {
-          var ca = cAcc(a), cb = cAcc(b);
-          if (ca !== cb) {
-            // sort group 'Schweizer' to the start so it becomes the bottom layer
-            // (for visual effect)
-            return ca === 'Schweizer' ? -1 : (cb === 'Schweizer' ? 1 : (ca < cb ? -1 : 1));
-          } else {
-            var xa = xAcc(a), xb = xAcc(b);
-            return xa < xb ? -1 : xa > xb ? 1 : 0;
-          }
-        });
+        .arrayBy(cAcc, schweizerSorter);
 
       state.stackedData = stacker.apply(state.data).map(function(stack) {
         stack.category = cAcc(stack[0]);
@@ -64,13 +63,13 @@
 
       state.maxStacked = d3.max(d3.values(dateValues), function(s) { return d3.sum(s, yAcc); });
 
-      state.categories = sszvis.fn.set(state.data, cAcc);
+      state.categories = sszvis.fn.set(state.data, cAcc).sort(schweizerSorter);
 
       render(state);
     });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 480, top: 10, right: 10, bottom: 60, left: 10 });
+      var bounds = sszvis.bounds({ width: 500, height: 520, top: 10, right: 10, bottom: 100, left: 10 });
 
       var xScale = d3.time.scale()
         .domain(state.timeExtent)
