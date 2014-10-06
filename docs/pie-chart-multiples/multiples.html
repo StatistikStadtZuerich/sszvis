@@ -141,10 +141,12 @@
       .on('mouseout',  actions.hideTooltip);
 
     // Tooltip
-    var tooltipLayer = sszvis.createHtmlLayer('#chart', bounds);
+    var tooltipLayer = sszvis.createHtmlLayer('#chart', sszvis.bounds());
     var tooltipCategories = state.tooltips.map(sszvis.fn.prop('category'));
     var tooltip = sszvis.component.tooltip2()
       .renderInto(tooltipLayer)
+      .header(sszvis.fn.prop('category'))
+      .body(function(d){ return 'Anzahl: ' + d.value })
       .visible(function(d) {
         return tooltipCategories.indexOf(d.category) >= 0;
       });

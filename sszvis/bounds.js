@@ -11,6 +11,7 @@
 namespace('sszvis.bounds', function(module) {
 
   module.exports = function(bounds) {
+    bounds || (bounds = {});
     var height  = sszvis.fn.either(bounds.height, 100);
     var width   = sszvis.fn.either(bounds.width, 100);
     var padding = {

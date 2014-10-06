@@ -43,7 +43,6 @@ namespace('sszvis.component.pie', function(module) {
           .attr('stroke', props.stroke);
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .debug(true)
           .position(function(d) {
             var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
             var r = props.radius * 2/3;
