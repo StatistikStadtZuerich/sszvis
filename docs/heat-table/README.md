@@ -31,7 +31,7 @@ The following configuration options are available:
     ],
     "size": {
         "width": 460,
-        "height": 700
+        "height": 760
     }
 }
 ```
@@ -47,7 +47,7 @@ The following configuration options are available:
     ],
     "size": {
         "width": 450,
-        "height": 900
+        "height": 960
     }
 }
 ```
@@ -63,7 +63,7 @@ The following configuration options are available:
     ],
     "size": {
         "width": 600,
-        "height": 440
+        "height": 500
     }
 }
 ```

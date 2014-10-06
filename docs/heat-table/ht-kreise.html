@@ -72,7 +72,7 @@
   };
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 460, height: 700, top: 50, right: 20, bottom: 10, left: 80 });
+    var bounds = sszvis.bounds({ width: 460, height: 760, top: 50, right: 20, bottom: 70, left: 80 });
 
     var xSide = bounds.innerWidth / state.kreisList.length;
     var ySide = bounds.innerHeight / state.agesList.length;
@@ -106,6 +106,10 @@
 
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('top').slant('diagonal').tickSize(0, 0).tickPadding(0);
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
+
+    var legend = sszvis.legend.colorRange()
+      .scale(colorScale)
+      .width(bounds.width / 2);
 
     var tooltipHeaderText = sszvis.component.modularText()
       .bold(cAcc)
@@ -146,6 +150,10 @@
     chart.selectGroup('yAxis')
       .attr('transform', 'translate(-10, 0)')
       .call(yAxis);
+
+    chart.selectGroup('legend')
+      .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
+      .call(legend);
   }
 
   function parseKreisInt(k) {

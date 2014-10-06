@@ -66,7 +66,7 @@
   };
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 600, height: 440, top: 50, right: 10, bottom: 10, left: 50 });
+    var bounds = sszvis.bounds({ width: 600, height: 500, top: 50, right: 10, bottom: 70, left: 50 });
 
     var xSide = bounds.innerWidth / state.manAgeList.length;
     var ySide = bounds.innerHeight / state.womAgeList.length;
@@ -101,6 +101,10 @@
     var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('top').tickSize(0, 0).tickPadding(0);
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
 
+    var legend = sszvis.legend.colorRange()
+      .scale(colorScale)
+      .width(bounds.width / 2);
+
     var tooltipHeaderText = sszvis.component.modularText()
       .bold(cAcc);
 
@@ -134,6 +138,10 @@
     chart.selectGroup('yAxis')
       .attr('transform', 'translate(-10, 0)')
       .call(yAxis);
+
+    chart.selectGroup('legend')
+      .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
+      .call(legend);
   }
 
 }());
