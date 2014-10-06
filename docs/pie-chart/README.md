@@ -18,8 +18,8 @@
         "docs/pie-chart/data/P_subcategories.csv"
     ],
     "size": {
-        "width": 400,
-        "height": 400
+        "width": 450,
+        "height": 300
     }
 }
 ```
@@ -32,8 +32,8 @@
         "docs/pie-chart/data/P_7Categories.csv"
     ],
     "size": {
-        "width": 400,
-        "height": 400
+        "width": 500,
+        "height": 300
     }
 }
 ```

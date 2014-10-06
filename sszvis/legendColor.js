@@ -8,7 +8,7 @@ namespace('sszvis.legend.color', function(module) {
   module.exports = function() {
     return d3.component()
       .prop('scale')
-      .prop('width')
+      .prop('width').width(0)
       .prop('rows').rows(3)
       .prop('columns').columns(3)
       .prop('orientation')

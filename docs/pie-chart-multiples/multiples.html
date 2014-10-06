@@ -132,6 +132,11 @@
       .rows(2)
       .cols(3);
 
+    var colorLegend = sszvis.legend.color()
+      .scale(cScale)
+      .rows(state.categories.length)
+      .orientation('vertical');
+
     var pieCharts = chart.selectGroup('piecharts')
       .call(multiplesMaker);
 
@@ -149,6 +154,10 @@
 
     var slices = pieCharts.selectAll('path')
       .call(hoverBehavior);
+
+    chart.selectGroup('colorLegend')
+      .attr('transform', 'translate(' + (bounds.innerWidth - 200) + ', ' + (bounds.innerHeight - 190) + ')')
+      .call(colorLegend);
   }
 
 }());

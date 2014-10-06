@@ -71,7 +71,7 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 200, top: 20, right: 14, bottom: 52, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 340, top: 20, right: 14, bottom: 180, left: 10 });
 
     var xScale = d3.scale.linear()
       .domain([0, state.maxStacked])
@@ -101,6 +101,12 @@
       .titleOffset(40);
 
     var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('right');
+
+    var colorLegend = sszvis.legend.color()
+      .scale(cScale)
+      .orientation('horizontal')
+      .columns(2)
+      .width(bounds.innerWidth);
 
     var tooltipText = sszvis.component.modularText()
       .bold(sszvis.fn.compose(sszvis.format.percent, function(d) { return xAcc(d) / 100; }));
@@ -135,6 +141,10 @@
     chart.selectGroup('yAxis')
       .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
       .call(yAxis);
+
+    chart.selectGroup('colorLegend')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 55) + ')')
+      .call(colorLegend);
   }
 
 }());

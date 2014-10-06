@@ -21,7 +21,7 @@
     hoveredDatum: {}
   };
 
-  var bounds = sszvis.bounds({ width: 400, height: 400, top: 60, right: 60, bottom: 60, left: 60 });
+  var bounds = sszvis.bounds({ width: 500, height: 300, top: 20, right: 230, bottom: 20, left: 20 });
 
   var vAcc = sszvis.fn.prop('value');
   var cAcc = sszvis.fn.prop('category');
@@ -90,9 +90,14 @@
       .range(sszvis.color.ranges.qualitative.qual12);
 
     var pieMaker = sszvis.component.pie()
-      .radius(bounds.innerWidth / 2)
+      .radius(Math.min(bounds.innerWidth / 2, bounds.innerHeight / 2))
       .angle(sszvis.fn.compose(aScale, vAcc))
       .fill(sszvis.fn.compose(cScale, cAcc));
+
+    var colorLegend = sszvis.legend.color()
+      .scale(cScale)
+      .rows(state.categories.length)
+      .orientation('vertical');
 
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.data);
@@ -106,6 +111,10 @@
 
     var slices = pie.selectAll('path')
       .call(hoverBehavior);
+
+    chart.selectGroup('colorLegend')
+      .attr('transform', 'translate(' + (bounds.innerWidth + 20) + ', 0)')
+      .call(colorLegend);
   }
 
 }());
