@@ -71,7 +71,7 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 280, height: 500, top: 20, right: 10, bottom: 40, left: 10 });
+    var bounds = sszvis.bounds({ width: 280, height: 670, top: 20, right: 20, bottom: 210, left: 10 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
@@ -109,6 +109,12 @@
       .title('Anzahl')
       .titleOffset(0);
 
+    var colorLegend = sszvis.legend.color()
+      .scale(cScale)
+      .width(bounds.innerWidth)
+      .rows(state.categories.length)
+      .orientation('vertical');
+
     var tooltipText = sszvis.component.modularText()
       .bold(yAcc);
 
@@ -142,6 +148,10 @@
     chart.selectGroup('yAxis')
       .attr('transform', 'translate(40, 0)')
       .call(yAxis);
+
+    chart.selectGroup('colorLegend')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
+      .call(colorLegend);
   }
 
 }());

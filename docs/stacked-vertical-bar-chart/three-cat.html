@@ -56,7 +56,7 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 500, top: 20, right: 10, bottom: 66, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 560, top: 20, right: 10, bottom: 126, left: 10 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
@@ -91,6 +91,11 @@
       .orient('right')
       .title('Anzahl');
 
+    var colorLegend = sszvis.legend.color()
+      .scale(cScale)
+      .width(bounds.innerWidth)
+      .orientation('vertical');
+
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.stackedData);
 
@@ -103,6 +108,10 @@
 
     chart.selectGroup('yAxis')
       .call(yAxis);
+
+    chart.selectGroup('colorLegend')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 60) + ')')
+      .call(colorLegend);
   }
 
 }());

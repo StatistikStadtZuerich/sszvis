@@ -18,8 +18,8 @@
         "docs/stacked-vertical-bar-chart/data/StVB_3Categories_yearly.csv"
     ],
     "size": {
-        "height": 500,
-        "width": 500
+        "width": 500,
+        "height": 560
     }
 }
 ```
@@ -32,7 +32,7 @@
         "docs/stacked-vertical-bar-chart/data/StVB_7Categories_yearly.csv"
     ],
     "size": {
-        "height": 500,
+        "height": 670,
         "width": 280
     }
 }
