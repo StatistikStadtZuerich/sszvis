@@ -27,7 +27,7 @@ namespace('sszvis.component.pie', function(module) {
           .startAngle(function(d) { return d.a0; })
           .endAngle(function(d) { return d.a1; });
 
-        var segments = selection.selectAll('path.sszvis-path')
+        var segments = selection.selectAll('.sszvis-path')
           .data(data);
 
         segments.enter()
@@ -41,6 +41,18 @@ namespace('sszvis.component.pie', function(module) {
           .attr('d', arcGen)
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(d) {
+            var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
+            var r = props.radius * 2/3;
+            return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
+          });
+
+        selection
+          .datum(data)
+          .call(tooltipAnchor)
+
       });
   };
 

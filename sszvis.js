@@ -58,6 +58,7 @@
    */
   d3.component = function() {
     var props = {};
+    var selectionRenderer = null;
     var renderer = identity;
 
     /**
@@ -66,6 +67,10 @@
      * @param  {d3.selection} selection Passed in by d3
      */
     function component(selection) {
+      if (selectionRenderer) {
+        selection.props = function(){ return clone(props); }
+        selectionRenderer.apply(selection, slice(arguments));
+      }
       selection.each(function() {
         this.__props__ = clone(props);
         renderer.apply(this, slice(arguments));
@@ -102,13 +107,18 @@
     }
 
     /**
-     * Get the props of this component
+     * Creates a render context for the given component's parent selection.
+     * Use this, when you need full control over the rendering of the component
+     * and you need access to the full selection instead of just the selection
+     * of one datum.
      *
-     * @return {Object} this component's props
+     * @param  {Function} callback
+     * @return {[d3.component]}
      */
-    component.getProps = function() {
-      return props;
-    };
+    component.renderSelection = function(callback) {
+      selectionRenderer = callback;
+      return component;
+    }
 
     /**
      * Creates a render context for the given component. Implements the
@@ -412,6 +422,7 @@ namespace('sszvis.cascade', function(module) {
 namespace('sszvis.bounds', function(module) {
 
   module.exports = function(bounds) {
+    bounds || (bounds = {});
     var height  = sszvis.fn.either(bounds.height, 100);
     var width   = sszvis.fn.either(bounds.width, 100);
     var padding = {
@@ -1885,6 +1896,186 @@ namespace('sszvis.component.tooltip', function(module) {
 
 
 /**
+ * Tooltip component
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.component.tooltip2', function(module) {
+
+  module.exports = function() {
+
+    var fn = sszvis.fn;
+    var renderer = tooltipRenderer();
+
+    return d3.component()
+      .delegate('header', renderer)
+      .delegate('body', renderer)
+      .delegate('orientation', renderer)
+      .prop('renderInto')
+      .prop('visible').visible(fn.constant(false))
+      .renderSelection(function(selection) {
+        var props = selection.props();
+
+        var tooltipData = [];
+        selection.each(function(d) {
+          var pos = this.getBoundingClientRect();
+          if (props.visible(d)) {
+            tooltipData.push({
+              datum: d,
+              x: pos.left,
+              y: pos.top
+            });
+          }
+        });
+
+        props.renderInto
+          .datum(tooltipData)
+          .call(renderer);
+      });
+  }
+
+
+  /**
+   * Tooltip renderer
+   * @private
+   */
+  var tooltipRenderer = function() {
+
+    var TIP_HEIGHT = 10;
+
+    var fn = sszvis.fn;
+
+    return d3.component()
+      .prop('header').header('')
+      .prop('body').body('')
+      .prop('orientation').orientation('bottom')
+      .renderSelection(function(selection) {
+
+        var tooltipData = selection.datum();
+        var data = tooltipData.map(fn.prop('datum'));
+        var props = selection.props();
+
+        var tooltip = selection.selectAll('.sszvis-tooltip')
+          .data(tooltipData)
+
+        tooltip.exit().remove();
+
+        var enterTooltip = tooltip.enter()
+          .append('div')
+          .style('pointer-events', 'none')
+          .classed('sszvis-tooltip', true);
+
+        var enterBox = enterTooltip.append('div')
+          .classed('sszvis-tooltip-box', true)
+
+        enterBox.append('div')
+          .classed('sszvis-tooltip-header', true);
+
+        enterBox.append('div')
+          .classed('sszvis-tooltip-body', true);
+
+        var enterTipholder = enterTooltip.append('div')
+          .classed('sszvis-tooltip-tipholder', true)
+          .classed('tip-top', props.orientation === 'top')
+          .classed('tip-bot', props.orientation === 'bottom')
+          .classed('tip-left', props.orientation === 'left')
+          .classed('tip-right', props.orientation === 'right');
+
+        var enterTip = enterTipholder.append('div')
+          .classed('sszvis-tooltip-tip', true)
+          .classed('tip-top', props.orientation === 'top')
+          .classed('tip-bot', props.orientation === 'bottom')
+          .classed('tip-left', props.orientation === 'left')
+          .classed('tip-right', props.orientation === 'right');
+
+        tooltip.select('.sszvis-tooltip-header')
+          .datum(fn.prop('datum'))
+          .html(props.header);
+
+        tooltip.select('.sszvis-tooltip-body')
+          .datum(fn.prop('datum'))
+          .html(props.body);
+
+        selection.selectAll('.sszvis-tooltip')
+          .each(function(d) {
+            d3.select(this).style({
+              left: d.x - this.offsetWidth / 2 + 'px',
+              top:  d.y - this.offsetHeight - TIP_HEIGHT + 'px'
+            });
+          });
+      });
+   };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Tooltip Anchor
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.component.tooltipAnchor', function(module) {
+
+  var fn = sszvis.fn;
+
+  module.exports = function() {
+
+    return d3.component()
+      .prop('debug')
+      .prop('position').position(d3.functor([0, 0]))
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var anchor = selection.selectAll('[data-tooltip-anchor]')
+          .data(data);
+
+        anchor.enter()
+          .append('g')
+          .attr('data-tooltip-anchor', '');
+
+        anchor
+          .attr('transform', fn.compose(translate, props.position));
+
+        anchor.exit().remove();
+
+
+        if (props.debug) {
+          var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
+            .data(data);
+
+          referencePoint.enter()
+            .append('circle')
+            .attr('data-tooltip-anchor-debug', '');
+
+          referencePoint
+            .attr('r', 2)
+            .attr('fill', '#fff')
+            .attr('stroke', '#f00')
+            .attr('stroke-width', 1.5)
+            .attr('transform', fn.compose(translate, props.position));
+
+          referencePoint.exit().remove();
+        }
+
+      });
+
+  };
+
+  function translate(position) {
+    return 'translate('+ position[0] +','+ position[1] +')';
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Stacked Chart
  * @return {d3.component}
  */
@@ -2131,7 +2322,7 @@ namespace('sszvis.component.pie', function(module) {
           .startAngle(function(d) { return d.a0; })
           .endAngle(function(d) { return d.a1; });
 
-        var segments = selection.selectAll('path.sszvis-path')
+        var segments = selection.selectAll('.sszvis-path')
           .data(data);
 
         segments.enter()
@@ -2145,10 +2336,23 @@ namespace('sszvis.component.pie', function(module) {
           .attr('d', arcGen)
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(d) {
+            var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
+            var r = props.radius * 2/3;
+            return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
+          });
+
+        selection
+          .datum(data)
+          .call(tooltipAnchor)
+
       });
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

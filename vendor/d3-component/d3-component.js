@@ -28,6 +28,7 @@
    */
   d3.component = function() {
     var props = {};
+    var selectionRenderer = null;
     var renderer = identity;
 
     /**
@@ -36,6 +37,10 @@
      * @param  {d3.selection} selection Passed in by d3
      */
     function component(selection) {
+      if (selectionRenderer) {
+        selection.props = function(){ return clone(props); }
+        selectionRenderer.apply(selection, slice(arguments));
+      }
       selection.each(function() {
         this.__props__ = clone(props);
         renderer.apply(this, slice(arguments));
@@ -72,13 +77,18 @@
     }
 
     /**
-     * Get the props of this component
+     * Creates a render context for the given component's parent selection.
+     * Use this, when you need full control over the rendering of the component
+     * and you need access to the full selection instead of just the selection
+     * of one datum.
      *
-     * @return {Object} this component's props
+     * @param  {Function} callback
+     * @return {[d3.component]}
      */
-    component.getProps = function() {
-      return props;
-    };
+    component.renderSelection = function(callback) {
+      selectionRenderer = callback;
+      return component;
+    }
 
     /**
      * Creates a render context for the given component. Implements the

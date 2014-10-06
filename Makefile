@@ -43,6 +43,8 @@ SOURCE_FILES = \
 	sszvis/component/modularText.js \
 	sszvis/component/ruler.js \
 	sszvis/component/tooltip.js \
+	sszvis/component/tooltip2.js \
+	sszvis/component/tooltipAnchor.js \
 	sszvis/component/stackedArea.js \
 	sszvis/component/stackedBar.js \
 	sszvis/component/textWrap.js \
