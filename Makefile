@@ -29,6 +29,7 @@ SOURCE_FILES = \
 	sszvis/parse.js \
 	sszvis/scale.js \
 	sszvis/axis.js \
+	sszvis/legendColor.js \
 	sszvis/createChart.js \
 	sszvis/createHtmlLayer.js \
 	sszvis/behavior/mouseover.js \

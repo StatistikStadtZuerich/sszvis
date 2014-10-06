@@ -41,6 +41,19 @@
   display: none;
 }
 
+/**
+ * Legend component - color legend
+ *
+ * @module sszvis/legend/color
+ */
+.sszvis-legend--label {
+  font-family: Arial, sans-serif;
+  fill: #909090;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+}
+
 
 /**
  * Bar component

@@ -18,8 +18,8 @@
         "docs/stacked-area-chart/data/SA_2Categories_yearly.csv"
     ],
     "size": {
-        "height": 442,
-        "width": 516
+        "width": 500,
+        "height": 600
     }
 }
 ```
@@ -32,8 +32,8 @@
         "docs/stacked-area-chart/data/SA_3Categories_yearly_zeroes.csv"
     ],
     "size": {
-        "height": 442,
-        "width": 516
+        "width": 516,
+        "height": 442
     }
 }
 ```
@@ -46,8 +46,8 @@
         "docs/stacked-area-chart/data/SA_7Kategories_yearly.csv"
     ],
     "size": {
-        "height": 442,
-        "width": 516
+        "width": 516,
+        "height": 442
     }
 }
 ```
