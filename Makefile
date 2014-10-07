@@ -26,6 +26,7 @@ SOURCE_FILES = \
 	sszvis/bounds.js \
 	sszvis/color.js \
 	sszvis/fn.js \
+	sszvis/transition.js \
 	sszvis/format.js \
 	sszvis/parse.js \
 	sszvis/scale.js \

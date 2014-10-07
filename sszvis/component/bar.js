@@ -31,6 +31,7 @@ namespace('sszvis.component.bar', function(module) {
 
         bars
           .transition()
+          .call(sszvis.transition)
           .attr('x', props.x)
           .attr('y', props.y)
           .attr('width', props.width)

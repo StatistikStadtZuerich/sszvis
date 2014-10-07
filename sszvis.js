@@ -781,6 +781,26 @@ namespace('sszvis.fn', function(module) {
 
 
 /**
+ * default transition attributes for sszvis
+ *
+ * @module sszvis/transition
+ */
+namespace('sszvis.transition', function(module) {
+
+  var defaultEase = d3.ease('poly-out', 4);
+
+  module.exports = function(transition) {
+    transition
+      .ease(defaultEase)
+      .duration(300);
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Formatting functions
  *
  * @module sszvis/format
@@ -1522,6 +1542,7 @@ namespace('sszvis.component.bar', function(module) {
 
         bars
           .transition()
+          .call(sszvis.transition)
           .attr('x', props.x)
           .attr('y', props.y)
           .attr('width', props.width)
