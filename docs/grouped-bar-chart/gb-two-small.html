@@ -101,7 +101,7 @@
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
-      .width(bounds.innerWidth)
+      .width(360) // magic number width creates a nice layout
       .columns(5)
       .orientation('horizontal');
 
@@ -119,7 +119,7 @@
       .call(yAxis);
 
     chart.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 115) + ')')
+      .attr('transform', 'translate(0, 10)')
       .call(colorLegend);
   }
 
