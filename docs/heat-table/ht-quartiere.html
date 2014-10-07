@@ -100,8 +100,20 @@
       .fill(cValue)
       .stroke(function(d) { return d === state.hoveredDatum ? d3.hsl(cValue(d)).darker(0.4) : "none" });
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('top').slant('diagonal').tickSize(0, 0).tickPadding(0);
-    var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('top')
+      .slant('diagonal')
+      .tickSize(0, 0)
+      .tickPadding(0)
+      .title('Ländergruppe')
+      .titleOffset(90);
+
+    var yAxis = sszvis.axis.y.ordinal()
+      .scale(yScale)
+      .orient('left')
+      .title('Quartier')
+      .titleOffset(12);
 
     var legend = sszvis.legend.colorRange()
       .scale(colorScale)

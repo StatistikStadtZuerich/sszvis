@@ -66,7 +66,7 @@
   };
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 600, height: 500, top: 50, right: 10, bottom: 70, left: 50 });
+    var bounds = sszvis.bounds({ width: 600, height: 480, top: 70, right: 10, bottom: 76, left: 120 });
 
     var xSide = bounds.innerWidth / state.manAgeList.length;
     var ySide = bounds.innerHeight / state.womAgeList.length;
@@ -98,8 +98,19 @@
       .fill(cValue)
       .stroke(function(d) { return d === state.hoveredDatum ? d3.hsl(cValue(d)).darker(0.4) : "none" });
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('top').tickSize(0, 0).tickPadding(0);
-    var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('top')
+      .tickSize(0, 0)
+      .tickPadding(0)
+      .title('Altersgruppe Männer')
+      .titleOffset(30);
+
+    var yAxis = sszvis.axis.y.ordinal()
+      .scale(yScale)
+      .orient('left')
+      .title('Altersgruppe Frauen')
+      .titleOffset(10);
 
     var legend = sszvis.legend.colorRange()
       .scale(colorScale)

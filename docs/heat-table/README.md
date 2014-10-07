@@ -63,7 +63,7 @@ The following configuration options are available:
     ],
     "size": {
         "width": 600,
-        "height": 500
+        "height": 480
     }
 }
 ```

@@ -72,7 +72,7 @@
   };
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 460, height: 760, top: 50, right: 20, bottom: 70, left: 80 });
+    var bounds = sszvis.bounds({ width: 460, height: 760, top: 70, right: 20, bottom: 50, left: 80 });
 
     var xSide = bounds.innerWidth / state.kreisList.length;
     var ySide = bounds.innerHeight / state.agesList.length;
@@ -104,8 +104,20 @@
       .fill(cValue)
       .stroke(function(d) { return d === state.hoveredDatum ? d3.hsl(cValue(d)).darker(0.4) : "none" });
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('top').slant('diagonal').tickSize(0, 0).tickPadding(0);
-    var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('left');
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('top')
+      .slant('diagonal')
+      .tickSize(0, 0)
+      .tickPadding(0)
+      .title('Kreis')
+      .titleOffset(40);
+
+    var yAxis = sszvis.axis.y.ordinal()
+      .scale(yScale)
+      .orient('left')
+      .title('Altersgruppe')
+      .titleOffset(10);
 
     var legend = sszvis.legend.colorRange()
       .scale(colorScale)
@@ -152,7 +164,7 @@
       .call(yAxis);
 
     chart.selectGroup('legend')
-      .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
+      .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 20) + ')')
       .call(legend);
   }
 
