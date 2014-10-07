@@ -32,8 +32,8 @@
         "docs/stacked-vertical-bar-chart/data/StVB_7Categories_yearly.csv"
     ],
     "size": {
-        "height": 670,
-        "width": 280
+        "height": 500,
+        "width": 500
     }
 }
 ```

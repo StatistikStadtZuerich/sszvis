@@ -71,7 +71,7 @@
     });
 
   function render(state) {
-    var bounds = sszvis.bounds({ width: 280, height: 670, top: 20, right: 20, bottom: 210, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 500, top: 20, right: 240, bottom: 40, left: 10 });
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
@@ -150,7 +150,7 @@
       .call(yAxis);
 
     chart.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
+      .attr('transform', 'translate(' + (bounds.innerWidth + 5) + ', 0)')
       .call(colorLegend);
   }
 
