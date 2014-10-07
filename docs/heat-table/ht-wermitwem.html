@@ -114,7 +114,8 @@
 
     var legend = sszvis.legend.colorRange()
       .scale(colorScale)
-      .width(bounds.width / 2);
+      .width(bounds.width / 2)
+      .units('Personen');
 
     var tooltipHeaderText = sszvis.component.modularText()
       .bold(cAcc);

@@ -1277,6 +1277,8 @@ namespace('sszvis.legend.colorRange', function(module) {
       .prop('scale')
       .prop('width')
       .prop('segments').segments(8)
+      .prop('units').units(false)
+      .prop('labelPadding').labelPadding(16)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -1315,6 +1317,8 @@ namespace('sszvis.legend.colorRange', function(module) {
           .attr('r', segHeight / 2)
           .attr('fill', function(d) { return props.scale(d); });
 
+        if (props.units) startEnd[1] += ' ' + props.units;
+
         var labels = selection.selectAll('.sszvis-legend--label')
           .data(startEnd);
 
@@ -1327,7 +1331,7 @@ namespace('sszvis.legend.colorRange', function(module) {
         labels
           .attr('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
           .attr('alignment-baseline', 'central')
-          .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * 18) + ', ' + (segHeight / 2) + ')'; })
+          .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
           .text(function(d) { return d; });
       });
   };
