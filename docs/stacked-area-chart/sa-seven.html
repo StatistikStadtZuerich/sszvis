@@ -85,8 +85,10 @@
 
       var colorLegend = sszvis.legend.color()
         .scale(cScale)
-        .width(bounds.innerWidth)
+        .width(bounds.innerWidth + 50) // magic number here adjusts the spacing of the columns in the color legend
         .rows(4)
+        // reverse the order of items in the color legend (for reasons discussed in sa-two.html)
+        .reverse(true)
         .orientation('vertical');
 
       var chart = sszvis.createChart('#chart', bounds)

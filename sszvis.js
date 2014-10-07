@@ -1189,11 +1189,16 @@ namespace('sszvis.legend.color', function(module) {
       .prop('rows').rows(3)
       .prop('columns').columns(3)
       .prop('orientation')
+      .prop('reverse').reverse(false)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
         var domain = props.scale.domain();
+
+        if (props.reverse) {
+          domain = domain.slice().reverse();
+        }
 
         var rows, cols;
         if (props.orientation === 'horizontal') {

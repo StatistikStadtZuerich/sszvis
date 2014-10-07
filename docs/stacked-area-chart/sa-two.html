@@ -96,6 +96,10 @@
       var colorLegend = sszvis.legend.color()
         .scale(cScale)
         .width(bounds.innerWidth)
+        // copy and reverse the order of the legend - this way the top layer in the stack
+        // (which is the last dataset and therefore the final category in the color scale)
+        // corresponds to the first category of the legend.
+        .reverse(true)
         .orientation('vertical');
 
       var chart = sszvis.createChart('#chart', bounds)
