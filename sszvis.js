@@ -964,7 +964,7 @@ namespace('sszvis.axis', function(module) {
 
     var stringEqual = function(a, b) {
       return a.toString() === b.toString();
-    }
+    };
 
     var axisTimeFormat = d3.time.format.multi([
       [".%L", function(d) { return d.getMilliseconds(); }],
@@ -980,8 +980,7 @@ namespace('sszvis.axis', function(module) {
     var axis = function() {
       var axisDelegate = d3.svg.axis();
 
-      return d3.component()
-        .prop('_axisDelegate')._axisDelegate(axisDelegate)
+      var axisComponent = d3.component()
         .delegate('scale', axisDelegate)
         .delegate('orient', axisDelegate)
         .delegate('ticks', axisDelegate)
@@ -1085,9 +1084,12 @@ namespace('sszvis.axis', function(module) {
                 }
               });
           }
-
         });
-    }
+
+        axisComponent.__delegate = axisDelegate;
+
+        return axisComponent;
+    };
 
     var set_ordinal_ticks = function(count) {
       // in this function, the "this" context should be an sszvis.axis
@@ -1104,6 +1106,8 @@ namespace('sszvis.axis', function(module) {
       if (typeof domain[domain.length - 1] !== 'undefined') values.push(domain[domain.length - 1]);
 
       this.tickValues(values);
+
+      return count;
     };
 
     var axis_x = function() {
@@ -1118,9 +1122,8 @@ namespace('sszvis.axis', function(module) {
       return axis_x()
         .tickFormat(axisTimeFormat)
         .alignOuterLabels(true);
-    }
+    };
 
-    // TODO: create an ordinal axis that doesn't have to show every label
     axis_x.ordinal = function() {
       return axis_x()
         // extend this class a little with a custom implementation of 'ticks'
@@ -1128,7 +1131,32 @@ namespace('sszvis.axis', function(module) {
         // including the first and last value in the ordinal scale
         .prop('ticks', set_ordinal_ticks)
         .tickFormat(format.text);
-    }
+    };
+
+    // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
+    axis_x.pyramid = function() {
+      return axis_x()
+        .ticks(10)
+        .prop("scale", function(s) {
+          var extended = s.copy(),
+              domain = extended.domain(),
+              range = extended.range();
+
+          extended
+            // the domain is mirrored - ±domain[1]
+            .domain([-domain[1], domain[1]])
+            // the extent of the range is doubled
+            .range([range[0], range[1] + (range[1] - range[0])]);
+
+          this.__delegate.scale(extended);
+          return extended;
+        })
+        .tickFormat(function(v) {
+          // this tick format means that the axis appears to be divergent around 0
+          // when in fact it is -domain[1] -> +domain[1]
+          return format.number(Math.abs(v));
+        });
+    };
 
     var axis_y = function() {
       return axis()
@@ -1139,23 +1167,23 @@ namespace('sszvis.axis', function(module) {
           return 0 === d ? null : format.number(d);
         })
         .vertical(true);
-    }
+    };
 
     axis_y.time = function() {
       return axis_y().tickFormat(axisTimeFormat);
-    }
+    };
 
     axis_y.ordinal = function() {
       return axis_y()
         // add custom 'ticks' function
         .prop('ticks', set_ordinal_ticks)
         .tickFormat(format.text);
-    }
+    };
 
     return {
       x: axis_x,
       y: axis_y
-    }
+    };
 
   }());
 
@@ -1193,7 +1221,7 @@ namespace('sszvis.axis', function(module) {
           .attr("transform", "rotate(-45)");
       }
     }
-  }
+  };
 
 });
 

@@ -63,7 +63,7 @@
     });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 600, height: 540, top: 30, right: 10, bottom: 60, left: 20 });
+      var bounds = sszvis.bounds({ width: 600, height: 540, top: 30, right: 10, bottom: 70, left: 20 });
 
       var groupPadding = 0.5;
 
@@ -88,6 +88,10 @@
         .barWidth(positionScale.rangeBand())
         .extentValue(sszvis.fn.compose(lengthScale, vAcc))
         .fill(sszvis.fn.compose(colorScale, groupAndStackAcc));
+
+      var xAxis = sszvis.axis.x.pyramid()
+        .scale(lengthScale)
+        .orient('bottom');
 
       var yAxis = sszvis.axis.y.ordinal()
         .scale(positionScale)
@@ -119,12 +123,16 @@
       pyramidGen.direction('right');
       group2.call(pyramidGen);
 
+      chart.selectGroup('xAxis')
+        .attr('transform', 'translate(0, ' + (bounds.innerHeight) + ')')
+        .call(xAxis);
+
       chart.selectGroup('yAxis')
         .attr('transform', 'translate(-15, 0)')
         .call(yAxis);
 
       chart.selectGroup('colorLegend')
-        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 15) + ')')
+        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 30) + ')')
         .call(colorLegend);
     }
 
