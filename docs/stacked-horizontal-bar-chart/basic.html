@@ -105,8 +105,9 @@
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
       .orientation('horizontal')
-      .columns(2)
-      .width(bounds.innerWidth);
+      .rows(state.categories.length / 2)
+      .width(bounds.innerWidth)
+      .orientation('vertical');
 
     var tooltipText = sszvis.component.modularText()
       .bold(sszvis.fn.compose(sszvis.format.percent, function(d) { return xAcc(d) / 100; }));
