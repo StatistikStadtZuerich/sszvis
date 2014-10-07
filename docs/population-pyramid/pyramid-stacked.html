@@ -98,7 +98,8 @@
         .scale(colorScale)
         .orientation('vertical')
         .rows(2)
-        .width(bounds.innerWidth * 2 / 3);
+        .width(bounds.innerWidth * 2 / 3)
+        .reverse(true);
 
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.populations);
