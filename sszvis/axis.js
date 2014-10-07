@@ -30,6 +30,7 @@ namespace('sszvis.axis', function(module) {
       var axisDelegate = d3.svg.axis();
 
       return d3.component()
+        .prop('_axisDelegate')._axisDelegate(axisDelegate)
         .delegate('scale', axisDelegate)
         .delegate('orient', axisDelegate)
         .delegate('ticks', axisDelegate)
@@ -137,6 +138,23 @@ namespace('sszvis.axis', function(module) {
         });
     }
 
+    var set_ordinal_ticks = function(count) {
+      // in this function, the "this" context should be an sszvis.axis
+      var domain = this.scale().domain(),
+          values = [],
+          step = Math.round(domain.length / count);
+
+      // include the first value
+      if (typeof domain[0] !== 'undefined') values.push(domain[0]);
+      for (var i = step, l = domain.length; i < l - 1; i += step) {
+        if (typeof domain[i] !== 'undefined') values.push(domain[i]);
+      }
+      // include the last value
+      if (typeof domain[domain.length - 1] !== 'undefined') values.push(domain[domain.length - 1]);
+
+      this.tickValues(values);
+    };
+
     var axis_x = function() {
       return axis()
         .ticks(3)
@@ -153,7 +171,12 @@ namespace('sszvis.axis', function(module) {
 
     // TODO: create an ordinal axis that doesn't have to show every label
     axis_x.ordinal = function() {
-      return axis_x().tickFormat(format.text);
+      return axis_x()
+        // extend this class a little with a custom implementation of 'ticks'
+        // that allows you to set a custom number of ticks,
+        // including the first and last value in the ordinal scale
+        .prop('ticks', set_ordinal_ticks)
+        .tickFormat(format.text);
     }
 
     var axis_y = function() {
@@ -172,7 +195,10 @@ namespace('sszvis.axis', function(module) {
     }
 
     axis_y.ordinal = function() {
-      return axis_y().tickFormat(format.text);
+      return axis_y()
+        // add custom 'ticks' function
+        .prop('ticks', set_ordinal_ticks)
+        .tickFormat(format.text);
     }
 
     return {
