@@ -45,7 +45,7 @@
       });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 450, top: 10, right: 10, bottom: 30, left: 10 });
+      var bounds = sszvis.bounds({ width: 500, height: 450, top: 30, right: 10, bottom: 50, left: 10 });
 
       var xScale = d3.scale.linear()
         .domain(state.xRange)
@@ -64,12 +64,16 @@
 
       var xAxis = sszvis.axis.x()
         .scale(xScale)
-        .orient('bottom');
+        .orient('bottom')
+        .title('Altersdifferenz')
+        .titleOffset(35);
 
       var yAxis = sszvis.axis.y()
         .scale(yScale)
         .orient('right')
-        .halo(true);
+        .halo(true)
+        .title('Häufigkeit')
+        .titleOffset(10);
 
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.lineData);

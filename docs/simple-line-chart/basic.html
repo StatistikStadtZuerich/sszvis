@@ -45,7 +45,7 @@
       });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 450, top: 10, right: 10, bottom: 30, left: 10 });
+      var bounds = sszvis.bounds({ width: 500, height: 450, top: 30, right: 10, bottom: 40, left: 10 });
 
       var xScale = d3.scale.linear()
         .domain(state.years)
@@ -65,12 +65,16 @@
       var xAxis = sszvis.axis.x()
         .scale(xScale)
         .tickFormat(sszvis.format.text)
-        .orient('bottom');
+        .orient('bottom')
+        .title('Jahr')
+        .titleOffset(30);
 
       var yAxis = sszvis.axis.y()
         .scale(yScale)
         .orient('right')
-        .halo(true);
+        .halo(true)
+        .title('Wert')
+        .titleOffset(15)
 
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.lineData);

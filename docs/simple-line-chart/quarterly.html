@@ -43,7 +43,7 @@
       });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 480, top: 10, right: 10, bottom: 80, left: 10 });
+      var bounds = sszvis.bounds({ width: 500, height: 480, top: 40, right: 10, bottom: 80, left: 10 });
 
       var xScale = d3.time.scale()
         .range([0, bounds.innerWidth])
@@ -63,11 +63,15 @@
       var xAxis = sszvis.axis.x.time()
         .scale(xScale)
         .orient('bottom')
+        .title('Datum')
+        .titleOffset(40)
         .ticks(4);
 
       var yAxis = sszvis.axis.y()
         .scale(yScale)
         .orient('right')
+        .title('Wert')
+        .titleOffset(20)
         .halo(true);
 
       var chart = sszvis.createChart('#chart', bounds)
