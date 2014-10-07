@@ -2,24 +2,6 @@
 
 ## Simple Line Chart
 
-Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung eines Wertes darzustellen.
-
-```project
-{
-    "index": "docs/simple-line-chart/index.html",
-    "readme": "docs/simple-line-chart/README.md",
-    "files": [
-        "docs/simple-line-chart/data.csv"
-    ],
-    "size": {
-        "width": 500,
-        "height": 480
-    }
-}
-```
-
-[Projekt herunterladen](docs/simple-line-chart/simple-line-chart.zip) (ZIP. Nicht mehr aktuell, wird in Zukunft automatisch generiert)
-
 ### Datenformat
 
 Dieses Chart benötigt zwei Datenreihen:
@@ -34,14 +16,97 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 * `xAxis` – eine `d3`-Achsenfunktion
 * `yAxis` – eine `d3`-Achsenfunktion
 
+## Simple Line Chart
+
+Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung eines Wertes darzustellen.
+
+```project
+{
+    "index": "docs/simple-line-chart/quarterly.html",
+    "readme": "docs/simple-line-chart/README.md",
+    "files": [
+        "docs/simple-line-chart/data/SL_quarterly.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 480
+    }
+}
+```
+
+[Projekt herunterladen](docs/simple-line-chart/simple-line-chart.zip) (ZIP. Nicht mehr aktuell, wird in Zukunft automatisch generiert)
+
 ## Interaktiv
 
 ```project
 {
     "index": "docs/simple-line-chart/interactive.html",
+    "readme": "docs/simple-line-chart/README.md",
+    "files": [
+        "docs/simple-line-chart/data/SL_quarterly.csv"
+    ],
     "size": {
         "height": 442,
         "width": 516
     }
 }
 ```
+
+## Statisch
+
+```project
+{
+    "index": "docs/simple-line-chart/basic.html",
+    "readme": "docs/simple-line-chart/README.md",
+    "files": [
+        "docs/simple-line-chart/data/SL_Basic.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 450
+    }
+}
+```
+
+```project
+{
+    "index": "docs/simple-line-chart/daily.html",
+    "readme": "docs/simple-line-chart/README.md",
+    "files": [
+        "docs/simple-line-chart/data/SL_daily.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 450
+    }
+}
+```
+
+```project
+{
+    "index": "docs/simple-line-chart/negatives-x-axis.html",
+    "readme": "docs/simple-line-chart/README.md",
+    "files": [
+        "docs/simple-line-chart/data/SL_negativesXAxis.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 450
+    }
+}
+```
+
+```project
+{
+    "index": "docs/simple-line-chart/percentage-negatives-y-axis.html",
+    "readme": "docs/simple-line-chart/README.md",
+    "files": [
+        "docs/simple-line-chart/data/SL_Percentage_negativesYAxis.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 450
+    }
+}
+```
+

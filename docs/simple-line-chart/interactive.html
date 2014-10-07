@@ -48,7 +48,7 @@
         return {
           date:  sszvis.parse.date(d['Datum']),
           value: sszvis.parse.number(d['Wert'])
-        }
+        };
       })
       .get(function(error, data) {
         if (error) {

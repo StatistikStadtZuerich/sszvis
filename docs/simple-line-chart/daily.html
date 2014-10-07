@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Line Chart</title>
+
+  <link rel="stylesheet" type="text/css" href="../../sszvis.css">
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+  <div id="chart"></div>
+  <script>
+  (function() {
+
+    var state = {
+      data: []
+    };
+
+    var xAcc = sszvis.fn.prop('date');
+    var yAcc = sszvis.fn.prop('value');
+
+    d3.csv('data/SL_daily.csv')
+      .row(function(d) {
+        return {
+          date:  sszvis.parse.date(d['Datum']),
+          value: sszvis.parse.number(d['Regen'])
+        };
+      })
+      .get(function(error, data) {
+        if (error) {
+          console.log('error loading data: ', error);
+          return;
+        }
+
+        state.data = data;
+
+        state.dates = d3.extent(state.data, xAcc);
+
+        state.lineData = [state.data];
+
+        render(state);
+      });
+
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 500, height: 450, top: 10, right: 10, bottom: 30, left: 10 });
+
+      var xScale = d3.time.scale()
+        .domain(state.dates)
+        .range([0, bounds.innerWidth]);
+
+      var yScale = d3.scale.linear()
+        .domain([0, d3.max(state.data, yAcc)])
+        .range([bounds.innerHeight, 0]);
+
+      var line = sszvis.component.line()
+        .x(xAcc)
+        .y(yAcc)
+        .xScale(xScale)
+        .yScale(yScale)
+        .stroke(sszvis.color.values.basicBlue);
+
+      var xAxis = sszvis.axis.x.time()
+        .scale(xScale)
+        .orient('bottom');
+
+      var yAxis = sszvis.axis.y()
+        .scale(yScale)
+        .orient('right')
+        .halo(true);
+
+      var chart = sszvis.createChart('#chart', bounds)
+        .datum(state.lineData);
+
+      chart.selectGroup('line')
+        .call(line);
+
+      chart.selectGroup('xAxis')
+        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .call(xAxis);
+
+      chart.selectGroup('yAxis')
+        .call(yAxis);
+    }
+
+  }());
+  </script>
+</body>
+</html>
