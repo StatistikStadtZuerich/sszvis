@@ -5,8 +5,8 @@ Gross- und Detailhandel,Beschäftigung,24
 Gastgewerbe,Beschäftigung,9
 Transport & Kommunikation,Beschäftigung,6
 Finanzsektor,Beschäftigung,38
-Immobilien, F&E, Informatik,Beschäftigung,34
-Verwaltung, Gesundheit- und Sozialwesen,Beschäftigung,33
+"Immobilien, F&E, Informatik",Beschäftigung,34
+"Verwaltung, Gesundheit- und Sozialwesen",Beschäftigung,33
 Vermietung und Dienstleistung Haushalte,Beschäftigung,27
 Industrie,BIP,50
 Baugewerbe,BIP,47
@@ -14,6 +14,6 @@ Gross- und Detailhandel,BIP,2
 Gastgewerbe,BIP,9
 Transport & Kommunikation,BIP,5
 Finanzsektor,BIP,1
-Immobilien, F&E, Informatik,BIP,35
-Verwaltung, Gesundheit- und Sozialwesen,BIP,24
+"Immobilien, F&E, Informatik",BIP,35
+"Verwaltung, Gesundheit- und Sozialwesen",BIP,24
 Vermietung und Dienstleistung Haushalte,BIP,34

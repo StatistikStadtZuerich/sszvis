@@ -451,7 +451,8 @@ namespace('sszvis.color', function(module) {
 
   module.exports.values = {
     basicBlue: "#6392C5",
-    basicDeepBlue: "#3A75B2"
+    basicDeepBlue: "#3A75B2",
+    plainWhite: "#FFFFFF"
   };
 
   module.exports.ranges = {
@@ -1590,12 +1591,12 @@ namespace('sszvis.component.bar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var bars = selection.selectAll('rect.sszvis-bar')
+        var bars = selection.selectAll('.sszvis-bar')
           .data(data);
 
         bars.enter()
           .append('rect')
-          .attr('class', 'sszvis-bar');
+          .classed('sszvis-bar', true);
 
         bars.exit().remove();
 
@@ -1615,6 +1616,48 @@ namespace('sszvis.component.bar', function(module) {
 
 });
 
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Dot component
+ * @return {d3.component}
+ */
+namespace('sszvis.component.dot', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('x')
+      .prop('y')
+      .prop('radius')
+      .prop('stroke')
+      .prop('fill')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var dots = selection.selectAll('.sszvis-circle')
+          .data(data);
+
+        dots.enter()
+          .append('circle')
+          .classed('sszvis-circle', true);
+
+        dots.exit().remove();
+
+        dots
+          .transition()
+          .call(sszvis.transition)
+          .attr('cx', props.x)
+          .attr('cy', props.y)
+          .attr('r', props.radius)
+          .attr('stroke', props.stroke)
+          .attr('fill', props.fill);
+      });
+  };
+
+});
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

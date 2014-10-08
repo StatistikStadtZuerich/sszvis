@@ -2,7 +2,8 @@ namespace('sszvis.color', function(module) {
 
   module.exports.values = {
     basicBlue: "#6392C5",
-    basicDeepBlue: "#3A75B2"
+    basicDeepBlue: "#3A75B2",
+    plainWhite: "#FFFFFF"
   };
 
   module.exports.ranges = {

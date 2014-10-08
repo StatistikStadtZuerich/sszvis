@@ -39,6 +39,7 @@ SOURCE_FILES = \
 	sszvis/behavior/move.js \
 	sszvis/segmentedControl.js \
 	sszvis/component/bar.js \
+	sszvis/component/dot.js \
 	sszvis/component/groupedBars.js \
 	sszvis/component/line.js \
 	sszvis/component/modularText.js \
