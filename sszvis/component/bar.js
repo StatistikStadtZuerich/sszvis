@@ -21,7 +21,7 @@ namespace('sszvis.component.bar', function(module) {
 
         bars.enter()
           .append('rect')
-          .attr('class', 'sszvis-bar');
+          .classed('sszvis-bar', true);
 
         bars.exit().remove();
 
