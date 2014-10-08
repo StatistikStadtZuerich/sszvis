@@ -58,10 +58,8 @@
         .range([bounds.innerHeight, 0]);
 
       var line = sszvis.component.line()
-        .x(xAcc)
-        .y(yAcc)
-        .xScale(xScale)
-        .yScale(yScale)
+        .xValue(sszvis.fn.compose(xScale, xAcc))
+        .yValue(sszvis.fn.compose(yScale, yAcc))
         .stroke(sszvis.color.values.basicBlue);
 
       var xAxis = sszvis.axis.x.time()

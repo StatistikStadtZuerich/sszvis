@@ -6,29 +6,27 @@ namespace('sszvis.component.line', function(module) {
 
   module.exports = function() {
 
-    var fn = sszvis.fn;
-
     return d3.component()
-      .prop('x')
-      .prop('y')
-      .prop('xScale')
-      .prop('yScale')
+      .prop('xValue')
+      .prop('yValue')
       .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var line = d3.svg.line()
-          .defined(fn.compose(fn.not(isNaN), props.y))
-          .x(fn.compose(props.xScale, props.x))
-          .y(fn.compose(props.yScale, props.y))
+        console.log(props.xValue, props.yValue);
 
-        var path = selection.selectAll('path.sszvis-line')
-          .data(data)
+        var line = d3.svg.line()
+          .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), props.yValue))
+          .x(props.xValue)
+          .y(props.yValue);
+
+        var path = selection.selectAll('.sszvis-line')
+          .data(data);
 
         path.enter()
           .append('path')
-          .classed("sszvis-line", true)
+          .classed("sszvis-line", true);
 
         path.exit().remove();
 

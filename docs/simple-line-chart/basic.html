@@ -56,10 +56,8 @@
         .range([bounds.innerHeight, 0]);
 
       var line = sszvis.component.line()
-        .x(xAcc)
-        .y(yAcc)
-        .xScale(xScale)
-        .yScale(yScale)
+        .xValue(sszvis.fn.compose(xScale, xAcc))
+        .yValue(sszvis.fn.compose(yScale, yAcc))
         .stroke(sszvis.color.values.basicBlue);
 
       var xAxis = sszvis.axis.x()
@@ -74,7 +72,7 @@
         .orient('right')
         .halo(true)
         .title('Wert')
-        .titleOffset(15)
+        .titleOffset(15);
 
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.lineData);
