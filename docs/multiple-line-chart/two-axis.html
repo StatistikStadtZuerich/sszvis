@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Multiple Line Chart</title>
+
+  <link rel="stylesheet" type="text/css" href="../../sszvis.css">
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+  <div id="chart"></div>
+  <script>
+  (function() {
+
+    var state = {
+      data: []
+    };
+
+    var xAcc = sszvis.fn.prop('date');
+    var yAcc = sszvis.fn.prop('value');
+    var cAcc = sszvis.fn.prop('region');
+
+    // a few helpers to distinguish between data that belongs on axis1 (left) and axis2 (right)
+    var axis2 = ['Schweiz']; // the values for "Region" that go in axis2
+    var valueIsOnAxis2 = function(v) { return axis2.indexOf(v) >= 0; };
+    var datumIsOnAxis2 = sszvis.fn.compose(valueIsOnAxis2, cAcc);
+
+    d3.csv('data/S_2yAxis.csv')
+      .row(function(d) {
+        return {
+          date: sszvis.parse.date(d['Jahr']),
+          region: d['Region'],
+          value: sszvis.parse.number(d['Schweiz'])
+        };
+      })
+      .get(function(error, data) {
+        if (error) {
+          console.log('error loading data: ', error);
+          return;
+        }
+
+        state.data = data;
+
+        var grouped = sszvis.cascade()
+          .arrayBy(cAcc, d3.ascending);
+
+        state.lineData = grouped.apply(state.data);
+
+        state.dates = d3.extent(state.data, xAcc);
+
+        // compute two different maximum y values - one for each axis
+        state.axis1maxY = d3.max(state.data.filter(sszvis.fn.not(datumIsOnAxis2)), yAcc);
+
+        state.axis2maxY = d3.max(state.data.filter(datumIsOnAxis2), yAcc);
+
+        // two different sets of categories for two color scales
+        state.categories1 = sszvis.fn.set(state.data.filter(sszvis.fn.not(datumIsOnAxis2)), cAcc);
+
+        state.categories2 = sszvis.fn.set(state.data.filter(datumIsOnAxis2), cAcc);
+
+        render(state);
+      });
+
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 500, height: 520, top: 10, right: 10, bottom: 95, left: 10 });
+
+      var xScale = d3.time.scale()
+        .domain(state.dates)
+        .range([0, bounds.innerWidth]);
+
+      var yScale1 = d3.scale.linear()
+        .domain([0, state.axis1maxY])
+        .range([bounds.innerHeight, 0]);
+
+      var yScale2 = d3.scale.linear()
+        .domain([0, state.axis2maxY])
+        .range([bounds.innerHeight, 0]);
+
+      var cScale1 = d3.scale.ordinal()
+        .domain(state.categories1)
+        .range(sszvis.color.ranges.qualitative.qual6);
+
+      var cScale2 = d3.scale.ordinal()
+        .domain(state.categories2)
+        // make a defensive copy with slice before reversing because .reverse() is a mutative operation.
+        .range(sszvis.color.ranges.qualitative.qual12.slice().reverse())
+
+      var line = sszvis.component.line()
+        .xValue(sszvis.fn.compose(xScale, xAcc))
+        .yValue(function(d) {
+          return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
+        })
+        // called on the line as a whole - this function needs to access the first item in the line
+        .stroke(function(lineData) {
+          var d = lineData[0];
+          return !datumIsOnAxis2(d) ? cScale1(cAcc(d)) : cScale2(cAcc(d));
+        });
+
+      var xAxis = sszvis.axis.x.time()
+        .scale(xScale)
+        .orient('bottom');
+
+      var yAxis1 = sszvis.axis.y()
+        .scale(yScale1)
+        .orient('right')
+        .halo(true);
+
+      var yAxis2 = sszvis.axis.y()
+        .scale(yScale2)
+        .orient('left')
+        .halo(true);
+
+      var cLegend1 = sszvis.legend.color()
+        .scale(cScale1)
+        .orientation('vertical');
+
+      var cLegend2 = sszvis.legend.color()
+        .scale(cScale2)
+        .orientation('vertical');
+
+      var chart = sszvis.createChart('#chart', bounds)
+        .datum(state.lineData);
+
+      chart.selectGroup('line')
+        .call(line);
+
+      chart.selectGroup('xAxis')
+        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .call(xAxis);
+
+      chart.selectGroup('yAxis1')
+        .call(yAxis1);
+
+      chart.selectGroup('yAxis2')
+        .attr('transform', 'translate(' + (bounds.innerWidth) + ', 0)')
+        .call(yAxis2);
+
+      chart.selectGroup('cScale1')
+        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 30) + ')')
+        .call(cLegend1);
+
+      chart.selectGroup('cScale2')
+        .attr('transform', 'translate(' + (bounds.innerWidth - 65) + ',' + (bounds.innerHeight + 30) + ')')
+        .call(cLegend2);
+    }
+
+  }());
+  </script>
+</body>
+</html>

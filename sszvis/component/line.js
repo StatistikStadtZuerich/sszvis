@@ -24,12 +24,12 @@ namespace('sszvis.component.line', function(module) {
 
         path.enter()
           .append('path')
-          .classed("sszvis-line", true);
+          .classed('sszvis-line', true);
 
         path.exit().remove();
 
         path
-          .attr("d", line)
+          .attr('d', line)
           .attr('stroke', props.stroke);
       });
   }
