@@ -58,7 +58,7 @@ Wünsche:
 In Bezug auf D3
 
 * Nahe am Stil von D3 bleiben
-* Nahe an online verfügbaren Beispielen bleiben
+* Nahe an online verfügbaren Beispiele bleiben
 * Schlechte Abstraktionen vermeiden
 * Kontrolle vor Konfiguration
 

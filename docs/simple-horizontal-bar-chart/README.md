@@ -16,7 +16,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 * `xAxis` - eine `d3`-Achsenfunktion
 * `yAxis` - eine `d3`-Achsenfunktion
 
-## Beispielen
+## Beispiele
 
 ```project
 {
