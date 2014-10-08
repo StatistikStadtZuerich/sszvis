@@ -14,8 +14,6 @@ namespace('sszvis.component.line', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        console.log(props.xValue, props.yValue);
-
         var line = d3.svg.line()
           .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), props.yValue))
           .x(props.xValue)
