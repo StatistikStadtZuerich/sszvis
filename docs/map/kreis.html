@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+
+  <link rel="stylesheet" type="text/css" href="../../sszvis.css">
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+  <div id="chart"></div>
+  <script>
+  (function() {
+
+    var state = {
+      data: []
+    };
+
+    d3.csv('data/M_kreis.csv')
+      .row(function(d) {
+        return {
+          kreisnum: sszvis.parse.number(d['KNr']),
+          name: d['Kname'],
+          value: sszvis.parse.number(d['Bevölkerung'])
+        };
+      })
+      .get(function(error, data) {
+        if (error) {
+          console.log('error loading data: ', error);
+          return;
+        }
+
+        state.data = data;
+
+        render(state);
+      });
+
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 500, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
+
+      var map = sszvis.map()
+        .type('zurich-stadtkreise')
+        .width(bounds.innerWidth)
+        .height(bounds.innerHeight);
+
+      var chart = sszvis.createChart('#chart', bounds)
+        .datum(state.data);
+
+      chart.call(map);
+    }
+
+  }());
+  </script>
+</body>
+</html>

@@ -52,7 +52,10 @@ SOURCE_FILES = \
 	sszvis/component/textWrap.js \
 	sszvis/component/pie.js \
 	sszvis/component/multiples.js \
-	sszvis/component/pyramid.js
+	sszvis/component/pyramid.js \
+	sszvis/map/map.js \
+	sszvis/map/switzerland.js \
+	sszvis/map/zurich.js
 
 section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))

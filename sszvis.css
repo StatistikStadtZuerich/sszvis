@@ -75,6 +75,17 @@
 }
 
 /**
+ * Map component
+ *
+ * @module sszvis/map
+ */
+.sszvis-map {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1;
+}
+
+/**
  * Segmented Control component
  *
  * @module sszvis/control/segmented
