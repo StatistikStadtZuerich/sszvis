@@ -16,7 +16,7 @@ namespace('sszvis.component.bar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var bars = selection.selectAll('rect.sszvis-bar')
+        var bars = selection.selectAll('.sszvis-bar')
           .data(data);
 
         bars.enter()
