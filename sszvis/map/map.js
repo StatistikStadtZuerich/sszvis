@@ -28,6 +28,28 @@ namespace('sszvis.map', function(module) {
         return mercatorPath;
   }
 
+  var COMPILED_MAPS = {
+    compiled: false,
+    zurich: {},
+    switzerland: {}
+  };
+
+  function compile_maps() {
+    if (COMPILED_MAPS.compiled) return true;
+
+    var zuri_names = ['stadtkreise_geo', 'statistische_quartiere_geo', 'wahlkreise_geo'],
+        zuri_topology = sszvis.mapdata.zurich,
+        zuri_objects = zuri_topology.objects;
+
+    zuri_names.forEach(function(name) {
+      COMPILED_MAPS.zurich[name] = topojson.feature(zuri_topology, zuri_objects[name]);
+    });
+
+    COMPILED_MAPS.zurich.zurichsee_geo = topojson.feature(zuri_topology, zuri_objects.zurichsee_geo);
+
+    return COMPILED_MAPS.compiled = true;
+  }
+
   module.exports = function() {
     return d3.component()
       .prop('type')
@@ -35,32 +57,57 @@ namespace('sszvis.map', function(module) {
       .prop('height')
       .prop('fill')
       .render(function(data) {
+        if (typeof topojson === 'undefined') {
+          throw new Error('sszvis.map component requires topojson as an additional dependency');
+        }
+
+        compile_maps();
+
         var selection = d3.select(this);
         var props = selection.props();
 
         var mapData;
         switch (props.type) {
-          case 'zurich-stadtkreise': mapData = sszvis.data.zurich.stadtkreise; break;
-          case 'zurich-statistischeQuartiere': mapData = sszvis.data.zurich.statistischeQuartiere; break;
-          case 'zurich-wahlkreise': mapData = sszvis.data.zurich.wahlkreise; break;
+          case 'zurich-stadtkreise': mapData = COMPILED_MAPS.zurich.stadtkreise_geo; break;
+          case 'zurich-statistischeQuartiere': mapData = COMPILED_MAPS.zurich.statistische_quartiere_geo; break;
+          case 'zurich-wahlkreise': mapData = COMPILED_MAPS.zurich.wahlkreise_geo; break;
         }
 
         var mapPath = swissMapPath(props.width, props.height, mapData);
 
-        var shapes = selection.selectAll('.sszvis-map')
+        mapData.features.forEach(function(f) {
+          f._datum = data[f.id] || null;
+        });
+
+        var shapes = selection.selectAll('.sszvis-map-area')
           .data(mapData.features);
 
         shapes.enter()
           .append('path')
-          .classed('sszvis-map', true);
+          .classed('sszvis-map-area', true);
 
         shapes.exit().remove();
 
         shapes
           .attr('d', mapPath)
-          .attr('fill', function(d) {
-            console.log(d);
-          });
+          .attr('fill', function(d) { return props.fill(d._datum); });
+
+        // special rendering for lake zurich
+        // TODO: make this configuration better
+        if (props.type.indexOf('zurich') >= 0) {
+          var zurichSee = selection.selectAll('.sszvis-lake-zurich')
+            .data([COMPILED_MAPS.zurich.zurichsee_geo]);
+
+          zurichSee.enter()
+            .append('path')
+            .classed('sszvis-map-area sszvis-lake-zurich', true);
+
+          zurichSee.exit().remove();
+
+          zurichSee
+            .attr('d', mapPath)
+            .attr('fill', '#fff');
+        }
       });
   };
 

@@ -1,7 +1,7 @@
 /**
  * Hardcoded map data for the cantons of Switzerland
  */
-namespace('sszvis.data.switzerland', function(module) {
+namespace('sszvis.mapdata.switzerland', function(module) {
 
   module.exports = {};
 

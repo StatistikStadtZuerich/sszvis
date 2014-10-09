@@ -8,6 +8,7 @@
   <link rel="stylesheet" type="text/css" href="../../sszvis.css">
 
   <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/topojson/topojson.js"></script>
   <script src="../../sszvis.js"></script>
 </head>
 <body style="margin:0;padding:0;">
@@ -18,6 +19,9 @@
     var state = {
       data: []
     };
+
+    var vAcc = sszvis.fn.prop('value');
+    var nAcc = sszvis.fn.prop('kreisnum');
 
     d3.csv('data/M_kreis.csv')
       .row(function(d) {
@@ -35,19 +39,32 @@
 
         state.data = data;
 
+        state.mapData = sszvis.cascade().objectBy(nAcc).flatten(true).apply(state.data);
+
+        state.valueExtent = d3.extent(state.data, vAcc);
+
+        state.quarters = sszvis.fn.set(state.data, nAcc);
+
         render(state);
       });
 
     function render(state) {
       var bounds = sszvis.bounds({ width: 500, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
 
+      var colorDomain = [state.valueExtent[0], (state.valueExtent[0] + state.valueExtent[1]) / 2, state.valueExtent[1]];
+
+      var colorScale = d3.scale.linear()
+        .domain(colorDomain)
+        .range(sszvis.color.ranges.sequential.valued.blue.map(function(c) { return d3.lab(c); }));
+
       var map = sszvis.map()
         .type('zurich-stadtkreise')
         .width(bounds.innerWidth)
-        .height(bounds.innerHeight);
+        .height(bounds.innerHeight)
+        .fill(sszvis.fn.compose(colorScale, vAcc));
 
       var chart = sszvis.createChart('#chart', bounds)
-        .datum(state.data);
+        .datum(state.mapData);
 
       chart.call(map);
     }

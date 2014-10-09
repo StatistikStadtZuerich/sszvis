@@ -7,7 +7,7 @@
 #   - browser-sync  <http://www.browsersync.io/>
 #
 
-.PHONY: build server
+.PHONY: build server maps
 
 CLI_SUCCESS = \033[1;32m✔
 CLI_RESET   = \033[0m
@@ -81,3 +81,15 @@ server: build
 		--files="sszvis.css" \
 		--files="docs/**/*" \
 		& fswatch -o sszvis/ -o vendor/ | xargs -n1 -I{} make build
+
+maps: geodata/zurich_topo.json
+
+ZURICH_MAPS = \
+	geodata/stadtkreise_geo.json \
+	geodata/statistische_quartiere_geo.json \
+	geodata/wahlkreise_geo.json \
+	geodata/zurichsee_geo.json
+
+geodata/zurich_topo.json: $(ZURICH_MAPS)
+	mkdir -p $(dir $@)
+	topojson -o $@ --id-property=+KNr,+QNr,Bezeichnung $^

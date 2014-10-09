@@ -79,9 +79,12 @@
  *
  * @module sszvis/map
  */
-.sszvis-map {
+.sszvis-map-area {
+  stroke: none;
+}
+
+.sszvis-map-border {
   fill: none;
-  stroke: #000;
   stroke-width: 1;
 }
 
