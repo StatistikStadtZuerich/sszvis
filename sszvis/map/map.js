@@ -47,6 +47,8 @@ namespace('sszvis.map', function(module) {
 
     COMPILED_MAPS.zurich.zurichsee_geo = topojson.feature(zuri_topology, zuri_objects.zurichsee_geo);
 
+    COMPILED_MAPS.switzerland = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
+
     return COMPILED_MAPS.compiled = true;
   }
 
@@ -71,12 +73,14 @@ namespace('sszvis.map', function(module) {
           case 'zurich-stadtkreise': mapData = COMPILED_MAPS.zurich.stadtkreise_geo; break;
           case 'zurich-statistischeQuartiere': mapData = COMPILED_MAPS.zurich.statistische_quartiere_geo; break;
           case 'zurich-wahlkreise': mapData = COMPILED_MAPS.zurich.wahlkreise_geo; break;
+          case 'switzerland-cantons': mapData = COMPILED_MAPS.switzerland; break;
+          default: throw new Error('incorrect map type specified: ' + props.type);
         }
 
         var mapPath = swissMapPath(props.width, props.height, mapData);
 
         mapData.features.forEach(function(f) {
-          f._datum = data[f.id] || null;
+          f._datum = data[f.id] || {};
         });
 
         var shapes = selection.selectAll('.sszvis-map-area')
@@ -90,7 +94,8 @@ namespace('sszvis.map', function(module) {
 
         shapes
           .attr('d', mapPath)
-          .attr('fill', function(d) { return props.fill(d._datum); });
+          .attr('fill', function(d) { return props.fill(d._datum); })
+          .attr('stroke', function(d) { return props.stroke(d._datum); });
 
         // special rendering for lake zurich
         // TODO: make this configuration better

@@ -58,7 +58,7 @@
         .range(sszvis.color.ranges.sequential.valued.blue.map(function(c) { return d3.lab(c); }));
 
       var map = sszvis.map()
-        .type('zurich-stadtkreise')
+        .type('switzerland-cantons')
         .width(bounds.innerWidth)
         .height(bounds.innerHeight)
         .fill(sszvis.fn.compose(colorScale, vAcc));
