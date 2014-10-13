@@ -619,7 +619,7 @@ namespace('sszvis.color', function(module) {
       neutral: {
         green: [
           "#d1dedd",
-          "497f7b",
+          "#497f7b",
           "#2b3b3e"
         ],
         brown: [
