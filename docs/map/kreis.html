@@ -17,7 +17,10 @@
   (function() {
 
     var state = {
-      data: []
+      data: [],
+      mapData: {},
+      valueExtent: [0, 0],
+      quarters: []
     };
 
     var vAcc = sszvis.fn.prop('value');

@@ -16,7 +16,11 @@
 (function() {
 
   var state = {
-    data: []
+    data: [],
+    ages: d3.range(0, 101), // [0 ... 100]
+    groups: [],
+    populations: {},
+    maxValue: 0
   };
 
   var vAcc = sszvis.fn.prop('value');
@@ -40,8 +44,6 @@
       }
 
       state.data = data;
-
-      state.ages = d3.range(0, 101); // [0 ... 100]
 
       state.groups = sszvis.fn.set(state.data, gAcc);
 

@@ -16,7 +16,11 @@
   (function() {
 
     var state = {
-      data: []
+      data: [],
+      lineData: [],
+      dates: [],
+      maxY: 0,
+      categories: []
     };
 
     var xAcc = sszvis.fn.prop('date');

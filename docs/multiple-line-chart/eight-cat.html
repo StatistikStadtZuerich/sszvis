@@ -16,7 +16,11 @@
   (function() {
 
     var state = {
-      data: []
+      data: [],
+      lineData: [],
+      months: [],
+      maxY: 0,
+      categories: []
     };
 
     var xAcc = sszvis.fn.prop('month');
@@ -39,10 +43,10 @@
 
         state.data = data;
 
-        var grouped = sszvis.cascade()
+        var grouper = sszvis.cascade()
           .arrayBy(cAcc, d3.ascending);
 
-        state.lineData = grouped.apply(state.data);
+        state.lineData = grouper.apply(state.data);
 
         state.months = sszvis.fn.set(state.data, xAcc);
 

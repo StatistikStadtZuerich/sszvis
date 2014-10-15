@@ -16,7 +16,11 @@
 (function() {
 
   var state = {
-    data: []
+    data: [],
+    timeExtent: [0, 0],
+    stackedData: [],
+    maxStacked: 0,
+    categories: []
   };
 
   var xAcc = sszvis.fn.prop('year');

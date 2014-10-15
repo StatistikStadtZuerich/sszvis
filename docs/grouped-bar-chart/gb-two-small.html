@@ -16,7 +16,12 @@
 (function() {
 
   var state = {
-    data: []
+    data: [],
+    years: [],
+    valueExtent: [0, 0],
+    groups: [],
+    groupedData: [],
+    longestGroup: 0
   };
 
   var xAcc = sszvis.fn.prop('region');
