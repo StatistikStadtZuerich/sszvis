@@ -93,8 +93,15 @@
       .height(sszvis.fn.compose(hScale, yAcc))
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom').slant('vertical');
-    var yAxis = sszvis.axis.y().scale(yScale).orient('right');
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('bottom')
+      .slant('vertical')
+      .ticks(4);
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right');
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)

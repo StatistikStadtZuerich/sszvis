@@ -86,8 +86,14 @@
         return d === state.hoveredDatum ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
       });
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom').slant('vertical');
-    var yAxis = sszvis.axis.y().scale(yPosScale).orient('right');
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('bottom')
+      .slant('vertical')
+      .ticks(5);
+
+    var yAxis = sszvis.axis.y()
+      .scale(yPosScale).orient('right');
 
     var tooltipText = sszvis.component.modularText()
       .bold(fn.prop('value'))
