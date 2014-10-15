@@ -2746,7 +2746,8 @@ namespace('sszvis.map', function(module) {
       .prop('type')
       .prop('width')
       .prop('height')
-      .prop('fill')
+      .prop('fill').fill(function() { return 'black'; }) // default is black
+      .prop('stroke').stroke(function() { return 'none'; }) // default is none
       .render(function(data) {
         if (typeof topojson === 'undefined') {
           throw new Error('sszvis.map component requires topojson as an additional dependency');
