@@ -14,15 +14,31 @@
 <script>
 (function() {
 
+  var fn = sszvis.fn;
+
+  var xAcc = fn.prop('kreis');
+  var yAcc = fn.prop('agegroup');
+  var cAcc = fn.prop('value');
+
   var state = {
     data: [],
-    tooltips: [],
-    hoveredDatum: {}
+    agesList: [],
+    kreisList: [],
+    valueDomain: null,
+    selection: []
   };
 
-  var xAcc = sszvis.fn.prop('kreis');
-  var yAcc = sszvis.fn.prop('agegroup');
-  var cAcc = sszvis.fn.prop('value');
+  var actions = {
+    showTooltip: function(datum) {
+      state.selection = [datum];
+      render(state);
+    },
+
+    hideTooltip: function() {
+      state.selection = [];
+      render(state);
+    }
+  };
 
   d3.csv('data/HT_kreise.csv')
     .row(function(d) {
@@ -34,18 +50,18 @@
     })
     .get(function(error, data) {
       if (error) {
-        console.log('error loading data: ', error);
+        console.error('Error loading data: ', error);
         return;
       }
 
       state.data = data;
 
-      state.agesList = sszvis.fn.set(state.data, yAcc)
+      state.agesList = fn.set(state.data, yAcc)
         .sort(function(a, b) {
           return d3.ascending(parseInt(a, 10), parseInt(b, 10));
         });
 
-      state.kreisList = sszvis.fn.set(state.data, xAcc)
+      state.kreisList = fn.set(state.data, xAcc)
         .sort(function(a, b) {
           return d3.ascending(parseKreisInt(a), parseKreisInt(b));
         });
@@ -55,19 +71,6 @@
       render(state);
     });
 
-  var actions = {
-    showTooltip: function(datum) {
-      state.tooltips = [datum];
-      state.hoveredDatum = datum;
-      render(state);
-    },
-    hideTooltip: function() {
-      state.tooltips = [];
-      state.hoveredDatum = {};
-      render(state);
-    }
-  };
-
   function render(state) {
     var bounds = sszvis.bounds({ width: 460, height: 760, top: 70, right: 20, bottom: 50, left: 80 });
 
@@ -76,22 +79,22 @@
     var sideLength = Math.min(xSide, ySide) * 0.95;
 
     var xScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
+      .rangeBands([0, bounds.innerWidth], 1 - (sideLength / xSide), 0)
       .domain(state.kreisList);
 
     var yScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
+      .rangeBands([0, bounds.innerHeight], 1 - (sideLength / ySide), 0)
       .domain(state.agesList);
 
-    var colorDomain = [state.valueDomain[0], (state.valueDomain[0] + state.valueDomain[1]) / 2, state.valueDomain[1]];
+    var colorDomain = [state.valueDomain[0], d3.mean(state.valueDomain), state.valueDomain[1]];
 
     var colorScale = d3.scale.linear()
       .domain(colorDomain)
-      .range(sszvis.color.ranges.sequential.valued.blue.map(function(c) { return d3.lab(c); }));
+      .range(sszvis.color.ranges.sequential.valued.blue.map(fn.arity(1, d3.lab)));
 
-    var xValue = sszvis.fn.compose(xScale, xAcc);
-    var yValue = sszvis.fn.compose(yScale, yAcc);
-    var cValue = sszvis.fn.compose(colorScale, cAcc);
+    var xValue = fn.compose(xScale, xAcc);
+    var yValue = fn.compose(yScale, yAcc);
+    var cValue = fn.compose(colorScale, cAcc);
 
     var barGen = sszvis.component.bar()
       .x(xValue)
@@ -99,7 +102,9 @@
       .width(xScale.rangeBand())
       .height(yScale.rangeBand())
       .fill(cValue)
-      .stroke(function(d) { return d === state.hoveredDatum ? d3.hsl(cValue(d)).darker(0.4) : "none" });
+      .stroke(function(d) {
+        return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : "none"
+      });
 
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
@@ -136,22 +141,19 @@
       .header(tooltipHeaderText)
       .body(tooltipBodyText);
 
-    var hoverBehavior = sszvis.behavior.mouseover()
-      .mouseover(actions.showTooltip)
-      .mouseout(actions.hideTooltip);
-
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.data);
 
     var overlay = sszvis.createHtmlLayer('#chart', bounds)
-      .datum(state.tooltips)
+      .datum(state.selection)
       .call(tooltipMaker);
 
     var bars = chart.selectGroup('bars')
       .call(barGen);
 
     bars.selectAll('rect')
-      .call(hoverBehavior);
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout', actions.hideTooltip);
 
     chart.selectGroup('xAxis')
       .attr('transform', 'translate(0, -10)')
