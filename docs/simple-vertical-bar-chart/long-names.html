@@ -17,9 +17,8 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var fn = sszvis.fn;
-  var xAcc = fn.prop('category');
-  var yAcc = fn.prop('value');
+  var xAcc = sszvis.fn.prop('category');
+  var yAcc = sszvis.fn.prop('value');
 
 
   /* Application state
@@ -99,10 +98,10 @@
     // Components
 
     var barGen = sszvis.component.bar()
-      .x(fn.compose(xScale, xAcc))
-      .y(fn.compose(yPosScale, yAcc))
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yPosScale, yAcc))
       .width(xScale.rangeBand())
-      .height(fn.compose(heightScale, yAcc))
+      .height(sszvis.fn.compose(heightScale, yAcc))
       .fill(function(d) {
         return isSelected(d) ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
       });
@@ -117,7 +116,7 @@
       .orient('right');
 
     var tooltipText = sszvis.component.modularText()
-      .plain(fn.compose(sszvis.format.number, yAcc))
+      .plain(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain('Beschäftigte');
 
     var tooltip = sszvis.component.tooltip2()
@@ -125,6 +124,7 @@
       .header(xAcc)
       .body(tooltipText)
       .visible(isSelected);
+
 
     // Rendering
 
