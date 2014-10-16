@@ -3,6 +3,7 @@
  * @return {d3.component}
  */
 namespace('sszvis.component.bar', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()

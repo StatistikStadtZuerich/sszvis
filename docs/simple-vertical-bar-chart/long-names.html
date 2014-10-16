@@ -13,6 +13,8 @@
 <div id="chart"></div>
 <script>
 (function() {
+  'use strict';
+
   /* Shortcuts
   ----------------------------------------------- */
   var fn = sszvis.fn;
@@ -47,7 +49,7 @@
       state.selection = [];
       render(state);
     }
-  }
+  };
 
 
   /* Data initialization
@@ -57,7 +59,7 @@
       return {
         category: d['Sektor'],
         value: sszvis.parse.number(d['Anzahl'])
-      }
+      };
     })
     .get(function(error, data) {
       error ? sszvis.loadError(error) : actions.prepareState(data);
@@ -74,7 +76,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([10, bounds.innerWidth], 0.55, 0.3);
+      .rangeBands([10, bounds.innerWidth], 0.55, 0.3); // FIXME: revise creation of rangeBands for bar charts
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
@@ -116,7 +118,7 @@
 
     var tooltipText = sszvis.component.modularText()
       .plain(fn.compose(sszvis.format.number, yAcc))
-      .plain('Beschäftigte')
+      .plain('Beschäftigte');
 
     var tooltip = sszvis.component.tooltip2()
       .renderInto(tooltipLayer)

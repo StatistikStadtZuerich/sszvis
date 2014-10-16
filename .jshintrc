@@ -2,6 +2,7 @@
   "boss": false,
   "browser": true,
   "esnext": false,
+  "expr": true,
   "globals": ["d3", "namespace", "sszvis"],
   "node": true,
   "quotmark": true,
