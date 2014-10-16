@@ -1,22 +1,5 @@
 # Stadt Zürich Visualization Library
 
-## Inputs 29.8.2014
-
-* Wenn Funktionalität von d3 erweitert wird: eigener Namespace um zu erkennen, dass nicht Original-d3. Beispiel: bei d3.component() weiss man nicht woher es kommt.
-* Aufsplitten der Requires: d3, sszvis
-* Node auf Windows: Probleme mit Native-Modules wegen Visual Studio-Dependency
-* No Build-System to make source code more readable
-  - Verstehen, was abläuft durch «view source» auf sszvis.js
-* Node Grundsätzlich kein Problem
-  - aber require()-System, weil «view source» nicht mehr so gut Möglich
-* Prototype
-  - Pure JS
-* Ziel: View Source auf HTML, CSS, JS
-* 1999
-* Catalog: add live examples
-* simple state/render cycle is possible
-
-
 ## Installation
 
 * Make sure you have [Node.js](http://nodejs.org/) installed

@@ -52,7 +52,9 @@ The following configuration options are available:
 }
 ```
 
-### Wermitwem
+### Wer mit wem?
+
+Welches haben Paare zum Zeitpunkt ihres ersten Kindes.
 
 ```project
 {
