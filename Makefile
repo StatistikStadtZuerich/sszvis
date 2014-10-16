@@ -35,6 +35,7 @@ SOURCE_FILES = \
 	sszvis/axis.js \
 	sszvis/legendColor.js \
 	sszvis/legendColorRange.js \
+	sszvis/loadError.js \
 	sszvis/createChart.js \
 	sszvis/createHtmlLayer.js \
 	sszvis/behavior/mouseover.js \

@@ -1493,6 +1493,32 @@ namespace('sszvis.legend.colorRange', function(module) {
 
 
 /**
+ * Handle data load errors in a standardized way
+ *
+ * @module sszvis/loadError
+ *
+ * @param  {Error} The error object
+ */
+namespace('sszvis.loadError', function(module) {
+
+  var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
+
+  module.exports = function(error) {
+    console.error(error);
+    if (error.status === 404) {
+      alert('Die Daten konnten nicht geladen werden.\n\n' + error.responseURL + '\n\n' + RELOAD_MSG);
+    } else {
+      alert('Ein Fehler ist aufgetreten und die Visualisierung kann nicht angezeigt werden. ' + RELOAD_MSG);
+    }
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Factory that returns an SVG element appended to the given target selector,
  * ensuring that it is only created once, even when run again.
  *
@@ -1707,6 +1733,16 @@ namespace('sszvis.component.bar', function(module) {
           .attr('y', props.y)
           .attr('width', props.width)
           .attr('height', props.height);
+
+        // Tooltip anchors
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(d) {
+            return [props.x(d) + props.width / 2, props.y(d)];
+          });
+
+        selection.call(tooltipAnchor);
+
       });
   };
 

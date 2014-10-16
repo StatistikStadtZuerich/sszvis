@@ -36,6 +36,16 @@ namespace('sszvis.component.bar', function(module) {
           .attr('y', props.y)
           .attr('width', props.width)
           .attr('height', props.height);
+
+        // Tooltip anchors
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(d) {
+            return [props.x(d) + props.width / 2, props.y(d)];
+          });
+
+        selection.call(tooltipAnchor);
+
       });
   };
 
