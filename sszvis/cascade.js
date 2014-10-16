@@ -27,12 +27,10 @@ namespace('sszvis.cascade', function(module) {
     var cascade = {},
         keys = [],
         sorts = [],
-        valuesSort,
-        flattenLeaves = false;
+        valuesSort;
 
     function make(data, depth) {
       if (depth >= keys.length) {
-        if (flattenLeaves && data.length === 1) return data[0];
         if (valuesSort) data.sort(valuesSort);
         return data;
       }
@@ -86,11 +84,6 @@ namespace('sszvis.cascade', function(module) {
 
     cascade.sort = function(d) {
       valuesSort = d;
-      return cascade;
-    };
-
-    cascade.flatten = function(_) {
-      flattenLeaves = _;
       return cascade;
     };
 
