@@ -14,7 +14,7 @@ namespace('sszvis.control.slideBar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        console.log(props);
+        console.log('rendering slidebar line with', props);
       });
   };
 

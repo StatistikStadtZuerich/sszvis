@@ -1725,7 +1725,7 @@ namespace('sszvis.control.slideBar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        console.log(props);
+        console.log('rendering slidebar line with', props);
       });
   };
 
@@ -2014,6 +2014,7 @@ namespace('sszvis.component.modularText', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.component.ruler', function(module) {
+  'use strict';
 
   module.exports = function() {
 
@@ -2032,9 +2033,7 @@ namespace('sszvis.component.ruler', function(module) {
 
         var key = function(d) {
           return props.x(d) + '_' + props.y(d);
-        }
-
-        var maxDatum = d3.max(data, fn.compose(props.xScale, props.x));
+        };
 
         var x = fn.compose(props.xScale, props.x);
         var y = fn.compose(props.yScale, props.y);
@@ -2088,12 +2087,12 @@ namespace('sszvis.component.ruler', function(module) {
             if (y(d) > bottom - baselineShift) return 0;
             return baselineShift;
           })
-          .text(props.label)
+          .text(props.label);
 
         label.exit().remove();
 
       });
-  }
+  };
 
 });
 
