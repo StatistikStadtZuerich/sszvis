@@ -103,7 +103,7 @@
       .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
       .call(yAxis);
 
-    var htmlLayer = sszvis.createHtmlLayer('#chart', bounds);
+    var htmlLayer = sszvis.createHtmlLayer('#chart');
 
     htmlLayer.selectDiv('controls')
       .style('left', (bounds.width / 4) + 'px')

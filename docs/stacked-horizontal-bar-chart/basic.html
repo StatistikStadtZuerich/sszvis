@@ -129,7 +129,7 @@
     var chart = sszvis.createChart('#chart', bounds)
       .datum(state.stackedData);
 
-    var overlay = sszvis.createHtmlLayer('#chart', bounds)
+    var overlay = sszvis.createHtmlLayer('#chart')
       .datum(state.tooltips)
       .call(tooltipMaker);
 

@@ -137,7 +137,7 @@
       .on('mouseout',  actions.hideTooltip);
 
     // Tooltip
-    var tooltipLayer = sszvis.createHtmlLayer('#chart', sszvis.bounds());
+    var tooltipLayer = sszvis.createHtmlLayer('#chart');
     var tooltipCategories = state.tooltips.map(sszvis.fn.prop('category'));
     var tooltip = sszvis.component.tooltip2()
       .renderInto(tooltipLayer)
