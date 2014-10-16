@@ -4,6 +4,7 @@
  * @module sszvis/control/segmented
  */
 namespace('sszvis.control.segmented', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -15,8 +16,7 @@ namespace('sszvis.control.segmented', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var buttonWidth = props.width / props.values.length,
-            buttonHeight = 20;
+        var buttonWidth = props.width / props.values.length;
 
         var container = selection.selectDiv('.ssvis-control--segmented');
 

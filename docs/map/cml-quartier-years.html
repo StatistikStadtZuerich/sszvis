@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+
+  <link rel="stylesheet" type="text/css" href="../../sszvis.css">
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/topojson/topojson.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+  <div id="chart"></div>
+  <script>
+  (function() {
+    'use strict';
+
+    /* Shortcuts
+    ----------------------------------------------- */
+    var vAcc = sszvis.fn.prop('value');
+    var yearAcc = sszvis.fn.prop('year');
+    var qAcc = sszvis.fn.prop('quarternum');
+
+
+    /* Application state
+    ----------------------------------------------- */
+    var state = {
+      data: [],
+      mapData: {},
+      valueDomain: [0, 0],
+      currentYear: 2013,
+      years: []
+    };
+
+
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      changeYear: function(y) {
+        state.currentYear = y.getFullYear();
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
+    d3.csv('data/CML_quartier_years.csv')
+      .row(function(d) {
+        return {
+          quarternum: sszvis.parse.number(d['QNr']),
+          quartername: d['Qname'],
+          year: sszvis.parse.year(d['Jahr']),
+          value: sszvis.parse.number(d['Anzahl'])
+        };
+      })
+      .get(function(error, data) {
+        if (error) {
+          console.log('error loading data: ', error);
+          return;
+        }
+
+        state.data = data;
+
+        state.valueDomain = d3.extent(state.data, vAcc);
+
+        state.yearDomain = d3.extent(state.data, yearAcc);
+
+        state.quarters = sszvis.fn.set(state.data, qAcc);
+
+        var mapGrouper = sszvis.cascade()
+          .objectBy(function(d) {
+            return yearAcc(d).getFullYear();
+          })
+          .objectBy(qAcc);
+
+        state.mapData = mapGrouper.apply(state.data);
+
+        var lineGrouper = sszvis.cascade()
+          .arrayBy(qAcc)
+          .sort(function(a, b) {
+            return d3.ascending(yearAcc(a), yearAcc(b));
+          });
+
+        state.lineData = lineGrouper.apply(state.data);
+
+        render(state);
+      });
+
+
+    /* Render
+    ----------------------------------------------- */
+    function render(state) {
+      var outerBounds = sszvis.bounds({ width: 516, height: 716, top: 0, right: 0, bottom: 0, left: 0 });
+      var mapBounds = sszvis.bounds({ width: 516, height: 516, top: 0, right: 0, bottom: 0, left: 0 });
+      var lineChartBounds = sszvis.bounds({ width: 516, height: 200, top: 0, right: 10, bottom: 30, left: 10 });
+
+
+      // Scales
+
+      var fillScale = sszvis.scale.colorScale()
+        .domain(state.valueDomain)
+        .range(sszvis.color.ranges.sequential.valued.red);
+
+      var xScale = d3.time.scale()
+        .domain(state.yearDomain)
+        .range([0, lineChartBounds.innerWidth]);
+
+      var yScale = d3.scale.linear()
+        .domain(state.valueDomain)
+        .range([lineChartBounds.innerHeight, 0]);
+
+      var cScale = d3.scale.ordinal()
+        .domain(state.quarters)
+        .range(sszvis.color.ranges.qualitative.qual12);
+
+
+      // Layers
+
+      var chart = sszvis.createChart('#chart', outerBounds);
+
+      var map = chart.selectGroup('map')
+        .datum(state.mapData[state.currentYear]);
+
+      var lineChart = chart.selectGroup('line')
+        .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.innerHeight + lineChartBounds.padding.top) + ')')
+        .datum(state.lineData);
+
+      var highlightLayer = lineChart.selectGroup('highlight')
+        .datum(state.selectedData);
+
+
+      // Components
+
+      var mapMaker = sszvis.map()
+        .type('zurich-statistischeQuartiere')
+        .width(mapBounds.innerWidth)
+        .height(mapBounds.innerHeight)
+        .fill(sszvis.fn.compose(fillScale, vAcc, sszvis.fn.first));
+
+      var lineMaker = sszvis.component.line()
+        .xValue(sszvis.fn.compose(xScale, yearAcc))
+        .yValue(sszvis.fn.compose(yScale, vAcc))
+        .stroke(sszvis.fn.compose(cScale, qAcc, sszvis.fn.first));
+
+      var lineXAxis = sszvis.axis.x.time()
+        .scale(xScale)
+        .orient('bottom');
+
+      var lineYAxis = sszvis.axis.y()
+        .scale(yScale)
+        .orient('right')
+        .halo(true);
+
+      var slideBar = sszvis.control.slideBar()
+        .x(yearAcc)
+        .xScale(xScale);
+
+      var moveBehavior = sszvis.behavior.move()
+        .xScale(xScale)
+        .yScale(yScale)
+        .on('move', actions.changeYear);
+
+
+      // Rendering
+
+      map.call(mapMaker);
+
+      lineChart.call(lineMaker);
+
+      lineChart.selectGroup('xAxis')
+        .attr('transform', 'translate(0, ' + (lineChartBounds.innerHeight) + ')')
+        .call(lineXAxis);
+
+      lineChart.selectGroup('yAxis')
+        .call(lineYAxis);
+
+      highlightLayer.call(slideBar);
+
+      lineChart.selectGroup('interaction')
+        .call(moveBehavior);
+    }
+
+  }());
+  </script>
+</body>
+</html>

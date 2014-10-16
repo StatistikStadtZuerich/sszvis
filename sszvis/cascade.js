@@ -1,5 +1,5 @@
 namespace('sszvis.cascade', function(module) {
-"use strict";
+'use strict';
 
   function groupBy(data, keyFunc) {
     var group = {}, key;

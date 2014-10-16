@@ -41,6 +41,7 @@ SOURCE_FILES = \
 	sszvis/behavior/mouseover.js \
 	sszvis/behavior/move.js \
 	sszvis/control/segmentedControl.js \
+	sszvis/control/slideBar.js \
 	sszvis/component/bar.js \
 	sszvis/component/dot.js \
 	sszvis/component/groupedBars.js \

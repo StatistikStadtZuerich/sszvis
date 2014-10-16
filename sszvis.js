@@ -316,7 +316,7 @@
 
 
 namespace('sszvis.cascade', function(module) {
-"use strict";
+'use strict';
 
   function groupBy(data, keyFunc) {
     var group = {}, key;
@@ -1669,6 +1669,7 @@ namespace('sszvis.behavior.move', function(module) {
  * @module sszvis/control/segmented
  */
 namespace('sszvis.control.segmented', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -1680,8 +1681,7 @@ namespace('sszvis.control.segmented', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var buttonWidth = props.width / props.values.length,
-            buttonHeight = 20;
+        var buttonWidth = props.width / props.values.length;
 
         var container = selection.selectDiv('.ssvis-control--segmented');
 
@@ -1701,6 +1701,31 @@ namespace('sszvis.control.segmented', function(module) {
           .classed('selected', function(d) { return d === props.current; })
           .text(function(d) { return d; })
           .on('click', props.change);
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * SlideBar for use in sliding along the x-axis of charts
+ *
+ * @module  sszvis/control/slideBar
+ */
+namespace('sszvis.control.slideBar', function(module) {
+  'use strict';
+
+  module.exports = function() {
+    return d3.component()
+      .prop('x')
+      .prop('xScale')
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        console.log(props);
       });
   };
 

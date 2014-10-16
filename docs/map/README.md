@@ -59,7 +59,7 @@
     ],
     "size": {
         "width": 516,
-        "height": 516
+        "height": 716
     }
 }
 ```
