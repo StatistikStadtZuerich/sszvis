@@ -40,7 +40,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/few_categories.html",
+    "index": "docs/simple-vertical-bar-chart/few-categories.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
         "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv"
@@ -56,7 +56,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/long_names.html",
+    "index": "docs/simple-vertical-bar-chart/long-names.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
         "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv"
@@ -72,7 +72,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/many_years.html",
+    "index": "docs/simple-vertical-bar-chart/many-years.html",
     "readme": "docs/simple-vertical-bar-chart/README.md",
     "files": [
         "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv"
