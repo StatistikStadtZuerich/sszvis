@@ -90,7 +90,7 @@
 
     var colorScale = d3.scale.linear()
       .domain(colorDomain)
-      .range(sszvis.color.ranges.sequential.valued.blue.map(fn.arity(1, d3.lab)));
+      .range(sszvis.color.ranges.sequential.valued.blue);
 
     var xValue = fn.compose(xScale, xAcc);
     var yValue = fn.compose(yScale, yAcc);

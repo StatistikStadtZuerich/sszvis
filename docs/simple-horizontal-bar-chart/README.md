@@ -34,7 +34,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-horizontal-bar-chart/basic_percent.html",
+    "index": "docs/simple-horizontal-bar-chart/basic-percent.html",
     "readme": "docs/simple-horizontal-bar-chart/README.md",
     "files": [
         "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv"
@@ -48,7 +48,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-horizontal-bar-chart/long_names.html",
+    "index": "docs/simple-horizontal-bar-chart/long-names.html",
     "readme": "docs/simple-horizontal-bar-chart/README.md",
     "files": [
         "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv"
