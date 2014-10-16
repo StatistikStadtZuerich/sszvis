@@ -1,12 +1,18 @@
 namespace('sszvis.color', function(module) {
 
-  module.exports.values = {
+  var values = {
     basicBlue: "#6392C5",
     basicDeepBlue: "#3A75B2",
     plainWhite: "#FFFFFF"
   };
 
-  module.exports.ranges = {
+  module.exports.values = {};
+
+  for (var prop in values) {
+    module.exports.values[prop] = d3.lab(values[prop]);
+  }
+
+  var ranges = {
     qualitative: {
       qual3: [
         "#b8cfe6",
@@ -197,5 +203,41 @@ namespace('sszvis.color', function(module) {
       }
     }
   };
+
+  module.exports.ranges = {
+    qualitative: {},
+    sequential: {
+      valued: {},
+      neutral: {}
+    },
+    divergent: {
+      valued: {},
+      neutral: {}
+    }
+  };
+
+  function makeLabArr(arr) {
+    return arr.map(function(c) { return d3.lab(c); });
+  }
+
+  for (var prop in ranges.qualitative) {
+    module.exports.ranges.qualitative[prop] = makeLabArr(ranges.qualitative[prop]);
+  }
+
+  for (var prop in ranges.sequential.valued) {
+    module.exports.ranges.sequential.valued[prop] = makeLabArr(ranges.sequential.valued[prop]);
+  }
+
+  for (var prop in ranges.sequential.neutral) {
+    module.exports.ranges.sequential.neutral[prop] = makeLabArr(ranges.sequential.neutral[prop]);
+  }
+
+  for (var prop in ranges.divergent.valued) {
+    module.exports.ranges.divergent.valued[prop] = makeLabArr(ranges.divergent.valued[prop]);
+  }
+
+  for (var prop in ranges.divergent.neutral) {
+    module.exports.ranges.divergent.neutral[prop] = makeLabArr(ranges.divergent.neutral[prop]);
+  }
 
 });
