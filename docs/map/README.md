@@ -16,8 +16,8 @@
         "docs/map/data/M_kreis.csv"
     ],
     "size": {
-        "width": 500,
-        "height": 500
+        "width": 516,
+        "height": 516
     }
 }
 ```
@@ -30,8 +30,8 @@
         "docs/map/data/M_quartier.csv"
     ],
     "size": {
-        "width": 500,
-        "height": 500
+        "width": 516,
+        "height": 516
     }
 }
 ```
@@ -44,22 +44,22 @@
         "docs/map/data/S_tabs.csv"
     ],
     "size": {
-        "width": 500,
-        "height": 500
+        "width": 516,
+        "height": 516
     }
 }
 ```
 
 ```project
 {
-    "index": "docs/map/quartier-years.html",
+    "index": "docs/map/cml-quartier-years.html",
     "readme": "docs/map/README.md",
     "files": [
         "docs/map/data/CML_quartier_years.csv"
     ],
     "size": {
-        "width": 500,
-        "height": 500
+        "width": 516,
+        "height": 516
     }
 }
 ```

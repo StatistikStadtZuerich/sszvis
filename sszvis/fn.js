@@ -72,6 +72,14 @@ namespace('sszvis.fn', function(module) {
       }
     },
 
+    first: function(arr) {
+      return arr[0];
+    },
+
+    last: function(arr) {
+      return arr[arr.length - 1];
+    },
+
     /**
      * fn.hashableSet
      *

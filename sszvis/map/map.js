@@ -3,6 +3,12 @@
  *
  * Use this component to make a map, either of the city of Zurich or of Switzerland
  * @return {d3.component}
+ *
+ * props.type options:
+ * zurich-stadtkreise
+ * zurich-statistischeQuartiere
+ * zurich-wahlkreise
+ * switzerland-cantons
  */
 namespace('sszvis.map', function(module) {
 
@@ -31,7 +37,7 @@ namespace('sszvis.map', function(module) {
   var COMPILED_MAPS = {
     compiled: false,
     zurich: {},
-    switzerland: {}
+    switzerland_geo: {}
   };
 
   function compile_maps() {
@@ -47,7 +53,7 @@ namespace('sszvis.map', function(module) {
 
     COMPILED_MAPS.zurich.zurichsee_geo = topojson.feature(zuri_topology, zuri_objects.zurichsee_geo);
 
-    COMPILED_MAPS.switzerland = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
+    COMPILED_MAPS.switzerland_geo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
 
     return COMPILED_MAPS.compiled = true;
   }
@@ -74,7 +80,7 @@ namespace('sszvis.map', function(module) {
           case 'zurich-stadtkreise': mapData = COMPILED_MAPS.zurich.stadtkreise_geo; break;
           case 'zurich-statistischeQuartiere': mapData = COMPILED_MAPS.zurich.statistische_quartiere_geo; break;
           case 'zurich-wahlkreise': mapData = COMPILED_MAPS.zurich.wahlkreise_geo; break;
-          case 'switzerland-cantons': mapData = COMPILED_MAPS.switzerland; break;
+          case 'switzerland-cantons': mapData = COMPILED_MAPS.switzerland_geo; break;
           default: throw new Error('incorrect map type specified: ' + props.type);
         }
 
@@ -94,13 +100,16 @@ namespace('sszvis.map', function(module) {
         shapes.exit().remove();
 
         shapes
-          .attr('d', mapPath)
+          .attr('d', mapPath);
+
+        shapes
+          .transition()
+          .call(sszvis.transition)
           .attr('fill', function(d) { return props.fill(d._datum); })
           .attr('stroke', function(d) { return props.stroke(d._datum); });
 
         // special rendering for lake zurich
-        // TODO: make this configuration better
-        if (props.type.indexOf('zurich') >= 0) {
+        if (props.type.indexOf('zurich-') >= 0) {
           var zurichSee = selection.selectAll('.sszvis-lake-zurich')
             .data([COMPILED_MAPS.zurich.zurichsee_geo]);
 
@@ -112,6 +121,7 @@ namespace('sszvis.map', function(module) {
 
           zurichSee
             .attr('d', mapPath)
+            // TODO: add special texturing for Lake Zurich
             .attr('fill', '#fff');
         }
       });

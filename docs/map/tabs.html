@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+
+  <link rel="stylesheet" type="text/css" href="../../sszvis.css">
+
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../vendor/topojson/topojson.js"></script>
+  <script src="../../sszvis.js"></script>
+</head>
+<body style="margin:0;padding:0;">
+  <div id="chart"></div>
+  <script>
+  (function() {
+
+    var state = {
+      data: [],
+      mapData: {},
+      valueDomain: [0, 0],
+      currentYear: "2012",
+      years: []
+    };
+
+    var vAcc = sszvis.fn.prop('value');
+    var yAcc = sszvis.fn.prop('year');
+    var qAcc = sszvis.fn.prop('quarternum');
+
+    var actions = {
+      onYearChange: function(y) {
+        state.currentYear = y;
+        render(state);
+      }
+    };
+
+    d3.csv('data/S_tabs.csv')
+      .row(function(d) {
+        return {
+          quarternum: sszvis.parse.number(d['Qcode']),
+          quartername: d['Qname'],
+          value: sszvis.parse.number(d['Ausländeranteil']),
+          year: d['Jahr']
+        };
+      })
+      .get(function(error, data) {
+        if (error) {
+          console.log('error loading data: ', error);
+          return;
+        }
+
+        state.data = data;
+
+        var grouper = sszvis.cascade()
+          .objectBy(yAcc)
+          .objectBy(qAcc);
+
+        state.mapData = grouper.apply(state.data);
+
+        state.valueDomain = [0, d3.max(state.data, vAcc)];
+
+        state.years = sszvis.fn.set(state.data, yAcc).sort(d3.ascending);
+
+        render(state);
+      });
+
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 516, height: 516, top: 60, right: 0, bottom: 0, left: 0 });
+
+      var colorScale = sszvis.scale.colorScale()
+        .domain(state.valueDomain)
+        .range(sszvis.color.ranges.sequential.valued.blue);
+
+      var control = sszvis.control.segmented()
+        .values(state.years)
+        .width(bounds.width / 2)
+        .current(state.currentYear)
+        .change(actions.onYearChange);
+
+      var mapMaker = sszvis.map()
+        .type('zurich-statistischeQuartiere')
+        .width(bounds.innerWidth)
+        .height(bounds.innerHeight)
+        .fill(sszvis.fn.compose(colorScale, vAcc, sszvis.fn.first));
+
+      var chart = sszvis.createChart('#chart', bounds)
+        .datum(state.mapData[state.currentYear]);
+
+      chart.call(mapMaker);
+
+      var htmlLayer = sszvis.createHtmlLayer('#chart', bounds);
+
+      htmlLayer.selectDiv('controls')
+        .style('left', (bounds.width / 4) + 'px')
+        .style('top', (-40) + 'px')
+        .call(control);
+    }
+
+  }());
+  </script>
+</body>
+</html>

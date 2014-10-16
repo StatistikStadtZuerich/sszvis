@@ -1,0 +1,76 @@
+Switzerland: ID - Canton
+1 - Zürich
+2 - Bern
+3 - Luzern
+4 - Uri
+5 - Schwyz
+6 - Obwalden
+7 - Nidwalden
+8 - Glarus
+9 - Zug
+10 - Fribourg
+11 - Solothurn
+12 - Basel-Stadt
+13 - Basel-Landschaft
+14 - Schaffhausen
+15 - Appenzell Ausserrhoden
+16 - Appenzell Innerrhoden
+17 - St. Gallen
+18 - Graubünden
+19 - Aargau
+20 - Thurgau
+21 - Ticino
+22 - Vaud
+23 - Valais
+24 - Neuchâtel
+25 - Genève
+26 - Jura
+
+Zurich: Stadtkreise: Kreis ID from 1-12
+
+Zurich: Statistische Quartiere: Quarter ID - Quarter Name - Kreis Number
+11 - Rathaus - Kreis 1
+12 - Hochschulen - Kreis 1
+13 - Lindenhof - Kreis 1
+14 - City - Kreis 1
+21 - Wollishofen - Kreis 2
+23 - Leimbach - Kreis 2
+24 - Enge - Kreis 2
+31 - Alt-Wiedikon - Kreis 3
+33 - Friesenberg - Kreis 3
+34 - Sihlfeld - Kreis 3
+41 - Werd - Kreis 4
+42 - Langstrasse - Kreis 4
+44 - Hard - Kreis 4
+51 - Gewerbeschule - Kreis 5
+52 - Escher Wyss - Kreis 5
+61 - Unterstrass - Kreis 6
+63 - Oberstrass - Kreis 6
+71 - Fluntern - Kreis 7
+72 - Hottingen - Kreis 7
+73 - Hirslanden - Kreis 7
+74 - Witikon - Kreis 7
+81 - Seefeld - Kreis 8
+82 - Mühlebach - Kreis 8
+83 - Weinegg - Kreis 8
+91 - Albisrieden - Kreis 9
+92 - Altstetten - Kreis 9
+101 - Höngg - Kreis 10
+102 - Wipkingen - Kreis 10
+111 - Affoltern - Kreis 11
+115 - Oerlikon - Kreis 11
+119 - Seebach - Kreis 11
+121 - Saatlen - Kreis 12
+122 - Schwamendingen-Mitte - Kreis 12
+123 - Hirzenbach - Kreis 12
+
+Zurich: Wahlkreise: Bezeichnung
+1 + 2
+3
+4 + 5
+6
+7 + 8
+9
+10
+11
+12

@@ -19,12 +19,11 @@
     var state = {
       data: [],
       mapData: {},
-      valueExtent: [0, 0],
-      quarters: []
+      valueDomain: [0, 0]
     };
 
     var vAcc = sszvis.fn.prop('value');
-    var nAcc = sszvis.fn.prop('kreisnum');
+    var qAcc = sszvis.fn.prop('kreisnum');
 
     d3.csv('data/M_kreis.csv')
       .row(function(d) {
@@ -42,26 +41,32 @@
 
         state.data = data;
 
-        state.mapData = sszvis.cascade().objectBy(nAcc).flatten(true).apply(state.data);
+        var grouper = sszvis.cascade()
+          .objectBy(qAcc);
 
-        state.valueExtent = d3.extent(state.data, vAcc);
+        var byKreis = grouper.apply(state.data);
 
-        state.quarters = sszvis.fn.set(state.data, nAcc);
+        state.mapData = {};
+
+        // "flatten" the byKreis data
+        for (var prop in byKreis) {
+          state.mapData[prop] = byKreis[prop][0];
+        }
+
+        state.valueDomain = [0, d3.max(state.data, vAcc)];
 
         render(state);
       });
 
     function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 500, top: 10, right: 10, bottom: 10, left: 10 });
+      var bounds = sszvis.bounds({ width: 516, height: 516, top: 0, right: 0, bottom: 0, left: 0 });
 
-      var colorDomain = [state.valueExtent[0], (state.valueExtent[0] + state.valueExtent[1]) / 2, state.valueExtent[1]];
+      var colorScale = sszvis.scale.colorScale()
+        .domain(state.valueDomain)
+        .range(sszvis.color.ranges.sequential.valued.blue);
 
-      var colorScale = d3.scale.linear()
-        .domain(colorDomain)
-        .range(sszvis.color.ranges.sequential.valued.blue.map(function(c) { return d3.lab(c); }));
-
-      var map = sszvis.map()
-        .type('switzerland-cantons')
+      var mapMaker = sszvis.map()
+        .type('zurich-stadtkreise')
         .width(bounds.innerWidth)
         .height(bounds.innerHeight)
         .fill(sszvis.fn.compose(colorScale, vAcc));
@@ -69,7 +74,7 @@
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.mapData);
 
-      chart.call(map);
+      chart.call(mapMaker);
     }
 
   }());

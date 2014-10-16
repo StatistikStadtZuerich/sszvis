@@ -6,8 +6,10 @@
 #   - fswatch       <http://emcrisostomo.github.io/fswatch/>
 #   - browser-sync  <http://www.browsersync.io/>
 #
+# make maps
+# 	- topojson			<https://github.com/mbostock/topojson>
 
-.PHONY: build server maps
+.PHONY: build server maps clean
 
 CLI_SUCCESS = \033[1;32m✔
 CLI_RESET   = \033[0m
@@ -82,7 +84,13 @@ server: build
 		--files="docs/**/*" \
 		& fswatch -o sszvis/ -o vendor/ | xargs -n1 -I{} make build
 
-maps: geodata/zurich_topo.json
+ZURICH_MAP_TARGETS = \
+	geodata/zurich_topo.json
+
+maps: $(ZURICH_MAP_TARGETS)
+
+clean:
+	rm $(ZURICH_MAP_TARGETS)
 
 ZURICH_MAPS = \
 	geodata/stadtkreise_geo.json \
@@ -92,4 +100,4 @@ ZURICH_MAPS = \
 
 geodata/zurich_topo.json: $(ZURICH_MAPS)
 	mkdir -p $(dir $@)
-	topojson -o $@ --id-property=+KNr,+QNr,Bezeichnung $^
+	topojson -o $@ --id-property=Bezeichnung,+QNr,+KNr $^
