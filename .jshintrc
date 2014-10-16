@@ -1,0 +1,11 @@
+{
+  "boss": false,
+  "browser": true,
+  "esnext": false,
+  "globals": ["d3", "namespace", "sszvis"],
+  "node": true,
+  "quotmark": true,
+  "strict": true,
+  "sub": true,
+  "unused": true
+}
