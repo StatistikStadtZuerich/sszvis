@@ -40,7 +40,7 @@ SOURCE_FILES = \
 	sszvis/createHtmlLayer.js \
 	sszvis/behavior/mouseover.js \
 	sszvis/behavior/move.js \
-	sszvis/segmentedControl.js \
+	sszvis/control/segmentedControl.js \
 	sszvis/component/bar.js \
 	sszvis/component/dot.js \
 	sszvis/component/groupedBars.js \

@@ -704,12 +704,12 @@ namespace('sszvis.color', function(module) {
  * @module sszvis/fn
  */
 namespace('sszvis.fn', function(module) {
-"use strict";
+'use strict';
 
   var slice = function(list) {
     var slice = Array.prototype.slice;
     return slice.apply(list, slice.call(arguments, 1));
-  }
+  };
 
   module.exports = {
     /**
@@ -761,7 +761,7 @@ namespace('sszvis.fn', function(module) {
     },
 
     either: function(val, fallback) {
-      return (typeof val === "undefined") ? fallback : val;
+      return (typeof val === 'undefined') ? fallback : val;
     },
 
     find: function(predicate, list) {
@@ -816,13 +816,13 @@ namespace('sszvis.fn', function(module) {
     },
 
     not: function (f) {
-      return function(){ return !f.apply(this, arguments) };
+      return function(){ return !f.apply(this, arguments); };
     },
 
     prop: function(key) {
       return function(object) {
         return object[key];
-      }
+      };
     },
 
     /**
@@ -853,7 +853,7 @@ namespace('sszvis.fn', function(module) {
       }, []);
     }
 
-  }
+  };
 
 });
 
