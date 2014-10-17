@@ -2114,6 +2114,7 @@ namespace('sszvis.component.ruler', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.component.tooltip', function(module) {
+  'use strict';
 
   module.exports = function() {
 
@@ -2145,7 +2146,7 @@ namespace('sszvis.component.tooltip', function(module) {
           .datum(tooltipData)
           .call(renderer);
       });
-  }
+  };
 
 
   /**
@@ -2165,11 +2166,10 @@ namespace('sszvis.component.tooltip', function(module) {
       .renderSelection(function(selection) {
 
         var tooltipData = selection.datum();
-        var data = tooltipData.map(fn.prop('datum'));
         var props = selection.props();
 
         var tooltip = selection.selectAll('.sszvis-tooltip')
-          .data(tooltipData)
+          .data(tooltipData);
 
         tooltip.exit().remove();
 
@@ -2179,7 +2179,7 @@ namespace('sszvis.component.tooltip', function(module) {
           .classed('sszvis-tooltip', true);
 
         var enterBox = enterTooltip.append('div')
-          .classed('sszvis-tooltip-box', true)
+          .classed('sszvis-tooltip-box', true);
 
         enterBox.append('div')
           .classed('sszvis-tooltip-header', true);
@@ -2194,7 +2194,7 @@ namespace('sszvis.component.tooltip', function(module) {
           .classed('tip-left', props.orientation === 'left')
           .classed('tip-right', props.orientation === 'right');
 
-        var enterTip = enterTipholder.append('div')
+        enterTipholder.append('div')
           .classed('sszvis-tooltip-tip', true)
           .classed('tip-top', props.orientation === 'top')
           .classed('tip-bot', props.orientation === 'bottom')
@@ -2247,7 +2247,13 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
           .data(data);
 
         anchor.enter()
-          .append('g')
+          .append('rect')
+          .attr('height', 1)
+          .attr('width', 1)
+          .attr('fill', 'none')
+          .attr('stroke', 'none')
+          .attr('visibility', 'none')
+          .attr('pointer-events', 'none')
           .attr('data-tooltip-anchor', '');
 
         anchor

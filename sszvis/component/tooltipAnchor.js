@@ -20,7 +20,13 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
           .data(data);
 
         anchor.enter()
-          .append('g')
+          .append('rect')
+          .attr('height', 1)
+          .attr('width', 1)
+          .attr('fill', 'none')
+          .attr('stroke', 'none')
+          .attr('visibility', 'none')
+          .attr('pointer-events', 'none')
           .attr('data-tooltip-anchor', '');
 
         anchor
