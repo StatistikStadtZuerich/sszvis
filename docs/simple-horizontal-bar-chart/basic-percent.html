@@ -14,56 +14,72 @@
 <div id="chart"></div>
 <script>
 (function() {
+  'use strict';
 
-  var state = {
-    data: [],
-    dataByArea: {},
-    years: [],
-    categories: [],
-    selectedArea: "Stadt Zürich"
-  };
+  /* Configuration
+  ----------------------------------------------- */
+  var AREAS = ['Stadt Zürich', 'Agglomeration Zürich', 'Schweiz']; // TODO: is there a better way to have intentional sorting, possibly directly from the data?
+  var INITIAL_AREA = 'Stadt Zürich';
 
+
+  /* Shortcuts
+  ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('value');
   var yAcc = sszvis.fn.prop('category');
   var aAcc = sszvis.fn.prop('area');
 
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    categories: [],
+    selectedArea: null,
+    selectedData: []
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.categories = sszvis.fn.set(state.data, yAcc);
+      actions.selectArea(INITIAL_AREA);
+    },
+
+    selectArea: function(area) {
+      state.selectedArea = area;
+      state.selectedData = state.data.filter(function(d) {
+        return aAcc(d) === area;
+      });
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
   d3.csv('data/SHB_basic_percent.csv')
     .row(function(d) {
       return {
         category: d['Branche'],
         value: sszvis.parse.number(d['BIP']),
         area: d['Gebiet']
-      }
+      };
     })
     .get(function(error, data) {
-      if (error) {
-        console.log('error loading data: ', error);
-        return;
-      }
-
-      state.data = data;
-
-      var nester = sszvis.cascade()
-        .objectBy(aAcc);
-
-      state.dataByArea = nester.apply(state.data);
-
-      state.years = sszvis.fn.set(state.data, aAcc);
-
-      state.categories = sszvis.fn.set(state.data, yAcc);
-
-      render(state);
+      error ? sszvis.loadError(error) : actions.prepareState(data);
     });
 
-  var actions = {
-    onYearChange: function(d) {
-      state.selectedArea = d;
-      render(state);
-    }
-  };
 
+  /* Render
+  ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ width: 500, height: 540, top: 75, right: 10, bottom: 30, left: 10 });
+
+
+    // Scales
 
     var widthScale = d3.scale.linear()
       .range([0, bounds.innerWidth])
@@ -73,6 +89,17 @@
       .rangeBands([0, bounds.innerHeight], 0.55, 0.1)
       .domain(state.categories);
 
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#chart', bounds)
+      .datum(state.selectedData);
+
+    var controlLayer = sszvis.createHtmlLayer('#chart');
+
+
+    // Components
+
     var barGen = sszvis.component.bar()
       .x(0)
       .y(sszvis.fn.compose(yScale, yAcc))
@@ -80,35 +107,39 @@
       .height(yScale.rangeBand())
       .fill(sszvis.color.values.basicBlue);
 
-    var xAxis = sszvis.axis.x().scale(widthScale).orient('bottom').tickFormat(function(v) { return sszvis.format.percent(v / 100); });
-    var yAxis = sszvis.axis.y.ordinal().scale(yScale).orient('right');
+    var xAxis = sszvis.axis.x()
+      .scale(widthScale)
+      .orient('bottom')
+      .tickFormat(function(v) { return sszvis.format.percent(v / 100); });
 
-    var chart = sszvis.createChart('#chart', bounds)
-      .datum(state.dataByArea[state.selectedArea]);
+    var yAxis = sszvis.axis.y.ordinal()
+      .scale(yScale)
+      .orient('right');
 
-    var control = sszvis.control.segmented()
-      .values(state.years)
+    var segmentedControl = sszvis.control.segmented()
+      .values(AREAS)
       .width(bounds.width * 0.8)
       .current(state.selectedArea)
-      .change(actions.onYearChange);
+      .change(actions.selectArea);
 
-    chart.selectGroup('bars')
+
+    // Rendering
+
+    chartLayer.selectGroup('bars')
       .call(barGen);
 
-    chart.selectGroup('xAxis')
+    chartLayer.selectGroup('xAxis')
       .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
       .call(xAxis);
 
-    chart.selectGroup('yAxis')
+    chartLayer.selectGroup('yAxis')
       .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
       .call(yAxis);
 
-    var htmlLayer = sszvis.createHtmlLayer('#chart');
-
-    htmlLayer.selectDiv('controls')
+    controlLayer.selectDiv('controls')
       .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
-      .style('top', (20) + 'px')
-      .call(control);
+      .style('top', 10 + 'px')
+      .call(segmentedControl);
   }
 
 }());
