@@ -54,7 +54,7 @@
       prepareState: function(data) {
         state.data = data;
 
-        state.valueDomain = d3.extent(state.data, vAcc);
+        state.valueDomain = [0, d3.max(state.data, vAcc)];
 
         state.yearDomain = d3.extent(state.data, yearAcc);
 
@@ -97,7 +97,7 @@
     function render(state) {
       var outerBounds = sszvis.bounds({ width: 516, height: 716, top: 0, right: 0, bottom: 0, left: 0 });
       var mapBounds = sszvis.bounds({ width: 516, height: 516, top: 0, right: 0, bottom: 0, left: 0 });
-      var lineChartBounds = sszvis.bounds({ width: 516, height: 200, top: 0, right: 10, bottom: 30, left: 10 });
+      var lineChartBounds = sszvis.bounds({ width: 516, height: 200, top: 20, right: 10, bottom: 30, left: 10 });
 
 
       // Scales
@@ -112,7 +112,7 @@
 
       var yScale = d3.scale.linear()
         .domain(state.valueDomain)
-        .range([lineChartBounds.innerHeight, 20]);
+        .range([lineChartBounds.innerHeight, 0]);
 
 
       // Layers

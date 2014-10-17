@@ -26,6 +26,7 @@ namespace('sszvis.control.slideBar', function(module) {
         var bottom = d3.max(props.yScale.range()) - 4;
         var handleWidth = 10;
         var handleHeight = 30;
+        var handleTop = top - handleHeight;
 
         var group = selection.selectAll('.sszvis-slider-group')
           .data(data, key);
@@ -56,7 +57,7 @@ namespace('sszvis.control.slideBar', function(module) {
 
         group.selectAll('.sszvis-slider-handle')
           .attr('x', function(d) { return xValue(d) - handleWidth / 2; })
-          .attr('y', top)
+          .attr('y', handleTop)
           .attr('width', handleWidth)
           .attr('height', handleHeight)
           .attr('rx', 2)
@@ -64,9 +65,9 @@ namespace('sszvis.control.slideBar', function(module) {
 
         group.selectAll('.sszvis-slider-handleMark')
           .attr('x1', xValue)
-          .attr('y1', top + handleHeight * 0.15)
+          .attr('y1', handleTop + handleHeight * 0.15)
           .attr('x2', xValue)
-          .attr('y2', top + handleHeight * 0.85);
+          .attr('y2', handleTop + handleHeight * 0.85);
 
 
       });
