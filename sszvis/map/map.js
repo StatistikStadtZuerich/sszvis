@@ -98,7 +98,9 @@ namespace('sszvis.map', function(module) {
   var COMPILED_MAPS = {
     compiled: false,
     zurich: {},
-    switzerland_geo: {}
+    zurich_mesh: {},
+    switzerland_geo: {},
+    switzerland_mesh: {}
   };
 
   function compile_maps() {
@@ -112,9 +114,15 @@ namespace('sszvis.map', function(module) {
       COMPILED_MAPS.zurich[name] = topojson.feature(zuri_topology, zuri_objects[name]);
     });
 
+    zuri_names.forEach(function(name) {
+      COMPILED_MAPS.zurich_mesh[name] = topojson.mesh(zuri_topology, zuri_objects[name]);
+    });
+
     COMPILED_MAPS.zurich.zurichsee_geo = topojson.feature(zuri_topology, zuri_objects.zurichsee_geo);
 
     COMPILED_MAPS.switzerland_geo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
+
+    COMPILED_MAPS.switzerland_mesh = topojson.mesh(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
 
     COMPILED_MAPS.compiled = true;
 
@@ -139,13 +147,26 @@ namespace('sszvis.map', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var mapData;
+        var mapData, meshData;
         switch (props.type) {
-          case 'zurich-stadtkreise': mapData = COMPILED_MAPS.zurich.stadtkreise_geo; break;
-          case 'zurich-statistischeQuartiere': mapData = COMPILED_MAPS.zurich.statistische_quartiere_geo; break;
-          case 'zurich-wahlkreise': mapData = COMPILED_MAPS.zurich.wahlkreise_geo; break;
-          case 'switzerland-cantons': mapData = COMPILED_MAPS.switzerland_geo; break;
-          default: throw new Error('incorrect map type specified: ' + props.type);
+          case 'zurich-stadtkreise':
+            mapData = COMPILED_MAPS.zurich.stadtkreise_geo;
+            meshData = COMPILED_MAPS.zurich_mesh.stadtkreise_geo;
+            break;
+          case 'zurich-statistischeQuartiere':
+            mapData = COMPILED_MAPS.zurich.statistische_quartiere_geo;
+            meshData = COMPILED_MAPS.zurich_mesh.statistische_quartiere_geo;
+            break;
+          case 'zurich-wahlkreise':
+            mapData = COMPILED_MAPS.zurich.wahlkreise_geo;
+            meshData = COMPILED_MAPS.zurich_mesh.wahlkreise_geo;
+            break;
+          case 'switzerland-cantons':
+            mapData = COMPILED_MAPS.switzerland_geo;
+            meshData = COMPILED_MAPS.switzerland_mesh;
+            break;
+          default:
+            throw new Error('incorrect map type specified: ' + props.type);
         }
 
         var mapPath = swissMapPath(props.width, props.height, mapData);
@@ -166,20 +187,30 @@ namespace('sszvis.map', function(module) {
         var baseGroups = selection.selectAll('.sszvis-map-group')
           .data(mapData.features);
 
-        var mapShapes = baseGroups.enter()
+        var mapGroupsEnter = baseGroups.enter()
           .append('g')
-          .classed('sszvis-map-group', true)
-              .append('path')
-              .datum(function(d) {
-                var o = {
-                  geoJson: d
-                };
-                o[props.keyName] = d.id;
-                return o;
-              })
-              .classed('sszvis-map-area', true)
-              .attr('d', sszvis.fn.compose(mapPath, sszvis.fn.prop('geoJson')))
-              .attr('fill', 'url(#missing-pattern)');
+          .classed('sszvis-map-group', true);
+
+        mapGroupsEnter
+          .append('path')
+          .datum(function(d) {
+            var o = {
+              geoJson: d
+            };
+            o[props.keyName] = d.id;
+            return o;
+          })
+          .classed('sszvis-map-area', true)
+          .attr('d', sszvis.fn.compose(mapPath, sszvis.fn.prop('geoJson')))
+          .attr('fill', 'url(#missing-pattern)');
+
+        mapGroupsEnter
+          .selectAll('.sszvis-map-border')
+          .data([meshData])
+          .enter()
+          .append('path')
+          .classed('sszvis-map-border', true)
+          .attr('d', mapPath);
 
         baseGroups.exit().remove();
 

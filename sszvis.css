@@ -85,7 +85,8 @@
 
 .sszvis-map-border {
   fill: none;
-  stroke-width: 1;
+  stroke: #fff;
+  stroke-width: 1.25;
 }
 
 /**
