@@ -1635,7 +1635,7 @@ namespace('sszvis.behavior.move', function(module) {
         var props = selection.props();
 
         var xExtent = props.xScale.range();
-        var yExtent = props.yScale.range().sort();
+        var yExtent = props.yScale.range().sort(d3.ascending);
 
         var layer = selection.selectAll('[data-sszvis-behavior-move]')
           .data([0]);
@@ -1726,10 +1726,64 @@ namespace('sszvis.control.slideBar', function(module) {
   module.exports = function() {
     return d3.component()
       .prop('x')
+      .prop('y')
       .prop('xScale')
-      .render(function() {
+      .prop('yScale')
+      .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
+
+        var key = function(d) {
+          return props.x(d) + '_' + props.y(d);
+        };
+
+        var xValue = sszvis.fn.compose(props.xScale, props.x);
+        var yValue = sszvis.fn.compose(props.yScale, props.y);
+        var top = d3.min(props.yScale.range());
+        var bottom = d3.max(props.yScale.range()) - 4;
+        var handleWidth = 10;
+        var handleHeight = 30;
+
+        var group = selection.selectAll('.sszvis-slider-group')
+          .data(data, key);
+
+        var entering = group.enter()
+          .append('g')
+          .classed('sszvis-slider-group', true);
+
+        group.exit().remove();
+
+        entering
+          .append('line')
+          .classed('sszvis-slider-line', true);
+
+        entering
+          .append('rect')
+          .classed('sszvis-slider-handle', true);
+
+        entering
+          .append('line')
+          .classed('sszvis-slider-handleMark', true);
+
+        group.selectAll('.sszvis-slider-line')
+          .attr('x1', xValue)
+          .attr('y1', top)
+          .attr('x2', xValue)
+          .attr('y2', bottom);
+
+        group.selectAll('.sszvis-slider-handle')
+          .attr('x', function(d) { return xValue(d) - handleWidth / 2; })
+          .attr('y', top)
+          .attr('width', handleWidth)
+          .attr('height', handleHeight)
+          .attr('rx', 2)
+          .attr('ry', 2);
+
+        group.selectAll('.sszvis-slider-handleMark')
+          .attr('x1', xValue)
+          .attr('y1', top + handleHeight * 0.15)
+          .attr('x2', xValue)
+          .attr('y2', top + handleHeight * 0.85);
 
 
       });

@@ -129,6 +129,23 @@
   border-bottom-right-radius: 3px;
 }
 
+/**
+ * Slider Bar component
+ *
+ * @module sszvis/control/slideBar
+ */
+.sszvis-slider-line {
+  stroke: #CCCCCC;
+}
+
+.sszvis-slider-handle {
+  fill: #fff;
+  stroke: #808184;
+}
+
+.sszvis-slider-handleMark {
+  stroke: #A6A8AB;
+}
 
 /**
  * Vertical Ruler component
