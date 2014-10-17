@@ -13,4 +13,10 @@ namespace('sszvis.transition', function(module) {
       .duration(300);
   };
 
+  module.exports.fastTransition = function(transition) {
+    transition
+      .ease(defaultEase)
+      .duration(50);
+  };
+
 });

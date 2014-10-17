@@ -11,6 +11,7 @@
  * switzerland-cantons
  */
 namespace('sszvis.map', function(module) {
+  'use strict';
 
   function swissMapPath(width, height, featureCollection) {
         var mercatorProjection = d3.geo.mercator()
@@ -24,7 +25,7 @@ namespace('sszvis.map', function(module) {
           .projection(mercatorProjection);
 
         var b = mercatorPath.bounds(featureCollection),
-            s = .96 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+            s = 0.96 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
             t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
         mercatorProjection
@@ -32,6 +33,66 @@ namespace('sszvis.map', function(module) {
             .translate(t);
 
         return mercatorPath;
+  }
+
+  function missingValuePattern(selection) {
+    var pWidth = 4;
+    var pHeight = 4;
+
+    selection
+      .attr('id', 'missing-pattern')
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('patternContentUnits', 'userSpaceOnUse')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight);
+
+    selection
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight)
+      .attr('fill', '#bfbfbf');
+
+    selection
+      .append('line')
+      .attr('x1', pWidth)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', pHeight)
+      .attr('stroke', '#737373');
+  }
+
+  function lakePattern(selection) {
+    var pWidth = 6;
+    var pHeight = 6;
+
+    selection
+      .attr('id', 'lake-pattern')
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('patternContentUnits', 'userSpaceOnUse')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight);
+
+    selection
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight)
+      .attr('fill', '#fff');
+
+    selection
+      .append('line')
+      .attr('x1', pWidth)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', pHeight)
+      .attr('stroke', '#d0d0d0');
   }
 
   var COMPILED_MAPS = {
@@ -55,12 +116,15 @@ namespace('sszvis.map', function(module) {
 
     COMPILED_MAPS.switzerland_geo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
 
-    return COMPILED_MAPS.compiled = true;
+    COMPILED_MAPS.compiled = true;
+
+    return true;
   }
 
   module.exports = function() {
     return d3.component()
       .prop('type')
+      .prop('keyName').keyName('geoId')
       .prop('width')
       .prop('height')
       .prop('fill').fill(function() { return 'black'; }) // default is black
@@ -86,30 +150,60 @@ namespace('sszvis.map', function(module) {
 
         var mapPath = swissMapPath(props.width, props.height, mapData);
 
-        mapData.features.forEach(function(f) {
-          f._datum = data[f.id] || {};
-        });
+        var defs = selection.selectAll('.sszvis-map-defs')
+          .data([1])
+          .enter()
+          .append('defs')
+          .classed('sszvis-map-defs', true);
 
-        var shapes = selection.selectAll('.sszvis-map-area')
+        var newMissingPattern = defs
+          .selectAll('.sszvis-map-pattern#missing-pattern')
+          .data([1])
+          .enter()
+          .append('pattern')
+          .call(missingValuePattern);
+
+        var baseGroups = selection.selectAll('.sszvis-map-group')
           .data(mapData.features);
 
-        shapes.enter()
-          .append('path')
-          .classed('sszvis-map-area', true);
+        var mapShapes = baseGroups.enter()
+          .append('g')
+          .classed('sszvis-map-group', true)
+              .append('path')
+              .datum(function(d) {
+                var o = {
+                  geoJson: d
+                };
+                o[props.keyName] = d.id;
+                return o;
+              })
+              .classed('sszvis-map-area', true)
+              .attr('d', sszvis.fn.compose(mapPath, sszvis.fn.prop('geoJson')))
+              .attr('fill', 'url(#missing-pattern)');
 
-        shapes.exit().remove();
+        baseGroups.exit().remove();
 
-        shapes
-          .attr('d', mapPath);
+        var joinedShapes = baseGroups.selectAll('.sszvis-map-area')
+          .data(data, sszvis.fn.prop(props.keyName));
 
-        shapes
+        joinedShapes
           .transition()
-          .call(sszvis.transition)
-          .attr('fill', function(d) { return props.fill(d._datum); })
-          .attr('stroke', function(d) { return props.stroke(d._datum); });
+          .call(sszvis.transition.fastTransition)
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
+
+        joinedShapes.exit()
+          .attr('fill', 'url(#missing-pattern)');
 
         // special rendering for lake zurich
         if (props.type.indexOf('zurich-') >= 0) {
+          var newLakePattern = defs
+            .selectAll('.sszvis-map-pattern#lake-pattern')
+            .data([1])
+            .enter()
+            .append('pattern')
+            .call(lakePattern);
+
           var zurichSee = selection.selectAll('.sszvis-lake-zurich')
             .data([COMPILED_MAPS.zurich.zurichsee_geo]);
 
@@ -122,7 +216,7 @@ namespace('sszvis.map', function(module) {
           zurichSee
             .attr('d', mapPath)
             // TODO: add special texturing for Lake Zurich
-            .attr('fill', '#fff');
+            .attr('fill', 'url(#lake-pattern)');
         }
       });
   };
