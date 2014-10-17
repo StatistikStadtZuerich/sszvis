@@ -16,12 +16,6 @@
 (function() {
   'use strict';
 
-  /* Configuration
-  ----------------------------------------------- */
-  var AREAS = ['Stadt Zürich', 'Agglomeration Zürich', 'Schweiz']; // TODO: is there a better way to have intentional sorting, possibly directly from the data?
-  var INITIAL_AREA = 'Stadt Zürich';
-
-
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('value');
@@ -34,6 +28,7 @@
   var state = {
     data: [],
     categories: [],
+    areas: [],
     selectedArea: null,
     selectedData: []
   };
@@ -45,7 +40,8 @@
     prepareState: function(data) {
       state.data = data;
       state.categories = sszvis.fn.set(state.data, yAcc);
-      actions.selectArea(INITIAL_AREA);
+      state.areas = sszvis.fn.set(state.data, aAcc);
+      actions.selectArea(state.areas[0]);
     },
 
     selectArea: function(area) {
@@ -117,7 +113,7 @@
       .orient('right');
 
     var segmentedControl = sszvis.control.segmented()
-      .values(AREAS)
+      .values(state.areas)
       .width(bounds.width * 0.8)
       .current(state.selectedArea)
       .change(actions.selectArea);
