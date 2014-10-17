@@ -15,7 +15,7 @@ namespace('sszvis.behavior.move', function(module) {
         var props = selection.props();
 
         var xExtent = props.xScale.range();
-        var yExtent = props.yScale.range().sort();
+        var yExtent = props.yScale.range().sort(d3.ascending);
 
         var layer = selection.selectAll('[data-sszvis-behavior-move]')
           .data([0]);
