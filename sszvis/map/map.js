@@ -204,7 +204,8 @@ namespace('sszvis.map', function(module) {
           .attr('d', sszvis.fn.compose(mapPath, sszvis.fn.prop('geoJson')))
           .attr('fill', 'url(#missing-pattern)');
 
-        mapGroupsEnter
+        // add borders
+        selection
           .selectAll('.sszvis-map-border')
           .data([meshData])
           .enter()
