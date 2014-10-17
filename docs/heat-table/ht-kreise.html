@@ -13,13 +13,17 @@
 <div id="chart"></div>
 <script>
 (function() {
+  'use strict';
 
-  var fn = sszvis.fn;
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('kreis');
+  var yAcc = sszvis.fn.prop('agegroup');
+  var cAcc = sszvis.fn.prop('value');
 
-  var xAcc = fn.prop('kreis');
-  var yAcc = fn.prop('agegroup');
-  var cAcc = fn.prop('value');
 
+  /* Application state
+  ----------------------------------------------- */
   var state = {
     data: [],
     agesList: [],
@@ -28,7 +32,19 @@
     selection: []
   };
 
+
+  /* State transitions
+  ----------------------------------------------- */
   var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.agesList = sszvis.fn.set(state.data, yAcc).sort(sortInt);
+      state.kreisList = sszvis.fn.set(state.data, xAcc).sort(sortKreisInt);
+      state.valueDomain = d3.extent(state.data, cAcc);
+
+      render(state);
+    },
+
     showTooltip: function(datum) {
       state.selection = [datum];
       render(state);
@@ -40,6 +56,9 @@
     }
   };
 
+
+  /* Data initialization
+  ----------------------------------------------- */
   d3.csv('data/HT_kreise.csv')
     .row(function(d) {
       return {
@@ -49,34 +68,24 @@
       };
     })
     .get(function(error, data) {
-      if (error) {
-        console.error('Error loading data: ', error);
-        return;
-      }
-
-      state.data = data;
-
-      state.agesList = fn.set(state.data, yAcc)
-        .sort(function(a, b) {
-          return d3.ascending(parseInt(a, 10), parseInt(b, 10));
-        });
-
-      state.kreisList = fn.set(state.data, xAcc)
-        .sort(function(a, b) {
-          return d3.ascending(parseKreisInt(a), parseKreisInt(b));
-        });
-
-      state.valueDomain = d3.extent(state.data, cAcc);
-
-      render(state);
+      error ? sszvis.loadError(error) : actions.prepareState(data);
     });
 
+
+  /* Render
+  ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ width: 460, height: 760, top: 70, right: 20, bottom: 50, left: 80 });
 
+    // FIXME: sideLength should be similar across charts and only
+    //        shrink when it doesn't fit the width. Growing vertically
+    //        is allowed.
     var xSide = bounds.innerWidth / state.kreisList.length;
     var ySide = bounds.innerHeight / state.agesList.length;
     var sideLength = Math.min(xSide, ySide) * 0.95;
+
+
+    // Scales
 
     var xScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerWidth], 1 - (sideLength / xSide), 0)
@@ -86,15 +95,28 @@
       .rangeBands([0, bounds.innerHeight], 1 - (sideLength / ySide), 0)
       .domain(state.agesList);
 
+    // FIXME: use sszvis color scale instead
     var colorDomain = [state.valueDomain[0], d3.mean(state.valueDomain), state.valueDomain[1]];
 
     var colorScale = d3.scale.linear()
       .domain(colorDomain)
       .range(sszvis.color.ranges.sequential.valued.blue);
 
-    var xValue = fn.compose(xScale, xAcc);
-    var yValue = fn.compose(yScale, yAcc);
-    var cValue = fn.compose(colorScale, cAcc);
+    var xValue = sszvis.fn.compose(xScale, xAcc);
+    var yValue = sszvis.fn.compose(yScale, yAcc);
+    var cValue = sszvis.fn.compose(colorScale, cAcc);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#chart', bounds)
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#chart')
+      .datum(state.selection);
+
+
+    // Components
 
     var barGen = sszvis.component.bar()
       .x(xValue)
@@ -103,7 +125,7 @@
       .height(yScale.rangeBand())
       .fill(cValue)
       .stroke(function(d) {
-        return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : "none"
+        return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
       });
 
     var xAxis = sszvis.axis.x.ordinal()
@@ -127,50 +149,68 @@
       .units('Einwohner');
 
     var tooltipHeaderText = sszvis.component.modularText()
-      .bold(cAcc)
-      .plain(' Einwohner');
-
-    var tooltipBodyText = sszvis.component.modularText()
-      .plain('im ')
       .plain(xAcc);
 
-    var tooltipMaker = sszvis.component.tooltip()
-      .orientation('bottom')
-      .x(function(d) { return xValue(d) + xScale.rangeBand() / 2 })
-      .y(yValue)
+    // FIXME: improve styling of line breaks
+    var tooltipBodyText = sszvis.component.modularText()
+      .plain(cAcc).plain('Einwohner')
+      .newline()
+      .plain(yAcc).plain('Jahre alt');
+
+    var tooltip = sszvis.component.tooltip2()
+      .renderInto(tooltipLayer)
       .header(tooltipHeaderText)
-      .body(tooltipBodyText);
+      .body(tooltipBodyText)
+      .visible(isSelected);
 
-    var chart = sszvis.createChart('#chart', bounds)
-      .datum(state.data);
 
-    var overlay = sszvis.createHtmlLayer('#chart')
-      .datum(state.selection)
-      .call(tooltipMaker);
+    // Rendering
 
-    var bars = chart.selectGroup('bars')
+    var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 
-    bars.selectAll('rect')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout', actions.hideTooltip);
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
-    chart.selectGroup('xAxis')
+    chartLayer.selectGroup('xAxis')
       .attr('transform', 'translate(0, -10)')
       .call(xAxis);
 
-    chart.selectGroup('yAxis')
+    chartLayer.selectGroup('yAxis')
       .attr('transform', 'translate(-10, 0)')
       .call(yAxis);
 
-    chart.selectGroup('legend')
+    chartLayer.selectGroup('legend')
       .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 20) + ')')
       .call(legend);
+
+
+    // Interaction
+
+    bars.selectAll('.sszvis-bar')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function isSelected(d) {
+    return state.selection.indexOf(d) >= 0;
   }
 
   function parseKreisInt(k) {
     return parseInt(k.replace('Kreis ', ''), 10);
   }
+
+  function sortInt(a, b) {
+    return d3.ascending(parseInt(a, 10), parseInt(b, 10));
+  }
+
+  function sortKreisInt(a, b) {
+    return d3.ascending(parseKreisInt(a), parseKreisInt(b));
+  }
+
 
 }());
 </script>

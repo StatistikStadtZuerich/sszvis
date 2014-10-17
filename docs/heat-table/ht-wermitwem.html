@@ -13,20 +13,52 @@
 <div id="chart"></div>
 <script>
 (function() {
+  'use strict';
 
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('manAge');
+  var yAcc = sszvis.fn.prop('womAge');
+  var cAcc = sszvis.fn.prop('value');
+
+
+  /* Application state
+  ----------------------------------------------- */
   var state = {
     data: [],
     manAgeList: [],
     womAgeList: [],
     valueDomain: [0, 0],
-    tooltips: [],
-    hoveredDatum: {}
+    selection: []
   };
 
-  var xAcc = sszvis.fn.prop('manAge');
-  var yAcc = sszvis.fn.prop('womAge');
-  var cAcc = sszvis.fn.prop('value');
 
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.manAgeList = sszvis.fn.set(state.data, xAcc);
+      state.womAgeList = sszvis.fn.set(state.data, yAcc);
+      state.valueDomain = d3.extent(state.data, cAcc);
+
+      render(state);
+    },
+
+    showTooltip: function(datum) {
+      state.selection = [datum];
+      render(state);
+    },
+
+    hideTooltip: function() {
+      state.selection = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
   d3.csv('data/HT_wermitwem.csv')
     .row(function(d) {
       return {
@@ -36,41 +68,24 @@
       };
     })
     .get(function(error, data) {
-      if (error) {
-        console.log('error loading data: ', error);
-        return;
-      }
-
-      state.data = data;
-
-      state.manAgeList = sszvis.fn.set(state.data, xAcc);
-
-      state.womAgeList = sszvis.fn.set(state.data, yAcc);
-
-      state.valueDomain = d3.extent(state.data, cAcc);
-
-      render(state);
+      error ? sszvis.loadError(error) : actions.prepareState(data);
     });
 
-  var actions = {
-    showTooltip: function(datum) {
-      state.tooltips = [datum];
-      state.hoveredDatum = datum;
-      render(state);
-    },
-    hideTooltip: function() {
-      state.tooltips = [];
-      state.hoveredDatum = {};
-      render(state);
-    }
-  };
 
+  /* Render
+  ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ width: 600, height: 480, top: 70, right: 10, bottom: 76, left: 120 });
 
+    // FIXME: sideLength should be similar across charts and only
+    //        shrink when it doesn't fit the width. Growing vertically
+    //        is allowed.
     var xSide = bounds.innerWidth / state.manAgeList.length;
     var ySide = bounds.innerHeight / state.womAgeList.length;
     var sideLength = Math.min(xSide, ySide) * 0.95;
+
+
+    // Scales
 
     var xScale = d3.scale.ordinal()
       .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
@@ -80,7 +95,8 @@
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
       .domain(state.womAgeList);
 
-    var colorDomain = [state.valueDomain[0], (state.valueDomain[0] + state.valueDomain[1]) / 2, state.valueDomain[1]];
+    // FIXME: use sszvis color scale instead
+    var colorDomain = [state.valueDomain[0], d3.mean(state.valueDomain), state.valueDomain[1]];
 
     var colorScale = d3.scale.linear()
       .domain(colorDomain)
@@ -90,13 +106,27 @@
     var yValue = sszvis.fn.compose(yScale, yAcc);
     var cValue = sszvis.fn.compose(colorScale, cAcc);
 
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#chart', bounds)
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#chart')
+      .datum(state.selection);
+
+
+    // Components
+
     var barGen = sszvis.component.bar()
       .x(xValue)
       .y(yValue)
       .width(xScale.rangeBand())
       .height(yScale.rangeBand())
       .fill(cValue)
-      .stroke(function(d) { return d === state.hoveredDatum ? d3.hsl(cValue(d)).darker(0.4) : "none" });
+      .stroke(function(d) {
+        return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
+      });
 
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
@@ -118,43 +148,57 @@
       .units('Personen');
 
     var tooltipHeaderText = sszvis.component.modularText()
-      .bold(cAcc);
+      .bold(cAcc).plain('Paare');
 
-    var tooltipMaker = sszvis.component.tooltip()
-      .orientation('bottom')
-      .x(function(d) { return xValue(d) + xScale.rangeBand() / 2 })
-      .y(yValue)
-      .header(tooltipHeaderText);
+    // FIXME: improve styling of text, possibly include tabular layout
+    var tooltipBodyText = sszvis.component.modularText()
+      .plain('Alter des Mannes:').plain(xAcc)
+      .newline()
+      .plain('Alter der Frau:').plain(yAcc);
 
-    var hoverBehavior = sszvis.behavior.mouseover()
-      .mouseover(actions.showTooltip)
-      .mouseout(actions.hideTooltip);
+    var tooltip = sszvis.component.tooltip2()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeaderText)
+      .body(tooltipBodyText)
+      .visible(isSelected);
 
-    var chart = sszvis.createChart('#chart', bounds)
-      .datum(state.data);
 
-    var overlay = sszvis.createHtmlLayer('#chart')
-      .datum(state.tooltips)
-      .call(tooltipMaker)
+    // Rendering
 
-    var bars = chart.selectGroup('bars')
+    var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 
-    bars.selectAll('rect')
-      .call(hoverBehavior);
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
-    chart.selectGroup('xAxis')
+    chartLayer.selectGroup('xAxis')
       .attr('transform', 'translate(0, -10)')
       .call(xAxis);
 
-    chart.selectGroup('yAxis')
+    chartLayer.selectGroup('yAxis')
       .attr('transform', 'translate(-10, 0)')
       .call(yAxis);
 
-    chart.selectGroup('legend')
+    chartLayer.selectGroup('legend')
       .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
       .call(legend);
+
+
+    // Interaction
+
+    bars.selectAll('.sszvis-bar')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
+
   }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function isSelected(d) {
+    return state.selection.indexOf(d) >= 0;
+  }
+
 
 }());
 </script>
