@@ -18,41 +18,22 @@ Jahr,Region,Wert
 2008,Stadt Zürich,0.109639402
 2009,Stadt Zürich,0.109170741
 2010,Stadt Zürich,0.107356632
-1992,Agglomeration Zürich ,0.1865232
-1993,Agglomeration Zürich ,0.189767745
-1994,Agglomeration Zürich ,0.188837444
-1995,Agglomeration Zürich ,0.188632441
-1996,Agglomeration Zürich ,0.193141193
-1997,Agglomeration Zürich ,0.197382567
-1998,Agglomeration Zürich ,0.200263022
-1999,Agglomeration Zürich ,0.201357653
-2000,Agglomeration Zürich ,0.205034218
-2001,Agglomeration Zürich ,0.200623839
-2002,Agglomeration Zürich ,0.198205763
-2003,Agglomeration Zürich ,0.198299578
-2004,Agglomeration Zürich ,0.197604929
-2005,Agglomeration Zürich ,0.196921964
-2006,Agglomeration Zürich ,0.199119451
-2007,Agglomeration Zürich ,0.200912893
-2008,Agglomeration Zürich ,0.199652275
-2009,Agglomeration Zürich ,0.199242323
-2010,Agglomeration Zürich ,0.197268433
-1992,Agglomeration Zürich ohne Stadt ,0.091600911
-1993,Agglomeration Zürich ohne Stadt ,0.090601856
-1994,Agglomeration Zürich ohne Stadt ,0.090614416
-1995,Agglomeration Zürich ohne Stadt ,0.090430052
-1996,Agglomeration Zürich ohne Stadt ,0.090375548
-1997,Agglomeration Zürich ohne Stadt ,0.090091806
-1998,Agglomeration Zürich ohne Stadt ,0.090042906
-1999,Agglomeration Zürich ohne Stadt ,0.090084775
-2000,Agglomeration Zürich ohne Stadt ,0.090205631
-2001,Agglomeration Zürich ohne Stadt ,0.090349538
-2002,Agglomeration Zürich ohne Stadt ,0.089368286
-2003,Agglomeration Zürich ohne Stadt ,0.088791702
-2004,Agglomeration Zürich ohne Stadt ,0.088940005
-2005,Agglomeration Zürich ohne Stadt ,0.088766972
-2006,Agglomeration Zürich ohne Stadt ,0.089052687
-2007,Agglomeration Zürich ohne Stadt ,0.089125771
-2008,Agglomeration Zürich ohne Stadt ,0.090012873
-2009,Agglomeration Zürich ohne Stadt ,0.090071583
-2010,Agglomeration Zürich ohne Stadt ,0.089911802
+1992,Agglomeration Zürich,0.091600911
+1993,Agglomeration Zürich,0.090601856
+1994,Agglomeration Zürich,0.090614416
+1995,Agglomeration Zürich,0.090430052
+1996,Agglomeration Zürich,0.090375548
+1997,Agglomeration Zürich,0.090091806
+1998,Agglomeration Zürich,0.090042906
+1999,Agglomeration Zürich,0.090084775
+2000,Agglomeration Zürich,0.090205631
+2001,Agglomeration Zürich,0.090349538
+2002,Agglomeration Zürich,0.089368286
+2003,Agglomeration Zürich,0.088791702
+2004,Agglomeration Zürich,0.088940005
+2005,Agglomeration Zürich,0.088766972
+2006,Agglomeration Zürich,0.089052687
+2007,Agglomeration Zürich,0.089125771
+2008,Agglomeration Zürich,0.090012873
+2009,Agglomeration Zürich,0.090071583
+2010,Agglomeration Zürich,0.089911802
