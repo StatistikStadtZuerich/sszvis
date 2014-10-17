@@ -134,12 +134,6 @@
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 
-    // FIXME: improve mouseover handling to prevent tooltip flickering
-    //        by selecting the closest datum
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
-
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
@@ -150,6 +144,15 @@
     chartLayer.selectGroup('yAxis')
       .attr('transform', 'translate(-5, 0)')
       .call(yAxis);
+
+
+    // Interaction
+
+    // FIXME: improve mouseover handling to prevent tooltip flickering
+    //        by selecting the closest datum
+    bars.selectAll('.sszvis-bar')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
   }
 
 

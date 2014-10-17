@@ -131,10 +131,6 @@
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
-
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
@@ -145,6 +141,13 @@
     chartLayer.selectGroup('yAxis')
       .attr('transform', 'translate(-5, 0)')
       .call(yAxis);
+
+
+    // Interaction
+
+    bars.selectAll('.sszvis-bar')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
 
   }
 
