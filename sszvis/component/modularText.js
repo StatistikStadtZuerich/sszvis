@@ -51,6 +51,14 @@ namespace('sszvis.component.modularText', function(module) {
       return makeText;
     };
 
+    makeText.newline = function() {
+      textUnits.push({
+        type: 'newline',
+        tFunc: fn.constant('<br />')
+      });
+      return makeText;
+    };
+
     ['bold', 'italic', 'plain'].forEach(function(type) {
       makeText[type] = function(tFunc) {
         if (typeof tFunc === "string") tFunc = fn.constant(tFunc);
