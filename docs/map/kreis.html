@@ -23,12 +23,12 @@
     };
 
     var vAcc = sszvis.fn.prop('value');
-    var qAcc = sszvis.fn.prop('kreisnum');
+    var qAcc = sszvis.fn.prop('geoId');
 
     d3.csv('data/M_kreis.csv')
       .row(function(d) {
         return {
-          kreisnum: sszvis.parse.number(d['KNr']),
+          geoId: sszvis.parse.number(d['KNr']),
           name: d['Kname'],
           value: sszvis.parse.number(d['Bevölkerung'])
         };
@@ -40,18 +40,6 @@
         }
 
         state.data = data;
-
-        var grouper = sszvis.cascade()
-          .objectBy(qAcc);
-
-        var byKreis = grouper.apply(state.data);
-
-        state.mapData = {};
-
-        // "flatten" the byKreis data
-        for (var prop in byKreis) {
-          state.mapData[prop] = byKreis[prop][0];
-        }
 
         state.valueDomain = [0, d3.max(state.data, vAcc)];
 
@@ -72,7 +60,7 @@
         .fill(sszvis.fn.compose(colorScale, vAcc));
 
       var chart = sszvis.createChart('#chart', bounds)
-        .datum(state.mapData);
+        .datum(state.data);
 
       chart.call(mapMaker);
     }

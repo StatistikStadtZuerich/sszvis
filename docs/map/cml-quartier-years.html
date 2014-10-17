@@ -17,29 +17,61 @@
   (function() {
     'use strict';
 
+    /* Configuration
+    ----------------------------------------------- */
+    var INITIAL_YEAR = sszvis.parse.year('2013');
+//    var INITIAL_YEAR = sszvis.parse.year('2014');
+
     /* Shortcuts
     ----------------------------------------------- */
     var vAcc = sszvis.fn.prop('value');
     var yearAcc = sszvis.fn.prop('year');
-    var qAcc = sszvis.fn.prop('quarternum');
+    var qAcc = sszvis.fn.prop('geoId');
 
+    var lineGrouper = sszvis.cascade()
+      .arrayBy(qAcc)
+      .sort(function(a, b) {
+        return d3.ascending(yearAcc(a), yearAcc(b));
+      });
 
     /* Application state
     ----------------------------------------------- */
     var state = {
       data: [],
-      mapData: {},
       valueDomain: [0, 0],
-      currentYear: 2013,
-      years: []
+      yearDomain: [new Date(), new Date()],
+      quarters: [],
+      lineData: [],
+      selectedData: {},
+      currentYear: null,
+      currentMapData: []
     };
 
 
     /* State transitions
     ----------------------------------------------- */
     var actions = {
-      changeYear: function(y) {
-        state.currentYear = y.getFullYear();
+      prepareState: function(data) {
+        state.data = data;
+
+        state.valueDomain = d3.extent(state.data, vAcc);
+
+        state.yearDomain = d3.extent(state.data, yearAcc);
+
+        state.quarters = sszvis.fn.set(state.data, qAcc);
+
+        state.lineData = lineGrouper.apply(state.data);
+
+        actions.changeYear(INITIAL_YEAR);
+      },
+
+      changeYear: function(inputDate) {
+        var closest = closestDatum(state.data, yearAcc, inputDate);
+        state.selectedData = [closest];
+        state.currentYear = yearAcc(closest).getFullYear();
+        state.currentMapData = state.data.filter(function(v) {
+          return yearAcc(v).getFullYear() === state.currentYear;
+        });
         render(state);
       }
     };
@@ -50,43 +82,13 @@
     d3.csv('data/CML_quartier_years.csv')
       .row(function(d) {
         return {
-          quarternum: sszvis.parse.number(d['QNr']),
-          quartername: d['Qname'],
+          geoId: sszvis.parse.number(d['QNr']),
           year: sszvis.parse.year(d['Jahr']),
           value: sszvis.parse.number(d['Anzahl'])
         };
       })
       .get(function(error, data) {
-        if (error) {
-          console.log('error loading data: ', error);
-          return;
-        }
-
-        state.data = data;
-
-        state.valueDomain = d3.extent(state.data, vAcc);
-
-        state.yearDomain = d3.extent(state.data, yearAcc);
-
-        state.quarters = sszvis.fn.set(state.data, qAcc);
-
-        var mapGrouper = sszvis.cascade()
-          .objectBy(function(d) {
-            return yearAcc(d).getFullYear();
-          })
-          .objectBy(qAcc);
-
-        state.mapData = mapGrouper.apply(state.data);
-
-        var lineGrouper = sszvis.cascade()
-          .arrayBy(qAcc)
-          .sort(function(a, b) {
-            return d3.ascending(yearAcc(a), yearAcc(b));
-          });
-
-        state.lineData = lineGrouper.apply(state.data);
-
-        render(state);
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
 
 
@@ -102,7 +104,7 @@
 
       var fillScale = sszvis.scale.colorScale()
         .domain(state.valueDomain)
-        .range(sszvis.color.ranges.sequential.valued.red);
+        .range(sszvis.color.ranges.sequential.valued.blue);
 
       var xScale = d3.time.scale()
         .domain(state.yearDomain)
@@ -110,7 +112,7 @@
 
       var yScale = d3.scale.linear()
         .domain(state.valueDomain)
-        .range([lineChartBounds.innerHeight, 0]);
+        .range([lineChartBounds.innerHeight, 20]);
 
 
       // Layers
@@ -118,13 +120,14 @@
       var chart = sszvis.createChart('#chart', outerBounds);
 
       var map = chart.selectGroup('map')
-        .datum(state.mapData[state.currentYear]);
+        .datum(state.currentMapData);
 
       var lineChart = chart.selectGroup('line')
         .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.innerHeight + lineChartBounds.padding.top) + ')')
         .datum(state.lineData);
 
-      var highlightLayer = lineChart.selectGroup('highlight')
+      var highlightLayer = chart.selectGroup('highlight')
+        .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.innerHeight + lineChartBounds.padding.top) + ')')
         .datum(state.selectedData);
 
 
@@ -134,7 +137,7 @@
         .type('zurich-statistischeQuartiere')
         .width(mapBounds.innerWidth)
         .height(mapBounds.innerHeight)
-        .fill(sszvis.fn.compose(fillScale, vAcc, sszvis.fn.first));
+        .fill(sszvis.fn.compose(fillScale, vAcc));
 
       var lineMaker = sszvis.component.line()
         .xValue(sszvis.fn.compose(xScale, yearAcc))
@@ -152,7 +155,9 @@
 
       var slideBar = sszvis.control.slideBar()
         .x(yearAcc)
-        .xScale(xScale);
+        .y(vAcc)
+        .xScale(xScale)
+        .yScale(yScale);
 
       var moveBehavior = sszvis.behavior.move()
         .xScale(xScale)
@@ -177,6 +182,15 @@
 
       lineChart.selectGroup('interaction')
         .call(moveBehavior);
+    }
+
+    /* Helper functions
+    ----------------------------------------------- */
+    function closestDatum(data, accessor, datum) {
+      var i = d3.bisector(accessor).left(data, datum, 1);
+      var d0 = data[i - 1];
+      var d1 = data[i] || d0;
+      return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
     }
 
   }());

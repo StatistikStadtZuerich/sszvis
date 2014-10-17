@@ -15,13 +15,14 @@
   <div id="chart"></div>
   <script>
   (function() {
+    var INITIAL_YEAR = '2012';
 
     var state = {
       data: [],
-      mapData: {},
       valueDomain: [0, 0],
-      currentYear: "2012",
-      years: []
+      years: [],
+      currentYear: null,
+      currentMapData: []
     };
 
     var vAcc = sszvis.fn.prop('value');
@@ -29,8 +30,21 @@
     var qAcc = sszvis.fn.prop('quarternum');
 
     var actions = {
-      onYearChange: function(y) {
+      prepareState: function(data) {
+        state.data = data;
+
+        state.valueDomain = [0, d3.max(state.data, vAcc)];
+
+        state.years = sszvis.fn.set(state.data, yAcc).sort(d3.ascending);
+
+        actions.setYear(INITIAL_YEAR);
+      },
+
+      setYear: function(y) {
         state.currentYear = y;
+        state.currentMapData = state.data.filter(function(v) {
+          return yAcc(v) === state.currentYear;
+        });
         render(state);
       }
     };
@@ -45,24 +59,7 @@
         };
       })
       .get(function(error, data) {
-        if (error) {
-          console.log('error loading data: ', error);
-          return;
-        }
-
-        state.data = data;
-
-        var grouper = sszvis.cascade()
-          .objectBy(yAcc)
-          .objectBy(qAcc);
-
-        state.mapData = grouper.apply(state.data);
-
-        state.valueDomain = [0, d3.max(state.data, vAcc)];
-
-        state.years = sszvis.fn.set(state.data, yAcc).sort(d3.ascending);
-
-        render(state);
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
 
     function render(state) {
@@ -76,16 +73,17 @@
         .values(state.years)
         .width(bounds.width / 2)
         .current(state.currentYear)
-        .change(actions.onYearChange);
+        .change(actions.setYear);
 
       var mapMaker = sszvis.map()
         .type('zurich-statistischeQuartiere')
+        .keyName('quarternum')
         .width(bounds.innerWidth)
         .height(bounds.innerHeight)
-        .fill(sszvis.fn.compose(colorScale, vAcc, sszvis.fn.first));
+        .fill(sszvis.fn.compose(colorScale, vAcc));
 
       var chart = sszvis.createChart('#chart', bounds)
-        .datum(state.mapData[state.currentYear]);
+        .datum(state.currentMapData);
 
       chart.call(mapMaker);
 

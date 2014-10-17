@@ -18,7 +18,6 @@
 
     var state = {
       data: [],
-      mapData: {},
       valueDomain: [0, 0]
     };
 
@@ -41,18 +40,6 @@
 
         state.data = data;
 
-        var grouper = sszvis.cascade()
-          .objectBy(qAcc);
-
-        var byKreis = grouper.apply(state.data);
-
-        state.mapData = {};
-
-        // "flatten" the byKreis data
-        for (var prop in byKreis) {
-          state.mapData[prop] = byKreis[prop][0];
-        }
-
         state.valueDomain = [0, d3.max(state.data, vAcc)];
 
         render(state);
@@ -67,12 +54,13 @@
 
       var mapMaker = sszvis.map()
         .type('zurich-statistischeQuartiere')
+        .keyName('quarternum')
         .width(bounds.innerWidth)
         .height(bounds.innerHeight)
         .fill(sszvis.fn.compose(colorScale, vAcc));
 
       var chart = sszvis.createChart('#chart', bounds)
-        .datum(state.mapData);
+        .datum(state.data);
 
       chart.call(mapMaker);
     }
