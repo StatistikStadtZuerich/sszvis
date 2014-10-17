@@ -38,7 +38,6 @@ SOURCE_FILES = \
 	sszvis/loadError.js \
 	sszvis/createChart.js \
 	sszvis/createHtmlLayer.js \
-	sszvis/behavior/mouseover.js \
 	sszvis/behavior/move.js \
 	sszvis/control/segmentedControl.js \
 	sszvis/control/slideBar.js \
