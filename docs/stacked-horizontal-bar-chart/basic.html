@@ -146,7 +146,7 @@
     var tooltipText = sszvis.component.modularText()
       .plain(sszvis.fn.compose(sszvis.format.percent, function(d) { return xAcc(d) / 100; }));
 
-    var tooltip = sszvis.component.tooltip2()
+    var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(tooltipText)

@@ -137,7 +137,7 @@
       .width(bounds.innerWidth)
       .orientation('vertical');
 
-    var tooltip = sszvis.component.tooltip2()
+    var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(sszvis.fn.prop('category'))
       .body(function(d){ return 'Anzahl: ' + d.value; })
