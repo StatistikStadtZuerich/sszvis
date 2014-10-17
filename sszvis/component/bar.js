@@ -7,12 +7,12 @@ namespace('sszvis.component.bar', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('x')
-      .prop('y')
-      .prop('width')
-      .prop('height')
-      .prop('fill')
-      .prop('stroke')
+      .prop('x', d3.functor)
+      .prop('y', d3.functor)
+      .prop('width', d3.functor)
+      .prop('height', d3.functor)
+      .prop('fill', d3.functor)
+      .prop('stroke', d3.functor)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -42,7 +42,7 @@ namespace('sszvis.component.bar', function(module) {
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
-            return [props.x(d) + props.width / 2, props.y(d)];
+            return [props.x(d) + props.width(d) / 2, props.y(d)];
           });
 
         selection.call(tooltipAnchor);
