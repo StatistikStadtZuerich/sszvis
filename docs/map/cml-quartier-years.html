@@ -159,10 +159,11 @@
         .xScale(xScale)
         .yScale(yScale);
 
-      var moveBehavior = sszvis.behavior.move()
+      var clickBehavior = sszvis.behavior.click()
         .xScale(xScale)
         .yScale(yScale)
-        .on('move', actions.changeYear);
+        .on('click', actions.changeYear)
+        .on('drag', actions.changeYear);
 
 
       // Rendering
@@ -181,7 +182,7 @@
       highlightLayer.call(slideBar);
 
       lineChart.selectGroup('interaction')
-        .call(moveBehavior);
+        .call(clickBehavior);
     }
 
     /* Helper functions

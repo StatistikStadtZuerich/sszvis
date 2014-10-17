@@ -26,6 +26,10 @@ namespace('sszvis.control.slideBar', function(module) {
         var bottom = d3.max(props.yScale.range()) - 4;
         var handleWidth = 10;
         var handleHeight = 30;
+
+        // FIXME: currently, the handle is rendered outside of the range of the yScale.
+        // This keeps the handle out of the data area, but it also means that the mouse clicks aren't in the area of the scale
+        // This makes the handle incompatible with, for instance, the click behavior component.
         var handleTop = top - handleHeight;
 
         var group = selection.selectAll('.sszvis-slider-group')

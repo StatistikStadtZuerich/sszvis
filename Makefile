@@ -39,6 +39,7 @@ SOURCE_FILES = \
 	sszvis/createChart.js \
 	sszvis/createHtmlLayer.js \
 	sszvis/behavior/move.js \
+	sszvis/behavior/click.js \
 	sszvis/control/segmentedControl.js \
 	sszvis/control/slideBar.js \
 	sszvis/component/bar.js \

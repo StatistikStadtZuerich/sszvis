@@ -10,11 +10,11 @@ namespace('sszvis.behavior.move', function(module) {
     var moveComponent = d3.component()
       .prop('xScale')
       .prop('yScale')
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var xExtent = props.xScale.range();
+        var xExtent = props.xScale.range().sort(d3.ascending);
         var yExtent = props.yScale.range().sort(d3.ascending);
 
         var layer = selection.selectAll('[data-sszvis-behavior-move]')
@@ -41,6 +41,6 @@ namespace('sszvis.behavior.move', function(module) {
     d3.rebind(moveComponent, event, 'on');
 
     return moveComponent;
-  }
+  };
 
 });
