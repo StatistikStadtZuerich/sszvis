@@ -764,6 +764,28 @@ namespace('sszvis.patterns', function(module) {
       .attr('stroke', '#d0d0d0');
   };
 
+  module.exports.dataAreaPattern = function(selection) {
+    var pWidth = 6;
+    var pHeight = 6;
+
+    selection
+      .attr('id', 'data-area-pattern')
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('patternContentUnits', 'userSpaceOnUse')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight);
+
+    selection
+      .append('line')
+      .attr('x1', pWidth)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', pHeight)
+      .attr('stroke', '#d0d0d0');
+  };
+
 });
 
 //////////////////////////////////// SECTION ///////////////////////////////////
@@ -2964,6 +2986,52 @@ namespace('sszvis.component.pyramid', function(module) {
           // reflection around y = x plus +width
           rendered.attr('transform', 'matrix(0, 1, 1, 0, ' + (props.width + props.groupPadding) + ', 0)');
         }
+
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * @module sszvis/component/dataAreaCircle
+ *
+ * @returns {d3.component} a circular data area component
+ */
+namespace('sszvis.component.dataAreaCircle', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('id').id('')
+      .prop('x', d3.functor)
+      .prop('y', d3.functor)
+      .prop('r', d3.functor)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var defs = selection.selectAll('defs')
+          .data([1])
+          .enter()
+          .append('defs');
+
+        var pattern = defs.selectAll('.sszvis-data-area-pattern')
+          .data([1])
+          .enter()
+          .append('pattern')
+          .call(sszvis.patterns.dataAreaPattern);
+
+        var dataArea = selection.selectAll('.sszvis-data-area-circle')
+          .data(data);
+
+        dataArea.enter()
+          .append('circle')
+          .attr('cx', props.x)
+          .attr('cy', props.y)
+          .attr('r', props.r)
+          .attr('fill', 'url(#data-area-pattern)');
 
       });
   };

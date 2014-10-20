@@ -57,6 +57,7 @@ SOURCE_FILES = \
 	sszvis/component/pie.js \
 	sszvis/component/multiples.js \
 	sszvis/component/pyramid.js \
+	sszvis/component/dataAreaCircle.js \
 	sszvis/map/map.js \
 	sszvis/map/switzerland.js \
 	sszvis/map/zurich.js

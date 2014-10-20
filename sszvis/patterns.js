@@ -64,4 +64,26 @@ namespace('sszvis.patterns', function(module) {
       .attr('stroke', '#d0d0d0');
   };
 
+  module.exports.dataAreaPattern = function(selection) {
+    var pWidth = 6;
+    var pHeight = 6;
+
+    selection
+      .attr('id', 'data-area-pattern')
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('patternContentUnits', 'userSpaceOnUse')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight);
+
+    selection
+      .append('line')
+      .attr('x1', pWidth)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', pHeight)
+      .attr('stroke', '#d0d0d0');
+  };
+
 });

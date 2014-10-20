@@ -15,6 +15,8 @@
   <script>
   (function() {
 
+    var HIGHLIGHTED_YEARS = [2003, 2006];
+
     var state = {
       data: [],
       years: [0, 0],
@@ -76,8 +78,21 @@
         .title('Wert')
         .titleOffset(15);
 
+      var dataAreaData = state.data.filter(function(v) {
+        return HIGHLIGHTED_YEARS.indexOf(xAcc(v)) >= 0;
+      });
+
+      var area = sszvis.component.dataAreaCircle()
+        .x(sszvis.fn.compose(xScale, xAcc))
+        .y(sszvis.fn.compose(yScale, yAcc))
+        .r(20);
+
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.lineData);
+
+      chart.selectGroup('dataArea')
+        .datum(dataAreaData)
+        .call(area);
 
       chart.selectGroup('line')
         .call(line);
