@@ -111,17 +111,7 @@ namespace('sszvis.map', function(module) {
 
         var mapPath = swissMapPath(props.width, props.height, mapData);
 
-        var defs = selection.selectAll('.sszvis-map-defs')
-          .data([1])
-          .enter()
-          .append('defs')
-          .classed('sszvis-map-defs', true);
-
-        var newMissingPattern = defs
-          .selectAll('.sszvis-map-pattern#missing-pattern')
-          .data([1])
-          .enter()
-          .append('pattern')
+        sszvis.patterns.ensurePattern(selection, 'missing-pattern')
           .call(sszvis.patterns.mapMissingValuePattern);
 
         var baseGroups = selection.selectAll('.sszvis-map-group')
@@ -169,11 +159,7 @@ namespace('sszvis.map', function(module) {
 
         // special rendering for lake zurich
         if (props.type.indexOf('zurich-') >= 0) {
-          var newLakePattern = defs
-            .selectAll('.sszvis-map-pattern#lake-pattern')
-            .data([1])
-            .enter()
-            .append('pattern')
+          sszvis.patterns.ensurePattern(selection, 'lake-pattern')
             .call(sszvis.patterns.mapLakePattern);
 
           var zurichSee = selection.selectAll('.sszvis-lake-zurich')

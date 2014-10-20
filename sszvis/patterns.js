@@ -4,12 +4,32 @@
  */
 namespace('sszvis.patterns', function(module) {
 
+  module.exports.ensureDefs = function(selection) {
+    var defs = selection.selectAll('defs')
+      .data([1]);
+
+    defs.enter()
+      .append('defs');
+
+    return defs;
+  };
+
+  module.exports.ensurePattern = function(selection, patternId) {
+    var pattern = sszvis.patterns.ensureDefs(selection)
+      .selectAll('pattern#' + patternId)
+      .data([1])
+      .enter()
+      .append('pattern')
+      .attr('id', patternId);
+
+    return pattern;
+  };
+
   module.exports.mapMissingValuePattern = function(selection) {
     var pWidth = 4;
     var pHeight = 4;
 
     selection
-      .attr('id', 'missing-pattern')
       .attr('patternUnits', 'userSpaceOnUse')
       .attr('patternContentUnits', 'userSpaceOnUse')
       .attr('x', 0)
@@ -39,7 +59,6 @@ namespace('sszvis.patterns', function(module) {
     var pHeight = 6;
 
     selection
-      .attr('id', 'lake-pattern')
       .attr('patternUnits', 'userSpaceOnUse')
       .attr('patternContentUnits', 'userSpaceOnUse')
       .attr('x', 0)
@@ -69,7 +88,6 @@ namespace('sszvis.patterns', function(module) {
     var pHeight = 6;
 
     selection
-      .attr('id', 'data-area-pattern')
       .attr('patternUnits', 'userSpaceOnUse')
       .attr('patternContentUnits', 'userSpaceOnUse')
       .attr('x', 0)

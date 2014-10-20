@@ -704,12 +704,32 @@ namespace('sszvis.color', function(module) {
  */
 namespace('sszvis.patterns', function(module) {
 
+  module.exports.ensureDefs = function(selection) {
+    var defs = selection.selectAll('defs')
+      .data([1]);
+
+    defs.enter()
+      .append('defs');
+
+    return defs;
+  };
+
+  module.exports.ensurePattern = function(selection, patternId) {
+    var pattern = sszvis.patterns.ensureDefs(selection)
+      .selectAll('pattern#' + patternId)
+      .data([1])
+      .enter()
+      .append('pattern')
+      .attr('id', patternId);
+
+    return pattern;
+  };
+
   module.exports.mapMissingValuePattern = function(selection) {
     var pWidth = 4;
     var pHeight = 4;
 
     selection
-      .attr('id', 'missing-pattern')
       .attr('patternUnits', 'userSpaceOnUse')
       .attr('patternContentUnits', 'userSpaceOnUse')
       .attr('x', 0)
@@ -739,7 +759,6 @@ namespace('sszvis.patterns', function(module) {
     var pHeight = 6;
 
     selection
-      .attr('id', 'lake-pattern')
       .attr('patternUnits', 'userSpaceOnUse')
       .attr('patternContentUnits', 'userSpaceOnUse')
       .attr('x', 0)
@@ -769,7 +788,6 @@ namespace('sszvis.patterns', function(module) {
     var pHeight = 6;
 
     selection
-      .attr('id', 'data-area-pattern')
       .attr('patternUnits', 'userSpaceOnUse')
       .attr('patternContentUnits', 'userSpaceOnUse')
       .attr('x', 0)
@@ -3004,7 +3022,6 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('id').id('')
       .prop('x', d3.functor)
       .prop('y', d3.functor)
       .prop('r', d3.functor)
@@ -3012,15 +3029,7 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var defs = selection.selectAll('defs')
-          .data([1])
-          .enter()
-          .append('defs');
-
-        var pattern = defs.selectAll('.sszvis-data-area-pattern')
-          .data([1])
-          .enter()
-          .append('pattern')
+        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
         var dataArea = selection.selectAll('.sszvis-data-area-circle')
@@ -3028,11 +3037,13 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
 
         dataArea.enter()
           .append('circle')
+          .classed('sszvis-data-area-circle', true);
+
+        dataArea
           .attr('cx', props.x)
           .attr('cy', props.y)
           .attr('r', props.r)
           .attr('fill', 'url(#data-area-pattern)');
-
       });
   };
 
@@ -3154,17 +3165,7 @@ namespace('sszvis.map', function(module) {
 
         var mapPath = swissMapPath(props.width, props.height, mapData);
 
-        var defs = selection.selectAll('.sszvis-map-defs')
-          .data([1])
-          .enter()
-          .append('defs')
-          .classed('sszvis-map-defs', true);
-
-        var newMissingPattern = defs
-          .selectAll('.sszvis-map-pattern#missing-pattern')
-          .data([1])
-          .enter()
-          .append('pattern')
+        sszvis.patterns.ensurePattern(selection, 'missing-pattern')
           .call(sszvis.patterns.mapMissingValuePattern);
 
         var baseGroups = selection.selectAll('.sszvis-map-group')
@@ -3212,11 +3213,7 @@ namespace('sszvis.map', function(module) {
 
         // special rendering for lake zurich
         if (props.type.indexOf('zurich-') >= 0) {
-          var newLakePattern = defs
-            .selectAll('.sszvis-map-pattern#lake-pattern')
-            .data([1])
-            .enter()
-            .append('pattern')
+          sszvis.patterns.ensurePattern(selection, 'lake-pattern')
             .call(sszvis.patterns.mapLakePattern);
 
           var zurichSee = selection.selectAll('.sszvis-lake-zurich')

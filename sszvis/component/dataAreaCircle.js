@@ -7,7 +7,6 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('id').id('')
       .prop('x', d3.functor)
       .prop('y', d3.functor)
       .prop('r', d3.functor)
@@ -15,15 +14,7 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var defs = selection.selectAll('defs')
-          .data([1])
-          .enter()
-          .append('defs');
-
-        var pattern = defs.selectAll('.sszvis-data-area-pattern')
-          .data([1])
-          .enter()
-          .append('pattern')
+        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
         var dataArea = selection.selectAll('.sszvis-data-area-circle')
@@ -31,11 +22,13 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
 
         dataArea.enter()
           .append('circle')
+          .classed('sszvis-data-area-circle', true);
+
+        dataArea
           .attr('cx', props.x)
           .attr('cy', props.y)
           .attr('r', props.r)
           .attr('fill', 'url(#data-area-pattern)');
-
       });
   };
 
