@@ -1780,6 +1780,8 @@ namespace('sszvis.control.slideBar', function(module) {
       .prop('y')
       .prop('xScale')
       .prop('yScale')
+      .prop('label').label(sszvis.fn.constant(''))
+      .prop('color')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -1841,6 +1843,39 @@ namespace('sszvis.control.slideBar', function(module) {
           .attr('x2', xValue)
           .attr('y2', handleTop + handleHeight * 0.85);
 
+        var dots = group.selectAll('.sszvis-slider-dot')
+          .data(data);
+
+        dots.enter()
+          .append('circle')
+          .classed('sszvis-slider-dot', true);
+
+        dots.exit().remove();
+
+        dots
+          .attr('cx', xValue)
+          .attr('cy', yValue)
+          .attr('r', 3.5)
+          .attr('fill', props.color);
+
+        var captions = group.selectAll('.sszvis-slider-label')
+          .data(data);
+
+        captions.enter()
+          .append('text')
+          .classed('sszvis-slider-label', true);
+
+        captions
+          .attr('x', xValue)
+          .attr('y', yValue)
+          .attr('dx', 10)
+          .attr('dy', function(d) {
+            var baselineShift = 5;
+            if (yValue(d) < top + baselineShift)    return 2 * baselineShift;
+            if (yValue(d) > bottom - baselineShift) return 0;
+            return baselineShift;
+          })
+          .text(props.label);
 
       });
   };

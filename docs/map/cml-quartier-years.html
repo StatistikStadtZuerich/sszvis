@@ -67,6 +67,7 @@
 
       changeYear: function(inputDate) {
         var closest = closestDatum(state.data, yearAcc, inputDate);
+        // FIXME: figure out how to choose just one (or several) data points as the selected data
         state.selectedData = [closest];
         state.currentYear = yearAcc(closest).getFullYear();
         state.currentMapData = state.data.filter(function(v) {
@@ -157,7 +158,11 @@
         .x(yearAcc)
         .y(vAcc)
         .xScale(xScale)
-        .yScale(yScale);
+        .yScale(yScale)
+        .color(sszvis.color.values.basicBlue)
+        .label(function(d) {
+          return 'Anzahl: ' + d.value;
+        });
 
       var clickBehavior = sszvis.behavior.click()
         .xScale(xScale)
@@ -180,9 +185,10 @@
       lineChart.selectGroup('yAxis')
         .call(lineYAxis);
 
-      highlightLayer.call(slideBar);
+      highlightLayer.selectGroup('slider')
+        .call(slideBar);
 
-      lineChart.selectGroup('interaction')
+      highlightLayer.selectGroup('interaction')
         .call(clickBehavior);
     }
 

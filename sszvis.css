@@ -148,6 +148,20 @@
   stroke: #A6A8AB;
 }
 
+.sszvis-slider-dot {
+  stroke: #fff;
+  stroke-width: 1;
+}
+
+.sszvis-slider-label {
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: bold;
+  text-shadow: #fff 1px 0 1px, #fff -1px 0 1px, #fff 0 1px 1px, #fff 0 -1px 1px;
+}
+
 /**
  * Vertical Ruler component
  *
