@@ -24,6 +24,20 @@
 
 ``` project
 {
+    "index": "docs/multiple-line-chart/two-cat-missing.html",
+    "readme": "docs/multiple-line-chart/README.md",
+    "files": [
+        "docs/multiple-line-chart/data/ML_2Categories_Quarterly_missing.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 500
+    }
+}
+```
+
+``` project
+{
     "index": "docs/multiple-line-chart/eight-cat.html",
     "readme": "docs/multiple-line-chart/README.md",
     "files": [

@@ -84,6 +84,20 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
 ```project
 {
+    "index": "docs/simple-line-chart/daily_missing.html",
+    "readme": "docs/simple-line-chart/README.md",
+    "files": [
+        "docs/simple-line-chart/data/SL_daily_missing.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 450
+    }
+}
+```
+
+```project
+{
     "index": "docs/simple-line-chart/negatives-x-axis.html",
     "readme": "docs/simple-line-chart/README.md",
     "files": [

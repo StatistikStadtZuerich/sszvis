@@ -52,6 +52,22 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 }
 ```
 
+### Few Categories - Missing Values
+
+```project
+{
+    "index": "docs/simple-vertical-bar-chart/few-categories-missing.html",
+    "readme": "docs/simple-vertical-bar-chart/README.md",
+    "files": [
+        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories_missing.csv"
+    ],
+    "size": {
+        "height": 500,
+        "width": 480
+    }
+}
+```
+
 ### Long Names
 
 ```project

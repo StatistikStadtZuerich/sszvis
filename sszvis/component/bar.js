@@ -5,6 +5,11 @@
 namespace('sszvis.component.bar', function(module) {
   'use strict';
 
+  // replaces NaN values with 0
+  function handleMissingVal(v) {
+    return isNaN(v) ? 0 : v;
+  }
+
   module.exports = function() {
     return d3.component()
       .prop('x', d3.functor)
@@ -33,10 +38,10 @@ namespace('sszvis.component.bar', function(module) {
         bars
           .transition()
           .call(sszvis.transition)
-          .attr('x', props.x)
-          .attr('y', props.y)
-          .attr('width', props.width)
-          .attr('height', props.height);
+          .attr('x', sszvis.fn.compose(handleMissingVal, props.x))
+          .attr('y', sszvis.fn.compose(handleMissingVal, props.y))
+          .attr('width', sszvis.fn.compose(handleMissingVal, props.width))
+          .attr('height', sszvis.fn.compose(handleMissingVal, props.height));
 
         // Tooltip anchors
 

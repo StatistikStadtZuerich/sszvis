@@ -59,3 +59,17 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     }
 }
 ```
+
+```project
+{
+    "index": "docs/simple-horizontal-bar-chart/missing.html",
+    "readme": "docs/simple-horizontal-bar-chart/README.md",
+    "files": [
+        "docs/simple-horizontal-bar-chart/data/S_missing.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 500
+    }
+}
+```
