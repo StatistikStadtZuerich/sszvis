@@ -27,6 +27,7 @@ SOURCE_FILES = \
 	sszvis/cascade.js \
 	sszvis/bounds.js \
 	sszvis/color.js \
+	sszvis/patterns.js \
 	sszvis/fn.js \
 	sszvis/transition.js \
 	sszvis/format.js \
