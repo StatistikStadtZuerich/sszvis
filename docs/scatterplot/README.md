@@ -38,6 +38,22 @@
 }
 ```
 
+### Reference Line
+
+```project
+{
+    "index": "docs/scatterplot/refline-fake.html",
+    "readme": "docs/scatterplot/README.md",
+    "files": [
+        "docs/scatterplot/data/SS_refline_fake.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 500
+    }
+}
+```
+
 ### Variable-Radius Scatterplot
 
 ```project

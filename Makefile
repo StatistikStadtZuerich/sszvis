@@ -59,6 +59,7 @@ SOURCE_FILES = \
 	sszvis/component/pyramid.js \
 	sszvis/component/dataAreaCircle.js \
 	sszvis/component/dataAreaRectangle.js \
+	sszvis/component/dataAreaLine.js \
 	sszvis/map/map.js \
 	sszvis/map/switzerland.js \
 	sszvis/map/zurich.js

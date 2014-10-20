@@ -42,6 +42,17 @@
 }
 
 /**
+ * Reference line component
+ *
+ * @module sszvis/component/dataAreaLine
+ */
+.sszvis-reference-line {
+  stroke-width: 1.5;
+  stroke: #aaa;
+  stroke-dasharray: 3 3;
+}
+
+/**
  * Legend component - color legend
  *
  * @module sszvis/legend/color
