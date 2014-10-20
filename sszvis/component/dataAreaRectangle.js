@@ -3,7 +3,7 @@
  *
  * @returns {d3.component} a rectangular data area component
  */
-namespace('sszivs.component.dataAreaRectangle', function(module) {
+namespace('sszvis.component.dataAreaRectangle', function(module) {
 
   module.exports = function() {
     return d3.component()

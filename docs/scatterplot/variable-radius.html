@@ -71,6 +71,13 @@
         .fill(sszvis.color.values.basicBlue)
         .stroke(sszvis.color.values.plainWhite);
 
+      // create a rectangular data area on the scatterplot
+      var area = sszvis.component.dataAreaRectangle()
+        .x(bounds.innerWidth * 0.55) // x-position is bounds.innerWidth * t, where t = 0.55
+        .y(0)
+        .width(bounds.innerWidth * 0.45) // width is bounds.innerWidth * (1 - t)
+        .height(bounds.innerHeight);
+
       var xAxis = sszvis.axis.x()
         .scale(xScale)
         .orient('bottom');
@@ -82,6 +89,10 @@
 
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.data);
+
+      chart.selectGroup('dataArea')
+        .datum([1])
+        .call(area);
 
       chart.selectGroup('dots')
         .call(dots);
