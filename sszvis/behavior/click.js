@@ -33,23 +33,23 @@ namespace('sszvis.behavior.click', function(module) {
           .attr('height', yExtent[1] - yExtent[0])
           .attr('fill', 'transparent')
           .on('mousedown', function() {
-            var xy = d3.mouse(this);
+            var invXY = invertXY(d3.mouse(this), props.xScale, props.yScale);
             this.__isDragging = true;
-            event.mousedown(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+            event.mousedown(invXY[0], invXY[1]);
           })
           .on('mouseup', function() {
-            var xy = d3.mouse(this);
+            var invXY = invertXY(d3.mouse(this), props.xScale, props.yScale);
             this.__isDragging = false;
-            event.mouseup(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+            event.mouseup(invXY[0], invXY[1]);
           })
           .on('click', function() {
-            var xy = d3.mouse(this);
-            event.click(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+            var invXY = invertXY(d3.mouse(this), props.xScale, props.yScale);
+            event.click(invXY[0], invXY[1]);
           })
           .on('mousemove', function() {
             if (this.__isDragging) {
-              var xy = d3.mouse(this);
-              event.drag(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+              var invXY = invertXY(d3.mouse(this), props.xScale, props.yScale);
+              event.drag(invXY[0], invXY[1]);
             }
           })
           .on('mouseout', function() {
@@ -61,5 +61,9 @@ namespace('sszvis.behavior.click', function(module) {
 
     return clickComponent;
   };
+
+  function invertXY(xy, xScale, yScale) {
+    return [xScale.invert(xy[0]), yScale.invert(xy[1])];
+  }
 
 });
