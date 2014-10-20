@@ -53,6 +53,18 @@
 }
 
 /**
+ * Circle data area component
+ *
+ * @module sszvis/component/dataAreaCircle
+ */
+.sszvis-data-area-circle-caption {
+  text-anchor: middle;
+  text-baseline: middle;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+/**
  * Legend component - color legend
  *
  * @module sszvis/legend/color
