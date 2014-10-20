@@ -95,11 +95,8 @@
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
       .domain(state.womAgeList);
 
-    // FIXME: use sszvis color scale instead
-    var colorDomain = [state.valueDomain[0], d3.mean(state.valueDomain), state.valueDomain[1]];
-
-    var colorScale = d3.scale.linear()
-      .domain(colorDomain)
+    var colorScale = sszvis.scale.colorScale()
+      .domain(state.valueDomain)
       .range(sszvis.color.ranges.sequential.valued.blue);
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
