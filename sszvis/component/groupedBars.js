@@ -41,6 +41,8 @@ namespace('sszvis.component.groupedBars', function(module) {
         bars.exit().remove();
 
         bars
+          .transition()
+          .call(sszvis.transition)
           .attr('x', function(d, i) {
             // first term is the x-position of the group, the second term is the x-position of the bar within the group
             return props.groupScale(d) + inGroupScale(i);

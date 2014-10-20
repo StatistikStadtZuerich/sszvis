@@ -29,6 +29,8 @@ namespace('sszvis.component.line', function(module) {
         path.exit().remove();
 
         path
+          .transition()
+          .call(sszvis.transition)
           .attr('d', line)
           .attr('stroke', props.stroke);
       });

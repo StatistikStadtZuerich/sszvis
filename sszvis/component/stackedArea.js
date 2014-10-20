@@ -35,6 +35,8 @@ namespace('sszvis.component.stacked.area', function(module) {
         paths.exit().remove();
 
         paths
+          .transition()
+          .call(sszvis.transition)
           .attr('d', areaGen)
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);

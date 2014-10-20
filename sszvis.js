@@ -2171,6 +2171,8 @@ namespace('sszvis.component.groupedBars', function(module) {
         bars.exit().remove();
 
         bars
+          .transition()
+          .call(sszvis.transition)
           .attr('x', function(d, i) {
             // first term is the x-position of the group, the second term is the x-position of the bar within the group
             return props.groupScale(d) + inGroupScale(i);
@@ -2218,6 +2220,8 @@ namespace('sszvis.component.line', function(module) {
         path.exit().remove();
 
         path
+          .transition()
+          .call(sszvis.transition)
           .attr('d', line)
           .attr('stroke', props.stroke);
       });
@@ -2625,6 +2629,8 @@ namespace('sszvis.component.stacked.area', function(module) {
         paths.exit().remove();
 
         paths
+          .transition()
+          .call(sszvis.transition)
           .attr('d', areaGen)
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
@@ -2845,6 +2851,8 @@ namespace('sszvis.component.pie', function(module) {
         segments.exit().remove();
 
         segments
+          .transition()
+          .call(sszvis.transition)
           .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
           .attr('d', arcGen)
           .attr('fill', props.fill)
@@ -2968,6 +2976,8 @@ namespace('sszvis.component.pyramid', function(module) {
           rendered.exit().remove();
 
           rendered
+            .transition()
+            .call(sszvis.transition)
             .attr('x', props.alignmentValue)
             .attr('y', 0)
             .attr('width', props.barWidth)
@@ -2997,6 +3007,8 @@ namespace('sszvis.component.pyramid', function(module) {
           bars.exit().remove();
 
           bars
+            .transition()
+            .call(sszvis.transition)
             .attr('x', props.alignmentValue)
             .attr('y', function(d) { return d.y0; })
             .attr('width', props.barWidth)
@@ -3017,6 +3029,8 @@ namespace('sszvis.component.pyramid', function(module) {
           rendered.exit().remove();
 
           rendered
+            .transition()
+            .call(sszvis.transition)
             .attr('d', lineGen)
             .attr('fill', 'none')
             .attr('stroke', '#aaa')

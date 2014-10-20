@@ -32,6 +32,8 @@ namespace('sszvis.component.pyramid', function(module) {
           rendered.exit().remove();
 
           rendered
+            .transition()
+            .call(sszvis.transition)
             .attr('x', props.alignmentValue)
             .attr('y', 0)
             .attr('width', props.barWidth)
@@ -61,6 +63,8 @@ namespace('sszvis.component.pyramid', function(module) {
           bars.exit().remove();
 
           bars
+            .transition()
+            .call(sszvis.transition)
             .attr('x', props.alignmentValue)
             .attr('y', function(d) { return d.y0; })
             .attr('width', props.barWidth)
@@ -81,6 +85,8 @@ namespace('sszvis.component.pyramid', function(module) {
           rendered.exit().remove();
 
           rendered
+            .transition()
+            .call(sszvis.transition)
             .attr('d', lineGen)
             .attr('fill', 'none')
             .attr('stroke', '#aaa')

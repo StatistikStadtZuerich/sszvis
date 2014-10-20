@@ -37,6 +37,8 @@ namespace('sszvis.component.pie', function(module) {
         segments.exit().remove();
 
         segments
+          .transition()
+          .call(sszvis.transition)
           .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
           .attr('d', arcGen)
           .attr('fill', props.fill)
