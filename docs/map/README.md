@@ -8,6 +8,8 @@
 
 ## Beispiele
 
+### Zürich
+
 ```project
 {
     "index": "docs/map/kreis.html",
@@ -64,3 +66,18 @@
 }
 ```
 
+### Schweiz
+
+```project
+{
+    "index": "docs/map/switzerland.html",
+    "readme": "docs/map/README.md",
+    "files": [
+        "docs/map/data/M_swiss_fake.csv"
+    ],
+    "size": {
+        "width": 516,
+        "height": 516
+    }
+}
+```
