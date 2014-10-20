@@ -65,6 +65,18 @@
 }
 
 /**
+ * Rectangle data area component
+ *
+ * @module sszvis/component/dataAreaRectangle
+ */
+.sszvis-data-area-rectangle-caption {
+  text-anchor: middle;
+  text-baseline: middle;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+/**
  * Legend component - color legend
  *
  * @module sszvis/legend/color

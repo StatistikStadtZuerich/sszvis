@@ -76,7 +76,8 @@
         .x(bounds.innerWidth * 0.55) // x-position is bounds.innerWidth * t, where t = 0.55
         .y(0)
         .width(bounds.innerWidth * 0.45) // width is bounds.innerWidth * (1 - t)
-        .height(bounds.innerHeight);
+        .height(bounds.innerHeight)
+        .caption('Dies ist ein Datenbereich');
 
       var xAxis = sszvis.axis.x()
         .scale(xScale)

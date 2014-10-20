@@ -33,19 +33,21 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
           .attr('r', props.r)
           .attr('fill', 'url(#data-area-pattern)');
 
-        var dataCaptions = selection.selectAll('.sszvis-data-area-circle-caption')
-          .data(data);
+        if (props.caption) {
+          var dataCaptions = selection.selectAll('.sszvis-data-area-circle-caption')
+            .data(data);
 
-        dataCaptions.enter()
-          .append('text')
-          .classed('sszvis-data-area-circle-caption', true);
+          dataCaptions.enter()
+            .append('text')
+            .classed('sszvis-data-area-circle-caption', true);
 
-        dataCaptions
-          .attr('x', props.x)
-          .attr('y', props.y)
-          .attr('dx', props.dx)
-          .attr('dy', props.dy)
-          .text(props.caption);
+          dataCaptions
+            .attr('x', props.x)
+            .attr('y', props.y)
+            .attr('dx', props.dx)
+            .attr('dy', props.dy)
+            .text(props.caption);
+        }
       });
   };
 
