@@ -3116,7 +3116,6 @@ namespace('sszvis.map', function(module) {
 
           zurichSee
             .attr('d', mapPath)
-            // TODO: add special texturing for Lake Zurich
             .attr('fill', 'url(#lake-pattern)');
         }
       });
