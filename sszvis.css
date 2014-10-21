@@ -222,6 +222,26 @@
 }
 
 /**
+ * rangeRule component
+ *
+ * @module sszvis/component/rangeRuler
+ */
+.sszvis-rangeRuler--rule {
+  stroke: #555;
+}
+
+.sszvis-rangeRuler--p1, .sszvis-rangeRuler--p2 {
+  fill: #555;
+}
+
+.sszvis-rangeRuler--label {
+  font-size: 10px;
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-style: normal;
+}
+
+/**
  * Tooltip component
  *
  * @module sszvis/component/tooltip

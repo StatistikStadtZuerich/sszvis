@@ -52,8 +52,10 @@
       },
 
       changeDate: function(inputDate) {
-        var closest = findClosestInStacks(state.lineData, xAcc, inputDate);
-        state.highlightData = closest;
+        var closest = xAcc(findClosest(state.data, xAcc, inputDate));
+        state.highlightData = state.lineData.map(function(stack) {
+          return stack.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
+        });
 
         render(state);
       },
@@ -160,14 +162,6 @@
 
       chart.selectGroup('interaction')
         .call(interactionLayer);
-    }
-
-    function findClosestInStacks(stacks, accessor, datum) {
-      var res = [];
-      for (var i = 0, l = stacks.length; i < l; ++i) {
-        res.push(findClosest(stacks[i], accessor, datum));
-      }
-      return res;
     }
 
     function findClosest(data, accessor, datum) {

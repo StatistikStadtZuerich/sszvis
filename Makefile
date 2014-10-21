@@ -49,6 +49,7 @@ SOURCE_FILES = \
 	sszvis/component/line.js \
 	sszvis/component/modularText.js \
 	sszvis/component/ruler.js \
+	sszvis/component/rangeRuler.js \
 	sszvis/component/tooltip.js \
 	sszvis/component/tooltipAnchor.js \
 	sszvis/component/stackedArea.js \

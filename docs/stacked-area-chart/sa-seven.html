@@ -20,27 +20,17 @@
     timeExtent: [0, 0],
     stackedData: [],
     maxStacked: 0,
-    categories: []
+    categories: [],
+    highlightDate: new Date(), // FIXME: what's a good initial value for dates?
+    highlightData: []
   };
 
   var xAcc = sszvis.fn.prop('year');
   var yAcc = sszvis.fn.prop('value');
   var cAcc = sszvis.fn.prop('category');
 
-  d3.csv('data/SA_7Kategories_yearly.csv')
-    .row(function(d) {
-      return {
-        category: d['Branche'],
-        year: sszvis.parse.year(d['Jahr']),
-        value: sszvis.parse.number(d['Wert'])
-      }
-    })
-    .get(function(error, data) {
-      if (error) {
-        console.log('error loading data: ', error);
-        return;
-      }
-
+  var actions = {
+    prepareState: function(data) {
       state.data = data;
 
       state.timeExtent = d3.extent(state.data, xAcc);
@@ -59,7 +49,42 @@
 
       state.categories = sszvis.fn.set(state.data, cAcc);
 
+      state.dates = sszvis.fn.set(state.data, xAcc);
+
+      actions.resetDate();
+    },
+
+    changeDate: function(inputDate) {
+      var closest = findClosest(state.dates, inputDate);
+      state.highlightDate = closest;
+      state.highlightData = state.stackedData.map(function(stack) {
+        return stack.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
+      });
+
       render(state);
+    },
+
+    resetDate: function() {
+      var mostRecent = d3.max(state.data, xAcc);
+      actions.changeDate(mostRecent);
+    }
+  };
+
+  d3.csv('data/SA_7Kategories_yearly.csv')
+    .row(function(d) {
+      return {
+        category: d['Branche'],
+        year: sszvis.parse.year(d['Jahr']),
+        value: sszvis.parse.number(d['Wert'])
+      }
+    })
+    .get(function(error, data) {
+      if (error) {
+        console.log('error loading data: ', error);
+        return;
+      }
+
+      actions.prepareState(data);
     });
 
     function render(state) {
@@ -101,6 +126,19 @@
         .reverse(true)
         .orientation('vertical');
 
+      var rangeRuler = sszvis.component.rangeRuler()
+        .x(xScale(state.highlightDate))
+        .yScale(yScale)
+        .label(function(d) {
+          return yAcc(d).toString();
+        });
+
+      var interactionLayer = sszvis.behavior.move()
+        .xScale(xScale)
+        .yScale(yScale)
+        .on('move', actions.changeDate)
+        .on('end', actions.resetDate);
+
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.stackedData);
 
@@ -117,6 +155,20 @@
       chart.selectGroup('colorLegend')
         .attr('transform', 'translate(0, ' + (bounds.innerHeight + 30) + ')')
         .call(colorLegend);
+
+      chart.selectGroup('highlight')
+        .datum(state.highlightData)
+        .call(rangeRuler);
+
+      chart.selectGroup('interaction')
+        .call(interactionLayer);
+    }
+
+    function findClosest(data, datum) {
+      var i = d3.bisectLeft(data, datum, 1);
+      var d0 = data[i - 1];
+      var d1 = data[i] || d0;
+      return datum - d0 > d1 - datum ? d1 : d0;
     }
 
 }());
