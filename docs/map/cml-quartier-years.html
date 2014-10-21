@@ -167,8 +167,8 @@
       var clickBehavior = sszvis.behavior.click()
         .xScale(xScale)
         .yScale(yScale)
-        .on('mousedown', actions.changeYear)
-        .on('click', actions.changeYear)
+        .padding({ top: 30 }) // same as passing { top: 30, left: 0, bottom: 0, right: 0 }
+        .on('down', actions.changeYear)
         .on('drag', actions.changeYear);
 
 
