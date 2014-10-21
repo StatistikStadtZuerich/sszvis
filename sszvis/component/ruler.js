@@ -31,6 +31,10 @@ namespace('sszvis.component.ruler', function(module) {
         var bottom = d3.max(props.yScale.range());
 
         var ruler = selection.selectAll('.sszvis-ruler-rule')
+          // FIXME: in situations with multiple data points - e.g. when displaying multiple dots,
+          // this generates multiple lines. When the lines overlap in the same place, they're redundant,
+          // when they show up in separate places, this is a potentially useful, but surprising and undocumented
+          // feature. Perhaps this behavior should be either documented or removed.
           .data(data, key);
 
         ruler.enter()
