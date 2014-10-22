@@ -234,7 +234,7 @@
   fill: #555;
 }
 
-.sszvis-rangeRuler--label {
+.sszvis-rangeRuler--label, .sszvis-rangeRuler--total {
   font-size: 10px;
   fill: #545454;
   font-family: Arial, sans-serif;

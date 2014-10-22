@@ -20,9 +20,13 @@ namespace('sszvis.component.rangeRuler', function(module) {
         var y0 = sszvis.fn.compose(props.yScale, props.y0);
         var y1 = sszvis.fn.compose(props.yScale, function(d) { return props.y0(d) + props.dy(d); });
         var ty = sszvis.fn.compose(props.yScale, function(d) { return props.y0(d) + props.dy(d) / 2; });
-        var top = d3.min(props.yScale.range());
+        var top = y1(sszvis.fn.last(data));
         var bottom = d3.max(props.yScale.range());
         var dotRadius = 1.5;
+
+        var totalValue = data.reduce(function(m, d) {
+          return m + props.dy(d);
+        }, 0);
 
         var line = selection.selectAll('.sszvis-rangeRuler--rule')
           .data([1]);
@@ -31,9 +35,11 @@ namespace('sszvis.component.rangeRuler', function(module) {
           .append('line')
           .classed('sszvis-rangeRuler--rule', true);
 
+        line.exit().remove();
+
         line
           .attr('x1', props.x)
-          .attr('y1', y1(sszvis.fn.last(data)))
+          .attr('y1', top)
           .attr('x2', props.x)
           .attr('y2', bottom);
 
@@ -69,6 +75,22 @@ namespace('sszvis.component.rangeRuler', function(module) {
           })
           .attr('y', ty)
           .text(props.label);
+
+        var total = selection.selectAll('.sszvis-rangeRuler--total')
+          .data([totalValue]);
+
+        total.enter()
+          .append('text')
+          .classed('sszvis-rangeRuler--total', true);
+
+        total.exit().remove();
+
+        total
+          .attr('x', function(d, i) {
+            return props.x(d, i) + 10;
+          })
+          .attr('y', top - 10)
+          .text('Total ' + sszvis.format.number(totalValue));
       });
   };
 
