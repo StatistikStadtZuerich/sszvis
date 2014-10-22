@@ -44,7 +44,8 @@
 
         state.data = data;
 
-        state.xExtent = d3.extent(state.data, xAcc);
+        // a log scale can't include zero.
+        state.xExtent = [0.1, d3.max(state.data, xAcc)];
 
         state.yExtent = d3.extent(state.data, yAcc);
 
@@ -56,7 +57,7 @@
     function render(state) {
       var bounds = sszvis.bounds({ width: 500, height: 500, top: 10, right: 10, bottom: 40, left: 10 });
 
-      var xScale = d3.scale.linear()
+      var xScale = d3.scale.log()
         .domain(state.xExtent)
         .range([0, bounds.innerWidth]);
 
@@ -65,7 +66,9 @@
         .range([bounds.innerHeight, 0]);
 
       var dots = sszvis.component.dot()
-        .x(sszvis.fn.compose(xScale, xAcc))
+        .x(sszvis.fn.compose(function(v) {
+          return v <= 0.1 ? 0 : xScale(v);
+        }, xAcc))
         .y(sszvis.fn.compose(yScale, yAcc))
         .radius(rAcc)
         .fill(sszvis.color.values.basicBlue)
@@ -73,14 +76,16 @@
 
       // create a rectangular data area on the scatterplot
       var area = sszvis.component.dataAreaRectangle()
-        .x(bounds.innerWidth * 0.55) // x-position is bounds.innerWidth * t, where t = 0.55
+        .x(xScale(10)) // x-position is bounds.innerWidth * t, where t = 0.55
         .y(0)
-        .width(bounds.innerWidth * 0.45) // width is bounds.innerWidth * (1 - t)
+        .width(bounds.innerWidth - xScale(10)) // width is bounds.innerWidth * (1 - t)
         .height(bounds.innerHeight)
         .caption('Dies ist ein Datenbereich');
 
       var xAxis = sszvis.axis.x()
         .scale(xScale)
+        .tickFormat(sszvis.format.number)
+        .ticks(4)
         .orient('bottom');
 
       var yAxis = sszvis.axis.y()
@@ -91,12 +96,12 @@
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.data);
 
+      chart.selectGroup('dots')
+        .call(dots);
+
       chart.selectGroup('dataArea')
         .datum([1])
         .call(area);
-
-      chart.selectGroup('dots')
-        .call(dots);
 
       chart.selectGroup('xAxis')
         .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
