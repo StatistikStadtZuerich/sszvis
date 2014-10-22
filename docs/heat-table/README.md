@@ -36,6 +36,22 @@ The following configuration options are available:
 }
 ```
 
+### Missing Values
+
+```project
+{
+    "index": "docs/heat-table/ht-missing.html",
+    "readme": "docs/heat-table/README.md",
+    "files": [
+        "docs/heat-table/data/HT_kreise_missing.csv"
+    ],
+    "size": {
+        "width": 460,
+        "height": 760
+    }
+}
+```
+
 ### Quartiere
 
 ```project
