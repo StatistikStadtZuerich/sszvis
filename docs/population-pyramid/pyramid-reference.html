@@ -23,8 +23,8 @@
   var aAcc = sszvis.fn.prop('age');
   var refAcc = sszvis.fn.prop('group');
   var womenAcc = sszvis.fn.prop('Frauen');
-  var menAcc = sszvis.fn.prop('Maenner');
-  var collegeAcc = sszvis.fn.prop('Hoschulabschluss');
+  var menAcc = sszvis.fn.prop('Männer');
+  var collegeAcc = sszvis.fn.prop('Hochschulabschluss');
   var otherAcc = sszvis.fn.prop('Andere');
 
 
@@ -102,8 +102,10 @@
 
     // Components
 
+
+    // mirrorScale(xScale)
+
     var pyramidGen = sszvis.component.pyramid()
-      .renderMode('bar')
       .width(bounds.innerWidth / 2)
       .height(bounds.innerHeight)
       .groupPadding(groupPadding)

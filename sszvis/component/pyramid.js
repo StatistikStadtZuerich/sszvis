@@ -15,7 +15,6 @@ namespace('sszvis.component.pyramid', function(module) {
       .prop('barWidth')
       .prop('extentValue')
       .prop('fill')
-      .prop('renderMode')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
