@@ -1992,18 +1992,17 @@ namespace('sszvis.control.slideBar', function(module) {
 
         var xValue = sszvis.fn.compose(props.xScale, props.x);
         var yValue = sszvis.fn.compose(props.yScale, props.y);
+
+        var xPos = xValue(sszvis.fn.first(data));
         var top = d3.min(props.yScale.range());
         var bottom = d3.max(props.yScale.range()) - 4;
+
         var handleWidth = 10;
         var handleHeight = 30;
-
-        // FIXME: currently, the handle is rendered outside of the range of the yScale.
-        // This keeps the handle out of the data area, but it also means that the mouse clicks aren't in the area of the scale
-        // This makes the handle incompatible with, for instance, the click behavior component.
         var handleTop = top - handleHeight;
 
         var group = selection.selectAll('.sszvis-slider-group')
-          .data(data, key);
+          .data([1]);
 
         var entering = group.enter()
           .append('g')
@@ -2024,13 +2023,13 @@ namespace('sszvis.control.slideBar', function(module) {
           .classed('sszvis-slider-handleMark', true);
 
         group.selectAll('.sszvis-slider-line')
-          .attr('x1', xValue)
+          .attr('x1', xPos)
           .attr('y1', top)
-          .attr('x2', xValue)
+          .attr('x2', xPos)
           .attr('y2', bottom);
 
         group.selectAll('.sszvis-slider-handle')
-          .attr('x', function(d) { return xValue(d) - handleWidth / 2; })
+          .attr('x', xPos - handleWidth / 2)
           .attr('y', handleTop)
           .attr('width', handleWidth)
           .attr('height', handleHeight)
@@ -2038,9 +2037,9 @@ namespace('sszvis.control.slideBar', function(module) {
           .attr('ry', 2);
 
         group.selectAll('.sszvis-slider-handleMark')
-          .attr('x1', xValue)
+          .attr('x1', xPos)
           .attr('y1', handleTop + handleHeight * 0.15)
-          .attr('x2', xValue)
+          .attr('x2', xPos)
           .attr('y2', handleTop + handleHeight * 0.85);
 
         var dots = group.selectAll('.sszvis-slider-dot')
@@ -2064,6 +2063,8 @@ namespace('sszvis.control.slideBar', function(module) {
         captions.enter()
           .append('text')
           .classed('sszvis-slider-label', true);
+
+        captions.exit().remove();
 
         captions
           .attr('x', xValue)
@@ -2408,11 +2409,11 @@ namespace('sszvis.component.ruler', function(module) {
         var top = d3.min(props.yScale.range());
         var bottom = d3.max(props.yScale.range());
 
+        // FIXME: in situations with multiple data points - e.g. when displaying multiple dots,
+        // this generates multiple lines. When the lines overlap in the same place, they're redundant,
+        // when they show up in separate places, this is a potentially useful, but surprising and undocumented
+        // feature. Perhaps this behavior should be either documented or removed.
         var ruler = selection.selectAll('.sszvis-ruler-rule')
-          // FIXME: in situations with multiple data points - e.g. when displaying multiple dots,
-          // this generates multiple lines. When the lines overlap in the same place, they're redundant,
-          // when they show up in separate places, this is a potentially useful, but surprising and undocumented
-          // feature. Perhaps this behavior should be either documented or removed.
           .data(data, key);
 
         ruler.enter()

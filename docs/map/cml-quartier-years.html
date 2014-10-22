@@ -42,7 +42,6 @@
       yearDomain: [new Date(), new Date()],
       quarters: [],
       lineData: [],
-      selectedData: {},
       currentYear: null,
       currentMapData: []
     };
@@ -67,8 +66,6 @@
 
       changeYear: function(inputDate) {
         var closest = closestDatum(state.data, yearAcc, inputDate);
-        // FIXME: figure out how to choose just one (or several) data points as the selected data
-        state.selectedData = [closest];
         state.currentYear = yearAcc(closest).getFullYear();
         state.currentMapData = state.data.filter(function(v) {
           return yearAcc(v).getFullYear() === state.currentYear;
@@ -129,7 +126,7 @@
 
       var highlightLayer = chart.selectGroup('highlight')
         .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.innerHeight + lineChartBounds.padding.top) + ')')
-        .datum(state.selectedData);
+        .datum(state.currentMapData);
 
 
       // Components
