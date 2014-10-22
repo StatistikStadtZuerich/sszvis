@@ -81,3 +81,19 @@
     }
 }
 ```
+
+### Schweiz - Missing Data
+
+```project
+{
+    "index": "docs/map/switzerland-missing.html",
+    "readme": "docs/map/README.md",
+    "files": [
+        "docs/map/data/M_swiss_fake_missing.csv"
+    ],
+    "size": {
+        "width": 516,
+        "height": 516
+    }
+}
+```
