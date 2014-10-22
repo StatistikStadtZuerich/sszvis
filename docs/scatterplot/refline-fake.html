@@ -73,11 +73,13 @@
         .fill(sszvis.fn.compose(cScale, cAcc));
 
       var referenceLine = sszvis.component.dataAreaLine()
-        .m(200)
+        .m(100)
         .b(state.yExtent[0])
         .xScale(xScale)
         .yScale(yScale)
-        .xRange([0, bounds.innerWidth]);
+        .xRange([0, bounds.innerWidth])
+        .dy(-8)
+        .caption('Reference Line');
 
       var xAxis = sszvis.axis.x()
         .scale(xScale)
@@ -98,12 +100,12 @@
       var chart = sszvis.createChart('#chart', bounds)
         .datum(state.data);
 
+      chart.selectGroup('dots')
+        .call(dots);
+
       chart.selectGroup('referenceLine')
         .datum([1])
         .call(referenceLine);
-
-      chart.selectGroup('dots')
-        .call(dots);
 
       chart.selectGroup('xAxis')
         .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
