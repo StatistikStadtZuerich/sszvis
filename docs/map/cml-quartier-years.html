@@ -66,9 +66,9 @@
 
       changeYear: function(inputDate) {
         var closest = closestDatum(state.data, yearAcc, inputDate);
-        state.currentYear = yearAcc(closest).getFullYear();
+        state.currentYear = yearAcc(closest);
         state.currentMapData = state.data.filter(function(v) {
-          return yearAcc(v).getFullYear() === state.currentYear;
+          return yearAcc(v).getFullYear() === state.currentYear.getFullYear();
         });
         render(state);
       }
@@ -142,9 +142,15 @@
         .yValue(sszvis.fn.compose(yScale, vAcc))
         .stroke(sszvis.color.values.basicBlue);
 
+      var xTickValues = xScale
+        .ticks(4)
+        .concat(state.currentYear);
+
       var lineXAxis = sszvis.axis.x.time()
         .scale(xScale)
-        .orient('bottom');
+        .orient('bottom')
+        .tickValues(xTickValues)
+        .highlight(state.currentYear);
 
       var lineYAxis = sszvis.axis.y()
         .scale(yScale)
