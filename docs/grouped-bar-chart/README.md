@@ -24,6 +24,22 @@
 }
 ```
 
+### Missing Values
+
+```project
+{
+    "index": "docs/grouped-bar-chart/gb-missing.html",
+    "readme": "docs/grouped-bar-chart/README.md",
+    "files": [
+        "docs/grouped-bar-chart/data/GB_2Categories_smallVals_missing.csv"
+    ],
+    "size": {
+        "width": 500,
+        "height": 600
+    }
+}
+```
+
 ```project
 {
     "index": "docs/grouped-bar-chart/gb-two-yearly-long.html",

@@ -2207,6 +2207,7 @@ namespace('sszvis.component.groupedBars', function(module) {
       .prop('height')
       .prop('fill')
       .prop('stroke')
+      .prop('defined', d3.functor).defined(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -2234,16 +2235,33 @@ namespace('sszvis.component.groupedBars', function(module) {
         bars.exit().remove();
 
         bars
-          .transition()
-          .call(sszvis.transition)
           .attr('x', function(d, i) {
             // first term is the x-position of the group, the second term is the x-position of the bar within the group
-            return props.groupScale(d) + inGroupScale(i);
+            return props.defined(d) ? props.groupScale(d) + inGroupScale(i) : 0;
           })
+          .attr('y', function(d, i) {
+            return props.defined(d) ? props.y(d, i) : 0;
+          })
+          .attr('transform', function(d, i) {
+            // special positioning for the "missing value" bars
+            return props.defined(d) ? '' : 'translate(' + (props.groupScale(d) + inGroupScale(i) + inGroupScale.rangeBand() / 2) + ',' + (props.y(d, i) - 5) + ') rotate(25)';
+          });
+
+        // filter for the bars which have a value and display it
+        bars
+          .filter(sszvis.fn.compose(sszvis.fn.not(isNaN), props.height))
+          .transition()
+          .call(sszvis.transition)
           .attr('width', inGroupScale.rangeBand())
-          .attr('y', props.y)
           .attr('height', props.height)
           .attr('fill', props.fill);
+
+        // handle missing values
+        bars
+          .filter(sszvis.fn.compose(isNaN, props.height))
+          .attr('width', 1)
+          .attr('height', 10)
+          .attr('fill', '#000');
       });
   };
 
