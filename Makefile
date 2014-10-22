@@ -69,6 +69,20 @@ section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
 SOURCE_FILES_SEP = $(foreach file, $(SOURCE_FILES), $(call section, $(file)))
 
+ZURICH_MAP_TARGETS = \
+	geodata/zurich_topo.json
+
+ZURICH_MAPS = \
+	geodata/stadtkreise_geo.json \
+	geodata/statistische_quartiere_geo.json \
+	geodata/wahlkreise_geo.json \
+	geodata/zurichsee_geo.json
+
+
+#
+# Recipes
+#
+
 all: server
 
 build:
@@ -88,22 +102,16 @@ server: build
 		--files="index.html" \
 		--files="sszvis.css" \
 		--files="docs/**/*" \
-		& fswatch -o sszvis/ -o vendor/ | xargs -n1 -I{} make build
-
-ZURICH_MAP_TARGETS = \
-	geodata/zurich_topo.json
+		& fswatch -0 -o sszvis/ -o vendor/ | xargs -0 -n1 -I{} make build
 
 maps: $(ZURICH_MAP_TARGETS)
 
 clean:
 	rm $(ZURICH_MAP_TARGETS)
 
-ZURICH_MAPS = \
-	geodata/stadtkreise_geo.json \
-	geodata/statistische_quartiere_geo.json \
-	geodata/wahlkreise_geo.json \
-	geodata/zurichsee_geo.json
-
+#
+# Targets
+#
 geodata/zurich_topo.json: $(ZURICH_MAPS)
 	mkdir -p $(dir $@)
 	topojson -o $@ --id-property=Bezeichnung,+QNr,+KNr $^
