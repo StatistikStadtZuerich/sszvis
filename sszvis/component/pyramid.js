@@ -4,6 +4,7 @@
  * @return {d3.component}
  */
 namespace('sszvis.component.pyramid', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -14,95 +15,135 @@ namespace('sszvis.component.pyramid', function(module) {
       .prop('barWidth')
       .prop('extentValue')
       .prop('fill')
-      .prop('direction') // links, rechts
-      .prop('renderMode').renderMode('bar') // bar, stacked, line
+      .prop('renderMode')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var rendered;
-        if (props.renderMode === 'bar') {
-          rendered = selection.selectAll('rect.sszvis-bar')
-            .data(data);
 
-          rendered.enter()
-            .append('rect')
-            .classed('sszvis-bar', true);
+        // Bars
 
-          rendered.exit().remove();
+        var leftBar = barComponent()
+          .alignmentValue(props.alignmentValue)
+          .barWidth(props.barWidth)
+          .extentValue(props.extentValue)
+          .fill(props.fill)
+          .transform(transformLeft(props.width - props.groupPadding));
 
-          rendered
-            .transition()
-            .call(sszvis.transition)
-            .attr('x', props.alignmentValue)
-            .attr('y', 0)
-            .attr('width', props.barWidth)
-            .attr('height', props.extentValue)
-            .attr('fill', props.fill);
-        } else if (props.renderMode === 'stacked') {
-          var stackLayout = d3.layout.stack()
-            .x(props.alignmentValue)
-            .y(props.extentValue);
 
-          rendered = selection.selectAll('g.sszvis-g')
-            .data(stackLayout(data));
+        var rightBar = barComponent()
+          .alignmentValue(props.alignmentValue)
+          .barWidth(props.barWidth)
+          .extentValue(props.extentValue)
+          .fill(props.fill)
+          .transform(transformRight(props.width + props.groupPadding));
 
-          rendered.enter()
-            .append('g')
-            .classed('sszvis-g', true);
+        selection.selectGroup('left')
+          .datum(data.left)
+          .call(leftBar);
 
-          rendered.exit().remove();
+        selection.selectGroup('right')
+          .datum(data.right)
+          .call(rightBar);
 
-          var bars = rendered.selectAll('rect.sszvis-bar')
-            .data(function(d) { return d; });
 
-          bars.enter()
-            .append('rect')
-            .classed('sszvis-bar', true);
+        // Reference lines
 
-          bars.exit().remove();
+        var leftLine = lineComponent()
+          .alignmentValue(props.alignmentValue)
+          .extentValue(props.extentValue)
+          .transform(transformLeft(props.width - props.groupPadding));
 
-          bars
-            .transition()
-            .call(sszvis.transition)
-            .attr('x', props.alignmentValue)
-            .attr('y', function(d) { return d.y0; })
-            .attr('width', props.barWidth)
-            .attr('height', function(d) { return d.y; })
-            .attr('fill', props.fill);
-        } else if (props.renderMode === 'line') {
-          var lineGen = d3.svg.line()
-            .x(props.alignmentValue)
-            .y(props.extentValue);
+        var rightLine = lineComponent()
+          .alignmentValue(props.alignmentValue)
+          .extentValue(props.extentValue)
+          .transform(transformRight(props.width + props.groupPadding));
 
-          rendered = selection.selectAll('path.sszvis-path')
-            .data([data]);
+        selection.selectGroup('leftReference')
+          .datum(data.leftReference ? [data.leftReference] : [])
+          .call(leftLine);
 
-          rendered.enter()
-            .append('path')
-            .classed('sszvis-path', true);
-
-          rendered.exit().remove();
-
-          rendered
-            .transition()
-            .call(sszvis.transition)
-            .attr('d', lineGen)
-            .attr('fill', 'none')
-            .attr('stroke', '#aaa')
-            .attr('stroke-width', 2)
-            .attr('stroke-dasharray', '3 3');
-        }
-
-        if (props.direction === 'left') {
-          // 90deg rotation plus +width
-          rendered.attr('transform', 'matrix(0, 1, -1, 0, ' + (props.width - props.groupPadding) + ', 0)');
-        } else if (props.direction === 'right') {
-          // reflection around y = x plus +width
-          rendered.attr('transform', 'matrix(0, 1, 1, 0, ' + (props.width + props.groupPadding) + ', 0)');
-        }
+        selection.selectGroup('rightReference')
+          .datum(data.rightReference ? [data.rightReference] : [])
+          .call(rightLine);
 
       });
   };
+
+  function transformLeft(width) {
+    // 90deg rotation plus +width
+    return 'matrix(0, 1, -1, 0, ' + width + ', 0)';
+  }
+
+  function transformRight(width) {
+    // reflection around y = x plus +width
+    return 'matrix(0, 1, 1, 0, ' + width + ', 0)';
+  }
+
+  function barComponent() {
+    return d3.component()
+      .prop('alignmentValue')
+      .prop('barWidth')
+      .prop('extentValue')
+      .prop('fill')
+      .prop('transform')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var bar = selection.selectAll('.sszvis-bar')
+          .data(data);
+
+        bar.enter()
+          .append('rect')
+          .attr('class', 'sszvis-bar');
+
+        bar
+          .attr('fill', props.fill)
+          .attr('transform', props.transform)
+          .transition()
+          .call(sszvis.transition)
+          .attr('x', props.alignmentValue)
+          .attr('y', 0)
+          .attr('width', props.barWidth)
+          .attr('height', props.extentValue);
+
+        bar.exit().remove();
+      });
+  }
+
+  function lineComponent() {
+    return d3.component()
+      .prop('alignmentValue')
+      .prop('extentValue')
+      .prop('transform')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var lineGen = d3.svg.line()
+          .x(props.alignmentValue)
+          .y(props.extentValue);
+
+        var line = selection.selectAll('.sszvis-path')
+          .data(data);
+
+        line.enter()
+          .append('path')
+          .attr('class', 'sszvis-path')
+          .attr('fill', 'none')
+          .attr('stroke', '#aaa')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '3 3');
+
+        line
+          .attr('transform', props.transform)
+          .transition()
+          .call(sszvis.transition)
+          .attr('d', lineGen);
+
+        line.exit().remove();
+      });
+  }
 
 });
