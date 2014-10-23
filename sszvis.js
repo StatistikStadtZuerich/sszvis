@@ -202,6 +202,7 @@
 
 (function(d3) {
 
+  // NOTE this is a test comment of sch
   var localizedFormat = d3.locale({
     "decimal": ".",
     "thousands": " ",
