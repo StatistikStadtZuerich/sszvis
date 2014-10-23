@@ -75,7 +75,11 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 600, height: 540, top: 30, right: 10, bottom: 70, left: 20 });
+    var bounds = sszvis.bounds({ width: 600, height: 540, top: 25, right: 1, bottom: 80, left: 0 });
+
+    var lengthScale = d3.scale.linear()
+      .domain([0, state.maxValue])
+      .range([0, bounds.innerWidth / 2]);
 
     var positionScale = d3.scale.ordinal()
       .domain(state.ages)
@@ -84,10 +88,6 @@
     var colorScale = d3.scale.ordinal()
       .domain(state.groups)
       .range(sszvis.color.ranges.qualitative.neutralQual2);
-
-    var lengthScale = d3.scale.linear()
-      .domain([0, state.maxValue])
-      .range([0, bounds.innerWidth / 2]);
 
 
     // Layers
@@ -106,15 +106,20 @@
 
     var xAxis = sszvis.axis.x.pyramid()
       .scale(lengthScale)
-      .orient('bottom');
+      .orient('bottom')
+      .ticks(5)
+      .title('Anzahl Frauen und Männer mit Hochschulabschluss')
+      .titleOffset(35);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(positionScale)
       .orient('right')
-      .tickFormat(sszvis.format.age)
-      .title('Alter')
-      .titleOffset(15)
-      .ticks(5);
+      .tickFormat(function(d) {
+        return (d === 0) ? '' : sszvis.format.age(d);
+      })
+      .ticks(5)
+      .title('Alter in Jahren')
+      .titleOffset(18);
 
     var colorLegend = sszvis.legend.color()
       .scale(colorScale)
@@ -139,11 +144,11 @@
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(-15, 0)')
+      .attr('transform', 'translate(0, 0)')
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 60) + ')')
       .call(colorLegend);
   }
 
