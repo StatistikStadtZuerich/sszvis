@@ -11,10 +11,14 @@
  *
  * @requires sszvis.component.bar
  *
- * @property {number, d3.scale} barFill     The color of a bar
- * @property {number, d3.scale} barHeight   The height of a bar
- * @property {number, d3.scale} barWidth    The width of a bar
- * @property {number, d3.scale} barPosition The vertical position of a bar
+ * @property {number, d3.scale} [barFill]          The color of a bar
+ * @property {number, d3.scale} barHeight          The height of a bar
+ * @property {number, d3.scale} barWidth           The width of a bar
+ * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {function}         leftAccessor       Data for the left side
+ * @property {function}         rightAccessor      Data for the right side
+ * @property {function}         [leftRefAccessor]  Reference data for the left side
+ * @property {function}         [rightRefAccessor] Reference data for the right side
  *
  * @return {d3.component}
  */
@@ -34,6 +38,10 @@ namespace('sszvis.component.pyramid', function(module) {
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
       .prop('barFill').barFill(d3.functor('#000'))
+      .prop('leftAccessor')
+      .prop('rightAccessor')
+      .prop('leftRefAccessor')
+      .prop('rightRefAccessor')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -68,19 +76,19 @@ namespace('sszvis.component.pyramid', function(module) {
         // Rendering
 
         selection.selectGroup('left')
-          .datum(data.left)
+          .datum(props.leftAccessor(data))
           .call(leftBar);
 
         selection.selectGroup('right')
-          .datum(data.right)
+          .datum(props.rightAccessor(data))
           .call(rightBar);
 
         selection.selectGroup('leftReference')
-          .datum(data.leftReference ? [data.leftReference] : [])
+          .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
           .call(leftLine);
 
         selection.selectGroup('rightReference')
-          .datum(data.rightReference ? [data.rightReference] : [])
+          .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
           .call(rightLine);
 
       });
