@@ -100,7 +100,7 @@
 
     var pyramidGen = sszvis.component.pyramid()
       .barHeight(positionScale.rangeBand())
-      .barLength(sszvis.fn.compose(lengthScale, vAcc))
+      .barWidth(sszvis.fn.compose(lengthScale, vAcc))
       .verticalPosition(sszvis.fn.compose(positionScale, aAcc))
       .fill(sszvis.fn.compose(colorScale, gAcc));
 
