@@ -2150,6 +2150,210 @@ namespace('sszvis.component.bar', function(module) {
 
 
 /**
+ * @module sszvis/component/dataAreaCircle
+ *
+ * @returns {d3.component} a circular data area component
+ */
+namespace('sszvis.component.dataAreaCircle', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('x', d3.functor)
+      .prop('y', d3.functor)
+      .prop('r', d3.functor)
+      .prop('dx', d3.functor)
+      .prop('dy', d3.functor)
+      .prop('caption', d3.functor)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
+          .call(sszvis.patterns.dataAreaPattern);
+
+        var dataArea = selection.selectAll('.sszvis-data-area-circle')
+          .data(data);
+
+        dataArea.enter()
+          .append('circle')
+          .classed('sszvis-data-area-circle', true);
+
+        dataArea
+          .attr('cx', props.x)
+          .attr('cy', props.y)
+          .attr('r', props.r)
+          .attr('fill', 'url(#data-area-pattern)');
+
+        if (props.caption) {
+          var dataCaptions = selection.selectAll('.sszvis-data-area-circle-caption')
+            .data(data);
+
+          dataCaptions.enter()
+            .append('text')
+            .classed('sszvis-data-area-circle-caption', true);
+
+          dataCaptions
+            .attr('x', props.x)
+            .attr('y', props.y)
+            .attr('dx', props.dx)
+            .attr('dy', props.dy)
+            .text(props.caption);
+        }
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * @module sszvis/component/dataAreaLine
+ *
+ * @returns {d3.component} a linear data area component (reference line)
+ */
+namespace('sszvis.component.dataAreaLine', function(module) {
+
+  // reference line specified in the form y = mx + b
+  // user supplies m and b
+  // default line is y = x
+
+  module.exports = function() {
+    return d3.component()
+      .prop('m').m(1)
+      .prop('b').b(0)
+      .prop('xScale')
+      .prop('yScale')
+      .prop('xRange')
+      .prop('dx', d3.functor).dx(0)
+      .prop('dy', d3.functor).dy(0)
+      .prop('caption', d3.functor)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var x1 = props.xRange[0];
+        var x2 = props.xRange[1];
+        var y1 = props.yScale(props.m * props.xScale.invert(x1) + props.b);
+        var y2 = props.yScale(props.m * props.xScale.invert(x2) + props.b);
+
+        var line = selection.selectAll('.sszvis-reference-line')
+          .data(data);
+
+        line.enter()
+          .append('line')
+          .classed('sszvis-reference-line', true);
+
+        line.exit().remove();
+
+        line
+          .attr('x1', x1)
+          .attr('y1', y1)
+          .attr('x2', x2)
+          .attr('y2', y2);
+
+        if (props.caption) {
+          var caption = selection.selectAll('.sszvis-reference-line--caption')
+            .data([1]);
+
+          caption.enter()
+            .append('text')
+            .classed('sszvis-reference-line--caption', true);
+
+          caption.exit().remove();
+
+          caption
+            .attr('transform', function() {
+              var vx = x2 - x1;
+              var vy = y2 - y1;
+              var angle = Math.atan2(vy, vx) * 180 / Math.PI;
+              var rotation;
+              if (angle > 0) {
+                // in top half
+                rotation = angle < 90 ? -angle : angle;
+              } else {
+                // in bottom semicircle
+                rotation = angle > -90 ? -angle : angle; // display angle math is weird
+              }
+              return 'translate(' + ((x1 + x2) / 2) + ',' + ((y1 + y2) / 2) + ') rotate(' + (angle) + ')';
+            })
+            .attr('dx', props.dx)
+            .attr('dy', props.dy)
+            .text(props.caption);
+        }
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * @module sszvis/component/dataAreaRectangle
+ *
+ * @returns {d3.component} a rectangular data area component
+ */
+namespace('sszvis.component.dataAreaRectangle', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('x', d3.functor)
+      .prop('y', d3.functor)
+      .prop('width', d3.functor)
+      .prop('height', d3.functor)
+      .prop('dx', d3.functor)
+      .prop('dy', d3.functor)
+      .prop('caption', d3.functor)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
+          .call(sszvis.patterns.dataAreaPattern);
+
+        var dataArea = selection.selectAll('.sszvis-data-area-rectangle')
+          .data(data);
+
+        dataArea.enter()
+          .append('rect')
+          .classed('sszvis-data-area-rectangle', true);
+
+        dataArea
+          .attr('x', props.x)
+          .attr('t', props.y)
+          .attr('width', props.width)
+          .attr('height', props.height)
+          .attr('fill', 'url(#data-area-pattern)');
+
+        if (props.caption) {
+          var dataCaptions = selection.selectAll('.sszvis-data-area-rectangle-caption')
+            .data(data);
+
+          dataCaptions.enter()
+            .append('text')
+            .classed('sszvis-data-area-rectangle-caption', true);
+
+          dataCaptions
+            .attr('x', function(d, i) {
+              return props.x(d, i) + props.width(d, i) / 2;
+            })
+            .attr('y', function(d, i) {
+              return props.y(d, i) + props.height(d, i) / 2;
+            })
+            .attr('dx', props.dx)
+            .attr('dy', props.dy)
+            .text(props.caption);
+        }
+      });
+  }
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Dot component
  * @return {d3.component}
  */
@@ -2395,95 +2599,266 @@ namespace('sszvis.component.modularText', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
-
 /**
- * Ruler component
+ * Small Multiples component
+ *
+ * Used to generate group elements for small multiples charts
+ *
  * @return {d3.component}
  */
-namespace('sszvis.component.ruler', function(module) {
-  'use strict';
+namespace('sszvis.component.multiples', function(module) {
 
   module.exports = function() {
-
-    var fn = sszvis.fn;
-
     return d3.component()
-      .prop('x').x(fn.identity)
-      .prop('y').y(fn.identity)
-      .prop('xScale')
-      .prop('yScale')
-      .prop('label').label(fn.constant(''))
-      .prop('color')
+      .prop('width')
+      .prop('height')
+      .prop('paddingX')
+      .prop('paddingY')
+      .prop('rows')
+      .prop('cols')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var key = function(d) {
-          return props.x(d) + '_' + props.y(d);
-        };
+        var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
+        var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
 
-        var x = fn.compose(props.xScale, props.x);
-        var y = fn.compose(props.yScale, props.y);
-        var top = d3.min(props.yScale.range());
-        var bottom = d3.max(props.yScale.range());
+        var multiples = selection.selectAll('g.sszvis-multiple')
+          .data(data);
 
-        // FIXME: in situations with multiple data points - e.g. when displaying multiple dots,
-        // this generates multiple lines. When the lines overlap in the same place, they're redundant,
-        // when they show up in separate places, this is a potentially useful, but surprising and undocumented
-        // feature. Perhaps this behavior should be either documented or removed.
-        var ruler = selection.selectAll('.sszvis-ruler-rule')
-          .data(data, key);
+        multiples.enter()
+          .append('g')
+          .classed('sszvis-g sszvis-multiple', true);
 
-        ruler.enter()
-          .append('line')
-          .classed('sszvis-ruler-rule', true);
+        multiples.exit().remove();
 
-        ruler
-          .attr('x1', x)
-          .attr('y1', y)
-          .attr('x2', x)
-          .attr('y2', bottom);
+        var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
+          .data(function(d) {
+            return [d.values];
+          });
 
-        ruler.exit().remove();
+        subGroups.enter()
+          .append('g')
+          .classed('sszvis-multiple-chart', true);
 
-        var dot = selection.selectAll('.sszvis-ruler-dot')
-          .data(data, key);
+        subGroups.exit().remove();
 
-        dot.enter()
-          .append('circle')
-          .classed('sszvis-ruler-dot', true);
-
-        dot
-          .attr('cx', x)
-          .attr('cy', y)
-          .attr('r', 3.5)
-          .attr('fill', props.color);
-
-        dot.exit().remove();
-
-        var label = selection.selectAll('.sszvis-ruler-label')
-          .data(data, key);
-
-        label.enter()
-          .append('text')
-          .classed('sszvis-ruler-label', true);
-
-        label
-          .attr('x', x)
-          .attr('y', y)
-          .attr('dx', 10)
-          .attr('dy', function(d) {
-            var baselineShift = 5;
-            if (y(d) < top + baselineShift)    return 2 * baselineShift;
-            if (y(d) > bottom - baselineShift) return 0;
-            return baselineShift;
+        multiples
+          .datum(function(d, i) {
+            d.gx = (i % props.cols) * (unitWidth + props.paddingX);
+            d.gw = unitWidth;
+            d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
+            d.gh = unitHeight;
+            return d;
           })
-          .text(props.label);
-
-        label.exit().remove();
+          .attr('transform', function(d, i) {
+            return 'translate(' + d.gx + ',' + d.gy + ')';
+          });
 
       });
   };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Pie component
+ * @return {d3.component}
+*/
+namespace('sszvis.component.pie', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('radius')
+      .prop('fill')
+      .prop('stroke')
+      .prop('angle')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var angle = 0;
+        data.forEach(function(value) {
+          value.a0 = angle;
+          angle += props.angle(value);
+          value.a1 = angle;
+        });
+
+        var arcGen = d3.svg.arc()
+          .innerRadius(4)
+          .outerRadius(props.radius)
+          .startAngle(function(d) { return d.a0; })
+          .endAngle(function(d) { return d.a1; });
+
+        var segments = selection.selectAll('.sszvis-path')
+          .data(data);
+
+        segments.enter()
+          .append('path')
+          .classed('sszvis-path', true);
+
+        segments.exit().remove();
+
+        segments
+          .transition()
+          .call(sszvis.transition)
+          .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
+          .attr('d', arcGen)
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(d) {
+            var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
+            var r = props.radius * 2/3;
+            return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
+          });
+
+        selection
+          .datum(data)
+          .call(tooltipAnchor)
+
+      });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Pyramid component
+ *
+ * The pyramid component is primarily used to show a distribution of age groups
+ * in a population (population pyramid). The chart is mirrored vertically,
+ * meaning that it has a horizontal axis that extends in a positive and negative
+ * direction having the same domain.
+ *
+ * This chart's horizontal point of origin is at it's spine, i.e. the center of
+ * the chart.
+ *
+ * @requires sszvis.component.bar
+ *
+ * @property {number, d3.scale} [barFill]          The color of a bar
+ * @property {number, d3.scale} barHeight          The height of a bar
+ * @property {number, d3.scale} barWidth           The width of a bar
+ * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {function}         leftAccessor       Data for the left side
+ * @property {function}         rightAccessor      Data for the right side
+ * @property {function}         [leftRefAccessor]  Reference data for the left side
+ * @property {function}         [rightRefAccessor] Reference data for the right side
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.component.pyramid', function(module) {
+  'use strict';
+
+  /* Constants
+  ----------------------------------------------- */
+  var SPINE_PADDING = 0.5;
+
+
+  /* Module
+  ----------------------------------------------- */
+  module.exports = function() {
+    return d3.component()
+      .prop('barHeight', d3.functor)
+      .prop('barWidth', d3.functor)
+      .prop('barPosition', d3.functor)
+      .prop('barFill').barFill(d3.functor('#000'))
+      .prop('leftAccessor')
+      .prop('rightAccessor')
+      .prop('leftRefAccessor')
+      .prop('rightRefAccessor')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+
+        // Components
+
+        var leftBar = sszvis.component.bar()
+          .x(function(d){ return -SPINE_PADDING - props.barWidth(d); })
+          .y(props.barPosition)
+          .height(props.barHeight)
+          .width(props.barWidth)
+          .fill(props.barFill);
+
+        var rightBar = sszvis.component.bar()
+          .x(SPINE_PADDING)
+          .y(props.barPosition)
+          .height(props.barHeight)
+          .width(props.barWidth)
+          .fill(props.barFill);
+
+        var leftLine = lineComponent()
+          .barPosition(props.barPosition)
+          .barWidth(props.barWidth)
+          .mirror(true);
+
+        var rightLine = lineComponent()
+          .barPosition(props.barPosition)
+          .barWidth(props.barWidth);
+
+
+        // Rendering
+
+        selection.selectGroup('left')
+          .datum(props.leftAccessor(data))
+          .call(leftBar);
+
+        selection.selectGroup('right')
+          .datum(props.rightAccessor(data))
+          .call(rightBar);
+
+        selection.selectGroup('leftReference')
+          .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
+          .call(leftLine);
+
+        selection.selectGroup('rightReference')
+          .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
+          .call(rightLine);
+
+      });
+  };
+
+
+  function lineComponent() {
+    return d3.component()
+      .prop('barPosition')
+      .prop('barWidth')
+      .prop('mirror').mirror(false)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var lineGen = d3.svg.line()
+          .x(props.barWidth)
+          .y(props.barPosition);
+
+        var line = selection.selectAll('.sszvis-path')
+          .data(data);
+
+        line.enter()
+          .append('path')
+          .attr('class', 'sszvis-path')
+          .attr('fill', 'none')
+          .attr('stroke', '#aaa')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '3 3');
+
+        line
+          .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
+          .transition()
+          .call(sszvis.transition)
+          .attr('d', lineGen);
+
+        line.exit().remove();
+      });
+  }
 
 });
 
@@ -2588,6 +2963,494 @@ namespace('sszvis.component.rangeRuler', function(module) {
   };
 
 });
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+
+/**
+ * Ruler component
+ * @return {d3.component}
+ */
+namespace('sszvis.component.ruler', function(module) {
+  'use strict';
+
+  module.exports = function() {
+
+    var fn = sszvis.fn;
+
+    return d3.component()
+      .prop('x').x(fn.identity)
+      .prop('y').y(fn.identity)
+      .prop('xScale')
+      .prop('yScale')
+      .prop('label').label(fn.constant(''))
+      .prop('color')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var key = function(d) {
+          return props.x(d) + '_' + props.y(d);
+        };
+
+        var x = fn.compose(props.xScale, props.x);
+        var y = fn.compose(props.yScale, props.y);
+        var top = d3.min(props.yScale.range());
+        var bottom = d3.max(props.yScale.range());
+
+        // FIXME: in situations with multiple data points - e.g. when displaying multiple dots,
+        // this generates multiple lines. When the lines overlap in the same place, they're redundant,
+        // when they show up in separate places, this is a potentially useful, but surprising and undocumented
+        // feature. Perhaps this behavior should be either documented or removed.
+        var ruler = selection.selectAll('.sszvis-ruler-rule')
+          .data(data, key);
+
+        ruler.enter()
+          .append('line')
+          .classed('sszvis-ruler-rule', true);
+
+        ruler
+          .attr('x1', x)
+          .attr('y1', y)
+          .attr('x2', x)
+          .attr('y2', bottom);
+
+        ruler.exit().remove();
+
+        var dot = selection.selectAll('.sszvis-ruler-dot')
+          .data(data, key);
+
+        dot.enter()
+          .append('circle')
+          .classed('sszvis-ruler-dot', true);
+
+        dot
+          .attr('cx', x)
+          .attr('cy', y)
+          .attr('r', 3.5)
+          .attr('fill', props.color);
+
+        dot.exit().remove();
+
+        var label = selection.selectAll('.sszvis-ruler-label')
+          .data(data, key);
+
+        label.enter()
+          .append('text')
+          .classed('sszvis-ruler-label', true);
+
+        label
+          .attr('x', x)
+          .attr('y', y)
+          .attr('dx', 10)
+          .attr('dy', function(d) {
+            var baselineShift = 5;
+            if (y(d) < top + baselineShift)    return 2 * baselineShift;
+            if (y(d) > bottom - baselineShift) return 0;
+            return baselineShift;
+          })
+          .text(props.label);
+
+        label.exit().remove();
+
+      });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Stacked Chart
+ * @return {d3.component}
+ */
+namespace('sszvis.component.stacked.area', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('xAccessor')
+      .prop('xScale')
+      .prop('yAccessor')
+      .prop('yScale')
+      .prop('fill')
+      .prop('stroke')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var stackLayout = d3.layout.stack()
+          .x(props.xAccessor)
+          .y(props.yAccessor);
+
+        var areaGen = d3.svg.area()
+          .x(sszvis.fn.compose(props.xScale, props.xAccessor))
+          .y0(function(d) { return props.yScale(d.y0); })
+          .y1(function(d) { return props.yScale(d.y0 + d.y); });
+
+        var paths = selection.selectAll('path.sszvis-path')
+          .data(stackLayout(data));
+
+        paths.enter()
+          .append('path')
+          .classed('sszvis-path', true);
+
+        paths.exit().remove();
+
+        paths
+          .transition()
+          .call(sszvis.transition)
+          .attr('d', areaGen)
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Stacked Bar Chart
+ * @return {d3.component}
+ */
+namespace('sszvis.component.stacked.bar', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('orientation')
+      .prop('xAccessor')
+      .prop('xScale')
+      .prop('width')
+      .prop('yAccessor')
+      .prop('yScale')
+      .prop('fill')
+      .prop('stroke')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        // TODO: refactor this class to make more sense?
+        var stackLayout = d3.layout.stack()
+          .x(props.xAccessor)
+          .y(props.yAccessor);
+
+        var placementValue = sszvis.fn.compose(props.xScale, props.xAccessor);
+        var extentValueRight = function(d) { return props.yScale(d.y0); };
+        var extentValueLeft = function(d) { return props.yScale(d.y0 + d.y); };
+        var placementDimension = props.width;
+        var extentDimension = function(d) { return Math.abs(props.yScale(d.y0 + d.y) - props.yScale(d.y0)); };
+
+        var xFunc, yFunc, wFunc, hFunc;
+        if (props.orientation === 'vertical') {
+          xFunc = placementValue;
+          yFunc = extentValueLeft;
+          wFunc = placementDimension;
+          hFunc = extentDimension;
+        } else if (props.orientation === 'horizontal') {
+          xFunc = extentValueRight;
+          yFunc = placementValue;
+          wFunc = extentDimension;
+          hFunc = placementDimension;
+        } else {
+          throw new Error('sszvis.component.stacked.bar requires an orientation');
+        }
+
+        var barGen = sszvis.component.bar()
+          .x(xFunc)
+          .y(yFunc)
+          .width(wFunc)
+          .height(hFunc)
+          .fill(props.fill)
+          .stroke(props.stroke);
+
+        var groups = selection.selectAll('g.sszvis-g')
+          .data(stackLayout(data));
+
+        groups.enter()
+          .append('g')
+          .classed('sszvis-g', true);
+
+        groups.exit().remove();
+
+        var bars = groups.call(barGen);
+
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Stacked Pyramid component
+ *
+ * The pyramid component is primarily used to show a distribution of age groups
+ * in a population (population pyramid). The chart is mirrored vertically,
+ * meaning that it has a horizontal axis that extends in a positive and negative
+ * direction having the same domain.
+ *
+ * This chart's horizontal point of origin is at it's spine, i.e. the center of
+ * the chart.
+ *
+ * @requires sszvis.component.bar
+ *
+ * @property {number, d3.scale} [barFill]          The color of a bar
+ * @property {number, d3.scale} barHeight          The height of a bar
+ * @property {number, d3.scale} barWidth           The width of a bar
+ * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {function}         leftAccessor       Data for the left side
+ * @property {function}         rightAccessor      Data for the right side
+ * @property {function}         [leftRefAccessor]  Reference data for the left side
+ * @property {function}         [rightRefAccessor] Reference data for the right side
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.component.stackedPyramid', function(module) {
+  'use strict';
+
+  /* Constants
+  ----------------------------------------------- */
+  var SPINE_PADDING = 0.5;
+
+
+  /* Module
+  ----------------------------------------------- */
+  module.exports = function() {
+    return d3.component()
+      .prop('barHeight', d3.functor)
+      .prop('barWidth', d3.functor)
+      .prop('barPosition', d3.functor)
+      .prop('barFill').barFill(d3.functor('#000'))
+      .prop('leftAccessor')
+      .prop('rightAccessor')
+      .prop('leftRefAccessor')
+      .prop('rightRefAccessor')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var stackLayout = d3.layout.stack()
+          .x(props.barPosition)
+          .y(props.barWidth);
+
+
+        // Components
+
+        var leftBar = sszvis.component.bar()
+          .x(function(d){ return -SPINE_PADDING - d.y0 - d.y; })
+          .y(props.barPosition)
+          .height(props.barHeight)
+          .width(sszvis.fn.prop('y'))
+          .fill(props.barFill);
+
+        var rightBar = sszvis.component.bar()
+          .x(function(d){ return SPINE_PADDING + d.y0; })
+          .y(props.barPosition)
+          .height(props.barHeight)
+          .width(sszvis.fn.prop('y'))
+          .fill(props.barFill);
+
+        var leftStack = stackComponent()
+          .stackElement(leftBar);
+
+        var rightStack = stackComponent()
+          .stackElement(rightBar);
+
+        var leftLine = lineComponent()
+          .barPosition(props.barPosition)
+          .barWidth(props.barWidth)
+          .mirror(true);
+
+        var rightLine = lineComponent()
+          .barPosition(props.barPosition)
+          .barWidth(props.barWidth);
+
+
+        // Rendering
+
+        selection.selectGroup('leftStack')
+          .datum(stackLayout(props.leftAccessor(data)))
+          .call(leftStack);
+
+        selection.selectGroup('rightStack')
+          .datum(stackLayout(props.rightAccessor(data)))
+          .call(rightStack);
+
+        selection.selectGroup('leftReference')
+          .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
+          .call(leftLine);
+
+        selection.selectGroup('rightReference')
+          .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
+          .call(rightLine);
+
+      });
+  };
+
+
+  function stackComponent() {
+    return d3.component()
+      .prop('stackElement')
+      .renderSelection(function(selection) {
+        var datum = selection.datum();
+        var props = selection.props();
+
+        var stack = selection.selectAll('[data-sszvis-stack]')
+          .data(datum);
+
+        stack.enter()
+          .append('g')
+          .attr('data-sszvis-stack', '');
+
+        stack.exit().remove();
+
+        stack.each(function(d) {
+          d3.select(this)
+            .datum(d)
+            .call(props.stackElement);
+        });
+      });
+  }
+
+
+  function lineComponent() {
+    return d3.component()
+      .prop('barPosition')
+      .prop('barWidth')
+      .prop('mirror').mirror(false)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var lineGen = d3.svg.line()
+          .x(props.barWidth)
+          .y(props.barPosition);
+
+        var line = selection.selectAll('.sszvis-path')
+          .data(data);
+
+        line.enter()
+          .append('path')
+          .attr('class', 'sszvis-path')
+          .attr('fill', 'none')
+          .attr('stroke', '#aaa')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '3 3');
+
+        line
+          .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
+          .transition()
+          .call(sszvis.transition)
+          .attr('d', lineGen);
+
+        line.exit().remove();
+      });
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Function allowing to 'wrap' the text from an SVG <text> element with <tspan>.
+ * Based on https://github.com/mbostock/d3/issues/1642
+ * @example svg.append("g")
+ *      .attr("class", "x axis")
+ *      .attr("transform", "translate(0," + height + ")")
+ *      .call(xAxis)
+ *      .selectAll(".tick text")
+ *          .call(d3TextWrap, x.rangeBand());
+ *
+ * @param text d3 selection for one or more <text> object
+ * @param width number - global width in which the text will be word-wrapped.
+ * @param paddingRightLeft integer - Padding right and left between the wrapped text and the 'invisible bax' of 'width' width
+ * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
+ * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
+ */
+namespace('sszvis.component.textWrap', function(module) {
+
+  module.exports = function(text, width, paddingRightLeft, paddingTopBottom) {
+    paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
+    paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
+    var maxWidth = width; //I store the tooltip max width
+    width = width - (paddingRightLeft * 2); //Take the padding into account
+
+    var arrLineCreatedCount = [];
+    text.each(function() {
+      var text = d3.select(this);
+      var words = text.text().split(/[ \f\n\r\t\v]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
+      var word;
+      var line = [];
+      var lineNumber = 0;
+      var lineHeight = 1.1; //Em
+      var x;
+      var y = text.attr("y");
+      var dy = parseFloat(text.attr("dy"));
+      var createdLineCount = 1; //Total line created count
+      var textAlign = text.style('text-anchor') || 'start'; //'start' by default (start, middle, end, inherit)
+
+      //Clean the data in case <text> does not define those values
+      if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
+
+      //Offset the text position based on the text-anchor
+      var wrapTickLabels = d3.select(text.node().parentNode).classed('tick'); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
+      if (wrapTickLabels) {
+        switch (textAlign) {
+          case 'start':
+          x = -width / 2;
+          break;
+          case 'middle':
+          x = 0;
+          break;
+          case 'end':
+          x = width / 2;
+          break;
+          default :
+        }
+      } else { //untranslated <text> elements
+        switch (textAlign) {
+          case 'start':
+          x = paddingRightLeft;
+          break;
+          case 'middle':
+          x = maxWidth / 2;
+          break;
+          case 'end':
+          x = maxWidth - paddingRightLeft;
+          break;
+          default :
+        }
+      }
+      y = +((null === y)?paddingTopBottom:y);
+
+      var tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (tspan.node().getComputedTextLength() > width && line.length > 1) {
+          line.pop();
+          tspan.text(line.join(" "));
+          line = [word];
+          tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+          ++createdLineCount;
+        }
+      }
+
+      arrLineCreatedCount.push(createdLineCount); //Store the line count in the array
+    });
+    return arrLineCreatedCount;
+  }
+
+});
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -2774,697 +3637,6 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
 
 });
 
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Stacked Chart
- * @return {d3.component}
- */
-namespace('sszvis.component.stacked.area', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('xAccessor')
-      .prop('xScale')
-      .prop('yAccessor')
-      .prop('yScale')
-      .prop('fill')
-      .prop('stroke')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var stackLayout = d3.layout.stack()
-          .x(props.xAccessor)
-          .y(props.yAccessor);
-
-        var areaGen = d3.svg.area()
-          .x(sszvis.fn.compose(props.xScale, props.xAccessor))
-          .y0(function(d) { return props.yScale(d.y0); })
-          .y1(function(d) { return props.yScale(d.y0 + d.y); });
-
-        var paths = selection.selectAll('path.sszvis-path')
-          .data(stackLayout(data));
-
-        paths.enter()
-          .append('path')
-          .classed('sszvis-path', true);
-
-        paths.exit().remove();
-
-        paths
-          .transition()
-          .call(sszvis.transition)
-          .attr('d', areaGen)
-          .attr('fill', props.fill)
-          .attr('stroke', props.stroke);
-      });
-  };
-
-});
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Stacked Bar Chart
- * @return {d3.component}
- */
-namespace('sszvis.component.stacked.bar', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('orientation')
-      .prop('xAccessor')
-      .prop('xScale')
-      .prop('width')
-      .prop('yAccessor')
-      .prop('yScale')
-      .prop('fill')
-      .prop('stroke')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        // TODO: refactor this class to make more sense?
-        var stackLayout = d3.layout.stack()
-          .x(props.xAccessor)
-          .y(props.yAccessor);
-
-        var placementValue = sszvis.fn.compose(props.xScale, props.xAccessor);
-        var extentValueRight = function(d) { return props.yScale(d.y0); };
-        var extentValueLeft = function(d) { return props.yScale(d.y0 + d.y); };
-        var placementDimension = props.width;
-        var extentDimension = function(d) { return Math.abs(props.yScale(d.y0 + d.y) - props.yScale(d.y0)); };
-
-        var xFunc, yFunc, wFunc, hFunc;
-        if (props.orientation === 'vertical') {
-          xFunc = placementValue;
-          yFunc = extentValueLeft;
-          wFunc = placementDimension;
-          hFunc = extentDimension;
-        } else if (props.orientation === 'horizontal') {
-          xFunc = extentValueRight;
-          yFunc = placementValue;
-          wFunc = extentDimension;
-          hFunc = placementDimension;
-        } else {
-          throw new Error('sszvis.component.stacked.bar requires an orientation');
-        }
-
-        var barGen = sszvis.component.bar()
-          .x(xFunc)
-          .y(yFunc)
-          .width(wFunc)
-          .height(hFunc)
-          .fill(props.fill)
-          .stroke(props.stroke);
-
-        var groups = selection.selectAll('g.sszvis-g')
-          .data(stackLayout(data));
-
-        groups.enter()
-          .append('g')
-          .classed('sszvis-g', true);
-
-        groups.exit().remove();
-
-        var bars = groups.call(barGen);
-
-      });
-  };
-
-});
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Function allowing to 'wrap' the text from an SVG <text> element with <tspan>.
- * Based on https://github.com/mbostock/d3/issues/1642
- * @example svg.append("g")
- *      .attr("class", "x axis")
- *      .attr("transform", "translate(0," + height + ")")
- *      .call(xAxis)
- *      .selectAll(".tick text")
- *          .call(d3TextWrap, x.rangeBand());
- *
- * @param text d3 selection for one or more <text> object
- * @param width number - global width in which the text will be word-wrapped.
- * @param paddingRightLeft integer - Padding right and left between the wrapped text and the 'invisible bax' of 'width' width
- * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
- * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
- */
-namespace('sszvis.component.textWrap', function(module) {
-
-  module.exports = function(text, width, paddingRightLeft, paddingTopBottom) {
-    paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
-    paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
-    var maxWidth = width; //I store the tooltip max width
-    width = width - (paddingRightLeft * 2); //Take the padding into account
-
-    var arrLineCreatedCount = [];
-    text.each(function() {
-      var text = d3.select(this);
-      var words = text.text().split(/[ \f\n\r\t\v]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
-      var word;
-      var line = [];
-      var lineNumber = 0;
-      var lineHeight = 1.1; //Em
-      var x;
-      var y = text.attr("y");
-      var dy = parseFloat(text.attr("dy"));
-      var createdLineCount = 1; //Total line created count
-      var textAlign = text.style('text-anchor') || 'start'; //'start' by default (start, middle, end, inherit)
-
-      //Clean the data in case <text> does not define those values
-      if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
-
-      //Offset the text position based on the text-anchor
-      var wrapTickLabels = d3.select(text.node().parentNode).classed('tick'); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
-      if (wrapTickLabels) {
-        switch (textAlign) {
-          case 'start':
-          x = -width / 2;
-          break;
-          case 'middle':
-          x = 0;
-          break;
-          case 'end':
-          x = width / 2;
-          break;
-          default :
-        }
-      } else { //untranslated <text> elements
-        switch (textAlign) {
-          case 'start':
-          x = paddingRightLeft;
-          break;
-          case 'middle':
-          x = maxWidth / 2;
-          break;
-          case 'end':
-          x = maxWidth - paddingRightLeft;
-          break;
-          default :
-        }
-      }
-      y = +((null === y)?paddingTopBottom:y);
-
-      var tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
-
-      while (word = words.pop()) {
-        line.push(word);
-        tspan.text(line.join(" "));
-        if (tspan.node().getComputedTextLength() > width && line.length > 1) {
-          line.pop();
-          tspan.text(line.join(" "));
-          line = [word];
-          tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-          ++createdLineCount;
-        }
-      }
-
-      arrLineCreatedCount.push(createdLineCount); //Store the line count in the array
-    });
-    return arrLineCreatedCount;
-  }
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Pie component
- * @return {d3.component}
-*/
-namespace('sszvis.component.pie', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('radius')
-      .prop('fill')
-      .prop('stroke')
-      .prop('angle')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var angle = 0;
-        data.forEach(function(value) {
-          value.a0 = angle;
-          angle += props.angle(value);
-          value.a1 = angle;
-        });
-
-        var arcGen = d3.svg.arc()
-          .innerRadius(4)
-          .outerRadius(props.radius)
-          .startAngle(function(d) { return d.a0; })
-          .endAngle(function(d) { return d.a1; });
-
-        var segments = selection.selectAll('.sszvis-path')
-          .data(data);
-
-        segments.enter()
-          .append('path')
-          .classed('sszvis-path', true);
-
-        segments.exit().remove();
-
-        segments
-          .transition()
-          .call(sszvis.transition)
-          .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
-          .attr('d', arcGen)
-          .attr('fill', props.fill)
-          .attr('stroke', props.stroke);
-
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .position(function(d) {
-            var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
-            var r = props.radius * 2/3;
-            return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
-          });
-
-        selection
-          .datum(data)
-          .call(tooltipAnchor)
-
-      });
-  };
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Small Multiples component
- *
- * Used to generate group elements for small multiples charts
- *
- * @return {d3.component}
- */
-namespace('sszvis.component.multiples', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('width')
-      .prop('height')
-      .prop('paddingX')
-      .prop('paddingY')
-      .prop('rows')
-      .prop('cols')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
-        var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
-
-        var multiples = selection.selectAll('g.sszvis-multiple')
-          .data(data);
-
-        multiples.enter()
-          .append('g')
-          .classed('sszvis-g sszvis-multiple', true);
-
-        multiples.exit().remove();
-
-        var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
-          .data(function(d) {
-            return [d.values];
-          });
-
-        subGroups.enter()
-          .append('g')
-          .classed('sszvis-multiple-chart', true);
-
-        subGroups.exit().remove();
-
-        multiples
-          .datum(function(d, i) {
-            d.gx = (i % props.cols) * (unitWidth + props.paddingX);
-            d.gw = unitWidth;
-            d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
-            d.gh = unitHeight;
-            return d;
-          })
-          .attr('transform', function(d, i) {
-            return 'translate(' + d.gx + ',' + d.gy + ')';
-          });
-
-      });
-  };
-
-});
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Pyramid component
- *
- * The pyramid component is primarily used to show a distribution of age groups
- * in a population (population pyramid). The chart is mirrored vertically,
- * meaning that it has a horizontal axis that extends in a positive and negative
- * direction having the same domain.
- *
- * This chart's horizontal point of origin is at it's spine, i.e. the center of
- * the chart.
- *
- * @requires sszvis.component.bar
- *
- * @property {number, d3.scale} [barFill]          The color of a bar
- * @property {number, d3.scale} barHeight          The height of a bar
- * @property {number, d3.scale} barWidth           The width of a bar
- * @property {number, d3.scale} barPosition        The vertical position of a bar
- * @property {function}         leftAccessor       Data for the left side
- * @property {function}         rightAccessor      Data for the right side
- * @property {function}         [leftRefAccessor]  Reference data for the left side
- * @property {function}         [rightRefAccessor] Reference data for the right side
- *
- * @return {d3.component}
- */
-namespace('sszvis.component.pyramid', function(module) {
-  'use strict';
-
-  /* Constants
-  ----------------------------------------------- */
-  var SPINE_PADDING = 0.5;
-
-
-  /* Module
-  ----------------------------------------------- */
-  module.exports = function() {
-    return d3.component()
-      .prop('barHeight', d3.functor)
-      .prop('barWidth', d3.functor)
-      .prop('barPosition', d3.functor)
-      .prop('barFill').barFill(d3.functor('#000'))
-      .prop('leftAccessor')
-      .prop('rightAccessor')
-      .prop('leftRefAccessor')
-      .prop('rightRefAccessor')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-
-        // Components
-
-        var leftBar = sszvis.component.bar()
-          .x(function(d){ return -SPINE_PADDING - props.barWidth(d); })
-          .y(props.barPosition)
-          .height(props.barHeight)
-          .width(props.barWidth)
-          .fill(props.barFill);
-
-        var rightBar = sszvis.component.bar()
-          .x(SPINE_PADDING)
-          .y(props.barPosition)
-          .height(props.barHeight)
-          .width(props.barWidth)
-          .fill(props.barFill);
-
-        var leftLine = lineComponent()
-          .barPosition(props.barPosition)
-          .barWidth(props.barWidth)
-          .mirror(true);
-
-        var rightLine = lineComponent()
-          .barPosition(props.barPosition)
-          .barWidth(props.barWidth);
-
-
-        // Rendering
-
-        selection.selectGroup('left')
-          .datum(props.leftAccessor(data))
-          .call(leftBar);
-
-        selection.selectGroup('right')
-          .datum(props.rightAccessor(data))
-          .call(rightBar);
-
-        selection.selectGroup('leftReference')
-          .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
-          .call(leftLine);
-
-        selection.selectGroup('rightReference')
-          .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
-          .call(rightLine);
-
-      });
-  };
-
-
-  function lineComponent() {
-    return d3.component()
-      .prop('barPosition')
-      .prop('barWidth')
-      .prop('mirror').mirror(false)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var lineGen = d3.svg.line()
-          .x(props.barWidth)
-          .y(props.barPosition);
-
-        var line = selection.selectAll('.sszvis-path')
-          .data(data);
-
-        line.enter()
-          .append('path')
-          .attr('class', 'sszvis-path')
-          .attr('fill', 'none')
-          .attr('stroke', '#aaa')
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', '3 3');
-
-        line
-          .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
-          .transition()
-          .call(sszvis.transition)
-          .attr('d', lineGen);
-
-        line.exit().remove();
-      });
-  }
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * @module sszvis/component/dataAreaCircle
- *
- * @returns {d3.component} a circular data area component
- */
-namespace('sszvis.component.dataAreaCircle', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('x', d3.functor)
-      .prop('y', d3.functor)
-      .prop('r', d3.functor)
-      .prop('dx', d3.functor)
-      .prop('dy', d3.functor)
-      .prop('caption', d3.functor)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
-          .call(sszvis.patterns.dataAreaPattern);
-
-        var dataArea = selection.selectAll('.sszvis-data-area-circle')
-          .data(data);
-
-        dataArea.enter()
-          .append('circle')
-          .classed('sszvis-data-area-circle', true);
-
-        dataArea
-          .attr('cx', props.x)
-          .attr('cy', props.y)
-          .attr('r', props.r)
-          .attr('fill', 'url(#data-area-pattern)');
-
-        if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-circle-caption')
-            .data(data);
-
-          dataCaptions.enter()
-            .append('text')
-            .classed('sszvis-data-area-circle-caption', true);
-
-          dataCaptions
-            .attr('x', props.x)
-            .attr('y', props.y)
-            .attr('dx', props.dx)
-            .attr('dy', props.dy)
-            .text(props.caption);
-        }
-      });
-  };
-
-});
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * @module sszvis/component/dataAreaRectangle
- *
- * @returns {d3.component} a rectangular data area component
- */
-namespace('sszvis.component.dataAreaRectangle', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('x', d3.functor)
-      .prop('y', d3.functor)
-      .prop('width', d3.functor)
-      .prop('height', d3.functor)
-      .prop('dx', d3.functor)
-      .prop('dy', d3.functor)
-      .prop('caption', d3.functor)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
-          .call(sszvis.patterns.dataAreaPattern);
-
-        var dataArea = selection.selectAll('.sszvis-data-area-rectangle')
-          .data(data);
-
-        dataArea.enter()
-          .append('rect')
-          .classed('sszvis-data-area-rectangle', true);
-
-        dataArea
-          .attr('x', props.x)
-          .attr('t', props.y)
-          .attr('width', props.width)
-          .attr('height', props.height)
-          .attr('fill', 'url(#data-area-pattern)');
-
-        if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-rectangle-caption')
-            .data(data);
-
-          dataCaptions.enter()
-            .append('text')
-            .classed('sszvis-data-area-rectangle-caption', true);
-
-          dataCaptions
-            .attr('x', function(d, i) {
-              return props.x(d, i) + props.width(d, i) / 2;
-            })
-            .attr('y', function(d, i) {
-              return props.y(d, i) + props.height(d, i) / 2;
-            })
-            .attr('dx', props.dx)
-            .attr('dy', props.dy)
-            .text(props.caption);
-        }
-      });
-  }
-
-});
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * @module sszvis/component/dataAreaLine
- *
- * @returns {d3.component} a linear data area component (reference line)
- */
-namespace('sszvis.component.dataAreaLine', function(module) {
-
-  // reference line specified in the form y = mx + b
-  // user supplies m and b
-  // default line is y = x
-
-  module.exports = function() {
-    return d3.component()
-      .prop('m').m(1)
-      .prop('b').b(0)
-      .prop('xScale')
-      .prop('yScale')
-      .prop('xRange')
-      .prop('dx', d3.functor).dx(0)
-      .prop('dy', d3.functor).dy(0)
-      .prop('caption', d3.functor)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var x1 = props.xRange[0];
-        var x2 = props.xRange[1];
-        var y1 = props.yScale(props.m * props.xScale.invert(x1) + props.b);
-        var y2 = props.yScale(props.m * props.xScale.invert(x2) + props.b);
-
-        var line = selection.selectAll('.sszvis-reference-line')
-          .data(data);
-
-        line.enter()
-          .append('line')
-          .classed('sszvis-reference-line', true);
-
-        line.exit().remove();
-
-        line
-          .attr('x1', x1)
-          .attr('y1', y1)
-          .attr('x2', x2)
-          .attr('y2', y2);
-
-        if (props.caption) {
-          var caption = selection.selectAll('.sszvis-reference-line--caption')
-            .data([1]);
-
-          caption.enter()
-            .append('text')
-            .classed('sszvis-reference-line--caption', true);
-
-          caption.exit().remove();
-
-          caption
-            .attr('transform', function() {
-              var vx = x2 - x1;
-              var vy = y2 - y1;
-              var angle = Math.atan2(vy, vx) * 180 / Math.PI;
-              var rotation;
-              if (angle > 0) {
-                // in top half
-                rotation = angle < 90 ? -angle : angle;
-              } else {
-                // in bottom semicircle
-                rotation = angle > -90 ? -angle : angle; // display angle math is weird
-              }
-              return 'translate(' + ((x1 + x2) / 2) + ',' + ((y1 + y2) / 2) + ') rotate(' + (angle) + ')';
-            })
-            .attr('dx', props.dx)
-            .attr('dy', props.dy)
-            .text(props.caption);
-        }
-      });
-  };
-
-});
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

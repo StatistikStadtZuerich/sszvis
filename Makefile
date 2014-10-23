@@ -44,23 +44,24 @@ SOURCE_FILES = \
 	sszvis/control/segmentedControl.js \
 	sszvis/control/slideBar.js \
 	sszvis/component/bar.js \
+	sszvis/component/dataAreaCircle.js \
+	sszvis/component/dataAreaLine.js \
+	sszvis/component/dataAreaRectangle.js \
 	sszvis/component/dot.js \
 	sszvis/component/groupedBars.js \
 	sszvis/component/line.js \
 	sszvis/component/modularText.js \
-	sszvis/component/ruler.js \
+	sszvis/component/multiples.js \
+	sszvis/component/pie.js \
+	sszvis/component/pyramid.js \
 	sszvis/component/rangeRuler.js \
-	sszvis/component/tooltip.js \
-	sszvis/component/tooltipAnchor.js \
+	sszvis/component/ruler.js \
 	sszvis/component/stackedArea.js \
 	sszvis/component/stackedBar.js \
+	sszvis/component/stackedPyramid.js \
 	sszvis/component/textWrap.js \
-	sszvis/component/pie.js \
-	sszvis/component/multiples.js \
-	sszvis/component/pyramid.js \
-	sszvis/component/dataAreaCircle.js \
-	sszvis/component/dataAreaRectangle.js \
-	sszvis/component/dataAreaLine.js \
+	sszvis/component/tooltip.js \
+	sszvis/component/tooltipAnchor.js \
 	sszvis/map/map.js \
 	sszvis/map/switzerland.js \
 	sszvis/map/zurich.js
