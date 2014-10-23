@@ -85,13 +85,9 @@
       .domain(state.groups)
       .range(sszvis.color.ranges.qualitative.neutralQual2);
 
-
-    // FIXME: remove pyramid specific code
-
-    var groupPadding = 0.5;
-    var lengthScale = d3.scale.linear() // half-width
+    var lengthScale = d3.scale.linear()
       .domain([0, state.maxValue])
-      .range([0, bounds.innerWidth / 2 - groupPadding]);
+      .range([0, bounds.innerWidth / 2]);
 
 
     // Layers
@@ -102,16 +98,10 @@
 
     // Components
 
-
-    // mirrorScale(xScale)
-
     var pyramidGen = sszvis.component.pyramid()
-      .width(bounds.innerWidth / 2)
-      .height(bounds.innerHeight)
-      .groupPadding(groupPadding)
-      .alignmentValue(sszvis.fn.compose(positionScale, aAcc))
-      .barWidth(positionScale.rangeBand())
-      .extentValue(sszvis.fn.compose(lengthScale, vAcc))
+      .barHeight(positionScale.rangeBand())
+      .barLength(sszvis.fn.compose(lengthScale, vAcc))
+      .verticalPosition(sszvis.fn.compose(positionScale, aAcc))
       .fill(sszvis.fn.compose(colorScale, gAcc));
 
     var xAxis = sszvis.axis.x.pyramid()
@@ -141,10 +131,11 @@
         leftReference: womenAcc(otherAcc(state.populations)),
         rightReference: menAcc(otherAcc(state.populations))
       })
+      .attr('transform', 'translate(' + (bounds.innerWidth / 2) + ', 0)')
       .call(pyramidGen);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight) + ')')
+      .attr('transform', 'translate(' + (bounds.innerWidth / 2) + ',' + (bounds.innerHeight) + ')')
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')

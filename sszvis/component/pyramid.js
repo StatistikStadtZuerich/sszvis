@@ -8,13 +8,10 @@ namespace('sszvis.component.pyramid', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('width')
-      .prop('height')
-      .prop('groupPadding')
-      .prop('alignmentValue')
-      .prop('barWidth')
-      .prop('extentValue')
+      .prop('barHeight')
+      .prop('barLength')
       .prop('fill')
+      .prop('verticalPosition')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -23,19 +20,17 @@ namespace('sszvis.component.pyramid', function(module) {
         // Bars
 
         var leftBar = barComponent()
-          .alignmentValue(props.alignmentValue)
-          .barWidth(props.barWidth)
-          .extentValue(props.extentValue)
+          .verticalPosition(props.verticalPosition)
+          .barHeight(props.barHeight)
+          .barLength(props.barLength)
           .fill(props.fill)
-          .transform(transformLeft(props.width - props.groupPadding));
-
+          .mirror(true);
 
         var rightBar = barComponent()
-          .alignmentValue(props.alignmentValue)
-          .barWidth(props.barWidth)
-          .extentValue(props.extentValue)
-          .fill(props.fill)
-          .transform(transformRight(props.width + props.groupPadding));
+          .verticalPosition(props.verticalPosition)
+          .barHeight(props.barHeight)
+          .barLength(props.barLength)
+          .fill(props.fill);
 
         selection.selectGroup('left')
           .datum(data.left)
@@ -49,14 +44,13 @@ namespace('sszvis.component.pyramid', function(module) {
         // Reference lines
 
         var leftLine = lineComponent()
-          .alignmentValue(props.alignmentValue)
-          .extentValue(props.extentValue)
-          .transform(transformLeft(props.width - props.groupPadding));
+          .verticalPosition(props.verticalPosition)
+          .barLength(props.barLength)
+          .mirror(true);
 
         var rightLine = lineComponent()
-          .alignmentValue(props.alignmentValue)
-          .extentValue(props.extentValue)
-          .transform(transformRight(props.width + props.groupPadding));
+          .verticalPosition(props.verticalPosition)
+          .barLength(props.barLength);
 
         selection.selectGroup('leftReference')
           .datum(data.leftReference ? [data.leftReference] : [])
@@ -69,23 +63,13 @@ namespace('sszvis.component.pyramid', function(module) {
       });
   };
 
-  function transformLeft(width) {
-    // 90deg rotation plus +width
-    return 'matrix(0, 1, -1, 0, ' + width + ', 0)';
-  }
-
-  function transformRight(width) {
-    // reflection around y = x plus +width
-    return 'matrix(0, 1, 1, 0, ' + width + ', 0)';
-  }
-
   function barComponent() {
     return d3.component()
-      .prop('alignmentValue')
-      .prop('barWidth')
-      .prop('extentValue')
+      .prop('verticalPosition')
+      .prop('barHeight')
+      .prop('barLength')
       .prop('fill')
-      .prop('transform')
+      .prop('mirror').mirror(false)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -99,13 +83,13 @@ namespace('sszvis.component.pyramid', function(module) {
 
         bar
           .attr('fill', props.fill)
-          .attr('transform', props.transform)
+          .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
           .transition()
           .call(sszvis.transition)
-          .attr('x', props.alignmentValue)
-          .attr('y', 0)
-          .attr('width', props.barWidth)
-          .attr('height', props.extentValue);
+          .attr('x', 0.5)
+          .attr('y', props.verticalPosition)
+          .attr('height', props.barHeight)
+          .attr('width', props.barLength);
 
         bar.exit().remove();
       });
@@ -113,16 +97,16 @@ namespace('sszvis.component.pyramid', function(module) {
 
   function lineComponent() {
     return d3.component()
-      .prop('alignmentValue')
-      .prop('extentValue')
-      .prop('transform')
+      .prop('verticalPosition')
+      .prop('barLength')
+      .prop('mirror').mirror(false)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
         var lineGen = d3.svg.line()
-          .x(props.alignmentValue)
-          .y(props.extentValue);
+          .x(props.barLength)
+          .y(props.verticalPosition);
 
         var line = selection.selectAll('.sszvis-path')
           .data(data);
@@ -136,7 +120,7 @@ namespace('sszvis.component.pyramid', function(module) {
           .attr('stroke-dasharray', '3 3');
 
         line
-          .attr('transform', props.transform)
+          .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
           .transition()
           .call(sszvis.transition)
           .attr('d', lineGen);
