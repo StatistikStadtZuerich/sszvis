@@ -98,11 +98,11 @@
 
     // Components
 
-    var pyramidGen = sszvis.component.pyramid()
+    var pyramid = sszvis.component.pyramid()
+      .barFill(sszvis.fn.compose(colorScale, gAcc))
+      .barPosition(sszvis.fn.compose(positionScale, aAcc))
       .barHeight(positionScale.rangeBand())
-      .barWidth(sszvis.fn.compose(lengthScale, vAcc))
-      .verticalPosition(sszvis.fn.compose(positionScale, aAcc))
-      .fill(sszvis.fn.compose(colorScale, gAcc));
+      .barWidth(sszvis.fn.compose(lengthScale, vAcc));
 
     var xAxis = sszvis.axis.x.pyramid()
       .scale(lengthScale)
@@ -137,7 +137,7 @@
         rightReference: menAcc(otherAcc(state.populations))
       })
       .attr('transform', 'translate(' + (bounds.innerWidth / 2) + ', 0)')
-      .call(pyramidGen);
+      .call(pyramid);
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', 'translate(' + (bounds.innerWidth / 2) + ',' + (bounds.innerHeight) + ')')

@@ -11,10 +11,10 @@
  *
  * @requires sszvis.component.bar
  *
- * @property {number}   barHeight        The height of a bar
- * @property {d3.scale} barWidth         Scale that returns the width for a datum
- * @property {d3.scale} fill             Scale that returns the color for a datum
- * @property {d3.scale} verticalPosition Scale that returns the vertical position of a bar
+ * @property {number, d3.scale} barFill     The color of a bar
+ * @property {number, d3.scale} barHeight   The height of a bar
+ * @property {number, d3.scale} barWidth    The width of a bar
+ * @property {number, d3.scale} barPosition The vertical position of a bar
  *
  * @return {d3.component}
  */
@@ -30,10 +30,10 @@ namespace('sszvis.component.pyramid', function(module) {
   ----------------------------------------------- */
   module.exports = function() {
     return d3.component()
-      .prop('barHeight')
-      .prop('barWidth')
-      .prop('fill')
-      .prop('verticalPosition')
+      .prop('barHeight', d3.functor)
+      .prop('barWidth', d3.functor)
+      .prop('barPosition', d3.functor)
+      .prop('barFill').barFill(d3.functor('#000'))
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -43,25 +43,25 @@ namespace('sszvis.component.pyramid', function(module) {
 
         var leftBar = sszvis.component.bar()
           .x(function(d){ return -SPINE_PADDING - props.barWidth(d); })
-          .y(props.verticalPosition)
+          .y(props.barPosition)
           .height(props.barHeight)
           .width(props.barWidth)
-          .fill(props.fill);
+          .fill(props.barFill);
 
         var rightBar = sszvis.component.bar()
           .x(SPINE_PADDING)
-          .y(props.verticalPosition)
+          .y(props.barPosition)
           .height(props.barHeight)
           .width(props.barWidth)
-          .fill(props.fill);
+          .fill(props.barFill);
 
         var leftLine = lineComponent()
-          .verticalPosition(props.verticalPosition)
+          .barPosition(props.barPosition)
           .barWidth(props.barWidth)
           .mirror(true);
 
         var rightLine = lineComponent()
-          .verticalPosition(props.verticalPosition)
+          .barPosition(props.barPosition)
           .barWidth(props.barWidth);
 
 
@@ -89,7 +89,7 @@ namespace('sszvis.component.pyramid', function(module) {
 
   function lineComponent() {
     return d3.component()
-      .prop('verticalPosition')
+      .prop('barPosition')
       .prop('barWidth')
       .prop('mirror').mirror(false)
       .render(function(data) {
@@ -98,7 +98,7 @@ namespace('sszvis.component.pyramid', function(module) {
 
         var lineGen = d3.svg.line()
           .x(props.barWidth)
-          .y(props.verticalPosition);
+          .y(props.barPosition);
 
         var line = selection.selectAll('.sszvis-path')
           .data(data);
