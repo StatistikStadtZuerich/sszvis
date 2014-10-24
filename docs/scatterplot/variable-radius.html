@@ -14,7 +14,18 @@
   <div id="chart"></div>
   <script>
   (function() {
+    'use strict';
 
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('neubauabs');
+    var yAcc = sszvis.fn.prop('leerzunrel');
+    var rAcc = sszvis.fn.prop('best13radius');
+    var cAcc = sszvis.fn.prop('quname');
+
+
+    /* Application state
+    ----------------------------------------------- */
     var state = {
       data: [],
       xExtent: [0, 0],
@@ -22,11 +33,23 @@
       categories: []
     };
 
-    var xAcc = sszvis.fn.prop('neubauabs');
-    var yAcc = sszvis.fn.prop('leerzunrel');
-    var rAcc = sszvis.fn.prop('best13radius');
-    var cAcc = sszvis.fn.prop('quname');
 
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
+        state.yExtent = d3.extent(state.data, yAcc);
+        state.categories = sszvis.fn.set(state.data, cAcc);
+
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
     d3.csv('data/VRS_basic.csv')
       .row(function(d) {
         return {
@@ -37,25 +60,17 @@
         };
       })
       .get(function(error, data) {
-        if (error) {
-          console.log('error loading data: ', error);
-          return;
-        }
-
-        state.data = data;
-
-        // a log scale can't include zero.
-        state.xExtent = [0.1, d3.max(state.data, xAcc)];
-
-        state.yExtent = d3.extent(state.data, yAcc);
-
-        state.categories = sszvis.fn.set(state.data, cAcc);
-
-        render(state);
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
 
+
+    /* Render
+    ----------------------------------------------- */
     function render(state) {
       var bounds = sszvis.bounds({ width: 500, height: 500, top: 10, right: 10, bottom: 40, left: 10 });
+
+
+      // Scales
 
       var xScale = d3.scale.log()
         .domain(state.xExtent)
@@ -65,6 +80,15 @@
         .domain(state.yExtent)
         .range([bounds.innerHeight, 0]);
 
+
+      // Layers
+
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.data);
+
+
+      // Components
+
       var dots = sszvis.component.dot()
         .x(sszvis.fn.compose(function(v) {
           return v <= 0.1 ? 0 : xScale(v);
@@ -73,14 +97,6 @@
         .radius(rAcc)
         .fill(sszvis.color.values.basicBlue)
         .stroke(sszvis.color.values.plainWhite);
-
-      // create a rectangular data area on the scatterplot
-      var area = sszvis.component.dataAreaRectangle()
-        .x(xScale(10)) // x-position is bounds.innerWidth * t, where t = 0.55
-        .y(0)
-        .width(bounds.innerWidth - xScale(10)) // width is bounds.innerWidth * (1 - t)
-        .height(bounds.innerHeight)
-        .caption('Dies ist ein Datenbereich');
 
       var xAxis = sszvis.axis.x()
         .scale(xScale)
@@ -93,21 +109,28 @@
         .orient('right')
         .halo(true);
 
-      var chart = sszvis.createChart('#chart', bounds)
-        .datum(state.data);
+      var annotation = sszvis.component.dataAreaRectangle()
+        .x(xScale(8)) // x-position is bounds.innerWidth * t, where t = 0.55
+        .y(0)
+        .width(bounds.innerWidth - xScale(15)) // width is bounds.innerWidth * (1 - t)
+        .height(bounds.innerHeight)
+        .caption('Dies ist ein Datenbereich');
 
-      chart.selectGroup('dots')
+
+      // Rendering
+
+      chartLayer.selectGroup('dots')
         .call(dots);
 
-      chart.selectGroup('dataArea')
+      chartLayer.selectGroup('dataArea')
         .datum([1])
-        .call(area);
+        .call(annotation);
 
-      chart.selectGroup('xAxis')
+      chartLayer.selectGroup('xAxis')
         .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
         .call(xAxis);
 
-      chart.selectGroup('yAxis')
+      chartLayer.selectGroup('yAxis')
         .call(yAxis);
     }
 
