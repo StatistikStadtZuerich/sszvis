@@ -34,8 +34,6 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 }
 ```
 
-[Projekt herunterladen](docs/simple-line-chart/simple-line-chart.zip) (ZIP. Nicht mehr aktuell, wird in Zukunft automatisch generiert)
-
 ## Interaktiv
 
 ```project
@@ -56,38 +54,10 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
 ```project
 {
-    "index": "docs/simple-line-chart/basic.html",
-    "readme": "docs/simple-line-chart/README.md",
-    "files": [
-        "docs/simple-line-chart/data/SL_Basic.csv"
-    ],
-    "size": {
-        "width": 500,
-        "height": 450
-    }
-}
-```
-
-```project
-{
     "index": "docs/simple-line-chart/daily.html",
     "readme": "docs/simple-line-chart/README.md",
     "files": [
         "docs/simple-line-chart/data/SL_daily.csv"
-    ],
-    "size": {
-        "width": 500,
-        "height": 450
-    }
-}
-```
-
-```project
-{
-    "index": "docs/simple-line-chart/daily_missing.html",
-    "readme": "docs/simple-line-chart/README.md",
-    "files": [
-        "docs/simple-line-chart/data/SL_daily_missing.csv"
     ],
     "size": {
         "width": 500,
