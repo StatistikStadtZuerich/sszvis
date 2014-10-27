@@ -2500,7 +2500,8 @@ namespace('sszvis.component.line', function(module) {
 
         path.enter()
           .append('path')
-          .classed('sszvis-line', true);
+          .classed('sszvis-line', true)
+          .attr('stroke', props.stroke);
 
         path.exit().remove();
 
