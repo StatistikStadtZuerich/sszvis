@@ -105,6 +105,13 @@ server: build
 		--files="docs/**/*" \
 		& fswatch -0 -o sszvis/ -o vendor/ | xargs -0 -n1 -I{} make build
 
+
+deploy: build
+	rsync -avz ./ \
+	--exclude=.DS_Store \
+	--exclude=.git \
+	interact@interactivethings.com:/home/interact/www/clients.interactivethings.com/ssz/visualization-library
+
 maps: $(ZURICH_MAP_TARGETS)
 
 clean:
