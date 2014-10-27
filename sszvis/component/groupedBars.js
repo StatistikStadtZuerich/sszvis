@@ -37,7 +37,8 @@ namespace('sszvis.component.groupedBars', function(module) {
 
         bars.enter()
           .append('rect')
-          .classed('sszvis-bar', true);
+          .classed('sszvis-bar', true)
+          .attr('fill', props.fill);
 
         bars.exit().remove();
 

@@ -2434,7 +2434,8 @@ namespace('sszvis.component.groupedBars', function(module) {
 
         bars.enter()
           .append('rect')
-          .classed('sszvis-bar', true);
+          .classed('sszvis-bar', true)
+          .attr('fill', props.fill);
 
         bars.exit().remove();
 
@@ -2470,6 +2471,7 @@ namespace('sszvis.component.groupedBars', function(module) {
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -2698,7 +2700,10 @@ namespace('sszvis.component.pie', function(module) {
 
         segments.enter()
           .append('path')
-          .classed('sszvis-path', true);
+          .classed('sszvis-path', true)
+          .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
 
         segments.exit().remove();
 
