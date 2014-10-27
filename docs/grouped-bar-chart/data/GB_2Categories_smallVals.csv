@@ -4,7 +4,7 @@ Stadt Zürich,Import,-10
 Kanton Zürich,Import,-7.9
 Winterthur und Umgebung,Import,1.7
 Limmattal,Import,-16.2
-Glatttal,Import,-8.2
+Glatttal,Import,
 Oberland,Import,-0.2
 Zimmerberg,Import,-0.5
 Pfannenstiel,Import,-7.6
@@ -15,9 +15,9 @@ Stadt Zürich,Export,3.8
 Kanton Zürich,Export,0.1
 Winterthur und Umgebung,Export,19
 Limmattal,Export,-10.4
-Glatttal,Export,-0.9
+Glatttal,Export,
 Oberland,Export,-7.9
 Zimmerberg,Export,6
-Pfannenstiel,Export,-4.3
+Pfannenstiel,Export,
 Unterland,Export,-10.1
 Übrige Gebiete Zürich,Export,-4.5

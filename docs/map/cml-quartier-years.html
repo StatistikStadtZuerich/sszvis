@@ -20,7 +20,7 @@
     /* Configuration
     ----------------------------------------------- */
     var INITIAL_YEAR = sszvis.parse.year('2013');
-//    var INITIAL_YEAR = sszvis.parse.year('2014');
+
 
     /* Shortcuts
     ----------------------------------------------- */
@@ -28,11 +28,6 @@
     var yearAcc = sszvis.fn.prop('year');
     var qAcc = sszvis.fn.prop('geoId');
 
-    var lineGrouper = sszvis.cascade()
-      .arrayBy(qAcc)
-      .sort(function(a, b) {
-        return d3.ascending(yearAcc(a), yearAcc(b));
-      });
 
     /* Application state
     ----------------------------------------------- */
@@ -52,14 +47,15 @@
     var actions = {
       prepareState: function(data) {
         state.data = data;
-
         state.valueDomain = [0, d3.max(state.data, vAcc)];
-
         state.yearDomain = d3.extent(state.data, yearAcc);
-
         state.quarters = sszvis.fn.set(state.data, qAcc);
-
-        state.lineData = lineGrouper.apply(state.data);
+        state.lineData = sszvis.cascade()
+          .arrayBy(qAcc)
+          .sort(function(a, b) {
+            return d3.ascending(yearAcc(a), yearAcc(b));
+          })
+          .apply(state.data);
 
         actions.changeYear(INITIAL_YEAR);
       },
@@ -167,13 +163,6 @@
           return 'Anzahl: ' + d.value;
         });
 
-      var clickBehavior = sszvis.behavior.click()
-        .xScale(xScale)
-        .yScale(yScale)
-        .padding({ top: 30 }) // same as passing { top: 30, left: 0, bottom: 0, right: 0 }
-        .on('down', actions.changeYear)
-        .on('drag', actions.changeYear);
-
 
       // Rendering
 
@@ -191,9 +180,20 @@
       highlightLayer.selectGroup('slider')
         .call(slideBar);
 
+
+      // Interaction
+
+      var clickBehavior = sszvis.behavior.click()
+        .xScale(xScale)
+        .yScale(yScale)
+        .padding({ top: 30 })
+        .on('down', actions.changeYear)
+        .on('drag', actions.changeYear);
+
       highlightLayer.selectGroup('interaction')
         .call(clickBehavior);
     }
+
 
     /* Helper functions
     ----------------------------------------------- */
@@ -203,6 +203,7 @@
       var d1 = data[i] || d0;
       return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
     }
+
 
   }());
   </script>

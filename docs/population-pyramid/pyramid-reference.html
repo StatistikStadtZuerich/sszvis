@@ -14,20 +14,50 @@
 <div id="chart"></div>
 <script>
 (function() {
+  'use strict';
 
-  var state = {
-    data: [],
-    ages: d3.range(0, 101), // [0 ... 100]
-    groups: [],
-    populations: {},
-    maxValue: 0
-  };
-
+  /* Shortcuts
+  ----------------------------------------------- */
   var vAcc = sszvis.fn.prop('value');
   var gAcc = sszvis.fn.prop('gender');
   var aAcc = sszvis.fn.prop('age');
   var refAcc = sszvis.fn.prop('group');
+  var womenAcc = sszvis.fn.prop('Frauen');
+  var menAcc = sszvis.fn.prop('Männer');
+  var collegeAcc = sszvis.fn.prop('Hochschulabschluss');
+  var otherAcc = sszvis.fn.prop('Andere');
 
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    ages: d3.range(0, 101), // [0 ... 100]
+    groups: [],
+    maxValue: 0,
+    populations: {}
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.groups = sszvis.fn.set(state.data, gAcc);
+      state.maxValue = d3.max(state.data, vAcc);
+      state.populations = sszvis.cascade()
+        .objectBy(refAcc)
+        .objectBy(gAcc)
+        .apply(state.data);
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
   d3.csv('data/BP_reference.csv')
     .row(function(d) {
       return {
@@ -35,124 +65,94 @@
         gender: d['Geschlecht'],
         group: d['Ausbildung'],
         value: sszvis.parse.number(d['Anzahl'])
-      }
+      };
     })
     .get(function(error, data) {
-      if (error) {
-        console.log('error loading data: ', error);
-        return;
-      }
-
-      state.data = data;
-
-      state.groups = sszvis.fn.set(state.data, gAcc);
-
-      var cascade = sszvis.cascade()
-        .objectBy(refAcc)
-        .objectBy(gAcc);
-
-      state.populations = cascade.apply(state.data);
-
-      state.maxValue = d3.max(state.data, vAcc);
-
-      render(state);
+      error ? sszvis.loadError(error) : actions.prepareState(data);
     });
 
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 600, height: 540, top: 30, right: 10, bottom: 70, left: 20 });
 
-      var groupPadding = 0.5;
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 600, height: 540, top: 25, right: 1, bottom: 80, left: 0 });
 
-      var positionScale = d3.scale.ordinal()
-        .domain(state.ages)
-        .rangeBands([bounds.innerHeight, 0], 0.1, 0);
 
-      var lengthScale = d3.scale.linear()
-        .domain([0, state.maxValue])
-        .range([0, bounds.innerWidth / 2 - groupPadding]);
+    // Scales
 
-      var colorScale = d3.scale.ordinal()
-        .domain(state.groups)
-        .range(sszvis.color.ranges.qualitative.neutralQual2);
+    var lengthScale = d3.scale.linear()
+      .domain([0, state.maxValue])
+      .range([0, bounds.innerWidth / 2]);
 
-      var pyramidGen = sszvis.component.pyramid()
-        .renderMode('bar')
-        .width(bounds.innerWidth / 2)
-        .height(bounds.innerHeight)
-        .groupPadding(groupPadding)
-        .alignmentValue(sszvis.fn.compose(positionScale, aAcc))
-        .barWidth(positionScale.rangeBand())
-        .extentValue(sszvis.fn.compose(lengthScale, vAcc))
-        .fill(sszvis.fn.compose(colorScale, gAcc));
+    var positionScale = d3.scale.ordinal()
+      .domain(state.ages)
+      .rangeBands([bounds.innerHeight, 0], 0.1, 0);
 
-      var xAxis = sszvis.axis.x.pyramid()
-        .scale(lengthScale)
-        .orient('bottom');
+    var colorScale = d3.scale.ordinal()
+      .domain(state.groups)
+      .range(sszvis.color.ranges.qualitative.neutralQual2);
 
-      var yAxis = sszvis.axis.y.ordinal()
-        .scale(positionScale)
-        .orient('right')
-        .tickFormat(sszvis.format.age)
-        .title('Alter')
-        .titleOffset(15)
-        .ticks(5);
 
-      var colorLegend = sszvis.legend.color()
-        .scale(colorScale)
-        .orientation('horizontal')
-        .width(bounds.innerWidth / 2);
+    // Layers
 
-      var men = sszvis.fn.prop('Frauen');
-      var women = sszvis.fn.prop('Maenner');
-      var college = sszvis.fn.prop('Hoschulabschluss');
-      var other = sszvis.fn.prop('Andere');
+    var chartLayer = sszvis.createChart('#chart', bounds)
+      .datum(state.populations);
 
-      var chart = sszvis.createChart('#chart', bounds)
-        .datum(state.populations);
 
-      var collegeEd = chart.selectGroup('collegeEd')
-        .datum(college);
+    // Components
 
-      var cGroup1 = collegeEd.selectGroup('college-group1')
-        .datum(men);
+    var pyramid = sszvis.component.pyramid()
+      .barFill(sszvis.fn.compose(colorScale, gAcc))
+      .barPosition(sszvis.fn.compose(positionScale, aAcc))
+      .barHeight(positionScale.rangeBand())
+      .barWidth(sszvis.fn.compose(lengthScale, vAcc))
+      .leftAccessor(sszvis.fn.compose(womenAcc, collegeAcc))
+      .rightAccessor(sszvis.fn.compose(menAcc, collegeAcc))
+      .leftRefAccessor(sszvis.fn.compose(womenAcc, otherAcc))
+      .rightRefAccessor(sszvis.fn.compose(menAcc, otherAcc));
 
-      pyramidGen.direction('left');
-      cGroup1.call(pyramidGen);
+    var xAxis = sszvis.axis.x.pyramid()
+      .scale(lengthScale)
+      .orient('bottom')
+      .ticks(5)
+      .title('Anzahl Frauen und Männer mit Hochschulabschluss')
+      .titleOffset(35);
 
-      var cGroup2 = collegeEd.selectGroup('college-group2')
-        .datum(women);
+    var yAxis = sszvis.axis.y.ordinal()
+      .scale(positionScale)
+      .orient('right')
+      .tickFormat(function(d) {
+        return (d === 0) ? '' : sszvis.format.age(d);
+      })
+      .ticks(5)
+      .title('Alter in Jahren')
+      .titleOffset(18);
 
-      pyramidGen.direction('right');
-      cGroup2.call(pyramidGen);
+    var colorLegend = sszvis.legend.color()
+      .scale(colorScale)
+      .orientation('horizontal')
+      .width(bounds.innerWidth / 2);
 
-      var otherEd = chart.selectGroup('otherEd')
-        .datum(other);
 
-      var oGroup1 = otherEd.selectGroup('other-group1')
-        .datum(men);
+    // Rendering
 
-      pyramidGen.renderMode('line');
-      pyramidGen.direction('left');
-      oGroup1.call(pyramidGen);
+    chartLayer.selectGroup('populationPyramid')
+      .datum(state.populations)
+      .attr('transform', 'translate(' + (bounds.innerWidth / 2) + ', 0)')
+      .call(pyramid);
 
-      var oGroup2 = otherEd.selectGroup('other-group2')
-        .datum(women);
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', 'translate(' + (bounds.innerWidth / 2) + ',' + (bounds.innerHeight) + ')')
+      .call(xAxis);
 
-      pyramidGen.direction('right');
-      oGroup2.call(pyramidGen);
+    chartLayer.selectGroup('yAxis')
+      .attr('transform', 'translate(0, 0)')
+      .call(yAxis);
 
-      chart.selectGroup('xAxis')
-        .attr('transform', 'translate(0, ' + (bounds.innerHeight) + ')')
-        .call(xAxis);
-
-      chart.selectGroup('yAxis')
-        .attr('transform', 'translate(-15, 0)')
-        .call(yAxis);
-
-      chart.selectGroup('colorLegend')
-        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
-        .call(colorLegend);
-    }
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 60) + ')')
+      .call(colorLegend);
+  }
 
 }());
 </script>

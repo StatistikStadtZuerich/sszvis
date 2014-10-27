@@ -14,7 +14,17 @@
   <div id="chart"></div>
   <script>
   (function() {
+    'use strict';
 
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('percent');
+    var yAcc = sszvis.fn.prop('value');
+    var cAcc = sszvis.fn.prop('city');
+
+
+    /* Application state
+    ----------------------------------------------- */
     var state = {
       data: [],
       xExtent: [],
@@ -22,10 +32,23 @@
       cities: []
     };
 
-    var xAcc = sszvis.fn.prop('percent');
-    var yAcc = sszvis.fn.prop('value');
-    var cAcc = sszvis.fn.prop('city');
 
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.xExtent = [0, d3.max(state.data, xAcc)];
+        state.yExtent = [0, d3.max(state.data, yAcc)];
+        state.cities = sszvis.fn.set(state.data, cAcc);
+
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
     d3.csv('data/SS_refline_fake.csv')
       .row(function(d) {
         return {
@@ -35,24 +58,17 @@
         };
       })
       .get(function(error, data) {
-        if (error) {
-          console.log('error loading data: ', error);
-          return;
-        }
-
-        state.data = data;
-
-        state.xExtent = [0, d3.max(state.data, xAcc)];
-
-        state.yExtent = [0, d3.max(state.data, yAcc)];
-
-        state.cities = sszvis.fn.set(state.data, cAcc);
-
-        render(state);
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
 
+
+    /* Render
+    ----------------------------------------------- */
     function render(state) {
       var bounds = sszvis.bounds({ width: 500, height: 500, top: 10, right: 10, bottom: 60, left: 10 });
+
+
+      // Scales
 
       var xScale = d3.scale.linear()
         .domain(state.xExtent)
@@ -65,6 +81,15 @@
       var cScale = d3.scale.ordinal()
         .domain(state.cities)
         .range(sszvis.color.ranges.qualitative.valuedQual2);
+
+
+      // Layers
+
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.data);
+
+
+      // Components
 
       var dots = sszvis.component.dot()
         .x(sszvis.fn.compose(xScale, xAcc))
@@ -97,24 +122,24 @@
         .orientation('horizontal')
         .width(200);
 
-      var chart = sszvis.createChart('#chart', bounds)
-        .datum(state.data);
 
-      chart.selectGroup('dots')
+      // Rendering
+
+      chartLayer.selectGroup('dots')
         .call(dots);
 
-      chart.selectGroup('referenceLine')
+      chartLayer.selectGroup('referenceLine')
         .datum([1])
         .call(referenceLine);
 
-      chart.selectGroup('xAxis')
+      chartLayer.selectGroup('xAxis')
         .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
         .call(xAxis);
 
-      chart.selectGroup('yAxis')
+      chartLayer.selectGroup('yAxis')
         .call(yAxis);
 
-      chart.selectGroup('cScale')
+      chartLayer.selectGroup('cScale')
         .attr('transform', 'translate(' + (0) + ', ' + (bounds.innerHeight + 30) + ')')
         .call(cLegend);
     }

@@ -6,9 +6,8 @@
 
 ### Konfiguration
 
-## Beispiele
 
-### Zürich
+## Zürich: Kreise
 
 ```project
 {
@@ -24,6 +23,9 @@
 }
 ```
 
+
+## Zürich: Quartiere
+
 ```project
 {
     "index": "docs/map/quartier.html",
@@ -37,6 +39,26 @@
     }
 }
 ```
+
+
+## Schweiz
+
+```project
+{
+    "index": "docs/map/switzerland.html",
+    "readme": "docs/map/README.md",
+    "files": [
+        "docs/map/data/M_swiss_fake.csv"
+    ],
+    "size": {
+        "width": 516,
+        "height": 516
+    }
+}
+```
+
+
+## Interaktion
 
 ```project
 {
@@ -62,38 +84,6 @@
     "size": {
         "width": 516,
         "height": 716
-    }
-}
-```
-
-### Schweiz
-
-```project
-{
-    "index": "docs/map/switzerland.html",
-    "readme": "docs/map/README.md",
-    "files": [
-        "docs/map/data/M_swiss_fake.csv"
-    ],
-    "size": {
-        "width": 516,
-        "height": 516
-    }
-}
-```
-
-### Schweiz - Missing Data
-
-```project
-{
-    "index": "docs/map/switzerland-missing.html",
-    "readme": "docs/map/README.md",
-    "files": [
-        "docs/map/data/M_swiss_fake_missing.csv"
-    ],
-    "size": {
-        "width": 516,
-        "height": 516
     }
 }
 ```

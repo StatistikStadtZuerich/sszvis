@@ -14,8 +14,15 @@
   (function() {
     'use strict';
 
-    var fn = sszvis.fn;
 
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('date');
+    var yAcc = sszvis.fn.prop('value');
+
+
+    /* Application state
+    ----------------------------------------------- */
     var state = {
       data: [],
       years: [0, 0],
@@ -24,12 +31,20 @@
       currentDate: null
     };
 
-    var xAcc = fn.prop('date');
-    var yAcc = fn.prop('value');
 
+    /* State transitions
+    ----------------------------------------------- */
     var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.years = d3.extent(state.data, xAcc);
+        state.lineData = [state.data];
+
+        actions.resetDate();
+      },
+
       changeDate: function(inputDate) {
-        var date = closestDatum(state.data, fn.prop('date'), inputDate).date;
+        var date = closestDatum(state.data, sszvis.fn.prop('date'), inputDate).date;
         if (state.currentDate === date) return;
 
         state.currentDate = date;
@@ -41,11 +56,14 @@
       },
 
       resetDate: function() {
-        var mostRecentDate = d3.max(state.data, fn.prop('date'));
+        var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
         actions.changeDate(mostRecentDate);
       }
     };
 
+
+    /* Data initialization
+    ----------------------------------------------- */
     d3.csv('data/SL_quarterly.csv')
       .row(function(d) {
         return {
@@ -54,22 +72,17 @@
         };
       })
       .get(function(error, data) {
-        if (error) {
-          console.error(error);
-          return;
-        }
-
-        state.data = data;
-
-        state.years = d3.extent(state.data, xAcc);
-
-        state.lineData = [state.data];
-
-        actions.resetDate();
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
 
+
+    /* Render
+    ----------------------------------------------- */
     function render(state) {
       var bounds = sszvis.bounds({ width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3 });
+
+
+      // Scales
 
       var xScale = d3.time.scale()
         .domain(state.years)
@@ -78,6 +91,14 @@
       var yScale = d3.scale.linear()
         .domain([0, d3.max(state.data, yAcc)])
         .range([bounds.innerHeight, 0]);
+
+
+      // Layers
+
+      var chartLayer = sszvis.createChart('#chart', bounds);
+
+
+      // Components
 
       var line = sszvis.component.line()
         .xValue(sszvis.fn.compose(xScale, xAcc))
@@ -99,7 +120,7 @@
         .orient('right')
         .halo(true);
 
-      var highlightLayer = sszvis.component.ruler()
+      var ruler = sszvis.component.ruler()
         .x(xAcc)
         .y(yAcc)
         .xScale(xScale)
@@ -109,15 +130,10 @@
         })
         .color(sszvis.color.values.basicBlue);
 
-      var interactionLayer = sszvis.behavior.move()
-        .xScale(xScale)
-        .yScale(yScale)
-        .on('move', actions.changeDate)
-        .on('end', actions.resetDate);
 
-      var chart = sszvis.createChart('#chart', bounds);
+      // Rendering
 
-      var lineChart = chart.selectGroup('lineChart')
+      var lineChart = chartLayer.selectGroup('lineChart')
         .datum(state.lineData);
 
       lineChart.selectGroup('line')
@@ -130,20 +146,33 @@
       lineChart.selectGroup('yAxis')
         .call(yAxis);
 
-      chart.selectGroup('highlight')
+      chartLayer.selectGroup('ruler')
         .datum(state.selectedData)
-        .call(highlightLayer);
+        .call(ruler);
 
-      chart.selectGroup('interaction')
+
+      // Interaction
+
+      var interactionLayer = sszvis.behavior.move()
+        .xScale(xScale)
+        .yScale(yScale)
+        .on('move', actions.changeDate)
+        .on('end', actions.resetDate);
+
+      chartLayer.selectGroup('interaction')
         .call(interactionLayer);
     }
 
+
+    /* Helper functions
+    ----------------------------------------------- */
     function closestDatum(data, accessor, datum) {
       var i = d3.bisector(accessor).left(data, datum, 1);
       var d0 = data[i - 1];
       var d1 = data[i] || d0;
       return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
     }
+
 
   }());
   </script>

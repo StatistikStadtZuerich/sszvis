@@ -32,7 +32,10 @@ namespace('sszvis.component.pie', function(module) {
 
         segments.enter()
           .append('path')
-          .classed('sszvis-path', true);
+          .classed('sszvis-path', true)
+          .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
 
         segments.exit().remove();
 

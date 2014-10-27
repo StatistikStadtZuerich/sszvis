@@ -186,7 +186,7 @@ namespace('sszvis.axis', function(module) {
     axis_x.pyramid = function() {
       return axis_x()
         .ticks(10)
-        .prop("scale", function(s) {
+        .prop('scale', function(s) {
           var extended = s.copy(),
               domain = extended.domain(),
               range = extended.range();
@@ -194,8 +194,8 @@ namespace('sszvis.axis', function(module) {
           extended
             // the domain is mirrored - ±domain[1]
             .domain([-domain[1], domain[1]])
-            // the extent of the range is doubled
-            .range([range[0], range[1] + (range[1] - range[0])]);
+            // the range is mirrored – ±range[1]
+            .range([range[0] - range[1], range[0] + range[1]]);
 
           this.__delegate.scale(extended);
           return extended;

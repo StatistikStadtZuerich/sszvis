@@ -14,7 +14,16 @@
   <div id="chart"></div>
   <script>
   (function() {
+    'use strict';
 
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('date');
+    var yAcc = sszvis.fn.prop('value');
+
+
+    /* Application state
+    ----------------------------------------------- */
     var state = {
       data: [],
       dates: [0, 0],
@@ -22,9 +31,23 @@
       lineData: []
     };
 
-    var xAcc = sszvis.fn.prop('date');
-    var yAcc = sszvis.fn.prop('value');
 
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.dates = d3.extent(state.data, xAcc);
+        state.yRange = d3.extent(state.data, yAcc);
+        state.lineData = [state.data];
+
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
     d3.csv('data/SL_Percentage_negativesYAxis.csv')
       .row(function(d) {
         return {
@@ -33,24 +56,17 @@
         };
       })
       .get(function(error, data) {
-        if (error) {
-          console.log('error loading data: ', error);
-          return;
-        }
-
-        state.data = data;
-
-        state.dates = d3.extent(state.data, xAcc);
-
-        state.yRange = d3.extent(state.data, yAcc);
-
-        state.lineData = [state.data];
-
-        render(state);
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
 
+
+    /* Render
+    ----------------------------------------------- */
     function render(state) {
       var bounds = sszvis.bounds({ width: 500, height: 450, top: 30, right: 10, bottom: 50, left: 10 });
+
+
+      // Scales
 
       var xScale = d3.time.scale()
         .domain(state.dates)
@@ -59,6 +75,15 @@
       var yScale = d3.scale.linear()
         .domain(state.yRange)
         .range([bounds.innerHeight, 0]);
+
+
+      // Layers
+
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.lineData);
+
+
+      // Components
 
       var line = sszvis.component.line()
         .xValue(sszvis.fn.compose(xScale, xAcc))
@@ -78,17 +103,17 @@
         .title('Wert')
         .titleOffset(15);
 
-      var chart = sszvis.createChart('#chart', bounds)
-        .datum(state.lineData);
 
-      chart.selectGroup('line')
+      // Rendering
+
+      chartLayer.selectGroup('line')
         .call(line);
 
-      chart.selectGroup('xAxis')
+      chartLayer.selectGroup('xAxis')
         .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
         .call(xAxis);
 
-      chart.selectGroup('yAxis')
+      chartLayer.selectGroup('yAxis')
         .call(yAxis);
     }
 

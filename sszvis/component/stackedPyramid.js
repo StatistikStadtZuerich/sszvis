@@ -1,5 +1,5 @@
 /**
- * Pyramid component
+ * Stacked Pyramid component
  *
  * The pyramid component is primarily used to show a distribution of age groups
  * in a population (population pyramid). The chart is mirrored vertically,
@@ -22,7 +22,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.pyramid', function(module) {
+namespace('sszvis.component.stackedPyramid', function(module) {
   'use strict';
 
   /* Constants
@@ -46,22 +46,32 @@ namespace('sszvis.component.pyramid', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        var stackLayout = d3.layout.stack()
+          .x(props.barPosition)
+          .y(props.barWidth);
+
 
         // Components
 
         var leftBar = sszvis.component.bar()
-          .x(function(d){ return -SPINE_PADDING - props.barWidth(d); })
+          .x(function(d){ return -SPINE_PADDING - d.y0 - d.y; })
           .y(props.barPosition)
           .height(props.barHeight)
-          .width(props.barWidth)
+          .width(sszvis.fn.prop('y'))
           .fill(props.barFill);
 
         var rightBar = sszvis.component.bar()
-          .x(SPINE_PADDING)
+          .x(function(d){ return SPINE_PADDING + d.y0; })
           .y(props.barPosition)
           .height(props.barHeight)
-          .width(props.barWidth)
+          .width(sszvis.fn.prop('y'))
           .fill(props.barFill);
+
+        var leftStack = stackComponent()
+          .stackElement(leftBar);
+
+        var rightStack = stackComponent()
+          .stackElement(rightBar);
 
         var leftLine = lineComponent()
           .barPosition(props.barPosition)
@@ -75,13 +85,13 @@ namespace('sszvis.component.pyramid', function(module) {
 
         // Rendering
 
-        selection.selectGroup('left')
-          .datum(props.leftAccessor(data))
-          .call(leftBar);
+        selection.selectGroup('leftStack')
+          .datum(stackLayout(props.leftAccessor(data)))
+          .call(leftStack);
 
-        selection.selectGroup('right')
-          .datum(props.rightAccessor(data))
-          .call(rightBar);
+        selection.selectGroup('rightStack')
+          .datum(stackLayout(props.rightAccessor(data)))
+          .call(rightStack);
 
         selection.selectGroup('leftReference')
           .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
@@ -93,6 +103,31 @@ namespace('sszvis.component.pyramid', function(module) {
 
       });
   };
+
+
+  function stackComponent() {
+    return d3.component()
+      .prop('stackElement')
+      .renderSelection(function(selection) {
+        var datum = selection.datum();
+        var props = selection.props();
+
+        var stack = selection.selectAll('[data-sszvis-stack]')
+          .data(datum);
+
+        stack.enter()
+          .append('g')
+          .attr('data-sszvis-stack', '');
+
+        stack.exit().remove();
+
+        stack.each(function(d) {
+          d3.select(this)
+            .datum(d)
+            .call(props.stackElement);
+        });
+      });
+  }
 
 
   function lineComponent() {

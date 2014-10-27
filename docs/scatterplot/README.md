@@ -24,20 +24,6 @@
 }
 ```
 
-```project
-{
-    "index": "docs/scatterplot/ten-category-negative.html",
-    "readme": "docs/scatterplot/README.md",
-    "files": [
-        "docs/scatterplot/data/SS_10Categories_negatives.csv"
-    ],
-    "size": {
-        "width": 500,
-        "height": 600
-    }
-}
-```
-
 ### Reference Line
 
 ```project
