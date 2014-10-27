@@ -3073,6 +3073,8 @@ namespace('sszvis.component.ruler', function(module) {
  * Stacked Chart
  * @return {d3.component}
  */
+
+// FIXME: rename namespace or component to be consistent with file system
 namespace('sszvis.component.stacked.area', function(module) {
 
   module.exports = function() {
@@ -3101,7 +3103,9 @@ namespace('sszvis.component.stacked.area', function(module) {
 
         paths.enter()
           .append('path')
-          .classed('sszvis-path', true);
+          .classed('sszvis-path', true)
+          .attr('fill', props.fill)
+          .attr('stroke', props.stroke);
 
         paths.exit().remove();
 
@@ -3115,6 +3119,7 @@ namespace('sszvis.component.stacked.area', function(module) {
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
