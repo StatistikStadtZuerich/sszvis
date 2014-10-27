@@ -16,6 +16,7 @@ namespace('sszvis.createHtmlLayer', function(module) {
     bounds || (bounds = sszvis.bounds());
 
     var root = d3.select(selector);
+    // NOTE Why again do you need to add .data([0])?
     var layer = root.selectAll('div').data([0]);
     layer.enter().append('div');
 

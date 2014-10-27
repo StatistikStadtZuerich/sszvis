@@ -19,6 +19,8 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         var anchor = selection.selectAll('[data-tooltip-anchor]')
           .data(data);
 
+          // NOTE why are anchors rects? 
+          // NOTE as these rects are invisible, couldn't they're information just be stored in the data? 
         anchor.enter()
           .append('rect')
           .attr('height', 1)
@@ -57,6 +59,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
 
   };
 
+  // NOTE very useful function. it could be moved into sszvis.fn, so its accessible from other places
   function translate(position) {
     return 'translate('+ position[0] +','+ position[1] +')';
   }

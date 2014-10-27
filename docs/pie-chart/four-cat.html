@@ -121,6 +121,8 @@
     var pie = chartLayer.selectGroup('piechart')
       .call(pieMaker);
 
+      // NOTE Why '[data-tooltip-anchor]' and not just 'data-tooltip-anchor'?
+      // NOTE this approach appears a bit cumbersome to me. Why not just 'pie.selectAllAnchors()' ? 
     pie.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
