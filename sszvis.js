@@ -202,7 +202,6 @@
 
 (function(d3) {
 
-  // NOTE this is a test comment of sch
   var localizedFormat = d3.locale({
     "decimal": ".",
     "thousands": " ",
@@ -1476,6 +1475,8 @@ namespace('sszvis.axis', function(module) {
  *
  * @module sszvis/legend
  */
+ // NOTE why is there a namespace sszvis.legend.color AND sszvis.legend.ColorRange 
+ //and not just sszvis.legend returning an object containing color and colorRange?
 namespace('sszvis.legend.color', function(module) {
 
   module.exports = function() {
@@ -1566,6 +1567,10 @@ namespace('sszvis.legend.color', function(module) {
  *
  * @module sszvis/legend
  */
+ // NOTE Why are legent.colorRange and legen.colot
+ //in two different namespaces?
+ //Why not create just one namespace 'sszvis.legend'
+ //and return an object with 'color' and 'colorRange'?
 namespace('sszvis.legend.colorRange', function(module) {
 
   module.exports = function() {

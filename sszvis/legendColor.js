@@ -3,6 +3,8 @@
  *
  * @module sszvis/legend
  */
+ // NOTE why is there a namespace sszvis.legend.color AND sszvis.legend.ColorRange 
+ //and not just sszvis.legend returning an object containing color and colorRange?
 namespace('sszvis.legend.color', function(module) {
 
   module.exports = function() {

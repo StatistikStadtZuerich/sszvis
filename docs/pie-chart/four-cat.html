@@ -36,6 +36,7 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
+      // NOTE: This seems to be used only once in the beginning. I prefer to have these few lines directly in .get. For me it seems conceptually more logic to do it like that.
       state.data = data;
       state.totalValue = d3.sum(state.data, vAcc);
       state.categories = sszvis.fn.set(state.data, cAcc);
