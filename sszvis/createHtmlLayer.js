@@ -9,6 +9,8 @@
  *
  * @returns {d3.selection}
  */
+ // NOTE could be nice to add a class name
+ //so when looking at the code it is clear what the tooltip layer is
 namespace('sszvis.createHtmlLayer', function(module) {
   'use strict';
 
