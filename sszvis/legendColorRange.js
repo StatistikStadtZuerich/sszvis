@@ -9,6 +9,7 @@
  //and return an object with 'color' and 'colorRange'?
 
  // NOTE Should this not be in the components folder? As it creates a component.
+
 namespace('sszvis.legend.colorRange', function(module) {
 
   module.exports = function() {
@@ -24,6 +25,8 @@ namespace('sszvis.legend.colorRange', function(module) {
 
         var values = props.scale.ticks(props.segments);
 
+         // NOTE a default width would be good to avoid division by zero
+         // and to save programmers time while he searches for the cause of the error. 
         var segWidth = props.width / values.length,
             segHeight = 10;
 
