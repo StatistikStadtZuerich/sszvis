@@ -25,6 +25,9 @@ namespace('sszvis.component.modularText', function(module) {
     hasLineBreaks;
 
     function makeText(d) {
+
+      // NOTE whats the convention for variable declaration?
+      // Could imagine one var keyword per variable.
       var text = "", i = -1, end = textUnits.length, unit;
       while (++i < end) {
         unit = textUnits[i];
