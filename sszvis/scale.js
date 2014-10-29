@@ -8,6 +8,14 @@ namespace('sszvis.scale', function(module) {
 
     var scales = {};
 
+    /**
+     * scale.colorScale
+     *
+     * Extends the built-in d3.scale.linear for use as a color scale.
+     *
+     * @return {d3.scale.linear} a d3 linear scale exposing the same API,
+     * but with certain methods overwritten.
+     */
     scales.colorScale = function() {
       var alteredScale = d3.scale.linear(),
           nativeDomain = alteredScale.domain;
@@ -19,6 +27,60 @@ namespace('sszvis.scale', function(module) {
         } else {
           return nativeDomain.apply(this, arguments);
         }
+      };
+
+      return alteredScale;
+    };
+
+    /**
+     * scale.binnedColorScale
+     *
+     * Extends d3.scale.quantize for use as a binned color scale
+     *
+     * @return {d3.scale.quantize} a d3 quantize scale with extra methods
+     * for creating binned scales.
+     */
+    scales.binnedColorScale = function() {
+      var alteredScale = d3.scale.quantize(),
+          colorRange = ['#000', '#fff'],
+          bins = 2;
+
+      alteredScale.range(colorRange);
+
+      function setRange() {
+        var proxy = d3.scale.linear().range(colorRange),
+          range = [];
+        for (var i = 0, step = 1 / bins; 1 - i > 0.0001; i += step) {
+          range.push(proxy(i));
+        }
+        alteredScale.range(range);
+      }
+
+      alteredScale.bins = function(_) {
+        if (arguments.length === 0) return bins;
+        bins = _;
+        setRange();
+        return alteredScale;
+      };
+
+      alteredScale.colorRange = function(_) {
+        if (arguments.length === 0) return colorRange;
+        colorRange = _;
+        setRange();
+        return alteredScale;
+      };
+
+      // this function makes the scale compatible with the legendColorRange component
+      alteredScale.ticks = function(num) {
+        var first = sszvis.fn.first(alteredScale.domain()),
+            last = sszvis.fn.last(alteredScale.domain()),
+            step = (last - first) / bins,
+            ticks = [];
+        for (var i = first + step / 2; Math.abs(last - i) > step; i += step) {
+          ticks.push(i);
+        }
+        i += step; ticks.push(i);
+        return ticks;
       };
 
       return alteredScale;

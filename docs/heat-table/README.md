@@ -52,6 +52,22 @@ The following configuration options are available:
 }
 ```
 
+### Binned Color Scale
+
+```project
+{
+    "index": "docs/heat-table/ht-binned.html",
+    "readme": "docs/heat-table/README.md",
+    "files": [
+        "docs/heat-table/data/HT_binned.csv"
+    ],
+    "size": {
+        "width": 516,
+        "height": 760
+    }
+}
+```
+
 ### Quartiere
 
 ```project
