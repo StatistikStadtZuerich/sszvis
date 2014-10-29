@@ -154,10 +154,15 @@
 
   /* Helper functions
   ----------------------------------------------- */
+  // NOTE this could be maybe replaced by a convenience function in sszvis.fn, something like 
+  /* function contains(list,d){
+      return list.indexOf(d)>=0;
+  }*/
   function isSelected(d) {
     return state.selection.indexOf(d) >= 0;
   }
 
+  // NOTE I would pass  range directly as argument, as scale as such is not used in the function.
   function labelWrapWidth(scale) {
     var range = scale.range();
     return (d3.max(range) - d3.min(range)) / range.length;
