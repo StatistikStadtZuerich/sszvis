@@ -1094,6 +1094,8 @@ namespace('sszvis.format', function(module) {
  *
  * @module sszvis/parse
  */
+ // NOTE Thinking out loud: Should this not be part
+ //of sszvis.fn?
 namespace('sszvis.parse', function(module) {
 
   var yearParser = d3.time.format("%Y");
@@ -1567,10 +1569,13 @@ namespace('sszvis.legend.color', function(module) {
  *
  * @module sszvis/legend
  */
- // NOTE Why are legent.colorRange and legen.colot
+ // NOTE Why are legent.colorRange and legen.color
  //in two different namespaces?
  //Why not create just one namespace 'sszvis.legend'
  //and return an object with 'color' and 'colorRange'?
+
+ // NOTE Should this not be in the components folder? As it creates a component.
+
 namespace('sszvis.legend.colorRange', function(module) {
 
   module.exports = function() {
@@ -1586,6 +1591,8 @@ namespace('sszvis.legend.colorRange', function(module) {
 
         var values = props.scale.ticks(props.segments);
 
+         // NOTE a default width would be good to avoid division by zero
+         // and to save programmers time while he searches for the cause of the error. 
         var segWidth = props.width / values.length,
             segHeight = 10;
 
@@ -1715,6 +1722,8 @@ namespace('sszvis.createChart', function(module) {
  *
  * @returns {d3.selection}
  */
+ // NOTE could be nice to add a class name
+ //so when looking at the code it is clear what the tooltip layer is
 namespace('sszvis.createHtmlLayer', function(module) {
   'use strict';
 
@@ -1722,6 +1731,7 @@ namespace('sszvis.createHtmlLayer', function(module) {
     bounds || (bounds = sszvis.bounds());
 
     var root = d3.select(selector);
+    // NOTE Why again do you need to add .data([0])?
     var layer = root.selectAll('div').data([0]);
     layer.enter().append('div');
 
@@ -2554,6 +2564,9 @@ namespace('sszvis.component.modularText', function(module) {
     hasLineBreaks;
 
     function makeText(d) {
+
+      // NOTE whats the convention for variable declaration?
+      // Could imagine one var keyword per variable.
       var text = "", i = -1, end = textUnits.length, unit;
       while (++i < end) {
         unit = textUnits[i];
@@ -3610,6 +3623,8 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         var anchor = selection.selectAll('[data-tooltip-anchor]')
           .data(data);
 
+          // NOTE why are anchors rects? 
+          // NOTE as these rects are invisible, couldn't they're information just be stored in the data? 
         anchor.enter()
           .append('rect')
           .attr('height', 1)
@@ -3648,6 +3663,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
 
   };
 
+  // NOTE very useful function. it could be moved into sszvis.fn, so its accessible from other places
   function translate(position) {
     return 'translate('+ position[0] +','+ position[1] +')';
   }
