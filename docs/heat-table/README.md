@@ -62,8 +62,8 @@ The following configuration options are available:
         "docs/heat-table/data/HT_binned.csv"
     ],
     "size": {
-        "width": 516,
-        "height": 760
+        "width": 410,
+        "height": 480
     }
 }
 ```

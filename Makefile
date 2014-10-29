@@ -35,7 +35,8 @@ SOURCE_FILES = \
 	sszvis/scale.js \
 	sszvis/axis.js \
 	sszvis/legendColor.js \
-	sszvis/legendColorRange.js \
+	sszvis/legendLinearColorScale.js \
+	sszvis/legendBinnedColorScale.js \
 	sszvis/loadError.js \
 	sszvis/logError.js \
 	sszvis/createChart.js \

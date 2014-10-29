@@ -16,6 +16,7 @@ namespace('sszvis.logError', function(module) {
 
   module.exports = function(message) {
     console.error(SSZVIS_MSG + message);
+    return false;
   };
 
 });

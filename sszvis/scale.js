@@ -33,60 +33,6 @@ namespace('sszvis.scale', function(module) {
     };
 
     /**
-     * scale.binnedColorScale
-     *
-     * Extends d3.scale.quantize for use as a binned color scale
-     *
-     * @return {d3.scale.quantize} a d3 quantize scale with extra methods
-     * for creating binned scales.
-     */
-    scales.binnedColorScale = function() {
-      var alteredScale = d3.scale.quantize(),
-          colorRange = ['#000', '#fff'],
-          bins = 2;
-
-      alteredScale.range(colorRange);
-
-      function setRange() {
-        var proxy = d3.scale.linear().range(colorRange),
-          range = [];
-        for (var i = 0, step = 1 / bins; 1 - i > 0.0001; i += step) {
-          range.push(proxy(i));
-        }
-        alteredScale.range(range);
-      }
-
-      alteredScale.bins = function(_) {
-        if (arguments.length === 0) return bins;
-        bins = _;
-        setRange();
-        return alteredScale;
-      };
-
-      alteredScale.colorRange = function(_) {
-        if (arguments.length === 0) return colorRange;
-        colorRange = _;
-        setRange();
-        return alteredScale;
-      };
-
-      // this function makes the scale compatible with the legendColorRange component
-      alteredScale.ticks = function(num) {
-        var first = sszvis.fn.first(alteredScale.domain()),
-            last = sszvis.fn.last(alteredScale.domain()),
-            step = (last - first) / bins,
-            ticks = [];
-        for (var i = first + step / 2; Math.abs(last - i) > step; i += step) {
-          ticks.push(i);
-        }
-        i += step; ticks.push(i);
-        return ticks;
-      };
-
-      return alteredScale;
-    };
-
-    /**
      * Used to calculate a range that has some pixel-defined amount of left-hand padding,
      * and which obeys limits on the maximum size of the 'range band' - the size of the bars -
      * and the inner padding between the bars

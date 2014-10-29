@@ -888,6 +888,19 @@ namespace('sszvis.fn', function(module) {
       };
     },
 
+    /**
+     * colorRange - like d3.range, but both arguments are required.
+     * provides a linear color range with n values,
+     * sampled using the given array of colors
+     * @param  {Array} colors [an array of colors from which the range is sampled]
+     * @param  {Number} n  [the number of samples to return]
+     * @return {Array} An array of n colors
+     */
+    colorRange: function(colors, n) {
+      var interp = d3.scale.linear().range(colors);
+      return d3.range(n + 1).map(function(i) { return interp(i / n); });
+    },
+
     constant: function(value) {
       return function() {
         return value;
@@ -1159,60 +1172,6 @@ namespace('sszvis.scale', function(module) {
         } else {
           return nativeDomain.apply(this, arguments);
         }
-      };
-
-      return alteredScale;
-    };
-
-    /**
-     * scale.binnedColorScale
-     *
-     * Extends d3.scale.quantize for use as a binned color scale
-     *
-     * @return {d3.scale.quantize} a d3 quantize scale with extra methods
-     * for creating binned scales.
-     */
-    scales.binnedColorScale = function() {
-      var alteredScale = d3.scale.quantize(),
-          colorRange = ['#000', '#fff'],
-          bins = 2;
-
-      alteredScale.range(colorRange);
-
-      function setRange() {
-        var proxy = d3.scale.linear().range(colorRange),
-          range = [];
-        for (var i = 0, step = 1 / bins; 1 - i > 0.0001; i += step) {
-          range.push(proxy(i));
-        }
-        alteredScale.range(range);
-      }
-
-      alteredScale.bins = function(_) {
-        if (arguments.length === 0) return bins;
-        bins = _;
-        setRange();
-        return alteredScale;
-      };
-
-      alteredScale.colorRange = function(_) {
-        if (arguments.length === 0) return colorRange;
-        colorRange = _;
-        setRange();
-        return alteredScale;
-      };
-
-      // this function makes the scale compatible with the legendColorRange component
-      alteredScale.ticks = function(num) {
-        var first = sszvis.fn.first(alteredScale.domain()),
-            last = sszvis.fn.last(alteredScale.domain()),
-            step = (last - first) / bins,
-            ticks = [];
-        for (var i = first + step / 2; Math.abs(last - i) > step; i += step) {
-          ticks.push(i);
-        }
-        i += step; ticks.push(i);
-        return ticks;
       };
 
       return alteredScale;
@@ -1638,12 +1597,13 @@ namespace('sszvis.legend.color', function(module) {
 
  // NOTE Should this not be in the components folder? As it creates a component.
 
-namespace('sszvis.legend.colorRange', function(module) {
+namespace('sszvis.legend.linearColorScale', function(module) {
 
   module.exports = function() {
     return d3.component()
       .prop('scale')
-      .prop('width')
+      .prop('displayValues').displayValues([])
+      .prop('width').width(200)
       .prop('segments').segments(8)
       .prop('units').units(false)
       .prop('labelPadding').labelPadding(16)
@@ -1651,10 +1611,18 @@ namespace('sszvis.legend.colorRange', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var values = props.scale.ticks(props.segments);
+        if (!props.scale) {
+          sszvis.logError('legend.linearColorScale - a scale must be specified.');
+          return false;
+        }
+
+        var values = props.displayValues;
+        if (!values.length && props.scale.ticks) {
+          values = props.scale.ticks(props.segments);
+        }
 
          // NOTE a default width would be good to avoid division by zero
-         // and to save programmers time while he searches for the cause of the error. 
+         // and to save programmers time while he searches for the cause of the error.
         var segWidth = props.width / values.length,
             segHeight = 10;
 
@@ -1708,6 +1676,102 @@ namespace('sszvis.legend.colorRange', function(module) {
 
 });
 
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+namespace('sszvis.legend.binnedColorScale', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('scale')
+      .prop('displayValues')
+      .prop('width').width(200)
+      .prop('units').units(false)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        if (!props.scale) return sszvis.logError('legend.binnedColorScale - a scale must be specified.');
+        if (!props.displayValues) return sszvis.logError('legend.binnedColorScale - display values must be specified.');
+
+        var barWidth = d3.scale.linear()
+          .domain(d3.extent(props.displayValues))
+          .range([0, props.width]);
+        var sum = 0;
+        var rectData = [];
+        d3.pairs(props.displayValues).forEach(function(p) {
+          var w = barWidth(p[1]) - sum;
+          rectData.push({
+            x: sum,
+            w: w,
+            c: props.scale(p[0]),
+            p0: p[0],
+            p1: p[1]
+          });
+          sum += w;
+        });
+
+        var segHeight = 10;
+
+        var segments = selection.selectAll('rect.sszvis-legend--mark')
+          .data(rectData);
+
+        segments.enter()
+          .append('rect')
+          .classed('sszvis-legend--mark', true);
+
+        segments.exit().remove();
+
+        segments
+          .attr('x', sszvis.fn.prop('x'))
+          .attr('y', 0)
+          .attr('width', sszvis.fn.prop('w'))
+          .attr('height', segHeight)
+          .attr('fill', sszvis.fn.prop('c'));
+
+        var labelData = rectData.concat({
+          x: sum,
+          p0: sszvis.fn.last(rectData).p1
+        });
+
+        var lines = selection.selectAll('line.sszvis-legend--mark')
+          .data(labelData);
+
+        lines.enter()
+          .append('line')
+          .classed('sszvis-legend--mark', true);
+
+        lines.exit().remove();
+
+        lines
+          .attr('x1', function(d) { return Math.round(d.x); })
+          .attr('x2', function(d) { return Math.round(d.x); })
+          .attr('y1', 0)
+          .attr('y2', segHeight + 4)
+          .attr('stroke', '#909090');
+
+        var labels = selection.selectAll('.sszvis-legend--label')
+          .data(labelData);
+
+        labels.enter()
+          .append('text')
+          .classed('sszvis-legend--label', true);
+
+        labels.exit().remove();
+
+        labels
+          .attr('text-anchor', 'middle')
+          .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
+          .text(function(d) {
+            return d.p0;
+          });
+      });
+  };
+
+});
+
+
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
@@ -1755,6 +1819,7 @@ namespace('sszvis.logError', function(module) {
 
   module.exports = function(message) {
     console.error(SSZVIS_MSG + message);
+    return false;
   };
 
 });

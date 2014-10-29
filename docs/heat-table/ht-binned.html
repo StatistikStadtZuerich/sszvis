@@ -75,7 +75,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 470, height: 480, top: 70, right: 10, bottom: 70, left: 120 });
+    var bounds = sszvis.bounds({ width: 410, height: 480, top: 70, right: 10, bottom: 70, left: 60 });
 
     // FIXME: sideLength should be similar across charts and only
     //        shrink when it doesn't fit the width. Growing vertically
@@ -95,10 +95,23 @@
       .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
       .domain(state.g2List);
 
-    var colorScale = sszvis.scale.binnedColorScale()
-      .domain(state.valueDomain)
-      .bins(6)
-      .colorRange(sszvis.color.ranges.sequential.valued.blue);
+    // these are the internal edges of the bins used for the color scale
+    // IMPORTANT: because of the way d3.scale.threshold works,
+    // do not specify fixed upper and lower bounds
+    // anything less than or equal to the first element in binEdges will be grouped in the first bin,
+    // and anything greater than or equal to the last element will be grouped in the last bin
+    var binEdges = [40, 200, 400];
+    // create a linear color interpolator for generating the output range of bin colors
+    var interpolateColor = d3.scale.linear()
+      .range(sszvis.color.ranges.sequential.valued.blue);
+    // the range is composed of colors sampled at equal distances along the color spectrum,
+    // such that binColors.length === binEdges.length + 1
+    var binColors = d3.range(binEdges.length + 1).map(function(i) { return interpolateColor(i / binEdges.length); });
+    // for the threshold scale, the number of values in the range must be one greater than the
+    // number of values in the domain.
+    var colorScale = d3.scale.threshold()
+      .domain(binEdges)
+      .range(binColors);
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
     var yValue = sszvis.fn.compose(yScale, yAcc);
@@ -131,28 +144,30 @@
       .orient('top')
       .tickSize(0, 0)
       .tickPadding(0)
-      .title('Altersgruppe Männer')
+      .title('Group 1')
       .titleOffset(30);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
       .orient('left')
-      .title('Altersgruppe Frauen')
+      .title('Group 2')
       .titleOffset(10);
 
-    var legend = sszvis.legend.colorRange()
+    var displayValues = binEdges.concat(state.valueDomain).sort(d3.ascending);
+    var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
+      .displayValues(displayValues)
       .width(bounds.width / 2)
-      .units('Personen');
+      .units('Units');
 
     var tooltipHeaderText = sszvis.component.modularText()
-      .bold(cAcc).plain('Paare');
+      .bold(cAcc).plain('Units');
 
     // FIXME: improve styling of text, possibly include tabular layout
     var tooltipBodyText = sszvis.component.modularText()
-      .plain('Alter des Mannes:').plain(xAcc)
+      .plain('Group 1 Value:').plain(xAcc)
       .newline()
-      .plain('Alter der Frau:').plain(yAcc);
+      .plain('Group 2 Value:').plain(yAcc);
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
@@ -178,7 +193,6 @@
       .attr('transform', 'translate(-10, 0)')
       .call(yAxis);
 
-    // NOTE would be nice to have a convenience function in sszvis.fn which generate a 'translate string' from some input values.  
     chartLayer.selectGroup('legend')
       .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
       .call(legend);

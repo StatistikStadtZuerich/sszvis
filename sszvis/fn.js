@@ -50,6 +50,19 @@ namespace('sszvis.fn', function(module) {
       };
     },
 
+    /**
+     * colorRange - like d3.range, but both arguments are required.
+     * provides a linear color range with n values,
+     * sampled using the given array of colors
+     * @param  {Array} colors [an array of colors from which the range is sampled]
+     * @param  {Number} n  [the number of samples to return]
+     * @return {Array} An array of n colors
+     */
+    colorRange: function(colors, n) {
+      var interp = d3.scale.linear().range(colors);
+      return d3.range(n + 1).map(function(i) { return interp(i / n); });
+    },
+
     constant: function(value) {
       return function() {
         return value;
