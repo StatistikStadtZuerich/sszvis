@@ -37,6 +37,7 @@ SOURCE_FILES = \
 	sszvis/legendColor.js \
 	sszvis/legendColorRange.js \
 	sszvis/loadError.js \
+	sszvis/logError.js \
 	sszvis/createChart.js \
 	sszvis/createHtmlLayer.js \
 	sszvis/behavior/move.js \
