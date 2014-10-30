@@ -30,8 +30,8 @@ The following configuration options are available:
         "docs/heat-table/data/HT_kreise.csv"
     ],
     "size": {
-        "width": 460,
-        "height": 760
+        "width": 516,
+        "height": 800
     }
 }
 ```
@@ -46,8 +46,8 @@ The following configuration options are available:
         "docs/heat-table/data/HT_kreise_missing.csv"
     ],
     "size": {
-        "width": 460,
-        "height": 760
+        "width": 516,
+        "height": 800
     }
 }
 ```
@@ -62,8 +62,8 @@ The following configuration options are available:
         "docs/heat-table/data/HT_binned.csv"
     ],
     "size": {
-        "width": 410,
-        "height": 480
+        "width": 516,
+        "height": 350
     }
 }
 ```
@@ -78,8 +78,8 @@ The following configuration options are available:
         "docs/heat-table/data/HT_quartiere.csv"
     ],
     "size": {
-        "width": 450,
-        "height": 960
+        "width": 516,
+        "height": 1100
     }
 }
 ```
@@ -96,8 +96,8 @@ Welches haben Paare zum Zeitpunkt ihres ersten Kindes.
         "docs/heat-table/data/HT_wermitwem.csv"
     ],
     "size": {
-        "width": 600,
-        "height": 480
+        "width": 516,
+        "height": 360
     }
 }
 ```

@@ -75,24 +75,18 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 600, height: 480, top: 70, right: 10, bottom: 76, left: 120 });
-
-    // FIXME: sideLength should be similar across charts and only
-    //        shrink when it doesn't fit the width. Growing vertically
-    //        is allowed.
-    var xSide = bounds.innerWidth / state.manAgeList.length;
-    var ySide = bounds.innerHeight / state.womAgeList.length;
-    var sideLength = Math.min(xSide, ySide) * 0.95;
+    var bounds = sszvis.bounds({ width: 516, height: 360, top: 70, right: 0, bottom: 70, left: 120 });
+    var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.manAgeList.length, state.womAgeList.length);
 
 
     // Scales
 
     var xScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerWidth], 1 - sideLength / xSide, 0)
+      .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
       .domain(state.manAgeList);
 
     var yScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerHeight], 1 - sideLength / ySide, 0)
+      .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
       .domain(state.womAgeList);
 
     var colorScale = sszvis.scale.colorScale()
@@ -118,8 +112,8 @@
     var barGen = sszvis.component.bar()
       .x(xValue)
       .y(yValue)
-      .width(xScale.rangeBand())
-      .height(yScale.rangeBand())
+      .width(tableDimensions.side)
+      .height(tableDimensions.side)
       .fill(cValue)
       .stroke(function(d) {
         return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
