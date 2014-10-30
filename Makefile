@@ -24,23 +24,23 @@ VENDOR_FILES = \
 	vendor/namespace/namespace.js
 
 SOURCE_FILES = \
-	sszvis/cascade.js \
-	sszvis/bounds.js \
-	sszvis/color.js \
-	sszvis/patterns.js \
-	sszvis/fn.js \
-	sszvis/transition.js \
-	sszvis/format.js \
-	sszvis/parse.js \
-	sszvis/scale.js \
 	sszvis/axis.js \
-	sszvis/legendColor.js \
-	sszvis/legendLinearColorScale.js \
-	sszvis/legendBinnedColorScale.js \
-	sszvis/loadError.js \
-	sszvis/logError.js \
+	sszvis/bounds.js \
+	sszvis/cascade.js \
+	sszvis/color.js \
 	sszvis/createChart.js \
 	sszvis/createHtmlLayer.js \
+	sszvis/fn.js \
+	sszvis/format.js \
+	sszvis/legendBinnedColorScale.js \
+	sszvis/legendColor.js \
+	sszvis/legendLinearColorScale.js \
+	sszvis/loadError.js \
+	sszvis/logError.js \
+	sszvis/parse.js \
+	sszvis/patterns.js \
+	sszvis/scale.js \
+	sszvis/transition.js \
 	sszvis/behavior/move.js \
 	sszvis/behavior/click.js \
 	sszvis/control/segmentedControl.js \
