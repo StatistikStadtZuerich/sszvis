@@ -10,7 +10,7 @@
   <script src="../../vendor/d3/d3.min.js"></script>
   <script src="../../sszvis.js"></script>
 
-  <div id="chart"></div>
+  <div id="sszvis-chart"></div>
 
   <script>
   (function() {
@@ -112,10 +112,10 @@
 
       // Layers
 
-      var chart = sszvis.createChart('#chart', bounds)
+      var chart = sszvis.createChart('#sszvis-chart', bounds)
         .datum(state.pieGroups);
 
-      var tooltipLayer = sszvis.createHtmlLayer('#chart');
+      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
 
       // Components

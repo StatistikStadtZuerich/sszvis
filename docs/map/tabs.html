@@ -11,7 +11,7 @@
   <script src="../../vendor/topojson/topojson.js"></script>
   <script src="../../sszvis.js"></script>
 
-  <div id="chart"></div>
+  <div id="sszvis-chart"></div>
 
   <script>
   (function() {
@@ -92,10 +92,10 @@
 
       // Layers
 
-      var chartLayer = sszvis.createChart('#chart', bounds)
+      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
         .datum(state.currentMapData);
 
-      var htmlLayer = sszvis.createHtmlLayer('#chart');
+      var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
 
       // Components
