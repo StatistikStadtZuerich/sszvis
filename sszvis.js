@@ -3249,6 +3249,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
       .prop('dy', d3.functor).dy(sszvis.fn.prop('y'))
       .prop('yScale')
       .prop('label').label(sszvis.fn.constant(''))
+      .prop('flip', d3.functor)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -3307,9 +3308,13 @@ namespace('sszvis.component.rangeRuler', function(module) {
         marks.selectAll('.sszvis-rangeRuler--label')
           .data(function(d) { return [d]; })
           .attr('x', function(d, i) {
-            return props.x(d, i) + 10;
+            var offset = props.flip(d) ? -10 : 10;
+            return props.x(d, i) + offset;
           })
           .attr('y', ty)
+          .attr('text-anchor', function(d) {
+            return props.flip(d) ? 'end' : 'start';
+          })
           .text(props.label);
 
         var total = selection.selectAll('.sszvis-rangeRuler--total')
@@ -3323,14 +3328,19 @@ namespace('sszvis.component.rangeRuler', function(module) {
 
         total
           .attr('x', function(d, i) {
-            return props.x(d, i) + 10;
+            var offset = props.flip(d) ? -10 : 10;
+            return props.x(d, i) + offset;
           })
           .attr('y', top - 10)
+          .attr('text-anchor', function(d) {
+            return props.flip(d) ? 'end' : 'start';
+          })
           .text('Total ' + sszvis.format.number(totalValue));
       });
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

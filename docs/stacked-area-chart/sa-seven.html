@@ -102,7 +102,7 @@
     /* Render
     ----------------------------------------------- */
     function render(state) {
-      var bounds = sszvis.bounds({ width: 550, height: 540, top: 10, right: 10, bottom: 120, left: 10 });
+      var bounds = sszvis.bounds({ width: 500, height: 620, top: 30, right: 10, bottom: 180, left: 10 });
 
 
       // Scales
@@ -146,8 +146,8 @@
 
       var colorLegend = sszvis.legend.color()
         .scale(cScale)
-        .width(bounds.innerWidth + 50) // FIXME: magic number here adjusts the spacing of the columns in the color legend
-        .rows(4)
+        .width(bounds.innerWidth) // FIXME: magic number here adjusts the spacing of the columns in the color legend
+        .rows(6)
         // FIXME: reverse the order of items in the color legend (for reasons discussed in sa-two.html)
         .reverse(true)
         .orientation('vertical');
@@ -157,6 +157,9 @@
         .yScale(yScale)
         .label(function(d) {
           return yAcc(d).toString();
+        })
+        .flip(function(d) {
+          return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
         });
 
 
