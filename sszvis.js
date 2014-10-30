@@ -1483,288 +1483,6 @@ namespace('sszvis.format', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
-namespace('sszvis.legend.binnedColorScale', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('scale')
-      .prop('displayValues')
-      .prop('width').width(200)
-      .prop('units').units(false)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        if (!props.scale) return sszvis.logError('legend.binnedColorScale - a scale must be specified.');
-        if (!props.displayValues) return sszvis.logError('legend.binnedColorScale - display values must be specified.');
-
-        var barWidth = d3.scale.linear()
-          .domain(d3.extent(props.displayValues))
-          .range([0, props.width]);
-        var sum = 0;
-        var rectData = [];
-        d3.pairs(props.displayValues).forEach(function(p) {
-          var w = barWidth(p[1]) - sum;
-          rectData.push({
-            x: sum,
-            w: w,
-            c: props.scale(p[0]),
-            p0: p[0],
-            p1: p[1]
-          });
-          sum += w;
-        });
-
-        var segHeight = 10;
-
-        var segments = selection.selectAll('rect.sszvis-legend--mark')
-          .data(rectData);
-
-        segments.enter()
-          .append('rect')
-          .classed('sszvis-legend--mark', true);
-
-        segments.exit().remove();
-
-        segments
-          .attr('x', sszvis.fn.prop('x'))
-          .attr('y', 0)
-          .attr('width', sszvis.fn.prop('w'))
-          .attr('height', segHeight)
-          .attr('fill', sszvis.fn.prop('c'));
-
-        var labelData = rectData.concat({
-          x: sum,
-          p0: sszvis.fn.last(rectData).p1
-        });
-
-        var lines = selection.selectAll('line.sszvis-legend--mark')
-          .data(labelData);
-
-        lines.enter()
-          .append('line')
-          .classed('sszvis-legend--mark', true);
-
-        lines.exit().remove();
-
-        lines
-          .attr('x1', function(d) { return Math.round(d.x); })
-          .attr('x2', function(d) { return Math.round(d.x); })
-          .attr('y1', 0)
-          .attr('y2', segHeight + 4)
-          .attr('stroke', '#909090');
-
-        var labels = selection.selectAll('.sszvis-legend--label')
-          .data(labelData);
-
-        labels.enter()
-          .append('text')
-          .classed('sszvis-legend--label', true);
-
-        labels.exit().remove();
-
-        labels
-          .attr('text-anchor', 'middle')
-          .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
-          .text(function(d) {
-            return d.p0;
-          });
-      });
-  };
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Legend component
- *
- * @module sszvis/legend
- */
- // NOTE why is there a namespace sszvis.legend.color AND sszvis.legend.ColorRange 
- //and not just sszvis.legend returning an object containing color and colorRange?
-namespace('sszvis.legend.color', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('scale')
-      .prop('width').width(0)
-      .prop('rows').rows(3)
-      .prop('columns').columns(3)
-      .prop('orientation')
-      .prop('reverse').reverse(false)
-      .render(function() {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var domain = props.scale.domain();
-
-        if (props.reverse) {
-          domain = domain.slice().reverse();
-        }
-
-        var rows, cols;
-        if (props.orientation === 'horizontal') {
-          cols = props.columns;
-          rows = Math.ceil(domain.length / cols);
-        } else if (props.orientation === 'vertical') {
-          rows = props.rows;
-          cols = Math.ceil(domain.length / rows);
-        }
-
-        var colWidth = props.width / cols,
-            rowHeight = 20;
-
-        var groups = selection.selectAll('.sszvis-legend--entry')
-          .data(domain);
-
-        groups.enter()
-          .append('g')
-          .classed('sszvis-legend--entry', true);
-
-        groups.attr('transform', function(d, i) {
-          if (props.orientation === 'horizontal') {
-            return 'translate(' + ((i % cols) * colWidth) + ',' + (Math.floor(i / cols) * rowHeight) + ')';
-          } else if (props.orientation === 'vertical') {
-            return 'translate(' + (Math.floor(i / rows) * colWidth) + ',' + ((i % rows) * rowHeight) + ')';
-          }
-        });
-
-        groups.exit().remove();
-
-        var marks = groups.selectAll('.sszvis-legend--mark')
-          .data(function(d) { return [d]; });
-
-        marks.enter()
-          .append('circle')
-          .classed('sszvis-legend--mark', true);
-
-        marks.exit().remove();
-
-        marks
-          .attr('cx', 7)
-          .attr('cy', rowHeight / 2 - 1) // magic number adjustment for nice alignment with text
-          .attr('r', 6)
-          .attr('fill', function(d) { return props.scale(d); });
-
-        var labels = groups.selectAll('.sszvis-legend--label')
-          .data(function(d) { return [d]; });
-
-        labels.enter()
-          .append('text')
-          .classed('sszvis-legend--label', true);
-
-        labels.exit().remove();
-
-        labels
-          .text(function(d) { return d; })
-          .attr('alignment-baseline', 'central')
-          .attr('transform', 'translate(18, ' + (rowHeight / 2) + ')');
-      });
-  };
-
-});
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Legend component
- *
- * @module sszvis/legend
- */
- // NOTE Why are legent.colorRange and legen.color
- //in two different namespaces?
- //Why not create just one namespace 'sszvis.legend'
- //and return an object with 'color' and 'colorRange'?
-
- // NOTE Should this not be in the components folder? As it creates a component.
-
-namespace('sszvis.legend.linearColorScale', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('scale')
-      .prop('displayValues').displayValues([])
-      .prop('width').width(200)
-      .prop('segments').segments(8)
-      .prop('units').units(false)
-      .prop('labelPadding').labelPadding(16)
-      .render(function() {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        if (!props.scale) {
-          sszvis.logError('legend.linearColorScale - a scale must be specified.');
-          return false;
-        }
-
-        var values = props.displayValues;
-        if (!values.length && props.scale.ticks) {
-          values = props.scale.ticks(props.segments);
-        }
-
-         // NOTE a default width would be good to avoid division by zero
-         // and to save programmers time while he searches for the cause of the error.
-        var segWidth = props.width / values.length,
-            segHeight = 10;
-
-        var segments = selection.selectAll('rect.sszvis-legend--mark')
-          .data(values);
-
-        segments.enter()
-          .append('rect')
-          .classed('sszvis-legend--mark', true);
-
-        segments.exit().remove();
-
-        segments
-          .attr('x', function(d, i) { return i * segWidth; })
-          .attr('y', 0)
-          .attr('width', segWidth)
-          .attr('height', segHeight)
-          .attr('fill', function(d) { return props.scale(d); });
-
-        var startEnd = [values[0], values[values.length - 1]];
-
-        // rounded end caps for the segments
-        var endCaps = selection.selectAll('circle.ssvis-legend--mark')
-          .data(startEnd);
-
-        endCaps.enter()
-          .append('circle')
-          .attr('cx', function(d, i) { return i * props.width; })
-          .attr('cy', segHeight / 2)
-          .attr('r', segHeight / 2)
-          .attr('fill', function(d) { return props.scale(d); });
-
-        if (props.units) startEnd[1] += ' ' + props.units;
-
-        var labels = selection.selectAll('.sszvis-legend--label')
-          .data(startEnd);
-
-        labels.enter()
-          .append('text')
-          .classed('sszvis-legend--label', true);
-
-        labels.exit().remove();
-
-        labels
-          .attr('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
-          .attr('alignment-baseline', 'central')
-          .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
-          .text(function(d) { return d; });
-      });
-  };
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
 /**
  * Handle data load errors in a standardized way
  *
@@ -4022,6 +3740,293 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
   }
 
 });
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+namespace('sszvis.legend.binnedColorScale', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('scale')
+      .prop('displayValues')
+      .prop('width').width(200)
+      .prop('units').units(false)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        if (!props.scale) return sszvis.logError('legend.binnedColorScale - a scale must be specified.');
+        if (!props.displayValues) return sszvis.logError('legend.binnedColorScale - display values must be specified.');
+
+        var barWidth = d3.scale.linear()
+          .domain(d3.extent(props.displayValues))
+          .range([0, props.width]);
+        var sum = 0;
+        var rectData = [];
+        d3.pairs(props.displayValues).forEach(function(p) {
+          var w = barWidth(p[1]) - sum;
+          rectData.push({
+            x: sum,
+            w: w,
+            c: props.scale(p[0]),
+            p0: p[0],
+            p1: p[1]
+          });
+          sum += w;
+        });
+
+        var segHeight = 10;
+
+        var segments = selection.selectAll('rect.sszvis-legend--mark')
+          .data(rectData);
+
+        segments.enter()
+          .append('rect')
+          .classed('sszvis-legend--mark', true);
+
+        segments.exit().remove();
+
+        segments
+          .attr('x', sszvis.fn.prop('x'))
+          .attr('y', 0)
+          .attr('width', sszvis.fn.prop('w'))
+          .attr('height', segHeight)
+          .attr('fill', sszvis.fn.prop('c'));
+
+        var labelData = rectData.concat({
+          x: sum,
+          p0: sszvis.fn.last(rectData).p1
+        });
+
+        var lines = selection.selectAll('line.sszvis-legend--mark')
+          .data(labelData);
+
+        lines.enter()
+          .append('line')
+          .classed('sszvis-legend--mark', true);
+
+        lines.exit().remove();
+
+        lines
+          .attr('x1', function(d) { return Math.round(d.x); })
+          .attr('x2', function(d) { return Math.round(d.x); })
+          .attr('y1', 0)
+          .attr('y2', segHeight + 4)
+          .attr('stroke', '#909090');
+
+        var labels = selection.selectAll('.sszvis-legend--label')
+          .data(labelData);
+
+        labels.enter()
+          .append('text')
+          .classed('sszvis-legend--label', true);
+
+        labels.exit().remove();
+
+        labels
+          .attr('text-anchor', 'middle')
+          .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
+          .text(function(d) {
+            return d.p0;
+          });
+      });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Legend component
+ *
+ * @module sszvis/legend
+ */
+ // NOTE why is there a namespace sszvis.legend.color AND sszvis.legend.ColorRange 
+ //and not just sszvis.legend returning an object containing color and colorRange?
+namespace('sszvis.legend.color', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('scale')
+      .prop('width').width(0)
+      .prop('rows').rows(3)
+      .prop('columns').columns(3)
+      .prop('orientation')
+      .prop('reverse').reverse(false)
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var domain = props.scale.domain();
+
+        if (props.reverse) {
+          domain = domain.slice().reverse();
+        }
+
+        var rows, cols;
+        if (props.orientation === 'horizontal') {
+          cols = props.columns;
+          rows = Math.ceil(domain.length / cols);
+        } else if (props.orientation === 'vertical') {
+          rows = props.rows;
+          cols = Math.ceil(domain.length / rows);
+        }
+
+        var colWidth = props.width / cols,
+            rowHeight = 20;
+
+        var groups = selection.selectAll('.sszvis-legend--entry')
+          .data(domain);
+
+        groups.enter()
+          .append('g')
+          .classed('sszvis-legend--entry', true);
+
+        groups.attr('transform', function(d, i) {
+          if (props.orientation === 'horizontal') {
+            return 'translate(' + ((i % cols) * colWidth) + ',' + (Math.floor(i / cols) * rowHeight) + ')';
+          } else if (props.orientation === 'vertical') {
+            return 'translate(' + (Math.floor(i / rows) * colWidth) + ',' + ((i % rows) * rowHeight) + ')';
+          }
+        });
+
+        groups.exit().remove();
+
+        var marks = groups.selectAll('.sszvis-legend--mark')
+          .data(function(d) { return [d]; });
+
+        marks.enter()
+          .append('circle')
+          .classed('sszvis-legend--mark', true);
+
+        marks.exit().remove();
+
+        marks
+          .attr('cx', 7)
+          .attr('cy', rowHeight / 2 - 1) // magic number adjustment for nice alignment with text
+          .attr('r', 6)
+          .attr('fill', function(d) { return props.scale(d); });
+
+        var labels = groups.selectAll('.sszvis-legend--label')
+          .data(function(d) { return [d]; });
+
+        labels.enter()
+          .append('text')
+          .classed('sszvis-legend--label', true);
+
+        labels.exit().remove();
+
+        labels
+          .text(function(d) { return d; })
+          .attr('alignment-baseline', 'central')
+          .attr('transform', 'translate(18, ' + (rowHeight / 2) + ')');
+      });
+  };
+
+});
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Legend component
+ *
+ * @module sszvis/legend
+ */
+ // NOTE Why are legent.colorRange and legen.color
+ //in two different namespaces?
+ //Why not create just one namespace 'sszvis.legend'
+ //and return an object with 'color' and 'colorRange'?
+
+ // NOTE Should this not be in the components folder? As it creates a component.
+
+namespace('sszvis.legend.linearColorScale', function(module) {
+
+  module.exports = function() {
+    return d3.component()
+      .prop('scale')
+      .prop('displayValues').displayValues([])
+      .prop('width').width(200)
+      .prop('segments').segments(8)
+      .prop('units').units(false)
+      .prop('labelPadding').labelPadding(16)
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        if (!props.scale) {
+          sszvis.logError('legend.linearColorScale - a scale must be specified.');
+          return false;
+        }
+
+        var values = props.displayValues;
+        if (!values.length && props.scale.ticks) {
+          values = props.scale.ticks(props.segments);
+        }
+
+         // NOTE a default width would be good to avoid division by zero
+         // and to save programmers time while he searches for the cause of the error.
+        var segWidth = props.width / values.length,
+            segHeight = 10;
+
+        var segments = selection.selectAll('rect.sszvis-legend--mark')
+          .data(values);
+
+        segments.enter()
+          .append('rect')
+          .classed('sszvis-legend--mark', true);
+
+        segments.exit().remove();
+
+        segments
+          .attr('x', function(d, i) { return i * segWidth; })
+          .attr('y', 0)
+          .attr('width', segWidth)
+          .attr('height', segHeight)
+          .attr('fill', function(d) { return props.scale(d); });
+
+        var startEnd = [values[0], values[values.length - 1]];
+
+        // rounded end caps for the segments
+        var endCaps = selection.selectAll('circle.ssvis-legend--mark')
+          .data(startEnd);
+
+        endCaps.enter()
+          .append('circle')
+          .attr('cx', function(d, i) { return i * props.width; })
+          .attr('cy', segHeight / 2)
+          .attr('r', segHeight / 2)
+          .attr('fill', function(d) { return props.scale(d); });
+
+        if (props.units) startEnd[1] += ' ' + props.units;
+
+        var labels = selection.selectAll('.sszvis-legend--label')
+          .data(startEnd);
+
+        labels.enter()
+          .append('text')
+          .classed('sszvis-legend--label', true);
+
+        labels.exit().remove();
+
+        labels
+          .attr('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
+          .attr('alignment-baseline', 'central')
+          .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
+          .text(function(d) { return d; });
+      });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 
 
 //////////////////////////////////// SECTION ///////////////////////////////////

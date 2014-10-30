@@ -32,9 +32,6 @@ SOURCE_FILES = \
 	sszvis/createHtmlLayer.js \
 	sszvis/fn.js \
 	sszvis/format.js \
-	sszvis/legendBinnedColorScale.js \
-	sszvis/legendColor.js \
-	sszvis/legendLinearColorScale.js \
 	sszvis/loadError.js \
 	sszvis/logError.js \
 	sszvis/parse.js \
@@ -64,6 +61,10 @@ SOURCE_FILES = \
 	sszvis/component/textWrap.js \
 	sszvis/component/tooltip.js \
 	sszvis/component/tooltipAnchor.js \
+	sszvis/legend/legendBinnedColorScale.js \
+	sszvis/legend/legendColor.js \
+	sszvis/legend/legendLinearColorScale.js \
+	sszvis/legend/legendRadius.js \
 	sszvis/map/map.js \
 	sszvis/map/switzerland.js \
 	sszvis/map/zurich.js
