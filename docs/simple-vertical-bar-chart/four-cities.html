@@ -11,7 +11,7 @@
 
   <div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
+  <script>
   (function() {
     'use strict';
 
@@ -53,11 +53,11 @@
 
     /* Data initialization
     ----------------------------------------------- */
-    d3.csv('data/SiVB_yearly_many.csv')
+    d3.csv('data/SiVB_fourCities.csv')
       .row(function(d) {
         return {
-          category: d['Jahr'],
-          value: sszvis.parse.number(d['Hotel?bernachtungen'])
+          category: d['Stadt'],
+          value: sszvis.parse.number(d['Wert'])
         };
       })
       .get(function(error, data) {
@@ -68,30 +68,23 @@
     /* Render
     ----------------------------------------------- */
     function render(state) {
-      var bounds = sszvis.bounds({ width: 516, height: 550, top: 40, right: 10, bottom: 40, left: 15 });
-      // NOTE: because there are so many bars, this represents a special case
-      // in which the layout algorithm in sszvis.fn.verticalBarChartDimensions breaks down.
-      // FIXME: consider working on the layout algorithm to make it compatible with examples like this
-      // It should be noted that in situations with this much time-series data,
-      // a line chart is almost always the optimal display strategy.
+      var bounds = sszvis.bounds({ width: 540, height: 625, top: 75, right: 14, bottom: 190, left: 14 });
+      var barDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, 20, 20, state.categories.length);
 
 
       // Scales
 
       var xScale = d3.scale.ordinal()
         .domain(state.categories)
-        .rangeBands([20, bounds.innerWidth], 0.3, 0);
+        .rangeBands([0, barDimensions.barSpace], barDimensions.padRatio, 0);
 
       var heightScale = d3.scale.linear()
-        .domain([0, d3.max(state.data, yAcc)])
-        .range([0, bounds.innerHeight]);
+        .range([0, bounds.innerHeight])
+        .domain([0, 35]);
 
       var yPosScale = heightScale
         .copy()
-        .range(heightScale.range().slice().reverse()); // FIXME: revise creation of rangeBands for bar charts
-
-      var xValue = sszvis.fn.compose(xScale, xAcc);
-      var yValue = sszvis.fn.compose(yPosScale, yAcc);
+        .range(heightScale.range().slice().reverse());
 
 
       // Layers
@@ -106,9 +99,9 @@
       // Components
 
       var barGen = sszvis.component.bar()
-        .x(xValue)
-        .y(yValue)
-        .width(xScale.rangeBand())
+        .x(sszvis.fn.compose(xScale, xAcc))
+        .y(sszvis.fn.compose(yPosScale, yAcc))
+        .width(barDimensions.barWidth)
         .height(sszvis.fn.compose(heightScale, yAcc))
         .fill(function(d) {
           return isSelected(d) ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
@@ -116,48 +109,48 @@
 
       var xAxis = sszvis.axis.x.ordinal()
         .scale(xScale)
-        .orient('bottom')
-        .slant('vertical')
-        .ticks(5);
+        .orient('bottom');
 
       var yAxis = sszvis.axis.y()
-        .scale(yPosScale).orient('right');
+        .scale(yPosScale)
+        .orient('right');
 
       var tooltipTitle = sszvis.component.modularText()
-        .bold('Hotelübernachtungen')
-        .bold(xAcc);
+        .bold(yAcc)
+        .bold('Wert');
+
+      var tooltipBody = sszvis.component.modularText()
+        .plain('im')
+        .plain(xAcc);
 
       var tooltip = sszvis.component.tooltip()
         .renderInto(tooltipLayer)
         .header(tooltipTitle)
-        .body(yAcc)
+        .body(tooltipBody)
         .visible(isSelected);
-
 
       // Rendering
 
       var bars = chartLayer.selectGroup('bars')
+        .attr('transform', sszvis.fn.translateString(barDimensions.padding.left, 0))
         .call(barGen);
 
       bars.selectAll('[data-tooltip-anchor]')
         .call(tooltip);
 
       chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .attr('transform', sszvis.fn.translateString(barDimensions.padding.left, bounds.innerHeight))
         .call(xAxis);
 
       chartLayer.selectGroup('yAxis')
-        .attr('transform', 'translate(-5, 0)')
+        .attr('transform', sszvis.fn.translateString(-5, 0))
         .call(yAxis);
 
 
       // Interaction
-
-      // FIXME: improve mouseover handling to prevent tooltip flickering
-      //        by selecting the closest datum
       bars.selectAll('.sszvis-bar')
         .on('mouseover', actions.showTooltip)
-        .on('mouseout',  actions.hideTooltip);
+        .on('mouseout', actions.hideTooltip);
     }
 
 
@@ -166,7 +159,6 @@
     function isSelected(d) {
       return state.selection.indexOf(d) >= 0;
     }
-
 
   }());
   </script>

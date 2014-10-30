@@ -57,14 +57,15 @@
     /* Render
     ----------------------------------------------- */
     function render(state) {
-      var bounds = sszvis.bounds({ width: 480, height: 500, top: 10, right: 10, bottom: 40, left: 15 });
+      var bounds = sszvis.bounds({ width: 516, height: 500, top: 10, right: 10, bottom: 40, left: 15 });
+      var barDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, 60, 60, state.categories.length);
 
 
       // Scales
 
       var xScale = d3.scale.ordinal()
         .domain(state.categories)
-        .rangeBands([40, bounds.innerWidth - 50], 0.68, 0.2); // FIXME: revise creation of rangeBands for bar charts
+        .rangeBands([0, barDimensions.barSpace], barDimensions.padRatio, 0);
 
       var heightScale = d3.scale.linear()
         .range([0, bounds.innerHeight])
@@ -86,28 +87,35 @@
       var barGen = sszvis.component.bar()
         .x(sszvis.fn.compose(xScale, xAcc))
         .y(sszvis.fn.compose(yPosScale, yAcc))
-        .width(xScale.rangeBand())
+        .width(barDimensions.barWidth)
         .height(sszvis.fn.compose(heightScale, yAcc))
         .fill(sszvis.color.values.basicBlue);
 
       var xAxis = sszvis.axis.x.ordinal()
         .scale(xScale)
-        .orient('bottom');
+        .orient('bottom')
+        .textWrap(labelWrapWidth(xScale));
 
       var yAxis = sszvis.axis.y()
         .scale(yPosScale)
         .orient('right');
 
       chartLayer.selectGroup('bars')
+        .attr('transform', sszvis.fn.translateString(barDimensions.padding.left, 0))
         .call(barGen);
 
       chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .attr('transform', sszvis.fn.translateString(barDimensions.padding.left, bounds.innerHeight))
         .call(xAxis);
 
       chartLayer.selectGroup('yAxis')
-        .attr('transform', 'translate(-5, 0)')
+        .attr('transform', sszvis.fn.translateString(-5, 0))
         .call(yAxis);
+    }
+
+    function labelWrapWidth(scale) {
+      var range = scale.range();
+      return (d3.max(range) - d3.min(range)) / range.length;
     }
 
   }());

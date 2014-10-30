@@ -72,7 +72,8 @@
     /* Render
     ----------------------------------------------- */
     function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 500, top: 55, right: 10, bottom: 30, left: 10 });
+      var bounds = sszvis.bounds({ width: 500, height: 700, top: 30, right: 10, bottom: 60, left: 10 });
+      var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, 45, 20, state.categories.length);
 
 
       // Scales
@@ -82,7 +83,7 @@
         .domain([0, d3.max(state.data, xAcc)]);
 
       var yScale = d3.scale.ordinal()
-        .rangeBands([0, bounds.innerHeight], 0.55, 0.1) // FIXME: revise creation of rangeBands for bar charts
+        .rangeBands([0, chartDimensions.barSpace], chartDimensions.padRatio, 0)
         .domain(state.categories);
 
 
@@ -100,7 +101,7 @@
         .x(0)
         .y(sszvis.fn.compose(yScale, yAcc))
         .width(sszvis.fn.compose(widthScale, xAcc))
-        .height(yScale.rangeBand())
+        .height(chartDimensions.barHeight)
         .fill(sszvis.color.values.basicBlue);
 
       var xAxis = sszvis.axis.x()
@@ -121,16 +122,17 @@
       // Rendering
 
       chartLayer.selectGroup('bars')
+        .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top))
         .call(barGen);
 
       chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
         .call(xAxis);
 
         // NOTE need to know from the designers what the distance between text and bar has to be
-        // NOTE we talked already about howto calculate bar widths. It's again the question how manual and how automagic one wants to be. should we sit together again for that question?  
+        // NOTE we talked already about howto calculate bar widths. It's again the question how manual and how automagic one wants to be. should we sit together again for that question?
       chartLayer.selectGroup('yAxis')
-        .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
+        .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top + chartDimensions.axisOffset))
         .call(yAxis);
 
       controlLayer.selectDiv('controls')

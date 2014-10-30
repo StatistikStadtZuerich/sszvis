@@ -18,6 +18,22 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ### Examples
 
+### Four Cities
+
+```project
+{
+    "index": "docs/simple-vertical-bar-chart/four-cities.html",
+    "readme": "docs/simple-vertical-bar-chart/README.md",
+    "files": [
+        "docs/simple-vertical-bar-chart/data/SiVB_fourCities.csv"
+    ],
+    "size": {
+        "height": 625,
+        "width": 540
+    }
+}
+```
+
 ### Basic Data
 
 ```project
@@ -32,7 +48,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     },
     "size": {
         "height": 500,
-        "width": 500
+        "width": 516
     }
 }
 ```
@@ -53,7 +69,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "size": {
         "height": 500,
-        "width": 480
+        "width": 516
     }
 }
 ```
@@ -72,7 +88,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "size": {
         "height": 500,
-        "width": 480
+        "width": 516
     }
 }
 ```
@@ -91,7 +107,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "size": {
         "height": 500,
-        "width": 500
+        "width": 516
     }
 }
 ```
@@ -110,7 +126,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "size": {
         "height": 550,
-        "width": 550
+        "width": 516
     }
 }
 ```

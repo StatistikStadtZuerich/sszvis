@@ -1091,6 +1091,63 @@ namespace('sszvis.fn', function(module) {
       }
     },
 
+    verticalBarChartDimensions: function(width, leftPadding, rightPadding, numBars) {
+      var MAX_BAR_WIDTH = 48,
+          MIN_PADDING = 2,
+          MAX_PADDING = 100,
+          TARGET_BAR_RATIO = 0.70,
+          TARGET_PADDING_RATIO = 1 - TARGET_BAR_RATIO,
+          numPads = numBars - 1,
+          availableSpace = width - leftPadding - rightPadding,
+          padding = (availableSpace * TARGET_PADDING_RATIO) / ((TARGET_PADDING_RATIO * numPads) + (TARGET_BAR_RATIO * numBars)),
+          barWidth = (availableSpace - (padding * numPads)) / numBars;
+
+        // adjust for min and max
+        if (barWidth > MAX_BAR_WIDTH) {
+          barWidth = MAX_BAR_WIDTH;
+          padding = (availableSpace - (barWidth * numBars)) / numPads;
+        }
+        if (padding < MIN_PADDING) padding = MIN_PADDING;
+        if (padding > MAX_PADDING) padding = MAX_PADDING;
+
+        var paddedBarWidth = barWidth + padding,
+            padRatio = 1 - (barWidth / paddedBarWidth),
+            computedBarSpace = barWidth * numBars + padding * numPads,
+            computedLeftPadding = Math.max(leftPadding, leftPadding + ((availableSpace - computedBarSpace) / 2)),
+            computedRightPadding = Math.max(rightPadding, rightPadding + ((availableSpace - computedBarSpace) / 2));
+
+      return {
+        barWidth: barWidth,
+        padRatio: padRatio,
+        padding: {
+          left: computedLeftPadding,
+          right: computedRightPadding
+        },
+        barSpace: computedBarSpace
+      };
+    },
+
+    horizontalBarChartDimensions: function(height, topPadding, bottomPadding, numBars) {
+      var DEFAULT_HEIGHT = 24,
+          MIN_PADDING = 20,
+          availableSpace = height - topPadding - bottomPadding,
+          barHeight = DEFAULT_HEIGHT,
+          padding = Math.max((availableSpace / numBars) - barHeight, MIN_PADDING),
+          paddedBarWidth = barHeight + padding,
+          padRatio = 1 - (barHeight / paddedBarWidth),
+          computedBarSpace = paddedBarWidth * numBars - padding; // subtract the padding at the end
+      return {
+        barHeight: barHeight,
+        padRatio: padRatio,
+        padding: {
+          top: topPadding,
+          bottom: bottomPadding
+        },
+        axisOffset: -(barHeight / 2) - 10,
+        barSpace: computedBarSpace
+      };
+    },
+
     /**
      * fn.compose
      *
@@ -1257,11 +1314,11 @@ namespace('sszvis.fn', function(module) {
     heatTableDimensions: function(width, padding, numX, numY) {
       // this includes the default side length for the heat table
       var DEFAULT_SIDE = 30,
-          side = Math.min((width / numX) - padding, DEFAULT_SIDE),
+          side = Math.min((width - padding * (numX - 1)) / numX, DEFAULT_SIDE),
           paddedSide = side + padding,
           padRatio = 1 - (side / paddedSide),
-          width = paddedSide * numX,
-          height = paddedSide * numY;
+          width = numX * paddedSide - padding, // subtract the padding at the end
+          height = numY * paddedSide - padding; // subtract the padding at the end
       return {
         side: side,
         paddedSide: paddedSide,
@@ -1342,6 +1399,10 @@ namespace('sszvis.fn', function(module) {
         var computed = acc(value, i, arr);
         return m.indexOf(computed) < 0 ? m.concat(computed) : m;
       }, []);
+    },
+
+    translateString: function(x, y) {
+      return 'translate(' + x + ',' + y + ')';
     }
 
   };

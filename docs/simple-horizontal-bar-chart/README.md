@@ -31,7 +31,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
-        "height": 500
+        "height": 700
     }
 }
 ```
@@ -49,7 +49,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
-        "height": 540
+        "height": 656
     }
 }
 ```
@@ -67,7 +67,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
-        "height": 500
+        "height": 620
     }
 }
 ```
@@ -85,7 +85,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
-        "height": 500
+        "height": 440
     }
 }
 ```
