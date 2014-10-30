@@ -4,143 +4,143 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Horizontal Bar Chart</title>
-
-  <link href='../../sszvis.css' rel='stylesheet' />
-
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
 </head>
 <body style="margin:0;padding:0;">
-<div id="chart"></div>
-<script>
-(function() {
-  'use strict';
+  <link href='../../sszvis.css' rel='stylesheet' />
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
 
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('value');
-  var yAcc = sszvis.fn.prop('category');
-  var jAcc = sszvis.fn.prop('year');
+  <div id="chart"></div>
 
+  <script>
+  (function() {
+    'use strict';
 
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    categories: [],
-    years: [],
-    selectedYear: null,
-    selectedData: []
-  };
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('value');
+    var yAcc = sszvis.fn.prop('category');
+    var jAcc = sszvis.fn.prop('year');
 
 
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.categories = sszvis.fn.set(state.data, yAcc);
-      state.years = sszvis.fn.set(state.data, jAcc);
-      actions.selectYear(d3.max(state.years));
-    },
+    /* Application state
+    ----------------------------------------------- */
+    var state = {
+      data: [],
+      categories: [],
+      years: [],
+      selectedYear: null,
+      selectedData: []
+    };
 
-    selectYear: function(year) {
-      state.selectedYear = year;
-      state.selectedData = state.data.filter(function(d) {
-        return jAcc(d) === year;
+
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.categories = sszvis.fn.set(state.data, yAcc);
+        state.years = sszvis.fn.set(state.data, jAcc);
+        actions.selectYear(d3.max(state.years));
+      },
+
+      selectYear: function(year) {
+        state.selectedYear = year;
+        state.selectedData = state.data.filter(function(d) {
+          return jAcc(d) === year;
+        });
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
+    d3.csv('data/SHB_13Categories.csv')
+      .row(function(d) {
+        return {
+          category: d['Sektor'],
+          value: sszvis.parse.number(d['Zupendler']),
+          year: sszvis.parse.number(d['Jahr'])
+        };
+      })
+      .get(function(error, data) {
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
-      render(state);
+
+
+    /* Render
+    ----------------------------------------------- */
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 500, height: 500, top: 55, right: 10, bottom: 30, left: 10 });
+
+
+      // Scales
+
+      var widthScale = d3.scale.linear()
+        .range([0, bounds.innerWidth])
+        .domain([0, d3.max(state.data, xAcc)]);
+
+      var yScale = d3.scale.ordinal()
+        .rangeBands([0, bounds.innerHeight], 0.55, 0.1) // FIXME: revise creation of rangeBands for bar charts
+        .domain(state.categories);
+
+
+      // Layers
+
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.selectedData);
+
+      var controlLayer = sszvis.createHtmlLayer('#chart');
+
+
+      // Components
+
+      var barGen = sszvis.component.bar()
+        .x(0)
+        .y(sszvis.fn.compose(yScale, yAcc))
+        .width(sszvis.fn.compose(widthScale, xAcc))
+        .height(yScale.rangeBand())
+        .fill(sszvis.color.values.basicBlue);
+
+      var xAxis = sszvis.axis.x()
+        .scale(widthScale)
+        .orient('bottom');
+
+      var yAxis = sszvis.axis.y.ordinal()
+        .scale(yScale)
+        .orient('right');
+
+      var segmentedControl = sszvis.control.segmented()
+        .values(state.years)
+        .width(bounds.width / 2)
+        .current(state.selectedYear)
+        .change(actions.selectYear);
+
+
+      // Rendering
+
+      chartLayer.selectGroup('bars')
+        .call(barGen);
+
+      chartLayer.selectGroup('xAxis')
+        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .call(xAxis);
+
+        // NOTE need to know from the designers what the distance between text and bar has to be
+        // NOTE we talked already about howto calculate bar widths. It's again the question how manual and how automagic one wants to be. should we sit together again for that question?  
+      chartLayer.selectGroup('yAxis')
+        .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
+        .call(yAxis);
+
+      controlLayer.selectDiv('controls')
+        .style('left', (bounds.width / 4) + 'px')
+        .style('top', 10 + 'px')
+        .call(segmentedControl);
     }
-  };
 
 
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/SHB_13Categories.csv')
-    .row(function(d) {
-      return {
-        category: d['Sektor'],
-        value: sszvis.parse.number(d['Zupendler']),
-        year: sszvis.parse.number(d['Jahr'])
-      };
-    })
-    .get(function(error, data) {
-      error ? sszvis.loadError(error) : actions.prepareState(data);
-    });
-
-
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 500, top: 55, right: 10, bottom: 30, left: 10 });
-
-
-    // Scales
-
-    var widthScale = d3.scale.linear()
-      .range([0, bounds.innerWidth])
-      .domain([0, d3.max(state.data, xAcc)]);
-
-    var yScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerHeight], 0.55, 0.1) // FIXME: revise creation of rangeBands for bar charts
-      .domain(state.categories);
-
-
-    // Layers
-
-    var chartLayer = sszvis.createChart('#chart', bounds)
-      .datum(state.selectedData);
-
-    var controlLayer = sszvis.createHtmlLayer('#chart');
-
-
-    // Components
-
-    var barGen = sszvis.component.bar()
-      .x(0)
-      .y(sszvis.fn.compose(yScale, yAcc))
-      .width(sszvis.fn.compose(widthScale, xAcc))
-      .height(yScale.rangeBand())
-      .fill(sszvis.color.values.basicBlue);
-
-    var xAxis = sszvis.axis.x()
-      .scale(widthScale)
-      .orient('bottom');
-
-    var yAxis = sszvis.axis.y.ordinal()
-      .scale(yScale)
-      .orient('right');
-
-    var segmentedControl = sszvis.control.segmented()
-      .values(state.years)
-      .width(bounds.width / 2)
-      .current(state.selectedYear)
-      .change(actions.selectYear);
-
-
-    // Rendering
-
-    chartLayer.selectGroup('bars')
-      .call(barGen);
-
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-      .call(xAxis);
-
-      // NOTE need to know from the designers what the distance between text and bar has to be
-      // NOTE we talked already about howto calculate bar widths. It's again the question how manual and how automagic one wants to be. should we sit together again for that question?  
-    chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
-      .call(yAxis);
-
-    controlLayer.selectDiv('controls')
-      .style('left', (bounds.width / 4) + 'px')
-      .style('top', 10 + 'px')
-      .call(segmentedControl);
-  }
-
-
-}());
-</script>
+  }());
+  </script>
 </body>
 </html>

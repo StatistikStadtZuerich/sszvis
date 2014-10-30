@@ -3,145 +3,145 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Grouped Bar Chart</title>
-
-  <link href='../../sszvis.css' rel='stylesheet' />
-
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+  <title>Grouped Bar Chart – Three Yearly Negative</title>
 </head>
 <body style="margin:0;padding:0;">
-<div id="chart"></div>
-<script>
-(function() {
-  'use strict';
+  <link href='../../sszvis.css' rel='stylesheet' />
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
 
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('year');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('category');
+  <div id="chart"></div>
 
+  <script>
+  (function() {
+    'use strict';
 
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    years: [],
-    valueExtent: [0, 0],
-    groups: [],
-    groupedData: [],
-    longestGroup: 0
-  };
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('year');
+    var yAcc = sszvis.fn.prop('value');
+    var cAcc = sszvis.fn.prop('category');
 
 
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.years = sszvis.fn.set(state.data, xAcc);
-      state.valueExtent = d3.extent(state.data, yAcc);
-      state.groups = sszvis.fn.set(state.data, cAcc);
-      state.groupedData = sszvis.cascade()
-        .arrayBy(xAcc)
-        .apply(state.data);
-      state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
-
-      render(state);
-    }
-  };
+    /* Application state
+    ----------------------------------------------- */
+    var state = {
+      data: [],
+      years: [],
+      valueExtent: [0, 0],
+      groups: [],
+      groupedData: [],
+      longestGroup: 0
+    };
 
 
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/GB_3Categories_yearly_negatives.csv')
-    .row(function(d) {
-      return {
-        year: d['Datum'],
-        category: d['Region'],
-        value: sszvis.parse.number(d['Stadt Zürich'])
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.years = sszvis.fn.set(state.data, xAcc);
+        state.valueExtent = d3.extent(state.data, yAcc);
+        state.groups = sszvis.fn.set(state.data, cAcc);
+        state.groupedData = sszvis.cascade()
+          .arrayBy(xAcc)
+          .apply(state.data);
+        state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
+
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
+    d3.csv('data/GB_3Categories_yearly_negatives.csv')
+      .row(function(d) {
+        return {
+          year: d['Datum'],
+          category: d['Region'],
+          value: sszvis.parse.number(d['Stadt Zürich'])
+        };
+      })
+      .get(function(error, data) {
+        error ? sszvis.loadError(error) : actions.prepareState(data);
+      });
+
+
+    /* Render
+    ----------------------------------------------- */
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 500, height: 640, top: 10, right: 10, bottom: 70, left: 10 });
+
+
+      // Scales
+
+      var xScale = d3.scale.ordinal()
+        .domain(state.years)
+        .rangeBands([34, bounds.innerWidth], 0.26, 0);
+
+      var yScale = d3.scale.linear()
+        .domain(state.valueExtent)
+        .range([bounds.innerHeight - 10, 0]);
+
+      // FIXME: y-position and bar height scales are a little weird because of negative values
+      // see also gb-two-small.html and http://bl.ocks.org/mbostock/2368837
+      var yPosScale = function(v) {
+        return yScale(Math.max(v, 0));
       };
-    })
-    .get(function(error, data) {
-      error ? sszvis.loadError(error) : actions.prepareState(data);
-    });
+
+      var hScale = function(v) {
+        return Math.abs(yScale(v) - yScale(0));
+      };
+
+      var cScale = d3.scale.ordinal()
+        .domain(state.groups)
+        .range(sszvis.color.ranges.qualitative.qual3);
 
 
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 640, top: 10, right: 10, bottom: 70, left: 10 });
+      // Layers
+
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.groupedData);
 
 
-    // Scales
+      // Components
 
-    var xScale = d3.scale.ordinal()
-      .domain(state.years)
-      .rangeBands([34, bounds.innerWidth], 0.26, 0);
+      var barLayout = sszvis.component.groupedBars()
+        .groupScale(sszvis.fn.compose(xScale, xAcc))
+        .groupWidth(xScale.rangeBand())
+        .groupSize(state.longestGroup)
+        .y(sszvis.fn.compose(yPosScale, yAcc))
+        .height(sszvis.fn.compose(hScale, yAcc))
+        .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var yScale = d3.scale.linear()
-      .domain(state.valueExtent)
-      .range([bounds.innerHeight - 10, 0]);
+      var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
+      var yAxis = sszvis.axis.y().scale(yScale).orient('right');
 
-    // FIXME: y-position and bar height scales are a little weird because of negative values
-    // see also gb-two-small.html and http://bl.ocks.org/mbostock/2368837
-    var yPosScale = function(v) {
-      return yScale(Math.max(v, 0));
-    };
-
-    var hScale = function(v) {
-      return Math.abs(yScale(v) - yScale(0));
-    };
-
-    var cScale = d3.scale.ordinal()
-      .domain(state.groups)
-      .range(sszvis.color.ranges.qualitative.qual3);
+      var colorLegend = sszvis.legend.color()
+        .scale(cScale)
+        .width(bounds.innerWidth)
+        .orientation('horizontal');
 
 
-    // Layers
+      // Rendering
 
-    var chartLayer = sszvis.createChart('#chart', bounds)
-      .datum(state.groupedData);
+      chartLayer.selectGroup('bars')
+        .call(barLayout);
 
+      chartLayer.selectGroup('xAxis')
+        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .call(xAxis);
 
-    // Components
+      chartLayer.selectGroup('yAxis')
+        .call(yAxis);
 
-    var barLayout = sszvis.component.groupedBars()
-      .groupScale(sszvis.fn.compose(xScale, xAcc))
-      .groupWidth(xScale.rangeBand())
-      .groupSize(state.longestGroup)
-      .y(sszvis.fn.compose(yPosScale, yAcc))
-      .height(sszvis.fn.compose(hScale, yAcc))
-      .fill(sszvis.fn.compose(cScale, cAcc));
+      chartLayer.selectGroup('colorLegend')
+        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 36) + ')')
+        .call(colorLegend);
+    }
 
-    var xAxis = sszvis.axis.x.ordinal().scale(xScale).orient('bottom');
-    var yAxis = sszvis.axis.y().scale(yScale).orient('right');
-
-    var colorLegend = sszvis.legend.color()
-      .scale(cScale)
-      .width(bounds.innerWidth)
-      .orientation('horizontal');
-
-
-    // Rendering
-
-    chartLayer.selectGroup('bars')
-      .call(barLayout);
-
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-      .call(xAxis);
-
-    chartLayer.selectGroup('yAxis')
-      .call(yAxis);
-
-    chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 36) + ')')
-      .call(colorLegend);
-  }
-
-}());
-</script>
+  }());
+  </script>
 </body>
 </html>

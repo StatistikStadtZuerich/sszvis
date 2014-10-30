@@ -2,198 +2,198 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Heat Table</title>
-
-  <link href='../../sszvis.css' rel='stylesheet' />
-
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+  <title>Heat Table – Wer mit wem?</title>
 </head>
 <body style="margin:0;padding:0;">
-<div id="chart"></div>
-<script>
-(function() {
-  'use strict';
+  <link href='../../sszvis.css' rel='stylesheet' />
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
 
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('manAge');
-  var yAcc = sszvis.fn.prop('womAge');
-  var cAcc = sszvis.fn.prop('value');
+  <div id="chart"></div>
 
+  <script>
+  (function() {
+    'use strict';
 
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    manAgeList: [],
-    womAgeList: [],
-    valueDomain: [0, 0],
-    selection: []
-  };
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('manAge');
+    var yAcc = sszvis.fn.prop('womAge');
+    var cAcc = sszvis.fn.prop('value');
 
 
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.manAgeList = sszvis.fn.set(state.data, xAcc);
-      state.womAgeList = sszvis.fn.set(state.data, yAcc);
-      state.valueDomain = d3.extent(state.data, cAcc);
-
-      render(state);
-    },
-
-    showTooltip: function(datum) {
-      state.selection = [datum];
-      render(state);
-    },
-
-    hideTooltip: function() {
-      state.selection = [];
-      render(state);
-    }
-  };
+    /* Application state
+    ----------------------------------------------- */
+    var state = {
+      data: [],
+      manAgeList: [],
+      womAgeList: [],
+      valueDomain: [0, 0],
+      selection: []
+    };
 
 
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/HT_wermitwem.csv')
-    .row(function(d) {
-      return {
-        manAge: d['Altersgruppe Männer'],
-        womAge: d['Altersgruppe Frauen'],
-        value: sszvis.parse.number(d['Anzahl'])
-      };
-    })
-    .get(function(error, data) {
-      error ? sszvis.loadError(error) : actions.prepareState(data);
-    });
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.manAgeList = sszvis.fn.set(state.data, xAcc);
+        state.womAgeList = sszvis.fn.set(state.data, yAcc);
+        state.valueDomain = d3.extent(state.data, cAcc);
+
+        render(state);
+      },
+
+      showTooltip: function(datum) {
+        state.selection = [datum];
+        render(state);
+      },
+
+      hideTooltip: function() {
+        state.selection = [];
+        render(state);
+      }
+    };
 
 
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 360, top: 70, right: 0, bottom: 70, left: 120 });
-    var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.manAgeList.length, state.womAgeList.length);
-
-
-    // Scales
-
-    var xScale = d3.scale.ordinal()
-      .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
-      .domain(state.manAgeList);
-
-    var yScale = d3.scale.ordinal()
-      .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
-      .domain(state.womAgeList);
-
-    var colorScale = sszvis.scale.colorScale()
-      .domain(state.valueDomain)
-      .range(sszvis.color.ranges.sequential.valued.blue);
-
-    var xValue = sszvis.fn.compose(xScale, xAcc);
-    var yValue = sszvis.fn.compose(yScale, yAcc);
-    var cValue = sszvis.fn.compose(colorScale, cAcc);
-
-
-    // Layers
-
-    var chartLayer = sszvis.createChart('#chart', bounds)
-      .datum(state.data);
-
-    var tooltipLayer = sszvis.createHtmlLayer('#chart')
-      .datum(state.selection);
-
-
-    // Components
-
-    var barGen = sszvis.component.bar()
-      .x(xValue)
-      .y(yValue)
-      .width(tableDimensions.side)
-      .height(tableDimensions.side)
-      .fill(cValue)
-      .stroke(function(d) {
-        return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
+    /* Data initialization
+    ----------------------------------------------- */
+    d3.csv('data/HT_wermitwem.csv')
+      .row(function(d) {
+        return {
+          manAge: d['Altersgruppe Männer'],
+          womAge: d['Altersgruppe Frauen'],
+          value: sszvis.parse.number(d['Anzahl'])
+        };
+      })
+      .get(function(error, data) {
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
 
-    var xAxis = sszvis.axis.x.ordinal()
-      .scale(xScale)
-      .orient('top')
-      .tickSize(0, 0)
-      .tickPadding(0)
-      .title('Altersgruppe Männer')
-      .titleOffset(30);
 
-    var yAxis = sszvis.axis.y.ordinal()
-      .scale(yScale)
-      .orient('left')
-      .title('Altersgruppe Frauen')
-      .titleOffset(10);
-
-    var legend = sszvis.legend.linearColorScale()
-      .scale(colorScale)
-      .width(bounds.width / 2)
-      .units('Personen');
-
-    var tooltipHeaderText = sszvis.component.modularText()
-      .bold(cAcc).plain('Paare');
-
-    // FIXME: improve styling of text, possibly include tabular layout
-    var tooltipBodyText = sszvis.component.modularText()
-      .plain('Alter des Mannes:').plain(xAcc)
-      .newline()
-      .plain('Alter der Frau:').plain(yAcc);
-
-    var tooltip = sszvis.component.tooltip()
-      .renderInto(tooltipLayer)
-      .header(tooltipHeaderText)
-      .body(tooltipBodyText)
-      .visible(isSelected);
+    /* Render
+    ----------------------------------------------- */
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 516, height: 360, top: 70, right: 0, bottom: 70, left: 120 });
+      var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.manAgeList.length, state.womAgeList.length);
 
 
-    // Rendering
+      // Scales
 
-    var bars = chartLayer.selectGroup('bars')
-      .call(barGen);
+      var xScale = d3.scale.ordinal()
+        .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
+        .domain(state.manAgeList);
 
-    bars.selectAll('[data-tooltip-anchor]')
-      .call(tooltip);
+      var yScale = d3.scale.ordinal()
+        .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
+        .domain(state.womAgeList);
 
+      var colorScale = sszvis.scale.colorScale()
+        .domain(state.valueDomain)
+        .range(sszvis.color.ranges.sequential.valued.blue);
 
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0, -10)')
-      .call(xAxis);
-
-    chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(-10, 0)')
-      .call(yAxis);
-
-    // NOTE would be nice to have a convenience function in sszvis.fn which generate a 'translate string' from some input values.  
-    chartLayer.selectGroup('legend')
-      .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
-      .call(legend);
+      var xValue = sszvis.fn.compose(xScale, xAcc);
+      var yValue = sszvis.fn.compose(yScale, yAcc);
+      var cValue = sszvis.fn.compose(colorScale, cAcc);
 
 
-    // Interaction
+      // Layers
 
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.data);
 
-  }
-
-
-  /* Helper functions
-  ----------------------------------------------- */
-  function isSelected(d) {
-    return state.selection.indexOf(d) >= 0;
-  }
+      var tooltipLayer = sszvis.createHtmlLayer('#chart')
+        .datum(state.selection);
 
 
-}());
-</script>
+      // Components
+
+      var barGen = sszvis.component.bar()
+        .x(xValue)
+        .y(yValue)
+        .width(tableDimensions.side)
+        .height(tableDimensions.side)
+        .fill(cValue)
+        .stroke(function(d) {
+          return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
+        });
+
+      var xAxis = sszvis.axis.x.ordinal()
+        .scale(xScale)
+        .orient('top')
+        .tickSize(0, 0)
+        .tickPadding(0)
+        .title('Altersgruppe Männer')
+        .titleOffset(30);
+
+      var yAxis = sszvis.axis.y.ordinal()
+        .scale(yScale)
+        .orient('left')
+        .title('Altersgruppe Frauen')
+        .titleOffset(10);
+
+      var legend = sszvis.legend.linearColorScale()
+        .scale(colorScale)
+        .width(bounds.width / 2)
+        .units('Personen');
+
+      var tooltipHeaderText = sszvis.component.modularText()
+        .bold(cAcc).plain('Paare');
+
+      // FIXME: improve styling of text, possibly include tabular layout
+      var tooltipBodyText = sszvis.component.modularText()
+        .plain('Alter des Mannes:').plain(xAcc)
+        .newline()
+        .plain('Alter der Frau:').plain(yAcc);
+
+      var tooltip = sszvis.component.tooltip()
+        .renderInto(tooltipLayer)
+        .header(tooltipHeaderText)
+        .body(tooltipBodyText)
+        .visible(isSelected);
+
+
+      // Rendering
+
+      var bars = chartLayer.selectGroup('bars')
+        .call(barGen);
+
+      bars.selectAll('[data-tooltip-anchor]')
+        .call(tooltip);
+
+
+      chartLayer.selectGroup('xAxis')
+        .attr('transform', 'translate(0, -10)')
+        .call(xAxis);
+
+      chartLayer.selectGroup('yAxis')
+        .attr('transform', 'translate(-10, 0)')
+        .call(yAxis);
+
+      // NOTE would be nice to have a convenience function in sszvis.fn which generate a 'translate string' from some input values.  
+      chartLayer.selectGroup('legend')
+        .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
+        .call(legend);
+
+
+      // Interaction
+
+      bars.selectAll('.sszvis-bar')
+        .on('mouseover', actions.showTooltip)
+        .on('mouseout',  actions.hideTooltip);
+
+    }
+
+
+    /* Helper functions
+    ----------------------------------------------- */
+    function isSelected(d) {
+      return state.selection.indexOf(d) >= 0;
+    }
+
+
+  }());
+  </script>
 </body>
 </html>

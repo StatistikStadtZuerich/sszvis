@@ -3,117 +3,117 @@
 <head>
   <meta charset="UTF-8" />
   <title>Vertical Bar Chart</title>
-
-  <link href='../../sszvis.css' rel='stylesheet' />
-
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
 </head>
 <body style="margin:0;padding:0;">
-<div id="chart"></div>
-<script>
-(function() {
-  'use strict';
+  <link href='../../sszvis.css' rel='stylesheet' />
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
 
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('category');
-  var yAcc = sszvis.fn.prop('value');
+  <div id="chart"></div>
 
+  <script>
+  (function() {
+    'use strict';
 
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    categories: []
-  };
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('category');
+    var yAcc = sszvis.fn.prop('value');
 
 
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.categories = state.data.map(xAcc);
-      render(state);
+    /* Application state
+    ----------------------------------------------- */
+    var state = {
+      data: [],
+      categories: []
+    };
+
+
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.categories = state.data.map(xAcc);
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
+    d3.csv('data/SiVB_basic.csv')
+      .row(function(d) {
+        return {
+          category: d['Altersklasse'],
+          value: sszvis.parse.number(d['Anzahl'])
+        };
+      })
+      .get(function(error, data) {
+        error ? sszvis.loadError(error) : actions.prepareState(data);
+      });
+
+
+    /* Render
+    ----------------------------------------------- */
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 500, height: 500, top: 40, right: 10, bottom: 40, left: 15 });
+
+
+      // Scales
+
+      var xScale = d3.scale.ordinal()
+        .domain(state.categories)
+        .rangeBands([20, bounds.innerWidth], 0.55, 0.1); // FIXME: revise creation of rangeBands for bar charts
+
+      var heightScale = d3.scale.linear()
+        .domain([0, d3.max(state.data, yAcc)])
+        .range([0, bounds.innerHeight]);
+
+      var yPosScale = heightScale
+        .copy()
+        .range(heightScale.range().slice().reverse());
+
+
+      // Layers
+
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.data);
+
+
+      // Components
+
+      var barGen = sszvis.component.bar()
+        .x(sszvis.fn.compose(xScale, xAcc))
+        .y(sszvis.fn.compose(yPosScale, yAcc))
+        .width(xScale.rangeBand())
+        .height(sszvis.fn.compose(heightScale, yAcc))
+        .fill(sszvis.color.values.basicBlue);
+
+      var xAxis = sszvis.axis.x.ordinal()
+        .scale(xScale)
+        .orient('bottom');
+
+      var yAxis = sszvis.axis.y()
+        .scale(yPosScale)
+        .orient('right');
+
+
+      // Rendering
+
+      chartLayer.selectGroup('bars')
+        .call(barGen);
+
+      chartLayer.selectGroup('xAxis')
+        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .call(xAxis);
+
+      chartLayer.selectGroup('yAxis')
+        .attr('transform', 'translate(-5, 0)')
+        .call(yAxis);
     }
-  };
 
-
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/SiVB_basic.csv')
-    .row(function(d) {
-      return {
-        category: d['Altersklasse'],
-        value: sszvis.parse.number(d['Anzahl'])
-      };
-    })
-    .get(function(error, data) {
-      error ? sszvis.loadError(error) : actions.prepareState(data);
-    });
-
-
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 500, top: 40, right: 10, bottom: 40, left: 15 });
-
-
-    // Scales
-
-    var xScale = d3.scale.ordinal()
-      .domain(state.categories)
-      .rangeBands([20, bounds.innerWidth], 0.55, 0.1); // FIXME: revise creation of rangeBands for bar charts
-
-    var heightScale = d3.scale.linear()
-      .domain([0, d3.max(state.data, yAcc)])
-      .range([0, bounds.innerHeight]);
-
-    var yPosScale = heightScale
-      .copy()
-      .range(heightScale.range().slice().reverse());
-
-
-    // Layers
-
-    var chartLayer = sszvis.createChart('#chart', bounds)
-      .datum(state.data);
-
-
-    // Components
-
-    var barGen = sszvis.component.bar()
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yPosScale, yAcc))
-      .width(xScale.rangeBand())
-      .height(sszvis.fn.compose(heightScale, yAcc))
-      .fill(sszvis.color.values.basicBlue);
-
-    var xAxis = sszvis.axis.x.ordinal()
-      .scale(xScale)
-      .orient('bottom');
-
-    var yAxis = sszvis.axis.y()
-      .scale(yPosScale)
-      .orient('right');
-
-
-    // Rendering
-
-    chartLayer.selectGroup('bars')
-      .call(barGen);
-
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-      .call(xAxis);
-
-    chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(-5, 0)')
-      .call(yAxis);
-  }
-
-}());
-</script>
+  }());
+  </script>
 </body>
 </html>

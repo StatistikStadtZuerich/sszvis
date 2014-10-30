@@ -4,141 +4,141 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Horizontal Bar Chart</title>
-
-  <link href='../../sszvis.css' rel='stylesheet' />
-
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
 </head>
 <body style="margin:0;padding:0;">
-<div id="chart"></div>
-<script>
-(function() {
-  'use strict';
+  <link href='../../sszvis.css' rel='stylesheet' />
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
 
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('value');
-  var yAcc = sszvis.fn.prop('category');
-  var aAcc = sszvis.fn.prop('area');
+  <div id="chart"></div>
 
+  <script>
+  (function() {
+    'use strict';
 
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    categories: [],
-    areas: [],
-    selectedArea: null,
-    selectedData: []
-  };
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('value');
+    var yAcc = sszvis.fn.prop('category');
+    var aAcc = sszvis.fn.prop('area');
 
 
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.categories = sszvis.fn.set(state.data, yAcc);
-      state.areas = sszvis.fn.set(state.data, aAcc);
-      actions.selectArea(state.areas[0]);
-    },
+    /* Application state
+    ----------------------------------------------- */
+    var state = {
+      data: [],
+      categories: [],
+      areas: [],
+      selectedArea: null,
+      selectedData: []
+    };
 
-    selectArea: function(area) {
-      state.selectedArea = area;
-      state.selectedData = state.data.filter(function(d) {
-        return aAcc(d) === area;
+
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.categories = sszvis.fn.set(state.data, yAcc);
+        state.areas = sszvis.fn.set(state.data, aAcc);
+        actions.selectArea(state.areas[0]);
+      },
+
+      selectArea: function(area) {
+        state.selectedArea = area;
+        state.selectedData = state.data.filter(function(d) {
+          return aAcc(d) === area;
+        });
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
+    d3.csv('data/SHB_basic_percent.csv')
+      .row(function(d) {
+        return {
+          category: d['Branche'],
+          value: sszvis.parse.number(d['BIP']),
+          area: d['Gebiet']
+        };
+      })
+      .get(function(error, data) {
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
-      render(state);
+
+
+    /* Render
+    ----------------------------------------------- */
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 500, height: 540, top: 75, right: 10, bottom: 30, left: 10 });
+
+
+      // Scales
+
+      var widthScale = d3.scale.linear()
+        .range([0, bounds.innerWidth])
+        .domain([0, d3.max(state.data, xAcc)]);
+
+      var yScale = d3.scale.ordinal()
+        .rangeBands([0, bounds.innerHeight], 0.55, 0.1)
+        .domain(state.categories);
+
+
+      // Layers
+
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.selectedData);
+
+      var controlLayer = sszvis.createHtmlLayer('#chart');
+
+
+      // Components
+
+      var barGen = sszvis.component.bar()
+        .x(0)
+        .y(sszvis.fn.compose(yScale, yAcc))
+        .width(sszvis.fn.compose(widthScale, xAcc))
+        .height(yScale.rangeBand())
+        .fill(sszvis.color.values.basicBlue);
+
+      var xAxis = sszvis.axis.x()
+        .scale(widthScale)
+        .orient('bottom')
+        .tickFormat(function(v) { return sszvis.format.percent(v / 100); });
+
+      var yAxis = sszvis.axis.y.ordinal()
+        .scale(yScale)
+        .orient('right');
+
+      var segmentedControl = sszvis.control.segmented()
+        .values(state.areas)
+        .width(bounds.width * 0.8)
+        .current(state.selectedArea)
+        .change(actions.selectArea);
+
+
+      // Rendering
+
+      chartLayer.selectGroup('bars')
+        .call(barGen);
+
+      chartLayer.selectGroup('xAxis')
+        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+        .call(xAxis);
+
+      chartLayer.selectGroup('yAxis')
+        .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
+        .call(yAxis);
+
+      controlLayer.selectDiv('controls')
+        .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
+        .style('top', 10 + 'px')
+        .call(segmentedControl);
     }
-  };
 
-
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/SHB_basic_percent.csv')
-    .row(function(d) {
-      return {
-        category: d['Branche'],
-        value: sszvis.parse.number(d['BIP']),
-        area: d['Gebiet']
-      };
-    })
-    .get(function(error, data) {
-      error ? sszvis.loadError(error) : actions.prepareState(data);
-    });
-
-
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 540, top: 75, right: 10, bottom: 30, left: 10 });
-
-
-    // Scales
-
-    var widthScale = d3.scale.linear()
-      .range([0, bounds.innerWidth])
-      .domain([0, d3.max(state.data, xAcc)]);
-
-    var yScale = d3.scale.ordinal()
-      .rangeBands([0, bounds.innerHeight], 0.55, 0.1)
-      .domain(state.categories);
-
-
-    // Layers
-
-    var chartLayer = sszvis.createChart('#chart', bounds)
-      .datum(state.selectedData);
-
-    var controlLayer = sszvis.createHtmlLayer('#chart');
-
-
-    // Components
-
-    var barGen = sszvis.component.bar()
-      .x(0)
-      .y(sszvis.fn.compose(yScale, yAcc))
-      .width(sszvis.fn.compose(widthScale, xAcc))
-      .height(yScale.rangeBand())
-      .fill(sszvis.color.values.basicBlue);
-
-    var xAxis = sszvis.axis.x()
-      .scale(widthScale)
-      .orient('bottom')
-      .tickFormat(function(v) { return sszvis.format.percent(v / 100); });
-
-    var yAxis = sszvis.axis.y.ordinal()
-      .scale(yScale)
-      .orient('right');
-
-    var segmentedControl = sszvis.control.segmented()
-      .values(state.areas)
-      .width(bounds.width * 0.8)
-      .current(state.selectedArea)
-      .change(actions.selectArea);
-
-
-    // Rendering
-
-    chartLayer.selectGroup('bars')
-      .call(barGen);
-
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-      .call(xAxis);
-
-    chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(0, ' + -(yScale.rangeBand() / 2 + 10) + ')')
-      .call(yAxis);
-
-    controlLayer.selectDiv('controls')
-      .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
-      .style('top', 10 + 'px')
-      .call(segmentedControl);
-  }
-
-}());
-</script>
+  }());
+  </script>
 </body>
 </html>

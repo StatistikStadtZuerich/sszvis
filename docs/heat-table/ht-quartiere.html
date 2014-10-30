@@ -2,199 +2,199 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Heat Table</title>
-
-  <link href='../../sszvis.css' rel='stylesheet' />
-
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+  <title>Heat Table – Quartiere</title>
 </head>
 <body style="margin:0;padding:0;">
-<div id="chart"></div>
-<script>
-(function() {
-  'use strict';
+  <link href='../../sszvis.css' rel='stylesheet' />
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
 
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('group');
-  var yAcc = sszvis.fn.prop('quarter');
-  var cAcc = sszvis.fn.prop('value');
+  <div id="chart"></div>
 
+  <script>
+  (function() {
+    'use strict';
 
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    groupsList: [],
-    quarterList: [],
-    valueDomain: [0, 0],
-    selection: []
-  };
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('group');
+    var yAcc = sszvis.fn.prop('quarter');
+    var cAcc = sszvis.fn.prop('value');
 
 
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.groupsList = sszvis.fn.set(state.data, xAcc)
-        .sort();
-      state.quarterList = sszvis.fn.set(state.data, yAcc)
-        .sort();
-      state.valueDomain = d3.extent(state.data, cAcc);
-      render(state);
-    },
-
-    showTooltip: function(datum) {
-      state.selection = [datum];
-      render(state);
-    },
-
-    hideTooltip: function() {
-      state.selection = [];
-      render(state);
-    }
-  };
+    /* Application state
+    ----------------------------------------------- */
+    var state = {
+      data: [],
+      groupsList: [],
+      quarterList: [],
+      valueDomain: [0, 0],
+      selection: []
+    };
 
 
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/HT_quartiere.csv')
-    .row(function(d) {
-      return {
-        quarter: d['Qname'],
-        group: d['Ländergruppe'],
-        value: sszvis.parse.number(d['Anzahl'])
-      };
-    })
-    .get(function(error, data) {
-      error ? sszvis.loadError(error) : actions.prepareState(data);
-    });
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.groupsList = sszvis.fn.set(state.data, xAcc)
+          .sort();
+        state.quarterList = sszvis.fn.set(state.data, yAcc)
+          .sort();
+        state.valueDomain = d3.extent(state.data, cAcc);
+        render(state);
+      },
+
+      showTooltip: function(datum) {
+        state.selection = [datum];
+        render(state);
+      },
+
+      hideTooltip: function() {
+        state.selection = [];
+        render(state);
+      }
+    };
 
 
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 1100, top: 130, right: 40, bottom: 70, left: 130 });
-    var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.groupsList.length, state.quarterList.length);
-
-
-    // Scales
-
-    var xScale = d3.scale.ordinal()
-      .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
-      .domain(state.groupsList);
-
-    var yScale = d3.scale.ordinal()
-      .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
-      .domain(state.quarterList);
-
-    var colorScale = sszvis.scale.colorScale()
-      .domain(state.valueDomain)
-      .range(sszvis.color.ranges.sequential.valued.blue);
-
-    var xValue = sszvis.fn.compose(xScale, xAcc);
-    var yValue = sszvis.fn.compose(yScale, yAcc);
-    var cValue = sszvis.fn.compose(colorScale, cAcc);
-
-
-    // Layers
-
-    var chartLayer = sszvis.createChart('#chart', bounds)
-      .datum(state.data);
-
-    var tooltipLayer = sszvis.createHtmlLayer('#chart')
-      .datum(state.selection);
-
-
-    // Components
-
-    var barGen = sszvis.component.bar()
-      .x(xValue)
-      .y(yValue)
-      .width(tableDimensions.side)
-      .height(tableDimensions.side)
-      .fill(cValue)
-      .stroke(function(d) {
-        return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
+    /* Data initialization
+    ----------------------------------------------- */
+    d3.csv('data/HT_quartiere.csv')
+      .row(function(d) {
+        return {
+          quarter: d['Qname'],
+          group: d['Ländergruppe'],
+          value: sszvis.parse.number(d['Anzahl'])
+        };
+      })
+      .get(function(error, data) {
+        error ? sszvis.loadError(error) : actions.prepareState(data);
       });
 
-    var xAxis = sszvis.axis.x.ordinal()
-      .scale(xScale)
-      .orient('top')
-      .slant('diagonal')
-      .tickSize(0, 0)
-      .tickPadding(0)
-      .title('Ländergruppe')
-      .titleOffset(90);
 
-    var yAxis = sszvis.axis.y.ordinal()
-      .scale(yScale)
-      .orient('left')
-      .title('Quartier')
-      .titleOffset(12);
-
-    var legend = sszvis.legend.linearColorScale()
-      .scale(colorScale)
-      .width(bounds.width / 2)
-      .units('Einwohner');
-
-    var tooltipHeaderText = sszvis.component.modularText()
-      .bold(cAcc)
-      .plain(' Einwohner');
-
-    var tooltipBodyText = sszvis.component.modularText()
-      .plain('Herkunftsland:')
-      .plain(xAcc)
-      .newline()
-      .plain('Wohnort:')
-      .plain(yAcc);
-
-    var tooltip = sszvis.component.tooltip()
-      .renderInto(tooltipLayer)
-      .header(tooltipHeaderText)
-      .body(tooltipBodyText)
-      .visible(isSelected);
+    /* Render
+    ----------------------------------------------- */
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 516, height: 1100, top: 130, right: 40, bottom: 70, left: 130 });
+      var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.groupsList.length, state.quarterList.length);
 
 
-    // Rendering
+      // Scales
 
-    var bars = chartLayer.selectGroup('bars')
-      .call(barGen);
+      var xScale = d3.scale.ordinal()
+        .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
+        .domain(state.groupsList);
 
-    bars.selectAll('[data-tooltip-anchor]')
-      .call(tooltip);
+      var yScale = d3.scale.ordinal()
+        .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
+        .domain(state.quarterList);
 
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0, -10)')
-      .call(xAxis);
+      var colorScale = sszvis.scale.colorScale()
+        .domain(state.valueDomain)
+        .range(sszvis.color.ranges.sequential.valued.blue);
 
-    chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(-10, 0)')
-      .call(yAxis);
-
-    chartLayer.selectGroup('legend')
-      .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
-      .call(legend);
+      var xValue = sszvis.fn.compose(xScale, xAcc);
+      var yValue = sszvis.fn.compose(yScale, yAcc);
+      var cValue = sszvis.fn.compose(colorScale, cAcc);
 
 
-    // Interaction
+      // Layers
 
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
-  }
+      var chartLayer = sszvis.createChart('#chart', bounds)
+        .datum(state.data);
 
-
-  /* Helper functions
-  ----------------------------------------------- */
-  function isSelected(d) {
-    return state.selection.indexOf(d) >= 0;
-  }
+      var tooltipLayer = sszvis.createHtmlLayer('#chart')
+        .datum(state.selection);
 
 
-}());
-</script>
+      // Components
+
+      var barGen = sszvis.component.bar()
+        .x(xValue)
+        .y(yValue)
+        .width(tableDimensions.side)
+        .height(tableDimensions.side)
+        .fill(cValue)
+        .stroke(function(d) {
+          return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
+        });
+
+      var xAxis = sszvis.axis.x.ordinal()
+        .scale(xScale)
+        .orient('top')
+        .slant('diagonal')
+        .tickSize(0, 0)
+        .tickPadding(0)
+        .title('Ländergruppe')
+        .titleOffset(90);
+
+      var yAxis = sszvis.axis.y.ordinal()
+        .scale(yScale)
+        .orient('left')
+        .title('Quartier')
+        .titleOffset(12);
+
+      var legend = sszvis.legend.linearColorScale()
+        .scale(colorScale)
+        .width(bounds.width / 2)
+        .units('Einwohner');
+
+      var tooltipHeaderText = sszvis.component.modularText()
+        .bold(cAcc)
+        .plain(' Einwohner');
+
+      var tooltipBodyText = sszvis.component.modularText()
+        .plain('Herkunftsland:')
+        .plain(xAcc)
+        .newline()
+        .plain('Wohnort:')
+        .plain(yAcc);
+
+      var tooltip = sszvis.component.tooltip()
+        .renderInto(tooltipLayer)
+        .header(tooltipHeaderText)
+        .body(tooltipBodyText)
+        .visible(isSelected);
+
+
+      // Rendering
+
+      var bars = chartLayer.selectGroup('bars')
+        .call(barGen);
+
+      bars.selectAll('[data-tooltip-anchor]')
+        .call(tooltip);
+
+      chartLayer.selectGroup('xAxis')
+        .attr('transform', 'translate(0, -10)')
+        .call(xAxis);
+
+      chartLayer.selectGroup('yAxis')
+        .attr('transform', 'translate(-10, 0)')
+        .call(yAxis);
+
+      chartLayer.selectGroup('legend')
+        .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
+        .call(legend);
+
+
+      // Interaction
+
+      bars.selectAll('.sszvis-bar')
+        .on('mouseover', actions.showTooltip)
+        .on('mouseout',  actions.hideTooltip);
+    }
+
+
+    /* Helper functions
+    ----------------------------------------------- */
+    function isSelected(d) {
+      return state.selection.indexOf(d) >= 0;
+    }
+
+
+  }());
+  </script>
 </body>
 </html>
