@@ -30,7 +30,7 @@
       data: [],
       xExtent: [0, 0],
       yExtent: [0, 0],
-      categories: []
+      rExtent: [0, 0]
     };
 
 
@@ -41,7 +41,7 @@
         state.data = data;
         state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
         state.yExtent = d3.extent(state.data, yAcc);
-        state.categories = sszvis.fn.set(state.data, cAcc);
+        state.rExtent = d3.extent(state.data, rAcc);
 
         render(state);
       }
@@ -67,7 +67,7 @@
     /* Render
     ----------------------------------------------- */
     function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 500, top: 10, right: 10, bottom: 40, left: 10 });
+      var bounds = sszvis.bounds({ width: 500, height: 570, top: 10, right: 10, bottom: 110, left: 10 });
 
 
       // Scales
@@ -79,6 +79,10 @@
       var yScale = d3.scale.linear()
         .domain(state.yExtent)
         .range([bounds.innerHeight, 0]);
+
+      var rScale = d3.scale.linear()
+        .domain(state.rExtent)
+        .range(state.rExtent);
 
 
       // Layers
@@ -94,7 +98,7 @@
           return v <= 0.1 ? 0 : xScale(v);
         }, xAcc))
         .y(sszvis.fn.compose(yScale, yAcc))
-        .radius(rAcc)
+        .radius(sszvis.fn.compose(rScale, rAcc))
         .fill(sszvis.color.values.basicBlue)
         .stroke(sszvis.color.values.plainWhite);
 
@@ -116,6 +120,11 @@
         .height(bounds.innerHeight)
         .caption('Dies ist ein Datenbereich');
 
+      var radiusLegend = sszvis.legend.radius()
+        .scale(rScale)
+        .fill(sszvis.color.values.basicBlue)
+        .stroke(sszvis.color.values.plainWhite);
+
 
       // Rendering
 
@@ -125,6 +134,10 @@
       chartLayer.selectGroup('dataArea')
         .datum([1])
         .call(annotation);
+
+      chartLayer.selectGroup('radLegend')
+        .attr('transform', sszvis.fn.translateString(30, bounds.innerHeight + 70))
+        .call(radiusLegend);
 
       chartLayer.selectGroup('xAxis')
         .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
