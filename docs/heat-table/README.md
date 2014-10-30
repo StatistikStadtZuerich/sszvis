@@ -60,7 +60,7 @@ The following configuration options are available:
 }
 ```
 
-### Binned Color Scale
+### Binned Color Scale - Chunks
 
 ```project
 {
@@ -76,6 +76,28 @@ The following configuration options are available:
     "size": {
         "width": 516,
         "height": 350
+    }
+}
+```
+
+### Binned Color Scale - Linear
+
+For more on the different ways to construct binned color scales from a range of values, see: http://uxblog.idvsolutions.com/2011/10/telling-truth.html
+
+```project
+{
+    "name": "heat-table-binned-linear",
+    "files": {
+        "index.html": "docs/heat-table/ht-binned-linear.html",
+        "data.csv": "docs/heat-table/data/HT_binned_linear.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 516
     }
 }
 ```

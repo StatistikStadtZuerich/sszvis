@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Heat Table – Binned</title>
+</head>
+<body style="margin:0;padding:0;">
+  <link href='../../sszvis.css' rel='stylesheet' />
+  <script src="../../vendor/d3/d3.min.js"></script>
+  <script src="../../sszvis.js"></script>
+
+  <div id="sszvis-chart"></div>
+
+  <script data-catalog-project-expose="script.js">
+  (function() {
+    'use strict';
+
+    /* Shortcuts
+    ----------------------------------------------- */
+    var xAcc = sszvis.fn.prop('g1');
+    var yAcc = sszvis.fn.prop('g2');
+    var cAcc = sszvis.fn.prop('value');
+
+
+    /* Application state
+    ----------------------------------------------- */
+    var state = {
+      data: [],
+      g1List: [],
+      g2List: [],
+      valueDomain: [0, 0],
+      selection: []
+    };
+
+
+    /* State transitions
+    ----------------------------------------------- */
+    var actions = {
+      prepareState: function(data) {
+        state.data = data;
+        state.g1List = sszvis.fn.set(state.data, xAcc);
+        state.g2List = sszvis.fn.set(state.data, yAcc);
+        state.valueDomain = d3.extent(state.data, cAcc);
+
+        render(state);
+      },
+
+      showTooltip: function(datum) {
+        state.selection = [datum];
+        render(state);
+      },
+
+      hideTooltip: function() {
+        state.selection = [];
+        render(state);
+      }
+    };
+
+
+    /* Data initialization
+    ----------------------------------------------- */
+    d3.csv('data/HT_binned_linear.csv')
+      .row(function(d) {
+        return {
+          g1: d['Group1'],
+          g2: d['Group2'],
+          value: sszvis.parse.number(d['Value'])
+        };
+      })
+      .get(function(error, data) {
+        error ? sszvis.loadError(error) : actions.prepareState(data);
+      });
+
+
+    /* Render
+    ----------------------------------------------- */
+    function render(state) {
+      var bounds = sszvis.bounds({ width: 516, height: 516, top: 60, right: 0, bottom: 140, left: 60 });
+      var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.g1List.length, state.g2List.length);
+
+
+      // Scales
+
+      var xScale = d3.scale.ordinal()
+        .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
+        .domain(state.g1List);
+
+      var yScale = d3.scale.ordinal()
+        .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
+        .domain(state.g2List);
+
+      // these are the internal edges of the bins used for the color scale
+      // IMPORTANT: because of the way d3.scale.threshold works,
+      // do not specify fixed upper and lower bounds
+      // anything less than or equal to the first element in binEdges will be grouped in the first bin,
+      // and anything greater than or equal to the last element will be grouped in the last bin
+      var binEdges = d3.range(100, 1000, 100);
+      // create a linear color interpolator for generating the output range of bin colors
+      var interpolateColor = sszvis.scale.colorScale()
+        .domain(state.valueDomain) // the same as the data domain
+        .range(sszvis.color.ranges.sequential.valued.blue);
+      // the color bins are created by taking samples at equal spots along the data domain
+      // binColors.length must equal binEdges.length + 1
+      var binColors = d3.range(0, 10001, 110).map(function(v) { return interpolateColor(v); });
+      // for the threshold scale, the number of values in the range must be one greater than the
+      // number of values in the domain.
+      var colorScale = d3.scale.threshold()
+        .domain(binEdges)
+        .range(binColors);
+
+      var xValue = sszvis.fn.compose(xScale, xAcc);
+      var yValue = sszvis.fn.compose(yScale, yAcc);
+      var cValue = sszvis.fn.compose(colorScale, cAcc);
+
+
+      // Layers
+
+      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+        .datum(state.data);
+
+      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+        .datum(state.selection);
+
+
+      // Components
+
+      var barGen = sszvis.component.bar()
+        .x(xValue)
+        .y(yValue)
+        .width(tableDimensions.side)
+        .height(tableDimensions.side)
+        .fill(cValue)
+        .stroke(function(d) {
+          return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
+        });
+
+      var xAxis = sszvis.axis.x.ordinal()
+        .scale(xScale)
+        .orient('top')
+        .tickSize(0, 0)
+        .tickPadding(0)
+        .title('Group 1')
+        .titleOffset(20);
+
+      var yAxis = sszvis.axis.y.ordinal()
+        .scale(yScale)
+        .orient('left')
+        .title('Group 2')
+        .titleOffset(10);
+
+      var displayValues = binEdges.concat([0, 1000]).sort(d3.ascending);
+      var legend = sszvis.legend.binnedColorScale()
+        .scale(colorScale)
+        .displayValues(displayValues)
+        .width(tableDimensions.width)
+        .units('Units');
+
+      var tooltipHeaderText = sszvis.component.modularText()
+        .bold(cAcc).plain('Units');
+
+      // FIXME: improve styling of text, possibly include tabular layout
+      var tooltipBodyText = sszvis.component.modularText()
+        .plain('Group 1 Value:').plain(xAcc)
+        .newline()
+        .plain('Group 2 Value:').plain(yAcc);
+
+      var tooltip = sszvis.component.tooltip()
+        .renderInto(tooltipLayer)
+        .header(tooltipHeaderText)
+        .body(tooltipBodyText)
+        .visible(isSelected);
+
+
+      // Rendering
+
+      var bars = chartLayer.selectGroup('bars')
+        .call(barGen);
+
+      bars.selectAll('[data-tooltip-anchor]')
+        .call(tooltip);
+
+
+      chartLayer.selectGroup('xAxis')
+        .attr('transform', 'translate(0, -10)')
+        .call(xAxis);
+
+      chartLayer.selectGroup('yAxis')
+        .attr('transform', 'translate(-10, 0)')
+        .call(yAxis);
+
+      chartLayer.selectGroup('legend')
+        .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 30))
+        .call(legend);
+
+
+      // Interaction
+
+      bars.selectAll('.sszvis-bar')
+        .on('mouseover', actions.showTooltip)
+        .on('mouseout',  actions.hideTooltip);
+
+    }
+
+
+    /* Helper functions
+    ----------------------------------------------- */
+    function isSelected(d) {
+      return state.selection.indexOf(d) >= 0;
+    }
+
+
+  }());
+  </script>
+</body>
+</html>
