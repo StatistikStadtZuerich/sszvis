@@ -8,9 +8,6 @@ namespace('sszvis.axis', function(module) {
 
   module.exports = (function() {
 
-    var fn = sszvis.fn;
-    var format = sszvis.format;
-
     var stringEqual = function(a, b) {
       return a.toString() === b.toString();
     };
@@ -85,7 +82,7 @@ namespace('sszvis.axis', function(module) {
               });
           }
 
-          if (fn.defined(props.textWrap)) {
+          if (sszvis.fn.defined(props.textWrap)) {
             group.selectAll('text')
               .call(sszvis.component.textWrap, props.textWrap);
           }
@@ -164,7 +161,7 @@ namespace('sszvis.axis', function(module) {
         .ticks(3)
         .tickSize(4, 7)
         .tickPadding(7)
-        .tickFormat(format.number)
+        .tickFormat(sszvis.format.number)
     };
 
     axis_x.time = function() {
@@ -179,7 +176,7 @@ namespace('sszvis.axis', function(module) {
         // that allows you to set a custom number of ticks,
         // including the first and last value in the ordinal scale
         .prop('ticks', set_ordinal_ticks)
-        .tickFormat(format.text);
+        .tickFormat(sszvis.format.text);
     };
 
     // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
@@ -203,7 +200,7 @@ namespace('sszvis.axis', function(module) {
         .tickFormat(function(v) {
           // this tick format means that the axis appears to be divergent around 0
           // when in fact it is -domain[1] -> +domain[1]
-          return format.number(Math.abs(v));
+          return sszvis.format.number(Math.abs(v));
         });
     };
 
@@ -213,7 +210,7 @@ namespace('sszvis.axis', function(module) {
         .tickSize(0, 0)
         .tickPadding(0)
         .tickFormat(function(d) {
-          return 0 === d ? null : format.number(d);
+          return 0 === d ? null : sszvis.format.number(d);
         })
         .vertical(true);
     };
@@ -226,7 +223,7 @@ namespace('sszvis.axis', function(module) {
       return axis_y()
         // add custom 'ticks' function
         .prop('ticks', set_ordinal_ticks)
-        .tickFormat(format.text);
+        .tickFormat(sszvis.format.text);
     };
 
     return {

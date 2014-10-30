@@ -315,6 +315,321 @@
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * Axis component based on the d3.axis interface
+ *
+ * @see https://github.com/mbostock/d3/wiki/SVG-Axes
+ * @module sszvis/axis
+ */
+namespace('sszvis.axis', function(module) {
+
+  module.exports = (function() {
+
+    var stringEqual = function(a, b) {
+      return a.toString() === b.toString();
+    };
+
+    var axisTimeFormat = d3.time.format.multi([
+      [".%L", function(d) { return d.getMilliseconds(); }],
+      [":%S", function(d) { return d.getSeconds(); }],
+      ["%I:%M", function(d) { return d.getMinutes(); }],
+      ["%I %p", function(d) { return d.getHours(); }],
+      ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
+      ["%b %d", function(d) { return d.getDate() != 1; }],
+      ["%B", function(d) { return d.getMonth(); }],
+      ["%Y", function() { return true; }]
+    ]);
+
+    var axis = function() {
+      var axisDelegate = d3.svg.axis();
+
+      var axisComponent = d3.component()
+        .delegate('scale', axisDelegate)
+        .delegate('orient', axisDelegate)
+        .delegate('ticks', axisDelegate)
+        .delegate('tickValues', axisDelegate)
+        .delegate('tickSize', axisDelegate)
+        .delegate('innerTickSize', axisDelegate)
+        .delegate('outerTickSize', axisDelegate)
+        .delegate('tickPadding', axisDelegate)
+        .delegate('tickFormat', axisDelegate)
+        .prop('vertical').vertical(false)
+        .prop('alignOuterLabels').alignOuterLabels(false)
+        .prop('highlight')
+        .prop('halo')
+        .prop('textWrap')
+        .prop('slant')
+        .prop('title')
+        .prop('titleOffset').titleOffset(0)
+        .render(function() {
+          var selection = d3.select(this);
+          var props = selection.props();
+
+          var group = selection.selectGroup('sszvis-axis')
+            .classed('sszvis-axis', true)
+            .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
+            .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
+            .classed('sszvis-axis--vertical', props.vertical)
+            .classed('sszvis-axis--halo', props.halo)
+            .attr('transform', 'translate(0, 2)')
+            .call(axisDelegate);
+
+          if (props.highlight) {
+            group.selectAll('.tick')
+              .classed('active', function(d) {
+                return [].concat(props.highlight).reduce(function(found, highlight) {
+                  return found || stringEqual(highlight, d);
+                }, false)
+              });
+          }
+
+          if (props.alignOuterLabels) {
+            var extent = d3.extent(axisDelegate.scale().domain());
+            var min = extent[0];
+            var max = extent[1];
+
+            group.selectAll('g.tick text')
+              .style('text-anchor', function(d) {
+                if (stringEqual(d, min)) {
+                  return 'start';
+                } else if (stringEqual(d, max)) {
+                  return 'end';
+                }
+                return 'middle';
+              });
+          }
+
+          if (sszvis.fn.defined(props.textWrap)) {
+            group.selectAll('text')
+              .call(sszvis.component.textWrap, props.textWrap);
+          }
+
+          if (props.slant) {
+            group.selectAll("text")
+              .call(slantLabel[axisDelegate.orient()][props.slant]);
+          }
+
+          if (props.title) {
+            var title = group.selectAll('.sszvis-axis--title')
+              .data([props.title]);
+
+            title.enter()
+              .append('text')
+              .classed('sszvis-axis--title', true);
+
+            title.exit().remove();
+
+            title
+              .text(function(d) { return d; })
+              .attr('transform', function(d) {
+                var scale = axisDelegate.scale(),
+                    extent = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range()),
+                    halfWay = (extent[0] + extent[1]) / 2,
+                    orientation = axisDelegate.orient();
+                if (orientation === 'left') {
+                  return 'translate(0, ' + -props.titleOffset + ')';
+                } else if (orientation === 'right') {
+                  return 'translate(0, ' + -props.titleOffset + ')';
+                } else if (orientation === 'top') {
+                  return 'translate(' + halfWay + ', ' + -props.titleOffset + ')';
+                } else if (orientation === 'bottom') {
+                  return 'translate(' + halfWay + ', ' + props.titleOffset + ')';
+                }
+              })
+              .style('text-anchor', function(d) {
+                var orientation = axisDelegate.orient();
+                if (orientation === 'left') {
+                  return 'end';
+                } else if (orientation === 'right') {
+                  return 'start';
+                } else if (orientation === 'top' || orientation === 'bottom') {
+                  return 'middle';
+                }
+              });
+          }
+        });
+
+        axisComponent.__delegate = axisDelegate;
+
+        return axisComponent;
+    };
+
+    var set_ordinal_ticks = function(count) {
+      // in this function, the "this" context should be an sszvis.axis
+      var domain = this.scale().domain(),
+          values = [],
+          step = Math.round(domain.length / count);
+
+      // include the first value
+      if (typeof domain[0] !== 'undefined') values.push(domain[0]);
+      for (var i = step, l = domain.length; i < l - 1; i += step) {
+        if (typeof domain[i] !== 'undefined') values.push(domain[i]);
+      }
+      // include the last value
+      if (typeof domain[domain.length - 1] !== 'undefined') values.push(domain[domain.length - 1]);
+
+      this.tickValues(values);
+
+      return count;
+    };
+
+    var axis_x = function() {
+      return axis()
+        .ticks(3)
+        .tickSize(4, 7)
+        .tickPadding(7)
+        .tickFormat(sszvis.format.number)
+    };
+
+    axis_x.time = function() {
+      return axis_x()
+        .tickFormat(axisTimeFormat)
+        .alignOuterLabels(true);
+    };
+
+    axis_x.ordinal = function() {
+      return axis_x()
+        // extend this class a little with a custom implementation of 'ticks'
+        // that allows you to set a custom number of ticks,
+        // including the first and last value in the ordinal scale
+        .prop('ticks', set_ordinal_ticks)
+        .tickFormat(sszvis.format.text);
+    };
+
+    // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
+    axis_x.pyramid = function() {
+      return axis_x()
+        .ticks(10)
+        .prop('scale', function(s) {
+          var extended = s.copy(),
+              domain = extended.domain(),
+              range = extended.range();
+
+          extended
+            // the domain is mirrored - ±domain[1]
+            .domain([-domain[1], domain[1]])
+            // the range is mirrored – ±range[1]
+            .range([range[0] - range[1], range[0] + range[1]]);
+
+          this.__delegate.scale(extended);
+          return extended;
+        })
+        .tickFormat(function(v) {
+          // this tick format means that the axis appears to be divergent around 0
+          // when in fact it is -domain[1] -> +domain[1]
+          return sszvis.format.number(Math.abs(v));
+        });
+    };
+
+    var axis_y = function() {
+      return axis()
+        .ticks(7)
+        .tickSize(0, 0)
+        .tickPadding(0)
+        .tickFormat(function(d) {
+          return 0 === d ? null : sszvis.format.number(d);
+        })
+        .vertical(true);
+    };
+
+    axis_y.time = function() {
+      return axis_y().tickFormat(axisTimeFormat);
+    };
+
+    axis_y.ordinal = function() {
+      return axis_y()
+        // add custom 'ticks' function
+        .prop('ticks', set_ordinal_ticks)
+        .tickFormat(sszvis.format.text);
+    };
+
+    return {
+      x: axis_x,
+      y: axis_y
+    };
+
+  }());
+
+  function scaleExtent(domain) { // borrowed from d3 source
+    var start = domain[0], stop = domain[domain.length - 1];
+    return start < stop ? [ start, stop ] : [ stop, start ];
+  }
+
+  var slantLabel = {
+    top: {
+      vertical: function(selection) {
+        selection.style("text-anchor", "start")
+          .attr("dx", "0em")
+          .attr("dy", "0.35em")
+          .attr("transform", "rotate(-90)");
+      },
+      diagonal: function(selection) {
+        selection.style("text-anchor", "start")
+          .attr("dx", "0.1em")
+          .attr("dy", "0.1em")
+          .attr("transform", "rotate(-45)");
+      }
+    },
+    bottom: {
+      vertical: function(selection) {
+        selection.style("text-anchor", "end")
+          .attr("dx", "-1em")
+          .attr("dy", "-0.75em")
+          .attr("transform", "rotate(-90)");
+      },
+      diagonal:  function(selection) {
+        selection.style("text-anchor", "end")
+          .attr("dx", "-0.8em")
+          .attr("dy", "0em")
+          .attr("transform", "rotate(-45)");
+      }
+    }
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Creates a bounds object to help with the construction of d3 charts
+ * that follow the d3 margin convention.
+ *
+ * @module sszvis/bounds
+ * @see http://bl.ocks.org/mbostock/3019563
+ *
+ * @param  {Object} bounds
+ * @return {Object}
+ */
+namespace('sszvis.bounds', function(module) {
+
+  module.exports = function(bounds) {
+    bounds || (bounds = {});
+    var height  = sszvis.fn.either(bounds.height, 100);
+    var width   = sszvis.fn.either(bounds.width, 100);
+    var padding = {
+      top:    sszvis.fn.either(bounds.top, 0),
+      right:  sszvis.fn.either(bounds.right, 0),
+      bottom: sszvis.fn.either(bounds.bottom, 0),
+      left:   sszvis.fn.either(bounds.left, 0)
+    }
+
+    return {
+      innerHeight: height - padding.top  - padding.bottom,
+      innerWidth:  width  - padding.left - padding.right,
+      padding:     padding,
+      height:      height,
+      width:       width,
+    }
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 namespace('sszvis.cascade', function(module) {
 'use strict';
 
@@ -408,44 +723,6 @@ namespace('sszvis.cascade', function(module) {
   };
 
 });
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Creates a bounds object to help with the construction of d3 charts
- * that follow the d3 margin convention.
- *
- * @module sszvis/bounds
- * @see http://bl.ocks.org/mbostock/3019563
- *
- * @param  {Object} bounds
- * @return {Object}
- */
-namespace('sszvis.bounds', function(module) {
-
-  module.exports = function(bounds) {
-    bounds || (bounds = {});
-    var height  = sszvis.fn.either(bounds.height, 100);
-    var width   = sszvis.fn.either(bounds.width, 100);
-    var padding = {
-      top:    sszvis.fn.either(bounds.top, 0),
-      right:  sszvis.fn.either(bounds.right, 0),
-      bottom: sszvis.fn.either(bounds.bottom, 0),
-      left:   sszvis.fn.either(bounds.left, 0)
-    }
-
-    return {
-      innerHeight: height - padding.top  - padding.bottom,
-      innerWidth:  width  - padding.left - padding.right,
-      padding:     padding,
-      height:      height,
-      width:       width,
-    }
-  }
-
-});
-
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -699,139 +976,76 @@ namespace('sszvis.color', function(module) {
 
 
 /**
- * @module sszvis/patterns
+ * Factory that returns an SVG element appended to the given target selector,
+ * ensuring that it is only created once, even when run again.
  *
+ * @module sszvis/createChart
+ *
+ * @param {string|d3.selection} selector
+ * @param {d3.bounds} bounds
+ *
+ * @returns {d3.selection}
  */
-namespace('sszvis.patterns', function(module) {
+namespace('sszvis.createChart', function(module) {
 
-  module.exports.ensureDefs = function(selection) {
-    var defs = selection.selectAll('defs')
-      .data([1]);
+  module.exports = function(selector, bounds) {
+    var root = d3.select(selector);
+    var svg = root.selectAll('svg').data([0]);
+    svg.enter().append('svg');
 
-    defs.enter()
-      .append('defs');
+    svg
+      .attr('height', bounds.height)
+      .attr('width',  bounds.width)
 
-    return defs;
-  };
+    var viewport = svg.selectAll('[data-d3-chart]').data([0])
+    viewport.enter().append('g')
+      .attr('data-d3-chart', '')
+      .attr('transform', 'translate(' + bounds.padding.left + ',' + bounds.padding.top + ')');
 
-  module.exports.ensurePattern = function(selection, patternId) {
-    var pattern = sszvis.patterns.ensureDefs(selection)
-      .selectAll('pattern#' + patternId)
-      .data([1])
-      .enter()
-      .append('pattern')
-      .attr('id', patternId);
+    return viewport;
+  }
 
-    return pattern;
-  };
+});
 
-  module.exports.mapMissingValuePattern = function(selection) {
-    var pWidth = 4;
-    var pHeight = 4;
-    var offset = 0.5;
 
-    selection
-      .attr('patternUnits', 'userSpaceOnUse')
-      .attr('patternContentUnits', 'userSpaceOnUse')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', pWidth)
-      .attr('height', pHeight);
+//////////////////////////////////// SECTION ///////////////////////////////////
 
-    selection
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', pWidth)
-      .attr('height', pHeight)
-      .attr('fill', '#bfbfbf');
 
-    selection
-      .append('line')
-      .attr('x1', 0)
-      .attr('y1', pHeight * offset)
-      .attr('x2', pWidth * offset)
-      .attr('y2', 0)
-      .attr('stroke', '#737373');
+/**
+ * Factory that returns an HTML element appended to the given target selector,
+ * ensuring that it is only created once, even when run again.
+ *
+ * @module sszvis/createHtmlLayer
+ *
+ * @param {string|d3.selection} selector
+ * @param {d3.bounds} [bounds]
+ *
+ * @returns {d3.selection}
+ */
+ // NOTE could be nice to add a class name
+ //so when looking at the code it is clear what the tooltip layer is
+namespace('sszvis.createHtmlLayer', function(module) {
+  'use strict';
 
-    selection
-      .append('line')
-      .attr('x1', pWidth * offset)
-      .attr('y1', pHeight)
-      .attr('x2', pWidth)
-      .attr('y2', pHeight * offset)
-      .attr('stroke', '#737373');
-  };
+  module.exports = function(selector, bounds) {
+    bounds || (bounds = sszvis.bounds());
 
-  module.exports.mapLakePattern = function(selection) {
-    var pWidth = 6;
-    var pHeight = 6;
-    var offset = 0.5;
+    var root = d3.select(selector);
+    // NOTE Why again do you need to add .data([0])?
+    var layer = root.selectAll('div').data([0]);
+    layer.enter().append('div');
 
-    selection
-      .attr('patternUnits', 'userSpaceOnUse')
-      .attr('patternContentUnits', 'userSpaceOnUse')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', pWidth)
-      .attr('height', pHeight);
+    layer.style({
+      position: 'absolute',
+      left: bounds.padding.left + 'px',
+      top: bounds.padding.top + 'px'
+    });
 
-    selection
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', pWidth)
-      .attr('height', pHeight)
-      .attr('fill', '#fff');
-
-    selection
-      .append('line')
-      .attr('x1', 0)
-      .attr('y1', pHeight * offset)
-      .attr('x2', pWidth * offset)
-      .attr('y2', 0)
-      .attr('stroke', '#d0d0d0');
-
-    selection
-      .append('line')
-      .attr('x1', pWidth * offset)
-      .attr('y1', pHeight)
-      .attr('x2', pWidth)
-      .attr('y2', pHeight * offset)
-      .attr('stroke', '#d0d0d0');
-  };
-
-  module.exports.dataAreaPattern = function(selection) {
-    var pWidth = 6;
-    var pHeight = 6;
-    var offset = 0.5;
-
-    selection
-      .attr('patternUnits', 'userSpaceOnUse')
-      .attr('patternContentUnits', 'userSpaceOnUse')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', pWidth)
-      .attr('height', pHeight);
-
-    selection
-      .append('line')
-      .attr('x1', 0)
-      .attr('y1', pHeight * offset)
-      .attr('x2', pWidth * offset)
-      .attr('y2', 0)
-      .attr('stroke', '#d0d0d0');
-
-    selection
-      .append('line')
-      .attr('x1', pWidth * offset)
-      .attr('y1', pHeight)
-      .attr('x2', pWidth)
-      .attr('y2', pHeight * offset)
-      .attr('stroke', '#d0d0d0');
+    return layer;
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -1013,32 +1227,6 @@ namespace('sszvis.fn', function(module) {
 
 
 /**
- * default transition attributes for sszvis
- *
- * @module sszvis/transition
- */
-namespace('sszvis.transition', function(module) {
-
-  var defaultEase = d3.ease('poly-out', 4);
-
-  module.exports = function(transition) {
-    transition
-      .ease(defaultEase)
-      .duration(300);
-  };
-
-  module.exports.fastTransition = function(transition) {
-    transition
-      .ease(defaultEase)
-      .duration(50);
-  };
-
-});
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
  * Formatting functions
  *
  * @module sszvis/format
@@ -1102,389 +1290,93 @@ namespace('sszvis.format', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
-/**
- * Parsing functions
- *
- * @module sszvis/parse
- */
- // NOTE Thinking out loud: Should this not be part
- //of sszvis.fn?
-namespace('sszvis.parse', function(module) {
+namespace('sszvis.legend.binnedColorScale', function(module) {
 
-  var yearParser = d3.time.format("%Y");
+  module.exports = function() {
+    return d3.component()
+      .prop('scale')
+      .prop('displayValues')
+      .prop('width').width(200)
+      .prop('units').units(false)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
 
-  module.exports = {
-    /**
-     * Parse Swiss date strings
-     * @param  {String} d A Swiss date string, e.g. 17.08.2014
-     * @return {Date}
-     */
-    date: function(d) {
-      return d3.time.format("%d.%m.%Y").parse(d);
-    },
+        if (!props.scale) return sszvis.logError('legend.binnedColorScale - a scale must be specified.');
+        if (!props.displayValues) return sszvis.logError('legend.binnedColorScale - display values must be specified.');
 
-    year: function(d) {
-      return yearParser.parse(d);
-    },
-
-    /**
-     * Parse untyped input
-     * @param  {String} d A value that could be a number
-     * @return {Number}   If d is not a number, NaN is returned
-     */
-    number: function(d) {
-      return (d.trim() === '') ? NaN : +d;
-    }
-  }
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Scale component - for implementing alternatives to d3.scale
- *
- * @module sszvis/scale
-*/
-namespace('sszvis.scale', function(module) {
-  module.exports = (function() {
-
-    var scales = {};
-
-    /**
-     * scale.colorScale
-     *
-     * Extends the built-in d3.scale.linear for use as a color scale.
-     *
-     * @return {d3.scale.linear} a d3 linear scale exposing the same API,
-     * but with certain methods overwritten.
-     */
-    scales.colorScale = function() {
-      var alteredScale = d3.scale.linear(),
-          nativeDomain = alteredScale.domain;
-
-      alteredScale.domain = function(dom) {
-        if (arguments.length === 1) {
-          var threeDomain = [dom[0], d3.mean(dom), dom[1]];
-          return nativeDomain.call(this, threeDomain);
-        } else {
-          return nativeDomain.apply(this, arguments);
-        }
-      };
-
-      return alteredScale;
-    };
-
-    /**
-     * Used to calculate a range that has some pixel-defined amount of left-hand padding,
-     * and which obeys limits on the maximum size of the 'range band' - the size of the bars -
-     * and the inner padding between the bars
-     * @param  {Int} domainLength      length of the data domain
-     * @param  {Array[2]} range             the output range, [min, max]
-     * @param  {Float} innerPaddingRatio ratio between the padding width and the rangeBand width
-     * @param  {Int} leftPadding       pixels of left padding
-     * @param  {Int} maxRangeBand      maximum size of a rangeBand
-     * @param  {Int} maxInnerPadding   maximum size of the padding
-     * @return {Obj[range, rangeBand]}                   gives a range of values that correspond to the input domain,
-     *                                                   and a size for the rangeBand.
-     */
-    scales.leftPaddedRange = function(domainLength, range, innerPaddingRatio, leftPadding, maxRangeBand, maxInnerPadding) {
-      var start = range[0],
-          stop = range[1],
-          step = (stop - start - leftPadding) / (domainLength),
-          innerPadding = Math.min(step * innerPaddingRatio, maxInnerPadding),
-          rangeBand = Math.min(step * (1 - innerPaddingRatio), maxRangeBand);
-      step = innerPadding + rangeBand;
-      range = d3.range(domainLength).map(function(i) { return start + leftPadding + step * i; });
-      return {
-        range: range,
-        rangeBand: rangeBand
-      };
-    };
-
-    return scales;
-  }());
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Axis component based on the d3.axis interface
- *
- * @see https://github.com/mbostock/d3/wiki/SVG-Axes
- * @module sszvis/axis
- */
-namespace('sszvis.axis', function(module) {
-
-  module.exports = (function() {
-
-    var fn = sszvis.fn;
-    var format = sszvis.format;
-
-    var stringEqual = function(a, b) {
-      return a.toString() === b.toString();
-    };
-
-    var axisTimeFormat = d3.time.format.multi([
-      [".%L", function(d) { return d.getMilliseconds(); }],
-      [":%S", function(d) { return d.getSeconds(); }],
-      ["%I:%M", function(d) { return d.getMinutes(); }],
-      ["%I %p", function(d) { return d.getHours(); }],
-      ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
-      ["%b %d", function(d) { return d.getDate() != 1; }],
-      ["%B", function(d) { return d.getMonth(); }],
-      ["%Y", function() { return true; }]
-    ]);
-
-    var axis = function() {
-      var axisDelegate = d3.svg.axis();
-
-      var axisComponent = d3.component()
-        .delegate('scale', axisDelegate)
-        .delegate('orient', axisDelegate)
-        .delegate('ticks', axisDelegate)
-        .delegate('tickValues', axisDelegate)
-        .delegate('tickSize', axisDelegate)
-        .delegate('innerTickSize', axisDelegate)
-        .delegate('outerTickSize', axisDelegate)
-        .delegate('tickPadding', axisDelegate)
-        .delegate('tickFormat', axisDelegate)
-        .prop('vertical').vertical(false)
-        .prop('alignOuterLabels').alignOuterLabels(false)
-        .prop('highlight')
-        .prop('halo')
-        .prop('textWrap')
-        .prop('slant')
-        .prop('title')
-        .prop('titleOffset').titleOffset(0)
-        .render(function() {
-          var selection = d3.select(this);
-          var props = selection.props();
-
-          var group = selection.selectGroup('sszvis-axis')
-            .classed('sszvis-axis', true)
-            .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
-            .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
-            .classed('sszvis-axis--vertical', props.vertical)
-            .classed('sszvis-axis--halo', props.halo)
-            .attr('transform', 'translate(0, 2)')
-            .call(axisDelegate);
-
-          if (props.highlight) {
-            group.selectAll('.tick')
-              .classed('active', function(d) {
-                return [].concat(props.highlight).reduce(function(found, highlight) {
-                  return found || stringEqual(highlight, d);
-                }, false)
-              });
-          }
-
-          if (props.alignOuterLabels) {
-            var extent = d3.extent(axisDelegate.scale().domain());
-            var min = extent[0];
-            var max = extent[1];
-
-            group.selectAll('g.tick text')
-              .style('text-anchor', function(d) {
-                if (stringEqual(d, min)) {
-                  return 'start';
-                } else if (stringEqual(d, max)) {
-                  return 'end';
-                }
-                return 'middle';
-              });
-          }
-
-          if (fn.defined(props.textWrap)) {
-            group.selectAll('text')
-              .call(sszvis.component.textWrap, props.textWrap);
-          }
-
-          if (props.slant) {
-            group.selectAll("text")
-              .call(slantLabel[axisDelegate.orient()][props.slant]);
-          }
-
-          if (props.title) {
-            var title = group.selectAll('.sszvis-axis--title')
-              .data([props.title]);
-
-            title.enter()
-              .append('text')
-              .classed('sszvis-axis--title', true);
-
-            title.exit().remove();
-
-            title
-              .text(function(d) { return d; })
-              .attr('transform', function(d) {
-                var scale = axisDelegate.scale(),
-                    extent = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range()),
-                    halfWay = (extent[0] + extent[1]) / 2,
-                    orientation = axisDelegate.orient();
-                if (orientation === 'left') {
-                  return 'translate(0, ' + -props.titleOffset + ')';
-                } else if (orientation === 'right') {
-                  return 'translate(0, ' + -props.titleOffset + ')';
-                } else if (orientation === 'top') {
-                  return 'translate(' + halfWay + ', ' + -props.titleOffset + ')';
-                } else if (orientation === 'bottom') {
-                  return 'translate(' + halfWay + ', ' + props.titleOffset + ')';
-                }
-              })
-              .style('text-anchor', function(d) {
-                var orientation = axisDelegate.orient();
-                if (orientation === 'left') {
-                  return 'end';
-                } else if (orientation === 'right') {
-                  return 'start';
-                } else if (orientation === 'top' || orientation === 'bottom') {
-                  return 'middle';
-                }
-              });
-          }
+        var barWidth = d3.scale.linear()
+          .domain(d3.extent(props.displayValues))
+          .range([0, props.width]);
+        var sum = 0;
+        var rectData = [];
+        d3.pairs(props.displayValues).forEach(function(p) {
+          var w = barWidth(p[1]) - sum;
+          rectData.push({
+            x: sum,
+            w: w,
+            c: props.scale(p[0]),
+            p0: p[0],
+            p1: p[1]
+          });
+          sum += w;
         });
 
-        axisComponent.__delegate = axisDelegate;
+        var segHeight = 10;
 
-        return axisComponent;
-    };
+        var segments = selection.selectAll('rect.sszvis-legend--mark')
+          .data(rectData);
 
-    var set_ordinal_ticks = function(count) {
-      // in this function, the "this" context should be an sszvis.axis
-      var domain = this.scale().domain(),
-          values = [],
-          step = Math.round(domain.length / count);
+        segments.enter()
+          .append('rect')
+          .classed('sszvis-legend--mark', true);
 
-      // include the first value
-      if (typeof domain[0] !== 'undefined') values.push(domain[0]);
-      for (var i = step, l = domain.length; i < l - 1; i += step) {
-        if (typeof domain[i] !== 'undefined') values.push(domain[i]);
-      }
-      // include the last value
-      if (typeof domain[domain.length - 1] !== 'undefined') values.push(domain[domain.length - 1]);
+        segments.exit().remove();
 
-      this.tickValues(values);
+        segments
+          .attr('x', sszvis.fn.prop('x'))
+          .attr('y', 0)
+          .attr('width', sszvis.fn.prop('w'))
+          .attr('height', segHeight)
+          .attr('fill', sszvis.fn.prop('c'));
 
-      return count;
-    };
-
-    var axis_x = function() {
-      return axis()
-        .ticks(3)
-        .tickSize(4, 7)
-        .tickPadding(7)
-        .tickFormat(format.number)
-    };
-
-    axis_x.time = function() {
-      return axis_x()
-        .tickFormat(axisTimeFormat)
-        .alignOuterLabels(true);
-    };
-
-    axis_x.ordinal = function() {
-      return axis_x()
-        // extend this class a little with a custom implementation of 'ticks'
-        // that allows you to set a custom number of ticks,
-        // including the first and last value in the ordinal scale
-        .prop('ticks', set_ordinal_ticks)
-        .tickFormat(format.text);
-    };
-
-    // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
-    axis_x.pyramid = function() {
-      return axis_x()
-        .ticks(10)
-        .prop('scale', function(s) {
-          var extended = s.copy(),
-              domain = extended.domain(),
-              range = extended.range();
-
-          extended
-            // the domain is mirrored - ±domain[1]
-            .domain([-domain[1], domain[1]])
-            // the range is mirrored – ±range[1]
-            .range([range[0] - range[1], range[0] + range[1]]);
-
-          this.__delegate.scale(extended);
-          return extended;
-        })
-        .tickFormat(function(v) {
-          // this tick format means that the axis appears to be divergent around 0
-          // when in fact it is -domain[1] -> +domain[1]
-          return format.number(Math.abs(v));
+        var labelData = rectData.concat({
+          x: sum,
+          p0: sszvis.fn.last(rectData).p1
         });
-    };
 
-    var axis_y = function() {
-      return axis()
-        .ticks(7)
-        .tickSize(0, 0)
-        .tickPadding(0)
-        .tickFormat(function(d) {
-          return 0 === d ? null : format.number(d);
-        })
-        .vertical(true);
-    };
+        var lines = selection.selectAll('line.sszvis-legend--mark')
+          .data(labelData);
 
-    axis_y.time = function() {
-      return axis_y().tickFormat(axisTimeFormat);
-    };
+        lines.enter()
+          .append('line')
+          .classed('sszvis-legend--mark', true);
 
-    axis_y.ordinal = function() {
-      return axis_y()
-        // add custom 'ticks' function
-        .prop('ticks', set_ordinal_ticks)
-        .tickFormat(format.text);
-    };
+        lines.exit().remove();
 
-    return {
-      x: axis_x,
-      y: axis_y
-    };
+        lines
+          .attr('x1', function(d) { return Math.round(d.x); })
+          .attr('x2', function(d) { return Math.round(d.x); })
+          .attr('y1', 0)
+          .attr('y2', segHeight + 4)
+          .attr('stroke', '#909090');
 
-  }());
+        var labels = selection.selectAll('.sszvis-legend--label')
+          .data(labelData);
 
-  function scaleExtent(domain) { // borrowed from d3 source
-    var start = domain[0], stop = domain[domain.length - 1];
-    return start < stop ? [ start, stop ] : [ stop, start ];
-  }
+        labels.enter()
+          .append('text')
+          .classed('sszvis-legend--label', true);
 
-  var slantLabel = {
-    top: {
-      vertical: function(selection) {
-        selection.style("text-anchor", "start")
-          .attr("dx", "0em")
-          .attr("dy", "0.35em")
-          .attr("transform", "rotate(-90)");
-      },
-      diagonal: function(selection) {
-        selection.style("text-anchor", "start")
-          .attr("dx", "0.1em")
-          .attr("dy", "0.1em")
-          .attr("transform", "rotate(-45)");
-      }
-    },
-    bottom: {
-      vertical: function(selection) {
-        selection.style("text-anchor", "end")
-          .attr("dx", "-1em")
-          .attr("dy", "-0.75em")
-          .attr("transform", "rotate(-90)");
-      },
-      diagonal:  function(selection) {
-        selection.style("text-anchor", "end")
-          .attr("dx", "-0.8em")
-          .attr("dy", "0em")
-          .attr("transform", "rotate(-45)");
-      }
-    }
+        labels.exit().remove();
+
+        labels
+          .attr('text-anchor', 'middle')
+          .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
+          .text(function(d) {
+            return d.p0;
+          });
+      });
   };
 
 });
@@ -1680,101 +1572,6 @@ namespace('sszvis.legend.linearColorScale', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
-namespace('sszvis.legend.binnedColorScale', function(module) {
-
-  module.exports = function() {
-    return d3.component()
-      .prop('scale')
-      .prop('displayValues')
-      .prop('width').width(200)
-      .prop('units').units(false)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        if (!props.scale) return sszvis.logError('legend.binnedColorScale - a scale must be specified.');
-        if (!props.displayValues) return sszvis.logError('legend.binnedColorScale - display values must be specified.');
-
-        var barWidth = d3.scale.linear()
-          .domain(d3.extent(props.displayValues))
-          .range([0, props.width]);
-        var sum = 0;
-        var rectData = [];
-        d3.pairs(props.displayValues).forEach(function(p) {
-          var w = barWidth(p[1]) - sum;
-          rectData.push({
-            x: sum,
-            w: w,
-            c: props.scale(p[0]),
-            p0: p[0],
-            p1: p[1]
-          });
-          sum += w;
-        });
-
-        var segHeight = 10;
-
-        var segments = selection.selectAll('rect.sszvis-legend--mark')
-          .data(rectData);
-
-        segments.enter()
-          .append('rect')
-          .classed('sszvis-legend--mark', true);
-
-        segments.exit().remove();
-
-        segments
-          .attr('x', sszvis.fn.prop('x'))
-          .attr('y', 0)
-          .attr('width', sszvis.fn.prop('w'))
-          .attr('height', segHeight)
-          .attr('fill', sszvis.fn.prop('c'));
-
-        var labelData = rectData.concat({
-          x: sum,
-          p0: sszvis.fn.last(rectData).p1
-        });
-
-        var lines = selection.selectAll('line.sszvis-legend--mark')
-          .data(labelData);
-
-        lines.enter()
-          .append('line')
-          .classed('sszvis-legend--mark', true);
-
-        lines.exit().remove();
-
-        lines
-          .attr('x1', function(d) { return Math.round(d.x); })
-          .attr('x2', function(d) { return Math.round(d.x); })
-          .attr('y1', 0)
-          .attr('y2', segHeight + 4)
-          .attr('stroke', '#909090');
-
-        var labels = selection.selectAll('.sszvis-legend--label')
-          .data(labelData);
-
-        labels.enter()
-          .append('text')
-          .classed('sszvis-legend--label', true);
-
-        labels.exit().remove();
-
-        labels
-          .attr('text-anchor', 'middle')
-          .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
-          .text(function(d) {
-            return d.p0;
-          });
-      });
-  };
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
 /**
  * Handle data load errors in a standardized way
  *
@@ -1829,33 +1626,38 @@ namespace('sszvis.logError', function(module) {
 
 
 /**
- * Factory that returns an SVG element appended to the given target selector,
- * ensuring that it is only created once, even when run again.
+ * Parsing functions
  *
- * @module sszvis/createChart
- *
- * @param {string|d3.selection} selector
- * @param {d3.bounds} bounds
- *
- * @returns {d3.selection}
+ * @module sszvis/parse
  */
-namespace('sszvis.createChart', function(module) {
+ // NOTE Thinking out loud: Should this not be part
+ //of sszvis.fn?
+namespace('sszvis.parse', function(module) {
 
-  module.exports = function(selector, bounds) {
-    var root = d3.select(selector);
-    var svg = root.selectAll('svg').data([0]);
-    svg.enter().append('svg');
+  var yearParser = d3.time.format("%Y");
 
-    svg
-      .attr('height', bounds.height)
-      .attr('width',  bounds.width)
+  module.exports = {
+    /**
+     * Parse Swiss date strings
+     * @param  {String} d A Swiss date string, e.g. 17.08.2014
+     * @return {Date}
+     */
+    date: function(d) {
+      return d3.time.format("%d.%m.%Y").parse(d);
+    },
 
-    var viewport = svg.selectAll('[data-d3-chart]').data([0])
-    viewport.enter().append('g')
-      .attr('data-d3-chart', '')
-      .attr('transform', 'translate(' + bounds.padding.left + ',' + bounds.padding.top + ')');
+    year: function(d) {
+      return yearParser.parse(d);
+    },
 
-    return viewport;
+    /**
+     * Parse untyped input
+     * @param  {String} d A value that could be a number
+     * @return {Number}   If d is not a number, NaN is returned
+     */
+    number: function(d) {
+      return (d.trim() === '') ? NaN : +d;
+    }
   }
 
 });
@@ -1865,40 +1667,235 @@ namespace('sszvis.createChart', function(module) {
 
 
 /**
- * Factory that returns an HTML element appended to the given target selector,
- * ensuring that it is only created once, even when run again.
+ * @module sszvis/patterns
  *
- * @module sszvis/createHtmlLayer
- *
- * @param {string|d3.selection} selector
- * @param {d3.bounds} [bounds]
- *
- * @returns {d3.selection}
  */
- // NOTE could be nice to add a class name
- //so when looking at the code it is clear what the tooltip layer is
-namespace('sszvis.createHtmlLayer', function(module) {
-  'use strict';
+namespace('sszvis.patterns', function(module) {
 
-  module.exports = function(selector, bounds) {
-    bounds || (bounds = sszvis.bounds());
+  module.exports.ensureDefs = function(selection) {
+    var defs = selection.selectAll('defs')
+      .data([1]);
 
-    var root = d3.select(selector);
-    // NOTE Why again do you need to add .data([0])?
-    var layer = root.selectAll('div').data([0]);
-    layer.enter().append('div');
+    defs.enter()
+      .append('defs');
 
-    layer.style({
-      position: 'absolute',
-      left: bounds.padding.left + 'px',
-      top: bounds.padding.top + 'px'
-    });
+    return defs;
+  };
 
-    return layer;
+  module.exports.ensurePattern = function(selection, patternId) {
+    var pattern = sszvis.patterns.ensureDefs(selection)
+      .selectAll('pattern#' + patternId)
+      .data([1])
+      .enter()
+      .append('pattern')
+      .attr('id', patternId);
+
+    return pattern;
+  };
+
+  module.exports.mapMissingValuePattern = function(selection) {
+    var pWidth = 4;
+    var pHeight = 4;
+    var offset = 0.5;
+
+    selection
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('patternContentUnits', 'userSpaceOnUse')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight);
+
+    selection
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight)
+      .attr('fill', '#bfbfbf');
+
+    selection
+      .append('line')
+      .attr('x1', 0)
+      .attr('y1', pHeight * offset)
+      .attr('x2', pWidth * offset)
+      .attr('y2', 0)
+      .attr('stroke', '#737373');
+
+    selection
+      .append('line')
+      .attr('x1', pWidth * offset)
+      .attr('y1', pHeight)
+      .attr('x2', pWidth)
+      .attr('y2', pHeight * offset)
+      .attr('stroke', '#737373');
+  };
+
+  module.exports.mapLakePattern = function(selection) {
+    var pWidth = 6;
+    var pHeight = 6;
+    var offset = 0.5;
+
+    selection
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('patternContentUnits', 'userSpaceOnUse')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight);
+
+    selection
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight)
+      .attr('fill', '#fff');
+
+    selection
+      .append('line')
+      .attr('x1', 0)
+      .attr('y1', pHeight * offset)
+      .attr('x2', pWidth * offset)
+      .attr('y2', 0)
+      .attr('stroke', '#d0d0d0');
+
+    selection
+      .append('line')
+      .attr('x1', pWidth * offset)
+      .attr('y1', pHeight)
+      .attr('x2', pWidth)
+      .attr('y2', pHeight * offset)
+      .attr('stroke', '#d0d0d0');
+  };
+
+  module.exports.dataAreaPattern = function(selection) {
+    var pWidth = 6;
+    var pHeight = 6;
+    var offset = 0.5;
+
+    selection
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('patternContentUnits', 'userSpaceOnUse')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', pWidth)
+      .attr('height', pHeight);
+
+    selection
+      .append('line')
+      .attr('x1', 0)
+      .attr('y1', pHeight * offset)
+      .attr('x2', pWidth * offset)
+      .attr('y2', 0)
+      .attr('stroke', '#d0d0d0');
+
+    selection
+      .append('line')
+      .attr('x1', pWidth * offset)
+      .attr('y1', pHeight)
+      .attr('x2', pWidth)
+      .attr('y2', pHeight * offset)
+      .attr('stroke', '#d0d0d0');
   };
 
 });
 
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Scale component - for implementing alternatives to d3.scale
+ *
+ * @module sszvis/scale
+*/
+namespace('sszvis.scale', function(module) {
+  module.exports = (function() {
+
+    var scales = {};
+
+    /**
+     * scale.colorScale
+     *
+     * Extends the built-in d3.scale.linear for use as a color scale.
+     *
+     * @return {d3.scale.linear} a d3 linear scale exposing the same API,
+     * but with certain methods overwritten.
+     */
+    scales.colorScale = function() {
+      var alteredScale = d3.scale.linear(),
+          nativeDomain = alteredScale.domain;
+
+      alteredScale.domain = function(dom) {
+        if (arguments.length === 1) {
+          var threeDomain = [dom[0], d3.mean(dom), dom[1]];
+          return nativeDomain.call(this, threeDomain);
+        } else {
+          return nativeDomain.apply(this, arguments);
+        }
+      };
+
+      return alteredScale;
+    };
+
+    /**
+     * Used to calculate a range that has some pixel-defined amount of left-hand padding,
+     * and which obeys limits on the maximum size of the 'range band' - the size of the bars -
+     * and the inner padding between the bars
+     * @param  {Int} domainLength      length of the data domain
+     * @param  {Array[2]} range             the output range, [min, max]
+     * @param  {Float} innerPaddingRatio ratio between the padding width and the rangeBand width
+     * @param  {Int} leftPadding       pixels of left padding
+     * @param  {Int} maxRangeBand      maximum size of a rangeBand
+     * @param  {Int} maxInnerPadding   maximum size of the padding
+     * @return {Obj[range, rangeBand]}                   gives a range of values that correspond to the input domain,
+     *                                                   and a size for the rangeBand.
+     */
+    scales.leftPaddedRange = function(domainLength, range, innerPaddingRatio, leftPadding, maxRangeBand, maxInnerPadding) {
+      var start = range[0],
+          stop = range[1],
+          step = (stop - start - leftPadding) / (domainLength),
+          innerPadding = Math.min(step * innerPaddingRatio, maxInnerPadding),
+          rangeBand = Math.min(step * (1 - innerPaddingRatio), maxRangeBand);
+      step = innerPadding + rangeBand;
+      range = d3.range(domainLength).map(function(i) { return start + leftPadding + step * i; });
+      return {
+        range: range,
+        rangeBand: rangeBand
+      };
+    };
+
+    return scales;
+  }());
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * default transition attributes for sszvis
+ *
+ * @module sszvis/transition
+ */
+namespace('sszvis.transition', function(module) {
+
+  var defaultEase = d3.ease('poly-out', 4);
+
+  module.exports = function(transition) {
+    transition
+      .ease(defaultEase)
+      .duration(300);
+  };
+
+  module.exports.fastTransition = function(transition) {
+    transition
+      .ease(defaultEase)
+      .duration(50);
+  };
+
+});
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
