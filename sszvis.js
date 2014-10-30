@@ -1091,6 +1091,22 @@ namespace('sszvis.fn', function(module) {
       }
     },
 
+    /**
+     * fn.compose
+     *
+     * Returns the composition of a set of functions, in arguments order.
+     * For example, if functions F, G, and H are passed as arguments:
+     *
+     * A = fn.compose(F, G, H)
+     *
+     * A will be a function which returns F(G(H(...arguments to A...)))
+     * so that A(x) === F(G(H(x)))
+     *
+     * Note: all composed functions but the last should be of arity 1.
+     *
+     * @param {Function...} ... Accepts any number of functions as arguments
+     * @return {Function} returns a function which is the composition of the passed functions
+     */
     compose: function() {
       var fns = arguments,
           start = arguments.length - 1;
@@ -1103,9 +1119,10 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * colorRange - like d3.range, but both arguments are required.
+     * fn.colorRange - like d3.range, but both arguments are required.
      * provides a linear color range with n values,
-     * sampled using the given array of colors
+     * sampled using the given array of colors.
+     *
      * @param  {Array} colors [an array of colors from which the range is sampled]
      * @param  {Number} n  [the number of samples to return]
      * @return {Array} An array of n colors
@@ -1115,20 +1132,57 @@ namespace('sszvis.fn', function(module) {
       return d3.range(n + 1).map(function(i) { return interp(i / n); });
     },
 
+    /**
+     * fn.constant
+     *
+     * Returns a function which returns a constant value.
+     *
+     * @param  {*} value A value for the constant
+     * @return {Function}       A function which always returns the constant value.
+     */
     constant: function(value) {
       return function() {
         return value;
       };
     },
 
+    /**
+     * fn.defined
+     *
+     * determines if the passed value is defined.
+     *
+     * @param  {*} val the value to check
+     * @return {Boolean}     true if the value is defined, false if the value is undefined
+     */
     defined: function(val) {
       return typeof val !== 'undefined';
     },
 
+    /**
+     * fn.either
+     *
+     * used to check if a value is undefined. If it is, returns
+     * the fallback value. If not, returns the passed value.
+     *
+     * @param  {*} val      A value to be checked for undefined
+     * @param  {*} fallback A value to return if val is undefined
+     * @return {*}          Either val or fallback, depending on whether or not val is undefined.
+     */
     either: function(val, fallback) {
       return (typeof val === 'undefined') ? fallback : val;
     },
 
+    /**
+     * fn.find
+     *
+     * given a predicate function and a list, returns the first value
+     * in the list such that the predicate function returns true
+     * when passed that value.
+     *
+     * @param  {Function} predicate A predicate function to be called on elements in the list
+     * @param  {Array} list      An array in which to search for a truthy predicate value
+     * @return {*}           the first value in the array for which the predicate returns true.
+     */
     find: function(predicate, list) {
       var idx = -1;
       var len = list.length;
@@ -1137,10 +1191,26 @@ namespace('sszvis.fn', function(module) {
       }
     },
 
+    /**
+     * fn.first
+     *
+     * Returns the first value in the passed array, or undefined if the array is empty
+     *
+     * @param  {Array} arr an array
+     * @return {*}     the first value in the array
+     */
     first: function(arr) {
       return arr[0];
     },
 
+    /**
+     * fn.last
+     *
+     * Returns the last value in the passed array, or undefined if the array is empty
+     *
+     * @param  {Array} arr an array
+     * @return {*}     the last value in the array
+     */
     last: function(arr) {
       return arr[arr.length - 1];
     },
@@ -1176,14 +1246,70 @@ namespace('sszvis.fn', function(module) {
       return result;
     },
 
+    /**
+     * Utility function for calculating different demensions in the heat table
+     * @param  {Number} width   the total width of the heat table
+     * @param  {Number} padding the padding, in pixels, between squares in the heat table
+     * @param  {Number} numX     The number of columns that need to fit within the heat table width
+     * @param {Number} numY The number of rows in the table
+     * @return {Number}         The width of one side of a box in the heat table
+     */
+    heatTableDimensions: function(width, padding, numX, numY) {
+      // this includes the default side length for the heat table
+      var DEFAULT_SIDE = 30,
+          side = Math.min((width / numX) - padding, DEFAULT_SIDE),
+          paddedSide = side + padding,
+          padRatio = 1 - (side / paddedSide),
+          width = paddedSide * numX,
+          height = paddedSide * numY;
+      return {
+        side: side,
+        paddedSide: paddedSide,
+        padRatio: padRatio,
+        width: width,
+        height: height
+      };
+    },
+
+    /**
+     * fn.identity
+     *
+     * The identity function. It returns the first argument passed to it.
+     * Useful as a default where a function is required.
+     *
+     * @param  {*} value any value
+     * @return {*}       returns its argument
+     */
     identity: function(value) {
       return value;
     },
 
+    /**
+     * fn.not
+     *
+     * Takes as argument a function f and returns a new function
+     * which calls f on its arguments and returns the
+     * boolean opposite of f's return value.
+     *
+     * @param  {Function} f the argument function
+     * @return {Function}   a new function which returns the boolean opposite of the argument function
+     */
     not: function (f) {
       return function(){ return !f.apply(this, arguments); };
     },
 
+    /**
+     * fn.prop
+     *
+     * takes the name of a property and returns a property accessor function
+     * for the named property. When the accessor function is called on an object,
+     * it returns that object's value for the named property. (or undefined, if the object
+     * does not contain the property.)
+     *
+     * @param  {String} key the name of the property for which an accessor function is desired
+     * @return {Function}     A property-accessor function
+     *
+     */
     prop: function(key) {
       return function(object) {
         return object[key];
