@@ -12,11 +12,18 @@
 
 ```project
 {
-    "index": "docs/grouped-bar-chart/gb-two-small.html",
-    "readme": "docs/grouped-bar-chart/README.md",
-    "files": [
-        "docs/grouped-bar-chart/data/GB_2Categories_smallVals.csv"
-    ],
+    "name": "grouped-bar-chart_gb-two-small",
+    "files": {
+        "index.html": {
+            "source": "docs/grouped-bar-chart/gb-two-small.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/grouped-bar-chart/data/GB_2Categories_smallVals.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 600
@@ -26,11 +33,18 @@
 
 ```project
 {
-    "index": "docs/grouped-bar-chart/gb-two-yearly-long.html",
-    "readme": "docs/grouped-bar-chart/README.md",
-    "files": [
-        "docs/grouped-bar-chart/data/GB_2Categories_yearly_long.csv"
-    ],
+    "name": "grouped-bar-chart_gb-two-yearly-long",
+    "files": {
+        "index.html": {
+            "source": "docs/grouped-bar-chart/gb-two-yearly-long.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/grouped-bar-chart/data/GB_2Categories_yearly_long.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 640
@@ -40,11 +54,18 @@
 
 ```project
 {
-    "index": "docs/grouped-bar-chart/gb-three-yearly-neg.html",
-    "readme": "docs/grouped-bar-chart/README.md",
-    "files": [
-        "docs/grouped-bar-chart/data/GB_3Categories_yearly_negatives.csv"
-    ],
+    "name": "grouped-bar-chart_gb-three-yearly-neg",
+    "files": {
+        "index.html": {
+            "source": "docs/grouped-bar-chart/gb-three-yearly-neg.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/grouped-bar-chart/data/GB_3Categories_yearly_negatives.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 640
