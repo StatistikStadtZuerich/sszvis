@@ -24,11 +24,15 @@ The following configuration options are available:
 
 ```project
 {
-    "index": "docs/heat-table/ht-kreise.html",
-    "readme": "docs/heat-table/README.md",
-    "files": [
-        "docs/heat-table/data/HT_kreise.csv"
-    ],
+    "name": "heat-table-kreise",
+    "files": {
+        "index.html": "docs/heat-table/ht-kreise.html",
+        "data.csv": "docs/heat-table/data/HT_kreise.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 800
@@ -40,11 +44,15 @@ The following configuration options are available:
 
 ```project
 {
-    "index": "docs/heat-table/ht-missing.html",
-    "readme": "docs/heat-table/README.md",
-    "files": [
-        "docs/heat-table/data/HT_kreise_missing.csv"
-    ],
+    "name": "heat-table-missing",
+    "files": {
+        "index.html": "docs/heat-table/ht-missing.html",
+        "data.csv": "docs/heat-table/data/HT_kreise_missing.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 800
@@ -56,11 +64,15 @@ The following configuration options are available:
 
 ```project
 {
-    "index": "docs/heat-table/ht-binned.html",
-    "readme": "docs/heat-table/README.md",
-    "files": [
-        "docs/heat-table/data/HT_binned.csv"
-    ],
+    "name": "heat-table-binned",
+    "files": {
+        "index.html": "docs/heat-table/ht-binned.html",
+        "data.csv": "docs/heat-table/data/HT_binned.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 350
@@ -72,11 +84,15 @@ The following configuration options are available:
 
 ```project
 {
-    "index": "docs/heat-table/ht-quartiere.html",
-    "readme": "docs/heat-table/README.md",
-    "files": [
-        "docs/heat-table/data/HT_quartiere.csv"
-    ],
+    "name": "heat-table-quartiere",
+    "files": {
+        "index.html": "docs/heat-table/ht-quartiere.html",
+        "data.csv": "docs/heat-table/data/HT_quartiere.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 1100
@@ -90,11 +106,15 @@ Welches haben Paare zum Zeitpunkt ihres ersten Kindes.
 
 ```project
 {
-    "index": "docs/heat-table/ht-wermitwem.html",
-    "readme": "docs/heat-table/README.md",
-    "files": [
-        "docs/heat-table/data/HT_wermitwem.csv"
-    ],
+    "name": "heat-table-wermitwem",
+    "files": {
+        "index.html": "docs/heat-table/ht-wermitwem.html",
+        "data.csv": "docs/heat-table/data/HT_wermitwem.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 360

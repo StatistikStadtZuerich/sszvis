@@ -10,11 +10,15 @@
 
 ``` project
 {
-    "index": "docs/multiple-line-chart/two-cat.html",
-    "readme": "docs/multiple-line-chart/README.md",
-    "files": [
-        "docs/multiple-line-chart/data/ML_2Categories_Quarterly.csv"
-    ],
+    "name": "multiple-line-chart-two-cat",
+    "files": {
+        "index.html": "docs/multiple-line-chart/two-cat.html",
+        "data.csv": "docs/multiple-line-chart/data/ML_2Categories_Quarterly.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 500
@@ -24,11 +28,15 @@
 
 ``` project
 {
-    "index": "docs/multiple-line-chart/eight-cat.html",
-    "readme": "docs/multiple-line-chart/README.md",
-    "files": [
-        "docs/multiple-line-chart/data/ML_months_8Categories_superposition_missing.csv"
-    ],
+    "name": "multiple-line-chart-eight-cat",
+    "files": {
+        "index.html": "docs/multiple-line-chart/eight-cat.html",
+        "data.csv": "docs/multiple-line-chart/data/ML_months_8Categories_superposition_missing.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 500
@@ -39,11 +47,15 @@
 
 ``` project
 {
-    "index": "docs/multiple-line-chart/two-axis.html",
-    "readme": "docs/multiple-line-chart/README.md",
-    "files": [
-        "docs/multiple-line-chart/data/S_2yAxis.csv"
-    ],
+    "name": "multiple-line-chart-two-axis",
+    "files": {
+        "index.html": "docs/multiple-line-chart/two-axis.html",
+        "data.csv": "docs/multiple-line-chart/data/S_2yAxis.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 520

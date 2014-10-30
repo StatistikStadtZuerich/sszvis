@@ -12,11 +12,15 @@
 
 ```project
 {
-    "index": "docs/stacked-area-chart/sa-two.html",
-    "readme": "docs/stacked-area-chart/README.md",
-    "files": [
-        "docs/stacked-area-chart/data/SA_2Categories_yearly.csv"
-    ],
+    "name": "stacked-area-chart-two",
+    "files": {
+        "index.html": "docs/stacked-area-chart/sa-two.html",
+        "data.csv": "docs/stacked-area-chart/data/SA_2Categories_yearly.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 520
@@ -26,11 +30,15 @@
 
 ```project
 {
-    "index": "docs/stacked-area-chart/sa-three.html",
-    "readme": "docs/stacked-area-chart/README.md",
-    "files": [
-        "docs/stacked-area-chart/data/SA_3Categories_yearly_zeroes.csv"
-    ],
+    "name": "stacked-area-chart-three",
+    "files": {
+        "index.html": "docs/stacked-area-chart/sa-three.html",
+        "data.csv": "docs/stacked-area-chart/data/SA_3Categories_yearly_zeroes.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 520
@@ -40,11 +48,15 @@
 
 ```project
 {
-    "index": "docs/stacked-area-chart/sa-seven.html",
-    "readme": "docs/stacked-area-chart/README.md",
-    "files": [
-        "docs/stacked-area-chart/data/SA_7Kategories_yearly.csv"
-    ],
+    "name": "stacked-area-chart-seven",
+    "files": {
+        "index.html": "docs/stacked-area-chart/sa-seven.html",
+        "data.csv": "docs/stacked-area-chart/data/SA_7Kategories_yearly.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 550,
         "height": 540

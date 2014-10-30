@@ -12,11 +12,15 @@
 
 ```project
 {
-    "index": "docs/scatterplot/basic.html",
-    "readme": "docs/scatterplot/README.md",
-    "files": [
-        "docs/scatterplot/data/SS_basic.csv"
-    ],
+    "name": "scatterplot-basic",
+    "files": {
+        "index.html": "docs/scatterplot/basic.html",
+        "data.csv": "docs/scatterplot/data/SS_basic.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 600
@@ -28,11 +32,15 @@
 
 ```project
 {
-    "index": "docs/scatterplot/refline-fake.html",
-    "readme": "docs/scatterplot/README.md",
-    "files": [
-        "docs/scatterplot/data/SS_refline_fake.csv"
-    ],
+    "name": "scatterplot-refline-fake",
+    "files": {
+        "index.html": "docs/scatterplot/refline-fake.html",
+        "data.csv": "docs/scatterplot/data/SS_refline_fake.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 500
@@ -44,11 +52,15 @@
 
 ```project
 {
-    "index": "docs/scatterplot/variable-radius.html",
-    "readme": "docs/scatterplot/README.md",
-    "files": [
-        "docs/scatterplot/data/VRS_basic.csv"
-    ],
+    "name": "scatterplot-variable-radius",
+    "files": {
+        "index.html": "docs/scatterplot/variable-radius.html",
+        "data.csv": "docs/scatterplot/data/VRS_basic.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 500

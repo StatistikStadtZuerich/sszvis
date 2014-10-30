@@ -20,11 +20,15 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-horizontal-bar-chart/13-categories.html",
-    "readme": "docs/simple-horizontal-bar-chart/README.md",
-    "files": [
-        "docs/simple-horizontal-bar-chart/data/SHB_13Categories.csv"
-    ],
+    "name": "simple-horizontal-bar-chart-13-categories",
+    "files": {
+        "index.html": "docs/simple-horizontal-bar-chart/13-categories.html",
+        "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_13Categories.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 500
@@ -34,11 +38,15 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-horizontal-bar-chart/basic-percent.html",
-    "readme": "docs/simple-horizontal-bar-chart/README.md",
-    "files": [
-        "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv"
-    ],
+    "name": "simple-horizontal-bar-chart-basic-percent",
+    "files": {
+        "index.html": "docs/simple-horizontal-bar-chart/basic-percent.html",
+        "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 540
@@ -48,11 +56,15 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-horizontal-bar-chart/long-names.html",
-    "readme": "docs/simple-horizontal-bar-chart/README.md",
-    "files": [
-        "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv"
-    ],
+    "name": "simple-horizontal-bar-chart-long-names",
+    "files": {
+        "index.html": "docs/simple-horizontal-bar-chart/long-names.html",
+        "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 500
@@ -62,11 +74,15 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-horizontal-bar-chart/missing.html",
-    "readme": "docs/simple-horizontal-bar-chart/README.md",
-    "files": [
-        "docs/simple-horizontal-bar-chart/data/S_missing.csv"
-    ],
+    "name": "simple-horizontal-bar-chart-missing",
+    "files": {
+        "index.html": "docs/simple-horizontal-bar-chart/missing.html",
+        "data.csv": "docs/simple-horizontal-bar-chart/data/S_missing.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 500

@@ -22,11 +22,14 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/basic.html",
-    "readme": "docs/simple-vertical-bar-chart/README.md",
-    "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_basic.csv"
-   ],
+    "name": "simple-vertical-bar-chart-basic",
+    "files": {
+        "index.html": "docs/simple-vertical-bar-chart/basic.html",
+        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
     "size": {
         "height": 500,
         "width": 500
@@ -40,11 +43,14 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/few-categories.html",
-    "readme": "docs/simple-vertical-bar-chart/README.md",
-    "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv"
-    ],
+    "name": "simple-vertical-bar-chart-few-categories",
+    "files": {
+        "index.html": "docs/simple-vertical-bar-chart/few-categories.html",
+        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
     "size": {
         "height": 500,
         "width": 480
@@ -56,11 +62,14 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/few-categories-missing.html",
-    "readme": "docs/simple-vertical-bar-chart/README.md",
-    "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_fewCategories_missing.csv"
-    ],
+    "name": "simple-vertical-bar-chart-few-categories-missing",
+    "files": {
+        "index.html": "docs/simple-vertical-bar-chart/few-categories-missing.html",
+        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fewCategories_missing.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
     "size": {
         "height": 500,
         "width": 480
@@ -72,11 +81,14 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/long-names.html",
-    "readme": "docs/simple-vertical-bar-chart/README.md",
-    "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv"
-    ],
+    "name": "simple-vertical-bar-chart-long-names",
+    "files": {
+        "index.html": "docs/simple-vertical-bar-chart/long-names.html",
+        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
     "size": {
         "height": 500,
         "width": 500
@@ -88,11 +100,14 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/many-years.html",
-    "readme": "docs/simple-vertical-bar-chart/README.md",
-    "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv"
-    ],
+    "name": "simple-vertical-bar-chart-many-years",
+    "files": {
+        "index.html": "docs/simple-vertical-bar-chart/many-years.html",
+        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
     "size": {
         "height": 550,
         "width": 550

@@ -12,11 +12,15 @@
 
 ```project
 {
-    "index": "docs/stacked-horizontal-bar-chart/basic.html",
-    "readme": "docs/stacked-horizontal-bar-chart/README.md",
-    "files": [
-        "docs/stacked-horizontal-bar-chart/data/SHB_basic_percent.csv"
-    ],
+    "name": "stacked-horizontal-bar-chart-basic",
+    "files": {
+        "index.html": "docs/stacked-horizontal-bar-chart/basic.html",
+        "data.csv": "docs/stacked-horizontal-bar-chart/data/SHB_basic_percent.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 500,
         "height": 340
