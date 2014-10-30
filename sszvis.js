@@ -3244,7 +3244,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('x', d3.functor)
+      .prop('x')
       .prop('y0', d3.functor).y0(sszvis.fn.prop('y0'))
       .prop('dy', d3.functor).dy(sszvis.fn.prop('y'))
       .prop('yScale')
@@ -3309,7 +3309,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
           .data(function(d) { return [d]; })
           .attr('x', function(d, i) {
             var offset = props.flip(d) ? -10 : 10;
-            return props.x(d, i) + offset;
+            return props.x + offset;
           })
           .attr('y', ty)
           .attr('text-anchor', function(d) {
@@ -3329,7 +3329,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
         total
           .attr('x', function(d, i) {
             var offset = props.flip(d) ? -10 : 10;
-            return props.x(d, i) + offset;
+            return props.x + offset;
           })
           .attr('y', top - 10)
           .attr('text-anchor', function(d) {
