@@ -17,7 +17,7 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('category');
+  var xAcc = sszvis.fn.prop('year');
   var yAcc = sszvis.fn.prop('value');
 
 
@@ -25,7 +25,7 @@
   ----------------------------------------------- */
   var state = {
     data: [],
-    categories: [],
+    yearBounds: [],
     selection: []
   };
 
@@ -35,7 +35,7 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.categories = state.data.map(xAcc);
+      state.yearBounds = d3.extent(state.data, xAcc);
       render(state);
     },
 
@@ -56,7 +56,7 @@
   d3.csv('data/SiVB_yearly_many.csv')
     .row(function(d) {
       return {
-        category: d['Jahr'],
+        year: sszvis.parse.year(d['Jahr']),
         value: sszvis.parse.number(d['Hotel?bernachtungen'])
       };
     })
@@ -69,18 +69,20 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ width: 516, height: 550, top: 40, right: 0, bottom: 40, left: 0 });
+    var BAR_WIDTH = 3;
     // because there are so many bars, this represents a special case
-    // in which the layout algorithm in sszvis.fn.verticalBarChartDimensions breaks down.
-    // FIXME: consider working on the layout algorithm to make it compatible with examples like this
+    // in this example, because the x-axis values are sequential,
+    // the x-axis is implemented using a linear time scale,
+    // instead of the usual ordinal scale.
     // It should be noted that in situations with this much time-series data,
     // a line chart is almost always the optimal display strategy.
 
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
-      .domain(state.categories)
-      .rangeBands([20, bounds.innerWidth], 0.3, 0);
+    var xScale = d3.time.scale()
+      .domain(state.yearBounds)
+      .range([0, bounds.innerWidth]);
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
@@ -106,22 +108,25 @@
     // Components
 
     var barGen = sszvis.component.bar()
-      .x(xValue)
+      .x(function(d) {
+        return xValue(d) - BAR_WIDTH / 2; // this adjusts for the width of the bar
+      })
       .y(yValue)
-      .width(xScale.rangeBand())
+      .width(BAR_WIDTH)
       .height(sszvis.fn.compose(heightScale, yAcc))
       .fill(function(d) {
         return isSelected(d) ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
       });
 
-    var xAxis = sszvis.axis.x.ordinal()
+    var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
-      .slant('vertical')
       .ticks(5);
 
     var yAxis = sszvis.axis.y()
-      .scale(yPosScale).orient('right');
+      .halo(true)
+      .scale(yPosScale)
+      .orient('right');
 
     var tooltipTitle = sszvis.component.modularText()
       .bold('Hotelübernachtungen')
