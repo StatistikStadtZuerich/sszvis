@@ -172,7 +172,7 @@ namespace('sszvis.axis', function(module) {
           }
         });
 
-        axisComponent.__delegate = axisDelegate;
+        axisComponent.__delegate__ = axisDelegate;
 
         return axisComponent;
     };
@@ -234,7 +234,7 @@ namespace('sszvis.axis', function(module) {
             // the range is mirrored – ±range[1]
             .range([range[0] - range[1], range[0] + range[1]]);
 
-          this.__delegate.scale(extended);
+          this.__delegate__.scale(extended);
           return extended;
         })
         .tickFormat(function(v) {
