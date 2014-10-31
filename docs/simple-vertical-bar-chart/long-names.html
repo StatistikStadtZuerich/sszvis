@@ -69,13 +69,13 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ width: 516, height: 500, top: 60, right: 0, bottom: 60, left: 0 });
-    var barDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, 60, 60, state.categories.length);
+    var chartDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
     // Scales
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([0, barDimensions.barSpace], barDimensions.padRatio, 0); // FIXME: revise creation of rangeBands for bar charts
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, chartDimensions.outerRatio);
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
@@ -100,7 +100,7 @@
     var barGen = sszvis.component.bar()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yPosScale, yAcc))
-      .width(barDimensions.barWidth)
+      .width(chartDimensions.barWidth)
       .height(sszvis.fn.compose(heightScale, yAcc))
       .fill(function(d) {
         return isSelected(d) ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
@@ -129,18 +129,16 @@
     // Rendering
 
     var bars = chartLayer.selectGroup('bars')
-      .attr('transform', sszvis.fn.translateString(barDimensions.padding.left, 0))
       .call(barGen);
 
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(barDimensions.padding.left, bounds.innerHeight))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.fn.translateString(0, 0))
       .call(yAxis);
 
 

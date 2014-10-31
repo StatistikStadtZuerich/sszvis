@@ -39,69 +39,6 @@ namespace('sszvis.fn', function(module) {
       }
     },
 
-    verticalBarChartDimensions: function(width, leftPadding, rightPadding, numBars) {
-      var MAX_BAR_WIDTH = 48, // the maximum width of a bar
-          MIN_PADDING = 2, // the minimum padding value
-          MAX_PADDING = 100, // the maximum padding value
-          TARGET_BAR_RATIO = 0.70, // the ratio of width to width + padding used to compute the initial width and padding
-          TARGET_PADDING_RATIO = 1 - TARGET_BAR_RATIO, // the inverse of the bar ratio, this is the ratio of padding to width + padding
-          numPads = numBars - 1, // the number of padding spaces
-          availableSpace = width - leftPadding - rightPadding, // find the space in which to distribute the bars
-          // compute the target size of the padding
-          // the derivation of this equation is available upon request
-          padding = (availableSpace * TARGET_PADDING_RATIO) / ((TARGET_PADDING_RATIO * numPads) + (TARGET_BAR_RATIO * numBars)),
-          // based on the computed padding, calculate the bar width
-          barWidth = (availableSpace - (padding * numPads)) / numBars;
-
-        // adjust for min and max bounds
-        if (barWidth > MAX_BAR_WIDTH) {
-          barWidth = MAX_BAR_WIDTH;
-          // recompute the padding value where necessary
-          padding = (availableSpace - (barWidth * numBars)) / numPads;
-        }
-        if (padding < MIN_PADDING) padding = MIN_PADDING;
-        if (padding > MAX_PADDING) padding = MAX_PADDING;
-
-        // compute other information
-        var padRatio = 1 - (barWidth / (barWidth + padding)),
-            computedBarSpace = barWidth * numBars + padding * numPads,
-            computedLeftPadding = Math.max(leftPadding, leftPadding + ((availableSpace - computedBarSpace) / 2)),
-            computedRightPadding = Math.max(rightPadding, rightPadding + ((availableSpace - computedBarSpace) / 2));
-
-      return {
-        barWidth: barWidth,
-        padRatio: padRatio,
-        padding: {
-          left: computedLeftPadding,
-          right: computedRightPadding
-        },
-        barSpace: computedBarSpace
-      };
-    },
-
-    horizontalBarChartDimensions: function(height, topPadding, bottomPadding, numBars) {
-      var DEFAULT_HEIGHT = 24, // the default bar height
-          MIN_PADDING = 20, // the minimum padding size
-          availableSpace = height - topPadding - bottomPadding, // amount of available vertical space
-          barHeight = DEFAULT_HEIGHT, // the bar height
-          numPads = numBars - 1,
-          padding = Math.max((availableSpace - (barHeight * numBars)) / numPads, MIN_PADDING), // the padding size
-          // compute other information
-          padRatio = 1 - (barHeight / (barHeight + padding)),
-          computedBarSpace = barHeight * numBars + padding * (numBars - 1); // subtract the padding at the end
-
-      return {
-        barHeight: barHeight,
-        padRatio: padRatio,
-        padding: {
-          top: topPadding,
-          bottom: bottomPadding
-        },
-        axisOffset: -(barHeight / 2) - 10,
-        barSpace: computedBarSpace
-      };
-    },
-
     /**
      * fn.compose
      *
@@ -214,16 +151,26 @@ namespace('sszvis.fn', function(module) {
       return arr[0];
     },
 
-    /**
-     * fn.last
-     *
-     * Returns the last value in the passed array, or undefined if the array is empty
-     *
-     * @param  {Array} arr an array
-     * @return {*}     the last value in the array
-     */
-    last: function(arr) {
-      return arr[arr.length - 1];
+    horizontalBarChartDimensions: function(height, numBars) {
+      var DEFAULT_HEIGHT = 24, // the default bar height
+          MIN_PADDING = 20, // the minimum padding size
+          barHeight = DEFAULT_HEIGHT, // the bar height
+          numPads = numBars - 1,
+          padding = Math.max((height - (barHeight * numBars)) / numPads, MIN_PADDING), // the padding size
+          // compute other information
+          padRatio = 1 - (barHeight / (barHeight + padding)),
+          computedBarSpace = barHeight * numBars + padding * numPads,
+          outerRatio = (height - computedBarSpace) / 2 / (barHeight + padding);
+
+      return {
+        barHeight: barHeight,
+        padHeight: padding,
+        padRatio: padRatio,
+        outerRatio: outerRatio,
+        axisOffset: -(barHeight / 2) - 10,
+        barGroupHeight: computedBarSpace,
+        totalHeight: height
+      };
     },
 
     /**
@@ -296,6 +243,18 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.last
+     *
+     * Returns the last value in the passed array, or undefined if the array is empty
+     *
+     * @param  {Array} arr an array
+     * @return {*}     the last value in the array
+     */
+    last: function(arr) {
+      return arr[arr.length - 1];
+    },
+
+    /**
      * fn.not
      *
      * Takes as argument a function f and returns a new function
@@ -357,6 +316,43 @@ namespace('sszvis.fn', function(module) {
 
     translateString: function(x, y) {
       return 'translate(' + x + ',' + y + ')';
+    },
+
+    verticalBarChartDimensions: function(width, numBars) {
+      var MAX_BAR_WIDTH = 48, // the maximum width of a bar
+          MIN_PADDING = 2, // the minimum padding value
+          MAX_PADDING = 100, // the maximum padding value
+          TARGET_BAR_RATIO = 0.70, // the ratio of width to width + padding used to compute the initial width and padding
+          TARGET_PADDING_RATIO = 1 - TARGET_BAR_RATIO, // the inverse of the bar ratio, this is the ratio of padding to width + padding
+          numPads = numBars - 1, // the number of padding spaces
+          // compute the target size of the padding
+          // the derivation of this equation is available upon request
+          padding = (width * TARGET_PADDING_RATIO) / ((TARGET_PADDING_RATIO * numPads) + (TARGET_BAR_RATIO * numBars)),
+          // based on the computed padding, calculate the bar width
+          barWidth = (width - (padding * numPads)) / numBars;
+
+      // adjust for min and max bounds
+      if (barWidth > MAX_BAR_WIDTH) {
+        barWidth = MAX_BAR_WIDTH;
+        // recompute the padding value where necessary
+        padding = (width - (barWidth * numBars)) / numPads;
+      }
+      if (padding < MIN_PADDING) padding = MIN_PADDING;
+      if (padding > MAX_PADDING) padding = MAX_PADDING;
+
+      // compute other information
+      var padRatio = 1 - (barWidth / (barWidth + padding)),
+          computedBarSpace = barWidth * numBars + padding * numPads,
+          outerRatio = (width - computedBarSpace) / 2 / (barWidth + padding);
+
+      return {
+        barWidth: barWidth,
+        padWidth: padding,
+        padRatio: padRatio,
+        outerRatio: outerRatio,
+        barGroupWidth: computedBarSpace,
+        totalWidth: width
+      };
     }
 
   };

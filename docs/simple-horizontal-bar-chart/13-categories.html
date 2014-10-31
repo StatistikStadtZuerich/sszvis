@@ -73,7 +73,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ width: 500, height: 700, top: 30, right: 1, bottom: 60, left: 0 });
-    var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, 45, 20, state.categories.length);
+    var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, state.categories.length);
 
 
     // Scales
@@ -83,7 +83,7 @@
       .domain([0, d3.max(state.data, xAcc)]);
 
     var yScale = d3.scale.ordinal()
-      .rangeBands([0, chartDimensions.barSpace], chartDimensions.padRatio, 0)
+      .rangeBands([0, chartDimensions.totalHeight], chartDimensions.padRatio, chartDimensions.outerRatio)
       .domain(state.categories);
 
 
@@ -123,7 +123,7 @@
     // Rendering
 
     chartLayer.selectGroup('bars')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top))
+
       .call(barGen);
 
     chartLayer.selectGroup('xAxis')
@@ -133,7 +133,7 @@
       // NOTE need to know from the designers what the distance between text and bar has to be
       // NOTE we talked already about howto calculate bar widths. It's again the question how manual and how automagic one wants to be. should we sit together again for that question?
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top + chartDimensions.axisOffset))
+      .attr('transform', sszvis.fn.translateString(0, chartDimensions.axisOffset))
       .call(yAxis);
 
     controlLayer.selectDiv('controls')

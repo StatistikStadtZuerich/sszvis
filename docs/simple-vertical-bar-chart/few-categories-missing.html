@@ -58,14 +58,14 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ width: 516, height: 500, top: 10, right: 0, bottom: 40, left: 0 });
-    var barDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, 60, 60, state.categories.length);
+    var chartDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
 
     // Scales
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([0, barDimensions.barSpace], barDimensions.padRatio, 0);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, chartDimensions.outerRatio);
 
     var heightScale = d3.scale.linear()
       .range([0, bounds.innerHeight])
@@ -90,7 +90,7 @@
     var barGen = sszvis.component.bar()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yPosScale, yAcc))
-      .width(barDimensions.barWidth)
+      .width(chartDimensions.barWidth)
       .height(sszvis.fn.compose(heightScale, yAcc))
       .fill(sszvis.color.values.basicBlue);
 
@@ -104,15 +104,13 @@
       .orient('right');
 
     chartLayer.selectGroup('bars')
-      .attr('transform', sszvis.fn.translateString(barDimensions.padding.left, 0))
       .call(barGen);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(barDimensions.padding.left, bounds.innerHeight))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.fn.translateString(0, 0))
       .call(yAxis);
   }
 

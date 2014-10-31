@@ -73,7 +73,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ width: 500, height: 656, top: 75, right: 1, bottom: 50, left: 0 });
-    var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, 10, 20, state.categories.length);
+    var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, state.categories.length);
 
 
     // Scales
@@ -83,7 +83,7 @@
       .domain([0, d3.max(state.data, xAcc)]);
 
     var yScale = d3.scale.ordinal()
-      .rangeBands([0, chartDimensions.barSpace], chartDimensions.padRatio, 0)
+      .rangeBands([0, chartDimensions.totalHeight], chartDimensions.padRatio, chartDimensions.outerRatio)
       .domain(state.categories);
 
 
@@ -129,11 +129,11 @@
       .call(xAxis);
 
     chartLayer.selectGroup('bars')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top))
+
       .call(barGen);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top + chartDimensions.axisOffset))
+      .attr('transform', sszvis.fn.translateString(0, chartDimensions.axisOffset))
       .call(yAxis);
 
     controlLayer.selectDiv('controls')
