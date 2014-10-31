@@ -59,6 +59,10 @@
 
       state.categories = sszvis.fn.set(state.data, cAcc).sort(schweizerSorter);
 
+      // reverse both the domain and range of the color scale so that the displayed scale matches the order of the layers in the stack
+      state.categories.reverse();
+      state.colorCategories = sszvis.color.ranges.qualitative.qual3.slice(0, 2).reverse();
+
       render(state);
     }
   };
@@ -97,7 +101,7 @@
 
     var cScale = d3.scale.ordinal()
       .domain(state.categories)
-      .range(sszvis.color.ranges.qualitative.qual3);
+      .range(state.colorCategories);
 
 
     // Layers
@@ -126,11 +130,6 @@
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
-      .width(bounds.innerWidth)
-      // FIXME: copy and reverse the order of the legend - this way the top layer in the stack
-      // (which is the last dataset and therefore the final category in the color scale)
-      // corresponds to the first category of the legend.
-      .reverse(true)
       .orientation('vertical');
 
 

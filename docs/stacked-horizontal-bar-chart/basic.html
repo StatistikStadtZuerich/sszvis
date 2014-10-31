@@ -137,7 +137,7 @@
       .scale(cScale)
       .orientation('horizontal')
       .rows(state.categories.length / 2)
-      .width(bounds.innerWidth)
+      .columnWidth(bounds.innerWidth / 2)
       .orientation('vertical');
 
     var tooltipHeader = sszvis.component.modularText()

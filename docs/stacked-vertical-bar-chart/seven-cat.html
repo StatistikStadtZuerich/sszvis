@@ -41,7 +41,13 @@
     prepareState: function(data) {
       state.data = data;
       state.years = state.data.map(xAcc);
+
       state.categories = sszvis.fn.set(state.data, cAcc);
+
+      // reverse the order of the categories and the colors so that the order of the color scale
+      // lines up with the order of the stacks, which are built starting at the bottom and stacked up.
+      state.categories.reverse();
+      state.colorCategories = sszvis.color.ranges.qualitative.qual9.slice(0, state.categories.length).reverse();
 
       state.stackedData = sszvis.cascade()
         .arrayBy(cAcc)
@@ -100,7 +106,7 @@
 
     var cScale = d3.scale.ordinal()
       .domain(state.categories)
-      .range(sszvis.color.ranges.qualitative.qual9);
+      .range(state.colorCategories);
 
 
     // Layers
@@ -138,7 +144,6 @@
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
-      .width(bounds.innerWidth)
       .rows(state.categories.length)
       .orientation('vertical');
 

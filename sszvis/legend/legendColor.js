@@ -10,7 +10,8 @@ namespace('sszvis.legend.color', function(module) {
   module.exports = function() {
     return d3.component()
       .prop('scale')
-      .prop('width').width(0)
+      .prop('rowHeight').rowHeight(20)
+      .prop('columnWidth').columnWidth(200)
       .prop('rows').rows(3)
       .prop('columns').columns(3)
       .prop('orientation')
@@ -34,9 +35,6 @@ namespace('sszvis.legend.color', function(module) {
           cols = Math.ceil(domain.length / rows);
         }
 
-        var colWidth = props.width / cols,
-            rowHeight = 20;
-
         var groups = selection.selectAll('.sszvis-legend--entry')
           .data(domain);
 
@@ -46,9 +44,9 @@ namespace('sszvis.legend.color', function(module) {
 
         groups.attr('transform', function(d, i) {
           if (props.orientation === 'horizontal') {
-            return 'translate(' + ((i % cols) * colWidth) + ',' + (Math.floor(i / cols) * rowHeight) + ')';
+            return 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
           } else if (props.orientation === 'vertical') {
-            return 'translate(' + (Math.floor(i / rows) * colWidth) + ',' + ((i % rows) * rowHeight) + ')';
+            return 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
           }
         });
 
@@ -65,7 +63,7 @@ namespace('sszvis.legend.color', function(module) {
 
         marks
           .attr('cx', 7)
-          .attr('cy', rowHeight / 2 - 1) // magic number adjustment for nice alignment with text
+          .attr('cy', props.rowHeight / 2 - 1) // magic number adjustment for nice alignment with text
           .attr('r', 6)
           .attr('fill', function(d) { return props.scale(d); });
 
@@ -81,7 +79,7 @@ namespace('sszvis.legend.color', function(module) {
         labels
           .text(function(d) { return d; })
           .attr('alignment-baseline', 'central')
-          .attr('transform', 'translate(18, ' + (rowHeight / 2) + ')');
+          .attr('transform', 'translate(18, ' + (props.rowHeight / 2) + ')');
       });
   };
 
