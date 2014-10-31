@@ -22,7 +22,10 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 {
     "name": "simple-horizontal-bar-chart-13-categories",
     "files": {
-        "index.html": "docs/simple-horizontal-bar-chart/13-categories.html",
+        "index.html": {
+            "source": "docs/simple-horizontal-bar-chart/13-categories.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_13Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -40,7 +43,10 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 {
     "name": "simple-horizontal-bar-chart-basic-percent",
     "files": {
-        "index.html": "docs/simple-horizontal-bar-chart/basic-percent.html",
+        "index.html": {
+            "source": "docs/simple-horizontal-bar-chart/basic-percent.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -58,7 +64,10 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 {
     "name": "simple-horizontal-bar-chart-long-names",
     "files": {
-        "index.html": "docs/simple-horizontal-bar-chart/long-names.html",
+        "index.html": {
+            "source": "docs/simple-horizontal-bar-chart/long-names.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -76,7 +85,10 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 {
     "name": "simple-horizontal-bar-chart-missing",
     "files": {
-        "index.html": "docs/simple-horizontal-bar-chart/missing.html",
+        "index.html": {
+            "source": "docs/simple-horizontal-bar-chart/missing.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-horizontal-bar-chart/data/S_missing.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

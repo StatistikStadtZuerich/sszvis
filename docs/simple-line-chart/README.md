@@ -24,7 +24,10 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 {
     "name": "simple-line-chart-quarterly",
     "files": {
-        "index.html": "docs/simple-line-chart/quarterly.html",
+        "index.html": {
+            "source": "docs/simple-line-chart/quarterly.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-line-chart/data/SL_quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -44,7 +47,10 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 {
     "name": "simple-line-chart-interactive",
     "files": {
-        "index.html": "docs/simple-line-chart/interactive.html",
+        "index.html": {
+            "source": "docs/simple-line-chart/interactive.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-line-chart/data/SL_quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -64,7 +70,10 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 {
     "name": "simple-line-chart-daily",
     "files": {
-        "index.html": "docs/simple-line-chart/daily.html",
+        "index.html": {
+            "source": "docs/simple-line-chart/daily.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-line-chart/data/SL_daily.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -82,7 +91,10 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 {
     "name": "simple-line-chart-negatives-x-axis",
     "files": {
-        "index.html": "docs/simple-line-chart/negatives-x-axis.html",
+        "index.html": {
+            "source": "docs/simple-line-chart/negatives-x-axis.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-line-chart/data/SL_negativesXAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -100,7 +112,10 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 {
     "name": "simple-line-chart-percentage-negatives-y-axis",
     "files": {
-        "index.html": "docs/simple-line-chart/percentage-negatives-y-axis.html",
+        "index.html": {
+            "source": "docs/simple-line-chart/percentage-negatives-y-axis.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-line-chart/data/SL_Percentage_negativesYAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

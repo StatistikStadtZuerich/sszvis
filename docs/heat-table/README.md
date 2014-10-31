@@ -26,7 +26,10 @@ The following configuration options are available:
 {
     "name": "heat-table-kreise",
     "files": {
-        "index.html": "docs/heat-table/ht-kreise.html",
+        "index.html": {
+            "source": "docs/heat-table/ht-kreise.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/heat-table/data/HT_kreise.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -46,7 +49,10 @@ The following configuration options are available:
 {
     "name": "heat-table-missing",
     "files": {
-        "index.html": "docs/heat-table/ht-missing.html",
+        "index.html": {
+            "source": "docs/heat-table/ht-missing.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/heat-table/data/HT_kreise_missing.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -66,7 +72,10 @@ The following configuration options are available:
 {
     "name": "heat-table-binned",
     "files": {
-        "index.html": "docs/heat-table/ht-binned.html",
+        "index.html": {
+            "source": "docs/heat-table/ht-binned.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/heat-table/data/HT_binned.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -88,7 +97,10 @@ For more on the different ways to construct binned color scales from a range of 
 {
     "name": "heat-table-binned-linear",
     "files": {
-        "index.html": "docs/heat-table/ht-binned-linear.html",
+        "index.html": {
+            "source": "docs/heat-table/ht-binned-linear.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/heat-table/data/HT_binned_linear.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -108,7 +120,10 @@ For more on the different ways to construct binned color scales from a range of 
 {
     "name": "heat-table-quartiere",
     "files": {
-        "index.html": "docs/heat-table/ht-quartiere.html",
+        "index.html": {
+            "source": "docs/heat-table/ht-quartiere.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/heat-table/data/HT_quartiere.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -130,7 +145,10 @@ Welches haben Paare zum Zeitpunkt ihres ersten Kindes.
 {
     "name": "heat-table-wermitwem",
     "files": {
-        "index.html": "docs/heat-table/ht-wermitwem.html",
+        "index.html": {
+            "source": "docs/heat-table/ht-wermitwem.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/heat-table/data/HT_wermitwem.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

@@ -14,7 +14,10 @@
 {
     "name": "scatterplot-basic",
     "files": {
-        "index.html": "docs/scatterplot/basic.html",
+        "index.html": {
+            "source": "docs/scatterplot/basic.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/scatterplot/data/SS_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -34,7 +37,10 @@
 {
     "name": "scatterplot-refline-fake",
     "files": {
-        "index.html": "docs/scatterplot/refline-fake.html",
+        "index.html": {
+            "source": "docs/scatterplot/refline-fake.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/scatterplot/data/SS_refline_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -54,7 +60,10 @@
 {
     "name": "scatterplot-variable-radius",
     "files": {
-        "index.html": "docs/scatterplot/variable-radius.html",
+        "index.html": {
+            "source": "docs/scatterplot/variable-radius.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/scatterplot/data/VRS_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

@@ -24,7 +24,10 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 {
     "name": "simple-vertical-bar-chart-four-cities",
     "files": {
-        "index.html": "docs/simple-vertical-bar-chart/four-cities.html",
+        "index.html": {
+            "source": "docs/simple-vertical-bar-chart/four-cities.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fourCities.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -44,7 +47,10 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 {
     "name": "simple-vertical-bar-chart-basic",
     "files": {
-        "index.html": "docs/simple-vertical-bar-chart/basic.html",
+        "index.html": {
+            "source": "docs/simple-vertical-bar-chart/basic.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -66,7 +72,10 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 {
     "name": "simple-vertical-bar-chart-few-categories",
     "files": {
-        "index.html": "docs/simple-vertical-bar-chart/few-categories.html",
+        "index.html": {
+            "source": "docs/simple-vertical-bar-chart/few-categories.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -86,7 +95,10 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 {
     "name": "simple-vertical-bar-chart-few-categories-missing",
     "files": {
-        "index.html": "docs/simple-vertical-bar-chart/few-categories-missing.html",
+        "index.html": {
+            "source": "docs/simple-vertical-bar-chart/few-categories-missing.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fewCategories_missing.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -106,7 +118,10 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 {
     "name": "simple-vertical-bar-chart-long-names",
     "files": {
-        "index.html": "docs/simple-vertical-bar-chart/long-names.html",
+        "index.html": {
+            "source": "docs/simple-vertical-bar-chart/long-names.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -126,7 +141,10 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 {
     "name": "simple-vertical-bar-chart-many-years",
     "files": {
-        "index.html": "docs/simple-vertical-bar-chart/many-years.html",
+        "index.html": {
+            "source": "docs/simple-vertical-bar-chart/many-years.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

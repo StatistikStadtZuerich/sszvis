@@ -12,7 +12,10 @@
 {
     "name": "multiple-line-chart-two-cat",
     "files": {
-        "index.html": "docs/multiple-line-chart/two-cat.html",
+        "index.html": {
+            "source": "docs/multiple-line-chart/two-cat.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/multiple-line-chart/data/ML_2Categories_Quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -30,7 +33,10 @@
 {
     "name": "multiple-line-chart-eight-cat",
     "files": {
-        "index.html": "docs/multiple-line-chart/eight-cat.html",
+        "index.html": {
+            "source": "docs/multiple-line-chart/eight-cat.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/multiple-line-chart/data/ML_months_8Categories_superposition_missing.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -49,7 +55,10 @@
 {
     "name": "multiple-line-chart-two-axis",
     "files": {
-        "index.html": "docs/multiple-line-chart/two-axis.html",
+        "index.html": {
+            "source": "docs/multiple-line-chart/two-axis.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/multiple-line-chart/data/S_2yAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

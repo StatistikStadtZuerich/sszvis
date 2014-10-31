@@ -14,7 +14,10 @@
 {
     "name": "stacked-vertical-bar-chart",
     "files": {
-        "index.html": "docs/stacked-vertical-bar-chart/three-cat.html",
+        "index.html": {
+            "source": "docs/stacked-vertical-bar-chart/three-cat.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/stacked-vertical-bar-chart/data/StVB_3Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -32,7 +35,10 @@
 {
     "name": "stacked-vertical-bar-chart",
     "files": {
-        "index.html": "docs/stacked-vertical-bar-chart/seven-cat.html",
+        "index.html": {
+            "source": "docs/stacked-vertical-bar-chart/seven-cat.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/stacked-vertical-bar-chart/data/StVB_7Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -53,7 +59,10 @@ https://basecamp.com/1762663/projects/6446196/documents/6747425
 {
     "name": "stacked-vertical-bar-chart",
     "files": {
-        "index.html": "docs/stacked-vertical-bar-chart/two-cat.html",
+        "index.html": {
+            "source": "docs/stacked-vertical-bar-chart/two-cat.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/stacked-vertical-bar-chart/data/StVB_2Categories_yearly_negatives.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

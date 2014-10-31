@@ -14,7 +14,10 @@
 {
     "name": "stacked-area-chart-two",
     "files": {
-        "index.html": "docs/stacked-area-chart/sa-two.html",
+        "index.html": {
+            "source": "docs/stacked-area-chart/sa-two.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/stacked-area-chart/data/SA_2Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -32,7 +35,10 @@
 {
     "name": "stacked-area-chart-three",
     "files": {
-        "index.html": "docs/stacked-area-chart/sa-three.html",
+        "index.html": {
+            "source": "docs/stacked-area-chart/sa-three.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/stacked-area-chart/data/SA_3Categories_yearly_zeroes.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -50,7 +56,10 @@
 {
     "name": "stacked-area-chart-seven",
     "files": {
-        "index.html": "docs/stacked-area-chart/sa-seven.html",
+        "index.html": {
+            "source": "docs/stacked-area-chart/sa-seven.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/stacked-area-chart/data/SA_7Kategories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

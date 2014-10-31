@@ -13,7 +13,10 @@
 {
     "name": "map-kreis",
     "files": {
-        "index.html": "docs/map/kreis.html",
+        "index.html": {
+            "source": "docs/map/kreis.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/map/data/M_kreis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -34,7 +37,10 @@
 {
     "name": "map-quartier",
     "files": {
-        "index.html": "docs/map/quartier.html",
+        "index.html": {
+            "source": "docs/map/quartier.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/map/data/M_quartier.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -55,7 +61,10 @@
 {
     "name": "map-switzerland",
     "files": {
-        "index.html": "docs/map/switzerland.html",
+        "index.html": {
+            "source": "docs/map/switzerland.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/map/data/M_swiss_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -76,7 +85,10 @@
 {
     "name": "map-tabs",
     "files": {
-        "index.html": "docs/map/tabs.html",
+        "index.html": {
+            "source": "docs/map/tabs.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/map/data/S_tabs.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -94,7 +106,10 @@
 {
     "name": "map-cml-quartier-years",
     "files": {
-        "index.html": "docs/map/cml-quartier-years.html",
+        "index.html": {
+            "source": "docs/map/cml-quartier-years.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/map/data/CML_quartier_years.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",

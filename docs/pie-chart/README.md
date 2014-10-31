@@ -14,7 +14,10 @@
 {
     "name": "pie-chart-four-cat",
     "files": {
-        "index.html": "docs/pie-chart/four-cat.html",
+        "index.html": {
+            "source": "docs/pie-chart/four-cat.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/pie-chart/data/P_subcategories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
@@ -32,7 +35,10 @@
 {
     "name": "pie-chart-twelve-cat",
     "files": {
-        "index.html": "docs/pie-chart/twelve-cat.html",
+        "index.html": {
+            "source": "docs/pie-chart/twelve-cat.html",
+            "template": "docs/template.html"
+        },
         "data.csv": "docs/pie-chart/data/P_7Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
