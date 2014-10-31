@@ -172,8 +172,8 @@ namespace('sszvis.component.tooltip', function(module) {
               .select('path')
                 .attr('d', tooltipBackground(
                   [BLUR_PADDING, BLUR_PADDING],
-                  [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING - TIP_SIZE],
-                  'bottom'
+                  [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING],
+                  orientation
                 ));
           });
       });
@@ -182,7 +182,22 @@ namespace('sszvis.component.tooltip', function(module) {
 
   /* Helper functions
   ----------------------------------------------- */
-  function tooltipBackground(a, b, tipSide) {
+  function tooltipBackground(a, b, orientation) {
+    switch (orientation) {
+      case 'top':
+        a[1] = a[1] + TIP_SIZE;
+        break;
+      case 'bottom':
+        b[1] = b[1] - TIP_SIZE;
+        break;
+      case 'left':
+        a[0] = a[0] + TIP_SIZE;
+        break;
+      case 'right':
+        b[0] = b[0] - TIP_SIZE;
+        break;
+    }
+
     function x(d){ return d[0]; }
     function y(d){ return d[1]; }
     function side(cx, cy, x0, y0, x1, y1, showTip) {
@@ -235,13 +250,13 @@ namespace('sszvis.component.tooltip', function(module) {
       // Start
       ['M', x(a), y(a) + RADIUS],
       // Top side
-      side(x(a), y(a), x(a) + RADIUS, y(a), x(b) - RADIUS, y(a), (tipSide === 'top')),
+      side(x(a), y(a), x(a) + RADIUS, y(a), x(b) - RADIUS, y(a), (orientation === 'top')),
       // Right side
-      side(x(b), y(a), x(b), y(a) + RADIUS, x(b), y(b) - RADIUS, (tipSide === 'right')),
+      side(x(b), y(a), x(b), y(a) + RADIUS, x(b), y(b) - RADIUS, (orientation === 'right')),
       // Bottom side
-      side(x(b), y(b), x(b) -RADIUS, y(b), x(a) + RADIUS, y(b), (tipSide === 'bottom')),
+      side(x(b), y(b), x(b) -RADIUS, y(b), x(a) + RADIUS, y(b), (orientation === 'bottom')),
       // Left side
-      side(x(a), y(b), x(a), y(b) - RADIUS, x(a), y(a) + RADIUS, (tipSide === 'left'))
+      side(x(a), y(b), x(a), y(b) - RADIUS, x(a), y(a) + RADIUS, (orientation === 'left'))
     ].map(function(d){ return d.join(' '); }).join(' ');
   }
 
