@@ -68,8 +68,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 550, top: 40, right: 10, bottom: 40, left: 15 });
-    // NOTE: because there are so many bars, this represents a special case
+    var bounds = sszvis.bounds({ width: 516, height: 550, top: 40, right: 0, bottom: 40, left: 0 });
+    // because there are so many bars, this represents a special case
     // in which the layout algorithm in sszvis.fn.verticalBarChartDimensions breaks down.
     // FIXME: consider working on the layout algorithm to make it compatible with examples like this
     // It should be noted that in situations with this much time-series data,
@@ -147,7 +147,7 @@
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(-5, 0)')
+      .attr('transform', sszvis.fn.translateString(0, 0))
       .call(yAxis);
 
 

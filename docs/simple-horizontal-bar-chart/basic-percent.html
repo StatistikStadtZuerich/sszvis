@@ -72,7 +72,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 656, top: 75, right: 10, bottom: 50, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 656, top: 75, right: 1, bottom: 50, left: 0 });
     var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, 10, 20, state.categories.length);
 
 
@@ -107,7 +107,8 @@
     var xAxis = sszvis.axis.x()
       .scale(widthScale)
       .orient('bottom')
-      .tickFormat(function(v) { return sszvis.format.percent(v / 100); });
+      .tickFormat(function(v) { return sszvis.format.percent(v / 100); })
+      .alignOuterLabels(true);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)

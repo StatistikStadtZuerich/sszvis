@@ -68,7 +68,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 500, top: 60, right: 20, bottom: 60, left: 15 });
+    var bounds = sszvis.bounds({ width: 516, height: 500, top: 60, right: 0, bottom: 60, left: 0 });
     var barDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, 60, 60, state.categories.length);
 
     // Scales
@@ -140,7 +140,7 @@
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.fn.translateString(-5, 0))
+      .attr('transform', sszvis.fn.translateString(0, 0))
       .call(yAxis);
 
 

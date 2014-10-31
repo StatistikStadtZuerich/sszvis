@@ -85,7 +85,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 340, top: 20, right: 14, bottom: 180, left: 10 });
+    var bounds = sszvis.bounds({ width: 500, height: 340, top: 20, right: 0, bottom: 180, left: 0 });
 
 
     // Scales
@@ -127,7 +127,8 @@
       .scale(xScale)
       .orient('bottom')
       .title('Anzahl')
-      .titleOffset(40);
+      .titleOffset(40)
+      .alignOuterLabels(true);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
