@@ -357,6 +357,7 @@ namespace('sszvis.axis', function(module) {
         .prop('tickColor')
         .prop('halo')
         .prop('highlight')
+        .prop('showZeroY').showZeroY(false)
         .prop('slant')
         .prop('textWrap')
         .prop('tickLength')
@@ -561,14 +562,15 @@ namespace('sszvis.axis', function(module) {
     };
 
     var axis_y = function() {
-      return axis()
+      var newAxis = axis()
         .ticks(7)
         .tickSize(0, 0)
         .tickPadding(0)
         .tickFormat(function(d) {
-          return 0 === d ? null : sszvis.format.number(d);
+          return 0 === d && !newAxis.showZeroY() ? null : sszvis.format.number(d);
         })
         .vertical(true);
+      return newAxis;
     };
 
     axis_y.time = function() {
