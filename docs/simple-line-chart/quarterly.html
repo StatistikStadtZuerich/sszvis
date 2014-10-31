@@ -108,7 +108,7 @@
       .call(line);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 2))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
