@@ -77,17 +77,23 @@ namespace('sszvis.axis', function(module) {
 
           if (sszvis.fn.defined(props.tickLength)) {
             var extent = d3.extent(axisDelegate.scale().domain());
-            var ticks = group.selectAll('.tick line')
-              .filter(function(d) { return !stringEqual(d, extent[0]) && !stringEqual(d, extent[1]); });
+            var ticks = group.selectAll('.tick')
+              .filter(function(d) {
+                return !stringEqual(d, extent[0]) && !stringEqual(d, extent[1]);
+              });
+            var lines = ticks.selectAll('line');
             var orientation = axisDelegate.orient();
             if (orientation === 'top') {
-              ticks.attr('y1', props.tickLength);
+              lines.attr('y1', props.tickLength);
             } else if (orientation === 'bottom') {
-              ticks.attr('y1', -props.tickLength);
+              lines.attr('y1', -props.tickLength);
             } else if (orientation === 'left') {
-              ticks.attr('x1', -props.tickLength);
+              lines.attr('x1', -props.tickLength);
             } else if (orientation === 'right') {
-              ticks.attr('x1', props.tickLength);
+              lines.attr('x1', props.tickLength);
+            }
+            if (orientation === 'left' || orientation === 'right') {
+              ticks.selectAll('text').attr('dy', '-0.2em');
             }
           }
 
