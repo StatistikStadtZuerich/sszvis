@@ -3063,6 +3063,72 @@ namespace('sszvis.component.rangeRuler', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * @module sszvis/component/rangeFlag
+ *
+ * @returns {d3.component} range flag component (see stacked area chart example)
+ */
+namespace('sszvis.component.rangeFlag', function(module) {
+  'use strict';
+
+  module.exports = function() {
+    return d3.component()
+      .prop('x')
+      .prop('y0', d3.functor).y0(sszvis.fn.prop('y0'))
+      .prop('dy', d3.functor).dy(sszvis.fn.prop('y'))
+      .prop('yScale')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var y0 = sszvis.fn.compose(props.yScale, props.y0);
+        var y1 = sszvis.fn.compose(props.yScale, function(d) { return props.y0(d) + props.dy(d); });
+
+        var bottomDot = selection.selectAll('circle.sszvis-legend--mark.bottom')
+          .data(data);
+
+        bottomDot
+          .call(makeFlagDot)
+          .classed('bottom', true)
+          .attr('cy', y0);
+
+        var topDot = selection.selectAll('circle.sszvis-legend--mark.top')
+          .data(data);
+
+        topDot
+          .call(makeFlagDot)
+          .classed('top', true)
+          .attr('cy', y1);
+
+        function makeFlagDot(dot) {
+          dot.enter()
+            .append('circle')
+            .classed('sszvis-legend--mark', true);
+
+          dot.exit().remove();
+
+          dot
+            .attr('cx', props.x)
+            .attr('r', 2)
+            .attr('fill', '#fff')
+            .attr('stroke', '#909090');
+        }
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(d) {
+            return [props.x, props.yScale(props.y0(d) + props.dy(d) / 2)];
+          });
+
+        selection.call(tooltipAnchor);
+      });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 
 /**
  * Ruler component
@@ -3574,7 +3640,7 @@ namespace('sszvis.component.tooltip', function(module) {
       .delegate('body', renderer)
       .delegate('orientation', renderer)
       .prop('renderInto')
-      .prop('visible').visible(fn.constant(false))
+      .prop('visible', d3.functor).visible(false)
       .renderSelection(function(selection) {
         var props = selection.props();
 
@@ -3596,6 +3662,11 @@ namespace('sszvis.component.tooltip', function(module) {
       });
   };
 
+  function testPredicate(f, value) {
+    return function() {
+      return f.apply(this, arguments) === value;
+    };
+  }
 
   /**
    * Tooltip renderer
@@ -3610,7 +3681,7 @@ namespace('sszvis.component.tooltip', function(module) {
     return d3.component()
       .prop('header').header('')
       .prop('body').body('')
-      .prop('orientation').orientation('bottom')
+      .prop('orientation', d3.functor).orientation('bottom')
       .renderSelection(function(selection) {
 
         var tooltipData = selection.datum();
@@ -3636,18 +3707,10 @@ namespace('sszvis.component.tooltip', function(module) {
           .classed('sszvis-tooltip-body', true);
 
         var enterTipholder = enterTooltip.append('div')
-          .classed('sszvis-tooltip-tipholder', true)
-          .classed('tip-top', props.orientation === 'top')
-          .classed('tip-bot', props.orientation === 'bottom')
-          .classed('tip-left', props.orientation === 'left')
-          .classed('tip-right', props.orientation === 'right');
+          .classed('sszvis-tooltip-tipholder', true);
 
         enterTipholder.append('div')
-          .classed('sszvis-tooltip-tip', true)
-          .classed('tip-top', props.orientation === 'top')
-          .classed('tip-bot', props.orientation === 'bottom')
-          .classed('tip-left', props.orientation === 'left')
-          .classed('tip-right', props.orientation === 'right');
+          .classed('sszvis-tooltip-tip', true);
 
         tooltip.select('.sszvis-tooltip-header')
           .datum(fn.prop('datum'))
@@ -3657,12 +3720,46 @@ namespace('sszvis.component.tooltip', function(module) {
           .datum(fn.prop('datum'))
           .html(props.body);
 
+        tooltip.select('.sszvis-tooltip-tipholder')
+          .classed('tip-top', testPredicate(props.orientation, 'top'))
+          .classed('tip-bot', testPredicate(props.orientation, 'bottom'))
+          .classed('tip-left', testPredicate(props.orientation, 'left'))
+          .classed('tip-right', testPredicate(props.orientation, 'right'));
+
+        tooltip.select('.sszvis-tooltip-tip')
+          .classed('tip-top', testPredicate(props.orientation, 'top'))
+          .classed('tip-bot', testPredicate(props.orientation, 'bottom'))
+          .classed('tip-left', testPredicate(props.orientation, 'left'))
+          .classed('tip-right', testPredicate(props.orientation, 'right'));
+
         selection.selectAll('.sszvis-tooltip')
           .each(function(d) {
-            d3.select(this).style({
-              left: d.x - this.offsetWidth / 2 + 'px',
-              top:  d.y - this.offsetHeight - TIP_HEIGHT + 'px'
-            });
+            switch (props.orientation.apply(this, arguments)) {
+              case 'top':
+                d3.select(this).style({
+                  left: (d.x - this.offsetWidth / 2) + 'px',
+                  top:  (d.y + TIP_HEIGHT) + 'px'
+                });
+                break;
+              case 'bottom':
+                d3.select(this).style({
+                  left: (d.x - this.offsetWidth / 2) + 'px',
+                  top:  (d.y - this.offsetHeight - TIP_HEIGHT) + 'px'
+                });
+                break;
+              case 'left':
+                d3.select(this).style({
+                  left: (d.x + TIP_HEIGHT) + 'px',
+                  top:  (d.y - this.offsetHeight / 2) + 'px'
+                });
+                break;
+              case 'right':
+                d3.select(this).style({
+                  left: (d.x - this.offsetWidth - TIP_HEIGHT) + 'px',
+                  top:  (d.y - this.offsetHeight / 2) + 'px'
+                });
+                break;
+            }
           });
       });
    };

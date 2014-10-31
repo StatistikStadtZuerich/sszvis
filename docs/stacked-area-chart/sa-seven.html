@@ -62,17 +62,22 @@
 
         state.categories = sszvis.fn.set(state.data, cAcc);
 
+        // reverse both the domain and range of the color scale so that the displayed scale matches the order of the layers in the stack
+        state.categories.reverse();
+        state.colorCategories = sszvis.color.ranges.qualitative.qual12.slice().reverse();
+
         state.dates = sszvis.fn.set(state.data, xAcc);
 
         actions.resetDate();
       },
 
-      changeDate: function(inputDate) {
+      changeDate: function(inputDate, inputY) {
         var closest = findClosest(state.dates, inputDate);
         state.highlightDate = closest;
         state.highlightData = state.stackedData.map(function(stack) {
           return stack.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
         });
+        state.flagData = state.highlightData.filter(function(v) { return v.y0 < inputY && v.y0 + v.y > inputY; });
 
         render(state);
       },
@@ -117,13 +122,16 @@
 
       var cScale = d3.scale.ordinal()
         .domain(state.categories)
-        .range(sszvis.color.ranges.qualitative.qual12);
+        .range(state.colorCategories);
 
 
       // Layers
 
       var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
         .datum(state.stackedData);
+
+      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+        .datum(state.flagData);
 
 
       // Components
@@ -146,10 +154,8 @@
 
       var colorLegend = sszvis.legend.color()
         .scale(cScale)
-        .width(bounds.innerWidth) // FIXME: magic number here adjusts the spacing of the columns in the color legend
+        .width(bounds.innerWidth)
         .rows(6)
-        // FIXME: reverse the order of items in the color legend (for reasons discussed in sa-two.html)
-        .reverse(true)
         .orientation('vertical');
 
       var rangeRuler = sszvis.component.rangeRuler()
@@ -161,6 +167,20 @@
         .flip(function(d) {
           return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
         });
+
+      var rangeTooltip = sszvis.component.tooltip()
+          .header(function(d) {
+            return yAcc(d).toString();
+          })
+          .orientation(function(d) {
+            return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? 'right' : 'left';
+          })
+          .renderInto(tooltipLayer)
+          .visible(true);
+
+      var rangeFlag = sszvis.component.rangeFlag()
+        .x(xScale(state.highlightDate))
+        .yScale(yScale);
 
 
       // Rendering
@@ -182,6 +202,12 @@
       chartLayer.selectGroup('highlight')
         .datum(state.highlightData)
         .call(rangeRuler);
+
+      var flagGroup = chartLayer.selectGroup('flag')
+        .datum(state.flagData)
+        .call(rangeFlag);
+
+      flagGroup.selectAll('[data-tooltip-anchor]').call(rangeTooltip);
 
 
       // Interaction

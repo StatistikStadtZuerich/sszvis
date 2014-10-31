@@ -54,6 +54,7 @@ SOURCE_FILES = \
 	sszvis/component/pie.js \
 	sszvis/component/pyramid.js \
 	sszvis/component/rangeRuler.js \
+	sszvis/component/rangeFlag.js \
 	sszvis/component/ruler.js \
 	sszvis/component/stackedArea.js \
 	sszvis/component/stackedBar.js \

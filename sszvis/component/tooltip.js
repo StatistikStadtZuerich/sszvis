@@ -16,7 +16,7 @@ namespace('sszvis.component.tooltip', function(module) {
       .delegate('body', renderer)
       .delegate('orientation', renderer)
       .prop('renderInto')
-      .prop('visible').visible(fn.constant(false))
+      .prop('visible', d3.functor).visible(false)
       .renderSelection(function(selection) {
         var props = selection.props();
 
@@ -38,6 +38,11 @@ namespace('sszvis.component.tooltip', function(module) {
       });
   };
 
+  function testPredicate(f, value) {
+    return function() {
+      return f.apply(this, arguments) === value;
+    };
+  }
 
   /**
    * Tooltip renderer
@@ -52,7 +57,7 @@ namespace('sszvis.component.tooltip', function(module) {
     return d3.component()
       .prop('header').header('')
       .prop('body').body('')
-      .prop('orientation').orientation('bottom')
+      .prop('orientation', d3.functor).orientation('bottom')
       .renderSelection(function(selection) {
 
         var tooltipData = selection.datum();
@@ -78,18 +83,10 @@ namespace('sszvis.component.tooltip', function(module) {
           .classed('sszvis-tooltip-body', true);
 
         var enterTipholder = enterTooltip.append('div')
-          .classed('sszvis-tooltip-tipholder', true)
-          .classed('tip-top', props.orientation === 'top')
-          .classed('tip-bot', props.orientation === 'bottom')
-          .classed('tip-left', props.orientation === 'left')
-          .classed('tip-right', props.orientation === 'right');
+          .classed('sszvis-tooltip-tipholder', true);
 
         enterTipholder.append('div')
-          .classed('sszvis-tooltip-tip', true)
-          .classed('tip-top', props.orientation === 'top')
-          .classed('tip-bot', props.orientation === 'bottom')
-          .classed('tip-left', props.orientation === 'left')
-          .classed('tip-right', props.orientation === 'right');
+          .classed('sszvis-tooltip-tip', true);
 
         tooltip.select('.sszvis-tooltip-header')
           .datum(fn.prop('datum'))
@@ -99,12 +96,46 @@ namespace('sszvis.component.tooltip', function(module) {
           .datum(fn.prop('datum'))
           .html(props.body);
 
+        tooltip.select('.sszvis-tooltip-tipholder')
+          .classed('tip-top', testPredicate(props.orientation, 'top'))
+          .classed('tip-bot', testPredicate(props.orientation, 'bottom'))
+          .classed('tip-left', testPredicate(props.orientation, 'left'))
+          .classed('tip-right', testPredicate(props.orientation, 'right'));
+
+        tooltip.select('.sszvis-tooltip-tip')
+          .classed('tip-top', testPredicate(props.orientation, 'top'))
+          .classed('tip-bot', testPredicate(props.orientation, 'bottom'))
+          .classed('tip-left', testPredicate(props.orientation, 'left'))
+          .classed('tip-right', testPredicate(props.orientation, 'right'));
+
         selection.selectAll('.sszvis-tooltip')
           .each(function(d) {
-            d3.select(this).style({
-              left: d.x - this.offsetWidth / 2 + 'px',
-              top:  d.y - this.offsetHeight - TIP_HEIGHT + 'px'
-            });
+            switch (props.orientation.apply(this, arguments)) {
+              case 'top':
+                d3.select(this).style({
+                  left: (d.x - this.offsetWidth / 2) + 'px',
+                  top:  (d.y + TIP_HEIGHT) + 'px'
+                });
+                break;
+              case 'bottom':
+                d3.select(this).style({
+                  left: (d.x - this.offsetWidth / 2) + 'px',
+                  top:  (d.y - this.offsetHeight - TIP_HEIGHT) + 'px'
+                });
+                break;
+              case 'left':
+                d3.select(this).style({
+                  left: (d.x + TIP_HEIGHT) + 'px',
+                  top:  (d.y - this.offsetHeight / 2) + 'px'
+                });
+                break;
+              case 'right':
+                d3.select(this).style({
+                  left: (d.x - this.offsetWidth - TIP_HEIGHT) + 'px',
+                  top:  (d.y - this.offsetHeight / 2) + 'px'
+                });
+                break;
+            }
           });
       });
    };
