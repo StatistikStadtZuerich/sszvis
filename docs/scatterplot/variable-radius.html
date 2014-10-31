@@ -6,148 +6,148 @@
   <title>Scatterplot</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var xAcc = sszvis.fn.prop('neubauabs');
-    var yAcc = sszvis.fn.prop('leerzunrel');
-    var rAcc = sszvis.fn.prop('best13radius');
-    var cAcc = sszvis.fn.prop('quname');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      xExtent: [0, 0],
-      yExtent: [0, 0],
-      rExtent: [0, 0]
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('neubauabs');
+  var yAcc = sszvis.fn.prop('leerzunrel');
+  var rAcc = sszvis.fn.prop('best13radius');
+  var cAcc = sszvis.fn.prop('quname');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
-        state.yExtent = d3.extent(state.data, yAcc);
-        state.rExtent = d3.extent(state.data, rAcc);
-
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    xExtent: [0, 0],
+    yExtent: [0, 0],
+    rExtent: [0, 0]
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/VRS_basic.csv')
-      .row(function(d) {
-        return {
-          neubauabs: sszvis.parse.number(d['NeubauAbs (x-Achse)']),
-          leerzunrel: sszvis.parse.number(d['LeerZunRel (y-Achse) ']),
-          best13radius: sszvis.parse.number(d['Best13Radius (bubble)']),
-          quname: d['QuName']
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
-      });
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
+      state.yExtent = d3.extent(state.data, yAcc);
+      state.rExtent = d3.extent(state.data, rAcc);
 
-
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 570, top: 10, right: 10, bottom: 110, left: 10 });
-
-
-      // Scales
-
-      var xScale = d3.scale.log()
-        .domain(state.xExtent)
-        .range([0, bounds.innerWidth]);
-
-      var yScale = d3.scale.linear()
-        .domain(state.yExtent)
-        .range([bounds.innerHeight, 0]);
-
-      var rScale = d3.scale.linear()
-        .domain(state.rExtent)
-        .range(state.rExtent);
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.data);
-
-
-      // Components
-
-      var dots = sszvis.component.dot()
-        .x(sszvis.fn.compose(function(v) {
-          return v <= 0.1 ? 0 : xScale(v);
-        }, xAcc))
-        .y(sszvis.fn.compose(yScale, yAcc))
-        .radius(sszvis.fn.compose(rScale, rAcc))
-        .fill(sszvis.color.values.basicBlue)
-        .stroke(sszvis.color.values.plainWhite);
-
-      var xAxis = sszvis.axis.x()
-        .scale(xScale)
-        .tickFormat(sszvis.format.number)
-        .ticks(4)
-        .orient('bottom');
-
-      var yAxis = sszvis.axis.y()
-        .scale(yScale)
-        .orient('right')
-        .halo(true);
-
-      var annotation = sszvis.component.dataAreaRectangle()
-        .x(xScale(8)) // x-position is bounds.innerWidth * t, where t = 0.55
-        .y(0)
-        .width(bounds.innerWidth - xScale(15)) // width is bounds.innerWidth * (1 - t)
-        .height(bounds.innerHeight)
-        .caption('Dies ist ein Datenbereich');
-
-      var radiusLegend = sszvis.legend.radius()
-        .scale(rScale)
-        .fill(sszvis.color.values.basicBlue)
-        .stroke(sszvis.color.values.plainWhite);
-
-
-      // Rendering
-
-      chartLayer.selectGroup('dots')
-        .call(dots);
-
-      chartLayer.selectGroup('dataArea')
-        .datum([1])
-        .call(annotation);
-
-      chartLayer.selectGroup('radLegend')
-        .attr('transform', sszvis.fn.translateString(30, bounds.innerHeight + 70))
-        .call(radiusLegend);
-
-      chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-        .call(xAxis);
-
-      chartLayer.selectGroup('yAxis')
-        .call(yAxis);
+      render(state);
     }
+  };
 
-  }());
-  </script>
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/VRS_basic.csv')
+    .row(function(d) {
+      return {
+        neubauabs: sszvis.parse.number(d['NeubauAbs (x-Achse)']),
+        leerzunrel: sszvis.parse.number(d['LeerZunRel (y-Achse) ']),
+        best13radius: sszvis.parse.number(d['Best13Radius (bubble)']),
+        quname: d['QuName']
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 500, height: 570, top: 10, right: 10, bottom: 110, left: 10 });
+
+
+    // Scales
+
+    var xScale = d3.scale.log()
+      .domain(state.xExtent)
+      .range([0, bounds.innerWidth]);
+
+    var yScale = d3.scale.linear()
+      .domain(state.yExtent)
+      .range([bounds.innerHeight, 0]);
+
+    var rScale = d3.scale.linear()
+      .domain(state.rExtent)
+      .range(state.rExtent);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.data);
+
+
+    // Components
+
+    var dots = sszvis.component.dot()
+      .x(sszvis.fn.compose(function(v) {
+        return v <= 0.1 ? 0 : xScale(v);
+      }, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .radius(sszvis.fn.compose(rScale, rAcc))
+      .fill(sszvis.color.values.basicBlue)
+      .stroke(sszvis.color.values.plainWhite);
+
+    var xAxis = sszvis.axis.x()
+      .scale(xScale)
+      .tickFormat(sszvis.format.number)
+      .ticks(4)
+      .orient('bottom');
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .halo(true);
+
+    var annotation = sszvis.component.dataAreaRectangle()
+      .x(xScale(8)) // x-position is bounds.innerWidth * t, where t = 0.55
+      .y(0)
+      .width(bounds.innerWidth - xScale(15)) // width is bounds.innerWidth * (1 - t)
+      .height(bounds.innerHeight)
+      .caption('Dies ist ein Datenbereich');
+
+    var radiusLegend = sszvis.legend.radius()
+      .scale(rScale)
+      .fill(sszvis.color.values.basicBlue)
+      .stroke(sszvis.color.values.plainWhite);
+
+
+    // Rendering
+
+    chartLayer.selectGroup('dots')
+      .call(dots);
+
+    chartLayer.selectGroup('dataArea')
+      .datum([1])
+      .call(annotation);
+
+    chartLayer.selectGroup('radLegend')
+      .attr('transform', sszvis.fn.translateString(30, bounds.innerHeight + 70))
+      .call(radiusLegend);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis);
+  }
+
+}());
+</script>
 </body>
 </html>

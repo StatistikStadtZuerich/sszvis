@@ -6,177 +6,177 @@
   <title>Line chart</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
-
-
-    /* Shortcuts
-    ----------------------------------------------- */
-    var xAcc = sszvis.fn.prop('date');
-    var yAcc = sszvis.fn.prop('value');
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
 
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      years: [0, 0],
-      lineData: [],
-      selectedData: [],
-      currentDate: null
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('date');
+  var yAcc = sszvis.fn.prop('value');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.years = d3.extent(state.data, xAcc);
-        state.lineData = [state.data];
-
-        actions.resetDate();
-      },
-
-      changeDate: function(inputDate) {
-        var date = closestDatum(state.data, sszvis.fn.prop('date'), inputDate).date;
-        if (state.currentDate === date) return;
-
-        state.currentDate = date;
-        state.selectedData = state.data.filter(function(d) {
-          return d.date === state.currentDate && !isNaN(d.value);
-        });
-
-        render(state);
-      },
-
-      resetDate: function() {
-        var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
-        actions.changeDate(mostRecentDate);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    years: [0, 0],
+    lineData: [],
+    selectedData: [],
+    currentDate: null
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/SL_quarterly.csv')
-      .row(function(d) {
-        return {
-          date:  sszvis.parse.date(d['Datum']),
-          value: sszvis.parse.number(d['Wert'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.years = d3.extent(state.data, xAcc);
+      state.lineData = [state.data];
+
+      actions.resetDate();
+    },
+
+    changeDate: function(inputDate) {
+      var date = closestDatum(state.data, sszvis.fn.prop('date'), inputDate).date;
+      if (state.currentDate === date) return;
+
+      state.currentDate = date;
+      state.selectedData = state.data.filter(function(d) {
+        return d.date === state.currentDate && !isNaN(d.value);
       });
 
+      render(state);
+    },
 
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3 });
-
-
-      // Scales
-
-      var xScale = d3.time.scale()
-        .domain(state.years)
-        .range([0, bounds.innerWidth]);
-
-      var yScale = d3.scale.linear()
-        .domain([0, d3.max(state.data, yAcc)])
-        .range([bounds.innerHeight, 0]);
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds);
-
-
-      // Components
-
-      var line = sszvis.component.line()
-        .xValue(sszvis.fn.compose(xScale, xAcc))
-        .yValue(sszvis.fn.compose(yScale, yAcc))
-        .stroke(sszvis.color.values.basicBlue);
-
-      var xTickValues = xScale
-        .ticks(4)
-        .concat(state.selectedData.map(xAcc));
-
-      var xAxis = sszvis.axis.x.time()
-        .scale(xScale)
-        .orient('bottom')
-        .tickValues(xTickValues)
-        .highlight(state.selectedData.map(xAcc));
-
-      var yAxis = sszvis.axis.y()
-        .scale(yScale)
-        .orient('right')
-        .halo(true);
-
-      var ruler = sszvis.component.ruler()
-        .x(xAcc)
-        .y(yAcc)
-        .xScale(xScale)
-        .yScale(yScale)
-        .label(function(d) {
-          return d.value + ' Anteile';
-        })
-        .color(sszvis.color.values.basicBlue);
-
-
-      // Rendering
-
-      var lineChart = chartLayer.selectGroup('lineChart')
-        .datum(state.lineData);
-
-      lineChart.selectGroup('line')
-        .call(line);
-
-      lineChart.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-        .call(xAxis);
-
-      lineChart.selectGroup('yAxis')
-        .call(yAxis);
-
-      chartLayer.selectGroup('ruler')
-        .datum(state.selectedData)
-        .call(ruler);
-
-
-      // Interaction
-
-      var interactionLayer = sszvis.behavior.move()
-        .xScale(xScale)
-        .yScale(yScale)
-        .on('move', actions.changeDate)
-        .on('end', actions.resetDate);
-
-      chartLayer.selectGroup('interaction')
-        .call(interactionLayer);
+    resetDate: function() {
+      var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
+      actions.changeDate(mostRecentDate);
     }
+  };
 
 
-    /* Helper functions
-    ----------------------------------------------- */
-    function closestDatum(data, accessor, datum) {
-      var i = d3.bisector(accessor).left(data, datum, 1);
-      var d0 = data[i - 1];
-      var d1 = data[i] || d0;
-      return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
-    }
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/SL_quarterly.csv')
+    .row(function(d) {
+      return {
+        date:  sszvis.parse.date(d['Datum']),
+        value: sszvis.parse.number(d['Wert'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
 
 
-  }());
-  </script>
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 516, height: 442, top: 3, right: 3, bottom: 40, left: 3 });
+
+
+    // Scales
+
+    var xScale = d3.time.scale()
+      .domain(state.years)
+      .range([0, bounds.innerWidth]);
+
+    var yScale = d3.scale.linear()
+      .domain([0, d3.max(state.data, yAcc)])
+      .range([bounds.innerHeight, 0]);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds);
+
+
+    // Components
+
+    var line = sszvis.component.line()
+      .xValue(sszvis.fn.compose(xScale, xAcc))
+      .yValue(sszvis.fn.compose(yScale, yAcc))
+      .stroke(sszvis.color.values.basicBlue);
+
+    var xTickValues = xScale
+      .ticks(4)
+      .concat(state.selectedData.map(xAcc));
+
+    var xAxis = sszvis.axis.x.time()
+      .scale(xScale)
+      .orient('bottom')
+      .tickValues(xTickValues)
+      .highlight(state.selectedData.map(xAcc));
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .halo(true);
+
+    var ruler = sszvis.component.ruler()
+      .x(xAcc)
+      .y(yAcc)
+      .xScale(xScale)
+      .yScale(yScale)
+      .label(function(d) {
+        return d.value + ' Anteile';
+      })
+      .color(sszvis.color.values.basicBlue);
+
+
+    // Rendering
+
+    var lineChart = chartLayer.selectGroup('lineChart')
+      .datum(state.lineData);
+
+    lineChart.selectGroup('line')
+      .call(line);
+
+    lineChart.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    lineChart.selectGroup('yAxis')
+      .call(yAxis);
+
+    chartLayer.selectGroup('ruler')
+      .datum(state.selectedData)
+      .call(ruler);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(xScale)
+      .yScale(yScale)
+      .on('move', actions.changeDate)
+      .on('end', actions.resetDate);
+
+    chartLayer.selectGroup('interaction')
+      .call(interactionLayer);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function closestDatum(data, accessor, datum) {
+    var i = d3.bisector(accessor).left(data, datum, 1);
+    var d0 = data[i - 1];
+    var d1 = data[i] || d0;
+    return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+  }
+
+
+}());
+</script>
 </body>
 </html>

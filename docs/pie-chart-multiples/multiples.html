@@ -6,187 +6,187 @@
   <title>Pie Chart Multiples</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var gAcc = sszvis.fn.prop('group');
-    var vAcc = sszvis.fn.prop('value');
-    var cAcc = sszvis.fn.prop('category');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      groups: [],
-      totalValues: {},
-      pieGroups: [],
-      categories: [],
-      selection: [],
-      selectedCategories: []
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var gAcc = sszvis.fn.prop('group');
+  var vAcc = sszvis.fn.prop('value');
+  var cAcc = sszvis.fn.prop('category');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        var grouped = sszvis.cascade()
-          .arrayBy(gAcc, function(g1, g2) {
-            return state.groups.indexOf(g1) - state.groups.indexOf(g2);
-          })
-          .apply(data);
-
-        state.data = data;
-        state.groups = sszvis.fn.set(state.data, gAcc);
-        state.totalValues = grouped.reduce(function(memo, group, i) {
-          memo[state.groups[i]] = d3.sum(group, vAcc);
-          return memo;
-        }, {});
-        state.pieGroups = grouped.map(function(g, i) {
-          return {
-            group: state.groups[i],
-            values: g
-          };
-        });
-        state.categories = sszvis.fn.set(state.data, cAcc);
-
-        render(state);
-      },
-
-      showTooltip: function(datum) {
-        state.selection = state.data.filter(function(d) {
-          return datum.category === d.category;
-        });
-        state.selectedCategories = state.selection.map(sszvis.fn.prop('category'));
-        render(state);
-      },
-
-      hideTooltip: function() {
-        state.selection = [];
-        state.selectedCategories = [];
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    groups: [],
+    totalValues: {},
+    pieGroups: [],
+    categories: [],
+    selection: [],
+    selectedCategories: []
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/P_multiples.csv')
-      .row(function(d) {
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      var grouped = sszvis.cascade()
+        .arrayBy(gAcc, function(g1, g2) {
+          return state.groups.indexOf(g1) - state.groups.indexOf(g2);
+        })
+        .apply(data);
+
+      state.data = data;
+      state.groups = sszvis.fn.set(state.data, gAcc);
+      state.totalValues = grouped.reduce(function(memo, group, i) {
+        memo[state.groups[i]] = d3.sum(group, vAcc);
+        return memo;
+      }, {});
+      state.pieGroups = grouped.map(function(g, i) {
         return {
-          group: d['Gruppe'],
-          category: d['Kategorie'],
-          value: sszvis.parse.number(d['Anzahl'])
+          group: state.groups[i],
+          values: g
         };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
+      });
+      state.categories = sszvis.fn.set(state.data, cAcc);
+
+      render(state);
+    },
+
+    showTooltip: function(datum) {
+      state.selection = state.data.filter(function(d) {
+        return datum.category === d.category;
+      });
+      state.selectedCategories = state.selection.map(sszvis.fn.prop('category'));
+      render(state);
+    },
+
+    hideTooltip: function() {
+      state.selection = [];
+      state.selectedCategories = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/P_multiples.csv')
+    .row(function(d) {
+      return {
+        group: d['Gruppe'],
+        category: d['Kategorie'],
+        value: sszvis.parse.number(d['Anzahl'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 880, height: 680, top: 60, right: 60, bottom: 140, left: 60 });
+
+
+    // Scales
+
+    var aScale = d3.scale.linear()
+      .range([0, 2 * Math.PI]);
+
+    var cScale = d3.scale.ordinal()
+      .domain(state.categories)
+      .range(sszvis.color.ranges.qualitative.qual12);
+
+
+    // Layers
+
+    var chart = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.pieGroups);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart');
+
+
+    // Components
+
+    var pieMaker = sszvis.component.pie()
+      .fill(sszvis.fn.compose(cScale, cAcc));
+
+    // FIXME: should we use d3.grid?
+    var multiplesMaker = sszvis.component.multiples()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .paddingX(20)
+      .paddingY(40)
+      .rows(2)
+      .cols(3);
+
+    var colorLegend = sszvis.legend.color()
+      .scale(cScale)
+      .width(bounds.innerWidth)
+      .orientation('vertical');
+
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(sszvis.fn.prop('category'))
+      .body(function(d){ return 'Anzahl: ' + d.value; })
+      .visible(isSelected);
+
+
+    // Rendering
+
+    var pieCharts = chart.selectGroup('piecharts')
+      .call(multiplesMaker);
+
+    // FIXME: improve the multiplesMaker API
+    pieCharts.selectAll('.sszvis-multiple')
+      .each(function(d) {
+        var groupScale = aScale.copy()
+          .domain([0, state.totalValues[d.group]]);
+
+        pieMaker
+          .radius(Math.min(d.gw, d.gh) / 2)
+          .angle(sszvis.fn.compose(groupScale, vAcc));
+
+        d3.select(this).selectAll('.sszvis-multiple-chart')
+          .call(pieMaker);
       });
 
+    pieCharts.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 880, height: 680, top: 60, right: 60, bottom: 140, left: 60 });
-
-
-      // Scales
-
-      var aScale = d3.scale.linear()
-        .range([0, 2 * Math.PI]);
-
-      var cScale = d3.scale.ordinal()
-        .domain(state.categories)
-        .range(sszvis.color.ranges.qualitative.qual12);
+    chart.selectGroup('colorLegend')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
+      .call(colorLegend);
 
 
-      // Layers
+    // Interaction
 
-      var chart = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.pieGroups);
-
-      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart');
-
-
-      // Components
-
-      var pieMaker = sszvis.component.pie()
-        .fill(sszvis.fn.compose(cScale, cAcc));
-
-      // FIXME: should we use d3.grid?
-      var multiplesMaker = sszvis.component.multiples()
-        .width(bounds.innerWidth)
-        .height(bounds.innerHeight)
-        .paddingX(20)
-        .paddingY(40)
-        .rows(2)
-        .cols(3);
-
-      var colorLegend = sszvis.legend.color()
-        .scale(cScale)
-        .width(bounds.innerWidth)
-        .orientation('vertical');
-
-      var tooltip = sszvis.component.tooltip()
-        .renderInto(tooltipLayer)
-        .header(sszvis.fn.prop('category'))
-        .body(function(d){ return 'Anzahl: ' + d.value; })
-        .visible(isSelected);
+    pieCharts.selectAll('path')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
+  }
 
 
-      // Rendering
-
-      var pieCharts = chart.selectGroup('piecharts')
-        .call(multiplesMaker);
-
-      // FIXME: improve the multiplesMaker API
-      pieCharts.selectAll('.sszvis-multiple')
-        .each(function(d) {
-          var groupScale = aScale.copy()
-            .domain([0, state.totalValues[d.group]]);
-
-          pieMaker
-            .radius(Math.min(d.gw, d.gh) / 2)
-            .angle(sszvis.fn.compose(groupScale, vAcc));
-
-          d3.select(this).selectAll('.sszvis-multiple-chart')
-            .call(pieMaker);
-        });
-
-      pieCharts.selectAll('[data-tooltip-anchor]')
-        .call(tooltip);
-
-      chart.selectGroup('colorLegend')
-        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
-        .call(colorLegend);
+  /* Helper functions
+  ----------------------------------------------- */
+  function isSelected(d) {
+    return state.selectedCategories.indexOf(d.category) >= 0;
+  }
 
 
-      // Interaction
-
-      pieCharts.selectAll('path')
-        .on('mouseover', actions.showTooltip)
-        .on('mouseout',  actions.hideTooltip);
-    }
-
-
-    /* Helper functions
-    ----------------------------------------------- */
-    function isSelected(d) {
-      return state.selectedCategories.indexOf(d.category) >= 0;
-    }
-
-
-  }());
-  </script>
+}());
+</script>
 </body>
 </html>

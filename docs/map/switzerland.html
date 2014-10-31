@@ -6,95 +6,95 @@
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../vendor/topojson/topojson.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var vAcc = sszvis.fn.prop('value');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      mapData: {},
-      valueDomain: [0, 0]
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var vAcc = sszvis.fn.prop('value');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        // FIXME: filter the data to remove rows with NaN values. The lack of a datum for certain
-        // map regions will cause the region to be displayed with the missing data texture.
-        state.data = data.filter(function(d) {
-          return !isNaN(vAcc(d));
-        });
-        state.valueDomain = [0, d3.max(state.data, vAcc)];
-
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    mapData: {},
+    valueDomain: [0, 0]
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/M_swiss_fake.csv')
-      .row(function(d) {
-        return {
-          geoId: sszvis.parse.number(d['KantonNr']),
-          value: sszvis.parse.number(d['Wert'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      // FIXME: filter the data to remove rows with NaN values. The lack of a datum for certain
+      // map regions will cause the region to be displayed with the missing data texture.
+      state.data = data.filter(function(d) {
+        return !isNaN(vAcc(d));
       });
+      state.valueDomain = [0, d3.max(state.data, vAcc)];
 
-
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 516, height: 516, top: 0, right: 0, bottom: 0, left: 0 });
-
-
-      // Scales
-
-      var colorScale = sszvis.scale.colorScale()
-        .domain(state.valueDomain)
-        .range(sszvis.color.ranges.divergent.neutral.grnGryBrn);
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.data);
-
-
-      // Components
-
-      var mapMaker = sszvis.map()
-        .type('switzerland-cantons')
-        .width(bounds.innerWidth)
-        .height(bounds.innerHeight)
-        .fill(sszvis.fn.compose(colorScale, vAcc));
-
-
-      // Rendering
-
-      chartLayer.call(mapMaker);
+      render(state);
     }
+  };
 
-  }());
-  </script>
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/M_swiss_fake.csv')
+    .row(function(d) {
+      return {
+        geoId: sszvis.parse.number(d['KantonNr']),
+        value: sszvis.parse.number(d['Wert'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 516, height: 516, top: 0, right: 0, bottom: 0, left: 0 });
+
+
+    // Scales
+
+    var colorScale = sszvis.scale.colorScale()
+      .domain(state.valueDomain)
+      .range(sszvis.color.ranges.divergent.neutral.grnGryBrn);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.data);
+
+
+    // Components
+
+    var mapMaker = sszvis.map()
+      .type('switzerland-cantons')
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .fill(sszvis.fn.compose(colorScale, vAcc));
+
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+  }
+
+}());
+</script>
 </body>
 </html>

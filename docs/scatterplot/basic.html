@@ -6,130 +6,130 @@
   <title>Scatterplot</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var xAcc = sszvis.fn.prop('sector');
-    var yAcc = sszvis.fn.prop('value');
-    var cAcc = sszvis.fn.prop('category');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      xGroups: [],
-      yExtent: [0, 0],
-      categories: []
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('sector');
+  var yAcc = sszvis.fn.prop('value');
+  var cAcc = sszvis.fn.prop('category');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.xGroups = sszvis.fn.set(state.data, xAcc);
-        state.yExtent = d3.extent(state.data, yAcc);
-        state.categories = sszvis.fn.set(state.data, cAcc);
-
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    xGroups: [],
+    yExtent: [0, 0],
+    categories: []
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/SS_basic.csv')
-      .row(function(d) {
-        return {
-          sector: d['Sektor'],
-          category: d['Kategorie'],
-          value: sszvis.parse.number(d['Wert'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
-      });
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.xGroups = sszvis.fn.set(state.data, xAcc);
+      state.yExtent = d3.extent(state.data, yAcc);
+      state.categories = sszvis.fn.set(state.data, cAcc);
 
-
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 600, top: 10, right: 10, bottom: 180, left: 10 });
-
-
-      // Scales
-
-      var xScale = d3.scale.ordinal()
-        .domain(state.xGroups)
-        .rangePoints([0, bounds.innerWidth], 1);
-
-      var yScale = d3.scale.linear()
-        .domain(state.yExtent)
-        .range([bounds.innerHeight, 0]);
-
-      var cScale = d3.scale.ordinal()
-        .domain(state.categories)
-        .range(sszvis.color.ranges.qualitative.valuedQual2);
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.data);
-
-
-      // Components
-
-      var dots = sszvis.component.dot()
-        .x(sszvis.fn.compose(xScale, xAcc))
-        .y(sszvis.fn.compose(yScale, yAcc))
-        .radius(4)
-        .fill(sszvis.fn.compose(cScale, cAcc));
-
-      var xAxis = sszvis.axis.x.ordinal()
-        .scale(xScale)
-        .orient('bottom')
-        .slant('diagonal');
-
-      var yAxis = sszvis.axis.y()
-        .scale(yScale)
-        .orient('right')
-        .halo(true);
-
-      var cLegend = sszvis.legend.color()
-        .scale(cScale)
-        .orientation('vertical');
-
-
-      // Rendering
-
-      chartLayer.selectGroup('dots')
-        .call(dots);
-
-      chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + (bounds.innerHeight) + ')')
-        .call(xAxis);
-
-      chartLayer.selectGroup('yAxis')
-        .call(yAxis);
-
-      chartLayer.selectGroup('cScale')
-        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 105) + ')')
-        .call(cLegend);
+      render(state);
     }
+  };
 
-  }());
-  </script>
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/SS_basic.csv')
+    .row(function(d) {
+      return {
+        sector: d['Sektor'],
+        category: d['Kategorie'],
+        value: sszvis.parse.number(d['Wert'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 500, height: 600, top: 10, right: 10, bottom: 180, left: 10 });
+
+
+    // Scales
+
+    var xScale = d3.scale.ordinal()
+      .domain(state.xGroups)
+      .rangePoints([0, bounds.innerWidth], 1);
+
+    var yScale = d3.scale.linear()
+      .domain(state.yExtent)
+      .range([bounds.innerHeight, 0]);
+
+    var cScale = d3.scale.ordinal()
+      .domain(state.categories)
+      .range(sszvis.color.ranges.qualitative.valuedQual2);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.data);
+
+
+    // Components
+
+    var dots = sszvis.component.dot()
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .radius(4)
+      .fill(sszvis.fn.compose(cScale, cAcc));
+
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('bottom')
+      .slant('diagonal');
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .halo(true);
+
+    var cLegend = sszvis.legend.color()
+      .scale(cScale)
+      .orientation('vertical');
+
+
+    // Rendering
+
+    chartLayer.selectGroup('dots')
+      .call(dots);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + (bounds.innerHeight) + ')')
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis);
+
+    chartLayer.selectGroup('cScale')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 105) + ')')
+      .call(cLegend);
+  }
+
+}());
+</script>
 </body>
 </html>

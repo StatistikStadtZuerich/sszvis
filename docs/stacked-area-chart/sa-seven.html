@@ -6,234 +6,234 @@
   <title>Area Chart</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var xAcc = sszvis.fn.prop('year');
-    var yAcc = sszvis.fn.prop('value');
-    var cAcc = sszvis.fn.prop('category');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      timeExtent: [0, 0],
-      stackedData: [],
-      maxStacked: 0,
-      categories: [],
-      // FIXME: work with highlightData only, not a separate highlightDate
-      highlightDate: new Date(), // FIXME: what's a good initial value for dates?
-      highlightData: []
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('year');
+  var yAcc = sszvis.fn.prop('value');
+  var cAcc = sszvis.fn.prop('category');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.timeExtent = d3.extent(state.data, xAcc);
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    timeExtent: [0, 0],
+    stackedData: [],
+    maxStacked: 0,
+    categories: [],
+    // FIXME: work with highlightData only, not a separate highlightDate
+    highlightDate: new Date(), // FIXME: what's a good initial value for dates?
+    highlightData: []
+  };
 
-        state.stackedData = sszvis.cascade()
-          .arrayBy(cAcc)
-          .apply(state.data)
-          .map(function(stack) {
-            stack.category = cAcc(stack[0]);
-            return stack;
-          });
 
-        var dateValues = sszvis.cascade()
-          .objectBy(sszvis.fn.compose(String, xAcc))
-          .apply(state.data);
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.timeExtent = d3.extent(state.data, xAcc);
 
-        state.maxStacked = d3.max(d3.values(dateValues), function(s) {
-          return d3.sum(s, yAcc);
+      state.stackedData = sszvis.cascade()
+        .arrayBy(cAcc)
+        .apply(state.data)
+        .map(function(stack) {
+          stack.category = cAcc(stack[0]);
+          return stack;
         });
 
-        state.categories = sszvis.fn.set(state.data, cAcc);
+      var dateValues = sszvis.cascade()
+        .objectBy(sszvis.fn.compose(String, xAcc))
+        .apply(state.data);
 
-        // reverse both the domain and range of the color scale so that the displayed scale matches the order of the layers in the stack
-        state.categories.reverse();
-        state.colorCategories = sszvis.color.ranges.qualitative.qual12.slice().reverse();
-
-        state.dates = sszvis.fn.set(state.data, xAcc);
-
-        actions.resetDate();
-      },
-
-      changeDate: function(inputDate, inputY) {
-        var closest = findClosest(state.dates, inputDate);
-        state.highlightDate = closest;
-        state.highlightData = state.stackedData.map(function(stack) {
-          return stack.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
-        });
-        state.flagData = state.highlightData.filter(function(v) { return v.y0 < inputY && v.y0 + v.y > inputY; });
-
-        render(state);
-      },
-
-      resetDate: function() {
-        var mostRecent = d3.max(state.data, xAcc);
-        actions.changeDate(mostRecent);
-      }
-    };
-
-
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/SA_7Kategories_yearly.csv')
-      .row(function(d) {
-        return {
-          category: d['Branche'],
-          year: sszvis.parse.year(d['Jahr']),
-          value: sszvis.parse.number(d['Wert'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
+      state.maxStacked = d3.max(d3.values(dateValues), function(s) {
+        return d3.sum(s, yAcc);
       });
 
+      state.categories = sszvis.fn.set(state.data, cAcc);
 
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 620, top: 30, right: 10, bottom: 180, left: 10 });
+      // reverse both the domain and range of the color scale so that the displayed scale matches the order of the layers in the stack
+      state.categories.reverse();
+      state.colorCategories = sszvis.color.ranges.qualitative.qual12.slice().reverse();
 
+      state.dates = sszvis.fn.set(state.data, xAcc);
 
-      // Scales
+      actions.resetDate();
+    },
 
-      var xScale = d3.time.scale()
-        .domain(state.timeExtent)
-        .range([0, bounds.innerWidth]);
+    changeDate: function(inputDate, inputY) {
+      var closest = findClosest(state.dates, inputDate);
+      state.highlightDate = closest;
+      state.highlightData = state.stackedData.map(function(stack) {
+        return stack.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
+      });
+      state.flagData = state.highlightData.filter(function(v) { return v.y0 < inputY && v.y0 + v.y > inputY; });
 
-      var yScale = d3.scale.linear()
-        .domain([0, state.maxStacked])
-        .range([bounds.innerHeight, 0]);
+      render(state);
+    },
 
-      var cScale = d3.scale.ordinal()
-        .domain(state.categories)
-        .range(state.colorCategories);
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.stackedData);
-
-      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
-        .datum(state.flagData);
+    resetDate: function() {
+      var mostRecent = d3.max(state.data, xAcc);
+      actions.changeDate(mostRecent);
+    }
+  };
 
 
-      // Components
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/SA_7Kategories_yearly.csv')
+    .row(function(d) {
+      return {
+        category: d['Branche'],
+        year: sszvis.parse.year(d['Jahr']),
+        value: sszvis.parse.number(d['Wert'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
 
-      var stackedArea = sszvis.component.stacked.area()
-        .xAccessor(xAcc)
-        .xScale(xScale)
-        .yAccessor(yAcc)
-        .yScale(yScale)
-        .fill(function(d) { return cScale(d.category); }); // FIXME: "d" here is an array representing the whole group
 
-      var xAxis = sszvis.axis.x.time()
-        .scale(xScale)
-        .orient('bottom');
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 500, height: 620, top: 30, right: 10, bottom: 180, left: 10 });
 
-      var yAxis = sszvis.axis.y()
-        .scale(yScale)
-        .halo(true)
-        .orient('right');
 
-      var colorLegend = sszvis.legend.color()
-        .scale(cScale)
-        .width(bounds.innerWidth)
-        .rows(6)
-        .orientation('vertical');
+    // Scales
 
-      var rangeRuler = sszvis.component.rangeRuler()
-        .x(xScale(state.highlightDate))
-        .yScale(yScale)
-        .label(function(d) {
+    var xScale = d3.time.scale()
+      .domain(state.timeExtent)
+      .range([0, bounds.innerWidth]);
+
+    var yScale = d3.scale.linear()
+      .domain([0, state.maxStacked])
+      .range([bounds.innerHeight, 0]);
+
+    var cScale = d3.scale.ordinal()
+      .domain(state.categories)
+      .range(state.colorCategories);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.stackedData);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.flagData);
+
+
+    // Components
+
+    var stackedArea = sszvis.component.stacked.area()
+      .xAccessor(xAcc)
+      .xScale(xScale)
+      .yAccessor(yAcc)
+      .yScale(yScale)
+      .fill(function(d) { return cScale(d.category); }); // FIXME: "d" here is an array representing the whole group
+
+    var xAxis = sszvis.axis.x.time()
+      .scale(xScale)
+      .orient('bottom');
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .halo(true)
+      .orient('right');
+
+    var colorLegend = sszvis.legend.color()
+      .scale(cScale)
+      .width(bounds.innerWidth)
+      .rows(6)
+      .orientation('vertical');
+
+    var rangeRuler = sszvis.component.rangeRuler()
+      .x(xScale(state.highlightDate))
+      .yScale(yScale)
+      .label(function(d) {
+        return yAcc(d).toString();
+      })
+      .flip(function(d) {
+        return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
+      });
+
+    var rangeTooltip = sszvis.component.tooltip()
+        .header(function(d) {
           return yAcc(d).toString();
         })
-        .flip(function(d) {
-          return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
-        });
+        .orientation(function(d) {
+          return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? 'right' : 'left';
+        })
+        .renderInto(tooltipLayer)
+        .visible(true);
 
-      var rangeTooltip = sszvis.component.tooltip()
-          .header(function(d) {
-            return yAcc(d).toString();
-          })
-          .orientation(function(d) {
-            return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? 'right' : 'left';
-          })
-          .renderInto(tooltipLayer)
-          .visible(true);
-
-      var rangeFlag = sszvis.component.rangeFlag()
-        .x(xScale(state.highlightDate))
-        .yScale(yScale);
+    var rangeFlag = sszvis.component.rangeFlag()
+      .x(xScale(state.highlightDate))
+      .yScale(yScale);
 
 
-      // Rendering
+    // Rendering
 
-      chartLayer.selectGroup('areachart')
-        .call(stackedArea);
+    chartLayer.selectGroup('areachart')
+      .call(stackedArea);
 
-      chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
-        .call(xAxis);
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
+      .call(xAxis);
 
-      chartLayer.selectGroup('yAxis')
-        .call(yAxis);
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis);
 
-      chartLayer.selectGroup('colorLegend')
-        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 30) + ')')
-        .call(colorLegend);
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 30) + ')')
+      .call(colorLegend);
 
-      chartLayer.selectGroup('highlight')
-        .datum(state.highlightData)
-        .call(rangeRuler);
+    chartLayer.selectGroup('highlight')
+      .datum(state.highlightData)
+      .call(rangeRuler);
 
-      var flagGroup = chartLayer.selectGroup('flag')
-        .datum(state.flagData)
-        .call(rangeFlag);
+    var flagGroup = chartLayer.selectGroup('flag')
+      .datum(state.flagData)
+      .call(rangeFlag);
 
-      flagGroup.selectAll('[data-tooltip-anchor]').call(rangeTooltip);
-
-
-      // Interaction
-
-      var interactionLayer = sszvis.behavior.move()
-        .xScale(xScale)
-        .yScale(yScale)
-        .on('move', actions.changeDate)
-        .on('end', actions.resetDate);
-
-      chartLayer.selectGroup('interaction')
-        .call(interactionLayer);
-    }
+    flagGroup.selectAll('[data-tooltip-anchor]').call(rangeTooltip);
 
 
-    /* Helper functions
-    ----------------------------------------------- */
-    function findClosest(data, datum) {
-      var i = d3.bisectLeft(data, datum, 1);
-      var d0 = data[i - 1];
-      var d1 = data[i] || d0;
-      return datum - d0 > d1 - datum ? d1 : d0;
-    }
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(xScale)
+      .yScale(yScale)
+      .on('move', actions.changeDate)
+      .on('end', actions.resetDate);
+
+    chartLayer.selectGroup('interaction')
+      .call(interactionLayer);
+  }
 
 
-  }());
-  </script>
+  /* Helper functions
+  ----------------------------------------------- */
+  function findClosest(data, datum) {
+    var i = d3.bisectLeft(data, datum, 1);
+    var d0 = data[i - 1];
+    var d1 = data[i] || d0;
+    return datum - d0 > d1 - datum ? d1 : d0;
+  }
+
+
+}());
+</script>
 </body>
 </html>

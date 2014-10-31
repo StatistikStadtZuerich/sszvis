@@ -6,117 +6,117 @@
   <title>Line chart</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var xAcc = sszvis.fn.prop('date');
-    var yAcc = sszvis.fn.prop('value');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      years: [0, 0],
-      lineData: []
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('date');
+  var yAcc = sszvis.fn.prop('value');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.years = d3.extent(state.data, xAcc);
-        state.lineData = [state.data];
-
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    years: [0, 0],
+    lineData: []
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/SL_quarterly.csv')
-      .row(function(d) {
-        return {
-          date:  sszvis.parse.date(d['Datum']),
-          value: sszvis.parse.number(d['Wert'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
-      });
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.years = d3.extent(state.data, xAcc);
+      state.lineData = [state.data];
 
-
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 480, top: 40, right: 10, bottom: 80, left: 10 });
-
-
-      // Scales
-
-      var xScale = d3.time.scale()
-        .range([0, bounds.innerWidth])
-        .domain(state.years);
-
-      var yScale = d3.scale.linear()
-        .range([bounds.innerHeight, 0])
-        .domain([0, d3.max(state.data, yAcc)]);
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.lineData);
-
-
-      // Components
-
-      var line = sszvis.component.line()
-        .xValue(sszvis.fn.compose(xScale, xAcc))
-        .yValue(sszvis.fn.compose(yScale, yAcc))
-        .stroke(sszvis.color.values.basicBlue);
-
-      var xAxis = sszvis.axis.x.time()
-        .scale(xScale)
-        .orient('bottom')
-        .title('Datum')
-        .titleOffset(40)
-        .ticks(4);
-
-      var yAxis = sszvis.axis.y()
-        .scale(yScale)
-        .orient('right')
-        .title('Wert')
-        .titleOffset(20)
-        .halo(true);
-
-
-      // Rendering
-
-      chartLayer.selectGroup('line')
-        .call(line);
-
-      chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-        .call(xAxis);
-
-      chartLayer.selectGroup('yAxis')
-        .call(yAxis);
+      render(state);
     }
+  };
 
-  }());
-  </script>
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/SL_quarterly.csv')
+    .row(function(d) {
+      return {
+        date:  sszvis.parse.date(d['Datum']),
+        value: sszvis.parse.number(d['Wert'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 500, height: 480, top: 40, right: 10, bottom: 80, left: 10 });
+
+
+    // Scales
+
+    var xScale = d3.time.scale()
+      .range([0, bounds.innerWidth])
+      .domain(state.years);
+
+    var yScale = d3.scale.linear()
+      .range([bounds.innerHeight, 0])
+      .domain([0, d3.max(state.data, yAcc)]);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.lineData);
+
+
+    // Components
+
+    var line = sszvis.component.line()
+      .xValue(sszvis.fn.compose(xScale, xAcc))
+      .yValue(sszvis.fn.compose(yScale, yAcc))
+      .stroke(sszvis.color.values.basicBlue);
+
+    var xAxis = sszvis.axis.x.time()
+      .scale(xScale)
+      .orient('bottom')
+      .title('Datum')
+      .titleOffset(40)
+      .ticks(4);
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .title('Wert')
+      .titleOffset(20)
+      .halo(true);
+
+
+    // Rendering
+
+    chartLayer.selectGroup('line')
+      .call(line);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis);
+  }
+
+}());
+</script>
 </body>
 </html>

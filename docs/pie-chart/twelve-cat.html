@@ -6,144 +6,144 @@
   <title>Pie Chart</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var vAcc = sszvis.fn.prop('value');
-    var cAcc = sszvis.fn.prop('category');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      totalValue: 0,
-      categories: [],
-      selection: []
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var vAcc = sszvis.fn.prop('value');
+  var cAcc = sszvis.fn.prop('category');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.totalValue = d3.sum(state.data, vAcc);
-        state.categories = sszvis.fn.set(state.data, cAcc);
-        render(state);
-      },
-
-      showTooltip: function(datum) {
-        state.selection = [datum];
-        render(state);
-      },
-
-      hideTooltip: function() {
-        state.selection = [];
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    totalValue: 0,
+    categories: [],
+    selection: []
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/P_7Categories.csv')
-      .row(function(d) {
-        return {
-          category: d['Kategorie'],
-          value: sszvis.parse.number(d['Schweiz Import'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
-      });
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.totalValue = d3.sum(state.data, vAcc);
+      state.categories = sszvis.fn.set(state.data, cAcc);
+      render(state);
+    },
 
+    showTooltip: function(datum) {
+      state.selection = [datum];
+      render(state);
+    },
 
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 300, top: 20, right: 230, bottom: 20, left: 20 });
-
-
-      // Scales
-
-      var aScale = d3.scale.linear()
-        .domain([0, state.totalValue])
-        .range([0, 2 * Math.PI]);
-
-      var cScale = d3.scale.ordinal()
-        .domain(state.categories)
-        .range(sszvis.color.ranges.qualitative.qual12); // FIXME: construct ranges, don't use the basic object directly
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.data);
-
-      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
-        .datum(state.selection);
-
-
-      // Components
-
-      var pieMaker = sszvis.component.pie()
-        .radius(d3.min([bounds.innerWidth / 2, bounds.innerHeight / 2]))
-        .angle(sszvis.fn.compose(aScale, vAcc))
-        .fill(sszvis.fn.compose(cScale, cAcc));
-
-      var colorLegend = sszvis.legend.color()
-        .scale(cScale)
-        .rows(state.categories.length)
-        .orientation('vertical');
-
-      var headerText = sszvis.component.modularText()
-        .bold(sszvis.fn.compose(sszvis.format.percent, function(d) { return vAcc(d) / state.totalValue; }));
-
-      var tooltip = sszvis.component.tooltip()
-        .renderInto(tooltipLayer)
-        .header(headerText)
-        .visible(isSelected);
-
-
-      // Rendering
-
-      var pie = chartLayer.selectGroup('piechart')
-        .call(pieMaker);
-
-      pie.selectAll('[data-tooltip-anchor]')
-        .call(tooltip);
-
-      chartLayer.selectGroup('colorLegend')
-        .attr('transform', 'translate(' + (bounds.innerWidth + 40) + ', 5)') // FIXME: how to center legend vertically?
-        .call(colorLegend);
-
-
-      // Interaction
-
-      pie.selectAll('path')
-        .on('mouseover', actions.showTooltip)
-        .on('mouseout',  actions.hideTooltip);
+    hideTooltip: function() {
+      state.selection = [];
+      render(state);
     }
+  };
 
 
-    /* Helper functions
-    ----------------------------------------------- */
-    function isSelected(d) {
-      return state.selection.indexOf(d) >= 0;
-    }
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/P_7Categories.csv')
+    .row(function(d) {
+      return {
+        category: d['Kategorie'],
+        value: sszvis.parse.number(d['Schweiz Import'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
 
 
-  }());
-  </script>
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 500, height: 300, top: 20, right: 230, bottom: 20, left: 20 });
+
+
+    // Scales
+
+    var aScale = d3.scale.linear()
+      .domain([0, state.totalValue])
+      .range([0, 2 * Math.PI]);
+
+    var cScale = d3.scale.ordinal()
+      .domain(state.categories)
+      .range(sszvis.color.ranges.qualitative.qual12); // FIXME: construct ranges, don't use the basic object directly
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
+
+
+    // Components
+
+    var pieMaker = sszvis.component.pie()
+      .radius(d3.min([bounds.innerWidth / 2, bounds.innerHeight / 2]))
+      .angle(sszvis.fn.compose(aScale, vAcc))
+      .fill(sszvis.fn.compose(cScale, cAcc));
+
+    var colorLegend = sszvis.legend.color()
+      .scale(cScale)
+      .rows(state.categories.length)
+      .orientation('vertical');
+
+    var headerText = sszvis.component.modularText()
+      .bold(sszvis.fn.compose(sszvis.format.percent, function(d) { return vAcc(d) / state.totalValue; }));
+
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(headerText)
+      .visible(isSelected);
+
+
+    // Rendering
+
+    var pie = chartLayer.selectGroup('piechart')
+      .call(pieMaker);
+
+    pie.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', 'translate(' + (bounds.innerWidth + 40) + ', 5)') // FIXME: how to center legend vertically?
+      .call(colorLegend);
+
+
+    // Interaction
+
+    pie.selectAll('path')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function isSelected(d) {
+    return state.selection.indexOf(d) >= 0;
+  }
+
+
+}());
+</script>
 </body>
 </html>

@@ -6,117 +6,117 @@
   <title>Line Chart</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var xAcc = sszvis.fn.prop('difference');
-    var yAcc = sszvis.fn.prop('frequency');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      xRange: [0, 0],
-      yRange: [0, 0],
-      lineData: []
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('difference');
+  var yAcc = sszvis.fn.prop('frequency');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.xRange = d3.extent(state.data, xAcc);
-        state.lineData = [state.data];
-
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    xRange: [0, 0],
+    yRange: [0, 0],
+    lineData: []
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/SL_negativesXAxis.csv')
-      .row(function(d) {
-        return {
-          difference:  sszvis.parse.number(d['Altersdifferenz']),
-          frequency: sszvis.parse.number(d['Häufigkeit'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
-      });
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.xRange = d3.extent(state.data, xAcc);
+      state.lineData = [state.data];
 
-
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 500, height: 450, top: 30, right: 10, bottom: 50, left: 10 });
-
-
-      // Scales
-
-      var xScale = d3.scale.linear()
-        .domain(state.xRange)
-        .range([0, bounds.innerWidth]);
-
-      var yScale = d3.scale.linear()
-        .domain([0, d3.max(state.data, yAcc)])
-        .range([bounds.innerHeight, 0]);
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.lineData);
-
-
-      // Components
-
-      var line = sszvis.component.line()
-        .xValue(sszvis.fn.compose(xScale, xAcc))
-        .yValue(sszvis.fn.compose(yScale, yAcc))
-        .stroke(sszvis.color.values.basicBlue);
-
-      var xAxis = sszvis.axis.x()
-        .scale(xScale)
-        .orient('bottom')
-        .title('Altersdifferenz')
-        .titleOffset(35);
-
-      var yAxis = sszvis.axis.y()
-        .scale(yScale)
-        .orient('right')
-        .halo(true)
-        .title('Häufigkeit')
-        .titleOffset(10);
-
-
-      // Rendering
-
-      chartLayer.selectGroup('line')
-        .call(line);
-
-      chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-        .call(xAxis);
-
-      chartLayer.selectGroup('yAxis')
-        .call(yAxis);
+      render(state);
     }
+  };
 
-  }());
-  </script>
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/SL_negativesXAxis.csv')
+    .row(function(d) {
+      return {
+        difference:  sszvis.parse.number(d['Altersdifferenz']),
+        frequency: sszvis.parse.number(d['Häufigkeit'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 500, height: 450, top: 30, right: 10, bottom: 50, left: 10 });
+
+
+    // Scales
+
+    var xScale = d3.scale.linear()
+      .domain(state.xRange)
+      .range([0, bounds.innerWidth]);
+
+    var yScale = d3.scale.linear()
+      .domain([0, d3.max(state.data, yAcc)])
+      .range([bounds.innerHeight, 0]);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.lineData);
+
+
+    // Components
+
+    var line = sszvis.component.line()
+      .xValue(sszvis.fn.compose(xScale, xAcc))
+      .yValue(sszvis.fn.compose(yScale, yAcc))
+      .stroke(sszvis.color.values.basicBlue);
+
+    var xAxis = sszvis.axis.x()
+      .scale(xScale)
+      .orient('bottom')
+      .title('Altersdifferenz')
+      .titleOffset(35);
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .halo(true)
+      .title('Häufigkeit')
+      .titleOffset(10);
+
+
+    // Rendering
+
+    chartLayer.selectGroup('line')
+      .call(line);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis);
+  }
+
+}());
+</script>
 </body>
 </html>

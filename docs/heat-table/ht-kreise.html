@@ -5,205 +5,205 @@
   <title>Heat Table – Kreise</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var xAcc = sszvis.fn.prop('kreis');
-    var yAcc = sszvis.fn.prop('agegroup');
-    var cAcc = sszvis.fn.prop('value');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      agesList: [],
-      kreisList: [],
-      valueDomain: [0, 0],
-      selection: []
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('kreis');
+  var yAcc = sszvis.fn.prop('agegroup');
+  var cAcc = sszvis.fn.prop('value');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.agesList = sszvis.fn.set(state.data, yAcc).sort(sortInt);
-        state.kreisList = sszvis.fn.set(state.data, xAcc).sort(sortKreisInt);
-        state.valueDomain = d3.extent(state.data, cAcc);
-
-        render(state);
-      },
-
-      showTooltip: function(datum) {
-        state.selection = [datum];
-        render(state);
-      },
-
-      hideTooltip: function() {
-        state.selection = [];
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    agesList: [],
+    kreisList: [],
+    valueDomain: [0, 0],
+    selection: []
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/HT_kreise.csv')
-      .row(function(d) {
-        return {
-          kreis: d['KName'],
-          agegroup: d['Altersgruppe'],
-          value: sszvis.parse.number(d['Anzahl'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.agesList = sszvis.fn.set(state.data, yAcc).sort(sortInt);
+      state.kreisList = sszvis.fn.set(state.data, xAcc).sort(sortKreisInt);
+      state.valueDomain = d3.extent(state.data, cAcc);
+
+      render(state);
+    },
+
+    showTooltip: function(datum) {
+      state.selection = [datum];
+      render(state);
+    },
+
+    hideTooltip: function() {
+      state.selection = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/HT_kreise.csv')
+    .row(function(d) {
+      return {
+        kreis: d['KName'],
+        agegroup: d['Altersgruppe'],
+        value: sszvis.parse.number(d['Anzahl'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 516, height: 800, top: 70, right: 0, bottom: 50, left: 80 });
+    var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.kreisList.length, state.agesList.length);
+
+
+    // Scales
+
+    var xScale = d3.scale.ordinal()
+      .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
+      .domain(state.kreisList);
+
+    var yScale = d3.scale.ordinal()
+      .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
+      .domain(state.agesList);
+
+    var colorScale = sszvis.scale.colorScale()
+      .domain(state.valueDomain)
+      .range(sszvis.color.ranges.sequential.valued.blue);
+
+    var xValue = sszvis.fn.compose(xScale, xAcc);
+    var yValue = sszvis.fn.compose(yScale, yAcc);
+    var cValue = sszvis.fn.compose(colorScale, cAcc);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
+
+
+    // Components
+
+    var barGen = sszvis.component.bar()
+      .x(xValue)
+      .y(yValue)
+      .width(tableDimensions.side)
+      .height(tableDimensions.side)
+      .fill(cValue)
+      .stroke(function(d) {
+        return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
       });
 
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('top')
+      .slant('diagonal')
+      .tickSize(0, 0)
+      .tickPadding(0)
+      .title('Kreis')
+      .titleOffset(40);
 
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 516, height: 800, top: 70, right: 0, bottom: 50, left: 80 });
-      var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.kreisList.length, state.agesList.length);
+    var yAxis = sszvis.axis.y.ordinal()
+      .scale(yScale)
+      .orient('left')
+      .title('Altersgruppe')
+      .titleOffset(10);
 
+    var legend = sszvis.legend.linearColorScale()
+      .scale(colorScale)
+      .width(bounds.width / 2)
+      .units('Einwohner');
 
-      // Scales
+    var tooltipHeaderText = sszvis.component.modularText()
+      .plain(xAcc);
 
-      var xScale = d3.scale.ordinal()
-        .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
-        .domain(state.kreisList);
+    // FIXME: improve styling of line breaks
+    var tooltipBodyText = sszvis.component.modularText()
+      .plain(cAcc).plain('Einwohner')
+      .newline()
+      .plain(yAcc).plain('Jahre alt');
 
-      var yScale = d3.scale.ordinal()
-        .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
-        .domain(state.agesList);
-
-      var colorScale = sszvis.scale.colorScale()
-        .domain(state.valueDomain)
-        .range(sszvis.color.ranges.sequential.valued.blue);
-
-      var xValue = sszvis.fn.compose(xScale, xAcc);
-      var yValue = sszvis.fn.compose(yScale, yAcc);
-      var cValue = sszvis.fn.compose(colorScale, cAcc);
-
-
-      // Layers
-
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.data);
-
-      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
-        .datum(state.selection);
-
-
-      // Components
-
-      var barGen = sszvis.component.bar()
-        .x(xValue)
-        .y(yValue)
-        .width(tableDimensions.side)
-        .height(tableDimensions.side)
-        .fill(cValue)
-        .stroke(function(d) {
-          return state.selection.indexOf(d) >= 0 ? d3.hsl(cValue(d)).darker(0.4) : 'none';
-        });
-
-      var xAxis = sszvis.axis.x.ordinal()
-        .scale(xScale)
-        .orient('top')
-        .slant('diagonal')
-        .tickSize(0, 0)
-        .tickPadding(0)
-        .title('Kreis')
-        .titleOffset(40);
-
-      var yAxis = sszvis.axis.y.ordinal()
-        .scale(yScale)
-        .orient('left')
-        .title('Altersgruppe')
-        .titleOffset(10);
-
-      var legend = sszvis.legend.linearColorScale()
-        .scale(colorScale)
-        .width(bounds.width / 2)
-        .units('Einwohner');
-
-      var tooltipHeaderText = sszvis.component.modularText()
-        .plain(xAcc);
-
-      // FIXME: improve styling of line breaks
-      var tooltipBodyText = sszvis.component.modularText()
-        .plain(cAcc).plain('Einwohner')
-        .newline()
-        .plain(yAcc).plain('Jahre alt');
-
-      var tooltip = sszvis.component.tooltip()
-        .renderInto(tooltipLayer)
-        .header(tooltipHeaderText)
-        .body(tooltipBodyText)
-        .visible(isSelected);
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeaderText)
+      .body(tooltipBodyText)
+      .visible(isSelected);
 
 
-      // Rendering
+    // Rendering
 
-      var bars = chartLayer.selectGroup('bars')
-        .call(barGen);
+    var bars = chartLayer.selectGroup('bars')
+      .call(barGen);
 
-      bars.selectAll('[data-tooltip-anchor]')
-        .call(tooltip);
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
-      chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0, -10)')
-        .call(xAxis);
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', 'translate(0, -10)')
+      .call(xAxis);
 
-      chartLayer.selectGroup('yAxis')
-        .attr('transform', 'translate(-10, 0)')
-        .call(yAxis);
+    chartLayer.selectGroup('yAxis')
+      .attr('transform', 'translate(-10, 0)')
+      .call(yAxis);
 
-      chartLayer.selectGroup('legend')
-        .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 20) + ')')
-        .call(legend);
-
-
-      // Interaction
-
-      bars.selectAll('.sszvis-bar')
-        .on('mouseover', actions.showTooltip)
-        .on('mouseout',  actions.hideTooltip);
-    }
+    chartLayer.selectGroup('legend')
+      .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 20) + ')')
+      .call(legend);
 
 
-    /* Helper functions
-    ----------------------------------------------- */
-    function isSelected(d) {
-      return state.selection.indexOf(d) >= 0;
-    }
+    // Interaction
 
-    function parseKreisInt(k) {
-      return parseInt(k.replace('Kreis ', ''), 10);
-    }
-
-    function sortInt(a, b) {
-      return d3.ascending(parseInt(a, 10), parseInt(b, 10));
-    }
-
-    function sortKreisInt(a, b) {
-      return d3.ascending(parseKreisInt(a), parseKreisInt(b));
-    }
+    bars.selectAll('.sszvis-bar')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
+  }
 
 
-  }());
-  </script>
+  /* Helper functions
+  ----------------------------------------------- */
+  function isSelected(d) {
+    return state.selection.indexOf(d) >= 0;
+  }
+
+  function parseKreisInt(k) {
+    return parseInt(k.replace('Kreis ', ''), 10);
+  }
+
+  function sortInt(a, b) {
+    return d3.ascending(parseInt(a, 10), parseInt(b, 10));
+  }
+
+  function sortKreisInt(a, b) {
+    return d3.ascending(parseKreisInt(a), parseKreisInt(b));
+  }
+
+
+}());
+</script>
 </body>
 </html>

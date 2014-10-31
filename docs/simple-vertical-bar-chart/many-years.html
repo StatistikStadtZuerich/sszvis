@@ -5,170 +5,170 @@
   <title>Vertical Bar Chart</title>
 </head>
 <body style="margin:0;padding:0;">
-  <link href='../../sszvis.css' rel='stylesheet' />
-  <script src="../../vendor/d3/d3.min.js"></script>
-  <script src="../../sszvis.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
 
-  <div id="sszvis-chart"></div>
+<div id="sszvis-chart"></div>
 
-  <script data-catalog-project-expose="script.js">
-  (function() {
-    'use strict';
+<script data-catalog-project-expose="script.js">
+(function() {
+  'use strict';
 
-    /* Shortcuts
-    ----------------------------------------------- */
-    var xAcc = sszvis.fn.prop('category');
-    var yAcc = sszvis.fn.prop('value');
-
-
-    /* Application state
-    ----------------------------------------------- */
-    var state = {
-      data: [],
-      categories: [],
-      selection: []
-    };
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('category');
+  var yAcc = sszvis.fn.prop('value');
 
 
-    /* State transitions
-    ----------------------------------------------- */
-    var actions = {
-      prepareState: function(data) {
-        state.data = data;
-        state.categories = state.data.map(xAcc);
-        render(state);
-      },
-
-      showTooltip: function(datum) {
-        state.selection = [datum];
-        render(state);
-      },
-
-      hideTooltip: function() {
-        state.selection = [];
-        render(state);
-      }
-    };
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    categories: [],
+    selection: []
+  };
 
 
-    /* Data initialization
-    ----------------------------------------------- */
-    d3.csv('data/SiVB_yearly_many.csv')
-      .row(function(d) {
-        return {
-          category: d['Jahr'],
-          value: sszvis.parse.number(d['Hotel?bernachtungen'])
-        };
-      })
-      .get(function(error, data) {
-        error ? sszvis.loadError(error) : actions.prepareState(data);
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.categories = state.data.map(xAcc);
+      render(state);
+    },
+
+    showTooltip: function(datum) {
+      state.selection = [datum];
+      render(state);
+    },
+
+    hideTooltip: function() {
+      state.selection = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/SiVB_yearly_many.csv')
+    .row(function(d) {
+      return {
+        category: d['Jahr'],
+        value: sszvis.parse.number(d['Hotel?bernachtungen'])
+      };
+    })
+    .get(function(error, data) {
+      error ? sszvis.loadError(error) : actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ width: 516, height: 550, top: 40, right: 10, bottom: 40, left: 15 });
+    // NOTE: because there are so many bars, this represents a special case
+    // in which the layout algorithm in sszvis.fn.verticalBarChartDimensions breaks down.
+    // FIXME: consider working on the layout algorithm to make it compatible with examples like this
+    // It should be noted that in situations with this much time-series data,
+    // a line chart is almost always the optimal display strategy.
+
+
+    // Scales
+
+    var xScale = d3.scale.ordinal()
+      .domain(state.categories)
+      .rangeBands([20, bounds.innerWidth], 0.3, 0);
+
+    var heightScale = d3.scale.linear()
+      .domain([0, d3.max(state.data, yAcc)])
+      .range([0, bounds.innerHeight]);
+
+    var yPosScale = heightScale
+      .copy()
+      .range(heightScale.range().slice().reverse()); // FIXME: revise creation of rangeBands for bar charts
+
+    var xValue = sszvis.fn.compose(xScale, xAcc);
+    var yValue = sszvis.fn.compose(yPosScale, yAcc);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
+
+
+    // Components
+
+    var barGen = sszvis.component.bar()
+      .x(xValue)
+      .y(yValue)
+      .width(xScale.rangeBand())
+      .height(sszvis.fn.compose(heightScale, yAcc))
+      .fill(function(d) {
+        return isSelected(d) ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
       });
 
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('bottom')
+      .slant('vertical')
+      .ticks(5);
 
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ width: 516, height: 550, top: 40, right: 10, bottom: 40, left: 15 });
-      // NOTE: because there are so many bars, this represents a special case
-      // in which the layout algorithm in sszvis.fn.verticalBarChartDimensions breaks down.
-      // FIXME: consider working on the layout algorithm to make it compatible with examples like this
-      // It should be noted that in situations with this much time-series data,
-      // a line chart is almost always the optimal display strategy.
+    var yAxis = sszvis.axis.y()
+      .scale(yPosScale).orient('right');
 
+    var tooltipTitle = sszvis.component.modularText()
+      .bold('Hotelübernachtungen')
+      .bold(xAcc);
 
-      // Scales
-
-      var xScale = d3.scale.ordinal()
-        .domain(state.categories)
-        .rangeBands([20, bounds.innerWidth], 0.3, 0);
-
-      var heightScale = d3.scale.linear()
-        .domain([0, d3.max(state.data, yAcc)])
-        .range([0, bounds.innerHeight]);
-
-      var yPosScale = heightScale
-        .copy()
-        .range(heightScale.range().slice().reverse()); // FIXME: revise creation of rangeBands for bar charts
-
-      var xValue = sszvis.fn.compose(xScale, xAcc);
-      var yValue = sszvis.fn.compose(yPosScale, yAcc);
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(tooltipTitle)
+      .body(yAcc)
+      .visible(isSelected);
 
 
-      // Layers
+    // Rendering
 
-      var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
-        .datum(state.data);
+    var bars = chartLayer.selectGroup('bars')
+      .call(barGen);
 
-      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
-        .datum(state.selection);
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .call(xAxis);
 
-      // Components
-
-      var barGen = sszvis.component.bar()
-        .x(xValue)
-        .y(yValue)
-        .width(xScale.rangeBand())
-        .height(sszvis.fn.compose(heightScale, yAcc))
-        .fill(function(d) {
-          return isSelected(d) ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
-        });
-
-      var xAxis = sszvis.axis.x.ordinal()
-        .scale(xScale)
-        .orient('bottom')
-        .slant('vertical')
-        .ticks(5);
-
-      var yAxis = sszvis.axis.y()
-        .scale(yPosScale).orient('right');
-
-      var tooltipTitle = sszvis.component.modularText()
-        .bold('Hotelübernachtungen')
-        .bold(xAcc);
-
-      var tooltip = sszvis.component.tooltip()
-        .renderInto(tooltipLayer)
-        .header(tooltipTitle)
-        .body(yAcc)
-        .visible(isSelected);
+    chartLayer.selectGroup('yAxis')
+      .attr('transform', 'translate(-5, 0)')
+      .call(yAxis);
 
 
-      // Rendering
+    // Interaction
 
-      var bars = chartLayer.selectGroup('bars')
-        .call(barGen);
-
-      bars.selectAll('[data-tooltip-anchor]')
-        .call(tooltip);
-
-      chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
-        .call(xAxis);
-
-      chartLayer.selectGroup('yAxis')
-        .attr('transform', 'translate(-5, 0)')
-        .call(yAxis);
+    // FIXME: improve mouseover handling to prevent tooltip flickering
+    //        by selecting the closest datum
+    bars.selectAll('.sszvis-bar')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout',  actions.hideTooltip);
+  }
 
 
-      // Interaction
-
-      // FIXME: improve mouseover handling to prevent tooltip flickering
-      //        by selecting the closest datum
-      bars.selectAll('.sszvis-bar')
-        .on('mouseover', actions.showTooltip)
-        .on('mouseout',  actions.hideTooltip);
-    }
+  /* Helper functions
+  ----------------------------------------------- */
+  function isSelected(d) {
+    return state.selection.indexOf(d) >= 0;
+  }
 
 
-    /* Helper functions
-    ----------------------------------------------- */
-    function isSelected(d) {
-      return state.selection.indexOf(d) >= 0;
-    }
-
-
-  }());
-  </script>
+}());
+</script>
 </body>
 </html>
