@@ -8,7 +8,7 @@ namespace('sszvis.component.rangeFlag', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('x')
+      .prop('x', d3.functor)
       .prop('y0', d3.functor).y0(sszvis.fn.prop('y0'))
       .prop('dy', d3.functor).dy(sszvis.fn.prop('y'))
       .prop('yScale')
@@ -51,7 +51,7 @@ namespace('sszvis.component.rangeFlag', function(module) {
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
-            return [props.x, props.yScale(props.y0(d) + props.dy(d) / 2)];
+            return [props.x(d), props.yScale(props.y0(d) + props.dy(d) / 2)];
           });
 
         selection.call(tooltipAnchor);
