@@ -22,11 +22,15 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 
 ```project
 {
-    "index": "docs/simple-vertical-bar-chart/four-cities.html",
-    "readme": "docs/simple-vertical-bar-chart/README.md",
-    "files": [
-        "docs/simple-vertical-bar-chart/data/SiVB_fourCities.csv"
-    ],
+    "name": "simple-vertical-bar-chart-four-cities",
+    "files": {
+        "index.html": "docs/simple-vertical-bar-chart/four-cities.html",
+        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fourCities.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "height": 625,
         "width": 540
@@ -46,6 +50,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
     },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "height": 500,
         "width": 516
@@ -67,6 +72,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
     },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "height": 500,
         "width": 516
@@ -86,6 +92,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
     },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "height": 500,
         "width": 516
@@ -105,6 +112,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
     },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "height": 500,
         "width": 516
@@ -124,6 +132,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
     },
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "height": 550,
         "width": 516
