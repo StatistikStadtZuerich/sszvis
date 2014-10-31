@@ -3713,6 +3713,8 @@ namespace('sszvis.component.tooltip', function(module) {
       .delegate('header', renderer)
       .delegate('body', renderer)
       .delegate('orientation', renderer)
+      .delegate('dx', renderer)
+      .delegate('dy', renderer)
       .prop('renderInto')
       .prop('visible', d3.functor).visible(false)
       .renderSelection(function(selection) {
@@ -3746,15 +3748,22 @@ namespace('sszvis.component.tooltip', function(module) {
       .prop('header').header('')
       .prop('body').body('')
       .prop('orientation', d3.functor).orientation('bottom')
+      .prop('dx').dx(5)
+      .prop('dy').dy(5)
       .renderSelection(function(selection) {
-
         var tooltipData = selection.datum();
         var props = selection.props();
+
+
+        // Select tooltip elements
 
         var tooltip = selection.selectAll('.sszvis-tooltip')
           .data(tooltipData);
 
         tooltip.exit().remove();
+
+
+        // Enter: tooltip
 
         var enterTooltip = tooltip.enter()
           .append('div')
@@ -3762,6 +3771,7 @@ namespace('sszvis.component.tooltip', function(module) {
           .classed('sszvis-tooltip', true);
 
 
+        // Enter: tooltip background
 
         var enterBackground = enterTooltip.append('svg')
           .attr('class', 'sszvis-tooltip-background')
@@ -3793,20 +3803,23 @@ namespace('sszvis.component.tooltip', function(module) {
         merge.append('feMergeNode')  // Contains the element that the filter is applied to
           .attr('in', 'SourceGraphic');
 
-
         enterBackground.append('path')
           .style('filter', 'url(#sszvis-tooltip-shadow-filter)');
 
 
+        // Enter: tooltip content
 
-        var enterBox = enterTooltip.append('div')
+        var enterContent = enterTooltip.append('div')
           .classed('sszvis-tooltip-content', true);
 
-        enterBox.append('div')
+        enterContent.append('div')
           .classed('sszvis-tooltip-header', true);
 
-        enterBox.append('div')
+        enterContent.append('div')
           .classed('sszvis-tooltip-body', true);
+
+
+        // Update: content
 
         tooltip.select('.sszvis-tooltip-header')
           .datum(sszvis.fn.prop('datum'))
@@ -3822,43 +3835,48 @@ namespace('sszvis.component.tooltip', function(module) {
             var dimensions = tip.node().getBoundingClientRect();
             var orientation = props.orientation.apply(this, arguments);
 
+
+            // Position tooltip element
+
             switch (orientation) {
               case 'top':
                 tip.style({
                   left: (d.x - this.offsetWidth / 2) + 'px',
-                  top:  (d.y + TIP_SIZE) + 'px'
+                  top:  d.y + props.dy + 'px'
                 });
                 break;
               case 'bottom':
                 tip.style({
                   left: (d.x - this.offsetWidth / 2) + 'px',
-                  top:  (d.y - this.offsetHeight - TIP_SIZE) + 'px'
+                  top:  (d.y - props.dy - this.offsetHeight) + 'px'
                 });
                 break;
               case 'left':
                 tip.style({
-                  left: (d.x + TIP_SIZE) + 'px',
+                  left: d.x + props.dx + 'px',
                   top:  (d.y - this.offsetHeight / 2) + 'px'
                 });
                 break;
               case 'right':
                 tip.style({
-                  left: (d.x - this.offsetWidth - TIP_SIZE) + 'px',
+                  left: (d.x - props.dx - this.offsetWidth) + 'px',
                   top:  (d.y - this.offsetHeight / 2) + 'px'
                 });
                 break;
             }
 
 
-            var bgHeight = dimensions.height + 2 * TIP_SIZE;
-            var bgWidth = dimensions.width + 2 * TIP_SIZE;
+            // Position background element
+
+            var bgHeight = dimensions.height + 2 * BLUR_PADDING;
+            var bgWidth =  dimensions.width  + 2 * BLUR_PADDING;
             tip.select('.sszvis-tooltip-background')
               .attr('height', bgHeight)
-              .attr('width', bgWidth)
-              .style('left', -TIP_SIZE + 'px')
-              .style('top', -TIP_SIZE + 'px')
+              .attr('width',  bgWidth)
+              .style('left', -BLUR_PADDING + 'px')
+              .style('top',  -BLUR_PADDING + 'px')
               .select('path')
-                .attr('d', tooltipBackground(
+                .attr('d', tooltipBackgroundGenerator(
                   [BLUR_PADDING, BLUR_PADDING],
                   [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING],
                   orientation
@@ -3868,9 +3886,25 @@ namespace('sszvis.component.tooltip', function(module) {
    };
 
 
-  /* Helper functions
-  ----------------------------------------------- */
-  function tooltipBackground(a, b, orientation) {
+  /**
+   * Tooltip background generator
+   *
+   * Generates a path description with a tip on the specified side.
+   *
+   *           top
+   *         ________
+   *   left |        | right
+   *        |___  ___|
+   *            \/
+   *          bottom
+   *
+   * @param  {Vector} a           Top-left corner of the tooltip rectangle (x, y)
+   * @param  {Vector} b           Bottom-right corner of the tooltip rectangle (x, y)
+   * @param  {String} orientation The tip will point in this direction (top, right, bottom, left)
+   *
+   * @return {Path}               SVG path description
+   */
+  function tooltipBackgroundGenerator(a, b, orientation) {
     switch (orientation) {
       case 'top':
         a[1] = a[1] + TIP_SIZE;
