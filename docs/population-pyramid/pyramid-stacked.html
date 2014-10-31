@@ -115,7 +115,8 @@
       .scale(lengthScale)
       .orient('bottom')
       .title('Anzahl')
-      .titleOffset(35);
+      .titleAlign('middle')
+      .titleLeft(0);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(positionScale)
@@ -124,7 +125,7 @@
         return (d === 0) ? '' : sszvis.format.age(d);
       })
       .title('Alter in Jahren')
-      .titleOffset(18)
+      .titleTop(-18)
       .ticks(5);
 
     var colorLegend = sszvis.legend.color()

@@ -360,7 +360,9 @@ namespace('sszvis.axis', function(module) {
         .prop('textWrap')
         .prop('slant')
         .prop('title')
-        .prop('titleOffset').titleOffset(0)
+        .prop('titleAlign').titleAlign(null) // start, end, or middle
+        .prop('titleLeft').titleLeft(null) // a numeric value for the left offset of the title
+        .prop('titleTop').titleTop(null) // a numeric value for the top offset of the title
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -422,28 +424,36 @@ namespace('sszvis.axis', function(module) {
             title
               .text(function(d) { return d; })
               .attr('transform', function(d) {
-                var scale = axisDelegate.scale(),
-                    extent = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range()),
-                    halfWay = (extent[0] + extent[1]) / 2,
-                    orientation = axisDelegate.orient();
+                var orientation = axisDelegate.orient(),
+                    scale = axisDelegate.scale(),
+                    extent = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range());
+                var left, top;
+                // includes default title top and left alignments for different axis orientation
                 if (orientation === 'left') {
-                  return 'translate(0, ' + -props.titleOffset + ')';
+                  left = props.titleLeft !== null ? props.titleLeft : 0;
+                  top = props.titleTop !== null ? props.titleTop : 0;
                 } else if (orientation === 'right') {
-                  return 'translate(0, ' + -props.titleOffset + ')';
+                  left = props.titleLeft !== null ? props.titleLeft : 0;
+                  top = props.titleTop !== null ? props.titleTop : 0;
                 } else if (orientation === 'top') {
-                  return 'translate(' + halfWay + ', ' + -props.titleOffset + ')';
+                  left = props.titleLeft !== null ? props.titleLeft : extent[1];
+                  top = props.titleTop !== null ? props.titleTop : 0;
                 } else if (orientation === 'bottom') {
-                  return 'translate(' + halfWay + ', ' + props.titleOffset + ')';
+                  left = props.titleLeft !== null ? props.titleLeft : extent[1];
+                  top = props.titleTop !== null ? props.titleTop : 35;
                 }
+                return 'translate(' + (left) + ', ' + (top) + ')';
               })
               .style('text-anchor', function(d) {
                 var orientation = axisDelegate.orient();
-                if (orientation === 'left') {
+                if (props.titleAlign !== null) {
+                  return props.titleAlign;
+                } else if (orientation === 'left') {
                   return 'end';
                 } else if (orientation === 'right') {
                   return 'start';
                 } else if (orientation === 'top' || orientation === 'bottom') {
-                  return 'middle';
+                  return 'end';
                 }
               });
           }

@@ -125,13 +125,15 @@
       .tickSize(0, 0)
       .tickPadding(0)
       .title('Altersgruppe Männer')
-      .titleOffset(30);
+      .titleAlign('middle')
+      .titleLeft(tableDimensions.width / 2)
+      .titleTop(-30);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
       .orient('left')
       .title('Altersgruppe Frauen')
-      .titleOffset(10);
+      .titleTop(-10);
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)

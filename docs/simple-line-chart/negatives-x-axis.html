@@ -92,15 +92,14 @@
     var xAxis = sszvis.axis.x()
       .scale(xScale)
       .orient('bottom')
-      .title('Altersdifferenz')
-      .titleOffset(35);
+      .title('Altersdifferenz');
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
       .halo(true)
       .title('Häufigkeit')
-      .titleOffset(10);
+      .titleTop(-10);
 
 
     // Rendering

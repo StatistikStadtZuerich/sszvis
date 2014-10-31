@@ -116,7 +116,8 @@
       .orient('bottom')
       .ticks(5)
       .title('Anzahl Frauen und Männer mit Hochschulabschluss')
-      .titleOffset(35);
+      .titleAlign('middle')
+      .titleLeft(0);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(positionScale)
@@ -126,7 +127,7 @@
       })
       .ticks(5)
       .title('Alter in Jahren')
-      .titleOffset(18);
+      .titleTop(-18);
 
     var colorLegend = sszvis.legend.color()
       .scale(colorScale)

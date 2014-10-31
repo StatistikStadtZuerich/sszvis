@@ -127,13 +127,15 @@
       .tickSize(0, 0)
       .tickPadding(0)
       .title('Ländergruppe')
-      .titleOffset(90);
+      .titleAlign('middle')
+      .titleLeft(tableDimensions.width / 2)
+      .titleTop(-90);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
       .orient('left')
       .title('Quartier')
-      .titleOffset(12);
+      .titleTop(-12);
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)

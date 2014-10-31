@@ -100,15 +100,14 @@
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
-      .title('Datum')
-      .titleOffset(35);
+      .title('Datum');
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
       .halo(true)
       .title('Regen')
-      .titleOffset(10);
+      .titleTop(-10);
 
     var annotation = sszvis.component.dataAreaCircle()
       .x(sszvis.fn.compose(xScale, xAcc))

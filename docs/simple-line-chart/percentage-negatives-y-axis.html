@@ -93,15 +93,14 @@
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
-      .title('Datum')
-      .titleOffset(35);
+      .title('Datum');
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
       .halo(true)
       .title('Wert')
-      .titleOffset(15);
+      .titleTop(-15);
 
 
     // Rendering

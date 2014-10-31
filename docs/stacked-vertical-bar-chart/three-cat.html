@@ -112,7 +112,9 @@
       .orient('bottom')
       .slant('vertical')
       .title('Jahr')
-      .titleOffset(50);
+      .titleAlign('middle')
+      .titleLeft(bounds.innerWidth / 2)
+      .titleTop(50);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
