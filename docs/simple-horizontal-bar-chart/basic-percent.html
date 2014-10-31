@@ -108,6 +108,7 @@
       .scale(widthScale)
       .orient('bottom')
       .tickFormat(function(v) { return sszvis.format.percent(v / 100); })
+      .tickLength(bounds.innerHeight)
       .alignOuterLabels(true);
 
     var yAxis = sszvis.axis.y.ordinal()
@@ -123,13 +124,13 @@
 
     // Rendering
 
-    chartLayer.selectGroup('bars')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top))
-      .call(barGen);
-
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
+
+    chartLayer.selectGroup('bars')
+      .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top))
+      .call(barGen);
 
     chartLayer.selectGroup('yAxis')
       .attr('transform', sszvis.fn.translateString(0, chartDimensions.padding.top + chartDimensions.axisOffset))

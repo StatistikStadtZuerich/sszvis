@@ -353,16 +353,18 @@ namespace('sszvis.axis', function(module) {
         .delegate('outerTickSize', axisDelegate)
         .delegate('tickPadding', axisDelegate)
         .delegate('tickFormat', axisDelegate)
-        .prop('vertical').vertical(false)
         .prop('alignOuterLabels').alignOuterLabels(false)
-        .prop('highlight')
+        .prop('tickColor')
         .prop('halo')
-        .prop('textWrap')
+        .prop('highlight')
         .prop('slant')
+        .prop('textWrap')
+        .prop('tickLength')
         .prop('title')
         .prop('titleAlign').titleAlign(null) // start, end, or middle
         .prop('titleLeft').titleLeft(null) // a numeric value for the left offset of the title
         .prop('titleTop').titleTop(null) // a numeric value for the top offset of the title
+        .prop('vertical').vertical(false)
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -383,6 +385,27 @@ namespace('sszvis.axis', function(module) {
                   return found || stringEqual(highlight, d);
                 }, false)
               });
+          }
+
+          if (props.tickColor) {
+            group.selectAll('.tick line')
+              .style('stroke', props.tickColor);
+          }
+
+          if (sszvis.fn.defined(props.tickLength)) {
+            var extent = d3.extent(axisDelegate.scale().domain());
+            var ticks = group.selectAll('.tick line')
+              .filter(function(d) { return !stringEqual(d, extent[0]) && !stringEqual(d, extent[1]); });
+            var orientation = axisDelegate.orient();
+            if (orientation === 'top') {
+              ticks.attr('y1', props.tickLength);
+            } else if (orientation === 'bottom') {
+              ticks.attr('y1', -props.tickLength);
+            } else if (orientation === 'left') {
+              ticks.attr('x1', -props.tickLength);
+            } else if (orientation === 'right') {
+              ticks.attr('x1', props.tickLength);
+            }
           }
 
           if (props.alignOuterLabels) {

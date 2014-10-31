@@ -86,7 +86,10 @@
     var xAxis = sszvis.axis.x()
       .scale(widthScale)
       .orient('bottom')
-      .alignOuterLabels(true);
+      .alignOuterLabels(true)
+      .ticks(10)
+      .tickColor('#fff')
+      .tickLength(bounds.innerHeight);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
