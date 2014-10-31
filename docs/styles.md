@@ -36,7 +36,7 @@
 ```html|plain
 <div class='sszvis-tooltip-displaywrapper'>
     <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip-box'>
+        <div class='sszvis-tooltip-content'>
             <div class='sszvis-tooltip-header'>Example Header</div>
             <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the top</div>
         </div>
@@ -50,7 +50,7 @@
 ```html|plain
 <div class='sszvis-tooltip-displaywrapper'>
     <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip-box'>
+        <div class='sszvis-tooltip-content'>
             <div class='sszvis-tooltip-header'>Example Header</div>
             <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the bottom</div>
         </div>
@@ -64,7 +64,7 @@
 ```html|plain
 <div class='sszvis-tooltip-displaywrapper'>
     <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip-box'>
+        <div class='sszvis-tooltip-content'>
             <div class='sszvis-tooltip-header'>Example Header</div>
             <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the left</div>
         </div>
@@ -78,7 +78,7 @@
 ```html|plain
 <div class='sszvis-tooltip-displaywrapper'>
     <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip-box'>
+        <div class='sszvis-tooltip-content'>
             <div class='sszvis-tooltip-header'>Example Header</div>
             <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the right</div>
         </div>

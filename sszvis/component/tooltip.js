@@ -6,9 +6,17 @@
 namespace('sszvis.component.tooltip', function(module) {
   'use strict';
 
+  /* Configuration
+  ----------------------------------------------- */
+  var RADIUS = 3;
+  var TIP_SIZE = 6;
+  var BLUR_PADDING = 5;
+
+
+  /* Exported module
+  ----------------------------------------------- */
   module.exports = function() {
 
-    var fn = sszvis.fn;
     var renderer = tooltipRenderer();
 
     return d3.component()
@@ -38,22 +46,12 @@ namespace('sszvis.component.tooltip', function(module) {
       });
   };
 
-  function testPredicate(f, value) {
-    return function() {
-      return f.apply(this, arguments) === value;
-    };
-  }
 
   /**
    * Tooltip renderer
    * @private
    */
   var tooltipRenderer = function() {
-
-    var TIP_HEIGHT = 10;
-
-    var fn = sszvis.fn;
-
     return d3.component()
       .prop('header').header('')
       .prop('body').body('')
@@ -73,8 +71,48 @@ namespace('sszvis.component.tooltip', function(module) {
           .style('pointer-events', 'none')
           .classed('sszvis-tooltip', true);
 
+        var enterBackground = enterTooltip.append('svg')
+          .attr('class', 'sszvis-tooltip-background')
+          .attr('height', 0)
+          .attr('width', 0);
+
+
+
+
+        var filter = enterBackground.append('defs')
+          .append('filter')
+          .attr('id', 'sszvis-tooltip-shadow-filter')
+          .attr('height', '150%');
+
+        filter.append('feGaussianBlur')
+          .attr('in', 'SourceAlpha')
+          .attr('stdDeviation', 3);
+
+        filter.append('feComponentTransfer')
+          .append('feFuncA')
+          .attr('type', 'linear')
+          .attr('slope', 0.3);
+
+        filter.append('feOffset')
+          .attr('dx', 0)
+          .attr('dy', 1)
+          .attr('result', 'offsetblur');
+
+        var merge = filter.append('feMerge');
+        merge.append('feMergeNode')
+          .attr('in', 'offsetblur'); // Contains the blurred image
+        merge.append('feMergeNode')  // Contains the element that the filter is applied to
+          .attr('in', 'SourceGraphic');
+
+
+
+
+
+        enterBackground.append('path')
+          .style('filter', 'url(#sszvis-tooltip-shadow-filter)');
+
         var enterBox = enterTooltip.append('div')
-          .classed('sszvis-tooltip-box', true);
+          .classed('sszvis-tooltip-content', true);
 
         enterBox.append('div')
           .classed('sszvis-tooltip-header', true);
@@ -82,62 +120,129 @@ namespace('sszvis.component.tooltip', function(module) {
         enterBox.append('div')
           .classed('sszvis-tooltip-body', true);
 
-        var enterTipholder = enterTooltip.append('div')
-          .classed('sszvis-tooltip-tipholder', true);
-
-        enterTipholder.append('div')
-          .classed('sszvis-tooltip-tip', true);
-
         tooltip.select('.sszvis-tooltip-header')
-          .datum(fn.prop('datum'))
+          .datum(sszvis.fn.prop('datum'))
           .html(props.header);
 
         tooltip.select('.sszvis-tooltip-body')
-          .datum(fn.prop('datum'))
+          .datum(sszvis.fn.prop('datum'))
           .html(props.body);
-
-        tooltip.select('.sszvis-tooltip-tipholder')
-          .classed('tip-top', testPredicate(props.orientation, 'top'))
-          .classed('tip-bot', testPredicate(props.orientation, 'bottom'))
-          .classed('tip-left', testPredicate(props.orientation, 'left'))
-          .classed('tip-right', testPredicate(props.orientation, 'right'));
-
-        tooltip.select('.sszvis-tooltip-tip')
-          .classed('tip-top', testPredicate(props.orientation, 'top'))
-          .classed('tip-bot', testPredicate(props.orientation, 'bottom'))
-          .classed('tip-left', testPredicate(props.orientation, 'left'))
-          .classed('tip-right', testPredicate(props.orientation, 'right'));
 
         selection.selectAll('.sszvis-tooltip')
           .each(function(d) {
-            switch (props.orientation.apply(this, arguments)) {
+            var tip = d3.select(this);
+            var dimensions = tip.node().getBoundingClientRect();
+            var orientation = props.orientation.apply(this, arguments);
+
+            switch (orientation) {
               case 'top':
-                d3.select(this).style({
+                tip.style({
                   left: (d.x - this.offsetWidth / 2) + 'px',
-                  top:  (d.y + TIP_HEIGHT) + 'px'
+                  top:  (d.y + TIP_SIZE) + 'px'
                 });
                 break;
               case 'bottom':
-                d3.select(this).style({
+                tip.style({
                   left: (d.x - this.offsetWidth / 2) + 'px',
-                  top:  (d.y - this.offsetHeight - TIP_HEIGHT) + 'px'
+                  top:  (d.y - this.offsetHeight - TIP_SIZE) + 'px'
                 });
                 break;
               case 'left':
-                d3.select(this).style({
-                  left: (d.x + TIP_HEIGHT) + 'px',
+                tip.style({
+                  left: (d.x + TIP_SIZE) + 'px',
                   top:  (d.y - this.offsetHeight / 2) + 'px'
                 });
                 break;
               case 'right':
-                d3.select(this).style({
-                  left: (d.x - this.offsetWidth - TIP_HEIGHT) + 'px',
+                tip.style({
+                  left: (d.x - this.offsetWidth - TIP_SIZE) + 'px',
                   top:  (d.y - this.offsetHeight / 2) + 'px'
                 });
                 break;
             }
+
+
+            var bgHeight = dimensions.height + 2 * TIP_SIZE;
+            var bgWidth = dimensions.width + 2 * TIP_SIZE;
+            tip.select('.sszvis-tooltip-background')
+              .attr('height', bgHeight)
+              .attr('width', bgWidth)
+              .style('left', -TIP_SIZE + 'px')
+              .style('top', -TIP_SIZE + 'px')
+              .select('path')
+                .attr('d', tooltipBackground(
+                  [BLUR_PADDING, BLUR_PADDING],
+                  [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING - TIP_SIZE],
+                  'bottom'
+                ));
           });
       });
    };
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function tooltipBackground(a, b, tipSide) {
+    function x(d){ return d[0]; }
+    function y(d){ return d[1]; }
+    function side(cx, cy, x0, y0, x1, y1, showTip) {
+      var mx = x0 + (x1 - x0) / 2;
+      var my = y0 + (y1 - y0) / 2;
+
+      var corner = ['Q', cx, cy, x0, y0];
+
+      var tip = [];
+      if (showTip && y0 === y1) {
+        if (x0 < x1) {
+          // Top
+          tip = [
+            'L', mx - TIP_SIZE, my,
+            'L', mx,            my - TIP_SIZE,
+            'L', mx + TIP_SIZE, my
+          ];
+        } else {
+          // Bottom
+          tip = [
+            'L', mx + TIP_SIZE, my,
+            'L', mx,            my + TIP_SIZE,
+            'L', mx - TIP_SIZE, my
+          ];
+        }
+      } else if (showTip && x0 === x1) {
+        if (y0 < y1) {
+          // Right
+          tip = [
+            'L', mx,            my - TIP_SIZE,
+            'L', mx + TIP_SIZE, my,
+            'L', mx,            my + TIP_SIZE
+          ];
+        } else {
+          // Left
+          tip = [
+            'L', mx,            my + TIP_SIZE,
+            'L', mx - TIP_SIZE, my,
+            'L', mx,            my - TIP_SIZE
+          ];
+        }
+      }
+
+      var end = ['L', x1, y1];
+
+      return [].concat(corner, tip, end);
+    }
+
+    return [
+      // Start
+      ['M', x(a), y(a) + RADIUS],
+      // Top side
+      side(x(a), y(a), x(a) + RADIUS, y(a), x(b) - RADIUS, y(a), (tipSide === 'top')),
+      // Right side
+      side(x(b), y(a), x(b), y(a) + RADIUS, x(b), y(b) - RADIUS, (tipSide === 'right')),
+      // Bottom side
+      side(x(b), y(b), x(b) -RADIUS, y(b), x(a) + RADIUS, y(b), (tipSide === 'bottom')),
+      // Left side
+      side(x(a), y(b), x(a), y(b) - RADIUS, x(a), y(a) + RADIUS, (tipSide === 'left'))
+    ].map(function(d){ return d.join(' '); }).join(' ');
+  }
 
 });
