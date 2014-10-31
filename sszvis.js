@@ -2019,7 +2019,7 @@ namespace('sszvis.control.segmented', function(module) {
     return d3.component()
       .prop('values')
       .prop('current')
-      .prop('width')
+      .prop('width').width(300)
       .prop('change').change(sszvis.fn.identity)
       .render(function() {
         var selection = d3.select(this);
@@ -2049,6 +2049,7 @@ namespace('sszvis.control.segmented', function(module) {
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -2864,7 +2865,7 @@ namespace('sszvis.component.pyramid', function(module) {
       .prop('barHeight', d3.functor)
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
-      .prop('barFill').barFill(d3.functor('#000'))
+      .prop('barFill', d3.functor).barFill('#000')
       .prop('leftAccessor')
       .prop('rightAccessor')
       .prop('leftRefAccessor')
@@ -3152,8 +3153,8 @@ namespace('sszvis.component.ruler', function(module) {
     var fn = sszvis.fn;
 
     return d3.component()
-      .prop('x').x(fn.identity)
-      .prop('y').y(fn.identity)
+      .prop('x', d3.functor).x(fn.identity)
+      .prop('y', d3.functor).y(fn.identity)
       .prop('xScale')
       .prop('yScale')
       .prop('label').label(fn.constant(''))
@@ -3402,7 +3403,7 @@ namespace('sszvis.component.stackedPyramid', function(module) {
       .prop('barHeight', d3.functor)
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
-      .prop('barFill').barFill(d3.functor('#000'))
+      .prop('barFill', d3.functor).barFill('#000')
       .prop('leftAccessor')
       .prop('rightAccessor')
       .prop('leftRefAccessor')

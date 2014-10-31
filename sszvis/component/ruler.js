@@ -11,8 +11,8 @@ namespace('sszvis.component.ruler', function(module) {
     var fn = sszvis.fn;
 
     return d3.component()
-      .prop('x').x(fn.identity)
-      .prop('y').y(fn.identity)
+      .prop('x', d3.functor).x(fn.identity)
+      .prop('y', d3.functor).y(fn.identity)
       .prop('xScale')
       .prop('yScale')
       .prop('label').label(fn.constant(''))

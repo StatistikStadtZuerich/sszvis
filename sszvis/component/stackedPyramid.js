@@ -37,7 +37,7 @@ namespace('sszvis.component.stackedPyramid', function(module) {
       .prop('barHeight', d3.functor)
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
-      .prop('barFill').barFill(d3.functor('#000'))
+      .prop('barFill', d3.functor).barFill('#000')
       .prop('leftAccessor')
       .prop('rightAccessor')
       .prop('leftRefAccessor')

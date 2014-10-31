@@ -10,7 +10,7 @@ namespace('sszvis.control.segmented', function(module) {
     return d3.component()
       .prop('values')
       .prop('current')
-      .prop('width')
+      .prop('width').width(300)
       .prop('change').change(sszvis.fn.identity)
       .render(function() {
         var selection = d3.select(this);
