@@ -31,12 +31,12 @@ namespace('sszvis.format', function(module) {
      * @return {string} Fully formatted number
      */
     number: function(d) {
-      if (d >= 1e4) {
+      if (Math.abs(d) >= 1e4) {
         return d3.format(',')(d);
       } else if (d === 0) {
-        return 0;
+        return String(0);
       } else {
-        return d;
+        return String(d);
       }
     },
 

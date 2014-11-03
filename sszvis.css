@@ -61,10 +61,11 @@
 }
 
 .sszvis-reference-line--caption {
-  text-anchor: middle;
   alignment-baseline: baseline;
+  fill: #7C7C7C;
   font-family: Arial, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
+  text-anchor: middle;
 }
 
 /**
@@ -73,10 +74,11 @@
  * @module sszvis/component/dataAreaCircle
  */
 .sszvis-data-area-circle-caption {
-  text-anchor: middle;
   alignment-baseline: middle;
+  fill: #7C7C7C;
   font-family: Arial, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
+  text-anchor: middle;
 }
 
 /**
@@ -85,10 +87,11 @@
  * @module sszvis/component/dataAreaRectangle
  */
 .sszvis-data-area-rectangle-caption {
-  text-anchor: middle;
   alignment-baseline: middle;
+  fill: #7C7C7C;
   font-family: Arial, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
+  text-anchor: middle;
 }
 
 /**

@@ -201,23 +201,24 @@
 
 
 (function(d3) {
+  'use strict';
 
   var localizedFormat = d3.locale({
-    "decimal": ".",
-    "thousands": " ",
-    "grouping": [3],
-    "currency": ["CHF ", ""],
-    "dateTime": "%a. %e. %B %X %Y",
-    "date": "%d.%m.%Y",
-    "time": "%H:%M:%S",
-    "periods": [],
-    "days": ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
-    "shortDays": ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
-    "months": ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
-    "shortMonths": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+    'decimal': '.',
+    'thousands': ' ',
+    'grouping': [3],
+    'currency': ['CHF ', ''],
+    'dateTime': '%a. %e. %B %X %Y',
+    'date': '%d.%m.%Y',
+    'time': '%H:%M:%S',
+    'periods': [],
+    'days': ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+    'shortDays': ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+    'months': ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+    'shortMonths': ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
   });
-  d3.format = localizedFormat.numberFormat
-  d3.time.format = localizedFormat.timeFormat
+  d3.format = localizedFormat.numberFormat;
+  d3.time.format = localizedFormat.timeFormat;
 
 }(d3));
 
@@ -337,10 +338,10 @@ namespace('sszvis.axis', function(module) {
     var axisTimeFormat = d3.time.format.multi([
       ['.%L', function(d) { return d.getMilliseconds(); }],
       [':%S', function(d) { return d.getSeconds(); }],
-      ['%I:%M', function(d) { return d.getMinutes(); }],
-      ['%I %p', function(d) { return d.getHours(); }],
-      ['%a %d', function(d) { return d.getDay() && d.getDate() != 1; }],
-      ['%b %d', function(d) { return d.getDate() != 1; }],
+      ['%H:%M', function(d) { return d.getMinutes(); }],
+      ['%H Uhr', function(d) { return d.getHours(); }],
+      ['%a., %d.', function(d) { return d.getDay() && d.getDate() != 1; }],
+      ['%e. %b', function(d) { return d.getDate() != 1; }],
       ['%B', function(d) { return d.getMonth(); }],
       ['%Y', function() { return true; }]
     ]);
@@ -1530,12 +1531,12 @@ namespace('sszvis.format', function(module) {
      * @return {string} Fully formatted number
      */
     number: function(d) {
-      if (d >= 1e4) {
+      if (Math.abs(d) >= 1e4) {
         return d3.format(',')(d);
       } else if (d === 0) {
-        return 0;
+        return String(0);
       } else {
-        return d;
+        return String(d);
       }
     },
 

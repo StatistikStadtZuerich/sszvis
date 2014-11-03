@@ -70,7 +70,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 450, top: 30, right: 1, bottom: 50, left: 0 });
+    var bounds = sszvis.bounds({ width: 500, height: 450, top: 30, right: 1, bottom: 45, left: 1 });
 
 
     // Scales
@@ -113,10 +113,10 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .r(20)
+      .dy(-30)
       .caption(function(d) {
-        return 'Wert: ' + yAcc(d);
-      })
-      .dy(-25);
+        return 'Referenzwert A (' + yAcc(d) + ')';
+      });
 
 
     // Rendering

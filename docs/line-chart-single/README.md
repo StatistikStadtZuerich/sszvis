@@ -81,6 +81,8 @@ Basiert auf dem Standard-Diagramm, zeigt aber zusätzlich die Zahlenwerte an der
 
 ## Anwendungsbeispiel: Anmerkungen
 
+Zeigt eine Anmerkung an einem bestimmten Datenpunkt. Die Zeitachse zeigt Tage mit Monatskürzel.
+
 ```project
 {
     "name": "line-chart-single-daily",
@@ -104,6 +106,8 @@ Basiert auf dem Standard-Diagramm, zeigt aber zusätzlich die Zahlenwerte an der
 
 ## Anwendungsbeispiel: Negative x-Werte
 
+Zeigt negative x-Werte.
+
 ```project
 {
     "name": "line-chart-single-negatives-x-axis",
@@ -126,6 +130,8 @@ Basiert auf dem Standard-Diagramm, zeigt aber zusätzlich die Zahlenwerte an der
 ```
 
 ## Anwendungsbeispiel: Negative y-Werte
+
+Zeigt negative y-Werte.
 
 ```project
 {
