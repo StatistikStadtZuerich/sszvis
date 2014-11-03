@@ -41,6 +41,9 @@
       state.yRange = d3.extent(state.data, yAcc);
       state.lineData = [state.data];
 
+      // Add a bit of padding to prevent the y-axis value from touching the x-axis
+      state.yRange[0] = state.yRange[0] - 0.2;
+
       render(state);
     }
   };
