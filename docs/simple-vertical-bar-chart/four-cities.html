@@ -35,6 +35,7 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
+      state.maxValue = d3.max(state.data, yAcc);
       state.categories = state.data.map(xAcc);
       render(state);
     },
@@ -57,7 +58,7 @@
     .row(function(d) {
       return {
         category: d['Stadt'],
-        value: sszvis.parse.number(d['Wert'])
+        value: sszvis.parse.number(d['Wert']) / 100
       };
     })
     .get(function(error, data) {
@@ -76,11 +77,11 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, chartDimensions.outerRatio);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.3);
 
     var heightScale = d3.scale.linear()
       .range([0, bounds.innerHeight])
-      .domain([0, 35]);
+      .domain([0, state.maxValue]);
 
     var yPosScale = heightScale
       .copy()
@@ -113,14 +114,16 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
+      .tickFormat(function(d) {
+        return (d === 0) ? null : sszvis.format.percent(d);
+      })
       .orient('right');
 
     var tooltipTitle = sszvis.component.modularText()
-      .bold(yAcc)
+      .bold(sszvis.fn.compose(sszvis.format.percent, yAcc))
       .plain('Wert');
 
     var tooltipBody = sszvis.component.modularText()
-      .plain('im')
       .plain(xAcc);
 
     var tooltip = sszvis.component.tooltip()
@@ -128,6 +131,7 @@
       .header(tooltipTitle)
       .body(tooltipBody)
       .visible(isSelected);
+
 
     // Rendering
 
