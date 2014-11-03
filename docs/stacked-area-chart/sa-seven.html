@@ -63,6 +63,7 @@
       state.categories = sszvis.fn.set(state.data, cAcc);
 
       // reverse both the domain and range of the color scale so that the displayed scale matches the order of the layers in the stack
+      // NOTE why is this necessary? This looks unnice somehow. If I don't do it everything gets black.
       state.categories.reverse();
       state.colorCategories = sszvis.color.ranges.qualitative.qual12.slice().reverse();
 
