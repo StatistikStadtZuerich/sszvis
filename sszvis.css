@@ -19,9 +19,13 @@
 }
 
 /* States */
-.sszvis-axis .tick.active text {
+.sszvis-axis .tick text.active {
   fill: #545454;
   font-weight: bold;
+}
+
+.sszvis-axis .tick text.hidden {
+  display: none;
 }
 
 /* Modifiers */

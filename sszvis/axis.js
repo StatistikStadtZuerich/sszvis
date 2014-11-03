@@ -43,6 +43,7 @@ namespace('sszvis.axis', function(module) {
         .prop('tickColor')
         .prop('halo')
         .prop('highlight')
+        .prop('highlightBoundary').highlightBoundary(24)
         .prop('showZeroY').showZeroY(false)
         .prop('slant')
         .prop('textWrap')
@@ -66,11 +67,28 @@ namespace('sszvis.axis', function(module) {
             .call(axisDelegate);
 
           if (props.highlight) {
-            group.selectAll('.tick')
-              .classed('active', function(d) {
-                return [].concat(props.highlight).reduce(function(found, highlight) {
+            var highlightPositions = [];
+
+            group.selectAll('.tick text')
+              .each(function(d) {
+                var isHighlight = [].concat(props.highlight).reduce(function(found, highlight) {
                   return found || stringEqual(highlight, d);
                 }, false);
+                d3.select(this).classed('active', isHighlight);
+                if (isHighlight) {
+                  highlightPositions.push(axisDelegate.scale()(d));
+                }
+              });
+
+            group.selectAll('.tick text')
+              .each(function(d) {
+                var d3_this = d3.select(this);
+                if (d3_this.classed('active')) return;
+                var position = axisDelegate.scale()(d);
+                var isTooClose = highlightPositions.reduce(function(tooClose, highlightPos) {
+                  return tooClose || Math.abs(position - highlightPos) < props.highlightBoundary;
+                }, false);
+                d3_this.classed('hidden', isTooClose);
               });
           }
 
