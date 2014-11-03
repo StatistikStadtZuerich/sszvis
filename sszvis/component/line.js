@@ -2,6 +2,7 @@
  * Line component
  *
  * The line component is a general-purpose component used to render lines.
+ *
  * The input data should be an array of arrays, where each inner array
  * contains the data points necessary to render a line. The line is then
  * composed of x- and y- values extracted from these data objects
@@ -10,6 +11,12 @@
  * Each data object in a line's array is passed to the x- and y- accessors, along with
  * that data object's index in the array. For more information, see the documentation for
  * d3.svg.line.
+ *
+ * In addition, the user can specify stroke and strokeWidth accessor functions. Because these
+ * functions apply properties to the entire line, when called, they are give the entire array of line data
+ * as an argument, plus the index of that array of line data within the outer array of lines. Note that this
+ * differs slightly from the usual case in that dimension-related accessor functions are given different
+ * data than style-related accessor functions.
  *
  * @property {function} x                 An accessor function for getting the x-value of the line
  * @property {function} y                 An accessor function for getting the y-value of the line

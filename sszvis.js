@@ -2247,6 +2247,28 @@ namespace('sszvis.control.slideBar', function(module) {
 
 /**
  * Bar component
+ *
+ * The bar component is a general-purpose component used to render rectangles, including
+ * bars for horizontal and vertical standard and stacked bar charts, bars in the population
+ * pyramids, and the boxes of the heat table.
+ *
+ * The input data should be an array of data values, where each data value contains the information
+ * necessary to render a single rectangle. The x-position, y-position, width, and height of each rectangle
+ * are then extracted from the data objects using accessor functions.
+ *
+ * In addition, the user can specify fill and stroke accessor functions. When called, these functions
+ * are given each rectangle's data object, and should return a valid fill or stroke color to be applied
+ * to the rectangle.
+ *
+ * The x, y, width, height, fill, and stroke properties may also be specified as constants.
+ *
+ * @property {number, function} x       the x-value of the rectangles. Becomes a functor.
+ * @property {number, function} y       the y-value of the rectangles. Becomes a functor.
+ * @property {number, function} width   the width-value of the rectangles. Becomes a functor.
+ * @property {number, function} height  the height-value of the rectangles. Becomes a functor.
+ * @property {string, function} fill    the fill-value of the rectangles. Becomes a functor.
+ * @property {string, function} stroke  the stroke-value of the rectangles. Becomes a functor.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.bar', function(module) {
@@ -2639,6 +2661,7 @@ namespace('sszvis.component.groupedBars', function(module) {
  * Line component
  *
  * The line component is a general-purpose component used to render lines.
+ *
  * The input data should be an array of arrays, where each inner array
  * contains the data points necessary to render a line. The line is then
  * composed of x- and y- values extracted from these data objects
@@ -2647,6 +2670,12 @@ namespace('sszvis.component.groupedBars', function(module) {
  * Each data object in a line's array is passed to the x- and y- accessors, along with
  * that data object's index in the array. For more information, see the documentation for
  * d3.svg.line.
+ *
+ * In addition, the user can specify stroke and strokeWidth accessor functions. Because these
+ * functions apply properties to the entire line, when called, they are give the entire array of line data
+ * as an argument, plus the index of that array of line data within the outer array of lines. Note that this
+ * differs slightly from the usual case in that dimension-related accessor functions are given different
+ * data than style-related accessor functions.
  *
  * @property {function} x                 An accessor function for getting the x-value of the line
  * @property {function} y                 An accessor function for getting the y-value of the line
