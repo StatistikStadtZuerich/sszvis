@@ -20,6 +20,7 @@ namespace('sszvis.component.tooltip', function(module) {
     var renderer = tooltipRenderer();
 
     return d3.component()
+      .delegate('centered', renderer)
       .delegate('header', renderer)
       .delegate('body', renderer)
       .delegate('orientation', renderer)
@@ -55,6 +56,7 @@ namespace('sszvis.component.tooltip', function(module) {
    */
   var tooltipRenderer = function() {
     return d3.component()
+      .prop('centered').centered(false)
       .prop('header').header('')
       .prop('body').body('')
       .prop('orientation', d3.functor).orientation('bottom')
@@ -152,6 +154,7 @@ namespace('sszvis.component.tooltip', function(module) {
           .html(props.body);
 
         selection.selectAll('.sszvis-tooltip')
+          .classed('sszvis-tooltip--centered', props.centered)
           .each(function(d) {
             var tip = d3.select(this);
             var dimensions = tip.node().getBoundingClientRect();
