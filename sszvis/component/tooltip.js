@@ -78,7 +78,18 @@ namespace('sszvis.component.tooltip', function(module) {
         var enterTooltip = tooltip.enter()
           .append('div')
           .style('pointer-events', 'none')
-          .style('padding-bottom', TIP_SIZE + 'px')
+          .style('padding-top', function(d) {
+            return (props.orientation(d) === 'top') ? TIP_SIZE + 'px' : null;
+          })
+          .style('padding-right', function(d) {
+            return (props.orientation(d) === 'right') ? TIP_SIZE + 'px' : null;
+          })
+          .style('padding-bottom', function(d) {
+            return (props.orientation(d) === 'bottom') ? TIP_SIZE + 'px' : null;
+          })
+          .style('padding-left', function(d) {
+            return (props.orientation(d) === 'left') ? TIP_SIZE + 'px' : null;
+          })
           .classed('sszvis-tooltip', true);
 
 
