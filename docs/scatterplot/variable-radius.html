@@ -114,6 +114,10 @@
       .showZeroY(true)
       .halo(true);
 
+      // NOTE I tried to play with the values of this annotation but don't quite get it. // NOTE would it make sense to create an 'annotation' namespace so we would have
+      // sszvis.component.annotation.rectangle
+      // sszvis.component.annotation.circle
+      // sszvis.component.annotation.line
     var annotation = sszvis.component.dataAreaRectangle()
       .x(xScale(8)) // x-position is bounds.innerWidth * t, where t = 0.55
       .y(0)
