@@ -29,7 +29,7 @@
     data: [],
     years: [0, 0],
     lineData: [],
-    selectedData: [],
+    selection: [],
     currentDate: null
   };
 
@@ -50,7 +50,7 @@
       if (state.currentDate === date) return;
 
       state.currentDate = date;
-      state.selectedData = state.data.filter(function(d) {
+      state.selection = state.data.filter(function(d) {
         return d.date === state.currentDate && !isNaN(d.value);
       });
 
@@ -109,13 +109,20 @@
 
     var xTickValues = xScale
       .ticks(4)
-      .concat(state.selectedData.map(xAcc));
+      .concat(state.selection.map(xAcc));
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
-      .highlight(state.selectedData.map(xAcc));
+      .tickFormat(function(d) {
+        if (isSelected(d) || d.getMonth() > 0) {
+          return quarterName(d);
+        } else {
+          return d.getFullYear();
+        }
+      })
+      .highlight(state.selection.map(xAcc));
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
@@ -151,7 +158,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('ruler')
-      .datum(state.selectedData)
+      .datum(state.selection)
       .call(ruler);
 
 
@@ -177,6 +184,31 @@
     return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
   }
 
+  function isSelected(d) {
+    return state.selection.map(xAcc).map(String).indexOf(String(d)) >= 0;
+  }
+
+  function quarterName(date) {
+    var month = date.getMonth();
+    switch (month) {
+      case 0:
+      case 1:
+      case 2:
+        return 'Q1';
+      case 3:
+      case 4:
+      case 5:
+        return 'Q2';
+      case 6:
+      case 7:
+      case 8:
+        return 'Q3';
+      case 9:
+      case 10:
+      case 11:
+        return 'Q4';
+    }
+  }
 
 }());
 </script>
