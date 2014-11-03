@@ -45,7 +45,7 @@ namespace('sszvis.axis', function(module) {
         .prop('tickColor')
         .prop('halo')
         .prop('highlight')
-        .prop('highlightBoundary').highlightBoundary(24)
+        .prop('highlightBoundary').highlightBoundary(0)
         .prop('showZeroY').showZeroY(false)
         .prop('slant')
         .prop('textWrap')
@@ -96,7 +96,11 @@ namespace('sszvis.axis', function(module) {
             group.selectAll('.tick text')
               .each(function(d) {
                 var d3_this = d3.select(this);
-                if (d3_this.classed('active')) return;
+                if (d3_this.classed('active') || props.highlightBoundary === 0) {
+                  d3_this.classed('hidden', false);
+                  return;
+                }
+
                 var position = axisScale(d);
                 var isTooClose = highlightPositions.reduce(function(tooClose, highlightPos) {
                   return tooClose || Math.abs(position - highlightPos) < props.highlightBoundary;

@@ -132,7 +132,8 @@
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
-      .highlight(state.highlightData.map(xAcc));
+      .highlight(state.highlightData.map(xAcc))
+      .highlightBoundary(24);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
