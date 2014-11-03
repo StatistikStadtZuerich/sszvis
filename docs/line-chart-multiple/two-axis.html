@@ -148,7 +148,8 @@
 
     var cLegend2 = sszvis.legend.color()
       .scale(cScale2)
-      .orientation('vertical');
+      .orientation('vertical')
+      .rightAlign(true);
 
 
     // Rendering
@@ -157,22 +158,22 @@
       .call(line);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis1')
       .call(yAxis1);
 
     chartLayer.selectGroup('yAxis2')
-      .attr('transform', 'translate(' + (bounds.innerWidth) + ', 0)')
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth, 0))
       .call(yAxis2);
 
     chartLayer.selectGroup('cScale1')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 30) + ')')
+      .attr('transform', sszvis.fn.translateString(1, bounds.innerHeight + 30))
       .call(cLegend1);
 
     chartLayer.selectGroup('cScale2')
-      .attr('transform', 'translate(' + (bounds.innerWidth - 65) + ',' + (bounds.innerHeight + 30) + ')')
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth, bounds.innerHeight + 30))
       .call(cLegend2);
   }
 

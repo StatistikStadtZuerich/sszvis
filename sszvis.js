@@ -4215,6 +4215,7 @@ namespace('sszvis.legend.color', function(module) {
       .prop('columns').columns(3)
       .prop('orientation')
       .prop('reverse').reverse(false)
+      .prop('rightAlign').rightAlign(false)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -4261,7 +4262,7 @@ namespace('sszvis.legend.color', function(module) {
         marks.exit().remove();
 
         marks
-          .attr('cx', 7)
+          .attr('cx', props.rightAlign ? -6 : 6)
           .attr('cy', props.rowHeight / 2 - 1) // magic number adjustment for nice alignment with text
           .attr('r', 6)
           .attr('fill', function(d) { return props.scale(d); });
@@ -4278,7 +4279,10 @@ namespace('sszvis.legend.color', function(module) {
         labels
           .text(function(d) { return d; })
           .attr('alignment-baseline', 'central')
-          .attr('transform', 'translate(18, ' + (props.rowHeight / 2) + ')');
+          .attr('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
+          .attr('transform', function() {
+            return sszvis.fn.translateString(props.rightAlign ? -18 : 18, props.rowHeight / 2);
+          });
       });
   };
 
