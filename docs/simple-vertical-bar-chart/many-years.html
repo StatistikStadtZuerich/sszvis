@@ -132,15 +132,15 @@
       .orient('right');
 
     var tooltipTitle = sszvis.component.modularText()
-      .bold('Hotelübernachtungen')
-      .bold(function(d) {
-        return xAcc(d).getFullYear();
-      });
+      .bold(yAcc)
+      .plain('Hotelübernachtungen');
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipTitle)
-      .body(yAcc)
+      .body(function(d) {
+        return 'Im Jahr ' + xAcc(d).getFullYear();
+      })
       .visible(isSelected);
 
 

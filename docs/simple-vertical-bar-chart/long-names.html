@@ -115,14 +115,13 @@
       .scale(yPosScale)
       .orient('right');
 
-    var tooltipText = sszvis.component.modularText()
-      .plain(sszvis.fn.compose(sszvis.format.number, yAcc))
+    var tooltipHeader = sszvis.component.modularText()
+      .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain('Beschäftigte');
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
-      .header(xAcc)
-      .body(tooltipText)
+      .header(tooltipHeader)
       .visible(isSelected);
 
 

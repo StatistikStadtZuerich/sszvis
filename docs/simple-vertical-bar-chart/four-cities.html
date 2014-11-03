@@ -121,15 +121,11 @@
 
     var tooltipTitle = sszvis.component.modularText()
       .bold(sszvis.fn.compose(sszvis.format.percent, yAcc))
-      .plain('Wert');
-
-    var tooltipBody = sszvis.component.modularText()
-      .plain(xAcc);
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
+      .centered(true)
       .header(tooltipTitle)
-      .body(tooltipBody)
       .visible(isSelected);
 
 
@@ -152,7 +148,7 @@
     // Interaction
     bars.selectAll('.sszvis-bar')
       .on('mouseover', actions.showTooltip)
-      .on('mouseout', actions.hideTooltip);
+      // .on('mouseout', actions.hideTooltip);
   }
 
 
