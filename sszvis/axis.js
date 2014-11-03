@@ -9,6 +9,8 @@
 namespace('sszvis.axis', function(module) {
 'use strict';
 
+  var TICK_PROXIMITY_THRESHOLD = 8;
+
   module.exports = (function() {
 
     var stringEqual = function(a, b) {
@@ -66,6 +68,17 @@ namespace('sszvis.axis', function(module) {
             .attr('transform', 'translate(0, 2)')
             .call(axisDelegate);
 
+          var axisScale = axisDelegate.scale();
+
+          // hide ticks which are too close to one endpoint
+          var rangeExtent = scaleRange(axisScale);
+          group.selectAll('.tick line')
+            .each(function(d) {
+              var pos = axisScale(d);
+              d3.select(this)
+                .classed('hidden', Math.abs(pos - rangeExtent[0]) < TICK_PROXIMITY_THRESHOLD || Math.abs(pos - rangeExtent[1]) < TICK_PROXIMITY_THRESHOLD);
+            });
+
           if (props.highlight) {
             var highlightPositions = [];
 
@@ -76,7 +89,7 @@ namespace('sszvis.axis', function(module) {
                 }, false);
                 d3.select(this).classed('active', isHighlight);
                 if (isHighlight) {
-                  highlightPositions.push(axisDelegate.scale()(d));
+                  highlightPositions.push(axisScale(d));
                 }
               });
 
@@ -84,7 +97,7 @@ namespace('sszvis.axis', function(module) {
               .each(function(d) {
                 var d3_this = d3.select(this);
                 if (d3_this.classed('active')) return;
-                var position = axisDelegate.scale()(d);
+                var position = axisScale(d);
                 var isTooClose = highlightPositions.reduce(function(tooClose, highlightPos) {
                   return tooClose || Math.abs(position - highlightPos) < props.highlightBoundary;
                 }, false);
@@ -98,7 +111,7 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (sszvis.fn.defined(props.tickLength)) {
-            var extent = d3.extent(axisDelegate.scale().domain());
+            var extent = d3.extent(axisScale.domain());
             var ticks = group.selectAll('.tick')
               .filter(function(d) {
                 return !stringEqual(d, extent[0]) && !stringEqual(d, extent[1]);
@@ -120,7 +133,7 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = d3.extent(axisDelegate.scale().domain());
+            var extent = d3.extent(axisScale.domain());
             var min = extent[0];
             var max = extent[1];
 
@@ -159,8 +172,7 @@ namespace('sszvis.axis', function(module) {
               .text(function(d) { return d; })
               .attr('transform', function() {
                 var orientation = axisDelegate.orient(),
-                    scale = axisDelegate.scale(),
-                    extent = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range());
+                    extent = scaleRange(axisScale);
                 var left, top;
                 // includes default title top and left alignments for different axis orientation
                 if (orientation === 'left') {
@@ -295,9 +307,13 @@ namespace('sszvis.axis', function(module) {
 
   }());
 
-  function scaleExtent(domain) { // borrowed from d3 source
+  function scaleExtent(domain) { // borrowed from d3 source - svg.axis
     var start = domain[0], stop = domain[domain.length - 1];
     return start < stop ? [ start, stop ] : [ stop, start ];
+  }
+
+  function scaleRange(scale) { // borrowed from d3 source - svg.axis
+    return scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range());
   }
 
   var slantLabel = {
