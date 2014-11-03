@@ -78,7 +78,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.regions)
-      .rangeBands([24, bounds.innerWidth], 0.26, 0);
+      .rangeBands([0, bounds.innerWidth], 0.26, 0.80);
 
     // FIXME: because the dataset has negative values, scales for the y-axis are a little weird
     // see also: http://bl.ocks.org/mbostock/2368837 (http://stackoverflow.com/questions/10127402/bar-chart-with-negative-values)
@@ -139,14 +139,14 @@
       .call(barLayout);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(20, 10)')
+      .attr('transform', sszvis.fn.translateString(20, bounds.innerHeight + 115))
       .call(colorLegend);
   }
 
