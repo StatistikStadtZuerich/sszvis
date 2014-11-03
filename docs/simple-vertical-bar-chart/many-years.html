@@ -39,12 +39,15 @@
       render(state);
     },
 
-    showTooltip: function(datum) {
-      state.selection = [datum];
+    changeDate: function(selectedDate) {
+      var selectedYear = selectedDate.getFullYear();
+      state.selection = state.data.filter(function(v) {
+        return xAcc(v).getFullYear() === selectedYear;
+      });
       render(state);
     },
 
-    hideTooltip: function() {
+    resetDate: function() {
       state.selection = [];
       render(state);
     }
@@ -90,7 +93,7 @@
 
     var yPosScale = heightScale
       .copy()
-      .range(heightScale.range().slice().reverse()); // FIXME: revise creation of rangeBands for bar charts
+      .range(heightScale.range().slice().reverse());
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
     var yValue = sszvis.fn.compose(yPosScale, yAcc);
@@ -130,7 +133,9 @@
 
     var tooltipTitle = sszvis.component.modularText()
       .bold('Hotelübernachtungen')
-      .bold(xAcc);
+      .bold(function(d) {
+        return xAcc(d).getFullYear();
+      });
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
@@ -158,11 +163,14 @@
 
     // Interaction
 
-    // FIXME: improve mouseover handling to prevent tooltip flickering
-    //        by selecting the closest datum
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(xScale)
+      .yScale(yPosScale)
+      .on('move', actions.changeDate)
+      .on('end', actions.resetDate);
+
+    chartLayer.selectGroup('interaction')
+      .call(interactionLayer);
   }
 
 
