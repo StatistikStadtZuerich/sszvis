@@ -119,8 +119,8 @@
     // Components
 
     var line = sszvis.component.line()
-      .xValue(sszvis.fn.compose(xScale, xAcc))
-      .yValue(sszvis.fn.compose(yScale, yAcc))
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
       // FIXME: this is a slightly awkward construction because the component needs to access the first
       // element of the line in order to calculate the color of the line. Maybe the component itself
       // should pass the first element of the line to props.stroke instead

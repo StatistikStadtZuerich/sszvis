@@ -85,8 +85,8 @@
     // Components
 
     var line = sszvis.component.line()
-      .xValue(sszvis.fn.compose(xScale, xAcc))
-      .yValue(sszvis.fn.compose(yScale, yAcc))
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
       .stroke(sszvis.color.values.basicBlue);
 
     var xAxis = sszvis.axis.x()

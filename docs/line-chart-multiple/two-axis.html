@@ -118,8 +118,8 @@
     // Components
 
     var line = sszvis.component.line()
-      .xValue(sszvis.fn.compose(xScale, xAcc))
-      .yValue(function(d) {
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(function(d) {
         return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
       })
       // called on the line as a whole - this function needs to access the first item in the line

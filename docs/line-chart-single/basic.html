@@ -61,7 +61,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 500, height: 480, top: 40, right: 1, bottom: 80, left: 0 });
+    var bounds = sszvis.bounds({ width: 500, height: 480, top: 30, right: 1, bottom: 45, left: 0 });
 
 
     // Scales
@@ -84,8 +84,8 @@
     // Components
 
     var line = sszvis.component.line()
-      .xValue(sszvis.fn.compose(xScale, xAcc))
-      .yValue(sszvis.fn.compose(yScale, yAcc))
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
       .stroke(sszvis.color.values.basicBlue);
 
     var xAxis = sszvis.axis.x.time()

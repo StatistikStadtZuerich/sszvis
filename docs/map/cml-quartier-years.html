@@ -134,8 +134,8 @@
       .fill(sszvis.fn.compose(fillScale, vAcc));
 
     var lineMaker = sszvis.component.line()
-      .xValue(sszvis.fn.compose(xScale, yearAcc))
-      .yValue(sszvis.fn.compose(yScale, vAcc))
+      .x(sszvis.fn.compose(xScale, yearAcc))
+      .y(sszvis.fn.compose(yScale, vAcc))
       .stroke(sszvis.color.values.basicBlue);
 
     var xTickValues = xScale
