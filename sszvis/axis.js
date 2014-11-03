@@ -94,7 +94,7 @@ namespace('sszvis.axis', function(module) {
               lines.attr('x1', props.tickLength);
             }
             if (orientation === 'left' || orientation === 'right') {
-              ticks.selectAll('text').attr('dy', '-0.2em');
+              ticks.selectAll('text').attr('dy', '-0.4em');
             }
           }
 

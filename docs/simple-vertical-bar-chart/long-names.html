@@ -75,7 +75,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, chartDimensions.outerRatio);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.2);
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
