@@ -140,12 +140,14 @@
       .halo(true);
 
     var highlightLayer = sszvis.component.ruler()
-      .x(xAcc)
+      .x(sszvis.fn.compose(xScale, xAcc))
       .y(yAcc)
-      .xScale(xScale)
       .yScale(yScale)
       .label(function(d) {
         return yAcc(d) + ' Wert';
+      })
+      .flip(function(d) {
+        return xScale(xAcc(d)) >= bounds.innerWidth / 2;
       })
       .color(sszvis.fn.compose(cScale, cAcc));
 

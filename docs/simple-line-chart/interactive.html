@@ -123,12 +123,14 @@
       .halo(true);
 
     var ruler = sszvis.component.ruler()
-      .x(xAcc)
+      .x(sszvis.fn.compose(xScale, xAcc))
       .y(yAcc)
-      .xScale(xScale)
       .yScale(yScale)
       .label(function(d) {
         return d.value + ' Anteile';
+      })
+      .flip(function(d) {
+        return xScale(xAcc(d)) >= bounds.innerWidth / 2;
       })
       .color(sszvis.color.values.basicBlue);
 

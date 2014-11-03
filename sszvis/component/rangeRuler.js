@@ -13,7 +13,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
       .prop('dy', d3.functor).dy(sszvis.fn.prop('y'))
       .prop('yScale')
       .prop('label').label(sszvis.fn.constant(''))
-      .prop('flip', d3.functor)
+      .prop('flip', d3.functor).flip(false)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
