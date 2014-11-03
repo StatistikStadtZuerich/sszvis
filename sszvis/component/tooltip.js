@@ -58,8 +58,8 @@ namespace('sszvis.component.tooltip', function(module) {
       .prop('header').header('')
       .prop('body').body('')
       .prop('orientation', d3.functor).orientation('bottom')
-      .prop('dx').dx(5)
-      .prop('dy').dy(5)
+      .prop('dx').dx(1)
+      .prop('dy').dy(1)
       .renderSelection(function(selection) {
         var tooltipData = selection.datum();
         var props = selection.props();
@@ -78,6 +78,7 @@ namespace('sszvis.component.tooltip', function(module) {
         var enterTooltip = tooltip.enter()
           .append('div')
           .style('pointer-events', 'none')
+          .style('padding-bottom', TIP_SIZE + 'px')
           .classed('sszvis-tooltip', true);
 
 
@@ -95,16 +96,16 @@ namespace('sszvis.component.tooltip', function(module) {
 
         filter.append('feGaussianBlur')
           .attr('in', 'SourceAlpha')
-          .attr('stdDeviation', 3);
+          .attr('stdDeviation', 2);
 
         filter.append('feComponentTransfer')
           .append('feFuncA')
           .attr('type', 'linear')
-          .attr('slope', 0.3);
+          .attr('slope', 0.2);
 
         filter.append('feOffset')
           .attr('dx', 0)
-          .attr('dy', 1)
+          .attr('dy', 0)
           .attr('result', 'offsetblur');
 
         var merge = filter.append('feMerge');

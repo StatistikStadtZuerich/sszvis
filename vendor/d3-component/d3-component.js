@@ -21,8 +21,8 @@
    *
    * @see http://bost.ocks.org/mike/chart/
    *
-   * @property {Function} prop Define a property accessor
-   * @property {Function} render The chart's body
+   * @property {function} prop Define a property accessor
+   * @property {function} render The chart's body
    *
    * @return {d3.component} A d3 reusable chart
    */

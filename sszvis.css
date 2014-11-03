@@ -257,12 +257,6 @@
  *
  * @module sszvis/component/tooltip
  */
-/* FIXME: remove this class, it's for the docs only */
-.sszvis-tooltip-displaywrapper {
-  position: relative;
-  height: 50px;
-}
-
 .sszvis-tooltip {
   position: absolute;
 }
@@ -276,18 +270,29 @@
 }
 
 .sszvis-tooltip-content {
-  font-size: 11px;
   font-family: Arial;
-  padding: 10px 10px 20px 10px;
+  padding: 10px 10px 7px 10px;
   position: relative;
   white-space: nowrap;
   z-index: 1;
 }
 
+.sszvis-tooltip-content strong {
+  font-weight: bold;
+}
+
+.sszvis-tooltip-content em {
+  font-weight: bold;
+}
+
 .sszvis-tooltip-header {
-  font-weight: 700;
+  color: #545454;
+  font-size: 12px;
+  line-height: 1.3333;
 }
 
 .sszvis-tooltip-body {
-  margin-top: 0.4em;
+  color: #7C7C7C;
+  font-size: 11px;
+  line-height: 1.4545;
 }
