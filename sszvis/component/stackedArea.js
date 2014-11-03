@@ -8,8 +8,10 @@ namespace('sszvis.component.stacked.area', function(module) {
 
   module.exports = function() {
     return d3.component()
+      // NOTE why not just x()? Is this in line with other components
       .prop('xAccessor')
       .prop('xScale')
+      // NOTE why not just y()? Is this in line with other components
       .prop('yAccessor')
       .prop('yScale')
       .prop('fill')
