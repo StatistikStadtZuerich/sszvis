@@ -1,6 +1,13 @@
 /**
  * @module sszvis/component/dataAreaLine
  *
+ * A component for creating reference line data areas. The component should be passed
+ * an array of data values, each of which will be used to render a reference line
+ * by passing it through the accessor functions. You can specify a caption to display,
+ * which will be positioned by default at the midpoint of the line you specify,
+ * aligned with the angle of the line. The caption can be offset from the midpoint
+ * by specifying dx or dy properties.
+ *
  * @returns {d3.component} a linear data area component (reference line)
  */
 namespace('sszvis.component.dataAreaLine', function(module) {

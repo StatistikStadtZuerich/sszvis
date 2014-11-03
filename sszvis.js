@@ -2333,6 +2333,18 @@ namespace('sszvis.component.bar', function(module) {
 /**
  * @module sszvis/component/dataAreaCircle
  *
+ * A component for creating circular data areas. The component should be passed
+ * an array of data values, each of which will be used to render a data area by
+ * passing it through the accessor functions. You can specify a caption to display,
+ * which can be offset from the center of the data area by specifying dx or dy properties.
+ *
+ * @param {number, function} x        The x-position of the center of the data area.
+ * @param {number, function} y        The y-position of the center of the data area.
+ * @param {number, function} r        The radius of the data area.
+ * @param {number, function} dx       The x-offset of the data area caption.
+ * @param {number, function} dy       The y-offset of the data area caption.
+ * @param {string, function} caption  The caption for the data area.
+ *
  * @returns {d3.component} a circular data area component
  */
 namespace('sszvis.component.dataAreaCircle', function(module) {
@@ -2385,11 +2397,19 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
 
 });
 
+
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
 /**
  * @module sszvis/component/dataAreaLine
+ *
+ * A component for creating reference line data areas. The component should be passed
+ * an array of data values, each of which will be used to render a reference line
+ * by passing it through the accessor functions. You can specify a caption to display,
+ * which will be positioned by default at the midpoint of the line you specify,
+ * aligned with the angle of the line. The caption can be offset from the midpoint
+ * by specifying dx or dy properties.
  *
  * @returns {d3.component} a linear data area component (reference line)
  */
@@ -2467,11 +2487,25 @@ namespace('sszvis.component.dataAreaLine', function(module) {
 
 });
 
+
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
 /**
  * @module sszvis/component/dataAreaRectangle
+ *
+ * A component for creating rectangular data areas. The component should be passed
+ * an array of data values, each of which will be used to render a data area by
+ * passing it through the accessor functions. You can specify a caption to display,
+ * which can be offset from the center of the data area by specifying dx or dy properties.
+ *
+ * @param {number, function} x        The x-position of the upper left corner of the data area.
+ * @param {number, function} y        The y-position of the upper left corner of the data area.
+ * @param {number, function} width    The width of the data area.
+ * @param {number, function} height   The height of the data area.
+ * @param {number, function} dx       The x-offset of the data area caption.
+ * @param {number, function} dy       The y-offset of the data area caption.
+ * @param {string, function} caption  The caption for the data area.
  *
  * @returns {d3.component} a rectangular data area component
  */
@@ -2530,6 +2564,7 @@ namespace('sszvis.component.dataAreaRectangle', function(module) {
   }
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
