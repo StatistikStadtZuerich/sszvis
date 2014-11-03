@@ -4232,6 +4232,9 @@ namespace('sszvis.legend.color', function(module) {
       .prop('orientation')
       .prop('reverse').reverse(false)
       .prop('rightAlign').rightAlign(false)
+      .prop('horizontalFloat').horizontalFloat(false)
+      .prop('floatPadding').floatPadding(10)
+      .prop('floatWidth').floatWidth(600)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -4257,14 +4260,6 @@ namespace('sszvis.legend.color', function(module) {
         groups.enter()
           .append('g')
           .classed('sszvis-legend--entry', true);
-
-        groups.attr('transform', function(d, i) {
-          if (props.orientation === 'horizontal') {
-            return 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
-          } else if (props.orientation === 'vertical') {
-            return 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
-          }
-        });
 
         groups.exit().remove();
 
@@ -4299,6 +4294,29 @@ namespace('sszvis.legend.color', function(module) {
           .attr('transform', function() {
             return sszvis.fn.translateString(props.rightAlign ? -18 : 18, props.rowHeight / 2);
           });
+
+        if (props.horizontalFloat) {
+          var rowPosition = 0, horizontalPosition = 0;
+          groups.attr('transform', function(d, i) {
+            var width = this.getBoundingClientRect().width;
+            if (horizontalPosition + props.floatPadding + width > props.floatWidth) {
+              rowPosition += props.rowHeight;
+              horizontalPosition = 0;
+            }
+            var translate = sszvis.fn.translateString(horizontalPosition + props.floatPadding, rowPosition);
+            horizontalPosition += props.floatPadding + width;
+            return translate;
+          });
+        } else {
+          groups.attr('transform', function(d, i) {
+            if (props.orientation === 'horizontal') {
+              return 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
+            } else if (props.orientation === 'vertical') {
+              return 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
+            }
+          });
+        }
+
       });
   };
 

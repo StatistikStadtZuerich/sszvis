@@ -126,8 +126,8 @@
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
-      .columnWidth(210)
-      .orientation('horizontal');
+      .horizontalFloat(true)
+      .floatWidth(bounds.innerWidth);
 
 
     // Rendering
