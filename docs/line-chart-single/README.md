@@ -1,4 +1,7 @@
-# Line Chart
+# Einfache Liniendiagramme
+
+
+
 
 ## Simple Line Chart
 
@@ -22,13 +25,13 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
 ```project
 {
-    "name": "simple-line-chart-quarterly",
+    "name": "line-chart-single-quarterly",
     "files": {
         "index.html": {
-            "source": "docs/simple-line-chart/quarterly.html",
+            "source": "docs/line-chart-single/quarterly.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-line-chart/data/SL_quarterly.csv",
+        "data.csv": "docs/line-chart-single/data/SL_quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -45,13 +48,13 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
 ```project
 {
-    "name": "simple-line-chart-interactive",
+    "name": "line-chart-single-interactive",
     "files": {
         "index.html": {
-            "source": "docs/simple-line-chart/interactive.html",
+            "source": "docs/line-chart-single/interactive.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-line-chart/data/SL_quarterly.csv",
+        "data.csv": "docs/line-chart-single/data/SL_quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -68,13 +71,13 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
 ```project
 {
-    "name": "simple-line-chart-daily",
+    "name": "line-chart-single-daily",
     "files": {
         "index.html": {
-            "source": "docs/simple-line-chart/daily.html",
+            "source": "docs/line-chart-single/daily.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-line-chart/data/SL_daily.csv",
+        "data.csv": "docs/line-chart-single/data/SL_daily.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -89,13 +92,13 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
 ```project
 {
-    "name": "simple-line-chart-negatives-x-axis",
+    "name": "line-chart-single-negatives-x-axis",
     "files": {
         "index.html": {
-            "source": "docs/simple-line-chart/negatives-x-axis.html",
+            "source": "docs/line-chart-single/negatives-x-axis.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-line-chart/data/SL_negativesXAxis.csv",
+        "data.csv": "docs/line-chart-single/data/SL_negativesXAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -110,13 +113,13 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 
 ```project
 {
-    "name": "simple-line-chart-percentage-negatives-y-axis",
+    "name": "line-chart-single-percentage-negatives-y-axis",
     "files": {
         "index.html": {
-            "source": "docs/simple-line-chart/percentage-negatives-y-axis.html",
+            "source": "docs/line-chart-single/percentage-negatives-y-axis.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-line-chart/data/SL_Percentage_negativesYAxis.csv",
+        "data.csv": "docs/line-chart-single/data/SL_Percentage_negativesYAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
