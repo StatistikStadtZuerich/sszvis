@@ -4,7 +4,10 @@
  * @see https://github.com/mbostock/d3/wiki/SVG-Axes
  * @module sszvis/axis
  */
+
+/* jshint -W004 */
 namespace('sszvis.axis', function(module) {
+'use strict';
 
   module.exports = (function() {
 
@@ -13,14 +16,14 @@ namespace('sszvis.axis', function(module) {
     };
 
     var axisTimeFormat = d3.time.format.multi([
-      [".%L", function(d) { return d.getMilliseconds(); }],
-      [":%S", function(d) { return d.getSeconds(); }],
-      ["%I:%M", function(d) { return d.getMinutes(); }],
-      ["%I %p", function(d) { return d.getHours(); }],
-      ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
-      ["%b %d", function(d) { return d.getDate() != 1; }],
-      ["%B", function(d) { return d.getMonth(); }],
-      ["%Y", function() { return true; }]
+      ['.%L', function(d) { return d.getMilliseconds(); }],
+      [':%S', function(d) { return d.getSeconds(); }],
+      ['%I:%M', function(d) { return d.getMinutes(); }],
+      ['%I %p', function(d) { return d.getHours(); }],
+      ['%a %d', function(d) { return d.getDay() && d.getDate() != 1; }],
+      ['%b %d', function(d) { return d.getDate() != 1; }],
+      ['%B', function(d) { return d.getMonth(); }],
+      ['%Y', function() { return true; }]
     ]);
 
     var axis = function() {
@@ -67,7 +70,7 @@ namespace('sszvis.axis', function(module) {
               .classed('active', function(d) {
                 return [].concat(props.highlight).reduce(function(found, highlight) {
                   return found || stringEqual(highlight, d);
-                }, false)
+                }, false);
               });
           }
 
@@ -120,7 +123,7 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.slant) {
-            group.selectAll("text")
+            group.selectAll('text')
               .call(slantLabel[axisDelegate.orient()][props.slant]);
           }
 
@@ -136,7 +139,7 @@ namespace('sszvis.axis', function(module) {
 
             title
               .text(function(d) { return d; })
-              .attr('transform', function(d) {
+              .attr('transform', function() {
                 var orientation = axisDelegate.orient(),
                     scale = axisDelegate.scale(),
                     extent = scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range());
@@ -157,7 +160,7 @@ namespace('sszvis.axis', function(module) {
                 }
                 return 'translate(' + (left) + ', ' + (top) + ')';
               })
-              .style('text-anchor', function(d) {
+              .style('text-anchor', function() {
                 var orientation = axisDelegate.orient();
                 if (props.titleAlign !== null) {
                   return props.titleAlign;
@@ -178,7 +181,7 @@ namespace('sszvis.axis', function(module) {
     };
 
     var set_ordinal_ticks = function(count) {
-      // in this function, the "this" context should be an sszvis.axis
+      // in this function, the 'this' context should be an sszvis.axis
       var domain = this.scale().domain(),
           values = [],
           step = Math.round(domain.length / count);
@@ -201,7 +204,7 @@ namespace('sszvis.axis', function(module) {
         .ticks(3)
         .tickSize(4, 7)
         .tickPadding(7)
-        .tickFormat(sszvis.format.number)
+        .tickFormat(sszvis.format.number);
     };
 
     axis_x.time = function() {
@@ -282,30 +285,30 @@ namespace('sszvis.axis', function(module) {
   var slantLabel = {
     top: {
       vertical: function(selection) {
-        selection.style("text-anchor", "start")
-          .attr("dx", "0em")
-          .attr("dy", "0.35em")
-          .attr("transform", "rotate(-90)");
+        selection.style('text-anchor', 'start')
+          .attr('dx', '0em')
+          .attr('dy', '0.35em')
+          .attr('transform', 'rotate(-90)');
       },
       diagonal: function(selection) {
-        selection.style("text-anchor", "start")
-          .attr("dx", "0.1em")
-          .attr("dy", "0.1em")
-          .attr("transform", "rotate(-45)");
+        selection.style('text-anchor', 'start')
+          .attr('dx', '0.1em')
+          .attr('dy', '0.1em')
+          .attr('transform', 'rotate(-45)');
       }
     },
     bottom: {
       vertical: function(selection) {
-        selection.style("text-anchor", "end")
-          .attr("dx", "-1em")
-          .attr("dy", "-0.75em")
-          .attr("transform", "rotate(-90)");
+        selection.style('text-anchor', 'end')
+          .attr('dx', '-1em')
+          .attr('dy', '-0.75em')
+          .attr('transform', 'rotate(-90)');
       },
       diagonal:  function(selection) {
-        selection.style("text-anchor", "end")
-          .attr("dx", "-0.8em")
-          .attr("dy", "0em")
-          .attr("transform", "rotate(-45)");
+        selection.style('text-anchor', 'end')
+          .attr('dx', '-0.8em')
+          .attr('dy', '0em')
+          .attr('transform', 'rotate(-45)');
       }
     }
   };
