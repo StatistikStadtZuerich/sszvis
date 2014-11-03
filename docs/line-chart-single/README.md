@@ -1,34 +1,44 @@
 # Einfache Liniendiagramme
 
+> Liniendiagramme eignen sich zur Darstellung eines funktionellen Zusammenhangs zwischen zwei Merkmalen.
 
+Liniendiagramme sollten nur verwendet werden, wenn genügend Datenpunkte vorhanden sind, da durch die Verbindung der Punkte der Eindruck vermittelt wird, dass es sich um kontinuierliche Daten handelt.
 
+## sszvis.component.line
 
-## Simple Line Chart
+### Datenstruktur
 
-### Datenformat
-
-Dieses Chart benötigt zwei Datenreihen:
-
-* x-Achse
-* y-Achse
+Dieses Diagramm benötigt zwei Datenreihen, die einen Zusammenhang aufweisen.
 
 ### Konfiguration
 
-Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
+Das Liniendiagramm benutzt intern [d3.svg.line](https://github.com/mbostock/d3/wiki/SVG-Shapes#line) und funktioniert analog dazu.
 
-* `xAxis` – eine `d3`-Achsenfunktion
-* `yAxis` – eine `d3`-Achsenfunktion
+#### `line.x([x])`
 
-## Simple Line Chart
+Zugriffsfunktion, um *x*-Werte aus den Daten zu lesen.
 
-Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung eines Wertes darzustellen.
+#### `line.y([y])`
+
+Zugriffsfunktion, um *y*-Werte aus den Daten zu lesen.
+
+#### `line.stroke([stroke])`
+
+String oder Funktion um die Strichfarbe zu setzen (Standard: Schwarz)
+
+#### `line.strokeWidth([width])`
+
+String oder Funktion um die Strichdicke zu setzen (Standard: 1)
+
+
+### Diagramm
 
 ```project
 {
-    "name": "line-chart-single-quarterly",
+    "name": "line-chart-single-basic",
     "files": {
         "index.html": {
-            "source": "docs/line-chart-single/quarterly.html",
+            "source": "docs/line-chart-single/basic.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/line-chart-single/data/SL_quarterly.csv",
@@ -44,7 +54,9 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 }
 ```
 
-## Interaktiv
+## Anwendungsbeispiel: Interaktion
+
+Basiert auf dem Standard-Diagramm, zeigt aber zusätzlich die Zahlenwerte an der Mausposition an.
 
 ```project
 {
@@ -67,7 +79,7 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 }
 ```
 
-## Statisch
+## Anwendungsbeispiel: Anmerkungen
 
 ```project
 {
@@ -90,6 +102,8 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
 }
 ```
 
+## Anwendungsbeispiel: Negative x-Werte
+
 ```project
 {
     "name": "line-chart-single-negatives-x-axis",
@@ -110,6 +124,8 @@ Ein Liniendiagramm eignet sich, um die – meistens zeitliche – Veränderung e
     }
 }
 ```
+
+## Anwendungsbeispiel: Negative y-Werte
 
 ```project
 {
