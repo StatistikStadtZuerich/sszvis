@@ -133,8 +133,7 @@
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
-      .columnWidth(140)
-      .orientation('horizontal');
+      .horizontalFloat(true);
 
 
     // Rendering
@@ -150,7 +149,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 50) + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 50))
       .call(colorLegend);
   }
 

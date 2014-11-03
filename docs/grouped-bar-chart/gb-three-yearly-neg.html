@@ -143,7 +143,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 36) + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 36))
       .call(colorLegend);
   }
 

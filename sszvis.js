@@ -4305,12 +4305,12 @@ namespace('sszvis.legend.color', function(module) {
           var rowPosition = 0, horizontalPosition = 0;
           groups.attr('transform', function(d, i) {
             var width = this.getBoundingClientRect().width;
-            if (horizontalPosition + props.floatPadding + width > props.floatWidth) {
+            if (horizontalPosition + width > props.floatWidth) {
               rowPosition += props.rowHeight;
               horizontalPosition = 0;
             }
-            var translate = sszvis.fn.translateString(horizontalPosition + props.floatPadding, rowPosition);
-            horizontalPosition += props.floatPadding + width;
+            var translate = sszvis.fn.translateString(horizontalPosition, rowPosition);
+            horizontalPosition += width + props.floatPadding;
             return translate;
           });
         } else {
