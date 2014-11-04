@@ -89,8 +89,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var outerBounds = sszvis.bounds({ width: 516, height: 716, top: 0, right: 0, bottom: 0, left: 0 });
-    var mapBounds = sszvis.bounds({ width: 516, height: 516, top: 0, right: 0, bottom: 0, left: 0 });
+    var outerBounds = sszvis.bounds({ width: 516, height: 756, top: 0, right: 0, bottom: 0, left: 0 });
+    var mapBounds = sszvis.bounds({ width: 516, height: 556, top: 0, right: 0, bottom: 40, left: 0 });
     var lineChartBounds = sszvis.bounds({ width: 516, height: 200, top: 20, right: 10, bottom: 30, left: 10 });
 
 
@@ -117,11 +117,11 @@
       .datum(state.currentMapData);
 
     var lineChart = chart.selectGroup('line')
-      .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.innerHeight + lineChartBounds.padding.top) + ')')
+      .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.height + lineChartBounds.padding.top) + ')')
       .datum(state.lineData);
 
     var highlightLayer = chart.selectGroup('highlight')
-      .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.innerHeight + lineChartBounds.padding.top) + ')')
+      .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.height + lineChartBounds.padding.top) + ')')
       .datum(state.currentMapData);
 
 
@@ -163,6 +163,10 @@
         return 'Anzahl: ' + d.value;
       });
 
+    var legend = sszvis.legend.linearColorScale()
+      .scale(fillScale)
+      .width(outerBounds.width / 2)
+      .units('Anzahl');
 
     // Rendering
 
@@ -179,6 +183,10 @@
 
     highlightLayer.selectGroup('slider')
       .call(slideBar);
+
+    chart.selectGroup('legend')
+      .attr('transform', sszvis.fn.translateString(mapBounds.width / 4 - mapBounds.padding.left, mapBounds.innerHeight))
+      .call(legend);
 
 
     // Interaction
