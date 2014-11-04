@@ -51,9 +51,10 @@ namespace('sszvis.axis', function(module) {
         .prop('textWrap')
         .prop('tickLength')
         .prop('title')
-        .prop('titleAlign').titleAlign(null) // start, end, or middle
-        .prop('titleLeft').titleLeft(null) // a numeric value for the left offset of the title
-        .prop('titleTop').titleTop(null) // a numeric value for the top offset of the title
+        .prop('titleAlign') // start, end, or middle
+        .prop('titleLeft') // a numeric value for the left offset of the title
+        .prop('titleTop') // a numeric value for the top offset of the title
+        .prop('titleVertical')
         .prop('vertical').vertical(false)
         .render(function() {
           var selection = d3.select(this);
@@ -176,27 +177,21 @@ namespace('sszvis.axis', function(module) {
               .text(function(d) { return d; })
               .attr('transform', function() {
                 var orientation = axisDelegate.orient(),
-                    extent = scaleRange(axisScale);
-                var left, top;
-                // includes default title top and left alignments for different axis orientation
-                if (orientation === 'left') {
-                  left = props.titleLeft !== null ? props.titleLeft : 0;
-                  top = props.titleTop !== null ? props.titleTop : 0;
-                } else if (orientation === 'right') {
-                  left = props.titleLeft !== null ? props.titleLeft : 0;
-                  top = props.titleTop !== null ? props.titleTop : 0;
-                } else if (orientation === 'top') {
-                  left = props.titleLeft !== null ? props.titleLeft : extent[1];
-                  top = props.titleTop !== null ? props.titleTop : 0;
-                } else if (orientation === 'bottom') {
-                  left = props.titleLeft !== null ? props.titleLeft : extent[1];
-                  top = props.titleTop !== null ? props.titleTop : 35;
-                }
-                return 'translate(' + (left) + ', ' + (top) + ')';
+                    extent = scaleRange(axisScale),
+                    titleProps = sszvis.fn.defaults({
+                      vertical: props.titleVertical,
+                      left: props.titleLeft,
+                      top: props.titleTop
+                    }, {
+                      vertical: false,
+                      left: orientation === 'left' || orientation === 'right' ? 0 : orientation === 'top' || orientation === 'bottom' ? extent[1] : 0,
+                      top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 35 : 0
+                    });
+                return 'rotate(' + (titleProps.vertical ? '-90' : '0' ) + ') translate(' + (titleProps.left) + ', ' + (titleProps.top) + ')';
               })
               .style('text-anchor', function() {
                 var orientation = axisDelegate.orient();
-                if (props.titleAlign !== null) {
+                if (typeof props.titleAlign !== 'undefined') {
                   return props.titleAlign;
                 } else if (orientation === 'left') {
                   return 'end';

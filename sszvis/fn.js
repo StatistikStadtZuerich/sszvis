@@ -94,6 +94,19 @@ namespace('sszvis.fn', function(module) {
       };
     },
 
+    defaults: function(target) {
+      var def;
+      for (var i = 1; i < arguments.length; i++) {
+        def = arguments[i];
+        for (var prop in def) {
+          if (def.hasOwnProperty(prop) && typeof target[prop] === 'undefined') {
+            target[prop] = def[prop];
+          }
+        }
+      }
+      return target;
+    },
+
     /**
      * fn.defined
      *

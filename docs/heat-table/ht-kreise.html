@@ -134,7 +134,10 @@
       .scale(yScale)
       .orient('left')
       .title('Altersgruppe')
-      .titleTop(-10);
+      .titleVertical(true)
+      .titleAlign('middle')
+      .titleLeft(-tableDimensions.height / 2)
+      .titleTop(-40);
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)

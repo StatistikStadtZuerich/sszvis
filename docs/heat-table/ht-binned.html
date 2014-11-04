@@ -147,7 +147,10 @@
       .scale(yScale)
       .orient('left')
       .title('Group 2')
-      .titleTop(-10);
+      .titleVertical(true)
+      .titleAlign('middle')
+      .titleLeft(-tableDimensions.height / 2)
+      .titleTop(-30);
 
     var displayValues = binEdges.concat(state.valueDomain).sort(d3.ascending);
     var legend = sszvis.legend.binnedColorScale()

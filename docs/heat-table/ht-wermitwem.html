@@ -133,7 +133,10 @@
       .scale(yScale)
       .orient('left')
       .title('Altersgruppe Frauen')
-      .titleTop(-10);
+      .titleVertical(true)
+      .titleAlign('middle')
+      .titleLeft(-tableDimensions.height / 2)
+      .titleTop(-45);
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
