@@ -369,7 +369,7 @@ namespace('sszvis.axis', function(module) {
         .prop('textWrap')
         .prop('tickLength')
         .prop('title')
-        .prop('titleAlign') // start, end, or middle
+        .prop('titleAnchor') // start, end, or middle
         .prop('titleLeft') // a numeric value for the left offset of the title
         .prop('titleTop') // a numeric value for the top offset of the title
         .prop('titleVertical')
@@ -509,8 +509,8 @@ namespace('sszvis.axis', function(module) {
               })
               .style('text-anchor', function() {
                 var orientation = axisDelegate.orient();
-                if (typeof props.titleAlign !== 'undefined') {
-                  return props.titleAlign;
+                if (typeof props.titleAnchor !== 'undefined') {
+                  return props.titleAnchor;
                 } else if (orientation === 'left') {
                   return 'end';
                 } else if (orientation === 'right') {
