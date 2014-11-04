@@ -106,6 +106,20 @@ namespace('sszvis.fn', function(module) {
       return typeof val !== 'undefined';
     },
 
+    derivedSet: function(arr, acc) {
+      acc || (acc = sszvis.fn.identity);
+      var seen = [], sValue, cValue, result = [];
+      for (var i = 0, l = arr.length; i < l; ++i) {
+        sValue = arr[i];
+        cValue = acc(sValue, i, arr);
+        if (seen.indexOf(cValue) < 0) {
+          seen.push(cValue);
+          result.push(sValue);
+        }
+      }
+      return result;
+    },
+
     /**
      * fn.either
      *
@@ -182,6 +196,7 @@ namespace('sszvis.fn', function(module) {
      * in the input array. This function differs from fn.set in that the elements
      * in the input array (or the values returned by the accessor function)
      * MUST be "hashable" - convertible to unique keys of a JavaScript object.
+     * As payoff for obeying this restriction, the algorithm can run much faster.
      *
      * @param  {Array} arr the Array of source elements
      * @param {Function} [acc(element, index, array)=(v) -> v] - an accessor function which

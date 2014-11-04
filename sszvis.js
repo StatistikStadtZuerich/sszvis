@@ -1241,6 +1241,20 @@ namespace('sszvis.fn', function(module) {
       return typeof val !== 'undefined';
     },
 
+    derivedSet: function(arr, acc) {
+      acc || (acc = sszvis.fn.identity);
+      var seen = [], sValue, cValue, result = [];
+      for (var i = 0, l = arr.length; i < l; ++i) {
+        sValue = arr[i];
+        cValue = acc(sValue, i, arr);
+        if (seen.indexOf(cValue) < 0) {
+          seen.push(cValue);
+          result.push(sValue);
+        }
+      }
+      return result;
+    },
+
     /**
      * fn.either
      *
@@ -1317,6 +1331,7 @@ namespace('sszvis.fn', function(module) {
      * in the input array. This function differs from fn.set in that the elements
      * in the input array (or the values returned by the accessor function)
      * MUST be "hashable" - convertible to unique keys of a JavaScript object.
+     * As payoff for obeying this restriction, the algorithm can run much faster.
      *
      * @param  {Array} arr the Array of source elements
      * @param {Function} [acc(element, index, array)=(v) -> v] - an accessor function which
@@ -2078,6 +2093,73 @@ namespace('sszvis.behavior.click', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+namespace('sszvis.behavior.voronoi', function(module) {
+'use strict';
+
+  module.exports = function() {
+    var event = d3.dispatch('over', 'out');
+
+    var voronoiComponent = d3.component()
+      .prop('x')
+      .prop('y')
+      .prop('bounds')
+      .prop('debug')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        if (!props.bounds) {
+          sszvis.logError('behavior.voronoi - requires bounds');
+          return false;
+        }
+
+        var voronoi = d3.geom.voronoi()
+          .x(props.x)
+          .y(props.y)
+          .clipExtent(props.bounds);
+
+        var polys = selection.selectAll('[data-sszvis-behavior-voronoi]')
+          .data(voronoi(data));
+
+        polys.enter()
+          .append('path')
+          .attr('data-sszvis-behavior-voronoi', '');
+
+        polys.exit().remove();
+
+        polys
+          .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
+          .attr('fill', function(d) {
+            return props.debug ? d3.hsl(Math.random() * 360, Math.random() * 0.5 + 0.5, Math.random() * 0.5 + 0.5) : 'transparent';
+          })
+          .on('mouseover', function(d, i) {
+            event.over.apply(this, [d.point, i]);
+          })
+          .on('mouseout', function(d, i) {
+            event.out.apply(this, [d.point, i]);
+          })
+          .on('touchdown', function(d, i) {
+            event.over.apply(this, [d.point, i]);
+          })
+          .on('touchend', function(d, i) {
+            event.out.apply(this, [d.point, i]);
+
+            // calling preventDefault here prevents the browser from sending imitation mouse events
+            d3.event.preventDefault();
+          });
+      });
+
+    d3.rebind(voronoiComponent, event, 'on');
+
+    return voronoiComponent;
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
 /**
  * Segmented Control for switching top-level filter values
  *
@@ -2577,8 +2659,8 @@ namespace('sszvis.component.dot', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('x')
-      .prop('y')
+      .prop('x', d3.functor)
+      .prop('y', d3.functor)
       .prop('radius')
       .prop('stroke')
       .prop('fill')
@@ -2603,10 +2685,20 @@ namespace('sszvis.component.dot', function(module) {
           .attr('r', props.radius)
           .attr('stroke', props.stroke)
           .attr('fill', props.fill);
+
+        // Tooltip anchors
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(d) {
+            return [props.x(d), props.y(d)];
+          });
+
+        selection.call(tooltipAnchor);
       });
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

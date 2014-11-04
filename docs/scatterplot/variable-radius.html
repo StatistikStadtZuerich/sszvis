@@ -28,6 +28,7 @@
   ----------------------------------------------- */
   var state = {
     data: [],
+    highlightData: [],
     xExtent: [0, 0],
     yExtent: [0, 0],
     rExtent: [0, 0]
@@ -39,10 +40,27 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
+
+      // for the voronoi component to work, the data must first be filtered such that no two vertices
+      // fall at exactly the same point.
+      state.voronoiFiltered = sszvis.fn.derivedSet(state.data, function(d) {
+        return xAcc(d) + '___' + yAcc(d);
+      });
+
       state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
       state.yExtent = d3.extent(state.data, yAcc);
       state.rExtent = d3.extent(state.data, rAcc);
 
+      render(state);
+    },
+
+    setHighlight: function(d) {
+      state.highlightData = [d];
+      render(state);
+    },
+
+    resetHighlight: function() {
+      state.highlightData = [];
       render(state);
     }
   };
@@ -76,9 +94,15 @@
       .domain(state.xExtent)
       .range([0, bounds.innerWidth]);
 
+    var xValue = sszvis.fn.compose(function(v) {
+        return v <= 0.1 ? 0 : xScale(v);
+      }, xAcc);
+
     var yScale = d3.scale.linear()
       .domain(state.yExtent)
       .range([bounds.innerHeight, 0]);
+
+    var yValue = sszvis.fn.compose(yScale, yAcc);
 
     var rScale = d3.scale.linear()
       .domain(state.rExtent)
@@ -90,14 +114,15 @@
     var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
       .datum(state.data);
 
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.highlightData);
+
 
     // Components
 
     var dots = sszvis.component.dot()
-      .x(sszvis.fn.compose(function(v) {
-        return v <= 0.1 ? 0 : xScale(v);
-      }, xAcc))
-      .y(sszvis.fn.compose(yScale, yAcc))
+      .x(xValue)
+      .y(yValue)
       .radius(sszvis.fn.compose(rScale, rAcc))
       .fill(sszvis.color.values.basicBlue)
       .stroke(sszvis.color.values.plainWhite);
@@ -136,6 +161,14 @@
       .fill(sszvis.color.values.basicBlue)
       .stroke(sszvis.color.values.plainWhite);
 
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) { return cAcc(d); })
+      .visible(function(d) { return state.highlightData.indexOf(d) >= 0; })
+      .orientation(function(d) {
+        return xValue(d.datum) <= bounds.innerWidth / 2 ? 'left' : 'right';
+      });
+
 
     // Rendering
 
@@ -145,6 +178,9 @@
     chartLayer.selectGroup('dataArea')
       .datum([1])
       .call(annotation);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
     chartLayer.selectGroup('radLegend')
       .attr('transform', sszvis.fn.translateString(30, bounds.innerHeight + 70))
@@ -156,6 +192,20 @@
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
+
+
+    // Interaction
+
+    var mouseOverlay = sszvis.behavior.voronoi()
+      .x(xValue)
+      .y(yValue)
+      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + bounds.padding.bottom]])
+      .on('over', actions.setHighlight)
+      .on('out', actions.resetHighlight);
+
+    chartLayer.selectGroup('voronoiMouse')
+      .datum(state.voronoiFiltered)
+      .call(mouseOverlay);
   }
 
 }());

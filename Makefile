@@ -40,6 +40,7 @@ SOURCE_FILES = \
 	sszvis/transition.js \
 	sszvis/behavior/move.js \
 	sszvis/behavior/click.js \
+	sszvis/behavior/voronoi.js \
 	sszvis/control/segmentedControl.js \
 	sszvis/control/slideBar.js \
 	sszvis/component/bar.js \
