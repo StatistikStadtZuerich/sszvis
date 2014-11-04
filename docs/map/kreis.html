@@ -74,7 +74,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 516, top: 0, right: 0, bottom: 0, left: 0 });
+    var bounds = sszvis.bounds({ width: 516, height: 516, top: 0, right: 0, bottom: 26, left: 0 });
 
 
     // Scales
@@ -111,6 +111,11 @@
         console.log(d);
         return state.selection.indexOf(d) >= 0; });
 
+    var legend = sszvis.legend.linearColorScale()
+      .scale(colorScale)
+      .width(bounds.width / 2)
+      .units('Bevölkerung');
+
 
     // Rendering
 
@@ -118,6 +123,10 @@
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+    chartLayer.selectGroup('legend')
+      .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight))
+      .call(legend);
 
 
     // Interaction

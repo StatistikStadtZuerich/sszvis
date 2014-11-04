@@ -118,7 +118,7 @@
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 716
+        "height": 756
     }
 }
 ```
