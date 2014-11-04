@@ -102,11 +102,17 @@
       .fill(sszvis.color.values.basicBlue)
       .stroke(sszvis.color.values.plainWhite);
 
+    // the built-in .ticks() function for d3.scale.log() produces far too many ticks
+    var xTicks = [0.1, 0.5, 1, 5, 10, 50, 100];
+
     var xAxis = sszvis.axis.x()
       .scale(xScale)
-      .tickFormat(sszvis.format.number)
-      .ticks(4)
-      .orient('bottom');
+      .tickValues(xTicks)
+      .orient('bottom')
+      .tickFormat(function(d) {
+        return d < 1 ? d.toPrecision(1) : d;
+      })
+      .title('logarithmic scale');
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
