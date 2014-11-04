@@ -4236,6 +4236,8 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        Array.isArray(data) || (data = [data]);
+
         var anchor = selection.selectAll('[data-tooltip-anchor]')
           .data(data);
 
@@ -4825,6 +4827,11 @@ namespace('sszvis.map', function(module) {
 
         baseGroups.exit().remove();
 
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(mapPath.centroid);
+
+        baseGroups.call(tooltipAnchor);
+
         var joinedShapes = baseGroups.selectAll('.sszvis-map-area')
           .data(data, sszvis.fn.prop(props.keyName));
 
@@ -4859,6 +4866,7 @@ namespace('sszvis.map', function(module) {
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

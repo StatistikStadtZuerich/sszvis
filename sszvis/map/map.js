@@ -145,6 +145,11 @@ namespace('sszvis.map', function(module) {
 
         baseGroups.exit().remove();
 
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(mapPath.centroid);
+
+        baseGroups.call(tooltipAnchor);
+
         var joinedShapes = baseGroups.selectAll('.sszvis-map-area')
           .data(data, sszvis.fn.prop(props.keyName));
 

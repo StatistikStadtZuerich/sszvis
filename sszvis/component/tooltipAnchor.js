@@ -16,6 +16,8 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        Array.isArray(data) || (data = [data]);
+
         var anchor = selection.selectAll('[data-tooltip-anchor]')
           .data(data);
 

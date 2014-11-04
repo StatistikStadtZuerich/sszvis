@@ -26,6 +26,7 @@
   ----------------------------------------------- */
   var state = {
     data: [],
+    selection: [],
     mapData: {},
     valueDomain: [0, 0]
   };
@@ -38,6 +39,18 @@
       state.data = data;
       state.valueDomain = [0, d3.max(state.data, vAcc)];
 
+      render(state);
+    },
+
+    selectHovered: function(d) {
+      state.selection = [d];
+      console.log('select', state.selection);
+      render(state);
+    },
+
+    deselectHovered: function(d) {
+      state.selection = [];
+      console.log('deselect');
       render(state);
     }
   };
@@ -76,6 +89,9 @@
     var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
       .datum(state.data);
 
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
+
 
     // Components
 
@@ -85,10 +101,30 @@
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc));
 
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) {
+        return d.name + ' - ' + vAcc(d);
+      })
+      .visible(function(d) {
+        return true;
+        console.log(d);
+        return state.selection.indexOf(d) >= 0; });
+
 
     // Rendering
 
     chartLayer.call(mapMaker);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+
+    // Interaction
+
+    chartLayer.selectAll('.sszvis-map-area')
+      .on('mouseover', actions.selectHovered)
+      .on('mouseout', actions.deselectHovered);
   }
 
 }());
