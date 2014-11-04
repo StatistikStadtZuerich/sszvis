@@ -42,6 +42,7 @@
       state.lineData = [state.data];
 
       // Add a bit of padding to prevent the y-axis value from touching the x-axis
+      // NOTE what is that really for? It looks somehow not very elegant. 
       state.yRange[0] = state.yRange[0] - 0.2;
 
       render(state);
