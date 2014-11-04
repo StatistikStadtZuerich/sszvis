@@ -146,7 +146,10 @@ namespace('sszvis.map', function(module) {
         baseGroups.exit().remove();
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .position(mapPath.centroid);
+          .debug(true)
+          .position(function(d) {
+            return mapPath.centroid(d);
+          });
 
         baseGroups.call(tooltipAnchor);
 

@@ -78,6 +78,8 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
 
         anchor.exit().remove();
 
+        anchor
+          .attr('transform', fn.compose(translate, props.position));
 
         // Visible anchor if debug is true
         if (props.debug) {

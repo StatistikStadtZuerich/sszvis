@@ -4686,6 +4686,8 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
 
         anchor.exit().remove();
 
+        anchor
+          .attr('transform', fn.compose(translate, props.position));
 
         // Visible anchor if debug is true
         if (props.debug) {
@@ -5258,7 +5260,10 @@ namespace('sszvis.map', function(module) {
         baseGroups.exit().remove();
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .position(mapPath.centroid);
+          .debug(true)
+          .position(function(d) {
+            return mapPath.centroid(d);
+          });
 
         baseGroups.call(tooltipAnchor);
 
