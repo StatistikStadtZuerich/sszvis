@@ -6,8 +6,8 @@ namespace('sszvis.component.dot', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('x')
-      .prop('y')
+      .prop('x', d3.functor)
+      .prop('y', d3.functor)
       .prop('radius')
       .prop('stroke')
       .prop('fill')
@@ -32,6 +32,15 @@ namespace('sszvis.component.dot', function(module) {
           .attr('r', props.radius)
           .attr('stroke', props.stroke)
           .attr('fill', props.fill);
+
+        // Tooltip anchors
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(d) {
+            return [props.x(d), props.y(d)];
+          });
+
+        selection.call(tooltipAnchor);
       });
   };
 
