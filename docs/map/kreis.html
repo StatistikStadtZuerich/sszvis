@@ -123,6 +123,17 @@
       .width(bounds.width / 2)
       .units('Bevölkerung');
 
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) {
+        return d.name + ' - ' + vAcc(d);
+      })
+      .visible(function(d) {
+        return true;
+        console.log(d);
+        return state.selection.indexOf(d) >= 0;
+      });
+
 
     // Rendering
 
