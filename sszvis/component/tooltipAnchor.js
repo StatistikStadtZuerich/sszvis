@@ -33,11 +33,10 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
           .attr('pointer-events', 'none')
           .attr('data-tooltip-anchor', '');
 
-        anchor
-          .attr('transform', fn.compose(translate, props.position));
-
         anchor.exit().remove();
 
+        anchor
+          .attr('transform', fn.compose(translate, props.position));
 
         if (props.debug) {
           var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')

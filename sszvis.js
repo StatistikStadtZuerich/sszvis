@@ -4253,11 +4253,10 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
           .attr('pointer-events', 'none')
           .attr('data-tooltip-anchor', '');
 
-        anchor
-          .attr('transform', fn.compose(translate, props.position));
-
         anchor.exit().remove();
 
+        anchor
+          .attr('transform', fn.compose(translate, props.position));
 
         if (props.debug) {
           var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
@@ -4828,7 +4827,10 @@ namespace('sszvis.map', function(module) {
         baseGroups.exit().remove();
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .position(mapPath.centroid);
+          .debug(true)
+          .position(function(d) {
+            return mapPath.centroid(d);
+          });
 
         baseGroups.call(tooltipAnchor);
 
@@ -4838,11 +4840,12 @@ namespace('sszvis.map', function(module) {
         joinedShapes
           .transition()
           .call(sszvis.transition.fastTransition)
-          .attr('fill', props.fill)
-          .attr('stroke', props.stroke);
+          .attr('fill', props.fill);
 
         joinedShapes.exit()
           .attr('fill', 'url(#missing-pattern)');
+
+        baseGroups.data(data, sszvis.fn.prop(props.keyName));
 
         // special rendering for lake zurich
         if (props.type.indexOf('zurich-') >= 0) {

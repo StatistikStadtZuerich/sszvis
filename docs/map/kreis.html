@@ -97,9 +97,11 @@
 
     var mapMaker = sszvis.map()
       .type('zurich-stadtkreise')
+      .keyName('geoId')
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc));
+      .fill(sszvis.fn.compose(colorScale, vAcc))
+      .stroke(sszvis.fn.compose(colorScale, vAcc));
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
@@ -107,9 +109,8 @@
         return d.name + ' - ' + vAcc(d);
       })
       .visible(function(d) {
-        return true;
-        console.log(d);
-        return state.selection.indexOf(d) >= 0; });
+        return state.selection.indexOf(d) >= 0;
+      });
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
