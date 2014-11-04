@@ -58,6 +58,7 @@
   d3.csv('data/SL_daily.csv')
     .row(function(d) {
       return {
+        // NOTE I like how things are always mapped to 'date', 'value' kind of notations
         date:  sszvis.parse.date(d['Datum']),
         value: sszvis.parse.number(d['Regen'])
       };
@@ -85,7 +86,7 @@
 
 
     // Layers
-
+    // NOTE nice
     var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
       .datum(state.lineData);
 
@@ -95,6 +96,7 @@
     var line = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
+      // NOTE probably here also not use the direct colors, for some reason?
       .stroke(sszvis.color.values.basicBlue);
 
     var xAxis = sszvis.axis.x.time()
@@ -109,6 +111,8 @@
       .title('Regen')
       .titleTop(-10);
 
+      // NOTE The namespacing of the annotation components seems a bit awkward to me.To be discussed
+      //otherwise the api seems ok, although I didn't look at the inner code. 
     var annotation = sszvis.component.dataAreaCircle()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
