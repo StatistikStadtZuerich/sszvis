@@ -26,6 +26,7 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
+    // NOTE default values, good. 
     data: [],
     years: [0, 0],
     lineData: [],
@@ -115,6 +116,7 @@
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
+      // NOTE ok I see now how to change the tick label on interaction. Thats good. is this the most elegant way? 
       .tickFormat(function(d) {
         if (isSelected(d) || d.getMonth() > 0) {
           return quarterName(d);
@@ -136,6 +138,7 @@
       .label(function(d) {
         return d.value + ' Anteile';
       })
+      // NOTE good solution
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
       })
