@@ -2137,9 +2137,7 @@ namespace('sszvis.behavior.voronoi', function(module) {
 
         polys
           .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
-          .attr('fill', function(d) {
-            return props.debug ? d3.hsl(Math.random() * 360, Math.random() * 0.5 + 0.5, Math.random() * 0.5 + 0.5) : 'transparent';
-          })
+          .attr('fill', 'transparent')
           .on('mouseover', function(d, i) {
             event.over.apply(this, [d.point, i]);
           })
@@ -2155,6 +2153,10 @@ namespace('sszvis.behavior.voronoi', function(module) {
             // calling preventDefault here prevents the browser from sending imitation mouse events
             d3.event.preventDefault();
           });
+
+          if (props.debug) {
+            polys.attr('stroke', '#f00');
+          }
       });
 
     d3.rebind(voronoiComponent, event, 'on');
