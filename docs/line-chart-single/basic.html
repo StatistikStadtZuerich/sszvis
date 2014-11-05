@@ -69,7 +69,11 @@
       //  code for preparing the state
       //  ...
       //  render(state)
-      error ? sszvis.loadError(error) : actions.prepareState(data);
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
 
 
     });
