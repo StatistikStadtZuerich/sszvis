@@ -3748,6 +3748,7 @@ namespace('sszvis.component.ruler', function(module) {
 
 // FIXME: rename namespace or component to be consistent with file system
 namespace('sszvis.component.stacked.area', function(module) {
+'use strict';
 
   module.exports = function() {
     return d3.component()
