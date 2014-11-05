@@ -15,6 +15,16 @@
 (function() {
   'use strict';
 
+  /* Configuration
+  ----------------------------------------------- */
+  // These are the internal edges of the bins used for the color scale.
+  // IMPORTANT: because of the way d3.scale.threshold works, do not specify
+  // fixed upper and lower bounds. Anything less than or equal to the first element
+  // in BIN_EDGES will be grouped in the first bin, and anything greater than or
+  // equal to the last element will be grouped in the last bin.
+  var BIN_EDGES = [40, 200, 400];
+
+
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('g1');
@@ -89,22 +99,16 @@
       .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
       .domain(state.g2List);
 
-    // these are the internal edges of the bins used for the color scale
-    // IMPORTANT: because of the way d3.scale.threshold works,
-    // do not specify fixed upper and lower bounds
-    // anything less than or equal to the first element in binEdges will be grouped in the first bin,
-    // and anything greater than or equal to the last element will be grouped in the last bin
-    var binEdges = [40, 200, 400];
     // create a linear color interpolator for generating the output range of bin colors
     var interpolateColor = d3.scale.linear()
       .range(sszvis.color.ranges.sequential.valued.blue);
     // the range is composed of colors sampled at equal distances along the color spectrum,
-    // such that binColors.length === binEdges.length + 1
-    var binColors = d3.range(binEdges.length + 1).map(function(i) { return interpolateColor(i / binEdges.length); });
+    // such that binColors.length === BIN_EDGES.length + 1
+    var binColors = d3.range(BIN_EDGES.length + 1).map(function(i) { return interpolateColor(i / BIN_EDGES.length); });
     // for the threshold scale, the number of values in the range must be one greater than the
     // number of values in the domain.
     var colorScale = d3.scale.threshold()
-      .domain(binEdges)
+      .domain(BIN_EDGES)
       .range(binColors);
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
@@ -152,7 +156,7 @@
       .titleLeft(-tableDimensions.height / 2)
       .titleTop(-30);
 
-    var displayValues = binEdges.concat(state.valueDomain).sort(d3.ascending);
+    var displayValues = BIN_EDGES.concat(state.valueDomain).sort(d3.ascending);
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
       .displayValues(displayValues)
