@@ -2,68 +2,67 @@
  * Stacked Bar Chart
  * @return {d3.component}
  */
-namespace('sszvis.component.stacked.bar', function(module) {
+namespace('sszvis.component.stacked', function(module) {
+'use strict';
 
-  module.exports = function() {
+  function stackedBar() {
     return d3.component()
-      .prop('orientation')
-      .prop('xAccessor')
-      .prop('xScale')
-      .prop('width')
-      .prop('yAccessor')
-      .prop('yScale')
+      .prop('xAccessor', d3.functor)
+      .prop('xScale', d3.functor)
+      .prop('width', d3.functor)
+      .prop('yAccessor', d3.functor)
+      .prop('yScale', d3.functor)
+      .prop('height', d3.functor)
       .prop('fill')
       .prop('stroke')
+      .prop('orientation').orientation('vertical')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        // TODO: refactor this class to make more sense?
+        var isHorizontal = props.orientation === 'horizontal';
+
         var stackLayout = d3.layout.stack()
-          .x(props.xAccessor)
-          .y(props.yAccessor);
+          .x(isHorizontal ? props.yAccessor : props.xAccessor)
+          .y(isHorizontal ? props.xAccessor : props.yAccessor);
 
-        var placementValue = sszvis.fn.compose(props.xScale, props.xAccessor);
-        var extentValueRight = function(d) { return props.yScale(d.y0); };
-        var extentValueLeft = function(d) { return props.yScale(d.y0 + d.y); };
-        var placementDimension = props.width;
-        var extentDimension = function(d) { return Math.abs(props.yScale(d.y0 + d.y) - props.yScale(d.y0)); };
+        var xValue, yValue, widthValue, heightValue;
 
-        var xFunc, yFunc, wFunc, hFunc;
-        if (props.orientation === 'vertical') {
-          xFunc = placementValue;
-          yFunc = extentValueLeft;
-          wFunc = placementDimension;
-          hFunc = extentDimension;
-        } else if (props.orientation === 'horizontal') {
-          xFunc = extentValueRight;
-          yFunc = placementValue;
-          wFunc = extentDimension;
-          hFunc = placementDimension;
+        if (isHorizontal) {
+          xValue = function(d) { return props.xScale(d.y0); };
+          yValue = function(d) { return props.yScale(props.yAccessor(d)); };
+          widthValue = function(d) { return props.xScale(d.y0 + d.y) - props.xScale(d.y0); };
+          heightValue = function() { return props.height.apply(this, arguments); };
         } else {
-          throw new Error('sszvis.component.stacked.bar requires an orientation');
+          xValue = function(d) { return props.xScale(props.xAccessor(d)); };
+          yValue = function(d) { return props.yScale(d.y0 + d.y); };
+          widthValue = function(d) { return props.width.apply(this, arguments); };
+          heightValue = function(d) { return props.yScale(d.y0) - props.yScale(d.y0 + d.y); };
         }
 
         var barGen = sszvis.component.bar()
-          .x(xFunc)
-          .y(yFunc)
-          .width(wFunc)
-          .height(hFunc)
+          .x(xValue)
+          .y(yValue)
+          .width(widthValue)
+          .height(heightValue)
           .fill(props.fill)
           .stroke(props.stroke);
 
-        var groups = selection.selectAll('g.sszvis-g')
+        var groups = selection.selectAll('.sszvis-stack')
           .data(stackLayout(data));
 
         groups.enter()
           .append('g')
-          .classed('sszvis-g', true);
+          .classed('sszvis-stack', true);
 
         groups.exit().remove();
 
-        var bars = groups.call(barGen);
-
+        groups.call(barGen);
       });
-  };
+  }
+
+  module.exports.verticalBar = function() { return stackedBar().orientation('vertical'); };
+
+  module.exports.horizontalBar = function() { return stackedBar().orientation('horizontal'); };
 
 });
