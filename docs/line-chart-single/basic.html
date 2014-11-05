@@ -11,22 +11,19 @@
 <script src="../../sszvis.js"></script>
 
 <div id="sszvis-chart"></div>
-<!-- NOTE what is this script line for? It's confusing, as the chart code is below -->
+
 <script data-catalog-project-expose="script.js">
 (function() {
-  // NOTE where else do I have to put this to ensure strict mode. In every function? 
   'use strict';
 
   /* Shortcuts
   ----------------------------------------------- */
-  // NOTE nice!
   var xAcc = sszvis.fn.prop('date');
   var yAcc = sszvis.fn.prop('value');
 
 
   /* Application state
   ----------------------------------------------- */
-  // NOTE great to have the code structured in state and actions, good job!
   var state = {
     data: [],
     years: [0, 0],
@@ -38,8 +35,6 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
-      // NOTE I am not sure if its great to have an extra action function to prepare the state
-      // conceptually this is not really and action for me. Its just preparing the data. 
       state.data = data;
       state.years = d3.extent(state.data, xAcc);
       state.lineData = [state.data];
@@ -59,36 +54,22 @@
       };
     })
     .get(function(error, data) {
-      // NOTE this might be an elegant notation from a programmers point of view put confusing to the
-      //newbie. I would suggest 
-      //  if(error){
-      //    sszvis.loadError(error);
-      //    return;
-      //  }
-      //  ...
-      //  code for preparing the state
-      //  ...
-      //  render(state)
       if (error) {
         sszvis.loadError(error);
         return;
       }
       actions.prepareState(data);
-
-
     });
 
 
   /* Render
   ----------------------------------------------- */
-  // NOTE I like the code structure in general
   function render(state) {
-    // NOTE I like how bounds are handled, very good.
     var bounds = sszvis.bounds({ width: 500, height: 480, top: 30, right: 1, bottom: 45, left: 1 });
 
 
     // Scales
-    // NOTE again good code structure
+
     var xScale = d3.time.scale()
       .range([0, bounds.innerWidth])
       .domain(state.years);
@@ -111,7 +92,6 @@
       .y(sszvis.fn.compose(yScale, yAcc))
       .stroke(sszvis.color.values.basicBlue); // FIXME: don't use color values directly // NOTE what would the alternative be? have them in the state object? 
 
-    // NOTE I didn't look at the axis inner code. But the api of it looks good. 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
@@ -123,7 +103,6 @@
       .orient('right')
       .title('Wert')
       .titleTop(-20)
-      // NOTE nice
       .halo(true);
 
 
@@ -133,7 +112,6 @@
       .call(line);
 
     chartLayer.selectGroup('xAxis')
-      // NOTE very nice the translate function!
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 2))
       .call(xAxis);
 
