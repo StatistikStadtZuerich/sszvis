@@ -49,7 +49,7 @@ String oder Funktion um die Strichdicke zu setzen (Standard: 1)
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 480
+        "height": 440
     }
 }
 ```
@@ -73,8 +73,8 @@ Basiert auf dem Standard-Diagramm, zeigt aber zusätzlich die Zahlenwerte an der
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 442,
-        "width": 516
+        "width": 516,
+        "height": 393
     }
 }
 ```
@@ -99,7 +99,7 @@ Zeigt eine Anmerkung an einem bestimmten Datenpunkt. Die Zeitachse zeigt Tage mi
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 450
+        "height": 440
     }
 }
 ```
@@ -124,7 +124,7 @@ Zeigt negative x-Werte.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 450
+        "height": 440
     }
 }
 ```
@@ -149,7 +149,7 @@ Zeigt negative y-Werte.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 450
+        "height": 445
     }
 }
 ```

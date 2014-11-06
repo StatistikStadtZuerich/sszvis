@@ -9,17 +9,18 @@
  * @return {Object}
  */
 namespace('sszvis.bounds', function(module) {
+  'use strict';
 
   module.exports = function(bounds) {
     bounds || (bounds = {});
-    var height  = sszvis.fn.either(bounds.height, 100);
-    var width   = sszvis.fn.either(bounds.width, 100);
     var padding = {
       top:    sszvis.fn.either(bounds.top, 0),
       right:  sszvis.fn.either(bounds.right, 0),
       bottom: sszvis.fn.either(bounds.bottom, 0),
       left:   sszvis.fn.either(bounds.left, 0)
-    }
+    };
+    var height  = sszvis.fn.either(bounds.height, 365 + padding.top + padding.bottom);
+    var width   = sszvis.fn.either(bounds.width, 516);
 
     return {
       innerHeight: height - padding.top  - padding.bottom,
@@ -27,7 +28,7 @@ namespace('sszvis.bounds', function(module) {
       padding:     padding,
       height:      height,
       width:       width,
-    }
-  }
+    };
+  };
 
 });
