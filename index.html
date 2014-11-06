@@ -11,10 +11,14 @@
     Catalog.start('body', {
       title: 'SSZVIS',
       styles: ['sszvis.css'],
-      scripts: ['vendor/d3/d3.min.js', 'sszvis.js'],
       pages: [
         {name: 'intro', path: '/', title: 'Einführung', src: 'docs/intro.md'},
-        {name: 'styles', title: 'Basis-Stile', src: 'docs/styles.md'},
+        {
+          name: 'styles',
+          title: 'Basis-Stile',
+          src: 'docs/styles.md',
+          scripts: ['vendor/d3/d3.js', 'sszvis.js', 'docs/styles.js']
+        },
         {
           name: 'line-charts',
           title: 'Liniendiagramme',

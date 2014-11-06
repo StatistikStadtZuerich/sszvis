@@ -50,268 +50,68 @@
 
 ### Linear
 ```html|plain,run-script
-<script>
-    var scaleName = 'seqBlu';
-    var containerId = 'scale1';
-</script>
-
 <div id='scale1' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
 
 <script>
-    var numBars = 9,
-        barWidth = 80,
-        barHeight = 80;
-
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
-
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
-
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
-    });
-
-    function pixels(n) { return n + 'px'; }
+    makeColorScale('scale1', 'seqBlu');
 </script>
 ```
 
 ```html|plain,run-script
-<script>
-    var scaleName = 'seqRed';
-    var containerId = 'scale2';
-</script>
-
 <div id='scale2' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
 
 <script>
-    var numBars = 9,
-        barWidth = 80,
-        barHeight = 80;
-
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
-
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
-
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
-    });
-
-    function pixels(n) { return n + 'px'; }
+    makeColorScale('scale2', 'seqRed');
 </script>
 ```
 
 ```html|plain,run-script
-<script>
-    var scaleName = 'seqGrn';
-    var containerId = 'scale3';
-</script>
-
 <div id='scale3' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
 
 <script>
-    var numBars = 9,
-        barWidth = 80,
-        barHeight = 80;
-
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
-
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
-
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
-    });
-
-    function pixels(n) { return n + 'px'; }
+    makeColorScale('scale3', 'seqGrn');
 </script>
 ```
 
 ```html|plain,run-script
-<script>
-    var scaleName = 'seqBrn';
-    var containerId = 'scale4';
-</script>
-
 <div id='scale4' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
 
 <script>
-    var numBars = 9,
-        barWidth = 80,
-        barHeight = 80;
-
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
-
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
-
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
-    });
-
-    function pixels(n) { return n + 'px'; }
+    makeColorScale('scale4', 'seqBrn');
 </script>
 ```
 
 ### Divergent
 
 ```html|plain,run-script
-<script>
-    var scaleName = 'divBlu';
-    var containerId = 'scale5';
-</script>
-
 <div id='scale5' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
 
 <script>
-    var numBars = 9,
-        barWidth = 80,
-        barHeight = 80;
-
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
-
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
-
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
-    });
-
-    function pixels(n) { return n + 'px'; }
+    makeColorScale('scale5', 'divBlu');
 </script>
 ```
 
 ```html|plain,run-script
-<script>
-    var scaleName = 'divBluAlt';
-    var containerId = 'scale6';
-</script>
-
 <div id='scale6' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
 
 <script>
-    var numBars = 9,
-        barWidth = 80,
-        barHeight = 80;
-
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
-
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
-
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
-    });
-
-    function pixels(n) { return n + 'px'; }
+    makeColorScale('scale6', 'divBluAlt');
 </script>
 ```
 
 ```html|plain,run-script
-<script>
-    var scaleName = 'divGrn';
-    var containerId = 'scale7';
-</script>
-
 <div id='scale7' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
 
 <script>
-    var numBars = 9,
-        barWidth = 80,
-        barHeight = 80;
-
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
-
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
-
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
-    });
-
-    function pixels(n) { return n + 'px'; }
+    makeColorScale('scale7', 'divGrn');
 </script>
 ```
 
 ```html|plain,run-script
-<script>
-    var scaleName = 'divGrnAlt';
-    var containerId = 'scale8';
-</script>
-
 <div id='scale8' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
 
 <script>
-    var numBars = 9,
-        barWidth = 80,
-        barHeight = 80;
-
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
-
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
-
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
-    });
-
-    function pixels(n) { return n + 'px'; }
+    makeColorScale('scale8', 'divGrnAlt');
 </script>
 ```
 
