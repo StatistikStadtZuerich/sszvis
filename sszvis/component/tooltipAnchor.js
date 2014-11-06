@@ -1,17 +1,50 @@
 /**
- * Tooltip Anchor
+ * Tooltip anchor component
+ *
+ * Tooltip anchors are invisible SVG <rect>s that each component needs to
+ * provide. Because they are real elements we can know their exact position
+ * on the page without any calculations and even if the parent element has
+ * been transformed. These elements need to be <rect>s because some browsers
+ * don't calculate positon information for the better suited <g> elements.
+ *
+ * Tooltips can be bound to by selecting for the tooltip data attribute.
+ *
+ * @example
+ * var tooltip = sszvis.component.tooltip();
+ * bars.selectAll('[data-tooltip-anchor]').call(tooltip);
+ *
+ * Tooltips use HTML5 data attributes to clarify their intent, which is not
+ * to style an element but to provide an anchor that can be selected using
+ * Javascript.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Using_data_attributes
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors
+ *
+ * To add a tooltip anchor to an element, create a new tooltip anchor function
+ * and call it on a selection. This is usually the same selection that you have
+ * added the visible elements of your chart to, e.g. the selection that you
+ * render bar <rect>s into.
+ *
+ * @example
+ * var tooltipAnchor = sszvis.component.tooltipAnchor()
+ *   .position(function(d) {
+ *     return [xScale(d), yScale(d)];
+ *   });
+ * selection.call(tooltipAnchor);
+ *
+ * @property {function} position A vector of the tooltip's [x, y] coordinates
+ * @property {boolean}  debug    Renders a visible tooltip anchor when true
  *
  * @return {d3.component}
  */
 namespace('sszvis.component.tooltipAnchor', function(module) {
-
-  var fn = sszvis.fn;
+  'use strict';
 
   module.exports = function() {
 
     return d3.component()
-      .prop('debug')
       .prop('position').position(d3.functor([0, 0]))
+      .prop('debug')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -19,8 +52,9 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         var anchor = selection.selectAll('[data-tooltip-anchor]')
           .data(data);
 
-          // NOTE why are anchors rects? 
-          // NOTE as these rects are invisible, couldn't they're information just be stored in the data? 
+
+        // Enter
+
         anchor.enter()
           .append('rect')
           .attr('height', 1)
@@ -31,12 +65,19 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
           .attr('pointer-events', 'none')
           .attr('data-tooltip-anchor', '');
 
+
+        // Update
+
         anchor
-          .attr('transform', fn.compose(translate, props.position));
+          .attr('transform', sszvis.fn.compose(sszvis.fn.translateString, props.position));
+
+
+        // Exit
 
         anchor.exit().remove();
 
 
+        // Visible anchor if debug is true
         if (props.debug) {
           var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
             .data(data);
@@ -50,7 +91,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
             .attr('fill', '#fff')
             .attr('stroke', '#f00')
             .attr('stroke-width', 1.5)
-            .attr('transform', fn.compose(translate, props.position));
+            .attr('transform', sszvis.fn.compose(sszvis.fn.translateString, props.position));
 
           referencePoint.exit().remove();
         }
@@ -58,10 +99,5 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
       });
 
   };
-
-  // NOTE very useful function. it could be moved into sszvis.fn, so its accessible from other places
-  function translate(position) {
-    return 'translate('+ position[0] +','+ position[1] +')';
-  }
 
 });
