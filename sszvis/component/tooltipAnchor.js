@@ -1,4 +1,4 @@
-/**
+  /**
  * Tooltip anchor component
  *
  * Tooltip anchors are invisible SVG <rect>s that each component needs to
@@ -91,7 +91,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
             .attr('fill', '#fff')
             .attr('stroke', '#f00')
             .attr('stroke-width', 1.5)
-            .attr('transform', sszvis.fn.compose(sszvis.fn.translateString, props.position));
+            .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
 
           referencePoint.exit().remove();
         }
