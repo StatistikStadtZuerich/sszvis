@@ -89,6 +89,8 @@
       .copy()
       .range(heightScale.range().slice().reverse());
 
+    var colorScale = sszvis.color2.qual();
+
 
     // Layers
 
@@ -107,7 +109,8 @@
       .width(chartDimensions.barWidth)
       .height(sszvis.fn.compose(heightScale, yAcc))
       .fill(function(d) {
-        return isSelected(d) ? sszvis.color.values.basicDeepBlue : sszvis.color.values.basicBlue;
+        var fill = colorScale(d);
+        return isSelected(d) ? sszvis.color2.darker(fill) : fill;
       });
 
     var xAxis = sszvis.axis.x.ordinal()

@@ -24,13 +24,14 @@ VENDOR_FILES = \
 	vendor/namespace/namespace.js
 
 SOURCE_FILES = \
+	sszvis/fn.js \
 	sszvis/axis.js \
 	sszvis/bounds.js \
 	sszvis/cascade.js \
 	sszvis/color.js \
+	sszvis/color2.js \
 	sszvis/createChart.js \
 	sszvis/createHtmlLayer.js \
-	sszvis/fn.js \
 	sszvis/format.js \
 	sszvis/loadError.js \
 	sszvis/logError.js \

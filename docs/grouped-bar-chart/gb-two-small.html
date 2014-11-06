@@ -99,10 +99,7 @@
       return Math.abs(yScale(v) - yScale(0));
     };
 
-    var cScale = d3.scale.ordinal()
-      .domain(state.groups)
-      .range(sszvis.color.ranges.qualitative.qual3);
-
+    var cScale = sszvis.color2.qual();
 
     // Layers
 
