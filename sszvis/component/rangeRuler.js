@@ -9,25 +9,19 @@ namespace('sszvis.component.rangeRuler', function(module) {
   module.exports = function() {
     return d3.component()
       .prop('x', d3.functor)
-      .prop('y0', d3.functor).y0(sszvis.fn.prop('y0'))
-      .prop('dy', d3.functor).dy(sszvis.fn.prop('y'))
-      .prop('yScale')
+      .prop('y0', d3.functor)
+      .prop('y1', d3.functor)
+      .prop('top')
+      .prop('bottom')
       .prop('label').label(sszvis.fn.constant(''))
+      .prop('total')
       .prop('flip', d3.functor).flip(false)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var y0 = sszvis.fn.compose(props.yScale, props.y0);
-        var y1 = sszvis.fn.compose(props.yScale, function(d) { return props.y0(d) + props.dy(d); });
-        var ty = sszvis.fn.compose(props.yScale, function(d) { return props.y0(d) + props.dy(d) / 2; });
-        var top = y1(sszvis.fn.last(data));
-        var bottom = d3.max(props.yScale.range());
+        var middleY = function(d) { return (props.y0(d) + props.y1(d)) / 2; };
         var dotRadius = 1.5;
-
-        var totalValue = data.reduce(function(m, d) {
-          return m + props.dy(d);
-        }, 0);
 
         var line = selection.selectAll('.sszvis-rangeRuler--rule')
           .data([1]);
@@ -40,9 +34,9 @@ namespace('sszvis.component.rangeRuler', function(module) {
 
         line
           .attr('x1', props.x)
-          .attr('y1', top)
+          .attr('y1', props.top)
           .attr('x2', props.x)
-          .attr('y2', bottom);
+          .attr('y2', props.bottom);
 
         var marks = selection.selectAll('.sszvis-rangeRuler--mark')
           .data(data);
@@ -60,13 +54,13 @@ namespace('sszvis.component.rangeRuler', function(module) {
         marks.selectAll('.sszvis-rangeRuler--p1')
           .data(function(d) { return [d]; })
           .attr('cx', props.x)
-          .attr('cy', y0)
+          .attr('cy', props.y0)
           .attr('r', dotRadius);
 
         marks.selectAll('.sszvis-rangeRuler--p2')
           .data(function(d) { return [d]; })
           .attr('cx', props.x)
-          .attr('cy', y1)
+          .attr('cy', props.y1)
           .attr('r', dotRadius);
 
         marks.selectAll('.sszvis-rangeRuler--label')
@@ -75,7 +69,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
             var offset = props.flip(d) ? -10 : 10;
             return props.x(d) + offset;
           })
-          .attr('y', ty)
+          .attr('y', middleY)
           .attr('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
@@ -95,11 +89,11 @@ namespace('sszvis.component.rangeRuler', function(module) {
             var offset = props.flip(d) ? -10 : 10;
             return props.x(d) + offset;
           })
-          .attr('y', top - 10)
+          .attr('y', props.top - 10)
           .attr('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
-          .text('Total ' + sszvis.format.number(totalValue));
+          .text('Total ' + sszvis.format.number(props.total));
       });
   };
 

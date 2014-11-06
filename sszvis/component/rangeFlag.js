@@ -9,15 +9,11 @@ namespace('sszvis.component.rangeFlag', function(module) {
   module.exports = function() {
     return d3.component()
       .prop('x', d3.functor)
-      .prop('y0', d3.functor).y0(sszvis.fn.prop('y0'))
-      .prop('dy', d3.functor).dy(sszvis.fn.prop('y'))
-      .prop('yScale')
+      .prop('y0', d3.functor)
+      .prop('y1', d3.functor)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
-
-        var y0 = sszvis.fn.compose(props.yScale, props.y0);
-        var y1 = sszvis.fn.compose(props.yScale, function(d) { return props.y0(d) + props.dy(d); });
 
         var bottomDot = selection.selectAll('circle.sszvis-legend--mark.bottom')
           .data(data);
@@ -25,7 +21,7 @@ namespace('sszvis.component.rangeFlag', function(module) {
         bottomDot
           .call(makeFlagDot)
           .classed('bottom', true)
-          .attr('cy', y0);
+          .attr('cy', props.y0);
 
         var topDot = selection.selectAll('circle.sszvis-legend--mark.top')
           .data(data);
@@ -33,7 +29,7 @@ namespace('sszvis.component.rangeFlag', function(module) {
         topDot
           .call(makeFlagDot)
           .classed('top', true)
-          .attr('cy', y1);
+          .attr('cy', props.y1);
 
         function makeFlagDot(dot) {
           dot.enter()
@@ -51,7 +47,7 @@ namespace('sszvis.component.rangeFlag', function(module) {
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
-            return [props.x(d), props.yScale(props.y0(d) + props.dy(d) / 2)];
+            return [props.x(d), (props.y0(d) + props.y1(d)) / 2];
           });
 
         selection.call(tooltipAnchor);

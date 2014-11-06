@@ -59,6 +59,7 @@ SOURCE_FILES = \
 	sszvis/component/rangeFlag.js \
 	sszvis/component/ruler.js \
 	sszvis/component/stackedArea.js \
+	sszvis/component/stackedAreaMultiples.js \
 	sszvis/component/stackedBar.js \
 	sszvis/component/stackedPyramid.js \
 	sszvis/component/textWrap.js \

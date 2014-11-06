@@ -357,6 +357,22 @@ namespace('sszvis.fn', function(module) {
       }, []);
     },
 
+    stackedAreaMultiplesLayout: function(height, num, pct) {
+      pct || (pct = 0.1);
+      var step = height / (num - pct),
+          level = height,
+          range = [];
+      while (level > 0) {
+        range.push(level);
+        level -= step;
+      }
+      return {
+        range: range,
+        bandHeight: step * (1 - pct),
+        padHeight: step * pct
+      };
+    },
+
     translateString: function(x, y) {
       return 'translate(' + x + ',' + y + ')';
     },
