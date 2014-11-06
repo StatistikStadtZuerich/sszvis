@@ -48,7 +48,7 @@ String oder Funktion um die Strichdicke zu setzen (Standard: 1)
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "width": 500,
+        "width": 516,
         "height": 480
     }
 }
@@ -98,7 +98,7 @@ Zeigt eine Anmerkung an einem bestimmten Datenpunkt. Die Zeitachse zeigt Tage mi
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "width": 500,
+        "width": 516,
         "height": 450
     }
 }
@@ -123,7 +123,7 @@ Zeigt negative x-Werte.
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "width": 500,
+        "width": 516,
         "height": 450
     }
 }
@@ -148,7 +148,7 @@ Zeigt negative y-Werte.
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "width": 500,
+        "width": 516,
         "height": 450
     }
 }
