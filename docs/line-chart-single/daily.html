@@ -45,7 +45,7 @@
       state.dates = d3.extent(state.data, xAcc);
       state.lineData = [state.data];
       state.annotatedData = state.data.filter(function(d) {
-        return HIGHLIGHTED_DATES.map(String).indexOf(String(xAcc(d))) >= 0;
+        return sszvis.fn.contains(HIGHLIGHTED_DATES.map(String), String(xAcc(d)));
       });
 
       render(state);
@@ -90,7 +90,6 @@
 
 
     // Layers
-    // NOTE nice
     var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
       .datum(state.lineData);
 
@@ -100,7 +99,6 @@
     var line = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
-      // NOTE probably here also not use the direct colors, for some reason?
       .stroke(sszvis.color2.qual());
 
     var xAxis = sszvis.axis.x.time()

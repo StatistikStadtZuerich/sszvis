@@ -24,7 +24,7 @@
 
   // a few helpers to distinguish between data that belongs on axis1 (left) and axis2 (right)
   var axis2 = ['Schweiz']; // the values for "Region" that go in axis2
-  var valueIsOnAxis2 = function(v) { return axis2.indexOf(v) >= 0; };
+  var valueIsOnAxis2 = function(d) { return sszvis.fn.contains(axis2, d); };
   var datumIsOnAxis2 = sszvis.fn.compose(valueIsOnAxis2, cAcc);
 
 
