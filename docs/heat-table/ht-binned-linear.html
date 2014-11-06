@@ -101,14 +101,17 @@
     // and anything greater than or equal to the last element will be grouped in the last bin
     var binEdges = d3.range(100, 1000, 100);
     // create a linear color interpolator for generating the output range of bin colors
-    var interpolateColor = sszvis.scale.colorScale()
-      .domain(state.valueDomain) // the same as the data domain
-      .range(sszvis.color.ranges.sequential.valued.blue);
+
+    var interpolateColor = sszvis.color2.divBlu()
+      .range(sszvis.color2.divBlu().range().reverse()) // FIXME: custom reverse?
+      .domain(state.valueDomain)
+
     // the color bins are created by taking samples at equal spots along the data domain
     // binColors.length must equal binEdges.length + 1
-    var binColors = d3.range(0, 10001, 110).map(function(v) { return interpolateColor(v); });
+    var binColors = d3.range(0, 10001, 110).map(interpolateColor);
     // for the threshold scale, the number of values in the range must be one greater than the
     // number of values in the domain.
+
     var colorScale = d3.scale.threshold()
       .domain(binEdges)
       .range(binColors);
