@@ -160,11 +160,8 @@
   /* Helper functions
   ----------------------------------------------- */
   // NOTE this could be maybe replaced by a convenience function in sszvis.fn, something like 
-  /* function contains(list,d){
-      return list.indexOf(d)>=0;
-  }*/
   function isSelected(d) {
-    return state.selection.indexOf(d) >= 0;
+    return sszvis.fn.contains(state.selection, d);
   }
 
   // NOTE I would pass  range directly as argument, as scale as such is not used in the function.

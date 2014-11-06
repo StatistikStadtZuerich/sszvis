@@ -186,7 +186,7 @@
   /* Helper functions
   ----------------------------------------------- */
   function isSelected(d) {
-    return state.selectedCategories.indexOf(d.category) >= 0;
+    return sszvis.fn.contains(state.selectedCategories, d.category);
   }
 
 

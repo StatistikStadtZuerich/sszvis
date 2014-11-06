@@ -13,6 +13,8 @@ namespace('sszvis.fn', function(module) {
 
   module.exports = {
     /**
+     * fn.arity
+     *
      * Wraps a function of any arity (including nullary) in a function that
      * accepts exactly `n` parameters. Any extraneous parameters will not be
      * passed to the supplied function.
@@ -92,6 +94,19 @@ namespace('sszvis.fn', function(module) {
       return function() {
         return value;
       };
+    },
+
+    /**
+     * fn.contains
+     *
+     * Checks whether an item is present in the given list (by strict equality).
+     *
+     * @param  {array} list List of items
+     * @param  {any}   d    Item that might be in list
+     * @return {boolean}
+     */
+    contains: function(list, d) {
+      return list.indexOf(d) >= 0;
     },
 
     defaults: function(target) {

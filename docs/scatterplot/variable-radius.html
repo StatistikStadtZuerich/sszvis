@@ -168,7 +168,7 @@
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(function(d) { return cAcc(d); })
-      .visible(function(d) { return state.highlightData.indexOf(d) >= 0; })
+      .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
       .orientation(function(d) {
         return xValue(d.datum) <= bounds.innerWidth / 2 ? 'left' : 'right';
       });
