@@ -1,119 +1,106 @@
-# Basis-Stile
+# Fundamentals
 
-## Farben
+## Color scales
 
-### Graustufen
+### Grays
 
-```color
-[
-    {"value": "#B8B8B8"},
-    {"value": "#7C7C7C"},
-    {"value": "#545454"}
-]
-```
-
-### Qualitativ
-
-```color
-[
-    {"value": "#b8cfe6"},
-    {"value": "#5182b3"},
-    {"value": "#e6b7c7"},
-    {"value": "#cc6788"},
-    {"value": "#f2cec2"},
-    {"value": "#e67d73"},
-    {"value": "#faebaf"},
-    {"value": "#e6cf73"},
-    {"value": "#cfe6b8"},
-    {"value": "#94bf69"},
-    {"value": "#b8e6d2"},
-    {"value": "#60bf97"}
-]
-```
-
-```color
-[
-    {"value": "#B8CFE6"},
-    {"value": "#5182B3"},
-    {"value": "#F2CEC2"},
-    {"value": "#E67D73"},
-    {"value": "#FAEBAF"},
-    {"value": "#E6CF73"},
-    {"value": "#CFE6B8"},
-    {"value": "#94BF69"},
-    {"value": "#B8E6D2"},
-    {"value": "#60BF97"},
-    {"value": "#E6B7C7"},
-    {"value": "#CC6788"}
-]
-```
-
-### Linear
 ```html|plain,run-script
-<div id='scale1' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
-
+<div id='scaleGray' class='scale-container'></div>
 <script>
-    makeColorScale('scale1', 'seqBlu');
+    colorSwatchFromColors('scaleGray', ["#B8B8B8", "#7C7C7C", "#545454"]);
 </script>
 ```
 
-```html|plain,run-script
-<div id='scale2' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
+### Qualitative
 
-<script>
-    makeColorScale('scale2', 'seqRed');
-</script>
+#### `color2.qual()`
+
+```html|plain,run-script
+<div id='scaleQual' class='scale-container'></div>
+<script>colorSwatchFromQualitativeScale('scaleQual', 'qual');</script>
 ```
 
-```html|plain,run-script
-<div id='scale3' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
+#### `color2.qual2()`
 
-<script>
-    makeColorScale('scale3', 'seqGrn');
-</script>
+```html|plain,run-script
+<div id='scaleQual2' class='scale-container'></div>
+<script>colorSwatchFromQualitativeScale('scaleQual2', 'qual2');</script>
 ```
 
-```html|plain,run-script
-<div id='scale4' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
+#### `color2.qual6a()`
 
-<script>
-    makeColorScale('scale4', 'seqBrn');
-</script>
+```html|plain,run-script
+<div id='scaleQual6a' class='scale-container'></div>
+<script>colorSwatchFromQualitativeScale('scaleQual6a', 'qual6a');</script>
+```
+
+#### `color2.qual6b()`
+
+```html|plain,run-script
+<div id='scaleQual6b' class='scale-container'></div>
+<script>colorSwatchFromQualitativeScale('scaleQual6b', 'qual6b');</script>
+```
+
+### Sequential
+
+#### `color2.seqBlu()`
+
+```html|plain,run-script
+<div id='scale1' class='scale-container'></div>
+<script>colorSwatchFromLinearScale('scale1', 'seqBlu', 9);</script>
+```
+
+#### `color2.seqRed()`
+
+```html|plain,run-script
+<div id='scale2' class='scale-container'></div>
+<script>colorSwatchFromLinearScale('scale2', 'seqRed', 9);</script>
+```
+
+#### `color2.seqGrn()`
+
+```html|plain,run-script
+<div id='scale3' class='scale-container'></div>
+<script>colorSwatchFromLinearScale('scale3', 'seqGrn', 9);</script>
+```
+
+#### `color2.seqBrn()`
+
+```html|plain,run-script
+<div id='scale4' class='scale-container'></div>
+<script>colorSwatchFromLinearScale('scale4', 'seqBrn', 9);</script>
 ```
 
 ### Divergent
 
-```html|plain,run-script
-<div id='scale5' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
-
-<script>
-    makeColorScale('scale5', 'divBlu');
-</script>
-```
+#### `color2.divBlu()`
 
 ```html|plain,run-script
-<div id='scale6' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
-
-<script>
-    makeColorScale('scale6', 'divBluAlt');
-</script>
+<div id='scale5' class='scale-container'></div>
+<script>colorSwatchFromLinearScale('scale5', 'divBlu', 9);</script>
 ```
+
+#### `color2.divBluAlt()`
 
 ```html|plain,run-script
-<div id='scale7' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
-
-<script>
-    makeColorScale('scale7', 'divGrn');
-</script>
+<div id='scale6' class='scale-container'></div>
+<script>colorSwatchFromLinearScale('scale6', 'divBluAlt', 9);</script>
 ```
+
+#### `color2.divGrn()`
 
 ```html|plain,run-script
-<div id='scale8' class='scale-container' style='position:relative;width:300px;height:50px;'></div>
-
-<script>
-    makeColorScale('scale8', 'divGrnAlt');
-</script>
+<div id='scale7' class='scale-container'></div>
+<script>colorSwatchFromLinearScale('scale7', 'divGrn', 9);</script>
 ```
+
+#### `color2.divGrnAlt()`
+
+```html|plain,run-script
+<div id='scale8' class='scale-container'></div>
+<script>colorSwatchFromLinearScale('scale8', 'divGrnAlt', 9);</script>
+```
+
 
 ## Tooltips
 

@@ -24,10 +24,26 @@ namespace('sszvis.color2', function(module) {
 
   var QUAL_COLORS = {
     qual: [
-      '#B8CFE6', '#5182B3', '#F2CEC2',
-      '#E67D73', '#FAEBAF', '#E6CF73',
-      '#CFE6B8', '#94BF69', '#B8E6D2',
-      '#60BF97', '#E6B7C7', '#CC6788'
+      '#5182B3', '#B8CFE6',
+      '#60BF97', '#B8E6D2',
+      '#94BF69', '#CFE6B8',
+      '#E6CF73', '#FAEBAF',
+      '#E67D73', '#F2CEC2',
+      '#CC6788', '#E6B7C7'
+    ],
+
+    qual2: [ '#3B76B3', '#CC6171' ],
+
+    qual6a: [
+      '#5182B3', '#B8CFE6',
+      '#60BF97', '#B8E6D2',
+      '#94BF69', '#CFE6B8'
+    ],
+
+    qual6b: [
+      '#E6CF73', '#FAEBAF',
+      '#E67D73', '#F2CEC2',
+      '#CC6788', '#E6B7C7'
     ]
   };
 

@@ -1,23 +1,41 @@
-var numBars = 9,
-    barWidth = 80,
-    barHeight = 80;
+(function(global) {
+  'use strict';
 
-function makeColorScale(containerId, scaleName) {
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]),
-        container = document.getElementById(containerId);
+  var BAR_WIDTH  = 80;
+  var BAR_HEIGHT = 80;
 
-    container.style.width = pixels(barWidth * numBars);
-    container.style.height = pixels(barHeight);
+  global.colorSwatchFromQualitativeScale = function(containerId, scaleName) {
+    var scale = sszvis.color2[scaleName]();
+    renderSwatch(containerId, scale.range().map(String));
+  };
 
-    d3.range(0, numBars).map(scale).forEach(function(c, i) {
-        var colorDiv = document.createElement('div');
-        colorDiv.style.position = 'absolute';
-        colorDiv.style.left = pixels(i * barWidth);
-        colorDiv.style.width = pixels(barWidth);
-        colorDiv.style.height = pixels(barHeight);
-        colorDiv.style.backgroundColor = c;
-        container.appendChild(colorDiv);
+  global.colorSwatchFromLinearScale = function(containerId, scaleName, numBars) {
+    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]);
+    renderSwatch(containerId, d3.range(0, numBars).map(scale));
+  };
+
+  global.colorSwatchFromColors = function(containerId, colors) {
+    renderSwatch(containerId, colors);
+  };
+
+
+  /* Utils
+  ----------------------------------------------- */
+  function renderSwatch(containerId, colors) {
+    var container = document.getElementById(containerId);
+
+    colors.forEach(function(c) {
+      var colorDiv = document.createElement('div');
+      colorDiv.style.height   = px(BAR_HEIGHT);
+      colorDiv.style.width    = pct(100 / colors.length);
+      colorDiv.style.maxWidth = px(BAR_WIDTH);
+      colorDiv.style.backgroundColor = c;
+      colorDiv.innerHTML = '<span>' + c + '</span>';
+      container.appendChild(colorDiv);
     });
-}
+  }
 
-function pixels(n) { return n + 'px'; }
+  function px(n)  { return n + 'px'; }
+  function pct(n) { return n + '%'; }
+
+}(this));
