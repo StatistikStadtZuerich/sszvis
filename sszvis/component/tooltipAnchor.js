@@ -69,7 +69,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         // Update
 
         anchor
-          .attr('transform', sszvis.fn.compose(sszvis.fn.translateString, props.position));
+          .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
 
 
         // Exit
@@ -97,6 +97,13 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         }
 
       });
+
+
+    /* Helper functions
+    ----------------------------------------------- */
+    function vectorToTranslateString(vec) {
+      return sszvis.fn.translateString.apply(null, vec);
+    }
 
   };
 
