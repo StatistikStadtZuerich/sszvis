@@ -34,10 +34,9 @@ namespace('sszvis.legend.linearColorScale', function(module) {
           values = props.scale.ticks(props.segments);
         }
 
-         // NOTE a default width would be good to avoid division by zero
-         // and to save programmers time while he searches for the cause of the error.
-        var segWidth = props.width / values.length,
-            segHeight = 10;
+        // Avoid division by zero
+        var segWidth = values.length > 0 ? props.width / values.length : 0;
+        var segHeight = 10;
 
         var segments = selection.selectAll('rect.sszvis-legend--mark')
           .data(values);

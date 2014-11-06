@@ -9,8 +9,6 @@
  *
  * @returns {d3.selection}
  */
- // NOTE could be nice to add a class name
- //so when looking at the code it is clear what the tooltip layer is
 namespace('sszvis.createHtmlLayer', function(module) {
   'use strict';
 
@@ -18,9 +16,9 @@ namespace('sszvis.createHtmlLayer', function(module) {
     bounds || (bounds = sszvis.bounds());
 
     var root = d3.select(selector);
-    // NOTE Why again do you need to add .data([0])?
-    var layer = root.selectAll('div').data([0]);
-    layer.enter().append('div');
+    var layer = root.selectAll('[data-sszvis-html-layer]').data([0]);
+    layer.enter().append('div')
+      .attr('data-sszvis-html-layer', '');
 
     layer.style({
       position: 'absolute',

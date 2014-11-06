@@ -36,7 +36,6 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
-      // NOTE: This seems to be used only once in the beginning. I prefer to have these few lines directly in .get. For me it seems conceptually more logic to do it like that.
       state.data = data;
       state.totalValue = d3.sum(state.data, vAcc);
       state.categories = sszvis.fn.set(state.data, cAcc);
@@ -125,8 +124,7 @@
     var pie = chartLayer.selectGroup('piechart')
       .call(pieMaker);
 
-      // NOTE Why '[data-tooltip-anchor]' and not just 'data-tooltip-anchor'?
-      // NOTE this approach appears a bit cumbersome to me. Why not just 'pie.selectAllAnchors()' ? 
+    // NOTE this approach appears a bit cumbersome to me. Why not just 'pie.selectAllAnchors()' ? 
     pie.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 

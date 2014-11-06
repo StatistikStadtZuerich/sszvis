@@ -17,6 +17,7 @@
  * described by the name of the method which was used to add it.
  */
 namespace('sszvis.component.modularText', function(module) {
+  'use strict';
 
   module.exports = function() {
     var fn = sszvis.fn;
@@ -26,9 +27,11 @@ namespace('sszvis.component.modularText', function(module) {
 
     function makeText(d) {
 
-      // NOTE whats the convention for variable declaration?
-      // Could imagine one var keyword per variable.
-      var text = "", i = -1, end = textUnits.length, unit;
+      var text = '';
+      var i = -1;
+      var end = textUnits.length;
+      var unit;
+
       while (++i < end) {
         unit = textUnits[i];
         if (i > 0) {

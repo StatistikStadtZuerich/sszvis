@@ -116,7 +116,7 @@
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
       .orient('bottom')
-      .textWrap(labelWrapWidth(xScale));
+      .textWrap(labelWrapWidth(xScale.range()));
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
@@ -159,14 +159,11 @@
 
   /* Helper functions
   ----------------------------------------------- */
-  // NOTE this could be maybe replaced by a convenience function in sszvis.fn, something like 
   function isSelected(d) {
     return sszvis.fn.contains(state.selection, d);
   }
 
-  // NOTE I would pass  range directly as argument, as scale as such is not used in the function.
-  function labelWrapWidth(scale) {
-    var range = scale.range();
+  function labelWrapWidth(range) {
     return (d3.max(range) - d3.min(range)) / range.length;
   }
 
