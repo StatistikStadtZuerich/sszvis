@@ -444,6 +444,11 @@ if (false) {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+if (typeof this.sszvis !== 'undefined') {
+  console.warn('sszvis.js has already been defined in this scope. The existing definition will be overwritten.');
+  this.sszvis = {};
+}
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -1221,17 +1226,18 @@ namespace('sszvis.axis', function(module) {
  * @return {Object}
  */
 namespace('sszvis.bounds', function(module) {
+  'use strict';
 
   module.exports = function(bounds) {
     bounds || (bounds = {});
-    var height  = sszvis.fn.either(bounds.height, 100);
-    var width   = sszvis.fn.either(bounds.width, 100);
     var padding = {
       top:    sszvis.fn.either(bounds.top, 0),
       right:  sszvis.fn.either(bounds.right, 0),
       bottom: sszvis.fn.either(bounds.bottom, 0),
       left:   sszvis.fn.either(bounds.left, 0)
-    }
+    };
+    var height  = sszvis.fn.either(bounds.height, 365 + padding.top + padding.bottom);
+    var width   = sszvis.fn.either(bounds.width, 516);
 
     return {
       innerHeight: height - padding.top  - padding.bottom,
@@ -1239,8 +1245,8 @@ namespace('sszvis.bounds', function(module) {
       padding:     padding,
       height:      height,
       width:       width,
-    }
-  }
+    };
+  };
 
 });
 
@@ -1618,32 +1624,31 @@ namespace('sszvis.color2', function(module) {
   var DARKEN = 0.6;
 
   var QUAL_COLORS = {
-    qual:       [
-                  '#B8CFE6', '#5182B3', '#F2CEC2',
-                  '#E67D73', '#FAEBAF', '#E6CF73',
-                  '#CFE6B8', '#94BF69', '#B8E6D2',
-                  '#60BF97', '#E6B7C7', '#CC6788'
-                ]
+    qual: [
+      '#B8CFE6', '#5182B3', '#F2CEC2',
+      '#E67D73', '#FAEBAF', '#E6CF73',
+      '#CFE6B8', '#94BF69', '#B8E6D2',
+      '#60BF97', '#E6B7C7', '#CC6788'
+    ]
   };
 
   var SEQ_COLORS = {
-    seqBlu:     [ '#DDE9FE', '#3B76B3', '#343F4D' ],
-    seqRed:     [ '#FEECEC', '#CC6171', '#4D353A' ],
-    seqGrn:     [ '#D2DFDE', '#4A807C', '#2C3C3F' ],
-    seqBrn:     [ '#E9DFD6', '#A67D5A', '#4C3735' ]
+    seqBlu: ['#DDE9FE', '#3B76B3', '#343F4D'],
+    seqRed: ['#FEECEC', '#CC6171', '#4D353A'],
+    seqGrn: ['#D2DFDE', '#4A807C', '#2C3C3F'],
+    seqBrn: ['#E9DFD6', '#A67D5A', '#4C3735']
   };
 
   var DIV_COLORS = {
-    divBlu:     [ '#3B76B3', '#FFFFFF', '#CC6171' ],
-    divBluAlt:  [ '#3B76B3', '#F3F3F3', '#CC6171' ],
-    divGrn:     [ '#4A807C', '#FFFFFF', '#A67D5A' ],
-    divGrnAlt:  [ '#4A807C', '#F3F3F3', '#A67D5A' ]
+    divBlu: ['#3B76B3', '#FFFFFF', '#CC6171'],
+    divBluAlt: ['#3B76B3', '#F3F3F3', '#CC6171'],
+    divGrn: ['#4A807C', '#FFFFFF', '#A67D5A'],
+    divGrnAlt: ['#4A807C', '#F3F3F3', '#A67D5A']
   };
 
 
   /* Scales
   ----------------------------------------------- */
-
   Object.keys(QUAL_COLORS).forEach(function(key) {
     module.exports[key] = function() {
       return d3.scale.ordinal().range(QUAL_COLORS[key].map(convertLab));
@@ -1665,16 +1670,18 @@ namespace('sszvis.color2', function(module) {
 
   /* Color utilities
   ----------------------------------------------- */
-  module.exports.darker = function(inColor) {
-    return convertLab(inColor).darker(DARKEN);
+  module.exports.darker = function(color) {
+    return convertLab(color).darker(DARKEN);
   };
 
 
   /* Helper functions
   ----------------------------------------------- */
-  var convertLab = sszvis.fn.arity(1, d3.lab);
+  function convertLab(d) {
+    return d3.lab(d);
+  }
 
-  var interpolatedColorScale = function() {
+  function interpolatedColorScale() {
     var alteredScale = d3.scale.linear();
     var nativeDomain = alteredScale.domain;
 
