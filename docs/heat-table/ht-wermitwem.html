@@ -180,9 +180,8 @@
       .attr('transform', 'translate(-10, 0)')
       .call(yAxis);
 
-    // NOTE would be nice to have a convenience function in sszvis.fn which generate a 'translate string' from some input values.  
     chartLayer.selectGroup('legend')
-      .attr('transform', 'translate(' + (bounds.width / 4 - bounds.padding.left) + ',' + (bounds.innerHeight + 30) + ')')
+      .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 30))
       .call(legend);
 
 
