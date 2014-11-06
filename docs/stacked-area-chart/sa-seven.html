@@ -142,8 +142,7 @@
     // Components
 
     var stackedArea = sszvis.component.stacked.area()
-      .xAccessor(xAcc)
-      .xScale(xScale)
+      .x(sszvis.fn.compose(xScale, xAcc))
       .yAccessor(yAcc)
       .yScale(yScale)
       .fill(function(d) { return cScale(d.category); }); // FIXME: "d" here is an array representing the whole group
@@ -163,12 +162,24 @@
       .rows(6)
       .orientation('vertical');
 
+    var totalHighlightValue = state.highlightData.reduce(function(m, v) {
+      return yAcc(v) + m;
+    }, 0);
+
     var rangeRuler = sszvis.component.rangeRuler()
       .x(xScale(state.highlightDate))
-      .yScale(yScale)
+      .y0(function(d) {
+        return yScale(d.y0);
+      })
+      .y1(function(d) {
+        return yScale(d.y0 + d.y);
+      })
+      .top(yScale(totalHighlightValue))
+      .bottom(bounds.innerHeight)
       .label(function(d) {
         return yAcc(d).toString();
       })
+      .total(totalHighlightValue)
       .flip(function(d) {
         return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
       });
@@ -185,7 +196,12 @@
 
     var rangeFlag = sszvis.component.rangeFlag()
       .x(xScale(state.highlightDate))
-      .yScale(yScale);
+      .y0(function(d) {
+        return yScale(d.y0);
+      })
+      .y1(function(d) {
+        return yScale(d.y0 + d.y);
+      });
 
 
     // Rendering

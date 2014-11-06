@@ -116,8 +116,7 @@
     // Components
 
     var stackedArea = sszvis.component.stacked.area()
-      .xAccessor(xAcc)
-      .xScale(xScale)
+      .x(sszvis.fn.compose(xScale, xAcc))
       .yAccessor(yAcc)
       .yScale(yScale)
       .fill(function(d) { return cScale(d.category); });

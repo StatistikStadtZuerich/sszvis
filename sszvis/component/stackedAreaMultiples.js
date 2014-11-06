@@ -3,32 +3,27 @@
  * @return {d3.component}
  */
 
-// FIXME: rename namespace or component to be consistent with file system
-namespace('sszvis.component.stacked.area', function(module) {
+namespace('sszvis.component.stacked.areaMultiples', function(module) {
 'use strict';
 
   module.exports = function() {
     return d3.component()
       .prop('x')
-      .prop('yAccessor')
-      .prop('yScale')
+      .prop('y0')
+      .prop('y1')
       .prop('fill')
       .prop('stroke')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var stackLayout = d3.layout.stack()
-          .x(props.x)
-          .y(props.yAccessor);
-
         var areaGen = d3.svg.area()
           .x(props.x)
-          .y0(function(d) { return props.yScale(d.y0); })
-          .y1(function(d) { return props.yScale(d.y0 + d.y); });
+          .y0(props.y0)
+          .y1(props.y1);
 
         var paths = selection.selectAll('path.sszvis-path')
-          .data(stackLayout(data));
+          .data(data);
 
         paths.enter()
           .append('path')
