@@ -1,0 +1,35 @@
+.scale-container {
+  padding: 0;
+  margin: -20px 0;
+  position:relative;
+  width: 100%;
+}
+
+.scale-container div {
+  display: inline-block;
+  position: relative;
+  z-index: 0;
+}
+
+.scale-container div:hover {
+  z-index: 1;
+}
+
+.scale-container div span {
+  color: #7C7C7C;
+  display: none;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: normal;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.scale-container div:hover span {
+  display: block;
+  padding: 4px;
+  position: absolute;
+  top: 100%;
+}
+
