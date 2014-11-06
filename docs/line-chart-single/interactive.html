@@ -120,14 +120,7 @@
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
-      // NOTE ok I see now how to change the tick label on interaction. Thats good. is this the most elegant way? 
-      .tickFormat(function(d) {
-        if (isSelected(d) || d.getMonth() > 0) {
-          return quarterName(d);
-        } else {
-          return d.getFullYear();
-        }
-      })
+      .tickFormat(quarterTickLabel)
       .highlight(state.selection.map(xAcc));
 
     var yAxis = sszvis.axis.y()
@@ -192,11 +185,19 @@
   }
 
   function isSelected(d) {
-    return state.selection.map(xAcc).map(String).indexOf(String(d)) >= 0;
+    return sszvis.fn.contains(state.selection.map(xAcc).map(String), String(d));
   }
 
-  function quarterName(date) {
-    var month = date.getMonth();
+  function isStartOfYear(d) {
+    return d.getMonth() === 0;
+  }
+
+  function quarterTickLabel(d) {
+    return (isStartOfYear(d) && !isSelected(d)) ? d.getFullYear(d) : quarterName(d);
+  }
+
+  function quarterName(d) {
+    var month = d.getMonth();
     switch (month) {
       case 0:
       case 1:
