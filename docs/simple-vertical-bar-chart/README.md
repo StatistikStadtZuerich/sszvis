@@ -36,7 +36,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "height": 625,
-        "width": 540
+        "width": 516
     }
 }
 ```
