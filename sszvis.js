@@ -463,6 +463,8 @@ namespace('sszvis.fn', function(module) {
 
   module.exports = {
     /**
+     * fn.arity
+     *
      * Wraps a function of any arity (including nullary) in a function that
      * accepts exactly `n` parameters. Any extraneous parameters will not be
      * passed to the supplied function.
@@ -542,6 +544,19 @@ namespace('sszvis.fn', function(module) {
       return function() {
         return value;
       };
+    },
+
+    /**
+     * fn.contains
+     *
+     * Checks whether an item is present in the given list (by strict equality).
+     *
+     * @param  {array} list List of items
+     * @param  {any}   d    Item that might be in list
+     * @return {boolean}
+     */
+    contains: function(list, d) {
+      return list.indexOf(d) >= 0;
     },
 
     defaults: function(target) {
@@ -1703,9 +1718,9 @@ namespace('sszvis.createChart', function(module) {
       .attr('height', bounds.height)
       .attr('width',  bounds.width)
 
-    var viewport = svg.selectAll('[data-d3-chart]').data([0])
+    var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0])
     viewport.enter().append('g')
-      .attr('data-d3-chart', '')
+      .attr('data-sszvis-svg-layer', '')
       .attr('transform', 'translate(' + bounds.padding.left + ',' + bounds.padding.top + ')');
 
     return viewport;
@@ -1728,8 +1743,6 @@ namespace('sszvis.createChart', function(module) {
  *
  * @returns {d3.selection}
  */
- // NOTE could be nice to add a class name
- //so when looking at the code it is clear what the tooltip layer is
 namespace('sszvis.createHtmlLayer', function(module) {
   'use strict';
 
@@ -1737,9 +1750,9 @@ namespace('sszvis.createHtmlLayer', function(module) {
     bounds || (bounds = sszvis.bounds());
 
     var root = d3.select(selector);
-    // NOTE Why again do you need to add .data([0])?
-    var layer = root.selectAll('div').data([0]);
-    layer.enter().append('div');
+    var layer = root.selectAll('[data-sszvis-html-layer]').data([0]);
+    layer.enter().append('div')
+      .attr('data-sszvis-html-layer', '');
 
     layer.style({
       position: 'absolute',
@@ -1880,8 +1893,6 @@ namespace('sszvis.logError', function(module) {
  *
  * @module sszvis/parse
  */
- // NOTE Thinking out loud: Should this not be part
- //of sszvis.fn?
 namespace('sszvis.parse', function(module) {
 
   var yearParser = d3.time.format("%Y");
@@ -3129,6 +3140,7 @@ namespace('sszvis.component.line', function(module) {
  * described by the name of the method which was used to add it.
  */
 namespace('sszvis.component.modularText', function(module) {
+  'use strict';
 
   module.exports = function() {
     var fn = sszvis.fn;
@@ -3138,9 +3150,11 @@ namespace('sszvis.component.modularText', function(module) {
 
     function makeText(d) {
 
-      // NOTE whats the convention for variable declaration?
-      // Could imagine one var keyword per variable.
-      var text = "", i = -1, end = textUnits.length, unit;
+      var text = '';
+      var i = -1;
+      var end = textUnits.length;
+      var unit;
+
       while (++i < end) {
         unit = textUnits[i];
         if (i > 0) {
@@ -4529,7 +4543,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         // Update
 
         anchor
-          .attr('transform', sszvis.fn.compose(sszvis.fn.translateString, props.position));
+          .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
 
 
         // Exit
@@ -4557,6 +4571,13 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         }
 
       });
+
+
+    /* Helper functions
+    ----------------------------------------------- */
+    function vectorToTranslateString(vec) {
+      return sszvis.fn.translateString.apply(null, vec);
+    }
 
   };
 
@@ -4810,10 +4831,9 @@ namespace('sszvis.legend.linearColorScale', function(module) {
           values = props.scale.ticks(props.segments);
         }
 
-         // NOTE a default width would be good to avoid division by zero
-         // and to save programmers time while he searches for the cause of the error.
-        var segWidth = props.width / values.length,
-            segHeight = 10;
+        // Avoid division by zero
+        var segWidth = values.length > 0 ? props.width / values.length : 0;
+        var segHeight = 10;
 
         var segments = selection.selectAll('rect.sszvis-legend--mark')
           .data(values);

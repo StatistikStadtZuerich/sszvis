@@ -3,8 +3,6 @@
  *
  * @module sszvis/parse
  */
- // NOTE Thinking out loud: Should this not be part
- //of sszvis.fn?
 namespace('sszvis.parse', function(module) {
 
   var yearParser = d3.time.format("%Y");

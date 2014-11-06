@@ -134,8 +134,6 @@
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
-      // NOTE need to know from the designers what the distance between text and bar has to be
-      // NOTE we talked already about howto calculate bar widths. It's again the question how manual and how automagic one wants to be. should we sit together again for that question?
     chartLayer.selectGroup('yAxis')
       .attr('transform', sszvis.fn.translateString(0, chartDimensions.axisOffset))
       .call(yAxis);
