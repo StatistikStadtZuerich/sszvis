@@ -65,10 +65,6 @@
 
       state.categories = sszvis.fn.set(state.data, cAcc).sort(schweizerSorter);
 
-      // reverse both the domain and range of the color scale so that the displayed scale matches the order of the layers in the stack
-      state.reversedCategories = state.categories.slice().reverse();
-      state.colorCategories = sszvis.color.ranges.qualitative.qual3.slice(0, 2).reverse();
-
       state.dates = sszvis.fn.set(state.data, xAcc);
 
       actions.resetDate();
@@ -141,9 +137,8 @@
       .domain(state.categories)
       .range(multiplesLayout.range);
 
-    var cScale = d3.scale.ordinal()
-      .domain(state.reversedCategories)
-      .range(state.colorCategories);
+    var cScale = sszvis.color2.qual()
+      .domain(state.categories);
 
 
     // Layers

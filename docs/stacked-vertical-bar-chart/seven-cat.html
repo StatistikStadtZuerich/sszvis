@@ -44,11 +44,6 @@
 
       state.categories = sszvis.fn.set(state.data, cAcc);
 
-      // reverse the order of the categories and the colors so that the order of the color scale
-      // lines up with the order of the stacks, which are built starting at the bottom and stacked up.
-      state.categories.reverse();
-      state.colorCategories = sszvis.color.ranges.qualitative.qual9.slice(0, state.categories.length).reverse();
-
       state.stackedData = sszvis.cascade()
         .arrayBy(cAcc)
         .apply(state.data);
@@ -108,9 +103,8 @@
       .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 0]);
 
-    var cScale = d3.scale.ordinal()
-      .domain(state.categories)
-      .range(state.colorCategories);
+    var cScale = sszvis.color2.qual()
+      .domain(state.categories);
 
 
     // Layers
