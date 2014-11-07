@@ -25,6 +25,17 @@ Qualitative scales are used for data that has distinct categories. They distingu
 </script>
 ```
 
+
+#### `color2.qual6()`
+
+```html|plain,run-script
+<div id='scaleQual6' class='scale-container'></div>
+<script>
+    var scale = sszvis.color2.qual6();
+    colorSwatchFromColors('scaleQual6', scale.range());
+</script>
+```
+
 #### `color2.qual6a()`
 
 ```html|plain,run-script
