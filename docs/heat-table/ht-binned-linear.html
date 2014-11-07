@@ -102,7 +102,7 @@
     var binEdges = d3.range(100, 1000, 100);
     // create a linear color interpolator for generating the output range of bin colors
 
-    var interpolateColor = sszvis.color2.divVal().reverse()
+    var interpolateColor = sszvis.color2.divVal()
       .domain(state.valueDomain);
 
     // the color bins are created by taking samples at equal spots along the data domain
