@@ -25,6 +25,44 @@ namespace('sszvis.patterns', function(module) {
     return pattern;
   };
 
+  module.exports.heatTableMissingValuePattern = function(selection) {
+    var rectFill = '#FAFAFA',
+        crossStroke = '#A4A4A4',
+        crossStrokeWidth = 0.035,
+        cross1 = 0.35,
+        cross2 = 0.65;
+
+    selection
+      .attr('patternUnits', 'objectBoundingBox')
+      .attr('patternContentUnits', 'objectBoundingBox')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', 1)
+      .attr('height', 1);
+
+    selection
+      .append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', 1)
+      .attr('height', 1)
+      .attr('fill', rectFill);
+
+    selection
+      .append('line')
+      .attr('x1', cross1).attr('y1', cross1)
+      .attr('x2', cross2).attr('y2', cross2)
+      .attr('stroke-width', crossStrokeWidth)
+      .attr('stroke', crossStroke);
+
+    selection
+      .append('line')
+      .attr('x1', cross2).attr('y1', cross1)
+      .attr('x2', cross1).attr('y2', cross2)
+      .attr('stroke-width', crossStrokeWidth)
+      .attr('stroke', crossStroke);
+  };
+
   module.exports.mapMissingValuePattern = function(selection) {
     var pWidth = 4;
     var pHeight = 4;
