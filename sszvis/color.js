@@ -28,7 +28,7 @@ namespace('sszvis.color', function(module) {
   var LIGHTNESS_STEP = 0.6;
 
   var QUAL_COLORS = {
-    qual: [
+    qual12: [
       '#5182B3', '#B8CFE6',
       '#60BF97', '#B8E6D2',
       '#94BF69', '#CFE6B8',

@@ -109,7 +109,7 @@
     var line = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
-      .stroke(sszvis.color.qual());
+      .stroke(sszvis.color.qual12());
 
     var xTickValues = xScale
       .ticks(4)
@@ -138,7 +138,7 @@
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
       })
-      .color(sszvis.color.qual());
+      .color(sszvis.color.qual12());
 
 
     // Rendering
