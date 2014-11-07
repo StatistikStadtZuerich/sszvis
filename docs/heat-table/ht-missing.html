@@ -99,7 +99,7 @@
     var xValue = sszvis.fn.compose(xScale, xAcc);
     var yValue = sszvis.fn.compose(yScale, yAcc);
     var cValue = sszvis.fn.compose(function(v) {
-      return isNaN(v) ? 'url(#missing-value)' : colorScale(v);
+      return isNaN(v) ? 'url(#ht-missing-value)' : colorScale(v);
     }, cAcc);
 
 
@@ -112,8 +112,8 @@
       .datum(state.selection);
 
    // missingValuePattern
-    var mVP = sszvis.patterns.ensurePattern(chartLayer, 'missing-value')
-      .call(sszvis.patterns.mapMissingValuePattern);
+    var mVP = sszvis.patterns.ensurePattern(chartLayer, 'ht-missing-value')
+      .call(sszvis.patterns.heatTableMissingValuePattern);
 
 
     // Components
