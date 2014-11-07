@@ -358,81 +358,6 @@
 
 }(window));
 
-if (false) {
-
-  // simple test suite for the namespace component
-  namespace('sszvis.nsTest.func', function(module) {
-    module.exports = function() { console.log('test success: module as function'); };
-  });
-  sszvis.nsTest.func();
-
-  try {
-    namespace('sszvis.nsTest.func', function(module) {
-      module.exports = function() { console.log('test failed: no module overwrite');};
-    })
-    sszvis.nsTest.func();
-  } catch(e) {
-    console.log('test succeeded: no module overwrite');
-  }
-
-  try {
-    namespace('sszvis.nsTest.func.extend', function(module) {
-      module.exports = function() { console.log('test failed: no function extending');};
-    });
-    sszvis.nsTest.func.extend();
-  } catch (e) {
-    console.log('test succeeded: no function extending');
-  }
-
-  try {
-    namespace('sszvis.nsTest.func.extend.extended', function(module) {
-      module.exports = function() {console.log('test failed: deep nested extension of a function');}
-    })
-    sszvis.nsTest.func.extend.extended();
-  } catch (e) {
-    console.log('test succeeded: deep nested extension of a function');
-  }
-
-  try {
-    namespace('sszvis.nsTest.func', function(module) {
-      module.exports.coolprop = "1";
-      module.exports.newprop = "2";
-    })
-    console.log('test failed: no in-module function extending using assignment');
-  } catch (e) {
-    console.log('test succeeded: no in-module function extending using assignment');
-  }
-
-  namespace('sszvis.nsTest.obj', function(m) {
-    m.exports = {
-      func: function() { console.log('test succeeded: define module as object'); },
-      b: 2,
-      c: 3
-    }
-  })
-  sszvis.nsTest.obj.func();
-
-  namespace('sszvis.nsTest.obj.extend', function(m) {
-    m.exports = function() {}
-  })
-  console.log('test succeeded: extend object module');
-
-  namespace('sszvis.nsTest.obj', function(m) {
-    m.exports.aprop = 1
-    m.exports.twoprop = 2
-  })
-  console.log('test succeded: in-module object extending using assignment');
-
-  namespace('sszvis.nsTest.obj', function(m) {
-    m.exports = {
-      extension: 6,
-      newthing: 10
-    }
-  })
-  console.log('test succeeded: in-module object extending using an object');
-
-}
-
 
 
 
@@ -1635,25 +1560,67 @@ namespace('sszvis.format', function(module) {
 
     /**
      * Formatter for no label
-     * @param  {string} d datum
      * @return {string} the empty string
      */
-    none: function(d) {
+    none: function() {
       return '';
     },
 
     /**
-     * Format numbers according to the sszvis style guide.
-     * @param  {number} d
-     * @return {string} Fully formatted number
+     * Format numbers according to the sszvis style guide. The most important
+     * rules are:
+     *
+     * - Thousands separator is a thin space (not a space)
+     * - Only apply thousands separator for numbers >= 10000
+     * - Decimal places only for significant decimals
+     * - No decimal places for numbers >= 10000
+     * - One decimal place for numbers >= 100
+     * - Two significant decimal places for other numbers
+     *
+     * @param  {number} d   Number
+     * @param  {number} [p] Decimal precision
+     * @return {string}     Fully formatted number
      */
-    number: function(d) {
-      if (Math.abs(d) >= 1e4) {
-        return d3.format(',')(d);
-      } else if (d === 0) {
+    number: function(d, p) {
+      var def = sszvis.fn.defined;
+      var dAbs = Math.abs(d);
+      var natLen = integerPlaces(d);
+      var decLen = decimalPlaces(d);
+
+      // 10250    -> "10 250"
+      // 10250.91 -> "10 251"
+      if (dAbs >= 1e4) {
+        def(p) || (p = 0);
+        return removeTrailingZeroes(d3.format(',.'+ p +'f')(d));
+      }
+
+      // 2350     -> "2350"
+      // 2350.29  -> "2350.3"
+      else if (dAbs >= 100) {
+        if (!def(p)) {
+          p = (decLen === 0) ? 0 : 1;
+        }
+        return removeTrailingZeroes(d3.format('.'+ p +'f')(d));
+      }
+
+      // 41       -> "41"
+      // 41.329   -> "41.33"
+      //  1.329   -> "1.33"
+      //  0.00034 -> "0.00034"
+      else if (dAbs > 0) {
+        var f;
+        if (!def(p)) {
+          p = (decLen === 0) ? 0 : natLen + Math.min(2, decLen);
+          f = p > 0 ? 'r' : 'f';
+        } else {
+          f = 'f';
+        }
+        return removeTrailingZeroes(d3.format('.'+ p + f)(d));
+      }
+
+      //  0       -> "0"
+      else {
         return String(0);
-      } else {
-        return String(d);
       }
     },
 
@@ -1675,6 +1642,25 @@ namespace('sszvis.format', function(module) {
       return String(d);
     }
   };
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function decimalPlaces(num) {
+    return (String(Math.abs(num)).split('.')[1] || '').length;
+  }
+
+  function integerPlaces(num) {
+    num = Math.floor(Math.abs(+num));
+    return String(num === 0 ? '' : num).length;
+  }
+
+  function removeTrailingZeroes(num) {
+    return String(num).replace(/([0-9]+)(\.)([0-9]*)0+$/, function(all, nat, dot, dec) {
+      return dec.length > 0 ? nat + dot + dec : nat;
+    });
+  }
+
 });
 
 
