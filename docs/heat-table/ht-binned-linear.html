@@ -102,9 +102,8 @@
     var binEdges = d3.range(100, 1000, 100);
     // create a linear color interpolator for generating the output range of bin colors
 
-    var interpolateColor = sszvis.color2.divVal()
-      .range(sszvis.color2.divVal().range().reverse()) // FIXME: custom reverse?
-      .domain(state.valueDomain)
+    var interpolateColor = sszvis.color2.divVal().reverse()
+      .domain(state.valueDomain);
 
     // the color bins are created by taking samples at equal spots along the data domain
     // binColors.length must equal binEdges.length + 1

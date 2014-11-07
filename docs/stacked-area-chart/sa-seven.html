@@ -62,11 +62,6 @@
 
       state.categories = sszvis.fn.set(state.data, cAcc);
 
-      // reverse both the domain and range of the color scale so that the displayed scale matches the order of the layers in the stack
-      // NOTE why is this necessary? This looks unnice somehow. If I don't do it everything gets black.
-      state.categories.reverse();
-      state.colorCategories = sszvis.color.ranges.qualitative.qual12.slice().reverse();
-
       state.dates = sszvis.fn.set(state.data, xAcc);
 
       actions.resetDate();
@@ -125,9 +120,8 @@
       .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 0]);
 
-    var cScale = d3.scale.ordinal()
-      .domain(state.categories)
-      .range(state.colorCategories);
+    var cScale = sszvis.color2.qual()
+      .domain(state.categories);
 
 
     // Layers

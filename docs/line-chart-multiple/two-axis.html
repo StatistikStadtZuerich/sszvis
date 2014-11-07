@@ -103,14 +103,8 @@
       .domain([0, state.axis2maxY])
       .range([bounds.innerHeight, 0]);
 
-    var cScale1 = d3.scale.ordinal()
-      .domain(state.categories1)
-      .range(sszvis.color.ranges.qualitative.qual6);
-
-    var cScale2 = d3.scale.ordinal()
-      .domain(state.categories2)
-      // make a defensive copy with slice before reversing because .reverse() is a mutative operation.
-      .range(sszvis.color.ranges.qualitative.qual12.slice().reverse())
+    var cScale1 = sszvis.color2.qual6a();
+    var cScale2 = sszvis.color2.qual6b();
 
 
     // Layers
