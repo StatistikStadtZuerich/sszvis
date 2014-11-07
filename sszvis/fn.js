@@ -367,7 +367,6 @@ namespace('sszvis.fn', function(module) {
         range.push(level);
         level += step;
       }
-      console.log(level, step, height);
       return {
         range: range,
         bandHeight: bandHeight,
