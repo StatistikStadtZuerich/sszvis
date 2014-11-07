@@ -29,7 +29,6 @@ SOURCE_FILES = \
 	sszvis/bounds.js \
 	sszvis/cascade.js \
 	sszvis/color.js \
-	sszvis/color2.js \
 	sszvis/createChart.js \
 	sszvis/createHtmlLayer.js \
 	sszvis/format.js \

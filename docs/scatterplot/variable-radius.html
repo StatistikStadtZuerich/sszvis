@@ -128,7 +128,7 @@
       .x(xValue)
       .y(yValue)
       .radius(sszvis.fn.compose(rScale, rAcc))
-      .fill(sszvis.color2.qual())
+      .fill(sszvis.color.qual())
       .stroke('#FFFFFF');
 
     // the built-in .ticks() function for d3.scale.log() produces far too many ticks
@@ -162,7 +162,7 @@
 
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
-      .fill(sszvis.color2.qual()(0))
+      .fill(sszvis.color.qual()(0))
       .stroke('#FFFFFF');
 
     var tooltip = sszvis.component.tooltip()
