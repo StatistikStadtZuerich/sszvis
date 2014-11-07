@@ -171,8 +171,8 @@
 
     var topValue;
     if (state.isMultiples) {
-      var last = sszvis.fn.last(state.highlightData);
-      topValue = yPositionMultiples(cAcc(last)) - yScaleMultiples(yAcc(last));
+      var first = sszvis.fn.first(state.highlightData);
+      topValue = yPositionMultiples(cAcc(first)) - yScaleMultiples(yAcc(first));
     } else {
       topValue = yScale(totalHighlightValue);
     }

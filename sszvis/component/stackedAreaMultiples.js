@@ -17,6 +17,8 @@ namespace('sszvis.component.stacked.areaMultiples', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        data = data.slice().reverse();
+
         var areaGen = d3.svg.area()
           .x(props.x)
           .y0(props.y0)

@@ -360,15 +360,17 @@ namespace('sszvis.fn', function(module) {
     stackedAreaMultiplesLayout: function(height, num, pct) {
       pct || (pct = 0.1);
       var step = height / (num - pct),
-          level = height,
+          bandHeight = step * (1 - pct),
+          level = bandHeight, // count from the top, and start at the bottom of the first band
           range = [];
-      while (level > 0) {
+      while (level - height < 1) {
         range.push(level);
-        level -= step;
+        level += step;
       }
+      console.log(level, step, height);
       return {
         range: range,
-        bandHeight: step * (1 - pct),
+        bandHeight: bandHeight,
         padHeight: step * pct
       };
     },

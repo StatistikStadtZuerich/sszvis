@@ -18,6 +18,8 @@ namespace('sszvis.component.stacked.area', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        data = data.slice().reverse();
+
         var stackLayout = d3.layout.stack()
           .x(props.x)
           .y(props.yAccessor);
