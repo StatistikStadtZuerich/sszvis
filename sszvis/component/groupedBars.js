@@ -23,53 +23,66 @@ namespace('sszvis.component.groupedBars', function(module) {
           .domain(d3.range(props.groupSize))
           .rangeBands([0, props.groupWidth], props.groupSpace, 0);
 
-        var groups = selection.selectAll('g.sszvis-g')
+        var groups = selection.selectAll('g.sszvis-bargroup')
           .data(data);
 
         groups.enter()
           .append('g')
-          .classed('sszvis-g', true);
+          .classed('sszvis-bargroup', true);
 
         groups.exit().remove();
 
-        var bars = groups.selectAll('rect.sszvis-bar')
-          .data(sszvis.fn.identity);
+        var barUnits = groups.selectAll('g.sszvis-barunit')
+          .data(function(d) { return d; });
 
-        bars.enter()
+        barUnits.enter()
+          .append('g')
+          .classed('sszvis-barunit', true);
+
+        barUnits.exit().remove();
+
+        barUnits.each(function(d, i) {
+          // necessary for the within-group scale
+          d.__sszvisGroupedBarIndex__ = i;
+        });
+
+        var unitsWithValue = barUnits.filter(props.defined);
+
+        // clear the units before rendering
+        unitsWithValue.selectAll('*').remove();
+
+        unitsWithValue
           .append('rect')
           .classed('sszvis-bar', true)
-          .attr('fill', props.fill);
-
-        bars.exit().remove();
-
-        bars
-          .attr('x', function(d, i) {
+          .attr('fill', props.fill)
+          .attr('x', function(d) {
             // first term is the x-position of the group, the second term is the x-position of the bar within the group
-            return props.defined(d) ? props.groupScale(d) + inGroupScale(i) : 0;
+            return props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__);
           })
-          .attr('y', function(d, i) {
-            return props.defined(d) ? props.y(d, i) : 0;
-          })
+          .attr('y', props.y)
+          .attr('width', inGroupScale.rangeBand())
+          .attr('height', props.height);
+
+        var unitsWithoutValue = barUnits.filter(sszvis.fn.not(props.defined));
+
+        unitsWithoutValue.selectAll('*').remove();
+
+        unitsWithoutValue
           .attr('transform', function(d, i) {
-            // special positioning for the "missing value" bars
-            return props.defined(d) ? '' : 'translate(' + (props.groupScale(d) + inGroupScale(i) + inGroupScale.rangeBand() / 2) + ',' + (props.y(d, i) - 5) + ') rotate(25)';
+            return sszvis.fn.translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2, props.y(d, i));
           });
 
-        // filter for the bars which have a value and display it
-        bars
-          .filter(sszvis.fn.compose(sszvis.fn.not(isNaN), props.height))
-          .transition()
-          .call(sszvis.transition)
-          .attr('width', inGroupScale.rangeBand())
-          .attr('height', props.height)
-          .attr('fill', props.fill);
+        unitsWithoutValue
+          .append('line')
+          .classed('sszvis-bar--missing line1', true)
+          .attr('x1', -4).attr('y1', -4)
+          .attr('x2', 4).attr('y2', 4);
 
-        // handle missing values
-        bars
-          .filter(sszvis.fn.compose(isNaN, props.height))
-          .attr('width', 1)
-          .attr('height', 10)
-          .attr('fill', '#000');
+        unitsWithoutValue
+          .append('line')
+          .classed('sszvis-bar--missing line2', true)
+          .attr('x1', 4).attr('y1', -4)
+          .attr('x2', -4).attr('y2', 4);
       });
   };
 
