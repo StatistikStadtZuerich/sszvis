@@ -1,30 +1,46 @@
 /**
+ * Color scales
+ *
+ * Three kinds of color scales are provided: qualitative, sequential, and
+ * diverging. All color scales can be reversed, qualitative color scales
+ * can also be brightened or darkened.
+ *
  * @module sszvis/color
  *
- * THIS IS ONLY A DRAFT OF A REVISION OF THE API AND IS NOT PART OF sszvis.js AT THE MOMENT
  *
- * instead of nested objects, this module exposes an api of just functions
+ * Qualitative color scales
  *
- * qual
- * qual6
- * qual6a
- * qual6b
- * seqBlu
- * seqRed
- * seqGrn
- * seqBrn
- * divVal
- * divValGry
- * divNtr
- * divNtrGry
+ * @function qual12    The full range of categorical colors
+ * @function qual6     Subset of saturated categorical colors
+ * @function qual6a    Subset of blue-green categorical colors
+ * @function qual6b    Subset of yellow-red categorical colors
+ * @method   darken    Instance method to darken all colors. @returns new scale
+ * @method   brighten  Instance method to brighten all colors. @returns new scale
+ * @method   reverse   Instance method to reverse the color order. @returns new scale
  *
- * darker
- * brighter
- * reverse
+ *
+ * Sequential color scales
+ *
+ * @function seqBlu    Linear color scale from bright to dark blue
+ * @function seqRed    Linear color scale from bright to dark red
+ * @function seqGrn    Linear color scale from bright to dark green
+ * @function seqBrn    Linear color scale from bright to dark brown
+ * @method   reverse   Instance method to reverse the color order. @returns new scale
+ *
+ *
+ * Diverging color scales
+ *
+ * @function divVal    Diverging and valued color scale from red to blue
+ * @function divNtr    Diverging and neutral color scale from brown to green
+ * @function divValGry Variation of the valued scale with a gray midpoint
+ * @function divNtrGry Variation of the neutral scale with a gray midpoint
+ * @method   reverse   Instance method to reverse the color order. @returns new scale
  */
 namespace('sszvis.color', function(module) {
   'use strict';
 
+  /* Constants
+  ----------------------------------------------- */
   var LIGHTNESS_STEP = 0.6;
 
   var QUAL_COLORS = {
@@ -36,19 +52,16 @@ namespace('sszvis.color', function(module) {
       '#E67D73', '#F2CEC2',
       '#CC6788', '#E6B7C7'
     ],
-
     qual6: [
       '#5182B3', '#60BF97',
       '#94BF69', '#E6CF73',
       '#E67D73', '#CC6788'
     ],
-
     qual6a: [
       '#5182B3', '#B8CFE6',
       '#60BF97', '#B8E6D2',
       '#94BF69', '#CFE6B8'
     ],
-
     qual6b: [
       '#E6CF73', '#FAEBAF',
       '#E67D73', '#F2CEC2',
