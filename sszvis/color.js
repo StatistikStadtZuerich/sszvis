@@ -1,243 +1,156 @@
+/**
+ * @module sszvis/color
+ *
+ * THIS IS ONLY A DRAFT OF A REVISION OF THE API AND IS NOT PART OF sszvis.js AT THE MOMENT
+ *
+ * instead of nested objects, this module exposes an api of just functions
+ *
+ * qual
+ * qual6
+ * qual6a
+ * qual6b
+ * seqBlu
+ * seqRed
+ * seqGrn
+ * seqBrn
+ * divVal
+ * divValGry
+ * divNtr
+ * divNtrGry
+ *
+ * darker
+ * brighter
+ * reverse
+ */
 namespace('sszvis.color', function(module) {
+  'use strict';
 
-  var values = {
-    basicBlue: "#6392C5",
-    basicDeepBlue: "#3A75B2",
-    plainWhite: "#FFFFFF"
+  var LIGHTNESS_STEP = 0.6;
+
+  var QUAL_COLORS = {
+    qual: [
+      '#5182B3', '#B8CFE6',
+      '#60BF97', '#B8E6D2',
+      '#94BF69', '#CFE6B8',
+      '#E6CF73', '#FAEBAF',
+      '#E67D73', '#F2CEC2',
+      '#CC6788', '#E6B7C7'
+    ],
+
+    qual6: [
+      '#5182B3', '#60BF97',
+      '#94BF69', '#E6CF73',
+      '#E67D73', '#CC6788'
+    ],
+
+    qual6a: [
+      '#5182B3', '#B8CFE6',
+      '#60BF97', '#B8E6D2',
+      '#94BF69', '#CFE6B8'
+    ],
+
+    qual6b: [
+      '#E6CF73', '#FAEBAF',
+      '#E67D73', '#F2CEC2',
+      '#CC6788', '#E6B7C7'
+    ]
   };
 
-  module.exports.values = {};
+  var SEQ_COLORS = {
+    seqBlu: ['#DDE9FE', '#3B76B3', '#343F4D'],
+    seqRed: ['#FEECEC', '#CC6171', '#4D353A'],
+    seqGrn: ['#D2DFDE', '#4A807C', '#2C3C3F'],
+    seqBrn: ['#E9DFD6', '#A67D5A', '#4C3735']
+  };
 
-  for (var prop in values) {
-    module.exports.values[prop] = d3.lab(values[prop]);
+  var DIV_COLORS = {
+    divVal:    ['#CC6171', '#FFFFFF', '#3B76B3'],
+    divValGry: ['#CC6171', '#F3F3F3', '#3B76B3'],
+    divNtr:    ['#A67D5A', '#FFFFFF', '#4A807C'],
+    divNtrGry: ['#A67D5A', '#F3F3F3', '#4A807C']
+  };
+
+
+  /* Scales
+  ----------------------------------------------- */
+  Object.keys(QUAL_COLORS).forEach(function(key) {
+    module.exports[key] = function() {
+      var scale = d3.scale.ordinal().range(QUAL_COLORS[key].map(convertLab));
+      return decorateOrdinalScale(scale);
+    };
+  });
+
+  Object.keys(SEQ_COLORS).forEach(function(key) {
+    module.exports[key] = function() {
+      var scale = d3.scale.linear().range(SEQ_COLORS[key].map(convertLab));
+      return decorateLinearScale(scale);
+    };
+  });
+
+  Object.keys(DIV_COLORS).forEach(function(key) {
+    module.exports[key] = function() {
+      var scale = d3.scale.linear().range(DIV_COLORS[key].map(convertLab));
+      return decorateLinearScale(scale);
+    };
+  });
+
+
+  /* Scale extensions
+  ----------------------------------------------- */
+  function decorateOrdinalScale(scale) {
+    scale.darker = function(){
+      return decorateOrdinalScale(
+        scale.copy().range(scale.range().map(func('darker', LIGHTNESS_STEP)))
+      );
+    };
+    scale.brighter = function(){
+      return decorateOrdinalScale(
+        scale.copy().range(scale.range().map(func('brighter', LIGHTNESS_STEP)))
+      );
+    };
+    scale.reverse = function(){
+      return decorateOrdinalScale(
+        scale.copy().range(scale.range().reverse())
+      );
+    };
+    return scale;
   }
 
-  var ranges = {
-    qualitative: {
-      qual3: [
-        "#b8cfe6",
-        "#5182b3",
-        "#e6b7c7"
-      ],
-      qual6: [
-        "#b8cfe6",
-        "#5182b3",
-        "#e6b7c7",
-        "#cc6788",
-        "#f2cec2",
-        "#e67d73"
-      ],
-      qual9: [
-        "#b8cfe6",
-        "#5182b3",
-        "#e6b7c7",
-        "#cc6788",
-        "#f2cec2",
-        "#e67d73",
-        "#faebaf",
-        "#e6cf73",
-        "#cfe6b8"
-      ],
-      qual12: [
-        "#b8cfe6",
-        "#5182b3",
-        "#e6b7c7",
-        "#cc6788",
-        "#f2cec2",
-        "#e67d73",
-        "#faebaf",
-        "#e6cf73",
-        "#cfe6b8",
-        "#94bf69",
-        "#b8e6d2",
-        "#60bf97"
-      ],
-      valuedQual2: [
-        "#3b76b3",
-        "#cc6171"
-      ],
-      neutralQual2: [
-        "#497f7b",
-        "#a57c59"
-      ],
-      valuedBlue9: [
-        "#DDE9FE",
-        "#b5cceb",
-        "#8cb0d9",
-        "#6493c6",
-        "#3b76b3",
-        "#396899",
-        "#385b80",
-        "#364d66",
-        "#333e4c"
-      ],
-      valuedRed10: [
-        "#fdebeb",
-        "#f2c9cd",
-        "#e5a7af",
-        "#d98490",
-        "#cc6171",
-        "#ac5663",
-        "#8d4b56",
-        "#6d4048",
-        "#4d353a",
-        "#4c3439"
-      ],
-      neutralGreen9: [
-        "#d2dfde",
-        "#b0c7c6",
-        "#8eb0ad",
-        "#6c9894",
-        "#4a807c",
-        "#436f6d",
-        "#3b5e5e",
-        "#344d4e",
-        "#2c3c3f"
-      ],
-      neutralBrown9: [
-        "#e9dfd6",
-        "#d8c7b7",
-        "#c8ae98",
-        "#b79579",
-        "#a67d5a",
-        "#906b51",
-        "#795a48",
-        "#62493e",
-        "#4c3735"
-      ],
-      valuedBluWhtRed9: [
-        "#3b76b3",
-        "#3b76b3",
-        "#3b76b3",
-        "#ceddec",
-        "#ffffff",
-        "#f2d8dc",
-        "#e6b0b8",
-        "#d98994",
-        "#cc6171"
-      ],
-      valuedBluGryRed9: [
-        "#3b76b3",
-        "#6995c3",
-        "#97b4d3",
-        "#c5d4e3",
-        "#f3f3f3",
-        "#e9ced3",
-        "#e0aab2",
-        "#d68592",
-        "#cc6171"
-      ],
-      neutralGrnWhtBrn9: [
-        "#4a807c",
-        "#77a09d",
-        "#a5c0be",
-        "#d2dfde",
-        "#ffffff",
-        "#e9dfd6",
-        "#d3bead",
-        "#bc9e83",
-        "#a67d5a"
-      ],
-      neutralGrnGryBrn9: [
-        "#4a807c",
-        "#749d9a",
-        "#9fbab8",
-        "#c9d6d5",
-        "#f3f3f3",
-        "#e0d5cd",
-        "#cdb8a7",
-        "#b99b80",
-        "#a67d5a"
-      ]
-    },
-    sequential: {
-      valued: {
-        blue: [
-          "#dce8fd",
-          "#3a75b2",
-          "#333e4c"
-        ],
-        red: [
-          "#fdebeb",
-          "#cb6070",
-          "#4c3439"
-        ]
-      },
-      neutral: {
-        green: [
-          "#d1dedd",
-          "#497f7b",
-          "#2b3b3e"
-        ],
-        brown: [
-          "#e8ded5",
-          "#a57c59",
-          "#4b3634"
-        ]
+  function decorateLinearScale(scale) {
+    scale = interpolatedColorScale(scale);
+    scale.reverse = function(){
+      return decorateLinearScale(
+        scale.copy().range(scale.range().reverse())
+      );
+    };
+    return scale;
+  }
+
+  function interpolatedColorScale(scale) {
+    var nativeDomain = scale.domain;
+    scale.domain = function(dom) {
+      if (arguments.length === 1) {
+        var threeDomain = [dom[0], d3.mean(dom), dom[1]];
+        return nativeDomain.call(this, threeDomain);
+      } else {
+        return nativeDomain.apply(this, arguments);
       }
-    },
-    divergent: {
-      valued: {
-        bluWhtRed: [
-          "#3a75b2",
-          "#ffffff",
-          "#cb6070"
-        ],
-        bluGryRed: [
-          "#3a75b2",
-          "#f2f2f2",
-          "#cb6070"
-        ]
-      },
-      neutral: {
-        grnWhtBrn: [
-          "#497f7b",
-          "#ffffff",
-          "#a57c59"
-        ],
-        grnGryBrn: [
-          "#497f7b",
-          "#f2f2f2",
-          "#a57c59"
-        ]
-      }
-    }
-  };
-
-  module.exports.ranges = {
-    qualitative: {},
-    sequential: {
-      valued: {},
-      neutral: {}
-    },
-    divergent: {
-      valued: {},
-      neutral: {}
-    }
-  };
-
-  function makeLabArr(arr) {
-    return arr.map(function(c) { return d3.lab(c); });
+    };
+    return scale;
   }
 
-  for (var prop in ranges.qualitative) {
-    module.exports.ranges.qualitative[prop] = makeLabArr(ranges.qualitative[prop]);
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function convertLab(d) {
+    return d3.lab(d);
   }
 
-  for (var prop in ranges.sequential.valued) {
-    module.exports.ranges.sequential.valued[prop] = makeLabArr(ranges.sequential.valued[prop]);
-  }
-
-  for (var prop in ranges.sequential.neutral) {
-    module.exports.ranges.sequential.neutral[prop] = makeLabArr(ranges.sequential.neutral[prop]);
-  }
-
-  for (var prop in ranges.divergent.valued) {
-    module.exports.ranges.divergent.valued[prop] = makeLabArr(ranges.divergent.valued[prop]);
-  }
-
-  for (var prop in ranges.divergent.neutral) {
-    module.exports.ranges.divergent.neutral[prop] = makeLabArr(ranges.divergent.neutral[prop]);
+  function func(fName) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return function(d) {
+      return d[fName].apply(d, args);
+    };
   }
 
 });

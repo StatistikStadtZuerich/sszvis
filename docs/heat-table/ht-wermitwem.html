@@ -93,7 +93,7 @@
       .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
       .domain(state.womAgeList);
 
-    var colorScale = sszvis.color2.seqBlu()
+    var colorScale = sszvis.color.seqBlu()
       .domain(state.valueDomain);
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
