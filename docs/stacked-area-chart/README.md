@@ -54,13 +54,13 @@
 
 ```project
 {
-    "name": "stacked-area-chart-seven",
+    "name": "stacked-area-chart-twelve",
     "files": {
         "index.html": {
-            "source": "docs/stacked-area-chart/sa-seven.html",
+            "source": "docs/stacked-area-chart/sa-twelve.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/stacked-area-chart/data/SA_7Kategories_yearly.csv",
+        "data.csv": "docs/stacked-area-chart/data/SA_12Kategories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
