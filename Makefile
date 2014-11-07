@@ -36,7 +36,6 @@ SOURCE_FILES = \
 	sszvis/logError.js \
 	sszvis/parse.js \
 	sszvis/patterns.js \
-	sszvis/scale.js \
 	sszvis/transition.js \
 	sszvis/behavior/move.js \
 	sszvis/behavior/click.js \
