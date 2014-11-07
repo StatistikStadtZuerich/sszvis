@@ -815,15 +815,17 @@ namespace('sszvis.fn', function(module) {
     stackedAreaMultiplesLayout: function(height, num, pct) {
       pct || (pct = 0.1);
       var step = height / (num - pct),
-          level = height,
+          bandHeight = step * (1 - pct),
+          level = bandHeight, // count from the top, and start at the bottom of the first band
           range = [];
-      while (level > 0) {
+      while (level - height < 1) {
         range.push(level);
-        level -= step;
+        level += step;
       }
+      console.log(level, step, height);
       return {
         range: range,
-        bandHeight: step * (1 - pct),
+        bandHeight: bandHeight,
         padHeight: step * pct
       };
     },
@@ -3838,6 +3840,8 @@ namespace('sszvis.component.stacked.area', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        data = data.slice().reverse();
+
         var stackLayout = d3.layout.stack()
           .x(props.x)
           .y(props.yAccessor);
@@ -3889,6 +3893,8 @@ namespace('sszvis.component.stacked.areaMultiples', function(module) {
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
+
+        data = data.slice().reverse();
 
         var areaGen = d3.svg.area()
           .x(props.x)

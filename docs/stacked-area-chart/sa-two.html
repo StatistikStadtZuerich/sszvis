@@ -46,7 +46,7 @@
       state.timeExtent = d3.extent(state.data, xAcc);
 
       state.stackedData = sszvis.cascade()
-        .arrayBy(cAcc, schweizerSorter)
+        .arrayBy(cAcc)
         .apply(state.data)
         .map(function(stack) {
           stack.category = cAcc(stack[0]);
@@ -63,7 +63,7 @@
         return d3.sum(s, yAcc);
       });
 
-      state.categories = sszvis.fn.set(state.data, cAcc).sort(schweizerSorter);
+      state.categories = sszvis.fn.set(state.data, cAcc);
 
       state.dates = sszvis.fn.set(state.data, xAcc);
 
@@ -171,8 +171,8 @@
 
     var topValue;
     if (state.isMultiples) {
-      var last = sszvis.fn.last(state.highlightData);
-      topValue = yPositionMultiples(cAcc(last)) - yScaleMultiples(yAcc(last));
+      var first = sszvis.fn.first(state.highlightData);
+      topValue = yPositionMultiples(cAcc(first)) - yScaleMultiples(yAcc(first));
     } else {
       topValue = yScale(totalHighlightValue);
     }
@@ -310,16 +310,6 @@
 
   /* Helper functions
   ----------------------------------------------- */
-  function schweizerSorter(a, b) {
-    if (a !== b) {
-      // sort group 'Schweizer' to the start so it becomes the bottom layer
-      // (for visual effect)
-      return a === 'Schweizer' ? -1 : (b === 'Schweizer' ? 1 : (a < b ? -1 : 1));
-    } else {
-      return 0;
-    }
-  }
-
   function findClosest(data, datum) {
     var i = d3.bisectLeft(data, datum, 1);
     var d0 = data[i - 1];
