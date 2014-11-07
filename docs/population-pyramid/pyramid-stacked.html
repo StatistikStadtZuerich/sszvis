@@ -94,9 +94,8 @@
       .domain(state.ages)
       .rangeBands([bounds.innerHeight, 0], 0.1, 0);
 
-    var colorScale = d3.scale.ordinal()
-      .domain(state.groups)
-      .range(sszvis.color.ranges.qualitative.qual6);
+    var colorScale = sszvis.color2.qual()
+      .domain(state.groups);
 
 
     // Layers
@@ -136,8 +135,7 @@
       .scale(colorScale)
       .orientation('vertical')
       .rows(2)
-      .columnWidth(bounds.innerWidth * 2 / 3)
-      .reverse(true);
+      .columnWidth(bounds.innerWidth * 2 / 3);
 
 
     // Rendering
