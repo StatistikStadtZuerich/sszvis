@@ -70,9 +70,8 @@
 
     // Scales
 
-    var colorScale = sszvis.scale.colorScale()
-      .domain(state.valueDomain)
-      .range(sszvis.color.ranges.sequential.valued.blue);
+    var colorScale = sszvis.color2.seqBlu()
+      .domain(state.valueDomain);
 
 
     // Layers

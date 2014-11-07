@@ -104,11 +104,13 @@
       .domain(state.g2List);
 
     // create a linear color interpolator for generating the output range of bin colors
-    var interpolateColor = d3.scale.linear()
-      .range(sszvis.color.ranges.sequential.valued.blue);
-    // the range is composed of colors sampled at equal distances along the color spectrum,
+    var interpolateColor = sszvis.color2.seqBlu()
+      .domain(state.valueDomain);
+
+    // the range is composed of colors sampled at equal distances along the color spectrum
     // such that binColors.length === BIN_EDGES.length + 1
-    var binColors = d3.range(BIN_EDGES.length + 1).map(function(i) { return interpolateColor(i / BIN_EDGES.length); });
+    var binColors = BIN_EDGES.concat(state.valueDomain[1]).map(interpolateColor);
+
     // for the threshold scale, the number of values in the range must be one greater than the
     // number of values in the domain.
     var colorScale = d3.scale.threshold()

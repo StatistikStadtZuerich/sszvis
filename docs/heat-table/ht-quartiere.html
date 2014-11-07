@@ -94,9 +94,8 @@
       .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
       .domain(state.quarterList);
 
-    var colorScale = sszvis.scale.colorScale()
-      .domain(state.valueDomain)
-      .range(sszvis.color.ranges.sequential.valued.blue);
+    var colorScale = sszvis.color2.seqBlu()
+      .domain(state.valueDomain);
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
     var yValue = sszvis.fn.compose(yScale, yAcc);

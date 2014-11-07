@@ -100,9 +100,8 @@
 
     // Scales
 
-    var fillScale = sszvis.scale.colorScale()
-      .domain(state.valueDomain)
-      .range(sszvis.color.ranges.sequential.valued.blue);
+    var fillScale = sszvis.color2.seqBlu()
+      .domain(state.valueDomain);
 
     var xScale = d3.time.scale()
       .domain(state.yearDomain)
