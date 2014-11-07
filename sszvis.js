@@ -1623,6 +1623,8 @@ namespace('sszvis.color', function(module) {
  * instead of nested objects, this module exposes an api of just functions
  *
  * qual
+ * qual6a
+ * qual6b
  * seqBlu
  * seqRed
  * seqGrn
@@ -1633,11 +1635,13 @@ namespace('sszvis.color', function(module) {
  * divNtrGry
  *
  * darker
+ * brighter
+ * reverse
  */
 namespace('sszvis.color2', function(module) {
   'use strict';
 
-  var DARKEN = 0.6;
+  var LIGHTNESS_STEP = 0.6;
 
   var QUAL_COLORS = {
     qual: [
@@ -1681,27 +1685,75 @@ namespace('sszvis.color2', function(module) {
   ----------------------------------------------- */
   Object.keys(QUAL_COLORS).forEach(function(key) {
     module.exports[key] = function() {
-      return d3.scale.ordinal().range(QUAL_COLORS[key].map(convertLab));
+      var scale = d3.scale.ordinal().range(QUAL_COLORS[key].map(convertLab));
+      return decorateOrdinalScale(scale);
     };
   });
 
   Object.keys(SEQ_COLORS).forEach(function(key) {
     module.exports[key] = function() {
-      return interpolatedColorScale().range(SEQ_COLORS[key].map(convertLab));
+      var scale = d3.scale.linear().range(SEQ_COLORS[key].map(convertLab));
+      return decorateLinearScale(scale);
     };
   });
 
   Object.keys(DIV_COLORS).forEach(function(key) {
     module.exports[key] = function() {
-      return interpolatedColorScale().range(DIV_COLORS[key].map(convertLab));
+      var scale = d3.scale.linear().range(DIV_COLORS[key].map(convertLab));
+      return decorateLinearScale(scale);
     };
   });
+
+
+  /* Scale extensions
+  ----------------------------------------------- */
+  function decorateOrdinalScale(scale) {
+    scale.darker = function(){
+      return decorateOrdinalScale(
+        scale.copy().range(scale.range().map(func('darker', LIGHTNESS_STEP)))
+      );
+    };
+    scale.brighter = function(){
+      return decorateOrdinalScale(
+        scale.copy().range(scale.range().map(func('brighter', LIGHTNESS_STEP)))
+      );
+    };
+    scale.reverse = function(){
+      return decorateOrdinalScale(
+        scale.copy().range(scale.range().reverse())
+      );
+    };
+    return scale;
+  }
+
+  function decorateLinearScale(scale) {
+    scale = interpolatedColorScale(scale);
+    scale.reverse = function(){
+      return decorateLinearScale(
+        scale.copy().range(scale.range().reverse())
+      );
+    };
+    return scale;
+  }
+
+  function interpolatedColorScale(scale) {
+    var nativeDomain = scale.domain;
+    scale.domain = function(dom) {
+      if (arguments.length === 1) {
+        var threeDomain = [dom[0], d3.mean(dom), dom[1]];
+        return nativeDomain.call(this, threeDomain);
+      } else {
+        return nativeDomain.apply(this, arguments);
+      }
+    };
+    return scale;
+  }
 
 
   /* Color utilities
   ----------------------------------------------- */
   module.exports.darker = function(color) {
-    return convertLab(color).darker(DARKEN);
+    return convertLab(color).darker(LIGHTNESS_STEP);
   };
 
 
@@ -1711,21 +1763,12 @@ namespace('sszvis.color2', function(module) {
     return d3.lab(d);
   }
 
-  function interpolatedColorScale() {
-    var alteredScale = d3.scale.linear();
-    var nativeDomain = alteredScale.domain;
-
-    alteredScale.domain = function(dom) {
-      if (arguments.length === 1) {
-        var threeDomain = [dom[0], d3.mean(dom), dom[1]];
-        return nativeDomain.call(this, threeDomain);
-      } else {
-        return nativeDomain.apply(this, arguments);
-      }
+  function func(fName) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return function(d) {
+      return d[fName].apply(d, args);
     };
-
-    return alteredScale;
-  };
+  }
 
 });
 

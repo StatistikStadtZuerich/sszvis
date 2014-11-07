@@ -5,6 +5,10 @@
   width: 100%;
 }
 
+.scale-container + .scale-container {
+  margin-top: 20px;
+}
+
 .scale-container div {
   display: inline-block;
   position: relative;
