@@ -3732,9 +3732,10 @@ namespace('sszvis.component.ruler', function(module) {
     var fn = sszvis.fn;
 
     return d3.component()
+      .prop('top')
+      .prop('bottom')
       .prop('x', d3.functor)
-      .prop('y', d3.functor).y(fn.identity)
-      .prop('yScale')
+      .prop('y', d3.functor)
       .prop('label').label(fn.constant(''))
       .prop('color')
       .prop('flip', d3.functor).flip(false)
@@ -3745,10 +3746,6 @@ namespace('sszvis.component.ruler', function(module) {
         var key = function(d) {
           return props.x(d) + '_' + props.y(d);
         };
-
-        var y = fn.compose(props.yScale, props.y);
-        var top = d3.min(props.yScale.range());
-        var bottom = d3.max(props.yScale.range());
 
         // FIXME: in situations with multiple data points - e.g. when displaying multiple dots,
         // this generates multiple lines. When the lines overlap in the same place, they're redundant,
@@ -3763,9 +3760,9 @@ namespace('sszvis.component.ruler', function(module) {
 
         ruler
           .attr('x1', props.x)
-          .attr('y1', y)
+          .attr('y1', props.y)
           .attr('x2', props.x)
-          .attr('y2', bottom);
+          .attr('y2', props.bottom);
 
         ruler.exit().remove();
 
@@ -3778,7 +3775,7 @@ namespace('sszvis.component.ruler', function(module) {
 
         dot
           .attr('cx', props.x)
-          .attr('cy', y)
+          .attr('cy', props.y)
           .attr('r', 3.5)
           .attr('fill', props.color);
 
@@ -3793,14 +3790,14 @@ namespace('sszvis.component.ruler', function(module) {
 
         label
           .attr('x', props.x)
-          .attr('y', y)
+          .attr('y', props.y)
           .attr('dx', function(d) {
             return props.flip(d) ? -10 : 10;
           })
           .attr('dy', function(d) {
             var baselineShift = 5;
-            if (y(d) < top + baselineShift)    return 2 * baselineShift;
-            if (y(d) > bottom - baselineShift) return 0;
+            if (props.y(d) < props.top + baselineShift)    return 2 * baselineShift;
+            if (props.y(d) > props.bottom - baselineShift) return 0;
             return baselineShift;
           })
           .attr('text-anchor', function(d) {
