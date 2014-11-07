@@ -4,18 +4,13 @@
   var BAR_WIDTH  = 80;
   var BAR_HEIGHT = 80;
 
-  global.colorSwatchFromQualitativeScale = function(containerId, scaleName) {
-    var scale = sszvis.color2[scaleName]();
-    renderSwatch(containerId, scale.range().map(String));
-  };
-
-  global.colorSwatchFromLinearScale = function(containerId, scaleName, numBars) {
-    var scale = sszvis.color2[scaleName]().domain([0, numBars - 1]);
+  global.colorSwatchFromLinearScale = function(containerId, scale, numBars) {
+    scale.domain([0, numBars - 1]);
     renderSwatch(containerId, d3.range(0, numBars).map(scale));
   };
 
   global.colorSwatchFromColors = function(containerId, colors) {
-    renderSwatch(containerId, colors);
+    renderSwatch(containerId, colors.map(String));
   };
 
 
