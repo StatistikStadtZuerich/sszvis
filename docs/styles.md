@@ -20,13 +20,6 @@
 <script>colorSwatchFromQualitativeScale('scaleQual', 'qual');</script>
 ```
 
-#### `color2.qual2()`
-
-```html|plain,run-script
-<div id='scaleQual2' class='scale-container'></div>
-<script>colorSwatchFromQualitativeScale('scaleQual2', 'qual2');</script>
-```
-
 #### `color2.qual6a()`
 
 ```html|plain,run-script
@@ -73,32 +66,32 @@
 
 ### Divergent
 
-#### `color2.divBlu()`
+#### `color2.divVal()`
 
 ```html|plain,run-script
 <div id='scale5' class='scale-container'></div>
-<script>colorSwatchFromLinearScale('scale5', 'divBlu', 9);</script>
+<script>colorSwatchFromLinearScale('scale5', 'divVal', 9);</script>
 ```
 
-#### `color2.divBluAlt()`
+#### `color2.divValGry()`
 
 ```html|plain,run-script
 <div id='scale6' class='scale-container'></div>
-<script>colorSwatchFromLinearScale('scale6', 'divBluAlt', 9);</script>
+<script>colorSwatchFromLinearScale('scale6', 'divValGry', 9);</script>
 ```
 
-#### `color2.divGrn()`
+#### `color2.divNtr()`
 
 ```html|plain,run-script
 <div id='scale7' class='scale-container'></div>
-<script>colorSwatchFromLinearScale('scale7', 'divGrn', 9);</script>
+<script>colorSwatchFromLinearScale('scale7', 'divNtr', 9);</script>
 ```
 
-#### `color2.divGrnAlt()`
+#### `color2.divNtrGry()`
 
 ```html|plain,run-script
 <div id='scale8' class='scale-container'></div>
-<script>colorSwatchFromLinearScale('scale8', 'divGrnAlt', 9);</script>
+<script>colorSwatchFromLinearScale('scale8', 'divNtrGry', 9);</script>
 ```
 
 

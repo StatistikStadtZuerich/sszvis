@@ -1627,10 +1627,10 @@ namespace('sszvis.color', function(module) {
  * seqRed
  * seqGrn
  * seqBrn
- * divBlu
- * divBluAlt
- * divGrn
- * divGrnAlt
+ * divVal
+ * divValGry
+ * divNtr
+ * divNtrGry
  *
  * darker
  */
@@ -1648,8 +1648,6 @@ namespace('sszvis.color2', function(module) {
       '#E67D73', '#F2CEC2',
       '#CC6788', '#E6B7C7'
     ],
-
-    qual2: [ '#3B76B3', '#CC6171' ],
 
     qual6a: [
       '#5182B3', '#B8CFE6',
@@ -1672,10 +1670,10 @@ namespace('sszvis.color2', function(module) {
   };
 
   var DIV_COLORS = {
-    divBlu: ['#3B76B3', '#FFFFFF', '#CC6171'],
-    divBluAlt: ['#3B76B3', '#F3F3F3', '#CC6171'],
-    divGrn: ['#4A807C', '#FFFFFF', '#A67D5A'],
-    divGrnAlt: ['#4A807C', '#F3F3F3', '#A67D5A']
+    divVal:    ['#CC6171', '#FFFFFF', '#3B76B3'],
+    divValGry: ['#CC6171', '#F3F3F3', '#3B76B3'],
+    divNtr:    ['#A67D5A', '#FFFFFF', '#4A807C'],
+    divNtrGry: ['#A67D5A', '#F3F3F3', '#4A807C']
   };
 
 
