@@ -1750,13 +1750,6 @@ namespace('sszvis.color2', function(module) {
   }
 
 
-  /* Color utilities
-  ----------------------------------------------- */
-  module.exports.darker = function(color) {
-    return convertLab(color).darker(LIGHTNESS_STEP);
-  };
-
-
   /* Helper functions
   ----------------------------------------------- */
   function convertLab(d) {
