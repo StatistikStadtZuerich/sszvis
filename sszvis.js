@@ -1624,6 +1624,7 @@ namespace('sszvis.color', function(module) {
  * instead of nested objects, this module exposes an api of just functions
  *
  * qual
+ * qual6
  * qual6a
  * qual6b
  * seqBlu
@@ -1652,6 +1653,12 @@ namespace('sszvis.color2', function(module) {
       '#E6CF73', '#FAEBAF',
       '#E67D73', '#F2CEC2',
       '#CC6788', '#E6B7C7'
+    ],
+
+    qual6: [
+      '#5182B3', '#60BF97',
+      '#94BF69', '#E6CF73',
+      '#E67D73', '#CC6788'
     ],
 
     qual6a: [
