@@ -139,7 +139,7 @@
     var lineMaker = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, yearAcc))
       .y(sszvis.fn.compose(yScale, vAcc))
-      .stroke(sszvis.color.qual());
+      .stroke(sszvis.color.qual12());
 
     var xTickValues = xScale
       .ticks(4)
@@ -161,7 +161,7 @@
       .y(vAcc)
       .xScale(xScale)
       .yScale(yScale)
-      .color(sszvis.color.qual())
+      .color(sszvis.color.qual12())
       .label(function(d) {
         return 'Anzahl: ' + d.value;
       });

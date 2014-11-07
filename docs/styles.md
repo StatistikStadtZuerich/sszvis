@@ -15,12 +15,12 @@ These are the default text colors used throughout the UI.
 
 Qualitative scales are used for data that has distinct categories. They distinguish categories based on color contrast. They should never be used to compare values, use sequential or divergent scales in this case.
 
-#### `color.qual()`
+#### `color.qual12()`
 
 ```html|plain,run-script
 <div id='scaleQual' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual();
+    var scale = sszvis.color.qual12();
     colorSwatchFromColors('scaleQual', scale.range());
 </script>
 ```
@@ -63,7 +63,7 @@ Qualitative scales can be brightened or darkened with the `scale.brighter()` and
 <div id='scaleQualDefault' class='scale-container'></div>
 <div id='scaleQualDarker' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual();
+    var scale = sszvis.color.qual12();
     colorSwatchFromColors('scaleQualBrigther', scale.brighter().range());
     colorSwatchFromColors('scaleQualDefault', scale.range());
     colorSwatchFromColors('scaleQualDarker', scale.darker().range());
@@ -74,7 +74,7 @@ Qualitative scales can be reversed with the `scale.reverse()` instance method. T
 ```html|plain,run-script
 <div id='scaleQualReverse' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual().reverse();
+    var scale = sszvis.color.qual12().reverse();
     colorSwatchFromColors('scaleQualReverse', scale.range());
 </script>
 ```
