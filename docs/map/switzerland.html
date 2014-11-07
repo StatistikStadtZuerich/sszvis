@@ -73,9 +73,8 @@
 
     // Scales
 
-    var colorScale = sszvis.scale.colorScale()
-      .domain(state.valueDomain)
-      .range(sszvis.color.ranges.divergent.neutral.grnGryBrn);
+    var colorScale = sszvis.color2.divNtrGry()
+      .domain(state.valueDomain);
 
 
     // Layers

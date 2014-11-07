@@ -84,9 +84,8 @@
       .domain([0, state.totalValue])
       .range([0, 2 * Math.PI]);
 
-    var cScale = d3.scale.ordinal()
-      .domain(state.categories)
-      .range(sszvis.color.ranges.qualitative.qual12); // FIXME: construct ranges, don't use the basic object directly
+    var cScale = sszvis.color2.qual()
+      .domain(state.categories);
 
 
     // Layers

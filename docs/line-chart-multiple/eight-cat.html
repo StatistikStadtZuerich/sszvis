@@ -86,9 +86,8 @@
       .domain([0, state.maxY])
       .range([bounds.innerHeight, 0]);
 
-    var cScale = d3.scale.ordinal()
-      .domain(state.categories)
-      .range(sszvis.color.ranges.qualitative.qual12);
+    var cScale = sszvis.color2.qual()
+      .domain(state.categories);
 
 
     // Layers

@@ -109,9 +109,8 @@
     var aScale = d3.scale.linear()
       .range([0, 2 * Math.PI]);
 
-    var cScale = d3.scale.ordinal()
-      .domain(state.categories)
-      .range(sszvis.color.ranges.qualitative.qual12);
+    var cScale = sszvis.color2.qual()
+      .domain(state.categories);
 
 
     // Layers
