@@ -3945,6 +3945,10 @@ namespace('sszvis.component.stacked', function(module) {
 
         var isHorizontal = props.orientation === 'horizontal';
 
+        if (!isHorizontal) {
+          data = data.slice().reverse();
+        }
+
         var stackLayout = d3.layout.stack()
           .x(isHorizontal ? props.yAccessor : props.xAccessor)
           .y(isHorizontal ? props.xAccessor : props.yAccessor);
