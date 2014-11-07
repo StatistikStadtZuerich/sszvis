@@ -64,9 +64,10 @@ namespace('sszvis.patterns', function(module) {
   };
 
   module.exports.mapMissingValuePattern = function(selection) {
-    var pWidth = 4;
-    var pHeight = 4;
-    var offset = 0.5;
+    var pWidth = 14,
+        pHeight = 14,
+        fillColor = '#FAFAFA',
+        lineStroke = '#CCCCCC';
 
     selection
       .attr('patternUnits', 'userSpaceOnUse')
@@ -82,23 +83,31 @@ namespace('sszvis.patterns', function(module) {
       .attr('y', 0)
       .attr('width', pWidth)
       .attr('height', pHeight)
-      .attr('fill', '#bfbfbf');
+      .attr('fill', fillColor);
 
     selection
       .append('line')
-      .attr('x1', 0)
-      .attr('y1', pHeight * offset)
-      .attr('x2', pWidth * offset)
-      .attr('y2', 0)
-      .attr('stroke', '#737373');
+      .attr('x1', 1).attr('y1', 10)
+      .attr('x2', 5).attr('y2', 14)
+      .attr('stroke', lineStroke);
 
     selection
       .append('line')
-      .attr('x1', pWidth * offset)
-      .attr('y1', pHeight)
-      .attr('x2', pWidth)
-      .attr('y2', pHeight * offset)
-      .attr('stroke', '#737373');
+      .attr('x1', 5).attr('y1', 10)
+      .attr('x2', 1).attr('y2', 14)
+      .attr('stroke', lineStroke);
+
+    selection
+      .append('line')
+      .attr('x1', 8).attr('y1', 3)
+      .attr('x2', 12).attr('y2', 7)
+      .attr('stroke', lineStroke);
+
+    selection
+      .append('line')
+      .attr('x1', 12).attr('y1', 3)
+      .attr('x2', 8).attr('y2', 7)
+      .attr('stroke', lineStroke);
   };
 
   module.exports.mapLakePattern = function(selection) {
