@@ -111,10 +111,19 @@
 /**
  * Bar component
  *
- * @module sszvis/component/line
+ * @module sszvis/component/bar
  */
 .sszvis-bar {
 
+}
+
+/**
+ * Grouped bar component
+ *
+ * @module sszvis/component/groupedBars
+ */
+.sszvis-bar--missing {
+  stroke: #A4A4A4;
 }
 
 /**
