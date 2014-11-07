@@ -128,9 +128,10 @@
       .halo(true);
 
     var ruler = sszvis.component.ruler()
+      .top(0)
+      .bottom(bounds.innerHeight)
       .x(sszvis.fn.compose(xScale, xAcc))
-      .y(yAcc)
-      .yScale(yScale)
+      .y(sszvis.fn.compose(yScale, yAcc))
       .label(function(d) {
         return d.value + ' Anteile';
       })
