@@ -46,7 +46,7 @@
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 500,
+        "height": 560,
         "width": 516
     }
 }

@@ -129,14 +129,14 @@
       .call(stackedBars);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 60) + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
   }
 
