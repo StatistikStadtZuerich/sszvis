@@ -869,10 +869,19 @@ namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
             .classed('sszvis-axis--vertical', props.vertical)
             .classed('sszvis-axis--halo', props.halo)
-            .attr('transform', 'translate(0, 2)')
+            .attr('transform', sszvis.fn.translateString(0, 2))
             .call(axisDelegate);
 
           var axisScale = axisDelegate.scale();
+
+          // Shift axis strokes by half-pixels to ensure they are not blurred
+          // due to anti-aliasing effects (even though crispEdges is set).
+          selection.selectAll('.sszvis-axis--bottom path')
+            .attr('transform', sszvis.fn.translateString(0.5, 0.5));
+
+          selection.selectAll('.sszvis-axis--bottom line')
+            .attr('transform', sszvis.fn.translateString(0.5, 3));
+
 
           // hide ticks which are too close to one endpoint
           var rangeExtent = scaleRange(axisScale);
@@ -1034,8 +1043,8 @@ namespace('sszvis.axis', function(module) {
     var axisX = function() {
       return axis()
         .ticks(3)
-        .tickSize(4, 7)
-        .tickPadding(7)
+        .tickSize(4, 6)
+        .tickPadding(6)
         .tickFormat(sszvis.format.number);
     };
 
