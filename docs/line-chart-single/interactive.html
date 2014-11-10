@@ -135,7 +135,7 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .label(function(d) {
-        return d.value + ' Anteile';
+        return sszvis.format.number(d.value) + ' Anteile';
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;

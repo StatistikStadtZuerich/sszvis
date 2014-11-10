@@ -152,7 +152,7 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .label(function(d) {
-        return yAcc(d) + ' Wert';
+        return sszvis.format.number(yAcc(d)) + ' Wert';
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
