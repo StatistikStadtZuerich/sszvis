@@ -41,10 +41,6 @@
   display: none;
 }
 
-.sszvis-axis--bottom line {
-  transform: translateY(3px);
-}
-
 .sszvis-axis--vertical path {
   display: none;
 }
