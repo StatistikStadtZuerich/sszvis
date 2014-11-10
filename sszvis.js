@@ -3065,7 +3065,50 @@ namespace('sszvis.component.modularText', function(module) {
 /**
  * Small Multiples component
  *
- * Used to generate group elements for small multiples charts
+ * Used to generate group elements which contain small multiples charts.
+ *
+ * This component lays out rectangular groups in a grid according to the number of rows
+ * and the number of columns provided. It is possible to specify paddingX and paddingY
+ * values, pixel amounts which will be left as empty space between the columns and the
+ * rows, respectively.
+ *
+ * Data should be passed to this component in a special way: it should be an array of
+ * data values, where each data value represents a single group. IMPORTANT: each data
+ * value must also have a property called 'values' which represents the values corresponding
+ * to that group.
+ *
+ * In the multiple pie charts example, an array of "groups" data is bound to the chart before
+ * the multiples component is called. Each element in the "groups" data has a values property
+ * which contains the data for a single pie chart.
+ *
+ * The multiples component creates the groups and lays them out, attaching the following new properties
+ * to each group object:
+ *
+ * gx - the x-position of the group
+ * gy - the y-position of the group
+ * gw - the width of the group (without padding)
+ * gh - the height of the group (without padding)
+ *
+ * Generally, you should not use source data objects as group objects, but should instead
+ * create new objects which are used to store group information. This creates a data hierarchy
+ * which matches the representation hierarchy, which is very much a d3 pattern.
+ *
+ * Once the groups have been created, the user must still do something with them. The pattern
+ * for creating charts within each group should look something like:
+ *
+ * chart.selectAll('.sszvis-multiple')
+ *   .each(function(d) {
+ *     var groupSelection = d3.select(this);
+ *
+ *     ... do something which creates a chart using groupSelection ...
+ *   });
+ *
+ * @property {number} width           the total width of the collection of multiples
+ * @property {number} height          the total height of the collection of multiples
+ * @property {number} paddingX        x-padding to put between columns
+ * @property {number} paddingY        y-padding to put between rows
+ * @property {number} rows            the number of rows to generate
+ * @property {number} cols            the number of columns to generate
  *
  * @return {d3.component}
  */
@@ -3129,6 +3172,20 @@ namespace('sszvis.component.multiples', function(module) {
 
 /**
  * Pie component
+ *
+ * The pie component is used to draw pie charts. It uses the d3.svg.arc() generator
+ * to create pie wedges.
+ *
+ * THe input data should be an array of data values, where each data value represents one wedge in the pie.
+ *
+ * @property {number} radius                  The radius of the pie chart (no default)
+ * @property {string, function} fill          a fill color for wedges in the pie (default black). Ideally a function
+ *                                            which takes a data value.
+ * @property {string, function} stroke        the stroke color for wedges in the pie (default none)
+ * @property {string, function} angle         specifys the angle of the wedges in radians. Theoretically this could be
+ *                                            a constant, but that would make for a very strange pie. Ideally, this
+ *                                            is a function which takes a data value and returns the angle in radians.
+ *
  * @return {d3.component}
 */
 namespace('sszvis.component.pie', function(module) {
@@ -3138,7 +3195,7 @@ namespace('sszvis.component.pie', function(module) {
       .prop('radius')
       .prop('fill')
       .prop('stroke')
-      .prop('angle')
+      .prop('angle', d3.functor)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
