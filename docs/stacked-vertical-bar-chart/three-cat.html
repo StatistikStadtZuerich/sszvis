@@ -91,7 +91,10 @@
 
     // Layers
 
-    var chartLayer = sszvis.createChart('#sszvis-chart', bounds)
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: 'Diagrammtitel',
+        description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+      })
       .datum(state.stackedData);
 
 
