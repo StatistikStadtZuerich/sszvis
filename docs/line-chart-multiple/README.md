@@ -1,12 +1,18 @@
-# Line Chart
+# Multiple line chart
 
-## Multiple Line Chart
+> Line charts are suited to show a functional relation between two attributes.
 
-### Datenformat
+## sszvis.component.line
 
-### Konfiguration
+### Data structure
 
-## Beispiele
+This chart requires at least two variables that can be plotted on the y-axis and that share a common third variable to define the x-axis.
+
+### Configuration
+
+The multiple line chart uses the same components as the [single line chart](/#/line-chart-single) and thus has the same configuration options.
+
+### Chart
 
 ``` project
 {
@@ -24,10 +30,14 @@
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 500
+        "height": 418
     }
 }
 ```
+
+## Usage example: Many years
+
+Observations for the same variable across many years.
 
 ``` project
 {
@@ -50,6 +60,9 @@
 }
 ```
 
+## Usage example: Three axis chart
+
+Comparison of two datasets with huge differences in values over the same time period by using two y-axes instead of just one.
 
 ``` project
 {

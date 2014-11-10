@@ -51,11 +51,11 @@
         .arrayBy(cAcc, d3.ascending)
         .apply(state.data);
 
-      // compute two different maximum y values - one for each axis
+      // Compute two different maximum y values - one for each axis
       state.axis1maxY = d3.max(state.data.filter(sszvis.fn.not(datumIsOnAxis2)), yAcc);
       state.axis2maxY = d3.max(state.data.filter(datumIsOnAxis2), yAcc);
 
-      // two different sets of categories for two color scales
+      // Two different sets of categories for two color scales
       state.categories1 = sszvis.fn.set(state.data.filter(sszvis.fn.not(datumIsOnAxis2)), cAcc);
       state.categories2 = sszvis.fn.set(state.data.filter(datumIsOnAxis2), cAcc);
 
@@ -123,9 +123,9 @@
       .y(function(d) {
         return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
       })
-      // called on the line as a whole - this function needs to access the first item in the line
+      // Access the first data point of the line to decide on the stroke color
       .stroke(function(lineData) {
-        var d = lineData[0];
+        var d = sszvis.fn.first(lineData);
         return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
       });
 
