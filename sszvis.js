@@ -1174,9 +1174,9 @@ namespace('sszvis.bounds', function(module) {
     bounds || (bounds = {});
     var padding = {
       top:    sszvis.fn.either(bounds.top, 0),
-      right:  sszvis.fn.either(bounds.right, 0),
+      right:  sszvis.fn.either(bounds.right, 1),
       bottom: sszvis.fn.either(bounds.bottom, 0),
-      left:   sszvis.fn.either(bounds.left, 0)
+      left:   sszvis.fn.either(bounds.left, 1)
     };
     var height  = sszvis.fn.either(bounds.height, 365 + padding.top + padding.bottom);
     var width   = sszvis.fn.either(bounds.width, 516);
