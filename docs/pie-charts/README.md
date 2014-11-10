@@ -8,17 +8,17 @@
 
 ## Examples
 
-### Pie Chart
+### Single Chart
 
 ```project
 {
     "name": "pie-chart-four-cat",
     "files": {
         "index.html": {
-            "source": "docs/pie-chart/four-cat.html",
+            "source": "docs/pie-charts/four-cat.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/pie-chart/data/P_subcategories.csv",
+        "data.csv": "docs/pie-charts/data/P_subcategories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -36,10 +36,10 @@
     "name": "pie-chart-twelve-cat",
     "files": {
         "index.html": {
-            "source": "docs/pie-chart/twelve-cat.html",
+            "source": "docs/pie-charts/twelve-cat.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/pie-chart/data/P_7Categories.csv",
+        "data.csv": "docs/pie-charts/data/P_7Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -52,3 +52,26 @@
 }
 ```
 
+### Multiple Charts
+
+```project
+{
+    "name": "pie-chart-multiples",
+    "readme": "docs/pie-charts/README.md",
+    "files": {
+        "index.html": {
+            "source": "docs/pie-charts/multiples.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/pie-charts/data/P_multiples.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 880,
+        "height": 680
+    }
+}
+```
