@@ -1,37 +1,35 @@
-# Einfache Liniendiagramme
+# Single line charts
 
-> Liniendiagramme eignen sich zur Darstellung eines funktionellen Zusammenhangs zwischen zwei Merkmalen.
-
-Liniendiagramme sollten nur verwendet werden, wenn genügend Datenpunkte vorhanden sind, da durch die Verbindung der Punkte der Eindruck vermittelt wird, dass es sich um kontinuierliche Daten handelt.
+> Line charts are suited to show a functional relation between two attributes.
 
 ## sszvis.component.line
 
-### Datenstruktur
+### Data structure
 
-Dieses Diagramm benötigt zwei Datenreihen, die einen Zusammenhang aufweisen.
+This chart requires two variables that can be put in relation to each other.
 
-### Konfiguration
+### Configuration
 
-Das Liniendiagramm benutzt intern [d3.svg.line](https://github.com/mbostock/d3/wiki/SVG-Shapes#line) und funktioniert analog dazu.
+Line charts use [d3.svg.line](https://github.com/mbostock/d3/wiki/SVG-Shapes#line) internally and work similarly.
 
 #### `line.x([x])`
 
-Zugriffsfunktion, um *x*-Werte aus den Daten zu lesen.
+Accessor function to read *x*-values from the data.
 
 #### `line.y([y])`
 
-Zugriffsfunktion, um *y*-Werte aus den Daten zu lesen.
+Accessor function to read *y*-values from the data.
 
 #### `line.stroke([stroke])`
 
-String oder Funktion um die Strichfarbe zu setzen (Standard: Schwarz)
+String or function to set the stroke color (default: black)
 
 #### `line.strokeWidth([width])`
 
-String oder Funktion um die Strichdicke zu setzen (Standard: 1)
+String or function to set the stroke thickness (default: 1)
 
 
-### Diagramm
+### Chart
 
 ```project
 {
@@ -54,9 +52,9 @@ String oder Funktion um die Strichdicke zu setzen (Standard: 1)
 }
 ```
 
-## Anwendungsbeispiel: Interaktion
+## Usage example: Interaction
 
-Basiert auf dem Standard-Diagramm, zeigt aber zusätzlich die Zahlenwerte an der Mausposition an.
+Based on the default chart. Additionally shows the numeric values at the current mouse position. The x-axis shows the current quarter (Q1–Q4).
 
 ```project
 {
@@ -79,9 +77,9 @@ Basiert auf dem Standard-Diagramm, zeigt aber zusätzlich die Zahlenwerte an der
 }
 ```
 
-## Anwendungsbeispiel: Anmerkungen
+## Usage example: Annotations
 
-Zeigt eine Anmerkung an einem bestimmten Datenpunkt. Die Zeitachse zeigt Tage mit Monatskürzel.
+Shows an annotation at a given position or data point. The time axis shows days with a short date.
 
 ```project
 {
@@ -104,9 +102,9 @@ Zeigt eine Anmerkung an einem bestimmten Datenpunkt. Die Zeitachse zeigt Tage mi
 }
 ```
 
-## Anwendungsbeispiel: Negative x-Werte
+## Usage example: Negative x-values
 
-Zeigt negative x-Werte.
+Shows how to use negative x-values.
 
 ```project
 {
@@ -129,9 +127,9 @@ Zeigt negative x-Werte.
 }
 ```
 
-## Anwendungsbeispiel: Negative y-Werte
+## Usage example: Negative y-values
 
-Zeigt negative y-Werte.
+Shows how to use negative y-values.
 
 ```project
 {
