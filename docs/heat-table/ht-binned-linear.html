@@ -80,8 +80,9 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 516, top: 60, right: 0, bottom: 140, left: 60 });
-    var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.g1List.length, state.g2List.length);
+    var squarePadding = 2;
+    var tableDimensions = sszvis.fn.heatTableDimensions(sszvis.bounds.SSZVIS_DEFAULT_WIDTH, squarePadding, state.g1List.length, state.g2List.length);
+    var bounds = sszvis.bounds({ width: 60 + tableDimensions.width + 20, left: 60, right: 20, height: 60 + tableDimensions.height + 140, top: 60, bottom: 140 });
 
 
     // Scales
@@ -193,11 +194,11 @@
 
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0, -10)')
+      .attr('transform', sszvis.fn.translateString(0, -10))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(-10, 0)')
+      .attr('transform', sszvis.fn.translateString(-10, 0))
       .call(yAxis);
 
     chartLayer.selectGroup('legend')

@@ -27,8 +27,10 @@ namespace('sszvis.bounds', function(module) {
       innerWidth:  width  - padding.left - padding.right,
       padding:     padding,
       height:      height,
-      width:       width,
+      width:       width
     };
   };
+
+  module.exports.SSZVIS_DEFAULT_WIDTH = 516;
 
 });

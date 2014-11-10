@@ -79,8 +79,9 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 360, top: 70, right: 0, bottom: 70, left: 120 });
-    var tableDimensions = sszvis.fn.heatTableDimensions(bounds.innerWidth, 2, state.manAgeList.length, state.womAgeList.length);
+    var squarePadding = 2;
+    var tableDimensions = sszvis.fn.heatTableDimensions(sszvis.bounds.SSZVIS_DEFAULT_WIDTH, squarePadding, state.manAgeList.length, state.womAgeList.length);
+    var bounds = sszvis.bounds({ width: 120 + tableDimensions.width + 10, left: 120, right: 10, height: 70 + tableDimensions.height + 70, top: 70, bottom: 70 });
 
 
     // Scales
@@ -172,11 +173,11 @@
 
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0, -10)')
+      .attr('transform', sszvis.fn.translateString(0, -10))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(-10, 0)')
+      .attr('transform', sszvis.fn.translateString(-10, 0))
       .call(yAxis);
 
     chartLayer.selectGroup('legend')
