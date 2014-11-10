@@ -1045,7 +1045,7 @@ namespace('sszvis.axis', function(module) {
         .ticks(3)
         .tickSize(4, 6)
         .tickPadding(6)
-        .tickFormat(sszvis.format.number);
+        .tickFormat(sszvis.fn.arity(1, sszvis.format.number));
     };
 
     axisX.time = function() {
