@@ -62,13 +62,13 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
           .attr('fill', 'none')
           .attr('stroke', 'none')
           .attr('visibility', 'none')
-          .attr('pointer-events', 'none')
           .attr('data-tooltip-anchor', '');
 
 
         // Update
 
         anchor
+          .style('pointer-events', 'none')
           .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
 
 
