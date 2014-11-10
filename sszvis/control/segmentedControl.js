@@ -18,9 +18,11 @@ namespace('sszvis.control.segmented', function(module) {
 
         var buttonWidth = props.width / props.values.length;
 
-        var container = selection.selectDiv('.ssvis-control--segmented');
+        var container = selection.selectDiv('segmentedControl');
 
-        container.style('width', props.width + 'px');
+        container
+          .classed('sszvis-control--segmented', true)
+          .style('width', props.width + 'px');
 
         var buttons = container.selectAll('.sszvis-control--segmentitem')
           .data(props.values);
