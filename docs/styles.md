@@ -197,9 +197,9 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
 ```html|plain
 <div style='position:relative;height:50px;'>
     <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip-content'>
-            <div class='sszvis-tooltip-header'>Example Header</div>
-            <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the top</div>
+        <div class='sszvis-tooltip__content'>
+            <div class='sszvis-tooltip__header'>Example Header</div>
+            <div class='sszvis-tooltip__body'>The tip of this tooltip points towards the top</div>
         </div>
         <div class='sszvis-tooltip-tipholder tip-top'>
             <div class='sszvis-tooltip-tip tip-top'></div>
@@ -211,9 +211,9 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
 ```html|plain
 <div style='position:relative;height:50px;'>
     <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip-content'>
-            <div class='sszvis-tooltip-header'>Example Header</div>
-            <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the bottom</div>
+        <div class='sszvis-tooltip__content'>
+            <div class='sszvis-tooltip__header'>Example Header</div>
+            <div class='sszvis-tooltip__body'>The tip of this tooltip points towards the bottom</div>
         </div>
         <div class='sszvis-tooltip-tipholder tip-bot'>
             <div class='sszvis-tooltip-tip tip-bot'></div>
@@ -225,9 +225,9 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
 ```html|plain
 <div style='position:relative;height:50px;'>
     <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip-content'>
-            <div class='sszvis-tooltip-header'>Example Header</div>
-            <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the left</div>
+        <div class='sszvis-tooltip__content'>
+            <div class='sszvis-tooltip__header'>Example Header</div>
+            <div class='sszvis-tooltip__body'>The tip of this tooltip points towards the left</div>
         </div>
         <div class='sszvis-tooltip-tipholder tip-left'>
             <div class='sszvis-tooltip-tip tip-left'></div>
@@ -239,9 +239,9 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
 ```html|plain
 <div style='position:relative;height:50px;'>
     <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip-content'>
-            <div class='sszvis-tooltip-header'>Example Header</div>
-            <div class='sszvis-tooltip-body'>The tip of this tooltip points towards the right</div>
+        <div class='sszvis-tooltip__content'>
+            <div class='sszvis-tooltip__header'>Example Header</div>
+            <div class='sszvis-tooltip__body'>The tip of this tooltip points towards the right</div>
         </div>
         <div class='sszvis-tooltip-tipholder tip-right'>
             <div class='sszvis-tooltip-tip tip-right'></div>

@@ -23,12 +23,12 @@ namespace('sszvis.component.rangeRuler', function(module) {
         var middleY = function(d) { return (props.y0(d) + props.y1(d)) / 2; };
         var dotRadius = 1.5;
 
-        var line = selection.selectAll('.sszvis-rangeRuler--rule')
+        var line = selection.selectAll('.sszvis-rangeRuler__rule')
           .data([1]);
 
         line.enter()
           .append('line')
-          .classed('sszvis-rangeRuler--rule', true);
+          .classed('sszvis-rangeRuler__rule', true);
 
         line.exit().remove();
 
@@ -47,23 +47,23 @@ namespace('sszvis.component.rangeRuler', function(module) {
 
         marks.exit().remove();
 
-        enteringMarks.append('circle').classed('sszvis-rangeRuler--p1', true);
-        enteringMarks.append('circle').classed('sszvis-rangeRuler--p2', true);
-        enteringMarks.append('text').classed('sszvis-rangeRuler--label', true);
+        enteringMarks.append('circle').classed('sszvis-rangeRuler__p1', true);
+        enteringMarks.append('circle').classed('sszvis-rangeRuler__p2', true);
+        enteringMarks.append('text').classed('sszvis-rangeRuler__label', true);
 
-        marks.selectAll('.sszvis-rangeRuler--p1')
+        marks.selectAll('.sszvis-rangeRuler__p1')
           .data(function(d) { return [d]; })
           .attr('cx', props.x)
           .attr('cy', props.y0)
           .attr('r', dotRadius);
 
-        marks.selectAll('.sszvis-rangeRuler--p2')
+        marks.selectAll('.sszvis-rangeRuler__p2')
           .data(function(d) { return [d]; })
           .attr('cx', props.x)
           .attr('cy', props.y1)
           .attr('r', dotRadius);
 
-        marks.selectAll('.sszvis-rangeRuler--label')
+        marks.selectAll('.sszvis-rangeRuler__label')
           .data(function(d) { return [d]; })
           .attr('x', function(d, i) {
             var offset = props.flip(d) ? -10 : 10;
@@ -75,12 +75,12 @@ namespace('sszvis.component.rangeRuler', function(module) {
           })
           .text(props.label);
 
-        var total = selection.selectAll('.sszvis-rangeRuler--total')
+        var total = selection.selectAll('.sszvis-rangeRuler__total')
           .data([sszvis.fn.last(data)]);
 
         total.enter()
           .append('text')
-          .classed('sszvis-rangeRuler--total', true);
+          .classed('sszvis-rangeRuler__total', true);
 
         total.exit().remove();
 

@@ -49,12 +49,12 @@ namespace('sszvis.component.dataAreaRectangle', function(module) {
           .attr('fill', 'url(#data-area-pattern)');
 
         if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-rectangle-caption')
+          var dataCaptions = selection.selectAll('.sszvis-data-area-rectangle__caption')
             .data(data);
 
           dataCaptions.enter()
             .append('text')
-            .classed('sszvis-data-area-rectangle-caption', true);
+            .classed('sszvis-data-area-rectangle__caption', true);
 
           dataCaptions
             .attr('x', function(d, i) {

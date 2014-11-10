@@ -60,7 +60,7 @@
   stroke-dasharray: 3 3;
 }
 
-.sszvis-reference-line--caption {
+.sszvis-reference-line__caption {
   alignment-baseline: baseline;
   fill: #7C7C7C;
   font-family: Arial, sans-serif;
@@ -73,7 +73,7 @@
  *
  * @module sszvis/component/dataAreaCircle
  */
-.sszvis-data-area-circle-caption {
+.sszvis-data-area-circle__caption {
   alignment-baseline: middle;
   fill: #7C7C7C;
   font-family: Arial, sans-serif;
@@ -86,7 +86,7 @@
  *
  * @module sszvis/component/dataAreaRectangle
  */
-.sszvis-data-area-rectangle-caption {
+.sszvis-data-area-rectangle__caption {
   alignment-baseline: middle;
   fill: #7C7C7C;
   font-family: Arial, sans-serif;
@@ -99,7 +99,7 @@
  *
  * @module sszvis/legend/color
  */
-.sszvis-legend--label {
+.sszvis-legend__label {
   font-family: Arial, sans-serif;
   fill: #909090;
   font-size: 12px;
@@ -141,11 +141,11 @@
  *
  * @module sszvis/map
  */
-.sszvis-map-area {
+.sszvis-map__area {
   stroke: none;
 }
 
-.sszvis-map-border {
+.sszvis-map__border {
   fill: none;
   stroke: #fff;
   stroke-width: 1.25;
@@ -156,7 +156,7 @@
  *
  * @module sszvis/control/segmented
  */
-.sszvis-control--segmented {
+.sszvis-segmented-control {
   display: inline-block;
   position: absolute;
   user-select: none;
@@ -165,7 +165,7 @@
   -ms-user-select: none;
 }
 
-.sszvis-control--segmentitem {
+.sszvis-segmented-control__item {
   background-color: #FFFFFF;
   border: 1px solid #7C7C7C;
   border-left: none;
@@ -180,18 +180,18 @@
   vertical-align: middle;
 }
 
-.sszvis-control--segmentitem.selected {
+.sszvis-segmented-control__item.selected {
   background-color: #B8B8B8;
   color: #FFFFFF;
 }
 
-.sszvis-control--segmentitem:first-child {
+.sszvis-segmented-control__item:first-child {
   border-left: 1px solid #7C7C7C;
   border-top-left-radius: 3px;
   border-bottom-left-radius: 3px;
 }
 
-.sszvis-control--segmentitem:last-child {
+.sszvis-segmented-control__item:last-child {
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px;
 }
@@ -201,25 +201,25 @@
  *
  * @module sszvis/control/slideBar
  */
-.sszvis-slider-line {
+.sszvis-slider__line {
   stroke: #CCCCCC;
 }
 
-.sszvis-slider-handle {
+.sszvis-slider__handle {
   fill: #fff;
   stroke: #808184;
 }
 
-.sszvis-slider-handleMark {
+.sszvis-slider__handle-mark {
   stroke: #A6A8AB;
 }
 
-.sszvis-slider-dot {
+.sszvis-slider__dot {
   stroke: #fff;
   stroke-width: 1;
 }
 
-.sszvis-slider-label {
+.sszvis-slider__label {
   fill: #545454;
   font-family: Arial, sans-serif;
   font-size: 12px;
@@ -233,17 +233,17 @@
  *
  * @module sszvis/component/ruler
  */
-.sszvis-ruler-rule {
+.sszvis-ruler__rule {
   shape-rendering: crispEdges;
   stroke: #B8B8B8;
 }
 
-.sszvis-ruler-dot {
+.sszvis-ruler__dot {
   stroke: #FFFFFF;
   stroke-width: 1.5;
 }
 
-.sszvis-ruler-label {
+.sszvis-ruler__label {
   fill: #545454;
   font-family: Arial, sans-serif;
   font-size: 12px;
@@ -257,15 +257,15 @@
  *
  * @module sszvis/component/rangeRuler
  */
-.sszvis-rangeRuler--rule {
+.sszvis-rangeRuler__rule {
   stroke: #555;
 }
 
-.sszvis-rangeRuler--p1, .sszvis-rangeRuler--p2 {
+.sszvis-rangeRuler__p1, .sszvis-rangeRuler__p2 {
   fill: #555;
 }
 
-.sszvis-rangeRuler--label, .sszvis-rangeRuler--total {
+.sszvis-rangeRuler__label, .sszvis-rangeRuler__total {
   font-size: 10px;
   fill: #545454;
   font-family: Arial, sans-serif;
@@ -282,15 +282,15 @@
   position: absolute;
 }
 
-.sszvis-tooltip-background {
+.sszvis-tooltip__background {
   position: absolute;
 }
 
-.sszvis-tooltip-background path {
+.sszvis-tooltip__background path {
   fill: rgba(255, 255, 255, 0.9);
 }
 
-.sszvis-tooltip-content {
+.sszvis-tooltip__content {
   font-family: Arial;
   padding: 10px 10px 7px 10px;
   position: relative;
@@ -298,27 +298,27 @@
   z-index: 1;
 }
 
-.sszvis-tooltip-content strong {
+.sszvis-tooltip__content strong {
   font-weight: bold;
 }
 
-.sszvis-tooltip-content em {
+.sszvis-tooltip__content em {
   font-weight: bold;
 }
 
-.sszvis-tooltip-header {
+.sszvis-tooltip__header {
   color: #545454;
   font-size: 12px;
   line-height: 1.3333;
 }
 
-.sszvis-tooltip-body {
+.sszvis-tooltip__body {
   color: #7C7C7C;
   font-size: 11px;
   line-height: 1.4545;
 }
 
-.sszvis-tooltip--centered .sszvis-tooltip-content {
+.sszvis-tooltip--centered .sszvis-tooltip__content {
   padding: 6px 10px 4px 10px;
   text-align: center;
 }

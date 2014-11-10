@@ -21,15 +21,15 @@ namespace('sszvis.control.segmented', function(module) {
         var container = selection.selectDiv('segmentedControl');
 
         container
-          .classed('sszvis-control--segmented', true)
+          .classed('sszvis-segmented-control', true)
           .style('width', props.width + 'px');
 
-        var buttons = container.selectAll('.sszvis-control--segmentitem')
+        var buttons = container.selectAll('.sszvis-segmented-control__item')
           .data(props.values);
 
         buttons.enter()
           .append('div')
-          .classed('sszvis-control--segmentitem', true);
+          .classed('sszvis-segmented-control__item', true);
 
         buttons.exit().remove();
 

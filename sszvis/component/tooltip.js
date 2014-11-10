@@ -98,7 +98,7 @@ namespace('sszvis.component.tooltip', function(module) {
         // Enter: tooltip background
 
         var enterBackground = enterTooltip.append('svg')
-          .attr('class', 'sszvis-tooltip-background')
+          .attr('class', 'sszvis-tooltip__background')
           .attr('height', 0)
           .attr('width', 0);
 
@@ -134,22 +134,22 @@ namespace('sszvis.component.tooltip', function(module) {
         // Enter: tooltip content
 
         var enterContent = enterTooltip.append('div')
-          .classed('sszvis-tooltip-content', true);
+          .classed('sszvis-tooltip__content', true);
 
         enterContent.append('div')
-          .classed('sszvis-tooltip-header', true);
+          .classed('sszvis-tooltip__header', true);
 
         enterContent.append('div')
-          .classed('sszvis-tooltip-body', true);
+          .classed('sszvis-tooltip__body', true);
 
 
         // Update: content
 
-        tooltip.select('.sszvis-tooltip-header')
+        tooltip.select('.sszvis-tooltip__header')
           .datum(sszvis.fn.prop('datum'))
           .html(props.header);
 
-        tooltip.select('.sszvis-tooltip-body')
+        tooltip.select('.sszvis-tooltip__body')
           .datum(sszvis.fn.prop('datum'))
           .html(props.body);
 
@@ -195,7 +195,7 @@ namespace('sszvis.component.tooltip', function(module) {
 
             var bgHeight = dimensions.height + 2 * BLUR_PADDING;
             var bgWidth =  dimensions.width  + 2 * BLUR_PADDING;
-            tip.select('.sszvis-tooltip-background')
+            tip.select('.sszvis-tooltip__background')
               .attr('height', bgHeight)
               .attr('width',  bgWidth)
               .style('left', -BLUR_PADDING + 'px')

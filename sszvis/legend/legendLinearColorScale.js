@@ -69,12 +69,12 @@ namespace('sszvis.legend.linearColorScale', function(module) {
 
         if (props.units) startEnd[1] += ' ' + props.units;
 
-        var labels = selection.selectAll('.sszvis-legend--label')
+        var labels = selection.selectAll('.sszvis-legend__label')
           .data(startEnd);
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend--label', true);
+          .classed('sszvis-legend__label', true);
 
         labels.exit().remove();
 

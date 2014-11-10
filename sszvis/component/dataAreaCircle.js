@@ -46,12 +46,12 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
           .attr('fill', 'url(#data-area-pattern)');
 
         if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-circle-caption')
+          var dataCaptions = selection.selectAll('.sszvis-data-area-circle__caption')
             .data(data);
 
           dataCaptions.enter()
             .append('text')
-            .classed('sszvis-data-area-circle-caption', true);
+            .classed('sszvis-data-area-circle__caption', true);
 
           dataCaptions
             .attr('x', props.x)

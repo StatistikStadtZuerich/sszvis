@@ -55,12 +55,12 @@ namespace('sszvis.legend.radius', function(module) {
           .attr('stroke', '#909090')
           .attr('stroke-dasharray', '3 2');
 
-        var labels = selection.selectAll('text.sszvis-legend--label')
+        var labels = selection.selectAll('text.sszvis-legend__label')
           .data(points);
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend--label', true);
+          .classed('sszvis-legend__label', true);
 
         labels.exit().remove();
 
