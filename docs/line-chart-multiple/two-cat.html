@@ -53,10 +53,10 @@
     },
 
     changeDate: function(inputDate) {
-      var closestDatum = xAcc(findClosest(state.data, xAcc, inputDate));
+      var closest = xAcc(closestDatum(state.data, xAcc, inputDate));
       var closestData = state.lineData.map(function(stack) {
         return stack.filter(function(d) {
-          return xAcc(d).toString() === closestDatum.toString();
+          return xAcc(d).toString() === closest.toString();
         })[0];
       });
 
@@ -96,7 +96,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 40, bottom: 80 });
+    var bounds = sszvis.bounds({ top: 3, bottom: 50 });
 
 
     // Scales
@@ -127,10 +127,8 @@
     var line = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
-      // FIXME: this is a slightly awkward construction because the component needs to access the first
-      // element of the line in order to calculate the color of the line. Maybe the component itself
-      // should pass the first element of the line to props.stroke instead
-      .stroke(sszvis.fn.compose(cScale, cAcc, function(d) { return d[0]; }));
+      // Access the first data point of the line to decide on the stroke color
+      .stroke(sszvis.fn.compose(cScale, cAcc, sszvis.fn.first));
 
     var xTickValues = xScale.ticks(5).concat(state.highlightData.map(xAcc));
 
@@ -153,7 +151,7 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .label(function(d) {
-        return sszvis.format.number(yAcc(d)) + ' Wert';
+        return sszvis.format.number(yAcc(d)) + ' ' + cAcc(d);
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
@@ -203,7 +201,7 @@
   /* Helper functions
   ----------------------------------------------- */
 
-  function findClosest(data, accessor, datum) {
+  function closestDatum(data, accessor, datum) {
     var i = d3.bisector(accessor).left(data, datum, 1);
     var d0 = data[i - 1];
     var d1 = data[i] || d0;

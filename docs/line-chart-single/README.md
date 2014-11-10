@@ -1,4 +1,4 @@
-# Single line charts
+# Single line chart
 
 > Line charts are suited to show a functional relation between two attributes.
 
