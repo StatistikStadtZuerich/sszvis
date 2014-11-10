@@ -118,7 +118,10 @@
 
     // Layers
 
-    var chart = sszvis.createChart('#sszvis-chart', bounds)
+    var chart = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: 'Diagrammtitel',
+        description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+      })
       .datum(state.pieGroups);
 
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart');
