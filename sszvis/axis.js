@@ -8,6 +8,7 @@ namespace('sszvis.axis', function(module) {
 'use strict';
 
   var TICK_PROXIMITY_THRESHOLD = 8;
+  var TICK_END_THRESHOLD = 12;
 
   module.exports = (function() {
 
@@ -84,7 +85,7 @@ namespace('sszvis.axis', function(module) {
             .each(function(d) {
               var pos = axisScale(d);
               d3.select(this)
-                .classed('hidden', Math.abs(pos - rangeExtent[0]) < TICK_PROXIMITY_THRESHOLD || Math.abs(pos - rangeExtent[1]) < TICK_PROXIMITY_THRESHOLD);
+                .classed('hidden', absDistance(pos, rangeExtent[0]) < TICK_PROXIMITY_THRESHOLD || absDistance(pos, rangeExtent[1]) < TICK_PROXIMITY_THRESHOLD);
             });
 
           if (props.highlight) {
@@ -111,7 +112,7 @@ namespace('sszvis.axis', function(module) {
 
                 var position = axisScale(d);
                 var isTooClose = highlightPositions.reduce(function(tooClose, highlightPos) {
-                  return tooClose || Math.abs(position - highlightPos) < props.highlightBoundary;
+                  return tooClose || absDistance(position, highlightPos) < props.highlightBoundary;
                 }, false);
                 selection.classed('hidden', isTooClose);
               });
@@ -145,15 +146,16 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = d3.extent(axisScale.domain());
+            var extent = scaleRange(axisScale);
             var min = extent[0];
             var max = extent[1];
 
             group.selectAll('g.tick text')
               .style('text-anchor', function(d) {
-                if (stringEqual(d, min)) {
+                var value = axisScale(d);
+                if (absDistance(value, min) < TICK_END_THRESHOLD) {
                   return 'start';
-                } else if (stringEqual(d, max)) {
+                } else if (absDistance(value, max) < TICK_END_THRESHOLD) {
                   return 'end';
                 }
                 return 'middle';
@@ -320,6 +322,10 @@ namespace('sszvis.axis', function(module) {
 
   function scaleRange(scale) { // borrowed from d3 source - svg.axis
     return scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range());
+  }
+
+  function absDistance(a, b) {
+    return Math.abs(a - b);
   }
 
   var slantLabel = {
