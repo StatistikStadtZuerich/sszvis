@@ -1795,7 +1795,7 @@ namespace('sszvis.patterns', function(module) {
 
   module.exports.ensureDefs = function(selection) {
     var defs = selection.selectAll('defs')
-      .data([1]);
+      .data([0]);
 
     defs.enter()
       .append('defs');
@@ -1806,7 +1806,7 @@ namespace('sszvis.patterns', function(module) {
   module.exports.ensurePattern = function(selection, patternId) {
     var pattern = sszvis.patterns.ensureDefs(selection)
       .selectAll('pattern#' + patternId)
-      .data([1])
+      .data([0])
       .enter()
       .append('pattern')
       .attr('id', patternId);
@@ -2339,7 +2339,7 @@ namespace('sszvis.control.slideBar', function(module) {
         var handleTop = top - handleHeight;
 
         var group = selection.selectAll('.sszvis-slider-group')
-          .data([1]);
+          .data([0]);
 
         var entering = group.enter()
           .append('g')
@@ -2634,7 +2634,7 @@ namespace('sszvis.component.dataAreaLine', function(module) {
 
         if (props.caption) {
           var caption = selection.selectAll('.sszvis-reference-line__caption')
-            .data([1]);
+            .data([0]);
 
           caption.enter()
             .append('text')
@@ -3359,7 +3359,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
         var dotRadius = 1.5;
 
         var line = selection.selectAll('.sszvis-rangeRuler__rule')
-          .data([1]);
+          .data([0]);
 
         line.enter()
           .append('line')

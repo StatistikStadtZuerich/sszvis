@@ -6,7 +6,7 @@ namespace('sszvis.patterns', function(module) {
 
   module.exports.ensureDefs = function(selection) {
     var defs = selection.selectAll('defs')
-      .data([1]);
+      .data([0]);
 
     defs.enter()
       .append('defs');
@@ -17,7 +17,7 @@ namespace('sszvis.patterns', function(module) {
   module.exports.ensurePattern = function(selection, patternId) {
     var pattern = sszvis.patterns.ensureDefs(selection)
       .selectAll('pattern#' + patternId)
-      .data([1])
+      .data([0])
       .enter()
       .append('pattern')
       .attr('id', patternId);
