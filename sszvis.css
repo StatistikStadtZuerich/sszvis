@@ -287,6 +287,11 @@
   fill: rgba(255, 255, 255, 0.9);
 }
 
+.sszvis-tooltip__background.sszvis-tooltip__background--fallback path {
+  stroke: #ddd;
+  stroke-width: 1;
+}
+
 .sszvis-tooltip__content {
   font-family: Arial;
   padding: 10px 10px 7px 10px;
