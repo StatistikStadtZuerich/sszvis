@@ -104,7 +104,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 880, height: 680, top: 60, right: 60, bottom: 140, left: 60 });
+    var bounds = sszvis.bounds({ width: 516, height: 880, top: 40, right: 40, bottom: 140, left: 40 });
 
 
     // Scales
@@ -133,15 +133,16 @@
     var multiplesMaker = sszvis.component.multiples()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .paddingX(20)
-      .paddingY(40)
-      .rows(2)
-      .cols(3);
+      .paddingX(30)
+      .paddingY(30)
+      .rows(3)
+      .cols(2);
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
-      .columnWidth(bounds.innerWidth / 3)
-      .orientation('vertical');
+      .columnWidth(bounds.innerWidth / 2)
+      .columns(2)
+      .orientation('horizontal');
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
@@ -176,7 +177,7 @@
       .call(tooltip);
 
     chart.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 40) + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 25))
       .call(colorLegend);
 
 

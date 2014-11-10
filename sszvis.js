@@ -4584,10 +4584,10 @@ namespace('sszvis.legend.color', function(module) {
 
         var rows, cols;
         if (props.orientation === 'horizontal') {
-          cols = props.columns;
+          cols = Math.ceil(props.columns);
           rows = Math.ceil(domain.length / cols);
         } else if (props.orientation === 'vertical') {
-          rows = props.rows;
+          rows = Math.ceil(props.rows);
           cols = Math.ceil(domain.length / rows);
         }
 
