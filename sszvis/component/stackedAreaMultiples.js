@@ -29,7 +29,8 @@ namespace('sszvis.component.stacked.areaMultiples', function(module) {
 
         paths.enter()
           .append('path')
-          .classed('sszvis-path', true);
+          .classed('sszvis-path', true)
+          .attr('fill', props.fill);
 
         paths.exit().remove();
 
