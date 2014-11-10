@@ -56,7 +56,7 @@
   d3.csv('data/ML_months_8Categories_superposition_missing.csv')
     .row(function(d) {
       return {
-        month: d['Monat'],
+        month: parseInt(d['Monat'], 10),
         value: sszvis.parse.number(d['Wert']),
         year: d['Jahr']
       };
@@ -111,7 +111,8 @@
 
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
-      .orient('bottom');
+      .orient('bottom')
+      .tickFormat(monthName);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
@@ -141,6 +142,16 @@
       .attr('transform', 'translate(1, ' + (bounds.innerHeight + 30) + ')')
       .call(cLegend);
   }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+
+  function monthName(month) {
+    var date = new Date(null, month - 1);
+    return d3.time.format('%b')(date);
+  }
+
 
 }(d3, sszvis));
 </script>
