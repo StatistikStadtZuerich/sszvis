@@ -255,6 +255,7 @@
  */
 .sszvis-rangeRuler__rule {
   stroke: #555;
+  shape-rendering: crispEdges;
 }
 
 .sszvis-rangeRuler__p1, .sszvis-rangeRuler__p2 {
