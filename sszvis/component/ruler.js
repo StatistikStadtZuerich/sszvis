@@ -38,9 +38,13 @@ namespace('sszvis.component.ruler', function(module) {
           .classed('sszvis-ruler__rule', true);
 
         ruler
-          .attr('x1', props.x)
+          .attr('x1', function() {
+            return Math.floor(props.x.apply(this, arguments)) + 0.5;
+          })
           .attr('y1', props.y)
-          .attr('x2', props.x)
+          .attr('x2', function() {
+            return Math.floor(props.x.apply(this, arguments)) + 0.5;
+          })
           .attr('y2', props.bottom);
 
         ruler.exit().remove();
