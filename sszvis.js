@@ -1494,7 +1494,7 @@ namespace('sszvis.createChart', function(module) {
     var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0])
     viewport.enter().append('g')
       .attr('data-sszvis-svg-layer', '')
-      .attr('transform', 'translate(' + bounds.padding.left + ',' + bounds.padding.top + ')');
+      .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
     return viewport;
   }
@@ -3086,13 +3086,14 @@ namespace('sszvis.component.multiples', function(module) {
             return d;
           })
           .attr('transform', function(d, i) {
-            return 'translate(' + d.gx + ',' + d.gy + ')';
+            return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
           });
 
       });
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -3132,7 +3133,7 @@ namespace('sszvis.component.pie', function(module) {
         segments.enter()
           .append('path')
           .classed('sszvis-path', true)
-          .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
+          .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
 
@@ -3141,7 +3142,7 @@ namespace('sszvis.component.pie', function(module) {
         segments
           .transition()
           .call(sszvis.transition)
-          .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
+          .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
           .attr('d', arcGen)
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);

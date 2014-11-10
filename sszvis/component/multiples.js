@@ -51,7 +51,7 @@ namespace('sszvis.component.multiples', function(module) {
             return d;
           })
           .attr('transform', function(d, i) {
-            return 'translate(' + d.gx + ',' + d.gy + ')';
+            return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
           });
 
       });

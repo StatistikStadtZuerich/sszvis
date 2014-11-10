@@ -128,7 +128,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(' + (bounds.innerWidth + 40) + ', 85)') // FIXME: how to center legend vertically?
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth + 40, 85)) // FIXME: how to center legend vertically?
       .call(colorLegend);
 
 

@@ -33,7 +33,7 @@ namespace('sszvis.component.pie', function(module) {
         segments.enter()
           .append('path')
           .classed('sszvis-path', true)
-          .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
+          .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
 
@@ -42,7 +42,7 @@ namespace('sszvis.component.pie', function(module) {
         segments
           .transition()
           .call(sszvis.transition)
-          .attr('transform', 'translate(' + props.radius + ',' + props.radius + ')')
+          .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
           .attr('d', arcGen)
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
