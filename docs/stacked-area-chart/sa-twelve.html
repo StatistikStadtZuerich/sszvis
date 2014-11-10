@@ -203,14 +203,17 @@
         return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
       });
 
+    var tooltipText = sszvis.component.modularText()
+      .bold(yAcc)
+      .plain(cAcc);
+
     var rangeTooltip = sszvis.component.tooltip()
-        .header(function(d) {
-          return yAcc(d).toString();
-        })
+        .header(tooltipText)
         .orientation(function(d) {
           return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? 'right' : 'left';
         })
         .renderInto(htmlLayer)
+        .centered(true)
         .visible(true);
 
     var rangeFlag = sszvis.component.rangeFlag()

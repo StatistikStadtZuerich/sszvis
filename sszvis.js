@@ -4100,7 +4100,9 @@ namespace('sszvis.component.tooltip', function(module) {
         // Enter: tooltip
 
         var enterTooltip = tooltip.enter()
-          .append('div')
+          .append('div');
+
+        tooltip
           .style('pointer-events', 'none')
           .style('padding-top', function(d) {
             return (props.orientation(d) === 'top') ? TIP_SIZE + 'px' : null;
