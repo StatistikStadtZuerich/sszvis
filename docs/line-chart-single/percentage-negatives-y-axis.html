@@ -41,10 +41,6 @@
       state.yRange = d3.extent(state.data, yAcc);
       state.lineData = [state.data];
 
-      // Add a bit of padding to prevent the y-axis value from touching the x-axis
-      // NOTE what is that really for? It looks somehow not very elegant. 
-      state.yRange[0] = state.yRange[0] - 0.2;
-
       render(state);
     }
   };
@@ -118,7 +114,9 @@
       .call(line);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 2))
+      // Add a bit of additional bottom padding to prevent the y-axis value from
+      // touching the x-axis
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 2 + 5))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
