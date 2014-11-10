@@ -1,5 +1,19 @@
 /**
  * Pie component
+ *
+ * The pie component is used to draw pie charts. It uses the d3.svg.arc() generator
+ * to create pie wedges.
+ *
+ * THe input data should be an array of data values, where each data value represents one wedge in the pie.
+ *
+ * @property {number} radius                  The radius of the pie chart (no default)
+ * @property {string, function} fill          a fill color for wedges in the pie (default black). Ideally a function
+ *                                            which takes a data value.
+ * @property {string, function} stroke        the stroke color for wedges in the pie (default none)
+ * @property {string, function} angle         specifys the angle of the wedges in radians. Theoretically this could be
+ *                                            a constant, but that would make for a very strange pie. Ideally, this
+ *                                            is a function which takes a data value and returns the angle in radians.
+ *
  * @return {d3.component}
 */
 namespace('sszvis.component.pie', function(module) {
@@ -9,7 +23,7 @@ namespace('sszvis.component.pie', function(module) {
       .prop('radius')
       .prop('fill')
       .prop('stroke')
-      .prop('angle')
+      .prop('angle', d3.functor)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
