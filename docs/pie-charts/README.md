@@ -70,8 +70,8 @@
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "width": 880,
-        "height": 680
+        "width": 516,
+        "height": 880
     }
 }
 ```
