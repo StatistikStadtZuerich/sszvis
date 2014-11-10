@@ -4048,6 +4048,7 @@ namespace('sszvis.component.tooltip', function(module) {
       .delegate('orientation', renderer)
       .delegate('dx', renderer)
       .delegate('dy', renderer)
+      .delegate('opacity', renderer)
       .prop('renderInto')
       .prop('visible', d3.functor).visible(false)
       .renderSelection(function(selection) {
@@ -4084,6 +4085,7 @@ namespace('sszvis.component.tooltip', function(module) {
       .prop('orientation', d3.functor).orientation('bottom')
       .prop('dx').dx(1)
       .prop('dy').dy(1)
+      .prop('opacity', d3.functor).opacity(1)
       .renderSelection(function(selection) {
         var tooltipData = selection.datum();
         var props = selection.props();
@@ -4104,6 +4106,7 @@ namespace('sszvis.component.tooltip', function(module) {
 
         tooltip
           .style('pointer-events', 'none')
+          .style('opacity', props.opacity)
           .style('padding-top', function(d) {
             return (props.orientation(d) === 'top') ? TIP_SIZE + 'px' : null;
           })

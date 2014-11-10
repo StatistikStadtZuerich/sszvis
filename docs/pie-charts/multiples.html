@@ -31,6 +31,7 @@
     totalValues: {},
     pieGroups: [],
     categories: [],
+    hoveredData: {},
     selection: [],
     selectedCategories: []
   };
@@ -64,6 +65,7 @@
     },
 
     showTooltip: function(datum) {
+      state.hoveredData = datum;
       state.selection = state.data.filter(function(d) {
         return datum.category === d.category;
       });
@@ -72,6 +74,7 @@
     },
 
     hideTooltip: function() {
+      state.hoveredData = {};
       state.selection = [];
       state.selectedCategories = [];
       render(state);
@@ -144,6 +147,9 @@
       .renderInto(tooltipLayer)
       .header(sszvis.fn.prop('category'))
       .body(function(d){ return 'Anzahl: ' + d.value; })
+      .opacity(function(d, i) {
+        return d.datum === state.hoveredData ? 1 : 0.75;
+      })
       .visible(isSelected);
 
 
