@@ -4163,34 +4163,38 @@ namespace('sszvis.component.tooltip', function(module) {
           .attr('height', 0)
           .attr('width', 0);
 
-        var filter = enterBackground.append('defs')
-          .append('filter')
-          .attr('id', 'sszvis-tooltip-shadow-filter')
-          .attr('height', '150%');
+        var enterBackgroundPath = enterBackground.append('path');
 
-        filter.append('feGaussianBlur')
-          .attr('in', 'SourceAlpha')
-          .attr('stdDeviation', 2);
+        if (supportsSVGFilters()) {
+          var filter = enterBackground.append('defs')
+            .append('filter')
+            .attr('id', 'sszvis-tooltip-shadow-filter')
+            .attr('height', '150%');
 
-        filter.append('feComponentTransfer')
-          .append('feFuncA')
-          .attr('type', 'linear')
-          .attr('slope', 0.2);
+          filter.append('feGaussianBlur')
+            .attr('in', 'SourceAlpha')
+            .attr('stdDeviation', 2);
 
-        filter.append('feOffset')
-          .attr('dx', 0)
-          .attr('dy', 0)
-          .attr('result', 'offsetblur');
+          filter.append('feComponentTransfer')
+            .append('feFuncA')
+            .attr('type', 'linear')
+            .attr('slope', 0.2);
 
-        var merge = filter.append('feMerge');
-        merge.append('feMergeNode')
-          .attr('in', 'offsetblur'); // Contains the blurred image
-        merge.append('feMergeNode')  // Contains the element that the filter is applied to
-          .attr('in', 'SourceGraphic');
+          filter.append('feOffset')
+            .attr('dx', 0)
+            .attr('dy', 0)
+            .attr('result', 'offsetblur');
 
-        enterBackground.append('path')
-          .style('filter', 'url(#sszvis-tooltip-shadow-filter)');
-
+          var merge = filter.append('feMerge');
+          merge.append('feMergeNode')
+            .attr('in', 'offsetblur'); // Contains the blurred image
+          merge.append('feMergeNode')  // Contains the element that the filter is applied to
+            .attr('in', 'SourceGraphic');
+          enterBackgroundPath
+            .style('filter', 'url(#sszvis-tooltip-shadow-filter)');
+        } else {
+          enterBackground.classed('sszvis-tooltip__background--fallback', true);
+        }
 
         // Enter: tooltip content
 
@@ -4366,6 +4370,15 @@ namespace('sszvis.component.tooltip', function(module) {
       // Left side
       side(x(a), y(b), x(a), y(b) - RADIUS, x(a), y(a) + RADIUS, (orientation === 'left'))
     ].map(function(d){ return d.join(' '); }).join(' ');
+  }
+
+
+  /**
+   * Detect whether the current browser supports SVG filters
+   */
+  function supportsSVGFilters() {
+    return window['SVGFEColorMatrixElement'] !== undefined &&
+           SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE == 2;
   }
 
 });
