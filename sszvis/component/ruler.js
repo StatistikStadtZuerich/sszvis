@@ -30,12 +30,12 @@ namespace('sszvis.component.ruler', function(module) {
         // this generates multiple lines. When the lines overlap in the same place, they're redundant,
         // when they show up in separate places, this is a potentially useful, but surprising and undocumented
         // feature. Perhaps this behavior should be either documented or removed.
-        var ruler = selection.selectAll('.sszvis-ruler-rule')
+        var ruler = selection.selectAll('.sszvis-ruler__rule')
           .data(data, key);
 
         ruler.enter()
           .append('line')
-          .classed('sszvis-ruler-rule', true);
+          .classed('sszvis-ruler__rule', true);
 
         ruler
           .attr('x1', props.x)
@@ -45,12 +45,12 @@ namespace('sszvis.component.ruler', function(module) {
 
         ruler.exit().remove();
 
-        var dot = selection.selectAll('.sszvis-ruler-dot')
+        var dot = selection.selectAll('.sszvis-ruler__dot')
           .data(data, key);
 
         dot.enter()
           .append('circle')
-          .classed('sszvis-ruler-dot', true);
+          .classed('sszvis-ruler__dot', true);
 
         dot
           .attr('cx', props.x)
@@ -60,12 +60,12 @@ namespace('sszvis.component.ruler', function(module) {
 
         dot.exit().remove();
 
-        var label = selection.selectAll('.sszvis-ruler-label')
+        var label = selection.selectAll('.sszvis-ruler__label')
           .data(data, key);
 
         label.enter()
           .append('text')
-          .classed('sszvis-ruler-label', true);
+          .classed('sszvis-ruler__label', true);
 
         label
           .attr('x', props.x)

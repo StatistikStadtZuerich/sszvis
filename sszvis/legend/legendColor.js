@@ -63,12 +63,12 @@ namespace('sszvis.legend.color', function(module) {
           .attr('r', 6)
           .attr('fill', function(d) { return props.scale(d); });
 
-        var labels = groups.selectAll('.sszvis-legend--label')
+        var labels = groups.selectAll('.sszvis-legend__label')
           .data(function(d) { return [d]; });
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend--label', true);
+          .classed('sszvis-legend__label', true);
 
         labels.exit().remove();
 

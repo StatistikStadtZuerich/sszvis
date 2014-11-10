@@ -44,23 +44,23 @@ namespace('sszvis.control.slideBar', function(module) {
 
         entering
           .append('line')
-          .classed('sszvis-slider-line', true);
+          .classed('sszvis-slider__line', true);
 
         entering
           .append('rect')
-          .classed('sszvis-slider-handle', true);
+          .classed('sszvis-slider__handle', true);
 
         entering
           .append('line')
-          .classed('sszvis-slider-handleMark', true);
+          .classed('sszvis-slider__handle-mark', true);
 
-        group.selectAll('.sszvis-slider-line')
+        group.selectAll('.sszvis-slider__line')
           .attr('x1', xPos)
           .attr('y1', top)
           .attr('x2', xPos)
           .attr('y2', bottom);
 
-        group.selectAll('.sszvis-slider-handle')
+        group.selectAll('.sszvis-slider__handle')
           .attr('x', xPos - handleWidth / 2)
           .attr('y', handleTop)
           .attr('width', handleWidth)
@@ -68,18 +68,18 @@ namespace('sszvis.control.slideBar', function(module) {
           .attr('rx', 2)
           .attr('ry', 2);
 
-        group.selectAll('.sszvis-slider-handleMark')
+        group.selectAll('.sszvis-slider__handle-mark')
           .attr('x1', xPos)
           .attr('y1', handleTop + handleHeight * 0.15)
           .attr('x2', xPos)
           .attr('y2', handleTop + handleHeight * 0.85);
 
-        var dots = group.selectAll('.sszvis-slider-dot')
+        var dots = group.selectAll('.sszvis-slider__dot')
           .data(data);
 
         dots.enter()
           .append('circle')
-          .classed('sszvis-slider-dot', true);
+          .classed('sszvis-slider__dot', true);
 
         dots.exit().remove();
 
@@ -89,12 +89,12 @@ namespace('sszvis.control.slideBar', function(module) {
           .attr('r', 3.5)
           .attr('fill', props.color);
 
-        var captions = group.selectAll('.sszvis-slider-label')
+        var captions = group.selectAll('.sszvis-slider__label')
           .data(data);
 
         captions.enter()
           .append('text')
-          .classed('sszvis-slider-label', true);
+          .classed('sszvis-slider__label', true);
 
         captions.exit().remove();
 

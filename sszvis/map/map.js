@@ -38,31 +38,31 @@ namespace('sszvis.map', function(module) {
   var COMPILED_MAPS = {
     compiled: false,
     zurich: {},
-    zurich_mesh: {},
-    switzerland_geo: {},
-    switzerland_mesh: {}
+    zurichMesh: {},
+    switzerlandGeo: {},
+    switzerlandMesh: {}
   };
 
-  function compile_maps() {
+  function compileMaps() {
     if (COMPILED_MAPS.compiled) return true;
 
-    var zuri_names = ['stadtkreise_geo', 'statistische_quartiere_geo', 'wahlkreise_geo'],
-        zuri_topology = sszvis.mapdata.zurich,
-        zuri_objects = zuri_topology.objects;
+    var zurichNames = ['stadtkreise_geo', 'statistische_quartiere_geo', 'wahlkreise_geo'],
+        zurichTopology = sszvis.mapdata.zurich,
+        zurichObjects = zurichTopology.objects;
 
-    zuri_names.forEach(function(name) {
-      COMPILED_MAPS.zurich[name] = topojson.feature(zuri_topology, zuri_objects[name]);
+    zurichNames.forEach(function(name) {
+      COMPILED_MAPS.zurich[name] = topojson.feature(zurichTopology, zurichObjects[name]);
     });
 
-    zuri_names.forEach(function(name) {
-      COMPILED_MAPS.zurich_mesh[name] = topojson.mesh(zuri_topology, zuri_objects[name]);
+    zurichNames.forEach(function(name) {
+      COMPILED_MAPS.zurichMesh[name] = topojson.mesh(zurichTopology, zurichObjects[name]);
     });
 
-    COMPILED_MAPS.zurich.zurichsee_geo = topojson.feature(zuri_topology, zuri_objects.zurichsee_geo);
+    COMPILED_MAPS.zurich.zurichsee_geo = topojson.feature(zurichTopology, zurichObjects.zurichsee_geo);
 
-    COMPILED_MAPS.switzerland_geo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
+    COMPILED_MAPS.switzerlandGeo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
 
-    COMPILED_MAPS.switzerland_mesh = topojson.mesh(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
+    COMPILED_MAPS.switzerlandMesh = topojson.mesh(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
 
     COMPILED_MAPS.compiled = true;
 
@@ -82,7 +82,7 @@ namespace('sszvis.map', function(module) {
           throw new Error('sszvis.map component requires topojson as an additional dependency');
         }
 
-        compile_maps();
+        compileMaps();
 
         var selection = d3.select(this);
         var props = selection.props();
@@ -91,19 +91,19 @@ namespace('sszvis.map', function(module) {
         switch (props.type) {
           case 'zurich-stadtkreise':
             mapData = COMPILED_MAPS.zurich.stadtkreise_geo;
-            meshData = COMPILED_MAPS.zurich_mesh.stadtkreise_geo;
+            meshData = COMPILED_MAPS.zurichMesh.stadtkreise_geo;
             break;
           case 'zurich-statistischeQuartiere':
             mapData = COMPILED_MAPS.zurich.statistische_quartiere_geo;
-            meshData = COMPILED_MAPS.zurich_mesh.statistische_quartiere_geo;
+            meshData = COMPILED_MAPS.zurichMesh.statistische_quartiere_geo;
             break;
           case 'zurich-wahlkreise':
             mapData = COMPILED_MAPS.zurich.wahlkreise_geo;
-            meshData = COMPILED_MAPS.zurich_mesh.wahlkreise_geo;
+            meshData = COMPILED_MAPS.zurichMesh.wahlkreise_geo;
             break;
           case 'switzerland-cantons':
-            mapData = COMPILED_MAPS.switzerland_geo;
-            meshData = COMPILED_MAPS.switzerland_mesh;
+            mapData = COMPILED_MAPS.switzerlandGeo;
+            meshData = COMPILED_MAPS.switzerlandMesh;
             break;
           default:
             throw new Error('incorrect map type specified: ' + props.type);
@@ -130,22 +130,22 @@ namespace('sszvis.map', function(module) {
             o[props.keyName] = d.id;
             return o;
           })
-          .classed('sszvis-map-area', true)
+          .classed('sszvis-map__area', true)
           .attr('d', sszvis.fn.compose(mapPath, sszvis.fn.prop('geoJson')))
           .attr('fill', 'url(#missing-pattern)');
 
         // add borders
         selection
-          .selectAll('.sszvis-map-border')
+          .selectAll('.sszvis-map__border')
           .data([meshData])
           .enter()
           .append('path')
-          .classed('sszvis-map-border', true)
+          .classed('sszvis-map__border', true)
           .attr('d', mapPath);
 
         baseGroups.exit().remove();
 
-        var joinedShapes = baseGroups.selectAll('.sszvis-map-area')
+        var joinedShapes = baseGroups.selectAll('.sszvis-map__area')
           .data(data, sszvis.fn.prop(props.keyName));
 
         joinedShapes
@@ -167,7 +167,7 @@ namespace('sszvis.map', function(module) {
 
           zurichSee.enter()
             .append('path')
-            .classed('sszvis-map-area sszvis-lake-zurich', true);
+            .classed('sszvis-map__area sszvis-lake-zurich', true);
 
           zurichSee.exit().remove();
 

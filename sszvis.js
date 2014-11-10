@@ -809,8 +809,6 @@ namespace('sszvis.fn', function(module) {
  * @see https://github.com/mbostock/d3/wiki/SVG-Axes
  * @module sszvis/axis
  */
-
-/* jshint -W004 */
 namespace('sszvis.axis', function(module) {
 'use strict';
 
@@ -901,9 +899,9 @@ namespace('sszvis.axis', function(module) {
 
             group.selectAll('.tick text')
               .each(function(d) {
-                var d3_this = d3.select(this);
-                if (d3_this.classed('active') || props.highlightBoundary === 0) {
-                  d3_this.classed('hidden', false);
+                var selection = d3.select(this);
+                if (selection.classed('active') || props.highlightBoundary === 0) {
+                  selection.classed('hidden', false);
                   return;
                 }
 
@@ -911,7 +909,7 @@ namespace('sszvis.axis', function(module) {
                 var isTooClose = highlightPositions.reduce(function(tooClose, highlightPos) {
                   return tooClose || Math.abs(position - highlightPos) < props.highlightBoundary;
                 }, false);
-                d3_this.classed('hidden', isTooClose);
+                selection.classed('hidden', isTooClose);
               });
           }
 
@@ -1014,7 +1012,7 @@ namespace('sszvis.axis', function(module) {
         return axisComponent;
     };
 
-    var set_ordinal_ticks = function(count) {
+    var setOrdinalTicks = function(count) {
       // in this function, the 'this' context should be an sszvis.axis
       var domain = this.scale().domain(),
           values = [],
@@ -1033,7 +1031,7 @@ namespace('sszvis.axis', function(module) {
       return count;
     };
 
-    var axis_x = function() {
+    var axisX = function() {
       return axis()
         .ticks(3)
         .tickSize(4, 7)
@@ -1041,24 +1039,24 @@ namespace('sszvis.axis', function(module) {
         .tickFormat(sszvis.format.number);
     };
 
-    axis_x.time = function() {
-      return axis_x()
+    axisX.time = function() {
+      return axisX()
         .tickFormat(axisTimeFormat)
         .alignOuterLabels(true);
     };
 
-    axis_x.ordinal = function() {
-      return axis_x()
+    axisX.ordinal = function() {
+      return axisX()
         // extend this class a little with a custom implementation of 'ticks'
         // that allows you to set a custom number of ticks,
         // including the first and last value in the ordinal scale
-        .prop('ticks', set_ordinal_ticks)
+        .prop('ticks', setOrdinalTicks)
         .tickFormat(sszvis.format.text);
     };
 
     // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
-    axis_x.pyramid = function() {
-      return axis_x()
+    axisX.pyramid = function() {
+      return axisX()
         .ticks(10)
         .prop('scale', function(s) {
           var extended = s.copy(),
@@ -1081,7 +1079,7 @@ namespace('sszvis.axis', function(module) {
         });
     };
 
-    var axis_y = function() {
+    var axisY = function() {
       var newAxis = axis()
         .ticks(7)
         .tickSize(0, 0)
@@ -1093,20 +1091,20 @@ namespace('sszvis.axis', function(module) {
       return newAxis;
     };
 
-    axis_y.time = function() {
-      return axis_y().tickFormat(axisTimeFormat);
+    axisY.time = function() {
+      return axisY().tickFormat(axisTimeFormat);
     };
 
-    axis_y.ordinal = function() {
-      return axis_y()
+    axisY.ordinal = function() {
+      return axisY()
         // add custom 'ticks' function
-        .prop('ticks', set_ordinal_ticks)
+        .prop('ticks', setOrdinalTicks)
         .tickFormat(sszvis.format.text);
     };
 
     return {
-      x: axis_x,
-      y: axis_y
+      x: axisX,
+      y: axisY
     };
 
   }());
@@ -2251,15 +2249,15 @@ namespace('sszvis.control.segmented', function(module) {
         var container = selection.selectDiv('segmentedControl');
 
         container
-          .classed('sszvis-control--segmented', true)
+          .classed('sszvis-segmented-control', true)
           .style('width', props.width + 'px');
 
-        var buttons = container.selectAll('.sszvis-control--segmentitem')
+        var buttons = container.selectAll('.sszvis-segmented-control__item')
           .data(props.values);
 
         buttons.enter()
           .append('div')
-          .classed('sszvis-control--segmentitem', true);
+          .classed('sszvis-segmented-control__item', true);
 
         buttons.exit().remove();
 
@@ -2323,23 +2321,23 @@ namespace('sszvis.control.slideBar', function(module) {
 
         entering
           .append('line')
-          .classed('sszvis-slider-line', true);
+          .classed('sszvis-slider__line', true);
 
         entering
           .append('rect')
-          .classed('sszvis-slider-handle', true);
+          .classed('sszvis-slider__handle', true);
 
         entering
           .append('line')
-          .classed('sszvis-slider-handleMark', true);
+          .classed('sszvis-slider__handle-mark', true);
 
-        group.selectAll('.sszvis-slider-line')
+        group.selectAll('.sszvis-slider__line')
           .attr('x1', xPos)
           .attr('y1', top)
           .attr('x2', xPos)
           .attr('y2', bottom);
 
-        group.selectAll('.sszvis-slider-handle')
+        group.selectAll('.sszvis-slider__handle')
           .attr('x', xPos - handleWidth / 2)
           .attr('y', handleTop)
           .attr('width', handleWidth)
@@ -2347,18 +2345,18 @@ namespace('sszvis.control.slideBar', function(module) {
           .attr('rx', 2)
           .attr('ry', 2);
 
-        group.selectAll('.sszvis-slider-handleMark')
+        group.selectAll('.sszvis-slider__handle-mark')
           .attr('x1', xPos)
           .attr('y1', handleTop + handleHeight * 0.15)
           .attr('x2', xPos)
           .attr('y2', handleTop + handleHeight * 0.85);
 
-        var dots = group.selectAll('.sszvis-slider-dot')
+        var dots = group.selectAll('.sszvis-slider__dot')
           .data(data);
 
         dots.enter()
           .append('circle')
-          .classed('sszvis-slider-dot', true);
+          .classed('sszvis-slider__dot', true);
 
         dots.exit().remove();
 
@@ -2368,12 +2366,12 @@ namespace('sszvis.control.slideBar', function(module) {
           .attr('r', 3.5)
           .attr('fill', props.color);
 
-        var captions = group.selectAll('.sszvis-slider-label')
+        var captions = group.selectAll('.sszvis-slider__label')
           .data(data);
 
         captions.enter()
           .append('text')
-          .classed('sszvis-slider-label', true);
+          .classed('sszvis-slider__label', true);
 
         captions.exit().remove();
 
@@ -2393,6 +2391,7 @@ namespace('sszvis.control.slideBar', function(module) {
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -2530,12 +2529,12 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
           .attr('fill', 'url(#data-area-pattern)');
 
         if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-circle-caption')
+          var dataCaptions = selection.selectAll('.sszvis-data-area-circle__caption')
             .data(data);
 
           dataCaptions.enter()
             .append('text')
-            .classed('sszvis-data-area-circle-caption', true);
+            .classed('sszvis-data-area-circle__caption', true);
 
           dataCaptions
             .attr('x', props.x)
@@ -2606,12 +2605,12 @@ namespace('sszvis.component.dataAreaLine', function(module) {
           .attr('y2', y2);
 
         if (props.caption) {
-          var caption = selection.selectAll('.sszvis-reference-line--caption')
+          var caption = selection.selectAll('.sszvis-reference-line__caption')
             .data([1]);
 
           caption.enter()
             .append('text')
-            .classed('sszvis-reference-line--caption', true);
+            .classed('sszvis-reference-line__caption', true);
 
           caption.exit().remove();
 
@@ -2694,12 +2693,12 @@ namespace('sszvis.component.dataAreaRectangle', function(module) {
           .attr('fill', 'url(#data-area-pattern)');
 
         if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-rectangle-caption')
+          var dataCaptions = selection.selectAll('.sszvis-data-area-rectangle__caption')
             .data(data);
 
           dataCaptions.enter()
             .append('text')
-            .classed('sszvis-data-area-rectangle-caption', true);
+            .classed('sszvis-data-area-rectangle__caption', true);
 
           dataCaptions
             .attr('x', function(d, i) {
@@ -3331,12 +3330,12 @@ namespace('sszvis.component.rangeRuler', function(module) {
         var middleY = function(d) { return (props.y0(d) + props.y1(d)) / 2; };
         var dotRadius = 1.5;
 
-        var line = selection.selectAll('.sszvis-rangeRuler--rule')
+        var line = selection.selectAll('.sszvis-rangeRuler__rule')
           .data([1]);
 
         line.enter()
           .append('line')
-          .classed('sszvis-rangeRuler--rule', true);
+          .classed('sszvis-rangeRuler__rule', true);
 
         line.exit().remove();
 
@@ -3355,23 +3354,23 @@ namespace('sszvis.component.rangeRuler', function(module) {
 
         marks.exit().remove();
 
-        enteringMarks.append('circle').classed('sszvis-rangeRuler--p1', true);
-        enteringMarks.append('circle').classed('sszvis-rangeRuler--p2', true);
-        enteringMarks.append('text').classed('sszvis-rangeRuler--label', true);
+        enteringMarks.append('circle').classed('sszvis-rangeRuler__p1', true);
+        enteringMarks.append('circle').classed('sszvis-rangeRuler__p2', true);
+        enteringMarks.append('text').classed('sszvis-rangeRuler__label', true);
 
-        marks.selectAll('.sszvis-rangeRuler--p1')
+        marks.selectAll('.sszvis-rangeRuler__p1')
           .data(function(d) { return [d]; })
           .attr('cx', props.x)
           .attr('cy', props.y0)
           .attr('r', dotRadius);
 
-        marks.selectAll('.sszvis-rangeRuler--p2')
+        marks.selectAll('.sszvis-rangeRuler__p2')
           .data(function(d) { return [d]; })
           .attr('cx', props.x)
           .attr('cy', props.y1)
           .attr('r', dotRadius);
 
-        marks.selectAll('.sszvis-rangeRuler--label')
+        marks.selectAll('.sszvis-rangeRuler__label')
           .data(function(d) { return [d]; })
           .attr('x', function(d, i) {
             var offset = props.flip(d) ? -10 : 10;
@@ -3383,12 +3382,12 @@ namespace('sszvis.component.rangeRuler', function(module) {
           })
           .text(props.label);
 
-        var total = selection.selectAll('.sszvis-rangeRuler--total')
+        var total = selection.selectAll('.sszvis-rangeRuler__total')
           .data([sszvis.fn.last(data)]);
 
         total.enter()
           .append('text')
-          .classed('sszvis-rangeRuler--total', true);
+          .classed('sszvis-rangeRuler__total', true);
 
         total.exit().remove();
 
@@ -3505,12 +3504,12 @@ namespace('sszvis.component.ruler', function(module) {
         // this generates multiple lines. When the lines overlap in the same place, they're redundant,
         // when they show up in separate places, this is a potentially useful, but surprising and undocumented
         // feature. Perhaps this behavior should be either documented or removed.
-        var ruler = selection.selectAll('.sszvis-ruler-rule')
+        var ruler = selection.selectAll('.sszvis-ruler__rule')
           .data(data, key);
 
         ruler.enter()
           .append('line')
-          .classed('sszvis-ruler-rule', true);
+          .classed('sszvis-ruler__rule', true);
 
         ruler
           .attr('x1', props.x)
@@ -3520,12 +3519,12 @@ namespace('sszvis.component.ruler', function(module) {
 
         ruler.exit().remove();
 
-        var dot = selection.selectAll('.sszvis-ruler-dot')
+        var dot = selection.selectAll('.sszvis-ruler__dot')
           .data(data, key);
 
         dot.enter()
           .append('circle')
-          .classed('sszvis-ruler-dot', true);
+          .classed('sszvis-ruler__dot', true);
 
         dot
           .attr('cx', props.x)
@@ -3535,12 +3534,12 @@ namespace('sszvis.component.ruler', function(module) {
 
         dot.exit().remove();
 
-        var label = selection.selectAll('.sszvis-ruler-label')
+        var label = selection.selectAll('.sszvis-ruler__label')
           .data(data, key);
 
         label.enter()
           .append('text')
-          .classed('sszvis-ruler-label', true);
+          .classed('sszvis-ruler__label', true);
 
         label
           .attr('x', props.x)
@@ -4121,7 +4120,7 @@ namespace('sszvis.component.tooltip', function(module) {
         // Enter: tooltip background
 
         var enterBackground = enterTooltip.append('svg')
-          .attr('class', 'sszvis-tooltip-background')
+          .attr('class', 'sszvis-tooltip__background')
           .attr('height', 0)
           .attr('width', 0);
 
@@ -4157,22 +4156,22 @@ namespace('sszvis.component.tooltip', function(module) {
         // Enter: tooltip content
 
         var enterContent = enterTooltip.append('div')
-          .classed('sszvis-tooltip-content', true);
+          .classed('sszvis-tooltip__content', true);
 
         enterContent.append('div')
-          .classed('sszvis-tooltip-header', true);
+          .classed('sszvis-tooltip__header', true);
 
         enterContent.append('div')
-          .classed('sszvis-tooltip-body', true);
+          .classed('sszvis-tooltip__body', true);
 
 
         // Update: content
 
-        tooltip.select('.sszvis-tooltip-header')
+        tooltip.select('.sszvis-tooltip__header')
           .datum(sszvis.fn.prop('datum'))
           .html(props.header);
 
-        tooltip.select('.sszvis-tooltip-body')
+        tooltip.select('.sszvis-tooltip__body')
           .datum(sszvis.fn.prop('datum'))
           .html(props.body);
 
@@ -4218,7 +4217,7 @@ namespace('sszvis.component.tooltip', function(module) {
 
             var bgHeight = dimensions.height + 2 * BLUR_PADDING;
             var bgWidth =  dimensions.width  + 2 * BLUR_PADDING;
-            tip.select('.sszvis-tooltip-background')
+            tip.select('.sszvis-tooltip__background')
               .attr('height', bgHeight)
               .attr('width',  bgWidth)
               .style('left', -BLUR_PADDING + 'px')
@@ -4522,12 +4521,12 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
           .attr('y2', segHeight + 4)
           .attr('stroke', '#909090');
 
-        var labels = selection.selectAll('.sszvis-legend--label')
+        var labels = selection.selectAll('.sszvis-legend__label')
           .data(labelData);
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend--label', true);
+          .classed('sszvis-legend__label', true);
 
         labels.exit().remove();
 
@@ -4611,12 +4610,12 @@ namespace('sszvis.legend.color', function(module) {
           .attr('r', 6)
           .attr('fill', function(d) { return props.scale(d); });
 
-        var labels = groups.selectAll('.sszvis-legend--label')
+        var labels = groups.selectAll('.sszvis-legend__label')
           .data(function(d) { return [d]; });
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend--label', true);
+          .classed('sszvis-legend__label', true);
 
         labels.exit().remove();
 
@@ -4730,12 +4729,12 @@ namespace('sszvis.legend.linearColorScale', function(module) {
 
         if (props.units) startEnd[1] += ' ' + props.units;
 
-        var labels = selection.selectAll('.sszvis-legend--label')
+        var labels = selection.selectAll('.sszvis-legend__label')
           .data(startEnd);
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend--label', true);
+          .classed('sszvis-legend__label', true);
 
         labels.exit().remove();
 
@@ -4810,12 +4809,12 @@ namespace('sszvis.legend.radius', function(module) {
           .attr('stroke', '#909090')
           .attr('stroke-dasharray', '3 2');
 
-        var labels = selection.selectAll('text.sszvis-legend--label')
+        var labels = selection.selectAll('text.sszvis-legend__label')
           .data(points);
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend--label', true);
+          .classed('sszvis-legend__label', true);
 
         labels.exit().remove();
 
@@ -4878,31 +4877,31 @@ namespace('sszvis.map', function(module) {
   var COMPILED_MAPS = {
     compiled: false,
     zurich: {},
-    zurich_mesh: {},
-    switzerland_geo: {},
-    switzerland_mesh: {}
+    zurichMesh: {},
+    switzerlandGeo: {},
+    switzerlandMesh: {}
   };
 
-  function compile_maps() {
+  function compileMaps() {
     if (COMPILED_MAPS.compiled) return true;
 
-    var zuri_names = ['stadtkreise_geo', 'statistische_quartiere_geo', 'wahlkreise_geo'],
-        zuri_topology = sszvis.mapdata.zurich,
-        zuri_objects = zuri_topology.objects;
+    var zurichNames = ['stadtkreise_geo', 'statistische_quartiere_geo', 'wahlkreise_geo'],
+        zurichTopology = sszvis.mapdata.zurich,
+        zurichObjects = zurichTopology.objects;
 
-    zuri_names.forEach(function(name) {
-      COMPILED_MAPS.zurich[name] = topojson.feature(zuri_topology, zuri_objects[name]);
+    zurichNames.forEach(function(name) {
+      COMPILED_MAPS.zurich[name] = topojson.feature(zurichTopology, zurichObjects[name]);
     });
 
-    zuri_names.forEach(function(name) {
-      COMPILED_MAPS.zurich_mesh[name] = topojson.mesh(zuri_topology, zuri_objects[name]);
+    zurichNames.forEach(function(name) {
+      COMPILED_MAPS.zurichMesh[name] = topojson.mesh(zurichTopology, zurichObjects[name]);
     });
 
-    COMPILED_MAPS.zurich.zurichsee_geo = topojson.feature(zuri_topology, zuri_objects.zurichsee_geo);
+    COMPILED_MAPS.zurich.zurichsee_geo = topojson.feature(zurichTopology, zurichObjects.zurichsee_geo);
 
-    COMPILED_MAPS.switzerland_geo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
+    COMPILED_MAPS.switzerlandGeo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
 
-    COMPILED_MAPS.switzerland_mesh = topojson.mesh(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
+    COMPILED_MAPS.switzerlandMesh = topojson.mesh(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
 
     COMPILED_MAPS.compiled = true;
 
@@ -4922,7 +4921,7 @@ namespace('sszvis.map', function(module) {
           throw new Error('sszvis.map component requires topojson as an additional dependency');
         }
 
-        compile_maps();
+        compileMaps();
 
         var selection = d3.select(this);
         var props = selection.props();
@@ -4931,19 +4930,19 @@ namespace('sszvis.map', function(module) {
         switch (props.type) {
           case 'zurich-stadtkreise':
             mapData = COMPILED_MAPS.zurich.stadtkreise_geo;
-            meshData = COMPILED_MAPS.zurich_mesh.stadtkreise_geo;
+            meshData = COMPILED_MAPS.zurichMesh.stadtkreise_geo;
             break;
           case 'zurich-statistischeQuartiere':
             mapData = COMPILED_MAPS.zurich.statistische_quartiere_geo;
-            meshData = COMPILED_MAPS.zurich_mesh.statistische_quartiere_geo;
+            meshData = COMPILED_MAPS.zurichMesh.statistische_quartiere_geo;
             break;
           case 'zurich-wahlkreise':
             mapData = COMPILED_MAPS.zurich.wahlkreise_geo;
-            meshData = COMPILED_MAPS.zurich_mesh.wahlkreise_geo;
+            meshData = COMPILED_MAPS.zurichMesh.wahlkreise_geo;
             break;
           case 'switzerland-cantons':
-            mapData = COMPILED_MAPS.switzerland_geo;
-            meshData = COMPILED_MAPS.switzerland_mesh;
+            mapData = COMPILED_MAPS.switzerlandGeo;
+            meshData = COMPILED_MAPS.switzerlandMesh;
             break;
           default:
             throw new Error('incorrect map type specified: ' + props.type);
@@ -4970,22 +4969,22 @@ namespace('sszvis.map', function(module) {
             o[props.keyName] = d.id;
             return o;
           })
-          .classed('sszvis-map-area', true)
+          .classed('sszvis-map__area', true)
           .attr('d', sszvis.fn.compose(mapPath, sszvis.fn.prop('geoJson')))
           .attr('fill', 'url(#missing-pattern)');
 
         // add borders
         selection
-          .selectAll('.sszvis-map-border')
+          .selectAll('.sszvis-map__border')
           .data([meshData])
           .enter()
           .append('path')
-          .classed('sszvis-map-border', true)
+          .classed('sszvis-map__border', true)
           .attr('d', mapPath);
 
         baseGroups.exit().remove();
 
-        var joinedShapes = baseGroups.selectAll('.sszvis-map-area')
+        var joinedShapes = baseGroups.selectAll('.sszvis-map__area')
           .data(data, sszvis.fn.prop(props.keyName));
 
         joinedShapes
@@ -5007,7 +5006,7 @@ namespace('sszvis.map', function(module) {
 
           zurichSee.enter()
             .append('path')
-            .classed('sszvis-map-area sszvis-lake-zurich', true);
+            .classed('sszvis-map__area sszvis-lake-zurich', true);
 
           zurichSee.exit().remove();
 
@@ -5019,6 +5018,7 @@ namespace('sszvis.map', function(module) {
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

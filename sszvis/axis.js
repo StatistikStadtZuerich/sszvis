@@ -4,8 +4,6 @@
  * @see https://github.com/mbostock/d3/wiki/SVG-Axes
  * @module sszvis/axis
  */
-
-/* jshint -W004 */
 namespace('sszvis.axis', function(module) {
 'use strict';
 
@@ -96,9 +94,9 @@ namespace('sszvis.axis', function(module) {
 
             group.selectAll('.tick text')
               .each(function(d) {
-                var d3_this = d3.select(this);
-                if (d3_this.classed('active') || props.highlightBoundary === 0) {
-                  d3_this.classed('hidden', false);
+                var selection = d3.select(this);
+                if (selection.classed('active') || props.highlightBoundary === 0) {
+                  selection.classed('hidden', false);
                   return;
                 }
 
@@ -106,7 +104,7 @@ namespace('sszvis.axis', function(module) {
                 var isTooClose = highlightPositions.reduce(function(tooClose, highlightPos) {
                   return tooClose || Math.abs(position - highlightPos) < props.highlightBoundary;
                 }, false);
-                d3_this.classed('hidden', isTooClose);
+                selection.classed('hidden', isTooClose);
               });
           }
 
@@ -209,7 +207,7 @@ namespace('sszvis.axis', function(module) {
         return axisComponent;
     };
 
-    var set_ordinal_ticks = function(count) {
+    var setOrdinalTicks = function(count) {
       // in this function, the 'this' context should be an sszvis.axis
       var domain = this.scale().domain(),
           values = [],
@@ -228,7 +226,7 @@ namespace('sszvis.axis', function(module) {
       return count;
     };
 
-    var axis_x = function() {
+    var axisX = function() {
       return axis()
         .ticks(3)
         .tickSize(4, 7)
@@ -236,24 +234,24 @@ namespace('sszvis.axis', function(module) {
         .tickFormat(sszvis.format.number);
     };
 
-    axis_x.time = function() {
-      return axis_x()
+    axisX.time = function() {
+      return axisX()
         .tickFormat(axisTimeFormat)
         .alignOuterLabels(true);
     };
 
-    axis_x.ordinal = function() {
-      return axis_x()
+    axisX.ordinal = function() {
+      return axisX()
         // extend this class a little with a custom implementation of 'ticks'
         // that allows you to set a custom number of ticks,
         // including the first and last value in the ordinal scale
-        .prop('ticks', set_ordinal_ticks)
+        .prop('ticks', setOrdinalTicks)
         .tickFormat(sszvis.format.text);
     };
 
     // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
-    axis_x.pyramid = function() {
-      return axis_x()
+    axisX.pyramid = function() {
+      return axisX()
         .ticks(10)
         .prop('scale', function(s) {
           var extended = s.copy(),
@@ -276,7 +274,7 @@ namespace('sszvis.axis', function(module) {
         });
     };
 
-    var axis_y = function() {
+    var axisY = function() {
       var newAxis = axis()
         .ticks(7)
         .tickSize(0, 0)
@@ -288,20 +286,20 @@ namespace('sszvis.axis', function(module) {
       return newAxis;
     };
 
-    axis_y.time = function() {
-      return axis_y().tickFormat(axisTimeFormat);
+    axisY.time = function() {
+      return axisY().tickFormat(axisTimeFormat);
     };
 
-    axis_y.ordinal = function() {
-      return axis_y()
+    axisY.ordinal = function() {
+      return axisY()
         // add custom 'ticks' function
-        .prop('ticks', set_ordinal_ticks)
+        .prop('ticks', setOrdinalTicks)
         .tickFormat(sszvis.format.text);
     };
 
     return {
-      x: axis_x,
-      y: axis_y
+      x: axisX,
+      y: axisY
     };
 
   }());
