@@ -24,7 +24,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
         var dotRadius = 1.5;
 
         var line = selection.selectAll('.sszvis-rangeRuler__rule')
-          .data([1]);
+          .data([0]);
 
         line.enter()
           .append('line')

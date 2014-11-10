@@ -34,7 +34,7 @@ namespace('sszvis.control.slideBar', function(module) {
         var handleTop = top - handleHeight;
 
         var group = selection.selectAll('.sszvis-slider-group')
-          .data([1]);
+          .data([0]);
 
         var entering = group.enter()
           .append('g')

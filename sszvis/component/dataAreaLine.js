@@ -52,7 +52,7 @@ namespace('sszvis.component.dataAreaLine', function(module) {
 
         if (props.caption) {
           var caption = selection.selectAll('.sszvis-reference-line__caption')
-            .data([1]);
+            .data([0]);
 
           caption.enter()
             .append('text')
