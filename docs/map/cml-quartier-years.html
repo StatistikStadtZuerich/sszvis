@@ -120,11 +120,11 @@
       .datum(state.currentMapData);
 
     var lineChart = chart.selectGroup('line')
-      .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.height + lineChartBounds.padding.top) + ')')
+      .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .datum(state.lineData);
 
     var highlightLayer = chart.selectGroup('highlight')
-      .attr('transform', 'translate(' + (lineChartBounds.padding.left) + ', ' + (mapBounds.height + lineChartBounds.padding.top) + ')')
+      .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .datum(state.currentMapData);
 
 

@@ -23,7 +23,7 @@ namespace('sszvis.createChart', function(module) {
     var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0])
     viewport.enter().append('g')
       .attr('data-sszvis-svg-layer', '')
-      .attr('transform', 'translate(' + bounds.padding.left + ',' + bounds.padding.top + ')');
+      .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
     return viewport;
   }

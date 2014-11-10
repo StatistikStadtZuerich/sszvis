@@ -134,19 +134,19 @@
 
       chartLayer.selectGroup('populationPyramid')
         .datum(state.populations)
-        .attr('transform', 'translate(' + (bounds.innerWidth / 2) + ', 0)')
+        .attr('transform', sszvis.fn.translateString(bounds.innerWidth / 2, 0))
         .call(pyramid);
 
       chartLayer.selectGroup('xAxis')
-        .attr('transform', 'translate(' + (bounds.innerWidth / 2) + ',' + (bounds.innerHeight) + ')')
+        .attr('transform', sszvis.fn.translateString(bounds.innerWidth / 2, bounds.innerHeight))
         .call(xAxis);
 
       chartLayer.selectGroup('yAxis')
-        .attr('transform', 'translate(0, 0)')
+        .attr('transform', sszvis.fn.translateString(0, 0))
         .call(yAxis);
 
       chartLayer.selectGroup('colorLegend')
-        .attr('transform', 'translate(0, ' + (bounds.innerHeight + 60) + ')')
+        .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
         .call(colorLegend);
     }
 

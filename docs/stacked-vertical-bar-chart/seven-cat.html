@@ -167,15 +167,15 @@
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', 'translate(40, 0)')
+      .attr('transform', sszvis.fn.translateString(40, 0))
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(' + (bounds.innerWidth + 5) + ', 0)')
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth + 5, 0))
       .call(colorLegend);
 
 
