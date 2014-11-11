@@ -12,6 +12,7 @@
 
 <div id="sszvis-chart"></div>
 
+<!-- NOTE this script tag is not needed -->
 <script data-catalog-project-expose="script.js">
 (function(d3, sszvis) {
   'use strict';
@@ -39,6 +40,7 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
+      // NOTE here a comment would be useful to explain why sorting is needed in this case.
       state.data = data.sort(function(a, b) {
         return d3.ascending(xAcc(a), xAcc(b));
       });
@@ -54,6 +56,8 @@
 
     changeDate: function(inputDate) {
       var closest = xAcc(closestDatum(state.data, xAcc, inputDate));
+
+      // NOTE something like that needs commenting. It makes it much easier to understand when reading the code.
       var closestData = state.lineData.map(function(stack) {
         return stack.filter(function(d) {
           return xAcc(d).toString() === closest.toString();
@@ -68,6 +72,7 @@
     },
 
     resetDate: function() {
+      // NOTE a comment to explain what is needed to reset date and why these steps are needed. 
       var mostRecentDate = d3.max(state.data, xAcc);
       actions.changeDate(mostRecentDate);
     }
@@ -85,6 +90,7 @@
       };
     })
     .get(function(error, data) {
+      // NOTE great,thx!
       if (error) {
         sszvis.loadError(error);
         return;
@@ -96,6 +102,12 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
+
+    // NOTE does bounds now default to a certain width, what is the default width? 
+    // this chart needs the height to be calculated from the given width. I expect something like
+    // var ratio = 3/4;
+    // var w = 516;
+    // var h = ratio*w;
     var bounds = sszvis.bounds({ top: 3, bottom: 50 });
 
 
@@ -115,6 +127,7 @@
 
     // Layers
 
+    // NOTE I gather this is about accessibility? 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: 'Diagrammtitel',
         description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
@@ -128,8 +141,10 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       // Access the first data point of the line to decide on the stroke color
+      // NOTE I wonder if this is the most elegant way to do this. It seems odd to me that way. 
       .stroke(sszvis.fn.compose(cScale, cAcc, sszvis.fn.first));
 
+      // NOTE what does concat do? If I ask like that it means that I think the code is not self explanatory and therefore needs a comment.
     var xTickValues = xScale.ticks(5).concat(state.highlightData.map(xAcc));
 
     var xAxis = sszvis.axis.x.time()
@@ -137,12 +152,15 @@
       .orient('bottom')
       .tickValues(xTickValues)
       .alignOuterLabels(true)
+      // NOTE what does hightligt() and highlight boundary effect in the visualisation? 
+      // comment needed
       .highlight(state.highlightData.map(xAcc))
       .highlightBoundary(24);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
+      // NOTE we said that 'halo' as name will be replaced with 'outline' or similar
       .halo(true);
 
     var highlightLayer = sszvis.component.ruler()
