@@ -357,6 +357,10 @@ namespace('sszvis.fn', function(module) {
       }, []);
     },
 
+    stringEqual: function(a, b) {
+      return a.toString() === b.toString();
+    },
+
     stackedAreaMultiplesLayout: function(height, num, pct) {
       pct || (pct = 0.1);
       var step = height / (num - pct),
