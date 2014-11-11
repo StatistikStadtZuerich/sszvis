@@ -16,6 +16,17 @@ namespace('sszvis.format', function(module) {
       return String(Math.round(d));
     },
 
+    axisTimeFormat: d3.time.format.multi([
+      ['.%L', function(d) { return d.getMilliseconds(); }],
+      [':%S', function(d) { return d.getSeconds(); }],
+      ['%H:%M', function(d) { return d.getMinutes(); }],
+      ['%H Uhr', function(d) { return d.getHours(); }],
+      ['%a., %d.', function(d) { return d.getDay() && d.getDate() != 1; }],
+      ['%e. %b', function(d) { return d.getDate() != 1; }],
+      ['%B', function(d) { return d.getMonth(); }],
+      ['%Y', function() { return true; }]
+    ]),
+
     /**
      * Formatter for no label
      * @return {string} the empty string

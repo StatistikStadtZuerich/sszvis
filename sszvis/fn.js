@@ -329,6 +329,15 @@ namespace('sszvis.fn', function(module) {
       };
     },
 
+    scaleExtent: function(domain) { // borrowed from d3 source - svg.axis
+      var start = domain[0], stop = domain[domain.length - 1];
+      return start < stop ? [ start, stop ] : [ stop, start ];
+    },
+
+    scaleRange: function(scale) { // borrowed from d3 source - svg.axis
+      return scale.rangeExtent ? scale.rangeExtent() : sszvis.fn.scaleExtent(scale.range());
+    },
+
     /**
      * fn.set
      *

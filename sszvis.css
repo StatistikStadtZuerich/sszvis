@@ -47,6 +47,10 @@
   display: none;
 }
 
+.sszvis-axis.sszvis-axis--slidercontrol path {
+  stroke: none;
+}
+
 /**
  * Reference line component
  *
@@ -224,6 +228,31 @@
   font-style: normal;
   font-weight: bold;
   text-shadow: #fff 1px 0 1px, #fff -1px 0 1px, #fff 0 1px 1px, #fff 0 -1px 1px;
+}
+
+/**
+ * sliderControl component
+ *
+ * @module sszvis/control/sliderControl
+ */
+.sszvis-slidercontrol--handle {
+  cursor: pointer;
+}
+
+.sszvis-slidercontrol--label {
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.sszvis-slidercontrol--handlebox {
+  fill: #fff;
+  stroke: #545454;
+}
+
+.sszvis-slidercontrol--handleline {
+  stroke: #545454;
 }
 
 /**

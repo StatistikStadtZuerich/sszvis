@@ -9,8 +9,8 @@ namespace('sszvis.behavior.click', function(module) {
     var event = d3.dispatch('down', 'up', 'click', 'drag');
 
     var clickComponent = d3.component()
-      .prop('xScale')
-      .prop('yScale')
+      .prop('xScale').xScale(d3.scale.linear())
+      .prop('yScale').yScale(d3.scale.linear())
       .prop('padding', function(p) {
         var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
         for (var prop in p) { defaults[prop] = p[prop]; }

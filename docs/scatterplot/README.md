@@ -76,3 +76,25 @@
     }
 }
 ```
+
+### Many Years
+```project
+{
+    "name": "scatterplot-many-years",
+    "files": {
+        "index.html": {
+            "source": "docs/scatterplot/years-fake.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/scatterplot/data/SS_years_fake.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 570
+    }
+}
+```

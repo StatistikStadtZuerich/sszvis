@@ -42,6 +42,7 @@ SOURCE_FILES = \
 	sszvis/behavior/voronoi.js \
 	sszvis/control/segmentedControl.js \
 	sszvis/control/slideBar.js \
+	sszvis/control/sliderControl.js \
 	sszvis/component/bar.js \
 	sszvis/component/dataAreaCircle.js \
 	sszvis/component/dataAreaLine.js \

@@ -12,17 +12,6 @@ namespace('sszvis.axis', function(module) {
 
   module.exports = (function() {
 
-    var axisTimeFormat = d3.time.format.multi([
-      ['.%L', function(d) { return d.getMilliseconds(); }],
-      [':%S', function(d) { return d.getSeconds(); }],
-      ['%H:%M', function(d) { return d.getMinutes(); }],
-      ['%H Uhr', function(d) { return d.getHours(); }],
-      ['%a., %d.', function(d) { return d.getDay() && d.getDate() != 1; }],
-      ['%e. %b', function(d) { return d.getDate() != 1; }],
-      ['%B', function(d) { return d.getMonth(); }],
-      ['%Y', function() { return true; }]
-    ]);
-
     var axis = function() {
       var axisDelegate = d3.svg.axis();
 
@@ -76,7 +65,7 @@ namespace('sszvis.axis', function(module) {
 
 
           // hide ticks which are too close to one endpoint
-          var rangeExtent = scaleRange(axisScale);
+          var rangeExtent = sszvis.fn.scaleRange(axisScale);
           group.selectAll('.tick line')
             .each(function(d) {
               var pos = axisScale(d);
@@ -142,7 +131,7 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = scaleRange(axisScale);
+            var extent = sszvis.fn.scaleRange(axisScale);
             var min = extent[0];
             var max = extent[1];
 
@@ -182,7 +171,7 @@ namespace('sszvis.axis', function(module) {
               .text(function(d) { return d; })
               .attr('transform', function() {
                 var orientation = axisDelegate.orient(),
-                    extent = scaleRange(axisScale),
+                    extent = sszvis.fn.scaleRange(axisScale),
                     titleProps = sszvis.fn.defaults({
                       vertical: props.titleVertical,
                       left: props.titleLeft,
@@ -243,7 +232,7 @@ namespace('sszvis.axis', function(module) {
 
     axisX.time = function() {
       return axisX()
-        .tickFormat(axisTimeFormat)
+        .tickFormat(sszvis.format.axisTimeFormat)
         .alignOuterLabels(true);
     };
 
@@ -294,7 +283,7 @@ namespace('sszvis.axis', function(module) {
     };
 
     axisY.time = function() {
-      return axisY().tickFormat(axisTimeFormat);
+      return axisY().tickFormat(sszvis.format.axisTimeFormat);
     };
 
     axisY.ordinal = function() {
@@ -310,15 +299,6 @@ namespace('sszvis.axis', function(module) {
     };
 
   }());
-
-  function scaleExtent(domain) { // borrowed from d3 source - svg.axis
-    var start = domain[0], stop = domain[domain.length - 1];
-    return start < stop ? [ start, stop ] : [ stop, start ];
-  }
-
-  function scaleRange(scale) { // borrowed from d3 source - svg.axis
-    return scale.rangeExtent ? scale.rangeExtent() : scaleExtent(scale.range());
-  }
 
   function absDistance(a, b) {
     return Math.abs(a - b);
