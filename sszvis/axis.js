@@ -12,10 +12,6 @@ namespace('sszvis.axis', function(module) {
 
   module.exports = (function() {
 
-    var stringEqual = function(a, b) {
-      return a.toString() === b.toString();
-    };
-
     var axisTimeFormat = d3.time.format.multi([
       ['.%L', function(d) { return d.getMilliseconds(); }],
       [':%S', function(d) { return d.getSeconds(); }],
@@ -94,7 +90,7 @@ namespace('sszvis.axis', function(module) {
             group.selectAll('.tick text')
               .each(function(d) {
                 var isHighlight = [].concat(props.highlight).reduce(function(found, highlight) {
-                  return found || stringEqual(highlight, d);
+                  return found || sszvis.fn.stringEqual(highlight, d);
                 }, false);
                 d3.select(this).classed('active', isHighlight);
                 if (isHighlight) {
@@ -127,7 +123,7 @@ namespace('sszvis.axis', function(module) {
             var extent = d3.extent(axisScale.domain());
             var ticks = group.selectAll('.tick')
               .filter(function(d) {
-                return !stringEqual(d, extent[0]) && !stringEqual(d, extent[1]);
+                return !sszvis.fn.stringEqual(d, extent[0]) && !sszvis.fn.stringEqual(d, extent[1]);
               });
             var lines = ticks.selectAll('line');
             var orientation = axisDelegate.orient();
