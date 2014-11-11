@@ -34,8 +34,8 @@
 
 /* Modifiers */
 .sszvis-axis--halo text {
-  filter: progid:DXImageTransform.Microsoft.Shadow(color=#FFFFFF,strength=1);
-  -ms-filter: progid:DXImageTransform.Microsoft.Shadow(color=#FFFFFF,strength=1);
+  filter: progid:DXImageTransform.Microsoft.Shadow(direction=135,strength=1,color=ffffff);
+  -ms-filter: progid:DXImageTransform.Microsoft.Shadow(direction=135,strength=1,color=ffffff);
   text-shadow: #fff 1px 0 1px, #fff -1px 0 1px, #fff 0 1px 1px, #fff 0 -1px 1px;
 }
 
