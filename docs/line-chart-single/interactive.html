@@ -122,7 +122,7 @@
       .orient('bottom')
       .tickValues(xTickValues)
       .tickFormat(quarterTickLabel)
-      .highlight(state.selection.map(xAcc));
+      .highlight(isSelected);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)

@@ -152,7 +152,7 @@
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
-      .highlight(state.currentYear);
+      .highlight(isSelected);
 
     var lineYAxis = sszvis.axis.y()
       .scale(yScale)
@@ -216,6 +216,10 @@
     var d0 = data[i - 1];
     var d1 = data[i] || d0;
     return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+  }
+
+  function isSelected(d) {
+    return sszvis.fn.stringEqual(state.currentYear, d);
   }
 
 

@@ -29,7 +29,7 @@
     data: [],
     lineData: [],
     dates: [],
-    highlightData: [],
+    selection: [],
     maxY: 0,
     categories: []
   };
@@ -60,7 +60,7 @@
         })[0];
       });
 
-      state.highlightData = closestData.filter(
+      state.selection = closestData.filter(
         sszvis.fn.compose(sszvis.fn.not(isNaN), yAcc)
       );
 
@@ -133,17 +133,16 @@
       .stroke(sszvis.fn.compose(cScale, cAcc, sszvis.fn.first));
 
     // Add the highlighted data as additional ticks to the xScale
-    var xTickValues = xScale.ticks(5).concat(state.highlightData.map(xAcc));
+    var xTickValues = xScale
+      .ticks(5)
+      .concat(state.selection.map(xAcc));
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
       .alignOuterLabels(true)
-      // NOTE what does hightligt() and highlight boundary effect in the visualisation? 
-      // comment needed
-      .highlight(state.highlightData.map(xAcc))
-      .highlightBoundary(24);
+      .highlight(isSelected);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
@@ -185,7 +184,7 @@
       .call(cLegend);
 
     chartLayer.selectGroup('highlight')
-      .datum(state.highlightData)
+      .datum(state.selection)
       .call(highlightLayer);
 
 
@@ -211,6 +210,10 @@
     var d0 = data[i - 1];
     var d1 = data[i] || d0;
     return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+  }
+
+  function isSelected(d) {
+    return sszvis.fn.contains(state.selection.map(xAcc).map(String), String(d));
   }
 
 
