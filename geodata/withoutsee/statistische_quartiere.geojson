@@ -34932,7 +34932,8 @@
         "QNr": 81,
         "KNr": 8,
         "Qname": "Seefeld",
-        "Kname": "Kreis 8"
+        "Kname": "Kreis 8",
+        "center": [8.5516, 47.3575]
       },
       "geometry": {
         "type": "MultiPolygon",
