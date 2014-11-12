@@ -148,8 +148,7 @@
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      // NOTE we said that 'halo' as name will be replaced with 'outline' or similar
-      .halo(true);
+      .backdrop(true);
 
     var highlightLayer = sszvis.component.ruler()
       .top(0)

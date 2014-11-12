@@ -27,7 +27,7 @@ namespace('sszvis.axis', function(module) {
         .delegate('tickFormat', axisDelegate)
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('tickColor')
-        .prop('halo')
+        .prop('backdrop')
         .prop('highlight')
         .prop('highlightBoundary').highlightBoundary(0)
         .prop('showZeroY').showZeroY(false)
@@ -201,9 +201,9 @@ namespace('sszvis.axis', function(module) {
            * Add a background to axis labels to make them more readable on
            * colored backgrounds
            */
-          if (props.halo && props.slant) {
-            console.warn('Can\'t apply halo to slanted labels');
-          } else if (props.halo) {
+          if (props.backdrop && props.slant) {
+            console.warn('Can\'t apply backdrop to slanted labels');
+          } else if (props.backdrop) {
             selection.selectAll('.sszvis-axis .tick').each(function() {
               var g = d3.select(this);
               var dim = g.select('text').node().getBBox();
