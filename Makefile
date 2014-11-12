@@ -83,7 +83,10 @@ ZURICH_MAPS = \
 	geodata/stadtkreis.geojson \
 	geodata/statistische_quartiere.geojson \
 	geodata/wahlkreis.geojson \
-	geodata/zurichsee.geojson
+	geodata/zurichsee.geojson \
+	geodata/seebounds/stadtkreis_seebounds.geojson \
+	geodata/seebounds/statistische_quartiere_seebounds.geojson \
+	geodata/seebounds/wahlkreis_seebounds.geojson
 
 
 #
