@@ -55,7 +55,7 @@ Observations for the same variable across many years.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 500
+        "height": 455
     }
 }
 ```
@@ -80,7 +80,7 @@ Comparison of two datasets with huge differences in values over the same time pe
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 520
+        "height": 470
     }
 }
 ```

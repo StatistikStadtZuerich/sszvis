@@ -12,7 +12,6 @@
 
 <div id="sszvis-chart"></div>
 
-<!-- NOTE this script tag is not needed -->
 <script data-catalog-project-expose="script.js">
 (function(d3, sszvis) {
   'use strict';
@@ -74,9 +73,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-
-    // NOTE how is the height calculated? 
-    var bounds = sszvis.bounds({ height: 500, top: 10, bottom: 80 });
+    var bounds = sszvis.bounds({ top: 10, bottom: 80 });
 
 
     // Scales
@@ -96,7 +93,6 @@
     // Layers
 
     // NOTE I am thinking out lout: title and description could be extracted and saved in a constant
-    // NOTE is the way you are handling accessibility the best practice for SVG?
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: 'Diagrammtitel',
         description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
