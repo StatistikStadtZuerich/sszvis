@@ -20,6 +20,7 @@ namespace('sszvis.legend.linearColorScale', function(module) {
       .prop('segments').segments(8)
       .prop('units').units(false)
       .prop('labelPadding').labelPadding(16)
+      .prop('valueFormat').valueFormat(sszvis.fn.identity)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -67,8 +68,6 @@ namespace('sszvis.legend.linearColorScale', function(module) {
           .attr('r', segHeight / 2)
           .attr('fill', function(d) { return props.scale(d); });
 
-        if (props.units) startEnd[1] += ' ' + props.units;
-
         var labels = selection.selectAll('.sszvis-legend__label')
           .data(startEnd);
 
@@ -82,7 +81,11 @@ namespace('sszvis.legend.linearColorScale', function(module) {
           .attr('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
           .attr('alignment-baseline', 'central')
           .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
-          .text(function(d) { return d; });
+          .text(function(d, i) {
+            var formatted = props.valueFormat(d);
+            if (props.units && i === 1) formatted += ' ' + props.units;
+            return formatted;
+          });
       });
   };
 
