@@ -80,10 +80,10 @@ ZURICH_MAP_TARGETS = \
 	geodata/zurich_topo.json
 
 ZURICH_MAPS = \
-	geodata/stadtkreis_geo.json \
-	geodata/statistische_quartiere_geo.json \
-	geodata/wahlkreis_geo.json \
-	geodata/zurichsee_geo.json
+	geodata/stadtkreis.geojson \
+	geodata/statistische_quartiere.geojson \
+	geodata/wahlkreis.geojson \
+	geodata/zurichsee.geojson
 
 
 #
