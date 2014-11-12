@@ -44,13 +44,11 @@
 
     selectHovered: function(d) {
       state.selection = [d];
-      console.log('select', state.selection);
       render(state);
     },
 
-    deselectHovered: function(d) {
+    deselectHovered: function() {
       state.selection = [];
-      console.log('deselect');
       render(state);
     }
   };
@@ -104,18 +102,25 @@
     var mapMaker = sszvis.map()
       .type('zurich-stadtkreise')
       .keyName('geoId')
+      .highlight(state.selection)
+      .highlightStroke(function(d) {
+        return d3.hsl(colorScale(vAcc(d))).darker(0.7);
+      })
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
-      .stroke(sszvis.fn.compose(colorScale, vAcc));
+      .stroke(sszvis.fn.compose(colorScale, vAcc))
+      .on('over', actions.selectHovered)
+      .on('click', actions.selectHovered)
+      .on('out', actions.deselectHovered);
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(function(d) {
-        return d.name + ' - ' + vAcc(d);
+        return d.datum.name + ' - ' + vAcc(d.datum);
       })
       .visible(function(d) {
-        return state.selection.indexOf(d) >= 0;
+        return state.selection.indexOf(d.datum) >= 0;
       });
 
     var legend = sszvis.legend.linearColorScale()
@@ -134,13 +139,6 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight))
       .call(legend);
-
-
-    // Interaction
-
-    chartLayer.selectAll('.sszvis-map-area')
-      .on('mouseover', actions.selectHovered)
-      .on('mouseout', actions.deselectHovered);
   }
 
 }(d3, topojson, sszvis));
