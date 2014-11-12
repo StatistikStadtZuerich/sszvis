@@ -158,12 +158,12 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.title) {
-            var title = group.selectAll('.sszvis-axis--title')
+            var title = group.selectAll('.sszvis-axis__title')
               .data([props.title]);
 
             title.enter()
               .append('text')
-              .classed('sszvis-axis--title', true);
+              .classed('sszvis-axis__title', true);
 
             title.exit().remove();
 
