@@ -5304,7 +5304,6 @@ namespace('sszvis.map', function(module) {
           });
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .debug(true)
           .position(function(d) {
             var center = d.geoJson.properties.center;
             return center ? mapPath.projection()(center) : mapPath.centroid(d.geoJson);
