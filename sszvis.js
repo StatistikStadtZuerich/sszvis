@@ -5213,7 +5213,7 @@ namespace('sszvis.map', function(module) {
       .prop('width')
       .prop('height')
       .prop('fill').fill(function() { return 'black'; }) // default is black
-      .prop('stroke').stroke(function() { return 'none'; }) // default is none
+      .prop('stroke').stroke(function() { return 'white'; }) // default is white
       .render(function(data) {
         if (typeof topojson === 'undefined') {
           throw new Error('sszvis.map component requires topojson.js as an additional dependency: https://github.com/mbostock/topojson');
@@ -5319,7 +5319,8 @@ namespace('sszvis.map', function(module) {
           .enter()
           .append('path')
           .classed('sszvis-map__border', true)
-          .attr('d', mapPath);
+          .attr('d', mapPath)
+          .attr('stroke', props.stroke);
 
         // special rendering for Zürichsee
         if (props.type.indexOf('zurich-') >= 0) {

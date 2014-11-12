@@ -107,7 +107,6 @@
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
-      .stroke(sszvis.fn.compose(colorScale, vAcc))
       .on('over', actions.selectHovered)
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
