@@ -46,7 +46,7 @@ namespace('sszvis.map', function(module) {
   function compileMaps() {
     if (COMPILED_MAPS.compiled) return true;
 
-    var zurichNames = ['stadtkreise_geo', 'statistische_quartiere_geo', 'wahlkreise_geo'],
+    var zurichNames = ['stadtkreis_geo', 'statistische_quartiere_geo', 'wahlkreis_geo'],
         zurichTopology = sszvis.mapdata.zurich,
         zurichObjects = zurichTopology.objects;
 
@@ -90,16 +90,16 @@ namespace('sszvis.map', function(module) {
         var mapData, meshData;
         switch (props.type) {
           case 'zurich-stadtkreise':
-            mapData = COMPILED_MAPS.zurich.stadtkreise_geo;
-            meshData = COMPILED_MAPS.zurichMesh.stadtkreise_geo;
+            mapData = COMPILED_MAPS.zurich.stadtkreis_geo;
+            meshData = COMPILED_MAPS.zurichMesh.stadtkreis_geo;
             break;
           case 'zurich-statistischeQuartiere':
             mapData = COMPILED_MAPS.zurich.statistische_quartiere_geo;
             meshData = COMPILED_MAPS.zurichMesh.statistische_quartiere_geo;
             break;
           case 'zurich-wahlkreise':
-            mapData = COMPILED_MAPS.zurich.wahlkreise_geo;
-            meshData = COMPILED_MAPS.zurichMesh.wahlkreise_geo;
+            mapData = COMPILED_MAPS.zurich.wahlkreis_geo;
+            meshData = COMPILED_MAPS.zurichMesh.wahlkreis_geo;
             break;
           case 'switzerland-cantons':
             mapData = COMPILED_MAPS.switzerlandGeo;

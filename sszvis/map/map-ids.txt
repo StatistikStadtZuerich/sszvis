@@ -1,3 +1,24 @@
+This document lists the ids which are used to identify distinct map entities in the included map data.
+With the notable exception of the Zürich Wahlkreise, the ids are parsed as Numbers. The Wahlkreise ids
+are parsed as a string, e.g. "1 + 2" or "9". When data objects are provided to the map component, each one should
+have a property which is used to match that data object to a map entity. The name of this property can be configured
+when creating the map component by changing the prop "keyName". The default name expected by the component
+is "geoId". In order to ensure a valid matching, the value of that property should be one of the ids listed below.
+The id for each entity is the first item listed on the left, before the " - ".
+
+Note on sources:
+
+The map data for the city of Zürich is taken from the following pages (retrieved 12 Nov 2014):
+Stadtkreis: http://data.stadt-zuerich.ch/portal/de/index/ogd/daten/stadtkreis.html#download2
+Statistische Quartiere: http://data.stadt-zuerich.ch/portal/de/index/ogd/daten/statistisches_quartier.html#download2
+Wahlkreis: http://data.stadt-zuerich.ch/content/portal/de/index/ogd/daten/wahlkreis.html#download2
+
+The map data for the Zürichsee was provided by SSZ at the outset of the project. It was the modified slightly
+to extend the silhouette of the lake beyond the city limits, and to ensure a nice presentation. The tool used to make
+the modifications is http://geojson.io/
+
+The map data for the cantons of Switzerland is from an interactive things repository, found at: https://github.com/interactivethings/swiss-maps
+
 Switzerland: ID - Canton
 1 - Zürich
 2 - Bern
@@ -26,9 +47,21 @@ Switzerland: ID - Canton
 25 - Genève
 26 - Jura
 
-Zurich: Stadtkreise: Kreis ID from 1-12
+Zürich Stadtkreise: Kreis ID - Kreis Number
+1 - Kreis 1
+2 - Kreis 2
+3 - Kreis 3
+4 - Kreis 4
+5 - Kreis 5
+6 - Kreis 6
+7 - Kreis 7
+8 - Kreis 8
+9 - Kreis 9
+10 - Kreis 10
+11 - Kreis 11
+12 - Kreis 12
 
-Zurich: Statistische Quartiere: Quarter ID - Quarter Name - Kreis Number
+Zürich Statistische Quartiere: Quarter ID - Quarter Name - Kreis Number
 11 - Rathaus - Kreis 1
 12 - Hochschulen - Kreis 1
 13 - Lindenhof - Kreis 1
@@ -64,13 +97,13 @@ Zurich: Statistische Quartiere: Quarter ID - Quarter Name - Kreis Number
 122 - Schwamendingen-Mitte - Kreis 12
 123 - Hirzenbach - Kreis 12
 
-Zurich: Wahlkreise: Bezeichnung
-1 + 2
-3
-4 + 5
-6
-7 + 8
-9
-10
-11
-12
+Zürich Wahlkreise: ID - Kreis Combination
+"1 + 2" - Kreis 1 + Kreis 2
+"3" - Kreis 3
+"4 + 5" - Kreis 4 + Kreis 5
+"6" - Kreis 6
+"7 + 8" - Kreis 7 + Kreis 8
+"9" - Kreis 9
+"10" - Kreis 10
+"11" - Kreis 11
+"12" - Kreis 12
