@@ -3143,11 +3143,13 @@ namespace('sszvis.component.groupedBars', function(module) {
  * differs slightly from the usual case in that dimension-related accessor functions are given different
  * data than style-related accessor functions.
  *
- * @property {function} x                 An accessor function for getting the x-value of the line
- * @property {function} y                 An accessor function for getting the y-value of the line
- * @property {string, function} [stroke]  Either a string specifying the stroke color of the line or lines,
- *                                        or a function which, when passed the entire array representing the line,
- *                                        returns a value for the stroke. If left undefined, the stroke is black.
+ * @property {function} x                An accessor function for getting the x-value of the line
+ * @property {function} y                An accessor function for getting the y-value of the line
+ * @property {function} [key]            The key function to be used for the data join
+ * @property {function} [valuesAccessor] An accessor function for getting the data points array of the line
+ * @property {string, function} [stroke] Either a string specifying the stroke color of the line or lines,
+ *                                       or a function which, when passed the entire array representing the line,
+ *                                       returns a value for the stroke. If left undefined, the stroke is black.
  * @property {string, function} [stroke] Either a number specifying the stroke-width of the lines,
  *                                       or a function which, when passed the entire array representing the line,
  *                                       returns a value for the stroke-width. The default value is 1.
@@ -3164,6 +3166,8 @@ namespace('sszvis.component.line', function(module) {
       .prop('y')
       .prop('stroke')
       .prop('strokeWidth')
+      .prop('key').key(function(d, i){ return i; })
+      .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -3180,7 +3184,7 @@ namespace('sszvis.component.line', function(module) {
         // Rendering
 
         var path = selection.selectAll('.sszvis-line')
-          .data(data);
+          .data(data, props.key);
 
         path.enter()
           .append('path')
@@ -3192,7 +3196,7 @@ namespace('sszvis.component.line', function(module) {
         path
           .transition()
           .call(sszvis.transition)
-          .attr('d', line)
+          .attr('d', sszvis.fn.compose(line, props.valuesAccessor))
           .attr('stroke', props.stroke)
           .attr('stroke-width', props.strokeWidth);
       });
