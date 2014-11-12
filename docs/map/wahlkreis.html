@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var vAcc = sszvis.fn.prop('value');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    selection: [],
+    mapData: {},
+    valueDomain: [0, 1]
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+
+      render(state);
+    },
+
+    selectHovered: function(d) {
+      state.selection = [d];
+      render(state);
+    },
+
+    deselectHovered: function() {
+      state.selection = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/M_wahlkreis_fake.csv')
+    .row(function(d) {
+      return {
+        name: d['ID'],
+        // magic number 20 here is based on the range of the fake data
+        value: sszvis.parse.number(d['Value']) / 20
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ height: sszvis.bounds.SSZVIS_DEFAULT_WIDTH, top: 0, right: 0, bottom: 26, left: 0 });
+
+
+    // Scales
+
+    var colorScale = sszvis.color.seqBlu()
+      .domain(state.valueDomain);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: 'Diagrammtitel',
+        description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+      })
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
+
+
+    // Components
+
+    var mapMaker = sszvis.map()
+      .type('zurich-wahlkreise')
+      .keyName('name')
+      .highlight(state.selection)
+      .highlightStroke(function(d) {
+        return d3.hsl(colorScale(vAcc(d))).darker(0.7);
+      })
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .fill(sszvis.fn.compose(colorScale, vAcc))
+      .stroke(sszvis.fn.compose(colorScale, vAcc))
+      .on('over', actions.selectHovered)
+      .on('click', actions.selectHovered)
+      .on('out', actions.deselectHovered);
+
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) {
+        // FIXME: this is pretty inelegant and deeply coupled with the implementation of sszvis/map.
+        // Perhaps there is a better way of handling the map tooltips' data source.
+        if (!d) return;
+        return d.datum.name + ' - ' + sszvis.format.percent(vAcc(d.datum));
+      })
+      .visible(function(d) {
+        if (!d) return;
+        return state.selection.indexOf(d.datum) >= 0;
+      });
+
+    var legend = sszvis.legend.linearColorScale()
+      .scale(colorScale)
+      .width(bounds.width / 2)
+      .valueFormat(function(d) {
+        return sszvis.format.percent(d);
+      });
+
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('legend')
+      .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight))
+      .call(legend);
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>

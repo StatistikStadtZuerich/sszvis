@@ -31,6 +31,29 @@
 ```
 
 
+## Zürich: Wahlkreis
+
+```project
+{
+    "name": "map-kreis",
+    "files": {
+        "index.html": {
+            "source": "docs/map/wahlkreis.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map/data/M_wahlkreis_fake.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 516
+    }
+}
+```
+
 ## Zürich: Quartiere
 
 ```project
