@@ -867,7 +867,6 @@ namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
             .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
             .classed('sszvis-axis--vertical', props.vertical)
-            .classed('sszvis-axis--halo', props.halo)
             .attr('transform', sszvis.fn.translateString(0, 2))
             .call(axisDelegate);
 
@@ -976,12 +975,12 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.title) {
-            var title = group.selectAll('.sszvis-axis--title')
+            var title = group.selectAll('.sszvis-axis__title')
               .data([props.title]);
 
             title.enter()
               .append('text')
-              .classed('sszvis-axis--title', true);
+              .classed('sszvis-axis__title', true);
 
             title.exit().remove();
 
@@ -1013,6 +1012,31 @@ namespace('sszvis.axis', function(module) {
                   return 'end';
                 }
               });
+          }
+
+
+          /**
+           * Add a background to axis labels to make them more readable on
+           * colored backgrounds
+           */
+          if (props.halo && props.slant) {
+            console.warn('Can\'t apply halo to slanted labels');
+          } else if (props.halo) {
+            selection.selectAll('.sszvis-axis .tick').each(function() {
+              var g = d3.select(this);
+              var dim = g.select('text').node().getBBox();
+              var hPadding = 2;
+              var rect = g.select('rect');
+              if (rect.empty()) {
+                rect = g.insert('rect', ':first-child');
+              }
+              rect
+                .attr('class', 'sszvis-axis__label-background')
+                .attr('height', dim.height)
+                .attr('width', dim.width + 2 * hPadding)
+                .attr('x', dim.x - hPadding)
+                .attr('y', dim.y);
+            });
           }
         });
 
