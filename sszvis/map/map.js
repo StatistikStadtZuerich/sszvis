@@ -69,6 +69,11 @@ namespace('sszvis.map', function(module) {
     // compile the zurichsee geoJson
     COMPILED_MAPS.zurichGeo.zurichsee = topojson.feature(zurichTopo, zurichTopo.objects.zurichsee);
 
+    // compile the seebounds shapes
+    zurichNames.map(function(n) { return n + '_seebounds'; }).forEach(function(name) {
+      COMPILED_MAPS.zurichMesh[name] = topojson.mesh(zurichTopo, zurichTopo.objects[name]);
+    });
+
     // compile the Switzerland geoJson
     COMPILED_MAPS.switzerlandGeo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
 
@@ -102,19 +107,22 @@ namespace('sszvis.map', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var mapData, meshData;
+        var mapData, meshData, lakeBounds;
         switch (props.type) {
           case 'zurich-stadtkreise':
             mapData = COMPILED_MAPS.zurichGeo.stadtkreis;
             meshData = COMPILED_MAPS.zurichMesh.stadtkreis;
+            lakeBounds = COMPILED_MAPS.zurichMesh.stadtkreis_seebounds;
             break;
           case 'zurich-statistischeQuartiere':
             mapData = COMPILED_MAPS.zurichGeo.statistische_quartiere;
             meshData = COMPILED_MAPS.zurichMesh.statistische_quartiere;
+            lakeBounds = COMPILED_MAPS.zurichMesh.statistische_quartiere_seebounds;
             break;
           case 'zurich-wahlkreise':
             mapData = COMPILED_MAPS.zurichGeo.wahlkreis;
             meshData = COMPILED_MAPS.zurichMesh.wahlkreis;
+            lakeBounds = COMPILED_MAPS.zurichMesh.wahlkreis_seebounds;
             break;
           case 'switzerland-cantons':
             mapData = COMPILED_MAPS.switzerlandGeo;
@@ -187,25 +195,6 @@ namespace('sszvis.map', function(module) {
 
         baseGroups.call(tooltipAnchor);
 
-        // special rendering for Zürichsee
-        if (props.type.indexOf('zurich-') >= 0) {
-          sszvis.patterns.ensurePattern(selection, 'lake-pattern')
-            .call(sszvis.patterns.mapLakePattern);
-
-          var zurichSee = selection.selectAll('.sszvis-lake-zurich')
-            .data([COMPILED_MAPS.zurichGeo.zurichsee]);
-
-          zurichSee.enter()
-            .append('path')
-            .classed('sszvis-map__area sszvis-lake-zurich', true);
-
-          zurichSee.exit().remove();
-
-          zurichSee
-            .attr('d', mapPath)
-            .attr('fill', 'url(#lake-pattern)');
-        }
-
         // add borders
         selection
           .selectAll('.sszvis-map__border')
@@ -215,17 +204,51 @@ namespace('sszvis.map', function(module) {
           .classed('sszvis-map__border', true)
           .attr('d', mapPath);
 
+        // special rendering for Zürichsee
+        if (props.type.indexOf('zurich-') >= 0) {
+          sszvis.patterns.ensurePattern(selection, 'lake-pattern')
+            .call(sszvis.patterns.mapLakePattern);
+
+          var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
+            .data([COMPILED_MAPS.zurichGeo.zurichsee]);
+
+          zurichSee.enter()
+            .append('path')
+            .classed('sszvis-map__area sszvis-map__lakezurich', true);
+
+          zurichSee.exit().remove();
+
+          zurichSee
+            .attr('d', mapPath)
+            .attr('fill', 'url(#lake-pattern)');
+
+          var lakePath = selection.selectAll('.sszvis-map__lakepath')
+            .data([lakeBounds]);
+
+          lakePath.enter()
+            .append('path')
+            .classed('sszvis-map__lakepath', true);
+
+          lakePath.exit().remove();
+
+          lakePath
+            .attr('d', mapPath);
+        }
+
         if (props.highlight) {
           var groupedMapData = mapData.features.reduce(function(m, feature) {
             m[feature.id] = feature; return m;
           }, {});
 
-          var mergedHighlight = props.highlight.map(function(v) {
-            return {
-              geoJson: groupedMapData[v[props.keyName]],
-              datum: v
-            };
-          });
+          var mergedHighlight = props.highlight.reduce(function(m, v) {
+            if (v) {
+              m.push({
+                geoJson: groupedMapData[v[props.keyName]],
+                datum: v
+              });
+            }
+            return m;
+          }, []);
 
           var highlightBorders = selection
             .selectAll('.sszvis-map__highlight')

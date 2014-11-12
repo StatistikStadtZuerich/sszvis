@@ -160,6 +160,13 @@
   stroke-linejoin: round;
 }
 
+.sszvis-map__lakepath {
+  fill: none;
+  stroke: #CCC;
+  stroke-width: 1.25;
+  stroke-dasharray: 3 3;
+}
+
 /**
  * Segmented Control component
  *

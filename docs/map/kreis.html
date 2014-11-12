@@ -117,9 +117,13 @@
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(function(d) {
+        // FIXME: this is pretty inelegant and deeply coupled with the implementation of sszvis/map.
+        // Perhaps there is a better way of handling the map tooltips' data source.
+        if (!d) return;
         return d.datum.name + ' - ' + vAcc(d.datum);
       })
       .visible(function(d) {
+        if (!d) return;
         return state.selection.indexOf(d.datum) >= 0;
       });
 
