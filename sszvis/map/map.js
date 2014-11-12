@@ -157,7 +157,8 @@ namespace('sszvis.map', function(module) {
             return mapPath(d.geoJson);
           });
 
-        var mapAreas = baseGroups.selectAll('.sszvis-map__area');
+        var mapAreas = baseGroups.selectAll('.sszvis-map__area')
+          .data(function(d) { return [d]; });
 
         mapAreas
           .transition()
@@ -180,7 +181,8 @@ namespace('sszvis.map', function(module) {
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .debug(true)
           .position(function(d) {
-            return mapPath.centroid(d.geoJson);
+            var center = d.geoJson.properties.center;
+            return center ? mapPath.projection()(center) : mapPath.centroid(d.geoJson);
           });
 
         baseGroups.call(tooltipAnchor);
