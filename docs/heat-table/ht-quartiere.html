@@ -152,6 +152,7 @@
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
       .width(bounds.width / 2)
+      .valueFormat(sszvis.format.number)
       .units('Einwohner');
 
     var tooltipHeaderText = sszvis.component.modularText()

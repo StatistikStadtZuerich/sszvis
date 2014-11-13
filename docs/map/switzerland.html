@@ -96,7 +96,7 @@
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
       .width(bounds.width / 2)
-      .units('Wert');
+      .valueFormat(sszvis.format.percent);
 
 
     // Rendering

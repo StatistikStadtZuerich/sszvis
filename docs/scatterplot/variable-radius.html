@@ -166,7 +166,10 @@
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
       .fill(sszvis.color.qual12()(0))
-      .stroke('#FFFFFF');
+      .stroke('#FFFFFF')
+      .valueFormat(function(d) {
+        return Math.round(d * 100) / 100;
+      })
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)

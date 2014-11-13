@@ -168,7 +168,8 @@
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
       .displayValues(displayValues)
-      .width(tableDimensions.width);
+      .width(tableDimensions.width)
+      .valueFormat(sszvis.format.number);
 
     var tooltipHeaderText = sszvis.component.modularText()
       .bold(cAcc).plain('Units');

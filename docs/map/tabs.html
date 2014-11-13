@@ -122,6 +122,7 @@
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
       .width(bounds.width / 2)
+      .valueFormat(sszvis.format.percent)
       .units('Ausländeranteil');
 
 
@@ -130,7 +131,7 @@
     chartLayer.call(mapMaker);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight))
+      .attr('transform', sszvis.fn.translateString(100, bounds.innerHeight + 10))
       .call(legend);
 
     // FIXME: better centering
