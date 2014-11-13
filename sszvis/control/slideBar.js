@@ -15,7 +15,7 @@ namespace('sszvis.control.slideBar', function(module) {
       .prop('y')
       .prop('top')
       .prop('bottom')
-      .prop('label').label(sszvis.fn.constant(''))
+      .prop('label').label('')
       .prop('color')
       .prop('flip', d3.functor).flip(false)
       .render(function(data) {
