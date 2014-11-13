@@ -74,7 +74,7 @@ namespace('sszvis.legend.color', function(module) {
 
         labels
           .text(function(d) { return d; })
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
           .attr('transform', function() {
             return sszvis.fn.translateString(props.rightAlign ? -18 : 18, props.rowHeight / 2);

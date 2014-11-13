@@ -79,7 +79,7 @@ namespace('sszvis.legend.linearColorScale', function(module) {
 
         labels
           .style('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
           .text(function(d, i) {
             var formatted = props.labelFormat(d);

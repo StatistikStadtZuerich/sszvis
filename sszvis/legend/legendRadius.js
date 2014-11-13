@@ -70,7 +70,7 @@ namespace('sszvis.legend.radius', function(module) {
           .attr('y', function(d) {
             return -d + props.strokeWidth;
           })
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .style('font-size', props.labelSize)
           .text(props.labelFormat);
       });

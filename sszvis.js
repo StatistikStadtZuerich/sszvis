@@ -1228,7 +1228,7 @@ namespace('sszvis.axis', function(module) {
       vertical: function(selection) {
         selection.style('text-anchor', 'start')
           .attr('dx', '0em')
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .attr('transform', 'rotate(-90)');
       },
       diagonal: function(selection) {
@@ -3741,7 +3741,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
             return crispX(d) + offset;
           })
           .attr('y', middleY)
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
@@ -5014,7 +5014,7 @@ namespace('sszvis.legend.color', function(module) {
 
         labels
           .text(function(d) { return d; })
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
           .attr('transform', function() {
             return sszvis.fn.translateString(props.rightAlign ? -18 : 18, props.rowHeight / 2);
@@ -5132,7 +5132,7 @@ namespace('sszvis.legend.linearColorScale', function(module) {
 
         labels
           .style('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
           .text(function(d, i) {
             var formatted = props.labelFormat(d);
@@ -5220,7 +5220,7 @@ namespace('sszvis.legend.radius', function(module) {
           .attr('y', function(d) {
             return -d + props.strokeWidth;
           })
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .style('font-size', props.labelSize)
           .text(props.labelFormat);
       });

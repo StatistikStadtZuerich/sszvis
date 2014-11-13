@@ -371,7 +371,7 @@ namespace('sszvis.axis', function(module) {
       vertical: function(selection) {
         selection.style('text-anchor', 'start')
           .attr('dx', '0em')
-          .attr('dy', '0.35em')
+          .attr('dy', '0.35em') // vertically-center
           .attr('transform', 'rotate(-90)');
       },
       diagonal: function(selection) {
