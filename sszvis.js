@@ -736,7 +736,7 @@ namespace('sszvis.fn', function(module) {
      * @return {string}              An SVG transform string with rounded values
      */
     roundTransformString: function(transformStr) {
-      var roundNumber = sszvis.fn.compose(Math.round, Number);
+      var roundNumber = sszvis.fn.compose(Math.floor, Number);
       return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function(_, left, vecStr, right) {
         var roundVec = vecStr
           .replace(',', ' ')
