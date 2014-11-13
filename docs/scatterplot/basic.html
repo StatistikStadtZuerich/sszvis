@@ -121,7 +121,8 @@
 
     var cLegend = sszvis.legend.color()
       .scale(cScale)
-      .orientation('vertical');
+      .horizontalFloat(true)
+      .floatPadding(15);
 
 
     // Rendering
@@ -137,7 +138,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 105) + ')')
+      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 130) + ')')
       .call(cLegend);
   }
 
