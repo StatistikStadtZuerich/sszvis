@@ -5361,7 +5361,7 @@ namespace('sszvis.map', function(module) {
 
         mapAreas
           .transition()
-          .call(sszvis.transition.fastTransition)
+          .call(sszvis.transition)
           .attr('fill', function(d) {
             return sszvis.fn.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
           });
