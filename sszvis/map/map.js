@@ -266,14 +266,14 @@ namespace('sszvis.map', function(module) {
 
           highlightBorders.enter()
             .append('path')
-            .classed('sszvis-map__highlight', true)
-            .attr('d', function(d) {
-              return mapPath(d.geoJson);
-            });
+            .classed('sszvis-map__highlight', true);
 
           highlightBorders.exit().remove();
 
           highlightBorders
+            .attr('d', function(d) {
+              return mapPath(d.geoJson);
+            })
             .attr('stroke', function(d) {
               return props.highlightStroke(d.datum);
             });

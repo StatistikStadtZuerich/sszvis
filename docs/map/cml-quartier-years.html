@@ -21,7 +21,6 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var INITIAL_YEAR = sszvis.parse.year('2013');
 
 
   /* Shortcuts
@@ -39,8 +38,10 @@
     yearDomain: [new Date(), new Date()],
     quarters: [],
     lineData: [],
-    currentYear: null,
-    currentMapData: []
+    currentYear: new Date(),
+    currentMapData: [],
+    highlightEntity: null,
+    lineHighlightColor: sszvis.color.qual12()(0)
   };
 
 
@@ -52,23 +53,54 @@
       state.valueDomain = [0, d3.max(state.data, vAcc)];
       state.yearDomain = d3.extent(state.data, yearAcc);
       state.quarters = sszvis.fn.set(state.data, qAcc);
-      state.lineData = sszvis.cascade()
+      var cascadedData = sszvis.cascade()
         .arrayBy(qAcc)
         .sort(function(a, b) {
           return d3.ascending(yearAcc(a), yearAcc(b));
         })
         .apply(state.data);
+      state.lineData = cascadedData.map(function(lineData) {
+        return {
+          geoId: qAcc(sszvis.fn.first(lineData)),
+          values: lineData
+        };
+      });
 
-      actions.changeYear(INITIAL_YEAR);
+      actions.resetYear();
     },
 
-    changeYear: function(inputDate) {
-      var year = yearAcc(closestDatum(state.data, yearAcc, inputDate));
-      if (state.currentYear === year) return;
-      state.currentYear = year;
-      state.currentMapData = state.data.filter(function(v) {
-        return yearAcc(v).getFullYear() === state.currentYear.getFullYear();
-      });
+    changeYearAndEntity: function(inputDate, inputValue) {
+      var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
+      if (state.currentYear !== closestYear) {
+        state.currentMapData = state.data.filter(function(v) {
+          return yearAcc(v).getFullYear() === closestYear.getFullYear();
+        })
+        .sort(function(a, b) {
+          return d3.ascending(vAcc(a), vAcc(b)); // currentMapData has to be sorted so that d3.bisector will work on it.
+        });
+      }
+
+
+      var closestEntry = inputValue === null ? null : closestDatum(state.currentMapData, vAcc, inputValue);
+      if (state.currentYear !== closestYear || state.highlightEntity !== closestEntry) {
+        state.currentYear = closestYear;
+        state.highlightEntity = closestEntry;
+        render(state);
+      }
+    },
+
+    resetYear: function() {
+      var mostRecentDate = d3.max(state.yearDomain);
+      actions.changeYearAndEntity(mostRecentDate, null);
+    },
+
+    changeMapEntity: function(d) {
+      state.highlightEntity = d;
+      render(state);
+    },
+
+    resetMapEntity: function() {
+      state.highlightEntity = null;
       render(state);
     }
   };
@@ -81,7 +113,8 @@
       return {
         geoId: sszvis.parse.number(d['QNr']),
         year: sszvis.parse.year(d['Jahr']),
-        value: sszvis.parse.number(d['Anzahl'])
+        value: sszvis.parse.number(d['Anzahl']),
+        name: d['Qname']
       };
     })
     .get(function(error, data) {
@@ -117,6 +150,8 @@
 
     // Layers
 
+    var highlightData = state.highlightEntity ? [state.highlightEntity] : [];
+
     var chart = sszvis.createSvgLayer('#sszvis-chart', outerBounds, {
       title: TITLE,
       description: DESCRIPTION
@@ -125,27 +160,41 @@
     var map = chart.selectGroup('map')
       .datum(state.currentMapData);
 
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(highlightData);
+
     var lineChart = chart.selectGroup('line')
       .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .datum(state.lineData);
 
     var highlightLayer = chart.selectGroup('highlight')
       .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
-      .datum(state.currentMapData);
+      .datum(highlightData);
 
 
     // Components
 
     var mapMaker = sszvis.map()
       .type('zurich-statistischeQuartiere')
+      .keyName('geoId')
+      .highlight(highlightData)
+      .highlightStroke(function(d) {
+        return d3.hsl(fillScale(vAcc(d))).darker(0.7);
+      })
       .width(mapBounds.innerWidth)
       .height(mapBounds.innerHeight)
-      .fill(sszvis.fn.compose(fillScale, vAcc));
+      .fill(sszvis.fn.compose(fillScale, vAcc))
+      .on('over', actions.changeMapEntity)
+      .on('out', actions.resetMapEntity);
 
     var lineMaker = sszvis.component.line()
+      .key(sszvis.fn.prop('geoId'))
+      .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, yearAcc))
       .y(sszvis.fn.compose(yScale, vAcc))
-      .stroke(sszvis.color.qual12());
+      .stroke(function(lineData) {
+        return state.highlightEntity && state.highlightEntity.geoId === lineData.geoId ? state.lineHighlightColor : '#d0d0d0'
+      });
 
     var xTickValues = xScale
       .ticks(4)
@@ -163,13 +212,27 @@
       .backdrop(true);
 
     var slideBar = sszvis.control.slideBar()
-      .x(yearAcc)
-      .y(vAcc)
-      .xScale(xScale)
-      .yScale(yScale)
+      .x(xScale(state.currentYear))
+      .y(sszvis.fn.compose(yScale, vAcc))
+      .top(0)
+      .bottom(lineChartBounds.innerHeight)
+      .flip(function(d) {
+        return xScale(yearAcc(d)) >= lineChartBounds.innerWidth / 2;
+      })
       .color(sszvis.color.qual12())
       .label(function(d) {
         return 'Anzahl: ' + d.value;
+      });
+
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) {
+        if (!d) return;
+        return d.datum.name + ' - ' + vAcc(d.datum);
+      })
+      .visible(function(d) {
+        if (!d) return;
+        return state.highlightEntity === d.datum;
       });
 
     var legend = sszvis.legend.linearColorScale()
@@ -181,6 +244,9 @@
     // Rendering
 
     map.call(mapMaker);
+
+    map.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
     lineChart.call(lineMaker);
 
@@ -201,15 +267,15 @@
 
     // Interaction
 
-    var clickBehavior = sszvis.behavior.click()
+    var hoverBehavior = sszvis.behavior.move()
       .xScale(xScale)
       .yScale(yScale)
       .padding({ top: 30 })
-      .on('down', actions.changeYear)
-      .on('drag', actions.changeYear);
+      .on('move', actions.changeYearAndEntity)
+      .on('end', actions.resetYear);
 
     highlightLayer.selectGroup('interaction')
-      .call(clickBehavior);
+      .call(hoverBehavior);
   }
 
 

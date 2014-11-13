@@ -2,6 +2,9 @@
  * SlideBar for use in sliding along the x-axis of charts
  *
  * @module  sszvis/control/slideBar
+ *
+ * FIXME: This component is very similar to the ruler and rangeRuler components, and should probably be grouped
+ * with them
  */
 namespace('sszvis.control.slideBar', function(module) {
   'use strict';
@@ -10,24 +13,22 @@ namespace('sszvis.control.slideBar', function(module) {
     return d3.component()
       .prop('x')
       .prop('y')
-      .prop('xScale')
-      .prop('yScale')
+      .prop('top')
+      .prop('bottom')
       .prop('label').label(sszvis.fn.constant(''))
       .prop('color')
+      .prop('flip', d3.functor).flip(false)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var xValue = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.xScale, props.x);
-        var yValue = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.yScale, props.y);
+        var crispY = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y);
 
-        var xPos = xValue(sszvis.fn.first(data));
-        var top = d3.min(props.yScale.range());
-        var bottom = d3.max(props.yScale.range()) - 4;
-
+        var crispX = sszvis.fn.roundPixelCrisp(props.x);
+        var bottom = props.bottom - 4;
         var handleWidth = 10;
         var handleHeight = 24;
-        var handleTop = top - handleHeight;
+        var handleTop = props.top - handleHeight;
 
         var group = selection.selectAll('.sszvis-slider-group')
           .data([0]);
@@ -51,13 +52,13 @@ namespace('sszvis.control.slideBar', function(module) {
           .classed('sszvis-slider__handle-mark', true);
 
         group.selectAll('.sszvis-slider__line')
-          .attr('x1', xPos)
-          .attr('y1', sszvis.fn.roundPixelCrisp(top))
-          .attr('x2', xPos)
+          .attr('x1', crispX)
+          .attr('y1', sszvis.fn.roundPixelCrisp(props.top))
+          .attr('x2', crispX)
           .attr('y2', sszvis.fn.roundPixelCrisp(bottom));
 
         group.selectAll('.sszvis-slider__handle')
-          .attr('x', xPos - handleWidth / 2)
+          .attr('x', crispX - handleWidth / 2)
           .attr('y', sszvis.fn.roundPixelCrisp(handleTop))
           .attr('width', handleWidth)
           .attr('height', handleHeight)
@@ -65,9 +66,9 @@ namespace('sszvis.control.slideBar', function(module) {
           .attr('ry', 2);
 
         group.selectAll('.sszvis-slider__handle-mark')
-          .attr('x1', xPos)
+          .attr('x1', crispX)
           .attr('y1', sszvis.fn.roundPixelCrisp(handleTop + handleHeight * 0.15))
-          .attr('x2', xPos)
+          .attr('x2', crispX)
           .attr('y2', sszvis.fn.roundPixelCrisp(handleTop + handleHeight * 0.85));
 
         var dots = group.selectAll('.sszvis-slider__dot')
@@ -80,8 +81,8 @@ namespace('sszvis.control.slideBar', function(module) {
         dots.exit().remove();
 
         dots
-          .attr('cx', xValue)
-          .attr('cy', yValue)
+          .attr('cx', crispX)
+          .attr('cy', crispY)
           .attr('r', 3.5)
           .attr('fill', props.color);
 
@@ -95,14 +96,19 @@ namespace('sszvis.control.slideBar', function(module) {
         captions.exit().remove();
 
         captions
-          .attr('x', xValue)
-          .attr('y', yValue)
-          .attr('dx', 10)
+          .attr('x', crispX)
+          .attr('y', crispY)
+          .attr('dx', function(d) {
+            return props.flip(d) ? -10 : 10;
+          })
           .attr('dy', function(d) {
             var baselineShift = 5;
-            if (yValue(d) < top + baselineShift)    return 2 * baselineShift;
-            if (yValue(d) > bottom - baselineShift) return 0;
+            if (crispY(d) < props.top + baselineShift)    return 2 * baselineShift;
+            if (crispY(d) > bottom - baselineShift) return 0;
             return baselineShift;
+          })
+          .style('text-anchor', function(d) {
+            return props.flip(d) ? 'end' : 'start';
           })
           .text(props.label);
 
