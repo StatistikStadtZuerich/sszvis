@@ -20,7 +20,13 @@ namespace('sszvis.component.rangeRuler', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var middleY = function(d) { return (props.y0(d) + props.y1(d)) / 2; };
+        var crispX = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x);
+        var crispY0 = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y0);
+        var crispY1 = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y1);
+        var middleY = function(d) {
+          return sszvis.fn.roundPixelCrisp((props.y0(d) + props.y1(d)) / 2);
+        };
+
         var dotRadius = 1.5;
 
         var line = selection.selectAll('.sszvis-rangeRuler__rule')
@@ -33,9 +39,9 @@ namespace('sszvis.component.rangeRuler', function(module) {
         line.exit().remove();
 
         line
-          .attr('x1', props.x)
+          .attr('x1', crispX)
           .attr('y1', props.top)
-          .attr('x2', props.x)
+          .attr('x2', crispX)
           .attr('y2', props.bottom);
 
         var marks = selection.selectAll('.sszvis-rangeRuler--mark')
@@ -53,21 +59,21 @@ namespace('sszvis.component.rangeRuler', function(module) {
 
         marks.selectAll('.sszvis-rangeRuler__p1')
           .data(function(d) { return [d]; })
-          .attr('cx', props.x)
-          .attr('cy', props.y0)
+          .attr('cx', crispX)
+          .attr('cy', crispY0)
           .attr('r', dotRadius);
 
         marks.selectAll('.sszvis-rangeRuler__p2')
           .data(function(d) { return [d]; })
-          .attr('cx', props.x)
-          .attr('cy', props.y1)
+          .attr('cx', crispX)
+          .attr('cy', crispY1)
           .attr('r', dotRadius);
 
         marks.selectAll('.sszvis-rangeRuler__label')
           .data(function(d) { return [d]; })
           .attr('x', function(d, i) {
             var offset = props.flip(d) ? -10 : 10;
-            return props.x(d) + offset;
+            return crispX(d) + offset;
           })
           .attr('y', middleY)
           .attr('text-anchor', function(d) {
@@ -87,7 +93,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
         total
           .attr('x', function(d, i) {
             var offset = props.flip(d) ? -10 : 10;
-            return props.x(d) + offset;
+            return crispX(d) + offset;
           })
           .attr('y', props.top - 10)
           .attr('text-anchor', function(d) {

@@ -38,13 +38,9 @@ namespace('sszvis.component.ruler', function(module) {
           .classed('sszvis-ruler__rule', true);
 
         ruler
-          .attr('x1', function() {
-            return Math.floor(props.x.apply(this, arguments)) + 0.5;
-          })
+          .attr('x1', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
           .attr('y1', props.y)
-          .attr('x2', function() {
-            return Math.floor(props.x.apply(this, arguments)) + 0.5;
-          })
+          .attr('x2', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
           .attr('y2', props.bottom);
 
         ruler.exit().remove();
@@ -57,8 +53,8 @@ namespace('sszvis.component.ruler', function(module) {
           .classed('sszvis-ruler__dot', true);
 
         dot
-          .attr('cx', props.x)
-          .attr('cy', props.y)
+          .attr('cx', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
+          .attr('cy', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y))
           .attr('r', 3.5)
           .attr('fill', props.color);
 
@@ -72,8 +68,8 @@ namespace('sszvis.component.ruler', function(module) {
           .classed('sszvis-ruler__label', true);
 
         label
-          .attr('x', props.x)
-          .attr('y', props.y)
+          .attr('x', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
+          .attr('y', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y))
           .attr('dx', function(d) {
             return props.flip(d) ? -10 : 10;
           })

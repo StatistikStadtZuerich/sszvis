@@ -15,43 +15,46 @@ namespace('sszvis.component.rangeFlag', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var bottomDot = selection.selectAll('circle.sszvis-legend--mark.bottom')
+        var crispX = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x);
+        var crispY0 = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y0);
+        var crispY1 = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y1);
+
+        var bottomDot = selection.selectAll('.sszvis-rangeFlag__mark.bottom')
+          .data(data);
+
+        var topDot = selection.selectAll('.sszvis-rangeFlag__mark.top')
           .data(data);
 
         bottomDot
           .call(makeFlagDot)
           .classed('bottom', true)
-          .attr('cy', props.y0);
-
-        var topDot = selection.selectAll('circle.sszvis-legend--mark.top')
-          .data(data);
+          .attr('cx', crispX)
+          .attr('cy', crispY0);
 
         topDot
           .call(makeFlagDot)
           .classed('top', true)
-          .attr('cy', props.y1);
-
-        function makeFlagDot(dot) {
-          dot.enter()
-            .append('circle')
-            .classed('sszvis-legend--mark', true);
-
-          dot.exit().remove();
-
-          dot
-            .attr('cx', props.x)
-            .attr('r', 2)
-            .attr('fill', '#fff')
-            .attr('stroke', '#909090');
-        }
+          .attr('cx', crispX)
+          .attr('cy', crispY1);
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
-            return [props.x(d), (props.y0(d) + props.y1(d)) / 2];
+            return [crispX(d), sszvis.fn.roundPixelCrisp((props.y0(d) + props.y1(d)) / 2)];
           });
 
         selection.call(tooltipAnchor);
       });
   };
+
+  function makeFlagDot(dot) {
+    dot.enter()
+      .append('circle')
+      .attr('class', 'sszvis-rangeFlag__mark');
+
+    dot.exit().remove();
+
+    dot
+      .attr('r', 3.5);
+  }
 
 });

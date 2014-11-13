@@ -278,7 +278,7 @@
  */
 .sszvis-ruler__rule {
   shape-rendering: crispEdges;
-  stroke: #B8B8B8;
+  stroke: #CCCCCC;
 }
 
 .sszvis-ruler__dot {
@@ -296,17 +296,31 @@
 }
 
 /**
+ * rangeFlag component
+ *
+ * @module sszvis/component/rangeFlag
+ */
+.sszvis-rangeFlag__mark {
+  fill: #EFEFEF;
+  stroke: #7C7C7C;
+  stroke-width: 1.5;
+}
+
+/**
  * rangeRule component
  *
  * @module sszvis/component/rangeRuler
  */
 .sszvis-rangeRuler__rule {
-  stroke: #555;
+  opacity: 0.25;
   shape-rendering: crispEdges;
+  stroke: #000000;
 }
 
-.sszvis-rangeRuler__p1, .sszvis-rangeRuler__p2 {
-  fill: #555;
+.sszvis-rangeRuler__p1,
+.sszvis-rangeRuler__p2 {
+  fill: #000000;
+  opacity: 0.25;
 }
 
 .sszvis-rangeRuler__label, .sszvis-rangeRuler__total {
