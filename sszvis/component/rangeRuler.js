@@ -71,7 +71,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
 
         marks.selectAll('.sszvis-rangeRuler__label')
           .data(function(d) { return [d]; })
-          .attr('x', function(d, i) {
+          .attr('x', function(d) {
             var offset = props.flip(d) ? -10 : 10;
             return crispX(d) + offset;
           })
@@ -92,7 +92,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
         total.exit().remove();
 
         total
-          .attr('x', function(d, i) {
+          .attr('x', function(d) {
             var offset = props.flip(d) ? -10 : 10;
             return crispX(d) + offset;
           })
