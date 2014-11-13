@@ -15,6 +15,12 @@
 (function(d3, sszvis) {
   'use strict';
 
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('kreis');
@@ -105,8 +111,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: 'Diagrammtitel',
-        description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+        title: TITLE,
+        description: DESCRIPTION
       })
       .datum(state.data);
 

@@ -18,6 +18,8 @@
 
   /* Configuration
   ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var HIGHLIGHTED_DATES = [new Date(2013, 10, 10)];
 
 
@@ -90,8 +92,8 @@
 
     // Layers
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: 'Diagrammtitel',
-        description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+        title: TITLE,
+        description: DESCRIPTION
       })
       .datum(state.lineData);
 

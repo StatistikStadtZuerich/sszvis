@@ -19,6 +19,8 @@
 
   /* Configuration
   ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var INITIAL_YEAR = sszvis.parse.year('2013');
 
 
@@ -116,8 +118,8 @@
     // Layers
 
     var chart = sszvis.createSvgLayer('#sszvis-chart', outerBounds, {
-      title: 'Diagrammtitel',
-      description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+      title: TITLE,
+      description: DESCRIPTION
     });
 
     var map = chart.selectGroup('map')

@@ -16,6 +16,12 @@
 (function(d3, sszvis) {
   'use strict';
 
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('month');
@@ -92,10 +98,9 @@
 
     // Layers
 
-    // NOTE I am thinking out lout: title and description could be extracted and saved in a constant
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: 'Diagrammtitel',
-        description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+        title: TITLE,
+        description: DESCRIPTION
       })
       .datum(state.lineData);
 

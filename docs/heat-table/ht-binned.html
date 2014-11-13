@@ -17,6 +17,8 @@
 
   /* Configuration
   ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   // These are the internal edges of the bins used for the color scale.
   // IMPORTANT: because of the way d3.scale.threshold works, do not specify
   // fixed upper and lower bounds. Anything less than or equal to the first element
@@ -126,8 +128,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: 'Diagrammtitel',
-        description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+        title: TITLE,
+        description: DESCRIPTION
       })
       .datum(state.data);
 

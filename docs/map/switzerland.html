@@ -17,6 +17,12 @@
 (function(d3, topojson, sszvis) {
   'use strict';
 
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
   /* Shortcuts
   ----------------------------------------------- */
   var vAcc = sszvis.fn.prop('value');
@@ -79,8 +85,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: 'Diagrammtitel',
-        description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+        title: TITLE,
+        description: DESCRIPTION
       })
       .datum(state.data);
 
