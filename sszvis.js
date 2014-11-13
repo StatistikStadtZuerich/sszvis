@@ -3914,6 +3914,17 @@ namespace('sszvis.component.ruler', function(module) {
 
         dot.exit().remove();
 
+
+        var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
+          .data(data, key);
+
+        labelOutline.enter()
+          .append('text')
+          .classed('sszvis-ruler__label-outline', true);
+
+        labelOutline.exit().remove();
+
+
         var label = selection.selectAll('.sszvis-ruler__label')
           .data(data, key);
 
@@ -3921,7 +3932,12 @@ namespace('sszvis.component.ruler', function(module) {
           .append('text')
           .classed('sszvis-ruler__label', true);
 
-        label
+        label.exit().remove();
+
+
+        // Update both labelOutline and labelOutline selections
+
+        selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
           .attr('x', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
           .attr('y', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y))
           .attr('dx', function(d) {
@@ -3937,8 +3953,6 @@ namespace('sszvis.component.ruler', function(module) {
             return props.flip(d) ? 'end' : 'start';
           })
           .text(props.label);
-
-        label.exit().remove();
 
       });
   };
