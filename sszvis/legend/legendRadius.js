@@ -66,11 +66,11 @@ namespace('sszvis.legend.radius', function(module) {
         labels.exit().remove();
 
         labels
-          .attr('x', range[1] + 18)
+          .attr('dx', range[1] + 18)
           .attr('y', function(d) {
             return -d + props.strokeWidth;
           })
-          .attr('alignment-baseline', 'central')
+          .attr('dy', '0.35em')
           .style('font-size', props.labelSize)
           .text(props.labelFormat);
       });

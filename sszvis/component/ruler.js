@@ -79,7 +79,7 @@ namespace('sszvis.component.ruler', function(module) {
             if (props.y(d) > props.bottom - baselineShift) return 0;
             return baselineShift;
           })
-          .attr('text-anchor', function(d) {
+          .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
           .text(props.label);

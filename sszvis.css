@@ -65,7 +65,6 @@
 }
 
 .sszvis-reference-line__caption {
-  alignment-baseline: baseline;
   fill: #7C7C7C;
   font-family: Arial, sans-serif;
   font-size: 11px;
@@ -78,7 +77,6 @@
  * @module sszvis/component/dataAreaCircle
  */
 .sszvis-data-area-circle__caption {
-  alignment-baseline: middle;
   fill: #7C7C7C;
   font-family: Arial, sans-serif;
   font-size: 11px;
@@ -91,7 +89,6 @@
  * @module sszvis/component/dataAreaRectangle
  */
 .sszvis-data-area-rectangle__caption {
-  alignment-baseline: middle;
   fill: #7C7C7C;
   font-family: Arial, sans-serif;
   font-size: 11px;
@@ -109,6 +106,11 @@
   font-size: 12px;
   font-style: normal;
   font-weight: normal;
+  text-anchor: start;
+}
+
+.sszvis-legend__textpath {
+  font-size: 12px;
 }
 
 

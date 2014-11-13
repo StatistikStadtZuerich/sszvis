@@ -79,7 +79,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         labels.exit().remove();
 
         labels
-          .attr('text-anchor', 'middle')
+          .style('text-anchor', 'middle')
           .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
           .text(function(d) {
             return props.labelFormat(d.p0);

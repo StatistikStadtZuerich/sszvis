@@ -76,7 +76,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
             return crispX(d) + offset;
           })
           .attr('y', middleY)
-          .attr('text-anchor', function(d) {
+          .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
           .text(props.label);
@@ -96,7 +96,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
             return crispX(d) + offset;
           })
           .attr('y', props.top - 10)
-          .attr('text-anchor', function(d) {
+          .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
           .text('Total ' + sszvis.format.number(props.total));

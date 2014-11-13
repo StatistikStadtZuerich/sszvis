@@ -3741,7 +3741,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
             return crispX(d) + offset;
           })
           .attr('y', middleY)
-          .attr('text-anchor', function(d) {
+          .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
           .text(props.label);
@@ -3761,7 +3761,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
             return crispX(d) + offset;
           })
           .attr('y', props.top - 10)
-          .attr('text-anchor', function(d) {
+          .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
           .text('Total ' + sszvis.format.number(props.total));
@@ -3920,7 +3920,7 @@ namespace('sszvis.component.ruler', function(module) {
             if (props.y(d) > props.bottom - baselineShift) return 0;
             return baselineShift;
           })
-          .attr('text-anchor', function(d) {
+          .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
           .text(props.label);
@@ -4923,7 +4923,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         labels.exit().remove();
 
         labels
-          .attr('text-anchor', 'middle')
+          .style('text-anchor', 'middle')
           .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
           .text(function(d) {
             return props.labelFormat(d.p0);
@@ -5013,8 +5013,8 @@ namespace('sszvis.legend.color', function(module) {
 
         labels
           .text(function(d) { return d; })
-          .attr('alignment-baseline', 'central')
-          .attr('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
+          .attr('dy', '0.35em')
+          .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
           .attr('transform', function() {
             return sszvis.fn.translateString(props.rightAlign ? -18 : 18, props.rowHeight / 2);
           });
@@ -5130,8 +5130,8 @@ namespace('sszvis.legend.linearColorScale', function(module) {
         labels.exit().remove();
 
         labels
-          .attr('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
-          .attr('alignment-baseline', 'central')
+          .style('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
+          .attr('dy', '0.35em')
           .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
           .text(function(d, i) {
             var formatted = props.labelFormat(d);
@@ -5215,11 +5215,11 @@ namespace('sszvis.legend.radius', function(module) {
         labels.exit().remove();
 
         labels
-          .attr('x', range[1] + 18)
+          .attr('dx', range[1] + 18)
           .attr('y', function(d) {
             return -d + props.strokeWidth;
           })
-          .attr('alignment-baseline', 'central')
+          .attr('dy', '0.35em')
           .style('font-size', props.labelSize)
           .text(props.labelFormat);
       });
