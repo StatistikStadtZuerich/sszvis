@@ -65,6 +65,23 @@
           values: lineData
         };
       });
+      var averageLineValues = cascadedData.reduce(function(m, lineData) {
+        lineData.forEach(function(datum, index) {
+          if (!m[index]) {
+            m[index] = {
+              year: datum.year,
+              value: 0
+            };
+          }
+          m[index].value += Math.round(datum.value / cascadedData.length);
+        });
+        return m;
+      }, []);
+      state.averageLine = {
+        geoId: null,
+        values: averageLineValues
+      };
+      state.lineData.push(state.averageLine);
 
       actions.resetYear();
     },
@@ -150,7 +167,10 @@
 
     // Layers
 
-    var highlightData = state.highlightEntity ? [state.highlightEntity] : [];
+    var mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
+    var lineHighlightData = state.highlightEntity ? [state.highlightEntity] : state.averageLine.values.filter(function(averageObj) {
+      return yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear();
+    });
 
     var chart = sszvis.createSvgLayer('#sszvis-chart', outerBounds, {
       title: TITLE,
@@ -161,7 +181,7 @@
       .datum(state.currentMapData);
 
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
-      .datum(highlightData);
+      .datum(mapHighlightData);
 
     var lineChart = chart.selectGroup('line')
       .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
@@ -169,7 +189,7 @@
 
     var highlightLayer = chart.selectGroup('highlight')
       .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
-      .datum(highlightData);
+      .datum(lineHighlightData);
 
 
     // Components
@@ -177,7 +197,7 @@
     var mapMaker = sszvis.map()
       .type('zurich-statistischeQuartiere')
       .keyName('geoId')
-      .highlight(highlightData)
+      .highlight(mapHighlightData)
       .highlightStroke(function(d) {
         return d3.hsl(fillScale(vAcc(d))).darker(0.7);
       })
@@ -193,7 +213,13 @@
       .x(sszvis.fn.compose(xScale, yearAcc))
       .y(sszvis.fn.compose(yScale, vAcc))
       .stroke(function(lineData) {
-        return state.highlightEntity && state.highlightEntity.geoId === lineData.geoId ? state.lineHighlightColor : '#d0d0d0'
+        var isBlue;
+        if (!state.highlightEntity) {
+          isBlue = lineData.geoId === null; // if so, this is the average line
+        } else {
+          isBlue = state.highlightEntity.geoId === lineData.geoId;
+        }
+        return isBlue ? state.lineHighlightColor : '#d0d0d0';
       });
 
     var xTickValues = xScale
@@ -221,7 +247,7 @@
       })
       .color(sszvis.color.qual12())
       .label(function(d) {
-        return 'Anzahl: ' + d.value;
+        return 'Anzahl: ' + sszvis.format.number(d.value);
       });
 
     var tooltip = sszvis.component.tooltip()
