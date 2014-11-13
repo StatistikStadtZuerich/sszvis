@@ -339,7 +339,7 @@ namespace('sszvis.fn', function(module) {
      * @return {number}     A pixel position snapped to the pixel grid
      */
     roundPixelCrisp: function(pos) {
-      return Math.round(pos) + 0.5;
+      return Math.floor(pos) + 0.5;
     },
 
     /**

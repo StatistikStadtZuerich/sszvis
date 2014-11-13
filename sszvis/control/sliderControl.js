@@ -107,7 +107,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handle
           .attr('transform', function(d) {
-            return sszvis.fn.translateString(Math.round(props.scale(d)) + 0.5, 0);
+            return sszvis.fn.translateString(sszvis.fn.roundPixelCrips(props.scale(d)), 0);
           })
 
         handleEntering

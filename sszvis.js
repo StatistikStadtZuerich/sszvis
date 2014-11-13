@@ -719,7 +719,7 @@ namespace('sszvis.fn', function(module) {
      * @return {number}     A pixel position snapped to the pixel grid
      */
     roundPixelCrisp: function(pos) {
-      return Math.round(pos) + 0.5;
+      return Math.floor(pos) + 0.5;
     },
 
     /**
@@ -2646,7 +2646,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handle
           .attr('transform', function(d) {
-            return sszvis.fn.translateString(Math.round(props.scale(d)) + 0.5, 0);
+            return sszvis.fn.translateString(sszvis.fn.roundPixelCrips(props.scale(d)), 0);
           })
 
         handleEntering
