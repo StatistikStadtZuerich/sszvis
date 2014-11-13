@@ -81,7 +81,7 @@
   ----------------------------------------------- */
   function render(state) {
     var squarePadding = 2;
-    var tableDimensions = sszvis.fn.heatTableDimensions(sszvis.bounds.SSZVIS_DEFAULT_WIDTH, squarePadding, state.g1List.length, state.g2List.length);
+    var tableDimensions = sszvis.fn.heatTableDimensions(sszvis.bounds.DEFAULT_WIDTH, squarePadding, state.g1List.length, state.g2List.length);
     var bounds = sszvis.bounds({ width: 60 + tableDimensions.width + 20, left: 60, right: 20, height: 60 + tableDimensions.height + 140, top: 60, bottom: 140 });
 
 

@@ -1,14 +1,40 @@
 /**
- * Axis component based on the d3.axis interface
+ * Axis component
  *
- * @see https://github.com/mbostock/d3/wiki/SVG-Axes
+ * This component is an extension of d3.axis and provides the same interface
+ * with some custom additions. It provides good defaults for sszvis charts
+ * and helps with some commonly used functionality.
+ *
  * @module sszvis/axis
+ *
+ * The following properties are directly delegated to the d3.axis component.
+ * They are documented in the d3 documentation.
+ * @see https://github.com/mbostock/d3/wiki/SVG-Axes
+ *
+ * @property {function} scale         Delegates to d3.axis
+ * @property {function} orient        Delegates to d3.axis
+ * @property {function} ticks         Delegates to d3.axis
+ * @property {function} tickValues    Delegates to d3.axis
+ * @property {function} tickSize      Delegates to d3.axis
+ * @property {function} innerTickSize Delegates to d3.axis
+ * @property {function} outerTickSize Delegates to d3.axis
+ * @property {function} tickPadding   Delegates to d3.axis
+ * @property {function} tickFormat    Delegates to d3.axis
+ *
+ * The following properties are custom additions.
+ *
+ * @property {function} highlight Whether or not an axis tick should be visually highlighted
+ *
+ * FIXME: document missing custom properties
+ *
+ * @return {d3.component}
  */
 namespace('sszvis.axis', function(module) {
 'use strict';
 
   var TICK_PROXIMITY_THRESHOLD = 8;
   var TICK_END_THRESHOLD = 12;
+  var LABEL_PROXIMITY_THRESHOLD = 10;
 
   module.exports = (function() {
 
@@ -26,13 +52,12 @@ namespace('sszvis.axis', function(module) {
         .delegate('tickPadding', axisDelegate)
         .delegate('tickFormat', axisDelegate)
         .prop('alignOuterLabels').alignOuterLabels(false)
-        .prop('tickColor')
-        .prop('halo')
-        .prop('highlight')
-        .prop('highlightBoundary').highlightBoundary(0)
+        .prop('backdrop')
+        .prop('highlight', d3.functor)
         .prop('showZeroY').showZeroY(false)
         .prop('slant')
         .prop('textWrap')
+        .prop('tickColor')
         .prop('tickLength')
         .prop('title')
         .prop('titleAnchor') // start, end, or middle
@@ -49,7 +74,6 @@ namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
             .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
             .classed('sszvis-axis--vertical', props.vertical)
-            .classed('sszvis-axis--halo', props.halo)
             .attr('transform', sszvis.fn.translateString(0, 2))
             .call(axisDelegate);
 
@@ -73,34 +97,34 @@ namespace('sszvis.axis', function(module) {
                 .classed('hidden', absDistance(pos, rangeExtent[0]) < TICK_PROXIMITY_THRESHOLD || absDistance(pos, rangeExtent[1]) < TICK_PROXIMITY_THRESHOLD);
             });
 
+
+          // Highlight axis labels that return true for props.highlight.
+          // Hide axis labels that overlap with highlighted labels.
           if (props.highlight) {
-            var highlightPositions = [];
-
+            var activeBounds = [];
+            var passiveBounds = [];
             group.selectAll('.tick text')
+              .classed('hidden', false)
+              .classed('active', props.highlight)
               .each(function(d) {
-                var isHighlight = [].concat(props.highlight).reduce(function(found, highlight) {
-                  return found || sszvis.fn.stringEqual(highlight, d);
-                }, false);
-                d3.select(this).classed('active', isHighlight);
-                if (isHighlight) {
-                  highlightPositions.push(axisScale(d));
+                var bounds = {
+                  node: this,
+                  bounds: this.getBoundingClientRect()
+                };
+                if (props.highlight(d)) {
+                  bounds.left  -= LABEL_PROXIMITY_THRESHOLD;
+                  bounds.right += LABEL_PROXIMITY_THRESHOLD;
+                  activeBounds.push(bounds);
+                } else {
+                  passiveBounds.push(bounds);
                 }
               });
 
-            group.selectAll('.tick text')
-              .each(function(d) {
-                var selection = d3.select(this);
-                if (selection.classed('active') || props.highlightBoundary === 0) {
-                  selection.classed('hidden', false);
-                  return;
-                }
-
-                var position = axisScale(d);
-                var isTooClose = highlightPositions.reduce(function(tooClose, highlightPos) {
-                  return tooClose || absDistance(position, highlightPos) < props.highlightBoundary;
-                }, false);
-                selection.classed('hidden', isTooClose);
+            activeBounds.forEach(function(active) {
+              passiveBounds.forEach(function(passive) {
+                d3.select(passive.node).classed('hidden', boundsOverlap(passive.bounds, active.bounds));
               });
+            });
           }
 
           if (props.tickColor) {
@@ -158,12 +182,12 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.title) {
-            var title = group.selectAll('.sszvis-axis--title')
+            var title = group.selectAll('.sszvis-axis__title')
               .data([props.title]);
 
             title.enter()
               .append('text')
-              .classed('sszvis-axis--title', true);
+              .classed('sszvis-axis__title', true);
 
             title.exit().remove();
 
@@ -195,6 +219,31 @@ namespace('sszvis.axis', function(module) {
                   return 'end';
                 }
               });
+          }
+
+
+          /**
+           * Add a background to axis labels to make them more readable on
+           * colored backgrounds
+           */
+          if (props.backdrop && props.slant) {
+            console.warn('Can\'t apply backdrop to slanted labels');
+          } else if (props.backdrop) {
+            selection.selectAll('.sszvis-axis .tick').each(function() {
+              var g = d3.select(this);
+              var dim = g.select('text').node().getBBox();
+              var hPadding = 2;
+              var rect = g.select('rect');
+              if (rect.empty()) {
+                rect = g.insert('rect', ':first-child');
+              }
+              rect
+                .attr('class', 'sszvis-axis__label-background')
+                .attr('height', dim.height)
+                .attr('width', dim.width + 2 * hPadding)
+                .attr('x', dim.x - hPadding)
+                .attr('y', dim.y);
+            });
           }
         });
 
@@ -300,8 +349,19 @@ namespace('sszvis.axis', function(module) {
 
   }());
 
+
+  /* Helper functions
+  ----------------------------------------------- */
+
   function absDistance(a, b) {
     return Math.abs(a - b);
+  }
+
+  function boundsOverlap(boundsA, boundsB) {
+    return !(boundsB.left > boundsA.right ||
+             boundsB.right < boundsA.left ||
+             boundsB.top > boundsA.bottom ||
+             boundsB.bottom < boundsA.top);
   }
 
   var slantLabel = {

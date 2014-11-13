@@ -1,6 +1,8 @@
   /**
  * Tooltip anchor component
  *
+ * @module sszvis/component/tooltipAnchor
+ *
  * Tooltip anchors are invisible SVG <rect>s that each component needs to
  * provide. Because they are real elements we can know their exact position
  * on the page without any calculations and even if the parent element has
@@ -49,6 +51,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+		// FIXME: is this a hack? Investigate the purpose here
         Array.isArray(data) || (data = [data]);
 
         var anchor = selection.selectAll('[data-tooltip-anchor]')
