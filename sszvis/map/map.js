@@ -158,12 +158,17 @@ namespace('sszvis.map', function(module) {
 
         baseGroups.exit().remove();
 
+        function getMapFill(d) {
+          return sszvis.fn.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
+        }
+
         mapGroupsEnter
           .append('path')
           .classed('sszvis-map__area', true)
           .attr('d', function(d) {
             return mapPath(d.geoJson);
-          });
+          })
+          .attr('fill', getMapFill);
 
         var mapAreas = baseGroups.selectAll('.sszvis-map__area')
           .data(function(d) { return [d]; });
@@ -171,9 +176,7 @@ namespace('sszvis.map', function(module) {
         mapAreas
           .transition()
           .call(sszvis.transition)
-          .attr('fill', function(d) {
-            return sszvis.fn.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
-          });
+          .attr('fill', getMapFill);
 
         mapAreas
           .on('mouseover', function(d) {
