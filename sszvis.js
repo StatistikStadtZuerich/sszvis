@@ -910,6 +910,7 @@ namespace('sszvis.axis', function(module) {
         .delegate('tickFormat', axisDelegate)
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('backdrop')
+        .prop('hideBorderTickThreshold').hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
         .prop('highlight', d3.functor)
         .prop('showZeroY').showZeroY(false)
         .prop('slant')
@@ -952,7 +953,7 @@ namespace('sszvis.axis', function(module) {
             .each(function(d) {
               var pos = axisScale(d);
               d3.select(this)
-                .classed('hidden', absDistance(pos, rangeExtent[0]) < TICK_PROXIMITY_THRESHOLD || absDistance(pos, rangeExtent[1]) < TICK_PROXIMITY_THRESHOLD);
+                .classed('hidden', absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold);
             });
 
 
@@ -2575,9 +2576,10 @@ namespace('sszvis.control.sliderControl', function(module) {
         var axisOffset = 30;
 
         // create the axis
-        var axis = d3.svg.axis()
+        var axis = sszvis.axis.x()
           .scale(props.scale)
           .orient('bottom')
+          .hideBorderTickThreshold(0)
           .tickSize(12)
           .tickPadding(6)
           .tickValues(sszvis.fn.set([].concat(props.majorTicks, props.minorTicks)))

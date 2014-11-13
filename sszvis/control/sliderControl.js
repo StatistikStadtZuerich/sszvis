@@ -37,9 +37,10 @@ namespace('sszvis.control.sliderControl', function(module) {
         var axisOffset = 30;
 
         // create the axis
-        var axis = d3.svg.axis()
+        var axis = sszvis.axis.x()
           .scale(props.scale)
           .orient('bottom')
+          .hideBorderTickThreshold(0)
           .tickSize(12)
           .tickPadding(6)
           .tickValues(sszvis.fn.set([].concat(props.majorTicks, props.minorTicks)))

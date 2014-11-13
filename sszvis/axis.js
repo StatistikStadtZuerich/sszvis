@@ -53,6 +53,7 @@ namespace('sszvis.axis', function(module) {
         .delegate('tickFormat', axisDelegate)
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('backdrop')
+        .prop('hideBorderTickThreshold').hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
         .prop('highlight', d3.functor)
         .prop('showZeroY').showZeroY(false)
         .prop('slant')
@@ -95,7 +96,7 @@ namespace('sszvis.axis', function(module) {
             .each(function(d) {
               var pos = axisScale(d);
               d3.select(this)
-                .classed('hidden', absDistance(pos, rangeExtent[0]) < TICK_PROXIMITY_THRESHOLD || absDistance(pos, rangeExtent[1]) < TICK_PROXIMITY_THRESHOLD);
+                .classed('hidden', absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold);
             });
 
 
