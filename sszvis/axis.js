@@ -229,7 +229,7 @@ namespace('sszvis.axis', function(module) {
            * colored backgrounds
            */
           if (props.backdrop && props.slant) {
-            console.warn('Can\'t apply backdrop to slanted labels');
+            sszvis.logger.warn('Can\'t apply backdrop to slanted labels');
           } else if (props.backdrop) {
             selection.selectAll('.sszvis-axis .tick').each(function() {
               var g = d3.select(this);

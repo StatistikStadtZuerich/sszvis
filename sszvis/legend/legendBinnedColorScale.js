@@ -10,8 +10,8 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        if (!props.scale) return sszvis.logError('legend.binnedColorScale - a scale must be specified.');
-        if (!props.displayValues) return sszvis.logError('legend.binnedColorScale - display values must be specified.');
+        if (!props.scale) return sszvis.logger.error('legend.binnedColorScale - a scale must be specified.');
+        if (!props.displayValues) return sszvis.logger.error('legend.binnedColorScale - display values must be specified.');
 
         var barWidth = d3.scale.linear()
           .domain(d3.extent(props.displayValues))

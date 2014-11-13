@@ -33,7 +33,7 @@ SOURCE_FILES = \
 	sszvis/createHtmlLayer.js \
 	sszvis/format.js \
 	sszvis/loadError.js \
-	sszvis/logError.js \
+	sszvis/logger.js \
 	sszvis/parse.js \
 	sszvis/patterns.js \
 	sszvis/transition.js \

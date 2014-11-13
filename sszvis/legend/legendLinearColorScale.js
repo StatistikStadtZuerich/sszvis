@@ -26,7 +26,7 @@ namespace('sszvis.legend.linearColorScale', function(module) {
         var props = selection.props();
 
         if (!props.scale) {
-          sszvis.logError('legend.linearColorScale - a scale must be specified.');
+          sszvis.logger.error('legend.linearColorScale - a scale must be specified.');
           return false;
         }
 

@@ -10,7 +10,7 @@ namespace('sszvis.loadError', function(module) {
   var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
   module.exports = function(error) {
-    console.error(error);
+    sszvis.logger.error(error);
     if (error.status === 404) {
       alert('Die Daten konnten nicht geladen werden.\n\n' + error.responseURL + '\n\n' + RELOAD_MSG);
     } else {

@@ -14,7 +14,7 @@ namespace('sszvis.behavior.voronoi', function(module) {
         var props = selection.props();
 
         if (!props.bounds) {
-          sszvis.logError('behavior.voronoi - requires bounds');
+          sszvis.logger.error('behavior.voronoi - requires bounds');
           return false;
         }
 

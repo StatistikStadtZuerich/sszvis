@@ -370,7 +370,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 if (typeof this.sszvis !== 'undefined') {
-  console.warn('sszvis.js has already been defined in this scope. The existing definition will be overwritten.');
+  sszvis.logger.warn('sszvis.js has already been defined in this scope. The existing definition will be overwritten.');
   this.sszvis = {};
 }
 
@@ -1086,7 +1086,7 @@ namespace('sszvis.axis', function(module) {
            * colored backgrounds
            */
           if (props.backdrop && props.slant) {
-            console.warn('Can\'t apply backdrop to slanted labels');
+            sszvis.logger.warn('Can\'t apply backdrop to slanted labels');
           } else if (props.backdrop) {
             selection.selectAll('.sszvis-axis .tick').each(function() {
               var g = d3.select(this);
@@ -1821,7 +1821,7 @@ namespace('sszvis.loadError', function(module) {
   var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
   module.exports = function(error) {
-    console.error(error);
+    sszvis.logger.error(error);
     if (error.status === 404) {
       alert('Die Daten konnten nicht geladen werden.\n\n' + error.responseURL + '\n\n' + RELOAD_MSG);
     } else {
@@ -1836,25 +1836,37 @@ namespace('sszvis.loadError', function(module) {
 
 
 /**
- * A component for logging component errors
+ * A component for logging development messages and errors
  *
- * @module sszvis/logError
+ * @module sszvis/logger
  *
- * @param {String} The error message to log
+ * @param {String} The message to log
  */
-namespace('sszvis.logError', function(module) {
+namespace('sszvis.logger', function(module) {
+  'use strict';
 
-  var SSZVIS_MSG = 'Ein Fehler ist aufgetreten: ';
+  window.console || (window.console = {});
 
-  // polyfill for console.log
-  console.log = console.log || function() { /* IE8 users get no error messages */ };
-  // polyfill for console.error
-  console.error = console.error || function() { console.log.apply(console, arguments); };
+  // Polyfill for console logging
+  console.log || (console.log = function() { /* IE8 users get no error messages */ });
+  console.warn || (console.warn = function() { console.log.apply(console, arguments); });
+  console.error || (console.error = function() { console.log.apply(console, arguments); });
 
-  module.exports = function(message) {
-    console.error(SSZVIS_MSG + message);
-    return false;
+  module.exports = {
+    log: logger('log'),
+    warn: logger('warn'),
+    error: logger('error')
   };
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function logger(type) {
+    return function() {
+      var args = Array.prototype.slice.call(arguments);
+      console[type].apply(console, ['[sszvis]'].concat(args));
+    };
+  }
 
 });
 
@@ -2318,7 +2330,7 @@ namespace('sszvis.behavior.voronoi', function(module) {
         var props = selection.props();
 
         if (!props.bounds) {
-          sszvis.logError('behavior.voronoi - requires bounds');
+          sszvis.logger.error('behavior.voronoi - requires bounds');
           return false;
         }
 
@@ -4855,8 +4867,8 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        if (!props.scale) return sszvis.logError('legend.binnedColorScale - a scale must be specified.');
-        if (!props.displayValues) return sszvis.logError('legend.binnedColorScale - display values must be specified.');
+        if (!props.scale) return sszvis.logger.error('legend.binnedColorScale - a scale must be specified.');
+        if (!props.displayValues) return sszvis.logger.error('legend.binnedColorScale - display values must be specified.');
 
         var barWidth = d3.scale.linear()
           .domain(d3.extent(props.displayValues))
@@ -5079,7 +5091,7 @@ namespace('sszvis.legend.linearColorScale', function(module) {
         var props = selection.props();
 
         if (!props.scale) {
-          sszvis.logError('legend.linearColorScale - a scale must be specified.');
+          sszvis.logger.error('legend.linearColorScale - a scale must be specified.');
           return false;
         }
 
