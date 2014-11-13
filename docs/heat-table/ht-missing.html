@@ -116,7 +116,7 @@
       .datum(state.selection);
 
    // missingValuePattern
-    var mVP = sszvis.patterns.ensurePattern(chartLayer, 'ht-missing-value')
+    var mVP = sszvis.patterns.ensureDefsElement(chartLayer, 'pattern', 'ht-missing-value')
       .call(sszvis.patterns.heatTableMissingValuePattern);
 
 

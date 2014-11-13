@@ -31,7 +31,7 @@ namespace('sszvis.component.dataAreaRectangle', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
+        sszvis.patterns.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
         var dataArea = selection.selectAll('.sszvis-data-area-rectangle')

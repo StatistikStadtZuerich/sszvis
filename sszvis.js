@@ -1929,15 +1929,15 @@ namespace('sszvis.patterns', function(module) {
     return defs;
   };
 
-  module.exports.ensurePattern = function(selection, patternId) {
-    var pattern = sszvis.patterns.ensureDefs(selection)
-      .selectAll('pattern#' + patternId)
+  module.exports.ensureDefsElement = function(selection, type, elementId) {
+    var element = sszvis.patterns.ensureDefs(selection)
+      .selectAll(type + '#' + elementId)
       .data([0])
       .enter()
-      .append('pattern')
-      .attr('id', patternId);
+      .append(type)
+      .attr('id', elementId);
 
-    return pattern;
+    return element;
   };
 
   module.exports.heatTableMissingValuePattern = function(selection) {
@@ -2063,6 +2063,38 @@ namespace('sszvis.patterns', function(module) {
       .attr('y2', pHeight * offset)
       .attr('stroke', '#d0d0d0')
       .attr('stroke-linecap', 'square');
+  };
+
+  module.exports.mapLakeFadeGradient = function(selection) {
+    selection
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', 0.55)
+      .attr('y2', 1)
+      .attr('id', 'lake-fade-gradient');
+
+    selection
+      .append('stop')
+      .attr('offset', 0.74)
+      .attr('stop-color', 'white')
+      .attr('stop-opacity', 1);
+
+    selection
+      .append('stop')
+      .attr('offset', 0.97)
+      .attr('stop-color', 'white')
+      .attr('stop-opacity', 0);
+  };
+
+  module.exports.mapLakeGradientMask = function(selection) {
+    selection
+      .attr('maskContentUnits', 'objectBoundingBox');
+
+    selection
+      .append('rect')
+      .attr('fill', 'url(#lake-fade-gradient)')
+      .attr('width', 1)
+      .attr('height', 1);
   };
 
   module.exports.dataAreaPattern = function(selection) {
@@ -2821,7 +2853,7 @@ namespace('sszvis.component.dataAreaCircle', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
+        sszvis.patterns.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
         var dataArea = selection.selectAll('.sszvis-data-area-circle')
@@ -2984,7 +3016,7 @@ namespace('sszvis.component.dataAreaRectangle', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        sszvis.patterns.ensurePattern(selection, 'data-area-pattern')
+        sszvis.patterns.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
         var dataArea = selection.selectAll('.sszvis-data-area-rectangle')
@@ -5394,7 +5426,7 @@ namespace('sszvis.map', function(module) {
 
         var mapPath = swissMapPath(props.width, props.height, mapData);
 
-        sszvis.patterns.ensurePattern(selection, 'missing-pattern')
+        sszvis.patterns.ensureDefsElement(selection, 'pattern', 'missing-pattern')
           .call(sszvis.patterns.mapMissingValuePattern);
 
         var groupedInputData = data.reduce(function(m, v) {
@@ -5469,8 +5501,14 @@ namespace('sszvis.map', function(module) {
 
         // special rendering for Zürichsee
         if (props.type.indexOf('zurich-') >= 0) {
-          sszvis.patterns.ensurePattern(selection, 'lake-pattern')
+          sszvis.patterns.ensureDefsElement(selection, 'pattern', 'lake-pattern')
             .call(sszvis.patterns.mapLakePattern);
+
+          sszvis.patterns.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
+            .call(sszvis.patterns.mapLakeFadeGradient);
+
+          sszvis.patterns.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
+            .call(sszvis.patterns.mapLakeGradientMask);
 
           var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
             .data([COMPILED_MAPS.zurichGeo.zurichsee]);
@@ -5483,7 +5521,8 @@ namespace('sszvis.map', function(module) {
 
           zurichSee
             .attr('d', mapPath)
-            .attr('fill', 'url(#lake-pattern)');
+            .attr('fill', 'url(#lake-pattern)')
+            .attr('mask', 'url(#lake-fade-mask)');
 
           var lakePath = selection.selectAll('.sszvis-map__lakepath')
             .data([lakeBounds]);

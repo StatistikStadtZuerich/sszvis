@@ -134,7 +134,7 @@ namespace('sszvis.map', function(module) {
 
         var mapPath = swissMapPath(props.width, props.height, mapData);
 
-        sszvis.patterns.ensurePattern(selection, 'missing-pattern')
+        sszvis.patterns.ensureDefsElement(selection, 'pattern', 'missing-pattern')
           .call(sszvis.patterns.mapMissingValuePattern);
 
         var groupedInputData = data.reduce(function(m, v) {
@@ -209,8 +209,14 @@ namespace('sszvis.map', function(module) {
 
         // special rendering for Zürichsee
         if (props.type.indexOf('zurich-') >= 0) {
-          sszvis.patterns.ensurePattern(selection, 'lake-pattern')
+          sszvis.patterns.ensureDefsElement(selection, 'pattern', 'lake-pattern')
             .call(sszvis.patterns.mapLakePattern);
+
+          sszvis.patterns.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
+            .call(sszvis.patterns.mapLakeFadeGradient);
+
+          sszvis.patterns.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
+            .call(sszvis.patterns.mapLakeGradientMask);
 
           var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
             .data([COMPILED_MAPS.zurichGeo.zurichsee]);
@@ -223,7 +229,8 @@ namespace('sszvis.map', function(module) {
 
           zurichSee
             .attr('d', mapPath)
-            .attr('fill', 'url(#lake-pattern)');
+            .attr('fill', 'url(#lake-pattern)')
+            .attr('mask', 'url(#lake-fade-mask)');
 
           var lakePath = selection.selectAll('.sszvis-map__lakepath')
             .data([lakeBounds]);
