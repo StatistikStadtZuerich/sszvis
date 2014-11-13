@@ -3745,7 +3745,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
           .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
-          .text(props.label);
+          .text(sszvis.fn.compose(sszvis.format.number, props.label));
 
         var total = selection.selectAll('.sszvis-rangeRuler__total')
           .data([sszvis.fn.last(data)]);

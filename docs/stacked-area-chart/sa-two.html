@@ -207,7 +207,7 @@
       });
 
     var tooltipText = sszvis.component.modularText()
-      .bold(yAcc)
+      .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain(cAcc);
 
     var rangeTooltip = sszvis.component.tooltip()
