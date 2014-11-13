@@ -61,8 +61,9 @@
     },
 
     changeYear: function(inputDate) {
-      var closest = closestDatum(state.data, yearAcc, inputDate);
-      state.currentYear = yearAcc(closest);
+      var year = yearAcc(closestDatum(state.data, yearAcc, inputDate));
+      if (state.currentYear === year) return;
+      state.currentYear = year;
       state.currentMapData = state.data.filter(function(v) {
         return yearAcc(v).getFullYear() === state.currentYear.getFullYear();
       });
