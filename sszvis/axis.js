@@ -74,18 +74,19 @@ namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
             .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
             .classed('sszvis-axis--vertical', props.vertical)
-            .attr('transform', sszvis.fn.translateString(0, 2))
+            .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(2)))
             .call(axisDelegate);
 
           var axisScale = axisDelegate.scale();
 
-          // Shift axis strokes by half-pixels to ensure they are not blurred
-          // due to anti-aliasing effects (even though crispEdges is set).
-          selection.selectAll('.sszvis-axis--bottom path')
-            .attr('transform', sszvis.fn.translateString(0.5, 0.5));
+          // Place axis ticks on rounded pixel values to prevent anti-aliasing
+          selection.selectAll('.tick')
+            .attr('transform', function() {
+              return sszvis.fn.roundTransformString(this.getAttribute('transform'));
+            });
 
           selection.selectAll('.sszvis-axis--bottom line')
-            .attr('transform', sszvis.fn.translateString(0.5, 3));
+            .attr('transform', sszvis.fn.translateString(0, 3));
 
 
           // hide ticks which are too close to one endpoint
