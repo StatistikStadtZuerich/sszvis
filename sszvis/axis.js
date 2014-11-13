@@ -23,7 +23,7 @@
  *
  * The following properties are custom additions.
  *
- * @property {function} highlight Whether or not an axis tick should be visually highlighted
+ * @property {function} highlightTick Whether or not an axis tick should be visually highlighted
  *
  * FIXME: document missing custom properties
  *
@@ -54,7 +54,7 @@ namespace('sszvis.axis', function(module) {
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('backdrop')
         .prop('hideBorderTickThreshold').hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
-        .prop('highlight', d3.functor)
+        .prop('highlightTick', d3.functor)
         .prop('showZeroY').showZeroY(false)
         .prop('slant')
         .prop('textWrap')
@@ -100,20 +100,20 @@ namespace('sszvis.axis', function(module) {
             });
 
 
-          // Highlight axis labels that return true for props.highlight.
+          // Highlight axis labels that return true for props.highlightTick.
           // Hide axis labels that overlap with highlighted labels.
-          if (props.highlight) {
+          if (props.highlightTick) {
             var activeBounds = [];
             var passiveBounds = [];
             group.selectAll('.tick text')
               .classed('hidden', false)
-              .classed('active', props.highlight)
+              .classed('active', props.highlightTick)
               .each(function(d) {
                 var bounds = {
                   node: this,
                   bounds: this.getBoundingClientRect()
                 };
-                if (props.highlight(d)) {
+                if (props.highlightTick(d)) {
                   bounds.left  -= LABEL_PROXIMITY_THRESHOLD;
                   bounds.right += LABEL_PROXIMITY_THRESHOLD;
                   activeBounds.push(bounds);
