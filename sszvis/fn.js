@@ -329,6 +329,45 @@ namespace('sszvis.fn', function(module) {
       };
     },
 
+    /**
+     * fn.roundPixelCrisp
+     *
+     * To ensure SVG elements are rendered crisply and without anti-aliasing
+     * artefacts, they must be placed on a half-pixel grid.
+     *
+     * @param  {number} pos A pixel position
+     * @return {number}     A pixel position snapped to the pixel grid
+     */
+    roundPixelCrisp: function(pos) {
+      return Math.round(pos) + 0.5;
+    },
+
+    /**
+     * fn.roundTransformString
+     *
+     * Takes an SVG transform string 'translate(12.3,4.56789) rotate(3.5)' and
+     * rounds all translate coordinates to integers: 'translate(12,5) rotate(3.5)'.
+     *
+     * A valid translate instruction has the form 'translate(<x> [<y>])' where
+     * x and y can be separated by a space or comma. We normalize this to use
+     * spaces because that's what Internet Explorer uses.
+     *
+     * @param  {string} transformStr A valid SVG transform string
+     * @return {string}              An SVG transform string with rounded values
+     */
+    roundTransformString: function(transformStr) {
+      var roundNumber = sszvis.fn.compose(Math.round, Number);
+      return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function(_, left, vecStr, right) {
+        var roundVec = vecStr
+          .replace(',', ' ')
+          .replace(/\s+/, ' ')
+          .split(' ')
+          .map(roundNumber)
+          .join(',');
+        return left + roundVec + right;
+      });
+    },
+
     scaleExtent: function(domain) { // borrowed from d3 source - svg.axis
       var start = domain[0], stop = domain[domain.length - 1];
       return start < stop ? [ start, stop ] : [ stop, start ];
