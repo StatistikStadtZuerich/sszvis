@@ -4849,7 +4849,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
       .prop('scale')
       .prop('displayValues')
       .prop('width').width(200)
-      .prop('valueFormat').valueFormat(sszvis.fn.identity)
+      .prop('labelFormat').labelFormat(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -4926,7 +4926,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
           .attr('text-anchor', 'middle')
           .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
           .text(function(d) {
-            return props.valueFormat(d.p0);
+            return props.labelFormat(d.p0);
           });
       });
   };
@@ -5072,7 +5072,7 @@ namespace('sszvis.legend.linearColorScale', function(module) {
       .prop('segments').segments(8)
       .prop('units').units(false)
       .prop('labelPadding').labelPadding(16)
-      .prop('valueFormat').valueFormat(sszvis.fn.identity)
+      .prop('labelFormat').labelFormat(sszvis.fn.identity)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -5134,7 +5134,7 @@ namespace('sszvis.legend.linearColorScale', function(module) {
           .attr('alignment-baseline', 'central')
           .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
           .text(function(d, i) {
-            var formatted = props.valueFormat(d);
+            var formatted = props.labelFormat(d);
             if (props.units && i === 1) formatted += ' ' + props.units;
             return formatted;
           });
@@ -5161,7 +5161,7 @@ namespace('sszvis.legend.radius', function(module) {
       .prop('stroke').stroke('#000')
       .prop('strokeWidth').strokeWidth(1.25)
       .prop('labelSize').labelSize('10px')
-      .prop('valueFormat').valueFormat(sszvis.fn.identity)
+      .prop('labelFormat').labelFormat(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -5221,7 +5221,7 @@ namespace('sszvis.legend.radius', function(module) {
           })
           .attr('alignment-baseline', 'central')
           .style('font-size', props.labelSize)
-          .text(props.valueFormat);
+          .text(props.labelFormat);
       });
   };
 

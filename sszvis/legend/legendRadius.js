@@ -12,7 +12,7 @@ namespace('sszvis.legend.radius', function(module) {
       .prop('stroke').stroke('#000')
       .prop('strokeWidth').strokeWidth(1.25)
       .prop('labelSize').labelSize('10px')
-      .prop('valueFormat').valueFormat(sszvis.fn.identity)
+      .prop('labelFormat').labelFormat(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -72,7 +72,7 @@ namespace('sszvis.legend.radius', function(module) {
           })
           .attr('alignment-baseline', 'central')
           .style('font-size', props.labelSize)
-          .text(props.valueFormat);
+          .text(props.labelFormat);
       });
   };
 
