@@ -224,7 +224,7 @@
 }
 
 .sszvis-slider__handle {
-  fill: #fff;
+  fill: #FFFFFF;
   stroke: #808184;
 }
 
@@ -233,8 +233,8 @@
 }
 
 .sszvis-slider__dot {
-  stroke: #fff;
-  stroke-width: 1;
+  stroke: #FFFFFF;
+  stroke-width: 1.5;
 }
 
 .sszvis-slider__label {

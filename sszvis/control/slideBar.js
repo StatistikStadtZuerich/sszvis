@@ -18,19 +18,15 @@ namespace('sszvis.control.slideBar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var key = function(d) {
-          return props.x(d) + '_' + props.y(d);
-        };
-
-        var xValue = sszvis.fn.compose(props.xScale, props.x);
-        var yValue = sszvis.fn.compose(props.yScale, props.y);
+        var xValue = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.xScale, props.x);
+        var yValue = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.yScale, props.y);
 
         var xPos = xValue(sszvis.fn.first(data));
         var top = d3.min(props.yScale.range());
         var bottom = d3.max(props.yScale.range()) - 4;
 
         var handleWidth = 10;
-        var handleHeight = 30;
+        var handleHeight = 24;
         var handleTop = top - handleHeight;
 
         var group = selection.selectAll('.sszvis-slider-group')
@@ -56,13 +52,13 @@ namespace('sszvis.control.slideBar', function(module) {
 
         group.selectAll('.sszvis-slider__line')
           .attr('x1', xPos)
-          .attr('y1', top)
+          .attr('y1', sszvis.fn.roundPixelCrisp(top))
           .attr('x2', xPos)
-          .attr('y2', bottom);
+          .attr('y2', sszvis.fn.roundPixelCrisp(bottom));
 
         group.selectAll('.sszvis-slider__handle')
           .attr('x', xPos - handleWidth / 2)
-          .attr('y', handleTop)
+          .attr('y', sszvis.fn.roundPixelCrisp(handleTop))
           .attr('width', handleWidth)
           .attr('height', handleHeight)
           .attr('rx', 2)
@@ -70,9 +66,9 @@ namespace('sszvis.control.slideBar', function(module) {
 
         group.selectAll('.sszvis-slider__handle-mark')
           .attr('x1', xPos)
-          .attr('y1', handleTop + handleHeight * 0.15)
+          .attr('y1', sszvis.fn.roundPixelCrisp(handleTop + handleHeight * 0.15))
           .attr('x2', xPos)
-          .attr('y2', handleTop + handleHeight * 0.85);
+          .attr('y2', sszvis.fn.roundPixelCrisp(handleTop + handleHeight * 0.85));
 
         var dots = group.selectAll('.sszvis-slider__dot')
           .data(data);
