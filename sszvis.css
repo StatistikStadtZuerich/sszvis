@@ -153,6 +153,20 @@
   fill: none;
   stroke: #fff;
   stroke-width: 1.25;
+  stroke-linejoin: round;
+}
+
+.sszvis-map__highlight {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.sszvis-map__lakepath {
+  fill: none;
+  stroke: #CCC;
+  stroke-width: 1.25;
+  stroke-dasharray: 3 3;
 }
 
 /**

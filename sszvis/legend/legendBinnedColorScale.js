@@ -5,7 +5,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
       .prop('scale')
       .prop('displayValues')
       .prop('width').width(200)
-      .prop('units').units(false)
+      .prop('valueFormat').valueFormat(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -82,7 +82,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
           .attr('text-anchor', 'middle')
           .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
           .text(function(d) {
-            return d.p0;
+            return props.valueFormat(d.p0);
           });
       });
   };

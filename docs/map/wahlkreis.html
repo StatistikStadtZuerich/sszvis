@@ -27,7 +27,7 @@
   var state = {
     data: [],
     selection: [],
-    valueDomain: [0, 0]
+    valueDomain: [0, 1]
   };
 
 
@@ -36,7 +36,6 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.valueDomain = [0, d3.max(state.data, vAcc)];
 
       render(state);
     },
@@ -55,12 +54,12 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/M_kreis.csv')
+  d3.csv('data/M_wahlkreis_fake.csv')
     .row(function(d) {
       return {
-        geoId: sszvis.parse.number(d['KNr']),
-        name: d['Kname'],
-        value: sszvis.parse.number(d['Bevölkerung'])
+        name: d['ID'],
+        // magic number 20 here is based on the range of the fake data
+        value: sszvis.parse.number(d['Value']) / 20
       };
     })
     .get(function(error, data) {
@@ -75,7 +74,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: sszvis.bounds.DEFAULT_WIDTH, top: 0, right: 0, bottom: 26, left: 0 });
+    var bounds = sszvis.bounds({ height: sszvis.bounds.SSZVIS_DEFAULT_WIDTH, top: 0, right: 0, bottom: 26, left: 0 });
 
 
     // Scales
@@ -99,8 +98,8 @@
     // Components
 
     var mapMaker = sszvis.map()
-      .type('zurich-stadtkreise')
-      .keyName('geoId')
+      .type('zurich-wahlkreise')
+      .keyName('name')
       .highlight(state.selection)
       .highlightStroke(function(d) {
         return d3.hsl(colorScale(vAcc(d))).darker(0.7);
@@ -118,7 +117,7 @@
         // FIXME: this is pretty inelegant and deeply coupled with the implementation of sszvis/map.
         // Perhaps there is a better way of handling the map tooltips' data source.
         if (!d) return;
-        return d.datum.name + ' - ' + vAcc(d.datum);
+        return d.datum.name + ' - ' + sszvis.format.percent(vAcc(d.datum));
       })
       .visible(function(d) {
         if (!d) return;
@@ -128,7 +127,9 @@
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
       .width(bounds.width / 2)
-      .units('Bevölkerung');
+      .valueFormat(function(d) {
+        return sszvis.format.percent(d);
+      });
 
 
     // Rendering

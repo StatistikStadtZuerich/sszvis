@@ -80,10 +80,13 @@ ZURICH_MAP_TARGETS = \
 	geodata/zurich_topo.json
 
 ZURICH_MAPS = \
-	geodata/stadtkreise_geo.json \
-	geodata/statistische_quartiere_geo.json \
-	geodata/wahlkreise_geo.json \
-	geodata/zurichsee_geo.json
+	geodata/stadtkreis.geojson \
+	geodata/statistische_quartiere.geojson \
+	geodata/wahlkreis.geojson \
+	geodata/zurichsee.geojson \
+	geodata/seebounds/stadtkreis_seebounds.geojson \
+	geodata/seebounds/statistische_quartiere_seebounds.geojson \
+	geodata/seebounds/wahlkreis_seebounds.geojson
 
 
 #
@@ -128,4 +131,4 @@ clean:
 #
 geodata/zurich_topo.json: $(ZURICH_MAPS)
 	mkdir -p $(dir $@)
-	topojson -o $@ --id-property=Bezeichnung,+QNr,+KNr $^
+	topojson -o $@ --id-property=Bezeichnung,+QNr,+KNr $^ -p
