@@ -160,8 +160,7 @@
       .x(xScale(8)) // x-position is bounds.innerWidth * t, where t = 0.55
       .y(0)
       .width(bounds.innerWidth - xScale(15)) // width is bounds.innerWidth * (1 - t)
-      .height(bounds.innerHeight)
-      .caption('Dies ist ein Datenbereich');
+      .height(bounds.innerHeight);
 
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
@@ -182,12 +181,12 @@
 
     // Rendering
 
-    chartLayer.selectGroup('dots')
-      .call(dots);
-
     chartLayer.selectGroup('dataArea')
       .datum([1])
       .call(annotation);
+
+    chartLayer.selectGroup('dots')
+      .call(dots);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
