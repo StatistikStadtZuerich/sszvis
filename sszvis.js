@@ -2690,7 +2690,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handle
           .attr('transform', function(d) {
-            return sszvis.fn.translateString(sszvis.fn.roundPixelCrips(props.scale(d)), 0);
+            return sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(props.scale(d)), 0);
           })
 
         handleEntering
