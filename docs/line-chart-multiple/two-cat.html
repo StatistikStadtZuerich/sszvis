@@ -54,12 +54,13 @@
       // Find the date of the datum closest to the input date
       var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
       // Find all data that have the same date as the closest datum
-      var closestData = state.lineData.map(function(stack) {
-        return stack.filter(function(d) {
+      var closestData = state.lineData.map(function(linePoints) {
+        // For each line pick the first datum that matches
+        return sszvis.fn.find(function(d) {
           return xAcc(d).toString() === closestDate.toString();
-        })[0];
+        }, linePoints);
       });
-
+      // Make sure that the selection has a value to display
       state.selection = closestData.filter(
         sszvis.fn.compose(sszvis.fn.not(isNaN), yAcc)
       );
@@ -129,7 +130,6 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       // Access the first data point of the line to decide on the stroke color
-      // NOTE I wonder if this is the most elegant way to do this. It seems odd to me that way. 
       .stroke(sszvis.fn.compose(cScale, cAcc, sszvis.fn.first));
 
     // Add the highlighted data as additional ticks to the xScale
