@@ -76,6 +76,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
             return crispX(d) + offset;
           })
           .attr('y', middleY)
+          .attr('dy', '0.35em')
           .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
