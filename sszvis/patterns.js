@@ -201,7 +201,8 @@ namespace('sszvis.patterns', function(module) {
       .attr('y1', pHeight * offset)
       .attr('x2', pWidth * offset)
       .attr('y2', 0)
-      .attr('stroke', '#d0d0d0');
+      .attr('stroke', '#e6e6e6')
+      .attr('stroke-width', 1.1);
 
     selection
       .append('line')
@@ -209,7 +210,8 @@ namespace('sszvis.patterns', function(module) {
       .attr('y1', pHeight)
       .attr('x2', pWidth)
       .attr('y2', pHeight * offset)
-      .attr('stroke', '#d0d0d0');
+      .attr('stroke', '#e6e6e6')
+      .attr('stroke-width', 1.1);
   };
 
 });

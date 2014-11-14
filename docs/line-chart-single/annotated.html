@@ -115,7 +115,7 @@
       .orient('right')
       .backdrop(true)
       .title('Regen')
-      .titleTop(-10);
+      .titleTop(-20);
 
       // NOTE The namespacing of the annotation components seems a bit awkward to me.To be discussed
       //otherwise the api seems ok, although I didn't look at the inner code. 
@@ -131,6 +131,10 @@
 
     // Rendering
 
+    chartLayer.selectGroup('annotation')
+      .datum(state.annotatedData)
+      .call(annotation);
+
     chartLayer.selectGroup('line')
       .call(line);
 
@@ -140,10 +144,6 @@
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
-
-    chartLayer.selectGroup('annotation')
-      .datum(state.annotatedData)
-      .call(annotation);
   }
 
 }(d3, sszvis));

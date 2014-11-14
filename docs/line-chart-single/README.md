@@ -83,10 +83,10 @@ Shows an annotation at a given position or data point. The time axis shows days 
 
 ```project
 {
-    "name": "line-chart-single-daily",
+    "name": "line-chart-single-annotated",
     "files": {
         "index.html": {
-            "source": "docs/line-chart-single/daily.html",
+            "source": "docs/line-chart-single/annotated.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/line-chart-single/data/SL_daily.csv",
@@ -147,7 +147,7 @@ Shows how to use negative y-values.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 445
+        "height": 455
     }
 }
 ```

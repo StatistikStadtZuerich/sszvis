@@ -944,7 +944,7 @@ namespace('sszvis.axis', function(module) {
             });
 
           selection.selectAll('.sszvis-axis--bottom line')
-            .attr('transform', sszvis.fn.translateString(0, 3));
+            .attr('transform', sszvis.fn.translateString(0, 2));
 
 
           // hide ticks which are too close to one endpoint
@@ -1062,7 +1062,7 @@ namespace('sszvis.axis', function(module) {
                     }, {
                       vertical: false,
                       left: orientation === 'left' || orientation === 'right' ? 0 : orientation === 'top' || orientation === 'bottom' ? extent[1] : 0,
-                      top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 35 : 0
+                      top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
                     });
                 return 'rotate(' + (titleProps.vertical ? '-90' : '0' ) + ') translate(' + (titleProps.left) + ', ' + (titleProps.top) + ')';
               })
@@ -2116,7 +2116,8 @@ namespace('sszvis.patterns', function(module) {
       .attr('y1', pHeight * offset)
       .attr('x2', pWidth * offset)
       .attr('y2', 0)
-      .attr('stroke', '#d0d0d0');
+      .attr('stroke', '#e6e6e6')
+      .attr('stroke-width', 1.1);
 
     selection
       .append('line')
@@ -2124,7 +2125,8 @@ namespace('sszvis.patterns', function(module) {
       .attr('y1', pHeight)
       .attr('x2', pWidth)
       .attr('y2', pHeight * offset)
-      .attr('stroke', '#d0d0d0');
+      .attr('stroke', '#e6e6e6')
+      .attr('stroke-width', 1.1);
   };
 
 });

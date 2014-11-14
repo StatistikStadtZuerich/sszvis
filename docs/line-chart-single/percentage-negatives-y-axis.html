@@ -73,7 +73,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 50 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 60 });
 
 
     // Scales
@@ -114,7 +114,7 @@
       .backdrop(true)
       .showZeroY(true)
       .title('Wert')
-      .titleTop(-15);
+      .titleTop(-20);
 
 
     // Rendering
@@ -125,7 +125,7 @@
     chartLayer.selectGroup('xAxis')
       // Add a bit of additional bottom padding to prevent the y-axis value from
       // touching the x-axis
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 2 + 5))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 2 + 15))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')

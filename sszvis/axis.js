@@ -87,7 +87,7 @@ namespace('sszvis.axis', function(module) {
             });
 
           selection.selectAll('.sszvis-axis--bottom line')
-            .attr('transform', sszvis.fn.translateString(0, 3));
+            .attr('transform', sszvis.fn.translateString(0, 2));
 
 
           // hide ticks which are too close to one endpoint
@@ -205,7 +205,7 @@ namespace('sszvis.axis', function(module) {
                     }, {
                       vertical: false,
                       left: orientation === 'left' || orientation === 'right' ? 0 : orientation === 'top' || orientation === 'bottom' ? extent[1] : 0,
-                      top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 35 : 0
+                      top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
                     });
                 return 'rotate(' + (titleProps.vertical ? '-90' : '0' ) + ') translate(' + (titleProps.left) + ', ' + (titleProps.top) + ')';
               })
