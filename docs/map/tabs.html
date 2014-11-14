@@ -97,7 +97,9 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: sszvis.bounds.DEFAULT_WIDTH, top: 60, right: 0, bottom: 26, left: 0 });
+    // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
+    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    var bounds = sszvis.bounds({ height: 600, top: 60, right: padding, bottom: 40, left: padding });
 
 
     // Scales
@@ -176,7 +178,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString(100, bounds.innerHeight + 10))
+      .attr('transform', sszvis.fn.translateString(100, bounds.innerHeight + 20))
       .call(legend);
 
     // FIXME: better centering

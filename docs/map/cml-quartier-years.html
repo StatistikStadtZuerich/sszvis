@@ -145,9 +145,12 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var outerBounds = sszvis.bounds({ height: 756, top: 0, right: 0, bottom: 0, left: 0 });
-    var mapBounds = sszvis.bounds({ height: 556, top: 0, right: 0, bottom: 40, left: 0 });
-    var lineChartBounds = sszvis.bounds({ height: 200, top: 20, right: 10, bottom: 30, left: 10 });
+    var mapHeight = 564, lineChartHeight = 162;
+    var outerBounds = sszvis.bounds({ height: mapHeight + lineChartHeight, top: 0, right: 0, bottom: 0, left: 0 });
+    // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
+    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    var mapBounds = sszvis.bounds({ height: mapHeight, top: 0, right: padding, bottom: 64, left: padding });
+    var lineChartBounds = sszvis.bounds({ height: lineChartHeight, top: 24, right: 6, bottom: 20, left: 6 });
 
 
     // Scales
@@ -177,6 +180,7 @@
     });
 
     var map = chart.selectGroup('map')
+      .attr('transform', sszvis.fn.translateString(mapBounds.padding.left, mapBounds.padding.top))
       .datum(state.currentMapData);
 
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
@@ -292,7 +296,7 @@
       .call(slideBar);
 
     chart.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString(mapBounds.width / 4 - mapBounds.padding.left, mapBounds.innerHeight))
+      .attr('transform', sszvis.fn.translateString(mapBounds.width / 4 - mapBounds.padding.left, mapBounds.innerHeight + 20))
       .call(legend);
 
 
