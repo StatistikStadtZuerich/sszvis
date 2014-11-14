@@ -166,7 +166,7 @@
 
 .sszvis-map__lakepath {
   fill: none;
-  stroke: #CCC;
+  stroke: #d3d3d3;
   stroke-width: 1.25;
   stroke-dasharray: 3 3;
 }

@@ -137,7 +137,7 @@ namespace('sszvis.patterns', function(module) {
       .attr('y1', pHeight * offset)
       .attr('x2', pWidth * offset)
       .attr('y2', 0)
-      .attr('stroke', '#d0d0d0')
+      .attr('stroke', '#ddd')
       .attr('stroke-linecap', 'square');
 
     selection
@@ -146,7 +146,7 @@ namespace('sszvis.patterns', function(module) {
       .attr('y1', pHeight)
       .attr('x2', pWidth)
       .attr('y2', pHeight * offset)
-      .attr('stroke', '#d0d0d0')
+      .attr('stroke', '#ddd')
       .attr('stroke-linecap', 'square');
   };
 
