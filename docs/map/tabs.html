@@ -147,7 +147,7 @@
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
-    var tooltipHeader = sszvis.component.modularText()
+    var tooltipHeader = sszvis.component.modularText.html()
       .bold(function(d) {
         var v = vAcc(d.datum);
         return isNaN(v) ? '??' : sszvis.format.percent(v);

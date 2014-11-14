@@ -119,7 +119,7 @@
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
-    var tooltipHeader = sszvis.component.modularText()
+    var tooltipHeader = sszvis.component.modularText.html()
       .bold(function(d) {
         if (!d) return;
         return sszvis.format.percent(vAcc(d.datum));

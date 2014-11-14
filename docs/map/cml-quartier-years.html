@@ -256,7 +256,7 @@
         return prefix + sszvis.format.number(d.value);
       });
 
-    var tooltipHeader = sszvis.component.modularText()
+    var tooltipHeader = sszvis.component.modularText.html()
       .bold(function(d) {
         return vAcc(d.datum);
       })
