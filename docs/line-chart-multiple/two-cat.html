@@ -104,7 +104,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 3, bottom: 50 });
+    var bounds = sszvis.bounds({ top: 5, bottom: 90 });
 
 
     // Scales
@@ -186,7 +186,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', 'translate(1, ' + (bounds.innerHeight + 30) + ')')
+      .attr('transform', 'translate(1, ' + (bounds.innerHeight + 60) + ')')
       .call(cLegend);
 
     chartLayer.selectGroup('highlight')

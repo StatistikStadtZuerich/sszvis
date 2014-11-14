@@ -58,8 +58,10 @@
         .arrayBy(cAcc, d3.ascending)
         .apply(state.data);
 
-      // Compute two different maximum y values - one for each axis
-      state.axis1maxY = d3.max(state.data.filter(sszvis.fn.not(datumIsOnAxis2)), yAcc);
+      // Compute two different maximum y values - one for each axis.
+      // Multiply axis1maxY by a small number to ensure that the data for
+      // category 1 doesn't overlap with category 2 data
+      state.axis1maxY = d3.max(state.data.filter(sszvis.fn.not(datumIsOnAxis2)), yAcc) * 1.2;
       state.axis2maxY = d3.max(state.data.filter(datumIsOnAxis2), yAcc);
 
       // Two different sets of categories for two color scales
@@ -112,7 +114,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, bottom: 95 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 130 });
 
 
     // Scales
@@ -181,17 +183,25 @@
       .orient('bottom')
       .tickValues(xTickValues)
       .alignOuterLabels(true)
-      .highlightTick(isSelected);
+      .highlightTick(isSelected)
+      .title('Quartal')
+      // FIXME: simpler API for centering label
+      .titleLeft(bounds.innerWidth/2)
+      .titleAnchor('middle');
 
     var yAxis1 = sszvis.axis.y()
       .scale(yScale1)
       .orient('right')
-      .backdrop(true);
+      .backdrop(true)
+      .title('Anzahl Arbeitslose (regional)')
+      .titleTop(-20);
 
     var yAxis2 = sszvis.axis.y()
       .scale(yScale2)
       .orient('left')
-      .backdrop(true);
+      .backdrop(true)
+      .title('Anzahl Arbeitslose (schweizweit)')
+      .titleTop(-20);
 
     var cLegend1 = sszvis.legend.color()
       .scale(cScale1)
@@ -220,11 +230,11 @@
       .call(yAxis2);
 
     chartLayer.selectGroup('cScale1')
-      .attr('transform', sszvis.fn.translateString(1, bounds.innerHeight + 30))
+      .attr('transform', sszvis.fn.translateString(1, bounds.innerHeight + 60))
       .call(cLegend1);
 
     chartLayer.selectGroup('cScale2')
-      .attr('transform', sszvis.fn.translateString(bounds.innerWidth, bounds.innerHeight + 30))
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth, bounds.innerHeight + 60))
       .call(cLegend2);
 
     chartLayer.selectGroup('rulerLayer')

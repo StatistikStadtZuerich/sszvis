@@ -46,7 +46,7 @@
     prepareState: function(data) {
       state.data = data;
       state.months = sszvis.fn.set(state.data, xAcc);
-      state.maxY = d3.max(state.data, yAcc);
+      state.maxY = 1;
       state.categories = sszvis.fn.set(state.data, cAcc);
       state.lineData = sszvis.cascade()
         .arrayBy(cAcc, d3.ascending)
@@ -63,7 +63,7 @@
     .row(function(d) {
       return {
         month: parseInt(d['Monat'], 10),
-        value: sszvis.parse.number(d['Wert']),
+        value: sszvis.parse.number(d['Wert']) / 100,
         year: d['Jahr']
       };
     })
@@ -79,7 +79,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, bottom: 80 });
+    var bounds = sszvis.bounds({ top: 10, bottom: 110 });
 
 
     // Scales
@@ -121,6 +121,9 @@
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
+      .tickFormat(function(d) {
+        return d === 0 ? null : sszvis.format.percent(d);
+      })
       .backdrop(true);
 
     var cLegend = sszvis.legend.color()
@@ -143,7 +146,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', 'translate(1, ' + (bounds.innerHeight + 30) + ')')
+      .attr('transform', 'translate(1, ' + (bounds.innerHeight + 60) + ')')
       .call(cLegend);
   }
 
