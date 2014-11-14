@@ -54,8 +54,10 @@
       actions.setYear(INITIAL_YEAR);
     },
 
+    // this function switches the active year
     setYear: function(y) {
       state.currentYear = y;
+      // filter the data to match the selected year
       state.currentMapData = state.data.filter(function(v) {
         return yAcc(v) === state.currentYear;
       });
@@ -124,6 +126,7 @@
 
     // Components
 
+    // segmented control for switching the data year
     var control = sszvis.control.segmented()
       .values(state.years)
       .width(bounds.width / 2)
@@ -140,6 +143,8 @@
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .defined(function(d) {
+        // some of the values are empty in the .csv file. When parsed as a number,
+        // undefined or empty string values become NaN
         return !isNaN(vAcc(d));
       })
       .fill(sszvis.fn.compose(colorScale, vAcc))
@@ -147,6 +152,8 @@
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
+    // see the comment by the tooltip in docs/map/kreis.html for more information
+    // about accesing data properties of map entities.
     var tooltipHeader = sszvis.component.modularText.html()
       .bold(function(d) {
         var v = vAcc(d.datum);

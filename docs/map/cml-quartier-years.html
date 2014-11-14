@@ -27,7 +27,7 @@
   ----------------------------------------------- */
   var vAcc = sszvis.fn.prop('value');
   var yearAcc = sszvis.fn.prop('year');
-  var qAcc = sszvis.fn.prop('geoId');
+  var geoIdAcc = sszvis.fn.prop('geoId');
 
 
   /* Application state
@@ -36,7 +36,6 @@
     data: [],
     valueDomain: [0, 0],
     yearDomain: [new Date(), new Date()],
-    quarters: [],
     lineData: [],
     currentYear: new Date(),
     currentMapData: [],
@@ -52,23 +51,29 @@
       state.data = data;
       state.valueDomain = [0, d3.max(state.data, vAcc)];
       state.yearDomain = d3.extent(state.data, yearAcc);
-      state.quarters = sszvis.fn.set(state.data, qAcc);
+
+      // set up a cascade for sorting data into arrays based on which geoId they belong to
       var cascadedData = sszvis.cascade()
-        .arrayBy(qAcc)
+        .arrayBy(geoIdAcc)
         .sort(function(a, b) {
           return d3.ascending(yearAcc(a), yearAcc(b));
         })
         .apply(state.data);
+
+      // transform the data into line objects, one for each line
       state.lineData = cascadedData.map(function(lineData) {
         return {
-          geoId: qAcc(sszvis.fn.first(lineData)),
+          geoId: geoIdAcc(sszvis.fn.first(lineData)),
           values: lineData
         };
       });
+
+      // calculate a line which represents the average values in the dataset
       var averageLineValues = cascadedData.reduce(function(m, lineData) {
         lineData.forEach(function(datum, index) {
           if (!m[index]) {
             m[index] = {
+              // isAverageValue is used by the slideBar component to determine the correct tooltip
               isAverageValue: true,
               year: datum.year,
               value: 0
@@ -79,15 +84,20 @@
         return m;
       }, []);
       state.averageLine = {
+        // the average line can be identified because it has a null geoId
         geoId: null,
         values: averageLineValues
       };
+      // add the average line to the lineData
       state.lineData.push(state.averageLine);
 
       actions.resetYear();
     },
 
+    // this function is used to change either the active year or the active map entity.
+    // it is called as the user moves the mouse over the line chart
     changeYearAndEntity: function(inputDate, inputValue) {
+      // find the closest year to the mouse
       var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
       if (state.currentYear !== closestYear) {
         state.currentMapData = state.data.filter(function(v) {
@@ -98,7 +108,10 @@
         });
       }
 
+      // within the current year's data values, find the one closest to the mouse position
       var closestEntry = inputValue === null ? null : closestDatum(state.currentMapData, vAcc, inputValue);
+
+      // this is an optimization to ensure that the chart is only re-rendered when underlying state has changed
       if (state.currentYear !== closestYear || state.highlightEntity !== closestEntry) {
         state.currentYear = closestYear;
         state.highlightEntity = closestEntry;
@@ -106,16 +119,19 @@
       }
     },
 
+    // resets the active year
     resetYear: function() {
       var mostRecentDate = d3.max(state.yearDomain);
       actions.changeYearAndEntity(mostRecentDate, null);
     },
 
+    // called when moving over map entities with the mouse. Highlights certain entities
     changeMapEntity: function(d) {
       state.highlightEntity = d;
       render(state);
     },
 
+    // reset the highlighted map entity
     resetMapEntity: function() {
       state.highlightEntity = null;
       render(state);
@@ -150,15 +166,19 @@
     var outerBounds = sszvis.bounds({ height: mapHeight + lineChartHeight, top: 0, right: 0, bottom: 0, left: 0 });
     // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    // bounds for the map section of the chart
     var mapBounds = sszvis.bounds({ height: mapHeight, top: 0, right: padding, bottom: 64, left: padding });
+    // bounds for the line chart section
     var lineChartBounds = sszvis.bounds({ height: lineChartHeight, top: 24, right: 6, bottom: 20, left: 6 });
 
 
     // Scales
 
+    // map fill scale
     var fillScale = sszvis.color.seqBlu()
       .domain(state.valueDomain);
 
+    // line chart scales
     var xScale = d3.time.scale()
       .domain(state.yearDomain)
       .range([0, lineChartBounds.innerWidth]);
@@ -167,13 +187,17 @@
       .domain(state.valueDomain)
       .range([lineChartBounds.innerHeight, 0]);
 
+    // Data
 
-    // Layers
-
+    // highlightData passed to the map is slightly different from the data passed to the line chart.
+    // When no entity is highlighted, the map shows nothing special, but the line chart shows the average line.
     var mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
     var lineHighlightData = state.highlightEntity ? [state.highlightEntity] : state.averageLine.values.filter(function(averageObj) {
       return yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear();
     });
+
+
+    // Layers
 
     var chart = sszvis.createSvgLayer('#sszvis-chart', outerBounds, {
       title: TITLE,
@@ -212,11 +236,15 @@
       .on('out', actions.resetMapEntity);
 
     var lineMaker = sszvis.component.line()
+      // passing a key function here is important, because the DOM order of the lines is changed
+      // by highlighting a line. When a line is highlighted, it is sorted to the front of other lines.
+      // This sorting is performed later in the code.
       .key(sszvis.fn.prop('geoId'))
       .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, yearAcc))
       .y(sszvis.fn.compose(yScale, vAcc))
       .stroke(function(lineData) {
+        // this function determines whether the line is the highlighted line or not
         var isBlue;
         if (!state.highlightEntity) {
           isBlue = lineData.geoId === null; // if so, this is the average line
@@ -235,13 +263,14 @@
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
-      .highlightTick(isSelected);
+      .highlightTick(tickIsSelected);
 
     var lineYAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
       .backdrop(true);
 
+    // The bar which marks the current year and shows the value of the highlighted entity
     var slideBar = sszvis.control.slideBar()
       .x(xScale(state.currentYear))
       .y(sszvis.fn.compose(yScale, vAcc))
@@ -252,10 +281,13 @@
       })
       .color(sszvis.color.qual12())
       .label(function(d) {
+        // create a special label for the average value line
         var prefix = d.isAverageValue ? 'Durchschnitt Anzahl: ' : 'Anzahl: ';
         return prefix + sszvis.format.number(d.value);
       });
 
+    // see the comment by the tooltip in docs/map/kreis.html for more information
+    // about accesing data properties of map entities.
     var tooltipHeader = sszvis.component.modularText.html()
       .bold(function(d) {
         return vAcc(d.datum);
@@ -303,6 +335,7 @@
     highlightLayer.selectGroup('slider')
       .call(slideBar);
 
+    // for Zurich maps, the color legend should be positioned 60 pixels below the bottom of the map
     chart.selectGroup('legend')
       .attr('transform', sszvis.fn.translateString(mapBounds.width / 4 - mapBounds.padding.left, mapBounds.innerHeight + 20))
       .call(legend);
@@ -310,6 +343,8 @@
 
     // Interaction
 
+    // add the hover behavior for the chart, including top padding so that the area around the slide bar handle
+    // is responsive to mouse events.
     var hoverBehavior = sszvis.behavior.move()
       .xScale(xScale)
       .yScale(yScale)
@@ -323,14 +358,15 @@
 
   /* Helper functions
   ----------------------------------------------- */
-  function closestDatum(data, accessor, datum) {
-    var i = d3.bisector(accessor).left(data, datum, 1);
+  // given a dataset, an accessor, and a value, find the closest datum in the dataset to that value
+  function closestDatum(data, accessor, value) {
+    var i = d3.bisector(accessor).left(data, value, 1);
     var d0 = data[i - 1];
     var d1 = data[i] || d0;
-    return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+    return value - accessor(d0) > accessor(d1) - value ? d1 : d0;
   }
 
-  function isSelected(d) {
+  function tickIsSelected(d) {
     return sszvis.fn.stringEqual(state.currentYear, d);
   }
 

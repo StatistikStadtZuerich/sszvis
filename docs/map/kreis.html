@@ -47,6 +47,7 @@
       render(state);
     },
 
+    // manage which datum is selected. These data are highlighted by the map.
     selectHovered: function(d) {
       state.selection = [d];
       render(state);
@@ -111,11 +112,13 @@
       .keyName('geoId')
       .highlight(state.selection)
       .highlightStroke(function(d) {
+        // get the fill color and darken it
         return d3.hsl(colorScale(vAcc(d))).darker(0.7);
       })
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
+      // add mouse/touch interaction
       .on('over', actions.selectHovered)
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
@@ -127,6 +130,11 @@
       })
       .plain(' Einwohner');
 
+    // When using the map component, the data element bound to the tooltip anchor is the internal representation
+    // which includes both the geoJson and the datum as properties. This is necessary so that the correct position
+    // can be calculated from the geoJson. But that also means that when accessing the datum for other purposes,
+    // such as creating tooltip text, the user must be aware that the 'd' argument is not just the data value.
+    // The data value, if present, is available as d.datum.
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)

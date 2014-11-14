@@ -64,7 +64,7 @@
     .row(function(d) {
       return {
         name: d['ID'],
-        // magic number 20 here is based on the range of the fake data
+        // magic number 20 here is based on the range of the fake data. It transforms the values into percentages
         value: sszvis.parse.number(d['Value']) / 20
       };
     })
@@ -119,6 +119,8 @@
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
+    // see the comment by the tooltip in docs/map/kreis.html for more information
+    // about accesing data properties of map entities.
     var tooltipHeader = sszvis.component.modularText.html()
       .bold(function(d) {
         if (!d) return;
