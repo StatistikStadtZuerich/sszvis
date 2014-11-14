@@ -5100,7 +5100,7 @@ namespace('sszvis.legend.color', function(module) {
   module.exports = function() {
     return d3.component()
       .prop('scale')
-      .prop('rowHeight').rowHeight(20)
+      .prop('rowHeight').rowHeight(21)
       .prop('columnWidth').columnWidth(200)
       .prop('rows').rows(3)
       .prop('columns').columns(3)
@@ -5148,10 +5148,12 @@ namespace('sszvis.legend.color', function(module) {
         marks.exit().remove();
 
         marks
-          .attr('cx', props.rightAlign ? -6 : 6)
-          .attr('cy', props.rowHeight / 2 - 1) // magic number adjustment for nice alignment with text
-          .attr('r', 6)
-          .attr('fill', function(d) { return props.scale(d); });
+          .attr('cx', props.rightAlign ? -5 : 5)
+          .attr('cy', sszvis.fn.roundPixelCrisp(props.rowHeight / 2))
+          .attr('r', 5)
+          .attr('fill', function(d) { return props.scale(d); })
+          .attr('stroke', function(d) { return props.scale(d); })
+          .attr('stroke-width', 1);
 
         var labels = groups.selectAll('.sszvis-legend__label')
           .data(function(d) { return [d]; });
@@ -5167,7 +5169,9 @@ namespace('sszvis.legend.color', function(module) {
           .attr('dy', '0.35em') // vertically-center
           .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
           .attr('transform', function() {
-            return sszvis.fn.translateString(props.rightAlign ? -18 : 18, props.rowHeight / 2);
+            var x = props.rightAlign ? -18 : 18;
+            var y = sszvis.fn.roundPixelCrisp(props.rowHeight / 2);
+            return sszvis.fn.translateString(x, y);
           });
 
         if (props.horizontalFloat) {
