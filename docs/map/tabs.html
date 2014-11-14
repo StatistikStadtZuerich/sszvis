@@ -38,7 +38,8 @@
     valueDomain: [0, 0],
     years: [],
     currentYear: null,
-    currentMapData: []
+    currentMapData: [],
+    selection: []
   };
 
 
@@ -58,6 +59,16 @@
       state.currentMapData = state.data.filter(function(v) {
         return yAcc(v) === state.currentYear;
       });
+      render(state);
+    },
+
+    selectHovered: function(d) {
+      state.selection = [d];
+      render(state);
+    },
+
+    deselectHovered: function() {
+      state.selection = [];
       render(state);
     }
   };
@@ -105,6 +116,9 @@
 
     var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
+
 
     // Components
 
@@ -117,9 +131,27 @@
     var mapMaker = sszvis.map()
       .type('zurich-statistischeQuartiere')
       .keyName('quarternum')
+      .highlight(state.selection)
+      .highlightStroke(function(d) {
+        return d3.hsl(colorScale(vAcc(d))).darker(0.7);
+      })
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc));
+      .fill(sszvis.fn.compose(colorScale, vAcc))
+      .on('over', actions.selectHovered)
+      .on('click', actions.selectHovered)
+      .on('out', actions.deselectHovered);
+
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) {
+        if (!d) return;
+        return d.datum.quartername + ' - ' + vAcc(d.datum);
+      })
+      .visible(function(d) {
+        if (!d) return;
+        return state.selection.indexOf(d.datum) >= 0;
+      });
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
@@ -131,6 +163,9 @@
     // Rendering
 
     chartLayer.call(mapMaker);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.fn.translateString(100, bounds.innerHeight + 10))

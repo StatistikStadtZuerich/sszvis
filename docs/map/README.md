@@ -54,17 +54,18 @@
 }
 ```
 
+
 ## Zürich: Quartiere
 
 ```project
 {
-    "name": "map-quartier",
+    "name": "map-tabs",
     "files": {
         "index.html": {
-            "source": "docs/map/quartier.html",
+            "source": "docs/map/tabs.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/M_quartier.csv",
+        "data.csv": "docs/map/data/S_tabs.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -102,28 +103,7 @@
 ```
 
 
-## Interaktion
-
-```project
-{
-    "name": "map-tabs",
-    "files": {
-        "index.html": {
-            "source": "docs/map/tabs.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/map/data/S_tabs.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 516
-    }
-}
-```
+## Coordinated Map and Line Chart
 
 ```project
 {
