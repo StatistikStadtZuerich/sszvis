@@ -102,7 +102,7 @@ namespace('sszvis.legend.color', function(module) {
       .prop('reverse').reverse(false)
       .prop('rightAlign').rightAlign(false)
       .prop('horizontalFloat').horizontalFloat(false)
-      .prop('floatPadding').floatPadding(10)
+      .prop('floatPadding').floatPadding(20)
       .prop('floatWidth').floatWidth(600)
       .render(function() {
         var selection = d3.select(this);
