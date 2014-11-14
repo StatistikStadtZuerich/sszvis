@@ -24073,8 +24073,7 @@
         "QNr": 73,
         "KNr": 7,
         "Qname": "Hirslanden",
-        "Kname": "Kreis 7",
-        "center": [8.5729, 47.3657]
+        "Kname": "Kreis 7"
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -34932,8 +34931,7 @@
         "QNr": 81,
         "KNr": 8,
         "Qname": "Seefeld",
-        "Kname": "Kreis 8",
-        "center": [8.5516, 47.3575]
+        "Kname": "Kreis 8"
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -60513,8 +60511,7 @@
         "QNr": 72,
         "KNr": 7,
         "Qname": "Hottingen",
-        "Kname": "Kreis 7",
-        "center": [8.5748, 47.3772]
+        "Kname": "Kreis 7"
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -84736,8 +84733,7 @@
         "QNr": 12,
         "KNr": 1,
         "Qname": "Hochschulen",
-        "Kname": "Kreis 1",
-        "center": [8.5487, 47.3726]
+        "Kname": "Kreis 1"
       },
       "geometry": {
         "type": "MultiPolygon",

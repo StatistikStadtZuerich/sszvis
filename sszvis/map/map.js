@@ -192,7 +192,13 @@ namespace('sszvis.map', function(module) {
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
             var center = d.geoJson.properties.center;
-            return center ? mapPath.projection()(center) : mapPath.centroid(d.geoJson);
+            // properties.center should be a string of the form "longitude,latitude"
+            if (center) {
+              var parsed = center.split(',').map(parseFloat);
+              return mapPath.projection()(parsed);
+            } else {
+              return mapPath.centroid(d.geoJson);
+            }
           });
 
         baseGroups.call(tooltipAnchor);

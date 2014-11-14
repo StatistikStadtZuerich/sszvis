@@ -88,6 +88,8 @@ ZURICH_MAPS = \
 	geodata/seebounds/statistische_quartiere_seebounds.geojson \
 	geodata/seebounds/wahlkreis_seebounds.geojson
 
+CENTER_DATA = geodata/centers.csv
+
 
 #
 # Recipes
@@ -131,4 +133,4 @@ clean:
 #
 geodata/zurich_topo.json: $(ZURICH_MAPS)
 	mkdir -p $(dir $@)
-	topojson -o $@ --id-property=Bezeichnung,+QNr,+KNr $^ -p
+	topojson -o $@ -e $(CENTER_DATA) --id-property=Bezeichnung,+QNr,+KNr $^ -p
