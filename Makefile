@@ -9,7 +9,7 @@
 # make maps
 # 	- topojson			<https://github.com/mbostock/topojson>
 
-.PHONY: build server maps clean
+.PHONY: all build server deploy maps clean
 
 CLI_SUCCESS = \033[1;32m✔
 CLI_RESET   = \033[0m
@@ -76,17 +76,26 @@ section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
 SOURCE_FILES_SEP = $(foreach file, $(SOURCE_FILES), $(call section, $(file)))
 
-ZURICH_MAP_TARGETS = \
-	geodata/zurich_topo.json
+#
+# Map data files
+#
 
-ZURICH_MAPS = \
+ZURICH_MAP_INTERMEDIATE_SOURCE = \
+	geodata/statistische_quartiere.geojson
+
+ZURICH_MAP_INTERMEDIATE = \
+	geodata/sq_topo.json
+
+ZURICH_MAP_ALL_SOURCE = \
 	geodata/stadtkreis.geojson \
-	geodata/statistische_quartiere.geojson \
 	geodata/wahlkreis.geojson \
 	geodata/zurichsee.geojson \
 	geodata/seebounds/stadtkreis_seebounds.geojson \
 	geodata/seebounds/statistische_quartiere_seebounds.geojson \
 	geodata/seebounds/wahlkreis_seebounds.geojson
+
+ZURICH_MAP_TARGETS = \
+	geodata/zurich_topo.json
 
 CENTER_DATA = geodata/centers.csv
 
@@ -126,11 +135,27 @@ deploy: build
 maps: $(ZURICH_MAP_TARGETS)
 
 clean:
-	rm $(ZURICH_MAP_TARGETS)
+	rm -f $(ZURICH_MAP_TARGETS)
+
+#
+# Intermediate files
+#
+
+# this intermediate representation is necessary for merging data from centers.csv onto statistische_quartiere.geojson
+# If the merge happens during construction of the final zurich_topo.json, then (due to the implementation of topojson.js),
+# the shape for Kreis 12 receives the "center" property belonging to Quarter 12. This is of course an error. To avoid this,
+# statistische_quartiere.geojson is first compiled to an intermediate topojson file (sq_topo), and the data merge is performed.
+# Then, this intermediate file is combined with the other geojson files during construction of zurich_topo.json, and the intermediate
+# file is deleted.
+geodata/sq_topo.json: $(ZURICH_MAP_INTERMEDIATE_SOURCE)
+	mkdir -p $(dir $@)
+	topojson -o $@ -e $(CENTER_DATA) --id-property=+QNr -p -- $^
 
 #
 # Targets
 #
-geodata/zurich_topo.json: $(ZURICH_MAPS)
+
+geodata/zurich_topo.json: $(ZURICH_MAP_ALL_SOURCE) $(ZURICH_MAP_INTERMEDIATE)
 	mkdir -p $(dir $@)
-	topojson -o $@ -e $(CENTER_DATA) --id-property=Bezeichnung,+QNr,+KNr $^ -p
+	topojson -o $@ --id-property=Bezeichnung,+QNr,+KNr -p -- $^
+	rm -f $(ZURICH_MAP_INTERMEDIATE)
