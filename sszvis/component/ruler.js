@@ -84,21 +84,21 @@ namespace('sszvis.component.ruler', function(module) {
         // Update both labelOutline and labelOutline selections
 
         selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
-          .attr('x', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
-          .attr('y', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y))
-          .attr('dx', function(d) {
-            return props.flip(d) ? -10 : 10;
-          })
-          .attr('dy', function(d) {
-            var baselineShift = 5;
-            if (props.y(d) < props.top + baselineShift)    return 2 * baselineShift;
-            if (props.y(d) > props.bottom - baselineShift) return 0;
-            return baselineShift;
+          .attr('transform', function(d) {
+            var x = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x)(d);
+            var y = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y)(d);
+
+            var dx = props.flip(d) ? -10 : 10;
+            var dy = (y < props.top + dy) ? 2 * dy
+                   : (y > props.bottom - dy) ? 0
+                   : 5;
+
+            return sszvis.fn.translateString(x + dx, y + dy);
           })
           .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
           })
-          .text(props.label);
+          .html(props.label);
 
       });
   };

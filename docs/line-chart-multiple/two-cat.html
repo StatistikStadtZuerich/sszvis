@@ -155,14 +155,15 @@
       .orient('right')
       .backdrop(true);
 
+    var rulerLabel = sszvis.component.modularText.svg()
+      .bold(sszvis.fn.compose(sszvis.format.number, yAcc)).plain(cAcc);
+
     var highlightLayer = sszvis.component.ruler()
       .top(0)
       .bottom(bounds.innerHeight)
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
-      .label(function(d) {
-        return sszvis.format.number(yAcc(d)) + ' ' + cAcc(d);
-      })
+      .label(rulerLabel)
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
       })

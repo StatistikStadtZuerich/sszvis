@@ -161,11 +161,11 @@
       .labelFormat(sszvis.format.number)
       .units('Einwohner');
 
-    var tooltipHeaderText = sszvis.component.modularText()
+    var tooltipHeaderText = sszvis.component.modularText.html()
       .bold(cAcc)
       .plain(' Einwohner');
 
-    var tooltipBodyText = sszvis.component.modularText()
+    var tooltipBodyText = sszvis.component.modularText.html()
       .plain('Herkunftsland:')
       .plain(xAcc)
       .newline()

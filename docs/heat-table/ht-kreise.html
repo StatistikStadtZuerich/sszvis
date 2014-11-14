@@ -158,11 +158,11 @@
       .labelFormat(sszvis.format.number)
       .units('Einwohner');
 
-    var tooltipHeaderText = sszvis.component.modularText()
-      .plain(xAcc);
+    var tooltipHeaderText = sszvis.component.modularText.html()
+      .bold(xAcc);
 
     // FIXME: improve styling of line breaks
-    var tooltipBodyText = sszvis.component.modularText()
+    var tooltipBodyText = sszvis.component.modularText.html()
       .plain(cAcc).plain('Einwohner')
       .newline()
       .plain(yAcc).plain('Jahre alt');

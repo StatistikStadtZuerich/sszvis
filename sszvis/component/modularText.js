@@ -4,10 +4,10 @@
  * @return {@function} returns a configurable, callable class
  *
  * use like so:
- * modularText()
- *   .lineBreaks(true)
+ * modularText.html()
  *   .plain(function(d) { return d.name; })
  *   .plain(function(d) { return d.place; })
+ *   .newline()
  *   .bold(function(d) { return d.value; })
  *   .italic(function(d) { return d.caption; })
  *
@@ -19,64 +19,88 @@
 namespace('sszvis.component.modularText', function(module) {
   'use strict';
 
-  module.exports = function() {
-    var fn = sszvis.fn;
-
-    var textUnits = [],
-    hasLineBreaks;
-
-    function makeText(d) {
-
-      var text = '';
-      var i = -1;
-      var end = textUnits.length;
-      var unit;
-
-      while (++i < end) {
-        unit = textUnits[i];
-        if (i > 0) {
-          if (hasLineBreaks) text += "<br />";
-          text += " ";
-        }
-        switch (unit.type) {
-          case "bold":
-          text += "<strong>" + unit.tFunc(d) + "</strong>"; break;
-          case "italic":
-          text += "<em>" + unit.tFunc(d) + "</em>"; break;
-          case "plain": // intentional drop-through
-          default:
-          text += "" + unit.tFunc(d); break;
-        }
-      }
-      return text;
-    }
-
-    makeText.lineBreaks = function(b) {
-      if (!arguments.length) return hasLineBreaks;
-      hasLineBreaks = b;
-      return makeText;
+  function formatHTML() {
+    var styles = {
+      plain: function(d){ return d;},
+      italic: function(d){ return '<em>' + d + '</em>';},
+      bold: function(d){ return '<strong>' + d + '</strong>';}
     };
 
-    makeText.newline = function() {
-      textUnits.push({
-        type: 'newline',
-        tFunc: fn.constant('<br />')
-      });
-      return makeText;
+    return function(textBody, datum) {
+      return textBody.lines().map(function(line) {
+        return line.map(function(word) {
+          return styles[word.style].call(null, word.text(datum));
+        }).join(' ');
+      }).join('<br/>');
+    };
+  }
+
+  function formatSVG() {
+    var styles = {
+      plain: function(d){ return '<tspan>' + d + '</tspan>'; },
+      italic: function(d){ return '<tspan style="font-style:italic">' + d + '</tspan>'; },
+      bold: function(d){ return '<tspan style="font-weight:bold">' + d + '</tspan>'; }
     };
 
-    ['bold', 'italic', 'plain'].forEach(function(type) {
-      makeText[type] = function(tFunc) {
-        if (typeof tFunc === "string") tFunc = fn.constant(tFunc);
-        textUnits.push({
-          type: type,
-          tFunc: tFunc
+    return function(textBody, datum) {
+      return textBody.lines().reduce(function(svg, line, i) {
+        var lineSvg = line.map(function(word) {
+          return styles[word.style].call(null, word.text(datum));
+        }).join(' ');
+        var dy = (i === 0) ? 0 : '1.2em';
+        return svg + '<tspan x="0" dy="'+ dy +'">' + lineSvg + '</tspan>';
+      }, '');
+    };
+  }
+
+  function structuredText() {
+    var lines = [[]];
+
+    return {
+      addLine: function() {
+        lines.push([]);
+      },
+
+      addWord: function(style, text) {
+        sszvis.fn.last(lines).push({
+          text: d3.functor(text),
+          style: style
         });
+      },
+
+      lines: function() {
+        return lines;
+      }
+    };
+  }
+
+  function makeTextWithFormat(format) {
+    return function() {
+      var textBody = structuredText();
+
+      function makeText(d) {
+        return format(textBody, d);
+      }
+
+      makeText.newline = function() {
+        textBody.addLine();
         return makeText;
       };
-    });
 
-    return makeText;
+      ['bold', 'italic', 'plain'].forEach(function(style) {
+        makeText[style] = function(text) {
+          textBody.addWord(style, text);
+          return makeText;
+        };
+      });
+
+      return makeText;
+    };
+  }
+
+  module.exports = {
+    html: makeTextWithFormat(formatHTML()),
+    svg:  makeTextWithFormat(formatSVG())
   };
 
 });

@@ -164,11 +164,11 @@
       .labelFormat(sszvis.format.number)
       .units('Einwohner');
 
-    var tooltipHeaderText = sszvis.component.modularText()
+    var tooltipHeaderText = sszvis.component.modularText.html()
       .plain(xAcc);
 
     // FIXME: improve styling of line breaks
-    var tooltipBodyText = sszvis.component.modularText()
+    var tooltipBodyText = sszvis.component.modularText.html()
       .plain(function(d) {
         var v = cAcc(d);
         return isNaN(v) ? '???' : v;

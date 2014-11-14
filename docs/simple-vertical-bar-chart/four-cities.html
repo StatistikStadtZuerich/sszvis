@@ -134,7 +134,7 @@
       })
       .orient('right');
 
-    var tooltipTitle = sszvis.component.modularText()
+    var tooltipTitle = sszvis.component.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.percent, yAcc))
 
     var tooltip = sszvis.component.tooltip()

@@ -212,7 +212,7 @@
         return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
       });
 
-    var tooltipText = sszvis.component.modularText()
+    var tooltipText = sszvis.component.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain(cAcc);
 

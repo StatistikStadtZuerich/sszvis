@@ -157,11 +157,11 @@
       .labelFormat(sszvis.format.number)
       .units('Personen');
 
-    var tooltipHeaderText = sszvis.component.modularText()
+    var tooltipHeaderText = sszvis.component.modularText.html()
       .bold(cAcc).plain('Paare');
 
     // FIXME: improve styling of text, possibly include tabular layout
-    var tooltipBodyText = sszvis.component.modularText()
+    var tooltipBodyText = sszvis.component.modularText.html()
       .plain('Alter des Mannes:').plain(xAcc)
       .newline()
       .plain('Alter der Frau:').plain(yAcc);

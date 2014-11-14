@@ -177,11 +177,11 @@
       .width(tableDimensions.width)
       .labelFormat(sszvis.format.number);
 
-    var tooltipHeaderText = sszvis.component.modularText()
+    var tooltipHeaderText = sszvis.component.modularText.html()
       .bold(cAcc).plain('Units');
 
     // FIXME: improve styling of text, possibly include tabular layout
-    var tooltipBodyText = sszvis.component.modularText()
+    var tooltipBodyText = sszvis.component.modularText.html()
       .plain('Group 1 Value:').plain(xAcc)
       .newline()
       .plain('Group 2 Value:').plain(yAcc);
