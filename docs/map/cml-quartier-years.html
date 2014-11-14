@@ -252,7 +252,6 @@
 
     var tooltipHeader = sszvis.component.modularText()
       .bold(function(d) {
-        if (!d) return;
         return vAcc(d.datum);
       })
       .plain(' Anzahl');
@@ -261,11 +260,9 @@
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(function(d) {
-        if (!d) return;
         return 'im ' + d.datum.name;
       })
       .visible(function(d) {
-        if (!d) return;
         return state.highlightEntity === d.datum;
       });
 

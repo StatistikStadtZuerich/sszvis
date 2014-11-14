@@ -137,6 +137,9 @@
       })
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
+      .defined(function(d) {
+        return !isNaN(vAcc(d));
+      })
       .fill(sszvis.fn.compose(colorScale, vAcc))
       .on('over', actions.selectHovered)
       .on('click', actions.selectHovered)
@@ -144,19 +147,17 @@
 
     var tooltipHeader = sszvis.component.modularText()
       .bold(function(d) {
-        if (!d) return;
-        return sszvis.format.percent(vAcc(d.datum));
+        var v = vAcc(d.datum);
+        return isNaN(v) ? '??' : sszvis.format.percent(v);
       });
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(function(d) {
-        if (!d) return;
         return 'im ' + d.datum.quartername;
       })
       .visible(function(d) {
-        if (!d) return;
         return state.selection.indexOf(d.datum) >= 0;
       });
 

@@ -28,13 +28,13 @@ Jahr,Qcode,Qname,Ausländeranteil
 1993,012,Hochschulen,0.29
 2012,012,Hochschulen,0.26
 2012,101,Höngg,0.22
-1993,101,Höngg,0.14
+1993,101,Höngg,
 2012,072,Hottingen,0.29
 1993,072,Hottingen,0.21
 1993,042,Langstrasse,0.49
 2012,042,Langstrasse,0.41
 2012,023,Leimbach,0.24
-1993,023,Leimbach,0.15
+1993,023,Leimbach,
 2012,013,Lindenhof,0.26
 1993,013,Lindenhof,0.16
 2012,082,Mühlebach,0.32
@@ -64,6 +64,6 @@ Jahr,Qcode,Qname,Ausländeranteil
 1993,102,Wipkingen,0.34
 2012,102,Wipkingen,0.3
 2012,074,Witikon,0.23
-1993,074,Witikon,0.13
+1993,074,Witikon,
 2012,021,Wollishofen,0.26
 1993,021,Wollishofen,0.19

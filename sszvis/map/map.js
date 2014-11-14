@@ -95,6 +95,7 @@ namespace('sszvis.map', function(module) {
       .prop('highlightStroke', d3.functor)
       .prop('width')
       .prop('height')
+      .prop('defined', d3.functor).defined(true)
       .prop('fill').fill(function() { return 'black'; }) // default is black
       .prop('stroke').stroke(function() { return 'white'; }) // default is white
       .render(function(data) {
@@ -159,7 +160,7 @@ namespace('sszvis.map', function(module) {
         baseGroups.exit().remove();
 
         function getMapFill(d) {
-          return sszvis.fn.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
+          return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
         }
 
         mapGroupsEnter
