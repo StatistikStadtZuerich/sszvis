@@ -58,7 +58,7 @@
     .row(function(d) {
       return {
         date:  sszvis.parse.date(d['Datum']),
-        value: sszvis.parse.number(d['Wert'])
+        value: sszvis.parse.number(d['Wert']) / 100
       };
     })
     .get(function(error, data) {
@@ -113,6 +113,7 @@
       .orient('right')
       .backdrop(true)
       .showZeroY(true)
+      .tickFormat(sszvis.format.percent)
       .title('Wert')
       .titleTop(-20);
 
