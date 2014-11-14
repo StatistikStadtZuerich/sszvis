@@ -40,11 +40,10 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
-      // FIXME: filter the data to remove rows with NaN values. The lack of a datum for certain
-      // map regions will cause the region to be displayed with the missing data texture.
-      state.data = data.filter(function(d) {
+      state.data = data;
+/*      state.data = data.filter(function(d) {
         return !isNaN(vAcc(d));
-      });
+      });*/
       state.valueDomain = [0, d3.max(state.data, vAcc)];
 
       render(state);
@@ -97,7 +96,8 @@
       .type('switzerland-cantons')
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc));
+      .fill(sszvis.fn.compose(colorScale, vAcc))
+      .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), vAcc));
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
