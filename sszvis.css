@@ -56,7 +56,7 @@
 /**
  * Reference line component
  *
- * @module sszvis/component/dataAreaLine
+ * @module sszvis/annotation/line
  */
 .sszvis-reference-line {
   stroke-width: 1.5;
@@ -74,7 +74,7 @@
 /**
  * Circle data area component
  *
- * @module sszvis/component/dataAreaCircle
+ * @module sszvis/annotation/circle
  */
 .sszvis-data-area-circle__caption {
   fill: #7C7C7C;
@@ -86,7 +86,7 @@
 /**
  * Rectangle data area component
  *
- * @module sszvis/component/dataAreaRectangle
+ * @module sszvis/annotation/rectangle
  */
 .sszvis-data-area-rectangle__caption {
   fill: #7C7C7C;

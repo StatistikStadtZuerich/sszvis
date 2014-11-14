@@ -37,6 +37,9 @@ SOURCE_FILES = \
 	sszvis/parse.js \
 	sszvis/patterns.js \
 	sszvis/transition.js \
+	sszvis/annotation/circle.js \
+	sszvis/annotation/line.js \
+	sszvis/annotation/rectangle.js \
 	sszvis/behavior/move.js \
 	sszvis/behavior/click.js \
 	sszvis/behavior/voronoi.js \
@@ -44,9 +47,6 @@ SOURCE_FILES = \
 	sszvis/control/slideBar.js \
 	sszvis/control/sliderControl.js \
 	sszvis/component/bar.js \
-	sszvis/component/dataAreaCircle.js \
-	sszvis/component/dataAreaLine.js \
-	sszvis/component/dataAreaRectangle.js \
 	sszvis/component/dot.js \
 	sszvis/component/groupedBars.js \
 	sszvis/component/line.js \

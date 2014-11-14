@@ -1,5 +1,5 @@
 /**
- * @module sszvis/component/dataAreaLine
+ * @module sszvis/annotation/line
  *
  * A component for creating reference line data areas. The component should be passed
  * an array of data values, each of which will be used to render a reference line
@@ -10,7 +10,7 @@
  *
  * @returns {d3.component} a linear data area component (reference line)
  */
-namespace('sszvis.component.dataAreaLine', function(module) {
+namespace('sszvis.annotation.line', function(module) {
 
   // reference line specified in the form y = mx + b
   // user supplies m and b

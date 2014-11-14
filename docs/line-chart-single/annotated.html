@@ -117,9 +117,7 @@
       .title('Regen')
       .titleTop(-20);
 
-      // NOTE The namespacing of the annotation components seems a bit awkward to me.To be discussed
-      //otherwise the api seems ok, although I didn't look at the inner code. 
-    var annotation = sszvis.component.dataAreaCircle()
+    var annotation = sszvis.annotation.circle()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .r(20)
