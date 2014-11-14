@@ -117,13 +117,21 @@
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
+    var tooltipHeader = sszvis.component.modularText()
+      .bold(function(d) {
+        if (!d) return;
+        return sszvis.format.percent(vAcc(d.datum));
+      })
+      .plain(' Prozent');
+
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
-      .header(function(d) {
+      .header(tooltipHeader)
+      .body(function(d) {
         // FIXME: this is pretty inelegant and deeply coupled with the implementation of sszvis/map.
         // Perhaps there is a better way of handling the map tooltips' data source.
         if (!d) return;
-        return d.datum.name + ' - ' + sszvis.format.percent(vAcc(d.datum));
+        return 'im Bezeichnung ' + d.datum.name;
       })
       .visible(function(d) {
         if (!d) return;

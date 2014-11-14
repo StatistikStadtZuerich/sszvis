@@ -250,11 +250,19 @@
         return 'Anzahl: ' + sszvis.format.number(d.value);
       });
 
+    var tooltipHeader = sszvis.component.modularText()
+      .bold(function(d) {
+        if (!d) return;
+        return vAcc(d.datum);
+      })
+      .plain(' Anzahl');
+
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
-      .header(function(d) {
+      .header(tooltipHeader)
+      .body(function(d) {
         if (!d) return;
-        return d.datum.name + ' - ' + vAcc(d.datum);
+        return 'im ' + d.datum.name;
       })
       .visible(function(d) {
         if (!d) return;

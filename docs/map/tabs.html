@@ -142,11 +142,18 @@
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
+    var tooltipHeader = sszvis.component.modularText()
+      .bold(function(d) {
+        if (!d) return;
+        return sszvis.format.percent(vAcc(d.datum));
+      });
+
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
-      .header(function(d) {
+      .header(tooltipHeader)
+      .body(function(d) {
         if (!d) return;
-        return d.datum.quartername + ' - ' + vAcc(d.datum);
+        return 'im ' + d.datum.quartername;
       })
       .visible(function(d) {
         if (!d) return;
