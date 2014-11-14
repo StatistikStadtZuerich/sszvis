@@ -11,7 +11,7 @@ applicable, the cellular data requirement) of loading a significantly larger Geo
 in-memory GeoJSON is created when the map component is first used.
 
 Updating the map data used in sszvis.js requires several steps. First, the new map data must be prepared. The geodata/ folder contains all 
-the geo data files necessary for sszvis.js. Here is a summary:
+the geo data files necessary for sszvis.js. To view these geojson files, you can use the excellent GeoJson.io (http://geojson.io/). Here is a summary of the folder contents:
 
 geodata/
     ch_cantons_topo.json - this is a topoJson file containing data for the cantons of Switzerland. It is from the Interactive Things open 
