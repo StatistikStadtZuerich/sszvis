@@ -1,0 +1,74 @@
+Notes on updating the map data:
+
+The map data stored in zurich.js comes from SSZ GeoJSON posted on data.stadt-zuerich.ch. It is stored in the topoJSON format 
+(https://github.com/mbostock/topojson). TopoJSON has several advantages, including a much smaller file size, which enables quicker 
+transmission to the client, and the ability to calculate an optimized mesh of geographic borders, which improves the display performance 
+of the complex layered charts used by sszvis.js. Whereas GeoJSON encodes the coordinates of each point in a map vector, including 
+duplicate points wherever two map shapes have the same border, TopoJSON works by encoding only the border lines, plus information to 
+determine which map entities are associated with which borders. In order to be displayed in a map, TopoJSON objects must be converted to 
+valid GeoJSON in memory. This step requires the client to load the compact topojson.js, but compared to the network overhead (and, where 
+applicable, the cellular data requirement) of loading a significantly larger GeoJSON file, this is a relatively efficient process. The 
+in-memory GeoJSON is created when the map component is first used.
+
+Updating the map data used in sszvis.js requires several steps. First, the new map data must be prepared. The geodata/ folder contains all 
+the geo data files necessary for sszvis.js. Here is a summary:
+
+geodata/
+    ch_cantons_topo.json - this is a topoJson file containing data for the cantons of Switzerland. It is from the Interactive Things open 
+        source project Swiss Maps: https://github.com/interactivethings/swiss-maps/. This document will not discuss updating this file. 
+        Please see the github page for more information on this file. The contents of the switzerland.js module (sszvis.mapdata 
+        switzerland) are a direct copy of this file.
+    zurich_topo.json - this is a topoJson file containing data for the different administrative divisions of Zurich, plus data for 
+        rendering Lake Zurich. It contains, in one file, the topojson description of the stadtkreis, the wahlkreis, the statistische 
+        quartiere, the outline of the portion of Lake Zurich included in sszvis.js maps, and the sections of the boundaries of the 
+        stadkreis, wahlkreis, and statistische quartiere which are rendered as dotted lines over the outline of Lake Zurich. (For 
+        implementation reasons, these sections are kept as separate objects, distinct from the objects which represent city-wide 
+        boundaries).
+    stadtkreis.geojson - this file includes GeoJSON data for the stadtkreis shapes.
+    wahlkreis.geojson - this file includes GeoJSON data for the wahlkreis shapes.
+    statistische_quartiere.geojson - this file includes GeoJSON data for the statistische quartiere shapes. It also contains four custom - 
+        specified centers for the shape objects, for cases where the centroid of the shape is in a strange position.
+    centers.csv - A data file that gives the correct visual centers of certain map entities. More information below.
+    zurichsee.geojson - this file contains GeoJSON data for the outline of Lake Zurich.
+    seebounds/ - these files contains boundary lines that lie over Lake Zurich, and are used to render those boundaries as grey dotted 
+        lines.
+        stadtkreis_seebounds.geojson - this file contains the section of the stadtkreis boundaries which lie over lake zurich.
+        wahlkreis_seebounds.geojson - this file contains the section of the wahlkreis boundaries which lie over lake zurich.
+        statistische_quartiere_seebounds.geojson - this file contains the section of the statistische quartiere boundaries which lie over 
+            lake zurich.
+    withoutsee/ - This folder contains geoJson shapes for the three types of division, but without the area of Lake Zurich. In other 
+        words, lakeside entity boundaries end at the border of Lake Zurich, rather than at their official edges. These files are not used 
+        in sszvis.js at the moment, but are included to facilitate possible future maps of Zurich which require boundaries that exclude 
+        Lake Zurich.
+        stadtkreis.geojson - stadtkreis without Lake Zurich
+        wahlkreis.geojson - wahlkreis without Lake Zurich
+        statistische_quartiere.geojson - statistische_quartiere without Lake Zurich
+
+Generating zurich_topo.json:
+
+This file is generated using the topojson.js command-line interface described in the topoJson documentation. The commands for the 
+generation of these files are encapsulated in the Makefile rule for geodata/zurich_topo.json. That Make target depends on access to a 
+global topojson command, which can be installed by following instructions in the TopoJSON documentation, as well as of course a working 
+version of Make. It has only been tested using the Mac OS X developer tools version of Make, GNU Make 3.81. To rebuild zurich_topo.json as-
+is, run '$ make clean' to remove the generated file, then run '$ make maps' to re-create the file from its sources. This will re-generate 
+zurich_topo.json. If any of the map data is changed or updated, those changes will be reflected in zurich_topo.json.
+
+Note on the "center" property:
+
+To compute positions for the map tooltips, sszvis.js finds the point in the middle of the boundary of each shape. However, for some shapes 
+the resulting location is strange. For example, the "center" of the crescent-shaped Hochschulen quarter actually falls somewhere near the 
+boundary. This is a problem with four quartiere in the statistische_quartiere GeoJSON file (Hirslanden, Seefeld, Hottingen, and 
+Hochschulen). To get around this problem, a special "center" property is added to the data. If the property is present on a data object, 
+sszvis.js will use it as the center point instead of the automatically-computed centroid. The center property should be specified as a 
+string of the form "longitude,latitude". The location of the center was hand-chosen, and it is not one of the properties from the original 
+source data. It is merged onto the source data by the topojson tool, based on the QNr property. To add new custom centers, add the QNr and 
+the center to the end of centers.csv. Be sure to use quotes around the center string, since it contains a comma! (like "lat,lon").
+
+Copying zurich_topo.json into sszvis.js
+
+When the source geoJson files have been updated, and zurich_topo.json has been re-generated using '$ make clean; make maps;', it is time 
+to bring the new topoJson into sszvis.js itself. The raw data is stored in the sszvis/map/zurich.js module. To update the data, copy the 
+contents of zurich_topo.json and simply paste them directly into sszvis/map/zurich.js, in the place of the large existing string. That 
+way, the object is assigned to module.exports and is the entire content of the module. Once this step is completed, re-build sszvis.js by 
+running '$ make build'. This will incorporate the new version of zurich.js containing the new topoJson data into a newly compiled copy of 
+sszvis.js, which can then be used in charts. If all went well, you should see the Zurich map update automatically.
