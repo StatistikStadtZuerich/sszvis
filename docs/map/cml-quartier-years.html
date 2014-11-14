@@ -69,6 +69,7 @@
         lineData.forEach(function(datum, index) {
           if (!m[index]) {
             m[index] = {
+              isAverageValue: true,
               year: datum.year,
               value: 0
             };
@@ -251,7 +252,8 @@
       })
       .color(sszvis.color.qual12())
       .label(function(d) {
-        return 'Anzahl: ' + sszvis.format.number(d.value);
+        var prefix = d.isAverageValue ? 'Durchschnitt Anzahl: ' : 'Anzahl: ';
+        return prefix + sszvis.format.number(d.value);
       });
 
     var tooltipHeader = sszvis.component.modularText()
@@ -312,8 +314,7 @@
       .xScale(xScale)
       .yScale(yScale)
       .padding({ top: 30 })
-      .on('move', actions.changeYearAndEntity)
-      .on('end', actions.resetYear);
+      .on('move', actions.changeYearAndEntity);
 
     highlightLayer.selectGroup('interaction')
       .call(hoverBehavior);
