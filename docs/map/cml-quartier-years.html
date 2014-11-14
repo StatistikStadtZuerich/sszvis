@@ -218,7 +218,8 @@
         } else {
           isBlue = state.highlightEntity.geoId === lineData.geoId;
         }
-        return isBlue ? state.lineHighlightColor : '#d0d0d0';
+        // FIXME: don't hardcode color
+        return isBlue ? state.lineHighlightColor : '#D6D6D6';
       });
 
     var xTickValues = xScale
