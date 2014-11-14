@@ -28,7 +28,7 @@ namespace('sszvis.map', function(module) {
           .projection(mercatorProjection);
 
         var b = mercatorPath.bounds(featureCollection),
-            s = 0.96 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
+            s = 1 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
             t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
         mercatorProjection
