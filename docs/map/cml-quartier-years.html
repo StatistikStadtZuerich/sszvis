@@ -285,6 +285,12 @@
 
     lineChart.call(lineMaker);
 
+    // this sorts the highlighted line to the front of all lines
+    lineChart.selectAll('.sszvis-line').sort(function(a, b) {
+      var highlightId = state.highlightEntity ? state.highlightEntity.geoId : null;
+      return a.geoId === highlightId ? 1 : b.geoId === highlightId ? -1 : 0;
+    });
+
     lineChart.selectGroup('xAxis')
       .attr('transform', 'translate(0, ' + (lineChartBounds.innerHeight) + ')')
       .call(lineXAxis);
