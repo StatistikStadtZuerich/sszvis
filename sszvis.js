@@ -1509,6 +1509,10 @@ namespace('sszvis.color', function(module) {
     divNtrGry: ['#A67D5A', '#F3F3F3', '#4A807C']
   };
 
+  var GREY_COLORS = {
+    gry: ['#D6D6D6']
+  };
+
 
   /* Scales
   ----------------------------------------------- */
@@ -1529,6 +1533,13 @@ namespace('sszvis.color', function(module) {
   Object.keys(DIV_COLORS).forEach(function(key) {
     module.exports[key] = function() {
       var scale = d3.scale.linear().range(DIV_COLORS[key].map(convertLab));
+      return decorateLinearScale(scale);
+    };
+  });
+
+  Object.keys(GREY_COLORS).forEach(function(key) {
+    module.exports[key] = function() {
+      var scale = d3.scale.ordinal().range(GREY_COLORS[key].map(convertLab));
       return decorateLinearScale(scale);
     };
   });

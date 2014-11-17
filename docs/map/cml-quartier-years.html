@@ -40,6 +40,7 @@
     currentYear: new Date(),
     currentMapData: [],
     highlightEntity: null,
+    lineBaseColor: sszvis.color.gry()(0),
     lineHighlightColor: sszvis.color.qual12()(0)
   };
 
@@ -251,8 +252,7 @@
         } else {
           isBlue = state.highlightEntity.geoId === lineData.geoId;
         }
-        // FIXME: don't hardcode color
-        return isBlue ? state.lineHighlightColor : '#D6D6D6';
+        return isBlue ? state.lineHighlightColor : state.lineBaseColor;
       });
 
     var xTickValues = xScale
