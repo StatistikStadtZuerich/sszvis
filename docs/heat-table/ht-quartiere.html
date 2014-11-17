@@ -155,11 +155,12 @@
       .titleLeft(-tableDimensions.height / 2)
       .titleTop(-90);
 
+    var legendWidth = 240
+
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
-      .width(bounds.width / 2)
-      .labelFormat(sszvis.format.number)
-      .units('Einwohner');
+      .width(legendWidth)
+      .labelFormat(sszvis.format.number);
 
     var tooltipHeaderText = sszvis.component.modularText.html()
       .bold(cAcc)
@@ -196,7 +197,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 30))
+      .attr('transform', sszvis.fn.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 30))
       .call(legend);
 
 

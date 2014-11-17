@@ -18,7 +18,6 @@ namespace('sszvis.legend.linearColorScale', function(module) {
       .prop('displayValues').displayValues([])
       .prop('width').width(200)
       .prop('segments').segments(8)
-      .prop('units').units(false)
       .prop('labelText')
       .prop('labelPadding').labelPadding(16)
       .prop('labelFormat').labelFormat(sszvis.fn.identity)
@@ -85,7 +84,6 @@ namespace('sszvis.legend.linearColorScale', function(module) {
           .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
           .text(function(d, i) {
             var formatted = props.labelFormat(d, i);
-            if (props.units && i === 1) formatted += ' ' + props.units;
             return formatted;
           });
       });
