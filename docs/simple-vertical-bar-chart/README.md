@@ -35,7 +35,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 625,
+        "height": 485,
         "width": 516
     }
 }
@@ -58,7 +58,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 500,
+        "height": 485,
         "width": 516
     }
 }
@@ -83,7 +83,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 500,
+        "height": 485,
         "width": 516
     }
 }
@@ -106,7 +106,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 500,
+        "height": 485,
         "width": 516
     }
 }
@@ -129,7 +129,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 500,
+        "height": 485,
         "width": 516
     }
 }
@@ -152,7 +152,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 500,
+        "height": 485,
         "width": 516
     }
 }

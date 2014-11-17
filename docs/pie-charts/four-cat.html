@@ -81,7 +81,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 300, top: 20, right: 160, bottom: 20, left: 20 });
+    var bounds = sszvis.bounds({ height: 300, top: 20, right: 230, bottom: 20, left: 20 });
 
 
     // Scales
@@ -137,7 +137,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.fn.translateString(bounds.innerWidth + 40, 85)) // FIXME: how to center legend vertically?
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth + 20, 85)) // FIXME: how to center legend vertically?
       .call(colorLegend);
 
 

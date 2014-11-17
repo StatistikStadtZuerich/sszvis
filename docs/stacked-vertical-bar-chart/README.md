@@ -26,7 +26,7 @@
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 560
+        "height": 511
     }
 }
 ```
@@ -46,8 +46,8 @@
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 560,
-        "width": 516
+        "width": 516,
+        "height": 515
     }
 }
 ```

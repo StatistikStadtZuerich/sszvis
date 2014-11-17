@@ -85,7 +85,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 540, top: 25, bottom: 80 });
+    var bounds = sszvis.bounds({ top: 25, bottom: 80 });
 
 
     // Scales
@@ -163,7 +163,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 50))
       .call(colorLegend);
   }
 

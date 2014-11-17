@@ -75,7 +75,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 500, top: 10, bottom: 60 });
+    var bounds = sszvis.bounds({ top: 20, bottom: 70 });
 
 
     // Scales
@@ -151,7 +151,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 30))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 35))
       .call(cLegend);
   }
 

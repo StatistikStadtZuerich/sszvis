@@ -26,7 +26,7 @@
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 600
+        "height": 565
     }
 }
 ```
@@ -49,7 +49,7 @@
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 500
+        "height": 455
     }
 }
 ```
@@ -72,7 +72,7 @@
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 570
+        "height": 495
     }
 }
 ```
@@ -94,7 +94,7 @@
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 570
+        "height": 535
     }
 }
 ```
