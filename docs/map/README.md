@@ -1,13 +1,61 @@
 # Maps
 
-## Choropleth Maps
+> Maps show the geospatial distribution of quantities. When map entities are shaded in proportion to a color value, this is called a "choropleth".
 
-### Datenformat
+## sszvis.map
 
-### Konfiguration
+### Data structure
+
+This chart requires data which can be matched with map entities.
+
+### Configuration
+
+Maps use d3's excellent geographic projection support to render GeoJSON entities. Data values are then merged with map entities for display. The entities have id values, and the data values should share them. It's possible to configure which property of the data is used for this matching.
+
+#### `map.type(typeString)`
+
+The type of the chart. This must be specified and must be one of the following options: "zurich-stadtkreise", "zurich-statistischeQuartiere", "zurich-wahlkreise", "switzerland-cantons".
+
+#### `map.keyName([keyString])`
+
+The map entity key name. Default 'geoId'.
+
+#### `map.highlight([highlightArray])`
+
+An array of data elements to highlight. The corresponding map entities are highlighted.
+
+#### `map.highlightStroke([highlightString])`
+
+A function for the stroke of the highlighted entities.
+
+#### `map.width(width)`
+
+The width of the map. Used to create the map projection function.
+
+#### `map.height(height)`
+
+The height of the map. Used to create the map projection function.
+
+#### `map.defined([definedFunction])`
+
+A predicate function used to determine whether a datum has a defined value. Map entities with data values that fail this predicate test will display the missing value texture.
+
+#### `map.fill([fillColor])`
+
+A string or function for the fill of the map entities.
+
+#### `map.borderColor([borderColor])`
+
+A string for the border color of the map entities.
+
+#### `map.on(String, function)`
+
+This component has an event handler interface for binding events to the map entities. The available events are 'over', 'out', and 'click'. These are triggered on map elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
 
 
 ## Zürich: Kreise
+
+A map of the stadtkreis of Zürich.
 
 ```project
 {
@@ -30,8 +78,9 @@
 }
 ```
 
-
 ## Zürich: Wahlkreis
+
+A map of the wahlkreis of Zürich.
 
 ```project
 {
@@ -54,8 +103,9 @@
 }
 ```
 
-
 ## Zürich: Quartiere
+
+A map of the statistische quartiere of Zürich, demonstrating use of a segmented control for data subset selection.
 
 ```project
 {
@@ -78,8 +128,9 @@
 }
 ```
 
-
 ## Schweiz
+
+A map of Switzerland.
 
 ```project
 {
@@ -102,8 +153,9 @@
 }
 ```
 
-
 ## Coordinated Map and Line Chart
+
+A map of the Zürich statistische quartiere, demonstrating the coordination of the map dataset with a line chart which displays the full range of the data.
 
 ```project
 {
