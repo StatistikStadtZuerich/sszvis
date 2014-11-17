@@ -157,15 +157,17 @@
         return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
       });
 
+    var rulerLabel = sszvis.component.modularText.svg()
+      .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
+      .plain(cAcc);
+
     var ruler = sszvis.component.ruler()
       .top(0)
       .bottom(bounds.innerHeight)
+      .label(rulerLabel)
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(function(d) {
         return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
-      })
-      .label(function(d) {
-        return sszvis.format.number(yAcc(d)) + ' ' + cAcc(d);
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;

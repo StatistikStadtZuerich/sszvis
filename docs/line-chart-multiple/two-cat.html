@@ -156,7 +156,8 @@
       .contour('outline');
 
     var rulerLabel = sszvis.component.modularText.svg()
-      .bold(sszvis.fn.compose(sszvis.format.number, yAcc)).plain(cAcc);
+      .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
+      .plain(cAcc);
 
     var highlightLayer = sszvis.component.ruler()
       .top(0)
