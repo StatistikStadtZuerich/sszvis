@@ -242,9 +242,16 @@
         }
       });
 
+    var xAxisTicks = xScale.ticks(5)
+      .concat(state.highlightDate);
+
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
-      .orient('bottom');
+      .orient('bottom')
+      .tickValues(xAxisTicks)
+      .highlightTick(function(d) {
+        return sszvis.fn.stringEqual(d, state.highlightDate);
+      });
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
