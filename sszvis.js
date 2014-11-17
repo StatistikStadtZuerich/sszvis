@@ -5497,52 +5497,53 @@ namespace('sszvis.map', function(module) {
         return mercatorPath;
   }
 
-  var COMPILED_MAPS = {
-    compiled: false,
-    zurichGeo: {},
-    zurichMesh: {},
-    switzerlandGeo: {},
-    switzerlandMesh: {}
+  function compileFeature(rootTopo, objectName) {
+    return topojson.feature(rootTopo, rootTopo.objects[objectName]);
+  }
+
+  function compileMesh(rootTopo, objectName) {
+    return topojson.mesh(rootTopo, rootTopo.objects[objectName]);
+  }
+
+  // The MapData object contains the geoJson objects compiled from the TopoJSON format.
+  // If it's necessary, the getter functions compile the raw topoJson map data into geoJson.
+  // This way, the data can be transmitted as much more compact topoJson, and expanded in-memory into
+  // the geoJson necessary for rendering map entities. Note that this compilation step requires the topojson
+  // client-side library as a dependency (https://github.com/mbostock/topojson/blob/master/topojson.js)
+  var MapData = {};
+
+  MapData.getSwitzerland = function() {
+    return {
+      // feature data - a collection of distinct entities
+      featureData: MapData.switzerlandGeo || (MapData.switzerlandGeo = compileFeature(sszvis.mapdata.switzerland, 'cantons')),
+      // mesh data - a single line that represents all Swiss borders
+      meshData: MapData.switzerlandMesh || (MapData.switzerlandMesh = compileMesh(sszvis.mapdata.switzerland, 'cantons'))
+    };
   };
 
-  function ensureCompiledMaps() {
-    // this function compiles the raw topoJson map data into geoJson for use in rendering maps.
-    // This way, the data can be transmitted as much more compact topoJson, and expanded in-memory into
-    // the geoJson necessary for rendering map entities. Note that this compilation step requires the topojson
-    // client-side library as a dependency (https://github.com/mbostock/topojson/blob/master/topojson.js)
-    if (COMPILED_MAPS.compiled) return true;
+  var ZURICH_DATA_NAMES = {
+    'getZurichStadtKreis': 'stadtkreis',
+    'getZurichStatistischeQuartiere': 'statistische_quartiere',
+    'getZurichWahlkreis': 'wahlkreis'
+  };
 
-    var zurichNames = ['stadtkreis', 'statistische_quartiere', 'wahlkreis'],
-        zurichTopo = sszvis.mapdata.zurich; // raw zurich topojson
-
-    // compile zurich topoJson to GeoJson
-    zurichNames.forEach(function(name) {
-      COMPILED_MAPS.zurichGeo[name] = topojson.feature(zurichTopo, zurichTopo.objects[name]);
-    });
-
-    // compile Zurich topoJson to a mesh (boundaries only, shared boundaries are not repeated)
-    zurichNames.forEach(function(name) {
-      COMPILED_MAPS.zurichMesh[name] = topojson.mesh(zurichTopo, zurichTopo.objects[name]);
-    });
-
-    // compile the zurichsee geoJson
-    COMPILED_MAPS.zurichGeo.zurichsee = topojson.feature(zurichTopo, zurichTopo.objects.zurichsee);
-
-    // compile the seebounds shapes
-    zurichNames.map(function(n) { return n + '_seebounds'; }).forEach(function(name) {
-      COMPILED_MAPS.zurichMesh[name] = topojson.mesh(zurichTopo, zurichTopo.objects[name]);
-    });
-
-    // compile the Switzerland geoJson
-    COMPILED_MAPS.switzerlandGeo = topojson.feature(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
-
-    // compile the Switzerland topoJson to a mesh
-    COMPILED_MAPS.switzerlandMesh = topojson.mesh(sszvis.mapdata.switzerland, sszvis.mapdata.switzerland.objects.cantons);
-
-    COMPILED_MAPS.compiled = true;
-
-    return true;
-  }
+  Object.keys(ZURICH_DATA_NAMES).forEach(function(accFnName) {
+    var geoDataName = ZURICH_DATA_NAMES[accFnName],
+        meshDataName = geoDataName + 'Mesh',
+        seeBoundsName = geoDataName + '_seebounds';
+    MapData[accFnName] = function() {
+      return {
+        // feature data - a collection of distinct entities
+        featureData: MapData[geoDataName] || (MapData[geoDataName] = compileFeature(sszvis.mapdata.zurich, geoDataName)),
+        // mesh data - a single line that includes all the borders of the entities
+        meshData: MapData[meshDataName] || (MapData[meshDataName] = compileMesh(sszvis.mapdata.zurich, geoDataName)),
+        // the lake zurich feature - shared by all three zurich map types
+        lakeFeature: MapData.lakeZurichGeo || (MapData.lakeZurichGeo = compileFeature(sszvis.mapdata.zurich, 'zurichsee')),
+        // seebounds: the section of the map bounds which lies over the Zürichsee
+        lakeBounds: MapData[seeBoundsName] || (MapData[seeBoundsName] = compileMesh(sszvis.mapdata.zurich, seeBoundsName))
+      };
+    };
+  });
 
   module.exports = function() {
     // an event dispatcher
@@ -5564,40 +5565,31 @@ namespace('sszvis.map', function(module) {
           throw new Error('sszvis.map component requires topojson.js as an additional dependency: https://github.com/mbostock/topojson');
         }
 
-        // this function compiles the maps to GeoJSON, but only if they haven't already been compiled
-        ensureCompiledMaps();
-
         var selection = d3.select(this);
         var props = selection.props();
 
         // determine which map data objects to use
-        var mapData, meshData, lakeBounds;
+        // the getter functions compile the maps from TopoJSON to GeoJSON, but only if they haven't already been compiled
+        var mapInstanceData;
         switch (props.type) {
           case 'zurich-stadtkreise':
-            mapData = COMPILED_MAPS.zurichGeo.stadtkreis;
-            meshData = COMPILED_MAPS.zurichMesh.stadtkreis;
-            lakeBounds = COMPILED_MAPS.zurichMesh.stadtkreis_seebounds;
+            mapInstanceData = MapData.getZurichStadtKreis();
             break;
           case 'zurich-statistischeQuartiere':
-            mapData = COMPILED_MAPS.zurichGeo.statistische_quartiere;
-            meshData = COMPILED_MAPS.zurichMesh.statistische_quartiere;
-            lakeBounds = COMPILED_MAPS.zurichMesh.statistische_quartiere_seebounds;
+            mapInstanceData = MapData.getZurichStatistischeQuartiere();
             break;
           case 'zurich-wahlkreise':
-            mapData = COMPILED_MAPS.zurichGeo.wahlkreis;
-            meshData = COMPILED_MAPS.zurichMesh.wahlkreis;
-            lakeBounds = COMPILED_MAPS.zurichMesh.wahlkreis_seebounds;
+            mapInstanceData = MapData.getZurichWahlkreis();
             break;
           case 'switzerland-cantons':
-            mapData = COMPILED_MAPS.switzerlandGeo;
-            meshData = COMPILED_MAPS.switzerlandMesh;
+            mapInstanceData = MapData.getSwitzerland();
             break;
           default:
             throw new Error('incorrect map type specified: ' + props.type);
         }
 
         // create a map path generator function
-        var mapPath = swissMapPath(props.width, props.height, mapData);
+        var mapPath = swissMapPath(props.width, props.height, mapInstanceData.featureData);
 
         // render the missing value pattern
         sszvis.patterns.ensureDefsElement(selection, 'pattern', 'missing-pattern')
@@ -5610,7 +5602,7 @@ namespace('sszvis.map', function(module) {
         }, {});
 
         // merge the map features and the input data into new objects that include both
-        var mergedData = mapData.features.map(function(feature) {
+        var mergedData = mapInstanceData.featureData.features.map(function(feature) {
           return {
             geoJson: feature,
             datum: groupedInputData[feature.id]
@@ -5681,7 +5673,7 @@ namespace('sszvis.map', function(module) {
         // add the map borders. These are rendered as one single path element
         selection
           .selectAll('.sszvis-map__border')
-          .data([meshData])
+          .data([mapInstanceData.meshData])
           .enter()
           .append('path')
           .classed('sszvis-map__border', true)
@@ -5704,7 +5696,7 @@ namespace('sszvis.map', function(module) {
 
           // generate the lake zurich path
           var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
-            .data([COMPILED_MAPS.zurichGeo.zurichsee]);
+            .data([mapInstanceData.lakeFeature]);
 
           zurichSee.enter()
             .append('path')
@@ -5721,7 +5713,7 @@ namespace('sszvis.map', function(module) {
           // add a path for the boundaries of map entities which extend over the lake.
           // This path is rendered as a dotted line over the lake shape
           var lakePath = selection.selectAll('.sszvis-map__lakepath')
-            .data([lakeBounds]);
+            .data([mapInstanceData.lakeBounds]);
 
           lakePath.enter()
             .append('path')
@@ -5735,7 +5727,7 @@ namespace('sszvis.map', function(module) {
 
         // handle highlighted entities
         if (props.highlight) {
-          var groupedMapData = mapData.features.reduce(function(m, feature) {
+          var groupedMapData = mapInstanceData.featureData.features.reduce(function(m, feature) {
             m[feature.id] = feature;
             return m;
           }, {});
