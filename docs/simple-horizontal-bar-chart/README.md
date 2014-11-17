@@ -97,7 +97,7 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 440
+        "height": 460
     }
 }
 ```

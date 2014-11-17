@@ -152,7 +152,7 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 550,
+        "height": 500,
         "width": 516
     }
 }
