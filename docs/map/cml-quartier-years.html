@@ -268,7 +268,7 @@
     var lineYAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .backdrop(true);
+      .contour('rect');
 
     // The bar which marks the current year and shows the value of the highlighted entity
     var slideBar = sszvis.control.slideBar()

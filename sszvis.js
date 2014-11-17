@@ -909,7 +909,7 @@ namespace('sszvis.axis', function(module) {
         .delegate('tickPadding', axisDelegate)
         .delegate('tickFormat', axisDelegate)
         .prop('alignOuterLabels').alignOuterLabels(false)
-        .prop('backdrop')
+        .prop('contour')
         .prop('hideBorderTickThreshold').hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
         .prop('highlightTick', d3.functor)
         .prop('showZeroY').showZeroY(false)
@@ -1085,23 +1085,42 @@ namespace('sszvis.axis', function(module) {
            * Add a background to axis labels to make them more readable on
            * colored backgrounds
            */
-          if (props.backdrop && props.slant) {
-            sszvis.logger.warn('Can\'t apply backdrop to slanted labels');
-          } else if (props.backdrop) {
+          if (props.contour && props.slant) {
+            sszvis.logger.warn('Can\'t apply contour to slanted labels');
+          } else if (props.contour) {
             selection.selectAll('.sszvis-axis .tick').each(function() {
               var g = d3.select(this);
-              var dim = g.select('text').node().getBBox();
-              var hPadding = 2;
-              var rect = g.select('rect');
-              if (rect.empty()) {
-                rect = g.insert('rect', ':first-child');
+              var textNode = g.select('text').node();
+
+              switch (props.contour) {
+                case 'outline':
+                  var textContour = g.select('.sszvis-axis__label-contour-outline');
+                  if (textContour.empty()) {
+                    textContour = d3.select(textNode.cloneNode())
+                      .classed('sszvis-axis__label-contour-outline', true);
+                    this.insertBefore(textContour.node(), textNode);
+                  }
+                  textContour.text(textNode.textContent);
+                  break;
+
+                case 'rect':
+                  var dim = textNode.getBBox();
+                  var hPadding = 2;
+                  var rect = g.select('rect');
+                  if (rect.empty()) {
+                    rect = g.insert('rect', ':first-child');
+                  }
+                  rect
+                    .attr('class', 'sszvis-axis__label-contour-rect')
+                    .attr('height', dim.height)
+                    .attr('width', dim.width + 2 * hPadding)
+                    .attr('x', dim.x - hPadding)
+                    .attr('y', dim.y);
+                  break;
+
+                default:
+                  sszvis.logger.warn('Unknown contour "'+ props.contour +'"');
               }
-              rect
-                .attr('class', 'sszvis-axis__label-background')
-                .attr('height', dim.height)
-                .attr('width', dim.width + 2 * hPadding)
-                .attr('x', dim.x - hPadding)
-                .attr('y', dim.y);
             });
           }
         });

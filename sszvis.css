@@ -46,8 +46,15 @@
   stroke: none;
 }
 
-.sszvis-axis__label-background {
-  fill: #fff;
+.sszvis-axis__label-contour-outline {
+  fill: #FFFFFF;
+  opacity: 0.8;
+  stroke: #FFFFFF;
+  stroke-width: 3;
+}
+
+.sszvis-axis__label-contour-rect {
+  fill: #FFFFFF;
   opacity: 0.8;
   stroke: none;
 }
