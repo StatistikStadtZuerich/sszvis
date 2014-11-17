@@ -160,7 +160,7 @@
       .bold(cAcc);
 
     var tooltipText = sszvis.component.modularText.html()
-      .plain(yAcc)
+      .plain(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain('Angestellte');
 
     var tooltip = sszvis.component.tooltip()
