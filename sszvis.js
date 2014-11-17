@@ -5609,22 +5609,16 @@ namespace('sszvis.map', function(module) {
           };
         });
 
-        var baseGroups = selection.selectAll('.sszvis-map-group')
-          .data(mergedData);
-
-        var mapGroupsEnter = baseGroups.enter()
-          .append('g')
-          .classed('sszvis-map-group', true);
-
-        baseGroups.exit().remove();
-
         // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
         function getMapFill(d) {
           return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
         }
 
+        var mapAreas = selection.selectAll('.sszvis-map__area')
+          .data(mergedData);
+
         // add the base map paths - these are filled according to the map fill function
-        mapGroupsEnter
+        mapAreas.enter()
           .append('path')
           .classed('sszvis-map__area', true)
           .attr('d', function(d) {
@@ -5632,9 +5626,7 @@ namespace('sszvis.map', function(module) {
           })
           .attr('fill', getMapFill);
 
-        // propagate the data to the baseGroup child elements
-        var mapAreas = baseGroups.selectAll('.sszvis-map__area')
-          .data(function(d) { return [d]; });
+        mapAreas.exit().remove();
 
         // change the fill if necessary
         mapAreas
@@ -5670,8 +5662,11 @@ namespace('sszvis.map', function(module) {
             }
           });
 
+        var tooltipGroup = selection.selectGroup('tooltipAnchors')
+          .datum(mergedData);
+
         // attach tooltip anchors
-        baseGroups.call(tooltipAnchor);
+        tooltipGroup.call(tooltipAnchor);
 
         // add the map borders. These are rendered as one single path element
         selection
@@ -5703,7 +5698,7 @@ namespace('sszvis.map', function(module) {
 
           zurichSee.enter()
             .append('path')
-            .classed('sszvis-map__area sszvis-map__lakezurich', true);
+            .classed('sszvis-map__lakezurich', true);
 
           zurichSee.exit().remove();
 

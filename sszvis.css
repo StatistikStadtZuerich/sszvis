@@ -171,6 +171,10 @@
   stroke-linejoin: round;
 }
 
+.sszvis-map__lakezurich {
+  stroke: none;
+}
+
 .sszvis-map__lakepath {
   fill: none;
   stroke: #d3d3d3;
