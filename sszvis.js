@@ -5628,8 +5628,12 @@ namespace('sszvis.map', function(module) {
 
         mapAreas.exit().remove();
 
+        selection.selectAll('.sszvis-map__area--undefined')
+          .attr('fill', getMapFill);
+
         // change the fill if necessary
         mapAreas
+          .classed('sszvis-map__area--undefined', function(d) { return !props.defined(d.datum); })
           .transition()
           .call(sszvis.transition)
           .attr('fill', getMapFill);
@@ -5756,7 +5760,7 @@ namespace('sszvis.map', function(module) {
               return mapPath(d.geoJson);
             })
             .attr('stroke', function(d) {
-              return props.highlightStroke(d.datum);
+              return props.defined(d.datum) ? props.highlightStroke(d.datum) : 'white';
             });
         }
       });
