@@ -167,7 +167,7 @@
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(function(d) {
-        return 'im ' + d.datum.quartername;
+        return d.datum.quartername;
       })
       .visible(function(d) {
         return state.selection.indexOf(d.datum) >= 0;

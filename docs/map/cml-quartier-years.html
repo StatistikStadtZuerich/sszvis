@@ -298,7 +298,7 @@
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(function(d) {
-        return 'im ' + d.datum.name;
+        return d.datum.name;
       })
       .visible(function(d) {
         return state.highlightEntity === d.datum;
