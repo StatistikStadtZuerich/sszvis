@@ -1,22 +1,43 @@
-# Bar Chart
+# Bar Chart - Simple Horizontal Bar Chart
 
-## Simple Horizontal Bar Chart
+> Bar charts are suited to comparing numeric values for different categories. The categories can be ordered or unordered, numeric or non-numeric.
 
-### Datenformat
+## sszvis.component.bar
 
-Dieses Chart benötigt zwei Datenreihen:
+### Data structure
 
-* x-Achse
-* y-Achse
+This chart requires one variable used for categorization, and one variable for the extent (vertical or horizontal) of the bar. The extent variable must be numeric, while the categorization variable should be a set of unique values.
 
-### Konfiguration
+### Configuration
 
-Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
+The bar component generates svg rect elements from arrays of data objects.
 
-* `xAxis` - eine `d3`-Achsenfunktion
-* `yAxis` - eine `d3`-Achsenfunktion
+#### `bar.x(x)`
 
-## Beispiele
+Specifies the *x*-values of the rectangles. Can be a value or a function.
+
+#### `bar.y(y)`
+
+Specifies the *y*-values of the rectangles. Can be a value or a function.
+
+#### `bar.width(width)`
+
+Specifies the *width*-values of the rectangles. Can be a value or a function.
+
+#### `bar.height(height)`
+
+Specifies the *height*-values of the rectangles. Can be a value or a function.
+
+#### `bar.fill([fill])`
+
+Specifies the fill-value of the rectangles. Can be a value or a function (default: black).
+
+#### `bar.stroke([stroke])`
+
+Specifies the stroke-value of the rectangles. Can be a value or a function (default: black).
+
+
+## Several Categories and Several Years
 
 ```project
 {
@@ -39,6 +60,8 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 }
 ```
 
+## Several Categories With Guide Lines
+
 ```project
 {
     "name": "simple-horizontal-bar-chart-basic-percent",
@@ -60,6 +83,8 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 }
 ```
 
+## White Guide Lines Over the Bars but Under the Text
+
 ```project
 {
     "name": "simple-horizontal-bar-chart-long-names",
@@ -80,6 +105,8 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
     }
 }
 ```
+
+## Missing Values
 
 ```project
 {
