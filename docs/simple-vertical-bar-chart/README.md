@@ -1,24 +1,45 @@
-# Bar Chart
+# Bar Chart - Simple Vertical Bar Chart
 
-## Simple Vertical Bar Chart
+> Bar charts are suited to comparing numeric values for different categories. The categories can be ordered or unordered, numeric or non-numeric.
 
-### Datenformat
+## sszvis.component.bar
 
-Dieses Chart benötigt zwei Datenreihen:
+### Data structure
 
-* x-Achse
-* y-Achse
+This chart requires one variable used for categorization, and one variable for the extent (vertical or horizontal) of the bar. The extent variable must be numeric, while the categorization variable should be a set of unique values.
 
-### Konfiguration
+### Configuration
 
-Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
+The bar component generates svg rect elements from arrays of data objects.
 
-* `xAxis` - eine `d3`-Achsenfunktion
-* `yAxis` - eine `d3`-Achsenfunktion
+#### `bar.x(x)`
 
-### Examples
+Specifies the *x*-values of the rectangles. Can be a value or a function.
 
-### Four Cities
+#### `bar.y(y)`
+
+Specifies the *y*-values of the rectangles. Can be a value or a function.
+
+#### `bar.width(width)`
+
+Specifies the *width*-values of the rectangles. Can be a value or a function.
+
+#### `bar.height(height)`
+
+Specifies the *height*-values of the rectangles. Can be a value or a function.
+
+#### `bar.fill([fill])`
+
+Specifies the fill-value of the rectangles. Can be a value or a function (default: black).
+
+#### `bar.stroke([stroke])`
+
+Specifies the stroke-value of the rectangles. Can be a value or a function (default: black).
+
+
+## Four Cities
+
+A good default - compares four entities.
 
 ```project
 {
@@ -41,7 +62,9 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 }
 ```
 
-### Basic Data
+## Basic Data
+
+Displays age groups, and includes long axis ticks to aid chart reading.
 
 ```project
 {
@@ -64,9 +87,9 @@ Es stehen folgende Konfigurationsmöglichkeiten zur Verfügung:
 }
 ```
 
-### Few Categories
+## Few Categories
 
-Suggestion: center bar group when smaller than 3 or 4 items to be consistent with heat table. Also: an x-axis that extends to the right if there are no values could be misunderstood as missing values. There are probably not many charts that use this edge-case
+The bar layout function is flexible with respect to the overall width and the number of categories to be displayed.
 
 ```project
 {
@@ -89,7 +112,9 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 }
 ```
 
-### Few Categories - Missing Values
+## Few Categories - Missing Values
+
+When values are missing, no bar is shown.
 
 ```project
 {
@@ -112,7 +137,9 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 }
 ```
 
-### Long Names
+## Long Names
+
+Long axis labels can be word-wrapped by configuring the axis component.
 
 ```project
 {
@@ -135,7 +162,9 @@ Suggestion: center bar group when smaller than 3 or 4 items to be consistent wit
 }
 ```
 
-### Many Years
+## Many Years
+
+In some cases, many values in a category should be shown. In this example, a linear scale is used in place of a categorical one. This simplifies the construction of the *x*-axis.
 
 ```project
 {
