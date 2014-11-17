@@ -215,13 +215,16 @@ namespace('sszvis.map', function(module) {
         // the tooltip anchor generator
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
+            var computedCenter = d.geoJson.properties.computedCenter;
             var center = d.geoJson.properties.center;
-            // properties.center should be a string of the form "longitude,latitude"
-            if (center) {
+            if (computedCenter) {
+              return computedCenter;
+            } else if (center) {
+              // properties.center should be a string of the form "longitude,latitude"
               var parsed = center.split(',').map(parseFloat);
-              return mapPath.projection()(parsed);
+              return d.geoJson.properties.computedCenter = mapPath.projection()(parsed);
             } else {
-              return mapPath.centroid(d.geoJson);
+              return d.geoJson.properties.computedCenter = mapPath.centroid(d.geoJson);
             }
           });
 
