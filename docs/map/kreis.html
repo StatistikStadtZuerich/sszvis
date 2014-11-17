@@ -139,8 +139,6 @@
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(function(d) {
-        // FIXME: this is pretty inelegant and deeply coupled with the implementation of sszvis/map.
-        // Perhaps there is a better way of handling the map tooltips' data source.
         return 'im ' + d.datum.name;
       })
       .visible(function(d) {
