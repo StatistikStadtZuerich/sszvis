@@ -36,7 +36,8 @@
     categories: [],
     years: [],
     selectedYear: null,
-    selectedData: []
+    selectedData: [],
+    selected: []
   };
 
 
@@ -55,6 +56,16 @@
       state.selectedData = state.data.filter(function(d) {
         return jAcc(d) === year;
       });
+      render(state);
+    },
+
+    showTooltip: function(d) {
+      state.selected = [d];
+      render(state);
+    },
+
+    hideTooltip: function() {
+      state.selected = [];
       render(state);
     }
   };
@@ -107,6 +118,9 @@
 
     var controlLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selected);
+
 
     // Components
 
@@ -132,11 +146,24 @@
       .current(state.selectedYear)
       .change(actions.selectYear);
 
+    var tooltipHeader = sszvis.component.modularText.html()
+      .bold(yAcc);
+
+    var tooltipBody = sszvis.component.modularText.html()
+      .plain(sszvis.fn.compose(sszvis.format.number, xAcc));
+
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeader)
+      .body(tooltipBody)
+      .visible(function(d) {
+        return state.selected.indexOf(d) >= 0;
+      });
+
 
     // Rendering
 
-    chartLayer.selectGroup('bars')
-
+    var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 
     chartLayer.selectGroup('xAxis')
@@ -151,6 +178,15 @@
       .style('left', (bounds.width / 4) + 'px')
       .style('top', 10 + 'px')
       .call(segmentedControl);
+
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+
+    // Interaction
+    bars.selectAll('.sszvis-bar')
+      .on('mouseover', actions.showTooltip)
+      .on('mouseout', actions.hideTooltip);
   }
 
 
