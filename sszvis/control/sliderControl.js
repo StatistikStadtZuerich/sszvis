@@ -153,6 +153,7 @@ namespace('sszvis.control.sliderControl', function(module) {
           .on('drag', props.onchange);
 
         selection.selectGroup('sliderInteraction')
+          .classed('sszvis-slidercontrol--interactionLayer', true)
           .attr('transform', sszvis.fn.translateString(0, 4))
           .call(sliderInteraction);
       });

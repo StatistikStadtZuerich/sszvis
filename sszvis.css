@@ -284,6 +284,10 @@
   stroke: #545454;
 }
 
+.sszvis-slidercontrol--interactionLayer {
+  cursor: pointer;
+}
+
 /**
  * Vertical Ruler component
  *
