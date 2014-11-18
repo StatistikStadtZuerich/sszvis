@@ -132,9 +132,11 @@
     var pie = chartLayer.selectGroup('piechart')
       .call(pieMaker);
 
-    // NOTE this approach appears a bit cumbersome to me. Why not just 'pie.selectAllAnchors()' ? 
+    // NOTE this approach appears a bit cumbersome to me. Why not just 'pie.selectAllAnchors()' ?
     pie.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+
 
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.fn.translateString(bounds.innerWidth + 20, 85)) // FIXME: how to center legend vertically?
