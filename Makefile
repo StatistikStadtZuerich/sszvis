@@ -45,11 +45,11 @@ SOURCE_FILES = \
 	sszvis/behavior/click.js \
 	sszvis/behavior/voronoi.js \
 	sszvis/control/segmentedControl.js \
-	sszvis/control/slideBar.js \
 	sszvis/control/sliderControl.js \
 	sszvis/component/bar.js \
 	sszvis/component/dot.js \
 	sszvis/component/groupedBars.js \
+	sszvis/component/handleRuler.js \
 	sszvis/component/line.js \
 	sszvis/component/modularText.js \
 	sszvis/component/multiples.js \

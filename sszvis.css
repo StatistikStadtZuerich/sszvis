@@ -228,29 +228,29 @@
 }
 
 /**
- * Slider Bar component
+ * Handle Ruler component
  *
- * @module sszvis/control/slideBar
+ * @module sszvis/component/handleRuler
  */
-.sszvis-slider__line {
+.sszvis-rule__line {
   stroke: #CCCCCC;
 }
 
-.sszvis-slider__handle {
+.sszvis-rule__handle {
   fill: #FFFFFF;
   stroke: #808184;
 }
 
-.sszvis-slider__handle-mark {
+.sszvis-rule__handle-mark {
   stroke: #A6A8AB;
 }
 
-.sszvis-slider__dot {
+.sszvis-rule__dot {
   stroke: #FFFFFF;
   stroke-width: 1.5;
 }
 
-.sszvis-slider__label {
+.sszvis-rule_label {
   fill: #545454;
   font-family: Arial, sans-serif;
   font-size: 12px;

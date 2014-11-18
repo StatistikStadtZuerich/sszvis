@@ -74,7 +74,7 @@
         lineData.forEach(function(datum, index) {
           if (!m[index]) {
             m[index] = {
-              // isAverageValue is used by the slideBar component to determine the correct tooltip
+              // isAverageValue is used by the handleRuler component to determine the correct tooltip
               isAverageValue: true,
               year: datum.year,
               value: 0
@@ -271,7 +271,7 @@
       .contour('rect');
 
     // The bar which marks the current year and shows the value of the highlighted entity
-    var slideBar = sszvis.control.slideBar()
+    var handleRuler = sszvis.component.handleRuler()
       .x(xScale(state.currentYear))
       .y(sszvis.fn.compose(yScale, vAcc))
       .top(0)
@@ -331,8 +331,8 @@
     lineChart.selectGroup('yAxis')
       .call(lineYAxis);
 
-    highlightLayer.selectGroup('slider')
-      .call(slideBar);
+    highlightLayer.selectGroup('handleRuler')
+      .call(handleRuler);
 
     // for Zurich maps, the color legend should be positioned 60 pixels below the bottom of the map
     chart.selectGroup('legend')
