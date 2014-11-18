@@ -38,7 +38,8 @@
     ages: d3.range(0, 101), // [0 ... 100]
     groups: [],
     maxValue: 0,
-    populations: {}
+    populations: {},
+    selected: []
   };
 
 
@@ -53,6 +54,19 @@
         .objectBy(gAcc)
         .apply(state.data);
 
+      render(state);
+    },
+
+    selectBar: function(d) {
+      var age = aAcc(d);
+      state.selected = state.data.filter(function(v) {
+        return aAcc(v) === age;
+      });
+      render(state);
+    },
+
+    deselectBar: function(d) {
+      state.selected = [];
       render(state);
     }
   };
@@ -105,6 +119,9 @@
       })
         .datum(state.populations);
 
+      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+        .datum(state.selected);
+
 
       // Components
 
@@ -135,8 +152,23 @@
 
       var colorLegend = sszvis.legend.color()
         .scale(colorScale)
-        .orientation('horizontal')
-        .columnWidth(bounds.innerWidth / 2);
+        .horizontalFloat(true);
+
+      var tooltip = sszvis.component.tooltip()
+        .renderInto(tooltipLayer)
+        .header(sszvis.component.modularText.html()
+        .bold(function(d) {
+          return gAcc(d) + ' - ' + aAcc(d);
+        }))
+        .body(function(d) {
+          return vAcc(d);
+        })
+        .orientation(function(d) {
+          return isLeft(d.datum) ? 'right' : 'left';
+        })
+        .visible(function(d) {
+          return state.selected.indexOf(d) >= 0;
+        });
 
 
       // Rendering
@@ -145,6 +177,13 @@
         .datum(state.populations)
         .attr('transform', sszvis.fn.translateString(bounds.innerWidth / 2, 0))
         .call(pyramid);
+
+      chartLayer.selectAll('[data-tooltip-anchor]')
+        .call(tooltip);
+
+      chartLayer.selectAll('.sszvis-bar')
+        .on('mouseover', actions.selectBar)
+        .on('mouseout', actions.deselectBar);
 
       chartLayer.selectGroup('xAxis')
         .attr('transform', sszvis.fn.translateString(bounds.innerWidth / 2, bounds.innerHeight))
@@ -157,6 +196,13 @@
       chartLayer.selectGroup('colorLegend')
         .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 50))
         .call(colorLegend);
+    }
+
+
+    /* Helper Functions
+    ----------------------------------------------- */
+    function isLeft(d) {
+      return gAcc(d) === 'Frauen';
     }
 
 }(d3, sszvis));
