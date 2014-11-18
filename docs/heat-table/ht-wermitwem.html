@@ -139,7 +139,7 @@
       .tickPadding(0)
       .title('Altersgruppe Männer')
       .titleAnchor('middle')
-      .titleLeft(tableDimensions.width / 2)
+      .titleCenter(true)
       .titleTop(-30);
 
     var yAxis = sszvis.axis.y.ordinal()
@@ -148,8 +148,8 @@
       .title('Altersgruppe Frauen')
       .titleVertical(true)
       .titleAnchor('middle')
-      .titleLeft(-tableDimensions.height / 2)
-      .titleTop(-45);
+      .titleCenter(true)
+      .titleLeft(-45);
 
     var legendWidth = 240;
 

@@ -60,6 +60,7 @@ namespace('sszvis.axis', function(module) {
         .prop('tickLength')
         .prop('title')
         .prop('titleAnchor') // start, end, or middle
+        .prop('titleCenter') // a boolean value - whether to center the title
         .prop('titleLeft') // a numeric value for the left offset of the title
         .prop('titleTop') // a numeric value for the top offset of the title
         .prop('titleVertical')
@@ -196,16 +197,24 @@ namespace('sszvis.axis', function(module) {
               .attr('transform', function() {
                 var orientation = axisDelegate.orient(),
                     extent = sszvis.fn.scaleRange(axisScale),
-                    titleProps = sszvis.fn.defaults({
-                      vertical: props.titleVertical,
-                      left: props.titleLeft,
-                      top: props.titleTop
-                    }, {
-                      vertical: false,
-                      left: orientation === 'left' || orientation === 'right' ? 0 : orientation === 'top' || orientation === 'bottom' ? extent[1] : 0,
+                    titleProps;
+
+                  if (props.titleCenter) {
+                    titleProps = {
+                      left: orientation === 'left' || orientation === 'right' ? 0 : orientation === 'top' || orientation === 'bottom' ? (extent[0] + extent[1]) / 2 : 0,
+                      top: orientation === 'left' || orientation === 'right' ? (extent[0] + extent[1]) / 2 : orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
+                    };
+                  } else {
+                    titleProps = {
+                      left: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? extent[1] : 0,
                       top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
-                    });
-                return 'rotate(' + (titleProps.vertical ? '-90' : '0' ) + ') translate(' + (titleProps.left) + ', ' + (titleProps.top) + ')';
+                    };
+                  }
+
+                  titleProps.vertical = !!props.titleVertical;
+                  titleProps.left += props.titleLeft || 0;
+                  titleProps.top += props.titleTop || 0;
+                return 'translate(' + (titleProps.left) + ', ' + (titleProps.top) + ') rotate(' + (titleProps.vertical ? '-90' : '0' ) + ')';
               })
               .style('text-anchor', function() {
                 var orientation = axisDelegate.orient();

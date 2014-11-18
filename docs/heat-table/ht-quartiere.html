@@ -143,7 +143,7 @@
       .tickPadding(0)
       .title('Ländergruppe')
       .titleAnchor('middle')
-      .titleLeft(tableDimensions.width / 2)
+      .titleCenter(true)
       .titleTop(-90);
 
     var yAxis = sszvis.axis.y.ordinal()
@@ -152,8 +152,8 @@
       .title('Quartier')
       .titleVertical(true)
       .titleAnchor('middle')
-      .titleLeft(-tableDimensions.height / 2)
-      .titleTop(-90);
+      .titleCenter(true)
+      .titleLeft(-90);
 
     var legendWidth = 240
 

@@ -156,7 +156,7 @@
       .tickPadding(0)
       .title('Group 1')
       .titleAnchor('middle')
-      .titleLeft(tableDimensions.width / 2)
+      .titleCenter(true)
       .titleTop(-30);
 
     var yAxis = sszvis.axis.y.ordinal()
@@ -165,8 +165,8 @@
       .title('Group 2')
       .titleVertical(true)
       .titleAnchor('middle')
-      .titleLeft(-tableDimensions.height / 2)
-      .titleTop(-30);
+      .titleCenter(true)
+      .titleLeft(-30);
 
     var displayValues = BIN_EDGES.concat(state.valueDomain).sort(d3.ascending);
     var legend = sszvis.legend.binnedColorScale()

@@ -146,7 +146,7 @@
       .tickPadding(0)
       .title('Kreis')
       .titleAnchor('middle')
-      .titleLeft(tableDimensions.width / 2)
+      .titleCenter(true)
       .titleTop(-40);
 
     var yAxis = sszvis.axis.y.ordinal()
@@ -155,8 +155,8 @@
       .title('Altersgruppe')
       .titleVertical(true)
       .titleAnchor('middle')
-      .titleLeft(-tableDimensions.height / 2)
-      .titleTop(-40);
+      .titleCenter(true)
+      .titleLeft(-40);
 
     var legendWidth = bounds.width / 2;
 
