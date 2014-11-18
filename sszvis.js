@@ -984,8 +984,6 @@ namespace('sszvis.fn', function(module) {
  *
  * @property {function} highlightTick Whether or not an axis tick should be visually highlighted
  *
- * FIXME: document missing custom properties
- *
  * @return {d3.component}
  */
 namespace('sszvis.axis', function(module) {
