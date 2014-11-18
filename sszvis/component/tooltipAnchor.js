@@ -51,9 +51,6 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-		// FIXME: is this a hack? Investigate the purpose here
-        Array.isArray(data) || (data = [data]);
-
         var anchor = selection.selectAll('[data-tooltip-anchor]')
           .data(data);
 
