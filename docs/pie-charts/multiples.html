@@ -138,7 +138,6 @@
     var pieMaker = sszvis.component.pie()
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    // FIXME: should we use d3.grid?
     var multiplesMaker = sszvis.component.multiples()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
@@ -168,7 +167,6 @@
     var pieCharts = chart.selectGroup('piecharts')
       .call(multiplesMaker);
 
-    // FIXME: improve the multiplesMaker API
     pieCharts.selectAll('.sszvis-multiple')
       .each(function(d) {
         var groupScale = aScale.copy()
