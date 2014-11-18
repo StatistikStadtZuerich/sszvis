@@ -91,7 +91,6 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 20, bottom: 150 });
-    var sliderPadding = 14;
 
 
     // Scales
@@ -109,7 +108,7 @@
 
     var tScale = d3.time.scale()
       .domain(state.tExtent)
-      .range([0, bounds.innerWidth - sliderPadding * 2]);
+      .range([0, bounds.innerWidth]);
 
 
     // Layers
@@ -168,7 +167,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('sliderControl')
-      .attr('transform', sszvis.fn.translateString(sliderPadding, bounds.innerHeight + 36))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 36))
       .call(sliderControl);
 
     chartLayer.selectGroup('cScale')

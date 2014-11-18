@@ -23,22 +23,32 @@ namespace('sszvis.control.sliderControl', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        var axisOffset = 28; // vertical offset for the axis
+        var backgroundOffset = 18; // vertical offset for the middle of the background
+        var handleWidth = 10; // the width of the handle
+        var handleHeight = 23; // the height of the handle
+        var bgWidth = 6; // the width of the background
+        var lineEndOffset = (bgWidth / 2); // the amount by which to offset the ends of the background line
+        var handleSideOffset = (handleWidth / 2) + 1; // the amount by which to offset the position of the handle
+
+        var scaleDomain = props.scale.domain();
+        var scaleRange = sszvis.fn.scaleRange(props.scale);
+        var alteredScale = props.scale.copy()
+          .range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
+        var alteredRange = sszvis.fn.scaleRange(alteredScale);
+        var width = alteredRange[1] - alteredRange[0]; // the width of the component's axis
+
+        // the unchanging bits
         var bg = selection.selectAll('g.sszvis-g')
           .data([1]);
 
-        var range = sszvis.fn.scaleRange(props.scale);
-        var width = range[1] - range[0];
-
-        // the unchanging bits
         var enterBg = bg.enter()
           .append('g')
           .classed('sszvis-g', true);
 
-        var axisOffset = 30;
-
         // create the axis
         var axis = sszvis.axis.x()
-          .scale(props.scale)
+          .scale(alteredScale)
           .orient('bottom')
           .hideBorderTickThreshold(0)
           .tickSize(12)
@@ -70,8 +80,6 @@ namespace('sszvis.control.sliderControl', function(module) {
           return i === 0 ? 'start' : i === numTicks - 1 ? 'end' : 'middle';
         });
 
-        var backgroundOffset = 16;
-
         // create the slider background
         var backgroundSelection = enterBg.selectAll('g.sszvis-background')
           .data([1])
@@ -80,21 +88,19 @@ namespace('sszvis.control.sliderControl', function(module) {
           .attr('transform', sszvis.fn.translateString(0, backgroundOffset))
           .classed('sszvis-background', true);
 
-        var bgWidth = 6, lineOffset = bgWidth / 2;
-
         backgroundSelection
           .append('line')
           .style('stroke-width', bgWidth)
           .style('stroke', '#888')
           .style('stroke-linecap', 'round')
-          .attr('x1', lineOffset).attr('x2', width - lineOffset);
+          .attr('x1', lineEndOffset).attr('x2', scaleRange[1] - lineEndOffset);
 
         backgroundSelection
           .append('line')
           .style('stroke-width', bgWidth - 1)
           .style('stroke', '#fff')
           .style('stroke-linecap', 'round')
-          .attr('x1', lineOffset).attr('x2', width - lineOffset);
+          .attr('x1', lineEndOffset).attr('x2', scaleRange[1] - lineEndOffset);
 
         // draw the handle and the label
         var handle = selection.selectAll('g.sszvis-slidercontrol--handle')
@@ -107,7 +113,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handle
           .attr('transform', function(d) {
-            return sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(props.scale(d)), 0);
+            return sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0);
           })
 
         handleEntering
@@ -116,19 +122,23 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handle.selectAll('.sszvis-slidercontrol--label')
           .data(function(d) { return [d]; })
-          .text(props.label);
-
-        var boxWidth = 10, boxHeight = 23;
+          .text(props.label)
+          .style('text-anchor', function(d) {
+            return sszvis.fn.stringEqual(d, scaleDomain[0]) ? 'start' : sszvis.fn.stringEqual(d, scaleDomain[1]) ? 'end' : 'middle';
+          })
+          .attr('dx', function(d) {
+            return sszvis.fn.stringEqual(d, scaleDomain[0]) ? -(handleWidth / 2) : sszvis.fn.stringEqual(d, scaleDomain[1]) ? (handleWidth / 2) : 0;
+          });
 
         handleEntering
           .append('rect')
           .classed('sszvis-slidercontrol--handlebox', true)
-          .attr('x', -(boxWidth / 2))
-          .attr('y', backgroundOffset - boxHeight / 2)
-          .attr('width', boxWidth).attr('height', boxHeight)
+          .attr('x', -(handleWidth / 2))
+          .attr('y', backgroundOffset - handleHeight / 2)
+          .attr('width', handleWidth).attr('height', handleHeight)
           .attr('rx', 2).attr('ry', 2);
 
-        var handleLineDimension = (boxHeight / 2 - 4);
+        var handleLineDimension = (handleHeight / 2 - 4); // the amount by which to offset the small handle line within the handle
 
         handleEntering
           .append('line')
@@ -137,7 +147,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         var sliderInteraction = sszvis.behavior.click()
           .xScale(props.scale)
-          .yScale(d3.scale.linear().range([0, boxHeight]))
+          .yScale(d3.scale.linear().range([0, handleHeight]))
           .on('click', props.onchange)
           .on('down', props.onchange)
           .on('drag', props.onchange);
