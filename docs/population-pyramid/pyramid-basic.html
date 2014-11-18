@@ -121,7 +121,7 @@
         .orient('bottom')
         .title('Anzahl Frauen und Männer')
         .titleAnchor('middle')
-        .titleLeft(0);
+        .titleCenter(true);
 
       var yAxis = sszvis.axis.y.ordinal()
         .scale(positionScale)
@@ -129,9 +129,9 @@
         .tickFormat(function(d) {
           return (d === 0) ? '' : sszvis.format.age(d);
         })
+        .ticks(5)
         .title('Alter in Jahren')
-        .titleTop(-18)
-        .ticks(5);
+        .titleTop(-18);
 
       var colorLegend = sszvis.legend.color()
         .scale(colorScale)
