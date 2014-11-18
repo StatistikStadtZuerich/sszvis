@@ -92,14 +92,15 @@
 
     var maxAbsVal = d3.max(state.valueExtent, Math.abs);
 
-    // FIXME: Note that the bounds of the y-scale are different than in other examples.
+    // Note that the bounds of the y-scale are different than in other examples.
     // Here, the bounds are the positive and negative values of the largest absolute value in the dataset.
     // This is distinct from an ordinary range of the largest and smallest values in the dataset.
     var yScale = d3.scale.linear()
       .domain([-maxAbsVal, maxAbsVal])
       .range([bounds.innerHeight, 0]);
 
-    // FIXME: y-position and bar height scales are a little weird because of negative values
+    // y-position and bar height scales are different from the usual because
+    // of negative values in the dataset
     // see also gb-two-small.html and http://bl.ocks.org/mbostock/2368837
     var yPosScale = function(v) {
       return yScale(Math.max(v, 0));

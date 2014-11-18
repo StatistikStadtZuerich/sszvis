@@ -90,7 +90,7 @@
       .domain(state.regions)
       .rangeBands([0, bounds.innerWidth], 0.26, 0.80);
 
-    // FIXME: because the dataset has negative values, scales for the y-axis are a little weird
+    // because the bar chart must display negative values, scales for the y-axis are a little weird
     // see also: http://bl.ocks.org/mbostock/2368837 (http://stackoverflow.com/questions/10127402/bar-chart-with-negative-values)
     var yScale = d3.scale.linear()
       .domain(state.valueExtent)
@@ -101,7 +101,7 @@
     };
 
     var hScale = function(v) {
-      // FIXME: the size of the bar is distance from the y-position of the value to the y-position of 0
+      // the size of the bar is distance from the y-position of the value to the y-position of 0
       return Math.abs(yScale(v) - yScale(0));
     };
 

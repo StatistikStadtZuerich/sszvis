@@ -94,7 +94,8 @@
       .domain(state.valueExtent)
       .range([bounds.innerHeight - 10, 0]);
 
-    // FIXME: y-position and bar height scales are a little weird because of negative values
+    // the y-position and bar height scales are a little strange
+    // because this bar chart displays negative values
     // see also gb-two-small.html and http://bl.ocks.org/mbostock/2368837
     var yPosScale = function(v) {
       return yScale(Math.max(v, 0));
