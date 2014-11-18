@@ -55,8 +55,10 @@
         .arrayBy(cAcc)
         .apply(state.data)
         .map(function(stack) {
-          stack.category = cAcc(stack[0]);
-          return stack;
+          return {
+            category: cAcc(stack[0]),
+            values: stack
+          };
         });
 
       var dateValues = sszvis.cascade()
@@ -85,7 +87,7 @@
       var closest = findClosest(state.dates, xValue);
       state.highlightDate = closest;
       state.highlightData = state.stackedData.map(function(stack) {
-        return stack.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
+        return stack.values.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
       });
       state.mouseYValue = yValue;
 
@@ -161,12 +163,16 @@
     // Components
 
     var stackedArea = sszvis.component.stacked.area()
+      .key(sszvis.fn.prop('category'))
+      .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))
       .yAccessor(yAcc)
       .yScale(yScale)
       .fill(function(d) { return cScale(d.category); });
 
     var stackedAreaMultiples = sszvis.component.stacked.areaMultiples()
+      .key(sszvis.fn.prop('category'))
+      .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))
       .y0(sszvis.fn.compose(yPositionMultiples, cAcc))
       .y1(function(d) {

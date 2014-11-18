@@ -13,6 +13,8 @@ namespace('sszvis.component.stacked.area', function(module) {
       .prop('yScale')
       .prop('fill')
       .prop('stroke')
+      .prop('key').key(function(d, i){ return i; })
+      .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -23,13 +25,15 @@ namespace('sszvis.component.stacked.area', function(module) {
           .x(props.x)
           .y(props.yAccessor);
 
+        stackLayout(data.map(props.valuesAccessor));
+
         var areaGen = d3.svg.area()
           .x(props.x)
           .y0(function(d) { return props.yScale(d.y0); })
           .y1(function(d) { return props.yScale(d.y0 + d.y); });
 
         var paths = selection.selectAll('path.sszvis-path')
-          .data(stackLayout(data));
+          .data(data, props.key);
 
         paths.enter()
           .append('path')
@@ -41,7 +45,7 @@ namespace('sszvis.component.stacked.area', function(module) {
         paths
           .transition()
           .call(sszvis.transition)
-          .attr('d', areaGen)
+          .attr('d', sszvis.fn.compose(areaGen, props.valuesAccessor))
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
       });

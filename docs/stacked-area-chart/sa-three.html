@@ -50,8 +50,10 @@
         .arrayBy(cAcc)
         .apply(state.data)
         .map(function(stack) {
-          stack.category = cAcc(stack[0]);
-          return stack;
+          return {
+            category: cAcc(stack[0]),
+            values: stack
+          };
         });
 
       var dateValues = sszvis.cascade()
@@ -120,6 +122,8 @@
     // Components
 
     var stackedArea = sszvis.component.stacked.area()
+      .key(sszvis.fn.prop('category'))
+      .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))
       .yAccessor(yAcc)
       .yScale(yScale)

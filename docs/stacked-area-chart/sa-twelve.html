@@ -37,8 +37,6 @@
     stackedData: [],
     maxStacked: 0,
     categories: [],
-    // FIXME: work with highlightData only, not a separate highlightDate
-    highlightDate: new Date(), // FIXME: what's a good initial value for dates?
     highlightData: [],
     isMultiples: false
   };
@@ -55,8 +53,10 @@
         .arrayBy(cAcc)
         .apply(state.data)
         .map(function(stack) {
-          stack.category = cAcc(stack[0]);
-          return stack;
+          return {
+            category: cAcc(stack[0]),
+            values: stack
+          };
         });
 
       var dateValues = sszvis.cascade()
@@ -83,9 +83,8 @@
 
     changeDate: function(xValue, yValue) {
       var closest = findClosest(state.dates, xValue);
-      state.highlightDate = closest;
       state.highlightData = state.stackedData.map(function(stack) {
-        return stack.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
+        return stack.values.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
       });
       state.mouseYValue = yValue;
 
@@ -161,17 +160,23 @@
     // Components
 
     var stackedArea = sszvis.component.stacked.area()
+      .key(sszvis.fn.prop('category'))
+      .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))
       .yAccessor(yAcc)
       .yScale(yScale)
-      .fill(function(d) { return cScale(d.category); }); // FIXME: "d" here is an array representing the whole group
+      // "d" here is an object representing one layer of the area
+      .fill(function(d) { return cScale(d.category); });
 
     var stackedAreaMultiples = sszvis.component.stacked.areaMultiples()
+      .key(sszvis.fn.prop('category'))
+      .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))
       .y0(sszvis.fn.compose(yPositionMultiples, cAcc))
       .y1(function(d) {
         return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
       })
+      // "d" here is an object representing one area
       .fill(function(d) { return cScale(d.category); });
 
     var totalHighlightValue = state.highlightData.reduce(function(m, v) {
@@ -186,10 +191,13 @@
       topValue = yScale(totalHighlightValue);
     }
 
+    var highlightDate = xAcc(state.highlightData[0]),
+        highlightX = xScale(highlightDate);
+
     var rangeRuler = sszvis.component.rangeRuler()
       .top(topValue)
       .bottom(bounds.innerHeight)
-      .x(xScale(state.highlightDate))
+      .x(highlightX)
       .y0(function(d) {
         if (state.isMultiples) {
           return yPositionMultiples(cAcc(d));
@@ -209,7 +217,7 @@
       })
       .total(totalHighlightValue)
       .flip(function(d) {
-        return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
+        return highlightX >= 0.5 * bounds.innerWidth;
       });
 
     var tooltipText = sszvis.component.modularText.html()
@@ -219,14 +227,14 @@
     var rangeTooltip = sszvis.component.tooltip()
         .header(tooltipText)
         .orientation(function(d) {
-          return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? 'right' : 'left';
+          return highlightX >= 0.5 * bounds.innerWidth ? 'right' : 'left';
         })
         .renderInto(htmlLayer)
         .centered(true)
         .visible(true);
 
     var rangeFlag = sszvis.component.rangeFlag()
-      .x(xScale(state.highlightDate))
+      .x(highlightX)
       .y0(function(d) {
         if (state.isMultiples) {
           return yPositionMultiples(cAcc(d));
@@ -243,14 +251,14 @@
       });
 
     var xAxisTicks = xScale.ticks(5)
-      .concat(state.highlightDate);
+      .concat(highlightDate);
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xAxisTicks)
       .highlightTick(function(d) {
-        return sszvis.fn.stringEqual(d, state.highlightDate);
+        return sszvis.fn.stringEqual(d, highlightDate);
       });
 
     var yAxis = sszvis.axis.y()
