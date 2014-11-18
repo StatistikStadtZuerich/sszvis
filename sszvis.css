@@ -108,9 +108,9 @@
  * @module sszvis/legend/color
  */
 .sszvis-legend__label {
+  fill: #B8B8B8;
   font-family: Arial, sans-serif;
-  fill: #909090;
-  font-size: 12px;
+  font-size: 10px;
   font-style: normal;
   font-weight: normal;
   text-anchor: start;

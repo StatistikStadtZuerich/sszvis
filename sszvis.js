@@ -5099,6 +5099,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         });
 
         var segHeight = 10;
+        var circleRad = segHeight / 2;
 
         var segments = selection.selectAll('rect.sszvis-legend--mark')
           .data(rectData);
@@ -5110,16 +5111,36 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         segments.exit().remove();
 
         segments
-          .attr('x', sszvis.fn.prop('x'))
+          .attr('x', function(d, i) {
+            return i === 0 ? d.x + circleRad : d.x;
+          })
           .attr('y', 0)
-          .attr('width', sszvis.fn.prop('w'))
+          .attr('width', function(d, i) {
+            return i === 0 || i === rectData.length - 1 ? d.w - circleRad : d.w;
+          })
           .attr('height', segHeight)
           .attr('fill', sszvis.fn.prop('c'));
 
-        var labelData = rectData.concat({
-          x: sum,
-          p0: sszvis.fn.last(rectData).p1
-        });
+        var firstLast = [sszvis.fn.first(rectData), sszvis.fn.last(rectData)];
+
+        var circles = selection.selectAll('circle.sszvis-legend--mark')
+          .data(firstLast);
+
+        circles.enter()
+          .append('circle')
+          .classed('sszvis-legend--mark', true);
+
+        circles.exit().remove();
+
+        circles
+          .attr('r', circleRad)
+          .attr('cy', circleRad)
+          .attr('cx', function(d, i) {
+            return i === 0 ? d.x + circleRad : d.x + d.w - circleRad;
+          })
+          .attr('fill', sszvis.fn.prop('c'));
+
+        var labelData = rectData.splice(1);
 
         var lines = selection.selectAll('line.sszvis-legend--mark')
           .data(labelData);
@@ -5131,11 +5152,11 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         lines.exit().remove();
 
         lines
-          .attr('x1', function(d) { return Math.round(d.x); })
-          .attr('x2', function(d) { return Math.round(d.x); })
-          .attr('y1', 0)
-          .attr('y2', segHeight + 4)
-          .attr('stroke', '#909090');
+          .attr('x1', function(d) { return sszvis.fn.roundPixelCrisp(d.x); })
+          .attr('x2', function(d) { return sszvis.fn.roundPixelCrisp(d.x); })
+          .attr('y1', segHeight + 1)
+          .attr('y2', segHeight + 6)
+          .attr('stroke', '#B8B8B8');
 
         var labels = selection.selectAll('.sszvis-legend__label')
           .data(labelData);
@@ -5148,7 +5169,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
 
         labels
           .style('text-anchor', 'middle')
-          .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 16) + ')'; })
+          .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 20) + ')'; })
           .text(function(d) {
             return props.labelFormat(d.p0);
           });
