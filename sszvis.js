@@ -4076,10 +4076,6 @@ namespace('sszvis.component.ruler', function(module) {
           return props.x(d) + '_' + props.y(d);
         };
 
-        // FIXME: in situations with multiple data points - e.g. when displaying multiple dots,
-        // this generates multiple lines. When the lines overlap in the same place, they're redundant,
-        // when they show up in separate places, this is a potentially useful, but surprising and undocumented
-        // feature. Perhaps this behavior should be either documented or removed.
         var ruler = selection.selectAll('.sszvis-ruler__rule')
           .data(data, key);
 
@@ -4164,7 +4160,6 @@ namespace('sszvis.component.ruler', function(module) {
  * @return {d3.component}
  */
 
-// FIXME: rename namespace or component to be consistent with file system
 namespace('sszvis.component.stacked.area', function(module) {
 'use strict';
 
