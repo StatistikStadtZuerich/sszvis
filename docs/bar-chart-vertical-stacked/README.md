@@ -56,13 +56,13 @@ A straightforward example with two layers of values.
 
 ```project
 {
-    "name": "stacked-vertical-bar-chart",
+    "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "docs/stacked-vertical-bar-chart/three-cat.html",
+            "source": "docs/bar-chart-vertical-stacked/three-cat.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/stacked-vertical-bar-chart/data/StVB_3Categories_yearly.csv",
+        "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_3Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -81,13 +81,13 @@ Eight layers of values, with tooltips.
 
 ```project
 {
-    "name": "stacked-vertical-bar-chart",
+    "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "docs/stacked-vertical-bar-chart/seven-cat.html",
+            "source": "docs/bar-chart-vertical-stacked/seven-cat.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/stacked-vertical-bar-chart/data/StVB_7Categories_yearly.csv",
+        "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -107,13 +107,13 @@ https://basecamp.com/1762663/projects/6446196/documents/6747425
 
 ```project
 {
-    "name": "stacked-vertical-bar-chart",
+    "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "docs/stacked-vertical-bar-chart/two-cat.html",
+            "source": "docs/bar-chart-vertical-stacked/two-cat.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/stacked-vertical-bar-chart/data/StVB_2Categories_yearly_negatives.csv",
+        "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_2Categories_yearly_negatives.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
