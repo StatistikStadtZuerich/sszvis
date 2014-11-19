@@ -969,7 +969,33 @@ namespace('sszvis.fn', function(module) {
  *
  * The following properties are custom additions.
  *
- * @property {function} highlightTick Whether or not an axis tick should be visually highlighted
+ * @property {function} highlightTick                   Whether or not an axis tick should be visually highlighted
+ * @property {boolean} alignOuterLabels                 Whether or not to align the outer labels to the axis extent so that they do not fall outside the axis space.
+ * @property {string} ["outline", "rect"] contour       Specify a 'contour' background for the axis labels.
+ *                                                      "outline" provides a white outline shadow (which may not display well on all browsers).
+ *                                                      "rect" uses a faint white rectangle (which will work on all browsers).
+ * @property {number} hideBorderTickThreshold           Specifies the pixel distance threshold for the visible tick correction. Ticks which are closer than
+ *                                                      this threshold to the end of the axis (i.e. a tick which is 1 or two pixels from the end) will be
+ *                                                      hidden from view. This prevents the display of a tick very close to the ending line.
+ * @property {function} highlightTick                   Specifies a predicate function to use to determine whether axis ticks should be highlighted.
+ *                                                      Any tick value which returns true for this predicate function will be treated specially as a highlighted tick.
+ *                                                      Note that this function does NOT have any effect over which ticks are actually included on the axis. To create special
+ *                                                      custom ticks, use tickValues.
+ * @property {boolean} showZeroY                        Whether the axis should display a label for at y=0.
+ * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
+ *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
+ * @property {number} textWrap                          Specify a width at which to wrap the axis label text.
+ * @property {string, function} tickColor               specify a single string color or a function which takes a tick value and returns a color.
+ * @property {number, function} tickLength              specify a number or a function which returns a number for setting the tick length.
+ * @property {string} title                             Specify a string to use as the title of this chart. Default title position depends on the chart orientation
+ * @property {string} titleAnchor                       specify the title text-anchor. Values are 'start', 'middle', and 'end'. Corresponds to the 'text-anchor' svg styling attribute
+ *                                                      the default depends on the axis orient property
+ * @property {boolean} titleCenter                      whether or not to center the axis title along the axis. If true, this sets the title anchor point
+ *                                                      as the midpoint between axis extremes. Should usually be used with titleAnchor('middle') to ensure exact title centering. (default: false)
+ * @property {number} titleLeft                         specify an amount by which to offset the title towards the left. This offsets away from the default position. (default: 0)
+ * @property {number} titleTop                          specify an amount by which to offset the title towards the top. This offsets away from the default position. (default: 0)
+ * @property {boolean} titleVertical                    whether or not to rotate the title 90 degrees so that it appears vertical, reading from bottom to top. (default: false)
+ * @property {boolean} vertical                         whether the axis is a vertical axis. When true, this property changes certain display properties of the axis according to the style guide.
  *
  * @return {d3.component}
  */
