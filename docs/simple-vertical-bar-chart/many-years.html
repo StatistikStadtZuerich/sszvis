@@ -20,6 +20,14 @@
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
 
+  // Because there are so many bars, this represents a special case
+  // in this example, because the x-axis values are sequential,
+  // the x-axis is implemented using a linear time scale,
+  // instead of the usual ordinal scale.
+  // It should be noted that in situations with this much time-series data,
+  // a line chart is almost always the optimal display strategy.
+  var BAR_WIDTH = 3;
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -66,7 +74,7 @@
     .row(function(d) {
       return {
         year: sszvis.parse.year(d['Jahr']),
-        value: sszvis.parse.number(d['Hotel?bernachtungen'])
+        value: sszvis.parse.number(d['Hotelübernachtungen'])
       };
     })
     .get(function(error, data) {
@@ -81,14 +89,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 60, bottom: 60 });
-    var BAR_WIDTH = 3;
-    // because there are so many bars, this represents a special case
-    // in this example, because the x-axis values are sequential,
-    // the x-axis is implemented using a linear time scale,
-    // instead of the usual ordinal scale.
-    // It should be noted that in situations with this much time-series data,
-    // a line chart is almost always the optimal display strategy.
+
+    var bounds = sszvis.bounds({ top: 3, bottom: 25 });
 
 
     // Scales
@@ -128,7 +130,8 @@
 
     var barGen = sszvis.component.bar()
       .x(function(d) {
-        return xValue(d) - BAR_WIDTH / 2; // this adjusts for the width of the bar
+        // Adjust for the width of the bar
+        return xValue(d) - BAR_WIDTH / 2;
       })
       .y(yValue)
       .width(BAR_WIDTH)

@@ -79,7 +79,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 60, bottom: 60 });
+    var bounds = sszvis.bounds({ top: 3, bottom: 25 });
     var chartDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
 
@@ -129,13 +129,11 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
-      .tickFormat(function(d) {
-        return (d === 0) ? null : sszvis.format.percent(d);
-      })
+      .tickFormat(yAxisLabel)
       .orient('right');
 
     var tooltipTitle = sszvis.component.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.percent, yAcc))
+      .bold(sszvis.fn.compose(sszvis.format.percent, yAcc));
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
@@ -172,6 +170,11 @@
   function isSelected(d) {
     return sszvis.fn.contains(state.selection, d);
   }
+
+  function yAxisLabel(d) {
+    return (d === 0) ? null : sszvis.format.percent(d);
+  }
+
 
 }(d3, sszvis));
 </script>

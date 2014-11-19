@@ -81,7 +81,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 60, bottom: 60 });
+    var bounds = sszvis.bounds({ top: 3, bottom: 60 });
     var chartDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
     // Scales
@@ -119,9 +119,9 @@
     var barGen = sszvis.component.bar()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(nanFallback(yPosScale.range()[0]), yPosScale, yAcc))
-      // Because we use sszvis.behavior.move here, we need to make sure that
-      // bars have the exact same size as the scale's rangeBand. This will
-      // result in slightly narrower bars than the default.
+      // Because we use sszvis.behavior.move in this example, we need to make
+      // sure that bars have the exact same size as the scale's rangeBand. This
+      // will result in slightly narrower bars than the default.
       .width(xScale.rangeBand())
       .height(sszvis.fn.compose(heightScale, yAcc))
       .fill(function(d) {
@@ -185,17 +185,18 @@
 
   /* Helper functions
   ----------------------------------------------- */
-  function nanFallback(fallbackValue) {
-    return function(d) {
-      return isNaN(d) ? fallbackValue : d;
-    };
-  }
   function isSelected(d) {
     return sszvis.fn.contains(state.selection, d);
   }
 
   function labelWrapWidth(range) {
     return (d3.max(range) - d3.min(range)) / range.length;
+  }
+
+  function nanFallback(fallbackValue) {
+    return function(d) {
+      return isNaN(d) ? fallbackValue : d;
+    };
   }
 
 
