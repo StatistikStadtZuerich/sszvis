@@ -49,9 +49,9 @@ namespace('sszvis.legend.linearColorScale', function(module) {
         segments.exit().remove();
 
         segments
-          .attr('x', function(d, i) { return i * segWidth; })
+          .attr('x', function(d, i) { return i * segWidth - 1; }) // The offsets here cover up half-pixel antialiasing artifacts
           .attr('y', 0)
-          .attr('width', segWidth)
+          .attr('width', segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
           .attr('height', segHeight)
           .attr('fill', function(d) { return props.scale(d); });
 
