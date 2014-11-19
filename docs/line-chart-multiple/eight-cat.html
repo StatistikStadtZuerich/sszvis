@@ -86,7 +86,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.months)
-      .rangePoints([0, bounds.innerWidth], 1);
+      .rangePoints([0, bounds.innerWidth], 0);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxY])
@@ -116,7 +116,8 @@
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
       .orient('bottom')
-      .tickFormat(monthName);
+      .tickFormat(monthName)
+      .alignOuterLabels(true);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
