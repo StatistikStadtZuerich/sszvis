@@ -39,7 +39,7 @@
     groups: [],
     maxValue: 0,
     populations: {},
-    selected: []
+    selectedAge: []
   };
 
 
@@ -59,14 +59,20 @@
 
     selectBar: function(d) {
       var age = aAcc(d);
-      state.selected = state.data.filter(function(v) {
+      var rows = state.data.filter(function(v) {
         return aAcc(v) === age;
       });
+
+      state.selectedAge = {
+        age: rows[0].age,
+        rows: rows
+      };
+
       render(state);
     },
 
     deselectBar: function(d) {
-      state.selected = [];
+      state.selectedAge = [];
       render(state);
     }
   };
@@ -120,7 +126,7 @@
         .datum(state.populations);
 
       var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
-        .datum(state.selected);
+        .datum(state.selectedAge);
 
 
       // Components
@@ -156,18 +162,20 @@
 
       var tooltip = sszvis.component.tooltip()
         .renderInto(tooltipLayer)
-        .header(sszvis.component.modularText.html()
-        .bold(function(d) {
-          return gAcc(d) + ' - ' + aAcc(d);
-        }))
+        .header(function(d) {
+          return aAcc(d) + '-jährige';
+        })
         .body(function(d) {
-          return vAcc(d);
+          var rows = state.selectedAge.rows.map(function(r) {
+            return [gAcc(r), sszvis.format.number(vAcc(r))];
+          });
+          return rows.concat([['Alter', sszvis.format.age(state.selectedAge.age)]]);
         })
         .orientation(function(d) {
           return isLeft(d.datum) ? 'right' : 'left';
         })
         .visible(function(d) {
-          return state.selected.indexOf(d) >= 0;
+          return state.selectedAge.age === aAcc(d) && gAcc(d) === 'Männer';
         });
 
 
