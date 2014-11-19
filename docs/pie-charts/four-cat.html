@@ -139,7 +139,8 @@
 
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.fn.translateString(bounds.innerWidth + 20, 85))
+      // the magic number y-offset here vertically centers the color legend.
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth + 20, 87))
       .call(colorLegend);
 
 
