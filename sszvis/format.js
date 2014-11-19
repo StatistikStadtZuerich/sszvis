@@ -60,9 +60,14 @@ namespace('sszvis.format', function(module) {
       var natLen = integerPlaces(d);
       var decLen = decimalPlaces(d);
 
+      // NaN
+      if (isNaN(d)) {
+        return '–';
+      }
+
       // 10250    -> "10 250"
       // 10250.91 -> "10 251"
-      if (dAbs >= 1e4) {
+      else if (dAbs >= 1e4) {
         def(p) || (p = 0);
         return removeTrailingZeroes(d3.format(',.'+ p +'f')(d));
       }

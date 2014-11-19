@@ -7,6 +7,7 @@
   var assertEqual = sszvis.assertEqual('sszvis.format');
 
   [
+    [NaN, '–'],
     [10250, '10 250'],
     [10250.91, '10 251'],
     [2350, '2350'],
