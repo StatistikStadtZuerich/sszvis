@@ -27,6 +27,10 @@ namespace('sszvis.format', function(module) {
       ['%Y', function() { return true; }]
     ]),
 
+    month: sszvis.fn.compose(function(m) {
+      return m.toUpperCase();
+    }, d3.time.format('%b')),
+
     /**
      * Formatter for no label
      * @return {string} the empty string

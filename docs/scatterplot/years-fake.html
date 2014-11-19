@@ -137,7 +137,7 @@
       // Be aware that this uses fn.derivedSet instead of fn.set
       .majorTicks(sszvis.fn.derivedSet(state.quarters, function(d) { return d.getYear(); }))
       .tickLabels(sszvis.format.axisTimeFormat)
-      .label(sszvis.format.axisTimeFormat)
+      .label(sszvis.format.month)
       .onchange(actions.setQuarter);
 
     var xAxis = sszvis.axis.x()
