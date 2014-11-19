@@ -73,7 +73,7 @@ A map of Zürich's Stadtkreise.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 600
+        "height": 542
     }
 }
 ```
@@ -98,7 +98,7 @@ A map of Zürich's Wahlkreise.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 600
+        "height": 542
     }
 }
 ```
@@ -123,7 +123,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a segmented
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 600
+        "height": 592
     }
 }
 ```
@@ -148,7 +148,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 726
+        "height": 704
     }
 }
 ```

@@ -84,7 +84,7 @@
   function render(state) {
     // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 600, top: 0, right: padding, bottom: 100, left: padding });
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 90, left: padding });
 
 
     // Scales
@@ -159,7 +159,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 20))
+      .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
       .call(legend);
   }
 

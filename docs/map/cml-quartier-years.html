@@ -163,12 +163,12 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var mapHeight = 564, lineChartHeight = 162;
+    var mapHeight = 542, lineChartHeight = 162;
     var outerBounds = sszvis.bounds({ height: mapHeight + lineChartHeight, top: 0, right: 0, bottom: 0, left: 0 });
     // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
     // bounds for the map section of the chart
-    var mapBounds = sszvis.bounds({ height: mapHeight, top: 0, right: padding, bottom: 64, left: padding });
+    var mapBounds = sszvis.bounds({ height: mapHeight, top: 30, right: padding, bottom: 90, left: padding });
     // bounds for the line chart section
     var lineChartBounds = sszvis.bounds({ height: lineChartHeight, top: 24, right: 6, bottom: 20, left: 6 });
 
@@ -338,7 +338,7 @@
 
     // for Zurich maps, the color legend should be positioned 60 pixels below the bottom of the map
     chart.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString(mapBounds.width / 4, mapBounds.innerHeight + 20))
+      .attr('transform', sszvis.fn.translateString(mapBounds.width / 4, mapBounds.padding.top + mapBounds.innerHeight + 60))
       .call(legend);
 
 
