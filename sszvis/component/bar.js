@@ -44,6 +44,11 @@ namespace('sszvis.component.bar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        var xAcc = sszvis.fn.compose(handleMissingVal, props.x);
+        var yAcc = sszvis.fn.compose(handleMissingVal, props.y);
+        var wAcc = sszvis.fn.compose(handleMissingVal, props.width);
+        var hAcc = sszvis.fn.compose(handleMissingVal, props.height);
+
         var bars = selection.selectAll('.sszvis-bar')
           .data(data);
 
@@ -60,16 +65,16 @@ namespace('sszvis.component.bar', function(module) {
         bars
           .transition()
           .call(sszvis.transition)
-          .attr('x', sszvis.fn.compose(handleMissingVal, props.x))
-          .attr('y', sszvis.fn.compose(handleMissingVal, props.y))
-          .attr('width', sszvis.fn.compose(handleMissingVal, props.width))
-          .attr('height', sszvis.fn.compose(handleMissingVal, props.height));
+          .attr('x', xAcc)
+          .attr('y', yAcc)
+          .attr('width', wAcc)
+          .attr('height', hAcc);
 
         // Tooltip anchors
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
-            return [props.x(d) + props.width(d) / 2, props.y(d)];
+            return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
           });
 
         selection.call(tooltipAnchor);
