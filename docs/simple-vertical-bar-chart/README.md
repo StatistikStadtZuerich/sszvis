@@ -36,17 +36,14 @@ Specifies the fill-value of the rectangles. Can be a value or a function (defaul
 
 Specifies the stroke-value of the rectangles. Can be a value or a function (default: black).
 
-
-## Four Cities
-
-A good default - compares four entities.
+### Chart
 
 ```project
 {
-    "name": "simple-vertical-bar-chart-four-cities",
+    "name": "simple-vertical-bar-chart-basic",
     "files": {
         "index.html": {
-            "source": "docs/simple-vertical-bar-chart/four-cities.html",
+            "source": "docs/simple-vertical-bar-chart/basic.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fourCities.csv",
@@ -62,84 +59,13 @@ A good default - compares four entities.
 }
 ```
 
-## Basic Data
+## Specialties
 
-Displays age groups, and includes long axis ticks to aid chart reading.
+This example shows several edge cases and specialties:
 
-```project
-{
-    "name": "simple-vertical-bar-chart-basic",
-    "files": {
-        "index.html": {
-            "source": "docs/simple-vertical-bar-chart/basic.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_basic.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "height": 485,
-        "width": 516
-    }
-}
-```
-
-## Few Categories
-
-The bar layout function is flexible with respect to the overall width and the number of categories to be displayed.
-
-```project
-{
-    "name": "simple-vertical-bar-chart-few-categories",
-    "files": {
-        "index.html": {
-            "source": "docs/simple-vertical-bar-chart/few-categories.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fewCategories.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "height": 485,
-        "width": 516
-    }
-}
-```
-
-## Few Categories - Missing Values
-
-When values are missing, no bar is shown.
-
-```project
-{
-    "name": "simple-vertical-bar-chart-few-categories-missing",
-    "files": {
-        "index.html": {
-            "source": "docs/simple-vertical-bar-chart/few-categories-missing.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fewCategories_missing.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "height": 485,
-        "width": 516
-    }
-}
-```
-
-## Long Names
-
-Long axis labels can be word-wrapped by configuring the axis component.
+* Long axis labels can be word-wrapped by configuring the axis component
+* Long axis ticks can be toggled to aid chart reading, which can be useful to see when looking at static charts
+* Missing data renders a tooltip stating that there is no data. This uses `sszvis.behavior.move` to provide hover functionality in the absence of a bar.
 
 ```project
 {

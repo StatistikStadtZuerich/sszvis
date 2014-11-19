@@ -1867,9 +1867,14 @@ namespace('sszvis.format', function(module) {
       var natLen = integerPlaces(d);
       var decLen = decimalPlaces(d);
 
+      // NaN
+      if (isNaN(d)) {
+        return '–';
+      }
+
       // 10250    -> "10 250"
       // 10250.91 -> "10 251"
-      if (dAbs >= 1e4) {
+      else if (dAbs >= 1e4) {
         def(p) || (p = 0);
         return removeTrailingZeroes(d3.format(',.'+ p +'f')(d));
       }
@@ -2561,8 +2566,9 @@ namespace('sszvis.behavior.move', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var xExtent = props.xScale.range().sort(d3.ascending);
-        var yExtent = props.yScale.range().sort(d3.ascending);
+        var xExtent = scaleExtent(props.xScale).sort(d3.ascending);
+        var yExtent = scaleExtent(props.yScale).sort(d3.ascending);
+
         xExtent[0] -= props.padding.left;
         xExtent[1] += props.padding.right;
         yExtent[0] -= props.padding.top;
@@ -2585,12 +2591,12 @@ namespace('sszvis.behavior.move', function(module) {
           .on('mouseout', event.end)
           .on('mousemove', function() {
             var xy = d3.mouse(this);
-            event.move(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+            event.move(scaleInvert(props.xScale, xy[0]), scaleInvert(props.yScale, xy[1]));
           })
           .on('touchdown', event.start)
           .on('touchmove', function() {
             var xy = sszvis.fn.first(d3.touches(this));
-            event.move(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+            event.move(scaleInvert(props.xScale, xy[0]), scaleInvert(props.yScale, xy[1]));
           })
           .on('touchend', function() {
             event.end.apply(this, arguments);
@@ -2608,6 +2614,33 @@ namespace('sszvis.behavior.move', function(module) {
 
     return moveComponent;
   };
+
+  function scaleInvert(scale, px) {
+    if (scale.invert) {
+      // Linear scale
+      return scale.invert(px);
+    } else {
+      // Ordinal scale
+      var bandWidth = scale.rangeBand();
+      var leftEdges = scale.range().map(function(d) {
+        return [d, d + bandWidth];
+      });
+      for (var i = 0, l = leftEdges.length; i < l; i++) {
+        if (leftEdges[i][0] < px && px <= leftEdges[i][1]) {
+          return scale.domain()[i];
+        }
+      }
+      return null;
+    }
+  }
+
+  function scaleExtent(scale) {
+    if (scale.rangeExtent) {
+      return scale.rangeExtent();
+    } else {
+      return scale.range();
+    }
+  }
 
 });
 
@@ -3061,6 +3094,11 @@ namespace('sszvis.component.bar', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        var xAcc = sszvis.fn.compose(handleMissingVal, props.x);
+        var yAcc = sszvis.fn.compose(handleMissingVal, props.y);
+        var wAcc = sszvis.fn.compose(handleMissingVal, props.width);
+        var hAcc = sszvis.fn.compose(handleMissingVal, props.height);
+
         var bars = selection.selectAll('.sszvis-bar')
           .data(data);
 
@@ -3077,16 +3115,16 @@ namespace('sszvis.component.bar', function(module) {
         bars
           .transition()
           .call(sszvis.transition)
-          .attr('x', sszvis.fn.compose(handleMissingVal, props.x))
-          .attr('y', sszvis.fn.compose(handleMissingVal, props.y))
-          .attr('width', sszvis.fn.compose(handleMissingVal, props.width))
-          .attr('height', sszvis.fn.compose(handleMissingVal, props.height));
+          .attr('x', xAcc)
+          .attr('y', yAcc)
+          .attr('width', wAcc)
+          .attr('height', hAcc);
 
         // Tooltip anchors
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
-            return [props.x(d) + props.width(d) / 2, props.y(d)];
+            return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
           });
 
         selection.call(tooltipAnchor);

@@ -19,6 +19,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var SHOW_YAXIS_TICKS = true;
 
 
   /* Shortcuts
@@ -45,8 +46,10 @@
       render(state);
     },
 
-    showTooltip: function(tooltipData) {
-      state.selection = [tooltipData];
+    showTooltip: function(category) {
+      state.selection = state.data.filter(function(d){
+        return xAcc(d) === category;
+      });
       render(state);
     },
 
@@ -115,8 +118,11 @@
 
     var barGen = sszvis.component.bar()
       .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yPosScale, yAcc))
-      .width(chartDimensions.barWidth)
+      .y(sszvis.fn.compose(nanFallback(yPosScale.range()[0]), yPosScale, yAcc))
+      // Because we use sszvis.behavior.move here, we need to make sure that
+      // bars have the exact same size as the scale's rangeBand. This will
+      // result in slightly narrower bars than the default.
+      .width(xScale.rangeBand())
       .height(sszvis.fn.compose(heightScale, yAcc))
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
@@ -129,10 +135,14 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
+      .tickLength(SHOW_YAXIS_TICKS ? bounds.innerWidth : null)
       .orient('right');
 
     var tooltipHeader = sszvis.component.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
+      .bold(function(d) {
+        var value = yAcc(d);
+        return isNaN(value) ? 'keine' : sszvis.format.number(value);
+      })
       .plain('Beschäftigte');
 
     var tooltip = sszvis.component.tooltip()
@@ -143,12 +153,6 @@
 
     // Rendering
 
-    var bars = chartLayer.selectGroup('bars')
-      .call(barGen);
-
-    bars.selectAll('[data-tooltip-anchor]')
-      .call(tooltip);
-
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
@@ -156,18 +160,36 @@
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
+    var bars = chartLayer.selectGroup('bars')
+      .call(barGen);
+
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
 
     // Interaction
 
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
+    // Use the move behavior to provide tooltips in the absence of a bar, i.e.
+    // when we have missing data.
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(xScale)
+      .yScale(yPosScale)
+      .on('move', actions.showTooltip)
+      .on('end',  actions.hideTooltip);
+
+    chartLayer.selectGroup('interaction')
+      .call(interactionLayer);
 
   }
 
 
   /* Helper functions
   ----------------------------------------------- */
+  function nanFallback(fallbackValue) {
+    return function(d) {
+      return isNaN(d) ? fallbackValue : d;
+    };
+  }
   function isSelected(d) {
     return sszvis.fn.contains(state.selection, d);
   }
