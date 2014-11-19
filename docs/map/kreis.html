@@ -126,7 +126,7 @@
     var tooltipHeader = sszvis.component.modularText.html()
       .bold(function(d) {
         if (!d) return;
-        return vAcc(d.datum);
+        return sszvis.format.number(vAcc(d.datum));
       })
       .plain(' Einwohner');
 
