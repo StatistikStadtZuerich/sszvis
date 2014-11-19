@@ -2549,6 +2549,7 @@ namespace('sszvis.behavior.move', function(module) {
     var event = d3.dispatch('start', 'move', 'end');
 
     var moveComponent = d3.component()
+      .prop('debug')
       .prop('xScale')
       .prop('yScale')
       .prop('padding', function(p) {
@@ -2597,6 +2598,10 @@ namespace('sszvis.behavior.move', function(module) {
             // calling preventDefault here prevents the browser from sending imitation mouse events
             d3.event.preventDefault();
           });
+
+        if (props.debug) {
+          layer.attr('fill', 'rgba(255,0,0,0.2)');
+        }
       });
 
     d3.rebind(moveComponent, event, 'on');
