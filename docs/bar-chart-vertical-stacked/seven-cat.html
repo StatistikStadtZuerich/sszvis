@@ -80,7 +80,7 @@
     .row(function(d) {
       return {
         year: d['Jahr'],
-        field: d['Berfusfeld'], // [sic] - this is misspelled in the data
+        field: d['Berufsfeld'],
         value: sszvis.parse.number(d['Anzahl'])
       };
     })
@@ -96,7 +96,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 20, bottom: 130 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 150 });
     var chartDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, state.years.length);
 
 
@@ -104,7 +104,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.3);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.5);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])
@@ -147,7 +147,8 @@
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .title('Anzahl');
+      .title('Anzahl')
+      .titleTop(-20);
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
@@ -187,7 +188,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 40))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
 

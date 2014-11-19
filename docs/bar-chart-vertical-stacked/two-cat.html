@@ -78,7 +78,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 20, bottom: 126 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 110 });
 
 
     // Scales
@@ -118,13 +118,14 @@
       .scale(xScale)
       .orient('bottom')
       .slant('vertical')
-      .title('Jahr')
-      .titleTop(15);
+      .title('Jahr');
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .title('Anzahl');
+      .title('Anzahl')
+      .titleTop(-20)
+      .tickFormat(yAxisLabel);
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
@@ -147,6 +148,14 @@
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
   }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function yAxisLabel(d) {
+    return (d === 0) ? null : sszvis.format.percent(d);
+  }
+
 
 }(d3, sszvis));
 </script>
