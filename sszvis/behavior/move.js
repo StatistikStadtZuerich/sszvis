@@ -21,8 +21,9 @@ namespace('sszvis.behavior.move', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var xExtent = props.xScale.range().sort(d3.ascending);
-        var yExtent = props.yScale.range().sort(d3.ascending);
+        var xExtent = scaleExtent(props.xScale).sort(d3.ascending);
+        var yExtent = scaleExtent(props.yScale).sort(d3.ascending);
+
         xExtent[0] -= props.padding.left;
         xExtent[1] += props.padding.right;
         yExtent[0] -= props.padding.top;
@@ -45,12 +46,12 @@ namespace('sszvis.behavior.move', function(module) {
           .on('mouseout', event.end)
           .on('mousemove', function() {
             var xy = d3.mouse(this);
-            event.move(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+            event.move(scaleInvert(props.xScale, xy[0]), scaleInvert(props.yScale, xy[1]));
           })
           .on('touchdown', event.start)
           .on('touchmove', function() {
             var xy = sszvis.fn.first(d3.touches(this));
-            event.move(props.xScale.invert(xy[0]), props.yScale.invert(xy[1]));
+            event.move(scaleInvert(props.xScale, xy[0]), scaleInvert(props.yScale, xy[1]));
           })
           .on('touchend', function() {
             event.end.apply(this, arguments);
@@ -68,5 +69,32 @@ namespace('sszvis.behavior.move', function(module) {
 
     return moveComponent;
   };
+
+  function scaleInvert(scale, px) {
+    if (scale.invert) {
+      // Linear scale
+      return scale.invert(px);
+    } else {
+      // Ordinal scale
+      var bandWidth = scale.rangeBand();
+      var leftEdges = scale.range().map(function(d) {
+        return [d, d + bandWidth];
+      });
+      for (var i = 0, l = leftEdges.length; i < l; i++) {
+        if (leftEdges[i][0] < px && px <= leftEdges[i][1]) {
+          return scale.domain()[i];
+        }
+      }
+      return null;
+    }
+  }
+
+  function scaleExtent(scale) {
+    if (scale.rangeExtent) {
+      return scale.rangeExtent();
+    } else {
+      return scale.range();
+    }
+  }
 
 });
