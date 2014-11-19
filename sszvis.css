@@ -103,21 +103,28 @@
 }
 
 /**
- * Legend component - color legend
+ * Legend components
  *
  * @module sszvis/legend/color
+ * @module sszvis/legend/linearColorScale
+ * @module sszvis/legend/binnedColorScale
+ * @module sszvis/legend/radius
  */
 .sszvis-legend__label {
-  fill: #B8B8B8;
+  fill: #909090;
   font-family: Arial, sans-serif;
-  font-size: 10px;
+  font-size: 12px;
   font-style: normal;
   font-weight: normal;
   text-anchor: start;
 }
 
-.sszvis-legend__textpath {
-  font-size: 12px;
+.sszvis-legend__axislabel {
+  fill: #B8B8B8;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: normal;
 }
 
 
