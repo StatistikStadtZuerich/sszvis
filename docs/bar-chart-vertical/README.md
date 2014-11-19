@@ -40,13 +40,13 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
 
 ```project
 {
-    "name": "simple-vertical-bar-chart-basic",
+    "name": "bar-chart-vertical-basic",
     "files": {
         "index.html": {
-            "source": "docs/simple-vertical-bar-chart/basic.html",
+            "source": "docs/bar-chart-vertical/basic.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_fourCities.csv",
+        "data.csv": "docs/bar-chart-vertical/data/SiVB_fourCities.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -69,13 +69,13 @@ This example shows several edge cases and specialties:
 
 ```project
 {
-    "name": "simple-vertical-bar-chart-long-names",
+    "name": "bar-chart-vertical-long-names",
     "files": {
         "index.html": {
-            "source": "docs/simple-vertical-bar-chart/long-names.html",
+            "source": "docs/bar-chart-vertical/long-names.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_longNames.csv",
+        "data.csv": "docs/bar-chart-vertical/data/SiVB_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -94,13 +94,13 @@ In some cases, many values in a category should be shown. In this example, a lin
 
 ```project
 {
-    "name": "simple-vertical-bar-chart-many-years",
+    "name": "bar-chart-vertical-many-years",
     "files": {
         "index.html": {
-            "source": "docs/simple-vertical-bar-chart/many-years.html",
+            "source": "docs/bar-chart-vertical/many-years.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-vertical-bar-chart/data/SiVB_yearly_many.csv",
+        "data.csv": "docs/bar-chart-vertical/data/SiVB_yearly_many.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
