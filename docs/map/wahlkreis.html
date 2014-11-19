@@ -125,8 +125,7 @@
       .bold(function(d) {
         if (!d) return;
         return sszvis.format.percent(vAcc(d.datum));
-      })
-      .plain(' Prozent');
+      });
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
