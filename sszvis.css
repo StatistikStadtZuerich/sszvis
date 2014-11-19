@@ -227,66 +227,6 @@
   border-bottom-right-radius: 3px;
 }
 
-/**
- * Handle Ruler component
- *
- * @module sszvis/component/handleRuler
- */
-.sszvis-rule__line {
-  stroke: #CCCCCC;
-}
-
-.sszvis-rule__handle {
-  fill: #FFFFFF;
-  stroke: #808184;
-}
-
-.sszvis-rule__handle-mark {
-  stroke: #A6A8AB;
-}
-
-.sszvis-rule__dot {
-  stroke: #FFFFFF;
-  stroke-width: 1.5;
-}
-
-.sszvis-rule_label {
-  fill: #545454;
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: bold;
-  text-shadow: #fff 1px 0 1px, #fff -1px 0 1px, #fff 0 1px 1px, #fff 0 -1px 1px;
-}
-
-/**
- * sliderControl component
- *
- * @module sszvis/control/sliderControl
- */
-.sszvis-slidercontrol--handle {
-  cursor: pointer;
-}
-
-.sszvis-slidercontrol--label {
-  fill: #545454;
-  font-family: Arial, sans-serif;
-  font-size: 11px;
-  text-anchor: middle;
-}
-
-.sszvis-slidercontrol--handlebox {
-  fill: #fff;
-  stroke: #545454;
-}
-
-.sszvis-slidercontrol--handleline {
-  stroke: #545454;
-}
-
-.sszvis-slidercontrol--interactionLayer {
-  cursor: pointer;
-}
 
 /**
  * Vertical Ruler component
@@ -318,6 +258,52 @@
 .sszvis-ruler__label-outline {
   stroke: #FFFFFF;
   stroke-width: 3;
+}
+
+
+/**
+ * Handle Ruler component
+ *
+ * @module sszvis/component/handleRuler
+ */
+
+.sszvis-handleRuler__handle {
+  fill: #FFFFFF;
+  stroke: #808184;
+}
+
+.sszvis-handleRuler__handle-mark {
+  stroke: #A6A8AB;
+}
+
+
+/**
+ * sliderControl component
+ *
+ * @module sszvis/control/sliderControl
+ */
+.sszvis-slidercontrol--handle {
+  cursor: pointer;
+}
+
+.sszvis-slidercontrol--label {
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.sszvis-slidercontrol--handlebox {
+  fill: #fff;
+  stroke: #545454;
+}
+
+.sszvis-slidercontrol--handleline {
+  stroke: #545454;
+}
+
+.sszvis-slidercontrol--interactionLayer {
+  cursor: pointer;
 }
 
 
