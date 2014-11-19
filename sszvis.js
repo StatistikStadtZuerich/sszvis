@@ -4639,6 +4639,11 @@ namespace('sszvis.component.textWrap', function(module) {
 /**
  * Tooltip component
  *
+ * @property {function} body A function accepting a datum. This function can return
+ *                           - a plain string
+ *                           - an HTML string to be used as innerHTML
+ *                           - an array of arrays to produce a tabular layout
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.tooltip', function(module) {
@@ -4697,7 +4702,7 @@ namespace('sszvis.component.tooltip', function(module) {
     return d3.component()
       .prop('centered').centered(false)
       .prop('header').header('')
-      .prop('body').body('')
+      .prop('body').body(d3.functor(''))
       .prop('orientation', d3.functor).orientation('bottom')
       .prop('dx').dx(1)
       .prop('dy').dy(1)
@@ -4798,7 +4803,10 @@ namespace('sszvis.component.tooltip', function(module) {
 
         tooltip.select('.sszvis-tooltip__body')
           .datum(sszvis.fn.prop('datum'))
-          .html(props.body);
+          .html(function(d) {
+            var body = props.body(d);
+            return Array.isArray(body) ? formatTable(body) : body;
+          });
 
         selection.selectAll('.sszvis-tooltip')
           .classed('sszvis-tooltip--centered', props.centered)
@@ -4855,7 +4863,20 @@ namespace('sszvis.component.tooltip', function(module) {
                 ));
           });
       });
-   };
+  };
+
+
+  /**
+   * formatTable
+   */
+  function formatTable(rows) {
+    var tableBody = rows.map(function(row) {
+      return '<tr>' + row.map(function(cell) {
+        return '<td>' + cell + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    return '<table class="sszvis-tooltip__body__table">' + tableBody + '</table>';
+  }
 
 
   /**

@@ -398,3 +398,41 @@
   padding: 6px 10px 4px 10px;
   text-align: center;
 }
+
+.sszvis-tooltip__body__table,
+.sszvis-tooltip__body__table td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: top;
+}
+
+.sszvis-tooltip__body__table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  min-width: 120px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.sszvis-tooltip__body__table tr {
+  border-top: 1px solid #E5E6E7;
+}
+
+.sszvis-tooltip__body__table td {
+  padding: 7px 0.5em 7px 0;
+  text-align: left;
+}
+
+.sszvis-tooltip__body__table tr:last-child td {
+  padding-bottom: 3px;
+}
+
+.sszvis-tooltip__body__table td:last-child {
+  color: #545454;
+  font-weight: bold;
+  padding-right: 0;
+  text-align: right;
+}
