@@ -129,7 +129,7 @@
       .height(tableDimensions.side)
       .fill(cValue)
       .stroke(function(d) {
-        return sszvis.fn.contains(state.selection, d) ? d3.hsl(cValue(d)).darker(0.4) : 'none';
+        return sszvis.fn.contains(state.selection, d) ? sszvis.color.slightlyDarker(cValue(d)) : 'none';
       });
 
     var xAxis = sszvis.axis.x.ordinal()

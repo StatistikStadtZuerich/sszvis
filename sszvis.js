@@ -1640,6 +1640,14 @@ namespace('sszvis.color', function(module) {
     };
   });
 
+  module.exports.slightlyDarker = function(c) {
+    return d3.hsl(c).darker(0.4);
+  };
+
+  module.exports.muchDarker = function(c) {
+    return d3.hsl(c).darker(0.7);
+  };
+
 
   /* Scale extensions
   ----------------------------------------------- */

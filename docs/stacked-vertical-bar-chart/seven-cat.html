@@ -136,7 +136,7 @@
       .yScale(yScale)
       .fill(function(d) {
         var color = cScale(cAcc(d));
-        return isSelected(d) ? d3.rgb(color).darker(0.4) : color;
+        return isSelected(d) ? sszvis.color.slightlyDarker(color) : color;
       });
 
     var xAxis = sszvis.axis.x.ordinal()

@@ -110,7 +110,7 @@
       .keyName('name')
       .highlight(state.selection)
       .highlightStroke(function(d) {
-        return d3.hsl(colorScale(vAcc(d))).darker(0.7);
+        return sszvis.color.muchDarker(colorScale(vAcc(d)));
       })
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)

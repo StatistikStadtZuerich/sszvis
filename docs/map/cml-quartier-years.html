@@ -235,7 +235,7 @@
       .keyName('geoId')
       .highlight(state.mapHighlightData)
       .highlightStroke(function(d) {
-        return d3.hsl(fillScale(vAcc(d))).darker(0.7);
+        return sszvis.color.muchDarker(fillScale(vAcc(d)));
       })
       .width(mapBounds.innerWidth)
       .height(mapBounds.innerHeight)
