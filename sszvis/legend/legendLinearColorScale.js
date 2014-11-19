@@ -39,12 +39,12 @@ namespace('sszvis.legend.linearColorScale', function(module) {
         var segWidth = values.length > 0 ? props.width / values.length : 0;
         var segHeight = 10;
 
-        var segments = selection.selectAll('rect.sszvis-legend--mark')
+        var segments = selection.selectAll('rect.sszvis-legend__mark')
           .data(values);
 
         segments.enter()
           .append('rect')
-          .classed('sszvis-legend--mark', true);
+          .classed('sszvis-legend__mark', true);
 
         segments.exit().remove();
 

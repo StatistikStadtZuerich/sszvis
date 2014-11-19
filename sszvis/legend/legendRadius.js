@@ -20,12 +20,12 @@ namespace('sszvis.legend.radius', function(module) {
         var range = props.scale.range();
         var points = [range[1], d3.mean(range), range[0]];
 
-        var circles = selection.selectAll('circle.sszvis-legend--mark')
+        var circles = selection.selectAll('circle.sszvis-legend__mark')
           .data(points);
 
         circles.enter()
           .append('circle')
-          .classed('sszvis-legend--mark', true);
+          .classed('sszvis-legend__mark', true);
 
         circles.exit().remove();
 
@@ -35,12 +35,12 @@ namespace('sszvis.legend.radius', function(module) {
           .attr('stroke', props.stroke)
           .attr('stroke-width', props.strokeWidth);
 
-        var lines = selection.selectAll('line.sszvis-legend--mark')
+        var lines = selection.selectAll('line.sszvis-legend__mark')
           .data(points);
 
         lines.enter()
           .append('line')
-          .classed('sszvis-legend--mark', true);
+          .classed('sszvis-legend__mark', true);
 
         lines.exit().remove();
 

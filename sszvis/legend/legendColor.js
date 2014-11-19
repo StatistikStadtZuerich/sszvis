@@ -132,12 +132,12 @@ namespace('sszvis.legend.color', function(module) {
 
         groups.exit().remove();
 
-        var marks = groups.selectAll('.sszvis-legend--mark')
+        var marks = groups.selectAll('.sszvis-legend__mark')
           .data(function(d) { return [d]; });
 
         marks.enter()
           .append('circle')
-          .classed('sszvis-legend--mark', true);
+          .classed('sszvis-legend__mark', true);
 
         marks.exit().remove();
 

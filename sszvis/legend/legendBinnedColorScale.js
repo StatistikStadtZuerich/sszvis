@@ -33,12 +33,12 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         var segHeight = 10;
         var circleRad = segHeight / 2;
 
-        var segments = selection.selectAll('rect.sszvis-legend--mark')
+        var segments = selection.selectAll('rect.sszvis-legend__mark')
           .data(rectData);
 
         segments.enter()
           .append('rect')
-          .classed('sszvis-legend--mark', true);
+          .classed('sszvis-legend__mark', true);
 
         segments.exit().remove();
 
@@ -55,12 +55,12 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
 
         var firstLast = [sszvis.fn.first(rectData), sszvis.fn.last(rectData)];
 
-        var circles = selection.selectAll('circle.sszvis-legend--mark')
+        var circles = selection.selectAll('circle.sszvis-legend__mark')
           .data(firstLast);
 
         circles.enter()
           .append('circle')
-          .classed('sszvis-legend--mark', true);
+          .classed('sszvis-legend__mark', true);
 
         circles.exit().remove();
 
@@ -74,12 +74,12 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
 
         var labelData = rectData.splice(1);
 
-        var lines = selection.selectAll('line.sszvis-legend--mark')
+        var lines = selection.selectAll('line.sszvis-legend__mark')
           .data(labelData);
 
         lines.enter()
           .append('line')
-          .classed('sszvis-legend--mark', true);
+          .classed('sszvis-legend__mark', true);
 
         lines.exit().remove();
 
@@ -90,12 +90,12 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
           .attr('y2', segHeight + 6)
           .attr('stroke', '#B8B8B8');
 
-        var labels = selection.selectAll('.sszvis-legend__label')
+        var labels = selection.selectAll('.sszvis-legend__axislabel')
           .data(labelData);
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend__label', true);
+          .classed('sszvis-legend__axislabel', true);
 
         labels.exit().remove();
 
