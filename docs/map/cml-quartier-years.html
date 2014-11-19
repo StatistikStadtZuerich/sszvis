@@ -270,6 +270,12 @@
       .orient('right')
       .contour('rect');
 
+    var rulerLabel = sszvis.component.modularText.svg()
+      .bold(sszvis.fn.compose(sszvis.format.number, vAcc))
+      .plain(function(d) {
+        return d.isAverageValue ? 'Einwohner (Durchschnitt)' : 'Einwohner';
+      });
+
     // The bar which marks the current year and shows the value of the highlighted entity
     var handleRuler = sszvis.component.handleRuler()
       .x(xScale(state.currentYear))
@@ -280,11 +286,7 @@
         return xScale(yearAcc(d)) >= lineChartBounds.innerWidth / 2;
       })
       .color(sszvis.color.qual12())
-      .label(function(d) {
-        // create a special label for the average value line
-        var prefix = d.isAverageValue ? 'Durchschnitt Anzahl: ' : 'Anzahl: ';
-        return prefix + sszvis.format.number(d.value);
-      });
+      .label(rulerLabel);
 
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
@@ -292,7 +294,7 @@
       .bold(function(d) {
         return vAcc(d.datum);
       })
-      .plain(' Anzahl');
+      .plain(' Einwohner');
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
