@@ -41,7 +41,9 @@
     currentMapData: [],
     highlightEntity: null,
     lineBaseColor: sszvis.color.gry()(0),
-    lineHighlightColor: sszvis.color.qual12()(0)
+    lineHighlightColor: sszvis.color.qual12()(0),
+    mapHighlightData: [],
+    lineHighlightData: []
   };
 
 
@@ -116,7 +118,8 @@
       if (state.currentYear !== closestYear || state.highlightEntity !== closestEntry) {
         state.currentYear = closestYear;
         state.highlightEntity = closestEntry;
-        render(state);
+
+        actions.setHighlights();
       }
     },
 
@@ -129,12 +132,25 @@
     // called when moving over map entities with the mouse. Highlights certain entities
     changeMapEntity: function(d) {
       state.highlightEntity = d;
-      render(state);
+
+      actions.setHighlights();
     },
 
     // reset the highlighted map entity
     resetMapEntity: function() {
       state.highlightEntity = null;
+
+      actions.setHighlights();
+    },
+
+    setHighlights: function() {
+      // highlightData passed to the map is slightly different from the data passed to the line chart.
+      // When no entity is highlighted, the map shows nothing special, but the line chart shows the average line.
+      state.mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
+      state.lineHighlightData = state.highlightEntity ? [state.highlightEntity] : state.averageLine.values.filter(function(averageObj) {
+        return yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear();
+      });
+
       render(state);
     }
   };
@@ -188,15 +204,6 @@
       .domain(state.valueDomain)
       .range([lineChartBounds.innerHeight, 0]);
 
-    // Data
-
-    // highlightData passed to the map is slightly different from the data passed to the line chart.
-    // When no entity is highlighted, the map shows nothing special, but the line chart shows the average line.
-    var mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
-    var lineHighlightData = state.highlightEntity ? [state.highlightEntity] : state.averageLine.values.filter(function(averageObj) {
-      return yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear();
-    });
-
 
     // Layers
 
@@ -210,7 +217,7 @@
       .datum(state.currentMapData);
 
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
-      .datum(mapHighlightData);
+      .datum(state.mapHighlightData);
 
     var lineChart = chart.selectGroup('line')
       .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
@@ -218,7 +225,7 @@
 
     var highlightLayer = chart.selectGroup('highlight')
       .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
-      .datum(lineHighlightData);
+      .datum(state.lineHighlightData);
 
 
     // Components
@@ -226,7 +233,7 @@
     var mapMaker = sszvis.map()
       .type('zurich-statistischeQuartiere')
       .keyName('geoId')
-      .highlight(mapHighlightData)
+      .highlight(state.mapHighlightData)
       .highlightStroke(function(d) {
         return d3.hsl(fillScale(vAcc(d))).darker(0.7);
       })
