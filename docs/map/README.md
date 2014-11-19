@@ -55,7 +55,7 @@ This component has an event handler interface for binding events to the map enti
 
 ## Zürich: Kreise
 
-A map of the stadtkreis of Zürich.
+A map of Zürich's Stadtkreise.
 
 ```project
 {
@@ -80,7 +80,7 @@ A map of the stadtkreis of Zürich.
 
 ## Zürich: Wahlkreis
 
-A map of the wahlkreis of Zürich.
+A map of Zürich's Wahlkreise.
 
 ```project
 {
@@ -105,7 +105,7 @@ A map of the wahlkreis of Zürich.
 
 ## Zürich: Quartiere
 
-A map of the statistische quartiere of Zürich, demonstrating use of a segmented control for data subset selection.
+A map of the Statistische Quartiere of Zürich, demonstrating use of a segmented control for data subset selection.
 
 ```project
 {
@@ -124,6 +124,31 @@ A map of the statistische quartiere of Zürich, demonstrating use of a segmented
     "size": {
         "width": 516,
         "height": 600
+    }
+}
+```
+
+## Coordinated Map and Line Chart
+
+A map of the Statistische Quartiere of Zürich, demonstrating the coordination of the map dataset with a line chart which displays the full range of the data.
+
+```project
+{
+    "name": "map-cml-quartier-years",
+    "files": {
+        "index.html": {
+            "source": "docs/map/cml-quartier-years.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map/data/CML_quartier_years.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 726
     }
 }
 ```
@@ -149,31 +174,6 @@ A map of Switzerland.
     "size": {
         "width": 516,
         "height": 516
-    }
-}
-```
-
-## Coordinated Map and Line Chart
-
-A map of the Zürich statistische quartiere, demonstrating the coordination of the map dataset with a line chart which displays the full range of the data.
-
-```project
-{
-    "name": "map-cml-quartier-years",
-    "files": {
-        "index.html": {
-            "source": "docs/map/cml-quartier-years.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/map/data/CML_quartier_years.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 726
     }
 }
 ```
