@@ -82,7 +82,7 @@ Eight layers of values, with tooltips.
     "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "docs/bar-chart-vertical-stacked/seven-cat.html",
+            "source": "docs/bar-chart-vertical-stacked/eight-cat.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
