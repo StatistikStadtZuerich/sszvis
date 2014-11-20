@@ -43,29 +43,6 @@ The following configuration options are available:
 }
 ```
 
-### Binned Color Scale - Chunks
-
-```project
-{
-    "name": "heat-table-binned",
-    "files": {
-        "index.html": {
-            "source": "docs/heat-table/ht-binned.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/heat-table/data/HT_binned.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 350
-    }
-}
-```
-
 ### Binned Color Scale - Linear
 
 For more on the different ways to construct binned color scales from a range of values, see: http://uxblog.idvsolutions.com/2011/10/telling-truth.html
@@ -91,7 +68,7 @@ For more on the different ways to construct binned color scales from a range of 
 }
 ```
 
-### Wer mit wem?
+### Wer mit wem? - Irregularly Binned Color Scale Example
 
 Welches haben Paare zum Zeitpunkt ihres ersten Kindes.
 
