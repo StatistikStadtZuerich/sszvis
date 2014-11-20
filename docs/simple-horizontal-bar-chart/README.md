@@ -37,6 +37,29 @@ Specifies the fill-value of the rectangles. Can be a value or a function (defaul
 Specifies the stroke-value of the rectangles. Can be a value or a function (default: black).
 
 
+## White Guide Lines Over the Bars but Under the Text
+
+```project
+{
+    "name": "simple-horizontal-bar-chart-long-names",
+    "files": {
+        "index.html": {
+            "source": "docs/simple-horizontal-bar-chart/long-names.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 620
+    }
+}
+```
+
 ## Several Categories and Several Years
 
 ```project
@@ -79,29 +102,6 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
     "size": {
         "width": 516,
         "height": 656
-    }
-}
-```
-
-## White Guide Lines Over the Bars but Under the Text
-
-```project
-{
-    "name": "simple-horizontal-bar-chart-long-names",
-    "files": {
-        "index.html": {
-            "source": "docs/simple-horizontal-bar-chart/long-names.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 620
     }
 }
 ```
