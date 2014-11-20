@@ -6,12 +6,13 @@ namespace('sszvis.behavior.move', function(module) {
   'use strict';
 
   module.exports = function() {
-    var event = d3.dispatch('start', 'move', 'end');
+    var event = d3.dispatch('start', 'move', 'drag', 'end');
 
     var moveComponent = d3.component()
       .prop('debug')
       .prop('xScale')
       .prop('yScale')
+      .prop('draggable')
       .prop('padding', function(p) {
         var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
         for (var prop in p) { defaults[prop] = p[prop]; }
@@ -34,7 +35,12 @@ namespace('sszvis.behavior.move', function(module) {
 
         layer.enter()
           .append('rect')
-          .attr('data-sszvis-behavior-move', '');
+          .attr('data-sszvis-behavior-move', '')
+          .attr('class', 'sszvis-interactive');
+
+        if (props.draggable) {
+          layer.classed('sszvis-interactive--draggable', true);
+        }
 
         layer
           .attr('x', xExtent[0])
@@ -43,15 +49,42 @@ namespace('sszvis.behavior.move', function(module) {
           .attr('height', yExtent[1] - yExtent[0])
           .attr('fill', 'transparent')
           .on('mouseover', event.start)
+          .on('mousedown', function() {
+            var target = this;
+            var win = d3.select(window);
+            var xy = d3.mouse(this);
+            var x = scaleInvert(props.xScale, xy[0]);
+            var y = scaleInvert(props.yScale, xy[1]);
+
+            target.__dragging__ = true;
+            event.drag(x, y);
+
+            win.on('mouseup.sszvis-behavior-move', function() {
+              target.__dragging__ = false;
+              win.on('mouseup.sszvis-behavior-move', null);
+            });
+          })
           .on('mouseout', event.end)
           .on('mousemove', function() {
+            var target = this;
             var xy = d3.mouse(this);
-            event.move(scaleInvert(props.xScale, xy[0]), scaleInvert(props.yScale, xy[1]));
+            var x = scaleInvert(props.xScale, xy[0]);
+            var y = scaleInvert(props.yScale, xy[1]);
+
+            if (target.__dragging__) {
+              event.drag(x, y);
+            } else {
+              event.move(x, y);
+            }
           })
           .on('touchstart', event.start)
           .on('touchmove', function() {
             var xy = sszvis.fn.first(d3.touches(this));
-            event.move(scaleInvert(props.xScale, xy[0]), scaleInvert(props.yScale, xy[1]));
+            var x = scaleInvert(props.xScale, xy[0]);
+            var y = scaleInvert(props.yScale, xy[1]);
+
+            event.drag(x, y);
+            event.move(x, y);
           })
           .on('touchend', function() {
             event.end.apply(this, arguments);

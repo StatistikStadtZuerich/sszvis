@@ -1,4 +1,29 @@
 /**
+ * Specify that objects are interactive
+ */
+.sszvis-interactive {
+  cursor: default;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.sszvis-interactive.sszvis-interactive--draggable {
+  cursor: move; /* fallback if grab cursor is unsupported */
+  cursor: grab;
+  cursor: -moz-grab;
+  cursor: -webkit-grab;
+}
+
+.sszvis-interactive.sszvis-interactive--draggable:active {
+  cursor: grabbing;
+  cursor: -moz-grabbing;
+  cursor: -webkit-grabbing;
+}
+
+
+/**
  * Axis component based on the d3.axis interface
  *
  * @module sszvis/axis
