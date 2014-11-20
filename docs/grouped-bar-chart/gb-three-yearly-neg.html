@@ -34,7 +34,6 @@
   var state = {
     data: [],
     years: [],
-    valueExtent: [0, 0],
     groups: [],
     groupedData: [],
     longestGroup: 0
@@ -47,7 +46,6 @@
     prepareState: function(data) {
       state.data = data;
       state.years = sszvis.fn.set(state.data, xAcc);
-      state.valueExtent = d3.extent(state.data, yAcc);
       state.groups = sszvis.fn.set(state.data, cAcc);
       state.groupedData = sszvis.cascade()
         .arrayBy(xAcc)
@@ -81,7 +79,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, bottom: 60 });
+    var bounds = sszvis.bounds({ top: 10, bottom: 84 });
 
 
     // Scales
@@ -91,19 +89,12 @@
       .rangeBands([0, bounds.innerWidth], 0.30, 1.2);
 
     var yScale = d3.scale.linear()
-      .domain(state.valueExtent)
-      .range([bounds.innerHeight - 10, 0]);
+      .domain([0, d3.max(state.data, yAcc)])
+      .range([bounds.innerHeight, 0]);
 
-    // the y-position and bar height scales are a little strange
-    // because this bar chart displays negative values
-    // see also gb-two-small.html and http://bl.ocks.org/mbostock/2368837
-    var yPosScale = function(v) {
-      return yScale(Math.max(v, 0));
-    };
-
-    var hScale = function(v) {
-      return Math.abs(yScale(v) - yScale(0));
-    };
+    var hScale = yScale
+      .copy()
+      .range(yScale.range().slice().reverse());
 
     var cScale = sszvis.color.qual12()
       .domain(state.groups);
@@ -124,7 +115,7 @@
       .groupScale(sszvis.fn.compose(xScale, xAcc))
       .groupWidth(xScale.rangeBand())
       .groupSize(state.longestGroup)
-      .y(sszvis.fn.compose(yPosScale, yAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
       .height(sszvis.fn.compose(hScale, yAcc))
       .fill(sszvis.fn.compose(cScale, cAcc));
 
@@ -134,9 +125,10 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
-      .showZeroY(true)
       .orient('right')
-      .tickFormat(sszvis.format.percent);
+      .tickFormat(function(d) {
+        return d === 0 ? null : sszvis.format.percent(d);
+      });
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
@@ -150,14 +142,14 @@
       .call(barLayout);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 36))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
   }
 
