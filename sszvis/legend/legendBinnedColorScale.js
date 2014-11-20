@@ -4,6 +4,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
     return d3.component()
       .prop('scale')
       .prop('displayValues')
+      .prop('endpoints')
       .prop('width').width(200)
       .prop('labelFormat').labelFormat(sszvis.fn.identity)
       .render(function(data) {
@@ -12,26 +13,54 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
 
         if (!props.scale) return sszvis.logger.error('legend.binnedColorScale - a scale must be specified.');
         if (!props.displayValues) return sszvis.logger.error('legend.binnedColorScale - display values must be specified.');
-
-        var barWidth = d3.scale.linear()
-          .domain(d3.extent(props.displayValues))
-          .range([0, props.width]);
-        var sum = 0;
-        var rectData = [];
-        d3.pairs(props.displayValues).forEach(function(p) {
-          var w = barWidth(p[1]) - sum;
-          rectData.push({
-            x: sum,
-            w: w,
-            c: props.scale(p[0]),
-            p0: p[0],
-            p1: p[1]
-          });
-          sum += w;
-        });
+        if (!props.endpoints) return sszvis.logger.error('legend.binnedColorScale - endpoints must be specified');
 
         var segHeight = 10;
         var circleRad = segHeight / 2;
+        var innerRange = [0, props.width - (2 * circleRad)];
+
+        var barWidth = d3.scale.linear()
+          .domain(props.endpoints)
+          .range(innerRange);
+        var sum = 0;
+        var rectData = [];
+        var pPrev = props.endpoints[0];
+        props.displayValues.forEach(function(p) {
+          var w = barWidth(p) - sum;
+          var offset = sum % 1;
+          rectData.push({
+            x: Math.floor(circleRad + sum),
+            w: w + offset,
+            c: props.scale(pPrev),
+            p: p
+          });
+          sum += w;
+          pPrev = p;
+        });
+
+        // add the final box (last display value - > endpoint)
+        rectData.push({
+          x: Math.floor(circleRad + sum),
+          w: innerRange[1] - sum,
+          c: props.scale(pPrev)
+        })
+
+        var circles = selection.selectAll('circle.sszvis-legend__circle')
+          .data(props.endpoints);
+
+        circles.enter()
+          .append('circle')
+          .classed('sszvis-legend__circle', true);
+
+        circles.exit().remove();
+
+        circles
+          .attr('r', circleRad)
+          .attr('cy', circleRad)
+          .attr('cx', function(d, i) {
+            return i === 0 ? circleRad : props.width - circleRad;
+          })
+          .attr('fill', props.scale);
 
         var segments = selection.selectAll('rect.sszvis-legend__mark')
           .data(rectData);
@@ -43,39 +72,16 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         segments.exit().remove();
 
         segments
-          .attr('x', function(d, i) {
-            return i === 0 ? d.x + circleRad : d.x;
-          })
+          .attr('x', function(d) { return d.x; })
           .attr('y', 0)
-          .attr('width', function(d, i) {
-            return i === 0 || i === rectData.length - 1 ? d.w - circleRad : d.w;
-          })
+          .attr('width', function(d, i) { return d.w; })
           .attr('height', segHeight)
-          .attr('fill', sszvis.fn.prop('c'));
+          .attr('fill', function(d) { return d.c; });
 
-        var firstLast = [sszvis.fn.first(rectData), sszvis.fn.last(rectData)];
-
-        var circles = selection.selectAll('circle.sszvis-legend__mark')
-          .data(firstLast);
-
-        circles.enter()
-          .append('circle')
-          .classed('sszvis-legend__mark', true);
-
-        circles.exit().remove();
-
-        circles
-          .attr('r', circleRad)
-          .attr('cy', circleRad)
-          .attr('cx', function(d, i) {
-            return i === 0 ? d.x + circleRad : d.x + d.w - circleRad;
-          })
-          .attr('fill', sszvis.fn.prop('c'));
-
-        var labelData = rectData.splice(1);
+        var lineData = rectData.slice(0, -1);
 
         var lines = selection.selectAll('line.sszvis-legend__mark')
-          .data(labelData);
+          .data(lineData);
 
         lines.enter()
           .append('line')
@@ -84,14 +90,14 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         lines.exit().remove();
 
         lines
-          .attr('x1', function(d) { return sszvis.fn.roundPixelCrisp(d.x); })
-          .attr('x2', function(d) { return sszvis.fn.roundPixelCrisp(d.x); })
+          .attr('x1', function(d) { return sszvis.fn.roundPixelCrisp(d.x + d.w); })
+          .attr('x2', function(d) { return sszvis.fn.roundPixelCrisp(d.x + d.w); })
           .attr('y1', segHeight + 1)
           .attr('y2', segHeight + 6)
           .attr('stroke', '#B8B8B8');
 
         var labels = selection.selectAll('.sszvis-legend__axislabel')
-          .data(labelData);
+          .data(lineData);
 
         labels.enter()
           .append('text')
@@ -101,9 +107,9 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
 
         labels
           .style('text-anchor', 'middle')
-          .attr('transform', function(d, i) { return 'translate(' + (d.x) + ',' + (segHeight + 20) + ')'; })
+          .attr('transform', function(d, i) { return 'translate(' + (d.x + d.w) + ',' + (segHeight + 20) + ')'; })
           .text(function(d) {
-            return props.labelFormat(d.p0);
+            return props.labelFormat(d.p);
           });
       });
   };

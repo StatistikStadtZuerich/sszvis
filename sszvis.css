@@ -127,6 +127,10 @@
   font-weight: normal;
 }
 
+.sszvis-legend__mark {
+  shape-rendering: crispEdges;
+}
+
 
 /**
  * Bar component
