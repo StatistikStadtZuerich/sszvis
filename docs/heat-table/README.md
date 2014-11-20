@@ -43,29 +43,6 @@ The following configuration options are available:
 }
 ```
 
-### Missing Values
-
-```project
-{
-    "name": "heat-table-missing",
-    "files": {
-        "index.html": {
-            "source": "docs/heat-table/ht-missing.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/heat-table/data/HT_kreise_missing.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 800
-    }
-}
-```
-
 ### Binned Color Scale - Chunks
 
 ```project

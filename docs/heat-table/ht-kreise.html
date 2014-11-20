@@ -105,7 +105,9 @@
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
     var yValue = sszvis.fn.compose(yScale, yAcc);
-    var cValue = sszvis.fn.compose(colorScale, cAcc);
+    var cValue = sszvis.fn.compose(function(v) {
+      return isNaN(v) ? 'url(#ht-missing-value)' : colorScale(v);
+    }, cAcc);
 
 
     // Layers
@@ -119,6 +121,9 @@
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
       .datum(state.selection);
 
+   // missingValuePattern
+    var mVP = sszvis.patterns.ensureDefsElement(chartLayer, 'pattern', 'ht-missing-value')
+      .call(sszvis.patterns.heatTableMissingValuePattern);
 
     // Components
 
@@ -129,7 +134,7 @@
       .height(tableDimensions.side)
       .fill(cValue)
       .stroke(function(d) {
-        return sszvis.fn.contains(state.selection, d) ? sszvis.color.slightlyDarker(cValue(d)) : 'none';
+        return !isNaN(cAcc(d)) && sszvis.fn.contains(state.selection, d) ? sszvis.color.slightlyDarker(cValue(d)) : 'none';
       });
 
     var xAxis = sszvis.axis.x.ordinal()
@@ -163,7 +168,11 @@
       .bold(xAcc);
 
     var tooltipBodyText = sszvis.component.modularText.html()
-      .plain(cAcc).plain('Einwohner')
+      .plain(function(d) {
+        var v = cAcc(d);
+        return isNaN(v) ? '???' : v;
+      })
+      .plain('Einwohner')
       .newline()
       .plain(yAcc).plain('Jahre alt');
 
