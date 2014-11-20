@@ -1,8 +1,4 @@
 Datum,Region,Stadt Zürich
-1993,Stadt Zürich,0.06760515
-1994,Stadt Zürich,0.014973141
-1995,Stadt Zürich,0.010658074
-1996,Stadt Zürich,0.055078353
 1997,Stadt Zürich,0.064316595
 1998,Stadt Zürich,0.057458367
 1999,Stadt Zürich,0.029077523
@@ -17,10 +13,6 @@ Datum,Region,Stadt Zürich
 2008,Stadt Zürich,0.024255655
 2009,Stadt Zürich,-0.020583328
 2010,Stadt Zürich,0.003522457
-1993,Agglomeration Zürich,0.039695326
-1994,Agglomeration Zürich,0.019692578
-1995,Agglomeration Zürich,0.009773073
-1996,Agglomeration Zürich,0.032327131
 1997,Agglomeration Zürich,0.041814365
 1998,Agglomeration Zürich,0.044375594
 1999,Agglomeration Zürich,0.024913016
@@ -35,10 +27,6 @@ Datum,Region,Stadt Zürich
 2008,Agglomeration Zürich,0.037767208
 2009,Agglomeration Zürich,-0.018398469
 2010,Agglomeration Zürich,0.010370073
-1993,Schweiz,0.021919186
-1994,Schweiz,0.024716057
-1995,Schweiz,0.01087048
-1996,Schweiz,0.008228143
 1997,Schweiz,0.019427767
 1998,Schweiz,0.029353968
 1999,Schweiz,0.019341329
