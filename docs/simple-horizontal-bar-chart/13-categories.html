@@ -147,15 +147,12 @@
       .change(actions.selectYear);
 
     var tooltipHeader = sszvis.component.modularText.html()
-      .bold(yAcc);
-
-    var tooltipBody = sszvis.component.modularText.html()
-      .plain(sszvis.fn.compose(sszvis.format.number, xAcc));
+      .bold(sszvis.fn.compose(sszvis.format.number, xAcc));
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
-      .body(tooltipBody)
+      .centered(true)
       .visible(function(d) {
         return state.selected.indexOf(d) >= 0;
       });
