@@ -71,7 +71,7 @@ In this example, twelve distinct categories make up each stack, and the total fo
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 400
+        "height": 322
     }
 }
 ```
