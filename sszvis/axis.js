@@ -39,7 +39,7 @@
  * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
  *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
  * @property {number} textWrap                          Specify a width at which to wrap the axis label text.
- * @property {string, function} tickColor               specify a single string color or a function which takes a tick value and returns a color.
+ * @property {string, function} tickColor               specify a single string color or a function which takes a tick value and returns a color. (default specified in CSS)
  * @property {number, function} tickLength              specify a number or a function which returns a number for setting the tick length.
  * @property {string} title                             Specify a string to use as the title of this chart. Default title position depends on the chart orientation
  * @property {string} titleAnchor                       specify the title text-anchor. Values are 'start', 'middle', and 'end'. Corresponds to the 'text-anchor' svg styling attribute
@@ -136,11 +136,8 @@ namespace('sszvis.axis', function(module) {
                 .classed('hidden', absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold);
             });
 
-
-          if (props.tickColor) {
-            group.selectAll('.tick line')
-              .style('stroke', props.tickColor);
-          }
+          group.selectAll('.tick line')
+            .style('stroke', props.tickColor);
 
           if (sszvis.fn.defined(props.tickLength)) {
             var extent = d3.extent(axisScale.domain());

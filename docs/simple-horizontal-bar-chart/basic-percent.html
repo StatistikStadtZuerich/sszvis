@@ -20,6 +20,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var TICK_TYPES = ['Ohne Gitter', 'Dunkles Gitter', 'Helles Gitter'];
 
 
   /* Shortcuts
@@ -34,9 +35,7 @@
   var state = {
     data: [],
     categories: [],
-    areas: [],
-    selectedArea: null,
-    selectedData: []
+    tickType: null
   };
 
 
@@ -46,15 +45,11 @@
     prepareState: function(data) {
       state.data = data;
       state.categories = sszvis.fn.set(state.data, yAcc);
-      state.areas = sszvis.fn.set(state.data, aAcc);
-      actions.selectArea(state.areas[0]);
+      actions.selectTickType(TICK_TYPES[0]);
     },
 
-    selectArea: function(area) {
-      state.selectedArea = area;
-      state.selectedData = state.data.filter(function(d) {
-        return aAcc(d) === area;
-      });
+    selectTickType: function(type) {
+      state.tickType = type;
       render(state);
     }
   };
@@ -82,7 +77,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 656, top: 80, bottom: 40 });
+    var bounds = sszvis.bounds({ height: 656, top: 80, bottom: 25 });
     var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, state.categories.length);
 
 
@@ -90,7 +85,7 @@
 
     var widthScale = d3.scale.linear()
       .range([0, bounds.innerWidth])
-      .domain([0, d3.max(state.data, xAcc)]);
+      .domain([0, 18]);
 
     var yScale = d3.scale.ordinal()
       .rangeBands([0, chartDimensions.totalHeight], chartDimensions.padRatio, chartDimensions.outerRatio)
@@ -103,7 +98,7 @@
         title: TITLE,
         description: DESCRIPTION
       })
-      .datum(state.selectedData);
+      .datum(state.data);
 
     var controlLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
@@ -121,29 +116,39 @@
       .scale(widthScale)
       .orient('bottom')
       .tickFormat(function(v) { return sszvis.format.percent(v / 100); })
-      .tickLength(bounds.innerHeight)
+      .tickValues(d3.range(0, 20, 3))
+      .tickLength(state.tickType === 'Ohne Gitter' ? 0 : bounds.innerHeight)
       .alignOuterLabels(true);
+
+    if (state.tickType === 'Helles Gitter') xAxis.tickColor('white');
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
       .orient('right');
 
     var segmentedControl = sszvis.control.segmented()
-      .values(state.areas)
+      .values(TICK_TYPES)
       .width(bounds.width * 0.8)
-      .current(state.selectedArea)
-      .change(actions.selectArea);
+      .current(state.tickType)
+      .change(actions.selectTickType);
 
 
     // Rendering
 
-    chartLayer.selectGroup('xAxis')
+    chartLayer.selectGroup('underAxis')
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
+      .style('visibility', state.tickType === 'Helles Gitter' ? 'hidden' : '')
       .call(xAxis);
 
     chartLayer.selectGroup('bars')
-
       .call(barGen);
+
+    // this duplication of the axis layer is for demonstration purposes only!
+    // the white axis ticks should be above the bars, and the dark one below them
+    chartLayer.selectGroup('overAxis')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
+      .style('visibility', state.tickType === 'Helles Gitter' ? '' : 'hidden')
+      .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .attr('transform', sszvis.fn.translateString(0, chartDimensions.axisOffset))
@@ -151,7 +156,7 @@
 
     controlLayer.selectDiv('controls')
       .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
-      .style('top', 10 + 'px')
+      .style('top', 16 + 'px')
       .call(segmentedControl);
   }
 

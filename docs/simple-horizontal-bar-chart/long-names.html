@@ -60,7 +60,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 620, top: 30, bottom: 40 });
+    var bounds = sszvis.bounds({ height: 620, top: 30, bottom: 25 });
     var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, state.categories.length);
 
     // Scales
@@ -96,9 +96,7 @@
       .scale(widthScale)
       .orient('bottom')
       .alignOuterLabels(true)
-      .ticks(10)
-      .tickColor('#fff')
-      .tickLength(bounds.innerHeight);
+      .ticks(10);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
