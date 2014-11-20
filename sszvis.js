@@ -4914,9 +4914,8 @@ namespace('sszvis.component.tooltip', function(module) {
         var enterBackgroundPath = enterBackground.append('path');
 
         if (supportsSVGFilters()) {
-          var filter = enterBackground.append('defs')
-            .append('filter')
-            .attr('id', 'sszvis-tooltip-shadow-filter')
+          var filter = enterBackground.append('filter')
+            .attr('id', 'sszvisTooltipShadowFilter')
             .attr('height', '150%');
 
           filter.append('feGaussianBlur')
@@ -4928,21 +4927,17 @@ namespace('sszvis.component.tooltip', function(module) {
             .attr('type', 'linear')
             .attr('slope', 0.2);
 
-          filter.append('feOffset')
-            .attr('dx', 0)
-            .attr('dy', 0)
-            .attr('result', 'offsetblur');
-
           var merge = filter.append('feMerge');
-          merge.append('feMergeNode')
-            .attr('in', 'offsetblur'); // Contains the blurred image
+          merge.append('feMergeNode'); // Contains the blurred image
           merge.append('feMergeNode')  // Contains the element that the filter is applied to
             .attr('in', 'SourceGraphic');
+
           enterBackgroundPath
-            .style('filter', 'url(#sszvis-tooltip-shadow-filter)');
+            .attr('filter', 'url(#sszvisTooltipShadowFilter)');
         } else {
           enterBackground.classed('sszvis-tooltip__background--fallback', true);
         }
+
 
         // Enter: tooltip content
 
