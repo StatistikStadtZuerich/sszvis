@@ -135,7 +135,8 @@
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .showZeroY(true)
-      .orient('right');
+      .orient('right')
+      .tickFormat(sszvis.format.percent);
 
     var colorLegend = sszvis.legend.color()
       .scale(cScale)
