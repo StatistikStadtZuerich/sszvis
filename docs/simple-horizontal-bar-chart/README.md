@@ -104,26 +104,3 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
     }
 }
 ```
-
-## Missing Values
-
-```project
-{
-    "name": "simple-horizontal-bar-chart-missing",
-    "files": {
-        "index.html": {
-            "source": "docs/simple-horizontal-bar-chart/missing.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/simple-horizontal-bar-chart/data/S_missing.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 460
-    }
-}
-```
