@@ -91,29 +91,6 @@ For more on the different ways to construct binned color scales from a range of 
 }
 ```
 
-### Quartiere
-
-```project
-{
-    "name": "heat-table-quartiere",
-    "files": {
-        "index.html": {
-            "source": "docs/heat-table/ht-quartiere.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/heat-table/data/HT_quartiere.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 1100
-    }
-}
-```
-
 ### Wer mit wem?
 
 Welches haben Paare zum Zeitpunkt ihres ersten Kindes.
