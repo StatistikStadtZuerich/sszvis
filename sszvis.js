@@ -4392,7 +4392,6 @@ namespace('sszvis.component.ruler', function(module) {
  * Stacked Chart
  * @return {d3.component}
  */
-
 namespace('sszvis.component.stacked.area', function(module) {
 'use strict';
 
