@@ -159,17 +159,17 @@
       .labelFormat(sszvis.format.number);
 
     var tooltipHeaderText = sszvis.component.modularText.html()
-      .bold(cAcc).plain('Paare');
-
-    var tooltipBodyText = sszvis.component.modularText.html()
-      .plain('Alter des Mannes:').plain(xAcc)
-      .newline()
-      .plain('Alter der Frau:').plain(yAcc);
+      .bold('Paare');
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeaderText)
-      .body(tooltipBodyText)
+      .body(function(d) {
+        return [
+          ['Alter des Mannes:', 'Alter der Frau:', 'Anzahl: '],
+          [xAcc(d), yAcc(d), cAcc(d)]
+        ];
+      })
       .visible(isSelected);
 
 

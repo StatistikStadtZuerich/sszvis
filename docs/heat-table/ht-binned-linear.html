@@ -177,18 +177,17 @@
       .width(tableDimensions.width)
       .labelFormat(sszvis.format.number);
 
-    var tooltipHeaderText = sszvis.component.modularText.html()
-      .bold(cAcc).plain('Units');
-
-    var tooltipBodyText = sszvis.component.modularText.html()
-      .plain('Group 1 Value:').plain(xAcc)
-      .newline()
-      .plain('Group 2 Value:').plain(yAcc);
+    var tooltipHeaderText = sszvis.component.modularText.html().bold('Units');
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeaderText)
-      .body(tooltipBodyText)
+      .body(function(d) {
+        return [
+          ['Group 1', 'Group 2', 'Wert'],
+          [xAcc(d), yAcc(d), cAcc(d)]
+        ];
+      })
       .visible(isSelected);
 
 
