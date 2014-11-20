@@ -287,7 +287,7 @@
       .call(state.isMultiples ? stackedAreaMultiples : stackedArea);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0, ' + bounds.innerHeight + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
@@ -297,7 +297,7 @@
       .style('opacity', Number(!state.isMultiples));
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', 'translate(0, ' + (bounds.innerHeight + 30) + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 30))
       .call(colorLegend);
 
     htmlLayer.selectDiv('controls')

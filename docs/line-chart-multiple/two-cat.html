@@ -181,14 +181,14 @@
       .call(line);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', 'translate(0,' + bounds.innerHeight + ')')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', 'translate(1, ' + (bounds.innerHeight + 60) + ')')
+      .attr('transform', sszvis.fn.translateString(1, bounds.innerHeight + 60))
       .call(cLegend);
 
     chartLayer.selectGroup('highlight')

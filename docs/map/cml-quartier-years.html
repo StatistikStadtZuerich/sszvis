@@ -334,7 +334,7 @@
     });
 
     lineChart.selectGroup('xAxis')
-      .attr('transform', 'translate(0, ' + (lineChartBounds.innerHeight) + ')')
+      .attr('transform', sszvis.fn.translateString(0, lineChartBounds.innerHeight))
       .call(lineXAxis);
 
     lineChart.selectGroup('yAxis')
