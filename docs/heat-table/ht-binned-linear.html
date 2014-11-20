@@ -159,7 +159,7 @@
       .title('Group 1')
       .titleAnchor('middle')
       .titleCenter(true)
-      .titleTop(-20);
+      .dyTitle(-20);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
@@ -168,7 +168,7 @@
       .titleVertical(true)
       .titleAnchor('middle')
       .titleCenter(true)
-      .titleLeft(-20);
+      .dxTitle(-20);
 
     var displayValues = binEdges.concat([0, 1000]).sort(d3.ascending);
     var legend = sszvis.legend.binnedColorScale()

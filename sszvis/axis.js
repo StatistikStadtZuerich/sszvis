@@ -46,8 +46,8 @@
  *                                                      the default depends on the axis orient property
  * @property {boolean} titleCenter                      whether or not to center the axis title along the axis. If true, this sets the title anchor point
  *                                                      as the midpoint between axis extremes. Should usually be used with titleAnchor('middle') to ensure exact title centering. (default: false)
- * @property {number} titleLeft                         specify an amount by which to offset the title towards the left. This offsets away from the default position. (default: 0)
- * @property {number} titleTop                          specify an amount by which to offset the title towards the top. This offsets away from the default position. (default: 0)
+ * @property {number} dxTitle                         specify an amount by which to offset the title towards the left. This offsets away from the default position. (default: 0)
+ * @property {number} dyTitle                          specify an amount by which to offset the title towards the top. This offsets away from the default position. (default: 0)
  * @property {boolean} titleVertical                    whether or not to rotate the title 90 degrees so that it appears vertical, reading from bottom to top. (default: false)
  * @property {boolean} vertical                         whether the axis is a vertical axis. When true, this property changes certain display properties of the axis according to the style guide.
  *
@@ -87,8 +87,8 @@ namespace('sszvis.axis', function(module) {
         .prop('title')
         .prop('titleAnchor') // start, end, or middle
         .prop('titleCenter') // a boolean value - whether to center the title
-        .prop('titleLeft') // a numeric value for the left offset of the title
-        .prop('titleTop') // a numeric value for the top offset of the title
+        .prop('dxTitle') // a numeric value for the left offset of the title
+        .prop('dyTitle') // a numeric value for the top offset of the title
         .prop('titleVertical')
         .prop('vertical').vertical(false)
         .render(function() {
@@ -250,8 +250,8 @@ namespace('sszvis.axis', function(module) {
                   }
 
                   titleProps.vertical = !!props.titleVertical;
-                  titleProps.left += props.titleLeft || 0;
-                  titleProps.top += props.titleTop || 0;
+                  titleProps.left += props.dxTitle || 0;
+                  titleProps.top += props.dyTitle || 0;
                 return 'translate(' + (titleProps.left) + ', ' + (titleProps.top) + ') rotate(' + (titleProps.vertical ? '-90' : '0' ) + ')';
               })
               .style('text-anchor', function() {
