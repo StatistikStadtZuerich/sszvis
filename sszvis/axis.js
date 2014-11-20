@@ -100,19 +100,31 @@ namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
             .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
             .classed('sszvis-axis--vertical', props.vertical)
-            .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(2)))
+            .attr('transform', sszvis.fn.translateString(0, 2))
             .call(axisDelegate);
 
           var axisScale = axisDelegate.scale();
 
           // Place axis ticks on rounded pixel values to prevent anti-aliasing
-          selection.selectAll('.tick')
+          // In Firefox, this command causes the ticks to shift up and down slightly while it's being adjusted
+          group.selectAll('.tick')
             .attr('transform', function() {
               return sszvis.fn.roundTransformString(this.getAttribute('transform'));
-            });
+            })
+          // these lines only transform the tick line. However, when the tick group itself has been positioned with a fractional offset,
+          // the ticks may still be slightly blurry.
+          // .selectAll('line')
+          // .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
 
+          // Place axis line on rounded pixel values to prevent anti-aliasing
+          group.selectAll('path.domain')
+            .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
+
+          // special positioning for bottom-oriented axis ticks
           selection.selectAll('.sszvis-axis--bottom line')
-            .attr('transform', sszvis.fn.translateString(0, 2));
+            .attr('transform', sszvis.fn.translateString(0, 2))
+            // use this if the tick lines themselves are being rounded, rather than the tick groups
+            // .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(2)));
 
 
           // hide ticks which are too close to one endpoint
