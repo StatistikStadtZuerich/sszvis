@@ -31,6 +31,8 @@ namespace('sszvis.format', function(module) {
       return m.toUpperCase();
     }, d3.time.format('%b')),
 
+    year: d3.time.format('%Y'),
+
     /**
      * Formatter for no label
      * @return {string} the empty string
