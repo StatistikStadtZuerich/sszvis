@@ -48,7 +48,7 @@ namespace('sszvis.behavior.move', function(module) {
             var xy = d3.mouse(this);
             event.move(scaleInvert(props.xScale, xy[0]), scaleInvert(props.yScale, xy[1]));
           })
-          .on('touchdown', event.start)
+          .on('touchstart', event.start)
           .on('touchmove', function() {
             var xy = sszvis.fn.first(d3.touches(this));
             event.move(scaleInvert(props.xScale, xy[0]), scaleInvert(props.yScale, xy[1]));

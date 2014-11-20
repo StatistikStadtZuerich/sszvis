@@ -41,7 +41,7 @@ namespace('sszvis.behavior.voronoi', function(module) {
           .on('mouseout', function(d, i) {
             event.out.apply(this, [d.point, i]);
           })
-          .on('touchdown', function(d, i) {
+          .on('touchstart', function(d, i) {
             event.over.apply(this, [d.point, i]);
           })
           .on('touchend', function(d, i) {
