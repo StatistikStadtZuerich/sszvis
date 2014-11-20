@@ -120,7 +120,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 800, top: 70, bottom: 160});
+    var bounds = sszvis.bounds({ height: 800, top: 70, bottom: 190});
     var multiplesLayout = sszvis.fn.stackedAreaMultiplesLayout(bounds.innerHeight, state.stackedData.length, 0.1);
 
 
@@ -297,7 +297,7 @@
       .style('opacity', Number(!state.isMultiples));
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 30))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
     htmlLayer.selectDiv('controls')
