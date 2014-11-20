@@ -170,10 +170,10 @@
       .titleCenter(true)
       .dxTitle(-20);
 
-    var displayValues = binEdges.concat([0, 1000]).sort(d3.ascending);
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
-      .displayValues(displayValues)
+      .displayValues(binEdges)
+      .endpoints(state.valueDomain)
       .width(tableDimensions.width)
       .labelFormat(sszvis.format.number);
 

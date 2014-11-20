@@ -19,7 +19,12 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
+  // These are the internal edges of the bins used for the color scale.
+  // IMPORTANT: because of the way d3.scale.threshold works, do not specify
+  // fixed upper and lower bounds. Anything less than or equal to the first element
+  // in BIN_EDGES will be grouped in the first bin, and anything greater than or
+  // equal to the last element will be grouped in the last bin.
+  var BIN_EDGES = [5, 40, 200, 600];
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -100,8 +105,19 @@
       .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
       .domain(state.womAgeList);
 
-    var colorScale = sszvis.color.seqBlu()
+    // create a linear color interpolator for generating the output range of bin colors
+    var interpolateColor = sszvis.color.seqBlu()
       .domain(state.valueDomain);
+
+    // the range is composed of colors sampled at equal distances along the color spectrum
+    // such that binColors.length === BIN_EDGES.length + 1
+    var binColors = BIN_EDGES.concat(state.valueDomain[1]).map(interpolateColor);
+
+    // for the threshold scale, the number of values in the range must be one greater than the
+    // number of values in the domain.
+    var colorScale = d3.scale.threshold()
+      .domain(BIN_EDGES)
+      .range(binColors);
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
     var yValue = sszvis.fn.compose(yScale, yAcc);
@@ -151,11 +167,11 @@
       .titleCenter(true)
       .dxTitle(-45);
 
-    var legendWidth = 240;
-
-    var legend = sszvis.legend.linearColorScale()
+    var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
-      .width(legendWidth)
+      .displayValues(BIN_EDGES)
+      .endpoints(state.valueDomain)
+      .width(tableDimensions.width)
       .labelFormat(sszvis.format.number);
 
     var tooltipHeaderText = sszvis.component.modularText.html()
@@ -181,7 +197,6 @@
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
-
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.fn.translateString(0, -10))
       .call(xAxis);
@@ -191,7 +206,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 30))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 15))
       .call(legend);
 
 
