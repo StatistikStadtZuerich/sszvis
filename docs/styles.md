@@ -188,9 +188,22 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
 <script>
     var scale = sszvis.color.divVal();
     colorSwatchFromLinearScale('scaleDivValRev', scale.reverse(), 9);
-</script>```
+</script>
+```
 
+## Greyscale
 
+### `color.gry()`
+
+A grey scale is included for use in cases where a data value should be shaded out. Currently, it is used for the color of inactive lines in the coordinated map and line chart example. At the moment, it has only one value.
+
+```html|plain,run-script
+<div id='greyScale' class='scale-container'></div>
+<script>
+    var scale = sszvis.color.gry();
+    colorSwatchFromLinearScale('greyScale', scale, 1);
+</script>
+```
 
 ## Tooltips
 
