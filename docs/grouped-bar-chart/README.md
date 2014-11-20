@@ -12,6 +12,27 @@
 
 ```project
 {
+    "name": "grouped-bar-chart_gb-three-yearly-neg",
+    "files": {
+        "index.html": {
+            "source": "docs/grouped-bar-chart/gb-three-yearly-neg.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/grouped-bar-chart/data/GB_3Categories_yearly_negatives.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 465
+    }
+}
+```
+
+```project
+{
     "name": "grouped-bar-chart_gb-two-small",
     "files": {
         "index.html": {
@@ -48,27 +69,6 @@
     "size": {
         "width": 516,
         "height": 485
-    }
-}
-```
-
-```project
-{
-    "name": "grouped-bar-chart_gb-three-yearly-neg",
-    "files": {
-        "index.html": {
-            "source": "docs/grouped-bar-chart/gb-three-yearly-neg.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/grouped-bar-chart/data/GB_3Categories_yearly_negatives.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 465
     }
 }
 ```
