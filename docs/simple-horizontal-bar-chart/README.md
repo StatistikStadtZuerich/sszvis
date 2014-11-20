@@ -36,8 +36,7 @@ Specifies the fill-value of the rectangles. Can be a value or a function (defaul
 
 Specifies the stroke-value of the rectangles. Can be a value or a function (default: black).
 
-
-## White Guide Lines Over the Bars but Under the Text
+### Chart
 
 ```project
 {
