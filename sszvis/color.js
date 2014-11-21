@@ -32,8 +32,8 @@
  *
  * @function divVal    Diverging and valued color scale from red to blue
  * @function divNtr    Diverging and neutral color scale from brown to green
- * @function divValGry Variation of the valued scale with a gray midpoint
- * @function divNtrGry Variation of the neutral scale with a gray midpoint
+ * @function divValGry Variation of the valued scale with a grey midpoint
+ * @function divNtrGry Variation of the neutral scale with a grey midpoint
  * @method   reverse   Instance method to reverse the color order. @returns new scale
  */
 namespace('sszvis.color', function(module) {

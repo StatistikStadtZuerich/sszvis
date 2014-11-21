@@ -14,11 +14,22 @@
       pages: [
         {name: 'intro', path: '/', title: 'Introduction', src: 'docs/intro.md'},
         {
-          name: 'styles',
+          name: 'style-guide',
           title: 'Style guide',
-          src: 'docs/styles.md',
-          styles: ['docs/styles.css'],
-          scripts: ['vendor/d3/d3.js', 'sszvis.js', 'docs/styles.js']
+          pages: [
+            {name: 'annotations', title: 'Annotations', src: 'docs/style-guide/annotations.md'},
+            {name: 'axes', title: 'Axes', src: 'docs/style-guide/axes.md'},
+            {
+              name: 'colors',
+              title: 'Colors',
+              src: 'docs/style-guide/colors.md',
+              styles: ['docs/style-guide/colors.css'],
+              scripts: ['vendor/d3/d3.js', 'sszvis.js', 'docs/style-guide/colors.js']
+            },
+            {name: 'controls', title: 'Controls', src: 'docs/style-guide/controls.md'},
+            {name: 'legends', title: 'Legends', src: 'docs/style-guide/legends.md'},
+            {name: 'tooltips', title: 'Tooltips', src: 'docs/style-guide/tooltips.md'}
+          ]
         },
         {
           name: 'line-charts',

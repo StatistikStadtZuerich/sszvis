@@ -1,13 +1,27 @@
-# Fundamentals
+# Colors
 
-## Gray scales
+## Grey scales
 
-These are the default text colors used throughout the UI.
+### Defaults
+
+These are the default text colors used throughout the UI. They are hard-coded into the CSS.
 
 ```html|plain,run-script
-<div id='scaleGray' class='scale-container'></div>
+<div id='scaleGrey' class='scale-container'></div>
 <script>
-    colorSwatchFromColors('scaleGray', ["#B8B8B8", "#7C7C7C", "#545454"]);
+    colorSwatchFromColors('scaleGrey', ["#B8B8B8", "#7C7C7C", "#545454"]);
+</script>
+```
+
+### `color.gry()`
+
+A grey scale is included for use in cases where a data value should be shaded out. Currently, it is used for the color of inactive lines in the coordinated map and line chart example. At the moment, it has only one value.
+
+```html|plain,run-script
+<div id='greyScale' class='scale-container'></div>
+<script>
+    var scale = sszvis.color.gry();
+    colorSwatchFromLinearScale('greyScale', scale, 1);
 </script>
 ```
 
@@ -159,7 +173,7 @@ They come in two color variations: the valued (red-blue) variation is used for d
 </script>
 ```
 
-A gray midpoint can be used in situations where the contour of a data mark must be visible on a white background.
+A grey midpoint can be used in situations where the contour of a data mark must be visible on a white background.
 
 #### `color.divValGry()`
 
@@ -189,76 +203,4 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
     var scale = sszvis.color.divVal();
     colorSwatchFromLinearScale('scaleDivValRev', scale.reverse(), 9);
 </script>
-```
-
-## Greyscale
-
-### `color.gry()`
-
-A grey scale is included for use in cases where a data value should be shaded out. Currently, it is used for the color of inactive lines in the coordinated map and line chart example. At the moment, it has only one value.
-
-```html|plain,run-script
-<div id='greyScale' class='scale-container'></div>
-<script>
-    var scale = sszvis.color.gry();
-    colorSwatchFromLinearScale('greyScale', scale, 1);
-</script>
-```
-
-## Tooltips
-
-```html|plain
-<div style='position:relative;height:50px;'>
-    <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip__content'>
-            <div class='sszvis-tooltip__header'>Example Header</div>
-            <div class='sszvis-tooltip__body'>The tip of this tooltip points towards the top</div>
-        </div>
-        <div class='sszvis-tooltip-tipholder tip-top'>
-            <div class='sszvis-tooltip-tip tip-top'></div>
-        </div>
-    </div>
-</div>
-```
-
-```html|plain
-<div style='position:relative;height:50px;'>
-    <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip__content'>
-            <div class='sszvis-tooltip__header'>Example Header</div>
-            <div class='sszvis-tooltip__body'>The tip of this tooltip points towards the bottom</div>
-        </div>
-        <div class='sszvis-tooltip-tipholder tip-bot'>
-            <div class='sszvis-tooltip-tip tip-bot'></div>
-        </div>
-    </div>
-</div>
-```
-
-```html|plain
-<div style='position:relative;height:50px;'>
-    <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip__content'>
-            <div class='sszvis-tooltip__header'>Example Header</div>
-            <div class='sszvis-tooltip__body'>The tip of this tooltip points towards the left</div>
-        </div>
-        <div class='sszvis-tooltip-tipholder tip-left'>
-            <div class='sszvis-tooltip-tip tip-left'></div>
-        </div>
-    </div>
-</div>
-```
-
-```html|plain
-<div style='position:relative;height:50px;'>
-    <div class='sszvis-tooltip'>
-        <div class='sszvis-tooltip__content'>
-            <div class='sszvis-tooltip__header'>Example Header</div>
-            <div class='sszvis-tooltip__body'>The tip of this tooltip points towards the right</div>
-        </div>
-        <div class='sszvis-tooltip-tipholder tip-right'>
-            <div class='sszvis-tooltip-tip tip-right'></div>
-        </div>
-    </div>
-</div>
 ```
