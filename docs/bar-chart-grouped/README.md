@@ -52,10 +52,10 @@ A predicate function which can be used to determine whether a bar has a defined 
 
 ```project
 {
-    "name": "bar-chart-grouped_gb-three-yearly-neg",
+    "name": "bar-chart-grouped_basic",
     "files": {
         "index.html": {
-            "source": "docs/bar-chart-grouped/gb-three-yearly-neg.html",
+            "source": "docs/bar-chart-grouped/basic.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/bar-chart-grouped/data/GB_3Categories_yearly_negatives.csv",
