@@ -12,7 +12,7 @@ Because it uses a d3.stack layout under the hood, this component will assign two
 
 ### Configuration
 
-The stacked.verticalBar component is a combination of the sszvis bar component and a d3 stack layout. The stack is constructed vertically, using the *x*-value of each data element to form groups, and then calculating, for each element, the cumulative *y*-values underneath it in the stack.
+The stacked.verticalBar component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout). The stack is constructed vertically, using the *x*-value of each data element to form groups, and then calculating, for each element, the cumulative *y*-values underneath it in the stack.
 
 #### `stackedBar.xAccessor(xAcc)`
 

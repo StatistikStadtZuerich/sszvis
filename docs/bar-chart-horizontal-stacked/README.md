@@ -8,11 +8,11 @@ This chart expects an array of arrays, where each sub array is one layer of the 
 
 #### Caution
 
-Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: y0, the baseline value for each point, and y, the extent of each point. This assignment will of course overwrite any existing properties on the data object named y0 or y. These are intermediate values used to compute the bars' positioning in stack, and will be assigned even though the stack is horizontal. In the end, these values are used to calculate *x* positions and bar *widths*.
+Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: `y0`, the baseline value for each point, and `y`, the extent of each point. This assignment will overwrite any existing properties on the data object named `y0` or `y`. These are intermediate values used to compute the bars' positioning in stack, and will be assigned even though the stack is horizontal. In the end, these values are used to calculate *x* positions and bar *widths*.
 
 ### Configuration
 
-The stacked.horizontalBar component is a combination of the sszvis bar component and a d3 stack layout. The stack is constructed horizontally, using the *y*-value of each data element to form groups, and then calculating, for each element, the cumulative *x*-values to the left of it in the stack.
+The stacked.horizontalBar component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout). The stack is constructed horizontally, using the *y*-value of each data element to form groups, and then calculating, for each element, the cumulative *x*-values to the left of it in the stack.
 
 #### `stackedBar.xAccessor(xAcc)`
 
@@ -51,7 +51,7 @@ Specify a stroke value for the stack rectangles (default none).
 Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart. Used internally to configure the verticalBar and the horizontalBar. Should probably never be changed.
 
 
-## Twelve Categories - Stack Sums to 100
+### Chart
 
 In this example, twelve distinct categories make up each stack, and the total for each stack is 100.
 
