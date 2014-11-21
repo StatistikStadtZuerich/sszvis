@@ -189,32 +189,39 @@ namespace('sszvis.axis', function(module) {
           }
 
           // Highlight axis labels that return true for props.highlightTick.
-          // Hide axis labels that overlap with highlighted labels.
           if (props.highlightTick) {
             var activeBounds = [];
             var passiveBounds = [];
-            group.selectAll('.tick text')
-              .classed('hidden', false)
-              .classed('active', props.highlightTick)
-              .each(function(d) {
-                var bounds = {
-                  node: this,
-                  bounds: this.getBoundingClientRect()
-                };
-                if (props.highlightTick(d)) {
-                  bounds.left  -= LABEL_PROXIMITY_THRESHOLD;
-                  bounds.right += LABEL_PROXIMITY_THRESHOLD;
-                  activeBounds.push(bounds);
-                } else {
-                  passiveBounds.push(bounds);
-                }
-              });
+            var labels = group.selectAll('.tick text');
 
-            activeBounds.forEach(function(active) {
-              passiveBounds.forEach(function(passive) {
-                d3.select(passive.node).classed('hidden', boundsOverlap(passive.bounds, active.bounds));
+            labels
+              .classed('hidden', false)
+              .classed('active', props.highlightTick);
+
+            // Hide axis labels that overlap with highlighted labels unless
+            // the labels are slanted (in which case the bounding boxes overlap)
+            if (!props.slant) {
+              labels
+                .each(function(d) {
+                  var bounds = {
+                    node: this,
+                    bounds: this.getBoundingClientRect()
+                  };
+                  if (props.highlightTick(d)) {
+                    bounds.left  -= LABEL_PROXIMITY_THRESHOLD;
+                    bounds.right += LABEL_PROXIMITY_THRESHOLD;
+                    activeBounds.push(bounds);
+                  } else {
+                    passiveBounds.push(bounds);
+                  }
+                });
+
+              activeBounds.forEach(function(active) {
+                passiveBounds.forEach(function(passive) {
+                  d3.select(passive.node).classed('hidden', boundsOverlap(passive.bounds, active.bounds));
+                });
               });
-            });
+            }
           }
 
           if (props.title) {
