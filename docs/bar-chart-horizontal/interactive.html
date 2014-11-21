@@ -109,6 +109,8 @@
       .rangeBands([0, chartDimensions.totalHeight], chartDimensions.padRatio, chartDimensions.outerRatio)
       .domain(state.categories);
 
+    var cScale = sszvis.color.qual12();
+    var cScaleDark = cScale.darker();
 
     // Layers
 
@@ -131,7 +133,9 @@
       .y(sszvis.fn.compose(yScale, yAcc))
       .width(sszvis.fn.compose(widthScale, xAcc))
       .height(chartDimensions.barHeight)
-      .fill(sszvis.color.qual12());
+      .fill(function(d) {
+        return isSelected(d) ? cScaleDark(d): cScale(d);
+      });
 
     var xAxis = sszvis.axis.x()
       .scale(widthScale)
@@ -140,7 +144,10 @@
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
-      .orient('right');
+      .orient('right')
+      .highlightTick(function(d) {
+        return sszvis.fn.contains(state.selected.map(sszvis.fn.compose(String, yAcc)), String(d));
+      });
 
     var segmentedControl = sszvis.control.segmented()
       .values(state.years)
@@ -149,15 +156,15 @@
       .change(actions.selectYear);
 
     var tooltipHeader = sszvis.component.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.number, xAcc));
+      .bold(sszvis.fn.compose(function(d) {
+        return isNaN(d) ? '???' : sszvis.format.number(d);
+      }, xAcc));
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .centered(true)
-      .visible(function(d) {
-        return state.selected.indexOf(d) >= 0;
-      });
+      .visible(isSelected);
 
 
     // Rendering
@@ -202,6 +209,9 @@
 
   }
 
+  function isSelected(d) {
+    return state.selected.indexOf(d) >= 0;
+  }
 
 }(d3, sszvis));
 </script>
