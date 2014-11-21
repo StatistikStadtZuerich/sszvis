@@ -182,8 +182,9 @@
       .header(tooltipHeaderText)
       .body(function(d) {
         return [
-          ['Alter des Mannes:', 'Alter der Frau:', 'Anzahl: '],
-          [xAcc(d), yAcc(d), cAcc(d)]
+          ['Alter des Mannes:', xAcc(d)],
+          ['Alter der Frau:', yAcc(d)],
+          ['Anzahl: ', cAcc(d)]
         ];
       })
       .visible(isSelected);

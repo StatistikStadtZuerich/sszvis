@@ -184,8 +184,9 @@
       .header(tooltipHeaderText)
       .body(function(d) {
         return [
-          ['Group 1', 'Group 2', 'Wert'],
-          [xAcc(d), yAcc(d), cAcc(d)]
+          ['Group 1', xAcc(d)],
+          ['Group 2', yAcc(d)],
+          ['Wert', cAcc(d)]
         ];
       })
       .visible(isSelected);

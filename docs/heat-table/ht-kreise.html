@@ -167,19 +167,16 @@
     var tooltipHeaderText = sszvis.component.modularText.html()
       .bold(xAcc);
 
-    var tooltipBodyText = sszvis.component.modularText.html()
-      .plain(function(d) {
-        var v = cAcc(d);
-        return isNaN(v) ? '???' : v;
-      })
-      .plain('Einwohner')
-      .newline()
-      .plain(yAcc).plain('Jahre alt');
-
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeaderText)
-      .body(tooltipBodyText)
+      .body(function(d) {
+        var v = cAcc(d);
+        return [
+          ['Jahre alt', yAcc(d)],
+          ['Einwohner', isNaN(v) ? '???' : v]
+        ];
+      })
       .visible(isSelected);
 
 
