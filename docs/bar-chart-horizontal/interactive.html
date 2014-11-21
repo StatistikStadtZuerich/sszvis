@@ -59,8 +59,10 @@
       render(state);
     },
 
-    showTooltip: function(d) {
-      state.selected = [d];
+    showTooltip: function(_, category) {
+      state.selected = state.data.filter(function(d){
+        return yAcc(d) === category;
+      });
       render(state);
     },
 
@@ -181,9 +183,23 @@
 
 
     // Interaction
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout', actions.hideTooltip);
+    // bars.selectAll('.sszvis-bar')
+    //   .on('mouseover', actions.showTooltip)
+    //   .on('mouseout', actions.hideTooltip);
+
+    // Interaction
+
+    // Use the move behavior to provide tooltips in the absence of a bar, i.e.
+    // when we have missing data.
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(widthScale)
+      .yScale(yScale)
+      .on('move', actions.showTooltip)
+      .on('end',  actions.hideTooltip);
+
+    chartLayer.selectGroup('interaction')
+      .call(interactionLayer);
+
   }
 
 

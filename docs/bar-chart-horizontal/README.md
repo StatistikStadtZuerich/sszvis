@@ -6,11 +6,11 @@
 
 ### Data structure
 
-This chart requires one variable used for categorization, and one variable for the extent (vertical or horizontal) of the bar. The extent variable must be numeric, while the categorization variable should be a set of unique values.
+This chart requires one variable used for categorization, and one variable for the horizontal extent of the bar. The extent variable must be numeric, while the categorization variable should be a set of unique values.
 
 ### Configuration
 
-The bar component generates svg rect elements from arrays of data objects.
+The bar component generates SVG rect elements from arrays of data objects.
 
 #### `bar.x(x)`
 
@@ -40,13 +40,13 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
 
 ```project
 {
-    "name": "simple-horizontal-bar-chart-long-names",
+    "name": "bar-chart-horizontal-basic",
     "files": {
         "index.html": {
-            "source": "docs/simple-horizontal-bar-chart/long-names.html",
+            "source": "docs/bar-chart-horizontal/basic.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_13Categories_longNames.csv",
+        "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -59,17 +59,17 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
 }
 ```
 
-## Several Categories and Several Years
+## Interaction
 
 ```project
 {
-    "name": "simple-horizontal-bar-chart-13-categories",
+    "name": "bar-chart-horizontal-interactive",
     "files": {
         "index.html": {
-            "source": "docs/simple-horizontal-bar-chart/13-categories.html",
+            "source": "docs/bar-chart-horizontal/interactive.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_13Categories.csv",
+        "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -82,17 +82,19 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
 }
 ```
 
-## Several Categories With Guide Lines
+## Guide lines
+
+Long axis ticks can be toggled to aid chart reading, which can be useful to see when looking at static charts. They come in two variations: a dark line that should go under the bars, and a white line that should go above the bars.
 
 ```project
 {
-    "name": "simple-horizontal-bar-chart-basic-percent",
+    "name": "bar-chart-horizontal-percent",
     "files": {
         "index.html": {
-            "source": "docs/simple-horizontal-bar-chart/basic-percent.html",
+            "source": "docs/bar-chart-horizontal/percent.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/simple-horizontal-bar-chart/data/SHB_basic_percent.csv",
+        "data.csv": "docs/bar-chart-horizontal/data/SHB_basic_percent.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"

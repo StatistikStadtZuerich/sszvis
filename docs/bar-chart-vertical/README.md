@@ -6,11 +6,11 @@
 
 ### Data structure
 
-This chart requires one variable used for categorization, and one variable for the extent (vertical or horizontal) of the bar. The extent variable must be numeric, while the categorization variable should be a set of unique values.
+This chart requires one variable used for categorization, and one variable for the vertical extent of the bar. The extent variable must be numeric, while the categorization variable should be a set of unique values.
 
 ### Configuration
 
-The bar component generates svg rect elements from arrays of data objects.
+The bar component generates SVG rect elements from arrays of data objects.
 
 #### `bar.x(x)`
 
@@ -64,7 +64,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
 This example shows several edge cases and specialties:
 
 * Long axis labels can be word-wrapped by configuring the axis component
-* Long axis ticks can be toggled to aid chart reading, which can be useful to see when looking at static charts
+* Long axis ticks can be toggled as guide lines to aid chart reading, which can be useful to see when looking at static charts
 * Missing data renders a tooltip stating that there is no data. This uses `sszvis.behavior.move` to provide hover functionality in the absence of a bar.
 
 ```project
