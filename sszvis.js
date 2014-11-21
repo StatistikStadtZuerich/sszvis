@@ -992,8 +992,8 @@ namespace('sszvis.fn', function(module) {
  *                                                      the default depends on the axis orient property
  * @property {boolean} titleCenter                      whether or not to center the axis title along the axis. If true, this sets the title anchor point
  *                                                      as the midpoint between axis extremes. Should usually be used with titleAnchor('middle') to ensure exact title centering. (default: false)
- * @property {number} dxTitle                         specify an amount by which to offset the title towards the left. This offsets away from the default position. (default: 0)
- * @property {number} dyTitle                          specify an amount by which to offset the title towards the top. This offsets away from the default position. (default: 0)
+ * @property {number} dxTitle                           specify an amount by which to offset the title towards the left. This offsets away from the default position. (default: 0)
+ * @property {number} dyTitle                           specify an amount by which to offset the title towards the top. This offsets away from the default position. (default: 0)
  * @property {boolean} titleVertical                    whether or not to rotate the title 90 degrees so that it appears vertical, reading from bottom to top. (default: false)
  * @property {boolean} vertical                         whether the axis is a vertical axis. When true, this property changes certain display properties of the axis according to the style guide.
  *
