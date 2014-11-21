@@ -40,6 +40,7 @@
     isMultiples: false,
     highlightDate: new Date(),
     highlightData: [],
+    totalHighlightValue: 0,
     mouseYValue: 0
   };
 
@@ -79,7 +80,7 @@
     },
 
     toggleMultiples: function(g) {
-      state.isMultiples = g === 'Separiert';
+      state.isMultiples = (g === 'Separiert');
       render(state);
     },
 
@@ -89,6 +90,9 @@
       state.highlightData = state.stackedData.map(function(stack) {
         return stack.values.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
       });
+      state.totalHighlightValue = state.highlightData.reduce(function(m, v) {
+        return yAcc(v) + m;
+      }, 0);
       state.mouseYValue = yValue;
 
       render(state);
@@ -168,7 +172,7 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .yAccessor(yAcc)
       .yScale(yScale)
-      .fill(function(d) { return cScale(d.category); });
+      .fill(sszvis.fn.compose(cScale, cAcc));
 
     var stackedAreaMultiples = sszvis.component.stacked.areaMultiples()
       .key(sszvis.fn.prop('category'))
@@ -178,18 +182,14 @@
       .y1(function(d) {
         return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
       })
-      .fill(function(d) { return cScale(d.category); });
-
-    var totalHighlightValue = state.highlightData.reduce(function(m, v) {
-        return yAcc(v) + m;
-      }, 0);
+      .fill(sszvis.fn.compose(cScale, cAcc));
 
     var topValue;
     if (state.isMultiples) {
       var first = sszvis.fn.first(state.highlightData);
       topValue = yPositionMultiples(cAcc(first)) - yScaleMultiples(yAcc(first));
     } else {
-      topValue = yScale(totalHighlightValue);
+      topValue = yScale(state.totalHighlightValue);
     }
 
     var rangeRuler = sszvis.component.rangeRuler()
@@ -213,7 +213,7 @@
       .label(function(d) {
         return yAcc(d).toString();
       })
-      .total(totalHighlightValue)
+      .total(state.totalHighlightValue)
       .flip(function(d) {
         return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
       });
@@ -268,8 +268,6 @@
       .scale(cScale)
       .orientation('vertical');
 
-    // stacked:   kumuliert, aggregiert, Summiert
-    // separated: Separiert
     var options = ['Summiert', 'Separiert'];
     var segmentedControl = sszvis.control.segmented()
       .values(options)
@@ -278,6 +276,7 @@
 
 
     // Rendering
+
     chartLayer.selectGroup('areachart')
       .call(state.isMultiples ? stackedAreaMultiples : stackedArea);
 

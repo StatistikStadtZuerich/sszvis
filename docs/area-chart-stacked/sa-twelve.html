@@ -38,6 +38,8 @@
     maxStacked: 0,
     categories: [],
     highlightData: [],
+    highlightDate: 0,
+    totalHighlightValue: 0,
     isMultiples: false
   };
 
@@ -86,6 +88,10 @@
       state.highlightData = state.stackedData.map(function(stack) {
         return stack.values.filter(function(v) { return xAcc(v).toString() === closest.toString(); })[0];
       });
+      state.highlightDate = xAcc(state.highlightData[0]);
+      state.totalHighlightValue = state.highlightData.reduce(function(m, v) {
+        return yAcc(v) + m;
+      }, 0);
       state.mouseYValue = yValue;
 
       render(state);
@@ -165,8 +171,7 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .yAccessor(yAcc)
       .yScale(yScale)
-      // "d" here is an object representing one layer of the area
-      .fill(function(d) { return cScale(d.category); });
+      .fill(sszvis.fn.compose(cScale, cAcc));
 
     var stackedAreaMultiples = sszvis.component.stacked.areaMultiples()
       .key(sszvis.fn.prop('category'))
@@ -176,28 +181,20 @@
       .y1(function(d) {
         return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
       })
-      // "d" here is an object representing one area
-      .fill(function(d) { return cScale(d.category); });
-
-    var totalHighlightValue = state.highlightData.reduce(function(m, v) {
-      return yAcc(v) + m;
-    }, 0);
+      .fill(sszvis.fn.compose(cScale, cAcc));
 
     var topValue;
     if (state.isMultiples) {
       var first = sszvis.fn.first(state.highlightData);
       topValue = yPositionMultiples(cAcc(first)) - yScaleMultiples(yAcc(first));
     } else {
-      topValue = yScale(totalHighlightValue);
+      topValue = yScale(state.totalHighlightValue);
     }
-
-    var highlightDate = xAcc(state.highlightData[0]),
-        highlightX = xScale(highlightDate);
 
     var rangeRuler = sszvis.component.rangeRuler()
       .top(topValue)
       .bottom(bounds.innerHeight)
-      .x(highlightX)
+      .x(xScale(state.highlightDate))
       .y0(function(d) {
         if (state.isMultiples) {
           return yPositionMultiples(cAcc(d));
@@ -215,9 +212,9 @@
       .label(function(d) {
         return yAcc(d).toString();
       })
-      .total(totalHighlightValue)
+      .total(state.totalHighlightValue)
       .flip(function(d) {
-        return highlightX >= 0.5 * bounds.innerWidth;
+        return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
       });
 
     var tooltipText = sszvis.component.modularText.html()
@@ -227,14 +224,14 @@
     var rangeTooltip = sszvis.component.tooltip()
         .header(tooltipText)
         .orientation(function(d) {
-          return highlightX >= 0.5 * bounds.innerWidth ? 'right' : 'left';
+          return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? 'right' : 'left';
         })
         .renderInto(htmlLayer)
         .centered(true)
         .visible(true);
 
     var rangeFlag = sszvis.component.rangeFlag()
-      .x(highlightX)
+      .x(xScale(state.highlightDate))
       .y0(function(d) {
         if (state.isMultiples) {
           return yPositionMultiples(cAcc(d));
@@ -251,14 +248,14 @@
       });
 
     var xAxisTicks = xScale.ticks(5)
-      .concat(highlightDate);
+      .concat(state.highlightDate);
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xAxisTicks)
       .highlightTick(function(d) {
-        return sszvis.fn.stringEqual(d, highlightDate);
+        return sszvis.fn.stringEqual(d, state.highlightDate);
       });
 
     var yAxis = sszvis.axis.y()
@@ -272,8 +269,6 @@
       .rows(6)
       .orientation('vertical');
 
-    // stacked:   kumuliert, aggregiert, Summiert
-    // separated: Separiert
     var options = ['Summiert', 'Separiert'];
     var segmentedControl = sszvis.control.segmented()
       .values(options)

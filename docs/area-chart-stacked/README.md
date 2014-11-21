@@ -10,7 +10,7 @@ This component requires an array of layer objects, where each layer object repre
 
 ### Configuration
 
-The stacked.area component uses a d3.layout.stack under the hood, so some of its configuration properties are similar.
+The stacked.area component uses a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout) under the hood, so some of its configuration properties are similar.
 
 #### `area.x(x)`
 
@@ -38,21 +38,24 @@ Specify a key function for use in the data join. The value returned by the key s
 
 #### `area.valuesAccessor([values])`
 
-Specify an accessor for the values of the layer objects. The default treats the layer object as an array of values. Use this if your layer objects are something like: { name: "Name", values: [ ... Array of data values ... ] }
+Specify an accessor for the values of the layer objects. The default treats the layer object as an array of values. Use this if your layer objects are something like:
 
+```code
+{ name: "Name", values: [ ... Array of data values ... ] }
+```
 
 
 ### Chart
 
 ```project
 {
-    "name": "stacked-area-chart-three",
+    "name": "area-chart-stacked-three",
     "files": {
         "index.html": {
-            "source": "docs/stacked-area-chart/sa-three.html",
+            "source": "docs/area-chart-stacked/sa-three.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/stacked-area-chart/data/SA_3Categories_yearly_zeroes.csv",
+        "data.csv": "docs/area-chart-stacked/data/SA_3Categories_yearly_zeroes.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -69,7 +72,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
 
 ### Data structure
 
-This component, like stacked.area, requires an array of layer objects, where each layer object is one of the multiples.
+This component, like stacked.area, requires an array of layer objects, where each layer object is one of the multiples. In addition to stacked.area, this chart's layers can be separated to provide two views on the data: a sum of all elements as well as every element on its own.
 
 ### Configuration
 
@@ -99,20 +102,24 @@ Specify a key function for use in the data join. The value returned by the key s
 
 #### `areaMultiples.valuesAccessor([values])`
 
-Specify an accessor for the values of the layer objects. The default treats the layer object as an array of values. Use this if your layer objects are something like: { name: "Name", values: [ ... Array of data values ... ] }
+Specify an accessor for the values of the layer objects. The default treats the layer object as an array of values. Use this if your layer objects are something like:
+
+```code
+{ name: "Name", values: [ ... Array of data values ... ] }
+```
 
 
-### Two stacked layers, with the multiples option
+### Chart
 
 ```project
 {
-    "name": "stacked-area-chart-two",
+    "name": "area-chart-stacked-two",
     "files": {
         "index.html": {
-            "source": "docs/stacked-area-chart/sa-two.html",
+            "source": "docs/area-chart-stacked/sa-two.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/stacked-area-chart/data/SA_2Categories_yearly.csv",
+        "data.csv": "docs/area-chart-stacked/data/SA_2Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
@@ -125,17 +132,17 @@ Specify an accessor for the values of the layer objects. The default treats the 
 }
 ```
 
-## Usage example: many stacks, with multiples option
+## Many separable stacks
 
 ```project
 {
-    "name": "stacked-area-chart-twelve",
+    "name": "area-chart-stacked-twelve",
     "files": {
         "index.html": {
-            "source": "docs/stacked-area-chart/sa-twelve.html",
+            "source": "docs/area-chart-stacked/sa-twelve.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/stacked-area-chart/data/SA_12Kategories_yearly.csv",
+        "data.csv": "docs/area-chart-stacked/data/SA_12Kategories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
