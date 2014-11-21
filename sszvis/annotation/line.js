@@ -18,11 +18,12 @@ namespace('sszvis.annotation.line', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('m').m(1)
-      .prop('b').b(0)
+      .prop('x1')
+      .prop('x2')
+      .prop('y1')
+      .prop('y2')
       .prop('xScale')
       .prop('yScale')
-      .prop('xRange')
       .prop('dx', d3.functor).dx(0)
       .prop('dy', d3.functor).dy(0)
       .prop('caption', d3.functor)
@@ -30,10 +31,10 @@ namespace('sszvis.annotation.line', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var x1 = props.xRange[0];
-        var x2 = props.xRange[1];
-        var y1 = props.yScale(props.m * props.xScale.invert(x1) + props.b);
-        var y2 = props.yScale(props.m * props.xScale.invert(x2) + props.b);
+        var x1 = props.xScale(props.x1);
+        var y1 = props.yScale(props.y1);
+        var x2 = props.xScale(props.x2);
+        var y2 = props.yScale(props.y2);
 
         var line = selection.selectAll('.sszvis-reference-line')
           .data(data);

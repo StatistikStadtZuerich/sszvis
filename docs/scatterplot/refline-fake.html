@@ -33,7 +33,7 @@
   ----------------------------------------------- */
   var state = {
     data: [],
-    xExtent: [],
+    xExtent: [0, 1], // 0% - > 100%
     yExtent: [],
     cities: []
   };
@@ -44,7 +44,6 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.xExtent = [0, d3.max(state.data, xAcc)];
       state.yExtent = [0, d3.max(state.data, yAcc)];
       state.cities = sszvis.fn.set(state.data, cAcc);
 
@@ -110,11 +109,12 @@
       .fill(sszvis.fn.compose(cScale, cAcc));
 
     var referenceLine = sszvis.annotation.line()
-      .m(100)
-      .b(state.yExtent[0])
+      .x1(0.1)
+      .y1(40)
+      .x2(0.9)
+      .y2(120)
       .xScale(xScale)
       .yScale(yScale)
-      .xRange([0, bounds.innerWidth])
       .dy(-8)
       .caption('Reference Line');
 
@@ -122,7 +122,8 @@
       .scale(xScale)
       .ticks(10)
       .tickFormat(sszvis.format.percent)
-      .orient('bottom');
+      .orient('bottom')
+      .alignOuterLabels(true);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
