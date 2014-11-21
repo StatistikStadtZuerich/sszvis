@@ -37,7 +37,8 @@
     valueExtent: [0, 0],
     groups: [],
     groupedData: [],
-    longestGroup: 0
+    longestGroup: 0,
+    selection: []
   };
 
 
@@ -54,6 +55,18 @@
         .apply(state.data);
       state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
 
+      render(state);
+    },
+
+    showTooltip: function(x, y) {
+      state.selection = state.groupedData.filter(function(d) {
+        return sszvis.fn.contains(d.map(xAcc), x);
+      });
+      render(state);
+    },
+
+    hideTooltip: function(x, y) {
+      state.selection = [];
       render(state);
     }
   };
@@ -94,7 +107,7 @@
     // see also: http://bl.ocks.org/mbostock/2368837 (http://stackoverflow.com/questions/10127402/bar-chart-with-negative-values)
     var yScale = d3.scale.linear()
       .domain(state.valueExtent)
-      .range([bounds.innerHeight - 10, 0]);
+      .range([bounds.innerHeight, 0]);
 
     var yPosScale = function(v) {
       return isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
@@ -114,6 +127,9 @@
         description: DESCRIPTION
       })
       .datum(state.groupedData);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
 
 
     // Components
@@ -141,11 +157,30 @@
       .scale(cScale)
       .horizontalFloat(true);
 
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(sszvis.component.modularText.html().bold(function(d) {
+        return xAcc(sszvis.fn.first(d));
+      }))
+      .body(function(d) {
+        // generates a row from each data element
+        return d.map(function(item) {
+          var v = yAcc(item);
+          return [cAcc(item), isNaN(v) ? '–' : v];
+        });
+      })
+      .visible(function(d) {
+        return state.selection.indexOf(d) >= 0;
+      });
+
 
     // Rendering
 
-    chartLayer.selectGroup('bars')
+    var bars = chartLayer.selectGroup('bars')
       .call(barLayout);
+
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
@@ -157,6 +192,17 @@
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 115))
       .call(colorLegend);
+
+
+    // Interaction
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(xScale)
+      .yScale(yScale)
+      .on('move', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    chartLayer.selectGroup('interactionLayer')
+      .call(interactionLayer);
   }
 
 }(d3, sszvis));

@@ -50,7 +50,7 @@ namespace('sszvis.component.groupedBars', function(module) {
       .prop('groupSize')
       .prop('groupWidth')
       .prop('groupSpace').groupSpace(0.05)
-      .prop('y')
+      .prop('y', d3.functor)
       .prop('height')
       .prop('fill')
       .prop('stroke')
@@ -123,6 +123,21 @@ namespace('sszvis.component.groupedBars', function(module) {
           .classed('sszvis-bar--missing line2', true)
           .attr('x1', 4).attr('y1', -4)
           .attr('x2', -4).attr('y2', 4);
+
+        var tooltipAnchor = sszvis.component.tooltipAnchor()
+          .position(function(group) {
+            var xTotal = 0;
+            var tallest = Infinity;
+            group.forEach(function(d, i) {
+              xTotal += props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2;
+              // smaller y is higher
+              tallest = Math.min(tallest, props.y(d, i));
+            });
+            var xAverage = xTotal / group.length;
+            return [xAverage, tallest];
+          });
+
+        selection.call(tooltipAnchor);
       });
   };
 
