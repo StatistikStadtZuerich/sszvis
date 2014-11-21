@@ -54,7 +54,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 610
+        "height": 607
     }
 }
 ```
@@ -77,7 +77,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 640
+        "height": 637
     }
 }
 ```
@@ -102,7 +102,7 @@ Long axis ticks can be toggled to aid chart reading, which can be useful to see 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 616
+        "height": 613
     }
 }
 ```

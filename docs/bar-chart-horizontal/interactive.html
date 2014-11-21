@@ -95,8 +95,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 640, top: 60, bottom: 25 });
-    var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, state.categories.length);
+    var chartDimensions = sszvis.fn.horizontalBarChartDimensions(state.categories.length);
+    var bounds = sszvis.bounds({ height: 60 + chartDimensions.totalHeight + 25, top: 60, bottom: 25 });
 
 
     // Scales

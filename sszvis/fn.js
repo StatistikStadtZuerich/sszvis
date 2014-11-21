@@ -180,7 +180,7 @@ namespace('sszvis.fn', function(module) {
       return arr[0];
     },
 
-    horizontalBarChartDimensions: function(height, numBars) {
+    horizontalBarChartDimensions: function(numBars) {
       var DEFAULT_HEIGHT = 24, // the default bar height
           MIN_PADDING = 20, // the minimum padding size
           barHeight = DEFAULT_HEIGHT, // the bar height
