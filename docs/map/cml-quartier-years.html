@@ -100,14 +100,29 @@
       actions.resetYear();
     },
 
-    changeEntity: function(inputValue) {
-      // within the current year's data values, find the one closest to the mouse position
-      var closestEntry = inputValue === null ? null : closestDatum(state.currentMapData, vAcc, inputValue);
+    changeEntityNearDate: function(inputValue, inputDate) {
+      // find the closest year to the mouse
+      var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
+
+      // within the closest year's data values, find the one closest to the mouse position
+      var entitiesForYear = state.data.filter(function(d) {
+        return sszvis.fn.stringEqual(closestYear, yearAcc(d));
+      })
+      // entries have to be sorted so that d3.bisector will work on it.
+      .sort(sortWithAcc(vAcc));
+
+      // Find the closest entity to the mouse
+      var closestEntity = inputValue === null ? null : closestDatum(entitiesForYear, vAcc, inputValue);
 
       // Only re-render when the entity has changed
       // Only highlight the entity if it is close enough to the inputValue
-      if (state.highlightEntity !== closestEntry && Math.abs(inputValue - vAcc(closestEntry)) < VALUE_PROXIMITY_THRESHOLD) {
-        state.highlightEntity = closestEntry;
+      if (state.highlightEntity !== closestEntity && Math.abs(inputValue - vAcc(closestEntity)) < VALUE_PROXIMITY_THRESHOLD) {
+        // select the entity's sibling from the currently selected year instead
+        // of from what's near the mouse in order to highlight the correct
+        // entity on the ruler
+        state.highlightEntity = sszvis.fn.find(function(d) {
+          return geoIdAcc(d) === geoIdAcc(closestEntity);
+        }, state.currentMapData);
 
         actions.setHighlights();
       }
@@ -123,10 +138,8 @@
         state.currentMapData = state.data.filter(function(v) {
           return yearAcc(v).getFullYear() === state.currentYear.getFullYear();
         })
-        .sort(function(a, b) {
-          // currentMapData has to be sorted so that d3.bisector will work on it.
-          return d3.ascending(vAcc(a), vAcc(b));
-        });
+        // currentMapData has to be sorted so that d3.bisector will work on it.
+        .sort(sortWithAcc(vAcc));
 
         state.highlightEntity = findEntityWithGeoId(geoIdAcc(state.highlightEntity || {}), state.currentMapData);
 
@@ -372,7 +385,9 @@
       .padding({ top: 30 })
       .draggable(true)
       .on('drag', actions.changeYear)
-      .on('move', function(date, entity){ actions.changeEntity(entity); })
+      .on('move', function(date, entity){
+        actions.changeEntityNearDate(entity, date);
+      })
       .on('end', actions.resetMapEntity);
 
     highlightLayer.selectGroup('interaction')
@@ -394,6 +409,12 @@
     return sszvis.fn.find(function(d) {
       return geoIdAcc(d) === geoId;
     }, data);
+  }
+
+  function sortWithAcc(acc) {
+    return function(a, b) {
+      return d3.ascending(acc(a), acc(b));
+    };
   }
 
   function tickIsSelected(d) {
