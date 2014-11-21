@@ -117,7 +117,7 @@
       .orient('bottom')
       .tickFormat(function(v) { return sszvis.format.percent(v / 100); })
       .tickValues(d3.range(0, 20, 3))
-      .tickLength(state.tickType === 'Ohne Gitter' ? 0 : bounds.innerHeight)
+      .tickLength(state.tickType === 'Ohne Gitter' ? 0 : bounds.innerHeight + -chartDimensions.axisOffset)
       .alignOuterLabels(true);
 
     if (state.tickType === 'Helles Gitter') xAxis.tickColor('white');
