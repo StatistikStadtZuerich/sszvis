@@ -157,7 +157,7 @@
 
     var tooltipHeader = sszvis.component.modularText.html()
       .bold(sszvis.fn.compose(function(d) {
-        return isNaN(d) ? 'keine Daten' : sszvis.format.number(d);
+        return isNaN(d) ? 'k. A.' : sszvis.format.number(d);
       }, xAcc));
 
     var tooltip = sszvis.component.tooltip()
@@ -188,11 +188,6 @@
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
-
-    // Interaction
-    // bars.selectAll('.sszvis-bar')
-    //   .on('mouseover', actions.showTooltip)
-    //   .on('mouseout', actions.hideTooltip);
 
     // Interaction
 
