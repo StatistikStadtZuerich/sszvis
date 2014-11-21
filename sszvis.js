@@ -3098,7 +3098,7 @@ namespace('sszvis.control.sliderControl', function(module) {
         var props = selection.props();
 
         var axisOffset = 28; // vertical offset for the axis
-        var backgroundOffset = 18; // vertical offset for the middle of the background
+        var backgroundOffset = sszvis.fn.roundPixelCrisp(18); // vertical offset for the middle of the background
         var handleWidth = 10; // the width of the handle
         var handleHeight = 23; // the height of the handle
         var bgWidth = 6.5; // the width of the background
@@ -3113,12 +3113,12 @@ namespace('sszvis.control.sliderControl', function(module) {
         var width = alteredRange[1] - alteredRange[0]; // the width of the component's axis
 
         // the unchanging bits
-        var bg = selection.selectAll('g.sszvis-g')
+        var bg = selection.selectAll('g.sszvis-slidercontrol__backgroundgroup')
           .data([1]);
 
         var enterBg = bg.enter()
           .append('g')
-          .classed('sszvis-g', true);
+          .classed('sszvis-slidercontrol__backgroundgroup', true);
 
         // create the axis
         var axis = sszvis.axis.x()
@@ -3155,12 +3155,12 @@ namespace('sszvis.control.sliderControl', function(module) {
         });
 
         // create the slider background
-        var backgroundSelection = enterBg.selectAll('g.sszvis-background')
+        var backgroundSelection = enterBg.selectAll('g.sszvis-slider__background')
           .data([1])
           .enter()
           .append('g')
           .attr('transform', sszvis.fn.translateString(0, backgroundOffset))
-          .classed('sszvis-background', true);
+          .classed('sszvis-slider__background', true);
 
         backgroundSelection
           .append('line')
@@ -3177,17 +3177,17 @@ namespace('sszvis.control.sliderControl', function(module) {
           .attr('x1', sszvis.fn.roundPixelCrisp(scaleRange[0] + lineEndOffset)).attr('x2', sszvis.fn.roundPixelCrisp(scaleRange[1] - lineEndOffset));
 
         // draw the handle and the label
-        var handle = selection.selectAll('g.sszvis-slidercontrol--handle')
+        var handle = selection.selectAll('g.sszvis-slidercontrol__handle')
           .data([props.value]);
 
         handle.exit().remove();
 
         var handleEntering = handle.enter()
-          .append('g').classed('sszvis-slidercontrol--handle', true);
+          .append('g').classed('sszvis-slidercontrol__handle', true);
 
         handle
           .attr('transform', function(d) {
-            return sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0);
+            return sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0.5);
           })
 
         handleEntering
@@ -3206,7 +3206,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handleEntering
           .append('rect')
-          .classed('sszvis-slidercontrol--handlebox', true)
+          .classed('sszvis-slidercontrol__handlebox', true)
           .attr('x', -(handleWidth / 2))
           .attr('y', backgroundOffset - handleHeight / 2)
           .attr('width', handleWidth).attr('height', handleHeight)
@@ -3216,7 +3216,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handleEntering
           .append('line')
-          .classed('sszvis-slidercontrol--handleline', true)
+          .classed('sszvis-slidercontrol__handleline', true)
           .attr('y1', backgroundOffset - handleLineDimension).attr('y2', backgroundOffset + handleLineDimension);
 
         var sliderInteraction = sszvis.behavior.click()

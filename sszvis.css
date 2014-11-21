@@ -319,8 +319,13 @@
  *
  * @module sszvis/control/sliderControl
  */
-.sszvis-slidercontrol--handle {
+.sszvis-slidercontrol__backgroundgroup {
+  shape-rendering: crispEdges;
+}
+
+.sszvis-slidercontrol__handle {
   cursor: pointer;
+  shape-rendering: crispEdges;
 }
 
 .sszvis-slidercontrol--label {
@@ -330,12 +335,12 @@
   text-anchor: middle;
 }
 
-.sszvis-slidercontrol--handlebox {
+.sszvis-slidercontrol__handlebox {
   fill: #fff;
   stroke: #545454;
 }
 
-.sszvis-slidercontrol--handleline {
+.sszvis-slidercontrol__handleline {
   stroke: #545454;
 }
 
