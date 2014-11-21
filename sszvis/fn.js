@@ -121,6 +121,21 @@ namespace('sszvis.fn', function(module) {
       return typeof val !== 'undefined';
     },
 
+    /**
+     * fn.derivedSet
+     *
+     * fn.derivedSet is used to create sets of objects from an input array. The objects are
+     * first passed through an accessor function, which should produce a value. The set is calculated
+     * using that value, but the actual members of the set are the input objects. This allows you
+     * to use .derivedSet to create a group of obejcts, where the values of some derived property
+     * of those objects forms a set. This is distinct from other set functions in this toolkit because
+     * in the other set functions, the set of derived properties is returned, whereas this function
+     * returns a set of objects from the input array.
+     *
+     * @param  {array} arr        The array of elements from which the set is calculated
+     * @param  {function} acc     An accessor function which calculates the set determiner.
+     * @return {array}            An array of objects from the input array.
+     */
     derivedSet: function(arr, acc) {
       acc || (acc = sszvis.fn.identity);
       var seen = [], sValue, cValue, result = [];
@@ -180,6 +195,31 @@ namespace('sszvis.fn', function(module) {
       return arr[0];
     },
 
+    /**
+     * fn.horizontalBarChartDimensions
+     *
+     * This function calculates dimensions for the horizontal bar chart. It encapsulates the
+     * layout algorithm for sszvis horizontal bar charts. The object it returns contains several
+     * properties which can be used in other functions and components for layout purposes.
+     *
+     *
+     * @param  {number} numBars     the number of bars in the horizontal bar chart
+     * @return {object}             an object containing properties used for layout:
+     *                                 {
+     *                                  barHeight: the height of an individual bar
+     *                                  padHeight: the height of the padding between each bar
+     *                                  padRatio: the ratio of padding to barHeight + padding.
+     *                                            this can be passed as the second argument to d3.scale.ordinal().rangeBands
+     *                                  outerRatio: the ratio of outer padding to barHeight + padding.
+     *                                              this can be passed as the third parameter to d3.scale.ordinal().rangeBands
+     *                                  axisOffset: the amount by which to vertically offset the y-axis of the horizontal bar chart
+     *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
+     *                                              of a call to sszvis.fn.translateString.
+     *                                  barGroupHeight: the combined height of all the bars and their inner padding.
+     *                                  totalHeight: barGroupHeight plus the height of the outerPadding. This distance can be used
+     *                                               to translate scales below the bars.
+     *                                 }
+     */
     horizontalBarChartDimensions: function(numBars) {
       var DEFAULT_HEIGHT = 24, // the default bar height
           MIN_PADDING = 20, // the minimum padding size
@@ -355,11 +395,28 @@ namespace('sszvis.fn', function(module) {
       });
     },
 
+    /**
+     * fn.scaleExtent
+     *
+     * Used to determine the extent of an array. Mimics a function found in d3 source code.
+     *
+     * @param  {array} domain     an array, sorted in either ascending or descending order
+     * @return {array}            the extent of the array, with the smaller term first.
+     */
     scaleExtent: function(domain) { // borrowed from d3 source - svg.axis
       var start = domain[0], stop = domain[domain.length - 1];
       return start < stop ? [ start, stop ] : [ stop, start ];
     },
 
+    /**
+     * f.scaleRange
+     *
+     * Used to determine the extent of a scale's range. Mimics a function found in d3 source code.
+     *
+     * @param  {array} scale    The scale to be measured
+     * @return {array}          The extent of the scale's range. Useful for determining how far
+     *                          a scale stretches in its output dimension.
+     */
     scaleRange: function(scale) { // borrowed from d3 source - svg.axis
       return scale.rangeExtent ? scale.rangeExtent() : sszvis.fn.scaleExtent(scale.range());
     },
@@ -392,10 +449,44 @@ namespace('sszvis.fn', function(module) {
       }, []);
     },
 
+    /**
+     * fn.stringEqual
+     *
+     * Determines whether two values are equal when converted to strings. Useful for comparing
+     * date objects, because two different date objects are not considered equal, even if they
+     * represent the same date.
+     *
+     * @param  {any} a        the first value
+     * @param  {any} b        the second value
+     * @return {boolean}      Whether the provided values are equal when converted to strings.
+     */
     stringEqual: function(a, b) {
       return a.toString() === b.toString();
     },
 
+    /**
+     * fn.stackedAreaMultipelsLayout
+     *
+     * This function is used to compute layout parameters for the area multiples chart.
+     *
+     * @param  {number} height      The available height of the chart
+     * @param  {number} num         The number of individual stacks to display
+     * @param  {number} pct         the planned-for ratio between the space allotted to each area and the amount of space + area.
+     *                              This value is used to compute the baseline positions for the areas, and how much vertical space to leave
+     *                              between the areas.
+     *
+     * @return {object}             An object containing configuration properties for use in laying out the stacked area multiples.
+     *                              {
+     *                                range:          This is an array of baseline positions, counting from the top of the stack downwards.
+     *                                                It should be used to configure a d3.scale.ordinal(). The values passed into the ordinal
+     *                                                scale will be given a y-value which descends from the top of the stack, so that the resulting
+     *                                                scale will match the organization scheme of sszvis.stacked.area. Use the ordinal scale to
+     *                                                configure the sszvis.stacked.areaMultiples component.
+     *                                bandHeight:     The height of each multiples band. This can be used to configure the within-area y-scale.
+     *                                                This height represents the height of the y-axis of the individual area multiple.
+     *                                padHeight:      This is the amount of vertical padding between each area multiple.
+     *                              }
+     */
     stackedAreaMultiplesLayout: function(height, num, pct) {
       pct || (pct = 0.1);
       var step = height / (num - pct),
@@ -413,10 +504,40 @@ namespace('sszvis.fn', function(module) {
       };
     },
 
+    /**
+     * fn.translateString
+     *
+     * Pass an x and a y component, and this returns a translate string, which can be set as the 'transform' property of
+     * an svg element.
+     *
+     * @param  {number} x     The x-component of the transform
+     * @param  {number} y     The y-component of the transform
+     * @return {string}       The translate string
+     */
     translateString: function(x, y) {
       return 'translate(' + x + ',' + y + ')';
     },
 
+    /**
+     * fn.verticalBarDimension
+     *
+     * Generates a dimension configuration object to be used for laying out the vertical bar chart.
+     *
+     * @param  {number} width         the total width available to the horizontal bar chart. The computed chart layout is not guaranteed
+     *                                to fit inside this width.
+     * @param  {number} numBars       The number of bars in the bar chart.
+     * @return {object}               An object containing configuration properties for use in laying out the vertical bar chart.
+     *                                {
+     *                                  barWidth:             the width of each bar in the bar chart
+     *                                  padWidth:             the width of the padding between the bars in the bar chart
+     *                                  padRatio:             the ratio between the padding and the step (barWidth + padding). This can be passed
+     *                                                        as the second parameter to d3.scale.ordinal().rangeBands().
+     *                                  outerRatio:           the outer ratio between the outer padding and the step. This can be passed as the
+     *                                                        third parameter to d3.scale.ordinal().rangeBands().
+     *                                  barGroupWidth:        the width of all the bars plus all the padding between the bars.
+     *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
+     *                                }
+     */
     verticalBarChartDimensions: function(width, numBars) {
       var MAX_BAR_WIDTH = 48, // the maximum width of a bar
           MIN_PADDING = 2, // the minimum padding value
