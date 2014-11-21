@@ -137,6 +137,7 @@ namespace('sszvis.format', function(module) {
 
   function removeTrailingZeroes(num) {
     return String(num).replace(/([0-9]+)(\.)([0-9]*)0+$/, function(all, nat, dot, dec) {
+      if (parseInt(dec) === 0) dec = '';
       return dec.length > 0 ? nat + dot + dec : nat;
     });
   }
