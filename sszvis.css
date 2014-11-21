@@ -59,11 +59,15 @@
 
 /* Modifiers */
 
-.sszvis-axis--top path {
+.sszvis-axis.sszvis-axis--top path {
   display: none;
 }
 
-.sszvis-axis--vertical path {
+.sszvis-axis.sszvis-axis--vertical .tick text.active {
+  font-weight: normal;
+}
+
+.sszvis-axis.sszvis-axis--vertical path {
   display: none;
 }
 
