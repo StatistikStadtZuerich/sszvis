@@ -26,6 +26,8 @@
   /* Shortcuts
   ----------------------------------------------- */
   var vAcc = sszvis.fn.prop('value');
+  var nameAcc = sszvis.fn.prop('name');
+  var mDatumAcc = sszvis.fn.prop('datum');
 
 
   /* Application state
@@ -109,9 +111,7 @@
       .type('zurich-wahlkreise')
       .keyName('name')
       .highlight(state.selection)
-      .highlightStroke(function(d) {
-        return sszvis.color.muchDarker(colorScale(vAcc(d)));
-      })
+      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
@@ -122,22 +122,16 @@
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
     var tooltipHeader = sszvis.component.modularText.html()
-      .bold(function(d) {
-        if (!d) return;
-        return sszvis.format.percent(vAcc(d.datum));
-      });
+      .bold(sszvis.fn.compose(sszvis.format.percent, vAcc, mDatumAcc));
+
+    var tooltipBody = sszvis.component.modularText.html()
+      .plain('Wahlkreis ').plain(sszvis.fn.compose(nameAcc, mDatumAcc));
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
-      .body(function(d) {
-        if (!d) return;
-        return 'Wahlkreis ' + d.datum.name;
-      })
-      .visible(function(d) {
-        if (!d) return;
-        return state.selection.indexOf(d.datum) >= 0;
-      });
+      .body(tooltipBody)
+      .visible(isSelected);
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
@@ -155,6 +149,10 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
       .call(legend);
+  }
+
+  function isSelected(d) {
+    return state.selection.indexOf(d.datum) >= 0;
   }
 
 }(d3, topojson, sszvis));

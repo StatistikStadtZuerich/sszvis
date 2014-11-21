@@ -31,6 +31,8 @@
   var vAcc = sszvis.fn.prop('value');
   var yearAcc = sszvis.fn.prop('year');
   var geoIdAcc = sszvis.fn.prop('geoId');
+  var nameAcc = sszvis.fn.prop('name');
+  var mDatumAcc = sszvis.fn.prop('datum');
 
 
   /* Application state
@@ -320,20 +322,18 @@
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
     var tooltipHeader = sszvis.component.modularText.html()
-      .bold(function(d){ return d.datum.name; });
+      .bold(sszvis.fn.compose(nameAcc, mDatumAcc));
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(function(d) {
         return [
-          ['Jahr', sszvis.format.year(yearAcc(d.datum))],
-          ['Einwohner', sszvis.format.number(vAcc(d.datum))]
+          ['Jahr', sszvis.format.year(yearAcc(mDatumAcc(d)))],
+          ['Einwohner', sszvis.format.number(vAcc(mDatumAcc(d)))]
         ];
       })
-      .visible(function(d) {
-        return state.highlightEntity === d.datum;
-      });
+      .visible(entityIsSelected);
 
     var legend = sszvis.legend.linearColorScale()
       .scale(fillScale)
@@ -419,6 +419,10 @@
 
   function tickIsSelected(d) {
     return sszvis.fn.stringEqual(state.currentYear, d);
+  }
+
+  function entityIsSelected(d) {
+    return state.highlightEntity === mDatumAcc(d);
   }
 
 

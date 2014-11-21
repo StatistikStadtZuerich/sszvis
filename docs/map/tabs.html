@@ -29,6 +29,9 @@
   ----------------------------------------------- */
   var vAcc = sszvis.fn.prop('value');
   var yAcc = sszvis.fn.prop('year');
+  var nameAcc = sszvis.fn.prop('name');
+  var qnameAcc = sszvis.fn.prop('quartername');
+  var mDatumAcc = sszvis.fn.prop('datum');
 
 
   /* Application state
@@ -140,9 +143,7 @@
       .type('zurich-statistischeQuartiere')
       .keyName('quarternum')
       .highlight(state.selection)
-      .highlightStroke(function(d) {
-        return sszvis.color.muchDarker(colorScale(vAcc(d)));
-      })
+      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .defined(function(d) {
@@ -158,20 +159,15 @@
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
     var tooltipHeader = sszvis.component.modularText.html()
-      .bold(function(d) {
-        var v = vAcc(d.datum);
+      .bold(sszvis.fn.compose(function(v) {
         return isNaN(v) ? '??' : sszvis.format.percent(v);
-      });
+      }, vAcc, mDatumAcc));
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
-      .body(function(d) {
-        return d.datum.quartername;
-      })
-      .visible(function(d) {
-        return state.selection.indexOf(d.datum) >= 0;
-      });
+      .body(sszvis.fn.compose(qnameAcc, mDatumAcc))
+      .visible(isSelected);
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
@@ -194,6 +190,10 @@
       .style('left', ((bounds.width - controlWidth) / 2) + 'px')
       .style('top', (22) + 'px')
       .call(control);
+  }
+
+  function isSelected(d) {
+    return state.selection.indexOf(d.datum) >= 0;
   }
 
 }(d3, topojson, sszvis));
