@@ -57,13 +57,13 @@ In this example, twelve distinct categories make up each stack, and the total fo
 
 ```project
 {
-    "name": "stacked-horizontal-bar-chart-basic",
+    "name": "bar-chart-horizontal-stacked-basic",
     "files": {
         "index.html": {
-            "source": "docs/stacked-horizontal-bar-chart/basic.html",
+            "source": "docs/bar-chart-horizontal-stacked/basic.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/stacked-horizontal-bar-chart/data/SHB_basic_percent.csv",
+        "data.csv": "docs/bar-chart-horizontal-stacked/data/SHB_basic_percent.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "d3.js": "vendor/d3/d3.min.js"
