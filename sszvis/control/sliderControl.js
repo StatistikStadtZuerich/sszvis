@@ -148,6 +148,7 @@ namespace('sszvis.control.sliderControl', function(module) {
         var sliderInteraction = sszvis.behavior.click()
           .xScale(props.scale)
           .yScale(d3.scale.linear().range([0, handleHeight]))
+          .draggable(true)
           .on('click', props.onchange)
           .on('down', props.onchange)
           .on('drag', props.onchange);

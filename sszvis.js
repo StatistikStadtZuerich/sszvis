@@ -2838,8 +2838,10 @@ namespace('sszvis.behavior.click', function(module) {
     var event = d3.dispatch('down', 'up', 'click', 'drag');
 
     var clickComponent = d3.component()
+      .prop('debug')
       .prop('xScale').xScale(d3.scale.linear())
       .prop('yScale').yScale(d3.scale.linear())
+      .prop('draggable')
       .prop('padding', function(p) {
         var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
         for (var prop in p) { defaults[prop] = p[prop]; }
@@ -2861,7 +2863,12 @@ namespace('sszvis.behavior.click', function(module) {
 
         layer.enter()
           .append('rect')
-          .attr('data-sszvis-behavior-click', '');
+          .attr('data-sszvis-behavior-click', '')
+          .attr('class', 'sszvis-interactive');
+
+        if (props.draggable) {
+          layer.classed('sszvis-interactive--draggable', true);
+        }
 
         // defined in this scope in order to have access to props
         function bindDragEvents(targetEl) {
@@ -2916,6 +2923,10 @@ namespace('sszvis.behavior.click', function(module) {
             var invXY = invertXY(d3.mouse(this), props.xScale, props.yScale);
             event.click(invXY[0], invXY[1]);
           });
+
+        if (props.debug) {
+          layer.attr('fill', 'rgba(255,0,0,0.2)');
+        }
       });
 
     d3.rebind(clickComponent, event, 'on');
@@ -3210,6 +3221,7 @@ namespace('sszvis.control.sliderControl', function(module) {
         var sliderInteraction = sszvis.behavior.click()
           .xScale(props.scale)
           .yScale(d3.scale.linear().range([0, handleHeight]))
+          .draggable(true)
           .on('click', props.onchange)
           .on('down', props.onchange)
           .on('drag', props.onchange);
