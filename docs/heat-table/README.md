@@ -1,15 +1,22 @@
 # Heat Table
 
-## Heat Table
+> The heat table can be used to show off a matrix of values. Use it to display how a single variable varies across all the combinations of two categorical variables.
 
-### Datenformat
+## No special component
 
-Minimum three dimensions
+The heat table does not have a special component. Instead, it is constructed using the sszvis bar component by setting the width and height equal to each other, and with a creative use of the *x*- and *y*-position functions. Both *x*- and *y*-scales are ordinal scales which use the rangeBands function to calculate the output range.
+
+### Data structure
+
+This component requies a flat array of objects, and each object is turned into one square in the heat table.
+
+#### Minimum three dimensions
+
 * x-axis dimension
 * y-axis dimension
 * value (color) dimension
 
-### Konfiguration
+### Configuration
 
 The following configuration options are available:
 * Interaction - tooltips, highlighting, etc.
@@ -20,7 +27,7 @@ The following configuration options are available:
 
 ### Examples
 
-### Kreise
+### Kreise - With missing values
 
 ```project
 {
