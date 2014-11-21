@@ -174,7 +174,7 @@
         var v = cAcc(d);
         return [
           ['Jahre alt', yAcc(d)],
-          ['Einwohner', isNaN(v) ? '???' : v]
+          ['Einwohner', isNaN(v) ? '–' : sszvis.format.number(v)]
         ];
       })
       .visible(isSelected);

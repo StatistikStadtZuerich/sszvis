@@ -160,7 +160,7 @@
     // about accesing data properties of map entities.
     var tooltipHeader = sszvis.component.modularText.html()
       .bold(sszvis.fn.compose(function(v) {
-        return isNaN(v) ? '??' : sszvis.format.percent(v);
+        return isNaN(v) ? 'keine Daten' : sszvis.format.percent(v);
       }, vAcc, mDatumAcc));
 
     var tooltip = sszvis.component.tooltip()
