@@ -77,7 +77,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 656, top: 80, bottom: 25 });
+    var bounds = sszvis.bounds({ height: 616, top: 80, bottom: 25 });
     var chartDimensions = sszvis.fn.horizontalBarChartDimensions(bounds.innerHeight, state.categories.length);
 
 
@@ -136,7 +136,7 @@
     // Rendering
 
     chartLayer.selectGroup('underAxis')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.fn.translateString(0, chartDimensions.totalHeight))
       .style('visibility', state.tickType === 'Helles Gitter' ? 'hidden' : '')
       .call(xAxis);
 
@@ -146,7 +146,7 @@
     // this duplication of the axis layer is for demonstration purposes only!
     // the white axis ticks should be above the bars, and the dark one below them
     chartLayer.selectGroup('overAxis')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.fn.translateString(0, chartDimensions.totalHeight))
       .style('visibility', state.tickType === 'Helles Gitter' ? '' : 'hidden')
       .call(xAxis);
 

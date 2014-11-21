@@ -185,11 +185,11 @@ namespace('sszvis.fn', function(module) {
           MIN_PADDING = 20, // the minimum padding size
           barHeight = DEFAULT_HEIGHT, // the bar height
           numPads = numBars - 1,
-          padding = Math.max((height - (barHeight * numBars)) / numPads, MIN_PADDING), // the padding size
+          padding = MIN_PADDING,
           // compute other information
           padRatio = 1 - (barHeight / (barHeight + padding)),
           computedBarSpace = barHeight * numBars + padding * numPads,
-          outerRatio = (height - computedBarSpace) / 2 / (barHeight + padding);
+          outerRatio = 0; // no outer padding
 
       return {
         barHeight: barHeight,
@@ -198,7 +198,7 @@ namespace('sszvis.fn', function(module) {
         outerRatio: outerRatio,
         axisOffset: -(barHeight / 2) - 10,
         barGroupHeight: computedBarSpace,
-        totalHeight: height
+        totalHeight: computedBarSpace + (outerRatio * (barHeight + padding) * 2)
       };
     },
 
