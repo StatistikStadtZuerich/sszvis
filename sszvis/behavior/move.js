@@ -51,33 +51,62 @@ namespace('sszvis.behavior.move', function(module) {
           .on('mouseover', event.start)
           .on('mousedown', function() {
             var target = this;
+            var doc = d3.select(document);
             var win = d3.select(window);
-            var xy = d3.mouse(this);
-            var x = scaleInvert(props.xScale, xy[0]);
-            var y = scaleInvert(props.yScale, xy[1]);
 
-            target.__dragging__ = true;
-            event.drag(x, y);
+            var drag = function() {
+              var xy = d3.mouse(target);
+              var x = scaleInvert(props.xScale, xy[0]);
+              var y = scaleInvert(props.yScale, xy[1]);
+              d3.event.preventDefault();
+              event.drag(x, y);
+            };
 
-            win.on('mouseup.sszvis-behavior-move', function() {
+            var startDragging = function() {
+              target.__dragging__ = true;
+              drag();
+            };
+
+            var stopDragging = function() {
               target.__dragging__ = false;
               win.on('mouseup.sszvis-behavior-move', null);
+              win.on('mousemove.sszvis-behavior-move', null);
+              doc.on('mouseout.sszvis-behavior-move', null);
+            };
+
+            win.on('mousemove.sszvis-behavior-move', drag);
+            win.on('mouseup.sszvis-behavior-move', stopDragging);
+            doc.on('mouseout.sszvis-behavior-move', function() {
+              var from = d3.event.relatedTarget || d3.event.toElement;
+              if (!from || from.nodeName === 'HTML') {
+                stopDragging();
+              }
             });
+
+            startDragging();
           })
-          .on('mouseout', event.end)
           .on('mousemove', function() {
             var target = this;
             var xy = d3.mouse(this);
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
 
-            if (target.__dragging__) {
-              event.drag(x, y);
-            } else {
+            if (!target.__dragging__) {
               event.move(x, y);
             }
           })
-          .on('touchstart', event.start)
+          .on('mouseout', event.end)
+          .on('touchstart', function() {
+            d3.event.preventDefault();
+
+            var xy = sszvis.fn.first(d3.touches(this));
+            var x = scaleInvert(props.xScale, xy[0]);
+            var y = scaleInvert(props.yScale, xy[1]);
+
+            event.start.apply(this, Array.prototype.slice.call(arguments));
+            event.drag(x, y);
+            event.move(x, y);
+          })
           .on('touchmove', function() {
             var xy = sszvis.fn.first(d3.touches(this));
             var x = scaleInvert(props.xScale, xy[0]);
@@ -86,12 +115,7 @@ namespace('sszvis.behavior.move', function(module) {
             event.drag(x, y);
             event.move(x, y);
           })
-          .on('touchend', function() {
-            event.end.apply(this, arguments);
-
-            // calling preventDefault here prevents the browser from sending imitation mouse events
-            d3.event.preventDefault();
-          });
+          .on('touchend', event.end);
 
         if (props.debug) {
           layer.attr('fill', 'rgba(255,0,0,0.2)');
