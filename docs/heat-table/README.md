@@ -1,14 +1,14 @@
 # Heat Table
 
-> The heat table can be used to show off a matrix of values. Use it to display how a single variable varies across all the combinations of two categorical variables.
+> A heat table can be used to show off a matrix of values. Use it to display how a single variable varies across all the combinations of two categorical variables.
 
-## No special component
+## sszvis.component.bar
 
-The heat table does not have a special component. Instead, it is constructed using the sszvis bar component by setting the width and height equal to each other, and with a creative use of the *x*- and *y*-position functions. Both *x*- and *y*-scales are ordinal scales which use the rangeBands function to calculate the output range.
+The heat table does not have a special component. Instead, it is constructed using [sszvis.component.bar](/#/bar-chart-vertical) by setting the width and height equal to each other, and with the use of the *x*- and *y*-position functions. Both *x*- and *y*-scales are ordinal scales which use the rangeBands function to calculate the output range.
 
 ### Data structure
 
-This component requies a flat array of objects, and each object is turned into one square in the heat table.
+This component requires a flat array of objects, and each object is turned into one square in the heat table.
 
 #### Minimum three dimensions
 
@@ -18,16 +18,9 @@ This component requies a flat array of objects, and each object is turned into o
 
 ### Configuration
 
-The following configuration options are available:
-* Interaction - tooltips, highlighting, etc.
-* Color scale
-* x-axis
-* y-axis
-* dimensions of table squares (not necessarily squares)
+Heat tables are based on [sszvis.component.bar](/#/bar-chart-vertical) and thus have the same configuration options.
 
-### Examples
-
-### Kreise - With missing values
+### Chart
 
 ```project
 {
@@ -50,34 +43,11 @@ The following configuration options are available:
 }
 ```
 
-### Binned Color Scale - Linear
+## Irregularly Binned Color Scale
 
-For more on the different ways to construct binned color scales from a range of values, see: http://uxblog.idvsolutions.com/2011/10/telling-truth.html
+Binned color scales can be used to group data and make it easier to see similar areas. For more on the different ways to construct binned color scales from a range of values, see [Telling the Truth](http://uxblog.idvsolutions.com/2011/10/telling-truth.html).
 
-```project
-{
-    "name": "heat-table-binned-linear",
-    "files": {
-        "index.html": {
-            "source": "docs/heat-table/ht-binned-linear.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/heat-table/data/HT_binned_linear.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 516
-    }
-}
-```
-
-### Wer mit wem? - Irregularly Binned Color Scale Example
-
-Welches haben Paare zum Zeitpunkt ihres ersten Kindes.
+This example shows what age each partner in a partnership had when they had their first child.
 
 ```project
 {
@@ -96,6 +66,31 @@ Welches haben Paare zum Zeitpunkt ihres ersten Kindes.
     "size": {
         "width": 516,
         "height": 360
+    }
+}
+```
+
+## Regularly Binned Diverging Color Scale
+
+This example uses regularly spaced bins and shows positive/negative trends through a diverging color scale.
+
+```project
+{
+    "name": "heat-table-binned-linear",
+    "files": {
+        "index.html": {
+            "source": "docs/heat-table/ht-binned-linear.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/heat-table/data/HT_binned_linear.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 516
     }
 }
 ```
