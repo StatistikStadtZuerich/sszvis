@@ -3195,9 +3195,18 @@ namespace('sszvis.behavior.voronoi', function(module) {
 
 
 /**
- * Segmented Control for switching top-level filter values
+ * Segmented Control for switching top-level filter values. Use this control for changing between several
+ * options which affect the state of the chart. This component should be rendered into an html layer.
  *
  * @module sszvis/control/segmented
+ *
+ * @property {array} values         an array of values which are the options available in the control. Each one will become a button
+ * @property {any} current          the current value of the segmented control. Should be one of the options passed to .values()
+ * @property {number} width         The total width of the segmented control. Each option will have 1/3rd of this width. (default: 300px)
+ * @property {function} change      A callback/event handler function to call when the user clicks on a value.
+ *                                  Note that clicking on a value does not necessarily change any state unless this callback function does something.
+ *
+ * @return {d3.component}
  */
 namespace('sszvis.control.segmented', function(module) {
   'use strict';
@@ -3244,9 +3253,25 @@ namespace('sszvis.control.segmented', function(module) {
 
 
 /**
- * Slider control for use in filtering.
+ * Slider control for use in filtering. Works very much like an interactive axis.
+ * A d3 scale is its primary configuration, and it has a labeled handle which can be used to
+ * select values on that scale. Ticks created using an sszvis.axis show the user where
+ * data values lie.
  *
  * @module  sszvis/control/sliderControl
+ *
+ * @property {function} scale                 A scale function which this slider represents. The values in the scale's domain
+ *                                            are used as the possible values of the slider.
+ * @property {array} minorTicks               An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis
+ * @property {array} majorTicks               An array of ticks which become major (larger and labeled) ticks on the slider's axis
+ * @property {function} tickLabels            A function to use to format the major tick labels.
+ * @property {any} value                      The current value of the slider. Should be set whenever slider interaction causes the state to change.
+ * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
+ * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
+ *                                            Note that this component will not change its own state. The callback function must affect some state change
+ *                                            in order for this component's display to be updated.
+ *
+ * @returns {d3.component}
  */
 namespace('sszvis.control.sliderControl', function(module) {
   'use strict';

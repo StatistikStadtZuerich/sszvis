@@ -1,7 +1,23 @@
 /**
- * Slider control for use in filtering.
+ * Slider control for use in filtering. Works very much like an interactive axis.
+ * A d3 scale is its primary configuration, and it has a labeled handle which can be used to
+ * select values on that scale. Ticks created using an sszvis.axis show the user where
+ * data values lie.
  *
  * @module  sszvis/control/sliderControl
+ *
+ * @property {function} scale                 A scale function which this slider represents. The values in the scale's domain
+ *                                            are used as the possible values of the slider.
+ * @property {array} minorTicks               An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis
+ * @property {array} majorTicks               An array of ticks which become major (larger and labeled) ticks on the slider's axis
+ * @property {function} tickLabels            A function to use to format the major tick labels.
+ * @property {any} value                      The current value of the slider. Should be set whenever slider interaction causes the state to change.
+ * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
+ * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
+ *                                            Note that this component will not change its own state. The callback function must affect some state change
+ *                                            in order for this component's display to be updated.
+ *
+ * @returns {d3.component}
  */
 namespace('sszvis.control.sliderControl', function(module) {
   'use strict';

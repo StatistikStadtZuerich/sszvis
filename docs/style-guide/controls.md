@@ -1,5 +1,101 @@
 # Controls
 
+Controls can be used to provide a graphical tool for interacting with a chart's state settings.
+
 ## Segmented Control
 
+### sszvis.control.segmented
+
+#### `segmented.values`
+
+an array of values which are the options available in the control. Each one will become a button
+
+#### `segmented.current`
+
+the current value of the segmented control. Should be one of the options passed to .values()
+
+#### `segmented.[width]`
+
+The total width of the segmented control. Each option will have 1/3rd of this width. (default: 300px)
+
+#### `segmented.change`
+
+A callback/event handler function to call when the user clicks on a value. Note that clicking on a value does not necessarily change any state unless this callback function does something.
+
+### Example
+
+```project
+{
+    "name": "bar-chart-horizontal-interactive",
+    "files": {
+        "index.html": {
+            "source": "docs/bar-chart-horizontal/interactive.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 637
+    }
+}
+```
+
 ## Slider Control
+
+### sszvis.control.sliderControl
+
+#### `sliderControl.scale`
+
+A scale function which this slider represents. The values in the scale's domain are used as the possible values of the slider.
+
+#### `sliderControl.minorTicks`
+
+An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis.
+
+#### `sliderControl.majorTicks`
+
+An array of ticks which become major (larger and labeled) ticks on the slider's axis.
+
+#### `sliderControl.tickLabels`
+
+A function to use to format the major tick labels.
+
+#### `sliderControl.value`
+
+The display value of the slider.
+
+#### `sliderControl.label`
+
+A string or function for the handle label. The datum associated with it is the current slider value.
+
+#### `sliderControl.onchange`
+
+A callback function called whenever user interaction attempts to change the slider value. Note that this component will not change its own state. The callback function must affect some state change in order for this component's display to be updated.
+
+### Example
+
+```project
+{
+    "name": "scatterplot-many-years",
+    "files": {
+        "index.html": {
+            "source": "docs/scatterplot/years-fake.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/scatterplot/data/SS_years_fake.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 535
+    }
+}
+```
