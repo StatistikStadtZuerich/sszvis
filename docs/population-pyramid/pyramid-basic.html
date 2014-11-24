@@ -53,48 +53,81 @@
       state.groups = sszvis.fn.set(state.data, gAcc);
 
       var grouper = sszvis.cascade()
-        .objectBy(gAcc);
+        .objectBy(gAcc)
+        .sort(function(a, b) {
+          // Sort the groups in order of ascending age
+          return d3.ascending(aAcc(a), aAcc(b));
+        });
 
       var groupedData = grouper.apply(state.data);
 
+      // This example bins the data into five-year age ranges.
+      // It uses d3.median to compute the value of a bin.
+
       // compute bins
       var binnedData = [],
+          // The number of data points to include in each bin
           binStep = 5,
+          // A list of age groups in the dataset, used for the y-axis scale
           ages = [],
+          // A lookup index to aid in creating a smooth tooltip experience. The
+          // lookup table allows us to use a continuous range of mouse input and map each
+          // value to a categorical age range.
           ageLookupIndex = [];
       for (var group in groupedData) {
+        // perform the binning on each group separately
         var sourceArr = groupedData[group];
+        // loop through the elements in the group five at a time
         for (var i = 0, l = sourceArr.length; i < l; i += binStep) {
+          // create a name for the age range
           var ageListing = aAcc(sourceArr[i]) + '–' + aAcc(sourceArr[i + binStep - 1]);
+          // add the name to the list of ages
           ages.push(ageListing);
+          // add the binned datum (the structure mimics that of the un-binned data)
           binnedData.push({
             age: ageListing,
             gender: group,
+            // here, calculate the median value of the slice of data
             value: d3.median(sourceArr.slice(i, i + binStep), vAcc)
           });
           for (var indexIter = i, lastIndex = i + binStep; indexIter < lastIndex; ++indexIter) {
+            // add the age listing (e.g. "10 - 14") to the ageLookupIndex
+            // note that this overwrites whatever was already here. If one group is missing entries
+            // for certain ages which the other contains, this pattern could create age lookup problems
             ageLookupIndex[aAcc(sourceArr[indexIter])] = ageListing;
           }
         }
       }
 
+      // save data on state which will be used in later steps
+      // binned data, ungrouped
       state.binnedData = binnedData;
+      // group the bin data. This data set is bound to the chart
       state.populations = grouper.apply(binnedData);
+      // save the age lookup index
       state.ageLookupIndex = ageLookupIndex;
 
+      // use the unique age listings as the basis for the ordinal y-scale
       state.ages = sszvis.fn.set(ages);
+      // get the age extent (these ages are numbers, not strings) from the data
+      // this is used to configure the mouseover behavior
       state.ageExtent = d3.extent(state.data, aAcc);
+      // get the maximum binned value, for configuring the horizontal scale
       state.maxValue = d3.max(state.binnedData, vAcc);
 
       render(state);
     },
 
     selectBar: function(x, age) {
+      // use the age lookup index to figure out which age range is closest
+      // to the mouse
       var nearestAgeRange = state.ageLookupIndex[Math.floor(age)];
+      // find the binned data rows with that age range
       var rows = state.binnedData.filter(function(v) {
         return aAcc(v) === nearestAgeRange;
       });
 
+      // set the data for the tooltip
       state.selectedAge = {
         age: nearestAgeRange,
         rows: rows
@@ -232,6 +265,9 @@
       // Interaction
       var interactionLayer = sszvis.behavior.move()
         .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
+        // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
+        // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
+        // between the bars, because the ordinal scale has no value there, while a linear scale does.
         .yScale(d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
         .on('move', actions.selectBar)
         .on('end', actions.deselectBar);
