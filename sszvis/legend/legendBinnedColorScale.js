@@ -62,12 +62,12 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
           })
           .attr('fill', props.scale);
 
-        var segments = selection.selectAll('rect.sszvis-legend__mark')
+        var segments = selection.selectAll('rect.sszvis-legend__crispmark')
           .data(rectData);
 
         segments.enter()
           .append('rect')
-          .classed('sszvis-legend__mark', true);
+          .classed('sszvis-legend__crispmark', true);
 
         segments.exit().remove();
 
@@ -80,12 +80,12 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
 
         var lineData = rectData.slice(0, -1);
 
-        var lines = selection.selectAll('line.sszvis-legend__mark')
+        var lines = selection.selectAll('line.sszvis-legend__crispmark')
           .data(lineData);
 
         lines.enter()
           .append('line')
-          .classed('sszvis-legend__mark', true);
+          .classed('sszvis-legend__crispmark', true);
 
         lines.exit().remove();
 
