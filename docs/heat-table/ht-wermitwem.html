@@ -166,7 +166,12 @@
       .title('Altersgruppe Männer')
       .titleAnchor('middle')
       .titleCenter(true)
-      .dyTitle(-30);
+      .dyTitle(-30)
+      .highlightTick(function(tickValue) {
+        return state.selection.some(function(d) {
+          return xAcc(d) === tickValue;
+        });
+      });
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
@@ -175,7 +180,12 @@
       .titleVertical(true)
       .titleAnchor('middle')
       .titleCenter(true)
-      .dxTitle(-45);
+      .dxTitle(-45)
+      .highlightTick(function(tickValue) {
+        return state.selection.some(function(d) {
+          return yAcc(d) === tickValue;
+        });
+      });
 
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)

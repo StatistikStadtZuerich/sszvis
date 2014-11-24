@@ -164,7 +164,12 @@
       .title('Group 1')
       .titleAnchor('middle')
       .titleCenter(true)
-      .dyTitle(-20);
+      .dyTitle(-20)
+      .highlightTick(function(tickValue) {
+        return state.selection.some(function(d) {
+          return xAcc(d) === tickValue;
+        });
+      });
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
@@ -173,7 +178,12 @@
       .titleVertical(true)
       .titleAnchor('middle')
       .titleCenter(true)
-      .dxTitle(-20);
+      .dxTitle(-20)
+      .highlightTick(function(tickValue) {
+        return state.selection.some(function(d) {
+          return yAcc(d) === tickValue;
+        });
+      });
 
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)

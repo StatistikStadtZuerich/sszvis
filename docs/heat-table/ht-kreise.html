@@ -153,7 +153,12 @@
       .title('Kreis')
       .titleAnchor('middle')
       .titleCenter(true)
-      .dyTitle(-40);
+      .dyTitle(-40)
+      .highlightTick(function(tickValue) {
+        return state.selection.some(function(d) {
+          return xAcc(d) === tickValue;
+        });
+      });
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
@@ -162,7 +167,12 @@
       .titleVertical(true)
       .titleAnchor('middle')
       .titleCenter(true)
-      .dxTitle(-40);
+      .dxTitle(-40)
+      .highlightTick(function(tickValue) {
+        return state.selection.some(function(d) {
+          return yAcc(d) === tickValue;
+        });
+      });
 
     var legendWidth = bounds.width / 2;
 
