@@ -323,12 +323,11 @@
  * @module sszvis/control/sliderControl
  */
 .sszvis-slidercontrol__backgroundgroup {
-  shape-rendering: crispEdges;
+
 }
 
 .sszvis-slidercontrol__handle {
   cursor: pointer;
-  shape-rendering: crispEdges;
 }
 
 .sszvis-slidercontrol--label {
