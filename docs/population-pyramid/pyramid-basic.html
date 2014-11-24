@@ -35,9 +35,11 @@
   ----------------------------------------------- */
   var state = {
     data: [],
-    ages: d3.range(0, 101), // [0 ... 100]
+    ages: [],
+    ageExtent: [],
     groups: [],
     maxValue: 0,
+    binnedData: [],
     populations: {},
     selectedAge: []
   };
@@ -49,22 +51,52 @@
     prepareState: function(data) {
       state.data = data;
       state.groups = sszvis.fn.set(state.data, gAcc);
-      state.maxValue = d3.max(state.data, vAcc);
-      state.populations = sszvis.cascade()
-        .objectBy(gAcc)
-        .apply(state.data);
+
+      var grouper = sszvis.cascade()
+        .objectBy(gAcc);
+
+      var groupedData = grouper.apply(state.data);
+
+      // compute bins
+      var binnedData = [],
+          binStep = 5,
+          ages = [],
+          ageLookupIndex = [];
+      for (var group in groupedData) {
+        var sourceArr = groupedData[group];
+        for (var i = 0, l = sourceArr.length; i < l; i += binStep) {
+          var ageListing = aAcc(sourceArr[i]) + ' – ' + aAcc(sourceArr[i + binStep - 1]);
+          ages.push(ageListing);
+          binnedData.push({
+            age: ageListing,
+            gender: group,
+            value: d3.median(sourceArr.slice(i, i + binStep), vAcc)
+          });
+          for (var indexIter = i, lastIndex = i + binStep; indexIter < lastIndex; ++indexIter) {
+            ageLookupIndex[aAcc(sourceArr[indexIter])] = ageListing;
+          }
+        }
+      }
+
+      state.binnedData = binnedData;
+      state.populations = grouper.apply(binnedData);
+      state.ageLookupIndex = ageLookupIndex;
+
+      state.ages = sszvis.fn.set(ages);
+      state.ageExtent = d3.extent(state.data, aAcc);
+      state.maxValue = d3.max(state.binnedData, vAcc);
 
       render(state);
     },
 
-    selectBar: function(x, y) {
-      var age = Math.floor(y);
-      var rows = state.data.filter(function(v) {
-        return aAcc(v) === age;
+    selectBar: function(x, age) {
+      var nearestAgeRange = state.ageLookupIndex[Math.floor(age)];
+      var rows = state.binnedData.filter(function(v) {
+        return aAcc(v) === nearestAgeRange;
       });
 
       state.selectedAge = {
-        age: age,
+        age: nearestAgeRange,
         rows: rows
       };
 
@@ -149,9 +181,6 @@
       var yAxis = sszvis.axis.y.ordinal()
         .scale(positionScale)
         .orient('right')
-        .tickFormat(function(d) {
-          return (d === 0) ? '' : sszvis.format.age(d);
-        })
         .ticks(5)
         .title('Alter in Jahren')
         .dyTitle(-18);
@@ -169,7 +198,7 @@
           var rows = state.selectedAge.rows.map(function(r) {
             return [gAcc(r), sszvis.format.number(vAcc(r))];
           });
-          return rows.concat([['Alter', sszvis.format.age(state.selectedAge.age)]]);
+          return rows.concat([['Alter', state.selectedAge.age]]);
         })
         .orientation(function(d) {
           return isLeft(d.datum) ? 'right' : 'left';
@@ -205,7 +234,7 @@
       // Interaction
       var interactionLayer = sszvis.behavior.move()
         .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
-        .yScale(d3.scale.linear().domain(d3.extent(state.ages)).range([bounds.innerHeight, 0]))
+        .yScale(d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
         .on('move', actions.selectBar)
         .on('end', actions.deselectBar);
 
