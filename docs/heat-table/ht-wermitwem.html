@@ -121,7 +121,11 @@
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
     var yValue = sszvis.fn.compose(yScale, yAcc);
-    var cValue = sszvis.fn.compose(colorScale, cAcc);
+
+    function cValue(d) {
+      var v = cAcc(d);
+      return v === 0 ? 'white' : colorScale(v);
+    }
 
 
     // Layers
