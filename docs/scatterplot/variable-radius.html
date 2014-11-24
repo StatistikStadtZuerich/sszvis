@@ -50,7 +50,7 @@
       // for the voronoi component to work, the data must first be filtered such that no two vertices
       // fall at exactly the same point.
       state.voronoiFiltered = sszvis.fn.derivedSet(state.data, function(d) {
-        return xAcc(d) + '___' + yAcc(d);
+        return xAcc(d) + '__' + yAcc(d);
       });
 
       state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
@@ -158,14 +158,10 @@
       .showZeroY(true)
       .contour('rect');
 
-      // NOTE I tried to play with the values of this annotation but don't quite get it. // NOTE would it make sense to create an 'annotation' namespace so we would have
-      // sszvis.component.annotation.rectangle
-      // sszvis.component.annotation.circle
-      // sszvis.component.annotation.line
     var annotation = sszvis.annotation.rectangle()
-      .x(xScale(8)) // x-position is bounds.innerWidth * t, where t = 0.55
+      .x(xScale(8))
       .y(0)
-      .width(bounds.innerWidth - xScale(15)) // width is bounds.innerWidth * (1 - t)
+      .width(bounds.innerWidth - xScale(15))
       .height(bounds.innerHeight);
 
     var radiusLegend = sszvis.legend.radius()
@@ -174,7 +170,7 @@
       .stroke('#FFFFFF')
       .labelFormat(function(d) {
         return Math.round(d * 100) / 100;
-      })
+      });
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
