@@ -150,7 +150,7 @@
       .title('Anzahl')
       .dyTitle(-20);
 
-    var colorLegend = sszvis.legend.color()
+    var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .rows(state.categories.length / 2)
       .columnWidth(bounds.innerWidth / 2)

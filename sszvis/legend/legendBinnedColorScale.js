@@ -1,3 +1,9 @@
+/**
+ * Binned Color Scale Legend
+ *
+ * @module sszvis/legend/binnedColorScale
+ */
+
 namespace('sszvis.legend.binnedColorScale', function(module) {
 
   module.exports = function() {

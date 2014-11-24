@@ -1,9 +1,9 @@
 /**
- * Legend component
+ * Ordinal Color Scale Legend
  *
  * This component is used for creating a legend for a categorical color scale.
  *
- * @module sszvis/legend
+ * @module sszvis/legend/ordinalColorScale
  *
  * @property {d3.scale.ordinal()} scale         An ordinal scale which will be transformed into the legend.
  * @property {Number} rowHeight                 The height of the rows of the legend.
@@ -87,9 +87,7 @@
  * |fooBaz    barFoo |
  */
 
- // NOTE why is there a namespace sszvis.legend.color AND sszvis.legend.ColorRange
- //and not just sszvis.legend returning an object containing color and colorRange?
-namespace('sszvis.legend.color', function(module) {
+namespace('sszvis.legend.ordinalColorScale', function(module) {
 
   module.exports = function() {
     return d3.component()

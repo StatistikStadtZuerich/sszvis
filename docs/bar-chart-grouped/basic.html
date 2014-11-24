@@ -130,7 +130,7 @@
         return d === 0 ? null : sszvis.format.percent(d);
       });
 
-    var colorLegend = sszvis.legend.color()
+    var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .horizontalFloat(true)
       .floatWidth(bounds.innerWidth);

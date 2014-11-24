@@ -1,14 +1,8 @@
 /**
- * Legend component
+ * Linear Color Scale Legend
  *
- * @module sszvis/legend
+ * @module sszvis/legend/linearColorScale
  */
- // NOTE Why are legent.colorRange and legen.color
- //in two different namespaces?
- //Why not create just one namespace 'sszvis.legend'
- //and return an object with 'color' and 'colorRange'?
-
- // NOTE Should this not be in the components folder? As it creates a component.
 
 namespace('sszvis.legend.linearColorScale', function(module) {
 

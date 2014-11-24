@@ -113,7 +113,7 @@
       .angle(sszvis.fn.compose(aScale, vAcc))
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var colorLegend = sszvis.legend.color()
+    var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .rows(state.categories.length)
       .orientation('vertical');
