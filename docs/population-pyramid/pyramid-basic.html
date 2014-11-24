@@ -162,126 +162,126 @@
     });
 
 
-    /* Render
-    ----------------------------------------------- */
-    function render(state) {
-      var bounds = sszvis.bounds({ top: 25, bottom: 86 });
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ top: 25, bottom: 86 });
 
 
-      // Scales
+    // Scales
 
-      var lengthScale = d3.scale.linear()
-        .domain([0, state.maxValue])
-        .range([0, bounds.innerWidth / 2]);
+    var lengthScale = d3.scale.linear()
+      .domain([0, state.maxValue])
+      .range([0, bounds.innerWidth / 2]);
 
-      var positionScale = d3.scale.ordinal()
-        .domain(state.ages)
-        .rangeBands([bounds.innerHeight, 0], 0.1, 0);
+    var positionScale = d3.scale.ordinal()
+      .domain(state.ages)
+      .rangeBands([bounds.innerHeight, 0], 0.1, 0);
 
-      var colorScale = sszvis.color.qual6()
-        .domain(state.groups);
+    var colorScale = sszvis.color.qual6()
+      .domain(state.groups);
 
 
-      // Layers
+    // Layers
 
-      var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+      title: TITLE,
+      description: DESCRIPTION
+    })
+      .datum(state.populations);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selectedAge);
+
+
+    // Components
+
+    var pyramid = sszvis.component.pyramid()
+      .barFill(sszvis.fn.compose(colorScale, gAcc))
+      .barPosition(sszvis.fn.compose(positionScale, aAcc))
+      .barHeight(positionScale.rangeBand())
+      .barWidth(sszvis.fn.compose(lengthScale, vAcc))
+      .leftAccessor(womenAcc)
+      .rightAccessor(menAcc);
+
+    var xAxis = sszvis.axis.x.pyramid()
+      .scale(lengthScale)
+      .orient('bottom')
+      .title('Anzahl Frauen und Männer')
+      .titleAnchor('middle')
+      .titleCenter(true);
+
+    var yAxis = sszvis.axis.y.ordinal()
+      .scale(positionScale)
+      .orient('right')
+      .ticks(5)
+      .title('Alter in Jahren')
+      .dyTitle(-18);
+
+    var colorLegend = sszvis.legend.ordinalColorScale()
+      .scale(colorScale)
+      .horizontalFloat(true);
+
+    var tooltip = sszvis.component.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) {
+        return aAcc(d) + '-jährige';
       })
-        .datum(state.populations);
-
-      var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
-        .datum(state.selectedAge);
-
-
-      // Components
-
-      var pyramid = sszvis.component.pyramid()
-        .barFill(sszvis.fn.compose(colorScale, gAcc))
-        .barPosition(sszvis.fn.compose(positionScale, aAcc))
-        .barHeight(positionScale.rangeBand())
-        .barWidth(sszvis.fn.compose(lengthScale, vAcc))
-        .leftAccessor(womenAcc)
-        .rightAccessor(menAcc);
-
-      var xAxis = sszvis.axis.x.pyramid()
-        .scale(lengthScale)
-        .orient('bottom')
-        .title('Anzahl Frauen und Männer')
-        .titleAnchor('middle')
-        .titleCenter(true);
-
-      var yAxis = sszvis.axis.y.ordinal()
-        .scale(positionScale)
-        .orient('right')
-        .ticks(5)
-        .title('Alter in Jahren')
-        .dyTitle(-18);
-
-      var colorLegend = sszvis.legend.ordinalColorScale()
-        .scale(colorScale)
-        .horizontalFloat(true);
-
-      var tooltip = sszvis.component.tooltip()
-        .renderInto(tooltipLayer)
-        .header(function(d) {
-          return aAcc(d) + '-jährige';
-        })
-        .body(function() {
-          var rows = state.selectedAge.rows.map(function(r) {
-            return [gAcc(r), sszvis.format.number(vAcc(r))];
-          });
-          return rows.concat([['Alter', state.selectedAge.age]]);
-        })
-        .orientation('left')
-        .visible(function(d) {
-          return state.selectedAge.age === aAcc(d) && gAcc(d) === 'Männer';
+      .body(function() {
+        var rows = state.selectedAge.rows.map(function(r) {
+          return [gAcc(r), sszvis.format.number(vAcc(r))];
         });
+        return rows.concat([['Alter', state.selectedAge.age]]);
+      })
+      .orientation('left')
+      .visible(function(d) {
+        return state.selectedAge.age === aAcc(d) && gAcc(d) === 'Männer';
+      });
 
 
-      // Rendering
+    // Rendering
 
-      chartLayer.selectGroup('populationPyramid')
-        .datum(state.populations)
-        .attr('transform', sszvis.fn.translateString(bounds.innerWidth / 2, 0))
-        .call(pyramid);
+    chartLayer.selectGroup('populationPyramid')
+      .datum(state.populations)
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth / 2, 0))
+      .call(pyramid);
 
-      chartLayer.selectAll('[data-tooltip-anchor]')
-        .call(tooltip);
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
-      chartLayer.selectGroup('xAxis')
-        .attr('transform', sszvis.fn.translateString(bounds.innerWidth / 2, bounds.innerHeight))
-        .call(xAxis);
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.fn.translateString(bounds.innerWidth / 2, bounds.innerHeight))
+      .call(xAxis);
 
-      chartLayer.selectGroup('yAxis')
-        .attr('transform', sszvis.fn.translateString(0, 0))
-        .call(yAxis);
+    chartLayer.selectGroup('yAxis')
+      .attr('transform', sszvis.fn.translateString(0, 0))
+      .call(yAxis);
 
-      chartLayer.selectGroup('colorLegend')
-        .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
-        .call(colorLegend);
-
-
-      // Interaction
-      var interactionLayer = sszvis.behavior.move()
-        .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
-        // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
-        // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
-        // between the bars, because the ordinal scale has no value there, while a linear scale does.
-        .yScale(d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
-        .on('move', actions.selectBar)
-        .on('end', actions.deselectBar);
-
-      chartLayer.selectGroup('interactionLayer')
-        .call(interactionLayer);
-    }
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
+      .call(colorLegend);
 
 
-    /* Helper Functions
-    ----------------------------------------------- */
-    function isLeft(d) {
-      return gAcc(d) === 'Frauen';
-    }
+    // Interaction
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
+      // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
+      // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
+      // between the bars, because the ordinal scale has no value there, while a linear scale does.
+      .yScale(d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
+      .on('move', actions.selectBar)
+      .on('end', actions.deselectBar);
+
+    chartLayer.selectGroup('interactionLayer')
+      .call(interactionLayer);
+  }
+
+
+  /* Helper Functions
+  ----------------------------------------------- */
+  function isLeft(d) {
+    return gAcc(d) === 'Frauen';
+  }
 
 }(d3, sszvis));
 </script>

@@ -1,6 +1,8 @@
 # Population Pyramid
 
-> The population pyramid is used to show how a measurement varies across ages, or ranges of ages, within a population. The most common example is to show the number of people in the population for each age. In addition, population pyramids are mirrored, with a left and right side. The sides contrast differences across a binary variable, usually gender. More generally, the mirrored bar charts form could be used to display any contrast across a binary variable, with any type of variable mapped to the vertical dimension, but it is almost always used for population display, and it should be explicitly noted where that is not the case. As you will see from the examples, it is also possible to display bins computed from the population based on age range.
+> The population pyramid is used to show how a measurement varies across ages, or ranges of ages, within a population.
+
+The most common example is to show the number of people in the population for each age. In addition, population pyramids are mirrored, with a left and right side. The sides contrast differences across a binary variable, usually gender. More generally, the mirrored bar charts form could be used to display any contrast across a binary variable, with any type of variable mapped to the vertical dimension, but it is almost always used for population display, and it should be explicitly noted where that is not the case. As you will see from the examples, it is also possible to display bins computed from the population based on age range.
 
 ## sszvis.component.pyramid
 
@@ -36,11 +38,11 @@ Accessor function or constant for the color of a bar
 
 #### `pyramid.[leftRefAccessor]`
 
-Supply an accessor funtion for reference data for the left side. If this option is specified, the pyramid will show a reference line.
+Supply an accessor function for reference data for the left side. If this option is specified, the pyramid will show a reference line.
 
 #### `pyramid.[rightRefAccessor]`
 
-Supply an accessor funtion for reference data for the right side. If this option is specified, the pyramid will show a reference line.
+Supply an accessor function for reference data for the right side. If this option is specified, the pyramid will show a reference line.
 
 
 ### Chart
@@ -76,7 +78,7 @@ This component, like the standard pyramid component, expects an object with left
 
 The configuration options are the same as for the standard pyramid component, including the possibility of adding reference lines
 
-### Stacked pyramid example
+### Chart
 
 ```project
 {
@@ -99,7 +101,9 @@ The configuration options are the same as for the standard pyramid component, in
 }
 ```
 
-## Non-stacked pyramid with reference lines
+## Reference lines
+
+Reference lines can be shown to compare another set of data with the data displayed in the pyramid.
 
 ```project
 {
