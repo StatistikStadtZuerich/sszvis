@@ -143,6 +143,10 @@
   text-anchor: start;
 }
 
+.sszvis-legend__label--small {
+  font-size: 10px;
+}
+
 .sszvis-legend__axislabel {
   fill: #B8B8B8;
   font-family: Arial, sans-serif;

@@ -1,7 +1,18 @@
 /**
  * Binned Color Scale Legend
  *
+ * Use for displaying the values of discontinuous (binned) color scale's bins
+ *
  * @module sszvis/legend/binnedColorScale
+ *
+ * @param {function} scale              A scale to use to generate the color values
+ * @param {array} displayValues         An array of values which should be displayed. Usually these should be the bin edges
+ * @param {array} endpoints             The endpoints of the scale (note that these are not necessarily the first and last
+ *                                      bin edges). These will become labels at either end of the legend.
+ * @param {number} width                The pixel width of the legend. Default 200
+ * @param {function} labelFormat        A formatter function for the labels of the displayValues.
+ *
+ * @return {d3.component}
  */
 
 namespace('sszvis.legend.binnedColorScale', function(module) {

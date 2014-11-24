@@ -1,7 +1,18 @@
 /**
  * Linear Color Scale Legend
  *
+ * Use for displaying the values of a continuous linear color scale.
+ *
  * @module sszvis/legend/linearColorScale
+ *
+ * @property {function} scale                   The scale to use to generate the legend
+ * @property {array} displayValues              A list of specific values to display. If not specified, defaults to using scale.ticks
+ * @property {number} width                     The pixel width of the legend (default 200).
+ * @property {number} segments                  The number of segments to aim for. Note, this is only used if displayValues isn't specified,
+ *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default 8)
+ * @property {array} labelText                  Text or a text-returning function to use as the titles for the legend endpoints. If not supplied,
+ *                                              defaults to using the first and last tick values.
+ * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.format.number.
  */
 
 namespace('sszvis.legend.linearColorScale', function(module) {
@@ -13,7 +24,6 @@ namespace('sszvis.legend.linearColorScale', function(module) {
       .prop('width').width(200)
       .prop('segments').segments(8)
       .prop('labelText')
-      .prop('labelPadding').labelPadding(16)
       .prop('labelFormat').labelFormat(sszvis.fn.identity)
       .render(function() {
         var selection = d3.select(this);
@@ -72,10 +82,12 @@ namespace('sszvis.legend.linearColorScale', function(module) {
 
         labels.exit().remove();
 
+        var labelPadding = 16;
+
         labels
           .style('text-anchor', function(d, i) { return i === 0 ? 'end' : 'start'; })
           .attr('dy', '0.35em') // vertically-center
-          .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * props.labelPadding) + ', ' + (segHeight / 2) + ')'; })
+          .attr('transform', function(d, i) { return 'translate(' + (i * props.width + (i === 0 ? -1 : 1) * labelPadding) + ', ' + (segHeight / 2) + ')'; })
           .text(function(d, i) {
             var formatted = props.labelFormat(d, i);
             return formatted;

@@ -9,7 +9,7 @@
  * @property {Number} rowHeight                 The height of the rows of the legend.
  * @property {Number} columnWidth               The width of the columns of the legend.
  * @property {Number} rows                      The target number of rows for the legend.
- * @property {Number} column                    The target number of columns for the legend.
+ * @property {Number} columns                    The target number of columns for the legend.
  * @property {String} orientation               The orientation (layout order) of the legend. should be either "horizontal" or "vertical". No default.
  * @property {Boolean} reverse                  Whether to reverse the order that categories appear in the legend. Default false
  * @property {Boolean} rightAlign               Whether to right-align the legend. Default false.

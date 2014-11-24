@@ -1,5 +1,14 @@
 /**
+ *
+ * Radius size legend. Use for showing how different radius sizes correspond to data values.
+ *
  * @module sszvis/legend/radius
+ *
+ * @property {function} scale                     A scale to use to generate the radius sizes
+ * @property {string, function} fill              A function or string that gives a fill color for the demonstration circles (default white)
+ * @property {string, function} stroke            A function or string that gives a stroke color for the demonstration circles (default black)
+ * @property {number, function} strokeWidth       A number or function that gives a stroke width for the demonstration circles (default 1.25)
+ * @property {function} labelFormat               Formatter function for the labels (default identity)
  *
  * @returns {d3.component}
  */
@@ -11,7 +20,6 @@ namespace('sszvis.legend.radius', function(module) {
       .prop('fill').fill('#fff')
       .prop('stroke').stroke('#000')
       .prop('strokeWidth').strokeWidth(1.25)
-      .prop('labelSize').labelSize('10px')
       .prop('labelFormat').labelFormat(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
@@ -61,7 +69,7 @@ namespace('sszvis.legend.radius', function(module) {
 
         labels.enter()
           .append('text')
-          .classed('sszvis-legend__label', true);
+          .attr('class', 'sszvis-legend__label sszvis-legend__label--small');
 
         labels.exit().remove();
 
@@ -71,7 +79,6 @@ namespace('sszvis.legend.radius', function(module) {
             return -d + props.strokeWidth;
           })
           .attr('dy', '0.35em') // vertically-center
-          .style('font-size', props.labelSize)
           .text(props.labelFormat);
       });
   };
