@@ -71,7 +71,7 @@
       render(state);
     },
 
-    deselectBar: function(d) {
+    deselectBar: function() {
       state.selectedAge = [];
       render(state);
     }
@@ -165,7 +165,7 @@
         .header(function(d) {
           return aAcc(d) + '-jährige';
         })
-        .body(function(d) {
+        .body(function() {
           var rows = state.selectedAge.rows.map(function(r) {
             return [gAcc(r), sszvis.format.number(vAcc(r))];
           });
