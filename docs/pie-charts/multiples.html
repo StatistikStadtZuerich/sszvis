@@ -37,7 +37,7 @@
     totalValues: {},
     pieGroups: [],
     categories: [],
-    hoveredData: {},
+    hoveredDatum: {},
     selection: [],
     selectedCategories: []
   };
@@ -71,16 +71,16 @@
     },
 
     showTooltip: function(datum) {
-      state.hoveredData = datum;
+      state.hoveredDatum = datum;
       state.selection = state.data.filter(function(d) {
         return datum.category === d.category;
       });
-      state.selectedCategories = state.selection.map(sszvis.fn.prop('category'));
+      state.selectedCategories = state.selection.map(cAcc);
       render(state);
     },
 
     hideTooltip: function() {
-      state.hoveredData = {};
+      state.hoveredDatum = {};
       state.selection = [];
       state.selectedCategories = [];
       render(state);
@@ -110,7 +110,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 880, top: 40, right: 40, bottom: 140, left: 40 });
+    var bounds = sszvis.bounds({ width: 516, height: 880, top: 40, right: 40, bottom: 165, left: 40 });
 
 
     // Scales
@@ -154,11 +154,9 @@
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
-      .header(sszvis.fn.prop('category'))
+      .header(cAcc)
       .body(function(d){ return 'Anzahl: ' + d.value; })
-      .opacity(function(d, i) {
-        return d.datum === state.hoveredData ? 1 : 0.75;
-      })
+      .opacity(tooltipOpacity)
       .visible(isSelected);
 
 
@@ -167,24 +165,23 @@
     var pieCharts = chart.selectGroup('piecharts')
       .call(multiplesMaker);
 
-    pieCharts.selectAll('.sszvis-multiple')
-      .each(function(d) {
-        var groupScale = aScale.copy()
-          .domain([0, state.totalValues[d.group]]);
+    pieCharts.selectAll('.sszvis-multiple').each(function(d) {
+      var groupScale = aScale.copy()
+        .domain([0, state.totalValues[d.group]]);
 
-        pieMaker
-          .radius(Math.min(d.gw, d.gh) / 2)
-          .angle(sszvis.fn.compose(groupScale, vAcc));
+      pieMaker
+        .radius(Math.min(d.gw, d.gh) / 2)
+        .angle(sszvis.fn.compose(groupScale, vAcc));
 
-        d3.select(this).selectAll('.sszvis-multiple-chart')
-          .call(pieMaker);
-      });
+      d3.select(this).selectAll('.sszvis-multiple-chart')
+        .call(pieMaker);
+    });
 
     pieCharts.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
     chart.selectGroup('colorLegend')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 25))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 50))
       .call(colorLegend);
 
 
@@ -200,6 +197,10 @@
   ----------------------------------------------- */
   function isSelected(d) {
     return sszvis.fn.contains(state.selectedCategories, d.category);
+  }
+
+  function tooltipOpacity(d) {
+    return d.datum === state.hoveredDatum ? 1 : 0.75;
   }
 
 
