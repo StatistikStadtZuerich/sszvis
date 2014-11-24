@@ -1,5 +1,5 @@
 # Controls
 
-## Segmented control
+## Segmented Control
 
-## Slider control
+## Slider Control
