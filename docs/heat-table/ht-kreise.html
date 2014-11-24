@@ -121,9 +121,10 @@
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
       .datum(state.selection);
 
-   // missingValuePattern
-    var mVP = sszvis.patterns.ensureDefsElement(chartLayer, 'pattern', 'ht-missing-value')
+   // Make sure that the missing value pattern is available
+    sszvis.patterns.ensureDefsElement(chartLayer, 'pattern', 'ht-missing-value')
       .call(sszvis.patterns.heatTableMissingValuePattern);
+
 
     // Components
 
@@ -164,16 +165,13 @@
       .width(legendWidth)
       .labelFormat(sszvis.format.number);
 
-    var tooltipHeaderText = sszvis.component.modularText.html()
-      .bold(xAcc);
-
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
-      .header(tooltipHeaderText)
+      .header(xAcc)
       .body(function(d) {
         var v = cAcc(d);
         return [
-          ['Jahre alt', yAcc(d)],
+          ['Altersgruppe', yAcc(d)],
           ['Einwohner', isNaN(v) ? '–' : sszvis.format.number(v)]
         ];
       })
