@@ -65,7 +65,7 @@
       for (var group in groupedData) {
         var sourceArr = groupedData[group];
         for (var i = 0, l = sourceArr.length; i < l; i += binStep) {
-          var ageListing = aAcc(sourceArr[i]) + ' – ' + aAcc(sourceArr[i + binStep - 1]);
+          var ageListing = aAcc(sourceArr[i]) + '–' + aAcc(sourceArr[i + binStep - 1]);
           ages.push(ageListing);
           binnedData.push({
             age: ageListing,
