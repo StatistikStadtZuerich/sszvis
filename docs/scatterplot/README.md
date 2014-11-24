@@ -46,7 +46,7 @@ An accessor function for the fill color of the dot.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 455
+        "height": 469
     }
 }
 ```

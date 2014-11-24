@@ -171,7 +171,8 @@
       .call(sliderControl);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 120))
+      // the 124-pixel offset ensures that the color legend is 60px below the axis line of the slider control
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 124))
       .call(cLegend);
   }
 
