@@ -43,7 +43,7 @@ namespace('sszvis.annotation.rectangle', function(module) {
 
         dataArea
           .attr('x', props.x)
-          .attr('t', props.y)
+          .attr('y', props.y)
           .attr('width', props.width)
           .attr('height', props.height)
           .attr('fill', 'url(#data-area-pattern)');

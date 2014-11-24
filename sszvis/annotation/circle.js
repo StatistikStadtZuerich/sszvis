@@ -11,7 +11,7 @@
  * @param {number, function} r        The radius of the data area.
  * @param {number, function} dx       The x-offset of the data area caption.
  * @param {number, function} dy       The y-offset of the data area caption.
- * @param {string, function} caption  The caption for the data area.
+ * @param {string, function} caption  The caption for the data area. Default position is the center of the circle
  *
  * @returns {d3.component} a circular data area component
  */

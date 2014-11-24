@@ -8,6 +8,15 @@
  * aligned with the angle of the line. The caption can be offset from the midpoint
  * by specifying dx or dy properties.
  *
+ * @param {any} x1             The x-value, in data units, of the first reference line point.
+ * @param {any} x2             The x-value, in data units, of the second reference line point.
+ * @param {any} y1             The y-value, in data units, of the first reference line point.
+ * @param {any} y2             The y-value, in data units, of the second reference line point.
+ * @param {function} xScale         The x-scale of the chart. Used to transform the given x- values into chart coordinates.
+ * @param {function} yScale         The y-scale of the chart. Used to transform the given y- values into chart coordinates.
+ * @param {number} [dx]           The x-offset of the caption
+ * @param {number} [dy]           The y-offset of the caption
+ * @param {string} [caption]      A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
  * @returns {d3.component} a linear data area component (reference line)
  */
 namespace('sszvis.annotation.line', function(module) {

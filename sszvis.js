@@ -2576,7 +2576,7 @@ namespace('sszvis.transition', function(module) {
  * @param {number, function} r        The radius of the data area.
  * @param {number, function} dx       The x-offset of the data area caption.
  * @param {number, function} dy       The y-offset of the data area caption.
- * @param {string, function} caption  The caption for the data area.
+ * @param {string, function} caption  The caption for the data area. Default position is the center of the circle
  *
  * @returns {d3.component} a circular data area component
  */
@@ -2644,6 +2644,15 @@ namespace('sszvis.annotation.circle', function(module) {
  * aligned with the angle of the line. The caption can be offset from the midpoint
  * by specifying dx or dy properties.
  *
+ * @param {any} x1             The x-value, in data units, of the first reference line point.
+ * @param {any} x2             The x-value, in data units, of the second reference line point.
+ * @param {any} y1             The y-value, in data units, of the first reference line point.
+ * @param {any} y2             The y-value, in data units, of the second reference line point.
+ * @param {function} xScale         The x-scale of the chart. Used to transform the given x- values into chart coordinates.
+ * @param {function} yScale         The y-scale of the chart. Used to transform the given y- values into chart coordinates.
+ * @param {number} [dx]           The x-offset of the caption
+ * @param {number} [dy]           The y-offset of the caption
+ * @param {string} [caption]      A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
  * @returns {d3.component} a linear data area component (reference line)
  */
 namespace('sszvis.annotation.line', function(module) {
@@ -2770,7 +2779,7 @@ namespace('sszvis.annotation.rectangle', function(module) {
 
         dataArea
           .attr('x', props.x)
-          .attr('t', props.y)
+          .attr('y', props.y)
           .attr('width', props.width)
           .attr('height', props.height)
           .attr('fill', 'url(#data-area-pattern)');
