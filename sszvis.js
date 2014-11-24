@@ -996,6 +996,31 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.transformTranslateSubpixelShift
+     *
+     * This helper function takes a transform string and returns a vector that
+     * tells us how much to shift an element in order to place it on a half-pixel
+     * grid.
+     *
+     * @param  {string} transformStr A valid SVG transform string
+     * @return {vecor}               Two-element array ([dx, dy])
+     */
+    transformTranslateSubpixelShift: function(transformStr) {
+      var roundNumber = sszvis.fn.compose(Math.floor, Number);
+      var m = transformStr.match(/(translate\()\s*([0-9.,\- ]+)\s*(\))/i);
+      var vec = m[2]
+        .replace(',', ' ')
+        .replace(/\s+/, ' ')
+        .split(' ')
+        .map(Number);
+
+      if (vec.length === 1) vec.push([0]);
+
+      var vecRound = vec.map(roundNumber);
+      return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
+    },
+
+    /**
      * fn.translateString
      *
      * Pass an x and a y component, and this returns a translate string, which can be set as the 'transform' property of
@@ -1171,36 +1196,36 @@ namespace('sszvis.axis', function(module) {
           var selection = d3.select(this);
           var props = selection.props();
 
+          var isBottom = !props.vertical && axisDelegate.orient() === 'bottom';
+
           var group = selection.selectGroup('sszvis-axis')
             .classed('sszvis-axis', true)
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
-            .classed('sszvis-axis--bottom', !props.vertical && axisDelegate.orient() === 'bottom')
+            .classed('sszvis-axis--bottom', isBottom)
             .classed('sszvis-axis--vertical', props.vertical)
             .attr('transform', sszvis.fn.translateString(0, 2))
             .call(axisDelegate);
 
           var axisScale = axisDelegate.scale();
 
-          // Place axis ticks on rounded pixel values to prevent anti-aliasing
-          // In Firefox, this command causes the ticks to shift up and down slightly while it's being adjusted
+          // To prevent anti-aliasing on elements that need to be rendered crisply
+          // we need to position them on a half-pixel grid: 0.5, 1.5, 2.5, etc.
+          // We can't translate the whole .tick group, however, because this
+          // leads to weird type rendering artefacts in some browsers. That's
+          // why we reach into the group and translate lines onto the half-pixel
+          // grid by taking the translation of the group into account.
           group.selectAll('.tick')
-            .attr('transform', function() {
-              return sszvis.fn.roundTransformString(this.getAttribute('transform'));
-            })
-          // these lines only transform the tick line. However, when the tick group itself has been positioned with a fractional offset,
-          // the ticks may still be slightly blurry.
-          // .selectAll('line')
-          // .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
+            .each(function() {
+              var subpixelShift = sszvis.fn.transformTranslateSubpixelShift(this.getAttribute('transform'));
+              var dx = sszvis.fn.roundPixelCrisp(0) - subpixelShift[0];
+              var dy = sszvis.fn.roundPixelCrisp(isBottom ? 2 : 0) - subpixelShift[1];
+              d3.select(this).select('line')
+                .attr('transform', sszvis.fn.translateString(dx, dy));
+            });
 
-          // Place axis line on rounded pixel values to prevent anti-aliasing
+          // Place axis line on a half-pixel grid to prevent anti-aliasing
           group.selectAll('path.domain')
             .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
-
-          // special positioning for bottom-oriented axis ticks
-          selection.selectAll('.sszvis-axis--bottom line')
-            .attr('transform', sszvis.fn.translateString(0, 2))
-            // use this if the tick lines themselves are being rounded, rather than the tick groups
-            // .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(2)));
 
 
           // hide ticks which are too close to one endpoint

@@ -514,6 +514,31 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.transformTranslateSubpixelShift
+     *
+     * This helper function takes a transform string and returns a vector that
+     * tells us how much to shift an element in order to place it on a half-pixel
+     * grid.
+     *
+     * @param  {string} transformStr A valid SVG transform string
+     * @return {vecor}               Two-element array ([dx, dy])
+     */
+    transformTranslateSubpixelShift: function(transformStr) {
+      var roundNumber = sszvis.fn.compose(Math.floor, Number);
+      var m = transformStr.match(/(translate\()\s*([0-9.,\- ]+)\s*(\))/i);
+      var vec = m[2]
+        .replace(',', ' ')
+        .replace(/\s+/, ' ')
+        .split(' ')
+        .map(Number);
+
+      if (vec.length === 1) vec.push([0]);
+
+      var vecRound = vec.map(roundNumber);
+      return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
+    },
+
+    /**
      * fn.translateString
      *
      * Pass an x and a y component, and this returns a translate string, which can be set as the 'transform' property of
