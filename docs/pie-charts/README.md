@@ -91,27 +91,27 @@ This component takes an array of data objects, each of which represents a single
 
 ### Configuration
 
-### `multiples.width()`
+#### `multiples.width()`
 
 The total width of all groups
 
-### `multiples.height()`
+#### `multiples.height()`
 
 The total height of all groups
 
-### `multiples.paddingX()`
+#### `multiples.paddingX()`
 
 The pixel padding to place between columns of groups
 
-### `multiples.paddingY()`
+#### `multiples.paddingY()`
 
 The pixel padding to place between rows of groups
 
-### `multiples.rows()`
+#### `multiples.rows()`
 
 The number of rows of groups to create
 
-### `multiples.cols()`
+#### `multiples.cols()`
 
 The number of columns of groups to create
 
