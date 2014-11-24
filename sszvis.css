@@ -46,7 +46,6 @@
 /* States */
 .sszvis-axis .tick text.active {
   fill: #545454;
-  font-weight: bold;
 }
 
 .sszvis-axis .tick text.hidden {
@@ -61,10 +60,6 @@
 
 .sszvis-axis.sszvis-axis--top path {
   display: none;
-}
-
-.sszvis-axis.sszvis-axis--vertical .tick text.active {
-  font-weight: normal;
 }
 
 .sszvis-axis.sszvis-axis--vertical path {
