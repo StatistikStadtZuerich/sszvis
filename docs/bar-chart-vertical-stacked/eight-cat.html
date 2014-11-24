@@ -104,7 +104,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.5);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.34);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])
@@ -131,7 +131,7 @@
     var stackedBars = sszvis.component.stacked.verticalBar()
       .xAccessor(xAcc)
       .xScale(xScale)
-      .width(chartDimensions.barWidth)
+      .width(xScale.rangeBand())
       .yAccessor(yAcc)
       .yScale(yScale)
       .fill(function(d) {
