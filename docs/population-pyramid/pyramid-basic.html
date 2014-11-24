@@ -200,9 +200,7 @@
           });
           return rows.concat([['Alter', state.selectedAge.age]]);
         })
-        .orientation(function(d) {
-          return isLeft(d.datum) ? 'right' : 'left';
-        })
+        .orientation('left')
         .visible(function(d) {
           return state.selectedAge.age === aAcc(d) && gAcc(d) === 'Männer';
         });
