@@ -2104,6 +2104,9 @@ namespace('sszvis.format', function(module) {
       return String(Math.round(d));
     },
 
+    /**
+     * A multi time formatter used by the axis class
+     */
     axisTimeFormat: d3.time.format.multi([
       ['.%L', function(d) { return d.getMilliseconds(); }],
       [':%S', function(d) { return d.getSeconds(); }],
@@ -2115,10 +2118,16 @@ namespace('sszvis.format', function(module) {
       ['%Y', function() { return true; }]
     ]),
 
+    /**
+     * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
+     */
     month: sszvis.fn.compose(function(m) {
       return m.toUpperCase();
     }, d3.time.format('%b')),
 
+    /**
+     * A year formatter for date objects. Gives the date's year.
+     */
     year: d3.time.format('%Y'),
 
     /**
@@ -2320,6 +2329,11 @@ namespace('sszvis.parse', function(module) {
       return d3.time.format("%d.%m.%Y").parse(d);
     },
 
+    /**
+     * Parse year values
+     * @param  {string} d   A string which should be parsed as if it were a year, like "2014"
+     * @return {Date}       A javascript date object for the first time in the given year
+     */
     year: function(d) {
       return yearParser.parse(d);
     },
@@ -2563,9 +2577,15 @@ namespace('sszvis.patterns', function(module) {
 
 
 /**
- * default transition attributes for sszvis
+ * Default transition attributes for sszvis
  *
  * @module sszvis/transition
+ *
+ * Generally speaking, this module is used internally by components which transition the state of the update selection.
+ * The module sszvis.transition encapsulates the basic transition attributes used in the app. It is invoked by doing
+ * d3.selection().transition().call(sszvis.transition), which applies the transition attributes to the passed transition.
+ * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
+ * too slow.
  */
 namespace('sszvis.transition', function(module) {
 
@@ -2584,6 +2604,7 @@ namespace('sszvis.transition', function(module) {
   };
 
 });
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 

@@ -16,6 +16,9 @@ namespace('sszvis.format', function(module) {
       return String(Math.round(d));
     },
 
+    /**
+     * A multi time formatter used by the axis class
+     */
     axisTimeFormat: d3.time.format.multi([
       ['.%L', function(d) { return d.getMilliseconds(); }],
       [':%S', function(d) { return d.getSeconds(); }],
@@ -27,10 +30,16 @@ namespace('sszvis.format', function(module) {
       ['%Y', function() { return true; }]
     ]),
 
+    /**
+     * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
+     */
     month: sszvis.fn.compose(function(m) {
       return m.toUpperCase();
     }, d3.time.format('%b')),
 
+    /**
+     * A year formatter for date objects. Gives the date's year.
+     */
     year: d3.time.format('%Y'),
 
     /**
