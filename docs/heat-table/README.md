@@ -65,7 +65,7 @@ This example shows what age each partner in a partnership had when they had thei
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 360
+        "height": 372
     }
 }
 ```
@@ -90,7 +90,7 @@ This example uses regularly spaced bins and shows positive/negative trends throu
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 516
+        "height": 458
     }
 }
 ```

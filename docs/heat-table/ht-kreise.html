@@ -87,7 +87,13 @@
   function render(state) {
     var squarePadding = 2;
     var tableDimensions = sszvis.fn.heatTableDimensions(sszvis.bounds.DEFAULT_WIDTH, squarePadding, state.kreisList.length, state.agesList.length);
-    var bounds = sszvis.bounds({ width: 80 + tableDimensions.width + 10, left: 80, right: 10, height: 70 + tableDimensions.height + 50, top: 70, bottom: 50 });
+    var tablePadding = {
+      top: 70,
+      right: 54,
+      bottom: 60,
+      left: 80
+    };
+    var bounds = sszvis.bounds({ width: tablePadding.left + tableDimensions.width + tablePadding.right, left: tablePadding.left, right: tablePadding.right, height: tablePadding.top + tableDimensions.height + tablePadding.bottom, top: tablePadding.top, bottom: tablePadding.bottom });
 
 
     // Scales
@@ -195,7 +201,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 20))
+      .attr('transform', sszvis.fn.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 40))
       .call(legend);
 
 
