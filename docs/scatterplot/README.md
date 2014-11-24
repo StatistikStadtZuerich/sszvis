@@ -51,7 +51,9 @@ An accessor function for the fill color of the dot.
 }
 ```
 
-### Scatterplot with variable radius and voronoi-cell interaction
+## Variable radius
+
+Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/4060366) interaction.
 
 ```project
 {
@@ -74,7 +76,7 @@ An accessor function for the fill color of the dot.
 }
 ```
 
-### Many Years
+## Slider control
 
 ```project
 {
