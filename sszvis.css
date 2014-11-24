@@ -223,6 +223,18 @@
 }
 
 /**
+ * Population pyramid with reference line component
+ *
+ * @module sszvis/component/pyramid
+ */
+.sszvis-pyramid__referenceline {
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+
+/**
  * Segmented Control component
  *
  * @module sszvis/control/segmented

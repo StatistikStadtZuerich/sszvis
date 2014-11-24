@@ -108,16 +108,12 @@ namespace('sszvis.component.pyramid', function(module) {
           .x(props.barWidth)
           .y(props.barPosition);
 
-        var line = selection.selectAll('.sszvis-path')
+        var line = selection.selectAll('.sszvis-pyramid__referenceline')
           .data(data);
 
         line.enter()
           .append('path')
-          .attr('class', 'sszvis-path')
-          .attr('fill', 'none')
-          .attr('stroke', '#aaa')
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', '3 3');
+          .attr('class', 'sszvis-pyramid__referenceline');
 
         line
           .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
