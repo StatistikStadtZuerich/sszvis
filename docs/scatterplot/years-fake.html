@@ -50,7 +50,7 @@
     prepareState: function(data) {
       state.data = data;
       state.xExtent = d3.extent(state.data, xAcc);
-      state.yExtent = d3.extent(state.data, yAcc);
+      state.yMax = d3.max(state.data, yAcc);
       state.tExtent = d3.extent(state.data, qAcc);
       state.cities = sszvis.fn.set(state.data, cAcc);
       state.quarters = sszvis.fn.set(state.data, qAcc);
@@ -100,7 +100,7 @@
       .range([0, bounds.innerWidth]);
 
     var yScale = d3.scale.linear()
-      .domain(state.yExtent)
+      .domain([0, state.yMax])
       .range([bounds.innerHeight, 0]);
 
     var cScale = sszvis.color.qual6()
