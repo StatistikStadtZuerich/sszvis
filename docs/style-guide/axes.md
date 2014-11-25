@@ -77,9 +77,9 @@ This x-axis displays ordinal categories
 }
 ```
 
-## X-axis (Centered Title)
+## X-axis (Centered Title, Custom Highlight Ticks)
 
-The x-axis title is centered because there are two y-axes
+The x-axis title is centered because there are two y-axes. In addition, the ticks displayed on the bottom are customized, rather than using the default d3.scale.ticks. This is done to ensure that whichever value the user is hovering over is also displayed as a highlighted tick in the axis.
 
 ``` project
 {
@@ -127,9 +127,9 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
 }
 ```
 
-## Y-axis
+## Y-axis (Custom Tick Formatting)
 
-The y-axis convers the y-dimension, both placement and height
+The y-axis convers the y-dimension, both placement and height. Note also that sszvis.format.percent has been used to format the y-axis tick labels.
 
 ```project
 {
@@ -302,9 +302,9 @@ This y-axis has labels which display the "rect" contour, which places a pale rec
 }
 ```
 
-## Long Ticks
+## Long Ticks (With Formatted Tick Labels)
 
-This x-axis displays the use of the tickLength property to create ticks which extend across the entire chart. This approach adds visual clutter to the chart, but it can be useful to facilitate chart reading.
+This x-axis displays the use of the tickLength property to create ticks which extend across the entire chart. This approach adds visual clutter to the chart, but it can be useful to facilitate chart reading. Note also that sszvis.format.percent has been used to format the x-axis tick labels.
 
 ```project
 {
