@@ -1,5 +1,34 @@
 /**
  * Click behavior
+ *
+ * The click behavior is used to add a click or tap-based interface to a chart. Like other behavior components,
+ * the click behavior adds an invisible layer over the chart, which the users interact with using touch or mouse
+ * actions. The behavior component then interprets these interactions, and calls the relevant event handler callback
+ * functions. These callback functions are passed values which represent data-space information about the nature of the
+ * interaction. That last sentence was intentionally vague, because different behaviors operate in slightly different ways.
+ *
+ * The click behavior requires scales to be passed to it as configuration, and when a user interacts with the behavior layer,
+ * it inverts the pixel location of the interaction using these scales and passes the resulting data-space values to the callback
+ * functions. This component extends a d3.dispatch instance.
+ *
+ * @property {boolean} debug            Whether or not to render the component in debug mode, which reveals its position in the chart.
+ * @property {function} xScale          The x-scale for the component. The extent of this scale, plus component padding, is the width of the
+ *                                      component's active area.
+ * @property {function} yScale          The y-scale for the component. The extent of this scale, plus component padding, is the height of the
+ *                                      component's active area.
+ * @property {boolean} draggable        Whether or not this component is draggable. This changes certain display properties of the component.
+ * @property {object} padding           An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
+ *                                      The options are { top, right, bottom, left }
+ * @property {string and function} on   The .on() method of this component should specify an event name and an event handler function.
+ *                                      Possible event names are:
+ *                                      'down' - when the mousedown or touchstart happens
+ *                                      'up' - when the mouseup or touchend happens
+ *                                      'click' - triggered on a full 'click' action - down and up on the component's element
+ *                                      'drag' - when the mouse or touch is moved across the surface of the component's element.
+ *                                      All event handler functions are passed an x-value and a y-value, which are the data values,
+ *                                      computed by inverting the provided xScale and yScale, which correspond to the screen pixel
+ *                                      location of the event.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.behavior.click', function(module) {

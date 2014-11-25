@@ -2860,6 +2860,36 @@ namespace('sszvis.annotation.rectangle', function(module) {
 
 /**
  * Move behavior
+ *
+ * The move behavior is used to add a mouseover and touchmove-based interface to a chart.
+ *
+ * Like other behavior components, this behavior adds an invisible layer over the chart,
+ * which the users interact with using touch or mouse actions. The behavior component then interprets
+ * these interactions, and calls the relevant event handler callback functions. These callback functions are
+ * passed values which represent data-space information about the nature of the interaction.
+ * That last sentence was intentionally vague, because different behaviors operate in slightly different ways.
+ *
+ * The move behavior requires scales to be passed to it as configuration, and when a user interacts with the behavior layer,
+ * it inverts the pixel location of the interaction using these scales and passes the resulting data-space values to the callback
+ * functions. This component extends a d3.dispatch instance.
+ *
+ * @property {boolean} debug            Whether or not to render the component in debug mode, which reveals its position in the chart.
+ * @property {function} xScale          The x-scale for the component. The extent of this scale, plus component padding, is the width of the
+ *                                      component's active area.
+ * @property {function} yScale          The y-scale for the component. The extent of this scale, plus component padding, is the height of the
+ *                                      component's active area.
+ * @property {boolean} draggable        Whether or not this component is draggable. This changes certain display properties of the component.
+ * @property {object} padding           An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
+ *                                      The options are { top, right, bottom, left }
+ * @property {string and function} on   The .on() method of this component should specify an event name and an event handler function.
+ *                                      Possible event names are:
+ *                                      'start' - when the move action starts - mouseover or touchstart
+ *                                      'move' - called when a 'moving' action happens - mouseover on the element
+ *                                      'drag' - called when a 'dragging' action happens - mouseover with the mouse click down, or touchmove
+ *                                      'end' - called when the event ends - mouseout or touchend
+ *                                      Event handler functions, excepting end, are passed an x-value and a y-value, which are the data values,
+ *                                      computed by inverting the provided xScale and yScale, which correspond to the screen pixel location of the event.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.behavior.move', function(module) {
@@ -3022,6 +3052,35 @@ namespace('sszvis.behavior.move', function(module) {
 
 /**
  * Click behavior
+ *
+ * The click behavior is used to add a click or tap-based interface to a chart. Like other behavior components,
+ * the click behavior adds an invisible layer over the chart, which the users interact with using touch or mouse
+ * actions. The behavior component then interprets these interactions, and calls the relevant event handler callback
+ * functions. These callback functions are passed values which represent data-space information about the nature of the
+ * interaction. That last sentence was intentionally vague, because different behaviors operate in slightly different ways.
+ *
+ * The click behavior requires scales to be passed to it as configuration, and when a user interacts with the behavior layer,
+ * it inverts the pixel location of the interaction using these scales and passes the resulting data-space values to the callback
+ * functions. This component extends a d3.dispatch instance.
+ *
+ * @property {boolean} debug            Whether or not to render the component in debug mode, which reveals its position in the chart.
+ * @property {function} xScale          The x-scale for the component. The extent of this scale, plus component padding, is the width of the
+ *                                      component's active area.
+ * @property {function} yScale          The y-scale for the component. The extent of this scale, plus component padding, is the height of the
+ *                                      component's active area.
+ * @property {boolean} draggable        Whether or not this component is draggable. This changes certain display properties of the component.
+ * @property {object} padding           An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
+ *                                      The options are { top, right, bottom, left }
+ * @property {string and function} on   The .on() method of this component should specify an event name and an event handler function.
+ *                                      Possible event names are:
+ *                                      'down' - when the mousedown or touchstart happens
+ *                                      'up' - when the mouseup or touchend happens
+ *                                      'click' - triggered on a full 'click' action - down and up on the component's element
+ *                                      'drag' - when the mouse or touch is moved across the surface of the component's element.
+ *                                      All event handler functions are passed an x-value and a y-value, which are the data values,
+ *                                      computed by inverting the provided xScale and yScale, which correspond to the screen pixel
+ *                                      location of the event.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.behavior.click', function(module) {
@@ -3146,6 +3205,39 @@ namespace('sszvis.behavior.click', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * Voronoi behavior
+ *
+ * The voronoi behavior adds an invisible layer of voronoi cells to a chart. The voronoi cells are calculated
+ * based on the positions of the data objects which should be bound to the interaction layer before this behavior
+ * is called on it. Each voronoi cell is associated with one data object, and this data object is passed to the event
+ * callback functions.
+ *
+ * Like other behavior components, this behavior adds an invisible layer over the chart,
+ * which the users interact with using touch or mouse actions. The behavior component then interprets
+ * these interactions, and calls the relevant event handler callback functions. These callback functions are
+ * passed values which represent data-space information about the nature of the interaction.
+ * That last sentence was intentionally vague, because different behaviors operate in slightly different ways.
+ *
+ * The voronoi behavior expects to find an array of data already bound to the interaction layer. Each datum should
+ * represent a point, and these points are used as the focal points of the construction of voronoi cells. These data
+ * are also associated with the voronoi cells, so that when a user interacts with them, the datum and its index within the
+ * bound data are passed to the callback functions. This component extends a d3.dispatch instance.
+ *
+ * @property {function} x                         Specify an accessor function for the x-position of the voronoi point
+ * @property {function} y                         Specify an accessor function for the y-position of the voronoi point
+ * @property {array[array, array]} bounds         Specify the bounds of the voronoi area. This is essential to the construction of voronoi cells
+ *                                                using the d3.vornoi geom object. The bounds should determine the chart area over which you would like
+ *                                                voronoi cells to be active. Note that if not specified, the voronoi cells will be very large.
+ * @property {boolean} debug                      Whether the component is in debug mode. Being in debug mode renders the voroni cells obviously
+ * @property {string and function} on             The .on() method should specify an event name and an event handler function.
+ *                                                Possible event names are:
+ *                                                'over' - when the user interacts with a voronoi area, either with a mouseover or touchstart
+ *                                                'out' - when the user ceases to interact with a voronoi area, either with a mouseout or touchend
+ *                                                All event handler functions are passed the datum which is the center of the voronoi area,
+ *                                                and that datum's index within the data bound to the interaction layer.
+ *
+ */
 namespace('sszvis.behavior.voronoi', function(module) {
 'use strict';
 
