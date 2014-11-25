@@ -2355,7 +2355,28 @@ namespace('sszvis.parse', function(module) {
 
 
 /**
- * @module sszvis/patterns
+ *
+ * Patterns module
+ *
+ * This module contains svg patterns and pattern helper functions which are used
+ * to render important textures for various other components.
+ *
+ * @method ensureDefs                       This method ensures that the provided selection contains a 'defs' object,
+ *                                          which is required for rendering patterns. Svg elements rendered into a defs
+ *                                          container will not be displayed, but can be referenced by id in the fill property
+ *                                          of other, visible, elements.
+ * @method ensureDefsElement                This method ensures that the provided selection contains a 'defs' object,
+ *                                          and furthermore, that the defs object contains an instance of the provided
+ *                                          element type, with the provided id. To ensure that a given pattern will have
+ *                                          a container to render into, this is the only necessary method (it calls ensureDefs)
+ * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
+ * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
+ * @method  mapLakePattern                  The pattern for Lake Zurich in the map component. Used by map.js internally
+ * @method  mapLakeFadeGradient             The pattern which provides a gradient, used by the alpha fade pattern,
+ *                                          in the Lake Zurich shape. Used by map.js internally
+ * @method  mapLakeGradientMask             The pattern which provides a gradient alpha fade for the Lake Zurich shape.
+ *                                           It uses the fadeGradient pattern to create an alpha gradient mask. Used by map.js internally
+ * @method  dataAreaPattern                 The pattern for the data area texture.
  *
  */
 namespace('sszvis.patterns', function(module) {
