@@ -1,5 +1,25 @@
 /**
- * Stacked Chart
+ * Stacked Multiples Chart
+ *
+ * This component, like stacked.area, requires an array of layer objects, where each layer object is one of the multiples.
+ * In addition to stacked.area, this chart's layers can be separated to provide two views on the data: a sum of all
+ * elements as well as every element on its own.
+ *
+ * @property {number, function} x             Accessor function for the *x*-values. Passed a data object and should return a value
+ *                                            in screen pixels.
+ * @property {number, function} y0            Accessor function for the *y0*-value (the baseline of the area). Passed a data object
+ *                                            and should return a value in screen pixels.
+ * @property {number, function} y1            Accessor function for the *y1*-value (the top line of the area). Passed a data object
+ *                                            and should return a value in screen pixels.
+ * @property {string, function} fill          Accessor function for the area fill. Passed a layer object.
+ * @property {string, function} stroke        Accessor function for the area stroke. Passed a layer object.
+ * @property {function} key                   Specify a key function for use in the data join. The value returned by the key should
+ *                                            be unique among stacks. This option is particularly important when creating a chart
+ *                                            which transitions between stacked and separated views.
+ * @property {function} valuesAccessor        Specify an accessor for the values of the layer objects. The default treats the layer object
+ *                                            as an array of values. Use this if your layer objects should be treated as something other than
+ *                                            arrays of values.
+ *
  * @return {d3.component}
  */
 

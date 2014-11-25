@@ -3549,6 +3549,16 @@ namespace('sszvis.component.bar', function(module) {
 
 /**
  * Dot component
+ *
+ * Used to render small circles, where each circle corresponds to a data value. The dot component
+ * is built on rendering svg circles, so the configuration properties are directly mapped to circle attributes.
+ *
+ * @property {number, function} x               An accessor function or number for the x-position of the dots.
+ * @property {number, function} y               An accessor function or number for the y-position of the dots.
+ * @property {number, function} radius          An accessor function or number for the radius of the dots.
+ * @property {string, function} stroke          An accessor function or string for the stroke color of the dots.
+ * @property {string, function} fill            An accessor function or string for the fill color of the dots.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.dot', function(module) {
@@ -4690,7 +4700,30 @@ namespace('sszvis.component.ruler', function(module) {
 
 
 /**
- * Stacked Chart
+ * Stacked Area Chart
+ *
+ * Stacked area charts are useful for showing how component parts contribute to a total quantity
+ *
+ * The stacked.area component uses a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout) under the hood,
+ * so some of its configuration properties are similar. This component requires an array of layer objects,
+ * where each layer object represents a layer in the stack.
+
+ * @property {function} x                      Accessor function to read *x*-values from the data. Should return a value in screen pixels.
+ *                                             Used to figure out which values share a vertical position in the stack.
+ * @property {function} yAccessor              Accessor function to read raw *y*-values from the data. Should return a value which is in data-units,
+ *                                             not screen pixels. The results of this function are used to compute the stack, and they are then
+ *                                             passed into the yScale before display.
+ * @property {function} yScale                 A y-scale for determining the vertical position of data quantities. Used to compute the
+ *                                             bottom and top lines of the stack.
+ * @property {string, function} fill           String or accessor function for the area fill. Passed a layer object.
+ * @property {string, function} stroke         String or accessor function for the area stroke. Passed a layer object.
+ * @property {function} key                    Specify a key function for use in the data join. The value returned by the key should be unique
+ *                                             among stacks. This option is particularly important when creating a chart which transitions
+ *                                             between stacked and separated views.
+ * @property {function} valuesAccessor         Specify an accessor for the values of the layer objects. The default treats the layer object
+ *                                             as an array of values. Use this if your layer objects should be treated as something other than
+ *                                             arrays of values.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.stacked.area', function(module) {
@@ -4748,7 +4781,27 @@ namespace('sszvis.component.stacked.area', function(module) {
 
 
 /**
- * Stacked Chart
+ * Stacked Multiples Chart
+ *
+ * This component, like stacked.area, requires an array of layer objects, where each layer object is one of the multiples.
+ * In addition to stacked.area, this chart's layers can be separated to provide two views on the data: a sum of all
+ * elements as well as every element on its own.
+ *
+ * @property {number, function} x             Accessor function for the *x*-values. Passed a data object and should return a value
+ *                                            in screen pixels.
+ * @property {number, function} y0            Accessor function for the *y0*-value (the baseline of the area). Passed a data object
+ *                                            and should return a value in screen pixels.
+ * @property {number, function} y1            Accessor function for the *y1*-value (the top line of the area). Passed a data object
+ *                                            and should return a value in screen pixels.
+ * @property {string, function} fill          Accessor function for the area fill. Passed a layer object.
+ * @property {string, function} stroke        Accessor function for the area stroke. Passed a layer object.
+ * @property {function} key                   Specify a key function for use in the data join. The value returned by the key should
+ *                                            be unique among stacks. This option is particularly important when creating a chart
+ *                                            which transitions between stacked and separated views.
+ * @property {function} valuesAccessor        Specify an accessor for the values of the layer objects. The default treats the layer object
+ *                                            as an array of values. Use this if your layer objects should be treated as something other than
+ *                                            arrays of values.
+ *
  * @return {d3.component}
  */
 
@@ -4802,6 +4855,29 @@ namespace('sszvis.component.stacked.areaMultiples', function(module) {
 
 /**
  * Stacked Bar Chart
+ *
+ * This component includes both the vertical and horizontal stacked bar chart components.
+ * Both are variations on the same concept, and they both use the same abstract intermediate
+ * representation for the stack, but are rendered using different dimensions. Note that using
+ * this component will add the properties 'y0' and 'y' to any passed-in data objects, as part of
+ * computing the stack intermediate representation. Existing properties with these names will be
+ * overwritten.
+ *
+ * @property {function} xAccessor           Specifies an x-accessor for the stack layout. The result of this function
+ *                                          is used to compute the horizontal extent of each element in the stack.
+ *                                          The return value must be a number.
+ * @property {function} xScale              Specifies an x-scale for the stack layout. This scale is used to position
+ *                                          the elements of each stack, both the left offset value and the width of each stack segment.
+ * @property {number, function} width       Specifies a width for the bars in the stack layout. This value is not used in the
+ *                                          horizontal orientation. (xScale is used instead).
+ * @property {function} yAccessor           The y-accessor. The return values of this function are used to group elements together as stacks.
+ * @property {function} yScale              A y-scale. After the stack is computed, the y-scale is used to position each stack.
+ * @property {number, function} height      Specify the height of each rectangle. This value determines the height of each element in the stacks.
+ * @property {string, function} fill        Specify a fill value for the rectangles (default black).
+ * @property {string, function} stroke      Specify a stroke value for the stack rectangles (default none).
+ * @property {string} orientation           Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart.
+ *                                          Used internally to configure the verticalBar and the horizontalBar. Should probably never be changed.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.stacked', function(module) {

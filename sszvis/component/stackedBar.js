@@ -1,5 +1,28 @@
 /**
  * Stacked Bar Chart
+ *
+ * This component includes both the vertical and horizontal stacked bar chart components.
+ * Both are variations on the same concept, and they both use the same abstract intermediate
+ * representation for the stack, but are rendered using different dimensions. Note that using
+ * this component will add the properties 'y0' and 'y' to any passed-in data objects, as part of
+ * computing the stack intermediate representation. Existing properties with these names will be
+ * overwritten.
+ *
+ * @property {function} xAccessor           Specifies an x-accessor for the stack layout. The result of this function
+ *                                          is used to compute the horizontal extent of each element in the stack.
+ *                                          The return value must be a number.
+ * @property {function} xScale              Specifies an x-scale for the stack layout. This scale is used to position
+ *                                          the elements of each stack, both the left offset value and the width of each stack segment.
+ * @property {number, function} width       Specifies a width for the bars in the stack layout. This value is not used in the
+ *                                          horizontal orientation. (xScale is used instead).
+ * @property {function} yAccessor           The y-accessor. The return values of this function are used to group elements together as stacks.
+ * @property {function} yScale              A y-scale. After the stack is computed, the y-scale is used to position each stack.
+ * @property {number, function} height      Specify the height of each rectangle. This value determines the height of each element in the stacks.
+ * @property {string, function} fill        Specify a fill value for the rectangles (default black).
+ * @property {string, function} stroke      Specify a stroke value for the stack rectangles (default none).
+ * @property {string} orientation           Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart.
+ *                                          Used internally to configure the verticalBar and the horizontalBar. Should probably never be changed.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.stacked', function(module) {

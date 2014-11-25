@@ -1,5 +1,15 @@
 /**
  * Dot component
+ *
+ * Used to render small circles, where each circle corresponds to a data value. The dot component
+ * is built on rendering svg circles, so the configuration properties are directly mapped to circle attributes.
+ *
+ * @property {number, function} x               An accessor function or number for the x-position of the dots.
+ * @property {number, function} y               An accessor function or number for the y-position of the dots.
+ * @property {number, function} radius          An accessor function or number for the radius of the dots.
+ * @property {string, function} stroke          An accessor function or string for the stroke color of the dots.
+ * @property {string, function} fill            An accessor function or string for the fill color of the dots.
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.dot', function(module) {
