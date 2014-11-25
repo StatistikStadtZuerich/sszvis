@@ -54,7 +54,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 607
+        "height": 622
     }
 }
 ```

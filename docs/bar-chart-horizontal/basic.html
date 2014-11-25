@@ -61,7 +61,7 @@
   ----------------------------------------------- */
   function render(state) {
     var chartDimensions = sszvis.fn.horizontalBarChartDimensions(state.categories.length);
-    var bounds = sszvis.bounds({ height: 30 + chartDimensions.totalHeight + 25, top: 30, bottom: 25 });
+    var bounds = sszvis.bounds({ height: 30 + chartDimensions.totalHeight + 40, top: 30, bottom: 40 });
 
     // Scales
 
@@ -96,7 +96,8 @@
       .scale(widthScale)
       .orient('bottom')
       .alignOuterLabels(true)
-      .ticks(10);
+      .ticks(10)
+      .title('Erwerbstätige');
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
