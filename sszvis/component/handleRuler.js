@@ -1,8 +1,20 @@
 /**
- * SlideBar for use in sliding along the x-axis of charts
+ * Ruler with a handle
  *
- * @module  sszvis/component/handleRuler
+ * The handle ruler component is very similar to the ruler component, except that it is rendered
+ * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
+ * so the actual interaction with the handle is up to the developer to specify. This component also
+ * creates dots for each data point it finds bound to its layer.
  *
+ * @property {function} x                   A function or number which determines the x-position of the ruler
+ * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
+ * @property {number} top                   A number for the y-position of the top of the ruler.
+ * @property {number} bottom                A number for the y-position of the bottom of the ruler.
+ * @property {string, function} label       A string or string function for the labels of the ruler dots.
+ * @property {string, function} color       A string or color for the fill color of the ruler dots.
+ * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
+ *
+ * @returns {d3.component}
  */
 namespace('sszvis.component.handleRuler', function(module) {
   'use strict';

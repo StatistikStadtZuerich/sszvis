@@ -1,6 +1,21 @@
-
 /**
  * Ruler component
+ *
+ * The ruler component can be used to create a vertical line which highlights data at a certain
+ * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
+ * the layer it renders into, and it will generate a small dot for each data point it finds.
+ *
+ * @property {number} top                 A number which is the y-position of the top of the ruler line
+ * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
+ * @property {function} x                 A number or function returning a number for the x-position of the ruler line.
+ * @property {function} y                 A function for determining the y-position of the ruler dots. Should take a data
+ *                                        value as an argument and return a y-position.
+ * @property {function} label             A function for determining the labels of the ruler dots. Should take a
+ *                                        data value as argument and return a label.
+ * @property {string, function} color     A string or function to specify the color of the ruler dots.
+ * @property {function} flip              A boolean or function which returns a boolean that specifies
+ *                                        whether the labels on the ruler dots should be flipped. (they default to the right side)
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.ruler', function(module) {

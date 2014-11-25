@@ -3851,10 +3851,22 @@ namespace('sszvis.component.groupedBars', function(module) {
 
 
 /**
- * SlideBar for use in sliding along the x-axis of charts
+ * Ruler with a handle
  *
- * @module  sszvis/component/handleRuler
+ * The handle ruler component is very similar to the ruler component, except that it is rendered
+ * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
+ * so the actual interaction with the handle is up to the developer to specify. This component also
+ * creates dots for each data point it finds bound to its layer.
  *
+ * @property {function} x                   A function or number which determines the x-position of the ruler
+ * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
+ * @property {number} top                   A number for the y-position of the top of the ruler.
+ * @property {number} bottom                A number for the y-position of the bottom of the ruler.
+ * @property {string, function} label       A string or string function for the labels of the ruler dots.
+ * @property {string, function} color       A string or color for the fill color of the ruler dots.
+ * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
+ *
+ * @returns {d3.component}
  */
 namespace('sszvis.component.handleRuler', function(module) {
   'use strict';
@@ -4510,7 +4522,22 @@ namespace('sszvis.component.pyramid', function(module) {
 /**
  * RangeRuler component
  *
- * @return {d3.component} range-based rule component (see stacked area chart example)
+ * The range ruler is similar to the handle ruler and the ruler, except for each data
+ * point which it finds bound to its layer, it generates two small dots, and a label which
+ * states the value of the data point. For an example, see the interactive stacked area charts.
+ * Note that the interactive stacked area charts also include the rangeFlag component for highlighting
+ * certain specific dots. This is a sepearate component.
+ *
+ * @property {number functor} x            A function for the x-position of the ruler.
+ * @property {number functor} y0           A function for the y-position of the lower dot. Called for each datum.
+ * @property {number functor} y1           A function for the y-position of the upper dot. Called for each datum.
+ * @property {number} top                  A number for the y-position of the top of the ruler
+ * @property {number} bottom               A number for the y-position of the bottom of the ruler
+ * @property {string functor} label        A function which generates labels for each range.
+ * @property {number} total                A number to display as the total of the range ruler (at the top)
+ * @property {boolean functor} flip        Determines whether the rangeRuler labels should be flipped (they default to the right side)
+ *
+ * @return {d3.component}
  */
 namespace('sszvis.component.rangeRuler', function(module) {
   'use strict';
@@ -4620,9 +4647,19 @@ namespace('sszvis.component.rangeRuler', function(module) {
 
 
 /**
- * @module sszvis/component/rangeFlag
+ * Range Flag component
  *
- * @returns {d3.component} range flag component (see stacked area chart example)
+ * The range flag component creates a pair of small white circles which fit well with the range ruler.
+ * However, this is a separate component for implementation reasons, because the data for the range flag
+ * should usually be only one value, distinct from the range ruler which expects multiple values. The range
+ * flag also creates a tooltip anchor between the two dots, to which you can attach a tooltip. See the
+ * interactive stacked area chart examples for a use of the range flag.
+ *
+ * @property {number functor} x           A value for the x-value of the range flag
+ * @property {number functor} y0          A value for the y-value of the lower range flag dot
+ * @property {number functor} y1          A value for the y-value of the upper range flag dot
+ *
+ * @returns {d3.component}
  */
 namespace('sszvis.component.rangeFlag', function(module) {
   'use strict';
@@ -4684,9 +4721,24 @@ namespace('sszvis.component.rangeFlag', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
-
 /**
  * Ruler component
+ *
+ * The ruler component can be used to create a vertical line which highlights data at a certain
+ * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
+ * the layer it renders into, and it will generate a small dot for each data point it finds.
+ *
+ * @property {number} top                 A number which is the y-position of the top of the ruler line
+ * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
+ * @property {function} x                 A number or function returning a number for the x-position of the ruler line.
+ * @property {function} y                 A function for determining the y-position of the ruler dots. Should take a data
+ *                                        value as an argument and return a y-position.
+ * @property {function} label             A function for determining the labels of the ruler dots. Should take a
+ *                                        data value as argument and return a label.
+ * @property {string, function} color     A string or function to specify the color of the ruler dots.
+ * @property {function} flip              A boolean or function which returns a boolean that specifies
+ *                                        whether the labels on the ruler dots should be flipped. (they default to the right side)
+ *
  * @return {d3.component}
  */
 namespace('sszvis.component.ruler', function(module) {
