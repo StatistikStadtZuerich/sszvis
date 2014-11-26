@@ -1170,7 +1170,7 @@ namespace('sszvis.fn', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.axis', function(module) {
-'use strict';
+  'use strict';
 
   var TICK_PROXIMITY_THRESHOLD = 8;
   var TICK_END_THRESHOLD = 12;
@@ -1326,7 +1326,7 @@ namespace('sszvis.axis', function(module) {
                     bounds: this.getBoundingClientRect()
                   };
                   if (props.highlightTick(d)) {
-                    bounds.left  -= LABEL_PROXIMITY_THRESHOLD;
+                    bounds.left -= LABEL_PROXIMITY_THRESHOLD;
                     bounds.right += LABEL_PROXIMITY_THRESHOLD;
                     activeBounds.push(bounds);
                   } else {
@@ -1353,28 +1353,30 @@ namespace('sszvis.axis', function(module) {
             title.exit().remove();
 
             title
-              .text(function(d) { return d; })
+              .text(function(d) {
+                return d;
+              })
               .attr('transform', function() {
                 var orientation = axisDelegate.orient(),
-                    extent = sszvis.fn.scaleRange(axisScale),
-                    titleProps;
+                  extent = sszvis.fn.scaleRange(axisScale),
+                  titleProps;
 
-                  if (props.titleCenter) {
-                    titleProps = {
-                      left: orientation === 'left' || orientation === 'right' ? 0 : orientation === 'top' || orientation === 'bottom' ? (extent[0] + extent[1]) / 2 : 0,
-                      top: orientation === 'left' || orientation === 'right' ? (extent[0] + extent[1]) / 2 : orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
-                    };
-                  } else {
-                    titleProps = {
-                      left: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? extent[1] : 0,
-                      top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
-                    };
-                  }
+                if (props.titleCenter) {
+                  titleProps = {
+                    left: orientation === 'left' || orientation === 'right' ? 0 : orientation === 'top' || orientation === 'bottom' ? (extent[0] + extent[1]) / 2 : 0,
+                    top: orientation === 'left' || orientation === 'right' ? (extent[0] + extent[1]) / 2 : orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
+                  };
+                } else {
+                  titleProps = {
+                    left: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? extent[1] : 0,
+                    top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
+                  };
+                }
 
-                  titleProps.vertical = !!props.titleVertical;
-                  titleProps.left += props.dxTitle || 0;
-                  titleProps.top += props.dyTitle || 0;
-                return 'translate(' + (titleProps.left) + ', ' + (titleProps.top) + ') rotate(' + (titleProps.vertical ? '-90' : '0' ) + ')';
+                titleProps.vertical = !!props.titleVertical;
+                titleProps.left += props.dxTitle || 0;
+                titleProps.top += props.dyTitle || 0;
+                return 'translate(' + (titleProps.left) + ', ' + (titleProps.top) + ') rotate(' + (titleProps.vertical ? '-90' : '0') + ')';
               })
               .style('text-anchor', function() {
                 var orientation = axisDelegate.orient();
@@ -1429,22 +1431,22 @@ namespace('sszvis.axis', function(module) {
                   break;
 
                 default:
-                  sszvis.logger.warn('Unknown contour "'+ props.contour +'"');
+                  sszvis.logger.warn('Unknown contour "' + props.contour + '"');
               }
             });
           }
         });
 
-        axisComponent.__delegate__ = axisDelegate;
+      axisComponent.__delegate__ = axisDelegate;
 
-        return axisComponent;
+      return axisComponent;
     };
 
     var setOrdinalTicks = function(count) {
       // in this function, the 'this' context should be an sszvis.axis
       var domain = this.scale().domain(),
-          values = [],
-          step = Math.round(domain.length / count);
+        values = [],
+        step = Math.round(domain.length / count);
 
       // include the first value
       if (typeof domain[0] !== 'undefined') values.push(domain[0]);
@@ -1488,11 +1490,11 @@ namespace('sszvis.axis', function(module) {
         .ticks(10)
         .prop('scale', function(s) {
           var extended = s.copy(),
-              domain = extended.domain(),
-              range = extended.range();
+            domain = extended.domain(),
+            range = extended.range();
 
           extended
-            // the domain is mirrored - ±domain[1]
+          // the domain is mirrored - ±domain[1]
             .domain([-domain[1], domain[1]])
             // the range is mirrored – ±range[1]
             .range([range[0] - range[1], range[0] + range[1]]);
@@ -1547,9 +1549,9 @@ namespace('sszvis.axis', function(module) {
 
   function boundsOverlap(boundsA, boundsB) {
     return !(boundsB.left > boundsA.right ||
-             boundsB.right < boundsA.left ||
-             boundsB.top > boundsA.bottom ||
-             boundsB.bottom < boundsA.top);
+      boundsB.right < boundsA.left ||
+      boundsB.top > boundsA.bottom ||
+      boundsB.bottom < boundsA.top);
   }
 
   var slantLabel = {
@@ -1574,7 +1576,7 @@ namespace('sszvis.axis', function(module) {
           .attr('dy', '-0.75em')
           .attr('transform', 'rotate(-90)');
       },
-      diagonal:  function(selection) {
+      diagonal: function(selection) {
         selection.style('text-anchor', 'end')
           .attr('dx', '-0.8em')
           .attr('dy', '0em')
