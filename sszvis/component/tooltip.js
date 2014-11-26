@@ -13,7 +13,8 @@ namespace('sszvis.component.tooltip', function(module) {
 
   /* Configuration
   ----------------------------------------------- */
-  var RADIUS = 3;
+  var SMALL_CORNER_RADIUS = 3;
+  var LARGE_CORNER_RADIUS = 4;
   var TIP_SIZE = 6;
   var BLUR_PADDING = 5;
 
@@ -25,7 +26,6 @@ namespace('sszvis.component.tooltip', function(module) {
     var renderer = tooltipRenderer();
 
     return d3.component()
-      .delegate('centered', renderer)
       .delegate('header', renderer)
       .delegate('body', renderer)
       .delegate('orientation', renderer)
@@ -62,9 +62,8 @@ namespace('sszvis.component.tooltip', function(module) {
    */
   var tooltipRenderer = function() {
     return d3.component()
-      .prop('centered').centered(false)
-      .prop('header').header('')
-      .prop('body').body(d3.functor(''))
+      .prop('header')
+      .prop('body')
       .prop('orientation', d3.functor).orientation('bottom')
       .prop('dx').dx(1)
       .prop('dy').dy(1)
@@ -72,6 +71,11 @@ namespace('sszvis.component.tooltip', function(module) {
       .renderSelection(function(selection) {
         var tooltipData = selection.datum();
         var props = selection.props();
+
+        var isDef = sszvis.fn.defined;
+        var isSmall = (
+          isDef(props.header) && !isDef(props.body)) || (!isDef(props.header) && isDef(props.body)
+        );
 
 
         // Select tooltip elements
@@ -156,17 +160,17 @@ namespace('sszvis.component.tooltip', function(module) {
 
         tooltip.select('.sszvis-tooltip__header')
           .datum(sszvis.fn.prop('datum'))
-          .html(props.header);
+          .html(props.header || d3.functor(''));
 
         tooltip.select('.sszvis-tooltip__body')
           .datum(sszvis.fn.prop('datum'))
           .html(function(d) {
-            var body = props.body(d);
+            var body = props.body ? d3.functor(props.body)(d) : '';
             return Array.isArray(body) ? formatTable(body) : body;
           });
 
         selection.selectAll('.sszvis-tooltip')
-          .classed('sszvis-tooltip--centered', props.centered)
+          .classed('sszvis-tooltip--small', isSmall)
           .each(function(d) {
             var tip = d3.select(this);
             // only using dimensions.width and dimensions.height here. Not affected by scroll position
@@ -217,7 +221,8 @@ namespace('sszvis.component.tooltip', function(module) {
                 .attr('d', tooltipBackgroundGenerator(
                   [BLUR_PADDING, BLUR_PADDING],
                   [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING],
-                  orientation
+                  orientation,
+                  isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS
                 ));
           });
       });
@@ -255,7 +260,7 @@ namespace('sszvis.component.tooltip', function(module) {
    *
    * @return {Path}               SVG path description
    */
-  function tooltipBackgroundGenerator(a, b, orientation) {
+  function tooltipBackgroundGenerator(a, b, orientation, radius) {
     switch (orientation) {
       case 'top':
         a[1] = a[1] + TIP_SIZE;
@@ -321,15 +326,15 @@ namespace('sszvis.component.tooltip', function(module) {
 
     return [
       // Start
-      ['M', x(a), y(a) + RADIUS],
+      ['M', x(a), y(a) + radius],
       // Top side
-      side(x(a), y(a), x(a) + RADIUS, y(a), x(b) - RADIUS, y(a), (orientation === 'top')),
+      side(x(a), y(a), x(a) + radius, y(a), x(b) - radius, y(a), (orientation === 'top')),
       // Right side
-      side(x(b), y(a), x(b), y(a) + RADIUS, x(b), y(b) - RADIUS, (orientation === 'right')),
+      side(x(b), y(a), x(b), y(a) + radius, x(b), y(b) - radius, (orientation === 'right')),
       // Bottom side
-      side(x(b), y(b), x(b) -RADIUS, y(b), x(a) + RADIUS, y(b), (orientation === 'bottom')),
+      side(x(b), y(b), x(b) -radius, y(b), x(a) + radius, y(b), (orientation === 'bottom')),
       // Left side
-      side(x(a), y(b), x(a), y(b) - RADIUS, x(a), y(a) + RADIUS, (orientation === 'left'))
+      side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, (orientation === 'left'))
     ].map(function(d){ return d.join(' '); }).join(' ');
   }
 

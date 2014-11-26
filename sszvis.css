@@ -444,7 +444,7 @@
   line-height: 1.4545;
 }
 
-.sszvis-tooltip--centered .sszvis-tooltip__content {
+.sszvis-tooltip--small .sszvis-tooltip__content {
   padding: 6px 10px 4px 10px;
   text-align: center;
 }
