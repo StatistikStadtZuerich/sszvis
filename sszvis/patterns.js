@@ -47,7 +47,7 @@ namespace('sszvis.patterns', function(module) {
   };
 
   module.exports.heatTableMissingValuePattern = function(selection) {
-    var rectFill = '#FAFAFA',
+    var rectFill = sszvis.color.lightGry(),
         crossStroke = '#A4A4A4',
         crossStrokeWidth = 0.035,
         cross1 = 0.35,

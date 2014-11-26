@@ -35,6 +35,10 @@
  * @function divValGry Variation of the valued scale with a grey midpoint
  * @function divNtrGry Variation of the neutral scale with a grey midpoint
  * @method   reverse   Instance method to reverse the color order. @returns new scale
+ *
+ * Grey color scales
+ * @function gry       1-color scale for shaded values
+ * @function lightGry  1-color scale for shaded backgrounds
  */
 namespace('sszvis.color', function(module) {
   'use strict';
@@ -84,7 +88,8 @@ namespace('sszvis.color', function(module) {
   };
 
   var GREY_COLORS = {
-    gry: ['#D6D6D6']
+    gry: ['#D6D6D6'],
+    lightGry: ['#FAFAFA']
   };
 
 

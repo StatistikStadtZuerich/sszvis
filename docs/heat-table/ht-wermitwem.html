@@ -130,7 +130,7 @@
 
     function cValue(d) {
       var v = cAcc(d);
-      return v === 0 ? 'white' : colorScale(v);
+      return v === 0 ? sszvis.color.lightGry()(v) : colorScale(v);
     }
 
 

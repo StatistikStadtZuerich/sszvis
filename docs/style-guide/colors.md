@@ -25,6 +25,19 @@ A grey scale is included for use in cases where a data value should be shaded ou
 </script>
 ```
 
+### `color.lightGry()`
+
+A light grey scale is included for use in cases where a data background should be shaded out.
+
+```html|plain,run-script
+<div id='lightGreyScale' class='scale-container'></div>
+<script>
+    var scale = sszvis.color.lightGry();
+    colorSwatchFromLinearScale('lightGreyScale', scale, 1);
+</script>
+```
+
+
 ## Qualitative scales
 
 Qualitative scales are used for data that has distinct categories. They distinguish categories based on color contrast. They should never be used to compare values, use sequential or divergent scales in this case.
