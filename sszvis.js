@@ -5432,8 +5432,9 @@ namespace('sszvis.component.tooltip', function(module) {
           if (props.visible(d)) {
             tooltipData.push({
               datum: d,
-              x: pos.left,
-              y: pos.top
+              // here, we need to adjust for the window scroll position, since getBoundingClientRect returns viewport-relative coordinates, not document-relative ones
+              x: pos.left + window.scrollX,
+              y: pos.top + window.scrollY
             });
           }
         });
