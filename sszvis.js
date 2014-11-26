@@ -678,6 +678,21 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.getElementPageOffset
+     *
+     * Gets the element's offset from the page, which means adjusted for current scroll position
+     * @param  {node} el       The element for which to calculate the offset
+     * @return {array}         An array which is [xOffset, yOffset]
+     */
+    getElementPageOffset: function(el) {
+        // here, we need to adjust for the window scroll position, since getBoundingClientRect returns viewport-relative coordinates, not document-relative ones
+        var bounds = el.getBoundingClientRect(),
+            windowX = (window.pageXOffset !== undefined) ? window.pageXOffset : (document.documentElement || document.body.parentNode || document.body).scrollLeft,
+            windowY = (window.pageYOffset !== undefined) ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
+        return [bounds.left + windowX, bounds.top + windowY];
+    },
+
+    /**
      * fn.horizontalBarChartDimensions
      *
      * This function calculates dimensions for the horizontal bar chart. It encapsulates the
@@ -5430,13 +5445,12 @@ namespace('sszvis.component.tooltip', function(module) {
 
         var tooltipData = [];
         selection.each(function(d) {
-          var pos = this.getBoundingClientRect();
+          var pos = sszvis.fn.getElementPageOffset(this);
           if (props.visible(d)) {
             tooltipData.push({
               datum: d,
-              // here, we need to adjust for the window scroll position, since getBoundingClientRect returns viewport-relative coordinates, not document-relative ones
-              x: pos.left + window.scrollX,
-              y: pos.top + window.scrollY
+              x: pos[0],
+              y: pos[1]
             });
           }
         });
@@ -6167,6 +6181,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
         if (props.horizontalFloat) {
           var rowPosition = 0, horizontalPosition = 0;
           groups.attr('transform', function(d, i) {
+            // not affected by scroll position
             var width = this.getBoundingClientRect().width;
             if (horizontalPosition + width > props.floatWidth) {
               rowPosition += props.rowHeight;

@@ -196,6 +196,21 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.getElementPageOffset
+     *
+     * Gets the element's offset from the page, which means adjusted for current scroll position
+     * @param  {node} el       The element for which to calculate the offset
+     * @return {array}         An array which is [xOffset, yOffset]
+     */
+    getElementPageOffset: function(el) {
+        // here, we need to adjust for the window scroll position, since getBoundingClientRect returns viewport-relative coordinates, not document-relative ones
+        var bounds = el.getBoundingClientRect(),
+            windowX = (window.pageXOffset !== undefined) ? window.pageXOffset : (document.documentElement || document.body.parentNode || document.body).scrollLeft,
+            windowY = (window.pageYOffset !== undefined) ? window.pageYOffset : (document.documentElement || document.body.parentNode || document.body).scrollTop;
+        return [bounds.left + windowX, bounds.top + windowY];
+    },
+
+    /**
      * fn.horizontalBarChartDimensions
      *
      * This function calculates dimensions for the horizontal bar chart. It encapsulates the

@@ -39,13 +39,12 @@ namespace('sszvis.component.tooltip', function(module) {
 
         var tooltipData = [];
         selection.each(function(d) {
-          var pos = this.getBoundingClientRect();
+          var pos = sszvis.fn.getElementPageOffset(this);
           if (props.visible(d)) {
             tooltipData.push({
               datum: d,
-              // here, we need to adjust for the window scroll position, since getBoundingClientRect returns viewport-relative coordinates, not document-relative ones
-              x: pos.left + window.scrollX,
-              y: pos.top + window.scrollY
+              x: pos[0],
+              y: pos[1]
             });
           }
         });
