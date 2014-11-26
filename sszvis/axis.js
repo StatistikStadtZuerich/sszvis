@@ -203,6 +203,8 @@ namespace('sszvis.axis', function(module) {
             if (!props.slant) {
               labels
                 .each(function(d) {
+                  // although getBoundingClientRect returns coordinates relative to the window, not the document,
+                  // this should still work, since all tick bounds are affected equally by scroll position changes.
                   var bounds = {
                     node: this,
                     bounds: this.getBoundingClientRect()

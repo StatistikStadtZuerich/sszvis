@@ -1304,6 +1304,8 @@ namespace('sszvis.axis', function(module) {
             if (!props.slant) {
               labels
                 .each(function(d) {
+                  // although getBoundingClientRect returns coordinates relative to the window, not the document,
+                  // this should still work, since all tick bounds are affected equally by scroll position changes.
                   var bounds = {
                     node: this,
                     bounds: this.getBoundingClientRect()
@@ -5559,6 +5561,7 @@ namespace('sszvis.component.tooltip', function(module) {
           .classed('sszvis-tooltip--centered', props.centered)
           .each(function(d) {
             var tip = d3.select(this);
+            // only using dimensions.width and dimensions.height here. Not affected by scroll position
             var dimensions = tip.node().getBoundingClientRect();
             var orientation = props.orientation.apply(this, arguments);
 

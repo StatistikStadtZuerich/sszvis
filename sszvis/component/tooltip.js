@@ -170,6 +170,7 @@ namespace('sszvis.component.tooltip', function(module) {
           .classed('sszvis-tooltip--centered', props.centered)
           .each(function(d) {
             var tip = d3.select(this);
+            // only using dimensions.width and dimensions.height here. Not affected by scroll position
             var dimensions = tip.node().getBoundingClientRect();
             var orientation = props.orientation.apply(this, arguments);
 
