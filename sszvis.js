@@ -1155,7 +1155,6 @@ namespace('sszvis.fn', function(module) {
  * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
  *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
  * @property {number} textWrap                          Specify a width at which to wrap the axis label text.
- * @property {string, function} tickColor               specify a single string color or a function which takes a tick value and returns a color. (default specified in CSS)
  * @property {number, function} tickLength              specify a number or a function which returns a number for setting the tick length.
  * @property {string} title                             Specify a string to use as the title of this chart. Default title position depends on the chart orientation
  * @property {string} titleAnchor                       specify the title text-anchor. Values are 'start', 'middle', and 'end'. Corresponds to the 'text-anchor' svg styling attribute
@@ -1198,7 +1197,6 @@ namespace('sszvis.axis', function(module) {
         .prop('showZeroY').showZeroY(false)
         .prop('slant')
         .prop('textWrap')
-        .prop('tickColor')
         .prop('tickLength')
         .prop('title')
         .prop('titleAnchor') // start, end, or middle
@@ -1247,13 +1245,11 @@ namespace('sszvis.axis', function(module) {
           var rangeExtent = sszvis.fn.scaleRange(axisScale);
           group.selectAll('.tick line')
             .each(function(d) {
-              var pos = axisScale(d);
-              d3.select(this)
-                .classed('hidden', absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold);
+              var pos = axisScale(d),
+                  d3this = d3.select(this);
+              d3this
+                .classed('hidden', !d3this.classed('sszvis-axis__longtick') && (absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold));
             });
-
-          group.selectAll('.tick line')
-            .style('stroke', props.tickColor);
 
           if (sszvis.fn.defined(props.tickLength)) {
             var extent = d3.extent(axisScale.domain());
@@ -1261,20 +1257,44 @@ namespace('sszvis.axis', function(module) {
               .filter(function(d) {
                 return !sszvis.fn.stringEqual(d, extent[0]) && !sszvis.fn.stringEqual(d, extent[1]);
               });
-            var lines = ticks.selectAll('line');
             var orientation = axisDelegate.orient();
-            if (orientation === 'top') {
-              lines.attr('y1', props.tickLength);
-            } else if (orientation === 'bottom') {
-              lines.attr('y1', -props.tickLength);
-            } else if (orientation === 'left') {
-              lines.attr('x1', -props.tickLength);
-            } else if (orientation === 'right') {
-              lines.attr('x1', props.tickLength);
-            }
+
+            var longLinePadding = 2;
             if (orientation === 'left' || orientation === 'right') {
-              ticks.selectAll('text').attr('dy', '-0.4em');
+              ticks.selectAll('text').each(function(t) {
+                longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
+              });
+              longLinePadding += 2; // a lil' extra on the end
             }
+
+            var lines = ticks.selectAll('line.sszvis-axis__longtick')
+              .data([0]);
+
+            if (props.tickLength > longLinePadding) {
+              lines.enter().append('line')
+                .attr('class', 'sszvis-axis__longtick');
+
+              if (orientation === 'top') {
+                lines
+                  .attr('y1', longLinePadding)
+                  .attr('y2', props.tickLength);
+              } else if (orientation === 'bottom') {
+                lines
+                  .attr('y1', -longLinePadding)
+                  .attr('y2', -props.tickLength);
+              } else if (orientation === 'left') {
+                lines
+                  .attr('x1', -longLinePadding)
+                  .attr('x2', -props.tickLength);
+              } else if (orientation === 'right') {
+                lines
+                  .attr('x1', longLinePadding)
+                  .attr('x2', props.tickLength);
+              }
+            } else {
+              lines.remove();
+            }
+
           }
 
           if (props.alignOuterLabels) {

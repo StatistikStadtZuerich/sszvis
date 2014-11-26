@@ -20,7 +20,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var TICK_TYPES = ['Ohne Gitter', 'Dunkles Gitter', 'Helles Gitter'];
+  var TICK_TYPES = ['Ohne Gitter', 'Mit Gitter'];
 
 
   /* Shortcuts
@@ -120,8 +120,6 @@
       .tickLength(state.tickType === 'Ohne Gitter' ? 0 : bounds.innerHeight + -chartDimensions.axisOffset)
       .alignOuterLabels(true);
 
-    if (state.tickType === 'Helles Gitter') xAxis.tickColor('white');
-
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
       .orient('right');
@@ -137,18 +135,10 @@
 
     chartLayer.selectGroup('underAxis')
       .attr('transform', sszvis.fn.translateString(0, chartDimensions.totalHeight))
-      .style('visibility', state.tickType === 'Helles Gitter' ? 'hidden' : '')
       .call(xAxis);
 
     chartLayer.selectGroup('bars')
       .call(barGen);
-
-    // this duplication of the axis layer is for demonstration purposes only!
-    // the white axis ticks should be above the bars, and the dark one below them
-    chartLayer.selectGroup('overAxis')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.totalHeight))
-      .style('visibility', state.tickType === 'Helles Gitter' ? '' : 'hidden')
-      .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .attr('transform', sszvis.fn.translateString(0, chartDimensions.axisOffset))
