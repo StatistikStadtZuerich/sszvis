@@ -87,7 +87,9 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 25, bottom: 106 });
+    var defaultHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO;
+    var pyramidDimensions = sszvis.fn.populationPyramidLayout(defaultHeight, state.ages.length);
+    var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 106, top: 25, bottom: 106 });
 
 
     // Scales
@@ -98,7 +100,7 @@
 
     var positionScale = d3.scale.ordinal()
       .domain(state.ages)
-      .rangeBands([bounds.innerHeight, 0], 0.1, 0);
+      .range(pyramidDimensions.positions);
 
     var colorScale = sszvis.color.qual12()
       .domain(state.groups);
@@ -118,7 +120,7 @@
     var pyramid = sszvis.component.stackedPyramid()
       .barFill(sszvis.fn.compose(colorScale, groupAndStackAcc))
       .barPosition(sszvis.fn.compose(positionScale, aAcc))
-      .barHeight(positionScale.rangeBand())
+      .barHeight(pyramidDimensions.barHeight)
       .barWidth(sszvis.fn.compose(lengthScale, vAcc))
       .leftAccessor(womenAcc)
       .rightAccessor(menAcc);

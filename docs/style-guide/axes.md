@@ -122,7 +122,7 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 476
+        "height": 470
     }
 }
 ```
