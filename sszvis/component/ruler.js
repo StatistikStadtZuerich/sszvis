@@ -23,14 +23,12 @@ namespace('sszvis.component.ruler', function(module) {
 
   module.exports = function() {
 
-    var fn = sszvis.fn;
-
     return d3.component()
       .prop('top')
       .prop('bottom')
       .prop('x', d3.functor)
       .prop('y', d3.functor)
-      .prop('label').label(fn.constant(''))
+      .prop('label').label(d3.functor(''))
       .prop('color')
       .prop('flip', d3.functor).flip(false)
       .render(function(data) {

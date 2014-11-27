@@ -4,12 +4,7 @@
  * @module sszvis/fn
  */
 namespace('sszvis.fn', function(module) {
-'use strict';
-
-  var slice = function(list) {
-    var slice = Array.prototype.slice;
-    return slice.apply(list, slice.call(arguments, 1));
-  };
+  'use strict';
 
   module.exports = {
     /**
@@ -69,34 +64,6 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.colorRange - like d3.range, but both arguments are required.
-     * provides a linear color range with n values,
-     * sampled using the given array of colors.
-     *
-     * @param  {Array} colors [an array of colors from which the range is sampled]
-     * @param  {Number} n  [the number of samples to return]
-     * @return {Array} An array of n colors
-     */
-    colorRange: function(colors, n) {
-      var interp = d3.scale.linear().range(colors);
-      return d3.range(n + 1).map(function(i) { return interp(i / n); });
-    },
-
-    /**
-     * fn.constant
-     *
-     * Returns a function which returns a constant value.
-     *
-     * @param  {*} value A value for the constant
-     * @return {Function}       A function which always returns the constant value.
-     */
-    constant: function(value) {
-      return function() {
-        return value;
-      };
-    },
-
-    /**
      * fn.contains
      *
      * Checks whether an item is present in the given list (by strict equality).
@@ -148,20 +115,6 @@ namespace('sszvis.fn', function(module) {
         }
       }
       return result;
-    },
-
-    /**
-     * fn.either
-     *
-     * used to check if a value is undefined. If it is, returns
-     * the fallback value. If not, returns the passed value.
-     *
-     * @param  {*} val      A value to be checked for undefined
-     * @param  {*} fallback A value to return if val is undefined
-     * @return {*}          Either val or fallback, depending on whether or not val is undefined.
-     */
-    either: function(val, fallback) {
-      return (typeof val === 'undefined') ? fallback : val;
     },
 
     /**
@@ -405,7 +358,7 @@ namespace('sszvis.fn', function(module) {
         padding: padding,
         totalHeight: totalHeight,
         positions: positions
-      }
+      };
     },
 
     /**

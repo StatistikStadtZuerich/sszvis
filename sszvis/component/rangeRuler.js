@@ -28,7 +28,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
       .prop('y1', d3.functor)
       .prop('top')
       .prop('bottom')
-      .prop('label').label(sszvis.fn.constant(''))
+      .prop('label').label(d3.functor(''))
       .prop('total')
       .prop('flip', d3.functor).flip(false)
       .render(function(data) {

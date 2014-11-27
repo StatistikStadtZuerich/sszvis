@@ -486,12 +486,7 @@ if (typeof this.sszvis !== 'undefined') {
  * @module sszvis/fn
  */
 namespace('sszvis.fn', function(module) {
-'use strict';
-
-  var slice = function(list) {
-    var slice = Array.prototype.slice;
-    return slice.apply(list, slice.call(arguments, 1));
-  };
+  'use strict';
 
   module.exports = {
     /**
@@ -551,34 +546,6 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.colorRange - like d3.range, but both arguments are required.
-     * provides a linear color range with n values,
-     * sampled using the given array of colors.
-     *
-     * @param  {Array} colors [an array of colors from which the range is sampled]
-     * @param  {Number} n  [the number of samples to return]
-     * @return {Array} An array of n colors
-     */
-    colorRange: function(colors, n) {
-      var interp = d3.scale.linear().range(colors);
-      return d3.range(n + 1).map(function(i) { return interp(i / n); });
-    },
-
-    /**
-     * fn.constant
-     *
-     * Returns a function which returns a constant value.
-     *
-     * @param  {*} value A value for the constant
-     * @return {Function}       A function which always returns the constant value.
-     */
-    constant: function(value) {
-      return function() {
-        return value;
-      };
-    },
-
-    /**
      * fn.contains
      *
      * Checks whether an item is present in the given list (by strict equality).
@@ -630,20 +597,6 @@ namespace('sszvis.fn', function(module) {
         }
       }
       return result;
-    },
-
-    /**
-     * fn.either
-     *
-     * used to check if a value is undefined. If it is, returns
-     * the fallback value. If not, returns the passed value.
-     *
-     * @param  {*} val      A value to be checked for undefined
-     * @param  {*} fallback A value to return if val is undefined
-     * @return {*}          Either val or fallback, depending on whether or not val is undefined.
-     */
-    either: function(val, fallback) {
-      return (typeof val === 'undefined') ? fallback : val;
     },
 
     /**
@@ -887,7 +840,7 @@ namespace('sszvis.fn', function(module) {
         padding: padding,
         totalHeight: totalHeight,
         positions: positions
-      }
+      };
     },
 
     /**
@@ -1689,13 +1642,13 @@ namespace('sszvis.bounds', function(module) {
   module.exports = function(bounds) {
     bounds || (bounds = {});
     var padding = {
-      top:    sszvis.fn.either(bounds.top, 0),
-      right:  sszvis.fn.either(bounds.right, 1),
-      bottom: sszvis.fn.either(bounds.bottom, 0),
-      left:   sszvis.fn.either(bounds.left, 1)
+      top:    either(bounds.top, 0),
+      right:  either(bounds.right, 1),
+      bottom: either(bounds.bottom, 0),
+      left:   either(bounds.left, 1)
     };
-    var width   = sszvis.fn.either(bounds.width, DEFAULT_WIDTH);
-    var height  = sszvis.fn.either(bounds.height, Math.round(width / RATIO) + padding.top + padding.bottom);
+    var width   = either(bounds.width, DEFAULT_WIDTH);
+    var height  = either(bounds.height, Math.round(width / RATIO) + padding.top + padding.bottom);
 
     return {
       innerHeight: height - padding.top  - padding.bottom,
@@ -1708,6 +1661,13 @@ namespace('sszvis.bounds', function(module) {
 
   module.exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
   module.exports.RATIO = RATIO;
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function either(val, fallback) {
+    return (typeof val === 'undefined') ? fallback : val;
+  }
 
 });
 
@@ -4660,7 +4620,7 @@ namespace('sszvis.component.rangeRuler', function(module) {
       .prop('y1', d3.functor)
       .prop('top')
       .prop('bottom')
-      .prop('label').label(sszvis.fn.constant(''))
+      .prop('label').label(d3.functor(''))
       .prop('total')
       .prop('flip', d3.functor).flip(false)
       .render(function(data) {
@@ -4857,14 +4817,12 @@ namespace('sszvis.component.ruler', function(module) {
 
   module.exports = function() {
 
-    var fn = sszvis.fn;
-
     return d3.component()
       .prop('top')
       .prop('bottom')
       .prop('x', d3.functor)
       .prop('y', d3.functor)
-      .prop('label').label(fn.constant(''))
+      .prop('label').label(d3.functor(''))
       .prop('color')
       .prop('flip', d3.functor).flip(false)
       .render(function(data) {
