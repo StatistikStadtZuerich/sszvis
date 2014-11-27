@@ -3312,7 +3312,7 @@ namespace('sszvis.control.sliderControl', function(module) {
         var alteredRange = sszvis.fn.scaleRange(alteredScale);
         var width = alteredRange[1] - alteredRange[0]; // the width of the component's axis
 
-        // the unchanging bits
+        // the mostly unchanging bits
         var bg = selection.selectAll('g.sszvis-slidercontrol__backgroundgroup')
           .data([1]);
 
@@ -3333,12 +3333,14 @@ namespace('sszvis.control.sliderControl', function(module) {
           });
 
         var axisSelection = enterBg.selectAll('g.sszvis-axisGroup')
-          .data([1])
-          .enter()
+          .data([1]);
+
+        axisSelection.enter()
           .append('g')
           .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slidercontrol', true)
-          .attr('transform', sszvis.fn.translateString(0, axisOffset))
-          .call(axis);
+          .attr('transform', sszvis.fn.translateString(0, axisOffset));
+
+        axisSelection.call(axis);
 
         // adjust visual aspects of the axis to fit the design
         var minorAxisTicks = axisSelection.selectAll('.tick line').filter(function(d) {
@@ -3375,6 +3377,22 @@ namespace('sszvis.control.sliderControl', function(module) {
           .style('stroke', '#fff')
           .style('stroke-linecap', 'round')
           .attr('x1', sszvis.fn.roundPixelCrisp(scaleRange[0] + lineEndOffset)).attr('x2', sszvis.fn.roundPixelCrisp(scaleRange[1] - lineEndOffset));
+
+        var shadow = selection.selectAll('g.sszvis-slider__background').selectAll('.sszvis-slider__backgroundshadow')
+          .data([props.value]);
+
+        shadow.enter()
+          .append('line')
+          .attr('class', 'sszvis-slider__backgroundshadow')
+          .attr('stroke-width', bgWidth - 1)
+          .style('stroke', '#E0E0E0')
+          .style('stroke-linecap', 'round');
+
+          shadow
+            .attr('x1', sszvis.fn.roundPixelCrisp(scaleRange[0] + lineEndOffset))
+            .attr('x2', function(d) {
+              return sszvis.fn.roundPixelCrisp(alteredScale(d));
+            });
 
         // draw the handle and the label
         var handle = selection.selectAll('g.sszvis-slidercontrol__handle')
