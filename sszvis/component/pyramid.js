@@ -54,14 +54,16 @@ namespace('sszvis.component.pyramid', function(module) {
           .y(props.barPosition)
           .height(props.barHeight)
           .width(props.barWidth)
-          .fill(props.barFill);
+          .fill(props.barFill)
+          .centerTooltip(true);
 
         var rightBar = sszvis.component.bar()
           .x(SPINE_PADDING)
           .y(props.barPosition)
           .height(props.barHeight)
           .width(props.barWidth)
-          .fill(props.barFill);
+          .fill(props.barFill)
+          .centerTooltip(true);
 
         var leftLine = lineComponent()
           .barPosition(props.barPosition)

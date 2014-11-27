@@ -58,14 +58,16 @@ namespace('sszvis.component.stackedPyramid', function(module) {
           .y(props.barPosition)
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
-          .fill(props.barFill);
+          .fill(props.barFill)
+          .centerTooltip(true);
 
         var rightBar = sszvis.component.bar()
           .x(function(d){ return SPINE_PADDING + d.y0; })
           .y(props.barPosition)
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
-          .fill(props.barFill);
+          .fill(props.barFill)
+          .centerTooltip(true);
 
         var leftStack = stackComponent()
           .stackElement(leftBar);

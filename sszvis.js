@@ -3662,6 +3662,7 @@ namespace('sszvis.component.bar', function(module) {
       .prop('height', d3.functor)
       .prop('fill', d3.functor)
       .prop('stroke', d3.functor)
+      .prop('centerTooltip')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -3693,11 +3694,19 @@ namespace('sszvis.component.bar', function(module) {
           .attr('height', hAcc);
 
         // Tooltip anchors
+        var tooltipPosition;
+        if (props.centerTooltip) {
+          tooltipPosition = function(d) {
+            return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+          };
+        } else {
+          tooltipPosition = function(d) {
+            return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+          };
+        }
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .position(function(d) {
-            return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
-          });
+          .position(tooltipPosition);
 
         selection.call(tooltipAnchor);
 
@@ -4513,14 +4522,16 @@ namespace('sszvis.component.pyramid', function(module) {
           .y(props.barPosition)
           .height(props.barHeight)
           .width(props.barWidth)
-          .fill(props.barFill);
+          .fill(props.barFill)
+          .centerTooltip(true);
 
         var rightBar = sszvis.component.bar()
           .x(SPINE_PADDING)
           .y(props.barPosition)
           .height(props.barHeight)
           .width(props.barWidth)
-          .fill(props.barFill);
+          .fill(props.barFill)
+          .centerTooltip(true);
 
         var leftLine = lineComponent()
           .barPosition(props.barPosition)
@@ -5226,14 +5237,16 @@ namespace('sszvis.component.stackedPyramid', function(module) {
           .y(props.barPosition)
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
-          .fill(props.barFill);
+          .fill(props.barFill)
+          .centerTooltip(true);
 
         var rightBar = sszvis.component.bar()
           .x(function(d){ return SPINE_PADDING + d.y0; })
           .y(props.barPosition)
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
-          .fill(props.barFill);
+          .fill(props.barFill)
+          .centerTooltip(true);
 
         var leftStack = stackComponent()
           .stackElement(leftBar);

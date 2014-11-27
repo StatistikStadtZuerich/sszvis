@@ -40,6 +40,7 @@ namespace('sszvis.component.bar', function(module) {
       .prop('height', d3.functor)
       .prop('fill', d3.functor)
       .prop('stroke', d3.functor)
+      .prop('centerTooltip')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -71,11 +72,19 @@ namespace('sszvis.component.bar', function(module) {
           .attr('height', hAcc);
 
         // Tooltip anchors
+        var tooltipPosition;
+        if (props.centerTooltip) {
+          tooltipPosition = function(d) {
+            return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+          };
+        } else {
+          tooltipPosition = function(d) {
+            return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+          };
+        }
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .position(function(d) {
-            return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
-          });
+          .position(tooltipPosition);
 
         selection.call(tooltipAnchor);
 
