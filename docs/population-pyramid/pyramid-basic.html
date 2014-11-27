@@ -199,7 +199,10 @@
     // Components
 
     var pyramid = sszvis.component.pyramid()
-      .barFill(sszvis.fn.compose(colorScale, gAcc))
+      .barFill(function(d) {
+        var c = colorScale(gAcc(d));
+        return aAcc(d) === state.selectedAge.age ? sszvis.color.slightlyDarker(c) : c;
+      })
       .barPosition(sszvis.fn.compose(positionScale, aAcc))
       .barHeight(pyramidDimensions.barHeight)
       .barWidth(sszvis.fn.compose(lengthScale, vAcc))
