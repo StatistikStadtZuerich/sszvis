@@ -86,14 +86,28 @@
   ----------------------------------------------- */
   function render(state) {
     var squarePadding = 2;
+    // heatTableDimensions calculates a set of useful properties for configuring the heat table.
+    // give it the targeted width (final width will not necessarily match this), the padding between squares, and the number of squares
+    // in each dimension (x, then y)
     var tableDimensions = sszvis.fn.heatTableDimensions(sszvis.bounds.DEFAULT_WIDTH, squarePadding, state.kreisList.length, state.agesList.length);
+    // this object represents the padding around the heat table. The left and right need to be different in order to fit all of the y-axis
+    // labels into the available space
     var tablePadding = {
       top: 70,
       right: 54,
       bottom: 60,
       left: 80
     };
-    var bounds = sszvis.bounds({ width: tablePadding.left + tableDimensions.width + tablePadding.right, left: tablePadding.left, right: tablePadding.right, height: tablePadding.top + tableDimensions.height + tablePadding.bottom, top: tablePadding.top, bottom: tablePadding.bottom });
+    // construct the bounds as usual, but add the left and right padding to the width, and the top and bottom padding to the height
+    // This is because, when bounds are being constructed, the padding is subtracted from width and height to provide innerWidth and innerHeight, but we want these values to represent the table's dimensions
+    var bounds = sszvis.bounds({
+      width: tablePadding.left + tableDimensions.width + tablePadding.right,
+      left: tablePadding.left,
+      right: tablePadding.right,
+      height: tablePadding.top + tableDimensions.height + tablePadding.bottom,
+      top: tablePadding.top,
+      bottom: tablePadding.bottom
+    });
 
 
     // Scales
