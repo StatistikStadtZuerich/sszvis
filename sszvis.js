@@ -6229,46 +6229,55 @@ namespace('sszvis.legend.radius', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var range = props.scale.range();
-        var points = [range[1], d3.mean(range), range[0]];
+        var domain = props.scale.domain();
+        var points = [domain[1], Math.round(d3.mean(domain)), domain[0]];
+        var maxRadius = sszvis.fn.scaleRange(props.scale)[1];
 
-        var circles = selection.selectAll('circle.sszvis-legend__mark')
+        var group = selection.selectAll('g.sszvis-legend__elementgroup')
+          .data([0]);
+
+        group.enter().append('g').attr('class', 'sszvis-legend__elementgroup');
+
+        group.attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(maxRadius), sszvis.fn.roundPixelCrisp(maxRadius)));
+
+        var circles = group.selectAll('circle.sszvis-legend__greyline')
           .data(points);
 
         circles.enter()
           .append('circle')
-          .classed('sszvis-legend__mark', true);
+          .classed('sszvis-legend__greyline', true);
 
         circles.exit().remove();
 
-        circles
-          .attr('r', sszvis.fn.identity)
-          .attr('fill', props.fill)
-          .attr('stroke', props.stroke)
-          .attr('stroke-width', props.strokeWidth);
+        function getCircleCenter(d) {
+          return maxRadius - props.scale(d);
+        }
 
-        var lines = selection.selectAll('line.sszvis-legend__mark')
+        function getCircleEdge(d) {
+          return maxRadius - 2 * props.scale(d);
+        }
+
+        circles
+          .attr('r', props.scale)
+          .attr('stroke-width', 1.2)
+          .attr('cy', getCircleCenter);
+
+        var lines = group.selectAll('line.sszvis-legend__dashedline')
           .data(points);
 
         lines.enter()
           .append('line')
-          .classed('sszvis-legend__mark', true);
+          .classed('sszvis-legend__dashedline', true);
 
         lines.exit().remove();
 
         lines
           .attr('x1', 0)
-          .attr('y1', function(d) {
-            return -d + props.strokeWidth;
-          })
-          .attr('x2', range[1] + 15)
-          .attr('y2', function(d) {
-            return -d + props.strokeWidth;
-          })
-          .attr('stroke', '#909090')
-          .attr('stroke-dasharray', '3 2');
+          .attr('y1', getCircleEdge)
+          .attr('x2', maxRadius + 15)
+          .attr('y2', getCircleEdge);
 
-        var labels = selection.selectAll('text.sszvis-legend__label')
+        var labels = group.selectAll('text.sszvis-legend__label')
           .data(points);
 
         labels.enter()
@@ -6278,10 +6287,8 @@ namespace('sszvis.legend.radius', function(module) {
         labels.exit().remove();
 
         labels
-          .attr('dx', range[1] + 18)
-          .attr('y', function(d) {
-            return -d + props.strokeWidth;
-          })
+          .attr('dx', maxRadius + 18)
+          .attr('y', getCircleEdge)
           .attr('dy', '0.35em') // vertically-center
           .text(props.labelFormat);
       });

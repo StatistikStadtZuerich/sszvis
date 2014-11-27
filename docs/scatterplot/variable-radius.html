@@ -55,7 +55,8 @@
 
       state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
       state.yExtent = d3.extent(state.data, yAcc);
-      state.rExtent = d3.extent(state.data, rAcc);
+      var radiusExtent = d3.extent(state.data, rAcc);
+      state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
 
       render(state);
     },
@@ -194,7 +195,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('radLegend')
-      .attr('transform', sszvis.fn.translateString(state.rExtent[1], bounds.innerHeight + 70))
+      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 70))
       .call(radiusLegend);
 
     chartLayer.selectGroup('xAxis')

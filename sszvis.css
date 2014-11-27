@@ -152,6 +152,16 @@
   shape-rendering: crispEdges;
 }
 
+.sszvis-legend__greyline {
+  fill: none;
+  stroke: #909090;
+}
+
+.sszvis-legend__dashedline {
+  stroke: #909090;
+  stroke-dasharray: 3 2;
+}
+
 /**
  * Bar component
  *
