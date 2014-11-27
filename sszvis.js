@@ -5353,7 +5353,9 @@ namespace('sszvis.component.tooltip', function(module) {
 
         var tooltipData = [];
         selection.each(function(d) {
-          var pos = sszvis.fn.getElementPageOffset(this);
+          var thisBCR = this.getBoundingClientRect();
+          var intoBCR = props.renderInto.node().getBoundingClientRect();
+          var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
           if (props.visible(d)) {
             tooltipData.push({
               datum: d,
