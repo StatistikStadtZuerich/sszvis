@@ -3452,6 +3452,7 @@ namespace('sszvis.control.sliderControl', function(module) {
         var props = selection.props();
 
         var axisOffset = 28; // vertical offset for the axis
+        var majorTickSize = 12;
         var backgroundOffset = sszvis.fn.roundPixelCrisp(18); // vertical offset for the middle of the background
         var handleWidth = 10; // the width of the handle
         var handleHeight = 23; // the height of the handle
@@ -3479,7 +3480,7 @@ namespace('sszvis.control.sliderControl', function(module) {
           .scale(alteredScale)
           .orient('bottom')
           .hideBorderTickThreshold(0)
-          .tickSize(12)
+          .tickSize(majorTickSize)
           .tickPadding(6)
           .tickValues(sszvis.fn.set([].concat(props.majorTicks, props.minorTicks)))
           .tickFormat(function(d) {
@@ -3573,12 +3574,11 @@ namespace('sszvis.control.sliderControl', function(module) {
           .classed('sszvis-slidercontrol__handleline', true)
           .attr('y1', backgroundOffset - handleLineDimension).attr('y2', backgroundOffset + handleLineDimension);
 
-        var sliderInteraction = sszvis.behavior.click()
+        var sliderInteraction = sszvis.behavior.move()
           .xScale(props.scale)
-          .yScale(d3.scale.linear().range([0, handleHeight]))
+          // range goes from the text top (text is 11px tall) to the bottom of the axis
+          .yScale(d3.scale.linear().range([-11, axisOffset + majorTickSize]))
           .draggable(true)
-          .on('click', props.onchange)
-          .on('down', props.onchange)
           .on('drag', props.onchange);
 
         selection.selectGroup('sliderInteraction')
