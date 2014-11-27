@@ -1,103 +1,44 @@
-# Stadt Zürich Visualization Library
+# Statistik Stadt Zürich Visualization Library
+
+Most users will use the ready-to-use code in `sszvis.js` and `sszvis.css` in the root of this project to get started. If you want to contribute to this library, however, read on.
+
+## Documentation
+
+To read the documentation with all examples, open `index.html` in a browser. You can also read the documentation directly in `docs`. All source code in `sszvis` is documented, too, if you need to know the details.
+
+## Dependencies
+
+This library doesn't have any outside dependencies and doesn't require any special tooling to build. The major build step necessary is to concatenate all Javascript files in `sszvis` into a single file.
+
+To simplify development, we use GNU Make and some helpful libraries on Mac OS X. If you need to develop on another system, check the `Makefile` for the list of files that need to be concatenated.
 
 ## Installation
 
-* Make sure you have [Node.js](http://nodejs.org/) installed
-* In a console, change into the `prototype` directory
-* Run `npm install` to install all dependencies
-* Run `npm start` to start the webserver at http://localhost:8080/
+If you want to use the build system we have put in place, make sure you have the following software installed.
 
-## Inputs
+To build:
 
-* Integration per `<script src=""></script>`
-  - `iframe` keine Option
-  - `iframe` per skript erstellen?
-  - CSS namespacing und CSS von StZH-Seite
-  - CORS-Probleme?
-* Versionierung der Skripts
-* `<noscript>` notwendig, evtl. conditional comments for IElt9
-* CMS: HTML-Komponente
-* iframe -> verweis auf layoutX.html?script=bla.js
-* `<link>` und `<style>` ist verboten
-* linting aktivieren
+* [GNU Make](https://www.gnu.org/software/make/manual/make.html)
 
-Wünsche:
+To build and run a development server:
 
-* 1 Zeile Code für Line-Chart
-* Mit der Zeit verstehen, was Code macht
-* Z.B. auch Beispiele von D3 kopieren, soll bekannt aussehen
-* Möglich zu kopieren von D3?
+* [fswatch](http://emcrisostomo.github.io/fswatch/)
+* [browser-sync](http://www.browsersync.io/)
 
-* d3 evtl. als externe library
-* queue verwenden
-* jsdoc, aber stzh würde im falle dass selber doc generieren
+To build maps:
 
-## Prinzipien
+* [topojson](https://github.com/mbostock/topojson)
 
-* Deklarativ
-* Daten transformieren
-* Komponenten kombinieren
+## Development
 
-In Bezug auf D3
+Build the project with
 
-* Nahe am Stil von D3 bleiben
-* Nahe an online verfügbaren Beispiele bleiben
-* Schlechte Abstraktionen vermeiden
-* Kontrolle vor Konfiguration
+    make build
 
-In Bezug auf Daten
+Start a development server on http://localhost:3000 to automatically rebuild and push changes to the browser:
 
-* Daten so vorbereiten wie sie gebraucht werden
+    make server
 
-In Bezug auf die Anwendung
+Update the maps with
 
-* Copy/Paste everything as standalone index.html to get started
-
-
-## Architektur
-
-* State
-  - managed
-  - emits change events
-* Commands
-  - define what happens
-* Services
-  - fetch data
-* Models
-  - parse data
-    + don't detect data types, provide parsers instead
-  - filter data
-* View
-  - render UI
-  - render visualization
-    + nested layers
-    + plain D3 components
-  - trigger commands
-
-Möglicherweise
-
-* Router
-
-## Entwicklung
-
-Um ein neues Chart zu entwickeln, steht folgendes zur Verfügung:
-
-* Core-Library
-  - Applikationsarchitektur
-  - Applikations-Layouts
-  - D3-Komponenten
-* Beispiele
-* Entwicklungsserver
-* fallback, browser-support
-
-
-## Open questions
-
-* how to set context for scales (need all data)
-* all scales 0-1 normalized. will be expanded by layer to fit width/height
-* namespace: stzh
-* layer: needs access to
-  - data
-  - context size
-* loading state/spinner
-* load certain components only
+    make maps
