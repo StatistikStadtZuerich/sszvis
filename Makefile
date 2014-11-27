@@ -42,7 +42,6 @@ SOURCE_FILES = \
 	sszvis/annotation/line.js \
 	sszvis/annotation/rectangle.js \
 	sszvis/behavior/move.js \
-	sszvis/behavior/click.js \
 	sszvis/behavior/voronoi.js \
 	sszvis/control/segmentedControl.js \
 	sszvis/control/sliderControl.js \
