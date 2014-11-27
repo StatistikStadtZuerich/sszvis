@@ -68,10 +68,13 @@ namespace('sszvis.legend.linearColorScale', function(module) {
 
         endCaps.enter()
           .append('circle')
+          .attr('class', 'ssvis-legend--mark')
           .attr('cx', function(d, i) { return i * props.width; })
           .attr('cy', segHeight / 2)
           .attr('r', segHeight / 2)
           .attr('fill', function(d) { return props.scale(d); });
+
+        endCaps.exit().remove();
 
         var labels = selection.selectAll('.sszvis-legend__label')
           .data(labelText);
