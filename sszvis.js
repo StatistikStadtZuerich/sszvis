@@ -5288,10 +5288,34 @@ namespace('sszvis.component.textWrap', function(module) {
 /**
  * Tooltip component
  *
- * @property {function} body A function accepting a datum. This function can return
- *                           - a plain string
- *                           - an HTML string to be used as innerHTML
- *                           - an array of arrays to produce a tabular layout
+ * Use this component to add a tooltip to the document. The tooltip component should be
+ * called on a selection of [data-tooltip-anchor], which contain the information necessary to
+ * position the tooltip and provide it with data. The tooltip's visibility should be toggled
+ * using the .visible property, passing a predicate function. Tooltips will be displayed
+ * when .visible returns true.
+ *
+ * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
+ *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
+ *                                      on which it is called. Instead, it's rendered into whichever selection is
+ *                                      passed to the renderInto option
+ * @property {function} visible         Provide a predicate function which accepts a datum and determines whether the associated
+ *                                      tooltip should be visible
+ * @property {function} header          A function accepting a datum. The result becomes the header of the tooltip.
+ *                                      This function can return:
+ *                                      - a plain string
+ *                                      - an HTML string to be used as innerHTML
+ * @property {function} body            A function accepting a datum. The result becomes the body of the tooltip.
+ *                                      This function can return:
+ *                                      - a plain string
+ *                                      - an HTML string to be used as innerHTML
+ *                                      - an array of arrays, which produces a tabular layout where each
+ *                                      sub-array is one row in the table.
+ * @property {function} orientation     A string or function returning a string which determines the orientation. This determines
+ *                                      which direction the tooltip sits relative to its point.
+ *                                      Possible values are: "top" (above the point), "right" (right of the point), "bottom" (below the point), "left" (left of the point)
+ * @property {number} dx                A number for the x-offset of the tooltip
+ * @property {number} dy                A number for the y-offset of the tooltip
+ * @property {function} opacity         A function or number which determines the opacity of the tooltip. Default is 1.
  *
  * @return {d3.component}
  */
