@@ -27,7 +27,10 @@ namespace('sszvis.logger', function(module) {
   function logger(type) {
     return function() {
       var args = Array.prototype.slice.call(arguments);
-      console[type].apply(console, ['[sszvis]'].concat(args));
+      // IE9's console functions need a little bit of help
+      // http://stackoverflow.com/questions/5538972/console-log-apply-not-working-in-ie9
+      var log = Function.prototype.bind.call(console[type], console);
+      log.apply(console, ['[sszvis]'].concat(args));
     };
   }
 
