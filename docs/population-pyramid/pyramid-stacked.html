@@ -48,7 +48,7 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.groups = sszvis.fn.set(state.data, groupAndStackAcc).sort(d3.descending);
+      state.groups = sszvis.fn.set(state.data, groupAndStackAcc);
 
       state.populations = sszvis.cascade()
         .objectBy(gAcc)
