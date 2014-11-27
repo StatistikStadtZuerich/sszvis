@@ -49,7 +49,12 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
+      // find the range of the scale
       state.yearBounds = d3.extent(state.data, xAcc);
+      // calculate the year interval between endpoints of the range
+      var yearInterval = d3.time.years(state.yearBounds[0], state.yearBounds[1]).length + 1;
+      // expand the interval by 5%, so that the scale has left padding
+      state.yearBounds[0] = d3.time.year.offset(state.yearBounds[0], -(yearInterval * 0.05));
       render(state);
     },
 
@@ -146,7 +151,6 @@
       .ticks(5);
 
     var yAxis = sszvis.axis.y()
-      .contour('rect')
       .scale(yPosScale)
       .orient('right');
 
