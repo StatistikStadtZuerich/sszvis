@@ -303,7 +303,7 @@
       .scale(yScale)
       .ticks(3)
       .orient('right')
-      .contour('rect');
+      .contour(true);
 
     var rulerLabel = sszvis.component.modularText.svg()
       .bold(sszvis.fn.compose(sszvis.format.number, vAcc))

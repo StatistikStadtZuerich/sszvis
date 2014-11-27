@@ -23,11 +23,8 @@
  *
  * The following properties are custom additions.
  *
- * @property {function} highlightTick                   Whether or not an axis tick should be visually highlighted
  * @property {boolean} alignOuterLabels                 Whether or not to align the outer labels to the axis extent so that they do not fall outside the axis space.
- * @property {string} ["outline", "rect"] contour       Specify a 'contour' background for the axis labels.
- *                                                      "outline" provides a white outline shadow (which may not display well on all browsers).
- *                                                      "rect" uses a faint white rectangle (which will work on all browsers).
+ * @property {boolean} contour                          Specify a 'contour' background for the axis labels.
  * @property {number} hideBorderTickThreshold           Specifies the pixel distance threshold for the visible tick correction. Ticks which are closer than
  *                                                      this threshold to the end of the axis (i.e. a tick which is 1 or two pixels from the end) will be
  *                                                      hidden from view. This prevents the display of a tick very close to the ending line.
@@ -307,36 +304,13 @@ namespace('sszvis.axis', function(module) {
             selection.selectAll('.sszvis-axis .tick').each(function() {
               var g = d3.select(this);
               var textNode = g.select('text').node();
-
-              switch (props.contour) {
-                case 'outline':
-                  var textContour = g.select('.sszvis-axis__label-contour-outline');
-                  if (textContour.empty()) {
-                    textContour = d3.select(textNode.cloneNode())
-                      .classed('sszvis-axis__label-contour-outline', true);
-                    this.insertBefore(textContour.node(), textNode);
-                  }
-                  textContour.text(textNode.textContent);
-                  break;
-
-                case 'rect':
-                  var dim = textNode.getBBox();
-                  var hPadding = 2;
-                  var rect = g.select('rect');
-                  if (rect.empty()) {
-                    rect = g.insert('rect', ':first-child');
-                  }
-                  rect
-                    .attr('class', 'sszvis-axis__label-contour-rect')
-                    .attr('height', dim.height)
-                    .attr('width', dim.width + 2 * hPadding)
-                    .attr('x', dim.x - hPadding)
-                    .attr('y', dim.y);
-                  break;
-
-                default:
-                  sszvis.logger.warn('Unknown contour "' + props.contour + '"');
+              var textContour = g.select('.sszvis-axis__label-contour');
+              if (textContour.empty()) {
+                textContour = d3.select(textNode.cloneNode())
+                  .classed('sszvis-axis__label-contour', true);
+                this.insertBefore(textContour.node(), textNode);
               }
+              textContour.text(textNode.textContent);
             });
           }
         });

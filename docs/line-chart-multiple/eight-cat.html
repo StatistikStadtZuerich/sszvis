@@ -125,7 +125,7 @@
       .tickFormat(function(d) {
         return d === 0 ? null : sszvis.format.percent(d);
       })
-      .contour('outline');
+      .contour(true);
 
     var cLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)

@@ -153,7 +153,7 @@
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .contour('outline');
+      .contour(true);
 
     var rulerLabel = sszvis.component.modularText.svg()
       .bold(sszvis.fn.compose(sszvis.format.number, yAcc))

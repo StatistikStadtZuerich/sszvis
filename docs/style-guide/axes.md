@@ -252,9 +252,9 @@ This x-axis has a vertical slant
 }
 ```
 
-## Contours (Outline)
+## Contours
 
-Contours are used to make labels stand out, especially when they are positioned above chart components. This y-axis has labels which display the "outline" contour, which is generally the preferred method of making the labels stand out. However, rendering is not necessarily consistent across browsers.
+Contours are used to make labels stand out, especially when they are positioned above chart components. Contours should not be used on area charts.
 
 ```project
 {
@@ -273,31 +273,6 @@ Contours are used to make labels stand out, especially when they are positioned 
     "size": {
         "width": 516,
         "height": 455
-    }
-}
-```
-
-## Contours (Rect)
-
-This y-axis has labels which display the "rect" contour, which places a pale rectangle behind the labels. This contour will display across browsers.
-
-```project
-{
-    "name": "area-chart-stacked-three",
-    "files": {
-        "index.html": {
-            "source": "docs/area-chart-stacked/sa-three.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/area-chart-stacked/data/SA_3Categories_yearly_zeroes.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 535
     }
 }
 ```
