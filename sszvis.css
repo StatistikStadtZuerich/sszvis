@@ -93,6 +93,15 @@
   font-family: Arial, sans-serif;
   font-size: 11px;
   text-anchor: middle;
+  /*
+   * The fix for WebKit/Blink browsers.
+   */
+  -webkit-backface-visibility: hidden;
+
+  /*
+   * The fix for Firefox ... yes, it has to be on one, huge line.
+   */
+  filter: url('data:image/svg+xml;utf8,<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="gaussian_blur"><feGaussianBlur in="SourceGraphic" stdDeviation="0" /></filter></defs></svg>#gaussian_blur');
 }
 
 /**
