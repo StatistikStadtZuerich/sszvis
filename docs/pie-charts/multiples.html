@@ -47,6 +47,7 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
+      // groups the data into arrays by their 'group' value
       var grouped = sszvis.cascade()
         .arrayBy(gAcc, function(g1, g2) {
           return state.groups.indexOf(g1) - state.groups.indexOf(g2);
@@ -54,17 +55,21 @@
         .apply(data);
 
       state.data = data;
+      // a list of groups
       state.groups = sszvis.fn.set(state.data, gAcc);
+      // an index of the total values of the groups. Used for calculating the slice size of each component of the pie chart
       state.totalValues = grouped.reduce(function(memo, group, i) {
         memo[state.groups[i]] = d3.sum(group, vAcc);
         return memo;
       }, {});
+      // map the groups into data objects, with a group name and a set of values
       state.pieGroups = grouped.map(function(g, i) {
         return {
           group: state.groups[i],
           values: g
         };
       });
+      // a list of categories (for the color scale)
       state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
@@ -115,6 +120,8 @@
 
     // Scales
 
+    // this is a basic scale for the pie chart segment angles. It has no range because it will be copied
+    // and a different range set, for each pie chart in the multiples.
     var aScale = d3.scale.linear()
       .range([0, 2 * Math.PI]);
 
@@ -138,6 +145,7 @@
     var pieMaker = sszvis.component.pie()
       .fill(sszvis.fn.compose(cScale, cAcc));
 
+    // this component generates svg 'g' tags into which chart instances can be rendered
     var multiplesMaker = sszvis.component.multiples()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
@@ -152,6 +160,10 @@
       .columns(2)
       .orientation('horizontal');
 
+    // the infotip has special behavior because it shows up even when its directly
+    // associate element isn't hovered, but another element in the same category is.
+    // In these case, the infotip is faded slightly (by the infotipOpacity function),
+    // but the infotip under the mouse position has full opacity.
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
       .header(cAcc)
@@ -165,18 +177,24 @@
     var pieCharts = chart.selectGroup('piecharts')
       .call(multiplesMaker);
 
+    // grab all of the prepared groups, and render a pie chart into each of them
     pieCharts.selectAll('.sszvis-multiple').each(function(d) {
+      // inside this closure, create a copy of the angle scale
+      // which is relative to the group total calculated earlier
       var groupScale = aScale.copy()
         .domain([0, state.totalValues[d.group]]);
 
+      // configure the pieMaker component for this particular group
       pieMaker
         .radius(Math.min(d.gw, d.gh) / 2)
         .angle(sszvis.fn.compose(groupScale, vAcc));
 
+      // render the pie chart inside this group
       d3.select(this).selectAll('.sszvis-multiple-chart')
         .call(pieMaker);
     });
 
+    // attach the tooltips
     pieCharts.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
