@@ -88,6 +88,7 @@
  */
 
 namespace('sszvis.legend.ordinalColorScale', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -168,7 +169,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
 
         if (props.horizontalFloat) {
           var rowPosition = 0, horizontalPosition = 0;
-          groups.attr('transform', function(d, i) {
+          groups.attr('transform', function(d) {
             // not affected by scroll position
             var width = this.getBoundingClientRect().width;
             if (horizontalPosition + width > props.floatWidth) {

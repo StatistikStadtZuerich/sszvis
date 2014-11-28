@@ -69,10 +69,10 @@ SOURCE_FILES = \
 	sszvis/layout/populationPyramidLayout.js \
 	sszvis/layout/stackedAreaMultiplesLayout.js \
 	sszvis/layout/verticalBarChartDimensions.js \
-	sszvis/legend/legendBinnedColorScale.js \
-	sszvis/legend/legendColor.js \
-	sszvis/legend/legendLinearColorScale.js \
-	sszvis/legend/legendRadius.js \
+	sszvis/legend/binnedColorScale.js \
+	sszvis/legend/linearColorScale.js \
+	sszvis/legend/ordinalColorScale.js \
+	sszvis/legend/radius.js \
 	sszvis/map/map.js \
 	sszvis/map/switzerland.js \
 	sszvis/map/zurich.js

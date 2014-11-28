@@ -1,5 +1,4 @@
 /**
- * FIXME
  * Radius size legend
  *
  * Use for showing how different radius sizes correspond to data values.
@@ -15,6 +14,7 @@
  * @returns {d3.component}
  */
 namespace('sszvis.legend.radius', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()

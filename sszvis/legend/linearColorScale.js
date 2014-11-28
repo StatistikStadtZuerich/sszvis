@@ -1,5 +1,4 @@
 /**
- * FIXME
  * Linear Color Scale Legend
  *
  * Use for displaying the values of a continuous linear color scale.
@@ -17,6 +16,7 @@
  */
 
 namespace('sszvis.legend.linearColorScale', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()

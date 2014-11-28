@@ -1,5 +1,4 @@
 /**
- * FIXME
  * Binned Color Scale Legend
  *
  * Use for displaying the values of discontinuous (binned) color scale's bins
@@ -17,6 +16,7 @@
  */
 
 namespace('sszvis.legend.binnedColorScale', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -61,7 +61,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
           x: Math.floor(circleRad + sum),
           w: innerRange[1] - sum,
           c: props.scale(pPrev)
-        })
+        });
 
         var circles = selection.selectAll('circle.sszvis-legend__circle')
           .data(props.endpoints);
@@ -92,7 +92,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         segments
           .attr('x', function(d) { return d.x; })
           .attr('y', 0)
-          .attr('width', function(d, i) { return d.w; })
+          .attr('width', function(d) { return d.w; })
           .attr('height', segHeight)
           .attr('fill', function(d) { return d.c; });
 
@@ -125,7 +125,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
 
         labels
           .style('text-anchor', 'middle')
-          .attr('transform', function(d, i) { return 'translate(' + (d.x + d.w) + ',' + (segHeight + 20) + ')'; })
+          .attr('transform', function(d) { return 'translate(' + (d.x + d.w) + ',' + (segHeight + 20) + ')'; })
           .text(function(d) {
             return props.labelFormat(d.p);
           });
