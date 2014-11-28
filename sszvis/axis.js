@@ -197,7 +197,7 @@ namespace('sszvis.axis', function(module) {
 
           if (sszvis.fn.defined(props.textWrap)) {
             group.selectAll('text')
-              .call(sszvis.component.textWrap, props.textWrap);
+              .call(sszvis.svgUtils.textWrap, props.textWrap);
           }
 
           if (props.slant) {

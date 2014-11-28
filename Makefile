@@ -58,7 +58,6 @@ SOURCE_FILES = \
 	sszvis/component/stackedAreaMultiples.js \
 	sszvis/component/stackedBar.js \
 	sszvis/component/stackedPyramid.js \
-	sszvis/component/textWrap.js \
 	sszvis/component/tooltip.js \
 	sszvis/component/tooltipAnchor.js \
 	sszvis/control/buttonGroup.js \
@@ -78,6 +77,7 @@ SOURCE_FILES = \
 	sszvis/svgUtils/crisp.js \
 	sszvis/svgUtils/ensureDefsElement.js \
 	sszvis/svgUtils/modularText.js \
+	sszvis/svgUtils/textWrap.js \
 	sszvis/svgUtils/translateString.js
 
 section = sszvis/banner/_section.js $(1)

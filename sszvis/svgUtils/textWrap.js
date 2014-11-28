@@ -3,7 +3,7 @@
  *
  * Function allowing to 'wrap' the text from an SVG <text> element with <tspan>.
  *
- * @module sszvis/component/textWrap
+ * @module sszvis/svgUtils/textWrap
  *
  * Based on https://github.com/mbostock/d3/issues/1642
  * @example svg.append("g")
@@ -19,7 +19,7 @@
  * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
-namespace('sszvis.component.textWrap', function(module) {
+namespace('sszvis.svgUtils.textWrap', function(module) {
   'use strict';
 
   module.exports = function(text, width, paddingRightLeft, paddingTopBottom) {
