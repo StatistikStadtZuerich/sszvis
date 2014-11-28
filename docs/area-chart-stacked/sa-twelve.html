@@ -146,7 +146,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 800, top: 70, bottom: 190});
+    var bounds = sszvis.bounds({ height: Math.round(sszvis.bounds.DEFAULT_WIDTH * sszvis.bounds.RATIO), top: 70, bottom: 190});
     // this layout function computes values, including an array of baseline y-positions, for the
     // area multiples component. The most important is the array of y-baselines, which are used
     // for the yPositionMultiples scale
