@@ -124,7 +124,7 @@
       .scale(yScale)
       .orient('right');
 
-    var segmentedControl = sszvis.control.segmented()
+    var buttonGroup = sszvis.control.buttonGroup()
       .values(TICK_TYPES)
       .width(bounds.width * 0.8)
       .current(state.tickType)
@@ -147,7 +147,7 @@
     controlLayer.selectDiv('controls')
       .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
       .style('top', 16 + 'px')
-      .call(segmentedControl);
+      .call(buttonGroup);
   }
 
 }(d3, sszvis));

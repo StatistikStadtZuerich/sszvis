@@ -129,7 +129,7 @@
       .radius(4)
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var sliderControl = sszvis.control.sliderControl()
+    var slider = sszvis.control.slider()
       .scale(tScale)
       .value(state.activeQuarter)
       .minorTicks(state.quarters)
@@ -165,9 +165,9 @@
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
-    chartLayer.selectGroup('sliderControl')
+    chartLayer.selectGroup('slider')
       .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 36))
-      .call(sliderControl);
+      .call(slider);
 
     chartLayer.selectGroup('cScale')
       // the 124-pixel offset ensures that the color legend is 60px below the axis line of the slider control

@@ -1,21 +1,20 @@
 /**
- * FIXME
- * Segmented Control
+ * Button Group
  *
  * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
- * @module sszvis/control/segmented
+ * @module sszvis/control/buttonGroup
  *
  * @property {array} values         an array of values which are the options available in the control. Each one will become a button
- * @property {any} current          the current value of the segmented control. Should be one of the options passed to .values()
- * @property {number} width         The total width of the segmented control. Each option will have 1/3rd of this width. (default: 300px)
+ * @property {any} current          the current value of the button group. Should be one of the options passed to .values()
+ * @property {number} width         The total width of the button group. Each option will have 1/3rd of this width. (default: 300px)
  * @property {function} change      A callback/event handler function to call when the user clicks on a value.
  *                                  Note that clicking on a value does not necessarily change any state unless this callback function does something.
  *
  * @return {d3.component}
  */
-namespace('sszvis.control.segmented', function(module) {
+namespace('sszvis.control.buttonGroup', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -30,18 +29,18 @@ namespace('sszvis.control.segmented', function(module) {
 
         var buttonWidth = props.width / props.values.length;
 
-        var container = selection.selectDiv('segmentedControl');
+        var container = selection.selectDiv('buttonGroup');
 
         container
-          .classed('sszvis-segmented-control', true)
+          .classed('sszvis-control-buttonGroup', true)
           .style('width', props.width + 'px');
 
-        var buttons = container.selectAll('.sszvis-segmented-control__item')
+        var buttons = container.selectAll('.sszvis-control-buttonGroup__item')
           .data(props.values);
 
         buttons.enter()
           .append('div')
-          .classed('sszvis-segmented-control__item', true);
+          .classed('sszvis-control-buttonGroup__item', true);
 
         buttons.exit().remove();
 

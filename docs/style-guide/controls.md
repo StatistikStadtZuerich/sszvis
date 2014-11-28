@@ -2,23 +2,23 @@
 
 Controls can be used to provide a graphical tool for interacting with a chart's state settings.
 
-## Segmented Control
+## Button Group Control
 
-### sszvis.control.segmented
+### sszvis.control.buttonGroup
 
-#### `segmented.values`
+#### `buttonGroup.values`
 
 an array of values which are the options available in the control. Each one will become a button
 
-#### `segmented.current`
+#### `buttonGroup.current`
 
-the current value of the segmented control. Should be one of the options passed to .values()
+the current value of the buttonGroup control. Should be one of the options passed to .values()
 
-#### `segmented.[width]`
+#### `buttonGroup.[width]`
 
-The total width of the segmented control. Each option will have 1/3rd of this width. (default: 300px)
+The total width of the buttonGroup control. Each option will have 1/3rd of this width. (default: 300px)
 
-#### `segmented.change`
+#### `buttonGroup.change`
 
 A callback/event handler function to call when the user clicks on a value. Note that clicking on a value does not necessarily change any state unless this callback function does something.
 
@@ -47,33 +47,33 @@ A callback/event handler function to call when the user clicks on a value. Note 
 
 ## Slider Control
 
-### sszvis.control.sliderControl
+### sszvis.control.slider
 
-#### `sliderControl.scale`
+#### `slider.scale`
 
 A scale function which this slider represents. The values in the scale's domain are used as the possible values of the slider.
 
-#### `sliderControl.minorTicks`
+#### `slider.minorTicks`
 
 An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis.
 
-#### `sliderControl.majorTicks`
+#### `slider.majorTicks`
 
 An array of ticks which become major (larger and labeled) ticks on the slider's axis.
 
-#### `sliderControl.tickLabels`
+#### `slider.tickLabels`
 
 A function to use to format the major tick labels.
 
-#### `sliderControl.value`
+#### `slider.value`
 
 The display value of the slider.
 
-#### `sliderControl.label`
+#### `slider.label`
 
 A string or function for the handle label. The datum associated with it is the current slider value.
 
-#### `sliderControl.onchange`
+#### `slider.onchange`
 
 A callback function called whenever user interaction attempts to change the slider value. Note that this component will not change its own state. The callback function must affect some state change in order for this component's display to be updated.
 

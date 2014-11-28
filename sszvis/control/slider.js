@@ -1,5 +1,4 @@
 /**
- * FIXME
  * Slider control
  *
  * Control for use in filtering. Works very much like an interactive axis.
@@ -7,7 +6,7 @@
  * select values on that scale. Ticks created using an sszvis.axis show the user where
  * data values lie.
  *
- * @module  sszvis/control/sliderControl
+ * @module  sszvis/control/slider
  *
  * @property {function} scale                 A scale function which this slider represents. The values in the scale's domain
  *                                            are used as the possible values of the slider.
@@ -22,7 +21,7 @@
  *
  * @returns {d3.component}
  */
-namespace('sszvis.control.sliderControl', function(module) {
+namespace('sszvis.control.slider', function(module) {
   'use strict';
 
   function contains(x, a) {
@@ -55,16 +54,14 @@ namespace('sszvis.control.sliderControl', function(module) {
         var scaleRange = sszvis.fn.scaleRange(props.scale);
         var alteredScale = props.scale.copy()
           .range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
-        var alteredRange = sszvis.fn.scaleRange(alteredScale);
-        var width = alteredRange[1] - alteredRange[0]; // the width of the component's axis
 
         // the mostly unchanging bits
-        var bg = selection.selectAll('g.sszvis-slidercontrol__backgroundgroup')
+        var bg = selection.selectAll('g.sszvis-control-slider__backgroundgroup')
           .data([1]);
 
         var enterBg = bg.enter()
           .append('g')
-          .classed('sszvis-slidercontrol__backgroundgroup', true);
+          .classed('sszvis-control-slider__backgroundgroup', true);
 
         // create the axis
         var axis = sszvis.axis.x()
@@ -83,13 +80,13 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         axisSelection.enter()
           .append('g')
-          .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slidercontrol', true)
+          .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider', true)
           .attr('transform', sszvis.fn.translateString(0, axisOffset));
 
         axisSelection.call(axis);
 
         // adjust visual aspects of the axis to fit the design
-        var minorAxisTicks = axisSelection.selectAll('.tick line').filter(function(d) {
+        axisSelection.selectAll('.tick line').filter(function(d) {
           return !contains(d, props.majorTicks);
         })
         .attr('y2', 4);
@@ -141,24 +138,24 @@ namespace('sszvis.control.sliderControl', function(module) {
             });
 
         // draw the handle and the label
-        var handle = selection.selectAll('g.sszvis-slidercontrol__handle')
+        var handle = selection.selectAll('g.sszvis-control-slider__handle')
           .data([props.value]);
 
         handle.exit().remove();
 
         var handleEntering = handle.enter()
-          .append('g').classed('sszvis-slidercontrol__handle', true);
+          .append('g').classed('sszvis-control-slider__handle', true);
 
         handle
           .attr('transform', function(d) {
             return sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0.5);
-          })
+          });
 
         handleEntering
           .append('text')
-          .classed('sszvis-slidercontrol--label', true);
+          .classed('sszvis-control-slider--label', true);
 
-        handle.selectAll('.sszvis-slidercontrol--label')
+        handle.selectAll('.sszvis-control-slider--label')
           .data(function(d) { return [d]; })
           .text(props.label)
           .style('text-anchor', function(d) {
@@ -170,7 +167,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handleEntering
           .append('rect')
-          .classed('sszvis-slidercontrol__handlebox', true)
+          .classed('sszvis-control-slider__handlebox', true)
           .attr('x', -(handleWidth / 2))
           .attr('y', backgroundOffset - handleHeight / 2)
           .attr('width', handleWidth).attr('height', handleHeight)
@@ -180,7 +177,7 @@ namespace('sszvis.control.sliderControl', function(module) {
 
         handleEntering
           .append('line')
-          .classed('sszvis-slidercontrol__handleline', true)
+          .classed('sszvis-control-slider__handleline', true)
           .attr('y1', backgroundOffset - handleLineDimension).attr('y2', backgroundOffset + handleLineDimension);
 
         var sliderInteraction = sszvis.behavior.move()
@@ -191,7 +188,7 @@ namespace('sszvis.control.sliderControl', function(module) {
           .on('drag', props.onchange);
 
         selection.selectGroup('sliderInteraction')
-          .classed('sszvis-slidercontrol--interactionLayer', true)
+          .classed('sszvis-control-slider--interactionLayer', true)
           .attr('transform', sszvis.fn.translateString(0, 4))
           .call(sliderInteraction);
       });

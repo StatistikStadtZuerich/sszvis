@@ -190,7 +190,7 @@
       })
       .datum(state.stackedData);
 
-    // used for rendering the tooltip and the segmented control
+    // used for rendering the tooltip and the button group
     var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
 
@@ -330,9 +330,9 @@
       .rows(6)
       .orientation('vertical');
 
-    // set up the segmented control for choosing between joined and separated views
+    // set up the button group control for choosing between joined and separated views
     var options = ['Summiert', 'Separiert'];
-    var segmentedControl = sszvis.control.segmented()
+    var buttonGroup = sszvis.control.buttonGroup()
       .values(options)
       .current(options[Number(state.isMultiples)])
       .change(actions.toggleMultiples);
@@ -360,9 +360,9 @@
       .call(colorLegend);
 
     htmlLayer.selectDiv('controls')
-      .style('left', (bounds.innerWidth - segmentedControl.width()) / 2 + 'px')
+      .style('left', (bounds.innerWidth - buttonGroup.width()) / 2 + 'px')
       .style('top', '10px')
-      .call(segmentedControl);
+      .call(buttonGroup);
 
     chartLayer.selectGroup('highlight')
       .datum(state.highlightData)

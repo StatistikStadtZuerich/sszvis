@@ -43,8 +43,6 @@ SOURCE_FILES = \
 	sszvis/annotation/rectangle.js \
 	sszvis/behavior/move.js \
 	sszvis/behavior/voronoi.js \
-	sszvis/control/segmentedControl.js \
-	sszvis/control/sliderControl.js \
 	sszvis/component/bar.js \
 	sszvis/component/dot.js \
 	sszvis/component/groupedBars.js \
@@ -64,6 +62,8 @@ SOURCE_FILES = \
 	sszvis/component/textWrap.js \
 	sszvis/component/tooltip.js \
 	sszvis/component/tooltipAnchor.js \
+	sszvis/control/buttonGroup.js \
+	sszvis/control/slider.js \
 	sszvis/layout/heatTableDimensions.js \
 	sszvis/layout/horizontalBarChartDimensions.js \
 	sszvis/layout/populationPyramidLayout.js \

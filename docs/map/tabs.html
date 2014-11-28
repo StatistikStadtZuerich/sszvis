@@ -129,11 +129,11 @@
 
     // Components
 
-    // segmented control for switching the data year
+    // Button group control for switching the data year
 
     var controlWidth = bounds.width / 2;
 
-    var control = sszvis.control.segmented()
+    var control = sszvis.control.buttonGroup()
       .values(state.years)
       .width(controlWidth)
       .current(state.currentYear)

@@ -66,7 +66,7 @@
   display: none;
 }
 
-.sszvis-axis.sszvis-axis--slidercontrol path {
+.sszvis-axis.sszvis-axis--slider path {
   stroke: none;
 }
 
@@ -245,12 +245,13 @@
   stroke-dasharray: 3 3;
 }
 
+
 /**
- * Segmented Control component
+ * Button group control
  *
- * @module sszvis/control/segmented
+ * @module sszvis/control/buttonGrup
  */
-.sszvis-segmented-control {
+.sszvis-control-buttonGroup {
   display: inline-block;
   position: absolute;
   user-select: none;
@@ -259,7 +260,7 @@
   -ms-user-select: none;
 }
 
-.sszvis-segmented-control__item {
+.sszvis-control-buttonGroup__item {
   background-color: #FFFFFF;
   border: 1px solid #7C7C7C;
   border-left: none;
@@ -274,20 +275,50 @@
   vertical-align: middle;
 }
 
-.sszvis-segmented-control__item.selected {
+.sszvis-control-buttonGroup__item.selected {
   background-color: #B8B8B8;
   color: #FFFFFF;
 }
 
-.sszvis-segmented-control__item:first-child {
+.sszvis-control-buttonGroup__item:first-child {
   border-left: 1px solid #7C7C7C;
   border-top-left-radius: 3px;
   border-bottom-left-radius: 3px;
 }
 
-.sszvis-segmented-control__item:last-child {
+.sszvis-control-buttonGroup__item:last-child {
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px;
+}
+
+
+/**
+ * Slider control
+ *
+ * @module sszvis/control/slider
+ */
+.sszvis-control-slider__backgroundgroup {
+
+}
+
+.sszvis-control-slider__handle {
+  cursor: pointer;
+}
+
+.sszvis-control-slider--label {
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+.sszvis-control-slider__handlebox {
+  fill: #fff;
+  stroke: #545454;
+}
+
+.sszvis-control-slider__handleline {
+  stroke: #545454;
 }
 
 
@@ -337,36 +368,6 @@
 
 .sszvis-handleRuler__handle-mark {
   stroke: #A6A8AB;
-}
-
-
-/**
- * sliderControl component
- *
- * @module sszvis/control/sliderControl
- */
-.sszvis-slidercontrol__backgroundgroup {
-
-}
-
-.sszvis-slidercontrol__handle {
-  cursor: pointer;
-}
-
-.sszvis-slidercontrol--label {
-  fill: #545454;
-  font-family: Arial, sans-serif;
-  font-size: 10px;
-  text-anchor: middle;
-}
-
-.sszvis-slidercontrol__handlebox {
-  fill: #fff;
-  stroke: #545454;
-}
-
-.sszvis-slidercontrol__handleline {
-  stroke: #545454;
 }
 
 

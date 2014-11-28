@@ -105,7 +105,7 @@ A map of Zürich's Wahlkreise.
 
 ## Zürich: Quartiere
 
-A map of the Statistische Quartiere of Zürich, demonstrating use of a segmented control for data subset selection.
+A map of the Statistische Quartiere of Zürich, demonstrating use of a button group control for data subset selection.
 
 ```project
 {

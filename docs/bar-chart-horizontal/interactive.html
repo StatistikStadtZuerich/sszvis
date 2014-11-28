@@ -149,7 +149,7 @@
         return sszvis.fn.contains(state.selected.map(sszvis.fn.compose(String, yAcc)), String(d));
       });
 
-    var segmentedControl = sszvis.control.segmented()
+    var buttonGroup = sszvis.control.buttonGroup()
       .values(state.years)
       .width(bounds.width / 2)
       .current(state.selectedYear)
@@ -182,7 +182,7 @@
     controlLayer.selectDiv('controls')
       .style('left', (bounds.width / 4) + 'px')
       .style('top', 10 + 'px')
-      .call(segmentedControl);
+      .call(buttonGroup);
 
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
