@@ -197,7 +197,7 @@
     // Components
 
     // the stacked area component (for the joined view)
-    var stackedArea = sszvis.component.stacked.area()
+    var stackedArea = sszvis.component.stackedArea()
       // Because both this and the multiples component render using the
       // same pre-existing elements, a key function is important to ensure
       // that the data is bound in the correct way.
@@ -209,7 +209,7 @@
       .fill(sszvis.fn.compose(cScale, cAcc));
 
     // the area multiples component (for the separated view)
-    var stackedAreaMultiples = sszvis.component.stacked.areaMultiples()
+    var stackedAreaMultiples = sszvis.component.stackedAreaMultiples()
       // a key function must be passed here as well
       .key(sszvis.fn.prop('category'))
       .valuesAccessor(sszvis.fn.prop('values'))

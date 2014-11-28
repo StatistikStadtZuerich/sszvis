@@ -16,8 +16,8 @@
  *                                range:          This is an array of baseline positions, counting from the top of the stack downwards.
  *                                                It should be used to configure a d3.scale.ordinal(). The values passed into the ordinal
  *                                                scale will be given a y-value which descends from the top of the stack, so that the resulting
- *                                                scale will match the organization scheme of sszvis.stacked.area. Use the ordinal scale to
- *                                                configure the sszvis.stacked.areaMultiples component.
+ *                                                scale will match the organization scheme of sszvis.stackedArea. Use the ordinal scale to
+ *                                                configure the sszvis.stackedAreaMultiples component.
  *                                bandHeight:     The height of each multiples band. This can be used to configure the within-area y-scale.
  *                                                This height represents the height of the y-axis of the individual area multiple.
  *                                padHeight:      This is the amount of vertical padding between each area multiple.

@@ -2,7 +2,7 @@
 
 > Stacked area charts are useful for showing how component parts contribute to a total quantity, while also showing how those components and the total quantity change across change in another dimension, usually time.
 
-## sszvis.component.stacked.area
+## sszvis.component.stackedArea
 
 ### Data structure
 
@@ -10,7 +10,7 @@ This component requires an array of layer objects, where each layer object repre
 
 ### Configuration
 
-The stacked.area component uses a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout) under the hood, so some of its configuration properties are similar.
+The stackedArea component uses a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout) under the hood, so some of its configuration properties are similar.
 
 #### `area.x(x)`
 
@@ -68,11 +68,11 @@ Specify an accessor for the values of the layer objects. The default treats the 
 }
 ```
 
-## sszvis.component.stacked.areaMultiples
+## sszvis.component.stackedAreaMultiples
 
 ### Data structure
 
-This component, like stacked.area, requires an array of layer objects, where each layer object is one of the multiples. In addition to stacked.area, this chart's layers can be separated to provide two views on the data: a sum of all elements as well as every element on its own.
+This component, like stackedArea, requires an array of layer objects, where each layer object is one of the multiples. In addition to stackedArea, this chart's layers can be separated to provide two views on the data: a sum of all elements as well as every element on its own.
 
 ### Configuration
 

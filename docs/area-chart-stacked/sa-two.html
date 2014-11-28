@@ -169,7 +169,7 @@
 
     // Components
 
-    var stackedArea = sszvis.component.stacked.area()
+    var stackedArea = sszvis.component.stackedArea()
       .key(sszvis.fn.prop('category'))
       .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))
@@ -177,7 +177,7 @@
       .yScale(yScale)
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var stackedAreaMultiples = sszvis.component.stacked.areaMultiples()
+    var stackedAreaMultiples = sszvis.component.stackedAreaMultiples()
       .key(sszvis.fn.prop('category'))
       .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))

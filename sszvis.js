@@ -4318,16 +4318,15 @@ namespace('sszvis.component.ruler', function(module) {
 
 
 /**
- * FIXME
  * Stacked Area Chart
  *
  * Stacked area charts are useful for showing how component parts contribute to a total quantity
  *
- * The stacked.area component uses a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout) under the hood,
+ * The stackedArea component uses a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout) under the hood,
  * so some of its configuration properties are similar. This component requires an array of layer objects,
  * where each layer object represents a layer in the stack.
  *
- * @module sszvis/component/stacked/area
+ * @module sszvis/component/stackedArea
  *
  * @property {function} x                      Accessor function to read *x*-values from the data. Should return a value in screen pixels.
  *                                             Used to figure out which values share a vertical position in the stack.
@@ -4347,7 +4346,7 @@ namespace('sszvis.component.ruler', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.stacked.area', function(module) {
+namespace('sszvis.component.stackedArea', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -4402,13 +4401,13 @@ namespace('sszvis.component.stacked.area', function(module) {
 
 
 /**
- * Stacked Multiples Chart
+ * Stacked Area Multiples Chart
  *
- * This component, like stacked.area, requires an array of layer objects, where each layer object is one of the multiples.
- * In addition to stacked.area, this chart's layers can be separated to provide two views on the data: a sum of all
+ * This component, like stackedArea, requires an array of layer objects, where each layer object is one of the multiples.
+ * In addition to stackedArea, this chart's layers can be separated to provide two views on the data: a sum of all
  * elements as well as every element on its own.
  *
- * @module sszvis/component/stacked/areaMultiples
+ * @module sszvis/component/stackedAreaMultiples
  *
  * @property {number, function} x             Accessor function for the *x*-values. Passed a data object and should return a value
  *                                            in screen pixels.
@@ -4428,7 +4427,7 @@ namespace('sszvis.component.stacked.area', function(module) {
  * @return {d3.component}
  */
 
-namespace('sszvis.component.stacked.areaMultiples', function(module) {
+namespace('sszvis.component.stackedAreaMultiples', function(module) {
 'use strict';
 
   module.exports = function() {
@@ -5800,8 +5799,8 @@ namespace('sszvis.layout.populationPyramidLayout', function(module) {
  *                                range:          This is an array of baseline positions, counting from the top of the stack downwards.
  *                                                It should be used to configure a d3.scale.ordinal(). The values passed into the ordinal
  *                                                scale will be given a y-value which descends from the top of the stack, so that the resulting
- *                                                scale will match the organization scheme of sszvis.stacked.area. Use the ordinal scale to
- *                                                configure the sszvis.stacked.areaMultiples component.
+ *                                                scale will match the organization scheme of sszvis.stackedArea. Use the ordinal scale to
+ *                                                configure the sszvis.stackedAreaMultiples component.
  *                                bandHeight:     The height of each multiples band. This can be used to configure the within-area y-scale.
  *                                                This height represents the height of the y-axis of the individual area multiple.
  *                                padHeight:      This is the amount of vertical padding between each area multiple.

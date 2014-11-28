@@ -1,11 +1,11 @@
 /**
- * Stacked Multiples Chart
+ * Stacked Area Multiples Chart
  *
- * This component, like stacked.area, requires an array of layer objects, where each layer object is one of the multiples.
- * In addition to stacked.area, this chart's layers can be separated to provide two views on the data: a sum of all
+ * This component, like stackedArea, requires an array of layer objects, where each layer object is one of the multiples.
+ * In addition to stackedArea, this chart's layers can be separated to provide two views on the data: a sum of all
  * elements as well as every element on its own.
  *
- * @module sszvis/component/stacked/areaMultiples
+ * @module sszvis/component/stackedAreaMultiples
  *
  * @property {number, function} x             Accessor function for the *x*-values. Passed a data object and should return a value
  *                                            in screen pixels.
@@ -25,7 +25,7 @@
  * @return {d3.component}
  */
 
-namespace('sszvis.component.stacked.areaMultiples', function(module) {
+namespace('sszvis.component.stackedAreaMultiples', function(module) {
 'use strict';
 
   module.exports = function() {
