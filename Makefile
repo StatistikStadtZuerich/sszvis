@@ -32,6 +32,7 @@ SOURCE_FILES = \
 	sszvis/color.js \
 	sszvis/createSvgLayer.js \
 	sszvis/createHtmlLayer.js \
+	sszvis/fallback.js \
 	sszvis/format.js \
 	sszvis/loadError.js \
 	sszvis/logger.js \
