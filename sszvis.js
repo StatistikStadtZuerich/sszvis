@@ -853,21 +853,6 @@ namespace('sszvis.fn', function(module) {
 
       var vecRound = vec.map(roundNumber);
       return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
-    },
-
-    /**
-     * FIXME
-     * fn.translateString
-     *
-     * Pass an x and a y component, and this returns a translate string, which can be set as the 'transform' property of
-     * an svg element.
-     *
-     * @param  {number} x     The x-component of the transform
-     * @param  {number} y     The y-component of the transform
-     * @return {string}       The translate string
-     */
-    translateString: function(x, y) {
-      return 'translate(' + x + ',' + y + ')';
     }
 
   };
@@ -977,7 +962,7 @@ namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
             .classed('sszvis-axis--bottom', isBottom)
             .classed('sszvis-axis--vertical', props.vertical)
-            .attr('transform', sszvis.fn.translateString(0, 2))
+            .attr('transform', sszvis.svgUtils.translateString(0, 2))
             .call(axisDelegate);
 
           var axisScale = axisDelegate.scale();
@@ -994,12 +979,12 @@ namespace('sszvis.axis', function(module) {
               var dx = sszvis.fn.roundPixelCrisp(0) - subpixelShift[0];
               var dy = sszvis.fn.roundPixelCrisp(isBottom ? 2 : 0) - subpixelShift[1];
               d3.select(this).select('line')
-                .attr('transform', sszvis.fn.translateString(dx, dy));
+                .attr('transform', sszvis.svgUtils.translateString(dx, dy));
             });
 
           // Place axis line on a half-pixel grid to prevent anti-aliasing
           group.selectAll('path.domain')
-            .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
+            .attr('transform', sszvis.svgUtils.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
 
 
           // hide ticks which are too close to one endpoint
@@ -3235,7 +3220,7 @@ namespace('sszvis.component.groupedBars', function(module) {
 
         unitsWithoutValue
           .attr('transform', function(d, i) {
-            return sszvis.fn.translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2, props.y(d, i));
+            return sszvis.svgUtils.translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2, props.y(d, i));
           });
 
         unitsWithoutValue
@@ -3408,7 +3393,7 @@ namespace('sszvis.component.handleRuler', function(module) {
                    : (y > props.bottom - dy) ? 0
                    : 5;
 
-            return sszvis.fn.translateString(x + dx, y + dy);
+            return sszvis.svgUtils.translateString(x + dx, y + dy);
           })
           .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
@@ -4157,7 +4142,7 @@ namespace('sszvis.component.ruler', function(module) {
                    : (y > props.bottom - dy) ? 0
                    : 5;
 
-            return sszvis.fn.translateString(x + dx, y + dy);
+            return sszvis.svgUtils.translateString(x + dx, y + dy);
           })
           .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';
@@ -5202,7 +5187,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
     /* Helper functions
     ----------------------------------------------- */
     function vectorToTranslateString(vec) {
-      return sszvis.fn.translateString.apply(null, vec);
+      return sszvis.svgUtils.translateString.apply(null, vec);
     }
 
   };
@@ -5356,7 +5341,7 @@ namespace('sszvis.control.slider', function(module) {
         axisSelection.enter()
           .append('g')
           .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider', true)
-          .attr('transform', sszvis.fn.translateString(0, axisOffset));
+          .attr('transform', sszvis.svgUtils.translateString(0, axisOffset));
 
         axisSelection.call(axis);
 
@@ -5379,7 +5364,7 @@ namespace('sszvis.control.slider', function(module) {
           .data([1])
           .enter()
           .append('g')
-          .attr('transform', sszvis.fn.translateString(0, backgroundOffset))
+          .attr('transform', sszvis.svgUtils.translateString(0, backgroundOffset))
           .classed('sszvis-slider__background', true);
 
         backgroundSelection
@@ -5423,7 +5408,7 @@ namespace('sszvis.control.slider', function(module) {
 
         handle
           .attr('transform', function(d) {
-            return sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0.5);
+            return sszvis.svgUtils.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0.5);
           });
 
         handleEntering
@@ -5464,7 +5449,7 @@ namespace('sszvis.control.slider', function(module) {
 
         selection.selectGroup('sliderInteraction')
           .classed('sszvis-control-slider--interactionLayer', true)
-          .attr('transform', sszvis.fn.translateString(0, 4))
+          .attr('transform', sszvis.svgUtils.translateString(0, 4))
           .call(sliderInteraction);
       });
   };
@@ -5543,7 +5528,7 @@ namespace('sszvis.layout.heatTableDimensions', function(module) {
  *                                              this can be passed as the third parameter to d3.scale.ordinal().rangeBands
  *                                  axisOffset: the amount by which to vertically offset the y-axis of the horizontal bar chart
  *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
- *                                              of a call to sszvis.fn.translateString.
+ *                                              of a call to sszvis.svgUtils.translateString.
  *                                  barGroupHeight: the combined height of all the bars and their inner padding.
  *                                  totalHeight: barGroupHeight plus the height of the outerPadding. This distance can be used
  *                                               to translate scales below the bars.
@@ -6169,7 +6154,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
           .attr('transform', function() {
             var x = props.rightAlign ? -18 : 18;
             var y = sszvis.fn.roundPixelCrisp(props.rowHeight / 2);
-            return sszvis.fn.translateString(x, y);
+            return sszvis.svgUtils.translateString(x, y);
           });
 
         if (props.horizontalFloat) {
@@ -6181,7 +6166,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
               rowPosition += props.rowHeight;
               horizontalPosition = 0;
             }
-            var translate = sszvis.fn.translateString(horizontalPosition, rowPosition);
+            var translate = sszvis.svgUtils.translateString(horizontalPosition, rowPosition);
             horizontalPosition += width + props.floatPadding;
             return translate;
           });
@@ -6242,7 +6227,7 @@ namespace('sszvis.legend.radius', function(module) {
 
         group.enter().append('g').attr('class', 'sszvis-legend__elementgroup');
 
-        group.attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(maxRadius), sszvis.fn.roundPixelCrisp(maxRadius)));
+        group.attr('transform', sszvis.svgUtils.translateString(sszvis.fn.roundPixelCrisp(maxRadius), sszvis.fn.roundPixelCrisp(maxRadius)));
 
         var circles = group.selectAll('circle.sszvis-legend__greyline')
           .data(points);
@@ -6837,6 +6822,31 @@ namespace('sszvis.svgUtils.modularText', function(module) {
   module.exports = {
     html: makeTextWithFormat(formatHTML()),
     svg:  makeTextWithFormat(formatSVG())
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * translateString
+ *
+ * Pass an x and a y component, and this returns a translate string, which can be set as the 'transform' property of
+ * an svg element.
+ *
+ * @module sszvis/svgUtils/translateString
+ *
+ * @param  {number} x     The x-component of the transform
+ * @param  {number} y     The y-component of the transform
+ * @return {string}       The translate string
+ */
+namespace('sszvis.svgUtils.translateString', function(module) {
+  'use strict';
+
+  module.exports = function(x, y) {
+    return 'translate(' + x + ',' + y + ')';
   };
 
 });

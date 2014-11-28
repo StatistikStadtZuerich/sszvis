@@ -126,7 +126,7 @@
     chartLayer.selectGroup('xAxis')
       // Add a bit of additional bottom padding to prevent the y-axis value from
       // touching the x-axis
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 15))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 15))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')

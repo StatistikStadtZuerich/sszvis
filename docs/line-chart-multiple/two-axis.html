@@ -220,22 +220,22 @@
       .call(line);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis1')
       .call(yAxis1);
 
     chartLayer.selectGroup('yAxis2')
-      .attr('transform', sszvis.fn.translateString(bounds.innerWidth, 0))
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth, 0))
       .call(yAxis2);
 
     chartLayer.selectGroup('cScale1')
-      .attr('transform', sszvis.fn.translateString(1, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 60))
       .call(cLegend1);
 
     chartLayer.selectGroup('cScale2')
-      .attr('transform', sszvis.fn.translateString(bounds.innerWidth, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth, bounds.innerHeight + 60))
       .call(cLegend2);
 
     chartLayer.selectGroup('rulerLayer')

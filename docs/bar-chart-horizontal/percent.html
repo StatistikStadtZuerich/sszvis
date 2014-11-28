@@ -134,14 +134,14 @@
     // Rendering
 
     chartLayer.selectGroup('underAxis')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.totalHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.totalHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('bars')
       .call(barGen);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.axisOffset))
+      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.axisOffset))
       .call(yAxis);
 
     controlLayer.selectDiv('controls')

@@ -146,14 +146,14 @@
       .call(referenceLine);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(cLegend);
   }
 

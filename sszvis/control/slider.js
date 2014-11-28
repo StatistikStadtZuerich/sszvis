@@ -81,7 +81,7 @@ namespace('sszvis.control.slider', function(module) {
         axisSelection.enter()
           .append('g')
           .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider', true)
-          .attr('transform', sszvis.fn.translateString(0, axisOffset));
+          .attr('transform', sszvis.svgUtils.translateString(0, axisOffset));
 
         axisSelection.call(axis);
 
@@ -104,7 +104,7 @@ namespace('sszvis.control.slider', function(module) {
           .data([1])
           .enter()
           .append('g')
-          .attr('transform', sszvis.fn.translateString(0, backgroundOffset))
+          .attr('transform', sszvis.svgUtils.translateString(0, backgroundOffset))
           .classed('sszvis-slider__background', true);
 
         backgroundSelection
@@ -148,7 +148,7 @@ namespace('sszvis.control.slider', function(module) {
 
         handle
           .attr('transform', function(d) {
-            return sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0.5);
+            return sszvis.svgUtils.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0.5);
           });
 
         handleEntering
@@ -189,7 +189,7 @@ namespace('sszvis.control.slider', function(module) {
 
         selection.selectGroup('sliderInteraction')
           .classed('sszvis-control-slider--interactionLayer', true)
-          .attr('transform', sszvis.fn.translateString(0, 4))
+          .attr('transform', sszvis.svgUtils.translateString(0, 4))
           .call(sliderInteraction);
       });
   };

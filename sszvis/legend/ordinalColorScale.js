@@ -164,7 +164,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
           .attr('transform', function() {
             var x = props.rightAlign ? -18 : 18;
             var y = sszvis.fn.roundPixelCrisp(props.rowHeight / 2);
-            return sszvis.fn.translateString(x, y);
+            return sszvis.svgUtils.translateString(x, y);
           });
 
         if (props.horizontalFloat) {
@@ -176,7 +176,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
               rowPosition += props.rowHeight;
               horizontalPosition = 0;
             }
-            var translate = sszvis.fn.translateString(horizontalPosition, rowPosition);
+            var translate = sszvis.svgUtils.translateString(horizontalPosition, rowPosition);
             horizontalPosition += width + props.floatPadding;
             return translate;
           });

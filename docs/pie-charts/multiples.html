@@ -199,7 +199,7 @@
       .call(tooltip);
 
     chart.selectGroup('colorLegend')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 50))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 50))
       .call(colorLegend);
 
 

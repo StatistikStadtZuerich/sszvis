@@ -18,7 +18,7 @@
  *                                              this can be passed as the third parameter to d3.scale.ordinal().rangeBands
  *                                  axisOffset: the amount by which to vertically offset the y-axis of the horizontal bar chart
  *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
- *                                              of a call to sszvis.fn.translateString.
+ *                                              of a call to sszvis.svgUtils.translateString.
  *                                  barGroupHeight: the combined height of all the bars and their inner padding.
  *                                  totalHeight: barGroupHeight plus the height of the outerPadding. This distance can be used
  *                                               to translate scales below the bars.

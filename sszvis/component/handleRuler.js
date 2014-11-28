@@ -133,7 +133,7 @@ namespace('sszvis.component.handleRuler', function(module) {
                    : (y > props.bottom - dy) ? 0
                    : 5;
 
-            return sszvis.fn.translateString(x + dx, y + dy);
+            return sszvis.svgUtils.translateString(x + dx, y + dy);
           })
           .style('text-anchor', function(d) {
             return props.flip(d) ? 'end' : 'start';

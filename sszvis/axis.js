@@ -97,7 +97,7 @@ namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
             .classed('sszvis-axis--bottom', isBottom)
             .classed('sszvis-axis--vertical', props.vertical)
-            .attr('transform', sszvis.fn.translateString(0, 2))
+            .attr('transform', sszvis.svgUtils.translateString(0, 2))
             .call(axisDelegate);
 
           var axisScale = axisDelegate.scale();
@@ -114,12 +114,12 @@ namespace('sszvis.axis', function(module) {
               var dx = sszvis.fn.roundPixelCrisp(0) - subpixelShift[0];
               var dy = sszvis.fn.roundPixelCrisp(isBottom ? 2 : 0) - subpixelShift[1];
               d3.select(this).select('line')
-                .attr('transform', sszvis.fn.translateString(dx, dy));
+                .attr('transform', sszvis.svgUtils.translateString(dx, dy));
             });
 
           // Place axis line on a half-pixel grid to prevent anti-aliasing
           group.selectAll('path.domain')
-            .attr('transform', sszvis.fn.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
+            .attr('transform', sszvis.svgUtils.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
 
 
           // hide ticks which are too close to one endpoint

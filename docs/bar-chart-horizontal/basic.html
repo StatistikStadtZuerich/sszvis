@@ -111,11 +111,11 @@
       .call(barGen);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.totalHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.totalHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.fn.translateString(0, chartDimensions.axisOffset))
+      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.axisOffset))
       .call(yAxis);
   }
 

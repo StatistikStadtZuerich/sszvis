@@ -371,21 +371,6 @@ namespace('sszvis.fn', function(module) {
 
       var vecRound = vec.map(roundNumber);
       return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
-    },
-
-    /**
-     * FIXME
-     * fn.translateString
-     *
-     * Pass an x and a y component, and this returns a translate string, which can be set as the 'transform' property of
-     * an svg element.
-     *
-     * @param  {number} x     The x-component of the transform
-     * @param  {number} y     The y-component of the transform
-     * @return {string}       The translate string
-     */
-    translateString: function(x, y) {
-      return 'translate(' + x + ',' + y + ')';
     }
 
   };

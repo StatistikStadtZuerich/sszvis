@@ -107,7 +107,7 @@
     chartLayer.call(mapMaker);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight))
+      .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight))
       .call(legend);
   }
 

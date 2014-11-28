@@ -76,7 +76,8 @@ SOURCE_FILES = \
 	sszvis/map/switzerland.js \
 	sszvis/map/zurich.js \
 	sszvis/svgUtils/ensureDefsElement.js \
-	sszvis/svgUtils/modularText.js
+	sszvis/svgUtils/modularText.js \
+	sszvis/svgUtils/translateString.js
 
 section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))

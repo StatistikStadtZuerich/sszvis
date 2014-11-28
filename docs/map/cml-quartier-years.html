@@ -242,15 +242,15 @@
     });
 
     var map = chart.selectGroup('map')
-      .attr('transform', sszvis.fn.translateString(mapBounds.padding.left, mapBounds.padding.top))
+      .attr('transform', sszvis.svgUtils.translateString(mapBounds.padding.left, mapBounds.padding.top))
       .datum(state.currentMapData);
 
     var lineChart = chart.selectGroup('line')
-      .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
+      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .datum(state.lineData);
 
     var highlightLayer = chart.selectGroup('highlight')
-      .attr('transform', sszvis.fn.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
+      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .datum(state.lineHighlightData);
 
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
@@ -360,7 +360,7 @@
     });
 
     lineChart.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(0, lineChartBounds.innerHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, lineChartBounds.innerHeight))
       .call(lineXAxis);
 
     lineChart.selectGroup('yAxis')
@@ -371,7 +371,7 @@
 
     // for Zurich maps, the color legend should be positioned 60 pixels below the bottom of the map
     chart.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString(mapBounds.width / 4, mapBounds.padding.top + mapBounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(mapBounds.width / 4, mapBounds.padding.top + mapBounds.innerHeight + 60))
       .call(legend);
 
 

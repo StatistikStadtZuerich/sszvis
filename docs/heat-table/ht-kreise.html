@@ -217,15 +217,15 @@
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(0, -10))
+      .attr('transform', sszvis.svgUtils.translateString(0, -10))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.fn.translateString(-10, 0))
+      .attr('transform', sszvis.svgUtils.translateString(-10, 0))
       .call(yAxis);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.fn.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 40))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 40))
       .call(legend);
 
 

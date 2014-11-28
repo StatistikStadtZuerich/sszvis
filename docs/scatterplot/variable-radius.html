@@ -195,11 +195,11 @@
       .call(tooltip);
 
     chartLayer.selectGroup('radLegend')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 70))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 70))
       .call(radiusLegend);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')

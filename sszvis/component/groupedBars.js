@@ -112,7 +112,7 @@ namespace('sszvis.component.groupedBars', function(module) {
 
         unitsWithoutValue
           .attr('transform', function(d, i) {
-            return sszvis.fn.translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2, props.y(d, i));
+            return sszvis.svgUtils.translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2, props.y(d, i));
           });
 
         unitsWithoutValue

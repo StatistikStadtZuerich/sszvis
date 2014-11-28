@@ -104,7 +104,7 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
     /* Helper functions
     ----------------------------------------------- */
     function vectorToTranslateString(vec) {
-      return sszvis.fn.translateString.apply(null, vec);
+      return sszvis.svgUtils.translateString.apply(null, vec);
     }
 
   };

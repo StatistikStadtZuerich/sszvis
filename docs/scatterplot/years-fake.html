@@ -159,19 +159,19 @@
       .call(dots);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('slider')
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 36))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 36))
       .call(slider);
 
     chartLayer.selectGroup('cScale')
       // the 124-pixel offset ensures that the color legend is 60px below the axis line of the slider control
-      .attr('transform', sszvis.fn.translateString(0, bounds.innerHeight + 124))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 124))
       .call(cLegend);
   }
 
