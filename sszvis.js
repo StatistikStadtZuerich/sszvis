@@ -2511,6 +2511,212 @@ namespace('sszvis.annotation.line', function(module) {
 
 
 /**
+ * RangeRuler component
+ *
+ * The range ruler is similar to the handle ruler and the ruler, except for each data
+ * point which it finds bound to its layer, it generates two small dots, and a label which
+ * states the value of the data point. For an example, see the interactive stacked area charts.
+ * Note that the interactive stacked area charts also include the rangeFlag component for highlighting
+ * certain specific dots. This is a sepearate component.
+ *
+ * @module sszvis/component/rangeRuler
+ *
+ * @property {number functor} x            A function for the x-position of the ruler.
+ * @property {number functor} y0           A function for the y-position of the lower dot. Called for each datum.
+ * @property {number functor} y1           A function for the y-position of the upper dot. Called for each datum.
+ * @property {number} top                  A number for the y-position of the top of the ruler
+ * @property {number} bottom               A number for the y-position of the bottom of the ruler
+ * @property {string functor} label        A function which generates labels for each range.
+ * @property {number} total                A number to display as the total of the range ruler (at the top)
+ * @property {boolean functor} flip        Determines whether the rangeRuler labels should be flipped (they default to the right side)
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.annotation.rangeRuler', function(module) {
+  'use strict';
+
+  module.exports = function() {
+    return d3.component()
+      .prop('x', d3.functor)
+      .prop('y0', d3.functor)
+      .prop('y1', d3.functor)
+      .prop('top')
+      .prop('bottom')
+      .prop('label').label(d3.functor(''))
+      .prop('total')
+      .prop('flip', d3.functor).flip(false)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+        var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
+        var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
+        var middleY = function(d) {
+          return sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2);
+        };
+
+        var dotRadius = 1.5;
+
+        var line = selection.selectAll('.sszvis-rangeRuler__rule')
+          .data([0]);
+
+        line.enter()
+          .append('line')
+          .classed('sszvis-rangeRuler__rule', true);
+
+        line.exit().remove();
+
+        line
+          .attr('x1', crispX)
+          .attr('y1', props.top)
+          .attr('x2', crispX)
+          .attr('y2', props.bottom);
+
+        var marks = selection.selectAll('.sszvis-rangeRuler--mark')
+          .data(data);
+
+        var enteringMarks = marks.enter()
+          .append('g')
+          .classed('sszvis-rangeRuler--mark', true);
+
+        marks.exit().remove();
+
+        enteringMarks.append('circle').classed('sszvis-rangeRuler__p1', true);
+        enteringMarks.append('circle').classed('sszvis-rangeRuler__p2', true);
+        enteringMarks.append('text').classed('sszvis-rangeRuler__label', true);
+
+        marks.selectAll('.sszvis-rangeRuler__p1')
+          .data(function(d) { return [d]; })
+          .attr('cx', crispX)
+          .attr('cy', crispY0)
+          .attr('r', dotRadius);
+
+        marks.selectAll('.sszvis-rangeRuler__p2')
+          .data(function(d) { return [d]; })
+          .attr('cx', crispX)
+          .attr('cy', crispY1)
+          .attr('r', dotRadius);
+
+        marks.selectAll('.sszvis-rangeRuler__label')
+          .data(function(d) { return [d]; })
+          .attr('x', function(d) {
+            var offset = props.flip(d) ? -10 : 10;
+            return crispX(d) + offset;
+          })
+          .attr('y', middleY)
+          .attr('dy', '0.35em') // vertically-center
+          .style('text-anchor', function(d) {
+            return props.flip(d) ? 'end' : 'start';
+          })
+          .text(sszvis.fn.compose(sszvis.format.number, props.label));
+
+        var total = selection.selectAll('.sszvis-rangeRuler__total')
+          .data([sszvis.fn.last(data)]);
+
+        total.enter()
+          .append('text')
+          .classed('sszvis-rangeRuler__total', true);
+
+        total.exit().remove();
+
+        total
+          .attr('x', function(d) {
+            var offset = props.flip(d) ? -10 : 10;
+            return crispX(d) + offset;
+          })
+          .attr('y', props.top - 10)
+          .style('text-anchor', function(d) {
+            return props.flip(d) ? 'end' : 'start';
+          })
+          .text('Total ' + sszvis.format.number(props.total));
+      });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Range Flag component
+ *
+ * The range flag component creates a pair of small white circles which fit well with the range ruler.
+ * However, this is a separate component for implementation reasons, because the data for the range flag
+ * should usually be only one value, distinct from the range ruler which expects multiple values. The range
+ * flag also creates a tooltip anchor between the two dots, to which you can attach a tooltip. See the
+ * interactive stacked area chart examples for a use of the range flag.
+ *
+ * @module sszvis/component/rangeFlag
+ *
+ * @property {number functor} x           A value for the x-value of the range flag
+ * @property {number functor} y0          A value for the y-value of the lower range flag dot
+ * @property {number functor} y1          A value for the y-value of the upper range flag dot
+ *
+ * @returns {d3.component}
+ */
+namespace('sszvis.annotation.rangeFlag', function(module) {
+  'use strict';
+
+  module.exports = function() {
+    return d3.component()
+      .prop('x', d3.functor)
+      .prop('y0', d3.functor)
+      .prop('y1', d3.functor)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+        var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
+        var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
+
+        var bottomDot = selection.selectAll('.sszvis-rangeFlag__mark.bottom')
+          .data(data);
+
+        var topDot = selection.selectAll('.sszvis-rangeFlag__mark.top')
+          .data(data);
+
+        bottomDot
+          .call(makeFlagDot)
+          .classed('bottom', true)
+          .attr('cx', crispX)
+          .attr('cy', crispY0);
+
+        topDot
+          .call(makeFlagDot)
+          .classed('top', true)
+          .attr('cx', crispX)
+          .attr('cy', crispY1);
+
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+          .position(function(d) {
+            return [crispX(d), sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2)];
+          });
+
+        selection.call(tooltipAnchor);
+      });
+  };
+
+  function makeFlagDot(dot) {
+    dot.enter()
+      .append('circle')
+      .attr('class', 'sszvis-rangeFlag__mark');
+
+    dot.exit().remove();
+
+    dot
+      .attr('r', 3.5);
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Rectangle annotation
  *
  * A component for creating rectangular data areas. The component should be passed
@@ -2583,6 +2789,628 @@ namespace('sszvis.annotation.rectangle', function(module) {
             .text(props.caption);
         }
       });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Ruler component
+ *
+ * The ruler component can be used to create a vertical line which highlights data at a certain
+ * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
+ * the layer it renders into, and it will generate a small dot for each data point it finds.
+ *
+ * @module sszvis/component/ruler
+ *
+ * @property {number} top                 A number which is the y-position of the top of the ruler line
+ * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
+ * @property {function} x                 A number or function returning a number for the x-position of the ruler line.
+ * @property {function} y                 A function for determining the y-position of the ruler dots. Should take a data
+ *                                        value as an argument and return a y-position.
+ * @property {function} label             A function for determining the labels of the ruler dots. Should take a
+ *                                        data value as argument and return a label.
+ * @property {string, function} color     A string or function to specify the color of the ruler dots.
+ * @property {function} flip              A boolean or function which returns a boolean that specifies
+ *                                        whether the labels on the ruler dots should be flipped. (they default to the right side)
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.annotation.ruler', function(module) {
+  'use strict';
+
+  module.exports = function() {
+
+    return d3.component()
+      .prop('top')
+      .prop('bottom')
+      .prop('x', d3.functor)
+      .prop('y', d3.functor)
+      .prop('label').label(d3.functor(''))
+      .prop('color')
+      .prop('flip', d3.functor).flip(false)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var key = function(d) {
+          return props.x(d) + '_' + props.y(d);
+        };
+
+        var ruler = selection.selectAll('.sszvis-ruler__rule')
+          .data(data, key);
+
+        ruler.enter()
+          .append('line')
+          .classed('sszvis-ruler__rule', true);
+
+        ruler
+          .attr('x1', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+          .attr('y1', props.y)
+          .attr('x2', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+          .attr('y2', props.bottom);
+
+        ruler.exit().remove();
+
+        var dot = selection.selectAll('.sszvis-ruler__dot')
+          .data(data, key);
+
+        dot.enter()
+          .append('circle')
+          .classed('sszvis-ruler__dot', true);
+
+        dot
+          .attr('cx', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+          .attr('cy', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y))
+          .attr('r', 3.5)
+          .attr('fill', props.color);
+
+        dot.exit().remove();
+
+
+        var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
+          .data(data, key);
+
+        labelOutline.enter()
+          .append('text')
+          .classed('sszvis-ruler__label-outline', true);
+
+        labelOutline.exit().remove();
+
+
+        var label = selection.selectAll('.sszvis-ruler__label')
+          .data(data, key);
+
+        label.enter()
+          .append('text')
+          .classed('sszvis-ruler__label', true);
+
+        label.exit().remove();
+
+
+        // Update both labelOutline and labelOutline selections
+
+        selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
+          .attr('transform', function(d) {
+            var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
+            var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
+
+            var dx = props.flip(d) ? -10 : 10;
+            var dy = (y < props.top + dy) ? 2 * dy
+                   : (y > props.bottom - dy) ? 0
+                   : 5;
+
+            return sszvis.svgUtils.translateString(x + dx, y + dy);
+          })
+          .style('text-anchor', function(d) {
+            return props.flip(d) ? 'end' : 'start';
+          })
+          .html(props.label);
+
+      });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Tooltip component
+ *
+ * Use this component to add a tooltip to the document. The tooltip component should be
+ * called on a selection of [data-tooltip-anchor], which contain the information necessary to
+ * position the tooltip and provide it with data. The tooltip's visibility should be toggled
+ * using the .visible property, passing a predicate function. Tooltips will be displayed
+ * when .visible returns true.
+ *
+ * @module sszvis/component/tooltip
+ *
+ * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
+ *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
+ *                                      on which it is called. Instead, it's rendered into whichever selection is
+ *                                      passed to the renderInto option
+ * @property {function} visible         Provide a predicate function which accepts a datum and determines whether the associated
+ *                                      tooltip should be visible
+ * @property {function} header          A function accepting a datum. The result becomes the header of the tooltip.
+ *                                      This function can return:
+ *                                      - a plain string
+ *                                      - an HTML string to be used as innerHTML
+ * @property {function} body            A function accepting a datum. The result becomes the body of the tooltip.
+ *                                      This function can return:
+ *                                      - a plain string
+ *                                      - an HTML string to be used as innerHTML
+ *                                      - an array of arrays, which produces a tabular layout where each
+ *                                      sub-array is one row in the table.
+ * @property {function} orientation     A string or function returning a string which determines the orientation. This determines
+ *                                      which direction the tooltip sits relative to its point.
+ *                                      Possible values are: "top" (above the point), "right" (right of the point), "bottom" (below the point), "left" (left of the point)
+ * @property {number} dx                A number for the x-offset of the tooltip
+ * @property {number} dy                A number for the y-offset of the tooltip
+ * @property {function} opacity         A function or number which determines the opacity of the tooltip. Default is 1.
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.annotation.tooltip', function(module) {
+  'use strict';
+
+  /* Configuration
+  ----------------------------------------------- */
+  var SMALL_CORNER_RADIUS = 3;
+  var LARGE_CORNER_RADIUS = 4;
+  var TIP_SIZE = 6;
+  var BLUR_PADDING = 5;
+
+
+  /* Exported module
+  ----------------------------------------------- */
+  module.exports = function() {
+
+    var renderer = tooltipRenderer();
+
+    return d3.component()
+      .delegate('header', renderer)
+      .delegate('body', renderer)
+      .delegate('orientation', renderer)
+      .delegate('dx', renderer)
+      .delegate('dy', renderer)
+      .delegate('opacity', renderer)
+      .prop('renderInto')
+      .prop('visible', d3.functor).visible(false)
+      .renderSelection(function(selection) {
+        var props = selection.props();
+
+        var tooltipData = [];
+        selection.each(function(d) {
+          var thisBCR = this.getBoundingClientRect();
+          var intoBCR = props.renderInto.node().getBoundingClientRect();
+          var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
+          if (props.visible(d)) {
+            tooltipData.push({
+              datum: d,
+              x: pos[0],
+              y: pos[1]
+            });
+          }
+        });
+
+        props.renderInto
+          .datum(tooltipData)
+          .call(renderer);
+      });
+  };
+
+
+  /**
+   * Tooltip renderer
+   * @private
+   */
+  var tooltipRenderer = function() {
+    return d3.component()
+      .prop('header')
+      .prop('body')
+      .prop('orientation', d3.functor).orientation('bottom')
+      .prop('dx').dx(1)
+      .prop('dy').dy(1)
+      .prop('opacity', d3.functor).opacity(1)
+      .renderSelection(function(selection) {
+        var tooltipData = selection.datum();
+        var props = selection.props();
+
+        var isDef = sszvis.fn.defined;
+        var isSmall = (
+          isDef(props.header) && !isDef(props.body)) || (!isDef(props.header) && isDef(props.body)
+        );
+
+
+        // Select tooltip elements
+
+        var tooltip = selection.selectAll('.sszvis-tooltip')
+          .data(tooltipData);
+
+        tooltip.exit().remove();
+
+
+        // Enter: tooltip
+
+        var enterTooltip = tooltip.enter()
+          .append('div');
+
+        tooltip
+          .style('pointer-events', 'none')
+          .style('opacity', props.opacity)
+          .style('padding-top', function(d) {
+            return (props.orientation(d) === 'top') ? TIP_SIZE + 'px' : null;
+          })
+          .style('padding-right', function(d) {
+            return (props.orientation(d) === 'right') ? TIP_SIZE + 'px' : null;
+          })
+          .style('padding-bottom', function(d) {
+            return (props.orientation(d) === 'bottom') ? TIP_SIZE + 'px' : null;
+          })
+          .style('padding-left', function(d) {
+            return (props.orientation(d) === 'left') ? TIP_SIZE + 'px' : null;
+          })
+          .classed('sszvis-tooltip', true);
+
+
+        // Enter: tooltip background
+
+        var enterBackground = enterTooltip.append('svg')
+          .attr('class', 'sszvis-tooltip__background')
+          .attr('height', 0)
+          .attr('width', 0);
+
+        var enterBackgroundPath = enterBackground.append('path');
+
+        if (supportsSVGFilters()) {
+          var filter = enterBackground.append('filter')
+            .attr('id', 'sszvisTooltipShadowFilter')
+            .attr('height', '150%');
+
+          filter.append('feGaussianBlur')
+            .attr('in', 'SourceAlpha')
+            .attr('stdDeviation', 2);
+
+          filter.append('feComponentTransfer')
+            .append('feFuncA')
+            .attr('type', 'linear')
+            .attr('slope', 0.2);
+
+          var merge = filter.append('feMerge');
+          merge.append('feMergeNode'); // Contains the blurred image
+          merge.append('feMergeNode')  // Contains the element that the filter is applied to
+            .attr('in', 'SourceGraphic');
+
+          enterBackgroundPath
+            .attr('filter', 'url(#sszvisTooltipShadowFilter)');
+        } else {
+          enterBackground.classed('sszvis-tooltip__background--fallback', true);
+        }
+
+
+        // Enter: tooltip content
+
+        var enterContent = enterTooltip.append('div')
+          .classed('sszvis-tooltip__content', true);
+
+        enterContent.append('div')
+          .classed('sszvis-tooltip__header', true);
+
+        enterContent.append('div')
+          .classed('sszvis-tooltip__body', true);
+
+
+        // Update: content
+
+        tooltip.select('.sszvis-tooltip__header')
+          .datum(sszvis.fn.prop('datum'))
+          .html(props.header || d3.functor(''));
+
+        tooltip.select('.sszvis-tooltip__body')
+          .datum(sszvis.fn.prop('datum'))
+          .html(function(d) {
+            var body = props.body ? d3.functor(props.body)(d) : '';
+            return Array.isArray(body) ? formatTable(body) : body;
+          });
+
+        selection.selectAll('.sszvis-tooltip')
+          .classed('sszvis-tooltip--small', isSmall)
+          .each(function(d) {
+            var tip = d3.select(this);
+            // only using dimensions.width and dimensions.height here. Not affected by scroll position
+            var dimensions = tip.node().getBoundingClientRect();
+            var orientation = props.orientation.apply(this, arguments);
+
+
+            // Position tooltip element
+
+            switch (orientation) {
+              case 'top':
+                tip.style({
+                  left: (d.x - this.offsetWidth / 2) + 'px',
+                  top:  d.y + props.dy + 'px'
+                });
+                break;
+              case 'bottom':
+                tip.style({
+                  left: (d.x - this.offsetWidth / 2) + 'px',
+                  top:  (d.y - props.dy - this.offsetHeight) + 'px'
+                });
+                break;
+              case 'left':
+                tip.style({
+                  left: d.x + props.dx + 'px',
+                  top:  (d.y - this.offsetHeight / 2) + 'px'
+                });
+                break;
+              case 'right':
+                tip.style({
+                  left: (d.x - props.dx - this.offsetWidth) + 'px',
+                  top:  (d.y - this.offsetHeight / 2) + 'px'
+                });
+                break;
+            }
+
+
+            // Position background element
+
+            var bgHeight = dimensions.height + 2 * BLUR_PADDING;
+            var bgWidth =  dimensions.width  + 2 * BLUR_PADDING;
+            tip.select('.sszvis-tooltip__background')
+              .attr('height', bgHeight)
+              .attr('width',  bgWidth)
+              .style('left', -BLUR_PADDING + 'px')
+              .style('top',  -BLUR_PADDING + 'px')
+              .select('path')
+                .attr('d', tooltipBackgroundGenerator(
+                  [BLUR_PADDING, BLUR_PADDING],
+                  [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING],
+                  orientation,
+                  isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS
+                ));
+          });
+      });
+  };
+
+
+  /**
+   * formatTable
+   */
+  function formatTable(rows) {
+    var tableBody = rows.map(function(row) {
+      return '<tr>' + row.map(function(cell) {
+        return '<td>' + cell + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    return '<table class="sszvis-tooltip__body__table">' + tableBody + '</table>';
+  }
+
+
+  /**
+   * Tooltip background generator
+   *
+   * Generates a path description with a tip on the specified side.
+   *
+   *           top
+   *         ________
+   *   left |        | right
+   *        |___  ___|
+   *            \/
+   *          bottom
+   *
+   * @param  {Vector} a           Top-left corner of the tooltip rectangle (x, y)
+   * @param  {Vector} b           Bottom-right corner of the tooltip rectangle (x, y)
+   * @param  {String} orientation The tip will point in this direction (top, right, bottom, left)
+   *
+   * @return {Path}               SVG path description
+   */
+  function tooltipBackgroundGenerator(a, b, orientation, radius) {
+    switch (orientation) {
+      case 'top':
+        a[1] = a[1] + TIP_SIZE;
+        break;
+      case 'bottom':
+        b[1] = b[1] - TIP_SIZE;
+        break;
+      case 'left':
+        a[0] = a[0] + TIP_SIZE;
+        break;
+      case 'right':
+        b[0] = b[0] - TIP_SIZE;
+        break;
+    }
+
+    function x(d){ return d[0]; }
+    function y(d){ return d[1]; }
+    function side(cx, cy, x0, y0, x1, y1, showTip) {
+      var mx = x0 + (x1 - x0) / 2;
+      var my = y0 + (y1 - y0) / 2;
+
+      var corner = ['Q', cx, cy, x0, y0];
+
+      var tip = [];
+      if (showTip && y0 === y1) {
+        if (x0 < x1) {
+          // Top
+          tip = [
+            'L', mx - TIP_SIZE, my,
+            'L', mx,            my - TIP_SIZE,
+            'L', mx + TIP_SIZE, my
+          ];
+        } else {
+          // Bottom
+          tip = [
+            'L', mx + TIP_SIZE, my,
+            'L', mx,            my + TIP_SIZE,
+            'L', mx - TIP_SIZE, my
+          ];
+        }
+      } else if (showTip && x0 === x1) {
+        if (y0 < y1) {
+          // Right
+          tip = [
+            'L', mx,            my - TIP_SIZE,
+            'L', mx + TIP_SIZE, my,
+            'L', mx,            my + TIP_SIZE
+          ];
+        } else {
+          // Left
+          tip = [
+            'L', mx,            my + TIP_SIZE,
+            'L', mx - TIP_SIZE, my,
+            'L', mx,            my - TIP_SIZE
+          ];
+        }
+      }
+
+      var end = ['L', x1, y1];
+
+      return [].concat(corner, tip, end);
+    }
+
+    return [
+      // Start
+      ['M', x(a), y(a) + radius],
+      // Top side
+      side(x(a), y(a), x(a) + radius, y(a), x(b) - radius, y(a), (orientation === 'top')),
+      // Right side
+      side(x(b), y(a), x(b), y(a) + radius, x(b), y(b) - radius, (orientation === 'right')),
+      // Bottom side
+      side(x(b), y(b), x(b) -radius, y(b), x(a) + radius, y(b), (orientation === 'bottom')),
+      // Left side
+      side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, (orientation === 'left'))
+    ].map(function(d){ return d.join(' '); }).join(' ');
+  }
+
+
+  /**
+   * Detect whether the current browser supports SVG filters
+   */
+  function supportsSVGFilters() {
+    return window['SVGFEColorMatrixElement'] !== undefined &&
+           SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE == 2;
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Tooltip anchor component
+ *
+ * Tooltip anchors are invisible SVG <rect>s that each component needs to
+ * provide. Because they are real elements we can know their exact position
+ * on the page without any calculations and even if the parent element has
+ * been transformed. These elements need to be <rect>s because some browsers
+ * don't calculate positon information for the better suited <g> elements.
+ *
+ * Tooltips can be bound to by selecting for the tooltip data attribute.
+ *
+ * @module sszvis/component/tooltipAnchor
+ *
+ * @example
+ * var tooltip = sszvis.annotation.tooltip();
+ * bars.selectAll('[data-tooltip-anchor]').call(tooltip);
+ *
+ * Tooltips use HTML5 data attributes to clarify their intent, which is not
+ * to style an element but to provide an anchor that can be selected using
+ * Javascript.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Using_data_attributes
+ * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors
+ *
+ * To add a tooltip anchor to an element, create a new tooltip anchor function
+ * and call it on a selection. This is usually the same selection that you have
+ * added the visible elements of your chart to, e.g. the selection that you
+ * render bar <rect>s into.
+ *
+ * @example
+ * var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+ *   .position(function(d) {
+ *     return [xScale(d), yScale(d)];
+ *   });
+ * selection.call(tooltipAnchor);
+ *
+ * @property {function} position A vector of the tooltip's [x, y] coordinates
+ * @property {boolean}  debug    Renders a visible tooltip anchor when true
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.annotation.tooltipAnchor', function(module) {
+  'use strict';
+
+  module.exports = function() {
+
+    return d3.component()
+      .prop('position').position(d3.functor([0, 0]))
+      .prop('debug')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var anchor = selection.selectAll('[data-tooltip-anchor]')
+          .data(data);
+
+
+        // Enter
+
+        anchor.enter()
+          .append('rect')
+          .attr('height', 1)
+          .attr('width', 1)
+          .attr('fill', 'none')
+          .attr('stroke', 'none')
+          .attr('visibility', 'none')
+          .attr('data-tooltip-anchor', '');
+
+
+        // Update
+
+        anchor
+          .style('pointer-events', 'none')
+          .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
+
+
+        // Exit
+
+        anchor.exit().remove();
+
+
+        // Visible anchor if debug is true
+        if (props.debug) {
+          var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
+            .data(data);
+
+          referencePoint.enter()
+            .append('circle')
+            .attr('data-tooltip-anchor-debug', '');
+
+          referencePoint
+            .attr('r', 2)
+            .attr('fill', '#fff')
+            .attr('stroke', '#f00')
+            .attr('stroke-width', 1.5)
+            .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
+
+          referencePoint.exit().remove();
+        }
+
+      });
+
+
+    /* Helper functions
+    ----------------------------------------------- */
+    function vectorToTranslateString(vec) {
+      return sszvis.svgUtils.translateString.apply(null, vec);
+    }
+
   };
 
 });
@@ -2968,7 +3796,7 @@ namespace('sszvis.component.bar', function(module) {
           };
         }
 
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(tooltipPosition);
 
         selection.call(tooltipAnchor);
@@ -3032,7 +3860,7 @@ namespace('sszvis.component.dot', function(module) {
 
         // Tooltip anchors
 
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(d) {
             return [props.x(d), props.y(d)];
           });
@@ -3176,7 +4004,7 @@ namespace('sszvis.component.groupedBars', function(module) {
           .attr('x1', 4).attr('y1', -4)
           .attr('x2', -4).attr('y2', 4);
 
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(group) {
             var xTotal = 0;
             var tallest = Infinity;
@@ -3190,157 +4018,6 @@ namespace('sszvis.component.groupedBars', function(module) {
           });
 
         selection.call(tooltipAnchor);
-      });
-  };
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Ruler with a handle
- *
- * The handle ruler component is very similar to the ruler component, except that it is rendered
- * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
- * so the actual interaction with the handle is up to the developer to specify. This component also
- * creates dots for each data point it finds bound to its layer.
- *
- * @module sszvis/component/handleRuler
- *
- * @property {function} x                   A function or number which determines the x-position of the ruler
- * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
- * @property {number} top                   A number for the y-position of the top of the ruler.
- * @property {number} bottom                A number for the y-position of the bottom of the ruler.
- * @property {string, function} label       A string or string function for the labels of the ruler dots.
- * @property {string, function} color       A string or color for the fill color of the ruler dots.
- * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
- *
- * @returns {d3.component}
- */
-namespace('sszvis.component.handleRuler', function(module) {
-  'use strict';
-
-  module.exports = function() {
-    return d3.component()
-      .prop('x', d3.functor)
-      .prop('y', d3.functor)
-      .prop('top')
-      .prop('bottom')
-      .prop('label').label(d3.functor(''))
-      .prop('color')
-      .prop('flip', d3.functor).flip(false)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-        var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
-
-        var bottom = props.bottom - 4;
-        var handleWidth = 10;
-        var handleHeight = 24;
-        var handleTop = props.top - handleHeight;
-
-        var group = selection.selectAll('.sszvis-handleRuler__group')
-          .data([0]);
-
-        var entering = group.enter()
-          .append('g')
-          .classed('sszvis-handleRuler__group', true);
-
-        group.exit().remove();
-
-        entering
-          .append('line')
-          .classed('sszvis-ruler__rule', true);
-
-        entering
-          .append('rect')
-          .classed('sszvis-handleRuler__handle', true);
-
-        entering
-          .append('line')
-          .classed('sszvis-handleRuler__handle-mark', true);
-
-        group.selectAll('.sszvis-ruler__rule')
-          .attr('x1', crispX)
-          .attr('y1', sszvis.svgUtils.crisp.halfPixel(props.top))
-          .attr('x2', crispX)
-          .attr('y2', sszvis.svgUtils.crisp.halfPixel(bottom));
-
-        group.selectAll('.sszvis-handleRuler__handle')
-          .attr('x', function(d) {
-            return crispX(d) - handleWidth / 2;
-          })
-          .attr('y', sszvis.svgUtils.crisp.halfPixel(handleTop))
-          .attr('width', handleWidth)
-          .attr('height', handleHeight)
-          .attr('rx', 2)
-          .attr('ry', 2);
-
-        group.selectAll('.sszvis-handleRuler__handle-mark')
-          .attr('x1', crispX)
-          .attr('y1', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.15))
-          .attr('x2', crispX)
-          .attr('y2', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.85));
-
-        var dots = group.selectAll('.sszvis-ruler__dot')
-          .data(data);
-
-        dots.enter()
-          .append('circle')
-          .classed('sszvis-ruler__dot', true);
-
-        dots.exit().remove();
-
-        dots
-          .attr('cx', crispX)
-          .attr('cy', crispY)
-          .attr('r', 3.5)
-          .attr('fill', props.color);
-
-
-        var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
-          .data(data);
-
-        labelOutline.enter()
-          .append('text')
-          .classed('sszvis-ruler__label-outline', true);
-
-        labelOutline.exit().remove();
-
-
-        var label = selection.selectAll('.sszvis-ruler__label')
-          .data(data);
-
-        label.enter()
-          .append('text')
-          .classed('sszvis-ruler__label', true);
-
-        label.exit().remove();
-
-
-        // Update both labelOutline and labelOutline selections
-
-        selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
-          .attr('transform', function(d) {
-            var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
-            var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
-
-            var dx = props.flip(d) ? -10 : 10;
-            var dy = (y < props.top + dy) ? 2 * dy
-                   : (y > props.bottom - dy) ? 0
-                   : 5;
-
-            return sszvis.svgUtils.translateString(x + dx, y + dy);
-          })
-          .style('text-anchor', function(d) {
-            return props.flip(d) ? 'end' : 'start';
-          })
-          .html(props.label);
-
       });
   };
 
@@ -3438,117 +4115,6 @@ namespace('sszvis.component.line', function(module) {
 
 
 /**
- * Small Multiples component
- *
- * Used to generate group elements which contain small multiples charts.
- *
- * This component lays out rectangular groups in a grid according to the number of rows
- * and the number of columns provided. It is possible to specify paddingX and paddingY
- * values, pixel amounts which will be left as empty space between the columns and the
- * rows, respectively.
- *
- * Data should be passed to this component in a special way: it should be an array of
- * data values, where each data value represents a single group. IMPORTANT: each data
- * value must also have a property called 'values' which represents the values corresponding
- * to that group.
- *
- * In the multiple pie charts example, an array of "groups" data is bound to the chart before
- * the multiples component is called. Each element in the "groups" data has a values property
- * which contains the data for a single pie chart.
- *
- * The multiples component creates the groups and lays them out, attaching the following new properties
- * to each group object:
- *
- * gx - the x-position of the group
- * gy - the y-position of the group
- * gw - the width of the group (without padding)
- * gh - the height of the group (without padding)
- *
- * Generally, you should not use source data objects as group objects, but should instead
- * create new objects which are used to store group information. This creates a data hierarchy
- * which matches the representation hierarchy, which is very much a d3 pattern.
- *
- * Once the groups have been created, the user must still do something with them. The pattern
- * for creating charts within each group should look something like:
- *
- * chart.selectAll('.sszvis-multiple')
- *   .each(function(d) {
- *     var groupSelection = d3.select(this);
- *
- *     ... do something which creates a chart using groupSelection ...
- *   });
- *
- * @module sszvis/component/multiples
- *
- * @property {number} width           the total width of the collection of multiples
- * @property {number} height          the total height of the collection of multiples
- * @property {number} paddingX        x-padding to put between columns
- * @property {number} paddingY        y-padding to put between rows
- * @property {number} rows            the number of rows to generate
- * @property {number} cols            the number of columns to generate
- *
- * @return {d3.component}
- */
-namespace('sszvis.component.multiples', function(module) {
-  'use strict';
-
-  module.exports = function() {
-    return d3.component()
-      .prop('width')
-      .prop('height')
-      .prop('paddingX')
-      .prop('paddingY')
-      .prop('rows')
-      .prop('cols')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
-        var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
-
-        var multiples = selection.selectAll('g.sszvis-multiple')
-          .data(data);
-
-        multiples.enter()
-          .append('g')
-          .classed('sszvis-g sszvis-multiple', true);
-
-        multiples.exit().remove();
-
-        var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
-          .data(function(d) {
-            return [d.values];
-          });
-
-        subGroups.enter()
-          .append('g')
-          .classed('sszvis-multiple-chart', true);
-
-        subGroups.exit().remove();
-
-        multiples
-          .datum(function(d, i) {
-            d.gx = (i % props.cols) * (unitWidth + props.paddingX);
-            d.gw = unitWidth;
-            d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
-            d.gh = unitHeight;
-            return d;
-          })
-          .attr('transform', function(d) {
-            return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
-          });
-
-      });
-  };
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
  * Pie component
  *
  * The pie component is used to draw pie charts. It uses the d3.svg.arc() generator
@@ -3614,7 +4180,7 @@ namespace('sszvis.component.pie', function(module) {
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
 
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(d) {
             var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
             var r = props.radius * 2/3;
@@ -3764,334 +4330,6 @@ namespace('sszvis.component.pyramid', function(module) {
         line.exit().remove();
       });
   }
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * RangeRuler component
- *
- * The range ruler is similar to the handle ruler and the ruler, except for each data
- * point which it finds bound to its layer, it generates two small dots, and a label which
- * states the value of the data point. For an example, see the interactive stacked area charts.
- * Note that the interactive stacked area charts also include the rangeFlag component for highlighting
- * certain specific dots. This is a sepearate component.
- *
- * @module sszvis/component/rangeRuler
- *
- * @property {number functor} x            A function for the x-position of the ruler.
- * @property {number functor} y0           A function for the y-position of the lower dot. Called for each datum.
- * @property {number functor} y1           A function for the y-position of the upper dot. Called for each datum.
- * @property {number} top                  A number for the y-position of the top of the ruler
- * @property {number} bottom               A number for the y-position of the bottom of the ruler
- * @property {string functor} label        A function which generates labels for each range.
- * @property {number} total                A number to display as the total of the range ruler (at the top)
- * @property {boolean functor} flip        Determines whether the rangeRuler labels should be flipped (they default to the right side)
- *
- * @return {d3.component}
- */
-namespace('sszvis.component.rangeRuler', function(module) {
-  'use strict';
-
-  module.exports = function() {
-    return d3.component()
-      .prop('x', d3.functor)
-      .prop('y0', d3.functor)
-      .prop('y1', d3.functor)
-      .prop('top')
-      .prop('bottom')
-      .prop('label').label(d3.functor(''))
-      .prop('total')
-      .prop('flip', d3.functor).flip(false)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-        var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
-        var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
-        var middleY = function(d) {
-          return sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2);
-        };
-
-        var dotRadius = 1.5;
-
-        var line = selection.selectAll('.sszvis-rangeRuler__rule')
-          .data([0]);
-
-        line.enter()
-          .append('line')
-          .classed('sszvis-rangeRuler__rule', true);
-
-        line.exit().remove();
-
-        line
-          .attr('x1', crispX)
-          .attr('y1', props.top)
-          .attr('x2', crispX)
-          .attr('y2', props.bottom);
-
-        var marks = selection.selectAll('.sszvis-rangeRuler--mark')
-          .data(data);
-
-        var enteringMarks = marks.enter()
-          .append('g')
-          .classed('sszvis-rangeRuler--mark', true);
-
-        marks.exit().remove();
-
-        enteringMarks.append('circle').classed('sszvis-rangeRuler__p1', true);
-        enteringMarks.append('circle').classed('sszvis-rangeRuler__p2', true);
-        enteringMarks.append('text').classed('sszvis-rangeRuler__label', true);
-
-        marks.selectAll('.sszvis-rangeRuler__p1')
-          .data(function(d) { return [d]; })
-          .attr('cx', crispX)
-          .attr('cy', crispY0)
-          .attr('r', dotRadius);
-
-        marks.selectAll('.sszvis-rangeRuler__p2')
-          .data(function(d) { return [d]; })
-          .attr('cx', crispX)
-          .attr('cy', crispY1)
-          .attr('r', dotRadius);
-
-        marks.selectAll('.sszvis-rangeRuler__label')
-          .data(function(d) { return [d]; })
-          .attr('x', function(d) {
-            var offset = props.flip(d) ? -10 : 10;
-            return crispX(d) + offset;
-          })
-          .attr('y', middleY)
-          .attr('dy', '0.35em') // vertically-center
-          .style('text-anchor', function(d) {
-            return props.flip(d) ? 'end' : 'start';
-          })
-          .text(sszvis.fn.compose(sszvis.format.number, props.label));
-
-        var total = selection.selectAll('.sszvis-rangeRuler__total')
-          .data([sszvis.fn.last(data)]);
-
-        total.enter()
-          .append('text')
-          .classed('sszvis-rangeRuler__total', true);
-
-        total.exit().remove();
-
-        total
-          .attr('x', function(d) {
-            var offset = props.flip(d) ? -10 : 10;
-            return crispX(d) + offset;
-          })
-          .attr('y', props.top - 10)
-          .style('text-anchor', function(d) {
-            return props.flip(d) ? 'end' : 'start';
-          })
-          .text('Total ' + sszvis.format.number(props.total));
-      });
-  };
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Range Flag component
- *
- * The range flag component creates a pair of small white circles which fit well with the range ruler.
- * However, this is a separate component for implementation reasons, because the data for the range flag
- * should usually be only one value, distinct from the range ruler which expects multiple values. The range
- * flag also creates a tooltip anchor between the two dots, to which you can attach a tooltip. See the
- * interactive stacked area chart examples for a use of the range flag.
- *
- * @module sszvis/component/rangeFlag
- *
- * @property {number functor} x           A value for the x-value of the range flag
- * @property {number functor} y0          A value for the y-value of the lower range flag dot
- * @property {number functor} y1          A value for the y-value of the upper range flag dot
- *
- * @returns {d3.component}
- */
-namespace('sszvis.component.rangeFlag', function(module) {
-  'use strict';
-
-  module.exports = function() {
-    return d3.component()
-      .prop('x', d3.functor)
-      .prop('y0', d3.functor)
-      .prop('y1', d3.functor)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-        var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
-        var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
-
-        var bottomDot = selection.selectAll('.sszvis-rangeFlag__mark.bottom')
-          .data(data);
-
-        var topDot = selection.selectAll('.sszvis-rangeFlag__mark.top')
-          .data(data);
-
-        bottomDot
-          .call(makeFlagDot)
-          .classed('bottom', true)
-          .attr('cx', crispX)
-          .attr('cy', crispY0);
-
-        topDot
-          .call(makeFlagDot)
-          .classed('top', true)
-          .attr('cx', crispX)
-          .attr('cy', crispY1);
-
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
-          .position(function(d) {
-            return [crispX(d), sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2)];
-          });
-
-        selection.call(tooltipAnchor);
-      });
-  };
-
-  function makeFlagDot(dot) {
-    dot.enter()
-      .append('circle')
-      .attr('class', 'sszvis-rangeFlag__mark');
-
-    dot.exit().remove();
-
-    dot
-      .attr('r', 3.5);
-  }
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Ruler component
- *
- * The ruler component can be used to create a vertical line which highlights data at a certain
- * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
- * the layer it renders into, and it will generate a small dot for each data point it finds.
- *
- * @module sszvis/component/ruler
- *
- * @property {number} top                 A number which is the y-position of the top of the ruler line
- * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
- * @property {function} x                 A number or function returning a number for the x-position of the ruler line.
- * @property {function} y                 A function for determining the y-position of the ruler dots. Should take a data
- *                                        value as an argument and return a y-position.
- * @property {function} label             A function for determining the labels of the ruler dots. Should take a
- *                                        data value as argument and return a label.
- * @property {string, function} color     A string or function to specify the color of the ruler dots.
- * @property {function} flip              A boolean or function which returns a boolean that specifies
- *                                        whether the labels on the ruler dots should be flipped. (they default to the right side)
- *
- * @return {d3.component}
- */
-namespace('sszvis.component.ruler', function(module) {
-  'use strict';
-
-  module.exports = function() {
-
-    return d3.component()
-      .prop('top')
-      .prop('bottom')
-      .prop('x', d3.functor)
-      .prop('y', d3.functor)
-      .prop('label').label(d3.functor(''))
-      .prop('color')
-      .prop('flip', d3.functor).flip(false)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var key = function(d) {
-          return props.x(d) + '_' + props.y(d);
-        };
-
-        var ruler = selection.selectAll('.sszvis-ruler__rule')
-          .data(data, key);
-
-        ruler.enter()
-          .append('line')
-          .classed('sszvis-ruler__rule', true);
-
-        ruler
-          .attr('x1', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
-          .attr('y1', props.y)
-          .attr('x2', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
-          .attr('y2', props.bottom);
-
-        ruler.exit().remove();
-
-        var dot = selection.selectAll('.sszvis-ruler__dot')
-          .data(data, key);
-
-        dot.enter()
-          .append('circle')
-          .classed('sszvis-ruler__dot', true);
-
-        dot
-          .attr('cx', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
-          .attr('cy', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y))
-          .attr('r', 3.5)
-          .attr('fill', props.color);
-
-        dot.exit().remove();
-
-
-        var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
-          .data(data, key);
-
-        labelOutline.enter()
-          .append('text')
-          .classed('sszvis-ruler__label-outline', true);
-
-        labelOutline.exit().remove();
-
-
-        var label = selection.selectAll('.sszvis-ruler__label')
-          .data(data, key);
-
-        label.enter()
-          .append('text')
-          .classed('sszvis-ruler__label', true);
-
-        label.exit().remove();
-
-
-        // Update both labelOutline and labelOutline selections
-
-        selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
-          .attr('transform', function(d) {
-            var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
-            var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
-
-            var dx = props.flip(d) ? -10 : 10;
-            var dy = (y < props.top + dy) ? 2 * dy
-                   : (y > props.bottom - dy) ? 0
-                   : 5;
-
-            return sszvis.svgUtils.translateString(x + dx, y + dy);
-          })
-          .style('text-anchor', function(d) {
-            return props.flip(d) ? 'end' : 'start';
-          })
-          .html(props.label);
-
-      });
-  };
 
 });
 
@@ -4537,506 +4775,6 @@ namespace('sszvis.component.stackedPyramid', function(module) {
 
 
 /**
- * Tooltip component
- *
- * Use this component to add a tooltip to the document. The tooltip component should be
- * called on a selection of [data-tooltip-anchor], which contain the information necessary to
- * position the tooltip and provide it with data. The tooltip's visibility should be toggled
- * using the .visible property, passing a predicate function. Tooltips will be displayed
- * when .visible returns true.
- *
- * @module sszvis/component/tooltip
- *
- * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
- *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
- *                                      on which it is called. Instead, it's rendered into whichever selection is
- *                                      passed to the renderInto option
- * @property {function} visible         Provide a predicate function which accepts a datum and determines whether the associated
- *                                      tooltip should be visible
- * @property {function} header          A function accepting a datum. The result becomes the header of the tooltip.
- *                                      This function can return:
- *                                      - a plain string
- *                                      - an HTML string to be used as innerHTML
- * @property {function} body            A function accepting a datum. The result becomes the body of the tooltip.
- *                                      This function can return:
- *                                      - a plain string
- *                                      - an HTML string to be used as innerHTML
- *                                      - an array of arrays, which produces a tabular layout where each
- *                                      sub-array is one row in the table.
- * @property {function} orientation     A string or function returning a string which determines the orientation. This determines
- *                                      which direction the tooltip sits relative to its point.
- *                                      Possible values are: "top" (above the point), "right" (right of the point), "bottom" (below the point), "left" (left of the point)
- * @property {number} dx                A number for the x-offset of the tooltip
- * @property {number} dy                A number for the y-offset of the tooltip
- * @property {function} opacity         A function or number which determines the opacity of the tooltip. Default is 1.
- *
- * @return {d3.component}
- */
-namespace('sszvis.component.tooltip', function(module) {
-  'use strict';
-
-  /* Configuration
-  ----------------------------------------------- */
-  var SMALL_CORNER_RADIUS = 3;
-  var LARGE_CORNER_RADIUS = 4;
-  var TIP_SIZE = 6;
-  var BLUR_PADDING = 5;
-
-
-  /* Exported module
-  ----------------------------------------------- */
-  module.exports = function() {
-
-    var renderer = tooltipRenderer();
-
-    return d3.component()
-      .delegate('header', renderer)
-      .delegate('body', renderer)
-      .delegate('orientation', renderer)
-      .delegate('dx', renderer)
-      .delegate('dy', renderer)
-      .delegate('opacity', renderer)
-      .prop('renderInto')
-      .prop('visible', d3.functor).visible(false)
-      .renderSelection(function(selection) {
-        var props = selection.props();
-
-        var tooltipData = [];
-        selection.each(function(d) {
-          var thisBCR = this.getBoundingClientRect();
-          var intoBCR = props.renderInto.node().getBoundingClientRect();
-          var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
-          if (props.visible(d)) {
-            tooltipData.push({
-              datum: d,
-              x: pos[0],
-              y: pos[1]
-            });
-          }
-        });
-
-        props.renderInto
-          .datum(tooltipData)
-          .call(renderer);
-      });
-  };
-
-
-  /**
-   * Tooltip renderer
-   * @private
-   */
-  var tooltipRenderer = function() {
-    return d3.component()
-      .prop('header')
-      .prop('body')
-      .prop('orientation', d3.functor).orientation('bottom')
-      .prop('dx').dx(1)
-      .prop('dy').dy(1)
-      .prop('opacity', d3.functor).opacity(1)
-      .renderSelection(function(selection) {
-        var tooltipData = selection.datum();
-        var props = selection.props();
-
-        var isDef = sszvis.fn.defined;
-        var isSmall = (
-          isDef(props.header) && !isDef(props.body)) || (!isDef(props.header) && isDef(props.body)
-        );
-
-
-        // Select tooltip elements
-
-        var tooltip = selection.selectAll('.sszvis-tooltip')
-          .data(tooltipData);
-
-        tooltip.exit().remove();
-
-
-        // Enter: tooltip
-
-        var enterTooltip = tooltip.enter()
-          .append('div');
-
-        tooltip
-          .style('pointer-events', 'none')
-          .style('opacity', props.opacity)
-          .style('padding-top', function(d) {
-            return (props.orientation(d) === 'top') ? TIP_SIZE + 'px' : null;
-          })
-          .style('padding-right', function(d) {
-            return (props.orientation(d) === 'right') ? TIP_SIZE + 'px' : null;
-          })
-          .style('padding-bottom', function(d) {
-            return (props.orientation(d) === 'bottom') ? TIP_SIZE + 'px' : null;
-          })
-          .style('padding-left', function(d) {
-            return (props.orientation(d) === 'left') ? TIP_SIZE + 'px' : null;
-          })
-          .classed('sszvis-tooltip', true);
-
-
-        // Enter: tooltip background
-
-        var enterBackground = enterTooltip.append('svg')
-          .attr('class', 'sszvis-tooltip__background')
-          .attr('height', 0)
-          .attr('width', 0);
-
-        var enterBackgroundPath = enterBackground.append('path');
-
-        if (supportsSVGFilters()) {
-          var filter = enterBackground.append('filter')
-            .attr('id', 'sszvisTooltipShadowFilter')
-            .attr('height', '150%');
-
-          filter.append('feGaussianBlur')
-            .attr('in', 'SourceAlpha')
-            .attr('stdDeviation', 2);
-
-          filter.append('feComponentTransfer')
-            .append('feFuncA')
-            .attr('type', 'linear')
-            .attr('slope', 0.2);
-
-          var merge = filter.append('feMerge');
-          merge.append('feMergeNode'); // Contains the blurred image
-          merge.append('feMergeNode')  // Contains the element that the filter is applied to
-            .attr('in', 'SourceGraphic');
-
-          enterBackgroundPath
-            .attr('filter', 'url(#sszvisTooltipShadowFilter)');
-        } else {
-          enterBackground.classed('sszvis-tooltip__background--fallback', true);
-        }
-
-
-        // Enter: tooltip content
-
-        var enterContent = enterTooltip.append('div')
-          .classed('sszvis-tooltip__content', true);
-
-        enterContent.append('div')
-          .classed('sszvis-tooltip__header', true);
-
-        enterContent.append('div')
-          .classed('sszvis-tooltip__body', true);
-
-
-        // Update: content
-
-        tooltip.select('.sszvis-tooltip__header')
-          .datum(sszvis.fn.prop('datum'))
-          .html(props.header || d3.functor(''));
-
-        tooltip.select('.sszvis-tooltip__body')
-          .datum(sszvis.fn.prop('datum'))
-          .html(function(d) {
-            var body = props.body ? d3.functor(props.body)(d) : '';
-            return Array.isArray(body) ? formatTable(body) : body;
-          });
-
-        selection.selectAll('.sszvis-tooltip')
-          .classed('sszvis-tooltip--small', isSmall)
-          .each(function(d) {
-            var tip = d3.select(this);
-            // only using dimensions.width and dimensions.height here. Not affected by scroll position
-            var dimensions = tip.node().getBoundingClientRect();
-            var orientation = props.orientation.apply(this, arguments);
-
-
-            // Position tooltip element
-
-            switch (orientation) {
-              case 'top':
-                tip.style({
-                  left: (d.x - this.offsetWidth / 2) + 'px',
-                  top:  d.y + props.dy + 'px'
-                });
-                break;
-              case 'bottom':
-                tip.style({
-                  left: (d.x - this.offsetWidth / 2) + 'px',
-                  top:  (d.y - props.dy - this.offsetHeight) + 'px'
-                });
-                break;
-              case 'left':
-                tip.style({
-                  left: d.x + props.dx + 'px',
-                  top:  (d.y - this.offsetHeight / 2) + 'px'
-                });
-                break;
-              case 'right':
-                tip.style({
-                  left: (d.x - props.dx - this.offsetWidth) + 'px',
-                  top:  (d.y - this.offsetHeight / 2) + 'px'
-                });
-                break;
-            }
-
-
-            // Position background element
-
-            var bgHeight = dimensions.height + 2 * BLUR_PADDING;
-            var bgWidth =  dimensions.width  + 2 * BLUR_PADDING;
-            tip.select('.sszvis-tooltip__background')
-              .attr('height', bgHeight)
-              .attr('width',  bgWidth)
-              .style('left', -BLUR_PADDING + 'px')
-              .style('top',  -BLUR_PADDING + 'px')
-              .select('path')
-                .attr('d', tooltipBackgroundGenerator(
-                  [BLUR_PADDING, BLUR_PADDING],
-                  [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING],
-                  orientation,
-                  isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS
-                ));
-          });
-      });
-  };
-
-
-  /**
-   * formatTable
-   */
-  function formatTable(rows) {
-    var tableBody = rows.map(function(row) {
-      return '<tr>' + row.map(function(cell) {
-        return '<td>' + cell + '</td>';
-      }).join('') + '</tr>';
-    }).join('');
-    return '<table class="sszvis-tooltip__body__table">' + tableBody + '</table>';
-  }
-
-
-  /**
-   * Tooltip background generator
-   *
-   * Generates a path description with a tip on the specified side.
-   *
-   *           top
-   *         ________
-   *   left |        | right
-   *        |___  ___|
-   *            \/
-   *          bottom
-   *
-   * @param  {Vector} a           Top-left corner of the tooltip rectangle (x, y)
-   * @param  {Vector} b           Bottom-right corner of the tooltip rectangle (x, y)
-   * @param  {String} orientation The tip will point in this direction (top, right, bottom, left)
-   *
-   * @return {Path}               SVG path description
-   */
-  function tooltipBackgroundGenerator(a, b, orientation, radius) {
-    switch (orientation) {
-      case 'top':
-        a[1] = a[1] + TIP_SIZE;
-        break;
-      case 'bottom':
-        b[1] = b[1] - TIP_SIZE;
-        break;
-      case 'left':
-        a[0] = a[0] + TIP_SIZE;
-        break;
-      case 'right':
-        b[0] = b[0] - TIP_SIZE;
-        break;
-    }
-
-    function x(d){ return d[0]; }
-    function y(d){ return d[1]; }
-    function side(cx, cy, x0, y0, x1, y1, showTip) {
-      var mx = x0 + (x1 - x0) / 2;
-      var my = y0 + (y1 - y0) / 2;
-
-      var corner = ['Q', cx, cy, x0, y0];
-
-      var tip = [];
-      if (showTip && y0 === y1) {
-        if (x0 < x1) {
-          // Top
-          tip = [
-            'L', mx - TIP_SIZE, my,
-            'L', mx,            my - TIP_SIZE,
-            'L', mx + TIP_SIZE, my
-          ];
-        } else {
-          // Bottom
-          tip = [
-            'L', mx + TIP_SIZE, my,
-            'L', mx,            my + TIP_SIZE,
-            'L', mx - TIP_SIZE, my
-          ];
-        }
-      } else if (showTip && x0 === x1) {
-        if (y0 < y1) {
-          // Right
-          tip = [
-            'L', mx,            my - TIP_SIZE,
-            'L', mx + TIP_SIZE, my,
-            'L', mx,            my + TIP_SIZE
-          ];
-        } else {
-          // Left
-          tip = [
-            'L', mx,            my + TIP_SIZE,
-            'L', mx - TIP_SIZE, my,
-            'L', mx,            my - TIP_SIZE
-          ];
-        }
-      }
-
-      var end = ['L', x1, y1];
-
-      return [].concat(corner, tip, end);
-    }
-
-    return [
-      // Start
-      ['M', x(a), y(a) + radius],
-      // Top side
-      side(x(a), y(a), x(a) + radius, y(a), x(b) - radius, y(a), (orientation === 'top')),
-      // Right side
-      side(x(b), y(a), x(b), y(a) + radius, x(b), y(b) - radius, (orientation === 'right')),
-      // Bottom side
-      side(x(b), y(b), x(b) -radius, y(b), x(a) + radius, y(b), (orientation === 'bottom')),
-      // Left side
-      side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, (orientation === 'left'))
-    ].map(function(d){ return d.join(' '); }).join(' ');
-  }
-
-
-  /**
-   * Detect whether the current browser supports SVG filters
-   */
-  function supportsSVGFilters() {
-    return window['SVGFEColorMatrixElement'] !== undefined &&
-           SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE == 2;
-  }
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
- * Tooltip anchor component
- *
- * Tooltip anchors are invisible SVG <rect>s that each component needs to
- * provide. Because they are real elements we can know their exact position
- * on the page without any calculations and even if the parent element has
- * been transformed. These elements need to be <rect>s because some browsers
- * don't calculate positon information for the better suited <g> elements.
- *
- * Tooltips can be bound to by selecting for the tooltip data attribute.
- *
- * @module sszvis/component/tooltipAnchor
- *
- * @example
- * var tooltip = sszvis.component.tooltip();
- * bars.selectAll('[data-tooltip-anchor]').call(tooltip);
- *
- * Tooltips use HTML5 data attributes to clarify their intent, which is not
- * to style an element but to provide an anchor that can be selected using
- * Javascript.
- *
- * @see https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Using_data_attributes
- * @see https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors
- *
- * To add a tooltip anchor to an element, create a new tooltip anchor function
- * and call it on a selection. This is usually the same selection that you have
- * added the visible elements of your chart to, e.g. the selection that you
- * render bar <rect>s into.
- *
- * @example
- * var tooltipAnchor = sszvis.component.tooltipAnchor()
- *   .position(function(d) {
- *     return [xScale(d), yScale(d)];
- *   });
- * selection.call(tooltipAnchor);
- *
- * @property {function} position A vector of the tooltip's [x, y] coordinates
- * @property {boolean}  debug    Renders a visible tooltip anchor when true
- *
- * @return {d3.component}
- */
-namespace('sszvis.component.tooltipAnchor', function(module) {
-  'use strict';
-
-  module.exports = function() {
-
-    return d3.component()
-      .prop('position').position(d3.functor([0, 0]))
-      .prop('debug')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-        var anchor = selection.selectAll('[data-tooltip-anchor]')
-          .data(data);
-
-
-        // Enter
-
-        anchor.enter()
-          .append('rect')
-          .attr('height', 1)
-          .attr('width', 1)
-          .attr('fill', 'none')
-          .attr('stroke', 'none')
-          .attr('visibility', 'none')
-          .attr('data-tooltip-anchor', '');
-
-
-        // Update
-
-        anchor
-          .style('pointer-events', 'none')
-          .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
-
-
-        // Exit
-
-        anchor.exit().remove();
-
-
-        // Visible anchor if debug is true
-        if (props.debug) {
-          var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
-            .data(data);
-
-          referencePoint.enter()
-            .append('circle')
-            .attr('data-tooltip-anchor-debug', '');
-
-          referencePoint
-            .attr('r', 2)
-            .attr('fill', '#fff')
-            .attr('stroke', '#f00')
-            .attr('stroke-width', 1.5)
-            .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
-
-          referencePoint.exit().remove();
-        }
-
-      });
-
-
-    /* Helper functions
-    ----------------------------------------------- */
-    function vectorToTranslateString(vec) {
-      return sszvis.svgUtils.translateString.apply(null, vec);
-    }
-
-  };
-
-});
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
-/**
  * Button Group
  *
  * Control for switching top-level filter values. Use this control for changing between several
@@ -5087,6 +4825,157 @@ namespace('sszvis.control.buttonGroup', function(module) {
           .classed('selected', function(d) { return d === props.current; })
           .text(function(d) { return d; })
           .on('click', props.change);
+      });
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Ruler with a handle
+ *
+ * The handle ruler component is very similar to the ruler component, except that it is rendered
+ * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
+ * so the actual interaction with the handle is up to the developer to specify. This component also
+ * creates dots for each data point it finds bound to its layer.
+ *
+ * @module sszvis/component/handleRuler
+ *
+ * @property {function} x                   A function or number which determines the x-position of the ruler
+ * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
+ * @property {number} top                   A number for the y-position of the top of the ruler.
+ * @property {number} bottom                A number for the y-position of the bottom of the ruler.
+ * @property {string, function} label       A string or string function for the labels of the ruler dots.
+ * @property {string, function} color       A string or color for the fill color of the ruler dots.
+ * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
+ *
+ * @returns {d3.component}
+ */
+namespace('sszvis.control.handleRuler', function(module) {
+  'use strict';
+
+  module.exports = function() {
+    return d3.component()
+      .prop('x', d3.functor)
+      .prop('y', d3.functor)
+      .prop('top')
+      .prop('bottom')
+      .prop('label').label(d3.functor(''))
+      .prop('color')
+      .prop('flip', d3.functor).flip(false)
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+        var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
+
+        var bottom = props.bottom - 4;
+        var handleWidth = 10;
+        var handleHeight = 24;
+        var handleTop = props.top - handleHeight;
+
+        var group = selection.selectAll('.sszvis-handleRuler__group')
+          .data([0]);
+
+        var entering = group.enter()
+          .append('g')
+          .classed('sszvis-handleRuler__group', true);
+
+        group.exit().remove();
+
+        entering
+          .append('line')
+          .classed('sszvis-ruler__rule', true);
+
+        entering
+          .append('rect')
+          .classed('sszvis-handleRuler__handle', true);
+
+        entering
+          .append('line')
+          .classed('sszvis-handleRuler__handle-mark', true);
+
+        group.selectAll('.sszvis-ruler__rule')
+          .attr('x1', crispX)
+          .attr('y1', sszvis.svgUtils.crisp.halfPixel(props.top))
+          .attr('x2', crispX)
+          .attr('y2', sszvis.svgUtils.crisp.halfPixel(bottom));
+
+        group.selectAll('.sszvis-handleRuler__handle')
+          .attr('x', function(d) {
+            return crispX(d) - handleWidth / 2;
+          })
+          .attr('y', sszvis.svgUtils.crisp.halfPixel(handleTop))
+          .attr('width', handleWidth)
+          .attr('height', handleHeight)
+          .attr('rx', 2)
+          .attr('ry', 2);
+
+        group.selectAll('.sszvis-handleRuler__handle-mark')
+          .attr('x1', crispX)
+          .attr('y1', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.15))
+          .attr('x2', crispX)
+          .attr('y2', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.85));
+
+        var dots = group.selectAll('.sszvis-ruler__dot')
+          .data(data);
+
+        dots.enter()
+          .append('circle')
+          .classed('sszvis-ruler__dot', true);
+
+        dots.exit().remove();
+
+        dots
+          .attr('cx', crispX)
+          .attr('cy', crispY)
+          .attr('r', 3.5)
+          .attr('fill', props.color);
+
+
+        var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
+          .data(data);
+
+        labelOutline.enter()
+          .append('text')
+          .classed('sszvis-ruler__label-outline', true);
+
+        labelOutline.exit().remove();
+
+
+        var label = selection.selectAll('.sszvis-ruler__label')
+          .data(data);
+
+        label.enter()
+          .append('text')
+          .classed('sszvis-ruler__label', true);
+
+        label.exit().remove();
+
+
+        // Update both labelOutline and labelOutline selections
+
+        selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
+          .attr('transform', function(d) {
+            var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
+            var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
+
+            var dx = props.flip(d) ? -10 : 10;
+            var dy = (y < props.top + dy) ? 2 * dy
+                   : (y > props.bottom - dy) ? 0
+                   : 5;
+
+            return sszvis.svgUtils.translateString(x + dx, y + dy);
+          })
+          .style('text-anchor', function(d) {
+            return props.flip(d) ? 'end' : 'start';
+          })
+          .html(props.label);
+
       });
   };
 
@@ -5452,6 +5341,117 @@ namespace('sszvis.layout.populationPyramidLayout', function(module) {
       totalHeight: totalHeight,
       positions: positions
     };
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Small Multiples layout
+ *
+ * Used to generate group elements which contain small multiples charts.
+ *
+ * This component lays out rectangular groups in a grid according to the number of rows
+ * and the number of columns provided. It is possible to specify paddingX and paddingY
+ * values, pixel amounts which will be left as empty space between the columns and the
+ * rows, respectively.
+ *
+ * Data should be passed to this component in a special way: it should be an array of
+ * data values, where each data value represents a single group. IMPORTANT: each data
+ * value must also have a property called 'values' which represents the values corresponding
+ * to that group.
+ *
+ * In the multiple pie charts example, an array of "groups" data is bound to the chart before
+ * the multiples component is called. Each element in the "groups" data has a values property
+ * which contains the data for a single pie chart.
+ *
+ * The multiples component creates the groups and lays them out, attaching the following new properties
+ * to each group object:
+ *
+ * gx - the x-position of the group
+ * gy - the y-position of the group
+ * gw - the width of the group (without padding)
+ * gh - the height of the group (without padding)
+ *
+ * Generally, you should not use source data objects as group objects, but should instead
+ * create new objects which are used to store group information. This creates a data hierarchy
+ * which matches the representation hierarchy, which is very much a d3 pattern.
+ *
+ * Once the groups have been created, the user must still do something with them. The pattern
+ * for creating charts within each group should look something like:
+ *
+ * chart.selectAll('.sszvis-multiple')
+ *   .each(function(d) {
+ *     var groupSelection = d3.select(this);
+ *
+ *     ... do something which creates a chart using groupSelection ...
+ *   });
+ *
+ * @module sszvis/layout/smallMultiples
+ *
+ * @property {number} width           the total width of the collection of multiples
+ * @property {number} height          the total height of the collection of multiples
+ * @property {number} paddingX        x-padding to put between columns
+ * @property {number} paddingY        y-padding to put between rows
+ * @property {number} rows            the number of rows to generate
+ * @property {number} cols            the number of columns to generate
+ *
+ * @return {d3.component}
+ */
+namespace('sszvis.layout.smallMultiples', function(module) {
+  'use strict';
+
+  module.exports = function() {
+    return d3.component()
+      .prop('width')
+      .prop('height')
+      .prop('paddingX')
+      .prop('paddingY')
+      .prop('rows')
+      .prop('cols')
+      .render(function(data) {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
+        var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
+
+        var multiples = selection.selectAll('g.sszvis-multiple')
+          .data(data);
+
+        multiples.enter()
+          .append('g')
+          .classed('sszvis-g sszvis-multiple', true);
+
+        multiples.exit().remove();
+
+        var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
+          .data(function(d) {
+            return [d.values];
+          });
+
+        subGroups.enter()
+          .append('g')
+          .classed('sszvis-multiple-chart', true);
+
+        subGroups.exit().remove();
+
+        multiples
+          .datum(function(d, i) {
+            d.gx = (i % props.cols) * (unitWidth + props.paddingX);
+            d.gw = unitWidth;
+            d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
+            d.gh = unitHeight;
+            return d;
+          })
+          .attr('transform', function(d) {
+            return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
+          });
+
+      });
   };
 
 });
@@ -6338,7 +6338,7 @@ namespace('sszvis.map', function(module) {
           });
 
         // the tooltip anchor generator
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(d) {
             var computedCenter = d.geoJson.properties.computedCenter;
             var center = d.geoJson.properties.center;

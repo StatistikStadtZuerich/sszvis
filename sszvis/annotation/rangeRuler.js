@@ -20,7 +20,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.rangeRuler', function(module) {
+namespace('sszvis.annotation.rangeRuler', function(module) {
   'use strict';
 
   module.exports = function() {

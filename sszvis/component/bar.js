@@ -85,7 +85,7 @@ namespace('sszvis.component.bar', function(module) {
           };
         }
 
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(tooltipPosition);
 
         selection.call(tooltipAnchor);

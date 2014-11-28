@@ -81,7 +81,7 @@ Shows the creation of a pie chart with many categories
 ```
 
 
-## sszvis.component.multiples
+## sszvis.layout.smallMultiples
 
 To render pie charts in a group, the multiples component can be used to create SVG groups into which charts can be rendered.
 

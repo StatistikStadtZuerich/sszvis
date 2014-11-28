@@ -312,7 +312,7 @@
       });
 
     // The bar which marks the current year and shows the value of the highlighted entity
-    var handleRuler = sszvis.component.handleRuler()
+    var handleRuler = sszvis.control.handleRuler()
       .x(xScale(state.currentYear))
       .y(sszvis.fn.compose(yScale, vAcc))
       .top(0)
@@ -328,7 +328,7 @@
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(nameAcc, mDatumAcc));
 
-    var tooltip = sszvis.component.tooltip()
+    var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(function(d) {

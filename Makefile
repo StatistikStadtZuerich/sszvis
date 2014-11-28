@@ -41,31 +41,31 @@ SOURCE_FILES = \
 	sszvis/transition.js \
 	sszvis/annotation/circle.js \
 	sszvis/annotation/line.js \
+	sszvis/annotation/rangeRuler.js \
+	sszvis/annotation/rangeFlag.js \
 	sszvis/annotation/rectangle.js \
+	sszvis/annotation/ruler.js \
+	sszvis/annotation/tooltip.js \
+	sszvis/annotation/tooltipAnchor.js \
 	sszvis/behavior/move.js \
 	sszvis/behavior/voronoi.js \
 	sszvis/component/bar.js \
 	sszvis/component/dot.js \
 	sszvis/component/groupedBars.js \
-	sszvis/component/handleRuler.js \
 	sszvis/component/line.js \
-	sszvis/component/multiples.js \
 	sszvis/component/pie.js \
 	sszvis/component/pyramid.js \
-	sszvis/component/rangeRuler.js \
-	sszvis/component/rangeFlag.js \
-	sszvis/component/ruler.js \
 	sszvis/component/stackedArea.js \
 	sszvis/component/stackedAreaMultiples.js \
 	sszvis/component/stackedBar.js \
 	sszvis/component/stackedPyramid.js \
-	sszvis/component/tooltip.js \
-	sszvis/component/tooltipAnchor.js \
 	sszvis/control/buttonGroup.js \
+	sszvis/control/handleRuler.js \
 	sszvis/control/slider.js \
 	sszvis/layout/heatTableDimensions.js \
 	sszvis/layout/horizontalBarChartDimensions.js \
 	sszvis/layout/populationPyramidLayout.js \
+	sszvis/layout/smallMultiples.js \
 	sszvis/layout/stackedAreaMultiplesLayout.js \
 	sszvis/layout/verticalBarChartDimensions.js \
 	sszvis/legend/binnedColorScale.js \

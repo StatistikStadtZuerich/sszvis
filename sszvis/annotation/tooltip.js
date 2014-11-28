@@ -34,7 +34,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.tooltip', function(module) {
+namespace('sszvis.annotation.tooltip', function(module) {
   'use strict';
 
   /* Configuration

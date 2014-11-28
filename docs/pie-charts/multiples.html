@@ -146,7 +146,7 @@
       .fill(sszvis.fn.compose(cScale, cAcc));
 
     // this component generates svg 'g' tags into which chart instances can be rendered
-    var multiplesMaker = sszvis.component.multiples()
+    var multiplesMaker = sszvis.layout.smallMultiples()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .paddingX(30)
@@ -164,7 +164,7 @@
     // associate element isn't hovered, but another element in the same category is.
     // In these case, the infotip is faded slightly (by the infotipOpacity function),
     // but the infotip under the mouse position has full opacity.
-    var tooltip = sszvis.component.tooltip()
+    var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(cAcc)
       .body(function(d){ return 'Anzahl: ' + d.value; })

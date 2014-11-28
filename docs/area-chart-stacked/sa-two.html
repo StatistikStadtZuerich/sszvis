@@ -195,7 +195,7 @@
       topValue = yScale(state.totalHighlightValue);
     }
 
-    var rangeRuler = sszvis.component.rangeRuler()
+    var rangeRuler = sszvis.annotation.rangeRuler()
       .top(topValue)
       .bottom(bounds.innerHeight)
       .x(xScale(state.highlightDate))
@@ -225,7 +225,7 @@
       .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain(cAcc);
 
-    var rangeTooltip = sszvis.component.tooltip()
+    var rangeTooltip = sszvis.annotation.tooltip()
         .header(tooltipText)
         .orientation(function(d) {
           return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? 'right' : 'left';
@@ -233,7 +233,7 @@
         .renderInto(htmlLayer)
         .visible(true);
 
-    var rangeFlag = sszvis.component.rangeFlag()
+    var rangeFlag = sszvis.annotation.rangeFlag()
       .x(xScale(state.highlightDate))
       .y0(function(d) {
         if (state.isMultiples) {

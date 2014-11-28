@@ -127,7 +127,7 @@ namespace('sszvis.component.groupedBars', function(module) {
           .attr('x1', 4).attr('y1', -4)
           .attr('x2', -4).attr('y2', 4);
 
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(group) {
             var xTotal = 0;
             var tallest = Infinity;

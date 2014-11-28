@@ -15,7 +15,7 @@
  *
  * @returns {d3.component}
  */
-namespace('sszvis.component.rangeFlag', function(module) {
+namespace('sszvis.annotation.rangeFlag', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -49,7 +49,7 @@ namespace('sszvis.component.rangeFlag', function(module) {
           .attr('cx', crispX)
           .attr('cy', crispY1);
 
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(d) {
             return [crispX(d), sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2)];
           });

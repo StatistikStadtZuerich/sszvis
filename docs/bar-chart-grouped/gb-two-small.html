@@ -160,7 +160,7 @@
       .scale(cScale)
       .horizontalFloat(true);
 
-    var tooltip = sszvis.component.tooltip()
+    var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(sszvis.svgUtils.modularText.html().bold(function(d) {
         return xAcc(sszvis.fn.first(d));

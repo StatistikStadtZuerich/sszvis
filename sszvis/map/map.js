@@ -209,7 +209,7 @@ namespace('sszvis.map', function(module) {
           });
 
         // the tooltip anchor generator
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(d) {
             var computedCenter = d.geoJson.properties.computedCenter;
             var center = d.geoJson.properties.center;

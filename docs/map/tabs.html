@@ -163,7 +163,7 @@
         return isNaN(v) ? 'keine Daten' : sszvis.format.percent(v);
       }, vAcc, mDatumAcc));
 
-    var tooltip = sszvis.component.tooltip()
+    var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(sszvis.fn.compose(qnameAcc, mDatumAcc))

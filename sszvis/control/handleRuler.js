@@ -18,7 +18,7 @@
  *
  * @returns {d3.component}
  */
-namespace('sszvis.component.handleRuler', function(module) {
+namespace('sszvis.control.handleRuler', function(module) {
   'use strict';
 
   module.exports = function() {

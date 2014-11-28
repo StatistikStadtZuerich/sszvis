@@ -1,5 +1,5 @@
 /**
- * Small Multiples component
+ * Small Multiples layout
  *
  * Used to generate group elements which contain small multiples charts.
  *
@@ -39,7 +39,7 @@
  *     ... do something which creates a chart using groupSelection ...
  *   });
  *
- * @module sszvis/component/multiples
+ * @module sszvis/layout/smallMultiples
  *
  * @property {number} width           the total width of the collection of multiples
  * @property {number} height          the total height of the collection of multiples
@@ -50,7 +50,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.multiples', function(module) {
+namespace('sszvis.layout.smallMultiples', function(module) {
   'use strict';
 
   module.exports = function() {

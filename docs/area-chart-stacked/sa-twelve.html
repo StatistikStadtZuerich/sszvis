@@ -235,7 +235,7 @@
 
     // the range ruler - has different display positions for the individual dots and the
     // value labels depending on if this is the separated or the joined view.
-    var rangeRuler = sszvis.component.rangeRuler()
+    var rangeRuler = sszvis.annotation.rangeRuler()
       .top(topValue)
       .bottom(bounds.innerHeight)
       // the x-scale is the same
@@ -274,7 +274,7 @@
 
     // attached to the rangeFlag tooltip anchor, this tooltip displays
     // the current value of the shape the mouse is currently hovered over
-    var rangeTooltip = sszvis.component.tooltip()
+    var rangeTooltip = sszvis.annotation.tooltip()
         .header(tooltipText)
         .orientation(function(d) {
           // uses the same flip logic as the rangeRuler
@@ -285,7 +285,7 @@
 
     // The rangeFlag highlights two points, the top and bottom of a certain area segment, and also
     // creates a tooltip anchor between these points, to which we can bind rangeTooltip.
-    var rangeFlag = sszvis.component.rangeFlag()
+    var rangeFlag = sszvis.annotation.rangeFlag()
       // same x-position as the other highlight components
       .x(xScale(state.highlightDate))
       // two y-baseline scales, like the rangeRuler

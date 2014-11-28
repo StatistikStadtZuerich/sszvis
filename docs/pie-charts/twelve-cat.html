@@ -121,7 +121,7 @@
     var headerText = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.percent, function(d) { return vAcc(d) / state.totalValue; }));
 
-    var tooltip = sszvis.component.tooltip()
+    var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(headerText)
       .visible(isSelected);

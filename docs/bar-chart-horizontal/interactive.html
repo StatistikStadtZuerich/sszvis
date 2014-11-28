@@ -160,7 +160,7 @@
         return isNaN(d) ? 'k. A.' : sszvis.format.number(d);
       }, xAcc));
 
-    var tooltip = sszvis.component.tooltip()
+    var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .visible(isSelected);

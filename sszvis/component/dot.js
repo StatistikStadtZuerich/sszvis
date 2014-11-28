@@ -48,7 +48,7 @@ namespace('sszvis.component.dot', function(module) {
 
         // Tooltip anchors
 
-        var tooltipAnchor = sszvis.component.tooltipAnchor()
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(d) {
             return [props.x(d), props.y(d)];
           });
