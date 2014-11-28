@@ -142,7 +142,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
 
         marks
           .attr('cx', props.rightAlign ? -5 : 5)
-          .attr('cy', sszvis.fn.roundPixelCrisp(props.rowHeight / 2))
+          .attr('cy', sszvis.svgUtils.crisp.halfPixel(props.rowHeight / 2))
           .attr('r', 5)
           .attr('fill', function(d) { return props.scale(d); })
           .attr('stroke', function(d) { return props.scale(d); })
@@ -163,7 +163,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
           .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
           .attr('transform', function() {
             var x = props.rightAlign ? -18 : 18;
-            var y = sszvis.fn.roundPixelCrisp(props.rowHeight / 2);
+            var y = sszvis.svgUtils.crisp.halfPixel(props.rowHeight / 2);
             return sszvis.svgUtils.translateString(x, y);
           });
 

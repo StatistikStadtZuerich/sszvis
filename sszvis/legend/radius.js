@@ -36,7 +36,7 @@ namespace('sszvis.legend.radius', function(module) {
 
         group.enter().append('g').attr('class', 'sszvis-legend__elementgroup');
 
-        group.attr('transform', sszvis.svgUtils.translateString(sszvis.fn.roundPixelCrisp(maxRadius), sszvis.fn.roundPixelCrisp(maxRadius)));
+        group.attr('transform', sszvis.svgUtils.translateString(sszvis.svgUtils.crisp.halfPixel(maxRadius), sszvis.svgUtils.crisp.halfPixel(maxRadius)));
 
         var circles = group.selectAll('circle.sszvis-legend__greyline')
           .data(points);

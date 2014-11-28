@@ -75,6 +75,7 @@ SOURCE_FILES = \
 	sszvis/map/map.js \
 	sszvis/map/switzerland.js \
 	sszvis/map/zurich.js \
+	sszvis/svgUtils/crisp.js \
 	sszvis/svgUtils/ensureDefsElement.js \
 	sszvis/svgUtils/modularText.js \
 	sszvis/svgUtils/translateString.js

@@ -108,8 +108,8 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
         lines.exit().remove();
 
         lines
-          .attr('x1', function(d) { return sszvis.fn.roundPixelCrisp(d.x + d.w); })
-          .attr('x2', function(d) { return sszvis.fn.roundPixelCrisp(d.x + d.w); })
+          .attr('x1', function(d) { return sszvis.svgUtils.crisp.halfPixel(d.x + d.w); })
+          .attr('x2', function(d) { return sszvis.svgUtils.crisp.halfPixel(d.x + d.w); })
           .attr('y1', segHeight + 1)
           .attr('y2', segHeight + 6)
           .attr('stroke', '#B8B8B8');

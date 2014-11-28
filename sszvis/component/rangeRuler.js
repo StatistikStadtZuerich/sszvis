@@ -37,11 +37,11 @@ namespace('sszvis.component.rangeRuler', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var crispX = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x);
-        var crispY0 = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y0);
-        var crispY1 = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y1);
+        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+        var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
+        var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
         var middleY = function(d) {
-          return sszvis.fn.roundPixelCrisp((props.y0(d) + props.y1(d)) / 2);
+          return sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2);
         };
 
         var dotRadius = 1.5;

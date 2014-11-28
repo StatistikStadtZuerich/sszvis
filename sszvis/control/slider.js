@@ -43,7 +43,7 @@ namespace('sszvis.control.slider', function(module) {
 
         var axisOffset = 28; // vertical offset for the axis
         var majorTickSize = 12;
-        var backgroundOffset = sszvis.fn.roundPixelCrisp(18); // vertical offset for the middle of the background
+        var backgroundOffset = sszvis.svgUtils.crisp.halfPixel(18); // vertical offset for the middle of the background
         var handleWidth = 10; // the width of the handle
         var handleHeight = 23; // the height of the handle
         var bgWidth = 6.5; // the width of the background
@@ -112,14 +112,14 @@ namespace('sszvis.control.slider', function(module) {
           .style('stroke-width', bgWidth)
           .style('stroke', '#888')
           .style('stroke-linecap', 'round')
-          .attr('x1', sszvis.fn.roundPixelCrisp(scaleRange[0] + lineEndOffset)).attr('x2', sszvis.fn.roundPixelCrisp(scaleRange[1] - lineEndOffset));
+          .attr('x1', sszvis.svgUtils.crisp.halfPixel(scaleRange[0] + lineEndOffset)).attr('x2', sszvis.svgUtils.crisp.halfPixel(scaleRange[1] - lineEndOffset));
 
         backgroundSelection
           .append('line')
           .style('stroke-width', bgWidth - 1)
           .style('stroke', '#fff')
           .style('stroke-linecap', 'round')
-          .attr('x1', sszvis.fn.roundPixelCrisp(scaleRange[0] + lineEndOffset)).attr('x2', sszvis.fn.roundPixelCrisp(scaleRange[1] - lineEndOffset));
+          .attr('x1', sszvis.svgUtils.crisp.halfPixel(scaleRange[0] + lineEndOffset)).attr('x2', sszvis.svgUtils.crisp.halfPixel(scaleRange[1] - lineEndOffset));
 
         var shadow = selection.selectAll('g.sszvis-slider__background').selectAll('.sszvis-slider__backgroundshadow')
           .data([props.value]);
@@ -132,9 +132,9 @@ namespace('sszvis.control.slider', function(module) {
           .style('stroke-linecap', 'round');
 
           shadow
-            .attr('x1', sszvis.fn.roundPixelCrisp(scaleRange[0] + lineEndOffset))
+            .attr('x1', sszvis.svgUtils.crisp.halfPixel(scaleRange[0] + lineEndOffset))
             .attr('x2', function(d) {
-              return sszvis.fn.roundPixelCrisp(alteredScale(d));
+              return sszvis.svgUtils.crisp.halfPixel(alteredScale(d));
             });
 
         // draw the handle and the label
@@ -148,7 +148,7 @@ namespace('sszvis.control.slider', function(module) {
 
         handle
           .attr('transform', function(d) {
-            return sszvis.svgUtils.translateString(sszvis.fn.roundPixelCrisp(alteredScale(d)), 0.5);
+            return sszvis.svgUtils.translateString(sszvis.svgUtils.crisp.halfPixel(alteredScale(d)), 0.5);
           });
 
         handleEntering

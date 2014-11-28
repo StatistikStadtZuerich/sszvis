@@ -110,16 +110,16 @@ namespace('sszvis.axis', function(module) {
           // grid by taking the translation of the group into account.
           group.selectAll('.tick')
             .each(function() {
-              var subpixelShift = sszvis.fn.transformTranslateSubpixelShift(this.getAttribute('transform'));
-              var dx = sszvis.fn.roundPixelCrisp(0) - subpixelShift[0];
-              var dy = sszvis.fn.roundPixelCrisp(isBottom ? 2 : 0) - subpixelShift[1];
+              var subpixelShift = sszvis.svgUtils.crisp.transformTranslateSubpixelShift(this.getAttribute('transform'));
+              var dx = sszvis.svgUtils.crisp.halfPixel(0) - subpixelShift[0];
+              var dy = sszvis.svgUtils.crisp.halfPixel(isBottom ? 2 : 0) - subpixelShift[1];
               d3.select(this).select('line')
                 .attr('transform', sszvis.svgUtils.translateString(dx, dy));
             });
 
           // Place axis line on a half-pixel grid to prevent anti-aliasing
           group.selectAll('path.domain')
-            .attr('transform', sszvis.svgUtils.translateString(sszvis.fn.roundPixelCrisp(0), sszvis.fn.roundPixelCrisp(0)));
+            .attr('transform', sszvis.svgUtils.translateString(sszvis.svgUtils.crisp.halfPixel(0), sszvis.svgUtils.crisp.halfPixel(0)));
 
 
           // hide ticks which are too close to one endpoint

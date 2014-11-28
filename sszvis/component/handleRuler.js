@@ -34,8 +34,8 @@ namespace('sszvis.component.handleRuler', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var crispX = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x);
-        var crispY = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y);
+        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+        var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
 
         var bottom = props.bottom - 4;
         var handleWidth = 10;
@@ -65,15 +65,15 @@ namespace('sszvis.component.handleRuler', function(module) {
 
         group.selectAll('.sszvis-ruler__rule')
           .attr('x1', crispX)
-          .attr('y1', sszvis.fn.roundPixelCrisp(props.top))
+          .attr('y1', sszvis.svgUtils.crisp.halfPixel(props.top))
           .attr('x2', crispX)
-          .attr('y2', sszvis.fn.roundPixelCrisp(bottom));
+          .attr('y2', sszvis.svgUtils.crisp.halfPixel(bottom));
 
         group.selectAll('.sszvis-handleRuler__handle')
           .attr('x', function(d) {
             return crispX(d) - handleWidth / 2;
           })
-          .attr('y', sszvis.fn.roundPixelCrisp(handleTop))
+          .attr('y', sszvis.svgUtils.crisp.halfPixel(handleTop))
           .attr('width', handleWidth)
           .attr('height', handleHeight)
           .attr('rx', 2)
@@ -81,9 +81,9 @@ namespace('sszvis.component.handleRuler', function(module) {
 
         group.selectAll('.sszvis-handleRuler__handle-mark')
           .attr('x1', crispX)
-          .attr('y1', sszvis.fn.roundPixelCrisp(handleTop + handleHeight * 0.15))
+          .attr('y1', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.15))
           .attr('x2', crispX)
-          .attr('y2', sszvis.fn.roundPixelCrisp(handleTop + handleHeight * 0.85));
+          .attr('y2', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.85));
 
         var dots = group.selectAll('.sszvis-ruler__dot')
           .data(data);
@@ -125,8 +125,8 @@ namespace('sszvis.component.handleRuler', function(module) {
 
         selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
           .attr('transform', function(d) {
-            var x = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x)(d);
-            var y = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y)(d);
+            var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
+            var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
 
             var dx = props.flip(d) ? -10 : 10;
             var dy = (y < props.top + dy) ? 2 * dy

@@ -49,9 +49,9 @@ namespace('sszvis.component.ruler', function(module) {
           .classed('sszvis-ruler__rule', true);
 
         ruler
-          .attr('x1', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
+          .attr('x1', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
           .attr('y1', props.y)
-          .attr('x2', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
+          .attr('x2', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
           .attr('y2', props.bottom);
 
         ruler.exit().remove();
@@ -64,8 +64,8 @@ namespace('sszvis.component.ruler', function(module) {
           .classed('sszvis-ruler__dot', true);
 
         dot
-          .attr('cx', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x))
-          .attr('cy', sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y))
+          .attr('cx', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+          .attr('cy', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y))
           .attr('r', 3.5)
           .attr('fill', props.color);
 
@@ -96,8 +96,8 @@ namespace('sszvis.component.ruler', function(module) {
 
         selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
           .attr('transform', function(d) {
-            var x = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x)(d);
-            var y = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y)(d);
+            var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
+            var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
 
             var dx = props.flip(d) ? -10 : 10;
             var dy = (y < props.top + dy) ? 2 * dy

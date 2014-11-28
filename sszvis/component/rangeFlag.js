@@ -27,9 +27,9 @@ namespace('sszvis.component.rangeFlag', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var crispX = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.x);
-        var crispY0 = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y0);
-        var crispY1 = sszvis.fn.compose(sszvis.fn.roundPixelCrisp, props.y1);
+        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+        var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
+        var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
 
         var bottomDot = selection.selectAll('.sszvis-rangeFlag__mark.bottom')
           .data(data);
@@ -51,7 +51,7 @@ namespace('sszvis.component.rangeFlag', function(module) {
 
         var tooltipAnchor = sszvis.component.tooltipAnchor()
           .position(function(d) {
-            return [crispX(d), sszvis.fn.roundPixelCrisp((props.y0(d) + props.y1(d)) / 2)];
+            return [crispX(d), sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2)];
           });
 
         selection.call(tooltipAnchor);
