@@ -66,6 +66,7 @@ In this example, twelve distinct categories make up each stack, and the total fo
         "data.csv": "docs/bar-chart-horizontal-stacked/data/SHB_basic_percent.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

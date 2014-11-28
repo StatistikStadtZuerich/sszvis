@@ -17,6 +17,7 @@ The x-axis covers the x-dimension, both placement and width
         "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -42,6 +43,7 @@ This x-axis displays time values
         "data.csv": "docs/line-chart-single/data/SL_quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -67,6 +69,7 @@ This x-axis displays ordinal categories
         "data.csv": "docs/bar-chart-vertical/data/SiVB_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -92,6 +95,7 @@ The x-axis title is centered because there are two y-axes. In addition, the tick
         "data.csv": "docs/line-chart-multiple/data/S_2yAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -117,6 +121,7 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
         "data.csv": "docs/population-pyramid/data/BP_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -142,6 +147,7 @@ The y-axis convers the y-dimension, both placement and height. Note also that ss
         "data.csv": "docs/bar-chart-vertical/data/SiVB_fourCities.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -167,6 +173,7 @@ By default, sszvis y-axes don't show a label at 0. Since values go negative in t
         "data.csv": "docs/bar-chart-grouped/data/GB_2Categories_smallVals.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -192,6 +199,7 @@ This y-axis shows ordinal categories
         "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -217,6 +225,7 @@ This x-axis (with a 'top' orientation) has a diagonal slant
         "data.csv": "docs/heat-table/data/HT_kreise.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -246,6 +255,7 @@ This x-axis has a diagonal slant. Here are the guidelines for changing the slant
         "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_2Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -271,6 +281,7 @@ Contours are used to make labels stand out, especially when they are positioned 
         "data.csv": "docs/line-chart-single/data/SL_Percentage_negativesYAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -296,6 +307,7 @@ This x-axis displays the use of the tickLength property to create ticks which ex
         "data.csv": "docs/bar-chart-horizontal/data/SHB_basic_percent.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

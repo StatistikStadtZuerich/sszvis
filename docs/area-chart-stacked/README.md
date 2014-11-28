@@ -58,6 +58,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
         "data.csv": "docs/area-chart-stacked/data/SA_3Categories_yearly_zeroes.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -122,6 +123,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
         "data.csv": "docs/area-chart-stacked/data/SA_2Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -145,6 +147,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
         "data.csv": "docs/area-chart-stacked/data/SA_12Kategories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

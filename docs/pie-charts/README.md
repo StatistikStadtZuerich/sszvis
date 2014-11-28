@@ -45,6 +45,7 @@ A basic pie chart example, with tooltip interaction.
         "data.csv": "docs/pie-charts/data/P_subcategories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -70,6 +71,7 @@ Shows the creation of a pie chart with many categories
         "data.csv": "docs/pie-charts/data/P_7Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -131,6 +133,7 @@ Shows the use of the multiples component to render several pie charts, each one 
         "data.csv": "docs/pie-charts/data/P_multiples.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

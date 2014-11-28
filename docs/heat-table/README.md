@@ -33,6 +33,7 @@ Heat tables are based on [sszvis.component.bar](/#/bar-chart-vertical) and thus 
         "data.csv": "docs/heat-table/data/HT_kreise.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -60,6 +61,7 @@ This example shows what age each partner in a partnership had when they had thei
         "data.csv": "docs/heat-table/data/HT_wermitwem.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -85,6 +87,7 @@ This example uses regularly spaced bins and shows positive/negative trends throu
         "data.csv": "docs/heat-table/data/HT_binned_linear.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

@@ -61,6 +61,7 @@ A predicate function which can be used to determine whether a bar has a defined 
         "data.csv": "docs/bar-chart-grouped/data/GB_3Categories_yearly_negatives.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -84,6 +85,7 @@ A predicate function which can be used to determine whether a bar has a defined 
         "data.csv": "docs/bar-chart-grouped/data/GB_2Categories_smallVals.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -107,6 +109,7 @@ A predicate function which can be used to determine whether a bar has a defined 
         "data.csv": "docs/bar-chart-grouped/data/GB_2Categories_yearly_long.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

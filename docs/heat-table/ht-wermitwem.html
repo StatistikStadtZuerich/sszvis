@@ -15,6 +15,12 @@
 (function(d3, sszvis) {
   'use strict';
 
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
   /* Configuration
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';

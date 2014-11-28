@@ -58,6 +58,7 @@ Supply an accessor function for reference data for the right side. If this optio
         "data.csv": "docs/population-pyramid/data/BP_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -91,6 +92,7 @@ The configuration options are the same as for the standard pyramid component, in
         "data.csv": "docs/population-pyramid/data/BP_stacked.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -116,6 +118,7 @@ Reference lines can be shown to compare another set of data with the data displa
         "data.csv": "docs/population-pyramid/data/BP_reference.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

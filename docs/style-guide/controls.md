@@ -35,6 +35,7 @@ A callback/event handler function to call when the user clicks on a value. Note 
         "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -90,6 +91,7 @@ A callback function called whenever user interaction attempts to change the slid
         "data.csv": "docs/scatterplot/data/SS_years_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

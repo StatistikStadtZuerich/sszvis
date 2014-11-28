@@ -45,6 +45,7 @@ The caption for the data area. (default position is the center of the circle).
         "data.csv": "docs/line-chart-single/data/SL_daily.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -103,6 +104,7 @@ The caption for the data area. (default position is the center of the rectangle)
         "data.csv": "docs/scatterplot/data/VRS_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -167,6 +169,7 @@ A reference line caption. (default position is centered at the midpoint of the l
         "data.csv": "docs/scatterplot/data/SS_refline_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

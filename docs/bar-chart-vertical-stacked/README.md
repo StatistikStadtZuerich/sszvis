@@ -63,6 +63,7 @@ Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart.
         "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_2Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -88,6 +89,7 @@ Eight layers of values, with tooltips.
         "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

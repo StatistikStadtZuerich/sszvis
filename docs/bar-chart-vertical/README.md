@@ -49,6 +49,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
         "data.csv": "docs/bar-chart-vertical/data/SiVB_fourCities.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -78,6 +79,7 @@ This example shows several edge cases and specialties:
         "data.csv": "docs/bar-chart-vertical/data/SiVB_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -103,6 +105,7 @@ In some cases, many values in a category should be shown. In this example, a lin
         "data.csv": "docs/bar-chart-vertical/data/SiVB_yearly_many.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

@@ -64,6 +64,7 @@ The maximum width of the horizontal float layout. Default 600px
         "data.csv": "docs/line-chart-multiple/data/S_2yAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -87,6 +88,7 @@ The maximum width of the horizontal float layout. Default 600px
         "data.csv": "docs/bar-chart-horizontal-stacked/data/SHB_basic_percent.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -110,6 +112,7 @@ The maximum width of the horizontal float layout. Default 600px
         "data.csv": "docs/bar-chart-grouped/data/GB_3Categories_yearly_negatives.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -162,6 +165,7 @@ An optional formatter function for the end labels. Usually should be sszvis.form
         "data.csv": "docs/map/data/M_swiss_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -210,6 +214,7 @@ A formatter function for the labels of the displayValues.
         "data.csv": "docs/heat-table/data/HT_wermitwem.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -258,6 +263,7 @@ Formatter function for the labels
         "data.csv": "docs/scatterplot/data/VRS_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

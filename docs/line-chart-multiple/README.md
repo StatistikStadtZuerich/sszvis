@@ -25,6 +25,7 @@ The multiple line chart uses the same components as the [single line chart](/#/l
         "data.csv": "docs/line-chart-multiple/data/ML_2Categories_Quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -50,6 +51,7 @@ Observations for the same variable across many years.
         "data.csv": "docs/line-chart-multiple/data/ML_months_8Categories_superposition_missing.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -75,6 +77,7 @@ Comparison of two datasets with huge differences in values over the same time pe
         "data.csv": "docs/line-chart-multiple/data/S_2yAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

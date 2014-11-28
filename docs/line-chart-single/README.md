@@ -42,6 +42,7 @@ String or function to set the stroke thickness (default: 1)
         "data.csv": "docs/line-chart-single/data/SL_quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -67,6 +68,7 @@ Based on the default chart. Additionally shows the numeric values at the current
         "data.csv": "docs/line-chart-single/data/SL_quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -92,6 +94,7 @@ Shows an annotation at a given position or data point. The time axis shows days 
         "data.csv": "docs/line-chart-single/data/SL_daily.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -117,6 +120,7 @@ Shows how to use negative x-values.
         "data.csv": "docs/line-chart-single/data/SL_negativesXAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -142,6 +146,7 @@ Shows how to use negative y-values.
         "data.csv": "docs/line-chart-single/data/SL_Percentage_negativesYAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

@@ -41,6 +41,7 @@ An accessor function for the fill color of the dot.
         "data.csv": "docs/scatterplot/data/SS_refline_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -66,6 +67,7 @@ Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/
         "data.csv": "docs/scatterplot/data/VRS_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -89,6 +91,7 @@ Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/
         "data.csv": "docs/scatterplot/data/SS_years_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

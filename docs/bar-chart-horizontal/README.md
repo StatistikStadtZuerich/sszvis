@@ -49,6 +49,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
         "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -72,6 +73,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
         "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -97,6 +99,7 @@ Long axis ticks can be toggled to aid chart reading, which can be useful to see 
         "data.csv": "docs/bar-chart-horizontal/data/SHB_basic_percent.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],

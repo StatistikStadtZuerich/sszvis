@@ -68,6 +68,7 @@ A map of Zürich's Stadtkreise.
         "data.csv": "docs/map/data/M_kreis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -93,6 +94,7 @@ A map of Zürich's Wahlkreise.
         "data.csv": "docs/map/data/M_wahlkreis_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -118,6 +120,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
         "data.csv": "docs/map/data/S_tabs.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -143,6 +146,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
         "data.csv": "docs/map/data/CML_quartier_years.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
@@ -168,6 +172,7 @@ A map of Switzerland.
         "data.csv": "docs/map/data/M_swiss_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
     "sourceView": ["index.html", "data.csv"],
