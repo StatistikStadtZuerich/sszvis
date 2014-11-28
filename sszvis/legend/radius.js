@@ -5,11 +5,9 @@
  *
  * @module sszvis/legend/radius
  *
- * @property {function} scale                     A scale to use to generate the radius sizes
- * @property {string, function} fill              A function or string that gives a fill color for the demonstration circles (default white)
- * @property {string, function} stroke            A function or string that gives a stroke color for the demonstration circles (default black)
- * @property {number, function} strokeWidth       A number or function that gives a stroke width for the demonstration circles (default 1.25)
- * @property {function} labelFormat               Formatter function for the labels (default identity)
+ * @property {function} scale         A scale to use to generate the radius sizes
+ * @property {function} [tickFormat]  Formatter function for the labels (default identity)
+ * @property {array} [tickValues]     An array of domain values to be used as radii that the legend shows
  *
  * @returns {d3.component}
  */
@@ -19,16 +17,14 @@ namespace('sszvis.legend.radius', function(module) {
   module.exports = function() {
     return d3.component()
       .prop('scale')
-      .prop('fill').fill('#fff')
-      .prop('stroke').stroke('#000')
-      .prop('strokeWidth').strokeWidth(1.25)
-      .prop('labelFormat').labelFormat(sszvis.fn.identity)
-      .render(function(data) {
+      .prop('tickFormat').tickFormat(sszvis.fn.identity)
+      .prop('tickValues')
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
         var domain = props.scale.domain();
-        var points = [domain[1], Math.round(d3.mean(domain)), domain[0]];
+        var tickValues = props.tickValues || [domain[1], Math.round(d3.mean(domain)), domain[0]];
         var maxRadius = sszvis.scale.range(props.scale)[1];
 
         var group = selection.selectAll('g.sszvis-legend__elementgroup')
@@ -39,7 +35,7 @@ namespace('sszvis.legend.radius', function(module) {
         group.attr('transform', sszvis.svgUtils.translateString(sszvis.svgUtils.crisp.halfPixel(maxRadius), sszvis.svgUtils.crisp.halfPixel(maxRadius)));
 
         var circles = group.selectAll('circle.sszvis-legend__greyline')
-          .data(points);
+          .data(tickValues);
 
         circles.enter()
           .append('circle')
@@ -57,11 +53,11 @@ namespace('sszvis.legend.radius', function(module) {
 
         circles
           .attr('r', props.scale)
-          .attr('stroke-width', 1.2)
+          .attr('stroke-width', 1)
           .attr('cy', getCircleCenter);
 
         var lines = group.selectAll('line.sszvis-legend__dashedline')
-          .data(points);
+          .data(tickValues);
 
         lines.enter()
           .append('line')
@@ -75,8 +71,8 @@ namespace('sszvis.legend.radius', function(module) {
           .attr('x2', maxRadius + 15)
           .attr('y2', getCircleEdge);
 
-        var labels = group.selectAll('text.sszvis-legend__label')
-          .data(points);
+        var labels = group.selectAll('.sszvis-legend__label')
+          .data(tickValues);
 
         labels.enter()
           .append('text')
@@ -88,7 +84,7 @@ namespace('sszvis.legend.radius', function(module) {
           .attr('dx', maxRadius + 18)
           .attr('y', getCircleEdge)
           .attr('dy', '0.35em') // vertically-center
-          .text(props.labelFormat);
+          .text(props.tickFormat);
       });
   };
 

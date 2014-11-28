@@ -115,7 +115,9 @@
       .y2(120)
       .xScale(xScale)
       .yScale(yScale)
-      .dy(-8)
+      // Position the label so it doesn't overlap with the data points
+      .dx(28)
+      .dy(-5)
       .caption('Reference Line');
 
     var xAxis = sszvis.axis.x()
@@ -138,12 +140,15 @@
 
     // Rendering
 
-    chartLayer.selectGroup('dots')
-      .call(dots);
-
+    // We place the reference line below the points whenever we can. If it isn't
+    // possible to place the label in a way that is readable, the reference line
+    // needs to be placed above the data points to make it readable.
     chartLayer.selectGroup('referenceLine')
       .datum([1])
       .call(referenceLine);
+
+    chartLayer.selectGroup('dots')
+      .call(dots);
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))

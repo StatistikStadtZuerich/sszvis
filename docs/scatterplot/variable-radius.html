@@ -167,9 +167,7 @@
 
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
-      .fill(sszvis.color.qual12()(0))
-      .stroke('#FFFFFF')
-      .labelFormat(function(d) {
+      .tickFormat(function(d) {
         return Math.round(d * 100) / 100;
       });
 
@@ -194,8 +192,8 @@
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
-    chartLayer.selectGroup('radLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 70))
+    chartLayer.selectGroup('radiusLegend')
+      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 65))
       .call(radiusLegend);
 
     chartLayer.selectGroup('xAxis')
