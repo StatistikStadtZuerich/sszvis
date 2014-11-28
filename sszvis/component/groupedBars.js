@@ -64,7 +64,7 @@ namespace('sszvis.component.groupedBars', function(module) {
 
         var inGroupScale = d3.scale.ordinal()
           .domain(d3.range(props.groupSize))
-          .rangeBands([0, props.groupWidth], props.groupSpace, 0);
+          .rangeRoundBands([0, props.groupWidth], props.groupSpace, 0);
 
         var groups = selection.selectAll('g.sszvis-bargroup')
           .data(data);

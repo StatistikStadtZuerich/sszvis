@@ -88,7 +88,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, bounds.innerWidth], 0.1, 6);
+      .rangeRoundBands([0, bounds.innerWidth], 0.1, 0.1);
 
     var maxAbsVal = d3.max(state.valueExtent, Math.abs);
 

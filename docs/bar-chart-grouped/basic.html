@@ -86,7 +86,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, bounds.innerWidth], 0.30, 1.2);
+      .rangeRoundBands([0, bounds.innerWidth], 0.30, 0.5);
 
     var yScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
