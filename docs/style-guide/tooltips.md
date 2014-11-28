@@ -20,7 +20,7 @@ var position = [ 35, 41 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('bottom')
-    .header(sszvis.component.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -42,7 +42,7 @@ var position = [ 35, 0 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('top')
-    .header(sszvis.component.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -64,7 +64,7 @@ var position = [ 76, 17 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('right')
-    .header(sszvis.component.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -86,7 +86,7 @@ var position = [ 0, 17 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('left')
-    .header(sszvis.component.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -113,7 +113,7 @@ var position = [ 55, 63 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('bottom')
     .header(
-        sszvis.component.modularText.html()
+        sszvis.svgUtils.modularText.html()
             .bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value')))
             .plain('Anteile')
     )
@@ -140,7 +140,7 @@ var position = [ 55, 0 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('top')
     .header(
-        sszvis.component.modularText.html()
+        sszvis.svgUtils.modularText.html()
             .bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value')))
             .plain('Anteile')
     )
@@ -167,7 +167,7 @@ var position = [ 0, 28 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('left')
     .header(
-        sszvis.component.modularText.html()
+        sszvis.svgUtils.modularText.html()
             .bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value')))
             .plain('Anteile')
     )
@@ -194,7 +194,7 @@ var position = [ 119, 28 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('right')
     .header(
-        sszvis.component.modularText.html()
+        sszvis.svgUtils.modularText.html()
             .bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value')))
             .plain('Anteile')
     )
@@ -228,7 +228,7 @@ var position = [ 75, 110 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('bottom')
     .header(
-        sszvis.component.modularText.html()
+        sszvis.svgUtils.modularText.html()
             .plain('Titel')
     )
     .body(sszvis.fn.prop('value'));
@@ -257,7 +257,7 @@ var position = [ 75, 0 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('top')
     .header(
-        sszvis.component.modularText.html()
+        sszvis.svgUtils.modularText.html()
             .plain('Titel')
     )
     .body(sszvis.fn.prop('value'));
@@ -286,7 +286,7 @@ var position = [ 0, 52 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('left')
     .header(
-        sszvis.component.modularText.html()
+        sszvis.svgUtils.modularText.html()
             .plain('Titel')
     )
     .body(sszvis.fn.prop('value'));
@@ -315,7 +315,7 @@ var position = [ 156, 52 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('right')
     .header(
-        sszvis.component.modularText.html()
+        sszvis.svgUtils.modularText.html()
             .plain('Titel')
     )
     .body(sszvis.fn.prop('value'));

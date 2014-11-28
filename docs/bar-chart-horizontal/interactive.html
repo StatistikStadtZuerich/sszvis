@@ -155,7 +155,7 @@
       .current(state.selectedYear)
       .change(actions.selectYear);
 
-    var tooltipHeader = sszvis.component.modularText.html()
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(function(d) {
         return isNaN(d) ? 'k. A.' : sszvis.format.number(d);
       }, xAcc));

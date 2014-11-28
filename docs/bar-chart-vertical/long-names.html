@@ -138,7 +138,7 @@
       .tickLength(SHOW_YAXIS_TICKS ? bounds.innerWidth : null)
       .orient('right');
 
-    var tooltipHeader = sszvis.component.modularText.html()
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(function(d) {
         var value = yAcc(d);
         return isNaN(value) ? 'keine' : sszvis.format.number(value);

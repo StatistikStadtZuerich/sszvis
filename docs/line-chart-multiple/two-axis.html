@@ -157,7 +157,7 @@
         return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
       });
 
-    var rulerLabel = sszvis.component.modularText.svg()
+    var rulerLabel = sszvis.svgUtils.modularText.svg()
       .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain(cAcc);
 

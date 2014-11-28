@@ -151,10 +151,10 @@
       .columnWidth(bounds.innerWidth / 2)
       .orientation('vertical');
 
-    var tooltipHeader = sszvis.component.modularText.html()
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(cAcc);
 
-    var tooltipText = sszvis.component.modularText.html()
+    var tooltipText = sszvis.svgUtils.modularText.html()
       .plain(sszvis.fn.compose(sszvis.format.percent, function(d) { return xAcc(d) / 100; }));
 
     var tooltip = sszvis.component.tooltip()

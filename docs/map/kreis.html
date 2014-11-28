@@ -123,7 +123,7 @@
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
-    var tooltipHeader = sszvis.component.modularText.html()
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
       .plain(' Einwohner');
 

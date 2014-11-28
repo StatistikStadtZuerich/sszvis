@@ -155,7 +155,7 @@
       .orient('right')
       .contour(true);
 
-    var rulerLabel = sszvis.component.modularText.svg()
+    var rulerLabel = sszvis.svgUtils.modularText.svg()
       .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain(cAcc);
 

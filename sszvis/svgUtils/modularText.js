@@ -1,25 +1,37 @@
 /**
- * FIXME
  * ModularText component
  *
- * @module sszvis/component/modularText
+ * Create structured text with formatting and newlines. Use either the HTML or
+ * SVG variant, depending on the output you expect.
  *
- * @return {@function} returns a configurable, callable class
+ * @module sszvis/svgUtils/modularText/html
+ * @module sszvis/svgUtils/modularText/svg
  *
- * use like so:
- * modularText.html()
+ * @example HTML
+ * var fmtHtml = sszvis.svgUtils.modularText.html()
+ *   .plain('Artist:')
  *   .plain(function(d) { return d.name; })
- *   .plain(function(d) { return d.place; })
  *   .newline()
- *   .bold(function(d) { return d.value; })
- *   .italic(function(d) { return d.caption; })
+ *   .bold(function(d) { return d.age; })
+ *   .italic('years old');
+ * fmtHtml({name: 'Patti', age: 67});
+ * //=> "Artist: Patti<br/><strong>67</strong> <em>years old</em>"
  *
- * returns a function which, when called on a datum, produces a text string
- * by calling on the datum, in sequence, the provided functions,
- * with the result of each function formatted in the manner
- * described by the name of the method which was used to add it.
+ * @example SVG
+ * var fmtSvg = sszvis.svgUtils.modularText.svg()
+ *   .bold(function(d) { return d.items; })
+ *   .plain('items');
+ * fmtSvg({items: 30});
+ * //=> "<tspan x="0" dy="0"><tspan style="font-weight:bold">30</tspan> <tspan>items</tspan></tspan>"
+ *
+ * @property {string, function} plain  String without formatting
+ * @property {string, function} italic String with italic style
+ * @property {string, function} bold   String with bold style
+ * @property newline                   Insert a line break
+ *
+ * @return {function} Formatting function that accepts a datum
  */
-namespace('sszvis.component.modularText', function(module) {
+namespace('sszvis.svgUtils.modularText', function(module) {
   'use strict';
 
   function formatHTML() {

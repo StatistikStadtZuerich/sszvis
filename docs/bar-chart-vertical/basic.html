@@ -132,7 +132,7 @@
       .tickFormat(yAxisLabel)
       .orient('right');
 
-    var tooltipTitle = sszvis.component.modularText.html()
+    var tooltipTitle = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.percent, yAcc));
 
     var tooltip = sszvis.component.tooltip()

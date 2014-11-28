@@ -118,7 +118,7 @@
       .rows(state.categories.length)
       .orientation('vertical');
 
-    var headerText = sszvis.component.modularText.html()
+    var headerText = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.percent, function(d) { return vAcc(d) / state.totalValue; }));
 
     var tooltip = sszvis.component.tooltip()

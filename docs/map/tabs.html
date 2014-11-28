@@ -158,7 +158,7 @@
 
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
-    var tooltipHeader = sszvis.component.modularText.html()
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(function(v) {
         return isNaN(v) ? 'keine Daten' : sszvis.format.percent(v);
       }, vAcc, mDatumAcc));

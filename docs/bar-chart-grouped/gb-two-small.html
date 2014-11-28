@@ -162,7 +162,7 @@
 
     var tooltip = sszvis.component.tooltip()
       .renderInto(tooltipLayer)
-      .header(sszvis.component.modularText.html().bold(function(d) {
+      .header(sszvis.svgUtils.modularText.html().bold(function(d) {
         return xAcc(sszvis.fn.first(d));
       }))
       .body(function(d) {

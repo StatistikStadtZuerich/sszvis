@@ -157,10 +157,10 @@
       .columns(2)
       .orientation('horizontal');
 
-    var tooltipHeader = sszvis.component.modularText.html()
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(cAcc);
 
-    var tooltipText = sszvis.component.modularText.html()
+    var tooltipText = sszvis.svgUtils.modularText.html()
       .plain(sszvis.fn.compose(sszvis.format.number, yAcc))
       .plain('Angestellte');
 

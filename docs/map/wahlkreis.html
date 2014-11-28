@@ -121,10 +121,10 @@
 
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
-    var tooltipHeader = sszvis.component.modularText.html()
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.percent, vAcc, mDatumAcc));
 
-    var tooltipBody = sszvis.component.modularText.html()
+    var tooltipBody = sszvis.svgUtils.modularText.html()
       .plain('Wahlkreis ').plain(sszvis.fn.compose(nameAcc, mDatumAcc));
 
     var tooltip = sszvis.component.tooltip()

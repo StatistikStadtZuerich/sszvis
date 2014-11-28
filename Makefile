@@ -48,7 +48,6 @@ SOURCE_FILES = \
 	sszvis/component/groupedBars.js \
 	sszvis/component/handleRuler.js \
 	sszvis/component/line.js \
-	sszvis/component/modularText.js \
 	sszvis/component/multiples.js \
 	sszvis/component/pie.js \
 	sszvis/component/pyramid.js \
@@ -76,7 +75,8 @@ SOURCE_FILES = \
 	sszvis/map/map.js \
 	sszvis/map/switzerland.js \
 	sszvis/map/zurich.js \
-	sszvis/svgUtils/ensureDefsElement.js
+	sszvis/svgUtils/ensureDefsElement.js \
+	sszvis/svgUtils/modularText.js
 
 section = sszvis/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
