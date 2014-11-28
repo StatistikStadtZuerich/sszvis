@@ -1,6 +1,6 @@
 # Stacked Bar Chart - Horizontal
 
-## sszvis.component.stacked.horizontalBar
+## sszvis.component.stackedBar.horizontal
 
 ### Data structure
 
@@ -12,7 +12,7 @@ Because it uses a d3.stack layout under the hood, this component will assign two
 
 ### Configuration
 
-The stacked.horizontalBar component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout). The stack is constructed horizontally, using the *y*-value of each data element to form groups, and then calculating, for each element, the cumulative *x*-values to the left of it in the stack.
+The stackedBar.horizontal component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout). The stack is constructed horizontally, using the *y*-value of each data element to form groups, and then calculating, for each element, the cumulative *x*-values to the left of it in the stack.
 
 #### `stackedBar.xAccessor(xAcc)`
 

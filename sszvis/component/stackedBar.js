@@ -1,5 +1,4 @@
 /**
- * FIXME
  * Stacked Bar Chart
  *
  * This component includes both the vertical and horizontal stacked bar chart components.
@@ -9,7 +8,8 @@
  * computing the stack intermediate representation. Existing properties with these names will be
  * overwritten.
  *
- * @module sszvis/component/stacked
+ * @module sszvis/component/stackedBar/horizontal
+ * @module sszvis/component/stackedBar/vertical
  *
  * @property {function} xAccessor           Specifies an x-accessor for the stack layout. The result of this function
  *                                          is used to compute the horizontal extent of each element in the stack.
@@ -28,7 +28,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.stacked', function(module) {
+namespace('sszvis.component.stackedBar', function(module) {
   'use strict';
 
   function stackedBar() {
@@ -91,8 +91,8 @@ namespace('sszvis.component.stacked', function(module) {
       });
   }
 
-  module.exports.verticalBar = function() { return stackedBar().orientation('vertical'); };
+  module.exports.horizontal = function() { return stackedBar().orientation('horizontal'); };
 
-  module.exports.horizontalBar = function() { return stackedBar().orientation('horizontal'); };
+  module.exports.vertical = function() { return stackedBar().orientation('vertical'); };
 
 });
