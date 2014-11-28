@@ -10,6 +10,7 @@
 <script src="../../vendor/d3/d3.min.js"></script>
 <script src="../../vendor/topojson/topojson.js"></script>
 <script src="../../sszvis.js"></script>
+<script src="../../sszvis/map/zurichStatistischeQuartiere.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -145,8 +146,7 @@
       .current(state.currentYear)
       .change(actions.setYear);
 
-    var mapMaker = sszvis.map()
-      .type('zurich-statistischeQuartiere')
+    var mapMaker = sszvis.map.zurichStatistischeQuartiere()
       .keyName('quarternum')
       .highlight(state.selection)
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))

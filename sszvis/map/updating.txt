@@ -11,11 +11,11 @@ Updating the map data used in sszvis.js requires several steps. First, the new m
     *wahlkreis.geojson* - this file includes GeoJSON data for the wahlkreis shapes.
     *statistische_quartiere.geojson* - this file includes GeoJSON data for the statistische quartiere shapes. It also contains four custom - specified centers for the shape objects, for cases where the centroid of the shape is in a strange position.
     *centers.csv* - A data file that gives the correct visual centers of certain map entities. More information below.
-    *zurichsee.geojson* - this file contains GeoJSON data for the outline of Lake Zurich.
+    *lakezurich.geojson* - this file contains GeoJSON data for the outline of Lake Zurich.
     *seebounds/* - these files contains boundary lines that lie over Lake Zurich, and are used to render those boundaries as grey dotted lines.
-        *stadtkreis_seebounds.geojson* - this file contains the section of the stadtkreis boundaries which lie over lake zurich.
-        *wahlkreis_seebounds.geojson* - this file contains the section of the wahlkreis boundaries which lie over lake zurich.
-        *statistische_quartiere_seebounds.geojson* - this file contains the section of the statistische quartiere boundaries which lie over lake zurich.
+        *stadtkreis_lakebounds.geojson* - this file contains the section of the stadtkreis boundaries which lie over lake zurich.
+        *wahlkreis_lakebounds.geojson* - this file contains the section of the wahlkreis boundaries which lie over lake zurich.
+        *statistische_quartiere_lakebounds.geojson* - this file contains the section of the statistische quartiere boundaries which lie over lake zurich.
     *withoutsee/* - This folder contains geoJson shapes for the three types of division, but without the area of Lake Zurich. In other words, lakeside entity boundaries end at the border of Lake Zurich, rather than at their official edges. These files are not used in sszvis.js at the moment, but are included to facilitate possible future maps of Zurich which require boundaries that exclude Lake Zurich.
         *stadtkreis.geojson* - stadtkreis without Lake Zurich
         *wahlkreis.geojson* - wahlkreis without Lake Zurich

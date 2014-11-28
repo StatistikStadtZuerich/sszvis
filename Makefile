@@ -73,9 +73,11 @@ SOURCE_FILES = \
 	sszvis/legend/linearColorScale.js \
 	sszvis/legend/ordinalColorScale.js \
 	sszvis/legend/radius.js \
-	sszvis/map/map.js \
-	sszvis/map/switzerland.js \
-	sszvis/map/zurich.js \
+	sszvis/map/mapUtils.js \
+	sszvis/map/baseRenderer.js \
+	sszvis/map/meshRenderer.js \
+	sszvis/map/highlightRenderer.js \
+	sszvis/map/lakeRenderer.js \
 	sszvis/svgUtils/crisp.js \
 	sszvis/svgUtils/ensureDefsElement.js \
 	sszvis/svgUtils/modularText.js \
@@ -90,22 +92,10 @@ SOURCE_FILES_SEP = $(foreach file, $(SOURCE_FILES), $(call section, $(file)))
 # Map data files
 #
 
-ZURICH_MAP_INTERMEDIATE_SOURCE = \
-	geodata/statistische_quartiere.geojson
-
-ZURICH_MAP_INTERMEDIATE = \
-	geodata/sq_topo.json
-
-ZURICH_MAP_ALL_SOURCE = \
-	geodata/stadtkreis.geojson \
-	geodata/wahlkreis.geojson \
-	geodata/zurichsee.geojson \
-	geodata/seebounds/stadtkreis_seebounds.geojson \
-	geodata/seebounds/statistische_quartiere_seebounds.geojson \
-	geodata/seebounds/wahlkreis_seebounds.geojson
-
 ZURICH_MAP_TARGETS = \
-	geodata/zurich_topo.json
+	geodata/stadtkreis.topojson \
+	geodata/wahlkreis.topojson \
+	geodata/statistische_quartiere.topojson
 
 CENTER_DATA = geodata/centers.csv
 
@@ -147,25 +137,14 @@ maps: $(ZURICH_MAP_TARGETS)
 clean:
 	rm -f $(ZURICH_MAP_TARGETS)
 
-#
-# Intermediate files
-#
+geodata/stadtkreis.topojson: geodata/stadtkreis.geojson geodata/lakezurich.geojson geodata/seebounds/stadtkreis_lakebounds.geojson
+	mkdir -p $(dir $@)
+	topojson -o $@ --id-property=+KNr -p -- $^
 
-# this intermediate representation is necessary for merging data from centers.csv onto statistische_quartiere.geojson
-# If the merge happens during construction of the final zurich_topo.json, then (due to the implementation of topojson.js),
-# the shape for Kreis 12 receives the "center" property belonging to Quarter 12. This is of course an error. To avoid this,
-# statistische_quartiere.geojson is first compiled to an intermediate topojson file (sq_topo), and the data merge is performed.
-# Then, this intermediate file is combined with the other geojson files during construction of zurich_topo.json, and the intermediate
-# file is deleted.
-geodata/sq_topo.json: $(ZURICH_MAP_INTERMEDIATE_SOURCE)
+geodata/wahlkreis.topojson: geodata/wahlkreis.geojson geodata/lakezurich.geojson geodata/seebounds/wahlkreis_lakebounds.geojson
+	mkdir -p $(dir $@)
+	topojson -o $@ --id-property=Bezeichnung -p -- $^
+
+geodata/statistische_quartiere.topojson: geodata/statistische_quartiere.geojson geodata/lakezurich.geojson geodata/seebounds/statistische_quartiere_lakebounds.geojson
 	mkdir -p $(dir $@)
 	topojson -o $@ -e $(CENTER_DATA) --id-property=+QNr -p -- $^
-
-#
-# Targets
-#
-
-geodata/zurich_topo.json: $(ZURICH_MAP_ALL_SOURCE) $(ZURICH_MAP_INTERMEDIATE)
-	mkdir -p $(dir $@)
-	topojson -o $@ --id-property=Bezeichnung,+QNr,+KNr -p -- $^
-	rm -f $(ZURICH_MAP_INTERMEDIATE)

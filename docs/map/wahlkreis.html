@@ -10,6 +10,7 @@
 <script src="../../vendor/d3/d3.min.js"></script>
 <script src="../../vendor/topojson/topojson.js"></script>
 <script src="../../sszvis.js"></script>
+<script src="../../sszvis/map/zurichWahlKreise.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -113,8 +114,7 @@
 
     // Components
 
-    var mapMaker = sszvis.map()
-      .type('zurich-wahlkreise')
+    var mapMaker = sszvis.map.zurichWahlKreise()
       .keyName('name')
       .highlight(state.selection)
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))

@@ -10,6 +10,7 @@
 <script src="../../vendor/d3/d3.min.js"></script>
 <script src="../../vendor/topojson/topojson.js"></script>
 <script src="../../sszvis.js"></script>
+<script src="../../sszvis/map/zurichStatistischeQuartiere.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -265,9 +266,7 @@
 
     // Components
 
-    var mapMaker = sszvis.map()
-      .type('zurich-statistischeQuartiere')
-      .keyName('geoId')
+    var mapMaker = sszvis.map.zurichStatistischeQuartiere()
       .highlight(state.mapHighlightData)
       .highlightStroke(function(d) {
         return sszvis.color.muchDarker(fillScale(vAcc(d)));
