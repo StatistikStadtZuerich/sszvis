@@ -180,6 +180,7 @@
       .titleAnchor('middle')
       .titleCenter(true)
       .dyTitle(-30)
+      .hideLabelThreshold(0)
       .highlightTick(function(tickValue) {
         return state.selection.some(function(d) {
           return xAcc(d) === tickValue;

@@ -28,6 +28,8 @@
  * @property {number} hideBorderTickThreshold           Specifies the pixel distance threshold for the visible tick correction. Ticks which are closer than
  *                                                      this threshold to the end of the axis (i.e. a tick which is 1 or two pixels from the end) will be
  *                                                      hidden from view. This prevents the display of a tick very close to the ending line.
+ * @property {number} hideLabelThreshold                By default, labels are hidden when they are closer than LABEL_PROXIMITY_THRESHOLD to a highlighted label.
+ *                                                      If this value is set to 0 or lower, labels won't be hidden, even if they overlap with the highlighted label.
  * @property {function} highlightTick                   Specifies a predicate function to use to determine whether axis ticks should be highlighted.
  *                                                      Any tick value which returns true for this predicate function will be treated specially as a highlighted tick.
  *                                                      Note that this function does NOT have any effect over which ticks are actually included on the axis. To create special
@@ -74,6 +76,7 @@ namespace('sszvis.axis', function(module) {
         .prop('alignOuterLabels').alignOuterLabels(false)
         .prop('contour')
         .prop('hideBorderTickThreshold').hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
+        .prop('hideLabelThreshold').hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD)
         .prop('highlightTick', d3.functor)
         .prop('showZeroY').showZeroY(false)
         .prop('slant')
@@ -217,21 +220,27 @@ namespace('sszvis.axis', function(module) {
 
             // Hide axis labels that overlap with highlighted labels unless
             // the labels are slanted (in which case the bounding boxes overlap)
-            if (!props.slant) {
+            if (props.hideLabelThreshold > 0 && !props.slant) {
               labels
                 .each(function(d) {
                   // although getBoundingClientRect returns coordinates relative to the window, not the document,
                   // this should still work, since all tick bounds are affected equally by scroll position changes.
-                  var bounds = {
+                  var bcr = this.getBoundingClientRect();
+                  var b = {
                     node: this,
-                    bounds: this.getBoundingClientRect()
+                    bounds: {
+                      top: bcr.top,
+                      right: bcr.right,
+                      bottom: bcr.bottom,
+                      left: bcr.left
+                    }
                   };
                   if (props.highlightTick(d)) {
-                    bounds.left -= LABEL_PROXIMITY_THRESHOLD;
-                    bounds.right += LABEL_PROXIMITY_THRESHOLD;
-                    activeBounds.push(bounds);
+                    b.bounds.left -= props.hideLabelThreshold;
+                    b.bounds.right += props.hideLabelThreshold;
+                    activeBounds.push(b);
                   } else {
-                    passiveBounds.push(bounds);
+                    passiveBounds.push(b);
                   }
                 });
 
