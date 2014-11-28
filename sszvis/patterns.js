@@ -1,18 +1,9 @@
 /**
- * FIXME
  * Patterns module
  *
  * This module contains svg patterns and pattern helper functions which are used
  * to render important textures for various other components.
  *
- * @method ensureDefs                       This method ensures that the provided selection contains a 'defs' object,
- *                                          which is required for rendering patterns. Svg elements rendered into a defs
- *                                          container will not be displayed, but can be referenced by id in the fill property
- *                                          of other, visible, elements.
- * @method ensureDefsElement                This method ensures that the provided selection contains a 'defs' object,
- *                                          and furthermore, that the defs object contains an instance of the provided
- *                                          element type, with the provided id. To ensure that a given pattern will have
- *                                          a container to render into, this is the only necessary method (it calls ensureDefs)
  * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
  * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
  * @method  mapLakePattern                  The pattern for Lake Zurich in the map component. Used by map.js internally
@@ -25,27 +16,6 @@
  */
 namespace('sszvis.patterns', function(module) {
   'use strict';
-
-  module.exports.ensureDefs = function(selection) {
-    var defs = selection.selectAll('defs')
-      .data([0]);
-
-    defs.enter()
-      .append('defs');
-
-    return defs;
-  };
-
-  module.exports.ensureDefsElement = function(selection, type, elementId) {
-    var element = sszvis.patterns.ensureDefs(selection)
-      .selectAll(type + '#' + elementId)
-      .data([0])
-      .enter()
-      .append(type)
-      .attr('id', elementId);
-
-    return element;
-  };
 
   module.exports.heatTableMissingValuePattern = function(selection) {
     var rectFill = sszvis.color.lightGry(),

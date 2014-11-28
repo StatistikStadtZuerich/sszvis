@@ -32,7 +32,7 @@ namespace('sszvis.annotation.circle', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        sszvis.patterns.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
+        sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
         var dataArea = selection.selectAll('.sszvis-data-area-circle')

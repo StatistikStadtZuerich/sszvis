@@ -150,7 +150,7 @@ namespace('sszvis.map', function(module) {
         var mapPath = swissMapPath(props.width, props.height, mapInstanceData.featureData);
 
         // render the missing value pattern
-        sszvis.patterns.ensureDefsElement(selection, 'pattern', 'missing-pattern')
+        sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'missing-pattern')
           .call(sszvis.patterns.mapMissingValuePattern);
 
         // group the input data by map entity id
@@ -243,15 +243,15 @@ namespace('sszvis.map', function(module) {
         // special rendering for Zürichsee
         if (props.type.indexOf('zurich-') >= 0) {
           // the lake texture
-          sszvis.patterns.ensureDefsElement(selection, 'pattern', 'lake-pattern')
+          sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'lake-pattern')
             .call(sszvis.patterns.mapLakePattern);
 
           // the fade gradient
-          sszvis.patterns.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
+          sszvis.svgUtils.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
             .call(sszvis.patterns.mapLakeFadeGradient);
 
           // the mask, which uses the fade gradient
-          sszvis.patterns.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
+          sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
             .call(sszvis.patterns.mapLakeGradientMask);
 
           // generate the lake zurich path
