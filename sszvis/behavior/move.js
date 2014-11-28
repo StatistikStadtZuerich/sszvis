@@ -54,8 +54,8 @@ namespace('sszvis.behavior.move', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var xExtent = scaleExtent(props.xScale).sort(d3.ascending);
-        var yExtent = scaleExtent(props.yScale).sort(d3.ascending);
+        var xExtent = sszvis.scale.range(props.xScale).sort(d3.ascending);
+        var yExtent = sszvis.scale.range(props.yScale).sort(d3.ascending);
 
         xExtent[0] -= props.padding.left;
         xExtent[1] += props.padding.right;
@@ -175,14 +175,6 @@ namespace('sszvis.behavior.move', function(module) {
         }
       }
       return null;
-    }
-  }
-
-  function scaleExtent(scale) {
-    if (scale.rangeExtent) {
-      return scale.rangeExtent();
-    } else {
-      return scale.range();
     }
   }
 

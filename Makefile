@@ -37,6 +37,7 @@ SOURCE_FILES = \
 	sszvis/logger.js \
 	sszvis/parse.js \
 	sszvis/patterns.js \
+	sszvis/scale.js \
 	sszvis/transition.js \
 	sszvis/annotation/circle.js \
 	sszvis/annotation/line.js \

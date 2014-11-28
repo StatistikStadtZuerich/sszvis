@@ -720,32 +720,6 @@ namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.scaleExtent
-     *
-     * Used to determine the extent of an array. Mimics a function found in d3 source code.
-     *
-     * @param  {array} domain     an array, sorted in either ascending or descending order
-     * @return {array}            the extent of the array, with the smaller term first.
-     */
-    scaleExtent: function(domain) { // borrowed from d3 source - svg.axis
-      var start = domain[0], stop = domain[domain.length - 1];
-      return start < stop ? [ start, stop ] : [ stop, start ];
-    },
-
-    /**
-     * f.scaleRange
-     *
-     * Used to determine the extent of a scale's range. Mimics a function found in d3 source code.
-     *
-     * @param  {array} scale    The scale to be measured
-     * @return {array}          The extent of the scale's range. Useful for determining how far
-     *                          a scale stretches in its output dimension.
-     */
-    scaleRange: function(scale) { // borrowed from d3 source - svg.axis
-      return scale.rangeExtent ? scale.rangeExtent() : sszvis.fn.scaleExtent(scale.range());
-    },
-
-    /**
      * fn.set
      *
      * takes an array of elements and returns the unique elements of that array, optionally
@@ -921,7 +895,7 @@ namespace('sszvis.axis', function(module) {
 
 
           // hide ticks which are too close to one endpoint
-          var rangeExtent = sszvis.fn.scaleRange(axisScale);
+          var rangeExtent = sszvis.scale.range(axisScale);
           group.selectAll('.tick line')
             .each(function(d) {
               var pos = axisScale(d),
@@ -977,7 +951,7 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = sszvis.fn.scaleRange(axisScale);
+            var extent = sszvis.scale.range(axisScale);
             var min = extent[0];
             var max = extent[1];
 
@@ -1057,7 +1031,7 @@ namespace('sszvis.axis', function(module) {
               })
               .attr('transform', function() {
                 var orientation = axisDelegate.orient(),
-                  extent = sszvis.fn.scaleRange(axisScale),
+                  extent = sszvis.scale.range(axisScale),
                   titleProps;
 
                 if (props.titleCenter) {
@@ -2284,6 +2258,48 @@ namespace('sszvis.patterns', function(module) {
 
 
 /**
+ * Scale utilities
+ *
+ * @module sszvis/scale
+ */
+namespace('sszvis.scale', function(module) {
+  'use strict';
+
+  /**
+   * Scale range
+   *
+   * Used to determine the extent of a scale's range. Mimics a function found in d3 source code.
+   *
+   * @param  {array} scale    The scale to be measured
+   * @return {array}          The extent of the scale's range. Useful for determining how far
+   *                          a scale stretches in its output dimension.
+   */
+  module.exports.range = function(scale) { // borrowed from d3 source - svg.axis
+    return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
+  };
+
+
+  /**
+   * Helper function
+   * Extent
+   *
+   * Used to determine the extent of an array. Mimics a function found in d3 source code.
+   *
+   * @param  {array} domain     an array, sorted in either ascending or descending order
+   * @return {array}            the extent of the array, with the smaller term first.
+   */
+  function extent(domain) { // borrowed from d3 source - svg.axis
+    var start = domain[0], stop = domain[domain.length - 1];
+    return start < stop ? [ start, stop ] : [ stop, start ];
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Default transition attributes for sszvis
  *
  * @module sszvis/transition
@@ -2631,8 +2647,8 @@ namespace('sszvis.behavior.move', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var xExtent = scaleExtent(props.xScale).sort(d3.ascending);
-        var yExtent = scaleExtent(props.yScale).sort(d3.ascending);
+        var xExtent = sszvis.scale.range(props.xScale).sort(d3.ascending);
+        var yExtent = sszvis.scale.range(props.yScale).sort(d3.ascending);
 
         xExtent[0] -= props.padding.left;
         xExtent[1] += props.padding.right;
@@ -2752,14 +2768,6 @@ namespace('sszvis.behavior.move', function(module) {
         }
       }
       return null;
-    }
-  }
-
-  function scaleExtent(scale) {
-    if (scale.rangeExtent) {
-      return scale.rangeExtent();
-    } else {
-      return scale.range();
     }
   }
 
@@ -5141,7 +5149,7 @@ namespace('sszvis.control.slider', function(module) {
         var handleSideOffset = (handleWidth / 2) + 0.5; // the amount by which to offset the position of the handle
 
         var scaleDomain = props.scale.domain();
-        var scaleRange = sszvis.fn.scaleRange(props.scale);
+        var scaleRange = sszvis.scale.range(props.scale);
         var alteredScale = props.scale.copy()
           .range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
 
@@ -6050,7 +6058,7 @@ namespace('sszvis.legend.radius', function(module) {
 
         var domain = props.scale.domain();
         var points = [domain[1], Math.round(d3.mean(domain)), domain[0]];
-        var maxRadius = sszvis.fn.scaleRange(props.scale)[1];
+        var maxRadius = sszvis.scale.range(props.scale)[1];
 
         var group = selection.selectAll('g.sszvis-legend__elementgroup')
           .data([0]);

@@ -123,7 +123,7 @@ namespace('sszvis.axis', function(module) {
 
 
           // hide ticks which are too close to one endpoint
-          var rangeExtent = sszvis.fn.scaleRange(axisScale);
+          var rangeExtent = sszvis.scale.range(axisScale);
           group.selectAll('.tick line')
             .each(function(d) {
               var pos = axisScale(d),
@@ -179,7 +179,7 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = sszvis.fn.scaleRange(axisScale);
+            var extent = sszvis.scale.range(axisScale);
             var min = extent[0];
             var max = extent[1];
 
@@ -259,7 +259,7 @@ namespace('sszvis.axis', function(module) {
               })
               .attr('transform', function() {
                 var orientation = axisDelegate.orient(),
-                  extent = sszvis.fn.scaleRange(axisScale),
+                  extent = sszvis.scale.range(axisScale),
                   titleProps;
 
                 if (props.titleCenter) {

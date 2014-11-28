@@ -51,7 +51,7 @@ namespace('sszvis.control.slider', function(module) {
         var handleSideOffset = (handleWidth / 2) + 0.5; // the amount by which to offset the position of the handle
 
         var scaleDomain = props.scale.domain();
-        var scaleRange = sszvis.fn.scaleRange(props.scale);
+        var scaleRange = sszvis.scale.range(props.scale);
         var alteredScale = props.scale.copy()
           .range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
 

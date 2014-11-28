@@ -29,7 +29,7 @@ namespace('sszvis.legend.radius', function(module) {
 
         var domain = props.scale.domain();
         var points = [domain[1], Math.round(d3.mean(domain)), domain[0]];
-        var maxRadius = sszvis.fn.scaleRange(props.scale)[1];
+        var maxRadius = sszvis.scale.range(props.scale)[1];
 
         var group = selection.selectAll('g.sszvis-legend__elementgroup')
           .data([0]);
