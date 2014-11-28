@@ -81,7 +81,7 @@ SOURCE_FILES = \
 	sszvis/svgUtils/textWrap.js \
 	sszvis/svgUtils/translateString.js
 
-section = sszvis/banner/_section.js $(1)
+section = docs/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
 SOURCE_FILES_SEP = $(foreach file, $(SOURCE_FILES), $(call section, $(file)))
 
@@ -117,10 +117,10 @@ all: server
 
 build:
 	@cat \
-		sszvis/banner/_index.js \
-		sszvis/banner/_vendor.js \
+		docs/banner/_index.js \
+		docs/banner/_vendor.js \
 		$(VENDOR_FILES_SEP) \
-		sszvis/banner/_sszvis.js \
+		docs/banner/_sszvis.js \
 		$(SOURCE_FILES_SEP) \
 		> $(BUILD_TARGET)
 	@echo "$(CLI_SUCCESS) Updated $(BUILD_TARGET)$(CLI_RESET)"
