@@ -13,6 +13,8 @@
  * it inverts the pixel location of the interaction using these scales and passes the resulting data-space values to the callback
  * functions. This component extends a d3.dispatch instance.
  *
+ * @module sszvis/behavior/move
+ *
  * @property {boolean} debug            Whether or not to render the component in debug mode, which reveals its position in the chart.
  * @property {function} xScale          The x-scale for the component. The extent of this scale, plus component padding, is the width of the
  *                                      component's active area.

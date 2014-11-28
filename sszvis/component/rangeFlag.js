@@ -7,6 +7,8 @@
  * flag also creates a tooltip anchor between the two dots, to which you can attach a tooltip. See the
  * interactive stacked area chart examples for a use of the range flag.
  *
+ * @module sszvis/component/rangeFlag
+ *
  * @property {number functor} x           A value for the x-value of the range flag
  * @property {number functor} y0          A value for the y-value of the lower range flag dot
  * @property {number functor} y1          A value for the y-value of the upper range flag dot

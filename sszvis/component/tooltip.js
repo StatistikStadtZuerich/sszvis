@@ -7,6 +7,8 @@
  * using the .visible property, passing a predicate function. Tooltips will be displayed
  * when .visible returns true.
  *
+ * @module sszvis/component/tooltip
+ *
  * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
  *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
  *                                      on which it is called. Instead, it's rendered into whichever selection is

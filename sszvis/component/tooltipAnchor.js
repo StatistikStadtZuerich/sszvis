@@ -1,7 +1,5 @@
-  /**
+/**
  * Tooltip anchor component
- *
- * @module sszvis/component/tooltipAnchor
  *
  * Tooltip anchors are invisible SVG <rect>s that each component needs to
  * provide. Because they are real elements we can know their exact position
@@ -10,6 +8,8 @@
  * don't calculate positon information for the better suited <g> elements.
  *
  * Tooltips can be bound to by selecting for the tooltip data attribute.
+ *
+ * @module sszvis/component/tooltipAnchor
  *
  * @example
  * var tooltip = sszvis.component.tooltip();

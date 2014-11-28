@@ -1,4 +1,5 @@
 /**
+ * FIXME
  * Binned Color Scale Legend
  *
  * Use for displaying the values of discontinuous (binned) color scale's bins

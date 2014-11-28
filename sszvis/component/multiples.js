@@ -39,6 +39,8 @@
  *     ... do something which creates a chart using groupSelection ...
  *   });
  *
+ * @module sszvis/component/multiples
+ *
  * @property {number} width           the total width of the collection of multiples
  * @property {number} height          the total height of the collection of multiples
  * @property {number} paddingX        x-padding to put between columns
@@ -49,6 +51,7 @@
  * @return {d3.component}
  */
 namespace('sszvis.component.multiples', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -93,7 +96,7 @@ namespace('sszvis.component.multiples', function(module) {
             d.gh = unitHeight;
             return d;
           })
-          .attr('transform', function(d, i) {
+          .attr('transform', function(d) {
             return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
           });
 

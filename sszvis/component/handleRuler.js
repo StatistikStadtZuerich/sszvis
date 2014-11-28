@@ -6,6 +6,8 @@
  * so the actual interaction with the handle is up to the developer to specify. This component also
  * creates dots for each data point it finds bound to its layer.
  *
+ * @module sszvis/component/handleRuler
+ *
  * @property {function} x                   A function or number which determines the x-position of the ruler
  * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
  * @property {number} top                   A number for the y-position of the top of the ruler.

@@ -1,7 +1,9 @@
 /**
- * @module sszvis/layout/verticalBarChartDimensions
+ * Vertical Bar Chart Dimensions
  *
  * Generates a dimension configuration object to be used for laying out the vertical bar chart.
+ *
+ * @module sszvis/layout/verticalBarChartDimensions
  *
  * @param  {number} width         the total width available to the horizontal bar chart. The computed chart layout is not guaranteed
  *                                to fit inside this width.

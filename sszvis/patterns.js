@@ -1,5 +1,5 @@
 /**
- *
+ * FIXME
  * Patterns module
  *
  * This module contains svg patterns and pattern helper functions which are used
@@ -24,6 +24,7 @@
  *
  */
 namespace('sszvis.patterns', function(module) {
+  'use strict';
 
   module.exports.ensureDefs = function(selection) {
     var defs = selection.selectAll('defs')

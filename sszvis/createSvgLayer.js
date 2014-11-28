@@ -39,12 +39,12 @@ namespace('sszvis.createSvgLayer', function(module) {
       .attr('height', bounds.height)
       .attr('width',  bounds.width);
 
-    var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0])
+    var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0]);
     viewport.enter().append('g')
       .attr('data-sszvis-svg-layer', '')
       .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
     return viewport;
-  }
+  };
 
 });

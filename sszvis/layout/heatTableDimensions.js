@@ -1,7 +1,10 @@
 /**
- * @module sszvis/layout/heatTableDimensions
+ * Heat Table Dimensions
  *
  * Utility function for calculating different demensions in the heat table
+ *
+ * @module sszvis/layout/heatTableDimensions
+ *
  * @param  {Number} spaceWidth   the total available width for the heat table within its container
  * @param  {Number} padding the padding, in pixels, between squares in the heat table
  * @param  {Number} numX     The number of columns that need to fit within the heat table width

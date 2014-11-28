@@ -481,7 +481,7 @@ if (typeof this.sszvis !== 'undefined') {
 
 
 /**
- * A collection of functional helper functions
+ * A collection of functional programming helper functions
  *
  * @module sszvis/fn
  */
@@ -1022,7 +1022,7 @@ namespace('sszvis.axis', function(module) {
 
             var longLinePadding = 2;
             if (orientation === 'left' || orientation === 'right') {
-              ticks.selectAll('text').each(function(t) {
+              ticks.selectAll('text').each(function() {
                 longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
               });
               longLinePadding += 2; // a lil' extra on the end
@@ -1350,11 +1350,14 @@ namespace('sszvis.axis', function(module) {
 
 
 /**
+ * Bounds
+ *
  * Creates a bounds object to help with the construction of d3 charts
  * that follow the d3 margin convention. The result of this function
  * is comsumed by sszvis.createSvgLayer and sszvis.createHtmlLayer.
  *
  * @module sszvis/bounds
+ *
  * @see http://bl.ocks.org/mbostock/3019563
  *
  * @property {number} DEFAULT_WIDTH The default width used across all charts
@@ -1824,13 +1827,13 @@ namespace('sszvis.createSvgLayer', function(module) {
       .attr('height', bounds.height)
       .attr('width',  bounds.width);
 
-    var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0])
+    var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0]);
     viewport.enter().append('g')
       .attr('data-sszvis-svg-layer', '')
       .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
     return viewport;
-  }
+  };
 
 });
 
@@ -2042,6 +2045,7 @@ namespace('sszvis.format', function(module) {
  * @param  {Error} The error object
  */
 namespace('sszvis.loadError', function(module) {
+  'use strict';
 
   var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
@@ -2052,7 +2056,7 @@ namespace('sszvis.loadError', function(module) {
     } else {
       alert('Ein Fehler ist aufgetreten und die Visualisierung kann nicht angezeigt werden. ' + RELOAD_MSG);
     }
-  }
+  };
 
 });
 
@@ -2108,8 +2112,9 @@ namespace('sszvis.logger', function(module) {
  * @module sszvis/parse
  */
 namespace('sszvis.parse', function(module) {
+  'use strict';
 
-  var yearParser = d3.time.format("%Y");
+  var yearParser = d3.time.format('%Y');
 
   module.exports = {
     /**
@@ -2118,7 +2123,7 @@ namespace('sszvis.parse', function(module) {
      * @return {Date}
      */
     date: function(d) {
-      return d3.time.format("%d.%m.%Y").parse(d);
+      return d3.time.format('%d.%m.%Y').parse(d);
     },
 
     /**
@@ -2138,7 +2143,7 @@ namespace('sszvis.parse', function(module) {
     number: function(d) {
       return (d.trim() === '') ? NaN : +d;
     }
-  }
+  };
 
 });
 
@@ -2147,7 +2152,7 @@ namespace('sszvis.parse', function(module) {
 
 
 /**
- *
+ * FIXME
  * Patterns module
  *
  * This module contains svg patterns and pattern helper functions which are used
@@ -2172,6 +2177,7 @@ namespace('sszvis.parse', function(module) {
  *
  */
 namespace('sszvis.patterns', function(module) {
+  'use strict';
 
   module.exports.ensureDefs = function(selection) {
     var defs = selection.selectAll('defs')
@@ -2401,6 +2407,7 @@ namespace('sszvis.patterns', function(module) {
  * too slow.
  */
 namespace('sszvis.transition', function(module) {
+  'use strict';
 
   var defaultEase = d3.ease('poly-out', 4);
 
@@ -2423,12 +2430,14 @@ namespace('sszvis.transition', function(module) {
 
 
 /**
- * @module sszvis/annotation/circle
+ * Circle annotation
  *
  * A component for creating circular data areas. The component should be passed
  * an array of data values, each of which will be used to render a data area by
  * passing it through the accessor functions. You can specify a caption to display,
  * which can be offset from the center of the data area by specifying dx or dy properties.
+ *
+ * @module sszvis/annotation/circle
  *
  * @param {number, function} x        The x-position of the center of the data area.
  * @param {number, function} y        The y-position of the center of the data area.
@@ -2440,6 +2449,7 @@ namespace('sszvis.transition', function(module) {
  * @returns {d3.component} a circular data area component
  */
 namespace('sszvis.annotation.circle', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -2494,7 +2504,7 @@ namespace('sszvis.annotation.circle', function(module) {
 
 
 /**
- * @module sszvis/annotation/line
+ * Line annotation
  *
  * A component for creating reference line data areas. The component should be passed
  * an array of data values, each of which will be used to render a reference line
@@ -2502,6 +2512,8 @@ namespace('sszvis.annotation.circle', function(module) {
  * which will be positioned by default at the midpoint of the line you specify,
  * aligned with the angle of the line. The caption can be offset from the midpoint
  * by specifying dx or dy properties.
+ *
+ * @module sszvis/annotation/line
  *
  * @param {any} x1             The x-value, in data units, of the first reference line point.
  * @param {any} x2             The x-value, in data units, of the second reference line point.
@@ -2515,6 +2527,7 @@ namespace('sszvis.annotation.circle', function(module) {
  * @returns {d3.component} a linear data area component (reference line)
  */
 namespace('sszvis.annotation.line', function(module) {
+  'use strict';
 
   // reference line specified in the form y = mx + b
   // user supplies m and b
@@ -2594,12 +2607,14 @@ namespace('sszvis.annotation.line', function(module) {
 
 
 /**
- * @module sszvis/annotation/rectangle
+ * Rectangle annotation
  *
  * A component for creating rectangular data areas. The component should be passed
  * an array of data values, each of which will be used to render a data area by
  * passing it through the accessor functions. You can specify a caption to display,
  * which can be offset from the center of the data area by specifying dx or dy properties.
+ *
+ * @module sszvis/annotation/rectangle
  *
  * @param {number, function} x        The x-position of the upper left corner of the data area.
  * @param {number, function} y        The y-position of the upper left corner of the data area.
@@ -2612,6 +2627,7 @@ namespace('sszvis.annotation.line', function(module) {
  * @returns {d3.component} a rectangular data area component
  */
 namespace('sszvis.annotation.rectangle', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -2663,7 +2679,7 @@ namespace('sszvis.annotation.rectangle', function(module) {
             .text(props.caption);
         }
       });
-  }
+  };
 
 });
 
@@ -2685,6 +2701,8 @@ namespace('sszvis.annotation.rectangle', function(module) {
  * The move behavior requires scales to be passed to it as configuration, and when a user interacts with the behavior layer,
  * it inverts the pixel location of the interaction using these scales and passes the resulting data-space values to the callback
  * functions. This component extends a d3.dispatch instance.
+ *
+ * @module sszvis/behavior/move
  *
  * @property {boolean} debug            Whether or not to render the component in debug mode, which reveals its position in the chart.
  * @property {function} xScale          The x-scale for the component. The extent of this scale, plus component padding, is the width of the
@@ -2882,6 +2900,8 @@ namespace('sszvis.behavior.move', function(module) {
  * are also associated with the voronoi cells, so that when a user interacts with them, the datum and its index within the
  * bound data are passed to the callback functions. This component extends a d3.dispatch instance.
  *
+ * @module sszvis/behavior/voronoi
+ *
  * @property {function} x                         Specify an accessor function for the x-position of the voronoi point
  * @property {function} y                         Specify an accessor function for the y-position of the voronoi point
  * @property {array[array, array]} bounds         Specify the bounds of the voronoi area. This is essential to the construction of voronoi cells
@@ -2897,7 +2917,7 @@ namespace('sszvis.behavior.move', function(module) {
  *
  */
 namespace('sszvis.behavior.voronoi', function(module) {
-'use strict';
+  'use strict';
 
   module.exports = function() {
     var event = d3.dispatch('over', 'out');
@@ -2966,7 +2986,10 @@ namespace('sszvis.behavior.voronoi', function(module) {
 
 
 /**
- * Segmented Control for switching top-level filter values. Use this control for changing between several
+ * FIXME
+ * Segmented Control
+ *
+ * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
  * @module sszvis/control/segmented
@@ -3024,7 +3047,10 @@ namespace('sszvis.control.segmented', function(module) {
 
 
 /**
- * Slider control for use in filtering. Works very much like an interactive axis.
+ * FIXME
+ * Slider control
+ *
+ * Control for use in filtering. Works very much like an interactive axis.
  * A d3 scale is its primary configuration, and it has a labeled handle which can be used to
  * select values on that scale. Ticks created using an sszvis.axis show the user where
  * data values lie.
@@ -3242,6 +3268,8 @@ namespace('sszvis.control.sliderControl', function(module) {
  *
  * The x, y, width, height, fill, and stroke properties may also be specified as constants.
  *
+ * @module sszvis/component/bar
+ *
  * @property {number, function} x       the x-value of the rectangles. Becomes a functor.
  * @property {number, function} y       the y-value of the rectangles. Becomes a functor.
  * @property {number, function} width   the width-value of the rectangles. Becomes a functor.
@@ -3330,6 +3358,8 @@ namespace('sszvis.component.bar', function(module) {
  * Used to render small circles, where each circle corresponds to a data value. The dot component
  * is built on rendering svg circles, so the configuration properties are directly mapped to circle attributes.
  *
+ * @module sszvis/component/dot
+ *
  * @property {number, function} x               An accessor function or number for the x-position of the dots.
  * @property {number, function} y               An accessor function or number for the y-position of the dots.
  * @property {number, function} radius          An accessor function or number for the radius of the dots.
@@ -3339,6 +3369,7 @@ namespace('sszvis.component.bar', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.component.dot', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -3404,6 +3435,8 @@ namespace('sszvis.component.dot', function(module) {
  *
  * The groups are calculated and laid out entirely by the groupedBars component.
  *
+ * @module sszvis/component/groupedBars
+ *
  * @property {scale} groupScale         This should be a scale function for determining the correct group offset of a member of a group.
  *                                      This function is passed the group member, and should return a value for the group offset which
  *                                      is the same for all members of the group. The within-group offset (which is different for each member)
@@ -3431,6 +3464,7 @@ namespace('sszvis.component.dot', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.component.groupedBars', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -3542,6 +3576,8 @@ namespace('sszvis.component.groupedBars', function(module) {
  * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
  * so the actual interaction with the handle is up to the developer to specify. This component also
  * creates dots for each data point it finds bound to its layer.
+ *
+ * @module sszvis/component/handleRuler
  *
  * @property {function} x                   A function or number which determines the x-position of the ruler
  * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
@@ -3704,6 +3740,8 @@ namespace('sszvis.component.handleRuler', function(module) {
  * differs slightly from the usual case in that dimension-related accessor functions are given different
  * data than style-related accessor functions.
  *
+ * @module sszvis/component/line
+ *
  * @property {function} x                An accessor function for getting the x-value of the line
  * @property {function} y                An accessor function for getting the y-value of the line
  * @property {function} [key]            The key function to be used for the data join
@@ -3770,7 +3808,10 @@ namespace('sszvis.component.line', function(module) {
 
 
 /**
+ * FIXME
  * ModularText component
+ *
+ * @module sszvis/component/modularText
  *
  * @return {@function} returns a configurable, callable class
  *
@@ -3921,6 +3962,8 @@ namespace('sszvis.component.modularText', function(module) {
  *     ... do something which creates a chart using groupSelection ...
  *   });
  *
+ * @module sszvis/component/multiples
+ *
  * @property {number} width           the total width of the collection of multiples
  * @property {number} height          the total height of the collection of multiples
  * @property {number} paddingX        x-padding to put between columns
@@ -3931,6 +3974,7 @@ namespace('sszvis.component.modularText', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.component.multiples', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -3975,7 +4019,7 @@ namespace('sszvis.component.multiples', function(module) {
             d.gh = unitHeight;
             return d;
           })
-          .attr('transform', function(d, i) {
+          .attr('transform', function(d) {
             return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
           });
 
@@ -3996,6 +4040,8 @@ namespace('sszvis.component.multiples', function(module) {
  *
  * THe input data should be an array of data values, where each data value represents one wedge in the pie.
  *
+ * @module sszvis/component/pie
+ *
  * @property {number} radius                  The radius of the pie chart (no default)
  * @property {string, function} fill          a fill color for wedges in the pie (default black). Ideally a function
  *                                            which takes a data value.
@@ -4007,6 +4053,7 @@ namespace('sszvis.component.multiples', function(module) {
  * @return {d3.component}
 */
 namespace('sszvis.component.pie', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -4060,7 +4107,7 @@ namespace('sszvis.component.pie', function(module) {
 
         selection
           .datum(data)
-          .call(tooltipAnchor)
+          .call(tooltipAnchor);
 
       });
   };
@@ -4081,6 +4128,8 @@ namespace('sszvis.component.pie', function(module) {
  *
  * This chart's horizontal point of origin is at it's spine, i.e. the center of
  * the chart.
+ *
+ * @module sszvis/component/pyramid
  *
  * @requires sszvis.component.bar
  *
@@ -4215,6 +4264,8 @@ namespace('sszvis.component.pyramid', function(module) {
  * Note that the interactive stacked area charts also include the rangeFlag component for highlighting
  * certain specific dots. This is a sepearate component.
  *
+ * @module sszvis/component/rangeRuler
+ *
  * @property {number functor} x            A function for the x-position of the ruler.
  * @property {number functor} y0           A function for the y-position of the lower dot. Called for each datum.
  * @property {number functor} y1           A function for the y-position of the upper dot. Called for each datum.
@@ -4342,6 +4393,8 @@ namespace('sszvis.component.rangeRuler', function(module) {
  * flag also creates a tooltip anchor between the two dots, to which you can attach a tooltip. See the
  * interactive stacked area chart examples for a use of the range flag.
  *
+ * @module sszvis/component/rangeFlag
+ *
  * @property {number functor} x           A value for the x-value of the range flag
  * @property {number functor} y0          A value for the y-value of the lower range flag dot
  * @property {number functor} y1          A value for the y-value of the upper range flag dot
@@ -4414,6 +4467,8 @@ namespace('sszvis.component.rangeFlag', function(module) {
  * The ruler component can be used to create a vertical line which highlights data at a certain
  * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
  * the layer it renders into, and it will generate a small dot for each data point it finds.
+ *
+ * @module sszvis/component/ruler
  *
  * @property {number} top                 A number which is the y-position of the top of the ruler line
  * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
@@ -4529,6 +4584,7 @@ namespace('sszvis.component.ruler', function(module) {
 
 
 /**
+ * FIXME
  * Stacked Area Chart
  *
  * Stacked area charts are useful for showing how component parts contribute to a total quantity
@@ -4536,7 +4592,9 @@ namespace('sszvis.component.ruler', function(module) {
  * The stacked.area component uses a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout) under the hood,
  * so some of its configuration properties are similar. This component requires an array of layer objects,
  * where each layer object represents a layer in the stack.
-
+ *
+ * @module sszvis/component/stacked/area
+ *
  * @property {function} x                      Accessor function to read *x*-values from the data. Should return a value in screen pixels.
  *                                             Used to figure out which values share a vertical position in the stack.
  * @property {function} yAccessor              Accessor function to read raw *y*-values from the data. Should return a value which is in data-units,
@@ -4556,7 +4614,7 @@ namespace('sszvis.component.ruler', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.component.stacked.area', function(module) {
-'use strict';
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -4615,6 +4673,8 @@ namespace('sszvis.component.stacked.area', function(module) {
  * This component, like stacked.area, requires an array of layer objects, where each layer object is one of the multiples.
  * In addition to stacked.area, this chart's layers can be separated to provide two views on the data: a sum of all
  * elements as well as every element on its own.
+ *
+ * @module sszvis/component/stacked/areaMultiples
  *
  * @property {number, function} x             Accessor function for the *x*-values. Passed a data object and should return a value
  *                                            in screen pixels.
@@ -4683,6 +4743,7 @@ namespace('sszvis.component.stacked.areaMultiples', function(module) {
 
 
 /**
+ * FIXME
  * Stacked Bar Chart
  *
  * This component includes both the vertical and horizontal stacked bar chart components.
@@ -4691,6 +4752,8 @@ namespace('sszvis.component.stacked.areaMultiples', function(module) {
  * this component will add the properties 'y0' and 'y' to any passed-in data objects, as part of
  * computing the stack intermediate representation. Existing properties with these names will be
  * overwritten.
+ *
+ * @module sszvis/component/stacked
  *
  * @property {function} xAccessor           Specifies an x-accessor for the stack layout. The result of this function
  *                                          is used to compute the horizontal extent of each element in the stack.
@@ -4710,7 +4773,7 @@ namespace('sszvis.component.stacked.areaMultiples', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.component.stacked', function(module) {
-'use strict';
+  'use strict';
 
   function stackedBar() {
     return d3.component()
@@ -4792,6 +4855,8 @@ namespace('sszvis.component.stacked', function(module) {
  *
  * This chart's horizontal point of origin is at it's spine, i.e. the center of
  * the chart.
+ *
+ * @module sszvis/component/stackedPyramid
  *
  * @requires sszvis.component.bar
  *
@@ -4957,7 +5022,12 @@ namespace('sszvis.component.stackedPyramid', function(module) {
 
 
 /**
+ * Text wrap
+ *
  * Function allowing to 'wrap' the text from an SVG <text> element with <tspan>.
+ *
+ * @module sszvis/component/textWrap
+ *
  * Based on https://github.com/mbostock/d3/issues/1642
  * @example svg.append("g")
  *      .attr("class", "x axis")
@@ -4973,6 +5043,7 @@ namespace('sszvis.component.stackedPyramid', function(module) {
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
 namespace('sszvis.component.textWrap', function(module) {
+  'use strict';
 
   module.exports = function(text, width, paddingRightLeft, paddingTopBottom) {
     paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
@@ -4989,8 +5060,8 @@ namespace('sszvis.component.textWrap', function(module) {
       var lineNumber = 0;
       var lineHeight = 1.1; //Em
       var x;
-      var y = text.attr("y");
-      var dy = parseFloat(text.attr("dy"));
+      var y = text.attr('y');
+      var dy = parseFloat(text.attr('dy'));
       var createdLineCount = 1; //Total line created count
       var textAlign = text.style('text-anchor') || 'start'; //'start' by default (start, middle, end, inherit)
 
@@ -5028,16 +5099,16 @@ namespace('sszvis.component.textWrap', function(module) {
       }
       y = +((null === y)?paddingTopBottom:y);
 
-      var tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+      var tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em');
 
       while (word = words.pop()) {
         line.push(word);
-        tspan.text(line.join(" "));
+        tspan.text(line.join(' '));
         if (tspan.node().getComputedTextLength() > width && line.length > 1) {
           line.pop();
-          tspan.text(line.join(" "));
+          tspan.text(line.join(' '));
           line = [word];
-          tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+          tspan = text.append('tspan').attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(word);
           ++createdLineCount;
         }
       }
@@ -5045,7 +5116,7 @@ namespace('sszvis.component.textWrap', function(module) {
       arrLineCreatedCount.push(createdLineCount); //Store the line count in the array
     });
     return arrLineCreatedCount;
-  }
+  };
 
 });
 
@@ -5061,6 +5132,8 @@ namespace('sszvis.component.textWrap', function(module) {
  * position the tooltip and provide it with data. The tooltip's visibility should be toggled
  * using the .visible property, passing a predicate function. Tooltips will be displayed
  * when .visible returns true.
+ *
+ * @module sszvis/component/tooltip
  *
  * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
  *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
@@ -5434,10 +5507,8 @@ namespace('sszvis.component.tooltip', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
-  /**
+/**
  * Tooltip anchor component
- *
- * @module sszvis/component/tooltipAnchor
  *
  * Tooltip anchors are invisible SVG <rect>s that each component needs to
  * provide. Because they are real elements we can know their exact position
@@ -5446,6 +5517,8 @@ namespace('sszvis.component.tooltip', function(module) {
  * don't calculate positon information for the better suited <g> elements.
  *
  * Tooltips can be bound to by selecting for the tooltip data attribute.
+ *
+ * @module sszvis/component/tooltipAnchor
  *
  * @example
  * var tooltip = sszvis.component.tooltip();
@@ -5552,9 +5625,12 @@ namespace('sszvis.component.tooltipAnchor', function(module) {
 
 
 /**
- * @module sszvis/layout/heatTableDimensions
+ * Heat Table Dimensions
  *
  * Utility function for calculating different demensions in the heat table
+ *
+ * @module sszvis/layout/heatTableDimensions
+ *
  * @param  {Number} spaceWidth   the total available width for the heat table within its container
  * @param  {Number} padding the padding, in pixels, between squares in the heat table
  * @param  {Number} numX     The number of columns that need to fit within the heat table width
@@ -5597,12 +5673,13 @@ namespace('sszvis.layout.heatTableDimensions', function(module) {
 
 
 /**
- * @module sszvis/layout/horizontalBarChartDimensions
+ * Horizontal Bar Chart Dimensions
  *
  * This function calculates dimensions for the horizontal bar chart. It encapsulates the
  * layout algorithm for sszvis horizontal bar charts. The object it returns contains several
  * properties which can be used in other functions and components for layout purposes.
  *
+ * @module sszvis/layout/horizontalBarChartDimensions
  *
  * @param  {number} numBars     the number of bars in the horizontal bar chart
  * @return {object}             an object containing properties used for layout:
@@ -5653,9 +5730,11 @@ namespace('sszvis.layout.horizontalBarChartDimensions', function(module) {
 
 
 /**
- * @module sszvis/layout/populationPyramidLayout
+ * Population Pyramid Layout
  *
  * This function is used to compute the layout parameters for the population pyramid
+ *
+ * @module sszvis/layout/populationPyramidLayout
  *
  * @property {number} defaultHeight   The default height of the chart. This is used as a base for calculating rounded bar heights.
  *                                    however, the returned total height will not necessarily be the same as this value.
@@ -5708,9 +5787,11 @@ namespace('sszvis.layout.populationPyramidLayout', function(module) {
 
 
 /**
- * @module sszvis/layout/stackedAreaMultiplesLayout
+ * Stacked Area Multiples Layout
  *
  * This function is used to compute layout parameters for the area multiples chart.
+ *
+ * @module sszvis/layout/stackedAreaMultiplesLayout
  *
  * @param  {number} height      The available height of the chart
  * @param  {number} num         The number of individual stacks to display
@@ -5757,9 +5838,11 @@ namespace('sszvis.layout.stackedAreaMultiplesLayout', function(module) {
 
 
 /**
- * @module sszvis/layout/verticalBarChartDimensions
+ * Vertical Bar Chart Dimensions
  *
  * Generates a dimension configuration object to be used for laying out the vertical bar chart.
+ *
+ * @module sszvis/layout/verticalBarChartDimensions
  *
  * @param  {number} width         the total width available to the horizontal bar chart. The computed chart layout is not guaranteed
  *                                to fit inside this width.
@@ -5823,6 +5906,7 @@ namespace('sszvis.layout.verticalBarChartDimensions', function(module) {
 
 
 /**
+ * FIXME
  * Binned Color Scale Legend
  *
  * Use for displaying the values of discontinuous (binned) color scale's bins
@@ -6162,6 +6246,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
 
 
 /**
+ * FIXME
  * Linear Color Scale Legend
  *
  * Use for displaying the values of a continuous linear color scale.
@@ -6268,8 +6353,10 @@ namespace('sszvis.legend.linearColorScale', function(module) {
 
 
 /**
+ * FIXME
+ * Radius size legend
  *
- * Radius size legend. Use for showing how different radius sizes correspond to data values.
+ * Use for showing how different radius sizes correspond to data values.
  *
  * @module sszvis/legend/radius
  *

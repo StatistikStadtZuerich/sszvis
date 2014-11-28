@@ -9,6 +9,8 @@
  * This chart's horizontal point of origin is at it's spine, i.e. the center of
  * the chart.
  *
+ * @module sszvis/component/stackedPyramid
+ *
  * @requires sszvis.component.bar
  *
  * @property {number, d3.scale} [barFill]          The color of a bar

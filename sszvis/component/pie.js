@@ -6,6 +6,8 @@
  *
  * THe input data should be an array of data values, where each data value represents one wedge in the pie.
  *
+ * @module sszvis/component/pie
+ *
  * @property {number} radius                  The radius of the pie chart (no default)
  * @property {string, function} fill          a fill color for wedges in the pie (default black). Ideally a function
  *                                            which takes a data value.
@@ -17,6 +19,7 @@
  * @return {d3.component}
 */
 namespace('sszvis.component.pie', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -70,7 +73,7 @@ namespace('sszvis.component.pie', function(module) {
 
         selection
           .datum(data)
-          .call(tooltipAnchor)
+          .call(tooltipAnchor);
 
       });
   };

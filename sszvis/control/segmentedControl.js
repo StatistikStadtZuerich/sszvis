@@ -1,5 +1,8 @@
 /**
- * Segmented Control for switching top-level filter values. Use this control for changing between several
+ * FIXME
+ * Segmented Control
+ *
+ * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
  * @module sszvis/control/segmented

@@ -1,6 +1,8 @@
 /**
+ * FIXME
+ * Radius size legend
  *
- * Radius size legend. Use for showing how different radius sizes correspond to data values.
+ * Use for showing how different radius sizes correspond to data values.
  *
  * @module sszvis/legend/radius
  *

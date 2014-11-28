@@ -1,5 +1,8 @@
 /**
+ * FIXME
  * ModularText component
+ *
+ * @module sszvis/component/modularText
  *
  * @return {@function} returns a configurable, callable class
  *

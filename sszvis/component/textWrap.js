@@ -1,5 +1,10 @@
 /**
+ * Text wrap
+ *
  * Function allowing to 'wrap' the text from an SVG <text> element with <tspan>.
+ *
+ * @module sszvis/component/textWrap
+ *
  * Based on https://github.com/mbostock/d3/issues/1642
  * @example svg.append("g")
  *      .attr("class", "x axis")
@@ -15,6 +20,7 @@
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
 namespace('sszvis.component.textWrap', function(module) {
+  'use strict';
 
   module.exports = function(text, width, paddingRightLeft, paddingTopBottom) {
     paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
@@ -31,8 +37,8 @@ namespace('sszvis.component.textWrap', function(module) {
       var lineNumber = 0;
       var lineHeight = 1.1; //Em
       var x;
-      var y = text.attr("y");
-      var dy = parseFloat(text.attr("dy"));
+      var y = text.attr('y');
+      var dy = parseFloat(text.attr('dy'));
       var createdLineCount = 1; //Total line created count
       var textAlign = text.style('text-anchor') || 'start'; //'start' by default (start, middle, end, inherit)
 
@@ -70,16 +76,16 @@ namespace('sszvis.component.textWrap', function(module) {
       }
       y = +((null === y)?paddingTopBottom:y);
 
-      var tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+      var tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em');
 
       while (word = words.pop()) {
         line.push(word);
-        tspan.text(line.join(" "));
+        tspan.text(line.join(' '));
         if (tspan.node().getComputedTextLength() > width && line.length > 1) {
           line.pop();
-          tspan.text(line.join(" "));
+          tspan.text(line.join(' '));
           line = [word];
-          tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+          tspan = text.append('tspan').attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(word);
           ++createdLineCount;
         }
       }
@@ -87,6 +93,6 @@ namespace('sszvis.component.textWrap', function(module) {
       arrLineCreatedCount.push(createdLineCount); //Store the line count in the array
     });
     return arrLineCreatedCount;
-  }
+  };
 
 });

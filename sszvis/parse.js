@@ -4,8 +4,9 @@
  * @module sszvis/parse
  */
 namespace('sszvis.parse', function(module) {
+  'use strict';
 
-  var yearParser = d3.time.format("%Y");
+  var yearParser = d3.time.format('%Y');
 
   module.exports = {
     /**
@@ -14,7 +15,7 @@ namespace('sszvis.parse', function(module) {
      * @return {Date}
      */
     date: function(d) {
-      return d3.time.format("%d.%m.%Y").parse(d);
+      return d3.time.format('%d.%m.%Y').parse(d);
     },
 
     /**
@@ -34,6 +35,6 @@ namespace('sszvis.parse', function(module) {
     number: function(d) {
       return (d.trim() === '') ? NaN : +d;
     }
-  }
+  };
 
 });

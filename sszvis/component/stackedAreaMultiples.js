@@ -5,6 +5,8 @@
  * In addition to stacked.area, this chart's layers can be separated to provide two views on the data: a sum of all
  * elements as well as every element on its own.
  *
+ * @module sszvis/component/stacked/areaMultiples
+ *
  * @property {number, function} x             Accessor function for the *x*-values. Passed a data object and should return a value
  *                                            in screen pixels.
  * @property {number, function} y0            Accessor function for the *y0*-value (the baseline of the area). Passed a data object

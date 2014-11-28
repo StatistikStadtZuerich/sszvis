@@ -1,7 +1,9 @@
 /**
- * @module sszvis/layout/stackedAreaMultiplesLayout
+ * Stacked Area Multiples Layout
  *
  * This function is used to compute layout parameters for the area multiples chart.
+ *
+ * @module sszvis/layout/stackedAreaMultiplesLayout
  *
  * @param  {number} height      The available height of the chart
  * @param  {number} num         The number of individual stacks to display

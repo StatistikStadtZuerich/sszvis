@@ -17,6 +17,8 @@
  * are also associated with the voronoi cells, so that when a user interacts with them, the datum and its index within the
  * bound data are passed to the callback functions. This component extends a d3.dispatch instance.
  *
+ * @module sszvis/behavior/voronoi
+ *
  * @property {function} x                         Specify an accessor function for the x-position of the voronoi point
  * @property {function} y                         Specify an accessor function for the y-position of the voronoi point
  * @property {array[array, array]} bounds         Specify the bounds of the voronoi area. This is essential to the construction of voronoi cells
@@ -32,7 +34,7 @@
  *
  */
 namespace('sszvis.behavior.voronoi', function(module) {
-'use strict';
+  'use strict';
 
   module.exports = function() {
     var event = d3.dispatch('over', 'out');

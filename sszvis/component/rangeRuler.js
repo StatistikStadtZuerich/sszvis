@@ -7,6 +7,8 @@
  * Note that the interactive stacked area charts also include the rangeFlag component for highlighting
  * certain specific dots. This is a sepearate component.
  *
+ * @module sszvis/component/rangeRuler
+ *
  * @property {number functor} x            A function for the x-position of the ruler.
  * @property {number functor} y0           A function for the y-position of the lower dot. Called for each datum.
  * @property {number functor} y1           A function for the y-position of the upper dot. Called for each datum.

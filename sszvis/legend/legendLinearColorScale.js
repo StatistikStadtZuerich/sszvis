@@ -1,4 +1,5 @@
 /**
+ * FIXME
  * Linear Color Scale Legend
  *
  * Use for displaying the values of a continuous linear color scale.

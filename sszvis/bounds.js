@@ -1,9 +1,12 @@
 /**
+ * Bounds
+ *
  * Creates a bounds object to help with the construction of d3 charts
  * that follow the d3 margin convention. The result of this function
  * is comsumed by sszvis.createSvgLayer and sszvis.createHtmlLayer.
  *
  * @module sszvis/bounds
+ *
  * @see http://bl.ocks.org/mbostock/3019563
  *
  * @property {number} DEFAULT_WIDTH The default width used across all charts

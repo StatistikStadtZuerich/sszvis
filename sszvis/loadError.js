@@ -6,6 +6,7 @@
  * @param  {Error} The error object
  */
 namespace('sszvis.loadError', function(module) {
+  'use strict';
 
   var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
@@ -16,6 +17,6 @@ namespace('sszvis.loadError', function(module) {
     } else {
       alert('Ein Fehler ist aufgetreten und die Visualisierung kann nicht angezeigt werden. ' + RELOAD_MSG);
     }
-  }
+  };
 
 });

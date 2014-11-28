@@ -1,4 +1,5 @@
 /**
+ * FIXME
  * Stacked Area Chart
  *
  * Stacked area charts are useful for showing how component parts contribute to a total quantity
@@ -6,7 +7,9 @@
  * The stacked.area component uses a [d3 stack layout](https://github.com/mbostock/d3/wiki/Stack-Layout) under the hood,
  * so some of its configuration properties are similar. This component requires an array of layer objects,
  * where each layer object represents a layer in the stack.
-
+ *
+ * @module sszvis/component/stacked/area
+ *
  * @property {function} x                      Accessor function to read *x*-values from the data. Should return a value in screen pixels.
  *                                             Used to figure out which values share a vertical position in the stack.
  * @property {function} yAccessor              Accessor function to read raw *y*-values from the data. Should return a value which is in data-units,
@@ -26,7 +29,7 @@
  * @return {d3.component}
  */
 namespace('sszvis.component.stacked.area', function(module) {
-'use strict';
+  'use strict';
 
   module.exports = function() {
     return d3.component()

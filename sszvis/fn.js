@@ -1,5 +1,5 @@
 /**
- * A collection of functional helper functions
+ * A collection of functional programming helper functions
  *
  * @module sszvis/fn
  */

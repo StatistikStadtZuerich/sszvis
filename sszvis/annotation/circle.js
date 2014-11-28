@@ -1,10 +1,12 @@
 /**
- * @module sszvis/annotation/circle
+ * Circle annotation
  *
  * A component for creating circular data areas. The component should be passed
  * an array of data values, each of which will be used to render a data area by
  * passing it through the accessor functions. You can specify a caption to display,
  * which can be offset from the center of the data area by specifying dx or dy properties.
+ *
+ * @module sszvis/annotation/circle
  *
  * @param {number, function} x        The x-position of the center of the data area.
  * @param {number, function} y        The y-position of the center of the data area.
@@ -16,6 +18,7 @@
  * @returns {d3.component} a circular data area component
  */
 namespace('sszvis.annotation.circle', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()

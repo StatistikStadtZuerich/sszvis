@@ -10,6 +10,7 @@
  * too slow.
  */
 namespace('sszvis.transition', function(module) {
+  'use strict';
 
   var defaultEase = d3.ease('poly-out', 4);
 

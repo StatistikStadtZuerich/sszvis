@@ -1,4 +1,5 @@
 /**
+ * FIXME
  * Stacked Bar Chart
  *
  * This component includes both the vertical and horizontal stacked bar chart components.
@@ -7,6 +8,8 @@
  * this component will add the properties 'y0' and 'y' to any passed-in data objects, as part of
  * computing the stack intermediate representation. Existing properties with these names will be
  * overwritten.
+ *
+ * @module sszvis/component/stacked
  *
  * @property {function} xAccessor           Specifies an x-accessor for the stack layout. The result of this function
  *                                          is used to compute the horizontal extent of each element in the stack.
@@ -26,7 +29,7 @@
  * @return {d3.component}
  */
 namespace('sszvis.component.stacked', function(module) {
-'use strict';
+  'use strict';
 
   function stackedBar() {
     return d3.component()

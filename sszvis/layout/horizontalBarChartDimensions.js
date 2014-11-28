@@ -1,10 +1,11 @@
 /**
- * @module sszvis/layout/horizontalBarChartDimensions
+ * Horizontal Bar Chart Dimensions
  *
  * This function calculates dimensions for the horizontal bar chart. It encapsulates the
  * layout algorithm for sszvis horizontal bar charts. The object it returns contains several
  * properties which can be used in other functions and components for layout purposes.
  *
+ * @module sszvis/layout/horizontalBarChartDimensions
  *
  * @param  {number} numBars     the number of bars in the horizontal bar chart
  * @return {object}             an object containing properties used for layout:

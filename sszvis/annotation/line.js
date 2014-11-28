@@ -1,5 +1,5 @@
 /**
- * @module sszvis/annotation/line
+ * Line annotation
  *
  * A component for creating reference line data areas. The component should be passed
  * an array of data values, each of which will be used to render a reference line
@@ -7,6 +7,8 @@
  * which will be positioned by default at the midpoint of the line you specify,
  * aligned with the angle of the line. The caption can be offset from the midpoint
  * by specifying dx or dy properties.
+ *
+ * @module sszvis/annotation/line
  *
  * @param {any} x1             The x-value, in data units, of the first reference line point.
  * @param {any} x2             The x-value, in data units, of the second reference line point.
@@ -20,6 +22,7 @@
  * @returns {d3.component} a linear data area component (reference line)
  */
 namespace('sszvis.annotation.line', function(module) {
+  'use strict';
 
   // reference line specified in the form y = mx + b
   // user supplies m and b

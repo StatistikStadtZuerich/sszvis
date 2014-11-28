@@ -5,6 +5,8 @@
  * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
  * the layer it renders into, and it will generate a small dot for each data point it finds.
  *
+ * @module sszvis/component/ruler
+ *
  * @property {number} top                 A number which is the y-position of the top of the ruler line
  * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
  * @property {function} x                 A number or function returning a number for the x-position of the ruler line.

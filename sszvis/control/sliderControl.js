@@ -1,5 +1,8 @@
 /**
- * Slider control for use in filtering. Works very much like an interactive axis.
+ * FIXME
+ * Slider control
+ *
+ * Control for use in filtering. Works very much like an interactive axis.
  * A d3 scale is its primary configuration, and it has a labeled handle which can be used to
  * select values on that scale. Ticks created using an sszvis.axis show the user where
  * data values lie.

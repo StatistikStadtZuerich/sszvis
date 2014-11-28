@@ -15,6 +15,8 @@
  *
  * The x, y, width, height, fill, and stroke properties may also be specified as constants.
  *
+ * @module sszvis/component/bar
+ *
  * @property {number, function} x       the x-value of the rectangles. Becomes a functor.
  * @property {number, function} y       the y-value of the rectangles. Becomes a functor.
  * @property {number, function} width   the width-value of the rectangles. Becomes a functor.

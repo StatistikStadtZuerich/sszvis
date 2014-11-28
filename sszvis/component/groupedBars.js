@@ -16,6 +16,8 @@
  *
  * The groups are calculated and laid out entirely by the groupedBars component.
  *
+ * @module sszvis/component/groupedBars
+ *
  * @property {scale} groupScale         This should be a scale function for determining the correct group offset of a member of a group.
  *                                      This function is passed the group member, and should return a value for the group offset which
  *                                      is the same for all members of the group. The within-group offset (which is different for each member)
@@ -43,6 +45,7 @@
  * @return {d3.component}
  */
 namespace('sszvis.component.groupedBars', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()

@@ -1,7 +1,9 @@
 /**
- * @module sszvis/layout/populationPyramidLayout
+ * Population Pyramid Layout
  *
  * This function is used to compute the layout parameters for the population pyramid
+ *
+ * @module sszvis/layout/populationPyramidLayout
  *
  * @property {number} defaultHeight   The default height of the chart. This is used as a base for calculating rounded bar heights.
  *                                    however, the returned total height will not necessarily be the same as this value.

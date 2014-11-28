@@ -142,7 +142,7 @@ namespace('sszvis.axis', function(module) {
 
             var longLinePadding = 2;
             if (orientation === 'left' || orientation === 'right') {
-              ticks.selectAll('text').each(function(t) {
+              ticks.selectAll('text').each(function() {
                 longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
               });
               longLinePadding += 2; // a lil' extra on the end

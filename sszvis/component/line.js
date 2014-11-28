@@ -18,6 +18,8 @@
  * differs slightly from the usual case in that dimension-related accessor functions are given different
  * data than style-related accessor functions.
  *
+ * @module sszvis/component/line
+ *
  * @property {function} x                An accessor function for getting the x-value of the line
  * @property {function} y                An accessor function for getting the y-value of the line
  * @property {function} [key]            The key function to be used for the data join
