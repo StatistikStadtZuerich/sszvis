@@ -122,7 +122,8 @@
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
-      .orient('right');
+      .orient('right')
+      .contour('outline');
 
     var buttonGroup = sszvis.control.buttonGroup()
       .values(TICK_TYPES)
