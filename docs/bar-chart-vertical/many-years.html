@@ -39,7 +39,7 @@
   ----------------------------------------------- */
   var state = {
     data: [],
-    yearBounds: [],
+    yearRange: [],
     selection: []
   };
 
@@ -49,19 +49,14 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      // find the range of the scale
-      state.yearBounds = d3.extent(state.data, xAcc);
-      // calculate the year interval between endpoints of the range
-      var yearInterval = d3.time.years(state.yearBounds[0], state.yearBounds[1]).length + 1;
-      // expand the interval by 5%, so that the scale has left padding
-      state.yearBounds[0] = d3.time.year.offset(state.yearBounds[0], -(yearInterval * 0.05));
+      state.yearRange = d3.extent(state.data, xAcc);
       render(state);
     },
 
     changeDate: function(selectedDate) {
-      var selectedYear = selectedDate.getFullYear();
+      var selectedYear = Math.round(selectedDate);
       state.selection = state.data.filter(function(v) {
-        return xAcc(v).getFullYear() === selectedYear;
+        return xAcc(v) === selectedYear;
       });
       render(state);
     },
@@ -78,7 +73,7 @@
   d3.csv('data/SiVB_yearly_many.csv')
     .row(function(d) {
       return {
-        year: sszvis.parse.year(d['Jahr']),
+        year: sszvis.parse.number(d['Jahr']),
         value: sszvis.parse.number(d['Hotelübernachtungen'])
       };
     })
@@ -100,9 +95,9 @@
 
     // Scales
 
-    var xScale = d3.time.scale()
-      .domain(state.yearBounds)
-      .range([0, bounds.innerWidth]);
+    var xScale = d3.scale.ordinal()
+      .domain(sszvis.fn.set(state.data, xAcc))
+      .rangeRoundBands([0, bounds.innerWidth], 0.4, 0.1);
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
@@ -113,7 +108,9 @@
       .range(heightScale.range().slice().reverse());
 
     var xValue = sszvis.fn.compose(xScale, xAcc);
-    var yValue = sszvis.fn.compose(yPosScale, yAcc);
+    // rounding the y-values and the height prevents the bars from jumping around
+    var yValue = sszvis.fn.compose(Math.round, yPosScale, yAcc);
+    var hValue = sszvis.fn.compose(Math.round, heightScale, yAcc)
 
     var cScale = sszvis.color.qual12();
     var cScaleDark = cScale.darker();
@@ -134,21 +131,18 @@
     // Components
 
     var barGen = sszvis.component.bar()
-      .x(function(d) {
-        // Adjust for the width of the bar
-        return xValue(d) - BAR_WIDTH / 2;
-      })
+      .x(xValue)
       .y(yValue)
-      .width(BAR_WIDTH)
-      .height(sszvis.fn.compose(heightScale, yAcc))
+      .width(xScale.rangeBand())
+      .height(hValue)
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
       });
 
-    var xAxis = sszvis.axis.x.time()
+    var xAxis = sszvis.axis.x()
       .scale(xScale)
       .orient('bottom')
-      .ticks(5);
+      .tickValues(d3.range(state.yearRange[0], state.yearRange[1], 10));
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
@@ -162,7 +156,7 @@
       .renderInto(tooltipLayer)
       .header(tooltipTitle)
       .body(function(d) {
-        return 'Im Jahr ' + xAcc(d).getFullYear();
+        return 'Im Jahr ' + xAcc(d);
       })
       .visible(isSelected);
 
@@ -187,6 +181,9 @@
     // Interaction
 
     var interactionLayer = sszvis.behavior.move()
+      .padding({
+        right: BAR_WIDTH
+      })
       .xScale(xScale)
       .yScale(yPosScale)
       .on('move', actions.changeDate)
