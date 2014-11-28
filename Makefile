@@ -64,6 +64,11 @@ SOURCE_FILES = \
 	sszvis/component/textWrap.js \
 	sszvis/component/tooltip.js \
 	sszvis/component/tooltipAnchor.js \
+	sszvis/layout/heatTableDimensions.js \
+	sszvis/layout/horizontalBarChartDimensions.js \
+	sszvis/layout/populationPyramidLayout.js \
+	sszvis/layout/stackedAreaMultiplesLayout.js \
+	sszvis/layout/verticalBarChartDimensions.js \
 	sszvis/legend/legendBinnedColorScale.js \
 	sszvis/legend/legendColor.js \
 	sszvis/legend/legendLinearColorScale.js \

@@ -82,7 +82,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 3, bottom: 60 });
-    var chartDimensions = sszvis.fn.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
+    var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
     // Scales
 

@@ -88,7 +88,7 @@
   ----------------------------------------------- */
   function render(state) {
     var defaultHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO;
-    var pyramidDimensions = sszvis.fn.populationPyramidLayout(defaultHeight, state.ages.length);
+    var pyramidDimensions = sszvis.layout.populationPyramidLayout(defaultHeight, state.ages.length);
     var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 106, top: 25, bottom: 106 });
 
 
