@@ -229,7 +229,11 @@ This x-axis (with a 'top' orientation) has a diagonal slant
 
 ## Slants (Vertical)
 
-This x-axis has a vertical slant
+This x-axis has a diagonal slant. Here are the guidelines for changing the slant of the axis:
+
+- Labels are always displayed horizontally, if there is enough space to show them clearly separate from each other.
+- If horizontal labels don't have enough space and overlap, they are displayed diagonally (45°).
+- If diagonal labels don't have enough space and overlap or touch the canvas area, they are displayed orthogonally (90°).
 
 ```project
 {
