@@ -1,3 +1,20 @@
+/**
+ * baseRenderer component
+ *
+ * A component used internally for rendering the base layer of maps.
+ * These map entities have a color fill, which is possibly a pattern that represents
+ * missing values. They are also event targets. If your map has nothing else, it should have a
+ * base layer.
+ *
+ * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
+ * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+ * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
+ * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
+ *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
+ * @property {String, Function} fill                  A string or function for the fill of the map entities
+ *
+ * @return {d3.component}
+ */
 namespace('sszvis.map.baseRenderer', function(module) {
 
   module.exports = function() {

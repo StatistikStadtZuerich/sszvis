@@ -1,3 +1,18 @@
+/**
+ * highlightRenderer component
+ *
+ * A component used internally for rendering the highlight layer of maps.
+ * The highlight layer accepts an array of data values to highlight, and renders
+ * The map entities associated with those data values using a special stroke.
+ *
+ * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
+ * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+ * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
+ * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities are highlighted.
+ * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities
+ *
+ * @return {d3.component}
+ */
 namespace('sszvis.map.highlightRenderer', function(module) {
 
   module.exports = function() {
@@ -5,7 +20,6 @@ namespace('sszvis.map.highlightRenderer', function(module) {
       .prop('keyName').keyName('geoId') // the name of the data key that identifies which map entity it belongs to
       .prop('geoJson')
       .prop('mapPath')
-      .prop('defined', d3.functor).defined(true) // a predicate function to determine whether a datum has a defined value
       .prop('highlight').highlight([]) // an array of data values to highlight
       .prop('highlightStroke', d3.functor) // a function for highlighted entity stroke colors
       .render(function() {
@@ -48,9 +62,7 @@ namespace('sszvis.map.highlightRenderer', function(module) {
           .attr('d', function(d) {
             return props.mapPath(d.geoJson);
           })
-          .attr('stroke', function(d) {
-            return props.defined(d.datum) ? props.highlightStroke(d.datum) : 'white';
-          });
+          .attr('stroke', props.highlightStroke);
       });
   };
 

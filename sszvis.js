@@ -6166,40 +6166,25 @@ namespace('sszvis.legend.radius', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
-/**
- * Map Component Information (this is legacy documentation from the old sszvis.map)
+/*
+ * A collection of utilities used by the map modules
  *
- * Use this component to make a map, either of the city of Zurich or of Switzerland.
- *
- * To use this component, pass data in the usual manner. Each data object is expected to have a value which
- * will be used to match that object with a particular map entity. The possible values depend on the map type you are using.
- * They are covered in more detail in the file sszvis/map/map-ids.txt. The key for this value is configurable.
- * The default key which map.js expects is geoId, but by changing the keyName property of the map, you can pass data which
- * use any key. The map component assumes that datum[keyName] is a valid map ID which is matched with the available map entities.
- *
- * @module  sszvis/map
- *
- * @property {String} type                            The type of the chart. This must be one of the following options: "zurich-stadtkreise", "zurich-statistischeQuartiere", "zurich-wahlkreise", "switzerland-cantons"
- * @property {String} keyName                         The map entity key name. Default 'geoId'.
- * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities are highlighted.
- * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities
- * @property {Number} width                           The width of the map. Used to create the map projection function
- * @property {Number} height                          The height of the map. Used to create the map projection function
- * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value. Map entities with data values that fail this predicate test will display the missing value texture
- * @property {String, Function} fill                  A string or function for the fill of the map entities
- * @property {String} borderColor                     A string for the border color of the map entities
- *
- * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
- *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
- *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
- *
- * @return {d3.component}
+ * @module sszvis/map/utils
  */
 namespace('sszvis.map.utils', function(module) {
 
-  // This is a special d3.geo.path generator function tailored for rendering maps of
-  // Switzerland. The values are chosen specifically to optimize path generation for
-  // Swiss map regions and is not necessarily optimal for displaying other areas of the globe.
+  /**
+   * This is a special d3.geo.path generator function tailored for rendering maps of
+   * Switzerland. The values are chosen specifically to optimize path generation for
+   * Swiss map regions and is not necessarily optimal for displaying other areas of the globe.
+   *
+   * @param  {number} width                  The width of the available map space
+   * @param  {number} height                 The height of the available map space
+   * @param  {GeoJson} featureCollection     The collection of features to be displayed in the map space
+   * @return {d3.geo.path}                   A path generator function. This function takes a geojson datum as argument
+   *                                         and returns an svg path string which represents that geojson, projected using
+   *                                         a map projection optimal for Swiss areas.
+   */
   module.exports.swissMapPath = function(width, height, featureCollection) {
     var mercatorProjection = d3.geo.mercator()
       .rotate([-7.439583333333333, -46.95240555555556]);
@@ -6228,6 +6213,23 @@ namespace('sszvis.map.utils', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * baseRenderer component
+ *
+ * A component used internally for rendering the base layer of maps.
+ * These map entities have a color fill, which is possibly a pattern that represents
+ * missing values. They are also event targets. If your map has nothing else, it should have a
+ * base layer.
+ *
+ * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
+ * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+ * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
+ * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
+ *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
+ * @property {String, Function} fill                  A string or function for the fill of the map entities
+ *
+ * @return {d3.component}
+ */
 namespace('sszvis.map.baseRenderer', function(module) {
 
   module.exports = function() {
@@ -6319,6 +6321,21 @@ namespace('sszvis.map.baseRenderer', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * meshRenderer component
+ *
+ * A component used internally for rendering the borders of all map entities as a single mesh.
+ * This component expects a GeoJson object which is a single polyline for the entire mesh of all borders.
+ * All borders will therefore be rendered as one continuous object, which is faster, more memory-efficient,
+ * and prevents overlapping borders from creating strange rendering effects. The downside is that the entire
+ * line must have a single set of styles which all borders share. To highlight individual borders, use the highlightRenderer.
+ *
+ * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
+ * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+ * @property {string, function} borderColor           The color of the border path stroke. Default is white
+ *
+ * @return {d3.component}
+ */
 namespace('sszvis.map.meshRenderer', function(module) {
 
   module.exports = function() {
@@ -6353,6 +6370,21 @@ namespace('sszvis.map.meshRenderer', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * highlightRenderer component
+ *
+ * A component used internally for rendering the highlight layer of maps.
+ * The highlight layer accepts an array of data values to highlight, and renders
+ * The map entities associated with those data values using a special stroke.
+ *
+ * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
+ * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
+ * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
+ * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities are highlighted.
+ * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities
+ *
+ * @return {d3.component}
+ */
 namespace('sszvis.map.highlightRenderer', function(module) {
 
   module.exports = function() {
@@ -6360,7 +6392,6 @@ namespace('sszvis.map.highlightRenderer', function(module) {
       .prop('keyName').keyName('geoId') // the name of the data key that identifies which map entity it belongs to
       .prop('geoJson')
       .prop('mapPath')
-      .prop('defined', d3.functor).defined(true) // a predicate function to determine whether a datum has a defined value
       .prop('highlight').highlight([]) // an array of data values to highlight
       .prop('highlightStroke', d3.functor) // a function for highlighted entity stroke colors
       .render(function() {
@@ -6403,9 +6434,7 @@ namespace('sszvis.map.highlightRenderer', function(module) {
           .attr('d', function(d) {
             return props.mapPath(d.geoJson);
           })
-          .attr('stroke', function(d) {
-            return props.defined(d.datum) ? props.highlightStroke(d.datum) : 'white';
-          });
+          .attr('stroke', props.highlightStroke);
       });
   };
 
@@ -6415,6 +6444,20 @@ namespace('sszvis.map.highlightRenderer', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * lakeRenderer component
+ *
+ * A component used internally for rendering Lake Zurich, and the borders of map entities which
+ * lie above Lake Zurich.
+ *
+ * @property {d3.geo.path} mapPath      A path-generator function used to create the path data string of the provided GeoJson.
+ * @property {GeoJson} lakeFeature      A GeoJson object which provides data for the outline shape of Lake Zurich. This shape will
+ *                                      be filled with a special texture fill and masked with an alpha gradient fade.
+ * @property {GeoJson} lakeBounds       A GeoJson object which provides data for the shape of map entity borders which lie over the
+ *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
+ *
+ * @return {d3.component}
+ */
 namespace('sszvis.map.lakeRenderer', function(module) {
 
   module.exports = function() {
@@ -6438,7 +6481,7 @@ namespace('sszvis.map.lakeRenderer', function(module) {
         sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
           .call(sszvis.patterns.mapLakeGradientMask);
 
-        // generate the lake zurich path
+        // generate the Lake Zurich path
         var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
           .data([props.lakeFeature]);
 
