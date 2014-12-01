@@ -16,27 +16,27 @@ Provide a selection container into which to render the tooltip. Unlike most othe
 
 Provide a predicate function which accepts a datum and determines whether the associated tooltip should be visible. The default value is false, meaning that no tooltips will be displayed unless this option is specified.
 
-#### `tooltip.header`
+#### `tooltip.[header]`
 
 A function accepting a datum. The result becomes the header of the tooltip. This function can return a plain string or an HTML string to be used as innerHTML.
 
-#### `tooltip.body`
+#### `tooltip.[body]`
 
 A function accepting a datum. The result becomes the body of the tooltip. This function can return a plain string, an HTML string to be used as innerHTML, or an array of arrays, which produces a tabular layout where each sub-array is one row in the table.
 
-#### `tooltip.orientation`
+#### `tooltip.[orientation]`
 
-A string or function returning a string which determines the orientation. This determines which direction the tooltip sits relative to its point. Possible values are: "top" (above the point), "right" (right of the point), "bottom" (below the point), "left" (left of the point). In the examples below, each of the four orientations is demonstrated.
+A string or function returning a string which determines the orientation. This determines which direction the point of the tooltip sits relative to the body. Possible values are: "bottom" (points down), "top" (points upward), "left" (points left), and "right" (points right). In the examples below, each of the four orientations is demonstrated. Default is "bottom".
 
-#### `tooltip.dx`
+#### `tooltip.[dx]`
 
 A number for the x-offset of the tooltip.
 
-#### `tooltip.dy`
+#### `tooltip.[dy]`
 
 A number for the y-offset of the tooltip.
 
-#### `tooltip.opacity`
+#### `tooltip.[opacity]`
 
 A function or number which determines the opacity of the tooltip. Default is 1.
 
@@ -90,28 +90,6 @@ var tooltip = getTooltipComponent(id, data)
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='miniRight' class='tooltip-container'></div>
-<script>
-var id = 'miniRight';
-
-var data = [{
-    value: 0.34
-}];
-
-var dimensions = {
-    width: 76,
-    height: 35
-};
-
-var position = [ 76, 17 ];
-
-var tooltip = getTooltipComponent(id, data)
-    .orientation('right')
-    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
-
-renderTooltip(id, dimensions, data, position, tooltip);
-</script>
-
 <div id='miniLeft' class='tooltip-container'></div>
 <script>
 var id = 'miniLeft';
@@ -129,6 +107,28 @@ var position = [ 0, 17 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('left')
+    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+
+renderTooltip(id, dimensions, data, position, tooltip);
+</script>
+
+<div id='miniRight' class='tooltip-container'></div>
+<script>
+var id = 'miniRight';
+
+var data = [{
+    value: 0.34
+}];
+
+var dimensions = {
+    width: 76,
+    height: 35
+};
+
+var position = [ 76, 17 ];
+
+var tooltip = getTooltipComponent(id, data)
+    .orientation('right')
     .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);

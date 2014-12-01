@@ -2993,7 +2993,8 @@ namespace('sszvis.annotation.ruler', function(module) {
  *                                      sub-array is one row in the table.
  * @property {function} orientation     A string or function returning a string which determines the orientation. This determines
  *                                      which direction the tooltip sits relative to its point.
- *                                      Possible values are: "top" (above the point), "right" (right of the point), "bottom" (below the point), "left" (left of the point)
+ *                                      Possible values are: "bottom" (points down), "top" (points upward), "left" (points left), and "right" (points right).
+ *                                      Default is "bottom".
  * @property {number} dx                A number for the x-offset of the tooltip
  * @property {number} dy                A number for the y-offset of the tooltip
  * @property {function} opacity         A function or number which determines the opacity of the tooltip. Default is 1.
