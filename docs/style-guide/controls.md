@@ -101,3 +101,59 @@ A callback function called whenever user interaction attempts to change the slid
     }
 }
 ```
+
+## Handle Ruler
+
+### sszvis.control.handleRuler
+
+#### `handleRuler.x`
+
+A function or number which determines the x-position of the ruler
+
+#### `handleRuler.y`
+
+A function which determines the y-position of the ruler dots. Passed data values.
+
+#### `handleRuler.top`
+
+A number for the y-position of the top of the ruler.
+
+#### `handleRuler.bottom`
+
+A number for the y-position of the bottom of the ruler.
+
+#### `handleRuler.label`
+
+A string or string function for the labels of the ruler dots.
+
+#### `handleRuler.color`
+
+A string or color for the fill color of the ruler dots.
+
+#### `handleRuler.flip`
+
+A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
+
+### Example
+
+```project
+{
+    "name": "map-cml-quartier-years",
+    "files": {
+        "index.html": {
+            "source": "docs/map/cml-quartier-years.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map/data/CML_quartier_years.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 693
+    }
+}
+```
