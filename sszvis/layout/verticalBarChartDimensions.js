@@ -58,6 +58,6 @@ namespace('sszvis.layout.verticalBarChartDimensions', function(module) {
       barGroupWidth: computedBarSpace,
       totalWidth: width
     };
-    }
+  };
 
 });

@@ -10,6 +10,8 @@
 <script src="../../vendor/d3/d3.min.js"></script>
 <script src="../../vendor/topojson/topojson.js"></script>
 <script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../sszvis-map-zurich-stadtkreise.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -115,9 +117,7 @@
 
     // Components
 
-    var mapMaker = sszvis.map()
-      .type('zurich-stadtkreise')
-      .keyName('geoId')
+    var mapMaker = sszvis.map.zurichStadtKreise()
       .highlight(state.selection)
       // gets the fill color and darken it
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))

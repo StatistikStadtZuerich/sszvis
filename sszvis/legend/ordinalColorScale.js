@@ -169,7 +169,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
 
         if (props.horizontalFloat) {
           var rowPosition = 0, horizontalPosition = 0;
-          groups.attr('transform', function(d) {
+          groups.attr('transform', function() {
             // not affected by scroll position
             var width = this.getBoundingClientRect().width;
             if (horizontalPosition + width > props.floatWidth) {

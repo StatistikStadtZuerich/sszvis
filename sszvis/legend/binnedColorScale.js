@@ -25,7 +25,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
       .prop('endpoints')
       .prop('width').width(200)
       .prop('labelFormat').labelFormat(sszvis.fn.identity)
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
