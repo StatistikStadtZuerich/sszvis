@@ -73,6 +73,9 @@ namespace('sszvis.map.zurichStadtKreise', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+
+        // Components
+
         // create a map path generator function
         var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, compiledTopoJson.featureData());
 
@@ -81,26 +84,28 @@ namespace('sszvis.map.zurichStadtKreise', function(module) {
           .keyName(props.keyName)
           .mapPath(mapPath);
 
-        selection.call(base);
-
         // Border mesh
         mesh.mapPath(mapPath);
 
-        selection.call(mesh);
-
         // Lake Zurich shape
         lake.mapPath(mapPath);
-
-        selection.call(lake);
 
         // Highlight mesh
         highlight
           .keyName(props.keyName)
           .mapPath(mapPath);
 
-        selection.call(highlight);
 
-        // event binding
+        // Rendering
+
+        selection.call(base)
+                 .call(mesh)
+                 .call(lake)
+                 .call(highlight);
+
+
+        // Event Binding
+
         selection.selectAll('[data-event-target]')
           .on('mouseover', function(d) {
             event.over(d.datum);
