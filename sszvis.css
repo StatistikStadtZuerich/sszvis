@@ -1,4 +1,6 @@
 /**
+ * General rules
+ *
  * Specify that objects are interactive
  */
 .sszvis-interactive {
@@ -78,104 +80,6 @@
 }
 
 /**
- * Reference line component
- *
- * @module sszvis/annotation/line
- */
-.sszvis-reference-line {
-  stroke-width: 1.5;
-  stroke: #aaa;
-  stroke-dasharray: 3 3;
-}
-
-.sszvis-reference-line__caption {
-  fill: #7C7C7C;
-  font-family: Arial, sans-serif;
-  font-size: 11px;
-  text-anchor: middle;
-  /*
-   * This forces rotated text to render smoothly for WebKit/Blink browsers.
-   */
-  -webkit-backface-visibility: hidden;
-
-  /*
-   * This forces rotated text to render smoothly for Firefox Windows.
-   * It leads to slightly worse text rendering on Firefox Mac, though.
-   */
-  filter: url('data:image/svg+xml;utf8,<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="gaussian_blur"><feGaussianBlur in="SourceGraphic" stdDeviation="0" /></filter></defs></svg>#gaussian_blur');
-}
-
-/**
- * Circle data area component
- *
- * @module sszvis/annotation/circle
- */
-.sszvis-data-area-circle__caption {
-  fill: #7C7C7C;
-  font-family: Arial, sans-serif;
-  font-size: 11px;
-  text-anchor: middle;
-}
-
-/**
- * Rectangle data area component
- *
- * @module sszvis/annotation/rectangle
- */
-.sszvis-data-area-rectangle__caption {
-  fill: #7C7C7C;
-  font-family: Arial, sans-serif;
-  font-size: 11px;
-  text-anchor: middle;
-}
-
-/**
- * Legend components
- *
- * @module sszvis/legend/ordinalColorScale
- * @module sszvis/legend/linearColorScale
- * @module sszvis/legend/binnedColorScale
- * @module sszvis/legend/radius
- */
-.sszvis-legend__label {
-  fill: #909090;
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: normal;
-  text-anchor: start;
-}
-
-.sszvis-legend__label--small {
-  fill: #B8B8B8;
-  font-size: 10px;
-}
-
-.sszvis-legend__axislabel {
-  fill: #B8B8B8;
-  font-family: Arial, sans-serif;
-  font-size: 10px;
-  font-style: normal;
-  font-weight: normal;
-}
-
-.sszvis-legend__crispmark {
-  shape-rendering: crispEdges;
-}
-
-.sszvis-legend__greyline {
-  fill: none;
-  stroke: #B8B8B8;
-  stroke-width: 1.1;
-}
-
-.sszvis-legend__dashedline {
-  stroke: #CCCCCC;
-  stroke-dasharray: 2 3;
-  stroke-width: 1;
-}
-
-/**
  * Bar component
  *
  * @module sszvis/component/bar
@@ -204,9 +108,24 @@
 }
 
 /**
+ * Population pyramid with reference line component
+ *
+ * @module sszvis/component/pyramid
+ */
+.sszvis-pyramid__referenceline {
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+
+/**
  * Map component
  *
- * @module sszvis/map
+ * @module sszvis/map/renderer/base
+ * @module sszvis/map/renderer/highlight
+ * @module sszvis/map/renderer/mesh
+ * @module sszvis/map/renderer/patternedlakeoverlay
  */
 .sszvis-map__area {
   stroke: none;
@@ -236,19 +155,6 @@
   stroke-width: 1.25;
   stroke-dasharray: 3 3;
 }
-
-/**
- * Population pyramid with reference line component
- *
- * @module sszvis/component/pyramid
- */
-.sszvis-pyramid__referenceline {
-  fill: none;
-  stroke: #aaa;
-  stroke-width: 2;
-  stroke-dasharray: 3 3;
-}
-
 
 /**
  * Button group control
@@ -295,7 +201,6 @@
   border-bottom-right-radius: 3px;
 }
 
-
 /**
  * Slider control
  *
@@ -325,11 +230,25 @@
   stroke: #545454;
 }
 
+/**
+ * Handle Ruler control
+ *
+ * @module sszvis/control/handleRuler
+ */
+
+.sszvis-handleRuler__handle {
+  fill: #FFFFFF;
+  stroke: #808184;
+}
+
+.sszvis-handleRuler__handle-mark {
+  stroke: #A6A8AB;
+}
 
 /**
- * Vertical Ruler component
+ * Vertical Ruler annotation
  *
- * @module sszvis/component/ruler
+ * @module sszvis/annotation/ruler
  */
 .sszvis-ruler__rule {
   shape-rendering: crispEdges;
@@ -358,27 +277,10 @@
   stroke-width: 3;
 }
 
-
 /**
- * Handle Ruler component
+ * rangeFlag annotation
  *
- * @module sszvis/component/handleRuler
- */
-
-.sszvis-handleRuler__handle {
-  fill: #FFFFFF;
-  stroke: #808184;
-}
-
-.sszvis-handleRuler__handle-mark {
-  stroke: #A6A8AB;
-}
-
-
-/**
- * rangeFlag component
- *
- * @module sszvis/component/rangeFlag
+ * @module sszvis/annotation/rangeFlag
  */
 .sszvis-rangeFlag__mark {
   fill: #EFEFEF;
@@ -387,9 +289,9 @@
 }
 
 /**
- * rangeRule component
+ * rangeRuler annotation
  *
- * @module sszvis/component/rangeRuler
+ * @module sszvis/annotation/rangeRuler
  */
 .sszvis-rangeRuler__rule {
   opacity: 0.25;
@@ -411,9 +313,9 @@
 }
 
 /**
- * Tooltip component
+ * Tooltip annotation
  *
- * @module sszvis/component/tooltip
+ * @module sszvis/annotation/tooltip
  */
 .sszvis-tooltip {
   min-width: 60px;
@@ -502,4 +404,102 @@
   font-weight: bold;
   padding-right: 0;
   text-align: right;
+}
+
+/**
+ * Reference line component
+ *
+ * @module sszvis/annotation/line
+ */
+.sszvis-referenceline {
+  stroke-width: 1.5;
+  stroke: #aaa;
+  stroke-dasharray: 3 3;
+}
+
+.sszvis-referenceline__caption {
+  fill: #7C7C7C;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-anchor: middle;
+  /*
+   * This forces rotated text to render smoothly for WebKit/Blink browsers.
+   */
+  -webkit-backface-visibility: hidden;
+
+  /*
+   * This forces rotated text to render smoothly for Firefox Windows.
+   * It leads to slightly worse text rendering on Firefox Mac, though.
+   */
+  filter: url('data:image/svg+xml;utf8,<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><defs><filter id="gaussian_blur"><feGaussianBlur in="SourceGraphic" stdDeviation="0" /></filter></defs></svg>#gaussian_blur');
+}
+
+/**
+ * Circle data area component
+ *
+ * @module sszvis/annotation/circle
+ */
+.sszvis-dataareacircle__caption {
+  fill: #7C7C7C;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+/**
+ * Rectangle data area component
+ *
+ * @module sszvis/annotation/rectangle
+ */
+.sszvis-dataarearectangle__caption {
+  fill: #7C7C7C;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+/**
+ * Legend components
+ *
+ * @module sszvis/legend/ordinalColorScale
+ * @module sszvis/legend/linearColorScale
+ * @module sszvis/legend/binnedColorScale
+ * @module sszvis/legend/radius
+ */
+.sszvis-legend__label {
+  fill: #909090;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+  text-anchor: start;
+}
+
+.sszvis-legend__label--small {
+  fill: #B8B8B8;
+  font-size: 10px;
+}
+
+.sszvis-legend__axislabel {
+  fill: #B8B8B8;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: normal;
+}
+
+.sszvis-legend__crispmark {
+  shape-rendering: crispEdges;
+}
+
+.sszvis-legend__greyline {
+  fill: none;
+  stroke: #B8B8B8;
+  stroke-width: 1.1;
+}
+
+.sszvis-legend__dashedline {
+  stroke: #CCCCCC;
+  stroke-dasharray: 2 3;
+  stroke-width: 1;
 }
