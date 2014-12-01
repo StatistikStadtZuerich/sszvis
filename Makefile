@@ -74,10 +74,10 @@ SOURCE_FILES = \
 	sszvis/legend/ordinalColorScale.js \
 	sszvis/legend/radius.js \
 	sszvis/map/mapUtils.js \
-	sszvis/map/baseRenderer.js \
-	sszvis/map/meshRenderer.js \
-	sszvis/map/highlightRenderer.js \
-	sszvis/map/lakeRenderer.js \
+	sszvis/map/renderer/base.js \
+	sszvis/map/renderer/mesh.js \
+	sszvis/map/renderer/highlight.js \
+	sszvis/map/renderer/patternedlakeoverlay.js \
 	sszvis/svgUtils/crisp.js \
 	sszvis/svgUtils/ensureDefsElement.js \
 	sszvis/svgUtils/modularText.js \
