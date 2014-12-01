@@ -1803,12 +1803,8 @@ namespace('sszvis.fallback', function(module) {
   module.exports.render = function(selector, options) {
     options || (options = {});
     options.src    || (options.src    = 'fallback.png');
-    options.height || (options.height = 365);
-    options.width  || (options.width  = 516);
     d3.select(selector).append('img')
-      .attr('src', options.src)
-      .style('height', options.height + 'px')
-      .style('width', options.width + 'px');
+      .attr('src', options.src);
   };
 
 });
