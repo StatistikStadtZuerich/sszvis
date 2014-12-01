@@ -1,5 +1,5 @@
 /**
- * lakeRenderer component
+ * patternedlakeoverlay component
  *
  * A component used internally for rendering Lake Zurich, and the borders of map entities which
  * lie above Lake Zurich.
@@ -12,7 +12,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.lakeRenderer', function(module) {
+namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
 
   module.exports = function() {
     return d3.component()

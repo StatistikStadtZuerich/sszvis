@@ -1,5 +1,5 @@
 /**
- * highlightRenderer component
+ * highlight renderer component
  *
  * A component used internally for rendering the highlight layer of maps.
  * The highlight layer accepts an array of data values to highlight, and renders
@@ -13,7 +13,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.highlightRenderer', function(module) {
+namespace('sszvis.map.renderer.highlight', function(module) {
 
   module.exports = function() {
     return d3.component()
@@ -21,7 +21,7 @@ namespace('sszvis.map.highlightRenderer', function(module) {
       .prop('geoJson')
       .prop('mapPath')
       .prop('highlight').highlight([]) // an array of data values to highlight
-      .prop('highlightStroke', d3.functor) // a function for highlighted entity stroke colors
+      .prop('highlightStroke', d3.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -62,7 +62,9 @@ namespace('sszvis.map.highlightRenderer', function(module) {
           .attr('d', function(d) {
             return props.mapPath(d.geoJson);
           })
-          .attr('stroke', props.highlightStroke);
+          .attr('stroke', function(d) {
+            return props.highlightStroke(d.datum);
+          });
       });
   };
 

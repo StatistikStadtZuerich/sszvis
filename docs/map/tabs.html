@@ -150,7 +150,11 @@
     var mapMaker = sszvis.map.zurichStatistischeQuartiere()
       .keyName('quarternum')
       .highlight(state.selection)
-      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
+      .highlightStroke(function(d) {
+        // checks for undefined values and makes those white
+        var v = vAcc(d);
+        return isNaN(v) ? 'white' : sszvis.color.muchDarker(colorScale(vAcc(d)));
+      })
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .defined(function(d) {

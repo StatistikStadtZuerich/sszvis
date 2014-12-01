@@ -1,5 +1,5 @@
 /**
- * baseRenderer component
+ * base renderer component
  *
  * A component used internally for rendering the base layer of maps.
  * These map entities have a color fill, which is possibly a pattern that represents
@@ -15,7 +15,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.baseRenderer', function(module) {
+namespace('sszvis.map.renderer.base', function(module) {
 
   module.exports = function() {
     return d3.component()

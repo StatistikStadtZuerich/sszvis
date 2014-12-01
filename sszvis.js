@@ -6214,7 +6214,7 @@ namespace('sszvis.map.utils', function(module) {
 
 
 /**
- * baseRenderer component
+ * base renderer component
  *
  * A component used internally for rendering the base layer of maps.
  * These map entities have a color fill, which is possibly a pattern that represents
@@ -6230,7 +6230,7 @@ namespace('sszvis.map.utils', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.baseRenderer', function(module) {
+namespace('sszvis.map.renderer.base', function(module) {
 
   module.exports = function() {
     return d3.component()
@@ -6322,13 +6322,13 @@ namespace('sszvis.map.baseRenderer', function(module) {
 
 
 /**
- * meshRenderer component
+ * mesh renderer component
  *
  * A component used internally for rendering the borders of all map entities as a single mesh.
  * This component expects a GeoJson object which is a single polyline for the entire mesh of all borders.
  * All borders will therefore be rendered as one continuous object, which is faster, more memory-efficient,
  * and prevents overlapping borders from creating strange rendering effects. The downside is that the entire
- * line must have a single set of styles which all borders share. To highlight individual borders, use the highlightRenderer.
+ * line must have a single set of styles which all borders share. To highlight individual borders, use the highlight renderer.
  *
  * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
  * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
@@ -6336,7 +6336,7 @@ namespace('sszvis.map.baseRenderer', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.meshRenderer', function(module) {
+namespace('sszvis.map.renderer.mesh', function(module) {
 
   module.exports = function() {
     return d3.component()
@@ -6371,7 +6371,7 @@ namespace('sszvis.map.meshRenderer', function(module) {
 
 
 /**
- * highlightRenderer component
+ * highlight renderer component
  *
  * A component used internally for rendering the highlight layer of maps.
  * The highlight layer accepts an array of data values to highlight, and renders
@@ -6385,7 +6385,7 @@ namespace('sszvis.map.meshRenderer', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.highlightRenderer', function(module) {
+namespace('sszvis.map.renderer.highlight', function(module) {
 
   module.exports = function() {
     return d3.component()
@@ -6393,7 +6393,7 @@ namespace('sszvis.map.highlightRenderer', function(module) {
       .prop('geoJson')
       .prop('mapPath')
       .prop('highlight').highlight([]) // an array of data values to highlight
-      .prop('highlightStroke', d3.functor) // a function for highlighted entity stroke colors
+      .prop('highlightStroke', d3.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -6434,7 +6434,9 @@ namespace('sszvis.map.highlightRenderer', function(module) {
           .attr('d', function(d) {
             return props.mapPath(d.geoJson);
           })
-          .attr('stroke', props.highlightStroke);
+          .attr('stroke', function(d) {
+            return props.highlightStroke(d.datum);
+          });
       });
   };
 
@@ -6445,7 +6447,7 @@ namespace('sszvis.map.highlightRenderer', function(module) {
 
 
 /**
- * lakeRenderer component
+ * patternedlakeoverlay component
  *
  * A component used internally for rendering Lake Zurich, and the borders of map entities which
  * lie above Lake Zurich.
@@ -6458,7 +6460,7 @@ namespace('sszvis.map.highlightRenderer', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.lakeRenderer', function(module) {
+namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
 
   module.exports = function() {
     return d3.component()

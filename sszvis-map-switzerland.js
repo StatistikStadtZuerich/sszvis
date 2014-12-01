@@ -43,13 +43,13 @@ namespace('sszvis.map.switzerland', function(module) {
   module.exports = function() {
     var event = d3.dispatch('over', 'out', 'click');
 
-    var base = sszvis.map.baseRenderer()
+    var base = sszvis.map.renderer.base()
       .geoJson(compiledTopoJson.featureData());
 
-    var mesh = sszvis.map.meshRenderer()
+    var mesh = sszvis.map.renderer.mesh()
       .geoJson(compiledTopoJson.meshData());
 
-    var highlight = sszvis.map.highlightRenderer()
+    var highlight = sszvis.map.renderer.highlight()
       .geoJson(compiledTopoJson.featureData());
 
     var component = d3.component()

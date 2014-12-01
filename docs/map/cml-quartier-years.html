@@ -269,9 +269,7 @@
 
     var mapMaker = sszvis.map.zurichStatistischeQuartiere()
       .highlight(state.mapHighlightData)
-      .highlightStroke(function(d) {
-        return sszvis.color.muchDarker(fillScale(vAcc(d)));
-      })
+      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, fillScale, vAcc))
       .width(mapBounds.innerWidth)
       .height(mapBounds.innerHeight)
       .fill(sszvis.fn.compose(fillScale, vAcc));
