@@ -908,10 +908,10 @@ namespace('sszvis.axis', function(module) {
             });
 
           if (sszvis.fn.defined(props.tickLength)) {
-            var extent = d3.extent(axisScale.domain());
+            var domainExtent = d3.extent(axisScale.domain());
             var ticks = group.selectAll('.tick')
               .filter(function(d) {
-                return !sszvis.fn.stringEqual(d, extent[0]) && !sszvis.fn.stringEqual(d, extent[1]);
+                return !sszvis.fn.stringEqual(d, domainExtent[0]) && !sszvis.fn.stringEqual(d, domainExtent[1]);
               });
             var orientation = axisDelegate.orient();
 
@@ -954,9 +954,9 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = sszvis.scale.range(axisScale);
-            var min = extent[0];
-            var max = extent[1];
+            var alignmentBounds = sszvis.scale.range(axisScale);
+            var min = alignmentBounds[0];
+            var max = alignmentBounds[1];
 
             group.selectAll('g.tick text')
               .style('text-anchor', function(d) {
@@ -4606,7 +4606,7 @@ namespace('sszvis.component.stackedBar', function(module) {
         } else {
           xValue = function(d) { return props.xScale(props.xAccessor(d)); };
           yValue = function(d) { return props.yScale(d.y0 + d.y); };
-          widthValue = function(d) { return props.width.apply(this, arguments); };
+          widthValue = function() { return props.width.apply(this, arguments); };
           heightValue = function(d) { return props.yScale(d.y0) - props.yScale(d.y0 + d.y); };
         }
 
@@ -5067,7 +5067,7 @@ namespace('sszvis.control.slider', function(module) {
       .prop('value')
       .prop('label')
       .prop('onchange')
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
@@ -5614,7 +5614,7 @@ namespace('sszvis.layout.verticalBarChartDimensions', function(module) {
       barGroupWidth: computedBarSpace,
       totalWidth: width
     };
-    }
+  };
 
 });
 
@@ -5649,7 +5649,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
       .prop('endpoints')
       .prop('width').width(200)
       .prop('labelFormat').labelFormat(sszvis.fn.identity)
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
@@ -6040,7 +6040,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
 
         if (props.horizontalFloat) {
           var rowPosition = 0, horizontalPosition = 0;
-          groups.attr('transform', function(d) {
+          groups.attr('transform', function() {
             // not affected by scroll position
             var width = this.getBoundingClientRect().width;
             if (horizontalPosition + width > props.floatWidth) {
@@ -6172,6 +6172,7 @@ namespace('sszvis.legend.radius', function(module) {
  * @module sszvis/map/utils
  */
 namespace('sszvis.map.utils', function(module) {
+  'use strict';
 
   /**
    * This is a special d3.geo.path generator function tailored for rendering maps of
@@ -6231,6 +6232,7 @@ namespace('sszvis.map.utils', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.map.renderer.base', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -6301,10 +6303,11 @@ namespace('sszvis.map.renderer.base', function(module) {
             } else if (center) {
               // properties.center should be a string of the form "longitude,latitude"
               var parsed = center.split(',').map(parseFloat);
-              return d.geoJson.properties.computedCenter = props.mapPath.projection()(parsed);
+              d.geoJson.properties.computedCenter = props.mapPath.projection()(parsed);
             } else {
-              return d.geoJson.properties.computedCenter = props.mapPath.centroid(d.geoJson);
+              d.geoJson.properties.computedCenter = props.mapPath.centroid(d.geoJson);
             }
+            return d.geoJson.properties.computedCenter;
           });
 
         var tooltipGroup = selection.selectGroup('tooltipAnchors')
@@ -6337,13 +6340,14 @@ namespace('sszvis.map.renderer.base', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.map.renderer.mesh', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
       .prop('geoJson')
       .prop('mapPath')
       .prop('borderColor').borderColor('white') // A function or string for the color of all borders. Note: all borders have the same color
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
@@ -6386,6 +6390,7 @@ namespace('sszvis.map.renderer.mesh', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.map.renderer.highlight', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -6461,6 +6466,7 @@ namespace('sszvis.map.renderer.highlight', function(module) {
  * @return {d3.component}
  */
 namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()

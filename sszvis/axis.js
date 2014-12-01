@@ -136,10 +136,10 @@ namespace('sszvis.axis', function(module) {
             });
 
           if (sszvis.fn.defined(props.tickLength)) {
-            var extent = d3.extent(axisScale.domain());
+            var domainExtent = d3.extent(axisScale.domain());
             var ticks = group.selectAll('.tick')
               .filter(function(d) {
-                return !sszvis.fn.stringEqual(d, extent[0]) && !sszvis.fn.stringEqual(d, extent[1]);
+                return !sszvis.fn.stringEqual(d, domainExtent[0]) && !sszvis.fn.stringEqual(d, domainExtent[1]);
               });
             var orientation = axisDelegate.orient();
 
@@ -182,9 +182,9 @@ namespace('sszvis.axis', function(module) {
           }
 
           if (props.alignOuterLabels) {
-            var extent = sszvis.scale.range(axisScale);
-            var min = extent[0];
-            var max = extent[1];
+            var alignmentBounds = sszvis.scale.range(axisScale);
+            var min = alignmentBounds[0];
+            var max = alignmentBounds[1];
 
             group.selectAll('g.tick text')
               .style('text-anchor', function(d) {

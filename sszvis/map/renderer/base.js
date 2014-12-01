@@ -16,6 +16,7 @@
  * @return {d3.component}
  */
 namespace('sszvis.map.renderer.base', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
@@ -86,10 +87,11 @@ namespace('sszvis.map.renderer.base', function(module) {
             } else if (center) {
               // properties.center should be a string of the form "longitude,latitude"
               var parsed = center.split(',').map(parseFloat);
-              return d.geoJson.properties.computedCenter = props.mapPath.projection()(parsed);
+              d.geoJson.properties.computedCenter = props.mapPath.projection()(parsed);
             } else {
-              return d.geoJson.properties.computedCenter = props.mapPath.centroid(d.geoJson);
+              d.geoJson.properties.computedCenter = props.mapPath.centroid(d.geoJson);
             }
+            return d.geoJson.properties.computedCenter;
           });
 
         var tooltipGroup = selection.selectGroup('tooltipAnchors')

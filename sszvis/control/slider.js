@@ -37,7 +37,7 @@ namespace('sszvis.control.slider', function(module) {
       .prop('value')
       .prop('label')
       .prop('onchange')
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 

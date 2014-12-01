@@ -14,6 +14,7 @@
  * @return {d3.component}
  */
 namespace('sszvis.map.renderer.highlight', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()

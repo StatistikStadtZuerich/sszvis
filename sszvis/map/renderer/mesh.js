@@ -14,13 +14,14 @@
  * @return {d3.component}
  */
 namespace('sszvis.map.renderer.mesh', function(module) {
+  'use strict';
 
   module.exports = function() {
     return d3.component()
       .prop('geoJson')
       .prop('mapPath')
       .prop('borderColor').borderColor('white') // A function or string for the color of all borders. Note: all borders have the same color
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 

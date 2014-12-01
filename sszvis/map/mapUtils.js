@@ -4,6 +4,7 @@
  * @module sszvis/map/utils
  */
 namespace('sszvis.map.utils', function(module) {
+  'use strict';
 
   /**
    * This is a special d3.geo.path generator function tailored for rendering maps of

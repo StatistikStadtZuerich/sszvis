@@ -66,7 +66,7 @@ namespace('sszvis.component.stackedBar', function(module) {
         } else {
           xValue = function(d) { return props.xScale(props.xAccessor(d)); };
           yValue = function(d) { return props.yScale(d.y0 + d.y); };
-          widthValue = function(d) { return props.width.apply(this, arguments); };
+          widthValue = function() { return props.width.apply(this, arguments); };
           heightValue = function(d) { return props.yScale(d.y0) - props.yScale(d.y0 + d.y); };
         }
 
