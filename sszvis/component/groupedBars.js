@@ -1,5 +1,5 @@
 /**
- * Grouped Bars Component
+ * Grouped Bars component
  *
  * The grouped bars component is used to create grouped vertical bar charts.
  *

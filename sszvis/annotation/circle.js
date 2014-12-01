@@ -35,12 +35,12 @@ namespace('sszvis.annotation.circle', function(module) {
         sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
-        var dataArea = selection.selectAll('.sszvis-data-area-circle')
+        var dataArea = selection.selectAll('.sszvis-dataareacircle')
           .data(data);
 
         dataArea.enter()
           .append('circle')
-          .classed('sszvis-data-area-circle', true);
+          .classed('sszvis-dataareacircle', true);
 
         dataArea
           .attr('cx', props.x)
@@ -49,12 +49,12 @@ namespace('sszvis.annotation.circle', function(module) {
           .attr('fill', 'url(#data-area-pattern)');
 
         if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-circle__caption')
+          var dataCaptions = selection.selectAll('.sszvis-dataareacircle__caption')
             .data(data);
 
           dataCaptions.enter()
             .append('text')
-            .classed('sszvis-data-area-circle__caption', true);
+            .classed('sszvis-dataareacircle__caption', true);
 
           dataCaptions
             .attr('x', props.x)

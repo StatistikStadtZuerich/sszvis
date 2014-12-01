@@ -2089,6 +2089,8 @@ namespace('sszvis.parse', function(module) {
 /**
  * Patterns module
  *
+ * @module sszvis/patterns
+ *
  * This module contains svg patterns and pattern helper functions which are used
  * to render important textures for various other components.
  *
@@ -2413,12 +2415,12 @@ namespace('sszvis.annotation.circle', function(module) {
         sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
-        var dataArea = selection.selectAll('.sszvis-data-area-circle')
+        var dataArea = selection.selectAll('.sszvis-dataareacircle')
           .data(data);
 
         dataArea.enter()
           .append('circle')
-          .classed('sszvis-data-area-circle', true);
+          .classed('sszvis-dataareacircle', true);
 
         dataArea
           .attr('cx', props.x)
@@ -2427,12 +2429,12 @@ namespace('sszvis.annotation.circle', function(module) {
           .attr('fill', 'url(#data-area-pattern)');
 
         if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-circle__caption')
+          var dataCaptions = selection.selectAll('.sszvis-dataareacircle__caption')
             .data(data);
 
           dataCaptions.enter()
             .append('text')
-            .classed('sszvis-data-area-circle__caption', true);
+            .classed('sszvis-dataareacircle__caption', true);
 
           dataCaptions
             .attr('x', props.x)
@@ -2500,12 +2502,12 @@ namespace('sszvis.annotation.line', function(module) {
         var x2 = props.xScale(props.x2);
         var y2 = props.yScale(props.y2);
 
-        var line = selection.selectAll('.sszvis-reference-line')
+        var line = selection.selectAll('.sszvis-referenceline')
           .data(data);
 
         line.enter()
           .append('line')
-          .classed('sszvis-reference-line', true);
+          .classed('sszvis-referenceline', true);
 
         line.exit().remove();
 
@@ -2516,12 +2518,12 @@ namespace('sszvis.annotation.line', function(module) {
           .attr('y2', y2);
 
         if (props.caption) {
-          var caption = selection.selectAll('.sszvis-reference-line__caption')
+          var caption = selection.selectAll('.sszvis-referenceline__caption')
             .data([0]);
 
           caption.enter()
             .append('text')
-            .classed('sszvis-reference-line__caption', true);
+            .classed('sszvis-referenceline__caption', true);
 
           caption.exit().remove();
 
@@ -2554,7 +2556,7 @@ namespace('sszvis.annotation.line', function(module) {
 
 
 /**
- * RangeRuler component
+ * RangeRuler annotation
  *
  * The range ruler is similar to the handle ruler and the ruler, except for each data
  * point which it finds bound to its layer, it generates two small dots, and a label which
@@ -2562,7 +2564,7 @@ namespace('sszvis.annotation.line', function(module) {
  * Note that the interactive stacked area charts also include the rangeFlag component for highlighting
  * certain specific dots. This is a sepearate component.
  *
- * @module sszvis/component/rangeRuler
+ * @module sszvis/annotation/rangeRuler
  *
  * @property {number functor} x            A function for the x-position of the ruler.
  * @property {number functor} y0           A function for the y-position of the lower dot. Called for each datum.
@@ -2683,7 +2685,7 @@ namespace('sszvis.annotation.rangeRuler', function(module) {
 
 
 /**
- * Range Flag component
+ * Range Flag annotation
  *
  * The range flag component creates a pair of small white circles which fit well with the range ruler.
  * However, this is a separate component for implementation reasons, because the data for the range flag
@@ -2691,7 +2693,7 @@ namespace('sszvis.annotation.rangeRuler', function(module) {
  * flag also creates a tooltip anchor between the two dots, to which you can attach a tooltip. See the
  * interactive stacked area chart examples for a use of the range flag.
  *
- * @module sszvis/component/rangeFlag
+ * @module sszvis/annotation/rangeFlag
  *
  * @property {number functor} x           A value for the x-value of the range flag
  * @property {number functor} y0          A value for the y-value of the lower range flag dot
@@ -2798,12 +2800,12 @@ namespace('sszvis.annotation.rectangle', function(module) {
         sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
-        var dataArea = selection.selectAll('.sszvis-data-area-rectangle')
+        var dataArea = selection.selectAll('.sszvis-dataarearectangle')
           .data(data);
 
         dataArea.enter()
           .append('rect')
-          .classed('sszvis-data-area-rectangle', true);
+          .classed('sszvis-dataarearectangle', true);
 
         dataArea
           .attr('x', props.x)
@@ -2813,12 +2815,12 @@ namespace('sszvis.annotation.rectangle', function(module) {
           .attr('fill', 'url(#data-area-pattern)');
 
         if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-rectangle__caption')
+          var dataCaptions = selection.selectAll('.sszvis-dataarearectangle__caption')
             .data(data);
 
           dataCaptions.enter()
             .append('text')
-            .classed('sszvis-data-area-rectangle__caption', true);
+            .classed('sszvis-dataarearectangle__caption', true);
 
           dataCaptions
             .attr('x', function(d, i) {
@@ -2841,13 +2843,13 @@ namespace('sszvis.annotation.rectangle', function(module) {
 
 
 /**
- * Ruler component
+ * Ruler annotation
  *
  * The ruler component can be used to create a vertical line which highlights data at a certain
  * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
  * the layer it renders into, and it will generate a small dot for each data point it finds.
  *
- * @module sszvis/component/ruler
+ * @module sszvis/annotation/ruler
  *
  * @property {number} top                 A number which is the y-position of the top of the ruler line
  * @property {number} bottom              A number which is the y-position of the bottom of the ruler line
@@ -2963,7 +2965,7 @@ namespace('sszvis.annotation.ruler', function(module) {
 
 
 /**
- * Tooltip component
+ * Tooltip annotation
  *
  * Use this component to add a tooltip to the document. The tooltip component should be
  * called on a selection of [data-tooltip-anchor], which contain the information necessary to
@@ -2971,7 +2973,7 @@ namespace('sszvis.annotation.ruler', function(module) {
  * using the .visible property, passing a predicate function. Tooltips will be displayed
  * when .visible returns true.
  *
- * @module sszvis/component/tooltip
+ * @module sszvis/annotation/tooltip
  *
  * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
  *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
@@ -3346,7 +3348,7 @@ namespace('sszvis.annotation.tooltip', function(module) {
 
 
 /**
- * Tooltip anchor component
+ * Tooltip anchor annotation
  *
  * Tooltip anchors are invisible SVG <rect>s that each component needs to
  * provide. Because they are real elements we can know their exact position
@@ -3356,7 +3358,7 @@ namespace('sszvis.annotation.tooltip', function(module) {
  *
  * Tooltips can be bound to by selecting for the tooltip data attribute.
  *
- * @module sszvis/component/tooltipAnchor
+ * @module sszvis/annotation/tooltipAnchor
  *
  * @example
  * var tooltip = sszvis.annotation.tooltip();
@@ -3919,7 +3921,7 @@ namespace('sszvis.component.dot', function(module) {
 
 
 /**
- * Grouped Bars Component
+ * Grouped Bars component
  *
  * The grouped bars component is used to create grouped vertical bar charts.
  *
@@ -4381,7 +4383,7 @@ namespace('sszvis.component.pyramid', function(module) {
 
 
 /**
- * Stacked Area Chart
+ * Stacked Area component
  *
  * Stacked area charts are useful for showing how component parts contribute to a total quantity
  *
@@ -4464,7 +4466,7 @@ namespace('sszvis.component.stackedArea', function(module) {
 
 
 /**
- * Stacked Area Multiples Chart
+ * Stacked Area Multiples component
  *
  * This component, like stackedArea, requires an array of layer objects, where each layer object is one of the multiples.
  * In addition to stackedArea, this chart's layers can be separated to provide two views on the data: a sum of all
@@ -4539,7 +4541,7 @@ namespace('sszvis.component.stackedAreaMultiples', function(module) {
 
 
 /**
- * Stacked Bar Chart
+ * Stacked Bar component
  *
  * This component includes both the vertical and horizontal stacked bar chart components.
  * Both are variations on the same concept, and they both use the same abstract intermediate
@@ -4818,7 +4820,7 @@ namespace('sszvis.component.stackedPyramid', function(module) {
 
 
 /**
- * Button Group
+ * Button Group control
  *
  * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.
@@ -4878,14 +4880,14 @@ namespace('sszvis.control.buttonGroup', function(module) {
 
 
 /**
- * Ruler with a handle
+ * Ruler with a handle control
  *
  * The handle ruler component is very similar to the ruler component, except that it is rendered
  * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
  * so the actual interaction with the handle is up to the developer to specify. This component also
  * creates dots for each data point it finds bound to its layer.
  *
- * @module sszvis/component/handleRuler
+ * @module sszvis/control/handleRuler
  *
  * @property {function} x                   A function or number which determines the x-position of the ruler
  * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.
@@ -6217,6 +6219,8 @@ namespace('sszvis.map.utils', function(module) {
 /**
  * base renderer component
  *
+ * @module sszvis/map/renderer/base
+ *
  * A component used internally for rendering the base layer of maps.
  * These map entities have a color fill, which is possibly a pattern that represents
  * missing values. They are also event targets. If your map has nothing else, it should have a
@@ -6327,6 +6331,8 @@ namespace('sszvis.map.renderer.base', function(module) {
 /**
  * mesh renderer component
  *
+ * @module sszvis/map/renderer/mesh
+ *
  * A component used internally for rendering the borders of all map entities as a single mesh.
  * This component expects a GeoJson object which is a single polyline for the entire mesh of all borders.
  * All borders will therefore be rendered as one continuous object, which is faster, more memory-efficient,
@@ -6376,6 +6382,8 @@ namespace('sszvis.map.renderer.mesh', function(module) {
 
 /**
  * highlight renderer component
+ *
+ * @module sszvis/map/renderer/highlight
  *
  * A component used internally for rendering the highlight layer of maps.
  * The highlight layer accepts an array of data values to highlight, and renders
@@ -6453,6 +6461,8 @@ namespace('sszvis.map.renderer.highlight', function(module) {
 
 /**
  * patternedlakeoverlay component
+ *
+ * @module sszvis/map/renderer/patternedlakeoverlay
  *
  * A component used internally for rendering Lake Zurich, and the borders of map entities which
  * lie above Lake Zurich.

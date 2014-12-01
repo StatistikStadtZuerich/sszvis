@@ -1,5 +1,5 @@
 /**
- * Stacked Bar Chart
+ * Stacked Bar component
  *
  * This component includes both the vertical and horizontal stacked bar chart components.
  * Both are variations on the same concept, and they both use the same abstract intermediate

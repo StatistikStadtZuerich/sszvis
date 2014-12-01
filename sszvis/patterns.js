@@ -1,6 +1,8 @@
 /**
  * Patterns module
  *
+ * @module sszvis/patterns
+ *
  * This module contains svg patterns and pattern helper functions which are used
  * to render important textures for various other components.
  *

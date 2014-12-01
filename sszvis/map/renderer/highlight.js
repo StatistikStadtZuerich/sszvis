@@ -1,6 +1,8 @@
 /**
  * highlight renderer component
  *
+ * @module sszvis/map/renderer/highlight
+ *
  * A component used internally for rendering the highlight layer of maps.
  * The highlight layer accepts an array of data values to highlight, and renders
  * The map entities associated with those data values using a special stroke.

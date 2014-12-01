@@ -1,5 +1,5 @@
 /**
- * Range Flag component
+ * Range Flag annotation
  *
  * The range flag component creates a pair of small white circles which fit well with the range ruler.
  * However, this is a separate component for implementation reasons, because the data for the range flag
@@ -7,7 +7,7 @@
  * flag also creates a tooltip anchor between the two dots, to which you can attach a tooltip. See the
  * interactive stacked area chart examples for a use of the range flag.
  *
- * @module sszvis/component/rangeFlag
+ * @module sszvis/annotation/rangeFlag
  *
  * @property {number functor} x           A value for the x-value of the range flag
  * @property {number functor} y0          A value for the y-value of the lower range flag dot

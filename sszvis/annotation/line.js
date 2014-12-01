@@ -48,12 +48,12 @@ namespace('sszvis.annotation.line', function(module) {
         var x2 = props.xScale(props.x2);
         var y2 = props.yScale(props.y2);
 
-        var line = selection.selectAll('.sszvis-reference-line')
+        var line = selection.selectAll('.sszvis-referenceline')
           .data(data);
 
         line.enter()
           .append('line')
-          .classed('sszvis-reference-line', true);
+          .classed('sszvis-referenceline', true);
 
         line.exit().remove();
 
@@ -64,12 +64,12 @@ namespace('sszvis.annotation.line', function(module) {
           .attr('y2', y2);
 
         if (props.caption) {
-          var caption = selection.selectAll('.sszvis-reference-line__caption')
+          var caption = selection.selectAll('.sszvis-referenceline__caption')
             .data([0]);
 
           caption.enter()
             .append('text')
-            .classed('sszvis-reference-line__caption', true);
+            .classed('sszvis-referenceline__caption', true);
 
           caption.exit().remove();
 

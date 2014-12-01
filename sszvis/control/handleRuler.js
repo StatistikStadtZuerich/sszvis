@@ -1,12 +1,12 @@
 /**
- * Ruler with a handle
+ * Ruler with a handle control
  *
  * The handle ruler component is very similar to the ruler component, except that it is rendered
  * with a 24-pixel tall handle at the top. It is moved and repositioned in the same manner as a ruler,
  * so the actual interaction with the handle is up to the developer to specify. This component also
  * creates dots for each data point it finds bound to its layer.
  *
- * @module sszvis/component/handleRuler
+ * @module sszvis/control/handleRuler
  *
  * @property {function} x                   A function or number which determines the x-position of the ruler
  * @property {function} y                   A function which determines the y-position of the ruler dots. Passed data values.

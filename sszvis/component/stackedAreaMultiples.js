@@ -1,5 +1,5 @@
 /**
- * Stacked Area Multiples Chart
+ * Stacked Area Multiples component
  *
  * This component, like stackedArea, requires an array of layer objects, where each layer object is one of the multiples.
  * In addition to stackedArea, this chart's layers can be separated to provide two views on the data: a sum of all

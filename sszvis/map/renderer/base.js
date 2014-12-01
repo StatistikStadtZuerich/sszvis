@@ -1,6 +1,8 @@
 /**
  * base renderer component
  *
+ * @module sszvis/map/renderer/base
+ *
  * A component used internally for rendering the base layer of maps.
  * These map entities have a color fill, which is possibly a pattern that represents
  * missing values. They are also event targets. If your map has nothing else, it should have a

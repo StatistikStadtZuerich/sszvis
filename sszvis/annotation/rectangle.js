@@ -37,12 +37,12 @@ namespace('sszvis.annotation.rectangle', function(module) {
         sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
           .call(sszvis.patterns.dataAreaPattern);
 
-        var dataArea = selection.selectAll('.sszvis-data-area-rectangle')
+        var dataArea = selection.selectAll('.sszvis-dataarearectangle')
           .data(data);
 
         dataArea.enter()
           .append('rect')
-          .classed('sszvis-data-area-rectangle', true);
+          .classed('sszvis-dataarearectangle', true);
 
         dataArea
           .attr('x', props.x)
@@ -52,12 +52,12 @@ namespace('sszvis.annotation.rectangle', function(module) {
           .attr('fill', 'url(#data-area-pattern)');
 
         if (props.caption) {
-          var dataCaptions = selection.selectAll('.sszvis-data-area-rectangle__caption')
+          var dataCaptions = selection.selectAll('.sszvis-dataarearectangle__caption')
             .data(data);
 
           dataCaptions.enter()
             .append('text')
-            .classed('sszvis-data-area-rectangle__caption', true);
+            .classed('sszvis-dataarearectangle__caption', true);
 
           dataCaptions
             .attr('x', function(d, i) {

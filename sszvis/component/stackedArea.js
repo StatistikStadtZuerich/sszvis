@@ -1,5 +1,5 @@
 /**
- * Stacked Area Chart
+ * Stacked Area component
  *
  * Stacked area charts are useful for showing how component parts contribute to a total quantity
  *

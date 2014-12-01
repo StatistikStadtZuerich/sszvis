@@ -1,11 +1,11 @@
 /**
- * Ruler component
+ * Ruler annotation
  *
  * The ruler component can be used to create a vertical line which highlights data at a certain
  * x-value, for instance in a line chart or area chart. The ruler expects data to be bound to
  * the layer it renders into, and it will generate a small dot for each data point it finds.
  *
- * @module sszvis/component/ruler
+ * @module sszvis/annotation/ruler
  *
  * @property {number} top                 A number which is the y-position of the top of the ruler line
  * @property {number} bottom              A number which is the y-position of the bottom of the ruler line

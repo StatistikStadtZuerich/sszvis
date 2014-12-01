@@ -1,6 +1,8 @@
 /**
  * patternedlakeoverlay component
  *
+ * @module sszvis/map/renderer/patternedlakeoverlay
+ *
  * A component used internally for rendering Lake Zurich, and the borders of map entities which
  * lie above Lake Zurich.
  *

@@ -1,5 +1,5 @@
 /**
- * Button Group
+ * Button Group control
  *
  * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.

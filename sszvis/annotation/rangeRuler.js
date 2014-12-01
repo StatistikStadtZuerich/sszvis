@@ -1,5 +1,5 @@
 /**
- * RangeRuler component
+ * RangeRuler annotation
  *
  * The range ruler is similar to the handle ruler and the ruler, except for each data
  * point which it finds bound to its layer, it generates two small dots, and a label which
@@ -7,7 +7,7 @@
  * Note that the interactive stacked area charts also include the rangeFlag component for highlighting
  * certain specific dots. This is a sepearate component.
  *
- * @module sszvis/component/rangeRuler
+ * @module sszvis/annotation/rangeRuler
  *
  * @property {number functor} x            A function for the x-position of the ruler.
  * @property {number functor} y0           A function for the y-position of the lower dot. Called for each datum.

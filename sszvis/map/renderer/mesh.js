@@ -1,6 +1,8 @@
 /**
  * mesh renderer component
  *
+ * @module sszvis/map/renderer/mesh
+ *
  * A component used internally for rendering the borders of all map entities as a single mesh.
  * This component expects a GeoJson object which is a single polyline for the entire mesh of all borders.
  * All borders will therefore be rendered as one continuous object, which is faster, more memory-efficient,
