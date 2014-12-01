@@ -10,11 +10,12 @@ global.getTooltipComponent = function(containerId, data) {
     .visible(true);
 };
 
-global.renderTooltip = function(containerId, size, data, position, tooltip) {
+global.renderTooltip = function(containerId, size, data, position, tooltip, debug) {
   var container = sszvis.createSvgLayer('#' + containerId, sszvis.bounds(size), {})
     .datum(data);
 
   var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+    .debug(!!debug)
     .position(d3.functor(position));
 
   container.call(tooltipAnchor);

@@ -2980,7 +2980,7 @@ namespace('sszvis.annotation.ruler', function(module) {
  *                                      on which it is called. Instead, it's rendered into whichever selection is
  *                                      passed to the renderInto option
  * @property {function} visible         Provide a predicate function which accepts a datum and determines whether the associated
- *                                      tooltip should be visible
+ *                                      tooltip should be visible. (default: false)
  * @property {function} header          A function accepting a datum. The result becomes the header of the tooltip.
  *                                      This function can return:
  *                                      - a plain string
