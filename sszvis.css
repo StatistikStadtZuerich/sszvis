@@ -1,6 +1,12 @@
 /**
  * General rules
  *
+*/
+.sszvis-outer-container {
+  position: relative;
+}
+
+/**
  * Specify that objects are interactive
  */
 .sszvis-interactive {

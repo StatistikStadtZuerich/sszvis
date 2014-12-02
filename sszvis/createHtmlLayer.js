@@ -16,6 +16,8 @@ namespace('sszvis.createHtmlLayer', function(module) {
     bounds || (bounds = sszvis.bounds());
 
     var root = d3.select(selector);
+    root.classed('sszvis-outer-container', true);
+
     var layer = root.selectAll('[data-sszvis-html-layer]').data([0]);
     layer.enter().append('div')
       .attr('data-sszvis-html-layer', '');
