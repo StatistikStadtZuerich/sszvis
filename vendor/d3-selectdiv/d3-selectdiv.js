@@ -15,6 +15,7 @@
 
     div.enter()
       .append('div')
+      // NOTE is there sszvis as prefix needed here? 
       .attr('data-d3-selectdiv', key)
       .style('position', 'absolute');
 

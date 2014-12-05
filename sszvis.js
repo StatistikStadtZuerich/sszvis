@@ -238,9 +238,13 @@
    * @return {d3.selection}
    */
   d3.selection.prototype.selectGroup = function(key) {
+
+    // NOTE missing ';'
     var group = this.selectAll('[data-d3-selectgroup="' + key + '"]')
+    // NOTE missing ';'
       .data(function(d){ return [d] })
 
+    // NOTE missing ';'
     group.enter()
       .append('g')
       .attr('data-d3-selectgroup', key)
@@ -271,6 +275,7 @@
 
     div.enter()
       .append('div')
+      // NOTE is there sszvis as prefix needed here? 
       .attr('data-d3-selectdiv', key)
       .style('position', 'absolute');
 
@@ -432,6 +437,7 @@ Object.defineProperty(SVGElement.prototype, 'innerSVG', {
     return obj;
   }
 
+// NOTE does this correspond to some best practice. Can it be found somewhere?
   global.namespace = function(path, body) {
     var segments = path.split('.');
     var ancestors = segments.slice(0, segments.length - 1);
@@ -2360,6 +2366,7 @@ namespace('sszvis.scale', function(module) {
 namespace('sszvis.transition', function(module) {
   'use strict';
 
+  // NOTE how did you decide on defining exactly this default ease? 
   var defaultEase = d3.ease('poly-out', 4);
 
   module.exports = function(transition) {
@@ -3520,6 +3527,7 @@ namespace('sszvis.behavior.move', function(module) {
         return defaults;
       }).padding({})
       .render(function() {
+
         var selection = d3.select(this);
         var props = selection.props();
 
@@ -4918,6 +4926,7 @@ namespace('sszvis.control.handleRuler', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        // NOTE can you explain what is going on here
         var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
         var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
 
@@ -5783,7 +5792,6 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.format.number.
  */
-
 namespace('sszvis.legend.linearColorScale', function(module) {
   'use strict';
 
@@ -6894,6 +6902,7 @@ namespace('sszvis.svgUtils.textWrap', function(module) {
 
       var tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em');
 
+      // NOTE jshint says: Expected a conditional expression and instead saw an assignment.
       while (word = words.pop()) {
         line.push(word);
         tspan.text(line.join(' '));

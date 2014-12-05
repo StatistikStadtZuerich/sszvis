@@ -78,6 +78,7 @@ namespace('sszvis.svgUtils.textWrap', function(module) {
 
       var tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em');
 
+      // NOTE jshint says: Expected a conditional expression and instead saw an assignment.
       while (word = words.pop()) {
         line.push(word);
         tspan.text(line.join(' '));

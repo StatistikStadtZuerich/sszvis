@@ -51,6 +51,7 @@ namespace('sszvis.behavior.move', function(module) {
         return defaults;
       }).padding({})
       .render(function() {
+
         var selection = d3.select(this);
         var props = selection.props();
 

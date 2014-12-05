@@ -34,6 +34,7 @@ namespace('sszvis.control.handleRuler', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        // NOTE can you explain what is going on here
         var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
         var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
 

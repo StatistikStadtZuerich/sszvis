@@ -528,7 +528,9 @@
 
   function noop() {}
 
+  // NOTE this mechanism fails in CMS. It tries to 'define(topojson)' but apparently fails
   if (typeof define === "function" && define.amd) define(topojson);
   else if (typeof module === "object" && module.exports) module.exports = topojson;
+  // NOTE needed to remove last 'else' to make topojson known 
   else this.topojson = topojson;
 }();

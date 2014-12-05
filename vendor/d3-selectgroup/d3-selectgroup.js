@@ -10,9 +10,13 @@
    * @return {d3.selection}
    */
   d3.selection.prototype.selectGroup = function(key) {
+
+    // NOTE missing ';'
     var group = this.selectAll('[data-d3-selectgroup="' + key + '"]')
+    // NOTE missing ';'
       .data(function(d){ return [d] })
 
+    // NOTE missing ';'
     group.enter()
       .append('g')
       .attr('data-d3-selectgroup', key)
