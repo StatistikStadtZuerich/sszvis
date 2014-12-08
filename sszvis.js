@@ -2368,7 +2368,6 @@ namespace('sszvis.scale', function(module) {
 namespace('sszvis.transition', function(module) {
   'use strict';
 
-  // NOTE how did you decide on defining exactly this default ease? 
   var defaultEase = d3.ease('poly-out', 4);
 
   module.exports = function(transition) {
