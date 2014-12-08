@@ -1,4 +1,5 @@
 (function(d3) {
+  'use strict';
 
   /**
    * d3.selection plugin to simplify creating idempotent divs that are not

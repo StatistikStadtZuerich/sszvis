@@ -1,4 +1,5 @@
 (function(global){
+  'use strict';
 
   function isUndefined(value) {
     return typeof value == 'undefined';
@@ -7,14 +8,14 @@
   function isPlainObject(value) {
     // this isPlainObject implementation is taken from jQuery ~2.1.2
     // Not plain objects:
-    // - Any object or value whose internal [[Class]] property is not "[object Object]"
+    // - Any object or value whose internal [[Class]] property is not '[object Object]'
     // - DOM nodes
     // - window
-    if ( value == null || Object.prototype.toString.call(value) !== "[object Object]" || value.nodeType || value === value.window ) {
+    if ( value === null || Object.prototype.toString.call(value) !== '[object Object]' || value.nodeType || value === value.window ) {
       return false;
     }
 
-    if ( value.constructor && !Object.prototype.hasOwnProperty.call( value.constructor.prototype, "isPrototypeOf" ) ) {
+    if ( value.constructor && !Object.prototype.hasOwnProperty.call( value.constructor.prototype, 'isPrototypeOf' ) ) {
       return false;
     }
 
@@ -71,6 +72,6 @@
     }
 
     return ns[target];
-  }
+  };
 
 }(window));
