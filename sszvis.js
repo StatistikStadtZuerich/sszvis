@@ -29,6 +29,7 @@
 
 
 (function(d3) {
+  'use strict';
 
   /**
    * d3 plugin to simplify creating reusable charts. Implements
@@ -68,7 +69,7 @@
      */
     function component(selection) {
       if (selectionRenderer) {
-        selection.props = function(){ return clone(props); }
+        selection.props = function(){ return clone(props); };
         selectionRenderer.apply(selection, slice(arguments));
       }
       selection.each(function() {
@@ -89,7 +90,7 @@
       setter || (setter = identity);
       component[prop] = accessor(props, prop, setter.bind(component)).bind(component);
       return component;
-    }
+    };
 
     /**
      * Delegate a properties' accessors to a delegate object
@@ -102,9 +103,9 @@
       component[prop] = function() {
         var result = delegate[prop].apply(delegate, slice(arguments));
         return (arguments.length === 0) ? result : component;
-      }
+      };
       return component;
-    }
+    };
 
     /**
      * Creates a render context for the given component's parent selection.
@@ -118,7 +119,7 @@
     component.renderSelection = function(callback) {
       selectionRenderer = callback;
       return component;
-    }
+    };
 
     /**
      * Creates a render context for the given component. Implements the
@@ -132,10 +133,10 @@
     component.render = function(callback) {
       renderer = callback;
       return component;
-    }
+    };
 
     return component;
-  }
+  };
 
   /**
    * d3.selection plugin to get the properties of a d3.component.
@@ -150,14 +151,14 @@
     // d3.selection.data(), but it would need some test cases,
     // so we currently simplify to the most common use-case:
     // getting props.
-    if (arguments.length) throw new Error("selection.props() does not accept any arguments");
-    if (this.length != 1) throw new Error("only one group is supported");
-    if (this[0].length != 1) throw new Error("only one node is supported");
+    if (arguments.length) throw new Error('selection.props() does not accept any arguments');
+    if (this.length != 1) throw new Error('only one group is supported');
+    if (this[0].length != 1) throw new Error('only one node is supported');
 
     var group = this[0];
     var node  = group[0];
     return node.__props__ || {};
-  }
+  };
 
   /**
    * Creates an accessor function that either gets or sets a value, depending
@@ -175,7 +176,7 @@
 
       props[prop] = setter.apply(null, slice(arguments));
       return this;
-    }
+    };
   }
 
   function identity(d) {
@@ -227,6 +228,7 @@
 
 
 (function(d3) {
+  'use strict';
 
   /**
    * d3.selection plugin to simplify creating idempotent groups that are not
@@ -239,15 +241,12 @@
    */
   d3.selection.prototype.selectGroup = function(key) {
 
-    // NOTE missing ';'
     var group = this.selectAll('[data-d3-selectgroup="' + key + '"]')
-    // NOTE missing ';'
-      .data(function(d){ return [d] })
+      .data(function(d){ return [d]; });
 
-    // NOTE missing ';'
     group.enter()
       .append('g')
-      .attr('data-d3-selectgroup', key)
+      .attr('data-d3-selectgroup', key);
 
     return group;
   };
@@ -259,6 +258,7 @@
 
 
 (function(d3) {
+  'use strict';
 
   /**
    * d3.selection plugin to simplify creating idempotent divs that are not
@@ -283,6 +283,7 @@
   };
 
 }(d3));
+
 
 //////////////////////////////////// SECTION ///////////////////////////////////
 
@@ -390,6 +391,7 @@ Object.defineProperty(SVGElement.prototype, 'innerSVG', {
 
 
 (function(global){
+  'use strict';
 
   function isUndefined(value) {
     return typeof value == 'undefined';
@@ -398,14 +400,14 @@ Object.defineProperty(SVGElement.prototype, 'innerSVG', {
   function isPlainObject(value) {
     // this isPlainObject implementation is taken from jQuery ~2.1.2
     // Not plain objects:
-    // - Any object or value whose internal [[Class]] property is not "[object Object]"
+    // - Any object or value whose internal [[Class]] property is not '[object Object]'
     // - DOM nodes
     // - window
-    if ( value == null || Object.prototype.toString.call(value) !== "[object Object]" || value.nodeType || value === value.window ) {
+    if ( value === null || Object.prototype.toString.call(value) !== '[object Object]' || value.nodeType || value === value.window ) {
       return false;
     }
 
-    if ( value.constructor && !Object.prototype.hasOwnProperty.call( value.constructor.prototype, "isPrototypeOf" ) ) {
+    if ( value.constructor && !Object.prototype.hasOwnProperty.call( value.constructor.prototype, 'isPrototypeOf' ) ) {
       return false;
     }
 
@@ -462,7 +464,7 @@ Object.defineProperty(SVGElement.prototype, 'innerSVG', {
     }
 
     return ns[target];
-  }
+  };
 
 }(window));
 
