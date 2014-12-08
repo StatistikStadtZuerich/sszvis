@@ -3,6 +3,7 @@
  *
 */
 .sszvis-outer-container {
+  clear: both;
   position: relative;
 }
 
