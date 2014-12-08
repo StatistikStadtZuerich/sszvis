@@ -36,9 +36,9 @@ namespace('sszvis.map.switzerland', function(module) {
 
   var compiledTopoJson = {
     // feature data - a collection of distinct entities
-    featureData: function() { return this._featureData || (this._featureData = topojson.feature(rawTopo, rawTopo.objects.cantons)) },
+    featureData: function() { return this._featureData || (this._featureData = topojson.feature(rawTopo, rawTopo.objects.cantons)); },
     // mesh data - a single line that represents all Swiss borders
-    meshData: function() { return this._meshData || (this._meshData = topojson.mesh(rawTopo, rawTopo.objects.cantons)) }
+    meshData: function() { return this._meshData || (this._meshData = topojson.mesh(rawTopo, rawTopo.objects.cantons)); }
   };
 
   module.exports = function() {
@@ -62,7 +62,7 @@ namespace('sszvis.map.switzerland', function(module) {
       .delegate('borderColor', mesh)
       .delegate('highlight', highlight)
       .delegate('highlightStroke', highlight)
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 

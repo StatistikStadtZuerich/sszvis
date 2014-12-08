@@ -36,13 +36,13 @@ namespace('sszvis.map.zurichStadtKreise', function(module) {
 
   var compiledTopoJson = {
     // feature data - a collection of distinct entities
-    featureData: function() { return this._featureData || (this._featureData = topojson.feature(rawTopo, rawTopo.objects.stadtkreis)) },
+    featureData: function() { return this._featureData || (this._featureData = topojson.feature(rawTopo, rawTopo.objects.stadtkreis)); },
     // mesh data - a single line that represents all Swiss borders
-    meshData: function() { return this._meshData || (this._meshData = topojson.mesh(rawTopo, rawTopo.objects.stadtkreis)) },
+    meshData: function() { return this._meshData || (this._meshData = topojson.mesh(rawTopo, rawTopo.objects.stadtkreis)); },
     // the lake zurich feature - shared by all three zurich map types
-    lakeFeature: function() { return this._lakeFeature || (this._lakeFeature = topojson.feature(rawTopo, rawTopo.objects.lakezurich)) },
+    lakeFeature: function() { return this._lakeFeature || (this._lakeFeature = topojson.feature(rawTopo, rawTopo.objects.lakezurich)); },
     // seebounds: the section of the map bounds which lies over the Zürichsee
-    lakeBounds: function() { return this._lakeBounds || (this._lakeBounds = topojson.mesh(rawTopo, rawTopo.objects.stadtkreis_lakebounds)) }
+    lakeBounds: function() { return this._lakeBounds || (this._lakeBounds = topojson.mesh(rawTopo, rawTopo.objects.stadtkreis_lakebounds)); }
   };
 
   module.exports = function() {
@@ -70,7 +70,7 @@ namespace('sszvis.map.zurichStadtKreise', function(module) {
       .delegate('borderColor', mesh)
       .delegate('highlight', highlight)
       .delegate('highlightStroke', highlight)
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
