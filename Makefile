@@ -139,12 +139,12 @@ clean:
 
 geodata/stadtkreis.topojson: geodata/stadtkreis.geojson geodata/lakezurich.geojson geodata/seebounds/stadtkreis_lakebounds.geojson
 	mkdir -p $(dir $@)
-	topojson -o $@ --simplify-proportion=0.08 --id-property=+KNr -p -- $^
+	topojson -o $@ --simplify=2e-10 --id-property=+KNr -p -- $^
 
 geodata/wahlkreis.topojson: geodata/wahlkreis.geojson geodata/lakezurich.geojson geodata/seebounds/wahlkreis_lakebounds.geojson
 	mkdir -p $(dir $@)
-	topojson -o $@ --simplify-proportion=0.08 --id-property=Bezeichnung -p -- $^
+	topojson -o $@ --simplify=2e-10 --id-property=Bezeichnung -p -- $^
 
 geodata/statistische_quartiere.topojson: geodata/statistische_quartiere.geojson geodata/lakezurich.geojson geodata/seebounds/statistische_quartiere_lakebounds.geojson
 	mkdir -p $(dir $@)
-	topojson -o $@ --simplify-proportion=0.405 -e $(CENTER_DATA) --id-property=+QNr -p -- $^
+	topojson -o $@ --simplify=2e-10 -e $(CENTER_DATA) --id-property=+QNr -p -- $^
