@@ -2419,6 +2419,12 @@ namespace('sszvis.transition', function(module) {
       .duration(50);
   };
 
+  module.exports.slowTransition = function(transition) {
+    transition
+      .ease(defaultEase)
+      .duration(500);
+  };
+
 });
 
 
@@ -6343,7 +6349,7 @@ namespace('sszvis.map.renderer.base', function(module) {
         mapAreas
           .classed('sszvis-map__area--undefined', function(d) { return !props.defined(d.datum); })
           .transition()
-          .call(sszvis.transition)
+          .call(sszvis.transition.slowTransition)
           .attr('fill', getMapFill);
 
         // the tooltip anchor generator

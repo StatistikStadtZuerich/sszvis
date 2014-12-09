@@ -26,4 +26,10 @@ namespace('sszvis.transition', function(module) {
       .duration(50);
   };
 
+  module.exports.slowTransition = function(transition) {
+    transition
+      .ease(defaultEase)
+      .duration(500);
+  };
+
 });
