@@ -59,6 +59,7 @@ namespace('sszvis.map.switzerland', function(module) {
       .prop('keyName').keyName('geoId')
       .delegate('defined', base)
       .delegate('fill', base)
+      .delegate('transitionColor', base)
       .delegate('borderColor', mesh)
       .delegate('highlight', highlight)
       .delegate('highlightStroke', highlight)

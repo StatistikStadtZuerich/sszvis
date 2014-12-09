@@ -14,6 +14,7 @@
  * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
  *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
  * @property {String, Function} fill                  A string or function for the fill of the map entities
+ * @property {Boolean} transitionColor                Whether or not to transition the fill color of the map entities. (default: true)
  *
  * @return {d3.component}
  */
@@ -27,6 +28,7 @@ namespace('sszvis.map.renderer.base', function(module) {
       .prop('mapPath')
       .prop('defined', d3.functor).defined(true) // a predicate function to determine whether a datum has a defined value
       .prop('fill').fill(function() { return 'black'; }) // a function for the entity fill color. default is black
+      .prop('transitionColor').transitionColor(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -74,10 +76,16 @@ namespace('sszvis.map.renderer.base', function(module) {
 
         // change the fill if necessary
         mapAreas
-          .classed('sszvis-map__area--undefined', function(d) { return !props.defined(d.datum); })
-          .transition()
-          .call(sszvis.transition.slowTransition)
-          .attr('fill', getMapFill);
+          .classed('sszvis-map__area--undefined', function(d) { return !props.defined(d.datum); });
+
+        if (props.transitionColor) {
+          mapAreas
+            .transition()
+            .call(sszvis.transition.slowTransition)
+            .attr('fill', getMapFill);
+        } else {
+          mapAreas.attr('fill', getMapFill);
+        }
 
         // the tooltip anchor generator
         var tooltipAnchor = sszvis.annotation.tooltipAnchor()

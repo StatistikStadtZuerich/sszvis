@@ -272,6 +272,7 @@
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, fillScale, vAcc))
       .width(mapBounds.innerWidth)
       .height(mapBounds.innerHeight)
+      .transitionColor(false)
       .fill(sszvis.fn.compose(fillScale, vAcc));
 
     var lineMaker = sszvis.component.line()
