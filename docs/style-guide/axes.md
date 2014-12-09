@@ -60,13 +60,13 @@ This x-axis displays ordinal categories
 
 ```project
 {
-    "name": "bar-chart-vertical-long-names",
+    "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "docs/bar-chart-vertical/long-names.html",
+            "source": "docs/bar-chart-vertical-stacked/eight-cat.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/bar-chart-vertical/data/SiVB_longNames.csv",
+        "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -74,8 +74,8 @@ This x-axis displays ordinal categories
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 428,
-        "width": 516
+        "width": 516,
+        "height": 545
     }
 }
 ```
@@ -210,6 +210,32 @@ This y-axis shows ordinal categories
 }
 ```
 
+## Multi-Line Axis
+
+Sometimes, the axis labels are long enough that they will overlap their neighbors. In these cases, use the `textWrap` property. For bar charts, a good width for text wrapping is the width of a bar plus the space between bars.
+
+```project
+{
+    "name": "bar-chart-vertical-long-names",
+    "files": {
+        "index.html": {
+            "source": "docs/bar-chart-vertical/long-names.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/bar-chart-vertical/data/SiVB_longNames.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "height": 428,
+        "width": 516
+    }
+}
+```
+
 ## Slants (Diagonal)
 
 This x-axis (with a 'top' orientation) has a diagonal slant
@@ -236,7 +262,7 @@ This x-axis (with a 'top' orientation) has a diagonal slant
 }
 ```
 
-## Slants (Vertical)
+## Slants (Diagonal)
 
 This x-axis has a diagonal slant. Here are the guidelines for changing the slant of the axis:
 
