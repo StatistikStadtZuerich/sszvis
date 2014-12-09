@@ -362,12 +362,14 @@
   color: #545454;
   font-size: 12px;
   line-height: 1.3333;
+  vertical-align: middle;
 }
 
 .sszvis-tooltip__body {
   color: #7C7C7C;
   font-size: 11px;
   line-height: 1.4545;
+  vertical-align: middle;
 }
 
 .sszvis-tooltip--small .sszvis-tooltip__content {
