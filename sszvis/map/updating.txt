@@ -14,11 +14,11 @@ Updating the map data used in sszvis.js requires several steps. First, the new m
     *statistische_quartiere.geojson* - this file includes GeoJSON data for the statistische quartiere shapes.
     *centers.csv* - A data file that gives the correct visual centers of certain map entities. More information below.
     *lakezurich.geojson* - this file contains GeoJSON data for the outline of Lake Zurich.
-    *seebounds/* - these files contains boundary lines that lie over Lake Zurich, and are used to render those boundaries as grey dotted lines.
+    *lakebounds/* - these files contains boundary lines that lie over Lake Zurich, and are used to render those boundaries as grey dotted lines.
         *stadtkreis_lakebounds.geojson* - this file contains the section of the stadtkreis boundaries which lie over lake zurich.
         *wahlkreis_lakebounds.geojson* - this file contains the section of the wahlkreis boundaries which lie over lake zurich.
         *statistische_quartiere_lakebounds.geojson* - this file contains the section of the statistische quartiere boundaries which lie over lake zurich.
-    *withoutsee/* - This folder contains GeoJSON shapes for the three types of division, but without the area of Lake Zurich. In other words, lakeside entity boundaries end at the border of Lake Zurich, rather than at their official edges. These files are not used in sszvis.js at the moment, but are included to facilitate possible future maps of Zurich which require boundaries that exclude Lake Zurich.
+    *withoutlake/* - This folder contains GeoJSON shapes for the three types of division, but without the area of Lake Zurich. In other words, lakeside entity boundaries end at the border of Lake Zurich, rather than at their official edges. These files are not used in sszvis.js at the moment, but are included to facilitate possible future maps of Zurich which require boundaries that exclude Lake Zurich.
         *stadtkreis.geojson* - stadtkreis without Lake Zurich
         *wahlkreis.geojson* - wahlkreis without Lake Zurich
         *statistische_quartiere.geojson* - statistische_quartiere without Lake Zurich

@@ -41,7 +41,7 @@ namespace('sszvis.map.zurichStadtKreise', function(module) {
     meshData: function() { return this._meshData || (this._meshData = topojson.mesh(rawTopo, rawTopo.objects.stadtkreis)); },
     // the lake zurich feature - shared by all three zurich map types
     lakeFeature: function() { return this._lakeFeature || (this._lakeFeature = topojson.feature(rawTopo, rawTopo.objects.lakezurich)); },
-    // seebounds: the section of the map bounds which lies over the Zürichsee
+    // lakebounds: the section of the map bounds which lies over the Zürichsee
     lakeBounds: function() { return this._lakeBounds || (this._lakeBounds = topojson.mesh(rawTopo, rawTopo.objects.stadtkreis_lakebounds)); }
   };
 
