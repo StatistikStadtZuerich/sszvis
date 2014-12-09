@@ -145,6 +145,7 @@
       .y(yValue)
       .radius(sszvis.fn.compose(rScale, rAcc))
       .fill(sszvis.color.qual12())
+      // use white outlines in scatterplots to assist in identifying distinct circles
       .stroke('#FFFFFF');
 
     // the built-in .ticks() function for d3.scale.log() produces far too many ticks
