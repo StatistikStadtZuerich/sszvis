@@ -6300,7 +6300,7 @@ namespace('sszvis.map.renderer.base', function(module) {
       .prop('geoJson')
       .prop('mapPath')
       .prop('defined', d3.functor).defined(true) // a predicate function to determine whether a datum has a defined value
-      .prop('fill').fill(function() { return 'black'; }) // a function for the entity fill color. default is black
+      .prop('fill', d3.functor).fill(function() { return 'black'; }) // a function for the entity fill color. default is black
       .prop('transitionColor').transitionColor(true)
       .render(function(data) {
         var selection = d3.select(this);
