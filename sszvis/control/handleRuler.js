@@ -34,7 +34,10 @@ sszvis_namespace('sszvis.control.handleRuler', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        // NOTE can you explain what is going on here
+        // Elements need to be placed on half-pixels in order to be rendered
+        // crisply across browsers. That's why we create this position accessor
+        // here that takes a datum as input, reads out its value (props.x) and
+        // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
         var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
         var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
 
