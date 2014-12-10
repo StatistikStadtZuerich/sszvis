@@ -14,7 +14,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.control.buttonGroup', function(module) {
+sszvis_namespace('sszvis.control.buttonGroup', function(module) {
   'use strict';
 
   module.exports = function() {

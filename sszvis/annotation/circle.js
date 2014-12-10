@@ -17,7 +17,7 @@
  *
  * @returns {d3.component} a circular data area component
  */
-namespace('sszvis.annotation.circle', function(module) {
+sszvis_namespace('sszvis.annotation.circle', function(module) {
   'use strict';
 
   module.exports = function() {

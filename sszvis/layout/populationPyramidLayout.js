@@ -20,7 +20,7 @@
  *                                      has gone well, the positions array's length will be numBars
  *                                    }
  */
-namespace('sszvis.layout.populationPyramidLayout', function(module) {
+sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
   'use strict';
 
   module.exports = function(defaultHeight, numBars) {

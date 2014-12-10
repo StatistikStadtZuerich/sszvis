@@ -24,7 +24,7 @@
  *                               and 'innerHeight', which is the height minus top and bottom padding. And it includes a 'padding' sub-object,
  *                               which contains calculated or default values for top, bottom, left, and right padding.
  */
-namespace('sszvis.bounds', function(module) {
+sszvis_namespace('sszvis.bounds', function(module) {
   'use strict';
 
   var DEFAULT_WIDTH = 516;

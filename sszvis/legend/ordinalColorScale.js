@@ -87,7 +87,7 @@
  * |fooBaz    barFoo |
  */
 
-namespace('sszvis.legend.ordinalColorScale', function(module) {
+sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
   'use strict';
 
   module.exports = function() {

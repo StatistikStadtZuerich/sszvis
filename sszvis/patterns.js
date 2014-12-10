@@ -16,7 +16,7 @@
  * @method  dataAreaPattern                 The pattern for the data area texture.
  *
  */
-namespace('sszvis.patterns', function(module) {
+sszvis_namespace('sszvis.patterns', function(module) {
   'use strict';
 
   module.exports.heatTableMissingValuePattern = function(selection) {

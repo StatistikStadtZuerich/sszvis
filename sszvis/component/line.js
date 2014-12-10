@@ -33,7 +33,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.line', function(module) {
+sszvis_namespace('sszvis.component.line', function(module) {
   'use strict';
 
   module.exports = function() {

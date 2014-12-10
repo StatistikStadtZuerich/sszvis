@@ -11,7 +11,7 @@
  *
  * @module sszvis/fallback
  */
-namespace('sszvis.fallback', function(module) {
+sszvis_namespace('sszvis.fallback', function(module) {
   'use strict';
 
   module.exports.unsupported = function() {

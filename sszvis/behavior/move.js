@@ -34,7 +34,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.behavior.move', function(module) {
+sszvis_namespace('sszvis.behavior.move', function(module) {
   'use strict';
 
   module.exports = function() {

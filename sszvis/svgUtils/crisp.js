@@ -18,7 +18,7 @@
  * @module sszvis/svgUtils/crisp
  */
 
-namespace('sszvis.svgUtils.crisp', function(module) {
+sszvis_namespace('sszvis.svgUtils.crisp', function(module) {
   'use strict';
 
   /**

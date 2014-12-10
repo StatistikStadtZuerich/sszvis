@@ -14,7 +14,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
+sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
   'use strict';
 
   module.exports = function() {

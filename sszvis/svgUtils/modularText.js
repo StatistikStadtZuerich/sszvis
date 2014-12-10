@@ -31,7 +31,7 @@
  *
  * @return {function} Formatting function that accepts a datum
  */
-namespace('sszvis.svgUtils.modularText', function(module) {
+sszvis_namespace('sszvis.svgUtils.modularText', function(module) {
   'use strict';
 
   function formatHTML() {

@@ -44,7 +44,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.groupedBars', function(module) {
+sszvis_namespace('sszvis.component.groupedBars', function(module) {
   'use strict';
 
   module.exports = function() {

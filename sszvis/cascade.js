@@ -71,7 +71,7 @@
  * @returns                 An instance of sszvis.cascade
  */
 
-namespace('sszvis.cascade', function(module) {
+sszvis_namespace('sszvis.cascade', function(module) {
 'use strict';
 
   function groupBy(data, keyFunc) {

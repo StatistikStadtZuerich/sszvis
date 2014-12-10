@@ -11,7 +11,7 @@
  * @param {string}       type       Element to create
  * @param {string}       elementId  The ID to assign to the created element
  */
-namespace('sszvis.svgUtils.ensureDefsElement', function(module) {
+sszvis_namespace('sszvis.svgUtils.ensureDefsElement', function(module) {
   'use strict';
 
   module.exports = function(selection, type, elementId) {

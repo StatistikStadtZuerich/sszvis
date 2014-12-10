@@ -20,7 +20,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.annotation.ruler', function(module) {
+sszvis_namespace('sszvis.annotation.ruler', function(module) {
   'use strict';
 
   module.exports = function() {

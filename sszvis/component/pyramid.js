@@ -24,7 +24,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.pyramid', function(module) {
+sszvis_namespace('sszvis.component.pyramid', function(module) {
   'use strict';
 
   /* Constants

@@ -18,7 +18,7 @@
  *
  * @returns {d3.component} a rectangular data area component
  */
-namespace('sszvis.annotation.rectangle', function(module) {
+sszvis_namespace('sszvis.annotation.rectangle', function(module) {
   'use strict';
 
   module.exports = function() {

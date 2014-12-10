@@ -23,7 +23,7 @@
  *                                padHeight:      This is the amount of vertical padding between each area multiple.
  *                              }
  */
-namespace('sszvis.layout.stackedAreaMultiplesLayout', function(module) {
+sszvis_namespace('sszvis.layout.stackedAreaMultiplesLayout', function(module) {
   'use strict';
 
   module.exports = function(height, num, pct) {

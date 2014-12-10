@@ -33,7 +33,7 @@
  *                                                and that datum's index within the data bound to the interaction layer.
  *
  */
-namespace('sszvis.behavior.voronoi', function(module) {
+sszvis_namespace('sszvis.behavior.voronoi', function(module) {
   'use strict';
 
   module.exports = function() {

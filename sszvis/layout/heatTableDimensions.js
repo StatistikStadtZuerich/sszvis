@@ -19,7 +19,7 @@
  *                              centeredOffset: the left offset required to center the table horizontally within spaceWidth
  *                          }
  */
-namespace('sszvis.layout.heatTableDimensions', function(module) {
+sszvis_namespace('sszvis.layout.heatTableDimensions', function(module) {
   'use strict';
 
   module.exports = function(spaceWidth, padding, numX, numY) {

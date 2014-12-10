@@ -25,7 +25,7 @@
  * @return {d3.component}
  */
 
-namespace('sszvis.component.stackedAreaMultiples', function(module) {
+sszvis_namespace('sszvis.component.stackedAreaMultiples', function(module) {
 'use strict';
 
   module.exports = function() {

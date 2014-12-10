@@ -3,7 +3,7 @@
  *
  * @module sszvis/fn
  */
-namespace('sszvis.fn', function(module) {
+sszvis_namespace('sszvis.fn', function(module) {
   'use strict';
 
   module.exports = {

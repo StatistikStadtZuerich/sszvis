@@ -9,7 +9,7 @@
  *
  * @returns {d3.selection}
  */
-namespace('sszvis.createHtmlLayer', function(module) {
+sszvis_namespace('sszvis.createHtmlLayer', function(module) {
   'use strict';
 
   module.exports = function(selector, bounds) {

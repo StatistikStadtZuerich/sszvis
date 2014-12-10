@@ -26,7 +26,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.bar', function(module) {
+sszvis_namespace('sszvis.component.bar', function(module) {
   'use strict';
 
   // replaces NaN values with 0

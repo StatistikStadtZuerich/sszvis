@@ -3,7 +3,7 @@
  *
  * @module sszvis/map/utils
  */
-namespace('sszvis.map.utils', function(module) {
+sszvis_namespace('sszvis.map.utils', function(module) {
   'use strict';
 
   /**

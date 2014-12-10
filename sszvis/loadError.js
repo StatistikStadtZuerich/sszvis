@@ -5,7 +5,7 @@
  *
  * @param  {Error} The error object
  */
-namespace('sszvis.loadError', function(module) {
+sszvis_namespace('sszvis.loadError', function(module) {
   'use strict';
 
   var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';

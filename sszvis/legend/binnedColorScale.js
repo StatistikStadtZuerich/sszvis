@@ -15,7 +15,7 @@
  * @return {d3.component}
  */
 
-namespace('sszvis.legend.binnedColorScale', function(module) {
+sszvis_namespace('sszvis.legend.binnedColorScale', function(module) {
   'use strict';
 
   module.exports = function() {

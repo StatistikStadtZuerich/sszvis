@@ -24,7 +24,7 @@
  *                                               to translate scales below the bars.
  *                                 }
  */
-namespace('sszvis.layout.horizontalBarChartDimensions', function(module) {
+sszvis_namespace('sszvis.layout.horizontalBarChartDimensions', function(module) {
   'use strict';
 
   module.exports =  function(numBars) {

@@ -15,7 +15,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.renderer.mesh', function(module) {
+sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
   'use strict';
 
   module.exports = function() {

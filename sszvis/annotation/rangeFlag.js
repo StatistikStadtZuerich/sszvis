@@ -15,7 +15,7 @@
  *
  * @returns {d3.component}
  */
-namespace('sszvis.annotation.rangeFlag', function(module) {
+sszvis_namespace('sszvis.annotation.rangeFlag', function(module) {
   'use strict';
 
   module.exports = function() {

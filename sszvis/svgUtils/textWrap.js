@@ -19,7 +19,7 @@
  * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
-namespace('sszvis.svgUtils.textWrap', function(module) {
+sszvis_namespace('sszvis.svgUtils.textWrap', function(module) {
   'use strict';
 
   module.exports = function(text, width, paddingRightLeft, paddingTopBottom) {

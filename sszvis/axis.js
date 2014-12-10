@@ -51,7 +51,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.axis', function(module) {
+sszvis_namespace('sszvis.axis', function(module) {
   'use strict';
 
   var TICK_PROXIMITY_THRESHOLD = 8;

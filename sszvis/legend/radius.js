@@ -11,7 +11,7 @@
  *
  * @returns {d3.component}
  */
-namespace('sszvis.legend.radius', function(module) {
+sszvis_namespace('sszvis.legend.radius', function(module) {
   'use strict';
 
   module.exports = function() {

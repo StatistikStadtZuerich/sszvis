@@ -39,7 +39,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.annotation.tooltipAnchor', function(module) {
+sszvis_namespace('sszvis.annotation.tooltipAnchor', function(module) {
   'use strict';
 
   module.exports = function() {

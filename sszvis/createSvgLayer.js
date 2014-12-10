@@ -12,7 +12,7 @@
  *
  * @returns {d3.selection}
  */
-namespace('sszvis.createSvgLayer', function(module) {
+sszvis_namespace('sszvis.createSvgLayer', function(module) {
   'use strict';
 
   module.exports = function(selector, bounds, metadata) {

@@ -3,7 +3,7 @@
  *
  * @module sszvis/parse
  */
-namespace('sszvis.parse', function(module) {
+sszvis_namespace('sszvis.parse', function(module) {
   'use strict';
 
   var yearParser = d3.time.format('%Y');

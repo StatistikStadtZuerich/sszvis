@@ -3,7 +3,7 @@
  *
  * @module sszvis/scale
  */
-namespace('sszvis.scale', function(module) {
+sszvis_namespace('sszvis.scale', function(module) {
   'use strict';
 
   /**

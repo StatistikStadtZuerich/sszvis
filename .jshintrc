@@ -3,7 +3,7 @@
   "browser": true,
   "esnext": false,
   "expr": true,
-  "globals": ["d3", "namespace", "sszvis"],
+  "globals": ["d3", "sszvis_namespace", "sszvis"],
   "node": true,
   "quotmark": true,
   "strict": true,

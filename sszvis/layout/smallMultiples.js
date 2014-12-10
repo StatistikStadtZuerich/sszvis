@@ -50,7 +50,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.layout.smallMultiples', function(module) {
+sszvis_namespace('sszvis.layout.smallMultiples', function(module) {
   'use strict';
 
   module.exports = function() {

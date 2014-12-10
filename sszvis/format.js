@@ -3,7 +3,7 @@
  *
  * @module sszvis/format
  */
-namespace('sszvis.format', function(module) {
+sszvis_namespace('sszvis.format', function(module) {
   'use strict';
 
   var format = module.exports = {

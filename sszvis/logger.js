@@ -42,7 +42,7 @@
  *                             will handle the situation gracefully, and not cause an unexpected termination
  *                             of execution.
  */
-namespace('sszvis.logger', function(module) {
+sszvis_namespace('sszvis.logger', function(module) {
   'use strict';
 
   window.console || (window.console = {});

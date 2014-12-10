@@ -18,7 +18,7 @@
  *
  * @return {d3.component}
 */
-namespace('sszvis.component.pie', function(module) {
+sszvis_namespace('sszvis.component.pie', function(module) {
   'use strict';
 
   module.exports = function() {

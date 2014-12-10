@@ -20,7 +20,7 @@
  *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
  *                                }
  */
-namespace('sszvis.layout.verticalBarChartDimensions', function(module) {
+sszvis_namespace('sszvis.layout.verticalBarChartDimensions', function(module) {
   'use strict';
 
   module.exports = function(width, numBars) {

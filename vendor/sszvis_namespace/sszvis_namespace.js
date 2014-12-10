@@ -47,8 +47,7 @@
     return obj;
   }
 
-// NOTE does this correspond to some best practice. Can it be found somewhere?
-  global.namespace = function(path, body) {
+  global.sszvis_namespace = function(path, body) {
     var segments = path.split('.');
     var ancestors = segments.slice(0, segments.length - 1);
     var target = segments[segments.length - 1];

@@ -14,7 +14,7 @@
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.format.number.
  */
-namespace('sszvis.legend.linearColorScale', function(module) {
+sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
   'use strict';
 
   module.exports = function() {

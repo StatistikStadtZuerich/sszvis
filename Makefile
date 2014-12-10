@@ -22,7 +22,7 @@ VENDOR_FILES = \
 	vendor/d3-selectgroup/d3-selectgroup.js \
 	vendor/d3-selectdiv/d3-selectdiv.js \
 	vendor/innerSvg-polyfill/innersvg.js \
-	vendor/namespace/namespace.js
+	vendor/sszvis_namespace/sszvis_namespace.js
 
 SOURCE_FILES = \
 	sszvis/fn.js \

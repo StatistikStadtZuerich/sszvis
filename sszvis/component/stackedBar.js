@@ -28,7 +28,7 @@
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.stackedBar', function(module) {
+sszvis_namespace('sszvis.component.stackedBar', function(module) {
   'use strict';
 
   function stackedBar() {

@@ -21,7 +21,7 @@
  *
  * @returns {d3.component}
  */
-namespace('sszvis.control.slider', function(module) {
+sszvis_namespace('sszvis.control.slider', function(module) {
   'use strict';
 
   function contains(x, a) {

@@ -275,7 +275,6 @@
 
     div.enter()
       .append('div')
-      // NOTE is there sszvis as prefix needed here? 
       .attr('data-d3-selectdiv', key)
       .style('position', 'absolute');
 
@@ -439,8 +438,7 @@ Object.defineProperty(SVGElement.prototype, 'innerSVG', {
     return obj;
   }
 
-// NOTE does this correspond to some best practice. Can it be found somewhere?
-  global.namespace = function(path, body) {
+  global.sszvis_namespace = function(path, body) {
     var segments = path.split('.');
     var ancestors = segments.slice(0, segments.length - 1);
     var target = segments[segments.length - 1];
@@ -493,7 +491,7 @@ if (typeof this.sszvis !== 'undefined') {
  *
  * @module sszvis/fn
  */
-namespace('sszvis.fn', function(module) {
+sszvis_namespace('sszvis.fn', function(module) {
   'use strict';
 
   module.exports = {
@@ -831,7 +829,7 @@ namespace('sszvis.fn', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.axis', function(module) {
+sszvis_namespace('sszvis.axis', function(module) {
   'use strict';
 
   var TICK_PROXIMITY_THRESHOLD = 8;
@@ -1284,7 +1282,7 @@ namespace('sszvis.axis', function(module) {
  *                               and 'innerHeight', which is the height minus top and bottom padding. And it includes a 'padding' sub-object,
  *                               which contains calculated or default values for top, bottom, left, and right padding.
  */
-namespace('sszvis.bounds', function(module) {
+sszvis_namespace('sszvis.bounds', function(module) {
   'use strict';
 
   var DEFAULT_WIDTH = 516;
@@ -1399,7 +1397,7 @@ namespace('sszvis.bounds', function(module) {
  * @returns                 An instance of sszvis.cascade
  */
 
-namespace('sszvis.cascade', function(module) {
+sszvis_namespace('sszvis.cascade', function(module) {
 'use strict';
 
   function groupBy(data, keyFunc) {
@@ -1539,7 +1537,7 @@ namespace('sszvis.cascade', function(module) {
  * @function gry       1-color scale for shaded values
  * @function lightGry  1-color scale for shaded backgrounds
  */
-namespace('sszvis.color', function(module) {
+sszvis_namespace('sszvis.color', function(module) {
   'use strict';
 
   /* Constants
@@ -1709,7 +1707,7 @@ namespace('sszvis.color', function(module) {
  *
  * @returns {d3.selection}
  */
-namespace('sszvis.createSvgLayer', function(module) {
+sszvis_namespace('sszvis.createSvgLayer', function(module) {
   'use strict';
 
   module.exports = function(selector, bounds, metadata) {
@@ -1761,7 +1759,7 @@ namespace('sszvis.createSvgLayer', function(module) {
  *
  * @returns {d3.selection}
  */
-namespace('sszvis.createHtmlLayer', function(module) {
+sszvis_namespace('sszvis.createHtmlLayer', function(module) {
   'use strict';
 
   module.exports = function(selector, bounds) {
@@ -1802,7 +1800,7 @@ namespace('sszvis.createHtmlLayer', function(module) {
  *
  * @module sszvis/fallback
  */
-namespace('sszvis.fallback', function(module) {
+sszvis_namespace('sszvis.fallback', function(module) {
   'use strict';
 
   module.exports.unsupported = function() {
@@ -1828,7 +1826,7 @@ namespace('sszvis.fallback', function(module) {
  *
  * @module sszvis/format
  */
-namespace('sszvis.format', function(module) {
+sszvis_namespace('sszvis.format', function(module) {
   'use strict';
 
   var format = module.exports = {
@@ -1989,7 +1987,7 @@ namespace('sszvis.format', function(module) {
  *
  * @param  {Error} The error object
  */
-namespace('sszvis.loadError', function(module) {
+sszvis_namespace('sszvis.loadError', function(module) {
   'use strict';
 
   var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
@@ -2053,7 +2051,7 @@ namespace('sszvis.loadError', function(module) {
  *                             will handle the situation gracefully, and not cause an unexpected termination
  *                             of execution.
  */
-namespace('sszvis.logger', function(module) {
+sszvis_namespace('sszvis.logger', function(module) {
   'use strict';
 
   window.console || (window.console = {});
@@ -2093,7 +2091,7 @@ namespace('sszvis.logger', function(module) {
  *
  * @module sszvis/parse
  */
-namespace('sszvis.parse', function(module) {
+sszvis_namespace('sszvis.parse', function(module) {
   'use strict';
 
   var yearParser = d3.time.format('%Y');
@@ -2151,7 +2149,7 @@ namespace('sszvis.parse', function(module) {
  * @method  dataAreaPattern                 The pattern for the data area texture.
  *
  */
-namespace('sszvis.patterns', function(module) {
+sszvis_namespace('sszvis.patterns', function(module) {
   'use strict';
 
   module.exports.heatTableMissingValuePattern = function(selection) {
@@ -2354,7 +2352,7 @@ namespace('sszvis.patterns', function(module) {
  *
  * @module sszvis/scale
  */
-namespace('sszvis.scale', function(module) {
+sszvis_namespace('sszvis.scale', function(module) {
   'use strict';
 
   /**
@@ -2402,7 +2400,7 @@ namespace('sszvis.scale', function(module) {
  * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
  * too slow.
  */
-namespace('sszvis.transition', function(module) {
+sszvis_namespace('sszvis.transition', function(module) {
   'use strict';
 
   var defaultEase = d3.ease('poly-out', 4);
@@ -2450,7 +2448,7 @@ namespace('sszvis.transition', function(module) {
  *
  * @returns {d3.component} a circular data area component
  */
-namespace('sszvis.annotation.circle', function(module) {
+sszvis_namespace('sszvis.annotation.circle', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -2528,7 +2526,7 @@ namespace('sszvis.annotation.circle', function(module) {
  * @param {string} [caption]      A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
  * @returns {d3.component} a linear data area component (reference line)
  */
-namespace('sszvis.annotation.line', function(module) {
+sszvis_namespace('sszvis.annotation.line', function(module) {
   'use strict';
 
   // reference line specified in the form y = mx + b
@@ -2630,7 +2628,7 @@ namespace('sszvis.annotation.line', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.annotation.rangeRuler', function(module) {
+sszvis_namespace('sszvis.annotation.rangeRuler', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -2754,7 +2752,7 @@ namespace('sszvis.annotation.rangeRuler', function(module) {
  *
  * @returns {d3.component}
  */
-namespace('sszvis.annotation.rangeFlag', function(module) {
+sszvis_namespace('sszvis.annotation.rangeFlag', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -2834,7 +2832,7 @@ namespace('sszvis.annotation.rangeFlag', function(module) {
  *
  * @returns {d3.component} a rectangular data area component
  */
-namespace('sszvis.annotation.rectangle', function(module) {
+sszvis_namespace('sszvis.annotation.rectangle', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -2917,7 +2915,7 @@ namespace('sszvis.annotation.rectangle', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.annotation.ruler', function(module) {
+sszvis_namespace('sszvis.annotation.ruler', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -3054,7 +3052,7 @@ namespace('sszvis.annotation.ruler', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.annotation.tooltip', function(module) {
+sszvis_namespace('sszvis.annotation.tooltip', function(module) {
   'use strict';
 
   /* Configuration
@@ -3442,7 +3440,7 @@ namespace('sszvis.annotation.tooltip', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.annotation.tooltipAnchor', function(module) {
+sszvis_namespace('sszvis.annotation.tooltipAnchor', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -3554,7 +3552,7 @@ namespace('sszvis.annotation.tooltipAnchor', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.behavior.move', function(module) {
+sszvis_namespace('sszvis.behavior.move', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -3740,7 +3738,7 @@ namespace('sszvis.behavior.move', function(module) {
  *                                                and that datum's index within the data bound to the interaction layer.
  *
  */
-namespace('sszvis.behavior.voronoi', function(module) {
+sszvis_namespace('sszvis.behavior.voronoi', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -3837,7 +3835,7 @@ namespace('sszvis.behavior.voronoi', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.bar', function(module) {
+sszvis_namespace('sszvis.component.bar', function(module) {
   'use strict';
 
   // replaces NaN values with 0
@@ -3926,7 +3924,7 @@ namespace('sszvis.component.bar', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.dot', function(module) {
+sszvis_namespace('sszvis.component.dot', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -4021,7 +4019,7 @@ namespace('sszvis.component.dot', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.groupedBars', function(module) {
+sszvis_namespace('sszvis.component.groupedBars', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -4162,7 +4160,7 @@ namespace('sszvis.component.groupedBars', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.line', function(module) {
+sszvis_namespace('sszvis.component.line', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -4234,7 +4232,7 @@ namespace('sszvis.component.line', function(module) {
  *
  * @return {d3.component}
 */
-namespace('sszvis.component.pie', function(module) {
+sszvis_namespace('sszvis.component.pie', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -4326,7 +4324,7 @@ namespace('sszvis.component.pie', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.pyramid', function(module) {
+sszvis_namespace('sszvis.component.pyramid', function(module) {
   'use strict';
 
   /* Constants
@@ -4466,7 +4464,7 @@ namespace('sszvis.component.pyramid', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.stackedArea', function(module) {
+sszvis_namespace('sszvis.component.stackedArea', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -4547,7 +4545,7 @@ namespace('sszvis.component.stackedArea', function(module) {
  * @return {d3.component}
  */
 
-namespace('sszvis.component.stackedAreaMultiples', function(module) {
+sszvis_namespace('sszvis.component.stackedAreaMultiples', function(module) {
 'use strict';
 
   module.exports = function() {
@@ -4625,7 +4623,7 @@ namespace('sszvis.component.stackedAreaMultiples', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.stackedBar', function(module) {
+sszvis_namespace('sszvis.component.stackedBar', function(module) {
   'use strict';
 
   function stackedBar() {
@@ -4724,7 +4722,7 @@ namespace('sszvis.component.stackedBar', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.component.stackedPyramid', function(module) {
+sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
   'use strict';
 
   /* Constants
@@ -4890,7 +4888,7 @@ namespace('sszvis.component.stackedPyramid', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.control.buttonGroup', function(module) {
+sszvis_namespace('sszvis.control.buttonGroup', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -4954,7 +4952,7 @@ namespace('sszvis.control.buttonGroup', function(module) {
  *
  * @returns {d3.component}
  */
-namespace('sszvis.control.handleRuler', function(module) {
+sszvis_namespace('sszvis.control.handleRuler', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -5109,7 +5107,7 @@ namespace('sszvis.control.handleRuler', function(module) {
  *
  * @returns {d3.component}
  */
-namespace('sszvis.control.slider', function(module) {
+sszvis_namespace('sszvis.control.slider', function(module) {
   'use strict';
 
   function contains(x, a) {
@@ -5309,7 +5307,7 @@ namespace('sszvis.control.slider', function(module) {
  *                              centeredOffset: the left offset required to center the table horizontally within spaceWidth
  *                          }
  */
-namespace('sszvis.layout.heatTableDimensions', function(module) {
+sszvis_namespace('sszvis.layout.heatTableDimensions', function(module) {
   'use strict';
 
   module.exports = function(spaceWidth, padding, numX, numY) {
@@ -5362,7 +5360,7 @@ namespace('sszvis.layout.heatTableDimensions', function(module) {
  *                                               to translate scales below the bars.
  *                                 }
  */
-namespace('sszvis.layout.horizontalBarChartDimensions', function(module) {
+sszvis_namespace('sszvis.layout.horizontalBarChartDimensions', function(module) {
   'use strict';
 
   module.exports =  function(numBars) {
@@ -5415,7 +5413,7 @@ namespace('sszvis.layout.horizontalBarChartDimensions', function(module) {
  *                                      has gone well, the positions array's length will be numBars
  *                                    }
  */
-namespace('sszvis.layout.populationPyramidLayout', function(module) {
+sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
   'use strict';
 
   module.exports = function(defaultHeight, numBars) {
@@ -5502,7 +5500,7 @@ namespace('sszvis.layout.populationPyramidLayout', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.layout.smallMultiples', function(module) {
+sszvis_namespace('sszvis.layout.smallMultiples', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -5586,7 +5584,7 @@ namespace('sszvis.layout.smallMultiples', function(module) {
  *                                padHeight:      This is the amount of vertical padding between each area multiple.
  *                              }
  */
-namespace('sszvis.layout.stackedAreaMultiplesLayout', function(module) {
+sszvis_namespace('sszvis.layout.stackedAreaMultiplesLayout', function(module) {
   'use strict';
 
   module.exports = function(height, num, pct) {
@@ -5634,7 +5632,7 @@ namespace('sszvis.layout.stackedAreaMultiplesLayout', function(module) {
  *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
  *                                }
  */
-namespace('sszvis.layout.verticalBarChartDimensions', function(module) {
+sszvis_namespace('sszvis.layout.verticalBarChartDimensions', function(module) {
   'use strict';
 
   module.exports = function(width, numBars) {
@@ -5697,7 +5695,7 @@ namespace('sszvis.layout.verticalBarChartDimensions', function(module) {
  * @return {d3.component}
  */
 
-namespace('sszvis.legend.binnedColorScale', function(module) {
+sszvis_namespace('sszvis.legend.binnedColorScale', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -5836,7 +5834,7 @@ namespace('sszvis.legend.binnedColorScale', function(module) {
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.format.number.
  */
-namespace('sszvis.legend.linearColorScale', function(module) {
+sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -6015,7 +6013,7 @@ namespace('sszvis.legend.linearColorScale', function(module) {
  * |fooBaz    barFoo |
  */
 
-namespace('sszvis.legend.ordinalColorScale', function(module) {
+sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -6140,7 +6138,7 @@ namespace('sszvis.legend.ordinalColorScale', function(module) {
  *
  * @returns {d3.component}
  */
-namespace('sszvis.legend.radius', function(module) {
+sszvis_namespace('sszvis.legend.radius', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -6228,7 +6226,7 @@ namespace('sszvis.legend.radius', function(module) {
  *
  * @module sszvis/map/utils
  */
-namespace('sszvis.map.utils', function(module) {
+sszvis_namespace('sszvis.map.utils', function(module) {
   'use strict';
 
   /**
@@ -6291,7 +6289,7 @@ namespace('sszvis.map.utils', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.renderer.base', function(module) {
+sszvis_namespace('sszvis.map.renderer.base', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -6408,7 +6406,7 @@ namespace('sszvis.map.renderer.base', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.renderer.mesh', function(module) {
+sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -6460,7 +6458,7 @@ namespace('sszvis.map.renderer.mesh', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.renderer.highlight', function(module) {
+sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -6538,7 +6536,7 @@ namespace('sszvis.map.renderer.highlight', function(module) {
  *
  * @return {d3.component}
  */
-namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
+sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -6620,7 +6618,7 @@ namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
  * @module sszvis/svgUtils/crisp
  */
 
-namespace('sszvis.svgUtils.crisp', function(module) {
+sszvis_namespace('sszvis.svgUtils.crisp', function(module) {
   'use strict';
 
   /**
@@ -6708,7 +6706,7 @@ namespace('sszvis.svgUtils.crisp', function(module) {
  * @param {string}       type       Element to create
  * @param {string}       elementId  The ID to assign to the created element
  */
-namespace('sszvis.svgUtils.ensureDefsElement', function(module) {
+sszvis_namespace('sszvis.svgUtils.ensureDefsElement', function(module) {
   'use strict';
 
   module.exports = function(selection, type, elementId) {
@@ -6781,7 +6779,7 @@ namespace('sszvis.svgUtils.ensureDefsElement', function(module) {
  *
  * @return {function} Formatting function that accepts a datum
  */
-namespace('sszvis.svgUtils.modularText', function(module) {
+sszvis_namespace('sszvis.svgUtils.modularText', function(module) {
   'use strict';
 
   function formatHTML() {
@@ -6895,7 +6893,7 @@ namespace('sszvis.svgUtils.modularText', function(module) {
  * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
-namespace('sszvis.svgUtils.textWrap', function(module) {
+sszvis_namespace('sszvis.svgUtils.textWrap', function(module) {
   'use strict';
 
   module.exports = function(text, width, paddingRightLeft, paddingTopBottom) {
@@ -6990,7 +6988,7 @@ namespace('sszvis.svgUtils.textWrap', function(module) {
  * @param  {number} y     The y-component of the transform
  * @return {string}       The translate string
  */
-namespace('sszvis.svgUtils.translateString', function(module) {
+sszvis_namespace('sszvis.svgUtils.translateString', function(module) {
   'use strict';
 
   module.exports = function(x, y) {
