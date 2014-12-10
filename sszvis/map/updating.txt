@@ -5,7 +5,7 @@ The map data encapsulated in the zurich map modules comes from SSZ GeoJSON poste
 Updating the map data used in sszvis.js requires several steps. First, the new map data must be prepared. The geodata/ folder contains all the geo data files necessary for sszvis.js. To view these GeoJSON files, you can use the excellent GeoJSON.io (http://geojson.io/). Here is a summary of the folder contents:
 
 *geodata/*
-    *ch_cantons_topo.json* - this is a TopoJSON file containing data for the cantons of Switzerland. It is from the Interactive Things open source project Swiss Maps: https://github.com/interactivethings/swiss-maps/. This document will not discuss updating this file. Please see the github page for more information on this file. The TopoJSON in the the switzerland.js module is a direct copy of this file.
+    *ch_cantons.topojson* - this is a TopoJSON file containing data for the cantons of Switzerland. It is from the Interactive Things open source project Swiss Maps: https://github.com/interactivethings/swiss-maps/. This document will not discuss updating this file. Please see the github page for more information on this file. The TopoJSON in the the switzerland.js module is a direct copy of this file.
     *stadtkreis.topojson* - this is a TopoJSON file containing data for the stadtkreis of Zurich, plus the outline of the portion of Lake Zurich included in sszvis.js maps and the sections of the boundaries of the stadkreis which are rendered as dotted lines over the outline of Lake Zurich. (For implementation reasons, these sections are kept as separate objects, distinct from the objects which represent city-wide boundaries).
     *wahlkreis.topojson* - the wahlkreis data
     *statistische_quartiere.topojson* - the statistische quartiere data
