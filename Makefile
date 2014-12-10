@@ -92,10 +92,11 @@ SOURCE_FILES_SEP = $(foreach file, $(SOURCE_FILES), $(call section, $(file)))
 # Map data files
 #
 
-ZURICH_MAP_TARGETS = \
+MAP_TARGETS = \
 	geodata/stadtkreis.topojson \
 	geodata/wahlkreis.topojson \
-	geodata/statistische_quartiere.topojson
+	geodata/statistische_quartiere.topojson \
+	geodata/ch_cantons.topojson
 
 CENTER_DATA = geodata/centers.csv
 
@@ -132,10 +133,10 @@ deploy: build
 	--exclude=.git \
 	interact@interactivethings.com:/home/interact/www/clients.interactivethings.com/ssz/visualization-library
 
-maps: $(ZURICH_MAP_TARGETS)
+maps: $(MAP_TARGETS)
 
 clean:
-	rm -f $(ZURICH_MAP_TARGETS)
+	rm -f $(MAP_TARGETS)
 
 geodata/stadtkreis.topojson: geodata/stadtkreis.geojson geodata/lakezurich.geojson geodata/lakebounds/stadtkreis_lakebounds.geojson
 	mkdir -p $(dir $@)
@@ -148,3 +149,7 @@ geodata/wahlkreis.topojson: geodata/wahlkreis.geojson geodata/lakezurich.geojson
 geodata/statistische_quartiere.topojson: geodata/statistische_quartiere.geojson geodata/lakezurich.geojson geodata/lakebounds/statistische_quartiere_lakebounds.geojson
 	mkdir -p $(dir $@)
 	topojson -o $@ --simplify=2e-10 -e $(CENTER_DATA) --id-property=+QNr -p -- $^
+
+geodata/ch_cantons.topojson: geodata/ch_cantons_raw.topojson
+	mkdir -p $(dir $@)
+	topojson -o $@ --simplify=4e-8 -p -- $^
