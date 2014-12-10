@@ -58,17 +58,18 @@ sszvis_namespace('sszvis.logger', function(module) {
     error: logger('error')
   };
 
-
   /* Helper functions
   ----------------------------------------------- */
   function logger(type) {
     return function() {
-      var args = Array.prototype.slice.call(arguments);
-      // IE9's console functions need a little bit of help
-      // http://stackoverflow.com/questions/5538972/console-log-apply-not-working-in-ie9
-      var log = Function.prototype.bind.call(console[type], console);
-      log.apply(console, ['[sszvis]'].concat(args));
+      if (window.console && window.console[type]) {
+        window.console[type](slice(arguments));
+      }
     };
+  }
+
+  function slice(array) {
+    return Array.prototype.slice.call(array);
   }
 
 });
