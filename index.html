@@ -12,7 +12,14 @@
       title: 'SSZVIS',
       styles: ['sszvis.css'],
       pages: [
-        {name: 'intro', path: '/', title: 'Introduction', src: 'docs/intro.md'},
+        {
+          name: 'intro-group',
+          title: 'Introduction',
+          pages: [
+            {name: 'intro', path: '/', title: 'Overview', src: 'docs/intro.md'},
+            {name: 'faq', title: 'FAQ', src: 'docs/faq.md'}
+          ]
+        },
         {
           name: 'style-guide',
           title: 'Style guide',

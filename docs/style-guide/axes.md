@@ -1,6 +1,23 @@
 # Axis
 
-Axes are a visual representation of position and extent scales. They are used to display how numerical quantities are transformed into physical positions and sizes inside the chart. Often, the scales they represent are continuous linear transformations, but not always. Ordinal scales, where different categorical values are mapped to different positions, as well as logarithmic, quadratic, and exponential scales can also be displayed using axes. Usually, axes are positioned parallel to the visual dimension into which they transform data, hence the prominence of "x" and "y" axes. This is almost always the most readable and recognizable orientation.
+> Axes are a visual representation of position and extent scales. They are used to display how numerical quantities are transformed into physical positions and sizes inside the chart.
+
+Often, the scales they represent are continuous linear transformations, but not always. Ordinal scales, where different categorical values are mapped to different positions, as well as logarithmic, quadratic, and exponential scales can also be displayed using axes. Usually, axes are positioned parallel to the visual dimension into which they transform data, hence the prominence of "x" and "y" axes. This is almost always the most readable and recognizable orientation.
+
+## Axis labels
+
+Axis labels can be formatted very flexibly. A combination of `ticks`/`tickValues` and `tickFormat` is needed. The former to define how many and which ticks should be displayed, the latter to define what should be displayed. The documentation can be found here:
+
+* https://github.com/mbostock/d3/wiki/SVG-Axes#ticks
+* https://github.com/mbostock/d3/wiki/SVG-Axes#tickValues
+* https://github.com/mbostock/d3/wiki/SVG-Axes#tickFormat
+
+There are also corresponding functions for date/time scales:
+
+* https://github.com/mbostock/d3/wiki/Time-Scales#tickFormat
+* https://github.com/mbostock/d3/wiki/Time-Scales#ticks
+
+Custom time formats can be defined using [d3.time.format.multi](http://bl.ocks.org/mbostock/4149176)
 
 ## X-axis
 

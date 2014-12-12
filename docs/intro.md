@@ -1,6 +1,6 @@
 # Visualization library
 
-> The Statistik Stadt Zürich Visualization Library is used to create visualizations of their statistical data that can be integrated into their content management system.
+> A Javascript library that facilitates the creation of d3 data visualizations for Statistik Stadt Zürich.
 
 ## Getting started
 
