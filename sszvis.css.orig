@@ -1,6 +1,6 @@
 /**
  * General rules
- *
+ * This is the original CSS provided by IXT in Dec 2014
 */
 .sszvis-outer-container {
   clear: both;
@@ -34,20 +34,17 @@
 
 /**
  * Axis component based on the d3.axis interface
- * Changed color to match stzh website (original #B8B8B8)
+ *
  * @module sszvis/axis
  */
 .sszvis-axis text {
-  fill: #767676;
+  fill: #B8B8B8;
   font-family: Arial, sans-serif;
   font-size: 10px;
   font-style: normal;
   font-weight: normal;
 }
 
-/*
-* changed stroke to match sthz grey
-*/
 .sszvis-axis path,
 .sszvis-axis line {
   fill: none;
@@ -182,10 +179,10 @@
 
 .sszvis-control-buttonGroup__item {
   background-color: #FFFFFF;
-  border: 1px solid #767676;
+  border: 1px solid #7C7C7C;
   border-left: none;
   box-sizing: border-box;
-  color: #767676;
+  color: #7C7C7C;
   cursor: pointer;
   display: table-cell;
   font-family: Arial, sans-serif;
@@ -195,16 +192,13 @@
   vertical-align: middle;
 }
 
-/** 
-* uses same background color as "Zurücksetzen" form button on stzh Website
-*/
 .sszvis-control-buttonGroup__item.selected {
-  background-color: #767676;
+  background-color: #B8B8B8;
   color: #FFFFFF;
 }
 
 .sszvis-control-buttonGroup__item:first-child {
-  border-left: 1px solid #767676;
+  border-left: 1px solid #7C7C7C;
   border-top-left-radius: 3px;
   border-bottom-left-radius: 3px;
 }
@@ -482,7 +476,7 @@
  * @module sszvis/legend/radius
  */
 .sszvis-legend__label {
-  fill: #767676;
+  fill: #909090;
   font-family: Arial, sans-serif;
   font-size: 12px;
   font-style: normal;
@@ -491,12 +485,12 @@
 }
 
 .sszvis-legend__label--small {
-  fill: #767676;
+  fill: #B8B8B8;
   font-size: 10px;
 }
 
 .sszvis-legend__axislabel {
-  fill: #767676;
+  fill: #B8B8B8;
   font-family: Arial, sans-serif;
   font-size: 10px;
   font-style: normal;
