@@ -134,13 +134,26 @@ server: build
 
 backup: 
 	@echo 'backing up...'
-	-mv $(DEPLOY_PATH)/sszvis $(BACKUP_PATH)$(BACKUP_FOLDER)
-	
+	-mv $(DEPLOY_PATH)sszvis $(BACKUP_PATH)$(BACKUP_FOLDER)
+
+backup2:
+	@echo 'backing up...'
+	mkdir $(BACKUP_PATH)$(BACKUP_FOLDER)
+	-cp -r $(DEPLOY_PATH)sszvis/* $(BACKUP_PATH)$(BACKUP_FOLDER)
+
 deploy: build backup
 	@echo 'deploying...'
-	mkdir $(DEPLOY_PATH)/sszvis
-	cp -r * $(DEPLOY_PATH)/sszvis
-	sed -e s/TIMESTAMP/$(NOW)/g $(DEPLOY_PATH)/sszvis/index.html > $(DEPLOY_PATH)/sszvis/index.html.tmp && mv $(DEPLOY_PATH)/sszvis/index.html.tmp $(DEPLOY_PATH)/sszvis/index.html
+	mkdir $(DEPLOY_PATH)sszvis
+	cp -r * $(DEPLOY_PATH)sszvis
+	sed -e s/TIMESTAMP/$(NOW)/g $(DEPLOY_PATH)sszvis/index.html > $(DEPLOY_PATH)sszvis/index.html.tmp && mv $(DEPLOY_PATH)sszvis/index.html.tmp $(DEPLOY_PATH)/sszvis/index.html
+
+
+
+deploy2: build backup2
+	@echo 'deploying...'
+	rm -fr $(DEPLOY_PATH)sszvis/*
+	cp -r * $(DEPLOY_PATH)sszvis
+	sed -e s/TIMESTAMP/$(NOW)/g $(DEPLOY_PATH)sszvis/index.html > $(DEPLOY_PATH)sszvis/index.html.tmp && mv $(DEPLOY_PATH)sszvis/index.html.tmp $(DEPLOY_PATH)/sszvis/index.html
 
 
 testsed: 
