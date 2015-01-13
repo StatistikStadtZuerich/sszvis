@@ -12,8 +12,6 @@
  */
 
 (function() {
-'use strict';
-
 var serializeXML = function(node, output) {
   var nodeType = node.nodeType;
   if (nodeType == 3) { // TEXT nodes.
@@ -48,7 +46,7 @@ var serializeXML = function(node, output) {
     // TODO: Handle DOCUMENT nodes.
     throw 'Error serializing XML. Unhandled node of type: ' + nodeType;
   }
-};
+}
 // The innerHTML DOM property for SVGElement.
 Object.defineProperty(SVGElement.prototype, 'innerHTML', {
   get: function() {
@@ -82,7 +80,7 @@ Object.defineProperty(SVGElement.prototype, 'innerHTML', {
       }
     } catch(e) {
       throw new Error('Error parsing XML string');
-    }
+    };
   }
 });
 
