@@ -141,6 +141,20 @@
       .ticks(4)
       .concat(state.selection.map(xAcc));
 
+         var referenceLine = sszvis.annotation.line()
+      .x1(state.years[0]) // 0%
+      .y1(100)
+      .x2(state.years[1]) // 100%
+      .y2(100)
+      .xScale(xScale)
+      .yScale(yScale)
+      // Position the label so it doesn't overlap with the data points
+      .dx(28)
+      .dy(-5)
+      .caption('Was schreiben hier? Basis?');
+
+
+
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
@@ -152,6 +166,7 @@
       .ticks(5)
       .scale(yScale)
       .orient('right')
+      .tickSize(0)
       .contour(true);
 
     var ruler = sszvis.annotation.ruler()
@@ -169,6 +184,11 @@
 
 
     // Rendering
+
+   chartLayer.selectGroup('referenceLine')
+      .datum([1])
+      .call(referenceLine);
+
 
     var lineChart = chartLayer.selectGroup('lineChart')
       .datum(state.lineData);
