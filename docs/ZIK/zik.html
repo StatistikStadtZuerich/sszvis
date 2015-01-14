@@ -11,7 +11,9 @@
 <script src="../../sszvis.js"></script>
 
 <div id="sszvis-chart"></div>
-
+<script type="text/javascript">
+  var CSVDATA = 'data/zik_dez2010_jan2014.csv';
+</script>
 <script data-catalog-project-expose="script.js">
 (function(d3, sszvis) {
   'use strict';
@@ -26,8 +28,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var DATA_PATH = 'data/zik_dez2010_jan2014.csv'
-
+ 
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -81,7 +82,7 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv(DATA_PATH)
+  d3.csv(CSVDATA)
     .row(function(d) {
       return {
         date:  sszvis.parse.date(d['Datum']),
