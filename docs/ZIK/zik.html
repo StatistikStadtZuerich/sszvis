@@ -84,7 +84,7 @@
   d3.csv(DATA_PATH)
     .row(function(d) {
       return {
-        date:  d3.time.format('%Y %m').parse(d['Datum']),//sszvis.parse.date(d['Datum']),
+        date:  sszvis.parse.date(d['Datum']),
         value: sszvis.parse.number(d['Totalindex'])
       };
     })
@@ -107,7 +107,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 3, bottom: 25 });
+    var bounds = sszvis.bounds({ top: 10, bottom: 25 });
     console.log(bounds);
 
 
@@ -147,23 +147,17 @@
       .x2(state.years[1]) // 100%
       .y2(100)
       .xScale(xScale)
-      .yScale(yScale)
-      // Position the label so it doesn't overlap with the data points
-      .dx(28)
-      .dy(-5)
-      .caption('Was schreiben hier? Basis?');
-
-
+      .yScale(yScale);
+     
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
-   //.tickFormat(quarterTickLabel)
       .highlightTick(isSelected);
 
     var yAxis = sszvis.axis.y()
-      .ticks(5)
+      .tickValues([99,100,101,102])
       .scale(yScale)
       .orient('right')
       .tickSize(0)

@@ -23,7 +23,7 @@ https://www.stadt-zuerich.ch/zik
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 393
+        "height": 400
     }
 }
 ```
