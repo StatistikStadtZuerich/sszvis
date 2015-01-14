@@ -12,7 +12,7 @@
 
 <div id="sszvis-chart"></div>
 <script type="text/javascript">
-  var CSVDATA = 'data/zik_dez2010_jan2014.csv';
+  var CSVDATA = 'data/ZIK_Total_Basis_Dez_2010.csv';
 </script>
 <script data-catalog-project-expose="script.js">
 (function(d3, sszvis) {
@@ -92,15 +92,11 @@
     .get(function(error, data) {
 
       if (error) {
-        console.log('error');
-        var testDate = '2010 12';
-        var date = d3.time.format('%Y %m').parse(testDate);
-        console.log(date);
         sszvis.loadError(error);
         return;
       }
       
-      console.log('yes');
+    
       actions.prepareState(data);
     });
 
@@ -109,7 +105,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 10, bottom: 25 });
-    console.log(bounds);
+   
 
 
     // Scales
