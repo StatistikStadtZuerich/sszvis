@@ -14,7 +14,7 @@ https://www.stadt-zuerich.ch/zik
             "source": "docs/ZIK/zik.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/ZIK/data/tik.csv",
+        "data.csv": "docs/ZIK/data/zik_dez2010_jan2014.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
