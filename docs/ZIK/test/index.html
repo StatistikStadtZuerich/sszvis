@@ -1,1 +1,262 @@
-hi
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Line chart</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='sszvis.css' rel='stylesheet' />
+<script src="d3.min.js"></script>
+<script src="sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+<script type="text/javascript">
+  var CSVDATA = 'ZIK_Total_Basis_Dez_2010.csv';
+</script>
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+ 
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('date');
+  var yAcc = sszvis.fn.prop('value');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    years: [0, 0],
+    lineData: [],
+    selection: [],
+    currentDate: null
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+
+    
+      state.data = data;
+     
+      state.years = d3.extent(state.data, xAcc);
+      state.lineData = [state.data];
+
+      actions.resetDate();
+    },
+
+    changeDate: function(inputDate) {
+      var date = closestDatum(state.data, sszvis.fn.prop('date'), inputDate).date;
+      if (state.currentDate === date) return;
+
+      state.currentDate = date;
+      state.selection = state.data.filter(function(d) {
+        return d.date === state.currentDate && !isNaN(d.value);
+      });
+
+      render(state);
+    },
+
+    resetDate: function() {
+      var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
+      actions.changeDate(mostRecentDate);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv(CSVDATA)
+    .row(function(d) {
+      return {
+        date:  sszvis.parse.date(d['Datum']),
+        value: sszvis.parse.number(d['Totalindex'])
+      };
+    })
+    .get(function(error, data) {
+
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      
+    
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ top: 10, bottom: 25 });
+   
+
+
+    // Scales
+
+    var xScale = d3.time.scale()
+      .domain(state.years)
+      .range([0, bounds.innerWidth]);
+
+    var yScale = d3.scale.linear()
+      .domain([98,102])
+      .range([bounds.innerHeight, 0]);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      });
+
+
+    // Components
+
+    var line = sszvis.component.line()
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .stroke(sszvis.color.qual12());
+
+    var xTickValues = xScale
+      .ticks(4)
+      .concat(state.selection.map(xAcc));
+
+         var referenceLine = sszvis.annotation.line()
+      .x1(state.years[0]) // 0%
+      .y1(100)
+      .x2(state.years[1]) // 100%
+      .y2(100)
+      .xScale(xScale)
+      .yScale(yScale);
+     
+
+    var xAxis = sszvis.axis.x.time()
+      .scale(xScale)
+      .orient('bottom')
+      .tickValues(xTickValues)
+      .highlightTick(isSelected);
+
+    var yAxis = sszvis.axis.y()
+      .tickValues([99,100,101,102])
+      .scale(yScale)
+      .orient('right')
+      .tickSize(0)
+      .contour(true);
+
+    var ruler = sszvis.annotation.ruler()
+      .top(0)
+      .bottom(bounds.innerHeight)
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .label(function(d) {
+        return sszvis.format.number(d.value) + ' Punkte';
+      })
+      .flip(function(d) {
+        return xScale(xAcc(d)) >= bounds.innerWidth / 2;
+      })
+      .color(sszvis.color.qual12());
+
+
+    // Rendering
+
+   chartLayer.selectGroup('referenceLine')
+      .datum([1])
+      .call(referenceLine);
+
+
+    var lineChart = chartLayer.selectGroup('lineChart')
+      .datum(state.lineData);
+
+    lineChart.selectGroup('line')
+      .call(line);
+
+    lineChart.selectGroup('xAxis')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .call(xAxis);
+
+    lineChart.selectGroup('yAxis')
+      .call(yAxis);
+
+    chartLayer.selectGroup('ruler')
+      .datum(state.selection)
+      .call(ruler);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(xScale)
+      .yScale(yScale)
+      .on('move', actions.changeDate)
+      .on('end', actions.resetDate);
+
+    chartLayer.selectGroup('interaction')
+      .call(interactionLayer);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function closestDatum(data, accessor, datum) {
+    var i = d3.bisector(accessor).left(data, datum, 1);
+    var d0 = data[i - 1];
+    var d1 = data[i] || d0;
+    return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+  }
+
+  function isSelected(d) {
+    return sszvis.fn.contains(state.selection.map(xAcc).map(String), String(d));
+  }
+
+  function isStartOfYear(d) {
+    return d.getMonth() === 0;
+  }
+
+  function quarterTickLabel(d) {
+    //return (isStartOfYear(d) && !isSelected(d)) ? d.getFullYear(d) : d.getMonth();
+     return (isStartOfYear(d) && !isSelected(d)) ? d.getFullYear(d) : d.getMonth();
+  }
+
+  function quarterName(d) {
+    var month = d.getMonth();
+    switch (month) {
+      case 0:
+      case 1:
+      case 2:
+        return 'Q1';
+      case 3:
+      case 4:
+      case 5:
+        return 'Q2';
+      case 6:
+      case 7:
+      case 8:
+        return 'Q3';
+      case 9:
+      case 10:
+      case 11:
+        return 'Q4';
+    }
+  }
+
+}(d3, sszvis));
+</script>
+</body>
+</html>
