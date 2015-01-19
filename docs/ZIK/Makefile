@@ -4,8 +4,10 @@
 
 BASE_PATH=https://www.integ.stadt-zuerich.ch/content/dam/stzh/prd/Deutsch/Statistik/test/ixt/test_002/$(DIR_NAME_STRIPPED)
 
-DATA_FILE=zik_dez2010_jan2014.csv
-HTML_BASE=zik.html
+DATA_FILE=ZIK_Total_Basis_Dez_2010.csv
+BASE_NAME=zik
+HTML_BASE=$(BASE_NAME).html
+HTML_FALLBACK=$(BASE_NAME)_fallback.html
 
 
 DATA_PATH=$(BASE_PATH)/$(DATA_FILE)
@@ -26,24 +28,42 @@ PATH_TO_SCRIPT_PLACEHOLDER=SCRIPT_JS
 PATH_TO_CSS_PLACEHOLDER=SSZVIS_CSS
 
 
-all: cq5 d3 data fallback script sszvis template
+all: cq5 d3 css data script sszvis template fallback
 	@echo done
 
 cq5: 
 	@echo creating directory ./$(BUILD)
 	@mkdir ./$(BUILD)
+	@mkdir ./$(BUILD)/data
 
+css: 
+	@echo copy sszvis.css 
+	@cp ../../sszvis.css ./$(BUILD)
 d3:
 	@echo copy d3.js 
 	@cp ../../vendor/d3/d3.min.js ./$(BUILD)
 
 data:
 	@echo copy $(DATA_FILE)
-	@cp ./data/$(DATA_FILE) ./$(BUILD)/$(DATA_FILE)
+	@cp ./data/$(DATA_FILE) ./$(BUILD)/data/$(DATA_FILE)
 
 fallback:
-	@echo copy fallback.png
-	@cp ../fallback.png ./$(BUILD)/fallback.png 
+	@echo generating fallback.png
+	@sed 's=../../sszvis.css=http://localhost:8080/sszvis.css=g' $(HTML_FALLBACK) > fallbacktemp
+	@sed 's=../../vendor/d3/d3.min.js=http://localhost:8080/d3.min.js=g' fallbacktemp > fallbacktemp2
+	@sed 's=../../sszvis.js=http://localhost:8080/sszvis.js=g' fallbacktemp2 > fallbacktemp3
+
+	rm fallbacktemp fallbacktemp2
+	mv fallbacktemp3 ./$(BUILD)/fallback.html
+
+	http-server ./$(BUILD)/ &
+
+	cp ../../vendor/slimerjs/screenshot.js .
+	slimerjs screenshot.js http://localhost:8080/fallback.html ./$(BUILD)/fallback.png
+	rm screenshot.js
+	rm ./$(BUILD)/fallback.html
+
+	killall node
 
 script:
 	@echo generating script.js
