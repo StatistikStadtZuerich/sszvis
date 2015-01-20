@@ -66,11 +66,11 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/SiVB_fourCities.csv')
+  d3.csv('data/Grafik4.csv')
     .row(function(d) {
       return {
-        category: d['Stadt'],
-        value: sszvis.parse.number(d['Wert']) / 100
+        category: d['Jahr'],
+        value: sszvis.parse.number(d['Anzahl Wohnungen'])
       };
     })
     .get(function(error, data) {
@@ -93,7 +93,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.3);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.5);
 
     var heightScale = d3.scale.linear()
       .range([0, bounds.innerHeight])
@@ -135,11 +135,12 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
-      .tickFormat(yAxisLabel)
+     // .tickFormat(yAxisLabel)
       .orient('right');
 
     var tooltipTitle = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.percent, yAcc));
+      .bold(yAcc)
+      .plain('Wohnungen');
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)

@@ -62,8 +62,10 @@ fallback:
 	@slimerjs screenshot.js http://localhost:8080/fallback.html ./$(BUILD)/fallback.png
 	@rm screenshot.js
 	@rm ./$(BUILD)/fallback.html
+	@mv ./$(BUILD)/data/$(DATA_FILE) ./$(BUILD)/$(DATA_FILE)
+	@rmdir ./$(BUILD)/data
 
-	-@killall node
+	@-killall node
 
 script:
 	@echo generating script.js

@@ -28,7 +28,11 @@ sszvis_namespace('sszvis.bounds', function(module) {
   'use strict';
 
   var DEFAULT_WIDTH = 516;
-  var RATIO = Math.sqrt(2);
+
+  //changed sszsch
+  //We decied to have a default ratio 3:2 instead of 1:sqrt(2)
+  //var RATIO = Math.sqrt(2);
+  var RATIO = 3/2;
 
   module.exports = function(bounds) {
     bounds || (bounds = {});
