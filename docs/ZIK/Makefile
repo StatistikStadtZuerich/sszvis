@@ -2,7 +2,7 @@
 
 .PHONY: clean all d3 data fallback script sszvis template
 
-BASE_PATH=https://www.integ.stadt-zuerich.ch/content/dam/stzh/prd/Deutsch/Statistik/test/ixt/test_002/$(DIR_NAME_STRIPPED)
+BASE_PATH=/content/dam/stzh/prd/Deutsch/Statistik/testbereich/ZIK
 
 DATA_FILE=ZIK_Total_Basis_Dez_2010.csv
 BASE_NAME=zik
@@ -53,21 +53,21 @@ fallback:
 	@sed 's=../../vendor/d3/d3.min.js=http://localhost:8080/d3.min.js=g' fallbacktemp > fallbacktemp2
 	@sed 's=../../sszvis.js=http://localhost:8080/sszvis.js=g' fallbacktemp2 > fallbacktemp3
 
-	rm fallbacktemp fallbacktemp2
-	mv fallbacktemp3 ./$(BUILD)/fallback.html
+	@rm fallbacktemp fallbacktemp2
+	@mv fallbacktemp3 ./$(BUILD)/fallback.html
 
-	http-server ./$(BUILD)/ &
+	@http-server ./$(BUILD)/ &
 
-	cp ../../vendor/slimerjs/screenshot.js .
-	slimerjs screenshot.js http://localhost:8080/fallback.html ./$(BUILD)/fallback.png
-	rm screenshot.js
-	rm ./$(BUILD)/fallback.html
+	@cp ../../vendor/slimerjs/screenshot.js .
+	@slimerjs screenshot.js http://localhost:8080/fallback.html ./$(BUILD)/fallback.png
+	@rm screenshot.js
+	@rm ./$(BUILD)/fallback.html
 
-	killall node
+	-@killall node
 
 script:
 	@echo generating script.js
-	@xmllint --html --xpath "/html/body/script[@data-catalog-project-expose]/node()" $(HTML_BASE) > ./$(BUILD)/script.js
+	@xmllint --html --xpath "//html/body/script[@data-catalog-project-expose]/node()" $(HTML_BASE) > ./$(BUILD)/script.js
 
 sszvis:
 	@echo copy sszvis.js
