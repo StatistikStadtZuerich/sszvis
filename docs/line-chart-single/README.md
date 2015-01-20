@@ -157,3 +157,29 @@ Shows how to use negative y-values.
 }
 ```
 
+## Usage example: Automatic
+
+Generates a chart based on a config object
+
+```project
+{
+    "name": "line-chart-single-automatic",
+    "files": {
+        "index.html": {
+            "source": "docs/line-chart-single/automatic.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/line-chart-single/data/SL_quarterly.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 393
+    }
+}
+```
+

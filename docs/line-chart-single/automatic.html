@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Line chart</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+  /* Configuration
+  ----------------------------------------------- */
+  //configuration object
+  //This can be externalized into a file at a later point
+  var config = {
+    title: 'Title',
+    description: 'Description',
+    dataPath: 'data/SL_quarterly.csv',
+    dateColumn: 'Datum',
+    valueColumn: 'Wert',
+    rulerLabel: 'Anteile',
+    yLabel: 'Punkte'
+  }
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('date');
+  var yAcc = sszvis.fn.prop('value');
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    years: [0, 0],
+    lineData: [],
+    selection: [],
+    currentDate: null
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.years = d3.extent(state.data, xAcc);
+      state.lineData = [state.data];
+
+      actions.resetDate();
+    },
+
+    changeDate: function(inputDate) {
+      var date = closestDatum(state.data, sszvis.fn.prop('date'), inputDate).date;
+      if (state.currentDate === date) return;
+
+      state.currentDate = date;
+      state.selection = state.data.filter(function(d) {
+        return d.date === state.currentDate && !isNaN(d.value);
+      });
+
+      render(state);
+    },
+
+    resetDate: function() {
+      var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
+      actions.changeDate(mostRecentDate);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv(config.dataPath)
+    .row(function(d) {
+      return {
+        //probably need to distinguish time or discreet values here...
+        //although for a line chart it is rarely not time on x-axis.
+        date:  sszvis.parse.date(d[config.dateColumn]),
+        value: sszvis.parse.number(d[config.valueColumn])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ top: 30, bottom: 25 });
+
+
+    // Scales
+
+    var xScale = d3.time.scale()
+      .domain(state.years)
+      .range([0, bounds.innerWidth]);
+
+    var yScale = d3.scale.linear()
+      .domain([0, d3.max(state.data, yAcc)])
+      .range([bounds.innerHeight, 0]);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: config.title,
+        description: config.description
+      });
+
+
+    // Components
+
+    var line = sszvis.component.line()
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .stroke(sszvis.color.qual12());
+
+    var xTickValues = xScale
+      .ticks(4)
+      .concat(state.selection.map(xAcc));
+
+    var xAxis = sszvis.axis.x.time()
+      .scale(xScale)
+      .orient('bottom')
+      .tickValues(xTickValues)
+      .highlightTick(isSelected);
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .title(config.yLabel)
+      .dyTitle(-20)
+      .contour(true);
+
+    var ruler = sszvis.annotation.ruler()
+      .top(0)
+      .bottom(bounds.innerHeight)
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .label(function(d) {
+        return sszvis.format.number(d.value) + ' ' + config.rulerLabel;
+      })
+      .flip(function(d) {
+        return xScale(xAcc(d)) >= bounds.innerWidth / 2;
+      })
+      .color(sszvis.color.qual12());
+
+
+    // Rendering
+
+    var lineChart = chartLayer.selectGroup('lineChart')
+      .datum(state.lineData);
+
+    lineChart.selectGroup('line')
+      .call(line);
+
+    lineChart.selectGroup('xAxis')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .call(xAxis);
+
+    lineChart.selectGroup('yAxis')
+      .call(yAxis);
+
+    chartLayer.selectGroup('ruler')
+      .datum(state.selection)
+      .call(ruler);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.move()
+      .xScale(xScale)
+      .yScale(yScale)
+      .on('move', actions.changeDate)
+      .on('end', actions.resetDate);
+
+    chartLayer.selectGroup('interaction')
+      .call(interactionLayer);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function closestDatum(data, accessor, datum) {
+    var i = d3.bisector(accessor).left(data, datum, 1);
+    var d0 = data[i - 1];
+    var d1 = data[i] || d0;
+    return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+  }
+
+  function isSelected(d) {
+    return sszvis.fn.contains(state.selection.map(xAcc).map(String), String(d));
+  }
+
+  function isStartOfYear(d) {
+    return d.getMonth() === 0;
+  }
+
+
+
+  
+
+}(d3, sszvis));
+</script>
+</body>
+</html>
