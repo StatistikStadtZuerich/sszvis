@@ -26,8 +26,8 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var TITLE = 'Zürcher Index der Konsumentenpreise, Dezember 2010 bis Dezember 2014';
+  var DESCRIPTION = 'Die Grafik zeigt den Verlauf des monatlich berechneten Zürcher Index der Konsumentenpreise (Totalindex) von Dezember 2010 bis Dezember 2014 auf der Basis Dezember 2010 = 100 Punkte. Seit Juli 2011 liegt der Totalindex unter dem Basiswert von 100 Punkten; im Dezember 2014 liegt er bei 98,7 Punkten.';
  
 
   /* Shortcuts
@@ -104,7 +104,10 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, bottom: 25 });
+    var w = 516;
+    var h = w/(3/2);
+   var bounds = sszvis.bounds({ width: w, height: h, top: 30, bottom: 25 });
+    //var bounds = sszvis.bounds({ top: 10, bottom: 25 });
    
 
 
@@ -115,7 +118,7 @@
       .range([0, bounds.innerWidth]);
 
     var yScale = d3.scale.linear()
-      .domain([98,102])
+      .domain([98,101])
       .range([bounds.innerHeight, 0]);
 
 
@@ -138,10 +141,10 @@
       .ticks(4)
       .concat(state.selection.map(xAcc));
 
-     /*    var referenceLine = sszvis.annotation.line()
-      .x1(state.years[0]) 
+       /*  var referenceLine = sszvis.annotation.line()
+      .x1(state.years[0]) // 0%
       .y1(100)
-      .x2(state.years[1]) 
+      .x2(state.years[1]) // 100%
       .y2(100)
       .xScale(xScale)
       .yScale(yScale);*/
@@ -151,13 +154,17 @@
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
+    //  .tickFormat(tickLabels)
       .highlightTick(isSelected);
 
     var yAxis = sszvis.axis.y()
-      .tickValues([99,100,101,102])
+      .tickValues([98.5,99,99.5,100,100.5,101])
       .scale(yScale)
-      .tickLength(bounds.innerWidth)
-      .orient('right') 
+      .orient('right')
+   //   .tickSize(0)
+       .tickLength(bounds.innerWidth)
+      .title('Punkte')
+      .dyTitle(-20)
       .contour(true);
 
     var ruler = sszvis.annotation.ruler()
@@ -166,7 +173,7 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .label(function(d) {
-        return sszvis.format.number(d.value) + ' Punkte';
+        return sszvis.format.number(d.value,2);
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
@@ -175,16 +182,17 @@
 
 
     // Rendering
-
-   /*chartLayer.selectGroup('referenceLine')
+/*
+   chartLayer.selectGroup('referenceLine')
       .datum([1])
-      .call(referenceLine);*/
-
+      .call(referenceLine);
+*/
 
     var lineChart = chartLayer.selectGroup('lineChart')
       .datum(state.lineData);
 
- 
+    lineChart.selectGroup('line')
+      .call(line);
 
     lineChart.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
@@ -192,9 +200,6 @@
 
     lineChart.selectGroup('yAxis')
       .call(yAxis);
-
-       lineChart.selectGroup('line')
-      .call(line);
 
     chartLayer.selectGroup('ruler')
       .datum(state.selection)
@@ -231,32 +236,21 @@
     return d.getMonth() === 0;
   }
 
-  function quarterTickLabel(d) {
+  function tickLabels(d) {
     //return (isStartOfYear(d) && !isSelected(d)) ? d.getFullYear(d) : d.getMonth();
-     return (isStartOfYear(d) && !isSelected(d)) ? d.getFullYear(d) : d.getMonth();
+     //return (isStartOfYear(d) && !isSelected(d)) ? d.getFullYear(d) : d.getMonth();
+
+    if(isStartOfYear(d) && !isSelected(d)){
+
+        return sszvis.format.year(d);
+     }
+     else {
+      return sszvis.format.month(d) + ' ' + sszvis.format.year(d);
+   
+     }
   }
 
-  function quarterName(d) {
-    var month = d.getMonth();
-    switch (month) {
-      case 0:
-      case 1:
-      case 2:
-        return 'Q1';
-      case 3:
-      case 4:
-      case 5:
-        return 'Q2';
-      case 6:
-      case 7:
-      case 8:
-        return 'Q3';
-      case 9:
-      case 10:
-      case 11:
-        return 'Q4';
-    }
-  }
+
 
 }(d3, sszvis));
 </script>
