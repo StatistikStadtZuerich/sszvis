@@ -11,10 +11,10 @@ Anzahl fertig gestellter Neubauwohnungen pro Jahr und Eigentümerart
     "name": "neubauwohnungen-1",
     "files": {
         "index.html": {
-            "source": "docs/WEB_004_2015_Bautaetigkeit2014/Grafik1.html",
+            "source": "docs/website/WEB_004_2015_Bautaetigkeit2014/Grafik1.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/WEB_004_2015_Bautaetigkeit2014/data/Grafik1.csv",
+        "data.csv": "docs/website/WEB_004_2015_Bautaetigkeit2014/data/Grafik1.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -37,10 +37,10 @@ Anzahl Neubauwohnungen nach Eigentümertart für das Jahr 2014. In den fehlenden
     "name": "neubauwohnungen-3",
     "files": {
         "index.html": {
-            "source": "docs/WEB_004_2015_Bautaetigkeit2014/Grafik3.html",
+            "source": "docs/website/WEB_004_2015_Bautaetigkeit2014/Grafik3.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/WEB_004_2015_Bautaetigkeit2014/data/Grafik3.csv",
+        "data.csv": "docs/website/WEB_004_2015_Bautaetigkeit2014/data/Grafik3.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -64,10 +64,10 @@ Grafik 4
     "name": "neubauwohnungen-4",
     "files": {
         "index.html": {
-            "source": "docs/WEB_004_2015_Bautaetigkeit2014/Grafik4.html",
+            "source": "docs/website/WEB_004_2015_Bautaetigkeit2014/Grafik4.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/WEB_004_2015_Bautaetigkeit2014/data/Grafik4.csv",
+        "data.csv": "docs/website/WEB_004_2015_Bautaetigkeit2014/data/Grafik4.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Neubauwohnungen nach Quartier und Eigentümer</title>
+  <title>Anzahl fertig gestellter Neubauwohnungen pro Jahr und Eigentümerart</title>
 </head>
 <body style="margin:0;padding:0;">
-<link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
-<script src="../../sszvis.js"></script>
+<link href='../../../sszvis.css' rel='stylesheet' />
+<script src="../../../vendor/d3/d3.min.js"></script>
+<script src="../../../sszvis.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -24,24 +24,23 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Neubauwohnungen nach Quartier und Eigentümer';
-  var DESCRIPTION = 'Anzahl Neubauwohnungen nach Eigentümertart für das Jahr 2014. In den fehlenden Quartieren wurden 2014 keine Wohnungen fertig gestellt';
-  var DATA_PATH = 'data/Grafik3.csv';
+  var TITLE = 'Neubauwohnungen nach Eigentümer';
+  var DESCRIPTION = 'Anzahl fertig gestellter Neubauwohnungen pro Jahr und Eigentümerart';
+  var DATA_PATH = 'data/Grafik1.csv';
 
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('value');
-  var yAcc = sszvis.fn.prop('area');
-  var cAcc = sszvis.fn.prop('sector');
+  var xAcc = sszvis.fn.prop('year');
+  var yAcc = sszvis.fn.prop('value');
+  var cAcc = sszvis.fn.prop('field');
 
 
   /* Application state
   ----------------------------------------------- */
   var state = {
     data: [],
-    areas: [],
-    areaSet: [],
+    years: [],
     categories: [],
     stackedData: [],
     maxStacked: 0,
@@ -54,39 +53,28 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.areas = state.data.map(yAcc);
-      state.areaSet =  sszvis.fn.set(state.data, yAcc);
+      state.years = sszvis.fn.set(state.data, xAcc);
+
       state.categories = sszvis.fn.set(state.data, cAcc);
 
       state.stackedData = sszvis.cascade()
         .arrayBy(cAcc)
         .apply(state.data);
 
-      console.log(state.stackedData);
+      var stackedValues = sszvis.cascade().objectBy(xAcc).apply(state.data);
 
-      var stackedValues = sszvis.cascade()
-        .objectBy(yAcc)
-        .apply(state.data);
-
-        console.log(stackedValues);
-
-        var mapped = d3.values(stackedValues);
-        
-        console.log(mapped);
-
-
-      state.maxStacked = d3.max(d3.values(stackedValues), function(s) { return d3.sum(s, xAcc); });
+      state.maxStacked = d3.max(d3.values(stackedValues), function(d) {
+        return d3.sum(d, yAcc);
+      });
 
       render(state);
     },
 
     showTooltip: function(datum) {
-
       state.selection = [datum];
       render(state);
     },
     hideTooltip: function() {
-
       state.selection = [];
       render(state);
     }
@@ -98,9 +86,9 @@
   d3.csv(DATA_PATH)
     .row(function(d) {
       return {
-        sector: d['Eigentümerart'],
-        area: d['Quartier'],
-        value: sszvis.parse.number(d['NWNG'])
+        year: d['Jahr'],
+        field: d['Eigentümerart'],
+        value: sszvis.parse.number(d['Anzahl Wohnungen'])
       };
     })
     .get(function(error, data) {
@@ -115,25 +103,28 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.areaSet.length);
-    var bounds = sszvis.bounds({ height:  chartDimensions.totalHeight + 170, top: 30, bottom: 170 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 150 });
+    var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.years.length);
 
-    console.log(bounds);
+    console.log('bounds',bounds);
+
 
     // Scales
-    var xScale = d3.scale.linear()
-      .domain([0, state.maxStacked])
-      .range([0, bounds.innerWidth]);
 
-    var yScale = d3.scale.ordinal()
-      .domain(state.areas)
-      .rangeBands([0,chartDimensions.totalHeight], chartDimensions.padRatio, chartDimensions.outerRatio);
+    var xScale = d3.scale.ordinal()
+      .domain(state.years)
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.8);
+
+    var yScale = d3.scale.linear()
+      .domain([0, state.maxStacked])
+      .range([bounds.innerHeight, 0]);
 
     var cScale = sszvis.color.qual12()
       .domain(state.categories);
 
 
     // Layers
+
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: TITLE,
         description: DESCRIPTION
@@ -146,40 +137,41 @@
 
     // Components
 
-    var horizontalBars = sszvis.component.stackedBar.horizontal()
+    var stackedBars = sszvis.component.stackedBar.vertical()
       .xAccessor(xAcc)
       .xScale(xScale)
-     // .height(yScale.rangeBand())
-      .height(chartDimensions.barHeight)
+      .width(xScale.rangeBand())
       .yAccessor(yAcc)
       .yScale(yScale)
-      .fill(sszvis.fn.compose(cScale, cAcc));
+      .fill(function(d) {
+        var color = cScale(cAcc(d));
+        return isSelected(d) ? sszvis.color.slightlyDarker(color) : color;
+      });
 
-
-    var xAxis = sszvis.axis.x()
+    var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
       .orient('bottom')
-      .title('Anzahl Wohnungen')
-      .alignOuterLabels(true);
+      .title('Jahr');
 
-
-    var yAxis = sszvis.axis.y.ordinal()
+    var yAxis = sszvis.axis.y()
       .scale(yScale)
-      .orient('right');
-
+      .orient('right')
+      .title('Anzahl')
+      .dyTitle(-20);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .orientation('horizontal')
       .rows(state.categories.length / 2)
       .columnWidth(bounds.innerWidth / 2)
-      .orientation('vertical');
+      .columns(2)
+      .orientation('horizontal');
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(cAcc);
 
     var tooltipText = sszvis.svgUtils.modularText.html()
-      .plain(function(d) { return xAcc(d) + ' Wohnungen'; });
+      .plain(sszvis.fn.compose(sszvis.format.number, yAcc))
+      .plain('Neubauwohnungen');
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
@@ -189,23 +181,23 @@
 
 
     // Rendering
-    var bars = chartLayer.selectGroup('barchart')
-      .call(horizontalBars);
 
+    var bars = chartLayer.selectGroup('barchart')
+      .call(stackedBars);
 
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.totalHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.axisOffset))
+      .attr('transform', sszvis.svgUtils.translateString(0, 0))
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.totalHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
 
@@ -214,7 +206,6 @@
     bars.selectAll('.sszvis-bar')
       .on('mouseover', actions.showTooltip)
       .on('mouseout',  actions.hideTooltip);
-
   }
 
 
