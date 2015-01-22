@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Area Chart</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../sszvis.css' rel='stylesheet' />
+<script src="../vendor/d3/d3.min.js"></script>
+<script src="../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script>
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+  // This example works in much the same way as the twelve-category stacked area chart.
+  // Much of the code is similar, if not the same. For a detailed description of the
+  // process of rendering this type of chart, see the twelve-category example, sa-twelve.html
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('year');
+  var yAcc = sszvis.fn.prop('value');
+  var cAcc = sszvis.fn.prop('category');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    timeExtent: [0, 0],
+    stackedData: [],
+    maxStacked: 0,
+    categories: [],
+    isMultiples: false,
+    highlightDate: new Date(),
+    highlightData: [],
+    totalHighlightValue: 0,
+    mouseYValue: 0
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.timeExtent = d3.extent(state.data, xAcc);
+
+      state.stackedData = sszvis.cascade()
+        .arrayBy(cAcc)
+        .apply(state.data)
+        .map(function(stack) {
+          return {
+            category: cAcc(stack[0]),
+            values: stack
+          };
+        });
+
+
+      var dateValues = sszvis.cascade()
+        .objectBy(sszvis.fn.compose(String, xAcc))
+        .apply(state.data);
+
+      state.maxValue = d3.max(state.data, yAcc);
+
+      state.maxStacked = d3.max(d3.values(dateValues), function(s) {
+        return d3.sum(s, yAcc);
+      });
+
+      state.categories = sszvis.fn.set(state.data, cAcc);
+
+      state.dates = sszvis.fn.set(state.data, xAcc);
+
+     render(state);
+    },
+
+    changeData: function(){
+      console.log('change data');
+      state.data[0].category = 'Osterreicher';
+      state.data[1].category = 'Osterreicher';
+      state.data[2].category = 'Osterreicher';
+
+      state.data[0].value = Math.random()*30;
+
+      state.stackedData = sszvis.cascade()
+        .arrayBy(cAcc)
+        .apply(state.data)
+        .map(function(stack) {
+          return {
+            category: cAcc(stack[0]),
+            values: stack
+          };
+        });
+
+      var dateValues = sszvis.cascade()
+        .objectBy(sszvis.fn.compose(String, xAcc))
+        .apply(state.data);
+        state.maxValue = d3.max(state.data, yAcc);
+
+      state.maxStacked = d3.max(d3.values(dateValues), function(s) {
+        return d3.sum(s, yAcc);
+      });
+
+      console.log(state.stackedData);
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('stacked_test.csv')
+    .row(function(d) {
+      return {
+        category: d['Nationalität'],
+        year: sszvis.parse.year(d['Jahr']),
+        value: sszvis.parse.number(d['Anzahl'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ top: 60, bottom: 104 });
+
+
+    // Scales
+
+    var xScale = d3.time.scale()
+      .domain(state.timeExtent)
+      .range([0, bounds.innerWidth]);
+
+    var yScale = d3.scale.linear()
+      .domain([0, state.maxStacked])
+      .range([bounds.innerHeight, 0]);
+
+    var cScale = sszvis.color.qual12()
+      .domain(state.categories);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.stackedData);
+
+  
+    // Components
+
+    var stackedArea = sszvis.component.stackedArea()
+     // .key(sszvis.fn.prop('category'))
+      .valuesAccessor(sszvis.fn.prop('values'))
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .yAccessor(yAcc)
+      .yScale(yScale)
+      .fill(sszvis.fn.compose(cScale, cAcc));
+
+    
+
+    var topValue= yScale(state.totalHighlightValue);
+    
+
+    // Rendering
+
+    chartLayer.selectGroup('areachart')
+      .call(stackedArea);
+
+
+    // Interaction
+    d3.select("body").on("keydown", actions.changeData);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function findClosest(data, datum) {
+    var i = d3.bisectLeft(data, datum, 1);
+    var d0 = data[i - 1];
+    var d1 = data[i] || d0;
+    return datum - d0 > d1 - datum ? d1 : d0;
+  }
+
+
+}(d3, sszvis));
+</script>
+</body>
+</html>

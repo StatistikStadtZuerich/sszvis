@@ -282,7 +282,7 @@
       // Because both this and the multiples component render using the
       // same pre-existing elements, a key function is important to ensure
       // that the data is bound in the correct way.
-      .key(sszvis.fn.prop('category'))
+      //.key(sszvis.fn.prop('category'))
       .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))
       .yAccessor(yAcc)
@@ -292,7 +292,7 @@
     // the area multiples component (for the separated view)
     var stackedAreaMultiples = sszvis.component.stackedAreaMultiples()
       // a key function must be passed here as well
-      .key(sszvis.fn.prop('category'))
+      //.key(sszvis.fn.prop('category'))
       .valuesAccessor(sszvis.fn.prop('values'))
       .x(sszvis.fn.compose(xScale, xAcc))
       .y0(sszvis.fn.compose(yPositionMultiples, cAcc))
