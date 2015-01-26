@@ -25,8 +25,6 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var STACKED = "Stacked";
-  var MULTIPLES = "Multiples";
   var DATA_PATH= "data/Nationen.csv";
 
 
@@ -51,8 +49,7 @@
     highlightData: [],
     highlightDate: 0,
     currentContinent: null,
-    totalHighlightValue: 0,
-    isMultiples: true
+    totalHighlightValue: 0
   };
 
 
@@ -64,51 +61,9 @@
 
       state.continents = sszvis.fn.set(state.rawData,contAcc);
       state.currentContinent = state.continents[0];
-      console.log('continents',state.continents);
-
-      //take only the europe ones to start with
-      /*state.data = state.data.filter(function(d){
-        return contAcc(d) === 'Amerika';
-      });*/
+     // console.log('continents',state.continents);
 
       actions.initState(state.currentContinent);
-
-      //COMMENT START
-      // timeExtent is used for the x-axis
-     /* state.timeExtent = d3.extent(state.data, xAcc);
-
-      // create the stacked data layers, and transform them into "layer objects", with a "category" property
-      // for determining the correct color.
-      state.stackedData = sszvis.cascade()
-        .arrayBy(cAcc)
-        .apply(state.data)
-        .map(function(stack) {
-          return {
-            category: cAcc(stack[0]),
-            values: stack
-          };
-        });
-
-      // get the values to configure the stack and multiples component y-scales
-      var dateValues = sszvis.cascade()
-        .objectBy(sszvis.fn.compose(String, xAcc))
-        .apply(state.data);
-
-      // the maximum individual category value - used for the multiples y-scale
-      state.maxValue = d3.max(state.data, yAcc);
-
-      // the maximum stack sum - used for the stacked y-scale
-      state.maxStacked = d3.max(d3.values(dateValues), function(s) {
-        return d3.sum(s, yAcc);
-      });
-
-      // unique categories - for the color scale
-      state.categories = sszvis.fn.set(state.data, cAcc);
-
-      // unique dates - for the ruler interaction
-      state.dates = sszvis.fn.set(state.data, xAcc);
-*/
-      //COMMENT END
 
       actions.resetDate();
     },
@@ -154,13 +109,6 @@
       // unique dates - for the ruler interaction
       state.dates = sszvis.fn.set(state.data, xAcc);
       
-      //COMMENT END
-    },
-
-    toggleMultiples: function(g) {
-      // toggles multiples view on and off
-      state.isMultiples = g === MULTIPLES;
-      render(state);
     },
 
     changeDate: function(xValue, yValue) {
@@ -194,13 +142,14 @@
     },
 
     changeContinent: function(continent){
-      console.log('changeContinent ' + continent);
+     // console.log('changeContinent ' + continent);
       state.currentContinent = continent;
     actions.initState(state.currentContinent);
 
      // state.stackedData[0].values[0].value = Math.random()*50;
      // console.log(state.stackedData[0].values[0].value);
-      render(state);
+      //render(state);
+      actions.resetDate();
     }
   };
 
@@ -227,13 +176,12 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: Math.round(sszvis.bounds.DEFAULT_WIDTH * sszvis.bounds.RATIO), top: 70, bottom: 190});
-    // this layout function computes values, including an array of baseline y-positions, for the
-    // area multiples component. The most important is the array of y-baselines, which are used
-    // for the yPositionMultiples scale
-    var multiplesLayout = sszvis.layout.stackedAreaMultiplesLayout(bounds.innerHeight, state.stackedData.length, 0.1);
-
-
+    var topPad = 90;
+    var bottomPad = 190;
+    var innerHeight = sszvis.bounds.DEFAULT_WIDTH*(9/16);
+    var h = innerHeight+topPad+bottomPad;
+    var bounds = sszvis.bounds({ height: h, top: topPad, bottom: bottomPad});
+    console.log(bounds);
     // Scales
 
     // the x scale. Same for joined and separated views
@@ -245,18 +193,6 @@
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 0]);
-
-    // the y scale which is used for each of the separated instances
-    // when separated, each shape is shown with the same y- and x-scales, so that the
-    // relatives sizes and dimensions are comparable.
-    var yScaleMultiples = d3.scale.linear()
-      .domain([0, state.maxValue])
-      .range([0, multiplesLayout.bandHeight]);
-
-    // this scale determines the y-position of the baseline of each separated area shape
-    var yPositionMultiples = d3.scale.ordinal()
-      .domain(state.categories)
-      .range(multiplesLayout.range);
 
     // the color scale for the layers, based on the category values
     var cScale = sszvis.color.qual12()
@@ -274,7 +210,6 @@
     // used for rendering the tooltip and the button group
     var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
-
     // Components
 
     // the stacked area component (for the joined view)
@@ -289,30 +224,9 @@
       .yScale(yScale)
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    // the area multiples component (for the separated view)
-    var stackedAreaMultiples = sszvis.component.stackedAreaMultiples()
-      // a key function must be passed here as well
-      //.key(sszvis.fn.prop('category'))
-      .valuesAccessor(sszvis.fn.prop('values'))
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y0(sszvis.fn.compose(yPositionMultiples, cAcc))
-      .y1(function(d) {
-        return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
-      })
-      .fill(sszvis.fn.compose(cScale, cAcc));
-
-    // here we compute the pixel position of the "top", which is needed by the rangeRuler.
-    // The "top" is different depending on which view we're in, so we need two different options
-    // based on whether it's the multiples view or not.
-    var topValue;
-    if (state.isMultiples) {
-      // the top of the first area instance, at the current value
-      var first = sszvis.fn.first(state.highlightData);
-      topValue = yPositionMultiples(cAcc(first)) - yScaleMultiples(yAcc(first));
-    } else {
       // the top of the stack, at the current value (a.k.a. the y-position of the "total" value)
-      topValue = yScale(state.totalHighlightValue);
-    }
+      var topValue = yScale(state.totalHighlightValue);
+    
 
     // the range ruler - has different display positions for the individual dots and the
     // value labels depending on if this is the separated or the joined view.
@@ -330,12 +244,7 @@
         }
       })
       .y1(function(d) {
-        // two different y-top scales
-        if (state.isMultiples) {
-          return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
-        } else {
           return yScale(d.y0 + d.y);
-        }
       })
       // the label for the individual values (displayed as small numbers places between y0 and y1)
       .label(function(d) {
@@ -371,19 +280,11 @@
       .x(xScale(state.highlightDate))
       // two y-baseline scales, like the rangeRuler
       .y0(function(d) {
-        if (state.isMultiples) {
-          return yPositionMultiples(cAcc(d));
-        } else {
           return yScale(d.y0);
-        }
       })
       // two y-top scales, like the rangeRuler
       .y1(function(d) {
-        if (state.isMultiples) {
-          return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
-        } else {
           return yScale(d.y0 + d.y);
-        }
       });
 
     // a nice set of ticks, which includes the current highlight date
@@ -407,32 +308,21 @@
     // set up the color legend. Should also already be familiar
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .columnWidth(bounds.innerWidth / 2)
-      .rows(6)
+      .columnWidth(bounds.innerWidth / 3)
+      .rows(4)
       .orientation('vertical');
 
-    // set up the button group control for choosing between joined and separated views
-    var options = [STACKED, MULTIPLES];
     var buttonGroup = sszvis.control.buttonGroup()
-      .values(options)
-      .width(200)
-      .current(options[Number(state.isMultiples)])
-      .change(actions.toggleMultiples);
-
-    var buttonGroup2 = sszvis.control.buttonGroup()
       .values(state.continents)
       .width(400)
       .current(state.currentContinent)
       .change(actions.changeContinent);
 
-   // console.log('buttonGroup.width()',buttonGroup.width());
-  //  console.log('buttonGroup2.width()',buttonGroup2.width());
-
     // Rendering
 
     // choose different main chart components based on isMultiples state.
     chartLayer.selectGroup('areachart')
-      .call(state.isMultiples ? stackedAreaMultiples : stackedArea);
+      .call(stackedArea);
 
     // render the axes, legends, controls, and ruler
     chartLayer.selectGroup('xAxis')
@@ -449,15 +339,10 @@
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
-    htmlLayer.selectDiv('controls')
+  htmlLayer.selectDiv('controls')
       .style('left', (bounds.innerWidth - buttonGroup.width()) / 2 + 'px')
       .style('top', '10px')
       .call(buttonGroup);
-
-  htmlLayer.selectDiv('controls2')
-      .style('left', (bounds.innerWidth - buttonGroup2.width()) / 2 + 'px')
-      .style('top', '40px')
-      .call(buttonGroup2);
 
     chartLayer.selectGroup('highlight')
       .datum(state.highlightData)

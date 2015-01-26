@@ -41,6 +41,7 @@ sszvis_namespace('sszvis.component.stackedAreaMultiples', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        //sszsch why reverse? 
         data = data.slice().reverse();
 
         var areaGen = d3.svg.area()
