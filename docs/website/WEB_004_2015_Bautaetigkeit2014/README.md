@@ -28,6 +28,29 @@ Anzahl fertig gestellter Neubauwohnungen pro Jahr und Eigentümerart
 }
 ```
 
+## Neubauwohnungen pro Stadkreis 2009-2014
+```project
+{
+    "name": "neubauwohnungen-1",
+    "files": {
+        "index.html": {
+            "source": "docs/website/WEB_004_2015_Bautaetigkeit2014/Grafik2.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/website/WEB_004_2015_Bautaetigkeit2014/data/Grafik2.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 545
+    }
+}
+```
+
 ## Neubauwohnungen nach Eigentümer und Quartier 2014
 
 Anzahl Neubauwohnungen nach Eigentümertart für das Jahr 2014. In den fehlenden Quartieren wurden 2014 keine Wohnungen fertig gestellt.

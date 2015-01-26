@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Grouped Bar Chart – Three Yearly Negative</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../../sszvis.css' rel='stylesheet' />
+<script src="../../../vendor/d3/d3.min.js"></script>
+<script src="../../../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var DATA_PATH = 'data/Grafik2.csv';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('kreis');
+  var yAcc = sszvis.fn.prop('value');
+  var yearAcc = sszvis.fn.prop('year');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    kreise: [],
+    groups: [],
+    groupedData: [],
+    longestGroup: 0
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.kreise = sszvis.fn.set(state.data, xAcc);
+      state.groups = sszvis.fn.set(state.data, yearAcc);
+      state.groupedData = sszvis.cascade()
+        .arrayBy(xAcc)
+        .apply(state.data);
+      state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv(DATA_PATH)
+    .row(function(d) {
+      return {
+        kreis: 'Kreis ' + d['Kreis (Num)'],
+        year: d['Jahr'],
+        value: -1*sszvis.parse.number(d['Saldo'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ top: 10, bottom: 84 });
+
+
+    // Scales
+
+    var xScale = d3.scale.ordinal()
+      .domain(state.kreise)
+      .rangeRoundBands([0, bounds.innerWidth], 0.30, 0.5);
+
+    var yScale = d3.scale.linear()
+      .domain([0, d3.max(state.data, yAcc)])
+      .range([bounds.innerHeight, 0]);
+
+    var hScale = yScale
+      .copy()
+      .range(yScale.range().slice().reverse());
+
+  /*  var cScale = sszvis.color.qual12()
+      .domain(state.groups);*/
+
+      //TODO create function of this
+      var cSeq = sszvis.color.seqBlu().domain([0,state.groups.length-1]);
+      var cols = d3.range(0, state.groups.length).map(cSeq);
+      console.log(cols);
+      var cScale = d3.scale.ordinal()
+          .domain(state.groups)
+          .range(cols);
+
+           //sszvis.color.seqBlu().domain(state.groups);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.groupedData);
+
+    var controlLayer = sszvis.createHtmlLayer('#sszvis-chart');
+
+
+
+    // Components
+
+    var buttonGroup = sszvis.control.buttonGroup()
+      .values(state.years)
+      .width(bounds.width / 2)
+      .current(state.selectedYear)
+      .change(actions.selectYear);
+
+
+    var barLayout = sszvis.component.groupedBars()
+      .groupScale(sszvis.fn.compose(xScale, xAcc))
+      .groupWidth(xScale.rangeBand())
+      .groupSize(state.longestGroup)
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .height(sszvis.fn.compose(hScale, yAcc))
+      .fill(sszvis.fn.compose(cScale, yearAcc));
+
+    var xAxis = sszvis.axis.x.ordinal()
+      .scale(xScale)
+      .orient('bottom');
+      //.title('Stadt Kreis');
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .title('Anzahl Wohnungen')
+      .dyTitle(20)
+      .tickFormat(function(d) {
+        return d === 0 ? null : d;
+      });
+
+    var colorLegend = sszvis.legend.ordinalColorScale()
+      .scale(cScale)
+      .horizontalFloat(true)
+      .floatWidth(bounds.innerWidth);
+
+
+    // Rendering
+
+    chartLayer.selectGroup('bars')
+      .call(barLayout);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis);
+
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .call(colorLegend);
+  }
+
+}(d3, sszvis));
+</script>
+</body>
+</html>
