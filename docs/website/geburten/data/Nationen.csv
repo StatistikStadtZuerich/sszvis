@@ -36,7 +36,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 1993,Europa,Kroatien,33
 1993,Europa,Mazedonien,4
 1993,Europa,Portugal,101
-1993,Europa,Serbien und Montenegro und Kosovo,346
+1993,Europa,"Serbien, Montenegro und Kosovo",346
 1993,Europa,Spanien,89
 1993,Europa,Türkei,114
 1993,Ozeanien,Australien,3
@@ -81,7 +81,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 1994,Europa,Kroatien,44
 1994,Europa,Mazedonien,33
 1994,Europa,Portugal,117
-1994,Europa,Serbien und Montenegro und Kosovo,323
+1994,Europa,"Serbien, Montenegro und Kosovo",323
 1994,Europa,Spanien,117
 1994,Europa,Türkei,120
 1994,Ozeanien,Australien,2
@@ -126,7 +126,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 1995,Europa,Kroatien,42
 1995,Europa,Mazedonien,45
 1995,Europa,Portugal,102
-1995,Europa,Serbien und Montenegro und Kosovo,335
+1995,Europa,"Serbien, Montenegro und Kosovo",335
 1995,Europa,Spanien,96
 1995,Europa,Türkei,130
 1995,Ozeanien,Australien,0
@@ -171,7 +171,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 1996,Europa,Kroatien,51
 1996,Europa,Mazedonien,45
 1996,Europa,Portugal,129
-1996,Europa,Serbien und Montenegro und Kosovo,336
+1996,Europa,"Serbien, Montenegro und Kosovo",336
 1996,Europa,Spanien,76
 1996,Europa,Türkei,127
 1996,Ozeanien,Australien,2
@@ -216,7 +216,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 1997,Europa,Kroatien,38
 1997,Europa,Mazedonien,56
 1997,Europa,Portugal,150
-1997,Europa,Serbien und Montenegro und Kosovo,323
+1997,Europa,"Serbien, Montenegro und Kosovo",323
 1997,Europa,Spanien,92
 1997,Europa,Türkei,96
 1997,Ozeanien,Australien,2
@@ -261,7 +261,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 1998,Europa,Kroatien,43
 1998,Europa,Mazedonien,70
 1998,Europa,Portugal,131
-1998,Europa,Serbien und Montenegro und Kosovo,362
+1998,Europa,"Serbien, Montenegro und Kosovo",362
 1998,Europa,Spanien,73
 1998,Europa,Türkei,127
 1998,Ozeanien,Australien,1
@@ -306,7 +306,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 1999,Europa,Kroatien,36
 1999,Europa,Mazedonien,69
 1999,Europa,Portugal,134
-1999,Europa,Serbien und Montenegro und Kosovo,359
+1999,Europa,"Serbien, Montenegro und Kosovo",359
 1999,Europa,Spanien,68
 1999,Europa,Türkei,118
 1999,Ozeanien,Australien,3
@@ -351,7 +351,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2000,Europa,Kroatien,44
 2000,Europa,Mazedonien,79
 2000,Europa,Portugal,138
-2000,Europa,Serbien und Montenegro und Kosovo,386
+2000,Europa,"Serbien, Montenegro und Kosovo",386
 2000,Europa,Spanien,56
 2000,Europa,Türkei,104
 2000,Ozeanien,Australien,2
@@ -396,7 +396,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2001,Europa,Kroatien,25
 2001,Europa,Mazedonien,69
 2001,Europa,Portugal,127
-2001,Europa,Serbien und Montenegro und Kosovo,306
+2001,Europa,"Serbien, Montenegro und Kosovo",306
 2001,Europa,Spanien,44
 2001,Europa,Türkei,94
 2001,Ozeanien,Australien,3
@@ -441,7 +441,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2002,Europa,Kroatien,32
 2002,Europa,Mazedonien,65
 2002,Europa,Portugal,103
-2002,Europa,Serbien und Montenegro und Kosovo,291
+2002,Europa,"Serbien, Montenegro und Kosovo",291
 2002,Europa,Spanien,38
 2002,Europa,Türkei,105
 2002,Ozeanien,Australien,3
@@ -486,7 +486,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2003,Europa,Kroatien,35
 2003,Europa,Mazedonien,70
 2003,Europa,Portugal,118
-2003,Europa,Serbien und Montenegro und Kosovo,281
+2003,Europa,"Serbien, Montenegro und Kosovo",281
 2003,Europa,Spanien,42
 2003,Europa,Türkei,71
 2003,Ozeanien,Australien,5
@@ -531,7 +531,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2004,Europa,Kroatien,30
 2004,Europa,Mazedonien,53
 2004,Europa,Portugal,115
-2004,Europa,Serbien und Montenegro und Kosovo,223
+2004,Europa,"Serbien, Montenegro und Kosovo",223
 2004,Europa,Spanien,49
 2004,Europa,Türkei,99
 2004,Ozeanien,Australien,5
@@ -576,7 +576,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2005,Europa,Kroatien,31
 2005,Europa,Mazedonien,57
 2005,Europa,Portugal,119
-2005,Europa,Serbien und Montenegro und Kosovo,234
+2005,Europa,"Serbien, Montenegro und Kosovo",234
 2005,Europa,Spanien,38
 2005,Europa,Türkei,78
 2005,Ozeanien,Australien,3
@@ -621,7 +621,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2006,Europa,Kroatien,7
 2006,Europa,Mazedonien,59
 2006,Europa,Portugal,109
-2006,Europa,Serbien und Montenegro und Kosovo,202
+2006,Europa,"Serbien, Montenegro und Kosovo",202
 2006,Europa,Spanien,44
 2006,Europa,Türkei,70
 2006,Ozeanien,Australien,3
@@ -666,7 +666,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2007,Europa,Kroatien,21
 2007,Europa,Mazedonien,44
 2007,Europa,Portugal,99
-2007,Europa,Serbien und Montenegro und Kosovo,178
+2007,Europa,"Serbien, Montenegro und Kosovo",178
 2007,Europa,Spanien,38
 2007,Europa,Türkei,61
 2007,Ozeanien,Australien,4
@@ -711,7 +711,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2008,Europa,Kroatien,8
 2008,Europa,Mazedonien,52
 2008,Europa,Portugal,102
-2008,Europa,Serbien und Montenegro und Kosovo,160
+2008,Europa,"Serbien, Montenegro und Kosovo",160
 2008,Europa,Spanien,36
 2008,Europa,Türkei,58
 2008,Ozeanien,Australien,5
@@ -756,7 +756,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2009,Europa,Kroatien,18
 2009,Europa,Mazedonien,40
 2009,Europa,Portugal,105
-2009,Europa,Serbien und Montenegro und Kosovo,154
+2009,Europa,"Serbien, Montenegro und Kosovo",154
 2009,Europa,Spanien,26
 2009,Europa,Türkei,61
 2009,Ozeanien,Australien,2
@@ -801,7 +801,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2010,Europa,Kroatien,9
 2010,Europa,Mazedonien,44
 2010,Europa,Portugal,88
-2010,Europa,Serbien und Montenegro und Kosovo,133
+2010,Europa,"Serbien, Montenegro und Kosovo",133
 2010,Europa,Spanien,39
 2010,Europa,Türkei,46
 2010,Ozeanien,Australien,6
@@ -846,7 +846,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2011,Europa,Kroatien,12
 2011,Europa,Mazedonien,31
 2011,Europa,Portugal,89
-2011,Europa,Serbien und Montenegro und Kosovo,97
+2011,Europa,"Serbien, Montenegro und Kosovo",97
 2011,Europa,Spanien,46
 2011,Europa,Türkei,56
 2011,Ozeanien,Australien,7
@@ -891,7 +891,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2012,Europa,Kroatien,8
 2012,Europa,Mazedonien,42
 2012,Europa,Portugal,81
-2012,Europa,Serbien und Montenegro und Kosovo,103
+2012,Europa,"Serbien, Montenegro und Kosovo",103
 2012,Europa,Spanien,46
 2012,Europa,Türkei,42
 2012,Ozeanien,Australien,5
@@ -936,7 +936,7 @@ Ereignisjahr,KontinentK,HeimatK,Anzahl
 2013,Europa,Kroatien,7
 2013,Europa,Mazedonien,24
 2013,Europa,Portugal,101
-2013,Europa,Serbien und Montenegro und Kosovo,91
+2013,Europa,"Serbien, Montenegro und Kosovo",91
 2013,Europa,Spanien,56
 2013,Europa,Türkei,46
 2013,Ozeanien,Australien,3
