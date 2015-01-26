@@ -53,14 +53,16 @@
 ```
 
 
-### ☆ Map mit Slider
+### ☆ Geburtenziffer
+
+Coordinated Map Line Chart mit Slider
 
 ```project
 {
-    "name": "spezial-geburten-ziffer",
+    "name": "cml-geburten-ziffer",
     "files": {
         "index.html": {
-            "source": "docs/website/geburten/map-geburtenziffer.html",
+            "source": "docs/website/geburten/cml-geburtenziffer.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/website/geburten/data/Geburtenziffer.csv",
@@ -72,7 +74,7 @@
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 592
+        "height": 688
     }
 }
 ```
