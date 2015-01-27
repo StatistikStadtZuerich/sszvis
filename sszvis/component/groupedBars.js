@@ -89,10 +89,13 @@ sszvis_namespace('sszvis.component.groupedBars', function(module) {
           d.__sszvisGroupedBarIndex__ = i;
         });
 
+
+
         var unitsWithValue = barUnits.filter(props.defined);
 
         // clear the units before rendering
         unitsWithValue.selectAll('*').remove();
+
 
         unitsWithValue
           .append('rect')

@@ -1,19 +1,19 @@
 Kreis (Num),Jahr,Kategorie,Anzahl
 1,2009,Neubau,0
-1,2009,Abbruch,-2
+1,2009,Abbruch,2
 1,2009,Saldo,-2
 1,2010,Neubau,10
 1,2010,Abbruch,12
 1,2010,Saldo,4
 1,2011,Neubau,12
-1,2011,Abbruch,-2
+1,2011,Abbruch,2
 1,2011,Saldo,-2
 1,2012,Neubau,3
 1,2012,Abbruch,20
 1,2012,Saldo,10
 1,2013,Neubau,7
-1,2013,Abbruch,-1
+1,2013,Abbruch,1
 1,2013,Saldo,-1
 1,2014,Neubau,74
-1,2014,Abbruch,-152
+1,2014,Abbruch,90
 1,2014,Saldo,-78

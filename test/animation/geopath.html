@@ -76,18 +76,18 @@ var directionsService = new google.maps.DirectionsService();
       state.data = data;
       state.valueDomain = [0, d3.max(state.data, vAcc)];
 
-/*
+
         var request = {
       origin:'Schlieren,Zentrum',
       destination:'Hegibachplatz, Zürich',
       travelMode: google.maps.TravelMode.TRANSIT
-  };*/
+  };
 
-          var request = {
+         /* var request = {
       origin:'Albisrieden,Zürich',
       destination:'Klusplatz, Zürich',
       travelMode: google.maps.TravelMode.TRANSIT
-  };
+  };*/
 
   directionsService.route(request, function(response, status) {
     if (status == google.maps.DirectionsStatus.OK) {
