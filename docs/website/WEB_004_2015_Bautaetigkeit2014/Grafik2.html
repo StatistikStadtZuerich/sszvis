@@ -26,13 +26,14 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var DATA_PATH = 'data/Grafik2.csv';
+  var DATA_PATH = 'data/Grafik2_test.csv';
 
 
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('kreis');
   var yAcc = sszvis.fn.prop('value');
+  var catAcc = sszvis.fn.prop('category');
   var yearAcc = sszvis.fn.prop('year');
 
 
@@ -42,6 +43,7 @@
     data: [],
     kreise: [],
     groups: [],
+    categories: [],
     groupedData: [],
     longestGroup: 0
   };
@@ -52,11 +54,22 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
+      console.log(state.data);
       state.kreise = sszvis.fn.set(state.data, xAcc);
       state.groups = sszvis.fn.set(state.data, yearAcc);
+      state.categories = sszvis.fn.set(state.data,catAcc);
+      console.log('categories',state.categories);
+
+      //filter for neubau
+      state.selectedCategory = 'Neubau';
+      state.selectedData = state.data.filter(function(d) {
+        return catAcc(d) === state.selectedCategory;
+      });
+
+
       state.groupedData = sszvis.cascade()
         .arrayBy(xAcc)
-        .apply(state.data);
+        .apply(state.selectedData);
       state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
 
       render(state);
@@ -71,7 +84,8 @@
       return {
         kreis: 'Kreis ' + d['Kreis (Num)'],
         year: d['Jahr'],
-        value: -1*sszvis.parse.number(d['Saldo'])
+        value: sszvis.parse.number(d['Anzahl']),
+        category: d['Kategorie']
       };
     })
     .get(function(error, data) {
@@ -95,16 +109,40 @@
       .domain(state.kreise)
       .rangeRoundBands([0, bounds.innerWidth], 0.30, 0.5);
 
-    var yScale = d3.scale.linear()
+    /*var yScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
+      .range([bounds.innerHeight, 0]);*/
+
+      var minY = d3.min(state.selectedData,yAcc);
+      var maxY = d3.max(state.selectedData,yAcc);
+
+      //if there are no negative values, set lower bound to 0
+      if(minY>0){
+        minY = 0;
+      }
+
+    var yScale = d3.scale.linear()
+      .domain([minY,maxY])
       .range([bounds.innerHeight, 0]);
 
-    var hScale = yScale
+      console.log('yScale.domain',yScale.range());
+
+    /*var hScale = yScale
       .copy()
-      .range(yScale.range().slice().reverse());
+      .range(yScale.range().slice().reverse());*/
 
   /*  var cScale = sszvis.color.qual12()
       .domain(state.groups);*/
+
+      var yPosScale = function(v) {
+      return isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
+    };
+
+    var hScale = function(v) {
+      // the size of the bar is distance from the y-position of the value to the y-position of 0
+      return Math.abs(yScale(v) - yScale(0));
+      //return Math.abs(yScale(v)-yScale(yScale.domain()[0]));
+    };
 
       //TODO create function of this
       var cSeq = sszvis.color.seqBlu().domain([0,state.groups.length-1]);
@@ -142,7 +180,8 @@
       .groupScale(sszvis.fn.compose(xScale, xAcc))
       .groupWidth(xScale.rangeBand())
       .groupSize(state.longestGroup)
-      .y(sszvis.fn.compose(yScale, yAcc))
+     // .y(sszvis.fn.compose(yScale, yAcc))
+      .y(sszvis.fn.compose(yPosScale,yAcc))
       .height(sszvis.fn.compose(hScale, yAcc))
       .fill(sszvis.fn.compose(cScale, yearAcc));
 
