@@ -46,7 +46,8 @@
     categories: [],
     groupedData: [],
     longestGroup: 0,
-    yDomainLength: 0
+    yDomainLength: 0,
+    selection: []
   };
 
 
@@ -97,6 +98,20 @@
       render(state);
       
     
+    },
+     showTooltip: function(x, y) {
+      console.log('showTooltip',x,y);
+
+      state.selection = state.groupedData.filter(function(d) {
+        return sszvis.fn.contains(d.map(xAcc), x);
+      });
+      render(state);
+    },
+
+    hideTooltip: function(x, y) {
+      console.log('hideTooltip',x,y);
+      state.selection = [];
+      render(state);
     }
 
   };
@@ -202,6 +217,8 @@
 
     var controlLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
+     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
 
 
     // Components
@@ -241,6 +258,24 @@
       .horizontalFloat(true)
       .floatWidth(bounds.innerWidth);
 
+   var tooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .header(sszvis.svgUtils.modularText.html().bold(function(d) {
+        return xAcc(sszvis.fn.first(d)) + ':';
+      }).plain(state.selectedCategory))
+      .body(function(d) {
+        // generates a row from each data element
+      // return 'hi';
+        return d.map(function(item) {
+          var v = yAcc(item);
+          var year = yearAcc(item);
+          return [year, isNaN(v) ? '–' : v];
+        });
+      })
+      .visible(function(d) {
+        return state.selection.indexOf(d) >= 0;
+      });
+
 
     // Rendering
 
@@ -250,8 +285,12 @@
       .call(buttonGroup);
 
 
-    chartLayer.selectGroup('bars')
+    var bars = chartLayer.selectGroup('bars')
       .call(barLayout);
+
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
@@ -263,6 +302,16 @@
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
+
+    //Interaction
+     var interactionLayer = sszvis.behavior.move()
+      .xScale(xScale)
+      .yScale(yScale)
+      .on('move', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    chartLayer.selectGroup('interactionLayer')
+      .call(interactionLayer);
   }
 
 }(d3, sszvis));
