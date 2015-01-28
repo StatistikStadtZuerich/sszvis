@@ -191,7 +191,8 @@
 
     // the y scale for the joined view
     var yScale = d3.scale.linear()
-      .domain([0, state.maxStacked])
+      //.domain([0, state.maxStacked])
+      .domain(getDomain(state.currentContinent))
       .range([bounds.innerHeight, 0]);
 
     // the color scale for the layers, based on the category values
@@ -392,6 +393,18 @@
     var d0 = data[i - 1];
     var d1 = data[i] || d0;
     return datum - d0 > d1 - datum ? d1 : d0;
+  }
+
+  function getDomain(continent){
+
+      switch(continent){
+        case 'Afrika':
+        case 'Amerika':
+        case 'Asien': 
+        case 'Ozeanien': return [0,260];
+        case 'Europa': return [0,1200];
+        case 'Schweiz': return [0,3000];
+      }
   }
 
 

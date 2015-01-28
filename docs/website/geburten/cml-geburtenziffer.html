@@ -42,6 +42,7 @@
   var geoIdAcc = sszvis.fn.prop('geoId');
   var nameAcc = sszvis.fn.prop('name');
   var mDatumAcc = sszvis.fn.prop('datum');
+  var birthAcc = sszvis.fn.prop('nbirth');
 
 
   /* Application state
@@ -66,7 +67,8 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.valueDomain = [0, d3.max(state.data, vAcc)];
+      state.valueDomain = d3.extent(state.data,vAcc);//[0, d3.max(state.data, vAcc)];
+      console.log('valuedomain',state.valueDomain);
       state.yearDomain = d3.extent(state.data, yearAcc);
 
       // set up a cascade for sorting data into arrays based on which geoId they belong to
@@ -86,7 +88,7 @@
       });
 
       // calculate a line which represents the average values in the dataset
-      var averageLineValues = cascadedData.reduce(function(m, lineData) {
+    /*  var averageLineValues = cascadedData.reduce(function(m, lineData) {
         lineData.forEach(function(datum, index) {
           if (!m[index]) {
             m[index] = {
@@ -107,7 +109,7 @@
       };
       // add the average line to the lineData
       state.lineData.push(state.averageLine);
-
+*/
       actions.resetYear();
     },
 
@@ -182,9 +184,10 @@
       // highlightData passed to the map is slightly different from the data passed to the line chart.
       // When no entity is highlighted, the map shows nothing special, but the line chart shows the average line.
       state.mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
-      state.lineHighlightData = state.highlightEntity ? [state.highlightEntity] : state.averageLine.values.filter(function(averageObj) {
+      state.lineHighlightData = state.highlightEntity ? [state.highlightEntity] :[];
+      /*state.lineHighlightData = state.highlightEntity ? [state.highlightEntity] : state.averageLine.values.filter(function(averageObj) {
         return yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear();
-      });
+      });*/
 
       render(state);
     }
@@ -199,6 +202,7 @@
         geoId: sszvis.parse.number(d['qcode']),
         year: sszvis.parse.year(d['Ereignisjahr']),
         value: sszvis.parse.number(d['Geburtenziffer_Promille']),
+        nbirth: sszvis.parse.number(d['Anzahl_Geburten_wirtschaftlich']),
         name: d['qname']
       };
     })
@@ -230,9 +234,12 @@
 
     // Scales
 
+   // state.valueDomain = d3.extent(state.currentMapData,vAcc);
     // map fill scale
     var fillScale = sszvis.color.seqBlu()
       .domain(state.valueDomain);
+
+    
 
     // line chart scales
     var xScale = d3.time.scale()
@@ -313,9 +320,12 @@
       .contour(true);
 
     var rulerLabel = sszvis.svgUtils.modularText.svg()
-      .bold(sszvis.fn.compose(sszvis.format.number, vAcc))
+      .bold(function(d){
+        return sszvis.format.number(vAcc(d)) + ' ‰';
+      })
       .plain(function(d) {
-        return d.isAverageValue ? 'Durchschnitt' : d.name;
+        //return d.isAverageValue ? 'Durchschnitt' : d.name;
+        return d.name;
       });
 
     // The bar which marks the current year and shows the value of the highlighted entity
@@ -341,7 +351,8 @@
       .body(function(d) {
         return [
           ['Jahr', sszvis.format.year(yearAcc(mDatumAcc(d)))],
-          ['Geburtenziffer', sszvis.format.number(vAcc(mDatumAcc(d)))]
+          ['Geburten',sszvis.format.number(birthAcc(mDatumAcc(d)))],
+          ['Geburtenziffer  ‰', sszvis.format.number(vAcc(mDatumAcc(d)))]
         ];
       })
       .visible(entityIsSelected);
@@ -435,6 +446,8 @@
   function entityIsSelected(d) {
     return state.highlightEntity === mDatumAcc(d);
   }
+
+
 
 
 }(d3, topojson, sszvis));
