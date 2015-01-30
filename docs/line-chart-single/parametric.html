@@ -21,19 +21,37 @@
     return;
   }
 
+ /* Globals 
+ ------------------------------------------------*/
+ var DEFAULT_TITLE = '';
+ var DEFAULT_DESCRIPTION = '';
+ var DEFAULT_PATH = '';
+ var DEFAULT_DATE_COLUMN = 'Datum';
+ var DEFAULT_VALUE_COLUMN = 'Wert';
+ var DEFAULT_RULER_LABEL = '';
+ var DEFAULT_Y_LABEL = '';
+ var DEFAULT_X_LABEL = '';
+
+
   /* Configuration
   ----------------------------------------------- */
   //configuration object
   //This can be externalized into a file at a later point
+  //currently only works for timeseries
+  var files  = ['SL_daily.csv','SL_negativesXAxis.csv','SL_Percentage_negativesYAxis.csv','SL_quarterly.csv'];
   var config = {
-    title: 'Title',
-    description: 'Description',
-    dataPath: 'data/SL_quarterly.csv',
-    dateColumn: 'Datum',
-    valueColumn: 'Wert',
-    rulerLabel: 'Anteile',
-    yLabel: 'Punkte'
+    dataPath: ('data/' + files[3]),//'data/SL_quarterly.csv', //mandatory
+    //title: 'Title', //optional
+    //description: 'Description', //optional
+    //dateColumn: 'Altersdifferenz', //optional
+   //valueColumn: 'Häufigkeit', //optional
+    //rulerLabel: '', //optional
+   // yLabel: 'Punkte', //optional
+   // xLabel: 'Jahre', //optional
+    ticks: 5, //optional
   }
+
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -61,7 +79,6 @@
 
       actions.resetDate();
     },
-
     changeDate: function(inputDate) {
       var date = closestDatum(state.data, sszvis.fn.prop('date'), inputDate).date;
       if (state.currentDate === date) return;
@@ -73,7 +90,6 @@
 
       render(state);
     },
-
     resetDate: function() {
       var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
       actions.changeDate(mostRecentDate);
@@ -83,13 +99,13 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv(config.dataPath)
+  d3.csv((config.dataPath || DEFAULT_PATH))
     .row(function(d) {
       return {
         //probably need to distinguish time or discreet values here...
         //although for a line chart it is rarely not time on x-axis.
-        date:  sszvis.parse.date(d[config.dateColumn]),
-        value: sszvis.parse.number(d[config.valueColumn])
+        date:  sszvis.parse.date(d[(config.dateColumn || DEFAULT_DATE_COLUMN)]),
+        value: sszvis.parse.number(d[(config.valueColumn || DEFAULT_VALUE_COLUMN)])
       };
     })
     .get(function(error, data) {
@@ -104,64 +120,81 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 25 });
+
+    //param OK
+    var bounds = sszvis.bounds({ top: 30, bottom: 40 });
+    console.log(bounds);
 
 
     // Scales
-
+    //param OK
     var xScale = d3.time.scale()
       .domain(state.years)
       .range([0, bounds.innerWidth]);
 
+    //if smallest y value is great than 0, then minY is 0, otherwise (when there are negatives) its
+    //the smallest value 
+    var minY = d3.min([d3.min(state.data,yAcc),0]);
+    var maxY = d3.max(state.data, yAcc);
+    // Add a bit of additional bottom padding to prevent the y-axis value from
+    // touching the x-axis if we are having negative y values
+    var bottomPadding = (minY < 0) ? 15 : 0;
+
     var yScale = d3.scale.linear()
-      .domain([0, d3.max(state.data, yAcc)])
+      .domain([minY, maxY])
       .range([bounds.innerHeight, 0]);
 
 
     // Layers
-
+    //param OK
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: config.title,
-        description: config.description
+        title: (config.title || DEFAULT_TITLE),
+        description: (config.description || DEFAULT_DESCRIPTION)
       });
 
 
     // Components
-
+    //param OK
     var line = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
-      .stroke(sszvis.color.qual12());
+      .stroke(sszvis.color.qual6());
 
-    var xTickValues = xScale
-      .ticks(4)
-      .concat(state.selection.map(xAcc));
+      //param OK
 
+      var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();//xScale.ticks(d3.time.year,1);
+      xTickValues = xTickValues.concat(state.selection.map(xAcc));
+
+      //param OK
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
-      .highlightTick(isSelected);
+      .highlightTick(isSelected)
+      .title((config.xLabel || DEFAULT_X_LABEL))
 
+      //param OK
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .title(config.yLabel)
+      .title((config.yLabel || DEFAULT_Y_LABEL))
       .dyTitle(-20)
-      .contour(true);
+      .contour(true)
+      .showZeroY((minY < 0));
 
+      //param OK
     var ruler = sszvis.annotation.ruler()
       .top(0)
-      .bottom(bounds.innerHeight)
+      .bottom(bounds.innerHeight + bottomPadding)
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .label(function(d) {
-        return sszvis.format.number(d.value) + ' ' + config.rulerLabel;
+        return sszvis.format.number(d.value) + ' ' + (config.rulerLabel || DEFAULT_RULER_LABEL);
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
       })
-      .color(sszvis.color.qual12());
+      .color(sszvis.color.qual6());
 
 
     // Rendering
@@ -172,8 +205,9 @@
     lineChart.selectGroup('line')
       .call(line);
 
+
     lineChart.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + bottomPadding))
       .call(xAxis);
 
     lineChart.selectGroup('yAxis')
@@ -213,6 +247,8 @@
   function isStartOfYear(d) {
     return d.getMonth() === 0;
   }
+
+
 
 
 

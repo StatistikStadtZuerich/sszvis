@@ -157,7 +157,7 @@ Shows how to use negative y-values.
 }
 ```
 
-## Usage example: Automatic
+## Usage example: Parametric Configuration
 
 Generates a chart based on a config object
 
@@ -166,7 +166,7 @@ Generates a chart based on a config object
     "name": "line-chart-single-automatic",
     "files": {
         "index.html": {
-            "source": "docs/line-chart-single/automatic.html",
+            "source": "docs/line-chart-single/parametric.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/line-chart-single/data/SL_quarterly.csv",
@@ -178,7 +178,7 @@ Generates a chart based on a config object
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 393
+        "height": 414
     }
 }
 ```
