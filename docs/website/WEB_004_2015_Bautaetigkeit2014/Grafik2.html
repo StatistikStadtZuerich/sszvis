@@ -262,8 +262,8 @@
    var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(sszvis.svgUtils.modularText.html().bold(function(d) {
-        return xAcc(sszvis.fn.first(d)) + ':';
-      }).plain(state.selectedCategory))
+        return xAcc(sszvis.fn.first(d)) + '';
+      }).plain('Wohnungen'))
       .body(function(d) {
         // generates a row from each data element
       // return 'hi';

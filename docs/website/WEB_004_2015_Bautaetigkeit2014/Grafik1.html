@@ -119,7 +119,7 @@
       .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 0]);
 
-    var cScale = sszvis.color.qual12()
+    var cScale = sszvis.color.qual6()
       .domain(state.categories);
 
 
@@ -150,13 +150,13 @@
 
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
-      .orient('bottom')
-      .title('Jahr');
+      .orient('bottom');
+      //.title('Jahr');
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .title('Anzahl')
+      .title('Anzahl Wohnungen')
       .dyTitle(-20);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
@@ -171,7 +171,7 @@
 
     var tooltipText = sszvis.svgUtils.modularText.html()
       .plain(sszvis.fn.compose(sszvis.format.number, yAcc))
-      .plain('Neubauwohnungen');
+      .plain('Wohnungen');
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)

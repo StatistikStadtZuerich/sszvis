@@ -85,7 +85,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 3, bottom: 25 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 25 });
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
 
@@ -136,7 +136,9 @@
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
      // .tickFormat(yAxisLabel)
-      .orient('right');
+      .orient('right')
+      .title('Anzahl Wohnungen');
+      //.dyTitle(-20);
 
     var tooltipTitle = sszvis.svgUtils.modularText.html()
       .bold(yAcc)
