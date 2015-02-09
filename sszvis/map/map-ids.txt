@@ -107,3 +107,156 @@ Zürich Wahlkreise: ID - Kreis Combination
 "10" - Kreis 10
 "11" - Kreis 11
 "12" - Kreis 12
+
+Zürich Agglomeration 2012: ID - Gemeindename
+1 - Aeugst am Albis
+2 - Affoltern am Albis
+3 - Bonstetten
+4 - Hausen am Albis
+5 - Hedingen
+8 - Maschwanden
+9 - Mettmenstetten
+10 - Obfelden
+11 - Ottenbach
+12 - Rifferswil
+13 - Stallikon
+14 - Wettswil am Albis
+23 - Berg am Irchel
+51 - Bachenbülach
+52 - Bassersdorf
+53 - Bülach
+54 - Dietlikon
+55 - Eglisau
+56 - Embrach
+57 - Freienstein-Teufen
+58 - Glattfelden
+59 - Hochfelden
+60 - Höri
+61 - Hüntwangen
+62 - Kloten
+63 - Lufingen
+64 - Nürensdorf
+65 - Oberembrach
+66 - Opfikon
+67 - Rafz
+68 - Rorbas
+69 - Wallisellen
+70 - Wasterkingen
+71 - Wil (ZH)
+72 - Winkel
+81 - Bachs
+82 - Boppelsen
+83 - Buchs (ZH)
+84 - Dällikon
+85 - Dänikon
+86 - Dielsdorf
+87 - Hüttikon
+88 - Neerach
+89 - Niederglatt
+90 - Niederhasli
+91 - Niederweningen
+92 - Oberglatt
+93 - Oberweningen
+94 - Otelfingen
+95 - Regensberg
+96 - Regensdorf
+97 - Rümlang
+98 - Schleinikon
+99 - Schöfflisdorf
+100 - Stadel
+101 - Steinmaur
+102 - Weiach
+111 - Bäretswil
+112 - Bubikon
+115 - Gossau (ZH)
+116 - Grüningen
+117 - Hinwil
+119 - Seegräben
+121 - Wetzikon (ZH)
+131 - Adliswil
+132 - Hirzel
+133 - Horgen
+134 - Hütten
+135 - Kilchberg (ZH)
+136 - Langnau am Albis
+137 - Oberrieden
+138 - Richterswil
+139 - Rüschlikon
+140 - Schönenberg (ZH)
+141 - Thalwil
+142 - Wädenswil
+151 - Erlenbach (ZH)
+152 - Herrliberg
+153 - Hombrechtikon
+154 - Küsnacht (ZH)
+155 - Männedorf
+156 - Meilen
+157 - Oetwil am See
+158 - Stäfa
+159 - Uetikon am See
+160 - Zumikon
+161 - Zollikon
+172 - Fehraltorf
+173 - Hittnau
+174 - Illnau-Effretikon
+175 - Kyburg
+176 - Lindau
+177 - Pfäffikon
+178 - Russikon
+180 - Weisslingen
+182 - Wildberg
+191 - Dübendorf
+192 - Egg
+193 - Fällanden
+194 - Greifensee
+195 - Maur
+196 - Mönchaltorf
+197 - Schwerzenbach
+198 - Uster
+199 - Volketswil
+200 - Wangen-Brüttisellen
+213 - Brütten
+215 - Dättlikon
+224 - Pfungen
+241 - Aesch (ZH)
+242 - Birmensdorf (ZH)
+243 - Dietikon
+244 - Geroldswil
+245 - Oberengstringen
+246 - Oetwil an der Limmat
+247 - Schlieren
+248 - Uitikon
+249 - Unterengstringen
+250 - Urdorf
+251 - Weiningen (ZH)
+261 - Zürich
+1321 - Feusisberg
+1322 - Freienbach
+1323 - Wollerau
+2933 - Buchberg
+2938 - Rüdlingen
+4022 - Bellikon
+4023 - Bergdietikon
+4030 - Killwangen
+4031 - Künten
+4040 - Spreitenbach
+4048 - Würenlos
+4061 - Arni (AG)
+4062 - Berikon
+4063 - Bremgarten (AG)
+4066 - Eggenwil
+4067 - Fischbach-Göslikon
+4071 - Jonen
+4073 - Oberlunkhofen
+4074 - Oberwil-Lieli
+4075 - Rudolfstetten-Friedlisberg
+4079 - Unterlunkhofen
+4081 - Widen
+4083 - Zufikon
+4084 - Islisberg
+4226 - Besenbüren
+4238 - Rottenschwil
+4306 - Fisibach
+4308 - Kaiserstuhl
+4318 - Schneisingen
+4319 - Siglistorf
