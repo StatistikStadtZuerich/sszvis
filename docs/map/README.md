@@ -69,7 +69,9 @@ A map of Zürich's Stadtkreise.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-zurich-stadtkreise.js"
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
@@ -95,7 +97,9 @@ A map of Zürich's Wahlkreise.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-zurich-wahlkreise.js"
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
@@ -121,7 +125,9 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-zurich-statistischequartiere.js"
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
@@ -147,7 +153,9 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-zurich-statistischequartiere.js"
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
@@ -173,7 +181,9 @@ A map of Zürich's agglomeration.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-zurich-agglomeration-2012.js"
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
@@ -199,7 +209,9 @@ A map of Switzerland.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-switzerland.js"
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
