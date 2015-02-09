@@ -158,5 +158,5 @@ geodata/ch_cantons.topojson: geodata/ch_cantons_raw.topojson
 	mkdir -p $(dir $@)
 	topojson -o $@ --simplify=4e-8 -p -- $^
 
-geodata/agglomeration_2012.topojson: geodata/agglomeration_2012.geojson
+geodata/agglomeration_2012.topojson: geodata/agglomeration_2012.geojson geodata/lakezurich_lakegreifen.geojson
 	topojson -o $@ --id-property=+Gde_Nr -e geodata/agglomeration_2012.csv -p Gde_Nr,Gde_Name -- $^
