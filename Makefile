@@ -1,4 +1,7 @@
-#
+# This is the originial Makefile provided by IXT (Interactive Things) in Dec 2014
+# It contains IXT-infrastructur specific commands such as the deploy command. 
+# This file was not deleted to be used in future collaboration with IXT
+# 
 # make build
 #   - no dependencies
 #
@@ -9,16 +12,10 @@
 # make maps
 # 	- topojson			<https://github.com/mbostock/topojson>
 
-.PHONY: all build server deploy maps clean backup
+.PHONY: all build server deploy maps clean
 
 CLI_SUCCESS = \033[1;32m✔
 CLI_RESET   = \033[0m
-
-#create a timestamp for deployment
-NOW = $(shell date +"%c" | tr ' :' '-')
-BACKUP_FOLDER = sszvis_$(NOW)
-DEPLOY_PATH=//szhm0002/StatisticsTools/StatisticsTools/Modules/StyleGuide/
-BACKUP_PATH=//szhm0002/StatisticsTools/StatisticsTools/Modules/StyleGuide/old/
 
 BUILD_TARGET = sszvis.js
 
@@ -133,22 +130,11 @@ server: build
 		& fswatch -0 -o sszvis/ -o vendor/ | xargs -0 -n1 -I{} make build
 
 
-backup:
-	@echo 'backing up...'
-	mkdir $(BACKUP_PATH)$(BACKUP_FOLDER)
-	-cp -r $(DEPLOY_PATH)sszvis/* $(BACKUP_PATH)$(BACKUP_FOLDER)
-
-
-deploy: build backup
-	@echo 'deploying...'
-	rm -fr $(DEPLOY_PATH)sszvis/*
-	cp -r * $(DEPLOY_PATH)sszvis
-	sed -e s/TIMESTAMP/$(NOW)/g $(DEPLOY_PATH)sszvis/index.html > $(DEPLOY_PATH)sszvis/index.html.tmp && mv $(DEPLOY_PATH)sszvis/index.html.tmp $(DEPLOY_PATH)/sszvis/index.html
-
-
-testsed: 
-	#sed -i.bak s/TIMESTAMP/$(NOW)/g index.html
-	sed -e s/TIMESTAMP/$(NOW)/g index.html > index.html.tmp && mv index.html.tmp index.html
+deploy: build
+	rsync -avz ./ \
+	--exclude=.DS_Store \
+	--exclude=.git \
+	interact@interactivethings.com:/home/interact/www/clients.interactivethings.com/ssz/visualization-library
 
 maps: $(MAP_TARGETS)
 
