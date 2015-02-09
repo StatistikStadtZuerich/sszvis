@@ -157,6 +157,30 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
 }
 ```
 
+## Agglomeration
+
+```project
+{
+    "name": "map-agglomeration",
+    "files": {
+        "index.html": {
+            "source": "docs/map/agglomeration.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map/data/agglomeration_2012.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 542
+    }
+}
+```
+
 ## Schweiz
 
 A map of Switzerland.
