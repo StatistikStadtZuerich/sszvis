@@ -159,6 +159,8 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
 
 ## Agglomeration
 
+A map of Zürich's agglomeration.
+
 ```project
 {
     "name": "map-agglomeration",
@@ -176,7 +178,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 542
+        "height": 730
     }
 }
 ```
