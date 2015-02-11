@@ -53,7 +53,8 @@ sszvis_namespace('sszvis.map.zurichAgglomeration2012', function(module) {
       .geoJson(compiledTopoJson.meshData());
 
     var lake = sszvis.map.renderer.patternedlakeoverlay()
-      .lakeFeature(compiledTopoJson.lakeFeature());
+      .lakeFeature(compiledTopoJson.lakeFeature())
+      .fadeOut(false);
 
     var highlight = sszvis.map.renderer.highlight()
       .geoJson(compiledTopoJson.featureData());

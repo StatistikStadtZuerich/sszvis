@@ -22,6 +22,7 @@ sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
       .prop('mapPath')
       .prop('lakeFeature')
       .prop('lakeBounds')
+      .prop('fadeOut').fadeOut(true)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -30,13 +31,15 @@ sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
         sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'lake-pattern')
           .call(sszvis.patterns.mapLakePattern);
 
-        // the fade gradient
-        sszvis.svgUtils.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
-          .call(sszvis.patterns.mapLakeFadeGradient);
+        if (props.fadeOut) {
+          // the fade gradient
+          sszvis.svgUtils.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
+            .call(sszvis.patterns.mapLakeFadeGradient);
 
-        // the mask, which uses the fade gradient
-        sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
-          .call(sszvis.patterns.mapLakeGradientMask);
+          // the mask, which uses the fade gradient
+          sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
+            .call(sszvis.patterns.mapLakeGradientMask);
+        }
 
         // generate the Lake Zurich path
         var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
@@ -51,8 +54,11 @@ sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
         zurichSee
           .attr('d', props.mapPath)
           .attr('fill', 'url(#lake-pattern)')
+
+        if (props.fadeOut) {
           // this mask applies the fade effect
-          .attr('mask', 'url(#lake-fade-mask)');
+          zurichSee.attr('mask', 'url(#lake-fade-mask)');
+        }
 
         // add a path for the boundaries of map entities which extend over the lake.
         // This path is rendered as a dotted line over the lake shape
