@@ -71,6 +71,7 @@ sszvis_namespace('sszvis.component.line', function(module) {
         path.exit().remove();
 
         path
+          .order()
           .transition()
           .call(sszvis.transition)
           .attr('d', sszvis.fn.compose(line, props.valuesAccessor))
