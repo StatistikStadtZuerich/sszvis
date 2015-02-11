@@ -27,7 +27,7 @@
  * @property {string, function} [stroke] Either a string specifying the stroke color of the line or lines,
  *                                       or a function which, when passed the entire array representing the line,
  *                                       returns a value for the stroke. If left undefined, the stroke is black.
- * @property {string, function} [stroke] Either a number specifying the stroke-width of the lines,
+ * @property {string, function} [strokeWidth] Either a number specifying the stroke-width of the lines,
  *                                       or a function which, when passed the entire array representing the line,
  *                                       returns a value for the stroke-width. The default value is 1.
  *
@@ -66,7 +66,7 @@ sszvis_namespace('sszvis.component.line', function(module) {
         path.enter()
           .append('path')
           .classed('sszvis-line', true)
-          .attr('stroke', props.stroke);
+          .style('stroke', props.stroke);
 
         path.exit().remove();
 
@@ -75,8 +75,8 @@ sszvis_namespace('sszvis.component.line', function(module) {
           .transition()
           .call(sszvis.transition)
           .attr('d', sszvis.fn.compose(line, props.valuesAccessor))
-          .attr('stroke', props.stroke)
-          .attr('stroke-width', props.strokeWidth);
+          .style('stroke', props.stroke)
+          .style('stroke-width', props.strokeWidth);
       });
   };
 
