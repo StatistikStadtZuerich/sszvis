@@ -109,3 +109,28 @@ Long axis ticks can be toggled to aid chart reading, which can be useful to see 
     }
 }
 ```
+
+## Parametric
+
+```project
+{
+    "name": "bar-chart-horizontal-parametric",
+    "files": {
+        "index.html": {
+            "source": "docs/bar-chart-horizontal/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories_longNames.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 622
+    }
+}
+```
+
