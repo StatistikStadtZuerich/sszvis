@@ -23,32 +23,31 @@
 
     /* Globals 
  ------------------------------------------------*/
- var DEFAULT_TITLE = 'Diagrammtitel';
- var DEFAULT_DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
- var DEFAULT_PATH = '';
+ // CONFIG
+ // some default values for the chart configuration
+ // I tried to make these as few as possible. i.e. if
+ var DEFAULT_PATH = 'data/data.csv';
  var DEFAULT_DATE_COLUMN = 'Datum';
  var DEFAULT_CATEGORY_COLUMN = 'Kategorie'
  var DEFAULT_VALUE_COLUMN = 'Wert';
- var DEFAULT_RULER_LABEL = '';
- var DEFAULT_Y_LABEL = '';
- var DEFAULT_X_LABEL = '';
 
 
   /* Configuration
   ----------------------------------------------- */
-  //configuration object
-  //this configuration works only for up to 6 categories. 
-  //if you have more categories, think hard if the chart really needs so many categories for transmitting your message.
+  // CONFIG
+  // if a variable is optional, the code needs to work with default values 
+  // if variable is missing. 
   var config = {
-    dataPath: 'data/ML_2Categories_Quarterly.csv',
-    title: 'Title', //optional
-    description: 'Description', //optional
+    dataPath: 'data/ML_2Categories_Quarterly.csv', //optional
+    title: 'Diagrammtitel', //optional
+    description: 'Kurze Beschreibung des Inhalts dieses Diagramms', //optional
     dateColumn: 'Datum', //optional
     valueColumn: 'Anzahl', //optional
-    categoryColumn: 'Kategorie',
-    yLabel: '', //optional
-    xLabel: '', //optional
+    categoryColumn: 'Kategorie', //optional
+    yLabel: 'Y-Axis Label', //optional
+    xLabel: 'X-Axis Label', //optional
     ticks: 5, //optional
+    fallback: false //optional, creates long ticks when true
   }
 
   /* Shortcuts
@@ -115,6 +114,7 @@
   d3.csv((config.dataPath || DEFAULT_PATH))
     .row(function(d) {
       return {
+        // CONFIG
         date: sszvis.parse.date(d[(config.dateColumn || DEFAULT_DATE_COLUMN)]),
         value: sszvis.parse.number(d[(config.valueColumn || DEFAULT_VALUE_COLUMN)]),
         category: d[(config.categoryColumn || DEFAULT_CATEGORY_COLUMN)]
@@ -143,15 +143,17 @@
       .domain([0, state.maxY])
       .range([bounds.innerHeight, 0]);
 
-    var cScale = sszvis.color.qual6()
-      .domain(state.categories);
+    // CONFIG
+    //choose color scale depending on number of categories
+    var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
+    cScale.domain(state.categories);
 
 
     // Layers
-
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: (config.title || DEFAULT_TITLE),
-        description: (config.description || DEFAULT_DESCRIPTION)
+        // CONFIG
+        title: (config.title || ''),
+        description: (config.description || '')
       })
       .datum(state.lineData);
 
@@ -164,10 +166,7 @@
       .stroke(sszvis.fn.compose(cScale, cAcc, sszvis.fn.first));
 
     // Add the highlighted data as additional ticks to the xScale
-   /* var xTickValues = xScale
-      .ticks((config.ticks || DEFAULT_TICKS))
-      .concat(state.selection.map(xAcc));*/
-
+    // CONFIG use config.ticks if defined in config object
     var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();
     xTickValues = xTickValues.concat(state.selection.map(xAcc));
 
@@ -177,17 +176,30 @@
       .tickValues(xTickValues)
       .alignOuterLabels(true)
       .highlightTick(isSelected)
-      .title((config.xLabel || DEFAULT_X_LABEL));
+      // CONFIG
+      .title((config.xLabel || ''));
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
       .contour(true)
-      .title((config.yLabel || DEFAULT_Y_LABEL))
+      // CONFIG
+      .tickLength(config.fallback ? bounds.innerWidth : null)
+      // CONFIG
+      .title((config.yLabel || ''))
       .dyTitle(-20);
+
+    // CONFIG use a second x-Axis with only tick labels. 
+    // Necessary in order to prevent horizontal lines to be drawn above data lines 
+    // if config.fallback == true
+    var yAxis2 = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .contour(true);
 
     var rulerLabel = sszvis.svgUtils.modularText.svg()
       .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
+      // CONFIG use category name as ruler label
       .plain(cAcc);
 
     var highlightLayer = sszvis.annotation.ruler()
@@ -208,16 +220,25 @@
 
     // Rendering
 
-    chartLayer.selectGroup('line')
-      .call(line);
-
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
+    // CONFIG draw yAxis with long horizontal ticks (if config.fallback == true)
+    // before the data lines
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
+    // CONFIG draw data lines above long horizonzal ticks (if config.fallback == true)
+    chartLayer.selectGroup('line')
+      .call(line);
+
+    // CONFIG draw tick labels with contours once again so that they are above the data lines
+    //(if config.fallback == true) Maybe there is an easier solution to this issue
+    chartLayer.selectGroup('yAxis2')
+      .call(yAxis2);
+
+    
     chartLayer.selectGroup('cScale')
       // the color legend should always be positioned 60px below the bottom axis
       .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 60))
