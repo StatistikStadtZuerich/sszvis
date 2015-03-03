@@ -21,9 +21,6 @@
     return;
   }
 
- /* Globals 
- ------------------------------------------------*/
-
 
 
   /* Configuration
@@ -40,7 +37,7 @@
     rulerLabel: 'Anteile',
     yLabel: 'Punkte',
     xLabel: 'Jahre',
-    ticks: 5, //optional
+    ticks: 5,
   }
 
 
@@ -113,13 +110,11 @@
   ----------------------------------------------- */
   function render(state) {
 
-    //param OK
     var bounds = sszvis.bounds({ top: 30, bottom: 40 });
     console.log(bounds);
 
 
     // Scales
-    //param OK
     var xScale = d3.time.scale()
       .domain(state.years)
       .range([0, bounds.innerWidth]);
@@ -138,7 +133,6 @@
 
 
     // Layers
-    //param OK
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: config.title,
         description: config.description,
@@ -146,18 +140,14 @@
 
 
     // Components
-    //param OK
     var line = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .stroke(sszvis.color.qual6());
 
-      //param OK
-
-      var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();//xScale.ticks(d3.time.year,1);
+    var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();//xScale.ticks(d3.time.year,1);
       xTickValues = xTickValues.concat(state.selection.map(xAcc));
 
-      //param OK
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
@@ -165,7 +155,6 @@
       .highlightTick(isSelected)
       .title(config.xLabel)
 
-      //param OK
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
@@ -174,7 +163,6 @@
       .contour(true)
       .showZeroY((minY < 0));
 
-      //param OK
     var ruler = sszvis.annotation.ruler()
       .top(0)
       .bottom(bounds.innerHeight + bottomPadding)
