@@ -27,3 +27,29 @@ Generates a chart based on a config object
     }
 }
 ```
+
+## Multiple line chart – Parametric Configuration
+
+Generates a chart based on a config object
+
+``` project
+{
+    "name": "line-chart-multiple-two-cat",
+    "files": {
+        "index.html": {
+            "source": "docs/line-chart-multiple/two-cat.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/line-chart-multiple/data/ML_2Categories_Quarterly.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 460
+    }
+}
+```
