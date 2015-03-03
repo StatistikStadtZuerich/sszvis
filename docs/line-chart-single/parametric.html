@@ -23,11 +23,6 @@
 
  /* Globals 
  ------------------------------------------------*/
- var DEFAULT_TITLE = '';
- var DEFAULT_DESCRIPTION = '';
- var DEFAULT_RULER_LABEL = '';
- var DEFAULT_Y_LABEL = '';
- var DEFAULT_X_LABEL = '';
 
 
 
@@ -38,13 +33,13 @@
   //currently only works for timeseries
   var config = {
     dataPath: 'data/SL_quarterly.csv',
-    //title: 'Title', //optional
-    //description: 'Description', //optional
+    title: 'Title',
+    description: 'Description', 
     dateColumn: 'Datum',
     valueColumn: 'Wert',
-    //rulerLabel: '', //optional
-   // yLabel: 'Punkte', //optional
-   // xLabel: 'Jahre', //optional
+    rulerLabel: 'Anteile',
+    yLabel: 'Punkte',
+    xLabel: 'Jahre',
     ticks: 5, //optional
   }
 
@@ -146,7 +141,7 @@
     //param OK
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: config.title,
-        description: (config.description || DEFAULT_DESCRIPTION)
+        description: config.description,
       });
 
 
@@ -168,13 +163,13 @@
       .orient('bottom')
       .tickValues(xTickValues)
       .highlightTick(isSelected)
-      .title((config.xLabel || DEFAULT_X_LABEL))
+      .title(config.xLabel)
 
       //param OK
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .title((config.yLabel || DEFAULT_Y_LABEL))
+      .title(config.yLabel)
       .dyTitle(-20)
       .contour(true)
       .showZeroY((minY < 0));
@@ -186,7 +181,7 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .label(function(d) {
-        return sszvis.format.number(d.value) + ' ' + (config.rulerLabel || DEFAULT_RULER_LABEL);
+        return sszvis.format.number(d.value) + ' ' + config.rulerLabel;
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
