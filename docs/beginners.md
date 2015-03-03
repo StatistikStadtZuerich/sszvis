@@ -37,7 +37,7 @@ Generates a chart based on a config object
     "name": "line-chart-multiple-two-cat",
     "files": {
         "index.html": {
-            "source": "docs/line-chart-multiple/two-cat.html",
+            "source": "docs/line-chart-multiple/parametric.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/line-chart-multiple/data/ML_2Categories_Quarterly.csv",

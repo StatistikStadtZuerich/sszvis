@@ -26,10 +26,6 @@
  // CONFIG
  // some default values for the chart configuration
  // I tried to make these as few as possible. i.e. if
- var DEFAULT_PATH = 'data/data.csv';
- var DEFAULT_DATE_COLUMN = 'Datum';
- var DEFAULT_CATEGORY_COLUMN = 'Kategorie'
- var DEFAULT_VALUE_COLUMN = 'Wert';
 
 
   /* Configuration
@@ -41,12 +37,12 @@
     dataPath: 'data/ML_2Categories_Quarterly.csv', //optional
     title: 'Diagrammtitel', //optional
     description: 'Kurze Beschreibung des Inhalts dieses Diagramms', //optional
-    dateColumn: 'Datum', //optional
-    valueColumn: 'Anzahl', //optional
-    categoryColumn: 'Kategorie', //optional
-    yLabel: 'Y-Axis Label', //optional
-    xLabel: 'X-Axis Label', //optional
-    ticks: 5, //optional
+    dateColumn: 'Datum',
+    valueColumn: 'Anzahl',
+    categoryColumn: 'Kategorie',
+    yLabel: '',
+    xLabel: '', 
+    ticks: 5,
     fallback: false //optional, creates long ticks when true
   }
 
@@ -111,13 +107,13 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv((config.dataPath || DEFAULT_PATH))
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
         // CONFIG
-        date: sszvis.parse.date(d[(config.dateColumn || DEFAULT_DATE_COLUMN)]),
-        value: sszvis.parse.number(d[(config.valueColumn || DEFAULT_VALUE_COLUMN)]),
-        category: d[(config.categoryColumn || DEFAULT_CATEGORY_COLUMN)]
+        date: sszvis.parse.date(d[config.dateColumn]),
+        value: sszvis.parse.number(d[config.valueColumn]),
+        category: d[config.categoryColumn]
       };
     })
     .get(function(error, data) {
@@ -250,7 +246,6 @@
 
 
     // Interaction
-
     var interactionLayer = sszvis.behavior.move()
       .xScale(xScale)
       .yScale(yScale)
