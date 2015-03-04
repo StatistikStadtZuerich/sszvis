@@ -32,6 +32,8 @@
     xColumn: 'Region',
     yColumn: 'Wert',
     categoryColumn: 'Kategorie',
+    textDirection: 'diagonal', //takes null, 'diagonal' and 'vertical'
+
 
   };
 
@@ -160,10 +162,14 @@
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
       .orient('bottom')
-      .slant('diagonal')
+      .slant(config.textDirection)
       .highlightTick(function(d) {
         return sszvis.fn.contains(state.selection.map(sszvis.fn.compose(xAcc, sszvis.fn.first)), d);
       });
+
+      if (!config.textDirection) {
+        xAxis.textWrap(labelWrapWidth(xScale.range()));
+      };
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
@@ -221,6 +227,17 @@
     chartLayer.selectGroup('interactionLayer')
       .call(interactionLayer);
   }
+
+
+
+/* Helper functions
+  ----------------------------------------------- */
+
+  function labelWrapWidth(range) {
+    return (d3.max(range) - d3.min(range)) / range.length;
+  }
+
+
 
 }(d3, sszvis));
 </script>
