@@ -24,8 +24,10 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+    var config = {
+    title: 'Diagrammtitel',
+    description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+  };
 
   // This example works in much the same way as the twelve-category stacked area chart.
   // Much of the code is similar, if not the same. For a detailed description of the
@@ -165,8 +167,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
+        title: config.title,
+        description: config.description
       })
       .datum(state.stackedData);
 
@@ -275,12 +277,6 @@
       .scale(cScale)
       .orientation('vertical');
 
-    var options = ['Summiert', 'Separiert'];
-    var buttonGroup = sszvis.control.buttonGroup()
-      .values(options)
-      .current(options[Number(state.isMultiples)])
-      .change(actions.toggleMultiples);
-
 
     // Rendering
 
@@ -301,10 +297,6 @@
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
-    htmlLayer.selectDiv('controls')
-      .style('left', (bounds.innerWidth - buttonGroup.width()) / 2 + 'px')
-      .style('top', '10px')
-      .call(buttonGroup);
 
     chartLayer.selectGroup('highlight')
       .datum(state.highlightData)
