@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../sszvis-map-zurich-stadtkreise.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var vAcc = sszvis.fn.prop('value');
+  var nameAcc = sszvis.fn.prop('name');
+  var mDatumAcc = sszvis.fn.prop('datum');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    selection: [],
+    valueDomain: [0, 0]
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.valueDomain = [0, d3.max(state.data, vAcc)];
+
+      render(state);
+    },
+
+    // manage which datum is selected. These data are highlighted by the map.
+    selectHovered: function(d) {
+      state.selection = [d];
+      render(state);
+    },
+
+    deselectHovered: function() {
+      state.selection = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/M_kreis.csv')
+    .row(function(d) {
+      return {
+        geoId: sszvis.parse.number(d['KNr']),
+        name: d['Kname'],
+        value: sszvis.parse.number(d['Bevölkerung'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
+    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 90, left: padding });
+
+
+    // Scales
+
+    var colorScale = sszvis.color.seqBlu()
+      .domain(state.valueDomain);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichStadtKreise()
+      .highlight(state.selection)
+      // gets the fill color and darken it
+      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .fill(sszvis.fn.compose(colorScale, vAcc))
+      // add mouse/touch interaction
+      .on('over', actions.selectHovered)
+      .on('click', actions.selectHovered)
+      .on('out', actions.deselectHovered);
+
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
+      .bold(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
+      .plain(' Einwohner');
+
+    // When using the map component, the data element bound to the tooltip anchor is the internal representation
+    // which includes both the geoJson and the datum as properties. This is necessary so that the correct position
+    // can be calculated from the geoJson. But that also means that when accessing the datum for other purposes,
+    // such as creating tooltip text, the user must be aware that the 'd' argument is not just the data value.
+    // The data value, if present, is available as d.datum.
+    var tooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeader)
+      .body(sszvis.fn.compose(nameAcc, mDatumAcc))
+      .visible(isSelected);
+
+    var legend = sszvis.legend.linearColorScale()
+      .scale(colorScale)
+      .width(bounds.width / 2)
+      .labelFormat(sszvis.format.number);
+
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('legend')
+      .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
+      .call(legend);
+  }
+
+  function isSelected(d) {
+    return state.selection.indexOf(d.datum) >= 0;
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>

@@ -205,3 +205,31 @@ Generates a chart based on a config object
     }
 }
 ```
+
+## Map Zürich Kreise – Parametric Configuration
+
+A map of Zürich's Stadtkreise.
+
+```project
+{
+    "name": "map-kreis",
+    "files": {
+        "index.html": {
+            "source": "docs/map/kreis-parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map/data/M_kreis.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-zurich-stadtkreise.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 542
+    }
+}
+```
