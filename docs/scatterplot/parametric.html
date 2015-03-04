@@ -24,9 +24,14 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
+  var config = {
+    dataPath: 'data/SS_refline_fake.csv',
+    title: '',
+    description: '', 
+    city: 'Stadt',
+    percent: 'Prozent',
+    value: 'Wert',
+  }
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -60,12 +65,12 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/SS_refline_fake.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        city: d['Stadt'],
-        percent: sszvis.parse.number(d['Prozent']),
-        value: sszvis.parse.number(d['Wert'])
+        city: d[config.city],
+        percent: sszvis.parse.number(d[config.percent]),
+        value: sszvis.parse.number(d[config.value])
       };
     })
     .get(function(error, data) {
@@ -100,8 +105,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
+        title: config.title,
+        description: config.description
       })
       .datum(state.data);
 
