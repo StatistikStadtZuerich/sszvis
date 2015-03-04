@@ -103,3 +103,29 @@ With negative and missing values
     }
 }
 ```
+
+## Pie Chart – Parametric Configuration
+
+Generates a chart based on a config object
+
+```project
+{
+    "name": "pie-chart-twelve-cat",
+    "files": {
+        "index.html": {
+            "source": "docs/pie-charts/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/pie-charts/data/P_7Categories.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 300
+    }
+}
+```
