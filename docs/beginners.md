@@ -54,6 +54,31 @@ Generates a chart based on a config object
 }
 ```
 
+## Popultion Pyramid – Parametric Configuration
+
+Generates a chart based on a config object
+
+```project
+{
+    "name": "population-pyramid-basic",
+    "files": {
+        "index.html": {
+            "source": "docs/population-pyramid/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/population-pyramid/data/BP_basic.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 470
+    }
+}
+```
 ## Grouped Bar Chart – Parametric Configuration
 With negative and missing values
 
