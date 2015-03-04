@@ -97,6 +97,7 @@ sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
       .prop('columnWidth').columnWidth(200)
       .prop('rows').rows(3)
       .prop('columns').columns(3)
+      .prop('verticallyCentered').verticallyCentered(false)
       .prop('orientation')
       .prop('reverse').reverse(false)
       .prop('rightAlign').rightAlign(false)
@@ -167,6 +168,11 @@ sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
             return sszvis.svgUtils.translateString(x, y);
           });
 
+        var verticalOffset = '';
+        if (props.verticallyCentered) {
+          verticalOffset = 'translate(0,' + String(-(domain.length * props.rowHeight / 2)) + ') ';
+        }
+
         if (props.horizontalFloat) {
           var rowPosition = 0, horizontalPosition = 0;
           groups.attr('transform', function() {
@@ -178,14 +184,14 @@ sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
             }
             var translate = sszvis.svgUtils.translateString(horizontalPosition, rowPosition);
             horizontalPosition += width + props.floatPadding;
-            return translate;
+            return verticalOffset + translate;
           });
         } else {
           groups.attr('transform', function(d, i) {
             if (props.orientation === 'horizontal') {
-              return 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
+              return verticalOffset + 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
             } else if (props.orientation === 'vertical') {
-              return 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
+              return verticalOffset + 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
             }
           });
         }

@@ -127,6 +127,7 @@
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .rows(state.categories.length)
+      .verticallyCentered(true)
       .orientation('vertical');
 
     var headerText = sszvis.svgUtils.modularText.html()
@@ -148,7 +149,7 @@
 
     chartLayer.selectGroup('colorLegend')
       // the magic number y-offset here vertically centers the color legend.
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth + 20, 5))
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth + 20, bounds.innerWidth / 2))
       .call(colorLegend);
 
 
