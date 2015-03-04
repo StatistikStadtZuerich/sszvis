@@ -33,16 +33,14 @@ var config = {
     valueColumn: 'Anzahl',
     yLabel: '',
     xLabel: '',
-    yTicks: 5,
-    xTicks: 7,
   }
 
 
   /* Shortcuts
   ----------------------------------------------- */
-  var vAcc = sszvis.fn.prop('value');
-  var gAcc = sszvis.fn.prop('gender');
   var aAcc = sszvis.fn.prop('age');
+  var gAcc = sszvis.fn.prop('gender');
+  var vAcc = sszvis.fn.prop('value');
   var womenAcc = sszvis.fn.prop('Frauen');
   var menAcc = sszvis.fn.prop('Männer');
 
@@ -228,7 +226,6 @@ var config = {
     var xAxis = sszvis.axis.x.pyramid()
       .scale(lengthScale)
       .orient('bottom')
-      .ticks (config.xTicks)
       .title(config.xLabel)
       .titleAnchor('middle')
       .titleCenter(true);
@@ -236,7 +233,7 @@ var config = {
     var yAxis = sszvis.axis.y.ordinal()
       .scale(positionScale)
       .orient('right')
-      .ticks(config.yTicks)
+      .ticks(5)
       .title(config.yLabel)
       .dyTitle(-18);
 
