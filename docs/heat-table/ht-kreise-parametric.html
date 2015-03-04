@@ -29,7 +29,7 @@
     description: 'Kurze Beschreibung des Inhalts dieses Diagramms',
     xColumn: 'KName',
     yColumn: 'Altersgruppe',
-    valueColumn: 'Anzahl',
+    cColumn: 'Anzahl',
     xLabel: 'Kreis',
     yLabel: 'Altersgruppe',
     cLabel: 'Einwohner'
@@ -86,7 +86,7 @@
       return {
         kreis: d[config.xColumn],
         agegroup: d[config.yColumn],
-        value: sszvis.parse.number(d[config.valueColumn])
+        value: sszvis.parse.number(d[config.cColumn])
       };
     })
     .get(function(error, data) {
