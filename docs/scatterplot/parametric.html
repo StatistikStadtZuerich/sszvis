@@ -33,15 +33,13 @@
     cColumn: 'Stadt',
     xAxisLabel: '',
     yAxisLabel: '',
-    xTicks: 4,
-    yTicks: 6,
   }
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('xValue');
-  var yAcc = sszvis.fn.prop('yValue');
-  var cAcc = sszvis.fn.prop('cValue');
+  var xAcc = sszvis.fn.prop('xPosition');
+  var yAcc = sszvis.fn.prop('yPosition');
+  var cAcc = sszvis.fn.prop('category');
 
 
   /* Application state
@@ -72,9 +70,9 @@
   d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        xValue: sszvis.parse.number(d[config.xColumn]),
-        yValue: sszvis.parse.number(d[config.yColumn]),
-        cValue: d[config.cColumn],
+        xPosition: sszvis.parse.number(d[config.xColumn]),
+        yPosition: sszvis.parse.number(d[config.yColumn]),
+        category: d[config.cColumn],
       };
     })
     .get(function(error, data) {
@@ -128,14 +126,12 @@
 
     var xAxis = sszvis.axis.x()
       .scale(xScale)
-      .ticks(config.xTicks)
       .orient('bottom')
       .alignOuterLabels(true)
       .title(config.xAxisLabel);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
-      .ticks(config.yTicks)
       .orient('right')
       .contour(true)
       .title(config.yAxisLabel);
