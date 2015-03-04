@@ -104,6 +104,32 @@ With negative and missing values
 }
 ```
 
+
+## Area Chart – Parametric Configuration
+Without button groups…
+
+
+```project
+{
+    "name": "area-chart-stacked-two",
+    "files": {
+        "index.html": {
+            "source": "docs/area-chart-stacked/sa-two-parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/area-chart-stacked/data/SA_2Categories_yearly.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 529
+    }
+}
+```
 ## Pie Chart – Parametric Configuration
 
 Generates a chart based on a config object
