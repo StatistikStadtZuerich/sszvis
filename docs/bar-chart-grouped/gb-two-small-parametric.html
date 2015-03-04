@@ -28,6 +28,10 @@
   var config = {
     title: '', 
     description: '', 
+    dataPath: 'data/GB_2Categories_smallVals.csv',
+    xColumn: 'Region',
+    yColumn: 'Wert',
+    categoryColumn: 'Kategorie',
 
   };
 
@@ -84,12 +88,12 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/GB_2Categories_smallVals.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        region: d['Region'],
-        category: d['Kategorie'],
-        value: sszvis.parse.number(d['Wert'])
+        region: d[config.xColumn],
+        category: d[config.categoryColumn],
+        value: sszvis.parse.number(d[config.yColumn])
       };
     })
     .get(function(error, data) {
