@@ -100,8 +100,9 @@
       .domain([0, state.totalValue])
       .range([0, 2 * Math.PI]);
 
-    var cScale = sszvis.color.qual12()
-      .domain(state.categories);
+    //choose color scale depending on number of categories
+    var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
+    cScale.domain(state.categories);
 
 
     // Layers
