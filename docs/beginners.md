@@ -53,3 +53,28 @@ Generates a chart based on a config object
     }
 }
 ```
+
+## Grouped Bar Chart – Parametric Configuration
+With negative and missing values
+
+```project
+{
+    "name": "bar-chart-grouped_gb-two-small",
+    "files": {
+        "index.html": {
+            "source": "docs/bar-chart-grouped/gb-two-small.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/bar-chart-grouped/data/GB_2Categories_smallVals.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 515
+    }
+}
+```
