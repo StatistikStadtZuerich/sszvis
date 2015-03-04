@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Scatterplot</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('neubauabs');
+  var yAcc = sszvis.fn.prop('leerzunrel');
+  var rAcc = sszvis.fn.prop('best13radius');
+  var cAcc = sszvis.fn.prop('quname');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    highlightData: [],
+    xExtent: [0, 0],
+    yExtent: [0, 0],
+    rExtent: [0, 0]
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+
+      // for the voronoi component to work, the data must first be filtered such that no two vertices
+      // fall at exactly the same point.
+      state.voronoiFiltered = sszvis.fn.derivedSet(state.data, function(d) {
+        return xAcc(d) + '__' + yAcc(d);
+      });
+
+      state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
+      state.yExtent = d3.extent(state.data, yAcc);
+      var radiusExtent = d3.extent(state.data, rAcc);
+      state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
+
+      render(state);
+    },
+
+    setHighlight: function(d) {
+      state.highlightData = [d];
+      render(state);
+    },
+
+    resetHighlight: function() {
+      state.highlightData = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/VRS_basic.csv')
+    .row(function(d) {
+      return {
+        neubauabs: sszvis.parse.number(d['NeubauAbs (x-Achse)']),
+        leerzunrel: sszvis.parse.number(d['LeerZunRel (y-Achse) ']),
+        best13radius: sszvis.parse.number(d['Best13Radius (bubble)']),
+        quname: d['QuName']
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ top: 20, bottom: 110 });
+
+
+    // Scales
+
+    var xScale = d3.scale.log()
+      .domain(state.xExtent)
+      .range([0, bounds.innerWidth]);
+
+    var xValue = sszvis.fn.compose(function(v) {
+        return v <= 0.1 ? 0 : xScale(v);
+      }, xAcc);
+
+    var yScale = d3.scale.linear()
+      .domain(state.yExtent)
+      .range([bounds.innerHeight, 0]);
+
+    var yValue = sszvis.fn.compose(yScale, yAcc);
+
+    var rScale = d3.scale.linear()
+      .domain(state.rExtent)
+      .range(state.rExtent);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.highlightData);
+
+
+    // Components
+
+    var dots = sszvis.component.dot()
+      .x(xValue)
+      .y(yValue)
+      .radius(sszvis.fn.compose(rScale, rAcc))
+      .fill(sszvis.color.qual12())
+      // use white outlines in scatterplots to assist in identifying distinct circles
+      .stroke('#FFFFFF');
+
+    // the built-in .ticks() function for d3.scale.log() produces far too many ticks
+    var xTicks = [0.1, 0.5, 1, 5, 10, 50, 100];
+
+    var xAxis = sszvis.axis.x()
+      .scale(xScale)
+      .tickValues(xTicks)
+      .orient('bottom')
+      .tickFormat(function(d) {
+        return d < 1 ? d.toPrecision(1) : d;
+      })
+      .title('Logarithmische Skala');
+
+    var yAxis = sszvis.axis.y()
+      .scale(yScale)
+      .orient('right')
+      .showZeroY(true)
+      .contour(true);
+
+    var annotation = sszvis.annotation.rectangle()
+      .x(xScale(8))
+      .y(0)
+      .width(bounds.innerWidth - xScale(15))
+      .height(bounds.innerHeight);
+
+    var radiusLegend = sszvis.legend.radius()
+      .scale(rScale)
+      .tickFormat(function(d) {
+        return Math.round(d * 100) / 100;
+      });
+
+    var tooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) { return cAcc(d); })
+      .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
+      .orientation(function(d) {
+        return xValue(d.datum) <= bounds.innerWidth / 2 ? 'left' : 'right';
+      });
+
+
+    // Rendering
+
+    chartLayer.selectGroup('dataArea')
+      .datum([1])
+      .call(annotation);
+
+    chartLayer.selectGroup('dots')
+      .call(dots);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('radiusLegend')
+      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 65))
+      .call(radiusLegend);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis);
+
+
+    // Interaction
+
+    var mouseOverlay = sszvis.behavior.voronoi()
+      .x(xValue)
+      .y(yValue)
+      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
+      .on('over', actions.setHighlight)
+      .on('out', actions.resetHighlight);
+
+    chartLayer.selectGroup('voronoiMouse')
+      .datum(state.voronoiFiltered)
+      .call(mouseOverlay);
+  }
+
+}(d3, sszvis));
+</script>
+</body>
+</html>

@@ -82,6 +82,7 @@ Generates a chart based on a config object
     }
 }
 ```
+
 ## Grouped Bar Chart – Parametric Configuration
 With negative and missing values
 
@@ -106,7 +107,6 @@ With negative and missing values
     }
 }
 ```
-
 
 ## Area Chart – Parametric Configuration
 Without button groups…
@@ -133,6 +133,7 @@ Without button groups…
     }
 }
 ```
+
 ## Pie Chart – Parametric Configuration
 
 Generates a chart based on a config object
@@ -183,32 +184,6 @@ Generates a chart based on a config object
 }
 ```
 
-## Heat Table – Parametric Configuration
-
-Generates a chart based on a config object
-
-```project
-{
-    "name": "scatterplot-refline-fake",
-    "files": {
-        "index.html": {
-            "source": "docs/scatterplot/parametric.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/scatterplot/data/SS_refline_fake.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 469
-    }
-}
-```
-
 ## Map Zürich Kreise – Parametric Configuration
 
 A map of Zürich's Stadtkreise.
@@ -233,6 +208,58 @@ A map of Zürich's Stadtkreise.
     "size": {
         "width": 516,
         "height": 542
+    }
+}
+```
+
+## Scatterplot – Parametric Configuration
+
+Generates a chart based on a config object
+
+```project
+{
+    "name": "scatterplot-refline-fake",
+    "files": {
+        "index.html": {
+            "source": "docs/scatterplot/simple-scatterplot-parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/scatterplot/data/SS_refline_fake.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 469
+    }
+}
+```
+
+## Variable Radius Scatterplot – Parametric Configuration
+
+configurations
+
+```project
+{
+    "name": "scatterplot-variable-radius",
+    "files": {
+        "index.html": {
+            "source": "docs/scatterplot/variable-radius-parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/scatterplot/data/VRS_basic.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 495
     }
 }
 ```
