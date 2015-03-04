@@ -155,3 +155,27 @@ Generates a chart based on a config object
     }
 }
 ```
+
+## Heat Table – Parametric Configuration
+
+```project
+{
+    "name": "heat-table-kreise",
+    "files": {
+        "index.html": {
+            "source": "docs/heat-table/ht-kreise-parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/heat-table/data/HT_kreise.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 800
+    }
+}
+```
