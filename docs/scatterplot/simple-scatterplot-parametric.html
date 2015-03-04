@@ -33,6 +33,8 @@
     cColumn: 'Stadt',
     xAxisLabel: '',
     yAxisLabel: '',
+    xTicks: 4,
+    yTicks: 6,
   }
 
   /* Shortcuts
@@ -126,12 +128,14 @@
 
     var xAxis = sszvis.axis.x()
       .scale(xScale)
+      .ticks(config.xTicks)
       .orient('bottom')
       .alignOuterLabels(true)
       .title(config.xAxisLabel);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
+      .ticks(config.yTicks)
       .orient('right')
       .contour(true)
       .title(config.yAxisLabel);
