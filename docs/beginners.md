@@ -62,7 +62,7 @@ With negative and missing values
     "name": "bar-chart-grouped_gb-two-small",
     "files": {
         "index.html": {
-            "source": "docs/bar-chart-grouped/gb-two-small.html",
+            "source": "docs/bar-chart-grouped/gb-two-small-parametric.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/bar-chart-grouped/data/GB_2Categories_smallVals.csv",
