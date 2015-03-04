@@ -26,13 +26,15 @@
   ----------------------------------------------- */
 var config = {
     dataPath: 'data/BP_basic.csv',
-    title: 'Title',
-    description: 'Description', 
+    title: '',
+    description: '', 
     ageColumn: 'Alter',
     genderColumn: 'Geschlecht',
     valueColumn: 'Anzahl',
     yLabel: '',
     xLabel: '',
+    yTicks: 5,
+    xTicks: 7,
   }
 
 
@@ -226,6 +228,7 @@ var config = {
     var xAxis = sszvis.axis.x.pyramid()
       .scale(lengthScale)
       .orient('bottom')
+      .ticks (config.xTicks)
       .title(config.xLabel)
       .titleAnchor('middle')
       .titleCenter(true);
@@ -233,7 +236,7 @@ var config = {
     var yAxis = sszvis.axis.y.ordinal()
       .scale(positionScale)
       .orient('right')
-      .ticks(5)
+      .ticks(config.yTicks)
       .title(config.yLabel)
       .dyTitle(-18);
 
