@@ -27,9 +27,15 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
+  var config = {
+    dataPath: 'data/M_kreis.csv',
+    title: 'Diagrammtitel',
+    description: 'Kurze Beschreibung des Inhalts dieses Diagramms', 
+    nameColumn: 'Kname',
+    valueColumn: 'Bevölkerung',
+    geoIdColumn: 'KNr',
+    valueLabel: 'Einwohner'
+  }
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -72,12 +78,12 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/M_kreis.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        geoId: sszvis.parse.number(d['KNr']),
-        name: d['Kname'],
-        value: sszvis.parse.number(d['Bevölkerung'])
+        geoId: sszvis.parse.number(d[config.geoIdColumn]),
+        name: d[config.nameColumn],
+        value: sszvis.parse.number(d[config.valueColumn])
       };
     })
     .get(function(error, data) {
@@ -106,8 +112,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
+        title: config.title,
+        description: config.description
       })
       .datum(state.data);
 
@@ -131,7 +137,7 @@
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
-      .plain(' Einwohner');
+      .plain(config.valueLabel);
 
     // When using the map component, the data element bound to the tooltip anchor is the internal representation
     // which includes both the geoJson and the datum as properties. This is necessary so that the correct position
