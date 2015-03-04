@@ -25,8 +25,13 @@
   /* Configuration
   ----------------------------------------------- */
     var config = {
-    title: 'Diagrammtitel',
-    description: 'Kurze Beschreibung des Inhalts dieses Diagramms'
+      dataPath: 'data/SA_2Categories_yearly.csv',
+      title: 'Diagrammtitel',
+      description: 'Kurze Beschreibung des Inhalts dieses Diagramms',
+      xColumn: 'Jahr',
+      yColumn: 'Anzahl',
+      categoryColumn:'Nationalität',
+
   };
 
   // This example works in much the same way as the twelve-category stacked area chart.
@@ -118,12 +123,12 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/SA_2Categories_yearly.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        category: d['Nationalität'],
-        year: sszvis.parse.year(d['Jahr']),
-        value: sszvis.parse.number(d['Anzahl'])
+        category: d[config.categoryColumn],
+        year: sszvis.parse.year(d[config.xColumn]),
+        value: sszvis.parse.number(d[config.yColumn])
       };
     })
     .get(function(error, data) {
