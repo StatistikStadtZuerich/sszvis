@@ -24,16 +24,26 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+var config = {
+    dataPath: 'data/VRS_basic.csv',
+    title: '',
+    description: '',
+    xColumn: 'NeubauAbs (x-Achse)',
+    yColumn: 'LeerZunRel (y-Achse) ',
+    rColumn: 'Best13Radius (bubble)',
+    cColumn: 'QuName',
+    xAxisLabel: '',
+    yAxisLabel: '',
+  }
+
 
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('neubauabs');
-  var yAcc = sszvis.fn.prop('leerzunrel');
-  var rAcc = sszvis.fn.prop('best13radius');
-  var cAcc = sszvis.fn.prop('quname');
+  var xAcc = sszvis.fn.prop('xPosition');
+  var yAcc = sszvis.fn.prop('yPosition');
+  var rAcc = sszvis.fn.prop('radius');
+  var cAcc = sszvis.fn.prop('label');
 
 
   /* Application state
@@ -81,13 +91,13 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/VRS_basic.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        neubauabs: sszvis.parse.number(d['NeubauAbs (x-Achse)']),
-        leerzunrel: sszvis.parse.number(d['LeerZunRel (y-Achse) ']),
-        best13radius: sszvis.parse.number(d['Best13Radius (bubble)']),
-        quname: d['QuName']
+        xPosition: sszvis.parse.number(d[config.xColumn]),
+        yPosition: sszvis.parse.number(d[config.yColumn]),
+        radius: sszvis.parse.number(d[config.rColumn]),
+        label: d[config.cColumn]
       };
     })
     .get(function(error, data) {
@@ -129,8 +139,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
+        title: config.title,
+        description: config.description
       })
       .datum(state.data);
 
@@ -158,13 +168,14 @@
       .tickFormat(function(d) {
         return d < 1 ? d.toPrecision(1) : d;
       })
-      .title('Logarithmische Skala');
+      .title(config.xAxisLabel);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
       .showZeroY(true)
-      .contour(true);
+      .contour(true)
+      .title(config.yAxisLabel);
 
     var annotation = sszvis.annotation.rectangle()
       .x(xScale(8))
