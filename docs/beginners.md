@@ -179,3 +179,29 @@ Generates a chart based on a config object
     }
 }
 ```
+
+## Heat Table – Parametric Configuration
+
+Generates a chart based on a config object
+
+```project
+{
+    "name": "scatterplot-refline-fake",
+    "files": {
+        "index.html": {
+            "source": "docs/scatterplot/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/scatterplot/data/SS_refline_fake.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 469
+    }
+}
+```
