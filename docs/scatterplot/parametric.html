@@ -31,6 +31,10 @@
     city: 'Stadt',
     percent: 'Prozent',
     value: 'Wert',
+    yLabel: '',
+    xLabel: '',
+    yTicks: 4,
+    xTicks: 6,
   }
 
   /* Shortcuts
@@ -121,30 +125,19 @@
       // use white outlines in scatterplots to assist in identifying distinct circles
       .stroke('#FFFFFF');
 
-    var referenceLine = sszvis.annotation.line()
-      .x1(0.0) // 0%
-      .y1(40)
-      .x2(1.0) // 100%
-      .y2(120)
-      .xScale(xScale)
-      .yScale(yScale)
-      // Position the label so it doesn't overlap with the data points
-      .dx(28)
-      .dy(-5)
-      .caption('Reference Line');
-
     var xAxis = sszvis.axis.x()
       .scale(xScale)
-      .ticks(4)
-      .tickFormat(sszvis.format.percent)
+      .ticks(config.xTicks)
       .orient('bottom')
-      .alignOuterLabels(true);
+      .alignOuterLabels(true)
+      .title(config.xLabel);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
-      .ticks(6)
+      .ticks(config.yTicks)
       .orient('right')
-      .contour(true);
+      .contour(true)
+      .title(config.yLabel);
 
     var cLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
@@ -152,13 +145,6 @@
 
 
     // Rendering
-
-    // We place the reference line below the points whenever we can. If it isn't
-    // possible to place the label in a way that is readable, the reference line
-    // needs to be placed above the data points to make it readable.
-    chartLayer.selectGroup('referenceLine')
-      .datum([1])
-      .call(referenceLine);
 
     chartLayer.selectGroup('dots')
       .call(dots);
