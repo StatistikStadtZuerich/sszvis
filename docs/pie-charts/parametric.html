@@ -24,9 +24,13 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
+  var config = {
+    dataPath: 'data/P_7Categories.csv',
+    title: '',
+    description: '', 
+    categoryColumn: 'Kategorie',
+    valueColumn: 'Schweiz Import',
+  }
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -68,11 +72,11 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/P_7Categories.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        category: d['Kategorie'],
-        value: sszvis.parse.number(d['Schweiz Import'])
+        category: d[config.categoryColumn],
+        value: sszvis.parse.number(d[config.valueColumn])
       };
     })
     .get(function(error, data) {
@@ -103,8 +107,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
+        title: config.title,
+        description: config.description,
       })
       .datum(state.data);
 
