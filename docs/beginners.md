@@ -4,7 +4,10 @@
 
 ## Line chart – Parametric Configuration
 
-Generates a chart based on a config object
+Configuration
+
+* `xColumn` – Data column to use for the x-axis (required)
+* `xAxisLabel` – Label for the x-axis (optional)
 
 ```project
 {
