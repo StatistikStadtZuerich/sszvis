@@ -28,20 +28,20 @@
     dataPath: 'data/SS_refline_fake.csv',
     title: '',
     description: '', 
-    city: 'Stadt',
-    percent: 'Prozent',
-    value: 'Wert',
-    yLabel: '',
-    xLabel: '',
-    yTicks: 4,
-    xTicks: 6,
+    xColumn: 'Prozent',
+    yColumn: 'Wert',
+    cColumn: 'Stadt',
+    xAxisLabel: '',
+    yAxisLabel: '',
+    xTicks: 4,
+    yTicks: 6,
   }
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('percent');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('city');
+  var xAcc = sszvis.fn.prop('xValue');
+  var yAcc = sszvis.fn.prop('yValue');
+  var cAcc = sszvis.fn.prop('cValue');
 
 
   /* Application state
@@ -50,7 +50,7 @@
     data: [],
     xExtent: [0, 1], // 0% - > 100%
     yExtent: [],
-    cities: []
+    cExtent: []
   };
 
 
@@ -72,9 +72,9 @@
   d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        city: d[config.city],
-        percent: sszvis.parse.number(d[config.percent]),
-        value: sszvis.parse.number(d[config.value])
+        xValue: sszvis.parse.number(d[config.xColumn]),
+        yValue: sszvis.parse.number(d[config.yColumn]),
+        cValue: d[config.cColumn],
       };
     })
     .get(function(error, data) {
@@ -102,8 +102,9 @@
       .domain(state.yExtent)
       .range([bounds.innerHeight, 0]);
 
-    var cScale = sszvis.color.qual6()
-      .domain(state.cities);
+    //choose color scale depending on number of categories
+    var cScale = state.cExtent.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
+    cScale.domain(state.cExtent);
 
 
     // Layers
@@ -130,14 +131,14 @@
       .ticks(config.xTicks)
       .orient('bottom')
       .alignOuterLabels(true)
-      .title(config.xLabel);
+      .title(config.xAxisLabel);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .ticks(config.yTicks)
       .orient('right')
       .contour(true)
-      .title(config.yLabel);
+      .title(config.yAxisLabel);
 
     var cLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
