@@ -29,7 +29,10 @@
     description: 'Kurze Beschreibung des Inhalts dieses Diagramms',
     xColumn: 'KName',
     yColumn: 'Altersgruppe',
-    valueColumn: 'Anzahl'
+    valueColumn: 'Anzahl',
+    xLabel: 'Kreis',
+    yLabel: 'Altersgruppe',
+    cLabel: 'Einwohner'
 
   }
 
@@ -177,7 +180,7 @@
       .slant('diagonal')
       .tickSize(0, 0)
       .tickPadding(0)
-      .title('Kreis')
+      .title(config.xLabel)
       .titleAnchor('middle')
       .titleCenter(true)
       .dyTitle(-40)
@@ -190,7 +193,7 @@
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yScale)
       .orient('left')
-      .title('Altersgruppe')
+      .title(config.yLabel)
       .titleVertical(true)
       .titleAnchor('middle')
       .titleCenter(true)
@@ -214,8 +217,8 @@
       .body(function(d) {
         var v = cAcc(d);
         return [
-          ['Altersgruppe', yAcc(d)],
-          ['Einwohner', isNaN(v) ? '–' : sszvis.format.number(v)]
+          [config.yLabel, yAcc(d)],
+          [config.cLabel, isNaN(v) ? '–' : sszvis.format.number(v)]
         ];
       })
       .visible(isSelected);
