@@ -28,14 +28,14 @@
     dataPath: 'data/P_7Categories.csv',
     title: '',
     description: '', 
-    categoryColumn: 'Kategorie',
-    valueColumn: 'Schweiz Import',
+    cColumn: 'Kategorie',
+    vColumn: 'Schweiz Import',
   }
 
   /* Shortcuts
   ----------------------------------------------- */
-  var vAcc = sszvis.fn.prop('value');
   var cAcc = sszvis.fn.prop('category');
+  var vAcc = sszvis.fn.prop('value');
 
 
   /* Application state
@@ -75,8 +75,8 @@
   d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        category: d[config.categoryColumn],
-        value: sszvis.parse.number(d[config.valueColumn])
+        category: d[config.cColumn],
+        value: sszvis.parse.number(d[config.vColumn])
       };
     })
     .get(function(error, data) {
