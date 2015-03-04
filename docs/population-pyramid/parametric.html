@@ -24,8 +24,16 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+var config = {
+    dataPath: 'data/BP_basic.csv',
+    title: 'Title',
+    description: 'Description', 
+    ageColumn: 'Alter',
+    genderColumn: 'Geschlecht',
+    valueColumn: 'Anzahl',
+    yLabel: '',
+    xLabel: '',
+  }
 
 
   /* Shortcuts
@@ -151,12 +159,12 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/BP_basic.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        age: sszvis.parse.number(d['Alter']),
-        gender: d['Geschlecht'],
-        value: sszvis.parse.number(d['Anzahl'])
+        age: sszvis.parse.number(d[config.ageColumn]),
+        gender: d[config.genderColumn],
+        value: sszvis.parse.number(d[config.valueColumn])
       };
     })
     .get(function(error, data) {
@@ -193,8 +201,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-      title: TITLE,
-      description: DESCRIPTION
+      title: config.title,
+      description: config.description,
     })
       .datum(state.populations);
 
@@ -218,7 +226,7 @@
     var xAxis = sszvis.axis.x.pyramid()
       .scale(lengthScale)
       .orient('bottom')
-      .title('Anzahl Frauen und Männer')
+      .title(config.xLabel)
       .titleAnchor('middle')
       .titleCenter(true);
 
@@ -226,7 +234,7 @@
       .scale(positionScale)
       .orient('right')
       .ticks(5)
-      .title('Alter in Jahren')
+      .title(config.yLabel)
       .dyTitle(-18);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
