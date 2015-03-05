@@ -32,7 +32,6 @@
     xColumn: 'Region',
     yColumn: 'Wert',
     cColumn: 'Kategorie',
-    xAxisLabel: 'x-Achse',
     yAxisLabel: 'y-Achse',
     yTicks: 7,
     textDirection: 'diagonal', //takes null, 'diagonal' and 'vertical'
@@ -114,7 +113,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 10, bottom: 140 });
-
+    
 
     // Scales
 
@@ -140,6 +139,7 @@
     //choose color scale depending on number of categories
     var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
     cScale.domain(state.categories);
+
 
     // Layers
 
@@ -168,7 +168,6 @@
       .scale(xScale)
       .orient('bottom')
       .slant(config.textDirection)
-      .title(config.xAxisLabel || '')
       .highlightTick(function(d) {
         return sszvis.fn.contains(state.selection.map(sszvis.fn.compose(xAcc, sszvis.fn.first)), d);
       });
@@ -181,7 +180,8 @@
       .showZeroY(true)
       .orient('right')
       .ticks (config.yTicks)
-      .title(config.yAxisLabel || '');
+      .tickLength(config.fallback ? bounds.innerWidth : null)
+      .title(config.yAxisLabel);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
@@ -206,12 +206,6 @@
 
     // Rendering
 
-    var bars = chartLayer.selectGroup('bars')
-      .call(barLayout);
-
-    bars.selectAll('[data-tooltip-anchor]')
-      .call(tooltip);
-
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
@@ -219,12 +213,19 @@
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
+    var bars = chartLayer.selectGroup('bars')
+      .call(barLayout);
+
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 115))
       .call(colorLegend);
 
 
     // Interaction
+
     var interactionLayer = sszvis.behavior.move()
       .xScale(xScale)
       .yScale(yScale)
@@ -236,14 +237,12 @@
   }
 
 
-
 /* Helper functions
   ----------------------------------------------- */
 
   function labelWrapWidth(range) {
     return (d3.max(range) - d3.min(range)) / range.length;
   }
-
 
 
 }(d3, sszvis));
