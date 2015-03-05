@@ -136,8 +136,15 @@
       .on('out', actions.deselectHovered);
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
-      .plain(config.valueLabel);
+      .bold(sszvis.fn.compose(nameAcc, mDatumAcc)); 
+
+    var tooltipBody = function(d) {
+      var value = sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc); 
+      return [
+        [config.valueLabel, value(d)]
+      ];
+    };
+
 
     // When using the map component, the data element bound to the tooltip anchor is the internal representation
     // which includes both the geoJson and the datum as properties. This is necessary so that the correct position
@@ -147,7 +154,7 @@
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
-      .body(sszvis.fn.compose(nameAcc, mDatumAcc))
+      .body(tooltipBody)
       .visible(isSelected);
 
     var legend = sszvis.legend.linearColorScale()
