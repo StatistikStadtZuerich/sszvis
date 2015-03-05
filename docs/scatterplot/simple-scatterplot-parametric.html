@@ -31,8 +31,10 @@
     xColumn: 'Prozent',
     yColumn: 'Wert',
     cColumn: 'Stadt',
-    xAxisLabel: 'Prozent',
-    yAxisLabel: 'Wert',
+    xAxisLabel: 'x-Achse',
+    yAxisLabel: 'y-Achse',
+    xLabel:'Prozent', // label of x value in the tooltip
+    yLabel:'Wert', // label of y value in the tooltip
     xTicks: 4,
     yTicks: 6,
   }
@@ -175,8 +177,8 @@
       .header(cAcc)
       .body(function(d) {  
         return [
-          [config.yAxisLabel, yAcc(d)],
-          [config.xAxisLabel, xAcc(d).toPrecision(2)],
+          [config.yLabel, yAcc(d)],
+          [config.xLabel, xAcc(d).toPrecision(2)],
         ];
       })
       .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
