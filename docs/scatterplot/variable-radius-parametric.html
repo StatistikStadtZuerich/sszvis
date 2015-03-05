@@ -38,7 +38,8 @@ var config = {
     yLabel: 'LeerZunRel', // label of y value in the tooltip
     rLabel: 'Radius', // label of radius value in the tooltip
     xTicks: null,    // Replace null with a cardinal number to specify the number of ticks
-    yTicks: null    // Replace null with a cardinal number to specify the number of ticks
+    yTicks: null,    // Replace null with a cardinal number to specify the number of ticks
+    rLegend: [5, 10, 15, 20]
   }
 
 
@@ -179,9 +180,11 @@ var config = {
 
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
+      .tickValues(config.rLegend)
       .tickFormat(function(d) {
         return Math.round(d * 100) / 100;
       });
+
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
