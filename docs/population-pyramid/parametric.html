@@ -33,6 +33,7 @@ var config = {
     valueColumn: 'Anzahl',
     yLabel: '',
     xLabel: '',
+    xTicks: null,   // Replace null with a cardinal number to specify the number of ticks
     fallback: false //optional, creates vertical lines for the x-ticks when true
   };
 
@@ -228,6 +229,7 @@ var config = {
       .scale(lengthScale)
       .orient('bottom')
       .title(config.xLabel)
+      .ticks (config.xTicks)
       .tickLength(config.fallback ? bounds.innerWidth : null)
       .titleAnchor('middle')
       .titleCenter(true);
