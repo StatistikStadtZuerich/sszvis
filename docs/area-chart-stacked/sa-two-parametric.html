@@ -32,6 +32,9 @@
       yColumn: 'Anzahl',
       cColumn:'Nationalität',
       yAxisLabel: 'y-Achse',
+      yAxisLabel: 'x-Achse',
+      yTicks: 5, 
+      xTicks: 5
   };
 
   // This example works in much the same way as the twelve-category stacked area chart.
@@ -263,21 +266,26 @@
         }
       });
 
-    var xAxisTicks = xScale.ticks(5)
+    var xAxisTicks = xScale.ticks(config.xTicks)
       .concat(state.highlightDate);
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xAxisTicks)
+      .title(config.yAxisLabel)
       .highlightTick(function(d) {
         return sszvis.fn.stringEqual(d, state.highlightDate);
       });
 
+    var yAxisTicks = yScale.ticks(config.yTicks)
+      .concat(state.highlightDate);
+
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .title(config.yAxisLabel);
+      .title(config.yAxisLabel)
+      .tickValues(yAxisTicks);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
