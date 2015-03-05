@@ -31,10 +31,9 @@
     dataPath: 'data/GB_2Categories_smallVals.csv',
     xColumn: 'Region',
     yColumn: 'Wert',
-    categoryColumn: 'Kategorie',
+    cColumn: 'Kategorie',
+    yAxisLabel: 'y-Achse',
     textDirection: 'diagonal', //takes null, 'diagonal' and 'vertical'
-
-
   };
 
 
@@ -94,7 +93,7 @@
     .row(function(d) {
       return {
         region: d[config.xColumn],
-        category: d[config.categoryColumn],
+        category: d[config.cColumn],
         value: sszvis.parse.number(d[config.yColumn])
       };
     })
@@ -174,7 +173,8 @@
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .showZeroY(true)
-      .orient('right');
+      .orient('right')
+      .title(config.yAxisLabel);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
