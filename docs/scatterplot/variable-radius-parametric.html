@@ -25,17 +25,21 @@
   /* Configuration
   ----------------------------------------------- */
 var config = {
-    dataPath: 'data/VRS_basic.csv',
+    dataPath: 'data/VRS_basic_linear.csv',
     title: '',
     description: '',
     xColumn: 'NeubauAbs (x-Achse)',
     yColumn: 'LeerZunRel (y-Achse) ',
     rColumn: 'Best13Radius (bubble)',
     cColumn: 'QuName',
-    xAxisLabel: '',
-    yAxisLabel: '',
+    xAxisLabel: 'x-Achse',
+    yAxisLabel: 'y-Achse',
+    xLabel: 'NeubauAbs', // label of x value in the tooltip
+    yLabel: 'LeerZunRel', // label of y value in the tooltip
+    rLabel: 'Radius', // label of radius value in the tooltip
+    xTicks: null,    // Replace null with a cardinal number to specify the number of ticks
+    yTicks: null    // Replace null with a cardinal number to specify the number of ticks
   }
-
 
 
   /* Shortcuts
@@ -69,7 +73,7 @@ var config = {
         return xAcc(d) + '__' + yAcc(d);
       });
 
-      state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
+      state.xExtent = d3.extent(state.data, xAcc); 
       state.yExtent = d3.extent(state.data, yAcc);
       var radiusExtent = d3.extent(state.data, rAcc);
       state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
@@ -117,13 +121,11 @@ var config = {
 
     // Scales
 
-    var xScale = d3.scale.log()
+    var xScale = d3.scale.linear()
       .domain(state.xExtent)
       .range([0, bounds.innerWidth]);
 
-    var xValue = sszvis.fn.compose(function(v) {
-        return v <= 0.1 ? 0 : xScale(v);
-      }, xAcc);
+    var xValue = sszvis.fn.compose(xScale, xAcc);
 
     var yScale = d3.scale.linear()
       .domain(state.yExtent)
@@ -158,13 +160,10 @@ var config = {
       // use white outlines in scatterplots to assist in identifying distinct circles
       .stroke('#FFFFFF');
 
-    // the built-in .ticks() function for d3.scale.log() produces far too many ticks
-    var xTicks = [0.1, 0.5, 1, 5, 10, 50, 100];
-
     var xAxis = sszvis.axis.x()
       .scale(xScale)
-      .tickValues(xTicks)
       .orient('bottom')
+      .ticks (config.xTicks)
       .tickFormat(function(d) {
         return d < 1 ? d.toPrecision(1) : d;
       })
@@ -173,15 +172,10 @@ var config = {
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
+      .ticks (config.yTicks)
       .showZeroY(true)
       .contour(true)
       .title(config.yAxisLabel);
-
-    var annotation = sszvis.annotation.rectangle()
-      .x(xScale(8))
-      .y(0)
-      .width(bounds.innerWidth - xScale(15))
-      .height(bounds.innerHeight);
 
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
@@ -191,7 +185,14 @@ var config = {
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
-      .header(function(d) { return cAcc(d); })
+      .header(cAcc)
+      .body(function(d) {  
+        return [
+          [config.yLabel, yAcc(d).toPrecision(2)],
+          [config.xLabel, xAcc(d).toPrecision(2)],
+          [config.rLabel, rAcc(d).toPrecision(2)],
+        ];
+      })
       .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
       .orientation(function(d) {
         return xValue(d.datum) <= bounds.innerWidth / 2 ? 'left' : 'right';
@@ -199,10 +200,6 @@ var config = {
 
 
     // Rendering
-
-    chartLayer.selectGroup('dataArea')
-      .datum([1])
-      .call(annotation);
 
     chartLayer.selectGroup('dots')
       .call(dots);
