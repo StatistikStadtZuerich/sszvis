@@ -212,6 +212,34 @@ A map of Zürich's Stadtkreise.
 }
 ```
 
+##  Map Zürich: Quartiere – Parametric Configuration
+
+A map of the Statistische Quartiere of Zürich, demonstrating use of a button group control for data subset selection.
+
+```project
+{
+    "name": "map-tabs",
+    "files": {
+        "index.html": {
+            "source": "docs/map/tabs-parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map/data/S_tabs.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-zurich-statistischequartiere.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 592
+    }
+}
+```
+
 ## Scatterplot – Parametric Configuration
 
 Generates a chart based on a config object
