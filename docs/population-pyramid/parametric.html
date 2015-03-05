@@ -33,7 +33,8 @@ var config = {
     valueColumn: 'Anzahl',
     yLabel: '',
     xLabel: '',
-  }
+    fallback: false //optional, creates vertical lines for the x-ticks when true
+  };
 
 
   /* Shortcuts
@@ -227,6 +228,7 @@ var config = {
       .scale(lengthScale)
       .orient('bottom')
       .title(config.xLabel)
+      .tickLength(config.fallback ? bounds.innerWidth : null)
       .titleAnchor('middle')
       .titleCenter(true);
 
@@ -260,14 +262,6 @@ var config = {
 
     // Rendering
 
-    chartLayer.selectGroup('populationPyramid')
-      .datum(state.populations)
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, 0))
-      .call(pyramid);
-
-    chartLayer.selectAll('[data-tooltip-anchor]')
-      .call(tooltip);
-
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight))
       .call(xAxis);
@@ -275,6 +269,14 @@ var config = {
     chartLayer.selectGroup('yAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, 0))
       .call(yAxis);
+
+    chartLayer.selectGroup('populationPyramid')
+      .datum(state.populations)
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, 0))
+      .call(pyramid);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
