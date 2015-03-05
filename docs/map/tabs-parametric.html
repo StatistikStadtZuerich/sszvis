@@ -28,10 +28,17 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var INITIAL_YEAR = '2012';
-
+  var config = {
+    dataPath: 'data/S_tabs.csv',
+    title: '',
+    description: '', 
+    initialYear: '2012',
+    valueColumn: 'Ausländeranteil',
+    yearColumn: 'Jahr',
+    quarterNumColumn: 'Qcode',
+    quarterNameColumn: 'Qname',
+    valueLabel: 'Ausländeranteil'
+  }
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -61,7 +68,7 @@
       state.valueDomain = [0, d3.max(state.data, vAcc)];
       state.years = sszvis.fn.set(state.data, yAcc).sort(d3.ascending);
 
-      actions.setYear(INITIAL_YEAR);
+      actions.setYear(config.initialYear);
     },
 
     // this function switches the active year
@@ -91,10 +98,10 @@
   d3.csv('data/S_tabs.csv')
     .row(function(d) {
       return {
-        quarternum: sszvis.parse.number(d['Qcode']),
-        quartername: d['Qname'],
-        value: sszvis.parse.number(d['Ausländeranteil']),
-        year: d['Jahr']
+        quarternum: sszvis.parse.number(d[config.quarterNumColumn]),
+        quartername: d[config.quarterNameColumn],
+        value: sszvis.parse.number(d[config.valueColumn]),
+        year: d[config.yearColumn]
       };
     })
     .get(function(error, data) {
@@ -123,8 +130,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
+        title: config.title,
+        description: config.description
       })
       .datum(state.currentMapData);
 
@@ -169,14 +176,21 @@
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
     var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(function(v) {
+      .bold(sszvis.fn.compose(qnameAcc, mDatumAcc)); 
+
+    var tooltipBody = function(d) {
+      var value = sszvis.fn.compose(function(v) {
         return isNaN(v) ? 'keine Daten' : sszvis.format.percent(v);
-      }, vAcc, mDatumAcc));
+      }, vAcc, mDatumAcc); 
+      return [
+        [config.valueLabel, value(d)]
+      ];
+    };
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
-      .body(sszvis.fn.compose(qnameAcc, mDatumAcc))
+      .body(tooltipBody)
       .visible(isSelected);
 
     var legend = sszvis.legend.linearColorScale()
