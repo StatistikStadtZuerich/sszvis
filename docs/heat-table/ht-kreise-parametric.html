@@ -20,6 +20,12 @@
     return;
   }
 
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('xPosition');
+  var yAcc = sszvis.fn.prop('yPosition');
+  var vAcc = sszvis.fn.prop('value');
+
 
   /* Configuration
   ----------------------------------------------- */
@@ -32,15 +38,12 @@
     vColumn: 'Anzahl',
     xAxisLabel: 'Kreis',
     yAxisLabel: 'Altersgruppe',
-    valueLabel: 'Einwohner'
-  }
-
-
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('xPosition');
-  var yAcc = sszvis.fn.prop('yPosition');
-  var vAcc = sszvis.fn.prop('value');
+    valueLabel: 'Einwohner',
+    tHeader: function(d) {
+       return (yAcc(d) + ' ' + 'Jährige') //add yAcc(d) or xAcc(d)
+    }
+    // tHeader: yAcc //simpler version: just takes yAcc or xAcc
+  };
 
 
   /* Application state
@@ -212,7 +215,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
-      .header(xAcc)
+      .header(config.tHeader)
       .body(function(d) {
         var v = vAcc(d);
         return [
