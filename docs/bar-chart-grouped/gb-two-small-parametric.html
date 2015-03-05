@@ -32,8 +32,11 @@
     xColumn: 'Region',
     yColumn: 'Wert',
     cColumn: 'Kategorie',
+    xAxisLabel: 'x-Achse',
     yAxisLabel: 'y-Achse',
+    yTicks: 7,
     textDirection: 'diagonal', //takes null, 'diagonal' and 'vertical'
+    fallback: false //optional, creates horizontal lines for the y-ticks when true
   };
 
 
@@ -49,6 +52,7 @@
   var state = {
     data: [],
     years: [],
+    categories: [],
     valueExtent: [0, 0],
     groups: [],
     groupedData: [],
@@ -133,7 +137,9 @@
       return Math.abs(yScale(v) - yScale(0));
     };
 
-    var cScale = sszvis.color.qual12();
+    //choose color scale depending on number of categories
+    var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
+    cScale.domain(state.categories);
 
     // Layers
 
@@ -162,10 +168,10 @@
       .scale(xScale)
       .orient('bottom')
       .slant(config.textDirection)
+      .title(config.xAxisLabel || '')
       .highlightTick(function(d) {
         return sszvis.fn.contains(state.selection.map(sszvis.fn.compose(xAcc, sszvis.fn.first)), d);
       });
-
       if (!config.textDirection) {
         xAxis.textWrap(labelWrapWidth(xScale.range()));
       };
@@ -174,7 +180,8 @@
       .scale(yScale)
       .showZeroY(true)
       .orient('right')
-      .title(config.yAxisLabel);
+      .ticks (config.yTicks)
+      .title(config.yAxisLabel || '');
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
