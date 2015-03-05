@@ -169,7 +169,10 @@
       .domain(state.categories)
       .range(multiplesLayout.range);
 
-    var cScale = sszvis.color.qual12()
+    var cScale = sszvis.color.qual6()
+      .domain(state.categories);
+
+    var cScaleMultiples = sszvis.color.qual12()
       .domain(state.categories);
 
 
