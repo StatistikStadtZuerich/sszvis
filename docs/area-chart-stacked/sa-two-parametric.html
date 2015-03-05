@@ -35,6 +35,7 @@
       yAxisLabel: 'x-Achse',
       yTicks: 5, 
       xTicks: 5
+      fallback: true //takes true and false
   };
 
   // This example works in much the same way as the twelve-category stacked area chart.
@@ -203,6 +204,7 @@
       })
       .fill(sszvis.fn.compose(cScale, cAcc));
 
+
     var topValue;
     if (state.isMultiples) {
       var first = sszvis.fn.first(state.highlightData);
@@ -289,7 +291,8 @@
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .orientation('vertical');
+      .horizontalFloat(true);
+
 
 
     // Rendering
