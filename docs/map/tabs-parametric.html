@@ -40,6 +40,7 @@
     valueLabel: 'Ausländeranteil'
   }
 
+
   /* Shortcuts
   ----------------------------------------------- */
   var vAcc = sszvis.fn.prop('value');
@@ -144,7 +145,6 @@
     // Components
 
     // Button group control for switching the data year
-
     var controlWidth = bounds.width / 2;
 
     var control = sszvis.control.buttonGroup()
@@ -178,14 +178,11 @@
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(qnameAcc, mDatumAcc)); 
 
-    var tooltipBody = function(d) {
-      var value = sszvis.fn.compose(function(v) {
+    var tooltipBody = sszvis.svgUtils.modularText.html()
+      .bold(sszvis.fn.compose(function(v) {
         return isNaN(v) ? 'keine Daten' : sszvis.format.percent(v);
-      }, vAcc, mDatumAcc); 
-      return [
-        [config.valueLabel, value(d)]
-      ];
-    };
+      }, vAcc, mDatumAcc))
+      .plain(config.valueLabel);
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
@@ -219,6 +216,7 @@
   function isSelected(d) {
     return state.selection.indexOf(d.datum) >= 0;
   }
+
 
 }(d3, topojson, sszvis));
 </script>
