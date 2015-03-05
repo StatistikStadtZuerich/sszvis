@@ -32,9 +32,9 @@
       yColumn: 'Anzahl',
       cColumn:'Nationalität',
       yAxisLabel: 'y-Achse',
-      yAxisLabel: 'x-Achse',
+      xAxisLabel: 'x-Achse',
       yTicks: 5, 
-      xTicks: 5
+      xTicks: 5,
       fallback: true //takes true and false
   };
 
@@ -278,7 +278,7 @@
       .scale(xScale)
       .orient('bottom')
       .tickValues(xAxisTicks)
-      .title(config.yAxisLabel)
+      .title(config.xAxisLabel)
       .highlightTick(function(d) {
         return sszvis.fn.stringEqual(d, state.highlightDate);
       });
