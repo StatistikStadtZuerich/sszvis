@@ -30,8 +30,8 @@
       description: 'Kurze Beschreibung des Inhalts dieses Diagramms',
       xColumn: 'Jahr',
       yColumn: 'Anzahl',
-      categoryColumn:'Nationalität',
-
+      cColumn:'Nationalität',
+      yAxisLabel: 'y-Achse',
   };
 
   // This example works in much the same way as the twelve-category stacked area chart.
@@ -126,7 +126,7 @@
   d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        category: d[config.categoryColumn],
+        category: d[config.cColumn],
         year: sszvis.parse.year(d[config.xColumn]),
         value: sszvis.parse.number(d[config.yColumn])
       };
@@ -276,7 +276,8 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
-      .orient('right');
+      .orient('right')
+      .title(config.yAxisLabel);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
