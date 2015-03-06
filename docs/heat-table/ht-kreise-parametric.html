@@ -39,10 +39,8 @@
     xAxisLabel: 'Kreis',
     yAxisLabel: 'Altersgruppe',
     valueLabel: 'Einwohner',
-    tHeader: function(d) {
-       return (yAcc(d) + ' ' + 'Jährige') //add yAcc(d) or xAcc(d)
-    }
-    // tHeader: yAcc //simpler version: just takes yAcc or xAcc
+    tSourceAxis: 'y',  //Tooltip Header Source Axis 
+    tTitleAdd: 'Jährige' //Tooltip Header: additional Label to Source Axis
   };
 
 
@@ -215,16 +213,29 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
-      .header(config.tHeader)
+      .header(function(d) {
+        if (config.tSourceAxis==='y') {
+          return (yAcc(d) + ' ' + config.tTitleAdd)
+        } else {
+          return (xAcc(d) + ' ' + config.tTitleAdd)
+          }
+        }) 
       .body(function(d) {
         var v = vAcc(d);
-        return [
-          [config.yAxisLabel, yAcc(d)],
-          [config.valueLabel, isNaN(v) ? '–' : sszvis.format.number(v)]
-        ];
-      })
+        var y = yAcc(d);
+        if (config.tSourceAxis=== 'y'){
+          return [
+            [config.xAxisLabel, xAcc(d)],
+            [config.valueLabel, isNaN(v) ? '–' : sszvis.format.number(v)]
+          ]
+        } else {
+          return[
+            [config.yAxisLabel, yAcc(d)],
+            [config.valueLabel, isNaN(v) ? '–' : sszvis.format.number(v)]
+            ]
+          }
+        })
       .visible(isSelected);
-
 
     // Rendering
 
