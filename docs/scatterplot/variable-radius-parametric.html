@@ -32,14 +32,15 @@ var config = {
     yColumn: 'LeerZunRel (y-Achse) ',
     rColumn: 'Best13Radius (bubble)',
     cColumn: 'QuName',
-    xAxisLabel: 'x-Achse',
-    yAxisLabel: 'y-Achse',
+    xAxisLabel: '',
+    yAxisLabel: ' ',
     xLabel: 'NeubauAbs', // Label of x value in the tooltip
     yLabel: 'LeerZunRel', // Label of y value in the tooltip
     rLabel: 'Radius', // Label of radius value in the tooltip
     xTicks: null,    // Replace null with a cardinal number to specify the number of ticks
     yTicks: null,    // Replace null with a cardinal number to specify the number of ticks
     rLegend: null    // Replace null with [1000, 3000, 5000] to specify legend ticks 
+    fallback: false //optional, creates long ticks when true
   }
 
 
@@ -175,6 +176,7 @@ var config = {
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
+      .tickLength(config.fallback ? bounds.innerWidth : null)
       .ticks (config.yTicks)
       .showZeroY(true)
       .contour(true)

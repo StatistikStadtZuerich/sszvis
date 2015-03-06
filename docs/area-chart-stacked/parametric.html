@@ -290,6 +290,7 @@
       .scale(yScale)
       .orient('right')
       .title(config.yAxisLabel)
+      .tickLength(config.fallback ? bounds.innerWidth : null)
       .tickValues(yAxisTicks);
 
     var colorLegend = sszvis.legend.ordinalColorScale()

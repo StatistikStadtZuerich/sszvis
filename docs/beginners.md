@@ -414,6 +414,7 @@ Configuration:
 * `yLabel` – label of y-value in the tooltip (required)
 * `xTicks` –  Number of ticks on the x-axis (optional)
 * `yTicks` –  Number of ticks on the y-axis (optional)
+* `fallback` – View of the chart when interactivity is not available due to technical restrictions
 
 ```project
 {
@@ -454,6 +455,7 @@ Configurations
 * `xTicks` –  Number of ticks on the x-axis (optional)
 * `yTicks` –  Number of ticks on the y-axis (optional)
 * `rLegend` – Specifies the number and value of the legend ticks (optional)
+* `fallback` – View of the chart when interactivity is not available due to technical restrictions
 
 
 ```project

@@ -31,12 +31,13 @@
     xColumn: 'Prozent',
     yColumn: 'Wert',
     cColumn: 'Stadt',
-    xAxisLabel: 'x-Achse',
-    yAxisLabel: 'y-Achse',
+    xAxisLabel: '',
+    yAxisLabel: '',
     xLabel:'Prozent', // Label of x value in the tooltip
     yLabel:'Wert', // Label of y value in the tooltip
     xTicks: null, // Replace null with a cardinal number to specify the number of ticks
     yTicks: null, // Replace null with a cardinal number to specify the number of ticks
+    fallback: false //optional, creates long ticks when true
   }
 
 
@@ -165,6 +166,7 @@
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .ticks(config.xTicks)
+      .tickLength(config.fallback ? bounds.innerWidth : null)
       .orient('right')
       .contour(true)
       .showZeroY(true)
