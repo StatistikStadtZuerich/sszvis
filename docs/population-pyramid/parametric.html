@@ -26,15 +26,15 @@
   ----------------------------------------------- */
 var config = {
     dataPath: 'data/BP_basic.csv',
-    title: '',
-    description: '', 
+    title: '', 
+    description: '',
     ageColumn: 'Alter',
-    genderColumn: 'Geschlecht',
     valueColumn: 'Anzahl',
-    yLabel: '',
-    xLabel: '',
-    xTicks: null,   // Replace null with a cardinal number to specify the number of ticks
-    fallback: false //optional, creates vertical lines for the x-ticks when true
+    genderColumn: 'Geschlecht', 
+    xAxisLabel: '', 
+    yAxisLabel: '', 
+    xTicks: null,   // replace null with a cardinal number to specify the number of ticks
+    fallback: false //creates vertical lines for the x-ticks when true
   };
 
 
@@ -228,7 +228,7 @@ var config = {
     var xAxis = sszvis.axis.x.pyramid()
       .scale(lengthScale)
       .orient('bottom')
-      .title(config.xLabel)
+      .title(config.xAxisLabel)
       .ticks (config.xTicks)
       .tickLength(config.fallback ? bounds.innerWidth : null)
       .titleAnchor('middle')
@@ -238,7 +238,7 @@ var config = {
       .scale(positionScale)
       .orient('right')
       .ticks(5)
-      .title(config.yLabel)
+      .title(config.yAxisLabel)
       .dyTitle(-18);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
