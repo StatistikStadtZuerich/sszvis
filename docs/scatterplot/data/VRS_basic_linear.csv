@@ -1,5 +1,5 @@
 QuName,NeubauAbs (x-Achse),LeerZunRel (y-Achse) ,Best13Radius (bubble)
-Rathaus,0,0.696964077,1054
+Rathaus,0,1,1054
 Hochschulen,0.79596,0.688765126,156
 Lindenhof,0.42009,1.863804786,1743
 City,3.97042,2.259632209,1645
@@ -28,7 +28,7 @@ Altstetten,5.90502,-1.955239465,2445
 Höngg,7.782735,-0.058229271,4456
 Wipkingen,1.4432,-1.858323804,2445
 Affoltern,-4.16345,-0.002502066,5422
-Oerlikon,6.95727,-4.498365723,1055
+Oerlikon,6,-4,1055
 Seebach,6.93798,-0.240081029,2345
 Saatlen,0.4863,3.718916975,3455
 Schwamendingen-Mitte,5.7557,1.30787771,4577
