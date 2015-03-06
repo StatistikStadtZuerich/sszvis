@@ -240,7 +240,13 @@ Configuration
 
 ## Map Zürich Kreise – Parametric Configuration
 
-A map of Zürich's Stadtkreise.
+Configuration: 
+
+* `geoIdColumn` – Data column to use for the geographic values(required)
+* `nameColumn` – Data column to use for the name of the geographic values (required)
+* `valueColumn` – Data column to use for the values (required)
+* `valueLabel` – Label for the values, shows in the tooltip (required)
+
 
 ```project
 {
@@ -270,6 +276,13 @@ A map of Zürich's Stadtkreise.
 
 A map of the Statistische Quartiere of Zürich, demonstrating use of a button group control for data subset selection.
 
+* `initialYear` – (required)
+* `yearColumn` – Data column to use for the years (required)
+* `geoIdColumn` – Data column to use for the geographic values(required)
+* `nameColumn` – Data column to use for the name of the geographic values (required)
+* `valueColumn` – Data column to use for the values (required)
+* `valueLabel` – Label for the values, shows in the tooltip (required)
+
 ```project
 {
     "name": "map-tabs",
@@ -296,7 +309,16 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 
 ## Scatterplot – Parametric Configuration
 
-Generates a chart based on a config object
+* `xColumn` – Data column to use for the x-axis (required)
+* `yColumn` – Data column to use for the y-axis (required)
+* `cColumn` – Data column to use for the categories(required)
+* `xAxisLabel` – Label for the x-axis (optional)
+* `yAxisLabel` – Label for the y-axis (optional)
+* `xLabel` – Label of x-value in the tooltip (required)
+* `yLabel` – label of y-value in the tooltip (required)
+* `xTicks` –  Number of ticks on the x-axis (optional)
+* `yTicks` –  Number of ticks on the y-axis (optional)
+
 
 ```project
 {
@@ -322,7 +344,21 @@ Generates a chart based on a config object
 
 ## Variable Radius Scatterplot – Parametric Configuration
 
-configurations
+Configurations
+
+* `xColumn` – Data column to use for the x-axis (required)
+* `yColumn` – Data column to use for the y-axis (required)
+* `rColumn` – Data column to use for the bubble size (required)
+* `cColumn` – Data column to use for category or name (required)
+* `xAxisLabel` – Label for the x-axis (optional)
+* `yAxisLabel` – Label for the y-axis (optional)
+* `xLabel` – Label of x-value in the tooltip (required)
+* `yLabel` – label of y-value in the tooltip (required)
+* `rLabel` – label of radius value in the tooltip (required)
+* `xTicks` –  Number of ticks on the x-axis (optional)
+* `yTicks` –  Number of ticks on the y-axis (optional)
+* `rLegend` – Specifies the number and value of the legend ticks (optional)
+
 
 ```project
 {
