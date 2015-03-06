@@ -137,7 +137,7 @@ var config = {
 
     var rScale = d3.scale.linear()
       .domain(state.rExtent)
-      .range([1, 30]);
+      .range([1, 20]);
 
 
     // Layers
@@ -213,7 +213,7 @@ var config = {
       .call(tooltip);
 
     chartLayer.selectGroup('radiusLegend')
-      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 50))
+      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 65))
       .call(radiusLegend);
 
     chartLayer.selectGroup('xAxis')
