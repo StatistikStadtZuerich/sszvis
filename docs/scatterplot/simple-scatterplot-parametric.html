@@ -39,6 +39,7 @@
     yTicks: 6,
   }
 
+
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('xPosition');
@@ -69,8 +70,8 @@
         return xAcc(d) + '__' + yAcc(d);
       });
 
-
-      state.yExtent = [0, d3.max(state.data, yAcc)];
+      state.xExtent = d3.extent(state.data, xAcc); 
+      state.yExtent = d3.extent(state.data, yAcc);
       state.cExtent = sszvis.fn.set(state.data, cAcc);
 
       render(state);
@@ -166,6 +167,7 @@
       .ticks(config.xTicks)
       .orient('right')
       .contour(true)
+      .showZeroY(true)
       .title(config.yAxisLabel);
 
     var cLegend = sszvis.legend.ordinalColorScale()
@@ -205,6 +207,7 @@
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
 
       // Interaction
 
