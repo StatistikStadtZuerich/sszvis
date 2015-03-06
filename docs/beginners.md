@@ -13,11 +13,6 @@ For each chart the following can always be configured:
 
 ## Line chart – Parametric Configuration
 
-Configuration
-
-* `xColumn` – Data column to use for the x-axis (required)
-* `xAxisLabel` – Label for the x-axis (optional)
-
 ```project
 {
     "name": "line-chart-single-automatic",
@@ -40,9 +35,8 @@ Configuration
 }
 ```
 
-## Multiple line chart – Parametric Configuration
 
-Generates a chart based on a config object
+## Multiple line chart – Parametric Configuration
 
 ``` project
 {
@@ -66,29 +60,43 @@ Generates a chart based on a config object
 }
 ```
 
-## Popultion Pyramid – Parametric Configuration
 
-Configuration: 
-
-* `ageColumn` – Data column to use for the x-axis (required)
-* `valueColumn` – Data column to use for the y-axis (required)
-* `genderColumn` – Data column to use for the categories, here always male and female (required)
-* `yAxisLabel` – Label for the y-axis (optional)
-* `xAxisLabel` – Label for the x-axis (optional)
-* `xTicks` –  Number of ticks on the xAxis (optional)
-* `fallback` – View of the chart when interactivity is not available due to technical restrictions
-
-
+## Bar Chart Vertical – Parametric Configuration
 
 ```project
 {
-    "name": "population-pyramid-basic",
+    "name": "bar-chart-vertical-parametric",
     "files": {
         "index.html": {
-            "source": "docs/population-pyramid/parametric.html",
+            "source": "docs/bar-chart-vertical/parametric.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/population-pyramid/data/BP_basic.csv",
+        "data.csv": "docs/bar-chart-vertical/data/SiVB_fourCities.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "height": 393,
+        "width": 516
+    }
+}
+```
+
+
+## Bar Chart Vertical (Stacked) – Parametric Configuration
+
+```project
+{
+    "name": "bar-chart-vertical-stacked",
+    "files": {
+        "index.html": {
+            "source": "docs/bar-chart-vertical-stacked/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -97,10 +105,61 @@ Configuration:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 470
+        "height": 545
     }
 }
 ```
+
+
+## Bar Chart Horizontal – Parametric Configuration
+
+```project
+{
+    "name": "bar-chart-horizontal-parametric",
+    "files": {
+        "index.html": {
+            "source": "docs/bar-chart-horizontal/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/bar-chart-horizontal/data/SHB_13Categories_longNames.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 622
+    }
+}
+```
+
+
+## Bar Chart Horizontal (Stacked) – Parametric Configuration
+
+```project
+{
+    "name": "bar-chart-horizontal-stacked-parametric",
+    "files": {
+        "index.html": {
+            "source": "docs/bar-chart-horizontal-stacked/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/bar-chart-horizontal-stacked/data/SHB_basic_percent.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 322
+    }
+}
+```
+
 
 ## Grouped Bar Chart – Parametric Configuration
 
@@ -137,6 +196,7 @@ Configuration:
 }
 ```
 
+
 ## Area Chart – Parametric Configuration
 
 Configuration: 
@@ -168,72 +228,6 @@ Configuration:
     "size": {
         "width": 516,
         "height": 529
-    }
-}
-```
-
-## Pie Chart – Parametric Configuration
-
-Configuration:
-
-* `cColumn` – Data column to use for the category (required)
-* `vColumn` – Data column to use for the values of the categories (required)
-
-
-```project
-{
-    "name": "pie-chart-twelve-cat",
-    "files": {
-        "index.html": {
-            "source": "docs/pie-charts/parametric.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/pie-charts/data/P_7Categories.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 300
-    }
-}
-```
-
-## Heat Table – Parametric Configuration
-
-Configuration
-
-* `xColumn` – Data column to use for the x-axis (required)
-* `yColumn` – Data column to use for the y-axis (required)
-* `vColumn` – Data column to use for the values(required)
-* `xAxisLabel` – Label for the x-axis (required)
-* `yAxisLabel` – Label for the y-axis (required)
-* `valueLabel` – Label for the values, shows in the tooltip (required)
-* `tSourceAxis` – Source axis for the header of the tooltip (required)
-* `tTitleAdd` – Additional label to the header of the tooltip (optional)
-
-
-```project
-{
-    "name": "heat-table-kreise",
-    "files": {
-        "index.html": {
-            "source": "docs/heat-table/parametric.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/heat-table/data/HT_kreise.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 800
     }
 }
 ```
@@ -307,6 +301,108 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 }
 ```
 
+## Heat Table – Parametric Configuration
+
+Configuration
+
+* `xColumn` – Data column to use for the x-axis (required)
+* `yColumn` – Data column to use for the y-axis (required)
+* `vColumn` – Data column to use for the values(required)
+* `xAxisLabel` – Label for the x-axis (required)
+* `yAxisLabel` – Label for the y-axis (required)
+* `valueLabel` – Label for the values, shows in the tooltip (required)
+* `tSourceAxis` – Source axis for the header of the tooltip (required)
+* `tTitleAdd` – Additional label to the header of the tooltip (optional)
+
+
+```project
+{
+    "name": "heat-table-kreise",
+    "files": {
+        "index.html": {
+            "source": "docs/heat-table/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/heat-table/data/HT_kreise.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 800
+    }
+}
+```
+
+
+## Pie Chart – Parametric Configuration
+
+Configuration:
+
+* `cColumn` – Data column to use for the category (required)
+* `vColumn` – Data column to use for the values of the categories (required)
+
+
+```project
+{
+    "name": "pie-chart-twelve-cat",
+    "files": {
+        "index.html": {
+            "source": "docs/pie-charts/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/pie-charts/data/P_7Categories.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 300
+    }
+}
+```
+
+## Population Pyramid – Parametric Configuration
+
+Configuration: 
+
+* `ageColumn` – Data column to use for the x-axis (required)
+* `valueColumn` – Data column to use for the y-axis (required)
+* `genderColumn` – Data column to use for the categories, here always male and female (required)
+* `yAxisLabel` – Label for the y-axis (optional)
+* `xAxisLabel` – Label for the x-axis (optional)
+* `xTicks` –  Number of ticks on the xAxis (optional)
+* `fallback` – View of the chart when interactivity is not available due to technical restrictions
+
+```project
+{
+    "name": "population-pyramid-basic",
+    "files": {
+        "index.html": {
+            "source": "docs/population-pyramid/parametric.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/population-pyramid/data/BP_basic.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 470
+    }
+}
+```
+
+
 ## Scatterplot – Parametric Configuration
 
 * `xColumn` – Data column to use for the x-axis (required)
@@ -318,7 +414,6 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 * `yLabel` – label of y-value in the tooltip (required)
 * `xTicks` –  Number of ticks on the x-axis (optional)
 * `yTicks` –  Number of ticks on the y-axis (optional)
-
 
 ```project
 {
@@ -341,6 +436,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
     }
 }
 ```
+
 
 ## Variable Radius Scatterplot – Parametric Configuration
 

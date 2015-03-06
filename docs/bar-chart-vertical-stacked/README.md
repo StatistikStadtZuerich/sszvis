@@ -99,28 +99,3 @@ Eight layers of values, with tooltips.
     }
 }
 ```
-
-## Parametric
-
-
-```project
-{
-    "name": "bar-chart-vertical-stacked",
-    "files": {
-        "index.html": {
-            "source": "docs/bar-chart-vertical-stacked/parametric.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 545
-    }
-}
-```
