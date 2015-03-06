@@ -33,10 +33,10 @@
     title: '',
     description: '', 
     initialYear: '2012',
-    valueColumn: 'Ausländeranteil',
     yearColumn: 'Jahr',
-    quarterNumColumn: 'Qcode',
-    quarterNameColumn: 'Qname',
+    geoIdColumn: 'Qcode',
+    nameColumn: 'Qname',
+    valueColumn: 'Ausländeranteil',
     valueLabel: 'Ausländeranteil'
   }
 
@@ -99,8 +99,8 @@
   d3.csv('data/S_tabs.csv')
     .row(function(d) {
       return {
-        quarternum: sszvis.parse.number(d[config.quarterNumColumn]),
-        quartername: d[config.quarterNameColumn],
+        quarternum: sszvis.parse.number(d[config.geoIdColumn]),
+        quartername: d[config.nameColumn],
         value: sszvis.parse.number(d[config.valueColumn]),
         year: d[config.yearColumn]
       };
