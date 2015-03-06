@@ -1,6 +1,15 @@
 # Charts for beginners
 
-> These charts are fully parametrized for simple usage
+> These charts are fully parametrized for simple usage. They are all generated based on a config object that stands at the beginning of the code. 
+
+## General Parametric Configuration
+
+For each chart the following can always be configured: 
+
+* `dataPath` – Path to file containing the data (required)
+* `title` – Chart title (optional)
+* `description` – Short description of chart (optional)
+
 
 ## Line chart – Parametric Configuration
 
@@ -59,7 +68,17 @@ Generates a chart based on a config object
 
 ## Popultion Pyramid – Parametric Configuration
 
-Generates a chart based on a config object
+Configuration: 
+
+* `ageColumn` – Data column to use for the x-axis (required)
+* `valueColumn` – Data column to use for the y-axis (required)
+* `genderColumn` – Data column to use for the categories, here always male and female (required)
+* `yAxisLabel` – Label for the y-axis (optional)
+* `xAxisLabel` – Label for the x-axis (optional)
+* `xTicks` –  Number of ticks on the xAxis (optional)
+* `fallback` – View of the chart when interactivity is not available due to technical restrictions
+
+
 
 ```project
 {
@@ -84,14 +103,24 @@ Generates a chart based on a config object
 ```
 
 ## Grouped Bar Chart – Parametric Configuration
-With negative and missing values
+
+Configuration: 
+
+* `xColumn` – Data column to use for the x-axis (required)
+* `yColumn` – Data column to use for the y-axis (required)
+* `cColumn` – Data column to use for the categories(required)
+* `yAxisLabel` – Label for the y-axis (optional)
+* `yTicks` –  Number of ticks on the x-axis (optional)
+* `textDirection` – Text Direction of x-axis lables (optional)
+* `fallback` – View of the chart when interactivity is not available due to technical restrictions 
+
 
 ```project
 {
     "name": "bar-chart-grouped_gb-two-small",
     "files": {
         "index.html": {
-            "source": "docs/bar-chart-grouped/gb-two-small-parametric.html",
+            "source": "docs/bar-chart-grouped/parametric.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/bar-chart-grouped/data/GB_2Categories_smallVals.csv",
@@ -109,15 +138,24 @@ With negative and missing values
 ```
 
 ## Area Chart – Parametric Configuration
-Without button groups…
 
+Configuration: 
+
+* `xColumn` – Data column to use for the x-axis (required)
+* `yColumn` – Data column to use for the y-axis (required)
+* `cColumn` – Data column to use for the categories(required)
+* `xAxisLabel` – Label for the x-axis (optional)
+* `yAxisLabel` – Label for the y-axis (optional)
+* `xTicks` –  Number of ticks on the x-axis (optional)
+* `yTicks` –  Number of ticks on the y-axis (optional)
+* `fallback` – View of the chart when interactivity is not available due to technical restrictions 
 
 ```project
 {
     "name": "area-chart-stacked-two",
     "files": {
         "index.html": {
-            "source": "docs/area-chart-stacked/sa-two-parametric.html",
+            "source": "docs/area-chart-stacked/parametric.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/area-chart-stacked/data/SA_2Categories_yearly.csv",
@@ -136,7 +174,11 @@ Without button groups…
 
 ## Pie Chart – Parametric Configuration
 
-Generates a chart based on a config object
+Configuration:
+
+* `cColumn` – Data column to use for the category (required)
+* `vColumn` – Data column to use for the values of the categories (required)
+
 
 ```project
 {
@@ -162,12 +204,24 @@ Generates a chart based on a config object
 
 ## Heat Table – Parametric Configuration
 
+Configuration
+
+* `xColumn` – Data column to use for the x-axis (required)
+* `yColumn` – Data column to use for the y-axis (required)
+* `vColumn` – Data column to use for the values(required)
+* `xAxisLabel` – Label for the x-axis (required)
+* `yAxisLabel` – Label for the y-axis (required)
+* `valueLabel` – Label for the values, shows in the tooltip (required)
+* `tSourceAxis` – Source axis for the header of the tooltip (required)
+* `tTitleAdd` – Additional label to the header of the tooltip (optional)
+
+
 ```project
 {
     "name": "heat-table-kreise",
     "files": {
         "index.html": {
-            "source": "docs/heat-table/ht-kreise-parametric.html",
+            "source": "docs/heat-table/parametric.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/heat-table/data/HT_kreise.csv",
