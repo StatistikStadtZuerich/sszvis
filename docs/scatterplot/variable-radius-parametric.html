@@ -39,7 +39,7 @@ var config = {
     rLabel: 'Radius', // label of radius value in the tooltip
     xTicks: null,    // Replace null with a cardinal number to specify the number of ticks
     yTicks: null,    // Replace null with a cardinal number to specify the number of ticks
-    rLegend: [5, 10, 15, 20]
+    rLegend: null    // Replace null with [1000, 3000, 5000] to specify legend ticks 
   }
 
 
@@ -49,6 +49,7 @@ var config = {
   var yAcc = sszvis.fn.prop('yPosition');
   var rAcc = sszvis.fn.prop('radius');
   var cAcc = sszvis.fn.prop('label');
+
 
 
   /* Application state
@@ -136,7 +137,7 @@ var config = {
 
     var rScale = d3.scale.linear()
       .domain(state.rExtent)
-      .range(state.rExtent);
+      .range([1, 30]);
 
 
     // Layers
@@ -164,6 +165,7 @@ var config = {
     var xAxis = sszvis.axis.x()
       .scale(xScale)
       .orient('bottom')
+      .contour(true)
       .ticks (config.xTicks)
       .tickFormat(function(d) {
         return d < 1 ? d.toPrecision(1) : d;
@@ -191,9 +193,9 @@ var config = {
       .header(cAcc)
       .body(function(d) {  
         return [
-          [config.yLabel, yAcc(d).toPrecision(2)],
-          [config.xLabel, xAcc(d).toPrecision(2)],
-          [config.rLabel, rAcc(d).toPrecision(2)],
+          [config.yLabel, sszvis.format.number(yAcc(d), 2)],
+          [config.xLabel, sszvis.format.number(xAcc(d), 2)],
+          [config.rLabel, rAcc(d)],
         ];
       })
       .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
@@ -211,7 +213,7 @@ var config = {
       .call(tooltip);
 
     chartLayer.selectGroup('radiusLegend')
-      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 65))
+      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 50))
       .call(radiusLegend);
 
     chartLayer.selectGroup('xAxis')
