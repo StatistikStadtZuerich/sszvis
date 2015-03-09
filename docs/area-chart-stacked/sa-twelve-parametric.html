@@ -25,14 +25,18 @@
   /* Configuration
   ----------------------------------------------- */
   var config = {
+    // The path to the CSV file containing the data for this chart
     dataPath: 'data/SA_12Kategories_yearly.csv',
+    // The title and description of this chart for visually impaired users
     title: 'Diagrammtitel',
     description: 'Kurze Beschreibung des Inhalts dieses Diagramms',
-    xAxisLabel: 'xAxis',
-    yAxisLabel: 'yAxis',
-    distanceLegend: 40 //distance of Legend to x Axis
-
+    // The label for the x- and y-axis. Set to empty ('') to hide the label
+    xAxisLabel: 'x-Achsenbeschriftung',
+    yAxisLabel: 'y-Achsenbeschriftung',
+    // Padding between legend and x-axis in pixels. The recommended default is 60px.
+    legendPadding: 60
   }
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -162,23 +166,13 @@
     var cScale = sszvis.color.qual12()
       .domain(state.categories);
 
-   var nrRows = Math.round(state.categories.length / 2); 
-    if (state.categories.length <= 4) {
-      var colorLegend = sszvis.legend.ordinalColorScale()
-      .scale(cScale)
-      .horizontalFloat(true)
-    } else {
-      var colorLegend = sszvis.legend.ordinalColorScale()
-      .scale(cScale)
-      .rows(nrRows)
-      .orientation('vertical');
-    };
-    
-    var legendHeight = function() {
-      return nrRows * colorLegend.rowHeight();
-    };
+    var colorLegend = flexibleLegend(cScale, state.categories.length)
 
-    var bounds = sszvis.bounds({ height: Math.round(sszvis.bounds.DEFAULT_WIDTH * sszvis.bounds.RATIO), top: 70, bottom: legendHeight() + config.distanceLegend});
+    var bounds = sszvis.bounds({
+      height: Math.round(sszvis.bounds.DEFAULT_WIDTH * sszvis.bounds.RATIO),
+      top: 70,
+      bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
+    });
 
     // this layout function computes values, including an array of baseline y-positions, for the
     // area multiples component. The most important is the array of y-baselines, which are used
@@ -381,7 +375,7 @@
       .style('opacity', Number(!state.isMultiples));
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.distanceLegend))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
       .call(colorLegend);
 
     htmlLayer.selectDiv('controls')
@@ -438,6 +432,22 @@
     var d1 = data[i] || d0;
     return datum - d0 > d1 - datum ? d1 : d0;
   }
+
+  function flexibleLegend(scale, numEntries) {
+    var legend = sszvis.legend.ordinalColorScale().scale(scale)
+    if (numEntries <= 4) {
+      legend.horizontalFloat(true)
+    } else {
+      legend
+        .rows(Math.ceil(numEntries / 2))
+        .orientation('vertical');
+    };
+    return legend;
+  }
+
+  function legendHeight(legend, numEntries) {
+    return legend.rowHeight() * Math.ceil(numEntries / 2);
+  };
 
 
 }(d3, sszvis));
