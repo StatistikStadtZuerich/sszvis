@@ -121,11 +121,9 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 140 });
-    
+    var bounds = sszvis.bounds({ top: 25, bottom: 140 });
 
     // Scales
-
     var xScale = d3.scale.ordinal()
       .domain(state.regions)
       .rangeRoundBands([0, bounds.innerWidth], 0.26, 0.80);
@@ -146,6 +144,7 @@
     };
 
     //choose color scale depending on number of categories
+    state.categories = sszvis.fn.set(state.data, cAcc);
     var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
     cScale.domain(state.categories);
 
@@ -234,16 +233,18 @@
 
 
     // Interaction
+    if (!config.fallback) {
+      var interactionLayer = sszvis.behavior.move()
+        .xScale(xScale)
+        .yScale(yScale)
+        .on('move', actions.showTooltip)
+        .on('end', actions.hideTooltip);
 
-    var interactionLayer = sszvis.behavior.move()
-      .xScale(xScale)
-      .yScale(yScale)
-      .on('move', actions.showTooltip)
-      .on('end', actions.hideTooltip);
-
-    chartLayer.selectGroup('interactionLayer')
-      .call(interactionLayer);
+      chartLayer.selectGroup('interactionLayer')
+        .call(interactionLayer);
+    }
   }
+
 
 
 /* Helper functions
