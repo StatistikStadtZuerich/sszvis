@@ -41,16 +41,17 @@
     yColumn: 'Altersgruppe',
     // Data column to use for the values
     vColumn: 'Anzahl',
-    // The label for the x-axis. Required as it is also the label in the tooltip
+    // The label for the x- and y-axis. Set to empty ('') to hide the label
     xAxisLabel: 'Kreis',
-    // The label for the y-axis. Required as it is also the label in the tooltip
     yAxisLabel: 'Altersgruppe',
     // The label for the values. Required as it is also the label in the tooltip
     valueLabel: 'Einwohner',
     //Tooltip Header Source Axis, takes 'y' or 'x'
-    tSourceAxis: 'y',  
+    tSourceAxis: 'x',  
     //Additional label to the tooltip header. Set to empty ('') to hide the label
-    tTitleAdd: '' 
+    tTitleAdd: '', 
+    // View of the chart when interactivity is not desired. Does not render mouse interaction when true 
+    fallback: false
   };
 
 
@@ -252,8 +253,10 @@
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 
-    bars.selectAll('[data-tooltip-anchor]')
-      .call(tooltip);
+    if (!config.fallback) {
+      bars.selectAll('[data-tooltip-anchor]')
+        .call(tooltip)
+    };
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, -10))
@@ -269,10 +272,11 @@
 
 
     // Interaction
-
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
+    if (!config.fallback) {
+      bars.selectAll('.sszvis-bar')
+        .on('mouseover', actions.showTooltip)
+        .on('mouseout',  actions.hideTooltip)
+    };
   }
 
 
