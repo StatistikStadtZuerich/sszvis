@@ -36,12 +36,12 @@ var config = {
     valueColumn: 'Anzahl',
     //Data column to use for the categories, here always male and female
     genderColumn: 'Geschlecht', 
-    // The label for the x-axis. Set to empty ('') to hide the label
+    // The label for the x- and y-axis. Set to empty ('') to hide the label
     xAxisLabel: '', 
-    // The label for the y-axis. Set to empty ('') to hide the label
     yAxisLabel: '', 
-    // Number of ticks on the x-axis. Replace null with a cardinal number to specify the number of ticks
+    // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
     xTicks: null,   
+    yTicks: null, 
     //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks when true
     fallback: false
   };
@@ -92,7 +92,7 @@ var config = {
       // compute bins
       var binnedData = [],
           // The number of data points to include in each bin
-          binStep = 5, // MAYBE WORKS????
+          binStep = 5,
           // A list of age groups in the dataset, used for the y-axis scale
           ages = [],
           // A lookup index to aid in creating a smooth tooltip experience. The
@@ -238,7 +238,7 @@ var config = {
       .scale(lengthScale)
       .orient('bottom')
       .title(config.xAxisLabel)
-      .ticks (config.xTicks)
+      .ticks(config.xTicks)
       .tickLength(config.fallback ? bounds.innerWidth : null)
       .titleAnchor('middle')
       .titleCenter(true);
@@ -246,9 +246,13 @@ var config = {
     var yAxis = sszvis.axis.y.ordinal()
       .scale(positionScale)
       .orient('right')
-      .ticks(5)
       .title(config.yAxisLabel)
-      .dyTitle(-18);
+      .dyTitle(-18)
+      if (!config.yTicks){
+        yAxis.ticks(4)
+      } else {
+        yAxis.ticks((config.yTicks)-1)
+      };
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(colorScale)
@@ -295,6 +299,7 @@ var config = {
 
 
     // Interaction
+    if (!config.fallback) {
     var interactionLayer = sszvis.behavior.move()
       .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
       // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
@@ -305,7 +310,8 @@ var config = {
       .on('end', actions.deselectBar);
 
     chartLayer.selectGroup('interactionLayer')
-      .call(interactionLayer);
+      .call(interactionLayer)
+    };
   }
 
 
