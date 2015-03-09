@@ -29,14 +29,22 @@
   /* Configuration
   ----------------------------------------------- */
   var config = {
+    // The path to the CSV file containing the data for this chart
     dataPath: 'data/S_tabs.csv',
+    // The title and description of this chart for visually impaired users
     title: '',
     description: '', 
+
     initialYear: '2012',
     yearColumn: 'Jahr',
+    
+    //Data column to use for the geographic values
     geoIdColumn: 'Qcode',
+    //Data column to use for the name of the geographic values
     nameColumn: 'Qname',
+    //Data column to use for the values
     valueColumn: 'Ausländeranteil',
+    //Label for the values, shows in the tooltip
     valueLabel: 'Ausländeranteil'
   }
 
