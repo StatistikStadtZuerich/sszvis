@@ -30,17 +30,27 @@
   /* Configuration
   ----------------------------------------------- */
   var config = {
+    // The path to the CSV file containing the data for this chart
     dataPath: 'data/HT_kreise.csv',
+    // The title and description of this chart for visually impaired users
     title: '',
     description: '',
+    // Data column to use for the x-axis
     xColumn: 'KName',
+    // Data column to use for the y-axis
     yColumn: 'Altersgruppe',
+    // Data column to use for the values
     vColumn: 'Anzahl',
+    // The label for the x-axis. Required as it is also the label in the tooltip
     xAxisLabel: 'Kreis',
+    // The label for the y-axis. Required as it is also the label in the tooltip
     yAxisLabel: 'Altersgruppe',
+    // The label for the values. Required as it is also the label in the tooltip
     valueLabel: 'Einwohner',
-    tSourceAxis: 'y',  //Tooltip Header Source Axis, takes 'y' or 'x'
-    tTitleAdd: '' //additional label to the tooltip header
+    //Tooltip Header Source Axis, takes 'y' or 'x'
+    tSourceAxis: 'y',  
+    //Additional label to the tooltip header. Set to empty ('') to hide the label
+    tTitleAdd: '' 
   };
 
 
