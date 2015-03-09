@@ -42,7 +42,7 @@
     // Label for the values, shows in the tooltip
     valueLabel: 'Einwohner',
     // View of the chart when interactivity is not desired. Does not render mouse interaction when true    
-    fallback: true
+    fallback: false
   }
 
   /* Shortcuts
@@ -150,7 +150,7 @@
         .bold(sszvis.fn.compose(nameAcc, mDatumAcc)); 
 
       var tooltipBody = sszvis.svgUtils.modularText.html()
-        .bold(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
+        .plain(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
         .plain(config.valueLabel);
 
       // When using the map component, the data element bound to the tooltip anchor is the internal representation
