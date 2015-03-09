@@ -40,7 +40,9 @@
     // Data column to use for the values
     valueColumn: 'Bevölkerung',
     // Label for the values, shows in the tooltip
-    valueLabel: 'Einwohner'
+    valueLabel: 'Einwohner',
+    // View of the chart when interactivity is not desired. Does not render mouse interaction when true    
+    fallback: true
   }
 
   /* Shortcuts
@@ -128,36 +130,39 @@
 
 
     // Components
+    
+      var mapMaker = sszvis.map.zurichStadtKreise()
+        .highlight(state.selection)
+        // gets the fill color and darken it
+        .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
+        .width(bounds.innerWidth)
+        .height(bounds.innerHeight)
+        .fill(sszvis.fn.compose(colorScale, vAcc))
+        // add mouse/touch interaction
+        if (!config.fallback) {
+          mapMaker
+            .on('over', actions.selectHovered)
+            .on('click', actions.selectHovered) 
+            .on('out', actions.deselectHovered)
+        };
 
-    var mapMaker = sszvis.map.zurichStadtKreise()
-      .highlight(state.selection)
-      // gets the fill color and darken it
-      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
-      .width(bounds.innerWidth)
-      .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc))
-      // add mouse/touch interaction
-      .on('over', actions.selectHovered)
-      .on('click', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      var tooltipHeader = sszvis.svgUtils.modularText.html()
+        .bold(sszvis.fn.compose(nameAcc, mDatumAcc)); 
 
-    var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(nameAcc, mDatumAcc)); 
+      var tooltipBody = sszvis.svgUtils.modularText.html()
+        .bold(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
+        .plain(config.valueLabel);
 
-    var tooltipBody = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
-      .plain(config.valueLabel);
-
-    // When using the map component, the data element bound to the tooltip anchor is the internal representation
-    // which includes both the geoJson and the datum as properties. This is necessary so that the correct position
-    // can be calculated from the geoJson. But that also means that when accessing the datum for other purposes,
-    // such as creating tooltip text, the user must be aware that the 'd' argument is not just the data value.
-    // The data value, if present, is available as d.datum.
-    var tooltip = sszvis.annotation.tooltip()
-      .renderInto(tooltipLayer)
-      .header(tooltipHeader)
-      .body(tooltipBody)
-      .visible(isSelected);
+      // When using the map component, the data element bound to the tooltip anchor is the internal representation
+      // which includes both the geoJson and the datum as properties. This is necessary so that the correct position
+      // can be calculated from the geoJson. But that also means that when accessing the datum for other purposes,
+      // such as creating tooltip text, the user must be aware that the 'd' argument is not just the data value.
+      // The data value, if present, is available as d.datum.
+      var tooltip = sszvis.annotation.tooltip()
+        .renderInto(tooltipLayer)
+        .header(tooltipHeader)
+        .body(tooltipBody)
+        .visible(isSelected);
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
@@ -169,8 +174,10 @@
 
     chartLayer.call(mapMaker);
 
+    if (!config.fallback) {
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+    }
 
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
