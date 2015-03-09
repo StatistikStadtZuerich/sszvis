@@ -28,12 +28,18 @@
   /* Configuration
   ----------------------------------------------- */
   var config = {
+    // The path to the CSV file containing the data for this chart
     dataPath: 'data/M_kreis.csv',
+    // The title and description of this chart for visually impaired users
     title: '',
     description: '', 
-    nameColumn: 'Kname',
-    valueColumn: 'Bevölkerung',
+    // Data column to use for the geographic values
     geoIdColumn: 'KNr',
+    // Data column to use for the name of the geographic values
+    nameColumn: 'Kname',
+    // Data column to use for the values
+    valueColumn: 'Bevölkerung',
+    // Label for the values, shows in the tooltip
     valueLabel: 'Einwohner'
   }
 
