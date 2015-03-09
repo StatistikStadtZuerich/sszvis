@@ -34,10 +34,6 @@
     // The title and description of this chart for visually impaired users
     title: '',
     description: '', 
-
-    initialYear: '2012',
-    yearColumn: 'Jahr',
-    
     //Data column to use for the geographic values
     geoIdColumn: 'Qcode',
     //Data column to use for the name of the geographic values
@@ -45,14 +41,16 @@
     //Data column to use for the values
     valueColumn: 'Ausländeranteil',
     //Label for the values, shows in the tooltip
-    valueLabel: 'Ausländeranteil'
+    valueLabel: 'Ausländeranteil',
+    // View of the chart when interactivity is not desired. Does not render mouse interaction when true 
+    fallback: true
   }
 
 
   /* Shortcuts
   ----------------------------------------------- */
   var vAcc = sszvis.fn.prop('value');
-  var yAcc = sszvis.fn.prop('year');
+  // var yAcc = sszvis.fn.prop('year');
   var qnameAcc = sszvis.fn.prop('quartername');
   var mDatumAcc = sszvis.fn.prop('datum');
 
@@ -62,8 +60,6 @@
   var state = {
     data: [],
     valueDomain: [0, 0],
-    years: [],
-    currentYear: null,
     currentMapData: [],
     selection: []
   };
@@ -74,19 +70,8 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.valueDomain = [0, d3.max(state.data, vAcc)];
-      state.years = sszvis.fn.set(state.data, yAcc).sort(d3.ascending);
+      state.valueDomain = [0, d3.max(state.data, vAcc)]
 
-      actions.setYear(config.initialYear);
-    },
-
-    // this function switches the active year
-    setYear: function(y) {
-      state.currentYear = y;
-      // filter the data to match the selected year
-      state.currentMapData = state.data.filter(function(v) {
-        return yAcc(v) === state.currentYear;
-      });
       render(state);
     },
 
@@ -102,6 +87,7 @@
   };
 
 
+
   /* Data initialization
   ----------------------------------------------- */
   d3.csv('data/S_tabs.csv')
@@ -110,7 +96,6 @@
         quarternum: sszvis.parse.number(d[config.geoIdColumn]),
         quartername: d[config.nameColumn],
         value: sszvis.parse.number(d[config.valueColumn]),
-        year: d[config.yearColumn]
       };
     })
     .get(function(error, data) {
@@ -127,7 +112,7 @@
   function render(state) {
     // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 592, top: 80, right: padding, bottom: 90, left: padding });
+    var bounds = sszvis.bounds({ height: 592, top: 30, right: padding, bottom: 90, left: padding });
 
 
     // Scales
@@ -142,7 +127,7 @@
         title: config.title,
         description: config.description
       })
-      .datum(state.currentMapData);
+      .datum(state.data);
 
     var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart');
 
@@ -151,15 +136,6 @@
 
 
     // Components
-
-    // Button group control for switching the data year
-    var controlWidth = bounds.width / 2;
-
-    var control = sszvis.control.buttonGroup()
-      .values(state.years)
-      .width(controlWidth)
-      .current(state.currentYear)
-      .change(actions.setYear);
 
     var mapMaker = sszvis.map.zurichStatistischeQuartiere()
       .keyName('quarternum')
@@ -177,9 +153,12 @@
         return !isNaN(vAcc(d));
       })
       .fill(sszvis.fn.compose(colorScale, vAcc))
-      .on('over', actions.selectHovered)
-      .on('click', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      if (!config.fallback) {
+        mapMaker
+        .on('over', actions.selectHovered)
+        .on('click', actions.selectHovered)
+        .on('out', actions.deselectHovered)
+      };
 
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
@@ -187,7 +166,7 @@
       .bold(sszvis.fn.compose(qnameAcc, mDatumAcc)); 
 
     var tooltipBody = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(function(v) {
+      .plain(sszvis.fn.compose(function(v) {
         return isNaN(v) ? 'keine Daten' : sszvis.format.percent(v);
       }, vAcc, mDatumAcc))
       .plain(config.valueLabel);
@@ -208,18 +187,16 @@
 
     chartLayer.call(mapMaker);
 
+    if (!config.fallback) {
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+    }
 
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
       .call(legend);
-
-    htmlLayer.selectDiv('controls')
-      .style('left', ((bounds.width - controlWidth) / 2) + 'px')
-      .style('top', (22) + 'px')
-      .call(control);
   }
+
 
   function isSelected(d) {
     return state.selection.indexOf(d.datum) >= 0;
