@@ -25,16 +25,25 @@
   /* Configuration
   ----------------------------------------------- */
 var config = {
+    // The path to the CSV file containing the data for this chart
     dataPath: 'data/BP_basic.csv',
+    // The title and description of this chart for visually impaired users
     title: '', 
     description: '',
+    // Data column to use for the x-axis
     ageColumn: 'Alter',
+    // Data column to use for the y-axis
     valueColumn: 'Anzahl',
+    //Data column to use for the categories, here always male and female
     genderColumn: 'Geschlecht', 
+    // The label for the x-axis. Set to empty ('') to hide the label
     xAxisLabel: '', 
+    // The label for the y-axis. Set to empty ('') to hide the label
     yAxisLabel: '', 
-    xTicks: null,   // replace null with a cardinal number to specify the number of ticks
-    fallback: false //creates vertical lines for the x-ticks when true
+    // Number of ticks on the x-axis. Replace null with a cardinal number to specify the number of ticks
+    xTicks: null,   
+    //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks when true
+    fallback: false
   };
 
 
@@ -83,7 +92,7 @@ var config = {
       // compute bins
       var binnedData = [],
           // The number of data points to include in each bin
-          binStep = 5,
+          binStep = 5, // MAYBE WORKS????
           // A list of age groups in the dataset, used for the y-axis scale
           ages = [],
           // A lookup index to aid in creating a smooth tooltip experience. The
