@@ -189,20 +189,14 @@ var config = {
         return Math.round(d * 100) / 100;
       });
 
-    var roundingNumber = function(d){
-      if (d % 1 === 0) {
-        return 1}
-      else {return 2}
-    };
-
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(cAcc)
       .body(function(d) {  
         return [
-          [config.yLabel, sszvis.format.number(yAcc(d), roundingNumber(yAcc(d)))],
-          [config.xLabel, sszvis.format.number(xAcc(d), roundingNumber(xAcc(d)))],
-          [config.rLabel, sszvis.format.number(rAcc(d), roundingNumber(rAcc(d)))],
+          [config.yLabel, sszvis.format.number(yAcc(d))],
+          [config.xLabel, sszvis.format.number(xAcc(d))],
+          [config.rLabel, sszvis.format.number(rAcc(d))],
         ];
       })
       .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
