@@ -26,16 +26,25 @@
   ----------------------------------------------- */
 
   var config = {
+    // The path to the CSV file containing the data for this chart
+    dataPath: 'data/GB_2Categories_smallVals.csv',
+    // The title and description of this chart for visually impaired users
     title: '', 
     description: '', 
-    dataPath: 'data/GB_2Categories_smallVals.csv',
+    // Data column to use for the x-axis
     xColumn: 'Region',
-    yColumn: 'Wert',
+    // Data column to use for the y-axis
+    yColumn: 'Wert'
+    // Data column to use for the categories
     cColumn: 'Kategorie',
+    // The label for the y-axis. Set to empty ('') to hide the label
     yAxisLabel: '',
-    yTicks: null, // Replace null with a cardinal number to specify the number of ticks
-    textDirection: 'diagonal', //Takes null, 'diagonal' and 'vertical'
-    fallback: false //Optional, creates horizontal lines for the y-ticks when true
+    // Replace null with a cardinal number to specify the number of ticks
+    yTicks: null, 
+    //The orientation of the x-Axis Labels. Takes null, 'diagonal' and 'vertical'
+    textDirection: 'diagonal', 
+    //Creates horizontal lines for the y-ticks when true
+    fallback: false 
   };
 
 
