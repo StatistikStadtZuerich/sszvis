@@ -47,6 +47,8 @@ var config = {
     yTicks: null,  
     //Specifies the number and value of the legend ticks. Replace null with [], as in: [1000, 3000, 5000])
     rLegend: null,
+    // Padding between legend and x-axis in pixels. The recommended default is 60px.
+    legendPadding: 60,
     //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true 
     fallback: false 
   }
@@ -238,7 +240,7 @@ var config = {
       .call(tooltip);
 
     chartLayer.selectGroup('radiusLegend')
-      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 65))
+      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + config.legendPadding))
       .call(radiusLegend);
 
     chartLayer.selectGroup('xAxis')
