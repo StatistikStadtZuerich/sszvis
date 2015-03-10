@@ -190,7 +190,7 @@ var config = {
       .title(config.yAxisLabel);
       
 
-    var yAxisTicks = sszvis.axis.y()
+    var longTicks = sszvis.axis.y()
       .ticks(config.yTicks)
       .scale(yScale)
       .orient('right')
@@ -199,9 +199,9 @@ var config = {
       .title(config.yAxisLabel)
 
       if (config.fallback) {
-        yAxisTicks.tickLength(bounds.innerWidth) 
+        longTicks.tickLength(bounds.innerWidth) 
       } else {
-        yAxisTicks.tickLength(null)
+        longTicks.tickLength(null)
       };
 
 
@@ -229,8 +229,8 @@ var config = {
 
 
     // Rendering
-    chartLayer.selectGroup('yAxisTicks')
-      .call(yAxisTicks)
+    chartLayer.selectGroup('longTicks')
+      .call(longTicks)
 
     chartLayer.selectGroup('dots')
       .call(dots);

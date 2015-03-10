@@ -166,7 +166,6 @@
       .scale(xScale)
       .ticks(config.xTicks)
       .orient('bottom')
-      .tickLength(config.fallback ? bounds.innerWidth : null)
       .alignOuterLabels(true)
       .title(config.xAxisLabel);
 
@@ -177,6 +176,19 @@
       .contour(true)
       .showZeroY(true)
       .title(config.yAxisLabel);
+
+    var longTicks = sszvis.axis.y()
+      .ticks(config.yTicks)
+      .scale(yScale)
+      .orient('right')
+      .showZeroY(true)
+      .contour(true)
+      .title(config.yAxisLabel)
+      if (config.fallback) {
+        longTicks.tickLength(bounds.innerWidth) 
+      } else {
+        longTicks.tickLength(null)
+      };
 
     var cLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
@@ -198,7 +210,8 @@
 
 
     // Rendering
-
+    chartLayer.selectGroup('longTicks')
+      .call(longTicks)
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
