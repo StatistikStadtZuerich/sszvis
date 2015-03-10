@@ -126,7 +126,7 @@
     //choose color scale depending on number of categories
     var cScale = state.cExtent.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
     cScale.domain(state.cExtent);
-
+    
     var colorLegend = flexibleLegend(cScale, state.categories.length)
 
     var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length) });
@@ -197,10 +197,6 @@
         longTicks.tickLength(null)
       };
 
-    var cLegend = sszvis.legend.ordinalColorScale()
-      .scale(cScale)
-      .horizontalFloat(true);
-
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(cAcc)
@@ -232,7 +228,7 @@
 
     chartLayer.selectGroup('cScale')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
-      .call(cLegend);
+      .call(colorLegend);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
