@@ -42,6 +42,8 @@
     // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
     xTicks: null, 
     yTicks: null, 
+    // Padding between legend and x-axis in pixels. The recommended default is 60px.
+    legendPadding: 60,
     //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
     fallback: false
   }
@@ -80,6 +82,8 @@
       state.xExtent = d3.extent(state.data, xAcc); 
       state.yExtent = d3.extent(state.data, yAcc);
       state.cExtent = sszvis.fn.set(state.data, cAcc);
+      
+      state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
     },
@@ -118,7 +122,14 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 20, bottom: 84 });
+    
+    //choose color scale depending on number of categories
+    var cScale = state.cExtent.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
+    cScale.domain(state.cExtent);
+
+    var colorLegend = flexibleLegend(cScale, state.categories.length)
+
+    var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length) });
 
 
     // Scales
@@ -134,10 +145,6 @@
       .range([bounds.innerHeight, 0]);
 
     var yValue = sszvis.fn.compose(yScale, yAcc);
-
-    //choose color scale depending on number of categories
-    var cScale = state.cExtent.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
-    cScale.domain(state.cExtent);
 
 
     // Layers
@@ -224,7 +231,7 @@
       .call(xAxis);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
       .call(cLegend);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
@@ -245,6 +252,26 @@
       .call(mouseOverlay)
     };
   }
+
+
+/* Helper functions
+  ----------------------------------------------- */
+  function flexibleLegend(scale, numEntries) {
+    var legend = sszvis.legend.ordinalColorScale().scale(scale)
+    if (numEntries <= 4) {
+      legend.horizontalFloat(true)
+    } else {
+      legend
+        .rows(Math.ceil(numEntries / 2))
+        .orientation('vertical');
+    };
+    return legend;
+  }
+
+  function legendHeight(legend, numEntries) {
+    return legend.rowHeight() * Math.ceil(numEntries / 2);
+  };
+
 
 }(d3, sszvis));
 </script>
