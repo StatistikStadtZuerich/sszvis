@@ -34,6 +34,8 @@
     cColumn: 'Kategorie',
     // Data column to use for the values
     vColumn: 'Schweiz Import',
+    //View of the chart when interactivity is not available. Does not render mouse interaction when true
+    fallback: false
   }
 
   /* Shortcuts
@@ -158,10 +160,11 @@
 
 
     // Interaction
-
+    if (!config.fallback) {
     pie.selectAll('path')
       .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
+      .on('mouseout',  actions.hideTooltip)
+    };
   }
 
 
