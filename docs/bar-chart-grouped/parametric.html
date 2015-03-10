@@ -197,7 +197,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
-      .header(sszvis.svgUtils.modularText.html().bold(function(d) {
+      .header(sszvis.svgUtils.modularText.html().plain(function(d) {
         return xAcc(sszvis.fn.first(d));
       }))
       .body(function(d) {
