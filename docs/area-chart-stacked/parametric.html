@@ -25,17 +25,27 @@
   /* Configuration
   ----------------------------------------------- */
     var config = {
+      // The path to the CSV file containing the data for this chart
       dataPath: 'data/SA_2Categories_yearly.csv',
+      // The title and description of this chart for visually impaired users
       title: '',
       description: '',
+      // Data column to use for the x-axis
       xColumn: 'Jahr',
+      // Data column to use for the y-axis
       yColumn: 'Anzahl',
+      // Data column to use for the values
       cColumn:'Nationalität',
+      // The labels for the x and y-axis. Set to empty ('') to hide the label
       yAxisLabel: '',
       xAxisLabel: '',
-      xTicks: null, // Replace null with a cardinal number to specify the number of ticks
-      yTicks: null, // Replace null with a cardinal number to specify the number of ticks
-      fallback: false //Takes true and false
+      // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
+      xTicks: null, 
+      yTicks: null, 
+      // Padding between legend and x-axis in pixels. The recommended default is 60px.
+      legendPadding: 60,
+      //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
+      fallback: false
   };
 
   // This example works in much the same way as the twelve-category stacked area chart.
@@ -147,9 +157,15 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 104 });
-    var multiplesLayout = sszvis.layout.stackedAreaMultiplesLayout(bounds.innerHeight, state.stackedData.length, 0.1);
+    // var bounds = sszvis.bounds({ top: 25, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)});
 
+    var bounds = sszvis.bounds({
+      height: Math.round(sszvis.bounds.DEFAULT_WIDTH * sszvis.bounds.RATIO),
+      top: 70,
+      bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
+    });
+    
+    var colorLegend = flexibleLegend(cScale, state.categories.length)
 
     // Scales
 
@@ -161,19 +177,8 @@
       .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 10]);
 
-    var yScaleMultiples = d3.scale.linear()
-      .domain([0, state.maxValue])
-      .range([0, multiplesLayout.bandHeight]);
-
-    var yPositionMultiples = d3.scale.ordinal()
-      .domain(state.categories)
-      .range(multiplesLayout.range);
-
-    var cScale = sszvis.color.qual6()
-      .domain(state.categories);
-
-    var cScaleMultiples = sszvis.color.qual12()
-      .domain(state.categories);
+    var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
+    cScale.domain(state.categories);
 
 
     // Layers
@@ -197,42 +202,19 @@
       .yScale(yScale)
       .fill(sszvis.fn.compose(cScale, cAcc));
 
-    var stackedAreaMultiples = sszvis.component.stackedAreaMultiples()
-      .key(sszvis.fn.prop('category'))
-      .valuesAccessor(sszvis.fn.prop('values'))
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y0(sszvis.fn.compose(yPositionMultiples, cAcc))
-      .y1(function(d) {
-        return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
-      })
-      .fill(sszvis.fn.compose(cScale, cAcc));
-
 
     var topValue;
-    if (state.isMultiples) {
-      var first = sszvis.fn.first(state.highlightData);
-      topValue = yPositionMultiples(cAcc(first)) - yScaleMultiples(yAcc(first));
-    } else {
       topValue = yScale(state.totalHighlightValue);
-    }
 
     var rangeRuler = sszvis.annotation.rangeRuler()
       .top(topValue)
       .bottom(bounds.innerHeight)
       .x(xScale(state.highlightDate))
       .y0(function(d) {
-        if (state.isMultiples) {
-          return yPositionMultiples(cAcc(d));
-        } else {
           return yScale(d.y0);
-        }
       })
-      .y1(function(d) {
-        if (state.isMultiples) {
-          return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
-        } else {
+      .y1(function(d) { 
           return yScale(d.y0 + d.y);
-        }
       })
       .label(function(d) {
         return yAcc(d).toString();
@@ -257,18 +239,10 @@
     var rangeFlag = sszvis.annotation.rangeFlag()
       .x(xScale(state.highlightDate))
       .y0(function(d) {
-        if (state.isMultiples) {
-          return yPositionMultiples(cAcc(d));
-        } else {
           return yScale(d.y0);
-        }
       })
       .y1(function(d) {
-        if (state.isMultiples) {
-          return yPositionMultiples(cAcc(d)) - yScaleMultiples(yAcc(d));
-        } else {
           return yScale(d.y0 + d.y);
-        }
       });
 
     var xAxisTicks = xScale.ticks(config.xTicks)
@@ -302,7 +276,7 @@
     // Rendering
 
     chartLayer.selectGroup('areachart')
-      .call(state.isMultiples ? stackedAreaMultiples : stackedArea);
+      .call(stackedArea);
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
@@ -325,14 +299,7 @@
 
     var flagGroup = chartLayer.selectGroup('flag')
       .datum(state.highlightData.filter(function(v) {
-        if (state.isMultiples) {
-          var scaledMouseY = yScale(state.mouseYValue),
-              y0 = yPositionMultiples(cAcc(v)),
-              dy = yScaleMultiples(yAcc(v));
-          return y0 > scaledMouseY && y0 - dy < scaledMouseY;
-        } else {
           return v.y0 < state.mouseYValue && v.y0 + v.y > state.mouseYValue;
-        }
       }))
       .call(rangeFlag);
 
@@ -340,15 +307,16 @@
 
 
     // Interaction
+    if (!config.fallback) {
+      var interactionLayer = sszvis.behavior.move()
+        .xScale(xScale)
+        .yScale(yScale)
+        .on('move', actions.changeDate)
+        .on('end', actions.resetDate);
 
-    var interactionLayer = sszvis.behavior.move()
-      .xScale(xScale)
-      .yScale(yScale)
-      .on('move', actions.changeDate)
-      .on('end', actions.resetDate);
-
-    chartLayer.selectGroup('interaction')
-      .call(interactionLayer);
+      chartLayer.selectGroup('interaction')
+        .call(interactionLayer)
+      };
   }
 
 
@@ -360,6 +328,23 @@
     var d1 = data[i] || d0;
     return datum - d0 > d1 - datum ? d1 : d0;
   }
+
+    function flexibleLegend(scale, numEntries) {
+    var legend = sszvis.legend.ordinalColorScale().scale(scale)
+    if (numEntries <= 4) {
+      legend.horizontalFloat(true)
+    } else {
+      legend
+        .rows(Math.ceil(numEntries / 2))
+        .orientation('vertical');
+    };
+    return legend;
+  }
+
+  function legendHeight(legend, numEntries) {
+    return legend.rowHeight() * Math.ceil(numEntries / 2);
+  };
+
 
 
 }(d3, sszvis));
