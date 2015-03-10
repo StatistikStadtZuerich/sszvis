@@ -25,22 +25,30 @@
   /* Configuration
   ----------------------------------------------- */
 var config = {
+    // The path to the CSV file containing the data for this chart
     dataPath: 'data/VRS_basic_linear.csv',
+    // The title and description of this chart for visually impaired users
     title: '',
     description: '',
+    // Data column to use for the x-axis
     xColumn: 'NeubauAbs (x-Achse)',
+    // Data column to use for the y-axis
     yColumn: 'LeerZunRel (y-Achse) ',
+    // Data column to use for the bubble size
     rColumn: 'Best13Radius (bubble)',
+    //Data column to use for category or name
     cColumn: 'QuName',
-    xAxisLabel: '',
-    yAxisLabel: ' ',
-    xLabel: 'NeubauAbs', // Label of x value in the tooltip
-    yLabel: 'LeerZunRel', // Label of y value in the tooltip
-    rLabel: 'Radius', // Label of radius value in the tooltip
-    xTicks: null,    // Replace null with a cardinal number to specify the number of ticks
-    yTicks: null,    // Replace null with a cardinal number to specify the number of ticks
-    rLegend: null,   // Replace null with [1000, 3000, 5000] to specify legend ticks 
-    fallback: false //optional, creates long ticks when true
+    // The labels for the x and y-axis and for the bubble value. Required as they are also the labels in the tooltip
+    xAxisLabel: 'NeubauAbs',
+    yAxisLabel: 'LeerZunRel',
+    rLabel: 'Radius',
+    // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
+    xTicks: null,    
+    yTicks: null,  
+    //Specifies the number and value of the legend ticks. Replace null with [], as in: [1000, 3000, 5000])
+    rLegend: null,
+    //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true 
+    fallback: true 
   }
 
 
@@ -194,8 +202,8 @@ var config = {
       .header(cAcc)
       .body(function(d) {  
         return [
-          [config.yLabel, sszvis.format.number(yAcc(d))],
-          [config.xLabel, sszvis.format.number(xAcc(d))],
+          [config.xAxisLabel, sszvis.format.number(xAcc(d))],
+          [config.yAxisLabel, sszvis.format.number(yAcc(d))],
           [config.rLabel, sszvis.format.number(rAcc(d))],
         ];
       })
