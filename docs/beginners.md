@@ -6,9 +6,10 @@
 
 For each chart the following can always be configured: 
 
-* `dataPath` – Path to file containing the data (required)
-* `title` – Chart title (optional)
-* `description` – Short description of chart (optional)
+* `dataPath` – The path to the CSV file containing the data for this chart (required)
+* `title` – Chart title of this chart for visually impaired users (optional)
+* `description` – Short description of this chart for visually impaired users (optional)
+* `fallback` – View of the chart when interactivity is not desired. Creates horizontal lines for the y-ticks and/or does not render mouse interaction when true
 
 
 ## Line chart – Parametric Configuration
@@ -169,10 +170,9 @@ Configuration:
 * `yColumn` – Data column to use for the y-axis (required)
 * `cColumn` – Data column to use for the categories(required)
 * `yAxisLabel` – Label for the y-axis (optional)
-* `yTicks` –  Number of ticks on the x-axis (optional)
+* `yTicks` –  Number of ticks on the y-axis (optional)
 * `textDirection` – Text Direction of x-axis lables (optional)
-* `fallback` – View of the chart when interactivity is not available due to technical restrictions 
-
+* `legendPadding` – Padding between legend and x-axis in pixels (required)
 
 ```project
 {
@@ -203,12 +203,13 @@ Configuration:
 
 * `xColumn` – Data column to use for the x-axis (required)
 * `yColumn` – Data column to use for the y-axis (required)
-* `cColumn` – Data column to use for the categories(required)
+* `cColumn` – Data column to use for the categories (required)
 * `xAxisLabel` – Label for the x-axis (optional)
 * `yAxisLabel` – Label for the y-axis (optional)
 * `xTicks` –  Number of ticks on the x-axis (optional)
 * `yTicks` –  Number of ticks on the y-axis (optional)
-* `fallback` – View of the chart when interactivity is not available due to technical restrictions 
+* `legendPadding` – Padding between legend and x-axis in pixels (required)
+
 
 ```project
 {
@@ -233,6 +234,7 @@ Configuration:
 ```
 
 ## Area Chart Test – Parametric Configuration
+ TO BE TAKEN OUT 
 
 ```project
 {
@@ -294,8 +296,6 @@ Configuration:
 
 A map of the Statistische Quartiere of Zürich, demonstrating use of a button group control for data subset selection.
 
-* `initialYear` – (required)
-* `yearColumn` – Data column to use for the years (required)
 * `geoIdColumn` – Data column to use for the geographic values(required)
 * `nameColumn` – Data column to use for the name of the geographic values (required)
 * `valueColumn` – Data column to use for the values (required)
@@ -332,8 +332,8 @@ Configuration
 * `xColumn` – Data column to use for the x-axis (required)
 * `yColumn` – Data column to use for the y-axis (required)
 * `vColumn` – Data column to use for the values(required)
-* `xAxisLabel` – Label for the x-axis (required)
-* `yAxisLabel` – Label for the y-axis (required)
+* `xAxisLabel` – Label for the x-axis, shows in the tooltip (required)
+* `yAxisLabel` – Label for the y-axis, shows in the tooltip (required)
 * `valueLabel` – Label for the values, shows in the tooltip (required)
 * `tSourceAxis` – Source axis for the header of the tooltip (required)
 * `tTitleAdd` – Additional label to the header of the tooltip (optional)
@@ -399,10 +399,12 @@ Configuration:
 * `ageColumn` – Data column to use for the x-axis (required)
 * `valueColumn` – Data column to use for the y-axis (required)
 * `genderColumn` – Data column to use for the categories, here always male and female (required)
-* `yAxisLabel` – Label for the y-axis (optional)
 * `xAxisLabel` – Label for the x-axis (optional)
+* `yAxisLabel` – Label for the y-axis, shows in tooltip (required)
 * `xTicks` –  Number of ticks on the xAxis (optional)
-* `fallback` – View of the chart when interactivity is not available due to technical restrictions
+* `yTicks` –  Number of ticks on the yAxis (optional)
+* `legendPadding` – Padding between legend and x-axis in pixels (required)
+
 
 ```project
 {
@@ -432,13 +434,11 @@ Configuration:
 * `xColumn` – Data column to use for the x-axis (required)
 * `yColumn` – Data column to use for the y-axis (required)
 * `cColumn` – Data column to use for the categories(required)
-* `xAxisLabel` – Label for the x-axis (optional)
-* `yAxisLabel` – Label for the y-axis (optional)
-* `xLabel` – Label of x-value in the tooltip (required)
-* `yLabel` – label of y-value in the tooltip (required)
+* `xAxisLabel` – Label for the x-axis, shows in tooltip (required)
+* `yAxisLabel` – Label for the y-axis, shows in tooltip (required)
 * `xTicks` –  Number of ticks on the x-axis (optional)
 * `yTicks` –  Number of ticks on the y-axis (optional)
-* `fallback` – View of the chart when interactivity is not available due to technical restrictions
+* `legendPadding` – Padding between legend and x-axis in pixels (required)
 
 ```project
 {
@@ -471,16 +471,13 @@ Configurations
 * `yColumn` – Data column to use for the y-axis (required)
 * `rColumn` – Data column to use for the bubble size (required)
 * `cColumn` – Data column to use for category or name (required)
-* `xAxisLabel` – Label for the x-axis (optional)
-* `yAxisLabel` – Label for the y-axis (optional)
-* `xLabel` – Label of x-value in the tooltip (required)
-* `yLabel` – label of y-value in the tooltip (required)
+* `xAxisLabel` – Label for the x-axis, shows in tooltip (required)
+* `yAxisLabel` – Label for the y-axis, shows in tooltip (required)
 * `rLabel` – label of radius value in the tooltip (required)
 * `xTicks` –  Number of ticks on the x-axis (optional)
 * `yTicks` –  Number of ticks on the y-axis (optional)
 * `rLegend` – Specifies the number and value of the legend ticks (optional)
-* `fallback` – View of the chart when interactivity is not available due to technical restrictions
-
+* `legendPadding` – Padding between legend and x-axis in pixels (required)
 
 ```project
 {
