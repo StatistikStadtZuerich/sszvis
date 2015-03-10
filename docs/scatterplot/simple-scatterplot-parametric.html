@@ -36,7 +36,7 @@
     yColumn: 'Wert',
     // Data column to use for the values
     cColumn: 'Stadt', 
-    // The labely for the x and y-axis. Required as it is also the label in the tooltip
+    // The labely for the x and y-axis. Required as they are also the labels in the tooltip
     xAxisLabel: 'Prozent',
     yAxisLabel: 'Wert',
     // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
@@ -187,8 +187,8 @@
       .header(cAcc)
       .body(function(d) {  
         return [
-          [config.yAxisLabel, sszvis.format.number(yAcc(d))],
           [config.xAxisLabel, sszvis.format.number(xAcc(d))],
+          [config.yAxisLabel, sszvis.format.number(yAcc(d))],
         ];
       })
       .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
