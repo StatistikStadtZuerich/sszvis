@@ -30,16 +30,20 @@
     // The title and description of this chart for visually impaired users
     title: '',
     description: '', 
-    // This refers to the column header in the dataset
+    // Data column to use for the x-axis
     xColumn: 'Prozent',
+    // Data column to use for the y-axis
     yColumn: 'Wert',
+    // Data column to use for the values
     cColumn: 'Stadt', 
-    // The label for the x- and y-axis. It will be shown also in the tooltip
+    // The labely for the x and y-axis. Required as it is also the label in the tooltip
     xAxisLabel: 'Prozent',
     yAxisLabel: 'Wert',
-    xTicks: null, // Replace null with a cardinal number to specify the number of ticks
-    yTicks: null, // Replace null with a cardinal number to specify the number of ticks
-    fallback: false //optional, creates long ticks when true
+    // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
+    xTicks: null, 
+    yTicks: null, 
+    //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
+    fallback: false
   }
 
 
@@ -162,13 +166,13 @@
       .scale(xScale)
       .ticks(config.xTicks)
       .orient('bottom')
+      .tickLength(config.fallback ? bounds.innerWidth : null)
       .alignOuterLabels(true)
       .title(config.xAxisLabel);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .ticks(config.xTicks)
-      .tickLength(config.fallback ? bounds.innerWidth : null)
       .orient('right')
       .contour(true)
       .showZeroY(true)
@@ -195,12 +199,13 @@
 
     // Rendering
 
-    chartLayer.selectGroup('dots')
-      .call(dots);
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
+
+    chartLayer.selectGroup('dots')
+      .call(dots);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
@@ -214,7 +219,7 @@
 
 
     // Interaction
-
+    if (!config.fallback) {
     var mouseOverlay = sszvis.behavior.voronoi()
       .x(xValue)
       .y(yValue)
@@ -224,7 +229,8 @@
 
     chartLayer.selectGroup('voronoiMouse')
       .datum(state.voronoiFiltered)
-      .call(mouseOverlay);
+      .call(mouseOverlay)
+    };
   }
 
 }(d3, sszvis));
