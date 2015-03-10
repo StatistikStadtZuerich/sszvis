@@ -36,13 +36,14 @@ var config = {
     valueColumn: 'Anzahl',
     //Data column to use for the categories, here always male and female
     genderColumn: 'Geschlecht', 
-    // The label for the x- and y-axis. Set to empty ('') to hide the label
+    // The label for the x-axis. Set to empty ('') to hide the label
     xAxisLabel: '', 
-    yAxisLabel: '', 
+    // The label for the y-axis. Required as it is also the label in the tooltip
+    yAxisLabel: 'Alter', 
     // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
     xTicks: null,   
     yTicks: null, 
-    //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks when true
+    //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
     fallback: false
   };
 
@@ -267,7 +268,7 @@ var config = {
         var rows = state.selectedAge.rows.map(function(r) {
           return [gAcc(r), sszvis.format.number(vAcc(r))];
         });
-        return rows.concat([['Alter', state.selectedAge.age]]);
+        return rows.concat([[config.yAxisLabel, state.selectedAge.age]]);
       })
       .orientation('left')
       .visible(function(d) {
