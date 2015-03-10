@@ -43,6 +43,8 @@ var config = {
     // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
     xTicks: null,   
     yTicks: null, 
+    // Padding between legend and x-axis in pixels. The recommended default is 60px.
+    legendPadding: 60,
     //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
     fallback: false
   };
@@ -295,7 +297,7 @@ var config = {
       .call(tooltip);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
       .call(colorLegend);
 
 
