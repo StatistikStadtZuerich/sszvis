@@ -48,7 +48,7 @@ var config = {
     //Specifies the number and value of the legend ticks. Replace null with [], as in: [1000, 3000, 5000])
     rLegend: null,
     //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true 
-    fallback: true 
+    fallback: false 
   }
 
 
@@ -181,14 +181,29 @@ var config = {
       })
       .title(config.xAxisLabel);
 
+
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .tickLength(config.fallback ? bounds.innerWidth : null)
-      .ticks (config.yTicks)
       .showZeroY(true)
       .contour(true)
       .title(config.yAxisLabel);
+      
+
+    var yAxisTicks = sszvis.axis.y()
+      .ticks(config.yTicks)
+      .scale(yScale)
+      .orient('right')
+      .showZeroY(true)
+      .contour(true)
+      .title(config.yAxisLabel)
+
+      if (config.fallback) {
+        yAxisTicks.tickLength(bounds.innerWidth) 
+      } else {
+        yAxisTicks.tickLength(null)
+      };
+
 
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
@@ -214,6 +229,8 @@ var config = {
 
 
     // Rendering
+    chartLayer.selectGroup('yAxisTicks')
+      .call(yAxisTicks)
 
     chartLayer.selectGroup('dots')
       .call(dots);
@@ -234,7 +251,7 @@ var config = {
 
 
     // Interaction
-
+    if (!config.fallback) {
     var mouseOverlay = sszvis.behavior.voronoi()
       .x(xValue)
       .y(yValue)
@@ -244,8 +261,10 @@ var config = {
 
     chartLayer.selectGroup('voronoiMouse')
       .datum(state.voronoiFiltered)
-      .call(mouseOverlay);
+      .call(mouseOverlay)
+    };
   }
+
 
 }(d3, sszvis));
 </script>
