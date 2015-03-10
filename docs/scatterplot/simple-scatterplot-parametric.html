@@ -213,15 +213,15 @@
     chartLayer.selectGroup('longTicks')
       .call(longTicks)
 
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
-      .call(xAxis);
-
     chartLayer.selectGroup('dots')
       .call(dots);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .call(xAxis);
 
     chartLayer.selectGroup('cScale')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
