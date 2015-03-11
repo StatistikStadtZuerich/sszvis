@@ -306,10 +306,10 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
     "name": "map-tabs",
     "files": {
         "index.html": {
-            "source": "docs/map/tabs-parametric.html",
+            "source": "docs/map/quartiere-parametric.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/S_tabs.csv",
+        "data.csv": "docs/map/data/M_quartiere.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",

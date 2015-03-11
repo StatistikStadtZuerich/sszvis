@@ -30,7 +30,7 @@
   ----------------------------------------------- */
   var config = {
     // The path to the CSV file containing the data for this chart
-    dataPath: 'data/S_tabs.csv',
+    dataPath: 'data/M_quartiere.csv',
     // The title and description of this chart for visually impaired users
     title: '',
     description: '', 
@@ -90,7 +90,7 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/S_tabs.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
         quarternum: sszvis.parse.number(d[config.geoIdColumn]),
