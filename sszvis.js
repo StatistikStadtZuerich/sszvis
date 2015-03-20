@@ -5848,7 +5848,7 @@ sszvis_namespace('sszvis.legend.binnedColorScale', function(module) {
  * @property {array} displayValues              A list of specific values to display. If not specified, defaults to using scale.ticks
  * @property {number} width                     The pixel width of the legend (default 200).
  * @property {number} segments                  The number of segments to aim for. Note, this is only used if displayValues isn't specified,
- *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default 8)
+ *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default)
  * @property {array} labelText                  Text or a text-returning function to use as the titles for the legend endpoints. If not supplied,
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.format.number.
@@ -5898,7 +5898,8 @@ sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
           .attr('height', segHeight)
           .attr('fill', function(d) { return props.scale(d); });
 
-        var startEnd = [values[0], values[values.length - 1]];
+        var domain = props.scale.domain();
+        var startEnd = [domain[0], domain[domain.length - 1]];
         var labelText = props.labelText || startEnd;
 
         // rounded end caps for the segments
