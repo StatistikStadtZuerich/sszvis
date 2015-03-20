@@ -164,7 +164,7 @@ For each chart the following can always be configured:
 
 ## Grouped Bar Chart – Parametric Configuration
 
-Configuration: 
+Configuration:
 
 * `xColumn` – Data column to use for the x-axis (required)
 * `yColumn` – Data column to use for the y-axis (required)
@@ -199,7 +199,7 @@ Configuration:
 
 ## Area Chart – Parametric Configuration
 
-Configuration: 
+Configuration:
 
 * `xColumn` – Data column to use for the x-axis (required)
 * `yColumn` – Data column to use for the y-axis (required)
@@ -234,7 +234,7 @@ Configuration:
 ```
 
 ## Area Chart Test – Parametric Configuration
- TO BE TAKEN OUT 
+ TO BE TAKEN OUT
 
 ```project
 {
@@ -260,10 +260,11 @@ Configuration:
 
 ## Map Zürich Kreise – Parametric Configuration
 
-Configuration: 
+Configuration:
 
 * `geoIdColumn` – Data column to use for the geographic values(required)
 * `nameColumn` – Data column to use for the name of the geographic values (required)
+* `labelFormat` – Formatting function to use for the legend label. Defaults to number, but can be changed to "sszvis.format.percent" to render values from 0–1 as 0–100% (required)
 * `valueColumn` – Data column to use for the values (required)
 * `valueLabel` – Label for the values, shows in the tooltip (required)
 
@@ -297,6 +298,7 @@ Configuration:
 A map of the Statistische Quartiere of Zürich, demonstrating use of a button group control for data subset selection.
 
 * `geoIdColumn` – Data column to use for the geographic values(required)
+* `labelFormat` – Formatting function to use for the legend label. Defaults to number, but can be changed to "sszvis.format.percent" to render values from 0–1 as 0–100% (required)
 * `nameColumn` – Data column to use for the name of the geographic values (required)
 * `valueColumn` – Data column to use for the values (required)
 * `valueLabel` – Label for the values, shows in the tooltip (required)
@@ -394,7 +396,7 @@ Configuration:
 
 ## Population Pyramid – Parametric Configuration
 
-Configuration: 
+Configuration:
 
 * `ageColumn` – Data column to use for the x-axis (required)
 * `valueColumn` – Data column to use for the y-axis (required)

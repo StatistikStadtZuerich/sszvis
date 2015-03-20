@@ -35,6 +35,9 @@
     description: '',
     // Data column to use for the geographic values
     geoIdColumn: 'KNr',
+    // Formatting function to use for the legend label. Defaults to number, but
+    // can be changed to "sszvis.format.percent" to render values from 0–1 as 0–100%
+    labelFormat: sszvis.format.number,
     // Data column to use for the name of the geographic values
     nameColumn: 'Kname',
     // Data column to use for the values
@@ -168,7 +171,7 @@
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
       .width(bounds.width / 2)
-      .labelFormat(sszvis.format.number);
+      .labelFormat(config.labelFormat);
 
 
     // Rendering
