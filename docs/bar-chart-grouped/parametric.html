@@ -29,8 +29,8 @@
     // The path to the CSV file containing the data for this chart
     dataPath: 'data/GB_2Categories_smallVals.csv',
     // The title and description of this chart for visually impaired users
-    title: '', 
-    description: '', 
+    title: '',
+    description: '',
     // Data column to use for the x-axis
     xColumn: 'Region',
     // Data column to use for the y-axis
@@ -40,13 +40,13 @@
     // The label for the y-axis. Set to empty ('') to hide the label
     yAxisLabel: '',
     // Number of ticks on the y-axis. Replace null with a cardinal number to specify the number of ticks
-    yTicks: null, 
+    yTicks: null,
     // The orientation of the x-Axis Labels. Takes null, 'diagonal' and 'vertical'
-    textDirection: 'diagonal', 
+    textDirection: 'diagonal',
     // Padding between legend and x-axis in pixels. The recommended default is 60px or 120px depending on the orientation of the x-Axis Labels.
     legendPadding: 120,
     // View of the chart when interactivity is not desired. Creates horizontal lines for the y-ticks and does not render mouse interaction when true
-    fallback: false 
+    fallback: false
   };
 
 
@@ -77,7 +77,7 @@
     prepareState: function(data) {
       state.data = data;
       state.regions = sszvis.fn.set(state.data, xAcc);
-      state.valueExtent = d3.extent(state.data, yAcc);
+      state.valueExtent = zeroBasedAxisDomain(d3.extent(state.data, yAcc));
       state.groups = sszvis.fn.set(state.data, cAcc);
       state.groupedData = sszvis.cascade()
         .arrayBy(xAcc)
@@ -134,7 +134,6 @@
     var colorLegend = flexibleLegend(cScale, state.categories.length)
 
     var bounds = sszvis.bounds({
-      height: Math.round(sszvis.bounds.DEFAULT_WIDTH * sszvis.bounds.RATIO),
       top: 25,
       bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
     });
@@ -145,8 +144,6 @@
       .domain(state.regions)
       .rangeRoundBands([0, bounds.innerWidth], 0.26, 0.80);
 
-    // because the bar chart must display negative values, scales for the y-axis are a little weird
-    // see also: http://bl.ocks.org/mbostock/2368837 (http://stackoverflow.com/questions/10127402/bar-chart-with-negative-values)
     var yScale = d3.scale.linear()
       .domain(state.valueExtent)
       .range([bounds.innerHeight, 0]);
@@ -197,7 +194,7 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
-      .showZeroY(true)
+      .showZeroY(isTwoSidedDomain(state.valueExtent))
       .orient('right')
       .ticks (config.yTicks)
       .tickLength(config.fallback ? bounds.innerWidth : null)
@@ -255,14 +252,30 @@
 
 
 
-/* Helper functions
+  /* Helper functions
   ----------------------------------------------- */
+  function isTwoSidedDomain(extent) {
+    return d3.min(extent) !== 0;
+  }
+
+  function zeroBasedAxisDomain(extent) {
+    var min = extent[0];
+    var max = extent[1];
+    if (min < max) {
+      if (min > 0) min = 0;
+      if (max < 0) max = 0;
+      return [min, max];
+    } else {
+      var flipped = zeroBasedAxisDomain([max, min]);
+      return [flipped[1], flipped[0]];
+    }
+  }
 
   function labelWrapWidth(range) {
     return (d3.max(range) - d3.min(range)) / range.length;
   }
 
-    function flexibleLegend(scale, numEntries) {
+  function flexibleLegend(scale, numEntries) {
     var legend = sszvis.legend.ordinalColorScale().scale(scale)
     if (numEntries <= 4) {
       legend.horizontalFloat(true)
