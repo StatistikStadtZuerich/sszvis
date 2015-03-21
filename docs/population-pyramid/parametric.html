@@ -35,7 +35,10 @@ var config = {
     // Data column to use for the y-axis
     valueColumn: 'Anzahl',
     //Data column to use for the categories, here always male and female
-    genderColumn: 'Geschlecht',
+    categoryColumn: 'Geschlecht',
+    // The category to use for the left and right side of the chart
+    leftCategory: 'Frauen',
+    rightCategory: 'Männer',
     // The label for the x-axis. Set to empty ('') to hide the label
     xAxisLabel: '',
     // The label for the y-axis. Required as it is also the label in the tooltip
@@ -53,10 +56,8 @@ var config = {
   /* Shortcuts
   ----------------------------------------------- */
   var aAcc = sszvis.fn.prop('age');
-  var gAcc = sszvis.fn.prop('gender');
   var vAcc = sszvis.fn.prop('value');
-  var womenAcc = sszvis.fn.prop('Frauen');
-  var menAcc = sszvis.fn.prop('Männer');
+  var cAcc = sszvis.fn.prop('category');
 
 
   /* Application state
@@ -78,10 +79,10 @@ var config = {
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.groups = sszvis.fn.set(state.data, gAcc);
+      state.groups = [config.leftCategory, config.rightCategory];
 
       var grouper = sszvis.cascade()
-        .objectBy(gAcc)
+        .objectBy(cAcc)
         .sort(function(a, b) {
           // Sort the groups in order of ascending age
           return d3.ascending(aAcc(a), aAcc(b));
@@ -114,7 +115,7 @@ var config = {
           // add the binned datum (the structure mimics that of the un-binned data)
           binnedData.push({
             age: ageListing,
-            gender: group,
+            category: group,
             // here, calculate the median value of the slice of data
             value: d3.median(sourceArr.slice(i, i + binStep), vAcc)
           });
@@ -177,7 +178,7 @@ var config = {
     .row(function(d) {
       return {
         age: sszvis.parse.number(d[config.ageColumn]),
-        gender: d[config.genderColumn],
+        category: d[config.categoryColumn],
         value: sszvis.parse.number(d[config.valueColumn])
       };
     })
@@ -228,14 +229,14 @@ var config = {
 
     var pyramid = sszvis.component.pyramid()
       .barFill(function(d) {
-        var c = colorScale(gAcc(d));
+        var c = colorScale(cAcc(d));
         return aAcc(d) === state.selectedAge.age ? sszvis.color.slightlyDarker(c) : c;
       })
       .barPosition(sszvis.fn.compose(positionScale, aAcc))
       .barHeight(pyramidDimensions.barHeight)
       .barWidth(sszvis.fn.compose(lengthScale, vAcc))
-      .leftAccessor(womenAcc)
-      .rightAccessor(menAcc);
+      .leftAccessor(sszvis.fn.prop(config.leftCategory))
+      .rightAccessor(sszvis.fn.prop(config.rightCategory));
 
     var xAxis = sszvis.axis.x.pyramid()
       .scale(lengthScale)
@@ -268,13 +269,13 @@ var config = {
       })
       .body(function() {
         var rows = state.selectedAge.rows.map(function(r) {
-          return [gAcc(r), sszvis.format.number(vAcc(r))];
+          return [cAcc(r), sszvis.format.number(vAcc(r))];
         });
         return rows.concat([[config.yAxisLabel, state.selectedAge.age]]);
       })
       .orientation('left')
       .visible(function(d) {
-        return state.selectedAge.age === aAcc(d) && gAcc(d) === 'Männer';
+        return state.selectedAge.age === aAcc(d) && cAcc(d) === config.rightCategory;
       });
 
 
@@ -317,12 +318,6 @@ var config = {
     }
   }
 
-
-  /* Helper Functions
-  ----------------------------------------------- */
-  function isLeft(d) {
-    return gAcc(d) === 'Frauen';
-  }
 
 }(d3, sszvis));
 </script>

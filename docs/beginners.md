@@ -374,7 +374,9 @@ Configuration:
 
 * `ageColumn` – Data column to use for the x-axis (required)
 * `valueColumn` – Data column to use for the y-axis (required)
-* `genderColumn` – Data column to use for the categories, here always male and female (required)
+* `categoryColumn` – Data column to use for the categories (required)
+* `leftCategory` – The category to use for the left side of the chart
+* `rightCategory` – The category to use for the right side of the chart
 * `xAxisLabel` – Label for the x-axis (optional)
 * `yAxisLabel` – Label for the y-axis, shows in tooltip (required)
 * `xTicks` –  Number of ticks on the xAxis (optional)
