@@ -68,7 +68,7 @@
       var groupedData = grouper.apply(state.data);
 
       // This example bins the data into five-year age ranges.
-      // It uses d3.median to compute the value of a bin.
+      // It uses d3.sum to compute the value of a bin.
 
       // compute bins
       var binnedData = [],
@@ -93,8 +93,8 @@
           binnedData.push({
             age: ageListing,
             gender: group,
-            // here, calculate the median value of the slice of data
-            value: d3.median(sourceArr.slice(i, i + binStep), vAcc)
+            // here, calculate the sum value of the slice of data
+            value: d3.sum(sourceArr.slice(i, i + binStep), vAcc)
           });
           for (var indexIter = i, lastIndex = i + binStep; indexIter < lastIndex; ++indexIter) {
             // add the age listing (e.g. "10 - 14") to the ageLookupIndex
