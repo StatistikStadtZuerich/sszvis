@@ -28,21 +28,21 @@ var config = {
     // The path to the CSV file containing the data for this chart
     dataPath: 'data/BP_basic.csv',
     // The title and description of this chart for visually impaired users
-    title: '', 
+    title: '',
     description: '',
     // Data column to use for the x-axis
     ageColumn: 'Alter',
     // Data column to use for the y-axis
     valueColumn: 'Anzahl',
     //Data column to use for the categories, here always male and female
-    genderColumn: 'Geschlecht', 
+    genderColumn: 'Geschlecht',
     // The label for the x-axis. Set to empty ('') to hide the label
-    xAxisLabel: '', 
+    xAxisLabel: '',
     // The label for the y-axis. Required as it is also the label in the tooltip
-    yAxisLabel: 'Alter', 
+    yAxisLabel: 'Alter',
     // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
-    xTicks: null,   
-    yTicks: null, 
+    xTicks: null,
+    yTicks: null,
     // Padding between legend and x-axis in pixels. The recommended default is 60px.
     legendPadding: 60,
     //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
@@ -280,6 +280,11 @@ var config = {
 
     // Rendering
 
+    chartLayer.selectGroup('populationPyramid')
+      .datum(state.populations)
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, 0))
+      .call(pyramid);
+
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight))
       .call(xAxis);
@@ -287,11 +292,6 @@ var config = {
     chartLayer.selectGroup('yAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, 0))
       .call(yAxis);
-
-    chartLayer.selectGroup('populationPyramid')
-      .datum(state.populations)
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, 0))
-      .call(pyramid);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
@@ -303,18 +303,18 @@ var config = {
 
     // Interaction
     if (!config.fallback) {
-    var interactionLayer = sszvis.behavior.move()
-      .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
-      // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
-      // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
-      // between the bars, because the ordinal scale has no value there, while a linear scale does.
-      .yScale(d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
-      .on('move', actions.selectBar)
-      .on('end', actions.deselectBar);
+      var interactionLayer = sszvis.behavior.move()
+        .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
+        // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
+        // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
+        // between the bars, because the ordinal scale has no value there, while a linear scale does.
+        .yScale(d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
+        .on('move', actions.selectBar)
+        .on('end', actions.deselectBar);
 
-    chartLayer.selectGroup('interactionLayer')
-      .call(interactionLayer)
-    };
+      chartLayer.selectGroup('interactionLayer')
+        .call(interactionLayer)
+    }
   }
 
 
