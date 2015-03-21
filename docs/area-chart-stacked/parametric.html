@@ -254,8 +254,7 @@
         return sszvis.fn.stringEqual(d, state.highlightDate);
       });
 
-    var yAxisTicks = yScale.ticks(config.yTicks)
-      .concat(state.highlightDate);
+    var yAxisTicks = yScale.ticks(config.yTicks);
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
