@@ -46,10 +46,10 @@
     yAxisLabel: 'Altersgruppe',
     valueLabel: 'Einwohner',
     //Tooltip Header Source Axis, takes 'y' or 'x'
-    tSourceAxis: 'x',  
+    tSourceAxis: 'x',
     //Additional label to the tooltip header. Set to empty ('') to hide the label
-    tTitleAdd: '', 
-    // View of the chart when interactivity is not desired. Does not render mouse interaction when true 
+    tTitleAdd: '',
+    // View of the chart when interactivity is not desired. Does not render mouse interaction when true
     fallback: false
   };
 
@@ -228,8 +228,8 @@
           return (yAcc(d) + ' ' + config.tTitleAdd)
         } else {
           return (xAcc(d) + ' ' + config.tTitleAdd)
-          }
-        }) 
+        }
+      })
       .body(function(d) {
         var v = vAcc(d);
         var y = yAcc(d);
@@ -242,9 +242,9 @@
           return[
             [config.yAxisLabel, yAcc(d)],
             [config.valueLabel, isNaN(v) ? '–' : sszvis.format.number(v)]
-            ]
-          }
-        })
+          ]
+        }
+      })
       .visible(isSelected);
 
     // Rendering
