@@ -210,7 +210,7 @@
       .y0(function(d) {
           return yScale(d.y0);
       })
-      .y1(function(d) { 
+      .y1(function(d) {
           return yScale(d.y0 + d.y);
       })
       .label(function(d) {
@@ -283,10 +283,11 @@
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
       .call(colorLegend);
 
-
-    chartLayer.selectGroup('highlight')
-      .datum(state.highlightData)
-      .call(rangeRuler);
+    if (!config.fallback) {
+      chartLayer.selectGroup('highlight')
+        .datum(state.highlightData)
+        .call(rangeRuler);
+    }
 
     var flagGroup = chartLayer.selectGroup('flag')
       .datum(state.highlightData.filter(function(v) {
@@ -307,7 +308,7 @@
 
       chartLayer.selectGroup('interaction')
         .call(interactionLayer)
-      };
+    }
   }
 
 
