@@ -203,12 +203,20 @@ var config = {
       .domain([0, state.maxValue])
       .range([0, bounds.innerWidth / 2]);
 
+    var colorScale = sszvis.color.qual6()
+      .domain(state.groups);
+
     var positionScale = d3.scale.ordinal()
       .domain(state.ages)
       .range(pyramidDimensions.positions);
 
-    var colorScale = sszvis.color.qual6()
-      .domain(state.groups);
+    // For the yAxis, we create a copy of the positionScale that's used for the
+    // bars and shift the output range by half the bar height to center the
+    // axis labels vertically within the bars
+    var yAxisLabelScale = positionScale.copy()
+      .range(pyramidDimensions.positions.map(function(d){
+        return d + pyramidDimensions.barHeight / 2
+      }));
 
 
     // Layers
@@ -246,15 +254,11 @@ var config = {
       .titleCenter(true);
 
     var yAxis = sszvis.axis.y.ordinal()
-      .scale(positionScale)
+      .scale(yAxisLabelScale)
       .orient('right')
       .title(config.yAxisLabel)
       .dyTitle(-18)
-      if (!config.yTicks){
-        yAxis.ticks(4)
-      } else {
-        yAxis.ticks((config.yTicks)-1)
-      };
+      .ticks(config.yTicks ? config.yTicks : 4);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(colorScale)
