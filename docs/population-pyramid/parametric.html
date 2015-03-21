@@ -39,6 +39,8 @@ var config = {
     // The category to use for the left and right side of the chart
     leftCategory: 'Frauen',
     rightCategory: 'Männer',
+    // The number of age categories to group into one bar
+    groupSize: 5,
     // The label for the x-axis. Set to empty ('') to hide the label
     xAxisLabel: '',
     // The label for the y-axis. Required as it is also the label in the tooltip
@@ -93,7 +95,7 @@ var config = {
       // Compute bins
       var binnedData = [],
           // The number of data points to include in each bin
-          binStep = 5,
+          binStep = config.groupSize,
           // A list of age groups in the dataset, used for the y-axis scale
           ages = [],
           // A lookup index to aid in creating a smooth tooltip experience. The

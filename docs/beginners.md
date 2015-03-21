@@ -375,8 +375,9 @@ Configuration:
 * `ageColumn` – Data column to use for the x-axis (required)
 * `valueColumn` – Data column to use for the y-axis (required)
 * `categoryColumn` – Data column to use for the categories (required)
-* `leftCategory` – The category to use for the left side of the chart
-* `rightCategory` – The category to use for the right side of the chart
+* `leftCategory` – The category to use for the left side of the chart (required)
+* `rightCategory` – The category to use for the right side of the chart (required)
+* `groupSize` – The number of age categories to group into one bar (required)
 * `xAxisLabel` – Label for the x-axis (optional)
 * `yAxisLabel` – Label for the y-axis, shows in tooltip (required)
 * `xTicks` –  Number of ticks on the xAxis (optional)
