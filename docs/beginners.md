@@ -1,10 +1,10 @@
 # Charts for beginners
 
-> These charts are fully parametrized for simple usage. They are all generated based on a config object that stands at the beginning of the code. 
+> These charts are fully parametrized for simple usage. They are all generated based on a config object that stands at the beginning of the code.
 
 ## General Parametric Configuration
 
-For each chart the following can always be configured: 
+For each chart the following can always be configured:
 
 * `dataPath` – The path to the CSV file containing the data for this chart (required)
 * `title` – Chart title of this chart for visually impaired users (optional)
@@ -106,7 +106,7 @@ For each chart the following can always be configured:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 545
+        "height": 524
     }
 }
 ```
@@ -156,7 +156,7 @@ For each chart the following can always be configured:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 322
+        "height": 296
     }
 }
 ```
@@ -227,7 +227,7 @@ Configuration:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 529
+        "height": 445
     }
 }
 ```
@@ -402,7 +402,7 @@ Configuration:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 470
+        "height": 450
     }
 }
 ```
@@ -436,7 +436,7 @@ Configuration:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 469
+        "height": 445
     }
 }
 ```
@@ -475,7 +475,7 @@ Configurations
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 495
+        "height": 474
     }
 }
 ```
