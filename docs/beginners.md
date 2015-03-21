@@ -452,7 +452,7 @@ Configurations
 * `rLabel` – label of radius value in the tooltip (required)
 * `xTicks` –  Number of ticks on the x-axis (optional)
 * `yTicks` –  Number of ticks on the y-axis (optional)
-* `rLegend` – Specifies the number and value of the legend ticks (optional)
+* `legendTicks` – Specifies the number and value of the legend ticks (optional)
 * `legendPadding` – Padding between legend and x-axis in pixels (required)
 
 ```project

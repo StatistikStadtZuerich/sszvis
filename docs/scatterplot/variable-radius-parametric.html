@@ -36,21 +36,21 @@ var config = {
     yColumn: 'LeerZunRel (y-Achse) ',
     // Data column to use for the bubble size
     rColumn: 'Best13Radius (bubble)',
-    //Data column to use for category or name
+    // Data column to use for category or name
     cColumn: 'QuName',
     // The labels for the x and y-axis and for the bubble value. Required as they are also the labels in the tooltip
     xAxisLabel: 'NeubauAbs',
     yAxisLabel: 'LeerZunRel',
     rLabel: 'Radius',
     // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
-    xTicks: null,    
-    yTicks: null,  
-    //Specifies the number and value of the legend ticks. Replace null with [], as in: [1000, 3000, 5000])
-    rLegend: null,
+    xTicks: null,
+    yTicks: null,
+    // Specifies the number and value of the legend ticks. Replace null with [], as in: [1000, 3000, 5000])
+    legendTicks: null,
     // Padding between legend and x-axis in pixels. The recommended default is 60px.
     legendPadding: 60,
-    //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true 
-    fallback: false 
+    // View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
+    fallback: false
   }
 
 
@@ -86,7 +86,7 @@ var config = {
         return xAcc(d) + '__' + yAcc(d);
       });
 
-      state.xExtent = d3.extent(state.data, xAcc); 
+      state.xExtent = d3.extent(state.data, xAcc);
       state.yExtent = d3.extent(state.data, yAcc);
       var radiusExtent = d3.extent(state.data, rAcc);
       state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
@@ -190,25 +190,10 @@ var config = {
       .showZeroY(true)
       .contour(true)
       .title(config.yAxisLabel);
-      
-
-    var longTicks = sszvis.axis.y()
-      .ticks(config.yTicks)
-      .scale(yScale)
-      .orient('right')
-      .showZeroY(true)
-      .contour(true)
-      .title(config.yAxisLabel)
-      if (config.fallback) {
-        longTicks.tickLength(bounds.innerWidth) 
-      } else {
-        longTicks.tickLength(null)
-      };
-
 
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
-      .tickValues(config.rLegend)
+      .tickValues(config.legendTicks)
       .tickFormat(function(d) {
         return Math.round(d * 100) / 100;
       });
@@ -216,7 +201,7 @@ var config = {
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(cAcc)
-      .body(function(d) {  
+      .body(function(d) {
         return [
           [config.xAxisLabel, sszvis.format.number(xAcc(d))],
           [config.yAxisLabel, sszvis.format.number(yAcc(d))],
@@ -230,8 +215,21 @@ var config = {
 
 
     // Rendering
-    chartLayer.selectGroup('longTicks')
-      .call(longTicks)
+
+    if (config.fallback) {
+      var longTicks = sszvis.axis.y()
+        .ticks(config.yTicks)
+        .scale(yScale)
+        .orient('right')
+        .showZeroY(true)
+        .contour(true)
+        .title(config.yAxisLabel)
+        .tickLength(bounds.innerWidth)
+
+      chartLayer.selectGroup('longTicks')
+        .call(longTicks)
+        .call(removeOverlappingYTickLabels(bounds.innerHeight));
+    }
 
     chartLayer.selectGroup('dots')
       .call(dots);
@@ -248,22 +246,36 @@ var config = {
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .call(yAxis);
+      .call(yAxis)
+      .call(removeOverlappingYTickLabels(bounds.innerHeight));
 
 
     // Interaction
     if (!config.fallback) {
-    var mouseOverlay = sszvis.behavior.voronoi()
-      .x(xValue)
-      .y(yValue)
-      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
-      .on('over', actions.setHighlight)
-      .on('out', actions.resetHighlight);
+      var mouseOverlay = sszvis.behavior.voronoi()
+        .x(xValue)
+        .y(yValue)
+        .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
+        .on('over', actions.setHighlight)
+        .on('out', actions.resetHighlight);
 
-    chartLayer.selectGroup('voronoiMouse')
-      .datum(state.voronoiFiltered)
-      .call(mouseOverlay)
+      chartLayer.selectGroup('voronoiMouse')
+        .datum(state.voronoiFiltered)
+        .call(mouseOverlay)
     };
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+
+  function removeOverlappingYTickLabels(maxBottom) {
+    return function(g) {
+      g.selectAll('text').each(function() {
+        var bottom = this.getBoundingClientRect().bottom;
+        if (bottom >= maxBottom) d3.select(this.parentNode).style('display', 'none');
+      });
+    }
   }
 
 

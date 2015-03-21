@@ -29,19 +29,19 @@
     dataPath: 'data/SS_refline_fake.csv',
     // The title and description of this chart for visually impaired users
     title: '',
-    description: '', 
+    description: '',
     // Data column to use for the x-axis
     xColumn: 'Prozent',
     // Data column to use for the y-axis
     yColumn: 'Wert',
     // Data column to use for the values
-    cColumn: 'Stadt', 
+    cColumn: 'Stadt',
     // The labels for the x and y-axis. Required as they are also the labels in the tooltip
     xAxisLabel: 'Prozent',
     yAxisLabel: 'Wert',
     // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
-    xTicks: null, 
-    yTicks: null, 
+    xTicks: null,
+    yTicks: null,
     // Padding between legend and x-axis in pixels. The recommended default is 60px.
     legendPadding: 60,
     //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
@@ -79,10 +79,10 @@
         return xAcc(d) + '__' + yAcc(d);
       });
 
-      state.xExtent = d3.extent(state.data, xAcc); 
+      state.xExtent = d3.extent(state.data, xAcc);
       state.yExtent = d3.extent(state.data, yAcc);
       state.cExtent = sszvis.fn.set(state.data, cAcc);
-      
+
       state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
@@ -122,11 +122,11 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    
+
     //choose color scale depending on number of categories
     var cScale = state.cExtent.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
     cScale.domain(state.cExtent);
-    
+
     var colorLegend = flexibleLegend(cScale, state.categories.length)
 
     var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length) });
@@ -184,23 +184,10 @@
       .showZeroY(true)
       .title(config.yAxisLabel);
 
-    var longTicks = sszvis.axis.y()
-      .ticks(config.yTicks)
-      .scale(yScale)
-      .orient('right')
-      .showZeroY(true)
-      .contour(true)
-      .title(config.yAxisLabel)
-      if (config.fallback) {
-        longTicks.tickLength(bounds.innerWidth) 
-      } else {
-        longTicks.tickLength(null)
-      };
-
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(cAcc)
-      .body(function(d) {  
+      .body(function(d) {
         return [
           [config.xAxisLabel, sszvis.format.number(xAcc(d))],
           [config.yAxisLabel, sszvis.format.number(yAcc(d))],
@@ -213,18 +200,32 @@
 
 
     // Rendering
-    chartLayer.selectGroup('longTicks')
-      .call(longTicks)
+
+    if (config.fallback) {
+      var longTicks = sszvis.axis.y()
+        .ticks(config.yTicks)
+        .scale(yScale)
+        .orient('right')
+        .showZeroY(true)
+        .contour(true)
+        .title(config.yAxisLabel)
+        .tickLength(bounds.innerWidth);
+
+      chartLayer.selectGroup('longTicks')
+        .call(longTicks)
+        .call(removeOverlappingYTickLabels(bounds.innerHeight));
+    }
 
     chartLayer.selectGroup('dots')
       .call(dots);
 
-    chartLayer.selectGroup('yAxis')
-      .call(yAxis);
-
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
       .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis)
+      .call(removeOverlappingYTickLabels(bounds.innerHeight));
 
     chartLayer.selectGroup('cScale')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
@@ -236,16 +237,16 @@
 
     // Interaction
     if (!config.fallback) {
-    var mouseOverlay = sszvis.behavior.voronoi()
-      .x(xValue)
-      .y(yValue)
-      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
-      .on('over', actions.setHighlight)
-      .on('out', actions.resetHighlight);
+      var mouseOverlay = sszvis.behavior.voronoi()
+        .x(xValue)
+        .y(yValue)
+        .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
+        .on('over', actions.setHighlight)
+        .on('out', actions.resetHighlight);
 
-    chartLayer.selectGroup('voronoiMouse')
-      .datum(state.voronoiFiltered)
-      .call(mouseOverlay)
+      chartLayer.selectGroup('voronoiMouse')
+        .datum(state.voronoiFiltered)
+        .call(mouseOverlay)
     };
   }
 
@@ -268,6 +269,14 @@
     return legend.rowHeight() * Math.ceil(numEntries / 2);
   };
 
+  function removeOverlappingYTickLabels(maxBottom) {
+    return function(g) {
+      g.selectAll('text').each(function() {
+        var bottom = this.getBoundingClientRect().bottom;
+        if (bottom >= maxBottom) d3.select(this.parentNode).style('display', 'none');
+      });
+    }
+  }
 
 }(d3, sszvis));
 </script>
