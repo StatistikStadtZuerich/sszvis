@@ -210,38 +210,12 @@ Configuration:
 * `yTicks` –  Number of ticks on the y-axis (optional)
 * `legendPadding` – Padding between legend and x-axis in pixels (required)
 
-
 ```project
 {
     "name": "area-chart-stacked-two",
     "files": {
         "index.html": {
             "source": "docs/area-chart-stacked/parametric.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/area-chart-stacked/data/SA_2Categories_yearly.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 529
-    }
-}
-```
-
-## Area Chart Test – Parametric Configuration
- TO BE TAKEN OUT
-
-```project
-{
-    "name": "area-chart-stacked-two",
-    "files": {
-        "index.html": {
-            "source": "docs/area-chart-stacked/sa-twelve-parametric.html",
             "template": "docs/template.html"
         },
         "data.csv": "docs/area-chart-stacked/data/SA_2Categories_yearly.csv",

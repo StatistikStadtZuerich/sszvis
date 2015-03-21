@@ -40,8 +40,8 @@
       yAxisLabel: '',
       xAxisLabel: '',
       // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
-      xTicks: null, 
-      yTicks: null, 
+      xTicks: null,
+      yTicks: null,
       // Padding between legend and x-axis in pixels. The recommended default is 60px.
       legendPadding: 60,
       //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
@@ -157,7 +157,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    
+
     // the color scale for the layers, based on the number of categories
     var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
     cScale.domain(state.categories);
