@@ -21,16 +21,6 @@
     return;
   }
 
- /* Globals 
- ------------------------------------------------*/
- var DEFAULT_TITLE = '';
- var DEFAULT_DESCRIPTION = '';
- var DEFAULT_PATH = '';
- var DEFAULT_DATE_COLUMN = 'Datum';
- var DEFAULT_VALUE_COLUMN = 'Wert';
- var DEFAULT_RULER_LABEL = '';
- var DEFAULT_Y_LABEL = '';
- var DEFAULT_X_LABEL = '';
 
 
   /* Configuration
@@ -38,17 +28,16 @@
   //configuration object
   //This can be externalized into a file at a later point
   //currently only works for timeseries
-  var files  = ['SL_daily.csv','SL_negativesXAxis.csv','SL_Percentage_negativesYAxis.csv','SL_quarterly.csv'];
   var config = {
-    dataPath: ('data/' + files[3]),//'data/SL_quarterly.csv', //mandatory
-    //title: 'Title', //optional
-    //description: 'Description', //optional
-    //dateColumn: 'Altersdifferenz', //optional
-   //valueColumn: 'Häufigkeit', //optional
-    //rulerLabel: '', //optional
-   // yLabel: 'Punkte', //optional
-   // xLabel: 'Jahre', //optional
-    ticks: 5, //optional
+    dataPath: 'data/SL_quarterly.csv',
+    title: 'Title',
+    description: 'Description', 
+    dateColumn: 'Datum',
+    valueColumn: 'Wert',
+    rulerLabel: '',
+    xLabel: 'x-Achse',
+    yLabel: 'y-Achse',
+    ticks: 5,
   }
 
 
@@ -99,13 +88,13 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv((config.dataPath || DEFAULT_PATH))
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
         //probably need to distinguish time or discreet values here...
         //although for a line chart it is rarely not time on x-axis.
-        date:  sszvis.parse.date(d[(config.dateColumn || DEFAULT_DATE_COLUMN)]),
-        value: sszvis.parse.number(d[(config.valueColumn || DEFAULT_VALUE_COLUMN)])
+        date:  sszvis.parse.date(d[config.dateColumn]),
+        value: sszvis.parse.number(d[config.valueColumn])
       };
     })
     .get(function(error, data) {
@@ -121,13 +110,11 @@
   ----------------------------------------------- */
   function render(state) {
 
-    //param OK
     var bounds = sszvis.bounds({ top: 30, bottom: 40 });
     console.log(bounds);
 
 
     // Scales
-    //param OK
     var xScale = d3.time.scale()
       .domain(state.years)
       .range([0, bounds.innerWidth]);
@@ -146,50 +133,43 @@
 
 
     // Layers
-    //param OK
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: (config.title || DEFAULT_TITLE),
-        description: (config.description || DEFAULT_DESCRIPTION)
+        title: config.title,
+        description: config.description,
       });
 
 
     // Components
-    //param OK
     var line = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .stroke(sszvis.color.qual6());
 
-      //param OK
-
-      var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();//xScale.ticks(d3.time.year,1);
+    var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();//xScale.ticks(d3.time.year,1);
       xTickValues = xTickValues.concat(state.selection.map(xAcc));
 
-      //param OK
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
       .highlightTick(isSelected)
-      .title((config.xLabel || DEFAULT_X_LABEL))
+      .title(config.xLabel)
 
-      //param OK
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
-      .title((config.yLabel || DEFAULT_Y_LABEL))
+      .title(config.yLabel)
       .dyTitle(-20)
       .contour(true)
       .showZeroY((minY < 0));
 
-      //param OK
     var ruler = sszvis.annotation.ruler()
       .top(0)
       .bottom(bounds.innerHeight + bottomPadding)
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .label(function(d) {
-        return sszvis.format.number(d.value) + ' ' + (config.rulerLabel || DEFAULT_RULER_LABEL);
+        return sszvis.format.number(d.value) + ' ' + config.rulerLabel;
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;

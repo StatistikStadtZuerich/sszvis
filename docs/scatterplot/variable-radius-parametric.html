@@ -24,16 +24,43 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+var config = {
+    // The path to the CSV file containing the data for this chart
+    dataPath: 'data/VRS_basic_linear.csv',
+    // The title and description of this chart for visually impaired users
+    title: '',
+    description: '',
+    // Data column to use for the x-axis
+    xColumn: 'NeubauAbs (x-Achse)',
+    // Data column to use for the y-axis
+    yColumn: 'LeerZunRel (y-Achse) ',
+    // Data column to use for the bubble size
+    rColumn: 'Best13Radius (bubble)',
+    // Data column to use for category or name
+    cColumn: 'QuName',
+    // The labels for the x and y-axis and for the bubble value. Required as they are also the labels in the tooltip
+    xAxisLabel: 'NeubauAbs',
+    yAxisLabel: 'LeerZunRel',
+    rLabel: 'Radius',
+    // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
+    xTicks: null,
+    yTicks: null,
+    // Specifies the number and value of the legend ticks. Replace null with [], as in: [1000, 3000, 5000])
+    legendTicks: null,
+    // Padding between legend and x-axis in pixels. The recommended default is 60px.
+    legendPadding: 60,
+    // View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
+    fallback: false
+  }
 
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('neubauabs');
-  var yAcc = sszvis.fn.prop('leerzunrel');
-  var rAcc = sszvis.fn.prop('best13radius');
-  var cAcc = sszvis.fn.prop('quname');
+  var xAcc = sszvis.fn.prop('xPosition');
+  var yAcc = sszvis.fn.prop('yPosition');
+  var rAcc = sszvis.fn.prop('radius');
+  var cAcc = sszvis.fn.prop('label');
+
 
 
   /* Application state
@@ -59,7 +86,7 @@
         return xAcc(d) + '__' + yAcc(d);
       });
 
-      state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
+      state.xExtent = d3.extent(state.data, xAcc);
       state.yExtent = d3.extent(state.data, yAcc);
       var radiusExtent = d3.extent(state.data, rAcc);
       state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
@@ -81,13 +108,13 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/VRS_basic.csv')
+  d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        neubauabs: sszvis.parse.number(d['NeubauAbs (x-Achse)']),
-        leerzunrel: sszvis.parse.number(d['LeerZunRel (y-Achse) ']),
-        best13radius: sszvis.parse.number(d['Best13Radius (bubble)']),
-        quname: d['QuName']
+        xPosition: sszvis.parse.number(d[config.xColumn]),
+        yPosition: sszvis.parse.number(d[config.yColumn]),
+        radius: sszvis.parse.number(d[config.rColumn]),
+        label: d[config.cColumn]
       };
     })
     .get(function(error, data) {
@@ -107,13 +134,11 @@
 
     // Scales
 
-    var xScale = d3.scale.log()
+    var xScale = d3.scale.linear()
       .domain(state.xExtent)
       .range([0, bounds.innerWidth]);
 
-    var xValue = sszvis.fn.compose(function(v) {
-        return v <= 0.1 ? 0 : xScale(v);
-      }, xAcc);
+    var xValue = sszvis.fn.compose(xScale, xAcc);
 
     var yScale = d3.scale.linear()
       .domain(state.yExtent)
@@ -129,8 +154,8 @@
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
+        title: config.title,
+        description: config.description
       })
       .datum(state.data);
 
@@ -148,39 +173,41 @@
       // use white outlines in scatterplots to assist in identifying distinct circles
       .stroke('#FFFFFF');
 
-    // the built-in .ticks() function for d3.scale.log() produces far too many ticks
-    var xTicks = [0.1, 0.5, 1, 5, 10, 50, 100];
-
     var xAxis = sszvis.axis.x()
       .scale(xScale)
-      .tickValues(xTicks)
       .orient('bottom')
+      .contour(true)
+      .ticks (config.xTicks)
       .tickFormat(function(d) {
         return d < 1 ? d.toPrecision(1) : d;
       })
-      .title('Logarithmische Skala');
+      .title(config.xAxisLabel);
+
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
       .orient('right')
       .showZeroY(true)
-      .contour(true);
-
-    var annotation = sszvis.annotation.rectangle()
-      .x(xScale(8))
-      .y(0)
-      .width(bounds.innerWidth - xScale(15))
-      .height(bounds.innerHeight);
+      .contour(true)
+      .title(config.yAxisLabel);
 
     var radiusLegend = sszvis.legend.radius()
       .scale(rScale)
+      .tickValues(config.legendTicks)
       .tickFormat(function(d) {
         return Math.round(d * 100) / 100;
       });
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
-      .header(function(d) { return cAcc(d); })
+      .header(cAcc)
+      .body(function(d) {
+        return [
+          [config.xAxisLabel, sszvis.format.number(xAcc(d))],
+          [config.yAxisLabel, sszvis.format.number(yAcc(d))],
+          [config.rLabel, sszvis.format.number(rAcc(d))],
+        ];
+      })
       .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
       .orientation(function(d) {
         return xValue(d.datum) <= bounds.innerWidth / 2 ? 'left' : 'right';
@@ -189,9 +216,20 @@
 
     // Rendering
 
-    chartLayer.selectGroup('dataArea')
-      .datum([1])
-      .call(annotation);
+    if (config.fallback) {
+      var longTicks = sszvis.axis.y()
+        .ticks(config.yTicks)
+        .scale(yScale)
+        .orient('right')
+        .showZeroY(true)
+        .contour(true)
+        .title(config.yAxisLabel)
+        .tickLength(bounds.innerWidth)
+
+      chartLayer.selectGroup('longTicks')
+        .call(longTicks)
+        .call(removeOverlappingYTickLabels(bounds.innerHeight));
+    }
 
     chartLayer.selectGroup('dots')
       .call(dots);
@@ -200,7 +238,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('radiusLegend')
-      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 65))
+      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + config.legendPadding))
       .call(radiusLegend);
 
     chartLayer.selectGroup('xAxis')
@@ -208,22 +246,38 @@
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .call(yAxis);
+      .call(yAxis)
+      .call(removeOverlappingYTickLabels(bounds.innerHeight));
 
 
     // Interaction
+    if (!config.fallback) {
+      var mouseOverlay = sszvis.behavior.voronoi()
+        .x(xValue)
+        .y(yValue)
+        .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
+        .on('over', actions.setHighlight)
+        .on('out', actions.resetHighlight);
 
-    var mouseOverlay = sszvis.behavior.voronoi()
-      .x(xValue)
-      .y(yValue)
-      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
-      .on('over', actions.setHighlight)
-      .on('out', actions.resetHighlight);
-
-    chartLayer.selectGroup('voronoiMouse')
-      .datum(state.voronoiFiltered)
-      .call(mouseOverlay);
+      chartLayer.selectGroup('voronoiMouse')
+        .datum(state.voronoiFiltered)
+        .call(mouseOverlay)
+    };
   }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+
+  function removeOverlappingYTickLabels(maxBottom) {
+    return function(g) {
+      g.selectAll('text').each(function() {
+        var bottom = this.getBoundingClientRect().bottom;
+        if (bottom >= maxBottom) d3.select(this.parentNode).style('display', 'none');
+      });
+    }
+  }
+
 
 }(d3, sszvis));
 </script>

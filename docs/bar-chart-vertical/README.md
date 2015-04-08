@@ -115,27 +115,3 @@ In some cases, many values in a category should be shown. In this example, a lin
     }
 }
 ```
-
-## Parametric
-
-```project
-{
-    "name": "bar-chart-vertical-parametric",
-    "files": {
-        "index.html": {
-            "source": "docs/bar-chart-vertical/parametric.html",
-            "template": "docs/template.html"
-        },
-        "data.csv": "docs/bar-chart-vertical/data/SiVB_fourCities.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js"
-    },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "height": 393,
-        "width": 516
-    }
-}
-```
