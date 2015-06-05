@@ -48,6 +48,7 @@ sszvis_namespace('sszvis.map.zurichStadtKreise', function(module) {
   module.exports = function() {
     var event = d3.dispatch('over', 'out', 'click');
 
+
     var base = sszvis.map.renderer.base()
       .geoJson(compiledTopoJson.featureData());
 

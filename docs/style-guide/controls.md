@@ -41,7 +41,7 @@ A callback/event handler function to call when the user clicks on a value. Note 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 637
+        "height": 645
     }
 }
 ```

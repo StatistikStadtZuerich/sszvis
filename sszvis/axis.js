@@ -89,6 +89,9 @@ sszvis_namespace('sszvis.axis', function(module) {
         .prop('dyTitle') // a numeric value for the top offset of the title
         .prop('titleVertical')
         .prop('vertical').vertical(false)
+        //this property is typically used for the x-axis, but not for the y axis
+        //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels 
+        .prop('yOffset').yOffset(0)
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -100,7 +103,7 @@ sszvis_namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
             .classed('sszvis-axis--bottom', isBottom)
             .classed('sszvis-axis--vertical', props.vertical)
-            .attr('transform', sszvis.svgUtils.translateString(0, 2))
+            .attr('transform', sszvis.svgUtils.translateString(0, props.yOffset))
             .call(axisDelegate);
 
           var axisScale = axisDelegate.scale();
@@ -350,6 +353,7 @@ sszvis_namespace('sszvis.axis', function(module) {
 
     var axisX = function() {
       return axis()
+        .yOffset(2) //gap between chart and x-axis
         .ticks(3)
         .tickSize(4, 6)
         .tickPadding(6)

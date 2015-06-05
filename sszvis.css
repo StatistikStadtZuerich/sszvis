@@ -34,17 +34,20 @@
 
 /**
  * Axis component based on the d3.axis interface
- *
+ * Changed color to match stzh website (original #B8B8B8)
  * @module sszvis/axis
  */
 .sszvis-axis text {
-  fill: #B8B8B8;
+  fill: #767676;
   font-family: Arial, sans-serif;
   font-size: 10px;
   font-style: normal;
   font-weight: normal;
 }
 
+/*
+* changed stroke to match sthz grey
+*/
 .sszvis-axis path,
 .sszvis-axis line {
   fill: none;
@@ -179,26 +182,29 @@
 
 .sszvis-control-buttonGroup__item {
   background-color: #FFFFFF;
-  border: 1px solid #7C7C7C;
+  border: 1px solid #767676;
   border-left: none;
   box-sizing: border-box;
-  color: #7C7C7C;
+  color: #767676;
   cursor: pointer;
   display: table-cell;
   font-family: Arial, sans-serif;
   font-size: 12px;
-  padding: 0.5em 1em;
+  padding: 9px 12px;
   text-align: center;
   vertical-align: middle;
 }
 
+/** 
+* uses same background color as "Zurücksetzen" form button on stzh Website
+*/
 .sszvis-control-buttonGroup__item.selected {
-  background-color: #B8B8B8;
+  background-color: #767676;
   color: #FFFFFF;
 }
 
 .sszvis-control-buttonGroup__item:first-child {
-  border-left: 1px solid #7C7C7C;
+  border-left: 1px solid #767676;
   border-top-left-radius: 3px;
   border-bottom-left-radius: 3px;
 }
@@ -476,7 +482,7 @@
  * @module sszvis/legend/radius
  */
 .sszvis-legend__label {
-  fill: #909090;
+  fill: #767676;
   font-family: Arial, sans-serif;
   font-size: 12px;
   font-style: normal;
@@ -485,12 +491,12 @@
 }
 
 .sszvis-legend__label--small {
-  fill: #B8B8B8;
+  fill: #767676;
   font-size: 10px;
 }
 
 .sszvis-legend__axislabel {
-  fill: #B8B8B8;
+  fill: #767676;
   font-family: Arial, sans-serif;
   font-size: 10px;
   font-style: normal;

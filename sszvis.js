@@ -301,8 +301,6 @@
  */
 
 (function() {
-'use strict';
-
 var serializeXML = function(node, output) {
   var nodeType = node.nodeType;
   if (nodeType == 3) { // TEXT nodes.
@@ -337,7 +335,7 @@ var serializeXML = function(node, output) {
     // TODO: Handle DOCUMENT nodes.
     throw 'Error serializing XML. Unhandled node of type: ' + nodeType;
   }
-};
+}
 // The innerHTML DOM property for SVGElement.
 Object.defineProperty(SVGElement.prototype, 'innerHTML', {
   get: function() {
@@ -371,7 +369,7 @@ Object.defineProperty(SVGElement.prototype, 'innerHTML', {
       }
     } catch(e) {
       throw new Error('Error parsing XML string');
-    }
+    };
   }
 });
 
@@ -869,6 +867,9 @@ sszvis_namespace('sszvis.axis', function(module) {
         .prop('dyTitle') // a numeric value for the top offset of the title
         .prop('titleVertical')
         .prop('vertical').vertical(false)
+        //this property is typically used for the x-axis, but not for the y axis
+        //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels 
+        .prop('yOffset').yOffset(0)
         .render(function() {
           var selection = d3.select(this);
           var props = selection.props();
@@ -880,7 +881,7 @@ sszvis_namespace('sszvis.axis', function(module) {
             .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
             .classed('sszvis-axis--bottom', isBottom)
             .classed('sszvis-axis--vertical', props.vertical)
-            .attr('transform', sszvis.svgUtils.translateString(0, 2))
+            .attr('transform', sszvis.svgUtils.translateString(0, props.yOffset))
             .call(axisDelegate);
 
           var axisScale = axisDelegate.scale();
@@ -1130,6 +1131,7 @@ sszvis_namespace('sszvis.axis', function(module) {
 
     var axisX = function() {
       return axis()
+        .yOffset(2) //gap between chart and x-axis
         .ticks(3)
         .tickSize(4, 6)
         .tickPadding(6)
@@ -1288,7 +1290,11 @@ sszvis_namespace('sszvis.bounds', function(module) {
   'use strict';
 
   var DEFAULT_WIDTH = 516;
-  var RATIO = Math.sqrt(2);
+
+  //changed sszsch
+  //We decied to have a default ratio 3:2 instead of 1:sqrt(2)
+  //var RATIO = Math.sqrt(2);
+  var RATIO = 3/2;
 
   module.exports = function(bounds) {
     bounds || (bounds = {});
@@ -1910,6 +1916,7 @@ sszvis_namespace('sszvis.format', function(module) {
 
       // 2350     -> "2350"
       // 2350.29  -> "2350.3"
+      //changed this set 10 instead of 100
       else if (dAbs >= 100) {
         if (!def(p)) {
           p = (decLen === 0) ? 0 : 1;
@@ -1971,7 +1978,8 @@ sszvis_namespace('sszvis.format', function(module) {
 
   function removeTrailingZeroes(num) {
     return String(num).replace(/([0-9]+)(\.)([0-9]*)0+$/, function(all, nat, dot, dec) {
-      if (parseInt(dec) === 0) dec = '';
+     //changed sszsch: we dont want to cut trailing zeroes
+     // if (parseInt(dec) === 0) dec = '';
       return dec.length > 0 ? nat + dot + dec : nat;
     });
   }
@@ -4067,10 +4075,13 @@ sszvis_namespace('sszvis.component.groupedBars', function(module) {
           d.__sszvisGroupedBarIndex__ = i;
         });
 
+
+
         var unitsWithValue = barUnits.filter(props.defined);
 
         // clear the units before rendering
         unitsWithValue.selectAll('*').remove();
+
 
         unitsWithValue
           .append('rect')
@@ -4157,7 +4168,7 @@ sszvis_namespace('sszvis.component.groupedBars', function(module) {
  * @property {string, function} [stroke] Either a string specifying the stroke color of the line or lines,
  *                                       or a function which, when passed the entire array representing the line,
  *                                       returns a value for the stroke. If left undefined, the stroke is black.
- * @property {string, function} [stroke] Either a number specifying the stroke-width of the lines,
+ * @property {string, function} [strokeWidth] Either a number specifying the stroke-width of the lines,
  *                                       or a function which, when passed the entire array representing the line,
  *                                       returns a value for the stroke-width. The default value is 1.
  *
@@ -4196,16 +4207,17 @@ sszvis_namespace('sszvis.component.line', function(module) {
         path.enter()
           .append('path')
           .classed('sszvis-line', true)
-          .attr('stroke', props.stroke);
+          .style('stroke', props.stroke);
 
         path.exit().remove();
 
         path
+          .order()
           .transition()
           .call(sszvis.transition)
           .attr('d', sszvis.fn.compose(line, props.valuesAccessor))
-          .attr('stroke', props.stroke)
-          .attr('stroke-width', props.strokeWidth);
+          .style('stroke', props.stroke)
+          .style('stroke-width', props.strokeWidth);
       });
   };
 
@@ -4564,6 +4576,7 @@ sszvis_namespace('sszvis.component.stackedAreaMultiples', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        //sszsch why reverse? 
         data = data.slice().reverse();
 
         var areaGen = d3.svg.area()
@@ -5835,7 +5848,7 @@ sszvis_namespace('sszvis.legend.binnedColorScale', function(module) {
  * @property {array} displayValues              A list of specific values to display. If not specified, defaults to using scale.ticks
  * @property {number} width                     The pixel width of the legend (default 200).
  * @property {number} segments                  The number of segments to aim for. Note, this is only used if displayValues isn't specified,
- *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default 8)
+ *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default)
  * @property {array} labelText                  Text or a text-returning function to use as the titles for the legend endpoints. If not supplied,
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.format.number.
@@ -5885,7 +5898,8 @@ sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
           .attr('height', segHeight)
           .attr('fill', function(d) { return props.scale(d); });
 
-        var startEnd = [values[0], values[values.length - 1]];
+        var domain = props.scale.domain();
+        var startEnd = [domain[0], domain[domain.length - 1]];
         var labelText = props.labelText || startEnd;
 
         // rounded end caps for the segments
@@ -6029,6 +6043,7 @@ sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
       .prop('columnWidth').columnWidth(200)
       .prop('rows').rows(3)
       .prop('columns').columns(3)
+      .prop('verticallyCentered').verticallyCentered(false)
       .prop('orientation')
       .prop('reverse').reverse(false)
       .prop('rightAlign').rightAlign(false)
@@ -6099,6 +6114,11 @@ sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
             return sszvis.svgUtils.translateString(x, y);
           });
 
+        var verticalOffset = '';
+        if (props.verticallyCentered) {
+          verticalOffset = 'translate(0,' + String(-(domain.length * props.rowHeight / 2)) + ') ';
+        }
+
         if (props.horizontalFloat) {
           var rowPosition = 0, horizontalPosition = 0;
           groups.attr('transform', function() {
@@ -6110,14 +6130,14 @@ sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
             }
             var translate = sszvis.svgUtils.translateString(horizontalPosition, rowPosition);
             horizontalPosition += width + props.floatPadding;
-            return translate;
+            return verticalOffset + translate;
           });
         } else {
           groups.attr('transform', function(d, i) {
             if (props.orientation === 'horizontal') {
-              return 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
+              return verticalOffset + 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
             } else if (props.orientation === 'vertical') {
-              return 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
+              return verticalOffset + 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
             }
           });
         }
@@ -6262,6 +6282,7 @@ sszvis_namespace('sszvis.map.utils', function(module) {
         s = 1 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
         t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
 
+        
     mercatorProjection
       .scale(s)
       .translate(t);
@@ -6550,6 +6571,7 @@ sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
       .prop('mapPath')
       .prop('lakeFeature')
       .prop('lakeBounds')
+      .prop('fadeOut').fadeOut(true)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -6558,13 +6580,15 @@ sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
         sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'lake-pattern')
           .call(sszvis.patterns.mapLakePattern);
 
-        // the fade gradient
-        sszvis.svgUtils.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
-          .call(sszvis.patterns.mapLakeFadeGradient);
+        if (props.fadeOut) {
+          // the fade gradient
+          sszvis.svgUtils.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
+            .call(sszvis.patterns.mapLakeFadeGradient);
 
-        // the mask, which uses the fade gradient
-        sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
-          .call(sszvis.patterns.mapLakeGradientMask);
+          // the mask, which uses the fade gradient
+          sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
+            .call(sszvis.patterns.mapLakeGradientMask);
+        }
 
         // generate the Lake Zurich path
         var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
@@ -6579,8 +6603,11 @@ sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
         zurichSee
           .attr('d', props.mapPath)
           .attr('fill', 'url(#lake-pattern)')
+
+        if (props.fadeOut) {
           // this mask applies the fade effect
-          .attr('mask', 'url(#lake-fade-mask)');
+          zurichSee.attr('mask', 'url(#lake-fade-mask)');
+        }
 
         // add a path for the boundaries of map entities which extend over the lake.
         // This path is rendered as a dotted line over the lake shape

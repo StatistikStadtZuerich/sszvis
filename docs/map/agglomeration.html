@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../sszvis-map-zurich-agglomeration-2012.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var cAcc = sszvis.fn.prop('category');
+  var vAcc = sszvis.fn.prop('value');
+  var nameAcc = sszvis.fn.prop('name');
+  var mDatumAcc = sszvis.fn.prop('datum');
+  var catName = sszvis.fn.prop('name');
+  var catValue = sszvis.fn.prop('value');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    selection: [],
+    valueDomain: [0, 0],
+    binEdges: []
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.valueDomain = [d3.min(state.data, vAcc), d3.max(state.data, vAcc)];
+      state.categories = sszvis.cascade()
+        .arrayBy(cAcc)
+        .apply(state.data)
+        .map(function(d) {
+          return {
+            name: cAcc(d[0]),
+            value: d3.min(d, vAcc),
+          }
+        })
+        .sort(function(a, b) {
+          return d3.ascending(catValue(a), catValue(b));
+        });
+
+      render(state);
+    },
+
+    // manage which datum is selected. These data are highlighted by the map.
+    selectHovered: function(d) {
+      state.selection = [d];
+      render(state);
+    },
+
+    deselectHovered: function() {
+      state.selection = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/agglomeration_2012.csv')
+    .row(function(d) {
+      return {
+        geoId: sszvis.parse.number(d['Nr']),
+        name: d['Gemeinde'],
+        category: d['Klasse'],
+        value: sszvis.parse.number(d['Wert'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    // The map should use the whole width. We make it 730px high in order to
+    // achieve this optimal fit.
+    var bounds = sszvis.bounds({ height: 730, top: 30, bottom: 110 });
+
+
+    // Scales
+
+    var colorScale = sszvis.color.seqBlu()
+      .domain(state.valueDomain);
+
+    var categoryColorScale = d3.scale.ordinal()
+      .domain(state.categories.map(catName))
+      .range(state.categories.map(sszvis.fn.compose(colorScale, catValue)));
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+      .datum(state.selection);
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichAgglomeration2012()
+      .highlight(state.selection)
+      // gets the fill color and darken it
+      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .fill(sszvis.fn.compose(colorScale, vAcc))
+      // add mouse/touch interaction
+      .on('over', actions.selectHovered)
+      .on('click', actions.selectHovered)
+      .on('out', actions.deselectHovered);
+
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
+      .bold(sszvis.fn.compose(nameAcc, mDatumAcc));
+
+    var tooltipBody = function(d) {
+      var value = sszvis.fn.compose(vAcc, mDatumAcc);
+      return [
+        ['Anteil 75-jährige und Ältere', sszvis.format.percent(value(d) / 100)]
+      ];
+    };
+
+    // When using the map component, the data element bound to the tooltip anchor is the internal representation
+    // which includes both the geoJson and the datum as properties. This is necessary so that the correct position
+    // can be calculated from the geoJson. But that also means that when accessing the datum for other purposes,
+    // such as creating tooltip text, the user must be aware that the 'd' argument is not just the data value.
+    // The data value, if present, is available as d.datum.
+    var tooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeader)
+      .body(tooltipBody)
+      .visible(isSelected);
+
+    var legend = sszvis.legend.ordinalColorScale()
+      .scale(categoryColorScale)
+      .orientation('vertical')
+      .rows(state.categories.length / 3)
+      .columnWidth(bounds.innerWidth / 3)
+      .columns(3)
+
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('legend')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .call(legend);
+  }
+
+  function isSelected(d) {
+    return state.selection.indexOf(d.datum) >= 0;
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>

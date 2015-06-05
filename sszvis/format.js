@@ -85,6 +85,7 @@ sszvis_namespace('sszvis.format', function(module) {
 
       // 2350     -> "2350"
       // 2350.29  -> "2350.3"
+      //changed this set 10 instead of 100
       else if (dAbs >= 100) {
         if (!def(p)) {
           p = (decLen === 0) ? 0 : 1;
@@ -146,7 +147,8 @@ sszvis_namespace('sszvis.format', function(module) {
 
   function removeTrailingZeroes(num) {
     return String(num).replace(/([0-9]+)(\.)([0-9]*)0+$/, function(all, nat, dot, dec) {
-      if (parseInt(dec) === 0) dec = '';
+     //changed sszsch: we dont want to cut trailing zeroes
+     // if (parseInt(dec) === 0) dec = '';
       return dec.length > 0 ? nat + dot + dec : nat;
     });
   }
