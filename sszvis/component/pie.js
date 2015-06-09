@@ -33,9 +33,20 @@ sszvis_namespace('sszvis.component.pie', function(module) {
 
         var angle = 0;
         data.forEach(function(value) {
-          value.a0 = angle;
+          // In order for an angle transition to work correctly in d3, the transition must be done in data space.
+          // The computed arc path itself cannot be interpolated without error.
+          // see http://bl.ocks.org/mbostock/5100636 for a straightforward example.
+          // However, due to the structure of sszvis and the way d3 data joining works, this poses a bit of a challenge,
+          // since old and new data values could be on different objects, and they need to be merged.
+          // In the code that follows, value._a0 and value._a1 are the destination angles for the transition.
+          // value.a0 and value.a1 are the current values in the transition (either the initial value, some intermediate value, or the final angle value).
+          value._a0 = angle;
+          // These a0 and a1 values may be overwritten later if there is already data bound at this data index. (see the .each function further down).
+          if (isNaN(value.a0)) value.a0 = angle;
           angle += props.angle(value);
-          value.a1 = angle;
+          value._a1 = angle;
+          // data values which don't already have angles set start out at the complete value.
+          if (isNaN(value.a1)) value.a1 = angle;
         });
 
         var arcGen = d3.svg.arc()
@@ -45,6 +56,14 @@ sszvis_namespace('sszvis.component.pie', function(module) {
           .endAngle(function(d) { return d.a1; });
 
         var segments = selection.selectAll('.sszvis-path')
+          .each(function(d, i) {
+            // This matches the data values iteratively in the same way d3 will when it does the data join.
+            // This is kind of a hack, but it's the only way to get any existing angle values from the already-bound data
+            if (data[i]) {
+              data[i].a0 = d.a0;
+              data[i].a1 = d.a1;
+            }
+          })
           .data(data);
 
         segments.enter()
@@ -60,7 +79,15 @@ sszvis_namespace('sszvis.component.pie', function(module) {
           .transition()
           .call(sszvis.transition)
           .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
-          .attr('d', arcGen)
+          .attrTween('d', function(d) {
+            var angle0Interp = d3.interpolate(d.a0, d._a0);
+            var angle1Interp = d3.interpolate(d.a1, d._a1);
+            return function(t) {
+              d.a0 = angle0Interp(t);
+              d.a1 = angle1Interp(t);
+              return arcGen(d);
+            };
+          })
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
 
