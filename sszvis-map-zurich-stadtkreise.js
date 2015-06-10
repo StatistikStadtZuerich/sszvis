@@ -79,7 +79,7 @@ sszvis_namespace('sszvis.map.zurichStadtKreise', function(module) {
         // Components
 
         // create a map path generator function
-        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, compiledTopoJson.featureData());
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, compiledTopoJson.featureData(), 'stadtkreis');
 
         // Base shape
         base
