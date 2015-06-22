@@ -394,6 +394,7 @@
 }
 
 .sszvis-tooltip__body__table {
+  border: none !important; /* We need to override the parent website's selector */
   border-collapse: collapse;
   border-spacing: 0;
   min-width: 120px;
@@ -406,8 +407,10 @@
 }
 
 .sszvis-tooltip__body__table td {
-  padding: 7px 0.5em 7px 0;
+  border: none !important;  /* We need to override the parent website's selector */
+  padding: 7px 0.5em 7px 0 !important;  /* We need to override the parent website's selector */
   text-align: left;
+  vertical-align: top;
 }
 
 .sszvis-tooltip__body__table tr:last-child td {
