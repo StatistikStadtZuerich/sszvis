@@ -96,6 +96,10 @@ sszvis_namespace('sszvis.component.groupedBars', function(module) {
         // clear the units before rendering
         unitsWithValue.selectAll('*').remove();
 
+        //sszsch: fix: reset previously assigned translations
+        unitsWithValue.attr('transform',function(d,i){
+          return sszvis.svgUtils.translateString(0,0);
+        });
 
         unitsWithValue
           .append('rect')
