@@ -78,6 +78,7 @@ SOURCE_FILES = \
 	sszvis/legend/radius.js \
 	sszvis/map/mapUtils.js \
 	sszvis/map/renderer/base.js \
+	sszvis/map/renderer/grundkarte.js \
 	sszvis/map/renderer/mesh.js \
 	sszvis/map/renderer/highlight.js \
 	sszvis/map/renderer/patternedlakeoverlay.js \
