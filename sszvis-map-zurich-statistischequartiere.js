@@ -35,23 +35,20 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiereBaseMap', function(modul
   'use strict';
 
   module.exports = function() {
-    var mesh = sszvis.map.renderer.mesh()
-      .geoJson(sszvis.map.zurichStatistischeQuartiereMapData.meshData());
+    var grundKarteRenderer = sszvis.map.renderer.grundkarte()
+      .geoJson(sszvis.map.zurichStatistischeQuartiereMapData.meshData())
+      .featureData(sszvis.map.zurichStatistischeQuartiereMapData.featureData())
+      .mapPathCacheKey('statistische_quartiere');
 
     var component = d3.component()
-      .prop('width')
-      .prop('height')
-      .delegate('borderColor', mesh)
+      .delegate('width', grundKarteRenderer)
+      .delegate('height', grundKarteRenderer)
+      .delegate('borderColor', grundKarteRenderer)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
-        // create a map path generator function
-        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), 'statistische_quartiere');
-
-        mesh.mapPath(mapPath);
-
-        selection.call(mesh);
+        selection.call(grundKarteRenderer);
       });
 
     return component;
