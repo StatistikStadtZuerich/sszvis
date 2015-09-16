@@ -47,7 +47,7 @@
   function render(state) {
     // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 90, left: padding });
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
 
 
     // Layers
@@ -60,12 +60,10 @@
 
     // Components
 
-    var mapMaker = sszvis.map.zurichStatistischeQuartiere()
-      // gets the fill color and darken it
+    var mapMaker = sszvis.map.zurichStatistischeQuartiereBaseMap()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill('transparent')
-      .stroke('#123456');
+      .borderColor('black');
 
 
     // Rendering
