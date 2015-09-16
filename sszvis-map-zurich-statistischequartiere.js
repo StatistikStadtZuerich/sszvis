@@ -1,16 +1,14 @@
 /**
  * Modular map component for a map of the Zurich Statistische Quartiere.
- *
  */
 
 /**
- * The rawTopo reference has raw map data. The compiledTopoJson object contains
+ * The rawTopo reference has raw map data. The module object contains
  * the geoJson objects compiled from the TopoJSON format. If it's necessary, the getter functions
  * compile the raw topoJson map data into geoJson. This way, the data can be transmitted
  * as much more compact topoJson, and expanded in-memory into the geoJson necessary for rendering
  * map entities. Note that this compilation step requires the topojson client-side library as a
  * dependency (https://github.com/mbostock/topojson/blob/master/topojson.js)
- *
  */
 sszvis_namespace('sszvis.map.zurichStatistischeQuartiereMapData', function(module) {
   'use strict';
@@ -27,12 +25,11 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiereMapData', function(modul
     // lakebounds: the section of the map bounds which lies over the Zürichsee
     lakeBounds: function() { return this._lakeBounds || (this._lakeBounds = topojson.mesh(rawTopo, rawTopo.objects.statistische_quartiere_lakebounds)); }
   };
+
 });
 
 /**
  * zurichStatistischeQuartiere Base Map Component
- *
- * 
  */
 sszvis_namespace('sszvis.map.zurichStatistischeQuartiereBaseMap', function(module) {
   'use strict';

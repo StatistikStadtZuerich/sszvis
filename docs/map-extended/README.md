@@ -18,10 +18,10 @@ A base layer example using the Statistische Quartiere map data. This is a static
 
 ```project
 {
-    "name": "map-baselayer",
+    "name": "map-baselayer-statquart",
     "files": {
         "index.html": {
-            "source": "docs/map-extended/baselayer.html",
+            "source": "docs/map-extended/baselayer-statquart.html",
             "template": "docs/template.html"
         },
         "sszvis.js": "sszvis.js",
