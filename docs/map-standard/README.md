@@ -62,10 +62,10 @@ A map of Zürich's Stadtkreise.
     "name": "map-kreis",
     "files": {
         "index.html": {
-            "source": "docs/map/kreis.html",
+            "source": "docs/map-standard/kreis.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/M_kreis.csv",
+        "data.csv": "docs/map-standard/data/M_kreis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -90,10 +90,10 @@ A map of Zürich's Wahlkreise.
     "name": "map-kreis",
     "files": {
         "index.html": {
-            "source": "docs/map/wahlkreis.html",
+            "source": "docs/map-standard/wahlkreis.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/M_wahlkreis_fake.csv",
+        "data.csv": "docs/map-standard/data/M_wahlkreis_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -118,10 +118,10 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
     "name": "map-tabs",
     "files": {
         "index.html": {
-            "source": "docs/map/tabs.html",
+            "source": "docs/map-standard/tabs.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/S_tabs.csv",
+        "data.csv": "docs/map-standard/data/S_tabs.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -146,10 +146,10 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
     "name": "map-cml-quartier-years",
     "files": {
         "index.html": {
-            "source": "docs/map/cml-quartier-years.html",
+            "source": "docs/map-standard/cml-quartier-years.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/CML_quartier_years.csv",
+        "data.csv": "docs/map-standard/data/CML_quartier_years.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -174,10 +174,10 @@ A map of Zürich's agglomeration.
     "name": "map-agglomeration",
     "files": {
         "index.html": {
-            "source": "docs/map/agglomeration.html",
+            "source": "docs/map-standard/agglomeration.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/agglomeration_2012.csv",
+        "data.csv": "docs/map-standard/data/agglomeration_2012.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -202,10 +202,10 @@ A map of Switzerland.
     "name": "map-switzerland",
     "files": {
         "index.html": {
-            "source": "docs/map/switzerland.html",
+            "source": "docs/map-standard/switzerland.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/M_swiss_fake.csv",
+        "data.csv": "docs/map-standard/data/M_swiss_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
