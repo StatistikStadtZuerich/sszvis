@@ -6499,7 +6499,7 @@ sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
 
         meshLine
           .attr('d', props.mapPath)
-          .attr('stroke', props.borderColor);
+          .style('stroke', props.borderColor);
       });
   };
 
