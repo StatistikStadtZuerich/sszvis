@@ -4,6 +4,14 @@
 
 ## sszvis.map
 
+Available map generators:
+
+* `sszvis.map.zurichStadtKreise()`
+* `sszvis.map.zurichStatistischeQuartiere()`
+* `sszvis.map.zurichWahlKreise()`
+* `sszvis.map.zurichAgglomeration2012()`
+* `sszvis.map.switzerland()`
+
 ### Data structure
 
 This chart requires data which can be matched with map entities.

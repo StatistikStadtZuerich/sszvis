@@ -1,8 +1,16 @@
-# Extended Map Functionality
+# Map Base Layer Functionality
 
-> These map layers provide additional features that extend the mapping capabilities of the SSZVIS library.
+> These map layers can be used as "Grundkarte" for various types of map. They are the simplest way to generate the border of a geographic shape.
 
 ## sszvis.map
+
+Available base map generators:
+
+* `sszvis.map.zurichStadtKreiseBaseMap()`
+* `sszvis.map.zurichStatistischeQuartiereBaseMap()`
+* `sszvis.map.zurichWahlKreiseBaseMap()`
+* `sszvis.map.zurichAgglomeration2012BaseMap()`
+* `sszvis.map.switzerlandBaseMap()`
 
 ### Data structures
 
