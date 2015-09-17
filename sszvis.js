@@ -1727,6 +1727,7 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
     var svgEnter = svg.enter().append('svg');
 
     svgEnter
+      .classed('sszvis-svg-layer', true)
       .attr('role', 'img')
       .attr('aria-label', title + ' – ' + description);
 
@@ -1778,6 +1779,7 @@ sszvis_namespace('sszvis.createHtmlLayer', function(module) {
 
     var layer = root.selectAll('[data-sszvis-html-layer]').data([0]);
     layer.enter().append('div')
+      .classed('sszvis-html-layer', true)
       .attr('data-sszvis-html-layer', '');
 
     layer.style({

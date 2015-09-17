@@ -24,6 +24,7 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
     var svgEnter = svg.enter().append('svg');
 
     svgEnter
+      .classed('sszvis-svg-layer', true)
       .attr('role', 'img')
       .attr('aria-label', title + ' – ' + description);
 

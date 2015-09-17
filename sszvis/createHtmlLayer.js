@@ -20,6 +20,7 @@ sszvis_namespace('sszvis.createHtmlLayer', function(module) {
 
     var layer = root.selectAll('[data-sszvis-html-layer]').data([0]);
     layer.enter().append('div')
+      .classed('sszvis-html-layer', true)
       .attr('data-sszvis-html-layer', '');
 
     layer.style({

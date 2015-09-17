@@ -7,6 +7,14 @@
   position: relative;
 }
 
+.sszvis-svg-layer {
+  position: relative;
+}
+
+.sszvis-html-layer {
+  position: absolute;
+}
+
 /**
  * Specify that objects are interactive
  */
