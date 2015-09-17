@@ -177,6 +177,10 @@
 
 }
 
+.sszvis-map__image {
+  position: absolute;
+}
+
 /**
  * Button group control
  *
