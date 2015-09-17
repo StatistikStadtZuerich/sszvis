@@ -34,7 +34,7 @@ sszvis_namespace('sszvis.map.switzerlandBaseMap', function(module) {
     var grundKarteRenderer = sszvis.map.renderer.grundkarte()
       .geoJson(sszvis.map.switzerlandMapData.meshData())
       .featureData(sszvis.map.switzerlandMapData.featureData())
-      .mapPathCacheKey('switzerland');
+      .mapPathCacheKey(sszvis.map.utils.constants.SWITZERLAND_KEY);
 
     var component = d3.component()
       .delegate('width', grundKarteRenderer)
@@ -109,7 +109,7 @@ sszvis_namespace('sszvis.map.switzerland', function(module) {
         // Components
 
         // create a map path generator function
-        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.switzerlandMapData.featureData(), 'switzerland');
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.switzerlandMapData.featureData(), sszvis.map.utils.constants.SWITZERLAND_KEY);
 
         // Base shape
         base

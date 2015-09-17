@@ -6286,6 +6286,14 @@ sszvis_namespace('sszvis.legend.radius', function(module) {
 sszvis_namespace('sszvis.map.utils', function(module) {
   'use strict';
 
+  module.exports.constants = {
+    STADT_KREISE_KEY: 'zurichStadtKreise',
+    STATISTISCHE_QUARTIERE_KEY: 'zurichStatistischeQuartiere',
+    WAHL_KREISE_KEY: 'zurichWahlKreise',
+    AGGLOMERATION_2012_KEY: 'zurichAgglomeration2012',
+    SWITZERLAND_KEY: 'switzerland'
+  };
+
   // This is for caching feature bounds calculations, which are pretty expensive.
   // Given the current architecture, you need to pass a featureBoundsCacheKey in order to
   // enable using cached values. If the featureCollection passed to this function changes,
@@ -6361,23 +6369,23 @@ sszvis_namespace('sszvis.map.utils', function(module) {
 sszvis_namespace('sszvis.map.projection', function(module) {
 
   module.exports.zurichStadtKreise = function(width, height) {
-    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStadtKreiseMapData.featureData(), 'zurichStadtKreise');
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStadtKreiseMapData.featureData(), sszvis.map.utils.constants.STADT_KREISE_KEY);
   };
 
   module.exports.zurichStatistischeQuartiere = function(width, height) {
-    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), 'zurichStatistischeQuartiere');
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY);
   };
 
   module.exports.zurichWahlKreise = function(width, height) {
-    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichWahlKreiseMapData.featureData(), 'zurichWahlKreise');
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichWahlKreiseMapData.featureData(), sszvis.map.utils.constants.WAHL_KREISE_KEY);
   };
 
   module.exports.zurichAgglomeration2012 = function(width, height) {
-    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichAgglomeration2012MapData.featureData(), 'zurichAgglomeration2012');
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichAgglomeration2012MapData.featureData(), sszvis.map.utils.constants.AGGLOMERATION_2012_KEY);
   };
 
   module.exports.switzerland = function(width, height) {
-    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.switzerlandMapData.featureData(), 'switzerland');
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.switzerlandMapData.featureData(), sszvis.map.utils.constants.SWITZERLAND_KEY);
   };
 
 });

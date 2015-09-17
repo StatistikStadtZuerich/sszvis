@@ -38,7 +38,7 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiereBaseMap', function(modul
     var grundKarteRenderer = sszvis.map.renderer.grundkarte()
       .geoJson(sszvis.map.zurichStatistischeQuartiereMapData.meshData())
       .featureData(sszvis.map.zurichStatistischeQuartiereMapData.featureData())
-      .mapPathCacheKey('statistische_quartiere');
+      .mapPathCacheKey(sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY);
 
     var component = d3.component()
       .delegate('width', grundKarteRenderer)
@@ -117,7 +117,7 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiere', function(module) {
         // Components
 
         // create a map path generator function
-        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), 'statistische_quartiere');
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY);
 
         // Base shape
         base

@@ -6,6 +6,14 @@
 sszvis_namespace('sszvis.map.utils', function(module) {
   'use strict';
 
+  module.exports.constants = {
+    STADT_KREISE_KEY: 'zurichStadtKreise',
+    STATISTISCHE_QUARTIERE_KEY: 'zurichStatistischeQuartiere',
+    WAHL_KREISE_KEY: 'zurichWahlKreise',
+    AGGLOMERATION_2012_KEY: 'zurichAgglomeration2012',
+    SWITZERLAND_KEY: 'switzerland'
+  };
+
   // This is for caching feature bounds calculations, which are pretty expensive.
   // Given the current architecture, you need to pass a featureBoundsCacheKey in order to
   // enable using cached values. If the featureCollection passed to this function changes,
