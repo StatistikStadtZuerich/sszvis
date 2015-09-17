@@ -77,6 +77,7 @@ SOURCE_FILES = \
 	sszvis/legend/ordinalColorScale.js \
 	sszvis/legend/radius.js \
 	sszvis/map/mapUtils.js \
+	sszvis/map/projections.js \
 	sszvis/map/renderer/base.js \
 	sszvis/map/renderer/grundkarte.js \
 	sszvis/map/renderer/mesh.js \

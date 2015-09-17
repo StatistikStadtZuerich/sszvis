@@ -6292,6 +6292,43 @@ sszvis_namespace('sszvis.map.utils', function(module) {
   // a different featureBoundsCacheKey must be used.
   var featureBoundsCache = {};
 
+  module.exports.swissMapProjection = function(width, height, featureCollection, featureBoundsCacheKey) {
+    var mercatorProjection = d3.geo.mercator()
+      .rotate([-7.439583333333333, -46.95240555555556]);
+
+    var bounds;
+
+    if (featureBoundsCacheKey && featureBoundsCache[featureBoundsCacheKey]) {
+      // Use cached bounds calculation
+      bounds = featureBoundsCache[featureBoundsCacheKey];
+    } else {
+      // Calculate bounds
+      mercatorProjection
+        .scale(1)
+        .translate([0, 0]);
+
+      var boundsGenerator = d3.geo.path()
+        .projection(mercatorProjection);
+
+      bounds = boundsGenerator.bounds(featureCollection);
+
+      // Cache for later
+      if (featureBoundsCacheKey) {
+        featureBoundsCache[featureBoundsCacheKey] = bounds;
+      }
+    }
+
+    // calculate the scale and translation values from the bounds, width, and height
+    var scale = 1 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height),
+        translation = [(width - scale * (bounds[1][0] + bounds[0][0])) / 2, (height - scale * (bounds[1][1] + bounds[0][1])) / 2];
+        
+    mercatorProjection
+      .scale(scale)
+      .translate(translation);
+
+    return mercatorProjection;
+  };
+
   /**
    * This is a special d3.geo.path generator function tailored for rendering maps of
    * Switzerland. The values are chosen specifically to optimize path generation for
@@ -6309,26 +6346,38 @@ sszvis_namespace('sszvis.map.utils', function(module) {
    *                                            a map projection optimal for Swiss areas.
    */
   module.exports.swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
-    var mercatorProjection = d3.geo.mercator()
-      .rotate([-7.439583333333333, -46.95240555555556]);
-
-    mercatorProjection
-      .scale(1)
-      .translate([0, 0]);
-
     var mercatorPath = d3.geo.path()
-      .projection(mercatorProjection);
-
-    var b = featureBoundsCacheKey && featureBoundsCache[featureBoundsCacheKey] ? featureBoundsCache[featureBoundsCacheKey] : ( featureBoundsCacheKey ? ( featureBoundsCache[featureBoundsCacheKey] = mercatorPath.bounds(featureCollection) ) : mercatorPath.bounds(featureCollection) ),
-        s = 1 / Math.max((b[1][0] - b[0][0]) / width, (b[1][1] - b[0][1]) / height),
-        t = [(width - s * (b[1][0] + b[0][0])) / 2, (height - s * (b[1][1] + b[0][1])) / 2];
-
-        
-    mercatorProjection
-      .scale(s)
-      .translate(t);
+      .projection(sszvis.map.utils.swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
 
     return mercatorPath;
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+sszvis_namespace('sszvis.map.projection', function(module) {
+
+  module.exports.zurichStadtKreise = function(width, height) {
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStadtKreiseMapData.featureData(), 'zurichStadtKreise');
+  };
+
+  module.exports.zurichStatistischeQuartiere = function(width, height) {
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), 'zurichStatistischeQuartiere');
+  };
+
+  module.exports.zurichWahlKreise = function(width, height) {
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichWahlKreiseMapData.featureData(), 'zurichWahlKreise');
+  };
+
+  module.exports.zurichAgglomeration2012 = function(width, height) {
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichAgglomeration2012MapData.featureData(), 'zurichAgglomeration2012');
+  };
+
+  module.exports.switzerland = function(width, height) {
+    return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.switzerlandMapData.featureData(), 'switzerland');
   };
 
 });
