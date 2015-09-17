@@ -93,6 +93,33 @@ A base layer example using the Wahlkreise map data. This is a static map
 }
 ```
 
+## Zürich: Grundkarte Agglomerationen (2012)
+
+A base layer example using the Agglomeration (2012) map data. This is a static map
+
+```project
+{
+    "name": "map-baselayer-agglomeration-2012",
+    "files": {
+        "index.html": {
+            "source": "docs/map-extended/baselayer-agglomeration-2012.html",
+            "template": "docs/template.html"
+        },
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "sszvis-map-zurich-agglomeration-2012.js"
+    },
+    "sourceView": ["index.html"],
+    "size": {
+        "width": 516,
+        "height": 542
+    }
+}
+```
+
 ## Switzerland: Grundkarte
 
 A base layer example using the Switzerland map data. This is a static map
