@@ -1,1 +1,143 @@
-<!-- stub -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../map-modules/sszvis-map-zurich-statistischequartiere.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var idAcc = sszvis.fn.prop('id');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: { __sszvisIsUnloaded: true },
+    buildingsGeoJson: { __sszvisIsUnloaded: true }
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareData: function(data) {
+      state.data = data;
+
+      render(state);
+    },
+    prepareGeoJson: function(geoJson) {
+      state.buildingsGeoJson = geoJson;
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/gemeinnuetzige.csv')
+    .row(function(d) {
+      return {
+        id: sszvis.parse.number(d['id']),
+        name: d['name'],
+        ownership: d['traegerschaft'],
+        year: d['bezugsjahr']
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareData(data);
+    });
+
+  d3.json('data/gemeinnuetzige.json')
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareGeoJson(data);
+    });
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    if (state.data.__sszvisIsUnloaded || state.buildingsGeoJson.__sszvisIsUnloaded) {
+      return true;
+    }
+
+
+    // Padding
+    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.data);
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichStatistischeQuartiereBaseMap()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .borderColor('black');
+
+    var mapPathGen = d3.geo.path()
+      .projection(sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight));
+
+    var newBuildings = sszvis.map.renderer.buildings()
+      .dataKeyName('id')
+      .geoJsonKeyName('OBJECTID')
+      .geoJson(state.buildingsGeoJson)
+      .mapPath(mapPathGen)
+      .defined(sszvis.fn.compose(sszvis.fn.defined, idAcc))
+      .fill('black')
+      .stroke('black')
+      .strokeThickness(1.25);
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+
+    chartLayer.call(newBuildings);
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>
