@@ -76,7 +76,7 @@ sszvis_namespace('sszvis.map.renderer.base', function(module) {
 
         // change the fill if necessary
         mapAreas
-          .classed('sszvis-map__area--undefined', function(d) { return !props.defined(d.datum); });
+          .classed('sszvis-map__area--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); });
 
         if (props.transitionColor) {
           mapAreas
