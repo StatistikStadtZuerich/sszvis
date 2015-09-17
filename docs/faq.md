@@ -68,7 +68,7 @@ To create an example like a force directed graph (http://bl.ocks.org/mbostock/40
 The places to look for information about creating new maps are:
 
 * sszvis/map/updating.txt
-* sszvis-map-<name>.js
+* map-modules/sszvis-map-<name>.js
 * Makefile (at the bottom)
 
 ### sszvis/layout/*

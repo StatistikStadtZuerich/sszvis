@@ -257,7 +257,7 @@ Configuration:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js",
         "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "sszvis-map-zurich-stadtkreise.js"
+        "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
@@ -291,7 +291,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js",
         "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "sszvis-map-zurich-statistischequartiere.js"
+        "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
