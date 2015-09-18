@@ -89,7 +89,9 @@ sszvis_namespace('sszvis.color', function(module) {
 
   var GREY_COLORS = {
     gry: ['#D6D6D6'],
-    lightGry: ['#FAFAFA']
+    lightGry: ['#FAFAFA'],
+    medGry: ['#7C7C7C'],
+    deepGry: ['#545454']
   };
 
 

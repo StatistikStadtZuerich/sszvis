@@ -118,7 +118,8 @@
     var mapMaker = sszvis.map.zurichStatistischeQuartiereBaseMap()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .borderColor('black');
+      // In order to highlight the building shapes, use a subtle grey here
+      .borderColor(sszvis.color.deepGry());
 
     var projection = sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight);
 

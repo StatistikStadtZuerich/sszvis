@@ -13,6 +13,18 @@ These are the default text colors used throughout the UI. They are hard-coded in
 </script>
 ```
 
+### `color.lightGry()`
+
+A light grey scale is included for use in cases where a data background should be shaded out.
+
+```html|plain,run-script
+<div id='lightGreyScale' class='scale-container'></div>
+<script>
+    var scale = sszvis.color.lightGry();
+    colorSwatchFromLinearScale('lightGreyScale', scale, 1);
+</script>
+```
+
 ### `color.gry()`
 
 A grey scale is included for use in cases where a data value should be shaded out. Currently, it is used for the color of inactive lines in the coordinated map and line chart example. At the moment, it has only one value.
@@ -25,15 +37,27 @@ A grey scale is included for use in cases where a data value should be shaded ou
 </script>
 ```
 
-### `color.lightGry()`
+### `color.medGry()`
 
-A light grey scale is included for use in cases where a data background should be shaded out.
+The medium grey color, as a standalone value.
 
 ```html|plain,run-script
-<div id='lightGreyScale' class='scale-container'></div>
+<div id='medGreyScale' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.lightGry();
-    colorSwatchFromLinearScale('lightGreyScale', scale, 1);
+    var scale = sszvis.color.medGry();
+    colorSwatchFromLinearScale('medGreyScale', scale, 1);
+</script>
+```
+
+### `color.deepGry()`
+
+The deep grey color, as a standalone value.
+
+```html|plain,run-script
+<div id='deepGreyScale' class='scale-container'></div>
+<script>
+    var scale = sszvis.color.deepGry();
+    colorSwatchFromLinearScale('deepGreyScale', scale, 1);
 </script>
 ```
 
