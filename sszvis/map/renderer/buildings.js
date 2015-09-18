@@ -24,7 +24,9 @@ sszvis_namespace('sszvis.map.renderer.buildings', function(module) {
   'use strict';
 
   module.exports = function() {
-    return d3.component()
+    var event = d3.dispatch('over', 'out', 'click');
+
+    var component = d3.component()
       .prop('dataKeyName').dataKeyName('geoId')
       .prop('geoJsonKeyName').geoJsonKeyName('id')
       .prop('geoJson')
@@ -71,6 +73,7 @@ sszvis_namespace('sszvis.map.renderer.buildings', function(module) {
         buildings.enter()
           .append('path')
           .classed('sszvis-map__building', true)
+          .attr('data-event-target', '')
           .attr('d', function(d) {
             return props.mapPath(d.geoJson);
           })
@@ -96,7 +99,41 @@ sszvis_namespace('sszvis.map.renderer.buildings', function(module) {
         buildings
           .attr('stroke', props.stroke)
           .attr('stroke-width', props.strokeWidth);
+
+        selection.selectAll('[data-event-target]')
+          .on('mouseover', function(d) {
+            event.over(d.datum);
+          })
+          .on('mouseout', function(d) {
+            event.out(d.datum);
+          })
+          .on('click', function(d) {
+            event.click(d.datum);
+          });
+
+        // the tooltip anchor generator
+        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+          .position(function(d) {
+            d.geoJson.properties || (d.geoJson.properties = {});
+
+            var computedCenter = d.geoJson.properties.computedCenter;
+            if (!computedCenter) {
+              d.geoJson.properties.computedCenter = computedCenter = props.mapPath.centroid(d.geoJson);
+            }
+
+            return computedCenter;
+          });
+
+        var tooltipGroup = selection.selectGroup('tooltipAnchors')
+          .datum(mergedData);
+
+        // attach tooltip anchors
+        tooltipGroup.call(tooltipAnchor);
       });
+
+    d3.rebind(component, event, 'on');
+
+    return component;
   };
 
 });
