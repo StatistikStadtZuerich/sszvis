@@ -60,6 +60,29 @@
 
 ## Topografische Grundkarte der Stadt Zürich mit Neubausiedlungen
 
+```project
+{
+    "name": "map-topo-neubau",
+    "files": {
+        "index.html": {
+            "source": "docs/map-extended/topolayer-statquart-neubau.html",
+            "template": "docs/template.html"
+        },
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
+    },
+    "sourceView": ["index.html"],
+    "size": {
+        "width": 516,
+        "height": 542
+    }
+}
+```
+
 ## Statische Rasterkarte als Bins mit topografischer Hintergrundkarte.
 
 ## Statische Rasterkarte als Verlauf mit topografischer Hintergrundkarte
