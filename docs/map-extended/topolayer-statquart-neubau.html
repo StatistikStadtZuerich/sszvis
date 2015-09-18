@@ -34,13 +34,17 @@
   /* Shortcuts
   ----------------------------------------------- */
   var idAcc = sszvis.fn.prop('id');
+  var datumAcc = sszvis.fn.prop('datum');
+  var nameAcc = sszvis.fn.prop('name');
+  var yearAcc = sszvis.fn.prop('year');
 
 
   /* Application state
   ----------------------------------------------- */
   var state = {
     data: { __sszvisIsUnloaded: true },
-    buildingsGeoJson: { __sszvisIsUnloaded: true }
+    buildingsGeoJson: { __sszvisIsUnloaded: true },
+    selection: []
   };
 
 
@@ -52,9 +56,20 @@
 
       render(state);
     },
+
     prepareGeoJson: function(geoJson) {
       state.buildingsGeoJson = geoJson;
 
+      render(state);
+    },
+
+    selectHovered: function(d) {
+      state.selection = [d];
+      render(state);
+    },
+
+    deselectHovered: function() {
+      state.selection = [];
       render(state);
     }
   };
@@ -104,13 +119,20 @@
     // Layers
 
     // It's important that this html layer comes first, so that it lies under the svg
-    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
+    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
+      key: 'topolayer'
+    });
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: TITLE,
         description: DESCRIPTION
       })
       .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
+        key: 'tooltiplayer'
+      })
+      .datum(state.selection);
 
 
     // Components
@@ -134,7 +156,10 @@
       .defined(sszvis.fn.compose(sszvis.fn.defined, idAcc))
       .fill('black')
       .stroke('black')
-      .strokeWidth(1.25);
+      .strokeWidth(1.25)
+      .on('over', actions.selectHovered)
+      .on('click', actions.selectHovered)
+      .on('out', actions.deselectHovered);
 
     var topoLayer = sszvis.map.renderer.image()
       .projection(projection)
@@ -143,6 +168,15 @@
       .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]])
       .opacity(0.35);
 
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
+      .bold(sszvis.fn.compose(nameAcc, datumAcc));
+
+    var tooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeader)
+      .body(sszvis.fn.compose(yearAcc, datumAcc))
+      .visible(isSelected);
+
     // Rendering
 
     htmlLayer.call(topoLayer);
@@ -150,6 +184,13 @@
     chartLayer.call(mapMaker);
 
     chartLayer.call(newBuildings);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+  }
+
+  function isSelected(d) {
+    return state.selection.indexOf(d.datum) >= 0;
   }
 
 }(d3, topojson, sszvis));
