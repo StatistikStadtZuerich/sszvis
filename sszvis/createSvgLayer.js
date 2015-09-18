@@ -9,6 +9,11 @@
  * @param {object} [metadata] Metadata for this chart. Can be one of:
  *   @property {string} metadata.title The chart's title
  *   @property {string} metadata.description A longer description of this chart's content
+ *   @property {string} key Used as a unique key for this layer. If you pass different values
+ *                          of key to this function, the app will create and return different layers.
+ *                          If you pass the same value (including undefined), you will always get back
+ *                          the same DOM element. This is useful for adding multiple SVG elements.
+ *                          See the binned raster map for an example of using this effectively.
  *
  * @returns {d3.selection}
  */
@@ -19,15 +24,19 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
     bounds || (bounds = sszvis.bounds());
     metadata || (metadata = {});
 
+    var key = metadata.key || 'default';
     var title = metadata.title || '';
     var description = metadata.description || '';
 
+    var elementDataKey = 'data-sszvis-svg-' + key;
+
     var root = d3.select(selector);
-    var svg = root.selectAll('svg').data([0]);
+    var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
     var svgEnter = svg.enter().append('svg');
 
     svgEnter
       .classed('sszvis-svg-layer', true)
+      .attr(elementDataKey, '')
       .attr('role', 'img')
       .attr('aria-label', title + ' – ' + description);
 
