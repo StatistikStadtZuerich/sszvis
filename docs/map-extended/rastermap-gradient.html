@@ -112,18 +112,13 @@
 
     var projection = sszvis.map.projection.zurichStadtKreise(bounds.innerWidth, bounds.innerHeight);
 
-    function round2(n, pow10) {
+    function roundPow10(n, pow10) {
       var divisor = Math.pow(10, pow10);
       return Math.round(n * divisor) / divisor;
     }
 
     function getRoundVal(val) {
-      // return [xAcc(val), yAcc(val)];
-      return [round2(xAcc(val), 5), round2(yAcc(val), 5)];
-    }
-
-    function roundPos(pos) {
-      return [sszvis.svgUtils.crisp.halfPixel(pos[0]), sszvis.svgUtils.crisp.halfPixel(pos[1])];
+      return [roundPow10(xAcc(val), 5), roundPow10(yAcc(val), 5)];
     }
 
     function alterAlpha(c) {
