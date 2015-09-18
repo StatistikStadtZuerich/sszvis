@@ -25,10 +25,10 @@ sszvis_namespace('sszvis.map.renderer.image', function(module) {
 
         image
           .attr('src', props.src)
-          .style('left', topLeft[0] + 'px')
-          .style('top', topLeft[1] + 'px')
-          .style('width', (bottomRight[0] - topLeft[0]) + 'px')
-          .style('height', (bottomRight[1] - topLeft[1]) + 'px')
+          .style('left', Math.round(topLeft[0]) + 'px')
+          .style('top', Math.round(topLeft[1]) + 'px')
+          .style('width', Math.round(bottomRight[0] - topLeft[0]) + 'px')
+          .style('height', Math.round(bottomRight[1] - topLeft[1]) + 'px')
           .style('opacity', props.opacity);
       });
   };
