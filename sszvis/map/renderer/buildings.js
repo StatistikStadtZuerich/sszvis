@@ -1,3 +1,25 @@
+/**
+ * buildings renderer component
+ *
+ * @module sszvis/map/renderer/buildings
+ *
+ * A component used for rendering overlays of buildings above map layers. Technically,
+ * it can be used to render any arbitrary GeoJson.
+ *
+ * @property {string} dataKeyName           The keyname in the data which will be used to match data entities
+ *                                          with geographic entities. Default 'geoId'.
+ * @property {string} geoJsonKeyName        The keyname in the geoJson which will be used to match map entities
+ *                                          with data entities. Default 'id'.
+ * @property {GeoJson} geoJson              The GeoJson object which should be rendered. Needs to have a 'features' property.
+ * @property {d3.geo.path} mapPath          A path generator for drawing the GeoJson as SVG Path elements.
+ * @property {Function, Boolean} defined    A function which, when given a data value, returns whether or not data in that value is defined.
+ * @property {Function, String} fill        A function that returns a string, or a string, for the fill color of the GeoJson entities. Default black.
+ * @property {String} stroke                The stroke color of the entities. Can be a string or a function returning a string. Default black.
+ * @property {Number} strokeWidth           The thickness of the strokes of the shapes. Can be a number or a function returning a number. Default 1.25.
+ * @property {Boolean} transitionColor      Whether or not to transition the fill color of the buildings when it changes. Default true.
+ * 
+ * @return {d3.component}
+ */
 sszvis_namespace('sszvis.map.renderer.buildings', function(module) {
   'use strict';
 
@@ -9,8 +31,8 @@ sszvis_namespace('sszvis.map.renderer.buildings', function(module) {
       .prop('mapPath')
       .prop('defined', d3.functor).defined(true)
       .prop('fill', d3.functor).fill('black')
-      .prop('stroke').stroke('black')
-      .prop('strokeThickness').strokeThickness(1.25)
+      .prop('stroke', d3.functor).stroke('black')
+      .prop('strokeWidth', d3.functor).strokeWidth(1.25)
       .prop('transitionColor').transitionColor(true)
       .render(function(data) {
         var selection = d3.select(this);
@@ -73,7 +95,7 @@ sszvis_namespace('sszvis.map.renderer.buildings', function(module) {
 
         buildings
           .attr('stroke', props.stroke)
-          .attr('stroke-width', props.strokeThickness);
+          .attr('stroke-width', props.strokeWidth);
       });
   };
 
