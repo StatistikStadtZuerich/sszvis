@@ -1719,6 +1719,9 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
   'use strict';
 
   module.exports = function(selector, bounds, metadata) {
+    bounds || (bounds = sszvis.bounds());
+    metadata || (metadata = {});
+
     var title = metadata.title || '';
     var description = metadata.description || '';
 
