@@ -78,9 +78,6 @@
     });
 
 
-  var DEBUG = false;
-
-
   /* Render
   ----------------------------------------------- */
   function render(state) {
@@ -90,6 +87,7 @@
 
 
     // Scales
+
     var colorScale = sszvis.color.seqBlu()
       .domain(state.valueDomain);
 
@@ -147,6 +145,8 @@
 
 
     // Rendering
+
+    var DEBUG = false;
 
     if (DEBUG) {    
       chartLayer
