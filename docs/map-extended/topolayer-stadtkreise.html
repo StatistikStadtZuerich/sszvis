@@ -11,7 +11,7 @@
 <script src="../../vendor/topojson/topojson.js"></script>
 <script src="../../sszvis.js"></script>
 <!-- load the map module -->
-<script src="../../map-modules/sszvis-map-zurich-statistischequartiere.js"></script>
+<script src="../../map-modules/sszvis-map-zurich-stadtkreise.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -51,7 +51,7 @@
     // Layers
 
     // It's important that this html layer comes first, so that it lies under the svg
-    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart');
+    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: TITLE,
@@ -61,18 +61,18 @@
 
     // Components
 
-    var mapMaker = sszvis.map.zurichStatistischeQuartiereBaseMap()
+    var mapMaker = sszvis.map.zurichStadtKreiseBaseMap()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .borderColor('black');
 
-    var projection = sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight);
+    var projection = sszvis.map.projection.zurichStadtKreise(bounds.innerWidth, bounds.innerHeight);
 
     var topoLayer = sszvis.map.renderer.image()
       .projection(projection)
       .src('data/topo_map_cropped.png')
       // Expects longitude, latitude
-      .geoBounds([[8.40, 47.48], [8.70, 47.30]]);
+      .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]]);
 
     // Rendering
 
