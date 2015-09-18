@@ -128,12 +128,22 @@
       return [sszvis.svgUtils.crisp.halfPixel(pos[0]), sszvis.svgUtils.crisp.halfPixel(pos[1])];
     }
 
+    function alterAlpha(c) {
+      return sszvis.color.withAlpha(c, 0.3);
+    }
+
     var rasterLayer = sszvis.map.renderer.raster()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .position(sszvis.fn.compose(projection, getRoundVal))
       .cellSide(2)
-      .fill(sszvis.fn.compose(colorScale, valAcc));
+      .fill(sszvis.fn.compose(alterAlpha, colorScale, valAcc));
+
+    var topoLayer = sszvis.map.renderer.image()
+      .projection(projection)
+      .src('data/topo_map_cropped.png')
+      // Expects longitude, latitude
+      .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]]);
 
 
     // Rendering
@@ -164,9 +174,11 @@
         .attr('fill', 'none');
     }
 
-    chartLayer.call(mapMaker);
+    htmlLayer.call(topoLayer);
 
     htmlLayer.call(rasterLayer);
+
+    chartLayer.call(mapMaker);
   }
 
 }(d3, topojson, sszvis));

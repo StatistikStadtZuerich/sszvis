@@ -1636,6 +1636,11 @@ sszvis_namespace('sszvis.color', function(module) {
     return d3.hsl(c).darker(0.7);
   };
 
+  module.exports.withAlpha = function(c, a) {
+    var rgbColor = d3.rgb(c);
+    return 'rgba(' + rgbColor.r + ',' + rgbColor.g + ',' + rgbColor.b + ',' + a + ')';
+  };
+
 
   /* Scale extensions
   ----------------------------------------------- */
