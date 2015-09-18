@@ -30,20 +30,23 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
+  var DEFAULT_KEY = 'Kinder';
+  var KEY_OPTIONS = ['Kinder', 'Random'];
 
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('xpos');
   var yAcc = sszvis.fn.prop('ypos');
-  var valAcc = sszvis.fn.prop('val');
+  var kinderAcc = sszvis.fn.prop('kinder');
+  var randomAcc = sszvis.fn.prop('random');
 
 
   /* Application state
   ----------------------------------------------- */
   var state = {
     data: {},
-    valueDomain: [0, 0]
+    valueDomain: [0, 0],
+    currentKey: null
   };
 
 
@@ -52,7 +55,15 @@
   var actions = {
     prepareData: function(data) {
       state.data = data;
-      state.valueDomain = d3.extent(data, valAcc);
+      var kinderDomain = d3.extent(data, kinderAcc);
+      var randomDomain = d3.extent(data, randomAcc);
+      state.valueDomain = d3.extent(kinderDomain.concat(randomDomain));
+
+      actions.setKey(DEFAULT_KEY);
+    },
+
+    setKey: function(key) {
+      state.currentKey = key;
 
       render(state);
     }
@@ -61,12 +72,13 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/kinder.csv')
+  d3.csv('data/kinder_segmented.csv')
     .row(function(d) {
       return {
         xpos: sszvis.parse.number(d['xkoord']),
         ypos: sszvis.parse.number(d['ykoord']),
-        val: sszvis.parse.number(d['kinder'])
+        kinder: sszvis.parse.number(d['kinder']),
+        random: sszvis.parse.number(d['random'])
       };
     })
     .get(function(error, data) {
@@ -83,7 +95,7 @@
   function render(state) {
     // Padding
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+    var bounds = sszvis.bounds({ height: 542, top: 100, right: padding, bottom: 30, left: padding });
 
 
     // Scales
@@ -120,16 +132,35 @@
 
     // Layers
 
-    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
+    // Create an HTML layer that lives at the bottom. This will contain
+    // the topographic image and the canvas raster layer
+    var htmlUnderLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
+        key: 'underlayer'
+      })
       .datum(state.data);
 
+    // Create an SVG layer. This will contain the city outline
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: TITLE,
         description: DESCRIPTION
       });
 
+    // Create an HTML layer that lives at the top of the stack. This will
+    // contain the segmented control
+    var htmlOverLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
+      key: 'overlayer'
+    });
+
 
     // Components
+
+    var controlWidth = bounds.innerWidth / 2;
+
+    var control = sszvis.control.buttonGroup()
+      .values(KEY_OPTIONS)
+      .width(controlWidth)
+      .current(state.currentKey)
+      .change(actions.setKey);
 
     var mapMaker = sszvis.map.zurichStadtKreiseBaseMap()
       .width(bounds.innerWidth)
@@ -144,9 +175,10 @@
     }
 
     function getRoundVal(val) {
-      // return [xAcc(val), yAcc(val)];
       return [round2(xAcc(val), 5), round2(yAcc(val), 5)];
     }
+
+    var valAcc = state.currentKey === 'Kinder' ? kinderAcc : state.currentKey === 'Random' ? randomAcc : sszvis.fn.identity;
 
     var rasterLayer = sszvis.map.renderer.raster()
       .width(bounds.innerWidth)
@@ -161,16 +193,21 @@
       .src('data/topo_map_cropped.png')
       // Expects longitude, latitude
       .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]])
-      .opacity(1);
+      .opacity(0.5);
 
 
     // Rendering
 
-    htmlLayer.call(topoLayer);
+    htmlUnderLayer.call(topoLayer);
 
-    htmlLayer.call(rasterLayer);
+    htmlUnderLayer.call(rasterLayer);
 
     chartLayer.call(mapMaker);
+
+    htmlOverLayer.selectDiv('controls')
+      .style('left', ((bounds.innerWidth - controlWidth) / 2) + 'px')
+      .style('top', (-90) + 'px')
+      .call(control);
   }
 
 }(d3, topojson, sszvis));
