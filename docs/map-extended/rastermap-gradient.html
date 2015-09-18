@@ -88,8 +88,20 @@
 
     // Scales
 
-    var colorScale = sszvis.color.seqBlu()
+    var alphaScale = d3.scale.linear()
+      .domain(state.valueDomain)
+      .range([0, 1]);
+
+    // Scale the color values as well as the alpha values
+    var valueScale = sszvis.color.seqBlu()
       .domain(state.valueDomain);
+
+    // Uses a single color value
+    // let solidBlue = sszvis.color.qual12()(0);
+
+    function colorScale(v) {
+      return sszvis.color.withAlpha(valueScale(v), alphaScale(v));
+    }
 
 
     // Layers
@@ -127,14 +139,14 @@
       .position(sszvis.fn.compose(projection, getRoundVal))
       .cellSide(2)
       .fill(sszvis.fn.compose(colorScale, valAcc))
-      .opacity(0.65);
+      // .opacity(0.65);
 
     var topoLayer = sszvis.map.renderer.image()
       .projection(projection)
       .src('data/topo_map_cropped.png')
       // Expects longitude, latitude
       .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]])
-      .opacity(1);
+      .opacity(0.5);
 
 
     // Rendering
