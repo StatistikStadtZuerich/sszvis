@@ -55,9 +55,8 @@
   var actions = {
     prepareData: function(data) {
       state.data = data;
-      var kinderDomain = d3.extent(data, kinderAcc);
-      var randomDomain = d3.extent(data, randomAcc);
-      state.valueDomain = d3.extent(kinderDomain.concat(randomDomain));
+      // Ignore the domain of the random data
+      state.valueDomain = d3.extent(data, kinderAcc);
 
       actions.setKey(DEFAULT_KEY);
     },
@@ -95,7 +94,7 @@
   function render(state) {
     // Padding
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 100, right: padding, bottom: 30, left: padding });
+    var bounds = sszvis.bounds({ height: 640, top: 100, right: padding, bottom: 90, left: padding });
 
 
     // Scales
@@ -196,6 +195,15 @@
       .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]])
       .opacity(0.5);
 
+    var legendWidth = bounds.innerWidth / 2;
+
+    var legend = sszvis.legend.binnedColorScale()
+      .scale(colorScale)
+      .displayValues(binEdges)
+      .endpoints(state.valueDomain)
+      .width(legendWidth)
+      .labelFormat(sszvis.format.number);
+
 
     // Rendering
 
@@ -203,11 +211,16 @@
 
     htmlUnderLayer.call(rasterLayer);
 
-    chartLayer.call(mapMaker);
+    chartLayer.selectGroup('outline')
+      .call(mapMaker);
+
+    chartLayer.selectGroup('legend')
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 40))
+      .call(legend);
 
     htmlOverLayer.selectDiv('controls')
       .style('left', ((bounds.innerWidth - controlWidth) / 2) + 'px')
-      .style('top', (-90) + 'px')
+      .style('top', (-85) + 'px')
       .call(control);
   }
 

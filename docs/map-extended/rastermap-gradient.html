@@ -83,7 +83,7 @@
   function render(state) {
     // Padding
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 90, left: padding });
 
 
     // Scales
@@ -149,6 +149,11 @@
       .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]])
       .opacity(0.5);
 
+    var legend = sszvis.legend.linearColorScale()
+      .scale(valueScale)
+      .width(bounds.innerWidth / 2)
+      .labelFormat(sszvis.format.number);
+
 
     // Rendering
 
@@ -185,6 +190,10 @@
     htmlLayer.call(rasterLayer);
 
     chartLayer.call(mapMaker);
+
+    chartLayer.selectGroup('legend')
+      .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
+      .call(legend);
   }
 
 }(d3, topojson, sszvis));
