@@ -119,7 +119,7 @@
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       // In order to highlight the building shapes, use a subtle grey here
-      .borderColor(sszvis.color.deepGry());
+      .borderColor('#8C8C8C');
 
     var projection = sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight);
 
@@ -140,7 +140,8 @@
       .projection(projection)
       .src('data/topo_map_cropped.png')
       // Expects longitude, latitude
-      .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]]);
+      .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]])
+      .opacity(0.35);
 
     // Rendering
 

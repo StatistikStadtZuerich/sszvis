@@ -148,22 +148,20 @@
       return [round2(xAcc(val), 5), round2(yAcc(val), 5)];
     }
 
-    function alterAlpha(c) {
-      return sszvis.color.withAlpha(c, 0.3);
-    }
-
     var rasterLayer = sszvis.map.renderer.raster()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .position(sszvis.fn.compose(projection, getRoundVal))
       .cellSide(2)
-      .fill(sszvis.fn.compose(alterAlpha, colorScale, valAcc));
+      .fill(sszvis.fn.compose(colorScale, valAcc))
+      .opacity(0.65);
 
     var topoLayer = sszvis.map.renderer.image()
       .projection(projection)
       .src('data/topo_map_cropped.png')
       // Expects longitude, latitude
-      .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]]);
+      .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]])
+      .opacity(1);
 
 
     // Rendering

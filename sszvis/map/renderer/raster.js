@@ -10,6 +10,7 @@ sszvis_namespace('sszvis.map.renderer.raster', function(module) {
       .prop('position')
       .prop('cellSide').cellSide(2)
       .prop('fill', d3.functor)
+      .prop('opacity').opacity(1)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -25,7 +26,8 @@ sszvis_namespace('sszvis.map.renderer.raster', function(module) {
 
         canvas
           .attr('width', props.width)
-          .attr('height', props.height);
+          .attr('height', props.height)
+          .style('opacity', props.opacity);
 
         var ctx = canvas.node().getContext('2d');
 

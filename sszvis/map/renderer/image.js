@@ -6,6 +6,7 @@ sszvis_namespace('sszvis.map.renderer.image', function(module) {
       .prop('projection')
       .prop('src')
       .prop('geoBounds')
+      .prop('opacity').opacity(1)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -27,7 +28,8 @@ sszvis_namespace('sszvis.map.renderer.image', function(module) {
           .style('left', topLeft[0] + 'px')
           .style('top', topLeft[1] + 'px')
           .style('width', (bottomRight[0] - topLeft[0]) + 'px')
-          .style('height', (bottomRight[1] - topLeft[1]) + 'px');
+          .style('height', (bottomRight[1] - topLeft[1]) + 'px')
+          .style('opacity', props.opacity);
       });
   };
 

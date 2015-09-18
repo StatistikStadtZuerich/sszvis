@@ -6666,6 +6666,7 @@ sszvis_namespace('sszvis.map.renderer.image', function(module) {
       .prop('projection')
       .prop('src')
       .prop('geoBounds')
+      .prop('opacity').opacity(1)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -6687,7 +6688,8 @@ sszvis_namespace('sszvis.map.renderer.image', function(module) {
           .style('left', topLeft[0] + 'px')
           .style('top', topLeft[1] + 'px')
           .style('width', (bottomRight[0] - topLeft[0]) + 'px')
-          .style('height', (bottomRight[1] - topLeft[1]) + 'px');
+          .style('height', (bottomRight[1] - topLeft[1]) + 'px')
+          .style('opacity', props.opacity);
       });
   };
 
@@ -6709,6 +6711,7 @@ sszvis_namespace('sszvis.map.renderer.raster', function(module) {
       .prop('position')
       .prop('cellSide').cellSide(2)
       .prop('fill', d3.functor)
+      .prop('opacity').opacity(1)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -6724,7 +6727,8 @@ sszvis_namespace('sszvis.map.renderer.raster', function(module) {
 
         canvas
           .attr('width', props.width)
-          .attr('height', props.height);
+          .attr('height', props.height)
+          .style('opacity', props.opacity);
 
         var ctx = canvas.node().getContext('2d');
 
