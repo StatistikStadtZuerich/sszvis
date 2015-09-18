@@ -178,6 +178,7 @@
 }
 
 .sszvis-map__image {
+  display: block;
   position: absolute;
 }
 
