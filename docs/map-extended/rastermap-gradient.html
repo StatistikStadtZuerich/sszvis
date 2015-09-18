@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../map-modules/sszvis-map-zurich-stadtkreise.js"></script>
+<script src="../../map-modules/sszvis-map-zurich-statistischequartiere.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported() || sszvis.fallback.canvasUnsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('xpos');
+  var yAcc = sszvis.fn.prop('ypos');
+  var valAcc = sszvis.fn.prop('val');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: {},
+    valueDomain: [0, 0]
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareData: function(data) {
+      state.data = data;
+      state.valueDomain = d3.extent(data, valAcc);
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/kinder.csv')
+    .row(function(d) {
+      return {
+        xpos: sszvis.parse.number(d['xkoord']),
+        ypos: sszvis.parse.number(d['ykoord']),
+        val: sszvis.parse.number(d['kinder'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareData(data);
+    });
+
+
+  var DEBUG = false;
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    // Padding
+    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+
+
+    // Scales
+    var colorScale = sszvis.color.seqBlu()
+      .domain(state.valueDomain);
+
+
+    // Layers
+
+    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
+      .datum(state.data);
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      });
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichStadtKreiseBaseMap()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .borderColor('black');
+
+    var projection = sszvis.map.projection.zurichStadtKreise(bounds.innerWidth, bounds.innerHeight);
+
+    function round2(n, pow10) {
+      var divisor = Math.pow(10, pow10);
+      return Math.round(n * divisor) / divisor;
+    }
+
+    function getRoundVal(val) {
+      // return [xAcc(val), yAcc(val)];
+      return [round2(xAcc(val), 5), round2(yAcc(val), 5)];
+    }
+
+    function roundPos(pos) {
+      return [sszvis.svgUtils.crisp.halfPixel(pos[0]), sszvis.svgUtils.crisp.halfPixel(pos[1])];
+    }
+
+    var rasterLayer = sszvis.map.renderer.raster()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .position(sszvis.fn.compose(projection, getRoundVal))
+      .cellSide(2)
+      .fill(sszvis.fn.compose(colorScale, valAcc));
+
+
+    // Rendering
+
+    if (DEBUG) {    
+      chartLayer
+        .selectAll('.sszvis-debug-layer-rect')
+        .data([0])
+        .enter()
+        .append('rect')
+        .attr('class', 'sszvis-debug-layer-rect')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', bounds.innerWidth)
+        .attr('height', bounds.innerHeight)
+        .attr('fill', 'rgba(0, 0, 255, 0.2)');
+
+      rasterLayer.debug(DEBUG);
+
+      var circlePos = projection([8.537617, 47.383303]);
+
+      chartLayer.append('circle')
+        .attr('cx', circlePos[0])
+        .attr('cy', circlePos[1])
+        .attr('r', 2)
+        .attr('stroke', '#00ffff')
+        .attr('stroke-width', 1)
+        .attr('fill', 'none');
+    }
+
+    chartLayer.call(mapMaker);
+
+    htmlLayer.call(rasterLayer);
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>

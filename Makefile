@@ -82,6 +82,7 @@ SOURCE_FILES = \
 	sszvis/map/renderer/buildings.js \
 	sszvis/map/renderer/grundkarte.js \
 	sszvis/map/renderer/image.js \
+	sszvis/map/renderer/raster.js \
 	sszvis/map/renderer/mesh.js \
 	sszvis/map/renderer/highlight.js \
 	sszvis/map/renderer/patternedlakeoverlay.js \

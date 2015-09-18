@@ -181,6 +181,11 @@
   position: absolute;
 }
 
+.sszvis-map__rasterimage {
+  display: block;
+  position: absolute;
+}
+
 /**
  * Button group control
  *
