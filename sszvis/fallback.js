@@ -19,6 +19,11 @@ sszvis_namespace('sszvis.fallback', function(module) {
     return !supportsSVG;
   };
 
+  module.exports.canvasUnsupported = function() {
+    var supportsCanvas = !!document.createElement('canvas').getContext;
+    return !supportsCanvas;
+  };
+
   module.exports.render = function(selector, options) {
     options || (options = {});
     options.src    || (options.src    = 'fallback.png');
