@@ -174,8 +174,9 @@
       return Math.round(n * divisor) / divisor;
     }
 
+    // Subtract 0.0011 from both longitude and latitude for better alignment with the map data
     function getRoundVal(val) {
-      return [round2(xAcc(val), 5), round2(yAcc(val), 5)];
+      return [round2(xAcc(val) - 0.0011, 5), round2(yAcc(val) - 0.0011, 5)];
     }
 
     var valAcc = state.currentKey === 'Kinder' ? kinderAcc : state.currentKey === 'Random' ? randomAcc : sszvis.fn.identity;
