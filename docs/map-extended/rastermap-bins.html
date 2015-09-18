@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../map-modules/sszvis-map-zurich-stadtkreise.js"></script>
+<script src="../../map-modules/sszvis-map-zurich-statistischequartiere.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported() || sszvis.fallback.canvasUnsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.fn.prop('xpos');
+  var yAcc = sszvis.fn.prop('ypos');
+  var valAcc = sszvis.fn.prop('val');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: {},
+    valueDomain: [0, 0]
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareData: function(data) {
+      state.data = data;
+      state.valueDomain = d3.extent(data, valAcc);
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/kinder.csv')
+    .row(function(d) {
+      return {
+        xpos: sszvis.parse.number(d['xkoord']),
+        ypos: sszvis.parse.number(d['ykoord']),
+        val: sszvis.parse.number(d['kinder'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareData(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    // Padding
+    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+
+
+    // Scales
+
+    // Use the binned scale heat table example as a reference for a more in-depth description of setting
+    // up a binned color scale.
+
+    // Choose a number of bins
+    var numBins = 5;
+    // Then we need to calculate the bin edges in the data domain, and the color values for
+    // each bin in the color range. We will be using d3.scale.threshold(), so bin edges shouldn't
+    // include the start of the first bin or the end of the last bin. For the threshold scale,
+    // the number of values in the range must be one greater than the number of values
+    // in the domain.
+
+    // Calculate a bin step (the 'width' of a single bin) which will result in the correct
+    // number of bins, and round the bin step to 2 significant digits of precision.
+    var binStep = Math.ceil(((state.valueDomain[1] - state.valueDomain[0]) / numBins) * 100) / 100;
+    // Calculate the inner edges of the bins. We skip the beginning of the value domain,
+    // and d3.range automatically leaves off the end.
+    var binEdges = d3.range(state.valueDomain[0] + binStep, state.valueDomain[0] + binStep * numBins, binStep);
+    // Use a color scale function on an arbitrary range to calculate a set of bin colors easily.
+    // This domain is used because we want to map the integer range [0, numBins - 1].
+    var interpolateColor = sszvis.color.divValGry().reverse()
+      .domain([0, numBins - 1]);
+    // Calculate the colors of the bins using the range [0, numBins - 1]
+    // d3.range(0, numBins) returns a range including the integers in [0, numBins - 1]
+    var binColors = d3.range(0, numBins).map(interpolateColor);
+
+    var colorScale = d3.scale.threshold()
+      .domain(binEdges)
+      .range(binColors);
+
+
+    // Layers
+
+    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
+      .datum(state.data);
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      });
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichStadtKreiseBaseMap()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .borderColor('black');
+
+    var projection = sszvis.map.projection.zurichStadtKreise(bounds.innerWidth, bounds.innerHeight);
+
+    function round2(n, pow10) {
+      var divisor = Math.pow(10, pow10);
+      return Math.round(n * divisor) / divisor;
+    }
+
+    function getRoundVal(val) {
+      // return [xAcc(val), yAcc(val)];
+      return [round2(xAcc(val), 5), round2(yAcc(val), 5)];
+    }
+
+    function alterAlpha(c) {
+      return sszvis.color.withAlpha(c, 0.3);
+    }
+
+    var rasterLayer = sszvis.map.renderer.raster()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .position(sszvis.fn.compose(projection, getRoundVal))
+      .cellSide(2)
+      .fill(sszvis.fn.compose(alterAlpha, colorScale, valAcc));
+
+    var topoLayer = sszvis.map.renderer.image()
+      .projection(projection)
+      .src('data/topo_map_cropped.png')
+      // Expects longitude, latitude
+      .geoBounds([[8.431443, 47.448951], [8.644388, 47.307813]]);
+
+
+    // Rendering
+
+    htmlLayer.call(topoLayer);
+
+    htmlLayer.call(rasterLayer);
+
+    chartLayer.call(mapMaker);
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>
