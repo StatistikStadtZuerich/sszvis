@@ -140,7 +140,7 @@
     var mapPathGen = d3.geo.path()
       .projection(sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight));
 
-    var newBuildings = sszvis.map.renderer.buildings()
+    var newBuildings = sszvis.map.renderer.geojson()
       .dataKeyName('id')
       .geoJsonKeyName('OBJECTID')
       .geoJson(state.buildingsGeoJson)

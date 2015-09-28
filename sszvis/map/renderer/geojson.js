@@ -1,10 +1,10 @@
 /**
- * buildings renderer component
+ * geojson renderer component
  *
- * @module sszvis/map/renderer/buildings
+ * @module sszvis/map/renderer/geojson
  *
- * A component used for rendering overlays of buildings above map layers. Technically,
- * it can be used to render any arbitrary GeoJson.
+ * A component used for rendering overlays of geojson above map layers.
+ * It can be used to render any arbitrary GeoJson.
  *
  * @property {string} dataKeyName           The keyname in the data which will be used to match data entities
  *                                          with geographic entities. Default 'geoId'.
@@ -16,11 +16,11 @@
  * @property {Function, String} fill        A function that returns a string, or a string, for the fill color of the GeoJson entities. Default black.
  * @property {String} stroke                The stroke color of the entities. Can be a string or a function returning a string. Default black.
  * @property {Number} strokeWidth           The thickness of the strokes of the shapes. Can be a number or a function returning a number. Default 1.25.
- * @property {Boolean} transitionColor      Whether or not to transition the fill color of the buildings when it changes. Default true.
+ * @property {Boolean} transitionColor      Whether or not to transition the fill color of the geojson when it changes. Default true.
  * 
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.map.renderer.buildings', function(module) {
+sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
   'use strict';
 
   module.exports = function() {
@@ -67,36 +67,36 @@ sszvis_namespace('sszvis.map.renderer.buildings', function(module) {
           return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
         }
 
-        var buildings = selection.selectAll('.sszvis-map__building')
+        var geoElements = selection.selectAll('.sszvis-map__geojsonelement')
           .data(mergedData);
 
-        buildings.enter()
+        geoElements.enter()
           .append('path')
-          .classed('sszvis-map__building', true)
+          .classed('sszvis-map__geojsonelement', true)
           .attr('data-event-target', '')
           .attr('d', function(d) {
             return props.mapPath(d.geoJson);
           })
           .attr('fill', getMapFill);
 
-        buildings.exit().remove();
+        geoElements.exit().remove();
 
-        selection.selectAll('.sszvis-map__building--undefined')
+        selection.selectAll('.sszvis-map__geojsonelement--undefined')
           .attr('fill', getMapFill);
 
-        buildings
-          .classed('sszvis-map__building--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); });
+        geoElements
+          .classed('sszvis-map__geojsonelement--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); });
 
         if (props.transitionColor) {
-          buildings
+          geoElements
             .transition()
             .call(sszvis.transition.slowTransition)
             .attr('fill', getMapFill);
         } else {
-          buildings.attr('fill', getMapFill);
+          geoElements.attr('fill', getMapFill);
         }
 
-        buildings
+        geoElements
           .attr('stroke', props.stroke)
           .attr('stroke-width', props.strokeWidth);
 

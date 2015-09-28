@@ -148,7 +148,7 @@
     var mapPathGen = d3.geo.path()
       .projection(projection);
 
-    var newBuildings = sszvis.map.renderer.buildings()
+    var newBuildings = sszvis.map.renderer.geojson()
       .dataKeyName('id')
       .geoJsonKeyName('OBJECTID')
       .geoJson(state.buildingsGeoJson)

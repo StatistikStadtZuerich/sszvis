@@ -79,7 +79,7 @@ SOURCE_FILES = \
 	sszvis/map/mapUtils.js \
 	sszvis/map/projections.js \
 	sszvis/map/renderer/base.js \
-	sszvis/map/renderer/buildings.js \
+	sszvis/map/renderer/geojson.js \
 	sszvis/map/renderer/grundkarte.js \
 	sszvis/map/renderer/image.js \
 	sszvis/map/renderer/raster.js \
