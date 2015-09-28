@@ -142,7 +142,7 @@ deploy: build
 	--exclude=.git \
 	interact@interactivethings.com:/home/interact/www/clients.interactivethings.com/ssz/visualization-library
 
-maps: $(MAP_TARGETS)
+maps: Makefile $(MAP_TARGETS)
 
 clean:
 	rm -f $(MAP_TARGETS)
