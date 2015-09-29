@@ -132,3 +132,53 @@
     }
 }
 ```
+
+## Rasterkarte als Bins - 100m cell size
+
+```project
+{
+    "name": "map-raster-100m",
+    "files": {
+        "index.html": {
+            "source": "docs/map-extended/rastermap-bins-100m.html",
+            "template": "docs/template.html"
+        },
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
+    },
+    "sourceView": ["index.html"],
+    "size": {
+        "width": 516,
+        "height": 640
+    }
+}
+```
+
+## Rasterkarte als Bins - 200m cell size
+
+```project
+{
+    "name": "map-raster-200m",
+    "files": {
+        "index.html": {
+            "source": "docs/map-extended/rastermap-bins-200m.html",
+            "template": "docs/template.html"
+        },
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
+    },
+    "sourceView": ["index.html"],
+    "size": {
+        "width": 516,
+        "height": 640
+    }
+}
+```

@@ -38,15 +38,13 @@
   var xAcc = sszvis.fn.prop('xpos');
   var yAcc = sszvis.fn.prop('ypos');
   var kinderAcc = sszvis.fn.prop('kinder');
-  var randomAcc = sszvis.fn.prop('random');
 
 
   /* Application state
   ----------------------------------------------- */
   var state = {
     data: {},
-    valueDomain: [0, 0],
-    currentKey: null
+    valueDomain: [0, 0]
   };
 
 
@@ -55,14 +53,7 @@
   var actions = {
     prepareData: function(data) {
       state.data = data;
-      // Ignore the domain of the random data
       state.valueDomain = d3.extent(data, kinderAcc);
-
-      actions.setKey(DEFAULT_KEY);
-    },
-
-    setKey: function(key) {
-      state.currentKey = key;
 
       render(state);
     }
@@ -71,13 +62,12 @@
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/kinder_segmented.csv')
+  d3.csv('data/kinder200.csv')
     .row(function(d) {
       return {
         xpos: sszvis.parse.number(d['xkoord']),
         ypos: sszvis.parse.number(d['ykoord']),
-        kinder: sszvis.parse.number(d['kinder']),
-        random: sszvis.parse.number(d['random'])
+        kinder: sszvis.parse.number(d['kinder'])
       };
     })
     .get(function(error, data) {
@@ -94,34 +84,19 @@
   function render(state) {
     // Padding
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 640, top: 100, right: padding, bottom: 90, left: padding });
+    var bounds = sszvis.bounds({ height: 640, top: 30, right: padding, bottom: 90, left: padding });
 
 
     // Scales
 
     // Use the binned scale heat table example as a reference for a more in-depth description of setting
-    // up a binned color scale.
+    // up a binned color scale. For detailed comments on creating the bin scales, see rastermap-bins.html
 
-    // Choose a number of bins
     var numBins = 5;
-    // Then we need to calculate the bin edges in the data domain, and the color values for
-    // each bin in the color range. We will be using d3.scale.threshold(), so bin edges shouldn't
-    // include the start of the first bin or the end of the last bin. For the threshold scale,
-    // the number of values in the range must be one greater than the number of values
-    // in the domain.
-
-    // Calculate a bin step (the 'width' of a single bin) which will result in the correct
-    // number of bins, and round the bin step to 2 significant digits of precision.
     var binStep = Math.ceil(((state.valueDomain[1] - state.valueDomain[0]) / numBins) * 100) / 100;
-    // Calculate the inner edges of the bins. We skip the beginning of the value domain,
-    // and d3.range automatically leaves off the end.
     var binEdges = d3.range(state.valueDomain[0] + binStep, state.valueDomain[0] + binStep * numBins, binStep);
-    // Use a color scale function on an arbitrary range to calculate a set of bin colors easily.
-    // This domain is used because we want to map the integer range [0, numBins - 1].
     var interpolateColor = sszvis.color.divValGry().reverse()
       .domain([0, numBins - 1]);
-    // Calculate the colors of the bins using the range [0, numBins - 1]
-    // d3.range(0, numBins) returns a range including the integers in [0, numBins - 1]
     var binColors = d3.range(0, numBins).map(interpolateColor);
 
     var colorScale = d3.scale.threshold()
@@ -133,9 +108,7 @@
 
     // Create an HTML layer that lives at the bottom. This will contain
     // the topographic image and the canvas raster layer
-    var htmlUnderLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
-        key: 'underlayer'
-      })
+    var htmlUnderLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.data);
 
     // Create an SVG layer. This will contain the city outline
@@ -144,22 +117,8 @@
         description: DESCRIPTION
       });
 
-    // Create an HTML layer that lives at the top of the stack. This will
-    // contain the segmented control
-    var htmlOverLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
-      key: 'overlayer'
-    });
-
 
     // Components
-
-    var controlWidth = bounds.innerWidth / 2;
-
-    var control = sszvis.control.buttonGroup()
-      .values(KEY_OPTIONS)
-      .width(controlWidth)
-      .current(state.currentKey)
-      .change(actions.setKey);
 
     var mapMaker = sszvis.map.zurichStadtKreiseBaseMap()
       .width(bounds.innerWidth)
@@ -175,22 +134,18 @@
 
     // Subtract 0.0011 from both longitude and latitude for better alignment with the map data
     function getRoundVal(val) {
-      return [roundPow10(xAcc(val) - 0.0011, 5), roundPow10(yAcc(val) - 0.0011, 5)];
+      return [roundPow10(xAcc(val) - 0.001, 5), roundPow10(yAcc(val) - 0.001, 5)];
     }
 
-    var valAcc = state.currentKey === 'Kinder' ? kinderAcc : state.currentKey === 'Random' ? randomAcc : sszvis.fn.identity;
-
     var layerBounds = [[8.431443, 47.448978], [8.647471, 47.309726]];
-    var pixelSide = sszvis.map.utils.pixelsFromDistance(projection, [ (layerBounds[0][0] + layerBounds[1][0]) / 2, (layerBounds[0][1] + layerBounds[1][1]) / 2 ], 50);
-    // Using the half pixel crisp setting reduces some of the grid-like overlap patterning that we see with the exact measurement
-    pixelSide = sszvis.svgUtils.crisp.halfPixel(pixelSide);
+    var pixelSide = sszvis.map.utils.pixelsFromDistance(projection, [ (layerBounds[0][0] + layerBounds[1][0]) / 2, (layerBounds[0][1] + layerBounds[1][1]) / 2 ], 200);
 
     var rasterLayer = sszvis.map.renderer.raster()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .position(sszvis.fn.compose(projection, getRoundVal))
       .cellSide(pixelSide)
-      .fill(sszvis.fn.compose(colorScale, valAcc))
+      .fill(sszvis.fn.compose(colorScale, kinderAcc))
       .opacity(0.65);
 
     var topoLayer = sszvis.map.renderer.image()
@@ -222,11 +177,6 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 40))
       .call(legend);
-
-    htmlOverLayer.selectDiv('controls')
-      .style('left', ((bounds.innerWidth - controlWidth) / 2) + 'px')
-      .style('top', (-85) + 'px')
-      .call(control);
   }
 
 }(d3, topojson, sszvis));
