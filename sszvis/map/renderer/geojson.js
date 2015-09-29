@@ -67,6 +67,10 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
           return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
         }
 
+        function getMapStroke(d) {
+          return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : '';
+        }
+
         var geoElements = selection.selectAll('.sszvis-map__geojsonelement')
           .data(mergedData);
 
@@ -97,7 +101,7 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
         }
 
         geoElements
-          .attr('stroke', props.stroke)
+          .attr('stroke', getMapStroke)
           .attr('stroke-width', props.strokeWidth);
 
         selection.selectAll('[data-event-target]')

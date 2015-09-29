@@ -44,7 +44,8 @@
   var state = {
     data: { __sszvisIsUnloaded: true },
     buildingsGeoJson: { __sszvisIsUnloaded: true },
-    selection: []
+    selection: [],
+    yearRange: [0, 0]
   };
 
 
@@ -53,6 +54,7 @@
   var actions = {
     prepareData: function(data) {
       state.data = data;
+      state.yearRange = d3.extent(data, yearAcc);
 
       render(state);
     },
@@ -79,11 +81,13 @@
   ----------------------------------------------- */
   d3.csv('data/gemeinnuetzige.csv')
     .row(function(d) {
+      var parsedYear = sszvis.parse.number(d['bezugsjahr']);
+      parsedYear = parsedYear === 0 ? NaN : parsedYear;
       return {
         id: sszvis.parse.number(d['id']),
         name: d['name'],
         ownership: d['traegerschaft'],
-        year: d['bezugsjahr']
+        year: parsedYear
       };
     })
     .get(function(error, data) {
@@ -114,6 +118,10 @@
     // Padding
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
     var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+
+
+    // Scales
+    var colorScale = sszvis.color.seqGrn().reverse().domain(state.yearRange);
 
 
     // Layers
@@ -156,8 +164,8 @@
       .geoJson(state.buildingsGeoJson)
       .mapPath(mapPathGen)
       .defined(sszvis.fn.compose(sszvis.fn.defined, idAcc))
-      .fill('black')
-      .stroke('black')
+      .fill(sszvis.fn.compose(colorScale, yearAcc))
+      .stroke(sszvis.fn.compose(colorScale, yearAcc))
       .strokeWidth(1.25)
       .on('over', actions.selectHovered)
       .on('click', actions.selectHovered)
