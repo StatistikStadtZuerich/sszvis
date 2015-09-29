@@ -6,7 +6,7 @@
  *
  * @param {string|d3.selection} selector
  * @param {d3.bounds} bounds
- * @param {object} [metadata] Metadata for this chart. Can be one of:
+ * @param {object} [metadata] Metadata for this chart. Can include any number of the following:
  *   @property {string} metadata.title The chart's title
  *   @property {string} metadata.description A longer description of this chart's content
  *   @property {string} key Used as a unique key for this layer. If you pass different values
@@ -14,6 +14,8 @@
  *                          If you pass the same value (including undefined), you will always get back
  *                          the same DOM element. This is useful for adding multiple SVG elements.
  *                          See the binned raster map for an example of using this effectively.
+ *                          Note: For more information about this argument, see the detailed explanation in
+ *                          the source code for createHtmlLayer.
  *
  * @returns {d3.selection}
  */

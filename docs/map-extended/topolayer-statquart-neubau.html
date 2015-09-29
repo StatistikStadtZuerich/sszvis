@@ -119,6 +119,8 @@
     // Layers
 
     // It's important that this html layer comes first, so that it lies under the svg
+    // For more information about the 'key' argument to the metadata object, see the
+    // comment in the source code for createHtmlLayer
     var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
       key: 'topolayer'
     });
