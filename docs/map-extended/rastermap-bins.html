@@ -168,23 +168,29 @@
 
     var projection = sszvis.map.projection.zurichStadtKreise(bounds.innerWidth, bounds.innerHeight);
 
-    function round2(n, pow10) {
+    function roundPow10(n, pow10) {
       var divisor = Math.pow(10, pow10);
       return Math.round(n * divisor) / divisor;
     }
 
     // Subtract 0.0011 from both longitude and latitude for better alignment with the map data
     function getRoundVal(val) {
-      return [round2(xAcc(val) - 0.0011, 5), round2(yAcc(val) - 0.0011, 5)];
+      return [roundPow10(xAcc(val) - 0.0011, 5), roundPow10(yAcc(val) - 0.0011, 5)];
     }
 
     var valAcc = state.currentKey === 'Kinder' ? kinderAcc : state.currentKey === 'Random' ? randomAcc : sszvis.fn.identity;
+
+    var layerBounds = [[8.431443, 47.448978], [8.647471, 47.309726]];
+    var pixelSide = sszvis.map.utils.pixelsFromDistance(projection, [ (layerBounds[0][0] + layerBounds[1][0]) / 2, (layerBounds[0][1] + layerBounds[1][1]) / 2 ], 50);
+    // Using the half pixel crisp setting reduces some of the grid-like overlap patterning that we see with the exact measurement
+    pixelSide = sszvis.svgUtils.crisp.halfPixel(pixelSide);
+    // pixelSide = 2;
 
     var rasterLayer = sszvis.map.renderer.raster()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .position(sszvis.fn.compose(projection, getRoundVal))
-      .cellSide(2)
+      .cellSide(pixelSide)
       .fill(sszvis.fn.compose(colorScale, valAcc))
       .opacity(0.65);
 
@@ -192,7 +198,7 @@
       .projection(projection)
       .src('data/topo_layer_280915.png')
       // Expects longitude, latitude
-      .geoBounds([[8.431443, 47.448978], [8.647471, 47.309726]])
+      .geoBounds(layerBounds)
       .opacity(0.5);
 
     var legendWidth = bounds.innerWidth / 2;

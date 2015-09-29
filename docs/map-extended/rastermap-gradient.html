@@ -153,7 +153,7 @@
       .projection(projection)
       .src('data/topo_layer_280915.png')
       // Expects longitude, latitude
-      .geoBounds([[8.431443, 47.448978], [8.647471, 47.309726]])
+      .geoBounds(layerBounds)
       .opacity(0.5);
 
     var legend = sszvis.legend.linearColorScale()
