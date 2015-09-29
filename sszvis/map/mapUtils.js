@@ -80,4 +80,40 @@ sszvis_namespace('sszvis.map.utils', function(module) {
     return mercatorPath;
   };
 
+  /**
+   * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
+   * The earth's radius is not constant, so this function uses an approximation for calculating the degree angle of
+   * a distance in meters.
+   *
+   * @param {function} projection     You need to provide a projection function for calculating pixel values from decimal degree
+   *                                  coordinates. This function should accept values as [lon, lat] array pairs (like d3's projection functions).
+   * @param {array} centerPoint       You need to provide a center point. This point is used as the center of a hypothetical square
+   *                                  with side lengths equal to the meter distance to be measured. The center point is required
+   *                                  because the pixel size of a given degree distance will be different if that square is located
+   *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
+   * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
+   */
+  module.exports.pixelsFromDistance = function(projection, centerPoint, meterDistance) {
+    // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
+    // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
+    var APPROX_EARTH_RADIUS = 6367475;
+    var APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
+    // Compute the size of the angle made by the meter distance 
+    var degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360;
+    // Construct a square, centered at centerPoint, with sides that span that number of degrees
+    var halfDegrees = degrees / 2;
+    var bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
+
+    // Project those bounds to pixel coordinates using the provided map projection
+    var projBounds = bounds.map(projection);
+    // Depending on the rotation of the map, the sides of the box are not always positive quantities
+    // For example, on a north-is-up map, the pixel y-scale is inverted, so higher latitude degree
+    // values are lower pixel y-values. On a south-is-up map, the opposite is true.
+    var projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
+    var projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
+    var averageSideSize = (projXDist + projYDist) / 2;
+
+    return averageSideSize;
+  };
+
 });

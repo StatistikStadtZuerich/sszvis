@@ -134,11 +134,18 @@
       return [roundPow10(xAcc(val) - 0.0011, 5), roundPow10(yAcc(val) - 0.0011, 5)];
     }
 
+    var layerBounds = [[8.431443, 47.448978], [8.647471, 47.309726]];
+    // To calculate the length in pixels of a certain distance in meters, use this function.
+    // You need to provide a projection (for calculating pixel values from decimal degree coordinates)
+    // and you need to provide a center point. The center point is required because the pixel size of
+    // a given degree distance will be different if that square is at the equator or at one of the poles.
+    var pixelSide = sszvis.map.utils.pixelsFromDistance(projection, [ (layerBounds[0][0] + layerBounds[1][0]) / 2, (layerBounds[0][1] + layerBounds[1][1]) / 2 ], 50);
+
     var rasterLayer = sszvis.map.renderer.raster()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .position(sszvis.fn.compose(projection, getRoundVal))
-      .cellSide(2)
+      .cellSide(pixelSide)
       .fill(sszvis.fn.compose(colorScale, valAcc))
       // .opacity(0.65);
 
