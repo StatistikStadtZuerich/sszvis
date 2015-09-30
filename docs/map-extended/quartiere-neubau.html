@@ -141,7 +141,7 @@
     var mapMaker = sszvis.map.zurichStatistischeQuartiereBaseMap()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .borderColor('black');
+      .borderColor('#7C7C7C');
 
     var mapPathGen = d3.geo.path()
       .projection(sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight));
