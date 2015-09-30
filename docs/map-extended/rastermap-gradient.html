@@ -120,7 +120,7 @@
     var mapMaker = sszvis.map.zurichStadtKreiseBaseMap()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .borderColor('black');
+      .borderColor('#545454');
 
     var projection = sszvis.map.projection.zurichStadtKreise(bounds.innerWidth, bounds.innerHeight);
 
@@ -148,8 +148,7 @@
       .height(bounds.innerHeight)
       .position(sszvis.fn.compose(projection, getRoundVal))
       .cellSide(pixelSide)
-      .fill(sszvis.fn.compose(colorScale, valAcc))
-      // .opacity(0.65);
+      .fill(sszvis.fn.compose(colorScale, valAcc));
 
     var topoLayer = sszvis.map.renderer.image()
       .projection(projection)
