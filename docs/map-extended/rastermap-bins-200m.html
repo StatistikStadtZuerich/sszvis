@@ -132,12 +132,14 @@
       return Math.round(n * divisor) / divisor;
     }
 
-    // Subtract 0.0011 from both longitude and latitude for better alignment with the map data
+    // Offset is applied for better alignment with the map data
+    var geoOffset = -0.0011;
+
     function getRoundVal(val) {
-      return [roundPow10(xAcc(val) - 0.001, 5), roundPow10(yAcc(val) - 0.001, 5)];
+      return [roundPow10(xAcc(val) + geoOffset, 5), roundPow10(yAcc(val) + geoOffset, 5)];
     }
 
-    var layerBounds = [[8.431443, 47.448978], [8.647471, 47.309726]];
+    var layerBounds = [[8.431443 + geoOffset, 47.448978 + geoOffset], [8.647471 + geoOffset, 47.309726 + geoOffset]];
     var pixelSide = sszvis.map.utils.pixelsFromDistance(projection, [ (layerBounds[0][0] + layerBounds[1][0]) / 2, (layerBounds[0][1] + layerBounds[1][1]) / 2 ], 200);
 
     var rasterLayer = sszvis.map.renderer.raster()

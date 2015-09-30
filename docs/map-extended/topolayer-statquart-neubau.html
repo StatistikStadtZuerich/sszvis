@@ -172,11 +172,16 @@
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
+    // Offset is applied for better alignment with the map data
+    var geoOffset = -0.0011;
+
+    var layerBounds = [[8.431443 + geoOffset, 47.448978 + geoOffset], [8.647471 + geoOffset, 47.309726 + geoOffset]];
+
     var topoLayer = sszvis.map.renderer.image()
       .projection(projection)
       .src(sszvis.map.data.stadtZurichTopoLayer)
       // Expects longitude, latitude
-      .geoBounds([[8.431443, 47.448978], [8.647471, 47.309726]])
+      .geoBounds(layerBounds)
       .opacity(0.40);
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
