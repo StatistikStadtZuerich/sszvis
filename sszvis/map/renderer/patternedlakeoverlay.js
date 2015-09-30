@@ -22,6 +22,7 @@ sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
       .prop('mapPath')
       .prop('lakeFeature')
       .prop('lakeBounds')
+      .prop('lakePathColor')
       .prop('fadeOut').fadeOut(true)
       .render(function() {
         var selection = d3.select(this);
@@ -73,6 +74,10 @@ sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
 
         lakePath
           .attr('d', props.mapPath);
+
+        if (props.lakePathColor) {
+          lakePath.style('stroke', props.lakePathColor);
+        }
       });
   };
 

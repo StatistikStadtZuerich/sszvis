@@ -35,20 +35,34 @@ sszvis_namespace('sszvis.map.zurichWahlKreiseBaseMap', function(module) {
   'use strict';
 
   module.exports = function() {
-    var grundKarteRenderer = sszvis.map.renderer.grundkarte()
-      .geoJson(sszvis.map.zurichWahlKreiseMapData.meshData())
-      .featureData(sszvis.map.zurichWahlKreiseMapData.featureData())
-      .mapPathCacheKey(sszvis.map.utils.constants.WAHL_KREISE_KEY);
+    var mesh = sszvis.map.renderer.mesh()
+      .geoJson(sszvis.map.zurichWahlKreiseMapData.meshData());
+
+    var lake = sszvis.map.renderer.patternedlakeoverlay()
+      .lakeFeature(sszvis.map.zurichWahlKreiseMapData.lakeFeature())
+      .lakeBounds(sszvis.map.zurichWahlKreiseMapData.lakeBounds());
 
     var component = d3.component()
-      .delegate('width', grundKarteRenderer)
-      .delegate('height', grundKarteRenderer)
-      .delegate('borderColor', grundKarteRenderer)
+      .prop('width')
+      .prop('height')
+      .prop('borderColor').borderColor('black')
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
-        selection.call(grundKarteRenderer);
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.zurichWahlKreiseMapData.featureData(), sszvis.map.utils.constants.WAHL_KREISE_KEY);
+
+        mesh
+          .mapPath(mapPath)
+          .borderColor(props.borderColor);
+
+        lake
+          .mapPath(mapPath)
+          .lakePathColor(props.borderColor);
+
+        selection
+          .call(mesh)
+          .call(lake);
       });
 
     return component;

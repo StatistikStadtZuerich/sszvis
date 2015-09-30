@@ -35,20 +35,34 @@ sszvis_namespace('sszvis.map.zurichStadtKreiseBaseMap', function(module) {
   'use strict';
 
   module.exports = function() {
-    var grundKarteRenderer = sszvis.map.renderer.grundkarte()
-      .geoJson(sszvis.map.zurichStadtKreiseMapData.meshData())
-      .featureData(sszvis.map.zurichStadtKreiseMapData.featureData())
-      .mapPathCacheKey(sszvis.map.utils.constants.STADT_KREISE_KEY);
+    var mesh = sszvis.map.renderer.mesh()
+      .geoJson(sszvis.map.zurichStadtKreiseMapData.meshData());
+
+    var lake = sszvis.map.renderer.patternedlakeoverlay()
+      .lakeFeature(sszvis.map.zurichStadtKreiseMapData.lakeFeature())
+      .lakeBounds(sszvis.map.zurichStadtKreiseMapData.lakeBounds());
 
     var component = d3.component()
-      .delegate('width', grundKarteRenderer)
-      .delegate('height', grundKarteRenderer)
-      .delegate('borderColor', grundKarteRenderer)
+      .prop('width')
+      .prop('height')
+      .prop('borderColor').borderColor('black')
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
-        selection.call(grundKarteRenderer);
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.zurichStadtKreiseMapData.featureData(), sszvis.map.utils.constants.STADT_KREISE_KEY);
+
+        mesh
+          .mapPath(mapPath)
+          .borderColor(props.borderColor);
+
+        lake
+          .mapPath(mapPath)
+          .lakePathColor(props.borderColor);
+
+        selection
+          .call(mesh)
+          .call(lake);
       });
 
     return component;

@@ -31,20 +31,22 @@ sszvis_namespace('sszvis.map.switzerlandBaseMap', function(module) {
   'use strict';
 
   module.exports = function() {
-    var grundKarteRenderer = sszvis.map.renderer.grundkarte()
-      .geoJson(sszvis.map.switzerlandMapData.meshData())
-      .featureData(sszvis.map.switzerlandMapData.featureData())
-      .mapPathCacheKey(sszvis.map.utils.constants.SWITZERLAND_KEY);
+    var mesh = sszvis.map.renderer.mesh()
+      .geoJson(sszvis.map.switzerlandMapData.meshData());
 
     var component = d3.component()
-      .delegate('width', grundKarteRenderer)
-      .delegate('height', grundKarteRenderer)
-      .delegate('borderColor', grundKarteRenderer)
+      .prop('width')
+      .prop('height')
+      .delegate('borderColor', mesh)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
-        selection.call(grundKarteRenderer);
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.switzerlandMapData.featureData(), sszvis.map.utils.constants.SWITZERLAND_KEY);
+
+        mesh.mapPath(mapPath);
+
+        selection.call(mesh);
       });
 
     return component;

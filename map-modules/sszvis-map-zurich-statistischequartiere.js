@@ -35,20 +35,34 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiereBaseMap', function(modul
   'use strict';
 
   module.exports = function() {
-    var grundKarteRenderer = sszvis.map.renderer.grundkarte()
-      .geoJson(sszvis.map.zurichStatistischeQuartiereMapData.meshData())
-      .featureData(sszvis.map.zurichStatistischeQuartiereMapData.featureData())
-      .mapPathCacheKey(sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY);
+    var mesh = sszvis.map.renderer.mesh()
+      .geoJson(sszvis.map.zurichStatistischeQuartiereMapData.meshData());
+
+    var lake = sszvis.map.renderer.patternedlakeoverlay()
+      .lakeFeature(sszvis.map.zurichStatistischeQuartiereMapData.lakeFeature())
+      .lakeBounds(sszvis.map.zurichStatistischeQuartiereMapData.lakeBounds());
 
     var component = d3.component()
-      .delegate('width', grundKarteRenderer)
-      .delegate('height', grundKarteRenderer)
-      .delegate('borderColor', grundKarteRenderer)
+      .prop('width')
+      .prop('height')
+      .prop('borderColor').borderColor('black')
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
-        selection.call(grundKarteRenderer);
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY);
+
+        mesh
+          .mapPath(mapPath)
+          .borderColor(props.borderColor);
+
+        lake
+          .mapPath(mapPath)
+          .lakePathColor(props.borderColor);
+
+        selection
+          .call(mesh)
+          .call(lake);
       });
 
     return component;

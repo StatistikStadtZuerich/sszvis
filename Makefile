@@ -80,7 +80,6 @@ SOURCE_FILES = \
 	sszvis/map/projections.js \
 	sszvis/map/renderer/base.js \
 	sszvis/map/renderer/geojson.js \
-	sszvis/map/renderer/grundkarte.js \
 	sszvis/map/renderer/image.js \
 	sszvis/map/renderer/raster.js \
 	sszvis/map/renderer/mesh.js \
