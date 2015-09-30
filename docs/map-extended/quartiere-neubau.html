@@ -12,6 +12,7 @@
 <script src="../../sszvis.js"></script>
 <!-- load the map module -->
 <script src="../../map-modules/sszvis-map-zurich-statistischequartiere.js"></script>
+<script src="../../map-modules/sszvis-map-zurich-neubausiedlungen.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -42,8 +43,7 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: { __sszvisIsUnloaded: true },
-    buildingsGeoJson: { __sszvisIsUnloaded: true },
+    data: {},
     selection: [],
     yearRange: [0, 0]
   };
@@ -55,12 +55,6 @@
     prepareData: function(data) {
       state.data = data;
       state.yearRange = d3.extent(data, yearAcc);
-
-      render(state);
-    },
-
-    prepareGeoJson: function(geoJson) {
-      state.buildingsGeoJson = geoJson;
 
       render(state);
     },
@@ -98,23 +92,9 @@
       actions.prepareData(data);
     });
 
-  d3.json('data/gemeinnuetzige.json')
-    .get(function(error, data) {
-      if (error) {
-        sszvis.loadError(error);
-        return;
-      }
-      actions.prepareGeoJson(data);
-    });
-
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    if (state.data.__sszvisIsUnloaded || state.buildingsGeoJson.__sszvisIsUnloaded) {
-      return true;
-    }
-
-
     // Padding
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
     var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
@@ -149,7 +129,7 @@
     var newBuildings = sszvis.map.renderer.geojson()
       .dataKeyName('id')
       .geoJsonKeyName('OBJECTID')
-      .geoJson(state.buildingsGeoJson)
+      .geoJson(sszvis.map.data.neubausiedlungen)
       .mapPath(mapPathGen)
       .defined(sszvis.fn.compose(sszvis.fn.defined, idAcc))
       .fill(sszvis.fn.compose(colorScale, yearAcc))
