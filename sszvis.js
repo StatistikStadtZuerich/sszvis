@@ -6367,7 +6367,7 @@ sszvis_namespace('sszvis.map.utils', function(module) {
 
   module.exports.swissMapProjection = function(width, height, featureCollection, featureBoundsCacheKey) {
     var mercatorProjection = d3.geo.mercator()
-      .rotate([-7.439583333333333, -46.95240555555556]);
+      // .rotate([-7.439583333333333, -46.95240555555556]); // This rotation was, I think, part of the offset problem
 
     var bounds;
 
@@ -6758,11 +6758,6 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
   };
 
 });
-
-
-//////////////////////////////////// SECTION ///////////////////////////////////
-
-
 
 
 //////////////////////////////////// SECTION ///////////////////////////////////

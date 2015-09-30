@@ -45,6 +45,8 @@
   ----------------------------------------------- */
   function render(state) {
     // Padding
+    // NOTE: The bounds commented out here are used to generate screenshots for aligning the topographic layer for clipping
+    // var bounds = sszvis.bounds({ height: 1000, width: 991, top: 0, right: 96, bottom: 0, left: 81 });
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
     var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
 
