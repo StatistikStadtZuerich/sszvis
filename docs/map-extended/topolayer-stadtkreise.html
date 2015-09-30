@@ -12,6 +12,7 @@
 <script src="../../sszvis.js"></script>
 <!-- load the map module -->
 <script src="../../map-modules/sszvis-map-zurich-stadtkreise.js"></script>
+<script src="../../map-modules/sszvis-map-zurich-topolayer-clipped.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -70,7 +71,7 @@
 
     var topoLayer = sszvis.map.renderer.image()
       .projection(projection)
-      .src('data/topo_layer_280915.png')
+      .src(sszvis.map.data.stadtZurichTopoLayerClipped)
       // Expects longitude, latitude
       .geoBounds([[8.431443, 47.448978], [8.647471, 47.309726]])
       .opacity(0.35);
