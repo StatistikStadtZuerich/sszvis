@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../map-modules/sszvis-map-zurich-statistischezonen.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {};
+
+
+  /* Initialize
+  ----------------------------------------------- */
+  // Because no data needs to be loaded, here we just render the Application
+  render(state);
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      });
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichStatistischeZonenBaseMap()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .borderColor('black');
+
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>

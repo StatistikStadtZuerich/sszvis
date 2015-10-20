@@ -104,7 +104,8 @@ MAP_TARGETS = \
 	geodata/wahlkreis.topojson \
 	geodata/statistische_quartiere.topojson \
 	geodata/ch_cantons.topojson \
-	geodata/agglomeration_2012.topojson
+	geodata/agglomeration_2012.topojson \
+	geodata/statistische_zonen.topojson
 
 CENTER_DATA = geodata/centers.csv
 
@@ -164,3 +165,7 @@ geodata/ch_cantons.topojson: geodata/ch_cantons_raw.topojson
 
 geodata/agglomeration_2012.topojson: geodata/agglomeration_2012.geojson geodata/lakezurich_lakegreifen.geojson
 	topojson -o $@ --id-property=+Gde_Nr -e geodata/agglomeration_2012.csv -p Gde_Nr,Gde_Name -- $^
+
+geodata/statistische_zonen.topojson: geodata/statistische_zonen.geojson geodata/lakezurich.geojson geodata/lakebounds/statistische_quartiere_lakebounds.geojson
+	mkdir -p $(dir $@)
+	topojson -o $@ --simplify=2e-10 --id-property=+StZNr -p -- $^

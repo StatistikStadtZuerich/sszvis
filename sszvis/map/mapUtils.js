@@ -9,6 +9,7 @@ sszvis_namespace('sszvis.map.utils', function(module) {
   module.exports.constants = {
     STADT_KREISE_KEY: 'zurichStadtKreise',
     STATISTISCHE_QUARTIERE_KEY: 'zurichStatistischeQuartiere',
+    STATISTISCHE_ZONEN_KEY: 'zurichStatistischeZonen',
     WAHL_KREISE_KEY: 'zurichWahlKreise',
     AGGLOMERATION_2012_KEY: 'zurichAgglomeration2012',
     SWITZERLAND_KEY: 'switzerland'

@@ -260,3 +260,221 @@ Zürich Agglomeration 2012: ID - Gemeindename
 4308 - Kaiserstuhl
 4318 - Schneisingen
 4319 - Siglistorf
+
+Zürich Statistische Zonen: StZNr - StZ_Name
+1101 - Zähringerstrasse
+1102 - Zentralbibliothek
+1103 - Grossmünster
+1104 - Oberdorf
+1201 - Central
+1202 - ETH / Universität
+1203 - Bellevue
+1204 - See Nord
+1301 - Schipfe
+1302 - Münsterhof
+1303 - Stadthaus
+1401 - Bahnhofplatz
+1402 - Sihlporte
+1403 - Selnaustrasse
+1404 - Paradeplatz
+2101 - Bahnhof Wollishofen
+2102 - Bellariastrasse
+2103 - Jugendherberge
+2104 - Morgental
+2105 - Manegg
+2106 - Waschanstalt
+2107 - Auf der Egg
+2108 - Neubühl
+2109 - Entlisberg
+2110 - Verenastrasse
+2111 - Seeblickstrasse
+2112 - See Süd-West
+2301 - Höckler
+2302 - Mahrbachweg
+2303 - Sihlweidstrasse
+2401 - Parkring
+2402 - Kongresshaus
+2403 - Belvoir-Park
+2404 - Museum Rietberg
+2405 - Rieterplatz
+2406 - Gartenstrasse
+2407 - See West
+3101 - Höfliweg
+3102 - Goldbrunnenplatz
+3103 - Gotthelfstrasse
+3104 - Manesseplatz
+3105 - Binz
+3106 - Saalsporthalle
+3301 - Heuried
+3302 - Gehrenholz
+3303 - Uetliberg
+3304 - Strassenverkehrsamt
+3305 - Albisgüetli
+3306 - Triemli
+3401 - Schaufelbergerstrasse
+3402 - FriedhofSihlfeld
+3403 - Brahmsstrasse
+3404 - Fritschistrasse
+3405 - Idaplatz
+3406 - Zwinglihaus
+3407 - BahnhofWiedikon
+3408 - Sihlhölzli
+4101 - Kalkbreite
+4102 - Werdplatz
+4103 - Schöntalstrasse
+4201 - Schöneggplatz
+4202 - Bäckeranlage
+4203 - Engelstrasse
+4204 - Bezirksgebäude
+4205 - Volkshaus
+4206 - Sihlpost
+4401 - Schlachthof
+4402 - Norastrasse
+4403 - Bullingerhof
+4404 - Lochergut
+4405 - Güterbahnhof
+5101 - Josefswiese
+5102 - Quellenstrasse
+5103 - Berufsschule
+5104 - Museum für Gestaltung
+5105 - Johannesgasse
+5106 - Konradstrasse
+5201 - Hardturm
+5202 - Technopark
+5203 - Neue Hard
+5204 - KV-Business School
+6101 - Nordheim
+6102 - Kiefernweg
+6103 - Freibad Allenmoos
+6104 - Radio-Studio
+6105 - Steinkluppe
+6106 - Seminarstrasse
+6107 - Guggachstrasse
+6108 - Stüssistrasse
+6109 - Irchel
+6110 - Gemsenstrasse
+6111 - Schindlerstrasse
+6112 - Drahtschmidli
+6113 - Beckenhof
+6301 - UniIrchel
+6302 - Letzistrasse
+6303 - Ottikerstrasse
+6304 - Culmannstrasse
+6305 - Frauenklinik
+6306 - Rigistrasse
+6307 - Rigiblick
+7101 - Heubeeriweg
+7102 - Sonnenbad
+7103 - Bethanien
+7104 - Universitätsspital
+7105 - Platte
+7106 - Zoo
+7201 - Dolder
+7202 - Sonnenberg
+7203 - Doldertal
+7204 - Kinderspital
+7205 - Merkurplatz
+7206 - Pflegerinnenschule
+7207 - Eidmattstrasse
+7301 - Degenried
+7302 - Klusplatz
+7303 - Hegibachplatz
+7401 - Buchzelgstrasse
+7402 - Carl Spitteler-Strasse
+7403 - Eierbrecht
+7404 - Loorenstrasse
+7405 - Glockenacker
+7406 - ImTrichtisal
+7407 - Trichtenhausen
+8101 - Seebad Utoquai
+8102 - Chinagarten
+8103 - Tiefenbrunnen
+8104 - See Ost
+8201 - Holbeinstrasse
+8202 - Riesbachstrasse
+8203 - Geranienstrasse
+8204 - In der Mühle
+8301 - Neumünster
+8302 - Botanischer Garten
+8303 - Burghölzli
+8304 - Rehalp
+9101 - Brünneliacker
+9102 - In den Rütenen
+9103 - Bockhornstrasse
+9104 - Zollfreilager
+9105 - In der Ey
+9106 - Mühlezelgstrasse
+9107 - Letzigraben
+9108 - Sackzelg
+9109 - Espenhof
+9201 - Dunkelhölzli
+9202 - Loogartenstrasse
+9203 - Eichbühl
+9204 - Buchlern
+9205 - Dachslernstrasse
+9206 - Bachmattstrasse
+9207 - Werdhölzli
+9208 - Hardhof
+9209 - Altstetterplatz
+9210 - Calandastrasse
+9211 - Zwyssigstrasse
+9212 - Grimselstrasse
+9213 - Edelweissstrasse
+9214 - Letzigrund
+9215 - Juchhof
+9216 - Grünaustrasse
+10101 - Riedhof
+10102 - Hönggerberg
+10103 - Imbisbühlstrasse
+10104 - Werdinsel
+10105 - ETH Hönggerberg
+10106 - Bauherrenstrasse
+10107 - Grossmannstrasse
+10108 - Waidbad
+10109 - Rütihof
+10110 - Gsteigstrasse
+10201 - Waidspital
+10202 - Im Sydefädeli
+10203 - Zschokkestrasse
+10204 - Rosengartenstrasse
+10205 - Röschibachstrasse
+10206 - Schubertstrasse
+10207 - Letten
+11101 - Katzensee
+11102 - Furttalstrasse
+11103 - Zehntenhausplatz
+11104 - Schauenbergstrasse
+11105 - Schützenmatt
+11106 - Hürststrasse
+11107 - Reckenholz
+11501 - Affolternstrasse
+11502 - Holunderhof
+11503 - Albin Zollinger-Platz
+11504 - Marktplatz Oerlikon
+11505 - Stadthof
+11506 - Messegelände
+11507 - Magdalenenstrasse
+11508 - Berninaplatz
+11509 - Gorwiden
+11510 - Murwiesenstrasse
+11901 - Köschenrüti
+11902 - Schwandenholz
+11903 - Rickenstrasse
+11904 - Höhenring
+11905 - Ausserdorfstrasse
+11906 - Eichrain
+11907 - Sandacker
+11908 - Grünhaldenstrasse
+11909 - Leutschenbach
+12101 - Hagenholz
+12102 - Dreispitz
+12103 - Auzelg
+12201 - Tulpenstrasse
+12202 - Bocklerstrasse
+12203 - Auhof
+12204 - Schürgistrasse
+12205 - Roswiesenstrasse
+12301 - Kronwiesenstrasse
+12302 - Hirzenbachstrasse
+12303 - Mattenhof
+12304 - Probsteistrasse

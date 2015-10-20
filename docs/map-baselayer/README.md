@@ -86,6 +86,33 @@ A base layer example using the Statistische Quartiere map data. This is a static
 }
 ```
 
+## Zürich: Grundkarte Statistische Zonen
+
+A base layer example that uses the Statistische Zonen map data. This is a static map
+
+```project
+{
+    "name": "map-baselayer-statzone",
+    "files": {
+        "index.html": {
+            "source": "docs/map-baselayer/baselayer-statzone.html",
+            "template": "docs/template.html"
+        },
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
+    },
+    "sourceView": ["index.html"],
+    "size": {
+        "width": 516,
+        "height": 542
+    }
+}
+```
+
 ## Zürich: Grundkarte Wahlkreise
 
 A base layer example using the Wahlkreise map data. This is a static map
