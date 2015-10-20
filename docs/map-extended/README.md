@@ -18,6 +18,7 @@
             "source": "docs/map-extended/quartiere-neubau.html",
             "template": "docs/template.html"
         },
+        "data.csv": "docs/map-extended/data/gemeinnuetzige.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -68,6 +69,7 @@
             "source": "docs/map-extended/topolayer-statquart-neubau.html",
             "template": "docs/template.html"
         },
+        "data.csv": "docs/map-extended/data/gemeinnuetzige.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -93,6 +95,7 @@
             "source": "docs/map-extended/rastermap-bins.html",
             "template": "docs/template.html"
         },
+        "data.csv": "docs/map-extended/data/kinder_segmented.csv"
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -118,6 +121,7 @@
             "source": "docs/map-extended/rastermap-gradient.html",
             "template": "docs/template.html"
         },
+        "data.csv": "docs/map-extended/data/kinder.csv"
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -143,6 +147,7 @@
             "source": "docs/map-extended/rastermap-bins-100m.html",
             "template": "docs/template.html"
         },
+        "data.csv": "docs/map-extended/data/kinder100.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -168,6 +173,7 @@
             "source": "docs/map-extended/rastermap-bins-200m.html",
             "template": "docs/template.html"
         },
+        "data.csv": "docs/map-extended/data/kinder200.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
