@@ -1,5 +1,6 @@
 /**
  * Modular map component for a map of the Zurich Statistische Zonen.
+ *
  */
 sszvis_namespace('sszvis.map.zurichStatistischeZonenMapData', function(module) {
   'use strict';
@@ -18,6 +19,8 @@ sszvis_namespace('sszvis.map.zurichStatistischeZonenMapData', function(module) {
 
 /**
  * zurichStadtKreise Base Map Component
+ *
+ * Has the same API as the other Base Map components (see statdtkreise map module)
  */
 sszvis_namespace('sszvis.map.zurichStatistischeZonenBaseMap', function(module) {
   'use strict';
@@ -61,7 +64,7 @@ sszvis_namespace('sszvis.map.zurichStatistischeZonenBaseMap', function(module) {
 /**
  * zurichStatistischeZonen Map Component
  *
- * Has the same properties and usage as the other map components
+ * Has the same properties and usage as the other map components (see stadtkreise map module)
  *
  * @property {Number} width                           The width of the map. Used to create the map projection function
  * @property {Number} height                          The height of the map. Used to create the map projection function
