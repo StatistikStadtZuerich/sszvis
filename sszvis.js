@@ -726,6 +726,27 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.propOr
+     *
+     * Like fn.prop, this function takes the name of a property and returns an accessor function
+     * for the named property. However, the returned function has an added feature - it
+     * checks that the argument given to is not `undefined`, and whether the property exists on
+     * the object. If either is false, it returns a default value. The default value is the second
+     * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
+     * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
+     * 
+     * @param  {String} key         the name of the property for which an accessor function is desired
+     * @param  {any} defaultVal     the default value to return when either the object or the requested property are undefined
+     * @return {Function}           A property-accessor function
+     */
+    propOr: function(key, defaultVal) {
+        return function(object) {
+            var value = object !== undefined ? object[key] : undefined;
+            return value !== undefined ? value : defaultVal;
+        };
+    },
+
+    /**
      * fn.set
      *
      * takes an array of elements and returns the unique elements of that array, optionally
