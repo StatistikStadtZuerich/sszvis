@@ -89,6 +89,18 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.isNull
+     *
+     * determines if the passed value is null.
+     *
+     * @param {*} val the value to check
+     * @return {Boolean}     true if the value is null, false if the value is not null
+     */
+    isNull: function(val) {
+        return val === null;
+    },
+
+    /**
      * fn.derivedSet
      *
      * fn.derivedSet is used to create sets of objects from an input array. The objects are

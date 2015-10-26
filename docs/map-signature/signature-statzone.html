@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../map-modules/sszvis-map-zurich-statistischezonen.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var datumAcc = sszvis.fn.prop('datum');
+  var idAcc = sszvis.fn.propOr('id', null);
+  var yearAcc = sszvis.fn.prop('year');
+  var genderAcc = sszvis.fn.prop('gender');
+  var birthsAcc = sszvis.fn.propOr('births', 0);
+  var zoneNameAcc = sszvis.fn.propOr('zonename', '--');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: {},
+    selection: []
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareData: function(data) {
+      state.data = data;
+      state.birthsRange = [0, d3.max(state.data, birthsAcc)];
+
+      render(state);
+    },
+
+    selectHovered: function(d) {
+      state.selection = [idAcc(d)];
+      render(state);
+    },
+
+    deselectHovered: function() {
+      state.selection = [];
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/births_year_statisticalZones.csv')
+    .row(function(d) {
+      return {
+        id: sszvis.parse.number(d['statistischeZoneId']),
+        year: sszvis.parse.number(d['Jahr']),
+        gender: d['Geschlecht'],
+        births: sszvis.parse.number(d['Geburten']),
+        zonename: d['statistischeZoneName']
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareData(data);
+    });
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    // Padding
+    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+
+
+    // Scales
+    // Any time you visualize a quantity using a circle, you should make the total
+    // area of the circle proportional to the data value. Be sure to avoid using the
+    // radius or the diameter to encode the data value, because the consequent quadratic
+    // scaling of the area affects the visual perception of the quantity in undesirable ways.
+    var areaScale = d3.scale.linear().domain(state.birthsRange).range([0, 800]);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION,
+        key: 'chartlayer'
+      })
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
+      .datum(state.selection);
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichStatistischeZonen()
+      .keyName('id')
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .borderColor('#fff')
+      .fill('#D6D6D6');
+
+    var tooltipHeader = sszvis.svgUtils.modularText.html()
+      .plain(function(geod) {
+        console.log(geod);
+        return birthsAcc(geod) + " Geburten";
+      });
+
+    var tooltipBody = sszvis.svgUtils.modularText.html()
+      .plain(function(geod) {
+        return zoneNameAcc(geod);
+      });
+
+    var tooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .header(tooltipHeader)
+      .body(tooltipBody)
+      .visible(isSelected);
+
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+
+    var dotComponent = sszvis.component.dot()
+      .x(function(d) { return d.x; })
+      .y(function(d) { return d.y; })
+      .radius(function(d) { return Math.sqrt(areaScale(d.births) / Math.PI); })
+      .fill('rgba(81, 130, 179, 0.7)')
+      .stroke('#fff');
+
+    var dotData = [];
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .each(function(d) {
+        var bbox = this.getBoundingClientRect();
+        dotData.push({
+          x: bbox.left,
+          y: bbox.top,
+          id: idAcc(datumAcc(d)),
+          births: birthsAcc(datumAcc(d))
+        });
+      });
+
+    var dots = chartLayer.selectGroup('dotgroup')
+      .attr('transform', sszvis.svgUtils.translateString(-bounds.padding.left, -bounds.padding.top))
+      .datum(dotData)
+      .call(dotComponent);
+
+    dots.selectAll('.sszvis-circle')
+      .on('mouseover', actions.selectHovered)
+      .on('mouseout', actions.deselectHovered);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+  }
+
+  function isSelected(d) {
+    var id = idAcc(d);
+    return !sszvis.fn.isNull(id) && state.selection.indexOf(id) >= 0;
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>
