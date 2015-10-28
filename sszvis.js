@@ -4057,13 +4057,15 @@ sszvis_namespace('sszvis.component.dot', function(module) {
         dots.exit().remove();
 
         dots
+          .attr('stroke', props.stroke)
+          .attr('fill', props.fill);
+
+        dots
           .transition()
           .call(sszvis.transition)
           .attr('cx', props.x)
           .attr('cy', props.y)
-          .attr('r', props.radius)
-          .attr('stroke', props.stroke)
-          .attr('fill', props.fill);
+          .attr('r', props.radius);
 
         // Tooltip anchors
 
