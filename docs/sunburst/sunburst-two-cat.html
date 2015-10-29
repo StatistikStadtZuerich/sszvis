@@ -42,42 +42,61 @@
     data: []
   };
 
+  var sunburstPrepper = function() {
+    var nester = d3.nest();
+    var valueAcc = sszvis.fn.identity;
+
+    function main(data) {
+      nester.rollup(sszvis.fn.first);
+
+      var partitionLayout = d3.layout.partition()
+        .children(sszvis.fn.prop('values'))
+        .value(function(d) { return valueAcc(d.values); })
+        .sort(function(a, b) { console.log(a, b); return d3.descending(a.value, b.value); });
+
+      return partitionLayout({
+        isSunburstRoot: true,
+        values: nester.entries(data)
+      });
+    };
+
+    main.calculate = function(data) { return main(data); };
+
+    main.layer = function(keyFunc) {
+      nester.key(keyFunc);
+      return main;
+    };
+
+    main.value = function(accfn) {
+      valueAcc = accfn;
+      return main;
+    };
+
+    return main;
+  };
+
 
   /* State transitions
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
-      var nester = d3.nest()
-        .key(continentAcc)
-        .key(regionAcc)
-        .rollup(function(a) {
-          return sszvis.fn.first(a);
-        });
-
       var totals = data.reduce(function(memo, value) {
         var continent = continentAcc(value);
         memo[continent] = memo[continent] ? memo[continent] + numAcc(value) : numAcc(value);
         return memo;
       });
 
-      var nested = nester.entries(data)
-        .sort(function(a, b) {
-          return totals[b.key] - totals[a.key];
-        });
-
-      var partitionLayout = d3.layout.partition()
-        .children(sszvis.fn.prop('values'))
-        .value(function(d) {
-          return numAcc(d.values);
-        })
-        .sort(function(a, b) {
-          return d3.descending(a.value, b.value);
-        })
-
-      state.data = partitionLayout({
-        isRootNode: true,
-        values: nested
+      data.sort(function(a, b) {
+        var totalDiff = d3.descending(totals[continentAcc(a)], totals[continentAcc(b)]);
+        if (totalDiff !== 0) return totalDiff;
+        return d3.descending(numAcc(a), numAcc(b));
       });
+
+      state.data = sunburstPrepper()
+        .layer(continentAcc)
+        .layer(regionAcc)
+        .value(numAcc)
+        .calculate(data);
 
       render(state);
     }
@@ -123,7 +142,7 @@
     function getColor(node) {
       if (!node.parent) {
         return 'transparent';
-      } else if (node.parent.isRootNode) {
+      } else if (node.parent.isSunburstRoot) {
         return d3.hsl(colorScale(node.key));
       } else {
         // Recurse
