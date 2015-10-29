@@ -63,6 +63,7 @@ SOURCE_FILES = \
 	sszvis/component/stackedAreaMultiples.js \
 	sszvis/component/stackedBar.js \
 	sszvis/component/stackedPyramid.js \
+	sszvis/component/sunburst.js \
 	sszvis/control/buttonGroup.js \
 	sszvis/control/handleRuler.js \
 	sszvis/control/slider.js \
