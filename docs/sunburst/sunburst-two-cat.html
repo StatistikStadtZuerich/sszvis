@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Sunburst</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var continentAcc = sszvis.fn.prop('continent');
+  var regionAcc = sszvis.fn.prop('region');
+  var numAcc = sszvis.fn.prop('number');
+  var TWO_PI = 2 * Math.PI;
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: []
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      var nester = d3.nest()
+        .key(continentAcc)
+        .key(regionAcc)
+        .rollup(function(a) {
+          return sszvis.fn.first(a);
+        });
+
+      var totals = data.reduce(function(memo, value) {
+        var continent = continentAcc(value);
+        memo[continent] = memo[continent] ? memo[continent] + numAcc(value) : numAcc(value);
+        return memo;
+      });
+
+      var nested = nester.entries(data)
+        .sort(function(a, b) {
+          return totals[b.key] - totals[a.key];
+        });
+
+      var partitionLayout = d3.layout.partition()
+        .children(sszvis.fn.prop('values'))
+        .value(function(d) {
+          return numAcc(d.values);
+        })
+        .sort(function(a, b) {
+          return d3.descending(a.value, b.value);
+        })
+
+      state.data = partitionLayout({
+        isRootNode: true,
+        values: nested
+      });
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/sun_burst_zwei_hierarchien.csv')
+    .row(function(d) {
+      return {
+        continent: d['kontinent'],
+        region: d['region'],
+        number: sszvis.parse.number(d['anzahl'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ height: 512, top: 20, right: 20, bottom: 20, left: 20 });
+
+
+    // Scales
+    var angleScale = d3.scale.linear()
+      .domain([0, 1])
+      .range([0, TWO_PI]);
+
+    var radiusScale = d3.scale.linear()
+      .domain([0, 1])
+      .range([0, bounds.innerWidth / 2]);
+
+    var colorScale = sszvis.color.qual6();
+
+    function getColor(node) {
+      if (!node.parent) {
+        return 'transparent';
+      } else if (node.parent.isRootNode) {
+        return d3.hsl(colorScale(node.key));
+      } else {
+        // Recurse
+        var pColor = getColor(node.parent);
+        pColor.l *= 1.25;
+        return pColor.toString();
+      }
+    }
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.data);
+
+    var arcGen = d3.svg.arc()
+      .startAngle(function(d) {
+        return Math.max(0, Math.min(TWO_PI, angleScale(d.x)));
+      })
+      .endAngle(function(d) {
+        return Math.max(0, Math.min(TWO_PI, angleScale(d.x + d.dx)));
+      })
+      .innerRadius(function(d) {
+        return Math.max(0, radiusScale(d.y));
+      })
+      .outerRadius(function(d) {
+        return Math.max(0, radiusScale(d.y + d.dy));
+      });
+
+
+    // Components
+    var sunburst = sszvis.component.sunburst(); // TODO
+
+    // Rendering
+    var sunburstGroup = chartLayer.selectGroup('sunburst')
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2));
+
+    var arcs = sunburstGroup.selectAll('.sszvis-arc')
+      .data(state.data);
+
+    arcs.enter()
+      .append('path')
+      .attr('class', 'sszvis-arc')
+      .attr('d', arcGen)
+      .attr('stroke', 'white')
+      .attr('fill', getColor);
+
+  }
+
+}(d3, sszvis));
+</script>
+</body>
+</html>
