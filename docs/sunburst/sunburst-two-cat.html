@@ -96,6 +96,7 @@
     var burstLayout = sszvis.layout.sunburst.computeLayout(2, bounds.innerWidth);
 
     // Scales
+    var colorScale = sszvis.color.qual6();
 
 
     // Layers
@@ -109,7 +110,7 @@
 
     // Components
     var sunburstMaker = sszvis.component.sunburst()
-      .fill(sszvis.color.qual6())
+      .fill(colorScale)
       .layout(burstLayout);
 
     // Rendering
