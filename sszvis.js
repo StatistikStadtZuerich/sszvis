@@ -5022,19 +5022,64 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
 sszvis_namespace('sszvis.component.sunburst', function(module) {
   'use strict';
 
+  var TWO_PI = 2 * Math.PI;
+
   module.exports = function() {
     return d3.component()
-      .prop('startAngle', d3.functor)
-      .prop('endAngle', d3.functor)
-      .prop('innerRadius', d3.functor)
-      .prop('outerRadius', d3.functor)
+      .prop('layout')
       .prop('fill')
       .prop('stroke').stroke('white')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        function getColorRecursive(node) {
+          if (node.isSunburstRoot) {
+            return 'transparent';
+          } else if (node.parent.isSunburstRoot) {
+            // Use the color scale
+            return d3.hsl(props.fill(node.key));
+          } else {
+            // Recurse up the tree and adjust the lightness value
+            var pColor = getColorRecursive(node.parent);
+            pColor.l *= 1.25;
+            return String(pColor);
+          }
+        }
 
+        var rootDatum = sszvis.fn.first(data.filter(function(d) { return d.isSunburstRoot; }));
+
+        var angleScale = d3.scale.linear().range([0, TWO_PI]);
+
+        var radiusScale = d3.scale.linear()
+          .domain([rootDatum.dy, 1])
+          .range([0, props.layout.numLayers * props.layout.ringWidth]);
+
+        var arcGen = d3.svg.arc()
+          .startAngle(function(d) {
+            return Math.max(0, Math.min(TWO_PI, angleScale(d.x)));
+          })
+          .endAngle(function(d) {
+            return Math.max(0, Math.min(TWO_PI, angleScale(d.x + d.dx)));
+          })
+          .innerRadius(function(d) {
+            return props.layout.centerRadius + Math.max(0, radiusScale(d.y));
+          })
+          .outerRadius(function(d) {
+            return props.layout.centerRadius + Math.max(0, radiusScale(d.y + d.dy));
+          });
+
+        var arcs = selection.selectAll('.sszvis-sunburst-arc')
+          .data(data);
+
+        arcs.enter()
+          .append('path')
+          .attr('class', 'sszvis-sunburst-arc')
+
+        arcs
+          .attr('d', arcGen)
+          .attr('stroke', props.stroke)
+          .attr('fill', getColorRecursive);
       });
   };
 
@@ -5776,6 +5821,63 @@ sszvis_namespace('sszvis.layout.stackedAreaMultiplesLayout', function(module) {
       range: range,
       bandHeight: bandHeight,
       padHeight: step * pct
+    };
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+sszvis_namespace('sszvis.layout.sunburst', function(module) {
+  'use strict';
+
+  module.exports.prepareData = function() {
+    var nester = d3.nest();
+    var valueAcc = sszvis.fn.identity;
+
+    function main(data) {
+      nester.rollup(sszvis.fn.first);
+
+      var partitionLayout = d3.layout.partition()
+        .children(sszvis.fn.prop('values'))
+        .value(function(d) { return valueAcc(d.values); })
+        .sort(function(a, b) { return d3.descending(a.value, b.value); });
+
+      return partitionLayout({
+        isSunburstRoot: true,
+        values: nester.entries(data)
+      });
+    };
+
+    main.calculate = function(data) { return main(data); };
+
+    main.layer = function(keyFunc) {
+      nester.key(keyFunc);
+      return main;
+    };
+
+    main.value = function(accfn) {
+      valueAcc = accfn;
+      return main;
+    };
+
+    return main;
+  };
+
+  var MAX_RW = module.exports.MAX_SUNBURST_RING_WIDTH = 60;
+
+  module.exports.computeLayout = function(numLayers, chartWidth) {
+    // Diameter of the center circle is one-third the width
+    var halfWidth = chartWidth / 2;
+    var centerRadius = halfWidth / 3;
+    var ringWidth = Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers);
+
+    return {
+      centerRadius: centerRadius,
+      numLayers: numLayers,
+      ringWidth: ringWidth
     };
   };
 

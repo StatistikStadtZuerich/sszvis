@@ -72,6 +72,7 @@ SOURCE_FILES = \
 	sszvis/layout/populationPyramidLayout.js \
 	sszvis/layout/smallMultiples.js \
 	sszvis/layout/stackedAreaMultiplesLayout.js \
+	sszvis/layout/sunburst.js \
 	sszvis/layout/verticalBarChartDimensions.js \
 	sszvis/legend/binnedColorScale.js \
 	sszvis/legend/linearColorScale.js \
