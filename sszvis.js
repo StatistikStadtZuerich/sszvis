@@ -5033,21 +5033,29 @@ sszvis_namespace('sszvis.component.sunburst', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
+        // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
         function getColorRecursive(node) {
+          // Center node (if the data were prepared using sszvis.layout.sunburst.prepareData)
           if (node.isSunburstRoot) {
-            return 'transparent';
+            return d3.hsl('transparent');
+          } else if (!node.parent) {
+            // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
+            sszvis.logger.warn('Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData');
+            return d3.hsl(props.fill(node.key));
           } else if (node.parent.isSunburstRoot) {
             // Use the color scale
             return d3.hsl(props.fill(node.key));
           } else {
             // Recurse up the tree and adjust the lightness value
             var pColor = getColorRecursive(node.parent);
-            pColor.l *= 1.25;
-            return String(pColor);
+            pColor.l *= 1.15;
+            return pColor;
           }
         }
 
-        var rootDatum = sszvis.fn.first(data.filter(function(d) { return d.isSunburstRoot; }));
+        // Usually, this should return the very first item in the list of data
+        // But using find makes the algorithm data order-agnostic
+        var rootDatum = sszvis.fn.find(function(d) { return d.isSunburstRoot; }, data);
 
         var angleScale = d3.scale.linear().range([0, TWO_PI]);
 
