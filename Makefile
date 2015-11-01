@@ -59,6 +59,7 @@ SOURCE_FILES = \
 	sszvis/component/line.js \
 	sszvis/component/pie.js \
 	sszvis/component/pyramid.js \
+	sszvis/component/sankey.js \
 	sszvis/component/stackedArea.js \
 	sszvis/component/stackedAreaMultiples.js \
 	sszvis/component/stackedBar.js \
@@ -70,6 +71,7 @@ SOURCE_FILES = \
 	sszvis/layout/heatTableDimensions.js \
 	sszvis/layout/horizontalBarChartDimensions.js \
 	sszvis/layout/populationPyramidLayout.js \
+	sszvis/layout/sankey.js \
 	sszvis/layout/smallMultiples.js \
 	sszvis/layout/stackedAreaMultiplesLayout.js \
 	sszvis/layout/sunburst.js \
