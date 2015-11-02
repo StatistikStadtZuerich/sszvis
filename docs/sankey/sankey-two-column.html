@@ -53,7 +53,7 @@
         .source(fromAcc)
         .target(toAcc)
         .value(valAcc)
-        .yPadding(800)
+        .valPadding(800)
         .column(leftCol)
         .column(rightCol)
         .apply(data);
@@ -113,21 +113,21 @@
 
     // Components
     var barGen = sszvis.component.bar()
-      .x(function(node) { return nodeXPos(node.x); })
-      .y(function(node) { return sizeScale(node.y); })
+      .x(function(node) { return nodeXPos(node.columnIndex); })
+      .y(function(node) { return sizeScale(node.valueOffset); })
       .width(function(node) { return nodeWidth; })
       .height(function(node) { return Math.max(sizeScale(node.value), 1);  });
 
     var linkCurvature = 0.5;
 
     var makeLink = function(link) {
-      var x0 = nodeXPos(link.src.x) + nodeWidth + linkPadding,
-          x1 = nodeXPos(link.tgt.x) - linkPadding,
+      var x0 = nodeXPos(link.src.columnIndex) + nodeWidth + linkPadding,
+          x1 = nodeXPos(link.tgt.columnIndex) - linkPadding,
           xi = d3.interpolateNumber(x0, x1),
           x2 = xi(linkCurvature),
           x3 = xi(1 - linkCurvature),
-          y0 = sizeScale(link.src.y) + sizeScale(link.srcy) + (sizeScale(link.value) / 2),
-          y1 = sizeScale(link.tgt.y) + sizeScale(link.tgty) + (sizeScale(link.value) / 2);
+          y0 = sizeScale(link.src.valueOffset) + sizeScale(link.srcOffset) + (sizeScale(link.value) / 2),
+          y1 = sizeScale(link.tgt.valueOffset) + sizeScale(link.tgtOffset) + (sizeScale(link.value) / 2);
 
       return 'M' + x0 + ',' + y0 +
              'C' + x2 + ',' + y0 +

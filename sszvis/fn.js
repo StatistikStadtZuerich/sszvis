@@ -149,6 +149,23 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.filledArray
+     *
+     * returns a new array with length `len` filled with `val`
+     * 
+     * @param  {Number} len     The length of the desired array
+     * @param  {Any} val        The value with which to fill the array
+     * @return {Array}          An array of length len filled with val
+     */
+    filledArray: function(len, val) {
+      var arr = new Array(len);
+      for (var i = 0; i < len; ++i) {
+        arr[i] = val;
+      }
+      return arr;
+    },
+
+    /**
      * fn.first
      *
      * Returns the first value in the passed array, or undefined if the array is empty

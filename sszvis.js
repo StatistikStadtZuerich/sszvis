@@ -637,6 +637,23 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.filledArray
+     *
+     * returns a new array with length `len` filled with `val`
+     * 
+     * @param  {Number} len     The length of the desired array
+     * @param  {Any} val        The value with which to fill the array
+     * @return {Array}          An array of length len filled with val
+     */
+    filledArray: function(len, val) {
+      var arr = new Array(len);
+      for (var i = 0; i < len; ++i) {
+        arr[i] = val;
+      }
+      return arr;
+    },
+
+    /**
      * fn.first
      *
      * Returns the first value in the passed array, or undefined if the array is empty
@@ -5702,7 +5719,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
     var mGetTarget = sszvis.fn.identity;
     var mGetValue = sszvis.fn.identity;
     var mColumnIds = [];
-    var mYPadding = 10;
+    var mValuePadding = 0;
 
     // Helper functions
     var valueAcc = sszvis.fn.prop('value');
@@ -5712,42 +5729,34 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
     var valueSortFunc = byDescendingValue;
 
     var main = function(inputData) {
-      var columnData = mColumnIds.reduce(function(memo, columnIdsList, columnIdx) {
-        var columnNodes = columnIdsList.map(function(id) {
-          if (memo.index[id]) {
+      var columnIndex = mColumnIds.reduce(function(index, columnIdsList, columnIndex) {
+        columnIdsList.forEach(function(id) {
+          if (index.has(id)) {
             sszvis.logger.warn('Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:', id, 'The existing value will be overwritten');
           }
 
           var item = {
             id: id,
-            colNum: columnIdx,
+            columnIndex: columnIndex,
             value: 0,
+            valueOffset: 0,
             linksFrom: [],
-            linksTo: [],
-            x: columnIdx,
-            y: 0
+            linksTo: []
           };
           
-          memo.index[id] = item;
-
-          return item;
+          index.set(id, item);
         });
 
-        memo.nodes = memo.nodes.concat(columnNodes);
+        return index;
+      }, d3.map());
 
-        return memo;
-      }, {
-        nodes: [],
-        index: {}
-      });
-
-      var linkData = inputData.map(function(datum) {
+      var listofLinks = inputData.map(function(datum) {
         var srcId = mGetSource(datum);
         var tgtId = mGetTarget(datum);
         var value = + mGetValue(datum) || 0; // Cast this to number
 
-        var srcNode = columnData.index[srcId];
-        var tgtNode = columnData.index[tgtId];
+        var srcNode = columnIndex.get(srcId);
+        var tgtNode = columnIndex.get(tgtId);
 
         if (!srcNode) {
           sszvis.logger.warn('Found invalid source column id:', srcId);
@@ -5762,9 +5771,9 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
         var item = {
           value: value,
           src: srcNode,
-          srcy: 0,
+          srcOffset: 0,
           tgt: tgtNode,
-          tgty: 0
+          tgtOffset: 0
         };
 
         srcNode.linksFrom.push(item);
@@ -5773,43 +5782,49 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
         return item;
       });
 
-      columnData.nodes.forEach(function(node) {
+      // Extract the column nodes from the index
+      var listOfColumns = columnIndex.values();
+
+      listOfColumns.forEach(function(node) {
+        // Organize the node's links - sorted according to the sort function
         node.linksFrom.sort(valueSortFunc);
         node.linksTo.sort(valueSortFunc);
 
-        node.linksFrom.reduce(function(sumValue, link) {
-          link.srcy = sumValue;
+        // and stacked vertically within the node according to that order
+        var fromTotal = node.linksFrom.reduce(function(sumValue, link) {
+          link.srcOffset = sumValue;
           return sumValue + valueAcc(link);
         }, 0);
 
-        node.linksTo.reduce(function(sumValue, link) {
-          link.tgty = sumValue;
+        var toTotal = node.linksTo.reduce(function(sumValue, link) {
+          link.tgtOffset = sumValue;
           return sumValue + valueAcc(link);
         }, 0);
 
-        node.value = Math.max(0, d3.sum(node.linksFrom, valueAcc), d3.sum(node.linksTo, valueAcc));
+        // For correct visual display, the node's value is the max of the from and to links
+        node.value = Math.max(0, fromTotal, toTotal);
       });
 
-      columnData.nodes.sort(valueSortFunc);
+      // Sort the column nodes themselves
+      // (note, this sorts all nodes for all columns in the same array, but that should be fine)
+      listOfColumns.sort(valueSortFunc);
 
-      var columnTotals = columnData.nodes.reduce(function(columnTotals, node) {
-        var accumulatedY = columnTotals[node.x] || 0;
-        node.y = accumulatedY;
-        columnTotals[node.x] = accumulatedY + node.value + mYPadding;
-
+      var columnTotals = listOfColumns.reduce(function(columnTotals, node) {
+        node.valueOffset = columnTotals[node.columnIndex];
+        columnTotals[node.columnIndex] += node.value + mValuePadding;
         return columnTotals;
-      }, []);
+      }, sszvis.fn.filledArray(mColumnIds.length, 0));
 
-      var maxTotal = d3.max(columnTotals);
-      var columnPaddings = columnTotals.map(function(tot) { return (maxTotal - tot) / 2; });
+      // Add y-padding to vertically center all columns.
+      // Need to account for the fact that mValuePadding is extra at the end of each columnTotal
+      var maxTotal = d3.max(columnTotals) - mValuePadding;
+      var columnPaddings = columnTotals.map(function(tot) { return (maxTotal - (tot - mValuePadding)) / 2; });
 
-      columnData.nodes.forEach(function(node) {
-        node.y += columnPaddings[node.x];
-      });
+      listOfColumns.forEach(function(node) { node.valueOffset += columnPaddings[node.columnIndex]; });
 
       return {
-        bars: columnData.nodes,
-        links: linkData
+        bars: listOfColumns,
+        links: listofLinks
       };
     };
 
@@ -5821,7 +5836,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
 
     main.value = function(func) { mGetValue = func; return main; };
 
-    main.yPadding = function(pad) { mYPadding = pad; return main; };
+    main.valPadding = function(pad) { mValuePadding = pad; return main; };
 
     main.descendingSort = function() { valueSortFunc = byDescendingValue; return main; };
 
