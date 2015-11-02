@@ -53,6 +53,7 @@
         .source(fromAcc)
         .target(toAcc)
         .value(valAcc)
+        .yPadding(800)
         .column(leftCol)
         .column(rightCol)
         .apply(data);
@@ -86,13 +87,22 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 512, top: 20, right: 20, bottom: 20, left: 20 });
+    var bounds = sszvis.bounds({ height: 2000, top: 20, right: 20, bottom: 20, left: 20 });
 
 
     // Scales
     var sizeScale = d3.scale.linear()
       .domain(state.valRange)
-      .range([0, 200]);
+      .range([0, 440]);
+
+    var numColumns = 2;
+    var nodeWidth = 20;
+    var linkPadding = 1;
+    var columnXMultiplier = (bounds.innerWidth - nodeWidth) / (numColumns - 1);
+
+    var nodeXPos = function(xNumber) {
+      return xNumber * columnXMultiplier;
+    };
 
     // Layers
 
@@ -101,25 +111,23 @@
         description: DESCRIPTION
       });
 
-    console.log(state.data.bars, state.data.links);
-
     // Components
     var barGen = sszvis.component.bar()
-      .x(function(d) { return d.x; })
-      .y(function(d) { return d.y; })
-      .width(function(d) { return d.width; })
-      .height(function(d) { return d.size; });
+      .x(function(node) { return nodeXPos(node.x); })
+      .y(function(node) { return sizeScale(node.y); })
+      .width(function(node) { return nodeWidth; })
+      .height(function(node) { return Math.max(sizeScale(node.value), 1);  });
 
     var linkCurvature = 0.5;
 
     var makeLink = function(link) {
-      var x0 = link.src.x + link.src.width,
-          x1 = link.tgt.x,
+      var x0 = nodeXPos(link.src.x) + nodeWidth + linkPadding,
+          x1 = nodeXPos(link.tgt.x) - linkPadding,
           xi = d3.interpolateNumber(x0, x1),
           x2 = xi(linkCurvature),
           x3 = xi(1 - linkCurvature),
-          y0 = link.src.y + link.srcy + link.width / 2,
-          y1 = link.tgt.y + link.tgty + link.width / 2;
+          y0 = sizeScale(link.src.y) + sizeScale(link.srcy) + (sizeScale(link.value) / 2),
+          y1 = sizeScale(link.tgt.y) + sizeScale(link.tgty) + (sizeScale(link.value) / 2);
 
       return 'M' + x0 + ',' + y0 +
              'C' + x2 + ',' + y0 +
@@ -140,7 +148,12 @@
     linksElems.enter()
       .append('path')
       .attr('class', 'sszvis-link')
-      .attr('d', makeLink);
+      .attr('d', makeLink)
+      .attr('stroke', 'rgba(40, 90, 200, 0.5)')
+      .attr('stroke-width', function(d) {
+        return Math.max(sizeScale(d.value), 1);
+      })
+      .attr('fill', 'none');
 
 
   }
