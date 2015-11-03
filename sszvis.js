@@ -2197,7 +2197,7 @@ sszvis_namespace('sszvis.logger', function(module) {
   function logger(type) {
     return function() {
       if (window.console && window.console[type]) {
-        window.console[type](slice(arguments));
+        slice(arguments).forEach(function(msg) { window.console[type](msg); });
       }
     };
   }
