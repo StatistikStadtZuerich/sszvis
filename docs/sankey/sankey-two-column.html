@@ -49,11 +49,13 @@
       var leftCol = sszvis.fn.set(data, fromAcc);
       var rightCol = sszvis.fn.set(data, toAcc);
 
+      state.bounds = sszvis.bounds({ height: 700, top: 20, right: 20, bottom: 20, left: 20 });
+
       state.data = sszvis.layout.sankey.prepareData()
         .source(fromAcc)
         .target(toAcc)
         .value(valAcc)
-        .valPadding(800)
+        .pixelExtent(state.bounds.innerHeight)
         .column(leftCol)
         .column(rightCol)
         .apply(data);
@@ -87,33 +89,34 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 2000, top: 20, right: 20, bottom: 20, left: 20 });
+    // Slightly unusual - bounds are calculated in prepareData. This is because
+    // the total available pixel height is a necessary parameter for sszvis.layout.sankey.prepareData
 
 
     // Scales
     var sizeScale = d3.scale.linear()
-      .domain(state.valRange)
-      .range([0, 440]);
+      .domain(state.data.domain)
+      .range(state.data.range);
 
     var numColumns = 2;
     var nodeWidth = 20;
     var linkPadding = 1;
-    var columnXMultiplier = (bounds.innerWidth - nodeWidth) / (numColumns - 1);
+    var columnXMultiplier = (state.bounds.innerWidth - nodeWidth) / (numColumns - 1);
 
-    var nodeXPos = function(xNumber) {
-      return xNumber * columnXMultiplier;
-    };
+    var xScale = d3.scale.linear()
+      .domain([0, 1])
+      .range([0, columnXMultiplier]);
 
     // Layers
 
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', state.bounds, {
         title: TITLE,
         description: DESCRIPTION
       });
 
     // Components
     var barGen = sszvis.component.bar()
-      .x(function(node) { return nodeXPos(node.columnIndex); })
+      .x(function(node) { return xScale(node.columnIndex); })
       .y(function(node) { return sizeScale(node.valueOffset); })
       .width(function(node) { return nodeWidth; })
       .height(function(node) { return Math.max(sizeScale(node.value), 1);  });
@@ -121,8 +124,8 @@
     var linkCurvature = 0.5;
 
     var makeLink = function(link) {
-      var x0 = nodeXPos(link.src.columnIndex) + nodeWidth + linkPadding,
-          x1 = nodeXPos(link.tgt.columnIndex) - linkPadding,
+      var x0 = xScale(link.src.columnIndex) + nodeWidth + linkPadding,
+          x1 = xScale(link.tgt.columnIndex) - linkPadding,
           xi = d3.interpolateNumber(x0, x1),
           x2 = xi(linkCurvature),
           x3 = xi(1 - linkCurvature),
