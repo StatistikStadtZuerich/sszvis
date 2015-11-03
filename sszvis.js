@@ -5847,7 +5847,8 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
 
           var item = {
             id: id,
-            columnIndex: columnIndex,
+            columnIndex: columnIndex, // This is the index of the column containing this node
+            nodeIndex: 0, // This will be overwritten at a later stage with the index of this node within its column
             value: 0,
             valueOffset: 0,
             linksFrom: [],
@@ -5931,20 +5932,32 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
       var dimensionInfo = computeSankeyDimensions(columnLengths, columnValueTotals, mPixExtent);
 
       // Sort the column nodes themselves
-      // (note, this sorts all nodes for all columns in the same array, but that should be fine)
+      // (note, this sorts all nodes for all columns in the same array)
       listOfNodes.sort(valueSortFunc);
 
-      var columnPaddedTotals = listOfNodes.reduce(function(columnPaddedTotals, node) {
-        node.valueOffset = columnPaddedTotals[node.columnIndex];
-        columnPaddedTotals[node.columnIndex] += node.value + dimensionInfo.valuePadding;
-        return columnPaddedTotals;
-      }, sszvis.fn.filledArray(mColumnIds.length, 0));
+      // Assign the 
+      // Here, columnData[0] is an array adding up value totals
+      // and columnData[1] is an array adding up the number of nodes in each column
+      // Both are used to assign cumulative properties to the nodes of each column
+      var columnData = listOfNodes.reduce(function(columnData, node) {
+        // Assigns valueOffset and nodeIndex
+        node.valueOffset = columnData[0][node.columnIndex];
+        node.nodeIndex = columnData[1][node.columnIndex];
+
+        columnData[0][node.columnIndex] += node.value + dimensionInfo.valuePadding;
+        columnData[1][node.columnIndex] += 1;
+
+        return columnData;
+      }, [
+        sszvis.fn.filledArray(mColumnIds.length, 0),
+        sszvis.fn.filledArray(mColumnIds.length, 0)
+      ]);
 
       // Add y-padding to vertically center all columns.
       // Need to account for the fact that valuePadding is extra at the end of each columnTotal
-      var maxTotal = d3.max(columnPaddedTotals) - dimensionInfo.valuePadding;
+      var maxTotal = d3.max(columnData[0]) - dimensionInfo.valuePadding;
 
-      var columnPaddings = columnPaddedTotals.map(function(tot) { return (maxTotal - (tot - dimensionInfo.valuePadding)) / 2; });
+      var columnPaddings = columnData[0].map(function(total) { return (maxTotal - (total - dimensionInfo.valuePadding)) / 2; });
 
       listOfNodes.forEach(function(node) { node.valueOffset += columnPaddings[node.columnIndex]; });
 
