@@ -3,9 +3,10 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
 
   function computeSankeyDimensions(columnLengths, columnTotals, pixelExtent) {
     // Calculate appropriate scale and padding values (in pixels)
-    var padSpaceRatio = 0.25;
-    var padMin = 14;
+    var padSpaceRatio = 0.15;
+    var padMin = 12;
     var padMax = 50;
+    var minDisplayPixels = 1; // Minimum number of pixels used for display area
 
     // Compute the padding value (in pixels) for each column, then take the minimum value
     var computedPixPadding = d3.min(
@@ -22,7 +23,8 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
     // after padding pixels have been subtracted. Then take the minimum value of that.
     var pixPerUnit = d3.min(
       columnLengths.map(function(colLength, colIndex) {
-        var nonPaddingPixels = pixelExtent - ((colLength - 1) * computedPixPadding);
+        // The non-padding pixels must have at least minDisplayPixels
+        var nonPaddingPixels = Math.max(minDisplayPixels, pixelExtent - ((colLength - 1) * computedPixPadding));
         return nonPaddingPixels / columnTotals[colIndex];
       })
     );
@@ -165,6 +167,11 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
       // Add y-padding to vertically center all columns.
       // Need to account for the fact that valuePadding is extra at the end of each columnTotal
       var maxTotal = d3.max(columnPaddedTotals) - dimensionInfo.valuePadding;
+
+      if (maxTotal > mPixExtent) {
+        sszvis.logger.warn('The total size of at least one diagram column, including minimum padding, is greater than the allotted pixel extent. Please either reduce the number of elements in this column, or extend the available space');
+      }
+
       var columnPaddings = columnPaddedTotals.map(function(tot) { return (maxTotal - (tot - dimensionInfo.valuePadding)) / 2; });
 
       listOfNodes.forEach(function(node) { node.valueOffset += columnPaddings[node.columnIndex]; });
