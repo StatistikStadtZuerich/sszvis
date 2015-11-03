@@ -91,24 +91,15 @@
   function render(state) {
     // Slightly unusual - bounds are calculated in prepareData. This is because
     // the total available pixel height is a necessary parameter for sszvis.layout.sankey.prepareData
+    // TODO: change this so that the layout doesn't care about the pixel size.
+    // This required calculating the padding and the individual column offsets separately,
+    // either in a separate layout function or in the sszvis.component.sankey
 
 
     // Scales
-    var sizeScale = d3.scale.linear()
-      .domain(state.data.domain)
-      .range(state.data.range);
-
     var numColumns = 2;
     var nodeWidth = 20;
-    var linkPadding = 1;
     var columnXMultiplier = (state.bounds.innerWidth - nodeWidth) / (numColumns - 1);
-
-    var xScale = d3.scale.linear()
-      .domain([0, 1])
-      .range([0, columnXMultiplier]);
-
-    var barBlue = sszvis.color.qual12()(0);
-    var linkGrey = sszvis.color.gry()(0);
 
     // Layers
 
@@ -118,50 +109,20 @@
       });
 
     // Components
-    var barGen = sszvis.component.bar()
-      .x(function(node) { return xScale(node.columnIndex); })
-      .y(function(node) { return sizeScale(node.valueOffset); })
-      .width(function(node) { return nodeWidth; })
-      .height(function(node) { return Math.max(sizeScale(node.value), 1);  })
-      .fill(barBlue);
+    var sankeyGen = sszvis.component.sankey()
+      .numColumns(numColumns)
+      .nodeWidth(nodeWidth)
+      .linkPadding(1)
+      .columnWidth(columnXMultiplier)
+      .orientation('vertical');
 
-    var linkCurvature = 0.5;
-
-    var makeLink = function(link) {
-      var x0 = xScale(link.src.columnIndex) + nodeWidth + linkPadding,
-          x1 = xScale(link.tgt.columnIndex) - linkPadding,
-          xi = d3.interpolateNumber(x0, x1),
-          x2 = xi(linkCurvature),
-          x3 = xi(1 - linkCurvature),
-          y0 = sizeScale(link.src.valueOffset) + sizeScale(link.srcOffset) + (sizeScale(link.value) / 2),
-          y1 = sizeScale(link.tgt.valueOffset) + sizeScale(link.tgtOffset) + (sizeScale(link.value) / 2);
-
-      return 'M' + x0 + ',' + y0 +
-             'C' + x2 + ',' + y0 +
-             ' ' + x3 + ',' + y1 +
-             ' ' + x1 + ',' + y1;
-    };
 
     // Rendering
-    var barsGroup = chartLayer.selectGroup('bars')
-      .datum(state.data.bars)
-      .call(barGen);
 
-    var linksGroup = chartLayer.selectGroup('links');
 
-    var linksElems = linksGroup.selectAll('.sszvis-link')
-      .data(state.data.links);
-
-    linksElems.enter()
-      .append('path')
-      .attr('class', 'sszvis-link')
-      .attr('d', makeLink)
-      .attr('stroke', linkGrey)
-      .attr('stroke-width', function(d) {
-        return Math.max(sizeScale(d.value), 1);
-      })
-      .attr('fill', 'none');
-
+    chartLayer.selectGroup('sankey')
+      .datum(state.data)
+      .call(sankeyGen);
 
   }
 
