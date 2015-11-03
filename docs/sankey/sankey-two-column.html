@@ -107,6 +107,9 @@
       .domain([0, 1])
       .range([0, columnXMultiplier]);
 
+    var barBlue = sszvis.color.qual12()(0);
+    var linkGrey = sszvis.color.gry()(0);
+
     // Layers
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', state.bounds, {
@@ -119,7 +122,8 @@
       .x(function(node) { return xScale(node.columnIndex); })
       .y(function(node) { return sizeScale(node.valueOffset); })
       .width(function(node) { return nodeWidth; })
-      .height(function(node) { return Math.max(sizeScale(node.value), 1);  });
+      .height(function(node) { return Math.max(sizeScale(node.value), 1);  })
+      .fill(barBlue);
 
     var linkCurvature = 0.5;
 
@@ -152,7 +156,7 @@
       .append('path')
       .attr('class', 'sszvis-link')
       .attr('d', makeLink)
-      .attr('stroke', 'rgba(40, 90, 200, 0.5)')
+      .attr('stroke', linkGrey)
       .attr('stroke-width', function(d) {
         return Math.max(sizeScale(d.value), 1);
       })
