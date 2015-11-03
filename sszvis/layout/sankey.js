@@ -168,10 +168,6 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
       // Need to account for the fact that valuePadding is extra at the end of each columnTotal
       var maxTotal = d3.max(columnPaddedTotals) - dimensionInfo.valuePadding;
 
-      if (maxTotal > mPixExtent) {
-        sszvis.logger.warn('The total size of at least one diagram column, including minimum padding, is greater than the allotted pixel extent. Please either reduce the number of elements in this column, or extend the available space');
-      }
-
       var columnPaddings = columnPaddedTotals.map(function(tot) { return (maxTotal - (tot - dimensionInfo.valuePadding)) / 2; });
 
       listOfNodes.forEach(function(node) { node.valueOffset += columnPaddings[node.columnIndex]; });
