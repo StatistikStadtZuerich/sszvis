@@ -98,8 +98,8 @@
 
     // Scales
     var numColumns = 2;
-    var nodeWidth = 20;
-    var columnXMultiplier = (state.bounds.innerWidth - nodeWidth) / (numColumns - 1);
+    var nodeExtent = 20;
+    var columnXMultiplier = (state.bounds.innerWidth - nodeExtent) / (numColumns - 1);
 
     // Layers
 
@@ -111,10 +111,14 @@
     // Components
     var sankeyGen = sszvis.component.sankey()
       .numColumns(numColumns)
-      .nodeWidth(nodeWidth)
+      .nodeExtent(nodeExtent)
       .linkPadding(1)
-      .columnWidth(columnXMultiplier)
-      .orientation('vertical');
+      .columnExtent(columnXMultiplier)
+      .orientation('vertical')
+      .nodeColor(sszvis.color.qual12()(0))
+      .linkColor(sszvis.color.gry()(0))
+      .nameLabel(function(id) { return id; })
+      .valueLabel(function(value) { return value; });
 
 
     // Rendering
