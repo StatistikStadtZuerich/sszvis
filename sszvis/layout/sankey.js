@@ -85,7 +85,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
         return index;
       }, d3.map());
 
-      var listofLinks = inputData.map(function(datum) {
+      var listOfLinks = inputData.map(function(datum) {
         var srcId = mGetSource(datum);
         var tgtId = mGetTarget(datum);
         var value = + mGetValue(datum) || 0; // Cast this to number
@@ -155,9 +155,14 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
       // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
       var dimensionInfo = computeSankeyDimensions(columnLengths, columnValueTotals, mPixExtent);
 
-      // Sort the column nodes themselves
+      // Sort the column nodes
       // (note, this sorts all nodes for all columns in the same array)
       listOfNodes.sort(valueSortFunc);
+
+      // Sort the links in descending order of value. This means smaller links will render
+      // on top of larger links.
+      // (note, this sorts all links for all columns in the same array)
+      listOfLinks.sort(byDescendingValue);
 
       // Assign the 
       // Here, columnData[0] is an array adding up value totals
@@ -187,7 +192,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
 
       return {
         bars: listOfNodes,
-        links: listofLinks,
+        links: listOfLinks,
         colLengths: columnLengths,
         colTotals: columnValueTotals,
         domain: dimensionInfo.valueDomain,
