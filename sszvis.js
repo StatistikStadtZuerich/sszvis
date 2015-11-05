@@ -4603,11 +4603,13 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('numColumns')
-      .prop('columnExtent')
-      .prop('nodeExtent')
-      .prop('linkPadding').linkPadding(1)
+      .prop('sizeScale')
+      .prop('columnPosition')
+      .prop('nodeThickness')
+      .prop('nodePadding')
+      .prop('columnPadding', d3.functor)
       .prop('orientation').orientation('vertical') // Must be 'vertical' or 'horizontal'
+      .prop('linkPadding').linkPadding(1)
       .prop('linkCurvature').linkCurvature(0.5)
       .prop('nodeColor', d3.functor)
       .prop('linkColor', d3.functor)
@@ -4617,32 +4619,27 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        // Set up scales based on required input
-        var valueScale = d3.scale.linear()
-          .domain(data.domain)
-          .range(data.range);
-
-        var columnPosition = d3.scale.linear()
-          .domain([0, 1])
-          .range([0, props.columnExtent]);
-
         // Set up configurable horizontal/vertical display functions
         var isHorizontal = props.orientation === 'horizontal';
 
-        var xPosition, yPosition, xExtent, yExtent, linkPathString;
+        var xPosition, yPosition, xExtent, yExtent, linkPathString, linkBounds;
+
+        function getNodePosition(node) { return props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex); }
 
         if (isHorizontal) {
-          xPosition = function(node) { return valueScale(node.valueOffset); };
-          yPosition = function(node) { return columnPosition(node.columnIndex); };
-          xExtent = function(node) { return Math.max(valueScale(node.value), 1); };
-          yExtent = function(node) { return Math.max(props.nodeExtent, 1); };
+          xPosition = function(node) { return getNodePosition(node); };
+          yPosition = function(node) { return props.columnPosition(node.columnIndex); };
+          xExtent = function(node) { return Math.max(props.sizeScale(node.value), 1); };
+          yExtent = function(node) { return Math.max(props.nodeThickness, 1); };
           linkPathString = function(y0, y1, y2, y3, x0, x1) { return 'M' + x0 + ',' + y0 + 'C' + x0 + ',' + y1 + ' ' + x1 + ',' + y2 + ' ' + x1 + ',' + y3; };
+          linkBounds = function(y0, y1, x0, x1) { return [x0, x1, y0, y1]; };
         } else {
-          xPosition = function(node) { return columnPosition(node.columnIndex); };
-          yPosition = function(node) { return valueScale(node.valueOffset); };
-          xExtent = function(node) { return Math.max(props.nodeExtent, 1); };
-          yExtent = function(node) { return Math.max(valueScale(node.value), 1); };
+          xPosition = function(node) { return props.columnPosition(node.columnIndex); };
+          yPosition = function(node) { return getNodePosition(node); };
+          xExtent = function(node) { return Math.max(props.nodeThickness, 1); };
+          yExtent = function(node) { return Math.max(props.sizeScale(node.value), 1); };
           linkPathString = function(x0, x1, x2, x3, y0, y1) { return 'M' + x0 + ',' + y0 + 'C' + x1 + ',' + y0 + ' ' + x2 + ',' + y1 + ' ' + x3 + ',' + y1; };
+          linkBounds = function(x0, x1, y0, y1) { return [x0, x1, y0, y1]; };
         }
 
         // Draw the bars
@@ -4653,24 +4650,44 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .height(yExtent)
           .fill(props.nodeColor);
 
-        var renderedBars = selection.selectGroup('bars')
-          .datum(data.bars)
-          .call(barGen);
+        var barGroup = selection.selectGroup('bars')
+          .datum(data.bars);
+
+        barGroup.call(barGen);
+
+        var barTooltipAnchor = sszvis.annotation.tooltipAnchor()
+          .position(function(node) {
+            return [xPosition(node) + xExtent(node) / 2, yPosition(node) + yExtent(node) / 2];
+          });
+
+        barGroup.call(barTooltipAnchor);
 
         // Draw the links
-        var linkPath = function(link) {
-          var curveStart = columnPosition(link.src.columnIndex) + props.nodeExtent + props.linkPadding,
-              curveEnd = columnPosition(link.tgt.columnIndex) - props.linkPadding,
-              curveInterp = d3.interpolateNumber(curveStart, curveEnd),
-              curveControlPtA = curveInterp(props.linkCurvature),
-              curveControlPtB = curveInterp(1 - props.linkCurvature),
-              startLevel = valueScale(link.src.valueOffset + link.srcOffset) + (valueScale(link.value) / 2),
-              endLevel = valueScale(link.tgt.valueOffset + link.tgtOffset) + (valueScale(link.value) / 2);
+        var linkPoints = function(link) {
+          var curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + props.linkPadding,
+              curveEnd = props.columnPosition(link.tgt.columnIndex) - props.linkPadding,
+              startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + (props.sizeScale(link.value) / 2),
+              endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + (props.sizeScale(link.value) / 2);
 
-          return linkPathString(curveStart, curveControlPtA, curveControlPtB, curveEnd, startLevel, endLevel);
+          return [curveStart, curveEnd, startLevel, endLevel];
         };
 
-        var linkThickness = function(link) { return Math.max(valueScale(link.value), 1); };
+        var linkPath = function(link) {
+          var points = linkPoints(link),
+              curveInterp = d3.interpolateNumber(points[0], points[1]),
+              curveControlPtA = curveInterp(props.linkCurvature),
+              curveControlPtB = curveInterp(1 - props.linkCurvature);
+
+          return linkPathString(points[0], curveControlPtA, curveControlPtB, points[1], points[2], points[3]);
+        };
+
+        var linkBoundingBox = function(link) {
+          var points = linkPoints(link);
+
+          return linkBounds(points[0], points[1], points[2], points[3]);
+        }
+
+        var linkThickness = function(link) { return Math.max(props.sizeScale(link.value), 1); };
 
         var linksGroup = selection.selectGroup('links')
           .datum(data.links);
@@ -4690,7 +4707,13 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .attr('stroke-width', linkThickness)
           .attr('stroke', props.linkColor);
 
+        var linkTooltipAnchor = sszvis.annotation.tooltipAnchor()
+          .position(function(link) {
+            var bbox = linkBoundingBox(link);
+            return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
           });
+
+        linksGroup.call(linkTooltipAnchor);
       });
   };
 
@@ -5798,59 +5821,11 @@ sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
 sszvis_namespace('sszvis.layout.sankey', function(module) {
   'use strict';
 
-  function computeSankeyDimensions(columnLengths, columnTotals, pixelExtent) {
-    // Calculate appropriate scale and padding values (in pixels)
-    var padSpaceRatio = 0.15;
-    var padMin = 12;
-    var padMax = 50;
-    var minDisplayPixels = 1; // Minimum number of pixels used for display area
-
-    // Compute the padding value (in pixels) for each column, then take the minimum value
-    var computedPixPadding = d3.min(
-      columnLengths.map(function(colLength) {
-        // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
-        var colPadding = (pixelExtent * padSpaceRatio) / (colLength - 1);
-        // Limit by minimum and maximum pixel padding values
-        return Math.max(padMin, Math.min(padMax, colPadding));
-      })
-    );
-
-    // Given the computed padding value, compute each column's resulting "pixels per unit"
-    // This is the number of remaining pixels available to display the column's total units,
-    // after padding pixels have been subtracted. Then take the minimum value of that.
-    var pixPerUnit = d3.min(
-      columnLengths.map(function(colLength, colIndex) {
-        // The non-padding pixels must have at least minDisplayPixels
-        var nonPaddingPixels = Math.max(minDisplayPixels, pixelExtent - ((colLength - 1) * computedPixPadding));
-        return nonPaddingPixels / columnTotals[colIndex];
-      })
-    );
-
-    var maxTotal = d3.max(columnTotals);
-
-    // The padding between bars, in bar value units
-    var valuePadding = computedPixPadding / pixPerUnit;
-    // The padding between bars, in pixels
-    var pixelPadding = computedPixPadding;
-    // The domain of the visual scale
-    var valueDomain = [0, maxTotal];
-    // The range of the visual scale
-    var pixelRange = [0, maxTotal * pixPerUnit];
-
-    return {
-      valuePadding: valuePadding,
-      pixelPadding: pixelPadding,
-      valueDomain: valueDomain,
-      pixelRange: pixelRange
-    };
-  }
-
   module.exports.prepareData = function() {
     var mGetSource = sszvis.fn.identity;
     var mGetTarget = sszvis.fn.identity;
     var mGetValue = sszvis.fn.identity;
     var mColumnIds = [];
-    var mPixExtent = 0;
 
     // Helper functions
     var valueAcc = sszvis.fn.prop('value');
@@ -5918,7 +5893,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
       var listOfNodes = columnIndex.values();
 
       // Calculate an array of total values for each column
-      var columnValueTotals = listOfNodes.reduce(function(totals, node) {
+      var columnTotals = listOfNodes.reduce(function(totals, node) {
         // Organize the node's links - sorted according to the sort function
         node.linksFrom.sort(valueSortFunc);
         node.linksTo.sort(valueSortFunc);
@@ -5942,15 +5917,8 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
         return totals;
       }, sszvis.fn.filledArray(mColumnIds.length, 0));
 
-      if (mPixExtent === 0) {
-        sszvis.logger.warn('No extent specified for the sankey layout. The computed offsets won\'t make any sense');
-      }
-
+      // An array with the number of nodes in each column
       var columnLengths = mColumnIds.map(function(colIds) { return colIds.length; });
-
-      // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
-      // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
-      var dimensionInfo = computeSankeyDimensions(columnLengths, columnValueTotals, mPixExtent);
 
       // Sort the column nodes
       // (note, this sorts all nodes for all columns in the same array)
@@ -5961,16 +5929,16 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
       // (note, this sorts all links for all columns in the same array)
       listOfLinks.sort(byDescendingValue);
 
-      // Assign the 
+      // Assign the valueOffset and nodeIndex properties
       // Here, columnData[0] is an array adding up value totals
       // and columnData[1] is an array adding up the number of nodes in each column
       // Both are used to assign cumulative properties to the nodes of each column
-      var columnData = listOfNodes.reduce(function(columnData, node) {
+      listOfNodes.reduce(function(columnData, node) {
         // Assigns valueOffset and nodeIndex
         node.valueOffset = columnData[0][node.columnIndex];
         node.nodeIndex = columnData[1][node.columnIndex];
 
-        columnData[0][node.columnIndex] += node.value + dimensionInfo.valuePadding;
+        columnData[0][node.columnIndex] += node.value;
         columnData[1][node.columnIndex] += 1;
 
         return columnData;
@@ -5979,21 +5947,11 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
         sszvis.fn.filledArray(mColumnIds.length, 0)
       ]);
 
-      // Add y-padding to vertically center all columns.
-      // Need to account for the fact that valuePadding is extra at the end of each columnTotal
-      var maxTotal = d3.max(columnData[0]) - dimensionInfo.valuePadding;
-
-      var columnPaddings = columnData[0].map(function(total) { return (maxTotal - (total - dimensionInfo.valuePadding)) / 2; });
-
-      listOfNodes.forEach(function(node) { node.valueOffset += columnPaddings[node.columnIndex]; });
-
       return {
         bars: listOfNodes,
         links: listOfLinks,
-        colLengths: columnLengths,
-        colTotals: columnValueTotals,
-        domain: dimensionInfo.valueDomain,
-        range: dimensionInfo.pixelRange
+        columnTotals: columnTotals,
+        columnLengths: columnLengths
       };
     };
 
@@ -6005,8 +5963,6 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
 
     main.value = function(func) { mGetValue = func; return main; };
 
-    main.pixelExtent = function(pixels) { mPixExtent = pixels; return main; };
-
     main.descendingSort = function() { valueSortFunc = byDescendingValue; return main; };
 
     main.ascendingSort = function() { valueSortFunc = byAscendingValue; return main; };
@@ -6014,6 +5970,71 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
     main.column = function(columnIdsList) { mColumnIds.push(columnIdsList); return main; };
 
     return main;
+  };
+
+  module.exports.computeLayout = function(columnLengths, columnTotals, columnPixels, spreadPixels) {
+    // Calculate appropriate scale and padding values (in pixels)
+    var padSpaceRatio = 0.15;
+    var padMin = 12;
+    var padMax = 50;
+    var minDisplayPixels = 1; // Minimum number of pixels used for display area
+
+    // Compute the padding value (in pixels) for each column, then take the minimum value
+    var computedPixPadding = d3.min(
+      columnLengths.map(function(colLength) {
+        // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
+        var colPadding = (columnPixels * padSpaceRatio) / (colLength - 1);
+        // Limit by minimum and maximum pixel padding values
+        return Math.max(padMin, Math.min(padMax, colPadding));
+      })
+    );
+
+    // Given the computed padding value, compute each column's resulting "pixels per unit"
+    // This is the number of remaining pixels available to display the column's total units,
+    // after padding pixels have been subtracted. Then take the minimum value of that.
+    var pixPerUnit = d3.min(
+      columnLengths.map(function(colLength, colIndex) {
+        // The non-padding pixels must have at least minDisplayPixels
+        var nonPaddingPixels = Math.max(minDisplayPixels, columnPixels - ((colLength - 1) * computedPixPadding));
+        return nonPaddingPixels / columnTotals[colIndex];
+      })
+    );
+
+    // The padding between bars, in bar value units
+    var valuePadding = computedPixPadding / pixPerUnit;
+    // The padding between bars, in pixels
+    var pixelPadding = computedPixPadding;
+
+    // The maximum total value of any column
+    var maxTotal = d3.max(columnTotals);
+
+    // Compute y-padding required to vertically center each column (in pixels)
+    var paddedHeights = columnLengths.map(function(colLength, colIndex) { return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * pixelPadding; });
+    var maxPaddedHeight = d3.max(paddedHeights);
+    var columnPaddings = columnLengths.map(function(colLength, colIndex) { return (maxPaddedHeight - paddedHeights[colIndex]) / 2; });
+
+    // The domain of the size scale
+    var valueDomain = [0, maxTotal];
+    // The range of the size scale
+    var pixelRange = [0, maxTotal * pixPerUnit];
+
+    // Calculate column (or row, as the case may be) positioning values
+    var nodeThickness = 20;
+    var numColumns = columnLengths.length;
+    var columnXMultiplier = (spreadPixels - nodeThickness) / (numColumns - 1);
+    var columnDomain = [0, 1];
+    var columnRange = [0, columnXMultiplier];
+
+    return {
+      valuePadding: valuePadding,
+      pixelPadding: pixelPadding,
+      columnPaddings: columnPaddings,
+      valueDomain: valueDomain,
+      pixelRange: pixelRange,
+      nodeThickness: nodeThickness,
+      columnDomain: columnDomain,
+      columnRange: columnRange
+    };
   };
 
 });

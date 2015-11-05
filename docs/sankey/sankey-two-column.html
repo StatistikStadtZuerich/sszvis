@@ -49,13 +49,10 @@
       var leftCol = sszvis.fn.set(data, fromAcc);
       var rightCol = sszvis.fn.set(data, toAcc);
 
-      state.bounds = sszvis.bounds({ height: 700, top: 20, right: 20, bottom: 20, left: 20 });
-
       state.data = sszvis.layout.sankey.prepareData()
         .source(fromAcc)
         .target(toAcc)
         .value(valAcc)
-        .pixelExtent(state.bounds.innerHeight)
         .column(leftCol)
         .column(rightCol)
         .apply(data);
@@ -89,31 +86,42 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    // Slightly unusual - bounds are calculated in prepareData. This is because
-    // the total available pixel height is a necessary parameter for sszvis.layout.sankey.prepareData
-    // TODO: change this so that the layout doesn't care about the pixel size.
-    // This required calculating the padding and the individual column offsets separately,
-    // either in a separate layout function or in the sszvis.component.sankey
+    var bounds = sszvis.bounds({ height: 700, top: 20, right: 20, bottom: 20, left: 20 });
+
+    // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
+    // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
+    // The order of bounds.innerHeight and bounds.innerWidth needs to be reversed when doing a horizontal orientation
+    var sankeyLayout = sszvis.layout.sankey.computeLayout(state.data.columnLengths, state.data.columnTotals, bounds.innerHeight, bounds.innerWidth);
 
 
     // Scales
-    var numColumns = 2;
-    var nodeExtent = 20;
-    var columnXMultiplier = (state.bounds.innerWidth - nodeExtent) / (numColumns - 1);
+
+    var valueScale = d3.scale.linear()
+      .domain(sankeyLayout.valueDomain)
+      .range(sankeyLayout.pixelRange);
+
+    var columnPosition = d3.scale.linear()
+      .domain(sankeyLayout.columnDomain)
+      .range(sankeyLayout.columnRange);
+
 
     // Layers
 
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', state.bounds, {
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
         title: TITLE,
         description: DESCRIPTION
       });
 
+
     // Components
+
     var sankeyGen = sszvis.component.sankey()
-      .numColumns(numColumns)
-      .nodeExtent(nodeExtent)
+      .sizeScale(valueScale)
+      .columnPosition(columnPosition)
+      .nodeThickness(sankeyLayout.nodeThickness)
+      .nodePadding(sankeyLayout.pixelPadding)
+      .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })
       .linkPadding(1)
-      .columnExtent(columnXMultiplier)
       .orientation('vertical')
       .nodeColor(sszvis.color.qual12()(0))
       .linkColor(sszvis.color.gry()(0))
@@ -123,11 +131,9 @@
 
     // Rendering
 
-
     chartLayer.selectGroup('sankey')
       .datum(state.data)
       .call(sankeyGen);
-
   }
 
 }(d3, sszvis));
