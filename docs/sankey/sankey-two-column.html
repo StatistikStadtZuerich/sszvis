@@ -46,18 +46,16 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
-      var leftCol = sszvis.fn.set(data, fromAcc);
-      var rightCol = sszvis.fn.set(data, toAcc);
+      var leftColIds = sszvis.fn.set(data, fromAcc);
+      var rightColIds = sszvis.fn.set(data, toAcc);
 
       state.data = sszvis.layout.sankey.prepareData()
         .source(fromAcc)
         .target(toAcc)
         .value(valAcc)
-        .column(leftCol)
-        .column(rightCol)
+        .column(leftColIds)
+        .column(rightColIds)
         .apply(data);
-
-      state.valRange = [0, d3.max(state.data.bars, valAcc)];
 
       render(state);
     }
@@ -116,13 +114,13 @@
     // Components
 
     var sankeyGen = sszvis.component.sankey()
+      .orientation('vertical')
       .sizeScale(valueScale)
       .columnPosition(columnPosition)
       .nodeThickness(sankeyLayout.nodeThickness)
       .nodePadding(sankeyLayout.pixelPadding)
       .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })
       .linkPadding(1)
-      .orientation('vertical')
       .nodeColor(sszvis.color.qual12()(0))
       .linkColor(sszvis.color.gry()(0))
       .nameLabel(function(id) { return id; })
