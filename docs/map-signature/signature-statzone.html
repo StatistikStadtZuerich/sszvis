@@ -104,7 +104,7 @@
     // area of the circle proportional to the data value. Be sure to avoid using the
     // radius or the diameter to encode the data value, because the consequent quadratic
     // scaling of the area affects the visual perception of the quantity in undesirable ways.
-    var areaScale = d3.scale.linear().domain(state.birthsRange).range([0, 800]);
+    var areaScale = d3.scale.linear().domain(state.birthsRange).range([0, 600]);
 
 
     // Layers
@@ -155,7 +155,7 @@
       .x(function(d) { return d.x; })
       .y(function(d) { return d.y; })
       .radius(function(d) { return Math.sqrt(areaScale(d.births) / Math.PI); })
-      .fill('rgba(81, 130, 179, 0.7)')
+      .fill('rgb(81, 130, 179)')
       .stroke('#fff');
 
     var dotData = [];
