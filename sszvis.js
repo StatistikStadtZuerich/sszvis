@@ -4624,12 +4624,12 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         var xPosition, yPosition, xExtent, yExtent, linkPathString, linkBounds;
 
-        function getNodePosition(node) { return props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex); }
+        function getNodePosition(node) { return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex)); }
 
         if (isHorizontal) {
           xPosition = function(node) { return getNodePosition(node); };
           yPosition = function(node) { return props.columnPosition(node.columnIndex); };
-          xExtent = function(node) { return Math.max(props.sizeScale(node.value), 1); };
+          xExtent = function(node) { return Math.ceil(Math.max(props.sizeScale(node.value), 1)); };
           yExtent = function(node) { return Math.max(props.nodeThickness, 1); };
           linkPathString = function(y0, y1, y2, y3, x0, x1) { return 'M' + x0 + ',' + y0 + 'C' + x0 + ',' + y1 + ' ' + x1 + ',' + y2 + ' ' + x1 + ',' + y3; };
           linkBounds = function(y0, y1, x0, x1) { return [x0, x1, y0, y1]; };
@@ -4637,7 +4637,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           xPosition = function(node) { return props.columnPosition(node.columnIndex); };
           yPosition = function(node) { return getNodePosition(node); };
           xExtent = function(node) { return Math.max(props.nodeThickness, 1); };
-          yExtent = function(node) { return Math.max(props.sizeScale(node.value), 1); };
+          yExtent = function(node) { return Math.ceil(Math.max(props.sizeScale(node.value), 1)); };
           linkPathString = function(x0, x1, x2, x3, y0, y1) { return 'M' + x0 + ',' + y0 + 'C' + x1 + ',' + y0 + ' ' + x2 + ',' + y1 + ' ' + x3 + ',' + y1; };
           linkBounds = function(x0, x1, y0, y1) { return [x0, x1, y0, y1]; };
         }
