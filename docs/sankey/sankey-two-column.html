@@ -32,13 +32,14 @@
   ----------------------------------------------- */
   var sourceAcc = sszvis.fn.prop('source');
   var targetAcc = sszvis.fn.prop('target');
-  var valAcc = sszvis.fn.prop('value');
+  var valueAcc = sszvis.fn.prop('value');
 
 
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: []
+    data: [],
+    hoveredLink: {}
   };
 
 
@@ -52,9 +53,21 @@
       state.data = sszvis.layout.sankey.prepareData()
         .source(sourceAcc)
         .target(targetAcc)
-        .value(valAcc)
+        .value(valueAcc)
         .idLists( [ leftColIds, rightColIds ] )
         .apply(data);
+
+      render(state);
+    },
+
+    onLinkOver: function(d) {
+      state.hoveredLink = d;
+
+      render(state);
+    },
+
+    onLinkOut: function() {
+      state.hoveredLink = null;
 
       render(state);
     }
@@ -109,6 +122,10 @@
         description: DESCRIPTION
       });
 
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
+
+    var nodeBlue = sszvis.color.qual12()(0);
+    var linkGrey = sszvis.color.gry()(0);
 
     // Components
 
@@ -118,17 +135,39 @@
       .nodeThickness(sankeyLayout.nodeThickness)
       .nodePadding(sankeyLayout.nodePadding)
       .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })
-      .nodeColor(sszvis.color.qual12()(0))
-      .linkColor(sszvis.color.gry()(0))
+      .nodeColor(nodeBlue)
+      .linkColor(function(d) { return linkIsHovered(d) ? nodeBlue : linkGrey; })
+      .linkSort(function(a, b) { return linkIsHovered(a) ? 1 : (linkIsHovered(b) ? -1 : valueAcc(a) - valueAcc(b)); })
       .nameLabel(function(id) { return id; })
       .valueLabel(function(value) { return value; });
+
+    var linkTooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .header(sszvis.svgUtils.modularText.html().bold(valueAcc))
+      .visible(linkIsHovered);
 
 
     // Rendering
 
-    chartLayer.selectGroup('sankey')
+    var sankeyGroup = chartLayer.selectGroup('sankey');
+
+    sankeyGroup
       .datum(state.data)
       .call(sankeyGen);
+
+    var linksGroup = sankeyGroup.selectGroup('links');
+
+    linksGroup.selectAll('.sszvis-link')
+      .on('mouseover', actions.onLinkOver)
+      .on('mouseout', actions.onLinkOut);
+
+    linksGroup.selectAll('[data-tooltip-anchor]')
+      .call(linkTooltip);
+
+  }
+
+  function linkIsHovered(d) {
+    return state.hoveredLink === d;
   }
 
 }(d3, sszvis));
