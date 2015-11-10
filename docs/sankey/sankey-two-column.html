@@ -39,6 +39,7 @@
   ----------------------------------------------- */
   var state = {
     data: [],
+    hoveredNode: {},
     hoveredLink: {}
   };
 
@@ -60,6 +61,18 @@
       render(state);
     },
 
+    onNodeOver: function(d) {
+      state.hoveredNode = d;
+
+      render(state);
+    },
+
+    onNodeOut: function(d) {
+      state.hoveredNode = {};
+
+      render(state);
+    },
+
     onLinkOver: function(d) {
       state.hoveredLink = d;
 
@@ -67,7 +80,7 @@
     },
 
     onLinkOut: function() {
-      state.hoveredLink = null;
+      state.hoveredLink = {};
 
       render(state);
     }
@@ -136,8 +149,8 @@
       .nodePadding(sankeyLayout.nodePadding)
       .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })
       .nodeColor(nodeBlue)
-      .linkColor(function(d) { return linkIsHovered(d) ? nodeBlue : linkGrey; })
-      .linkSort(function(a, b) { return linkIsHovered(a) ? 1 : (linkIsHovered(b) ? -1 : valueAcc(a) - valueAcc(b)); })
+      .linkColor(function(d) { return linkIsSelected(d) ? nodeBlue : linkGrey; })
+      .linkSort(function(a, b) { return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)); })
       .nameLabel(function(id) { return id; })
       .valueLabel(function(value) { return value; });
 
@@ -155,6 +168,12 @@
       .datum(state.data)
       .call(sankeyGen);
 
+    var nodesGroup = sankeyGroup.selectGroup('bars');
+
+    nodesGroup.selectAll('.sszvis-bar')
+      .on('mouseover', actions.onNodeOver)
+      .on('mouseout', actions.onNodeOut);
+
     var linksGroup = sankeyGroup.selectGroup('links');
 
     linksGroup.selectAll('.sszvis-link')
@@ -164,6 +183,14 @@
     linksGroup.selectAll('[data-tooltip-anchor]')
       .call(linkTooltip);
 
+  }
+
+  function linkIsSelected(d) {
+    return linkIsHovered(d) || nodeIsHovered(d.src) || nodeIsHovered(d.tgt);
+  }
+
+  function nodeIsHovered(d) {
+    return state.hoveredNode === d;
   }
 
   function linkIsHovered(d) {
