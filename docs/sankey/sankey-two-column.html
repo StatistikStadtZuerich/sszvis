@@ -30,8 +30,8 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var fromAcc = sszvis.fn.prop('from');
-  var toAcc = sszvis.fn.prop('to');
+  var sourceAcc = sszvis.fn.prop('source');
+  var targetAcc = sszvis.fn.prop('target');
   var valAcc = sszvis.fn.prop('value');
 
 
@@ -46,15 +46,14 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
-      var leftColIds = sszvis.fn.set(data, fromAcc);
-      var rightColIds = sszvis.fn.set(data, toAcc);
+      var leftColIds = sszvis.fn.set(data, sourceAcc);
+      var rightColIds = sszvis.fn.set(data, targetAcc);
 
       state.data = sszvis.layout.sankey.prepareData()
-        .source(fromAcc)
-        .target(toAcc)
+        .source(sourceAcc)
+        .target(targetAcc)
         .value(valAcc)
-        .column(leftColIds)
-        .column(rightColIds)
+        .idLists( [ leftColIds, rightColIds ] )
         .apply(data);
 
       render(state);
@@ -67,8 +66,8 @@
   d3.csv('data/zuzug.csv')
     .row(function(d) {
       return {
-        from: d['Zuzugsregion'],
-        to: d['Stadtquartier'],
+        source: d['Zuzugsregion'],
+        target: d['Stadtquartier'],
         value: sszvis.parse.number(d['Anzahl'])
       };
     })
@@ -96,7 +95,7 @@
 
     var valueScale = d3.scale.linear()
       .domain(sankeyLayout.valueDomain)
-      .range(sankeyLayout.pixelRange);
+      .range(sankeyLayout.valueRange);
 
     var columnPosition = d3.scale.linear()
       .domain(sankeyLayout.columnDomain)
@@ -114,13 +113,11 @@
     // Components
 
     var sankeyGen = sszvis.component.sankey()
-      .orientation('vertical')
       .sizeScale(valueScale)
       .columnPosition(columnPosition)
       .nodeThickness(sankeyLayout.nodeThickness)
-      .nodePadding(sankeyLayout.pixelPadding)
+      .nodePadding(sankeyLayout.nodePadding)
       .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })
-      .linkPadding(1)
       .nodeColor(sszvis.color.qual12()(0))
       .linkColor(sszvis.color.gry()(0))
       .nameLabel(function(id) { return id; })

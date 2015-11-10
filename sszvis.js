@@ -4608,8 +4608,6 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('nodeThickness')
       .prop('nodePadding')
       .prop('columnPadding', d3.functor)
-      .prop('orientation').orientation('vertical') // Must be 'vertical' or 'horizontal'
-      .prop('linkPadding').linkPadding(1)
       .prop('linkCurvature').linkCurvature(0.5)
       .prop('nodeColor', d3.functor)
       .prop('linkColor', d3.functor)
@@ -4619,28 +4617,14 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        // Set up configurable horizontal/vertical display functions
-        var isHorizontal = props.orientation === 'horizontal';
-
-        var xPosition, yPosition, xExtent, yExtent, linkPathString, linkBounds;
-
-        function getNodePosition(node) { return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex)); }
-
-        if (isHorizontal) {
-          xPosition = function(node) { return getNodePosition(node); };
-          yPosition = function(node) { return props.columnPosition(node.columnIndex); };
-          xExtent = function(node) { return Math.ceil(Math.max(props.sizeScale(node.value), 1)); };
-          yExtent = function(node) { return Math.max(props.nodeThickness, 1); };
-          linkPathString = function(y0, y1, y2, y3, x0, x1) { return 'M' + x0 + ',' + y0 + 'C' + x0 + ',' + y1 + ' ' + x1 + ',' + y2 + ' ' + x1 + ',' + y3; };
-          linkBounds = function(y0, y1, x0, x1) { return [x0, x1, y0, y1]; };
-        } else {
-          xPosition = function(node) { return props.columnPosition(node.columnIndex); };
-          yPosition = function(node) { return getNodePosition(node); };
-          xExtent = function(node) { return Math.max(props.nodeThickness, 1); };
-          yExtent = function(node) { return Math.ceil(Math.max(props.sizeScale(node.value), 1)); };
-          linkPathString = function(x0, x1, x2, x3, y0, y1) { return 'M' + x0 + ',' + y0 + 'C' + x1 + ',' + y0 + ' ' + x2 + ',' + y1 + ' ' + x3 + ',' + y1; };
-          linkBounds = function(x0, x1, y0, y1) { return [x0, x1, y0, y1]; };
-        }
+        var getNodePosition = function(node) { return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex)); };
+        var xPosition = function(node) { return props.columnPosition(node.columnIndex); };
+        var yPosition = function(node) { return getNodePosition(node); };
+        var xExtent = function(node) { return Math.max(props.nodeThickness, 1); };
+        var yExtent = function(node) { return Math.ceil(Math.max(props.sizeScale(node.value), 1)); };
+        var linkPathString = function(x0, x1, x2, x3, y0, y1) { return 'M' + x0 + ',' + y0 + 'C' + x1 + ',' + y0 + ' ' + x2 + ',' + y1 + ' ' + x3 + ',' + y1; };
+        var linkBounds = function(x0, x1, y0, y1) { return [x0, x1, y0, y1]; };
+        var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
         // Draw the bars
         var barGen = sszvis.component.bar()
@@ -4664,8 +4648,8 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         // Draw the links
         var linkPoints = function(link) {
-          var curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + props.linkPadding,
-              curveEnd = props.columnPosition(link.tgt.columnIndex) - props.linkPadding,
+          var curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
+              curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
               startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + (props.sizeScale(link.value) / 2),
               endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + (props.sizeScale(link.value) / 2);
 
@@ -4685,7 +4669,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           var points = linkPoints(link);
 
           return linkBounds(points[0], points[1], points[2], points[3]);
-        }
+        };
 
         var linkThickness = function(link) { return Math.max(props.sizeScale(link.value), 1); };
 
@@ -5894,20 +5878,8 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
 
       // Calculate an array of total values for each column
       var columnTotals = listOfNodes.reduce(function(totals, node) {
-        // Organize the node's links - sorted according to the sort function
-        node.linksFrom.sort(valueSortFunc);
-        node.linksTo.sort(valueSortFunc);
-
-        // and stacked vertically within the node according to that order
-        var fromTotal = node.linksFrom.reduce(function(sumValue, link) {
-          link.srcOffset = sumValue;
-          return sumValue + valueAcc(link);
-        }, 0);
-
-        var toTotal = node.linksTo.reduce(function(sumValue, link) {
-          link.tgtOffset = sumValue;
-          return sumValue + valueAcc(link);
-        }, 0);
+        var fromTotal = d3.sum(node.linksFrom, valueAcc);
+        var toTotal = d3.sum(node.linksTo, valueAcc);
 
         // For correct visual display, the node's value is the max of the from and to links
         node.value = Math.max(0, fromTotal, toTotal);
@@ -5947,6 +5919,31 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
         sszvis.fn.filledArray(mColumnIds.length, 0)
       ]);
 
+      // Once the order of nodes is calculated, we need to sort the links going into the
+      // nodes and the links coming out of the nodes according to the ordering of the nodes
+      // they come from or go to. This creates a visually appealing layout which minimizes
+      // the number of link crossings
+      listOfNodes.forEach(function(node) {
+        node.linksFrom.sort(function(linkA, linkB) {
+          return linkA.tgt.nodeIndex - linkB.tgt.nodeIndex;
+        });
+
+        node.linksTo.sort(function(linkA, linkB) {
+          return linkA.src.nodeIndex - linkB.src.nodeIndex;
+        });
+
+        // Stack the links vertically within the node according to their order
+        node.linksFrom.reduce(function(sumValue, link) {
+          link.srcOffset = sumValue;
+          return sumValue + valueAcc(link);
+        }, 0);
+
+        node.linksTo.reduce(function(sumValue, link) {
+          link.tgtOffset = sumValue;
+          return sumValue + valueAcc(link);
+        }, 0);
+      });
+
       return {
         bars: listOfNodes,
         links: listOfLinks,
@@ -5967,7 +5964,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
 
     main.ascendingSort = function() { valueSortFunc = byAscendingValue; return main; };
 
-    main.column = function(columnIdsList) { mColumnIds.push(columnIdsList); return main; };
+    main.idLists = function(idLists) { mColumnIds = idLists; return main; };
 
     return main;
   };
@@ -6003,20 +6000,20 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
     // The padding between bars, in bar value units
     var valuePadding = computedPixPadding / pixPerUnit;
     // The padding between bars, in pixels
-    var pixelPadding = computedPixPadding;
+    var nodePadding = computedPixPadding;
 
     // The maximum total value of any column
     var maxTotal = d3.max(columnTotals);
 
     // Compute y-padding required to vertically center each column (in pixels)
-    var paddedHeights = columnLengths.map(function(colLength, colIndex) { return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * pixelPadding; });
+    var paddedHeights = columnLengths.map(function(colLength, colIndex) { return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding; });
     var maxPaddedHeight = d3.max(paddedHeights);
     var columnPaddings = columnLengths.map(function(colLength, colIndex) { return (maxPaddedHeight - paddedHeights[colIndex]) / 2; });
 
     // The domain of the size scale
     var valueDomain = [0, maxTotal];
     // The range of the size scale
-    var pixelRange = [0, maxTotal * pixPerUnit];
+    var valueRange = [0, maxTotal * pixPerUnit];
 
     // Calculate column (or row, as the case may be) positioning values
     var nodeThickness = 20;
@@ -6027,10 +6024,10 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
 
     return {
       valuePadding: valuePadding,
-      pixelPadding: pixelPadding,
+      nodePadding: nodePadding,
       columnPaddings: columnPaddings,
       valueDomain: valueDomain,
-      pixelRange: pixelRange,
+      valueRange: valueRange,
       nodeThickness: nodeThickness,
       columnDomain: columnDomain,
       columnRange: columnRange
