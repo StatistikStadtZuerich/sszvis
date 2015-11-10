@@ -4611,11 +4611,14 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('linkCurvature').linkCurvature(0.5)
       .prop('nodeColor', d3.functor)
       .prop('linkColor', d3.functor)
+      .prop('linkSort', d3.functor).linkSort(function(a, b) { return a.value - b.value; }) // Default sorts in descending order of value
       .prop('nameLabel').nameLabel(sszvis.fn.identity)
       .prop('valueLabel').valueLabel(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
+
+        var idAcc = sszvis.fn.prop('id');
 
         var getNodePosition = function(node) { return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex)); };
         var xPosition = function(node) { return props.columnPosition(node.columnIndex); };
@@ -4677,7 +4680,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .datum(data.links);
 
         var linksElems = linksGroup.selectAll('.sszvis-link')
-          .data(data.links);
+          .data(data.links, idAcc);
 
         linksElems.enter()
           .append('path')
@@ -4689,7 +4692,8 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .attr('fill', 'none')
           .attr('d', linkPath)
           .attr('stroke-width', linkThickness)
-          .attr('stroke', props.linkColor);
+          .attr('stroke', props.linkColor)
+          .sort(props.linkSort);
 
         var linkTooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(link) {
@@ -5805,6 +5809,11 @@ sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
 sszvis_namespace('sszvis.layout.sankey', function(module) {
   'use strict';
 
+  var newLinkId = (function() {
+    var id = 0;
+    return function() { return ++id; };
+  })();
+
   module.exports.prepareData = function() {
     var mGetSource = sszvis.fn.identity;
     var mGetTarget = sszvis.fn.identity;
@@ -5860,6 +5869,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
         }
 
         var item = {
+          id: newLinkId(),
           value: value,
           src: srcNode,
           srcOffset: 0,

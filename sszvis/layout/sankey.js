@@ -1,6 +1,11 @@
 sszvis_namespace('sszvis.layout.sankey', function(module) {
   'use strict';
 
+  var newLinkId = (function() {
+    var id = 0;
+    return function() { return ++id; };
+  })();
+
   module.exports.prepareData = function() {
     var mGetSource = sszvis.fn.identity;
     var mGetTarget = sszvis.fn.identity;
@@ -56,6 +61,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
         }
 
         var item = {
+          id: newLinkId(),
           value: value,
           src: srcNode,
           srcOffset: 0,
