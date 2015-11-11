@@ -130,10 +130,7 @@
       .fill('#D6D6D6');
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .plain(function(geod) {
-        console.log(geod);
-        return birthsAcc(geod) + " Geburten";
-      });
+      .plain(function(geod) { return birthsAcc(geod) + " Geburten"; });
 
     var tooltipBody = sszvis.svgUtils.modularText.html()
       .plain(function(geod) {
