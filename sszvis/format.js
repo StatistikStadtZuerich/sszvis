@@ -61,56 +61,74 @@ sszvis_namespace('sszvis.format', function(module) {
      * - One decimal place for numbers >= 100
      * - Two significant decimal places for other numbers
      *
+     * See also: many test cases for this function in sszvis.test
+     *
      * @param  {number} d   Number
      * @param  {number} [p] Decimal precision
      * @return {string}     Fully formatted number
      */
     number: function(d, p) {
-      var def = sszvis.fn.defined;
+      var pdefined = sszvis.fn.defined(p);
       var dAbs = Math.abs(d);
-      var natLen = integerPlaces(d);
+      // decLen is the number of decimal places in the number
+      // 0.0002 -> 4
+      // 0.0000 -> 0 (Javascript's number implementation chops off trailing zeroes)
+      // 123456.1 -> 1
+      // 123456.00001 -> 5
       var decLen = decimalPlaces(d);
 
-      // NaN
+      // NaN      -> '–'
       if (isNaN(d)) {
+        // This is an mdash
         return '–';
       }
 
       // 10250    -> "10 250"
       // 10250.91 -> "10 251"
       else if (dAbs >= 1e4) {
-        def(p) || (p = 0);
-        return removeTrailingZeroes(d3.format(',.'+ p +'f')(d));
+        pdefined || (p = 0);
+        // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
+        // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
+        return d3.format(',.'+ p +'f')(d);
       }
 
       // 2350     -> "2350"
       // 2350.29  -> "2350.3"
-      //changed this set 10 instead of 100
       else if (dAbs >= 100) {
-        if (!def(p)) {
-          p = (decLen === 0) ? 0 : 1;
-        }
-        return removeTrailingZeroes(d3.format('.'+ p +'f')(d));
+        pdefined || (p = decLen === 0 ? 0 : 1);
+        // Where there are decimals, round to 1 position
+        // To display more precision, provide an explicit precision parameter.
+        return d3.format('.'+ p +'f')(d);
       }
 
       // 41       -> "41"
       // 41.329   -> "41.33"
-      //  1.329   -> "1.33"
-      //  0.00034 -> "0.00034"
+      // 1.329    -> "1.33"
+      // 0.00034  -> "0.00034"
+      // 41, 3    -> "41.000"
+      // 0.042, 5 -> "0.04200"
       else if (dAbs > 0) {
-        var f;
-        if (!def(p)) {
-          p = (decLen === 0) ? 0 : natLen + Math.min(2, decLen);
-          f = p > 0 ? 'r' : 'f';
+        var pf;
+        if (pdefined) {
+          pf = p + 'f';
         } else {
-          f = 'f';
+          // The 'r' formatter rounds total digits, not just decimal digits
+          // the 'f' formatter rounds decimal digits
+          // see https://github.com/mbostock/d3/wiki/Formatting
+          // This means that when decLen is 0, it rounds off the number. When there are some decimals,
+          // rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
+          // but not more. To display more precision, provide a precision parameter.
+          pf = decLen === 0 ? '0f' : (integerPlaces(d) + Math.min(2, decLen)) + 'r';
         }
-        return removeTrailingZeroes(d3.format('.'+ p + f)(d));
+        return d3.format('.' + pf)(d);
       }
 
-      //  0       -> "0"
+      // If abs(num) is not > 0, num is 0
+      // 0       -> "0"
+      // 0, 3    -> "0.000"
       else {
-        return String(0);
+        pdefined || (p = 0);
+        return d3.format('.' + p + 'f')(0);
       }
     },
 
@@ -143,14 +161,6 @@ sszvis_namespace('sszvis.format', function(module) {
   function integerPlaces(num) {
     num = Math.floor(Math.abs(+num));
     return String(num === 0 ? '' : num).length;
-  }
-
-  function removeTrailingZeroes(num) {
-    return String(num).replace(/([0-9]+)(\.)([0-9]*)0+$/, function(all, nat, dot, dec) {
-     //changed sszsch: we dont want to cut trailing zeroes
-     // if (parseInt(dec) === 0) dec = '';
-      return dec.length > 0 ? nat + dot + dec : nat;
-    });
   }
 
 });

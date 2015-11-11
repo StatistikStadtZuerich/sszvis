@@ -42,6 +42,7 @@ SOURCE_FILES = \
 	sszvis/parse.js \
 	sszvis/patterns.js \
 	sszvis/scale.js \
+	sszvis/test.js \
 	sszvis/transition.js \
 	sszvis/annotation/circle.js \
 	sszvis/annotation/line.js \

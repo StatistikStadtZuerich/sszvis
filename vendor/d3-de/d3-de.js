@@ -3,7 +3,7 @@
 
   var localizedFormat = d3.locale({
     'decimal': '.',
-    'thousands': ' ',
+    'thousands': ' ', // This is a 'narrow space', not a regular space. Used as the thousands separator by d3.format
     'grouping': [3],
     'currency': ['CHF ', ''],
     'dateTime': '%a. %e. %B %X %Y',
