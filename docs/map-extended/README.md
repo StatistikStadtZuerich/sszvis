@@ -4,9 +4,7 @@
 
 ## sszvis.map
 
-### Data structures
-
-### Configuration
+New settlements, topographic maps, and raster maps
 
 ## Grundkarte der Stadt Zürcher Quartiere mit Neubausiedlungen
 
@@ -95,7 +93,7 @@
             "source": "docs/map-extended/rastermap-bins.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map-extended/data/kinder_segmented.csv"
+        "data.csv": "docs/map-extended/data/kinder_segmented.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -121,7 +119,7 @@
             "source": "docs/map-extended/rastermap-gradient.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map-extended/data/kinder.csv"
+        "data.csv": "docs/map-extended/data/kinder.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
