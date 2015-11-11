@@ -27,15 +27,20 @@
 sszvis_namespace('sszvis.bounds', function(module) {
   'use strict';
 
+  // This is the default width (not to be confused with innerWidth)
+  // the default innerWidth is calculated as width - leftpadding - rightpadding
   var DEFAULT_WIDTH = 516;
 
-  //changed sszsch
-  //We decied to have a default ratio 3:2 instead of 1:sqrt(2)
-  //var RATIO = Math.sqrt(2);
-  var RATIO = 3/2;
+  // This is the default aspect ratio. It is defined as: width / innerHeight
+  // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
+  var ASPECT_RATIO = 16 / 9;
+  // To calculate innerHeight, do width / ASPECT_RATIO
+  // This means that by default, innerHeight = 9 / 16 * width
+  // These are configurable by passing your own width and height to the bounds function
 
   module.exports = function(bounds) {
     bounds || (bounds = {});
+    // All padding sides have default values
     var padding = {
       top:    either(bounds.top, 0),
       right:  either(bounds.right, 1),
@@ -43,7 +48,8 @@ sszvis_namespace('sszvis.bounds', function(module) {
       left:   either(bounds.left, 1)
     };
     var width   = either(bounds.width, DEFAULT_WIDTH);
-    var height  = either(bounds.height, Math.round(width / RATIO) + padding.top + padding.bottom);
+    // The first term (inside Math.round) is the default innerHeight calculation
+    var height  = either(bounds.height, Math.round(width / ASPECT_RATIO) + padding.top + padding.bottom);
 
     return {
       innerHeight: height - padding.top  - padding.bottom,
@@ -55,7 +61,7 @@ sszvis_namespace('sszvis.bounds', function(module) {
   };
 
   module.exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
-  module.exports.RATIO = RATIO;
+  module.exports.RATIO = ASPECT_RATIO;
 
 
   /* Helper functions
