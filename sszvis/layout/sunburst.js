@@ -35,12 +35,13 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
   };
 
   var MAX_RW = module.exports.MAX_SUNBURST_RING_WIDTH = 60;
+  var MIN_RW = module.exports.MIN_SUNBURST_RING_WIDTH = 10;
 
   module.exports.computeLayout = function(numLayers, chartWidth) {
     // Diameter of the center circle is one-third the width
     var halfWidth = chartWidth / 2;
     var centerRadius = halfWidth / 3;
-    var ringWidth = Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers);
+    var ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
 
     return {
       centerRadius: centerRadius,
