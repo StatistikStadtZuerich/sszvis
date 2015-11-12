@@ -987,7 +987,7 @@ sszvis_namespace('sszvis.axis', function(module) {
 
             if (props.tickLength > longLinePadding) {
               lines.enter().append('line')
-                .attr('class', 'sszvis-axis__longtick');
+                .classed('sszvis-axis__longtick', true);
 
               if (orientation === 'top') {
                 lines
