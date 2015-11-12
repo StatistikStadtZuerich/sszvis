@@ -108,13 +108,20 @@ sszvis_namespace('sszvis.axis', function(module) {
 
           var axisScale = axisDelegate.scale();
 
+          // Create selections here which will be used later for many custom configurations
+          // Note: Invariant: This is only valid so long as new .tick groups or tick label texts
+          // are not being added after these selections are constructed. If that changes, these
+          // selections need to be re-constructed.
+          var tickGroups = group.selectAll('g.tick');
+          var tickTexts = tickGroups.selectAll('text');
+
           // To prevent anti-aliasing on elements that need to be rendered crisply
           // we need to position them on a half-pixel grid: 0.5, 1.5, 2.5, etc.
           // We can't translate the whole .tick group, however, because this
           // leads to weird type rendering artefacts in some browsers. That's
           // why we reach into the group and translate lines onto the half-pixel
           // grid by taking the translation of the group into account.
-          group.selectAll('.tick')
+          tickGroups
             .each(function() {
               var subpixelShift = sszvis.svgUtils.crisp.transformTranslateSubpixelShift(this.getAttribute('transform'));
               var dx = sszvis.svgUtils.crisp.halfPixel(0) - subpixelShift[0];
@@ -130,7 +137,7 @@ sszvis_namespace('sszvis.axis', function(module) {
 
           // hide ticks which are too close to one endpoint
           var rangeExtent = sszvis.scale.range(axisScale);
-          group.selectAll('.tick line')
+          tickGroups.selectAll('line')
             .each(function(d) {
               var pos = axisScale(d),
                   d3this = d3.select(this);
@@ -140,7 +147,7 @@ sszvis_namespace('sszvis.axis', function(module) {
 
           if (sszvis.fn.defined(props.tickLength)) {
             var domainExtent = d3.extent(axisScale.domain());
-            var ticks = group.selectAll('.tick')
+            var ticks = tickGroups
               .filter(function(d) {
                 return !sszvis.fn.stringEqual(d, domainExtent[0]) && !sszvis.fn.stringEqual(d, domainExtent[1]);
               });
@@ -189,7 +196,7 @@ sszvis_namespace('sszvis.axis', function(module) {
             var min = alignmentBounds[0];
             var max = alignmentBounds[1];
 
-            group.selectAll('g.tick text')
+            tickTexts
               .style('text-anchor', function(d) {
                 var value = axisScale(d);
                 if (absDistance(value, min) < TICK_END_THRESHOLD) {
@@ -202,12 +209,12 @@ sszvis_namespace('sszvis.axis', function(module) {
           }
 
           if (sszvis.fn.defined(props.textWrap)) {
-            group.selectAll('text')
+            tickTexts
               .call(sszvis.svgUtils.textWrap, props.textWrap);
           }
 
           if (props.slant) {
-            group.selectAll('text')
+            tickTexts
               .call(slantLabel[axisDelegate.orient()][props.slant]);
           }
 
@@ -215,16 +222,15 @@ sszvis_namespace('sszvis.axis', function(module) {
           if (props.highlightTick) {
             var activeBounds = [];
             var passiveBounds = [];
-            var labels = group.selectAll('.tick text');
 
-            labels
+            tickTexts
               .classed('hidden', false)
               .classed('active', props.highlightTick);
 
             // Hide axis labels that overlap with highlighted labels unless
             // the labels are slanted (in which case the bounding boxes overlap)
             if (props.hideLabelThreshold > 0 && !props.slant) {
-              labels
+              tickTexts
                 .each(function(d) {
                   // although getBoundingClientRect returns coordinates relative to the window, not the document,
                   // this should still work, since all tick bounds are affected equally by scroll position changes.
@@ -313,7 +319,7 @@ sszvis_namespace('sszvis.axis', function(module) {
           if (props.contour && props.slant) {
             sszvis.logger.warn('Can\'t apply contour to slanted labels');
           } else if (props.contour) {
-            selection.selectAll('.sszvis-axis .tick').each(function() {
+            tickGroups.each(function() {
               var g = d3.select(this);
               var textNode = g.select('text').node();
               var textContour = g.select('.sszvis-axis__label-contour');
