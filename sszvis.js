@@ -5642,12 +5642,12 @@ sszvis_namespace('sszvis.control.slider', function(module) {
   module.exports = function() {
     return d3.component()
       .prop('scale')
+      .prop('value')
+      .prop('onchange')
       .prop('minorTicks').minorTicks([])
       .prop('majorTicks').majorTicks([])
-      .prop('tickLabels')
-      .prop('value')
-      .prop('label')
-      .prop('onchange')
+      .prop('tickLabels', d3.functor).tickLabels(sszvis.fn.identity)
+      .prop('label', d3.functor).label(sszvis.fn.identity)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
