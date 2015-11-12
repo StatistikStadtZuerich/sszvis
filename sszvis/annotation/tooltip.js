@@ -94,8 +94,8 @@ sszvis_namespace('sszvis.annotation.tooltip', function(module) {
       .prop('header')
       .prop('body')
       .prop('orientation', d3.functor).orientation('bottom')
-      .prop('dx').dx(1)
-      .prop('dy').dy(1)
+      .prop('dx', d3.functor).dx(1)
+      .prop('dy', d3.functor).dy(1)
       .prop('opacity', d3.functor).opacity(1)
       .renderSelection(function(selection) {
         var tooltipData = selection.datum();
@@ -213,24 +213,24 @@ sszvis_namespace('sszvis.annotation.tooltip', function(module) {
               case 'top':
                 tip.style({
                   left: (d.x - this.offsetWidth / 2) + 'px',
-                  top:  d.y + props.dy + 'px'
+                  top:  d.y + props.dy(d) + 'px'
                 });
                 break;
               case 'bottom':
                 tip.style({
                   left: (d.x - this.offsetWidth / 2) + 'px',
-                  top:  (d.y - props.dy - this.offsetHeight) + 'px'
+                  top:  (d.y - props.dy(d) - this.offsetHeight) + 'px'
                 });
                 break;
               case 'left':
                 tip.style({
-                  left: d.x + props.dx + 'px',
+                  left: d.x + props.dx(d) + 'px',
                   top:  (d.y - this.offsetHeight / 2) + 'px'
                 });
                 break;
               case 'right':
                 tip.style({
-                  left: (d.x - props.dx - this.offsetWidth) + 'px',
+                  left: (d.x - props.dx(d) - this.offsetWidth) + 'px',
                   top:  (d.y - this.offsetHeight / 2) + 'px'
                 });
                 break;
