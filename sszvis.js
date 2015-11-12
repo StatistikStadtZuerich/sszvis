@@ -4140,6 +4140,7 @@ sszvis_namespace('sszvis.component.bar', function(module) {
       .prop('fill', d3.functor)
       .prop('stroke', d3.functor)
       .prop('centerTooltip')
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -4162,9 +4163,12 @@ sszvis_namespace('sszvis.component.bar', function(module) {
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
 
+        if (props.transition) {
+          bars = bars.transition()
+            .call(sszvis.transition);
+        }
+
         bars
-          .transition()
-          .call(sszvis.transition)
           .attr('x', xAcc)
           .attr('y', yAcc)
           .attr('width', wAcc)
@@ -4222,6 +4226,7 @@ sszvis_namespace('sszvis.component.dot', function(module) {
       .prop('radius')
       .prop('stroke')
       .prop('fill')
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -4239,9 +4244,12 @@ sszvis_namespace('sszvis.component.dot', function(module) {
           .attr('stroke', props.stroke)
           .attr('fill', props.fill);
 
+        if (props.transition) {
+          dots = dots.transition()
+            .call(sszvis.transition);
+        }
+
         dots
-          .transition()
-          .call(sszvis.transition)
           .attr('cx', props.x)
           .attr('cy', props.y)
           .attr('r', props.radius);
@@ -4469,6 +4477,7 @@ sszvis_namespace('sszvis.component.line', function(module) {
       .prop('strokeWidth')
       .prop('key').key(function(d, i){ return i; })
       .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -4494,10 +4503,14 @@ sszvis_namespace('sszvis.component.line', function(module) {
 
         path.exit().remove();
 
+        path.order();
+
+        if (props.transition) {
+          path = path.transition()
+            .call(sszvis.transition);
+        }
+
         path
-          .order()
-          .transition()
-          .call(sszvis.transition)
           .attr('d', sszvis.fn.compose(line, props.valuesAccessor))
           .style('stroke', props.stroke)
           .style('stroke-width', props.strokeWidth);
@@ -4916,6 +4929,7 @@ sszvis_namespace('sszvis.component.stackedArea', function(module) {
       .prop('stroke')
       .prop('key').key(function(d, i){ return i; })
       .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -4943,9 +4957,12 @@ sszvis_namespace('sszvis.component.stackedArea', function(module) {
 
         paths.exit().remove();
 
+        if (props.transition) {
+          paths = paths.transition()
+            .call(sszvis.transition);
+        }
+
         paths
-          .transition()
-          .call(sszvis.transition)
           .attr('d', sszvis.fn.compose(areaGen, props.valuesAccessor))
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
@@ -4997,6 +5014,7 @@ sszvis_namespace('sszvis.component.stackedAreaMultiples', function(module) {
       .prop('stroke')
       .prop('key').key(function(d, i){ return i; })
       .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -5019,9 +5037,12 @@ sszvis_namespace('sszvis.component.stackedAreaMultiples', function(module) {
 
         paths.exit().remove();
 
+        if (props.transition) {
+          paths = paths.transition()
+            .call(sszvis.transition);
+        }
+
         paths
-          .transition()
-          .call(sszvis.transition)
           .attr('d', sszvis.fn.compose(areaGen, props.valuesAccessor))
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);

@@ -24,6 +24,7 @@ sszvis_namespace('sszvis.component.dot', function(module) {
       .prop('radius')
       .prop('stroke')
       .prop('fill')
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -41,9 +42,12 @@ sszvis_namespace('sszvis.component.dot', function(module) {
           .attr('stroke', props.stroke)
           .attr('fill', props.fill);
 
+        if (props.transition) {
+          dots = dots.transition()
+            .call(sszvis.transition);
+        }
+
         dots
-          .transition()
-          .call(sszvis.transition)
           .attr('cx', props.x)
           .attr('cy', props.y)
           .attr('r', props.radius);

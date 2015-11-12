@@ -45,6 +45,7 @@ sszvis_namespace('sszvis.component.line', function(module) {
       .prop('strokeWidth')
       .prop('key').key(function(d, i){ return i; })
       .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -70,10 +71,14 @@ sszvis_namespace('sszvis.component.line', function(module) {
 
         path.exit().remove();
 
+        path.order();
+
+        if (props.transition) {
+          path = path.transition()
+            .call(sszvis.transition);
+        }
+
         path
-          .order()
-          .transition()
-          .call(sszvis.transition)
           .attr('d', sszvis.fn.compose(line, props.valuesAccessor))
           .style('stroke', props.stroke)
           .style('stroke-width', props.strokeWidth);

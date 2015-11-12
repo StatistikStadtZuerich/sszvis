@@ -39,6 +39,7 @@ sszvis_namespace('sszvis.component.stackedArea', function(module) {
       .prop('stroke')
       .prop('key').key(function(d, i){ return i; })
       .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -66,9 +67,12 @@ sszvis_namespace('sszvis.component.stackedArea', function(module) {
 
         paths.exit().remove();
 
+        if (props.transition) {
+          paths = paths.transition()
+            .call(sszvis.transition);
+        }
+
         paths
-          .transition()
-          .call(sszvis.transition)
           .attr('d', sszvis.fn.compose(areaGen, props.valuesAccessor))
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);

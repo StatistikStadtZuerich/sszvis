@@ -43,6 +43,7 @@ sszvis_namespace('sszvis.component.bar', function(module) {
       .prop('fill', d3.functor)
       .prop('stroke', d3.functor)
       .prop('centerTooltip')
+      .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -65,9 +66,12 @@ sszvis_namespace('sszvis.component.bar', function(module) {
           .attr('fill', props.fill)
           .attr('stroke', props.stroke);
 
+        if (props.transition) {
+          bars = bars.transition()
+            .call(sszvis.transition);
+        }
+
         bars
-          .transition()
-          .call(sszvis.transition)
           .attr('x', xAcc)
           .attr('y', yAcc)
           .attr('width', wAcc)
