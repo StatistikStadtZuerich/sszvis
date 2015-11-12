@@ -115,7 +115,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 700, top: 20, right: 20, bottom: 20, left: 20 });
+    var bounds = sszvis.bounds({ height: 700, top: 20, right: 115, bottom: 20, left: 115 });
 
     // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
     // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
@@ -163,6 +163,7 @@
       .nodeColor(nodeBlue)
       .linkColor(function(d) { return linkIsSelected(d) ? nodeBlue : linkGrey; })
       .linkSort(function(a, b) { return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)); })
+      .labelSide(function(columnIndex) { return columnPosition(columnIndex) > bounds.innerWidth / 2 ? 'right' : 'left'; })
       .nameLabel(function(id) { return id; })
       .valueLabel(function(value) { return value; });
 
