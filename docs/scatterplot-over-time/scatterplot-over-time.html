@@ -40,10 +40,14 @@
   ----------------------------------------------- */
   var state = {
     data: [],
+    linesData: [],
+    currentData: [],
+    currentLinesData: [],
     xExtent: [],
     yExtent: [],
     years: [],
-    branches: []
+    branches: [],
+    activeYear: null
   };
 
 
@@ -54,6 +58,7 @@
       state.data = data;
       state.xExtent = [0, d3.max(state.data, xAcc)];
       state.yExtent = [0, d3.max(state.data, yAcc)];
+      state.tExtent = d3.extent(state.data, yearAcc);
       state.years = sszvis.fn.set(state.data, yearAcc);
       state.branches = sszvis.fn.set(state.data, branchAcc);
 
@@ -61,6 +66,16 @@
         .arrayBy(branchAcc, d3.ascending)
         .sort(function(a, b) { return d3.ascending(yearAcc(a), yearAcc(b)); })
         .apply(state.data);
+
+      actions.setYear(d3.max(state.years));
+    },
+
+    setYear: function(inputYear) {
+      state.activeYear = closestDatum(state.years, sszvis.fn.identity, inputYear);
+
+      state.currentData = state.data.filter(isActive);
+
+      state.currentLinesData = state.linesData.map(function(line) { return line.filter(isActive); });
 
       render(state);
     }
@@ -106,6 +121,10 @@
     var cScale = sszvis.color.qual12()
       .domain(state.branches);
 
+    var tScale = d3.time.scale()
+      .domain(state.tExtent)
+      .range([0, bounds.innerWidth]);
+
 
     // Layers
 
@@ -129,6 +148,14 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .stroke(sszvis.fn.compose(cScale, branchAcc, sszvis.fn.first));
+
+    var slider = sszvis.control.slider()
+      .scale(tScale)
+      .value(state.activeYear)
+      .majorTicks(state.years)
+      // No label necessary here (it's redundant)
+      .label("")
+      .onchange(actions.setYear);
 
     var xAxis = sszvis.axis.x()
       .scale(xScale)
@@ -158,12 +185,12 @@
 
     // state.data renders the individual dots
     chartLayer.selectGroup('dots')
-      .datum(state.data)
+      .datum(state.currentData)
       .call(dots);
 
     // linesGroup has different data from the underlying chartLayer, rendering lines
     chartLayer.selectGroup('lines')
-      .datum(state.linesData)
+      .datum(state.currentLinesData)
       .call(lines);
 
     chartLayer.selectGroup('xAxis')
@@ -173,9 +200,24 @@
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
+    chartLayer.selectGroup('slider')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 46))
+      .call(slider);
+
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 122))
       .call(cLegend);
+  }
+
+  function closestDatum(data, accessor, datum) {
+    var i = d3.bisector(accessor).left(data, datum, 1);
+    var d0 = data[i - 1];
+    var d1 = data[i] || d0;
+    return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+  }
+
+  function isActive(d) {
+    return yearAcc(d) <= state.activeYear;
   }
 
 }(d3, sszvis));
