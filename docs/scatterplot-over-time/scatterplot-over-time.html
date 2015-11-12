@@ -47,7 +47,8 @@
     yExtent: [],
     years: [],
     branches: [],
-    activeYear: null
+    activeYear: null,
+    selection: []
   };
 
 
@@ -73,9 +74,36 @@
     setYear: function(inputYear) {
       state.activeYear = closestDatum(state.years, sszvis.fn.identity, inputYear);
 
-      state.currentData = state.data.filter(isActive);
+      state.currentData = state.data.filter(function(d) { return yearAcc(d) === state.activeYear; });
 
-      state.currentLinesData = state.linesData.map(function(line) { return line.filter(isActive); });
+      // For the voronoi component, it is essential that no two input vertices lie at the same point
+      state.voronoiPoints = sszvis.fn.derivedSet(state.currentData, function(d) {
+        return xAcc(d) + '__' + yAcc(d);
+      });
+
+      if (state.currentData.length !== state.voronoiPoints.length) {
+        sszvis.logger.warn('some data were filtered out of the voronoi points because the voronoi interaction layer requires that no two input vertices lie at the same point.');
+      }
+
+      state.currentLinesData = state.linesData.map(function(line) {
+        return line.filter(function(d) { return yearAcc(d) <= state.activeYear; });
+      });
+
+      state.futureLinesData = state.linesData.map(function(line) {
+        return line.filter(function(d) { return yearAcc(d) >= state.activeYear; });
+      });
+
+      render(state);
+    },
+
+    selectPoint: function(d) {
+      state.selection = [d];
+
+      render(state);
+    },
+
+    deselectPoint: function() {
+      state.selection = [];
 
       render(state);
     }
@@ -133,8 +161,21 @@
         description: DESCRIPTION
       });
 
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
+
 
     // Components
+
+    var lines = sszvis.component.line()
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .stroke(sszvis.fn.compose(cScale, branchAcc, sszvis.fn.first))
+      .transition(false);
+
+    var futureLines = sszvis.component.line()
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .transition(false);
 
     var dots = sszvis.component.dot()
       .x(sszvis.fn.compose(xScale, xAcc))
@@ -142,12 +183,15 @@
       .radius(4)
       .fill(sszvis.fn.compose(cScale, branchAcc))
       // use white outlines in scatterplots to assist in identifying distinct circles
-      .stroke('#FFFFFF');
+      .stroke('#FFFFFF')
+      .transition(false);
 
-    var lines = sszvis.component.line()
+    var mouseOverlay = sszvis.behavior.voronoi()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
-      .stroke(sszvis.fn.compose(cScale, branchAcc, sszvis.fn.first));
+      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
+      .on('over', actions.selectPoint)
+      .on('out', actions.deselectPoint);
 
     var slider = sszvis.control.slider()
       .scale(tScale)
@@ -180,18 +224,41 @@
       .rows(4)
       .columnWidth(bounds.innerWidth / 2);
 
+    var tooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .visible(isSelected)
+      .header(sszvis.svgUtils.modularText.html().bold(branchAcc))
+      .body(function(d) {
+        return [
+          ['Beschäftige', sszvis.format.number(xAcc(d))],
+          ['Frauenanteil', sszvis.format.percent(yAcc(d) / 100)]
+        ];
+      });
+
 
     // Rendering
+
+    // lines and futureLines have different data from the dots layer, rendering lines as arrays of data values
+    chartLayer.selectGroup('lines')
+      .datum(state.currentLinesData)
+      .call(lines);
+
+    chartLayer.selectGroup('futureLines')
+      .datum(state.futureLinesData)
+      .call(futureLines)
+      .selectAll('.sszvis-line')
+      .classed('sszvis-referenceline', true);
 
     // state.data renders the individual dots
     chartLayer.selectGroup('dots')
       .datum(state.currentData)
-      .call(dots);
+      .call(dots)
+      .selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
 
-    // linesGroup has different data from the underlying chartLayer, rendering lines
-    chartLayer.selectGroup('lines')
-      .datum(state.currentLinesData)
-      .call(lines);
+    chartLayer.selectGroup('voronoiInteraction')
+      .datum(state.voronoiPoints)
+      .call(mouseOverlay);
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
@@ -216,8 +283,8 @@
     return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
   }
 
-  function isActive(d) {
-    return yearAcc(d) <= state.activeYear;
+  function isSelected(d) {
+    return state.selection.indexOf(d) !== -1;
   }
 
 }(d3, sszvis));
