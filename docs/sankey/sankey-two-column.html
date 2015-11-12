@@ -39,6 +39,7 @@
   ----------------------------------------------- */
   var state = {
     data: [],
+    defaultHoveredNode: {},
     hoveredNode: {},
     hoveredLink: {}
   };
@@ -58,6 +59,9 @@
         .idLists( [ leftColIds, rightColIds ] )
         .apply(data);
 
+      state.defaultHoveredNode = sszvis.fn.find(function(node) { return node.id === 'Zentraleuropa'; }, state.data.nodes);
+      state.hoveredNode = state.defaultHoveredNode;
+
       render(state);
     },
 
@@ -68,19 +72,21 @@
     },
 
     onNodeOut: function(d) {
-      state.hoveredNode = {};
+      state.hoveredNode = state.defaultHoveredNode;
 
       render(state);
     },
 
     onLinkOver: function(d) {
       state.hoveredLink = d;
+      state.hoveredNode = {};
 
       render(state);
     },
 
     onLinkOut: function() {
       state.hoveredLink = {};
+      state.hoveredNode = state.defaultHoveredNode;
 
       render(state);
     }
@@ -135,7 +141,13 @@
         description: DESCRIPTION
       });
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
+    var linkTooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
+      key: 'linkTooltipLayer'
+    });
+
+    var nodeTooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
+      key: 'nodeTooltipLayer'
+    });
 
     var nodeBlue = sszvis.color.qual12()(0);
     var linkGrey = sszvis.color.gry()(0);
@@ -155,9 +167,16 @@
       .valueLabel(function(value) { return value; });
 
     var linkTooltip = sszvis.annotation.tooltip()
-      .renderInto(tooltipLayer)
+      .renderInto(linkTooltipLayer)
       .header(sszvis.svgUtils.modularText.html().bold(valueAcc))
       .visible(linkIsHovered);
+
+    var nodeTooltip = sszvis.annotation.tooltip()
+      .renderInto(nodeTooltipLayer)
+      .visible(nodeIsHovered)
+      .header(sszvis.svgUtils.modularText.html().bold(valueAcc))
+      .orientation(function(d) { return d.x >= bounds.innerWidth / 2 ? 'right' : 'left'; })
+      .dx(20);
 
 
     // Rendering
@@ -168,11 +187,14 @@
       .datum(state.data)
       .call(sankeyGen);
 
-    var nodesGroup = sankeyGroup.selectGroup('bars');
+    var nodesGroup = sankeyGroup.selectGroup('nodes');
 
     nodesGroup.selectAll('.sszvis-bar')
       .on('mouseover', actions.onNodeOver)
       .on('mouseout', actions.onNodeOut);
+
+    nodesGroup.selectAll('[data-tooltip-anchor]')
+      .call(nodeTooltip);
 
     var linksGroup = sankeyGroup.selectGroup('links');
 
