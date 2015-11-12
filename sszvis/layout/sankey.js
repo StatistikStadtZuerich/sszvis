@@ -147,7 +147,7 @@ sszvis_namespace('sszvis.layout.sankey', function(module) {
       });
 
       return {
-        bars: listOfNodes,
+        nodes: listOfNodes,
         links: listOfLinks,
         columnTotals: columnTotals,
         columnLengths: columnLengths

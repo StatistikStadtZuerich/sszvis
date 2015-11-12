@@ -29,7 +29,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
         var linkBounds = function(x0, x1, y0, y1) { return [x0, x1, y0, y1]; };
         var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
-        // Draw the bars
+        // Draw the nodes
         var barGen = sszvis.component.bar()
           .x(xPosition)
           .y(yPosition)
@@ -37,8 +37,8 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .height(yExtent)
           .fill(props.nodeColor);
 
-        var barGroup = selection.selectGroup('bars')
-          .datum(data.bars);
+        var barGroup = selection.selectGroup('nodes')
+          .datum(data.nodes);
 
         barGroup.call(barGen);
 
