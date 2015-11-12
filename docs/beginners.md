@@ -248,10 +248,10 @@ Configuration:
     "name": "map-kreis",
     "files": {
         "index.html": {
-            "source": "docs/map/kreis-parametric.html",
+            "source": "docs/map-standard/kreis-parametric.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/M_kreis.csv",
+        "data.csv": "docs/map-standard/data/M_kreis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -282,10 +282,10 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
     "name": "map-tabs",
     "files": {
         "index.html": {
-            "source": "docs/map/quartiere-parametric.html",
+            "source": "docs/map-standard/quartiere-parametric.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/M_quartiere.csv",
+        "data.csv": "docs/map-standard/data/M_quartiere.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
