@@ -170,11 +170,13 @@
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .stroke(sszvis.fn.compose(cScale, branchAcc, sszvis.fn.first))
+      .strokeWidth(1.8)
       .transition(false);
 
     var futureLines = sszvis.component.line()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
+      .strokeWidth(1.8)
       .transition(false);
 
     var dots = sszvis.component.dot()
@@ -247,7 +249,7 @@
       .datum(state.futureLinesData)
       .call(futureLines)
       .selectAll('.sszvis-line')
-      .classed('sszvis-referenceline', true);
+      .classed('sszvis-referenceline', true); // Adding this CSS class gives the future lines the same visual styling as the reference line component
 
     // state.data renders the individual dots
     chartLayer.selectGroup('dots')
