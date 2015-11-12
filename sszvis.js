@@ -4605,6 +4605,8 @@ sszvis_namespace('sszvis.component.pie', function(module) {
 
         var tooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(d) {
+            // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
+            // makes the same correction to svg.arc() angles :o
             var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
             var r = props.radius * 2/3;
             return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
