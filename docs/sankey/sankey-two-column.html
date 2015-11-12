@@ -164,6 +164,7 @@
       .linkColor(function(d) { return linkIsSelected(d) ? nodeBlue : linkGrey; })
       .linkSort(function(a, b) { return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)); })
       .labelSide(function(columnIndex) { return columnPosition(columnIndex) > bounds.innerWidth / 2 ? 'right' : 'left'; })
+      .labelHitBoxSize(150)
       .nameLabel(function(id) { return id; })
       .valueLabel(function(value) { return value; });
 
@@ -196,6 +197,11 @@
 
     nodesGroup.selectAll('[data-tooltip-anchor]')
       .call(nodeTooltip);
+
+    sankeyGroup.selectGroup('nodelabels')
+      .selectAll('.sszvis-sankey-hitbox')
+      .on('mouseover', actions.onNodeOver)
+      .on('mouseout', actions.onNodeOut);
 
     var linksGroup = sankeyGroup.selectGroup('links');
 

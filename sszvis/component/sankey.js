@@ -13,6 +13,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('linkColor', d3.functor)
       .prop('linkSort', d3.functor).linkSort(function(a, b) { return a.value - b.value; }) // Default sorts in descending order of value
       .prop('labelSide', d3.functor).labelSide('left')
+      .prop('labelHitBoxSize').labelHitBoxSize(0)
       .prop('nameLabel').nameLabel(sszvis.fn.identity)
       .prop('valueLabel').valueLabel(sszvis.fn.identity)
       .render(function(data) {
@@ -117,19 +118,29 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         barLabels
           .text(function(node) { return props.nameLabel(node.id); })
-          .each(function(node) {
-            var label = d3.select(this);
+          .attr('text-align', 'middle')
+          .attr('text-anchor', function(node) { return props.labelSide(node.columnIndex) === 'left' ? 'end' : 'start'; })
+          .attr('x', function(node) { return props.labelSide(node.columnIndex) === 'left' ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6; })
+          .attr('y', function(node) { return yPosition(node) + yExtent(node) / 2; });
 
-            var side = props.labelSide(node.columnIndex);
-            var xoff = side === 'left' ? -6 : props.nodeThickness + 6;
-            var anchor = side === 'left' ? 'end' : 'start';
+        var barLabelHitBoxes = selection.selectGroup('nodelabels')
+          .selectAll('.sszvis-sankey-hitbox')
+          .data(data.nodes);
 
-            d3.select(this)
-              .attr('text-anchor', anchor)
-              .attr('text-align', 'middle')
-              .attr('x', xPosition(node) + xoff)
-              .attr('y', yPosition(node) + yExtent(node) / 2);
-          });
+        barLabelHitBoxes.enter()
+          .append('rect')
+          .attr('class', 'sszvis-sankey-hitbox');
+
+        barLabelHitBoxes.exit().remove();
+
+        barLabelHitBoxes
+          .attr('fill', 'transparent')
+          .attr('x', function(node) { return xPosition(node) + (props.labelSide(node.columnIndex) === 'left' ? -props.labelHitBoxSize : props.nodeThickness); })
+          .attr('y', function(node) { return yPosition(node) - (props.nodePadding / 2); })
+          .attr('width', props.labelHitBoxSize)
+          .attr('height', function(node) { return yExtent(node) + props.nodePadding; });
+
+
       });
   };
 
