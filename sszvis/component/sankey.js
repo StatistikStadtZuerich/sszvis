@@ -12,6 +12,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('nodeColor', d3.functor)
       .prop('linkColor', d3.functor)
       .prop('linkSort', d3.functor).linkSort(function(a, b) { return a.value - b.value; }) // Default sorts in descending order of value
+      .prop('labelSide', d3.functor).labelSide('left')
       .prop('nameLabel').nameLabel(sszvis.fn.identity)
       .prop('valueLabel').valueLabel(sszvis.fn.identity)
       .render(function(data) {
@@ -76,8 +77,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         var linkThickness = function(link) { return Math.max(props.sizeScale(link.value), 1); };
 
-        var linksGroup = selection.selectGroup('links')
-          .datum(data.links);
+        var linksGroup = selection.selectGroup('links');
 
         var linksElems = linksGroup.selectAll('.sszvis-link')
           .data(data.links, idAcc);
@@ -95,6 +95,8 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .attr('stroke', props.linkColor)
           .sort(props.linkSort);
 
+        linksGroup.datum(data.links);
+
         var linkTooltipAnchor = sszvis.annotation.tooltipAnchor()
           .position(function(link) {
             var bbox = linkBoundingBox(link);
@@ -102,6 +104,32 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           });
 
         linksGroup.call(linkTooltipAnchor);
+
+        var barLabels = selection.selectGroup('nodelabels')
+          .selectAll('.sszvis-sankey-label')
+          .data(data.nodes);
+
+        barLabels.enter()
+          .append('text')
+          .attr('class', 'sszvis-sankey-label');
+
+        barLabels.exit().remove();
+
+        barLabels
+          .text(function(node) { return props.nameLabel(node.id); })
+          .each(function(node) {
+            var label = d3.select(this);
+
+            var side = props.labelSide(node.columnIndex);
+            var xoff = side === 'left' ? -6 : props.nodeThickness + 6;
+            var anchor = side === 'left' ? 'end' : 'start';
+
+            d3.select(this)
+              .attr('text-anchor', anchor)
+              .attr('text-align', 'middle')
+              .attr('x', xPosition(node) + xoff)
+              .attr('y', yPosition(node) + yExtent(node) / 2);
+          });
       });
   };
 

@@ -138,6 +138,21 @@
 }
 
 /**
+ * Sankey component
+ *
+ * @module sszvis/component/sankey
+ */
+.sszvis-sankey-label {
+  alignment-baseline: central; /* Maybe at least one of these will work? */
+  dominant-baseline: central;
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: normal;
+}
+
+/**
  * Map component
  *
  * @module sszvis/map/renderer/base
