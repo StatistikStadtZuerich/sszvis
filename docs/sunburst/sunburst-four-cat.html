@@ -41,7 +41,8 @@
   ----------------------------------------------- */
   var state = {
     data: [],
-    radiusExtent: [0, 0]
+    radiusExtent: [0, 0],
+    selection: []
   };
 
 
@@ -70,6 +71,18 @@
         .calculate(data);
 
       state.radiusExtent = sszvis.layout.sunburst.getRadiusExtent(state.data);
+
+      render(state);
+    },
+
+    onSliceOver: function(d) {
+      state.selection = [d];
+
+      render(state);
+    },
+
+    onSliceOut: function() {
+      state.selection = [];
 
       render(state);
     }
@@ -123,6 +136,8 @@
       })
       .datum(state.data);
 
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
+
 
     // Components
     var sunburstMaker = sszvis.component.sunburst()
@@ -131,10 +146,32 @@
       .radiusScale(radiusScale)
       .centerRadius(burstLayout.centerRadius);
 
+    var tooltipText = sszvis.svgUtils.modularText.html()
+      .bold(function(d) { return d.key; })
+      .plain(function(d) { return d.value; });
+
+    var tooltip = sszvis.annotation.tooltip()
+      .renderInto(tooltipLayer)
+      .visible(isSelected)
+      .header(tooltipText);
+
+
     // Rendering
     var sunburstGroup = chartLayer.selectGroup('sunburst')
       .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2))
       .call(sunburstMaker);
+
+    sunburstGroup.selectAll('.sszvis-sunburst-arc')
+      .on('mouseover', actions.onSliceOver)
+      .on('mouseout', actions.onSliceOut);
+
+    sunburstGroup.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+  }
+
+  function isSelected(d) {
+    return state.selection.indexOf(d) !== -1;
   }
 
 }(d3, sszvis));
