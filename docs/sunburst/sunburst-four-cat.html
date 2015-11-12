@@ -40,7 +40,8 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: []
+    data: [],
+    radiusExtent: [0, 0]
   };
 
 
@@ -67,6 +68,8 @@
         .layer(cantonAcc)
         .value(numAcc)
         .calculate(data);
+
+      state.radiusExtent = sszvis.layout.sunburst.getRadiusExtent(state.data);
 
       render(state);
     }
@@ -105,6 +108,12 @@
     // Scales
     var colorScale = sszvis.color.qual6();
 
+    var angleScale = d3.scale.linear().range([0, 2 * Math.PI]);
+
+    var radiusScale = d3.scale.linear()
+          .domain(state.radiusExtent)
+          .range([0, burstLayout.numLayers * burstLayout.ringWidth]);
+
 
     // Layers
 
@@ -118,7 +127,9 @@
     // Components
     var sunburstMaker = sszvis.component.sunburst()
       .fill(colorScale)
-      .layout(burstLayout);
+      .angleScale(angleScale)
+      .radiusScale(radiusScale)
+      .centerRadius(burstLayout.centerRadius);
 
     // Rendering
     var sunburstGroup = chartLayer.selectGroup('sunburst')

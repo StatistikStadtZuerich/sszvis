@@ -5320,7 +5320,9 @@ sszvis_namespace('sszvis.component.sunburst', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('layout')
+      .prop('angleScale')
+      .prop('radiusScale')
+      .prop('centerRadius')
       .prop('fill')
       .prop('stroke').stroke('white')
       .render(function(data) {
@@ -5331,7 +5333,7 @@ sszvis_namespace('sszvis.component.sunburst', function(module) {
         function getColorRecursive(node) {
           // Center node (if the data were prepared using sszvis.layout.sunburst.prepareData)
           if (node.isSunburstRoot) {
-            return d3.hsl('transparent');
+            return 'transparent';
           } else if (!node.parent) {
             // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
             sszvis.logger.warn('Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData');
@@ -5347,41 +5349,42 @@ sszvis_namespace('sszvis.component.sunburst', function(module) {
           }
         }
 
-        // Usually, this should return the very first item in the list of data
-        // But using find makes the algorithm data order-agnostic
-        var rootDatum = sszvis.fn.find(function(d) { return d.isSunburstRoot; }, data);
-
-        var angleScale = d3.scale.linear().range([0, TWO_PI]);
-
-        var radiusScale = d3.scale.linear()
-          .domain([rootDatum.dy, 1])
-          .range([0, props.layout.numLayers * props.layout.ringWidth]);
+        var startAngle = function(d) { return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x))); };
+        var endAngle = function(d) { return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x + d.dx))); };
+        var innerRadius = function(d) { return props.centerRadius + Math.max(0, props.radiusScale(d.y)); };
+        var outerRadius = function(d) { return props.centerRadius + Math.max(0, props.radiusScale(d.y + d.dy)); };
 
         var arcGen = d3.svg.arc()
-          .startAngle(function(d) {
-            return Math.max(0, Math.min(TWO_PI, angleScale(d.x)));
-          })
-          .endAngle(function(d) {
-            return Math.max(0, Math.min(TWO_PI, angleScale(d.x + d.dx)));
-          })
-          .innerRadius(function(d) {
-            return props.layout.centerRadius + Math.max(0, radiusScale(d.y));
-          })
-          .outerRadius(function(d) {
-            return props.layout.centerRadius + Math.max(0, radiusScale(d.y + d.dy));
-          });
+          .startAngle(startAngle)
+          .endAngle(endAngle)
+          .innerRadius(innerRadius)
+          .outerRadius(outerRadius);
 
         var arcs = selection.selectAll('.sszvis-sunburst-arc')
-          .data(data);
+          .data(data.filter(function(d) { return !d.isSunburstRoot; }));
 
         arcs.enter()
           .append('path')
           .attr('class', 'sszvis-sunburst-arc')
 
+        arcs.exit().remove();
+
         arcs
           .attr('d', arcGen)
           .attr('stroke', props.stroke)
           .attr('fill', getColorRecursive);
+
+        // Add tooltip anchors
+        var arcTooltipAnchor = sszvis.annotation.tooltipAnchor()
+          .position(function(d) {
+            var startA = startAngle(d);
+            var endA = endAngle(d);
+            var a = startA + (Math.abs(endA - startA) / 2) - Math.PI / 2;
+            var r = (innerRadius(d) + outerRadius(d)) / 2;
+            return [Math.cos(a) * r, Math.sin(a) * r];
+          });
+
+        selection.call(arcTooltipAnchor);
       });
   };
 
@@ -6392,9 +6395,10 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
         .sort(function(a, b) { return d3.descending(a.value, b.value); });
 
       return partitionLayout({
-        isSunburstRoot: true,
-        values: nester.entries(data)
-      });
+          isSunburstRoot: true,
+          values: nester.entries(data)
+        // Remove the root element from the data (but it still exists in memory so long as the data is alive)
+        }).filter(function(d) { return !d.isSunburstRoot; });
     };
 
     main.calculate = function(data) { return main(data); };
@@ -6426,6 +6430,13 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
       numLayers: numLayers,
       ringWidth: ringWidth
     };
+  };
+
+  module.exports.getRadiusExtent = function(formattedData) {
+    return [
+      d3.min(formattedData, function(d) { return d.y; }),
+      d3.max(formattedData, function(d) { return d.y + d.dy; })
+    ];
   };
 
 });

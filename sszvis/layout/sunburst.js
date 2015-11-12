@@ -14,9 +14,10 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
         .sort(function(a, b) { return d3.descending(a.value, b.value); });
 
       return partitionLayout({
-        isSunburstRoot: true,
-        values: nester.entries(data)
-      });
+          isSunburstRoot: true,
+          values: nester.entries(data)
+        // Remove the root element from the data (but it still exists in memory so long as the data is alive)
+        }).filter(function(d) { return !d.isSunburstRoot; });
     };
 
     main.calculate = function(data) { return main(data); };
@@ -48,6 +49,13 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
       numLayers: numLayers,
       ringWidth: ringWidth
     };
+  };
+
+  module.exports.getRadiusExtent = function(formattedData) {
+    return [
+      d3.min(formattedData, function(d) { return d.y; }),
+      d3.max(formattedData, function(d) { return d.y + d.dy; })
+    ];
   };
 
 });
