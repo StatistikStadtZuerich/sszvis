@@ -44,8 +44,10 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: {},
-    selection: []
+    data: [],
+    filteredData: [],
+    selection: [],
+    currentFilter: 'Weiblich 1993',
   };
 
 
@@ -56,11 +58,25 @@
       state.data = data;
       state.birthsRange = [0, d3.max(state.data, birthsAcc)];
 
+      actions.setFilter(state.currentFilter);
+    },
+
+    setFilter: function(filterValue) {
+      state.currentFilter = filterValue;
+      var filter = filterValue.toLowerCase().split(' ');
+      var gender = filter[0];
+      var year = parseInt(filter[1]);
+
+      state.filteredData = state.data.filter(function(d) {
+        return genderAcc(d) === gender && yearAcc(d) === year;
+      });
+
       render(state);
     },
 
     selectHovered: function(d) {
-      state.selection = [idAcc(d)];
+      state.selection = d ? [d] : [];
+
       render(state);
     },
 
@@ -96,7 +112,7 @@
   function render(state) {
     // Padding
     var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+    var bounds = sszvis.bounds({ height: 542, top: 60, right: padding, bottom: 0, left: padding });
 
 
     // Scales
@@ -114,7 +130,7 @@
         description: DESCRIPTION,
         key: 'chartlayer'
       })
-      .datum(state.data);
+      .datum(state.filteredData);
 
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
@@ -122,20 +138,28 @@
 
     // Components
 
+    var anchoredShape = sszvis.map.anchoredCircles()
+      .fill('rgb(81, 130, 179)')
+      .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : Math.sqrt(areaScale(d.births) / Math.PI); })
+      .on('over', actions.selectHovered)
+      .on('out', actions.deselectHovered);
+
     var mapMaker = sszvis.map.zurichStatistischeZonen()
       .keyName('id')
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .borderColor('#fff')
-      .fill('#D6D6D6');
+      .fill('#D6D6D6')
+      .transitionColor(false)
+      .anchoredShape(anchoredShape)
+      .on('over', actions.selectHovered)
+      .on('out', actions.deselectHovered);
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .plain(function(geod) { return birthsAcc(geod) + " Geburten"; });
+      .plain(function(geod) { return birthsAcc(geod.datum) + " Geburten"; });
 
     var tooltipBody = sszvis.svgUtils.modularText.html()
-      .plain(function(geod) {
-        return zoneNameAcc(geod);
-      });
+      .plain(function(geod) { return zoneNameAcc(geod.datum); });
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
@@ -143,47 +167,28 @@
       .body(tooltipBody)
       .visible(isSelected);
 
+    var control = sszvis.control.buttonGroup()
+      .values(['Männlich 1993', 'Weiblich 1993', 'Männlich 2014', 'Weiblich 2014'])
+      .current(state.currentFilter)
+      .width(bounds.innerWidth)
+      .change(actions.setFilter);
+
 
     // Rendering
 
     chartLayer.call(mapMaker);
 
-    var dotComponent = sszvis.component.dot()
-      .x(function(d) { return d.x; })
-      .y(function(d) { return d.y; })
-      .radius(function(d) { return Math.sqrt(areaScale(d.births) / Math.PI); })
-      .fill('rgb(81, 130, 179)')
-      .stroke('#fff');
-
-    var dotData = [];
-
-    chartLayer.selectAll('[data-tooltip-anchor]')
-      .each(function(d) {
-        var bbox = this.getBoundingClientRect();
-        dotData.push({
-          x: bbox.left,
-          y: bbox.top,
-          id: idAcc(datumAcc(d)),
-          births: birthsAcc(datumAcc(d))
-        });
-      });
-
-    var dots = chartLayer.selectGroup('dotgroup')
-      .attr('transform', sszvis.svgUtils.translateString(-bounds.padding.left, -bounds.padding.top))
-      .datum(dotData)
-      .call(dotComponent);
-
-    dots.selectAll('.sszvis-circle')
-      .on('mouseover', actions.selectHovered)
-      .on('mouseout', actions.deselectHovered);
-
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+    tooltipLayer.selectDiv('controls')
+      .style('left', (bounds.innerWidth - control.width()) / 2 + 'px')
+      .style('top', '-40px')
+      .call(control);
   }
 
   function isSelected(d) {
-    var id = idAcc(d);
-    return !sszvis.fn.isNull(id) && state.selection.indexOf(id) >= 0;
+    return sszvis.fn.defined(d.datum) && state.selection.indexOf(d.datum) !== -1;
   }
 
 }(d3, topojson, sszvis));

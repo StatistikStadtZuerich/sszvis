@@ -83,6 +83,7 @@ SOURCE_FILES = \
 	sszvis/legend/radius.js \
 	sszvis/map/mapUtils.js \
 	sszvis/map/projections.js \
+	sszvis/map/renderer/anchoredCircles.js \
 	sszvis/map/renderer/base.js \
 	sszvis/map/renderer/geojson.js \
 	sszvis/map/renderer/image.js \
