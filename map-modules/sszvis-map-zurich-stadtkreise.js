@@ -88,6 +88,7 @@ sszvis_namespace('sszvis.map.zurichStadtKreiseBaseMap', function(module) {
  *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
  * @property {String, Function} fill                  A string or function for the fill of the map entities
  * @property {String} borderColor                     A string for the border color of the map entities
+ * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
  * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
  *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
  *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
@@ -118,6 +119,7 @@ sszvis_namespace('sszvis.map.zurichStadtKreise', function(module) {
       .prop('width')
       .prop('height')
       .prop('keyName').keyName('geoId')
+      .prop('withLake').withLake(true)
       .delegate('defined', base)
       .delegate('fill', base)
       .delegate('transitionColor', base)
@@ -153,10 +155,13 @@ sszvis_namespace('sszvis.map.zurichStadtKreise', function(module) {
 
         // Rendering
 
-        selection.call(base)
-                 .call(mesh)
-                 .call(lake)
-                 .call(highlight);
+        selection.call(base).call(mesh);
+
+        if (props.withLake) {
+          selection.call(lake);
+        }
+
+        selection.call(highlight);
 
 
         // Event Binding
