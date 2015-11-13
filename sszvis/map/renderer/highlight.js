@@ -20,7 +20,7 @@ sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('keyName').keyName('geoId') // the name of the data key that identifies which map entity it belongs to
+      .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
       .prop('geoJson')
       .prop('mapPath')
       .prop('highlight').highlight([]) // an array of data values to highlight

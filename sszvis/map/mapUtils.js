@@ -117,4 +117,6 @@ sszvis_namespace('sszvis.map.utils', function(module) {
     return averageSideSize;
   };
 
+  module.exports.GEO_KEY_DEFAULT = 'geoId';
+
 });

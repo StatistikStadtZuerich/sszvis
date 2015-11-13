@@ -84,19 +84,21 @@ sszvis_namespace('sszvis.map.switzerland', function(module) {
   module.exports = function() {
     var event = d3.dispatch('over', 'out', 'click');
 
+    var featureGeoJson = sszvis.map.switzerlandMapData.featureData();
+
     var base = sszvis.map.renderer.base()
-      .geoJson(sszvis.map.switzerlandMapData.featureData());
+      .geoJson(featureGeoJson);
 
     var mesh = sszvis.map.renderer.mesh()
       .geoJson(sszvis.map.switzerlandMapData.meshData());
 
     var highlight = sszvis.map.renderer.highlight()
-      .geoJson(sszvis.map.switzerlandMapData.featureData());
+      .geoJson(featureGeoJson);
 
     var component = d3.component()
       .prop('width')
       .prop('height')
-      .prop('keyName').keyName('geoId')
+      .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT)
       .delegate('defined', base)
       .delegate('fill', base)
       .delegate('transitionColor', base)
@@ -111,7 +113,7 @@ sszvis_namespace('sszvis.map.switzerland', function(module) {
         // Components
 
         // create a map path generator function
-        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.switzerlandMapData.featureData(), sszvis.map.utils.constants.SWITZERLAND_KEY);
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, featureGeoJson, sszvis.map.utils.constants.SWITZERLAND_KEY);
 
         // Base shape
         base

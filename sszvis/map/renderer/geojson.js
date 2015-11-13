@@ -27,7 +27,7 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
     var event = d3.dispatch('over', 'out', 'click');
 
     var component = d3.component()
-      .prop('dataKeyName').dataKeyName('geoId')
+      .prop('dataKeyName').dataKeyName(sszvis.map.utils.GEO_KEY_DEFAULT)
       .prop('geoJsonKeyName').geoJsonKeyName('id')
       .prop('geoJson')
       .prop('mapPath')

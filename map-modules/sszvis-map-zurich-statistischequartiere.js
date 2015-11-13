@@ -101,8 +101,10 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiere', function(module) {
   module.exports = function() {
     var event = d3.dispatch('over', 'out', 'click');
 
+    var featureGeoJson = sszvis.map.zurichStatistischeQuartiereMapData.featureData();
+
     var base = sszvis.map.renderer.base()
-      .geoJson(sszvis.map.zurichStatistischeQuartiereMapData.featureData());
+      .geoJson(featureGeoJson);
 
     var mesh = sszvis.map.renderer.mesh()
       .geoJson(sszvis.map.zurichStatistischeQuartiereMapData.meshData());
@@ -112,12 +114,12 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiere', function(module) {
       .lakeBounds(sszvis.map.zurichStatistischeQuartiereMapData.lakeBounds());
 
     var highlight = sszvis.map.renderer.highlight()
-      .geoJson(sszvis.map.zurichStatistischeQuartiereMapData.featureData());
+      .geoJson(featureGeoJson);
 
     var component = d3.component()
       .prop('width')
       .prop('height')
-      .prop('keyName').keyName('geoId')
+      .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT)
       .prop('withLake').withLake(true)
       .delegate('defined', base)
       .delegate('fill', base)
@@ -133,7 +135,7 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiere', function(module) {
         // Components
 
         // create a map path generator function
-        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY);
+        var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, featureGeoJson, sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY);
 
         // Base shape
         base

@@ -7242,6 +7242,8 @@ sszvis_namespace('sszvis.map.utils', function(module) {
     return averageSideSize;
   };
 
+  module.exports.GEO_KEY_DEFAULT = 'geoId';
+
 });
 
 
@@ -7425,7 +7427,7 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
     var event = d3.dispatch('over', 'out', 'click');
 
     var component = d3.component()
-      .prop('dataKeyName').dataKeyName('geoId')
+      .prop('dataKeyName').dataKeyName(sszvis.map.utils.GEO_KEY_DEFAULT)
       .prop('geoJsonKeyName').geoJsonKeyName('id')
       .prop('geoJson')
       .prop('mapPath')
@@ -7716,7 +7718,7 @@ sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('keyName').keyName('geoId') // the name of the data key that identifies which map entity it belongs to
+      .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
       .prop('geoJson')
       .prop('mapPath')
       .prop('highlight').highlight([]) // an array of data values to highlight
