@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/topojson/topojson.js"></script>
+<script src="../../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../map-modules/sszvis-map-zurich-statistischezonen.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var vAcc = sszvis.fn.prop('value');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    valueDomain: [0, 0]
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.valueDomain = [0, d3.max(state.data, vAcc)];
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/M_statzone_fake.csv')
+    .row(function(d) {
+      return {
+        geoId: sszvis.parse.number(d['id']),
+        value: sszvis.parse.number(d['value'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ height: sszvis.bounds.DEFAULT_WIDTH, top: 0, right: 0, bottom: 0, left: 0 });
+
+
+    // Scales
+
+    var colorScale = sszvis.color.seqBlu()
+      .domain(state.valueDomain);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.data);
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichStatistischeZonen()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .fill(sszvis.fn.compose(colorScale, vAcc))
+      .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), vAcc))
+      .withLake(false);
+
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>

@@ -173,6 +173,34 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
 }
 ```
 
+## Zürich: Statistische Zonen
+
+A map of the "statistical zones" of Zürich
+
+```project
+{
+    "name": "map-statzone",
+    "files": {
+        "index.html": {
+            "source": "docs/map-standard/statistische-zonen.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map-standard/data/M_statzone_fake.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 516
+    }
+}
+```
+
 ## Agglomeration
 
 A map of Zürich's agglomeration.
