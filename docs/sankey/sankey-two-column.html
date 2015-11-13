@@ -149,8 +149,9 @@
       key: 'nodeTooltipLayer'
     });
 
-    var nodeBlue = sszvis.color.qual12()(0);
-    var linkGrey = sszvis.color.gry()(0);
+    var nodeBlue = sszvis.color.qual12().range()[0];
+    var highlightLinkBlue = sszvis.color.qual12().range()[1];
+    var linkGrey = sszvis.color.paleGry()(0);
 
     // Components
 
@@ -161,7 +162,7 @@
       .nodePadding(sankeyLayout.nodePadding)
       .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })
       .nodeColor(nodeBlue)
-      .linkColor(function(d) { return linkIsSelected(d) ? nodeBlue : linkGrey; })
+      .linkColor(function(d) { return linkIsSelected(d) ? highlightLinkBlue : linkGrey; })
       .linkSort(function(a, b) { return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)); })
       .labelSide(function(columnIndex) { return columnPosition(columnIndex) > bounds.innerWidth / 2 ? 'right' : 'left'; })
       .labelHitBoxSize(150)
