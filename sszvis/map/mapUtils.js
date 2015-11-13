@@ -119,4 +119,37 @@ sszvis_namespace('sszvis.map.utils', function(module) {
 
   module.exports.GEO_KEY_DEFAULT = 'geoId';
 
+  module.exports.prepareMergedData = function(dataset, geoJson, keyName) {
+    keyName || (keyName = sszvis.map.utils.GEO_KEY_DEFAULT);
+
+    // group the input data by map entity id
+    var groupedInputData = dataset.reduce(function(m, v) {
+      m[v[keyName]] = v;
+      return m;
+    }, {});
+
+    // merge the map features and the input data into new objects that include both
+    var mergedData = geoJson.features.map(function(feature) {
+      return {
+        geoJson: feature,
+        datum: groupedInputData[feature.id]
+      };
+    });
+
+    return mergedData;
+  };
+
+  module.exports.getGeoJsonCenter = function(geoJson) {
+    if (!geoJson.properties.cachedCenter) {
+      var setCenter = geoJson.properties.center;
+      if (setCenter) {
+        geoJson.properties.cachedCenter = setCenter.split(',').map(parseFloat);
+      } else {
+        geoJson.properties.cachedCenter = d3.geo.centroid(geoJson);
+      }
+    }
+
+    return geoJson.properties.cachedCenter;
+  };
+
 });

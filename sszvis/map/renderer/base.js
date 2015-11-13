@@ -10,7 +10,9 @@
  *
  * @property {GeoJson} geoJson                        The GeoJson object to be rendered by this map layer.
  * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
- * @property {String} keyName                         The data object key which will return a map entity id. Default 'geoId'.
+ * @property {Object} mergedData                      This should be an array of merged data objects. Each object should have a datum property (the datum for
+ *                                                    the map entity) and a geoJson property (the geoJson shape for the map entity). This component renders the
+ *                                                    geoJson data and uses the datum to get properties of the shape, like fill color and tooltip data.
  * @property {Boolean, Function} defined              A predicate function used to determine whether a datum has a defined value.
  *                                                    Map entities with data values that fail this predicate test will display the missing value texture.
  * @property {String, Function} fill                  A string or function for the fill of the map entities
@@ -23,13 +25,13 @@ sszvis_namespace('sszvis.map.renderer.base', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('keyName').keyName('geoId') // the name of the data key that identifies which map entity it belongs to
+      .prop('mergedData')
       .prop('geoJson')
       .prop('mapPath')
       .prop('defined', d3.functor).defined(true) // a predicate function to determine whether a datum has a defined value
       .prop('fill', d3.functor).fill(function() { return 'black'; }) // a function for the entity fill color. default is black
       .prop('transitionColor').transitionColor(true)
-      .render(function(data) {
+      .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
 
@@ -37,27 +39,13 @@ sszvis_namespace('sszvis.map.renderer.base', function(module) {
         sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'missing-pattern')
           .call(sszvis.patterns.mapMissingValuePattern);
 
-        // group the input data by map entity id
-        var groupedInputData = data.reduce(function(m, v) {
-          m[v[props.keyName]] = v;
-          return m;
-        }, {});
-
-        // merge the map features and the input data into new objects that include both
-        var mergedData = props.geoJson.features.map(function(feature) {
-          return {
-            geoJson: feature,
-            datum: groupedInputData[feature.id]
-          };
-        });
-
         // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
         function getMapFill(d) {
           return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
         }
 
         var mapAreas = selection.selectAll('.sszvis-map__area')
-          .data(mergedData);
+          .data(props.mergedData);
 
         // add the base map paths - these are filled according to the map fill function
         mapAreas.enter()
@@ -89,23 +77,10 @@ sszvis_namespace('sszvis.map.renderer.base', function(module) {
 
         // the tooltip anchor generator
         var tooltipAnchor = sszvis.annotation.tooltipAnchor()
-          .position(function(d) {
-            var computedCenter = d.geoJson.properties.computedCenter;
-            var center = d.geoJson.properties.center;
-            if (computedCenter) {
-              return computedCenter;
-            } else if (center) {
-              // properties.center should be a string of the form "longitude,latitude"
-              var parsed = center.split(',').map(parseFloat);
-              d.geoJson.properties.computedCenter = props.mapPath.projection()(parsed);
-            } else {
-              d.geoJson.properties.computedCenter = props.mapPath.centroid(d.geoJson);
-            }
-            return d.geoJson.properties.computedCenter;
-          });
+          .position(function(d) { return props.mapPath.projection()(sszvis.map.utils.getGeoJsonCenter(d.geoJson)); });
 
         var tooltipGroup = selection.selectGroup('tooltipAnchors')
-          .datum(mergedData);
+          .datum(props.mergedData);
 
         // attach tooltip anchors
         tooltipGroup.call(tooltipAnchor);

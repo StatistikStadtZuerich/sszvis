@@ -99,13 +99,14 @@ sszvis_namespace('sszvis.map.switzerland', function(module) {
       .prop('width')
       .prop('height')
       .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT)
+      .prop('anchoredShape')
       .delegate('defined', base)
       .delegate('fill', base)
       .delegate('transitionColor', base)
       .delegate('borderColor', mesh)
       .delegate('highlight', highlight)
       .delegate('highlightStroke', highlight)
-      .render(function() {
+      .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
 
@@ -115,9 +116,11 @@ sszvis_namespace('sszvis.map.switzerland', function(module) {
         // create a map path generator function
         var mapPath = sszvis.map.utils.swissMapPath(props.width, props.height, featureGeoJson, sszvis.map.utils.constants.SWITZERLAND_KEY);
 
+        var mergedData = sszvis.map.utils.prepareMergedData(data, featureGeoJson, props.keyName);
+
         // Base shape
         base
-          .keyName(props.keyName)
+          .mergedData(mergedData)
           .mapPath(mapPath);
 
         // Border mesh
@@ -134,6 +137,14 @@ sszvis_namespace('sszvis.map.switzerland', function(module) {
         selection.call(base)
                  .call(mesh)
                  .call(highlight);
+
+        if (props.anchoredShape) {
+          props.anchoredShape
+            .mergedData(mergedData)
+            .mapPath(mapPath);
+
+          selection.call(props.anchoredShape);
+        }
 
 
         // Event Binding
