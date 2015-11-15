@@ -15,7 +15,6 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('labelSide', d3.functor).labelSide('left')
       .prop('labelHitBoxSize').labelHitBoxSize(0)
       .prop('nameLabel').nameLabel(sszvis.fn.identity)
-      .prop('valueLabel').valueLabel(sszvis.fn.identity)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();

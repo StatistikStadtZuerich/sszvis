@@ -166,8 +166,7 @@
       .linkSort(function(a, b) { return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)); })
       .labelSide(function(columnIndex) { return columnPosition(columnIndex) > bounds.innerWidth / 2 ? 'right' : 'left'; })
       .labelHitBoxSize(150)
-      .nameLabel(function(id) { return id; })
-      .valueLabel(function(value) { return value; });
+      .nameLabel(function(id) { return id; });
 
     var linkTooltip = sszvis.annotation.tooltip()
       .renderInto(linkTooltipLayer)
