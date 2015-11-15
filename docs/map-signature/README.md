@@ -18,6 +18,7 @@
             "source": "docs/map-signature/signature-statzone.html",
             "template": "docs/template.html"
         },
+        "data.csv": "data/births_year_statisticalZones.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -43,6 +44,7 @@
             "source": "docs/map-signature/signature-statisticalquarters.html",
             "template": "docs/template.html"
         },
+        "data.csv": "data/fake_statistical_quarters.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
