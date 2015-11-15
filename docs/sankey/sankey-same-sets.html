@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Sankey Diagram (Parallel Sets)</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallback.unsupported()) {
+    sszvis.fallback.render('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var sourceAcc = sszvis.fn.prop('source');
+  var targetAcc = sszvis.fn.prop('target');
+  var valueAcc = sszvis.fn.prop('value');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    hoveredNode: {},
+    hoveredLink: {}
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      var leftColIds = sszvis.fn.set(data, sourceAcc);
+      var rightColIds = sszvis.fn.set(data, targetAcc);
+
+      state.data = sszvis.layout.sankey.prepareData()
+        .source(sourceAcc)
+        .target(targetAcc)
+        .value(valueAcc)
+        .idLists( [ leftColIds, rightColIds ] )
+        .apply(data);
+
+      render(state);
+    },
+
+    onNodeOver: function(d) {
+      state.hoveredNode = d;
+
+      render(state);
+    },
+
+    onNodeOut: function(d) {
+      state.hoveredNode = {};
+
+      render(state);
+    },
+
+    onLinkOver: function(d) {
+      state.hoveredLink = d;
+
+      render(state);
+    },
+
+    onLinkOut: function() {
+      state.hoveredLink = {};
+
+      render(state);
+    }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/sankey_same_sets_fake.csv')
+    .row(function(d) {
+      return {
+        source: d['source'],
+        target: d['target'],
+        value: sszvis.parse.number(d['value'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ height: 700, top: 20, right: 115, bottom: 20, left: 115 });
+
+    // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
+    // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
+    // The order of bounds.innerHeight and bounds.innerWidth needs to be reversed when doing a horizontal orientation
+    var sankeyLayout = sszvis.layout.sankey.computeLayout(state.data.columnLengths, state.data.columnTotals, bounds.innerHeight, bounds.innerWidth);
+
+
+    // Scales
+
+    var valueScale = d3.scale.linear()
+      .domain(sankeyLayout.valueDomain)
+      .range(sankeyLayout.valueRange);
+
+    var columnPosition = d3.scale.linear()
+      .domain(sankeyLayout.columnDomain)
+      .range(sankeyLayout.columnRange);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      });
+
+    var linkTooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
+      key: 'linkTooltipLayer'
+    });
+
+    var nodeTooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds, {
+      key: 'nodeTooltipLayer'
+    });
+
+    var nodeBlue = sszvis.color.qual12().range()[0];
+    var highlightLinkBlue = sszvis.color.qual12().range()[1];
+    var linkGrey = sszvis.color.paleGry()(0);
+
+    // Components
+
+    var sankeyGen = sszvis.component.sankey()
+      .sizeScale(valueScale)
+      .columnPosition(columnPosition)
+      .nodeThickness(sankeyLayout.nodeThickness)
+      .nodePadding(sankeyLayout.nodePadding)
+      .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })
+      .nodeColor(nodeBlue)
+      .linkColor(function(d) { return linkIsSelected(d) ? highlightLinkBlue : linkGrey; })
+      .linkSort(function(a, b) { return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)); })
+      .labelSide(function(columnIndex) { return columnPosition(columnIndex) > bounds.innerWidth / 2 ? 'right' : 'left'; })
+      .labelHitBoxSize(150)
+      .nameLabel(function(id) { return id.slice(2); }); // Remove the leading 'f-' or 't-' from the ids
+
+    var linkTooltip = sszvis.annotation.tooltip()
+      .renderInto(linkTooltipLayer)
+      .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.number, valueAcc)))
+      .visible(linkIsHovered);
+
+    var nodeTooltip = sszvis.annotation.tooltip()
+      .renderInto(nodeTooltipLayer)
+      .visible(nodeIsHovered)
+      .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.number, valueAcc)))
+      .orientation(function(d) { return d.x >= bounds.innerWidth / 2 ? 'right' : 'left'; })
+      .dx(20);
+
+
+    // Rendering
+
+    var sankeyGroup = chartLayer.selectGroup('sankey');
+
+    sankeyGroup
+      .datum(state.data)
+      .call(sankeyGen);
+
+    var nodesGroup = sankeyGroup.selectGroup('nodes');
+
+    nodesGroup.selectAll('.sszvis-bar')
+      .on('mouseover', actions.onNodeOver)
+      .on('mouseout', actions.onNodeOut);
+
+    nodesGroup.selectAll('[data-tooltip-anchor]')
+      .call(nodeTooltip);
+
+    sankeyGroup.selectGroup('nodelabels')
+      .selectAll('.sszvis-sankey-hitbox')
+      .on('mouseover', actions.onNodeOver)
+      .on('mouseout', actions.onNodeOut);
+
+    var linksGroup = sankeyGroup.selectGroup('links');
+
+    linksGroup.selectAll('.sszvis-link')
+      .on('mouseover', actions.onLinkOver)
+      .on('mouseout', actions.onLinkOut);
+
+    linksGroup.selectAll('[data-tooltip-anchor]')
+      .call(linkTooltip);
+
+  }
+
+  function linkIsSelected(d) {
+    return linkIsHovered(d) || nodeIsHovered(d.src) || nodeIsHovered(d.tgt);
+  }
+
+  function nodeIsHovered(d) {
+    return state.hoveredNode === d;
+  }
+
+  function linkIsHovered(d) {
+    return state.hoveredLink === d;
+  }
+
+}(d3, sszvis));
+</script>
+</body>
+</html>

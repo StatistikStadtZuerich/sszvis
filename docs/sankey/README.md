@@ -23,3 +23,28 @@
     }
 }
 ```
+
+
+## Sankey Diagram - Same Sets
+
+```project
+{
+    "name": "sankey-same-sets",
+    "files": {
+        "index.html": {
+            "source": "docs/sankey/sankey-same-sets.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/sankey/data/sankey_same_sets_fake.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 700
+    }
+}
+```
