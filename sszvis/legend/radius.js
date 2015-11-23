@@ -24,7 +24,7 @@ sszvis_namespace('sszvis.legend.radius', function(module) {
         var props = selection.props();
 
         var domain = props.scale.domain();
-        var tickValues = props.tickValues || [domain[1], Math.round(d3.mean(domain)), domain[0]];
+        var tickValues = props.tickValues || [domain[1], props.scale.invert(d3.mean(props.scale.range())), domain[0]];
         var maxRadius = sszvis.scale.range(props.scale)[1];
 
         var group = selection.selectAll('g.sszvis-legend__elementgroup')
