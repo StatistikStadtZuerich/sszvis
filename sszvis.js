@@ -2580,6 +2580,8 @@ sszvis_namespace('sszvis.test', function(module) {
     assert('NaN is mdash –', nfmt(NaN) === '–');
     assert('0, without precision', nfmt(0) === '0');
     assert('0, with precision', precNfmt(3, 0) === '0.000');
+    assert('test that currying works, 0', precNfmt(3)(0) === '0.000');
+    assert('test that currying works, 123.456789', precNfmt(3)(123.123456) === '123.123');
 
     // Note: tests for numbers > 10000 expect a 'narrow space' as the thousands separator
     assert('abs >10000, uses a thin space thousands separator', nfmt(10250) === '10 250');
