@@ -59,7 +59,7 @@ sszvis_namespace('sszvis.format', function(module) {
      * - Decimal places only for significant decimals
      * - No decimal places for numbers >= 10000
      * - One decimal place for numbers >= 100
-     * - Two significant decimal places for other numbers
+     * - 1 or 2 significant decimal places for other numbers
      *
      * See also: many test cases for this function in sszvis.test
      *
@@ -67,8 +67,7 @@ sszvis_namespace('sszvis.format', function(module) {
      * @param  {number} [p] Decimal precision
      * @return {string}     Fully formatted number
      */
-    number: function(d, p) {
-      var pdefined = sszvis.fn.defined(p);
+    number: function(d) {
       var dAbs = Math.abs(d);
       // decLen is the number of decimal places in the number
       // 0.0002 -> 4
@@ -86,18 +85,17 @@ sszvis_namespace('sszvis.format', function(module) {
       // 10250    -> "10 250"
       // 10250.91 -> "10 251"
       else if (dAbs >= 1e4) {
-        pdefined || (p = 0);
         // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
         // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
-        return d3.format(',.'+ p +'f')(d);
+        return d3.format(',.0f')(d);
       }
 
       // 2350     -> "2350"
       // 2350.29  -> "2350.3"
       else if (dAbs >= 100) {
-        pdefined || (p = decLen === 0 ? 0 : 1);
+        var p = decLen === 0 ? 0 : 1;
         // Where there are decimals, round to 1 position
-        // To display more precision, provide an explicit precision parameter.
+        // To display more precision, use the preciseNumber function.
         return d3.format('.'+ p +'f')(d);
       }
 
@@ -105,31 +103,48 @@ sszvis_namespace('sszvis.format', function(module) {
       // 41.329   -> "41.33"
       // 1.329    -> "1.33"
       // 0.00034  -> "0.00034"
-      // 41, 3    -> "41.000"
-      // 0.042, 5 -> "0.04200"
       else if (dAbs > 0) {
-        var pf;
-        if (pdefined) {
-          pf = p + 'f';
-        } else {
-          // The 'r' formatter rounds total digits, not just decimal digits
-          // the 'f' formatter rounds decimal digits
-          // see https://github.com/mbostock/d3/wiki/Formatting
-          // This means that when decLen is 0, it rounds off the number. When there are some decimals,
-          // rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
-          // but not more. To display more precision, provide a precision parameter.
-          pf = decLen === 0 ? '0f' : (integerPlaces(d) + Math.min(2, decLen)) + 'r';
-        }
-        return d3.format('.' + pf)(d);
+        var p = Math.min(2, decLen);
+        // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
+        // but not more. To display more precision, use the preciseNumber function.
+        return d3.format('.' + p + 'f')(d);
       }
 
       // If abs(num) is not > 0, num is 0
       // 0       -> "0"
-      // 0, 3    -> "0.000"
       else {
-        pdefined || (p = 0);
-        return d3.format('.' + p + 'f')(0);
+        return d3.format('.0f')(0);
       }
+    },
+
+    /**
+     * Format numbers to a particular precision. This function is "curried", meaning that it is a function with
+     * multiple arguments, but when you call it with less than the full number of arguments, it returns a function
+     * that takes less arguments and has the arguments you did provide "pre-filled" as parameters. So that means that:
+     *
+     * preciseNumber(2, 14.1234) -> "14.12"
+     * preciseNumber(2) -> function that accepts numbers and returns formatted values
+     *
+     * Note that preciseNumber(2, 14.1234) is equivalent to preciseNumber(2)(14.1234)
+     * 
+     * @param  {Number} p           The desired precision
+     * @param  {Number} d           The number to be formatted
+     * @return {String}             The formatted number
+     */
+    preciseNumber: function(p, d) {
+      // This curries the function
+      if (arguments.length > 1) return format.preciseNumber(p)(d);
+
+      return function formatPreciseNumber(d) {
+        var dAbs = Math.abs(d);
+        if (dAbs >= 100 && dAbs < 1e4) {
+          // No thousands separator
+          return d3.format('.' + p + 'f')(d);
+        } else {
+          // Use the thousands separator
+          return d3.format(',.' + p + 'f')(d);
+        }
+      };
     },
 
     /**
