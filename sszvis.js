@@ -7328,6 +7328,7 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
       .prop('radius', d3.functor)
       .prop('fill', d3.functor)
       .prop('strokeColor', d3.functor).strokeColor('#ffffff')
+      .prop('transition').transition(true)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -7345,7 +7346,6 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
             var position = props.mapPath.projection()(sszvis.map.utils.getGeoJsonCenter(d.geoJson));
             return sszvis.svgUtils.translateString(position[0], position[1]);
           })
-          .attr('r', function(d) { return props.radius(d.datum); })
           .attr('fill', function(d) { return props.fill(d.datum); })
           .attr('stroke', function(d) { return props.strokeColor(d.datum); })
           .sort(function(a, b) {
@@ -7362,6 +7362,13 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
           .on('click', function(d) {
             event.click(d.datum);
           });
+
+        if (props.transition) {
+          anchoredCircles = anchoredCircles.transition()
+            .call(sszvis.transition);
+        }
+
+        anchoredCircles.attr('r', function(d) { return props.radius(d.datum); });
       });
 
     d3.rebind(component, event, 'on');
