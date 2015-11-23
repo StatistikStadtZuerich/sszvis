@@ -24,7 +24,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html"],
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 542
@@ -75,7 +75,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html"],
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 542
@@ -101,7 +101,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html"],
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 640
@@ -127,7 +127,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html"],
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 542
@@ -153,7 +153,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html"],
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 640
@@ -179,7 +179,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html"],
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 640

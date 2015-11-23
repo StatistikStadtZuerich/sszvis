@@ -18,7 +18,7 @@
             "source": "docs/map-signature/signature-statzone.html",
             "template": "docs/template.html"
         },
-        "data.csv": "data/births_year_statisticalZones.csv",
+        "data.csv": "docs/map-signature/data/births_year_statisticalZones.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -26,7 +26,7 @@
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
     },
-    "sourceView": ["index.html"],
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 542
@@ -44,7 +44,7 @@
             "source": "docs/map-signature/signature-statisticalquarters.html",
             "template": "docs/template.html"
         },
-        "data.csv": "data/fake_statistical_quarters.csv",
+        "data.csv": "docs/map-signature/data/fake_statistical_quarters.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -52,7 +52,7 @@
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html"],
+    "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
         "height": 542
