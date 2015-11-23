@@ -88,11 +88,12 @@ sszvis_namespace('sszvis.color', function(module) {
   };
 
   var GREY_COLORS = {
-    gry: ['#D6D6D6'],
     lightGry: ['#FAFAFA'],
     paleGry: ['#EAEAEA'],
+    gry: ['#D6D6D6'],
+    dimGry: ['#B8B8B8'],
     medGry: ['#7C7C7C'],
-    deepGry: ['#545454']
+    deepGry: ['#545454'],
   };
 
 

@@ -151,7 +151,7 @@
       .keyName('id')
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.color.gry())
+      .fill(function(d) { return isSelected(d) ? sszvis.color.dimGry()(0) : sszvis.color.gry()(0) })
       .transitionColor(false)
       .anchoredShape(anchoredShape)
       .on('over', actions.selectHovered)
@@ -167,7 +167,7 @@
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(tooltipBody)
-      .visible(isSelected);
+      .visible(sszvis.fn.compose(isSelected, datumAcc));
 
     var control = sszvis.control.buttonGroup()
       .values(['Männlich 1993', 'Weiblich 1993', 'Männlich 2014', 'Weiblich 2014'])
@@ -198,7 +198,7 @@
   }
 
   function isSelected(d) {
-    return sszvis.fn.defined(d.datum) && state.selection.indexOf(d.datum) !== -1;
+    return sszvis.fn.defined(d) && state.selection.indexOf(d) !== -1;
   }
 
 }(d3, topojson, sszvis));

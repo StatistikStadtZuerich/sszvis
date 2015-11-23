@@ -132,14 +132,14 @@
       .keyName('id')
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.color.gry())
+      .fill(function(d) { return isSelected(d) ? sszvis.color.dimGry()(0) : sszvis.color.gry()(0) })
       .transitionColor(false)
       .anchoredShape(anchoredShape)
       .on('over', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .plain(sszvis.fn.compose(valueAcc, datumAcc));
+      .plain(sszvis.fn.compose(sszvis.format.number, valueAcc, datumAcc));
 
     var tooltipBody = sszvis.svgUtils.modularText.html()
       .plain(sszvis.fn.compose(zoneNameAcc, datumAcc));
@@ -148,7 +148,7 @@
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(tooltipBody)
-      .visible(isSelected);
+      .visible(sszvis.fn.compose(isSelected, datumAcc));
 
     var radiusLegend = sszvis.legend.radius()
       .scale(radiusScale)
@@ -168,7 +168,7 @@
   }
 
   function isSelected(d) {
-    return sszvis.fn.defined(datumAcc(d)) && state.selection.indexOf(datumAcc(d)) !== -1;
+    return sszvis.fn.defined(d) && state.selection.indexOf(d) !== -1;
   }
 
 }(d3, topojson, sszvis));
