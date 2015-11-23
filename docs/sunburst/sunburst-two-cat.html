@@ -142,7 +142,7 @@
 
     var tooltipText = sszvis.svgUtils.modularText.html()
       .bold(function(d) { return d.key; })
-      .plain(function(d) { return d.value; });
+      .plain(function(d) { return sszvis.format.number(d.value); });
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
