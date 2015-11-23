@@ -141,13 +141,13 @@
       .centerRadius(burstLayout.centerRadius);
 
     var tooltipText = sszvis.svgUtils.modularText.html()
-      .bold(function(d) { return d.key; })
-      .plain(function(d) { return sszvis.format.number(d.value); });
+      .bold(function(d) { return d.key; });
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .visible(isSelected)
-      .header(tooltipText);
+      .header(tooltipText)
+      .body(function(d) { return sszvis.format.number(d.value); });
 
 
     // Rendering
