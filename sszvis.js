@@ -3269,8 +3269,14 @@ sszvis_namespace('sszvis.annotation.ruler', function(module) {
             return d3.ascending(a.top, b.top);
           });
 
-          // Calculate overlap and correct position 
-          while (--ITERATIONS) {
+          // Using postfix decrement means the expression evaluates to the value of the variable
+          // before the decrement takes place. In the case of 10 iterations, this means that the
+          // variable gets to 0 after the truthiness of the 10th iteration is tested, and the
+          // expression is false at the beginning of the 11th, so 10 iterations are executed.
+          // If you use prefix decrement (--ITERATIONS), the variable gets to 0 at the beginning of
+          // the 10th iteration, meaning that only 9 iterations are executed.
+          while (ITERATIONS--) {
+            // Calculate overlap and correct position
             labelBounds.forEach(function(firstLabel, index) {
               labelBounds.slice(index + 1).forEach(function(secondLabel) {
                 var overlap = firstLabel.bottom - secondLabel.top;
