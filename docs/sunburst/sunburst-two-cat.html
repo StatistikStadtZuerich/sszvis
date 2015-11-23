@@ -60,6 +60,8 @@
         return d3.descending(numAcc(a), numAcc(b));
       });
 
+      state.continents = sszvis.fn.set(data, continentAcc);
+
       state.data = sszvis.layout.sunburst.prepareData()
         .layer(continentAcc)
         .layer(regionAcc)
@@ -107,13 +109,13 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 512, top: 20, right: 20, bottom: 20, left: 20 });
+    var bounds = sszvis.bounds({ height: 552, top: 20, right: 20, bottom: 70, left: 20 });
 
     // Compute the layout for 2 layers, with bounds.innerWidth total width available
     var burstLayout = sszvis.layout.sunburst.computeLayout(2, bounds.innerWidth);
 
     // Scales
-    var colorScale = sszvis.color.qual6();
+    var colorScale = sszvis.color.qual6().domain(state.continents);
 
     var angleScale = d3.scale.linear().range([0, 2 * Math.PI]);
 
@@ -149,6 +151,11 @@
       .header(tooltipText)
       .body(function(d) { return sszvis.format.number(d.value); });
 
+    var colorLegend = sszvis.legend.ordinalColorScale()
+      .scale(colorScale)
+      .rows(2)
+      .orientation('vertical');
+
 
     // Rendering
     var sunburstGroup = chartLayer.selectGroup('sunburst')
@@ -158,6 +165,10 @@
     sunburstGroup.selectAll('.sszvis-sunburst-arc')
       .on('mouseover', actions.onSliceOver)
       .on('mouseout', actions.onSliceOut);
+
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 20))
+      .call(colorLegend);
 
     sunburstGroup.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
