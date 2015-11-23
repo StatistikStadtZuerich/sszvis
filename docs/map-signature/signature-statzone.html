@@ -120,7 +120,10 @@
     // area of the circle proportional to the data value. Be sure to avoid using the
     // radius or the diameter to encode the data value, because the consequent quadratic
     // scaling of the area affects the visual perception of the quantity in undesirable ways.
-    var areaScale = d3.scale.linear().domain(state.birthsRange).range([0, 600]);
+    // This scale takes the square root of the input and uses that to scale the radius. When the
+    // result is used as the radius of a circle, the area of the circle will be linearly
+    // proportional to the input quantity.
+    var radiusScale = d3.scale.sqrt().domain(state.birthsRange).range([0, 14]);
 
 
     // Layers
@@ -140,7 +143,7 @@
 
     var anchoredShape = sszvis.map.anchoredCircles()
       .fill('rgb(81, 130, 179)')
-      .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : Math.sqrt(areaScale(d.births) / Math.PI); })
+      .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : radiusScale(birthsAcc(d)); })
       .on('over', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
@@ -172,10 +175,18 @@
       .width(bounds.innerWidth)
       .change(actions.setFilter);
 
+    var radiusLegend = sszvis.legend.radius()
+      .scale(radiusScale)
+      .tickFormat(sszvis.format.preciseNumber(1));
+
 
     // Rendering
 
     chartLayer.call(mapMaker);
+
+    chartLayer.selectGroup('radiusLegend')
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight - 65))
+      .call(radiusLegend);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
