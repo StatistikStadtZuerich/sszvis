@@ -121,7 +121,7 @@
     var xAxis = sszvis.axis.x()
       .scale(widthScale)
       .orient('bottom')
-      .tickFormat(function(v) { return sszvis.format.percent(v / 100); })
+      .tickFormat(function(v) { return sszvis.format.percent(v); })
       .tickValues(d3.range(0, 20, 3))
       .tickLength(state.tickType === 'Ohne Gitter' ? 0 : bounds.innerHeight + -chartDimensions.axisOffset)
       .alignOuterLabels(true);

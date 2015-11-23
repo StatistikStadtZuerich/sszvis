@@ -155,7 +155,7 @@
     var tooltipBody = function(d) {
       var value = sszvis.fn.compose(vAcc, mDatumAcc);
       return [
-        ['Anteil 75-jährige und Ältere', sszvis.format.percent(value(d) / 100)]
+        ['Anteil 75-jährige und Ältere', sszvis.format.percent(value(d))]
       ];
     };
 

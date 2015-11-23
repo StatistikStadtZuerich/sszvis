@@ -170,7 +170,7 @@
     // about accesing data properties of map entities.
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(function(v) {
-        return isNaN(v) ? 'keine Daten' : sszvis.format.percent(v);
+        return isNaN(v) ? 'keine Daten' : sszvis.format.percent(Math.round(v * 100));
       }, vAcc, mDatumAcc));
 
     var tooltip = sszvis.annotation.tooltip()
@@ -182,7 +182,7 @@
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
       .width(bounds.width / 2)
-      .labelFormat(sszvis.format.percent);
+      .labelFormat(sszvis.format.fractionPercent);
 
 
     // Rendering

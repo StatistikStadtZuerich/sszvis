@@ -129,7 +129,7 @@
     // see the comment by the tooltip in docs/map/kreis.html for more information
     // about accesing data properties of map entities.
     var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.percent, vAcc, mDatumAcc));
+      .bold(sszvis.fn.compose(sszvis.format.fractionPercent, vAcc, mDatumAcc));
 
     var tooltipBody = sszvis.svgUtils.modularText.html()
       .plain('Wahlkreis ').plain(sszvis.fn.compose(nameAcc, mDatumAcc));
@@ -143,7 +143,7 @@
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
       .width(bounds.width / 2)
-      .labelFormat(sszvis.format.percent);
+      .labelFormat(sszvis.format.fractionPercent);
 
 
     // Rendering

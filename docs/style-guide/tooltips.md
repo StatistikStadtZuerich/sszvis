@@ -51,7 +51,7 @@ This is the most basic tooltip form. Only the `.header` accessor function is use
 var id = 'miniBottom';
 
 var data = [{
-    value: 0.34
+    value: 34
 }];
 
 var dimensions = {
@@ -73,7 +73,7 @@ renderTooltip(id, dimensions, data, position, tooltip);
 var id = 'miniTop';
 
 var data = [{
-    value: 0.34
+    value: 34
 }];
 
 var dimensions = {
@@ -95,7 +95,7 @@ renderTooltip(id, dimensions, data, position, tooltip);
 var id = 'miniLeft';
 
 var data = [{
-    value: 0.34
+    value: 34
 }];
 
 var dimensions = {
@@ -117,7 +117,7 @@ renderTooltip(id, dimensions, data, position, tooltip);
 var id = 'miniRight';
 
 var data = [{
-    value: 0.34
+    value: 34
 }];
 
 var dimensions = {
@@ -146,7 +146,7 @@ This example demonstrates use of both the `.header` and `.body` accessor functio
 var id = 'medBot';
 
 var data = [{
-    value: 0.67
+    value: 67
 }];
 
 var dimensions = {
@@ -173,7 +173,7 @@ renderTooltip(id, dimensions, data, position, tooltip);
 var id = 'medTop';
 
 var data = [{
-    value: 0.67
+    value: 67
 }];
 
 var dimensions = {
@@ -200,7 +200,7 @@ renderTooltip(id, dimensions, data, position, tooltip);
 var id = 'medLeft';
 
 var data = [{
-    value: 0.67
+    value: 67
 }];
 
 var dimensions = {
@@ -227,7 +227,7 @@ renderTooltip(id, dimensions, data, position, tooltip);
 var id = 'medRight';
 
 var data = [{
-    value: 0.67
+    value: 67
 }];
 
 var dimensions = {
@@ -262,8 +262,8 @@ var id = 'maxBot';
 
 var data = [{
     value: [
-        ['Frauen', sszvis.format.percent(0.49)],
-        ['Männer', sszvis.format.percent(0.51)]
+        ['Frauen', sszvis.format.percent(49)],
+        ['Männer', sszvis.format.percent(51)]
     ]
 }];
 
@@ -291,8 +291,8 @@ var id = 'maxTop';
 
 var data = [{
     value: [
-        ['Frauen', sszvis.format.percent(0.49)],
-        ['Männer', sszvis.format.percent(0.51)]
+        ['Frauen', sszvis.format.percent(49)],
+        ['Männer', sszvis.format.percent(51)]
     ]
 }];
 
@@ -320,8 +320,8 @@ var id = 'maxLeft';
 
 var data = [{
     value: [
-        ['Frauen', sszvis.format.percent(0.49)],
-        ['Männer', sszvis.format.percent(0.51)]
+        ['Frauen', sszvis.format.percent(49)],
+        ['Männer', sszvis.format.percent(51)]
     ]
 }];
 
@@ -349,8 +349,8 @@ var id = 'maxRight';
 
 var data = [{
     value: [
-        ['Frauen', sszvis.format.percent(0.49)],
-        ['Männer', sszvis.format.percent(0.51)]
+        ['Frauen', sszvis.format.percent(49)],
+        ['Männer', sszvis.format.percent(51)]
     ]
 }];
 

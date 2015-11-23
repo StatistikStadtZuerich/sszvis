@@ -238,7 +238,7 @@ Configuration:
 
 * `geoIdColumn` – Data column to use for the geographic values(required)
 * `nameColumn` – Data column to use for the name of the geographic values (required)
-* `labelFormat` – Formatting function to use for the legend label. Defaults to number, but can be changed to "sszvis.format.percent" to render values from 0–1 as 0–100% (required)
+* `labelFormat` – Formatting function to use for the legend label. Defaults to number, but can be changed to "sszvis.format.percent" to render values from 0–100 as 0–100% (required)
 * `valueColumn` – Data column to use for the values (required)
 * `valueLabel` – Label for the values, shows in the tooltip (required)
 
@@ -272,7 +272,7 @@ Configuration:
 A map of the Statistische Quartiere of Zürich, demonstrating use of a button group control for data subset selection.
 
 * `geoIdColumn` – Data column to use for the geographic values(required)
-* `labelFormat` – Formatting function to use for the legend label. Defaults to number, but can be changed to "sszvis.format.percent" to render values from 0–1 as 0–100% (required)
+* `labelFormat` – Formatting function to use for the legend label. Defaults to number, but can be changed to "sszvis.format.percent" to render values from 0–100 as 0–100% (required)
 * `nameColumn` – Data column to use for the name of the geographic values (required)
 * `valueColumn` – Data column to use for the values (required)
 * `valueLabel` – Label for the values, shows in the tooltip (required)

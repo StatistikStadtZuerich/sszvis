@@ -148,11 +148,22 @@ sszvis_namespace('sszvis.format', function(module) {
     },
 
     /**
-     * Format percentages
-     * @param  {number} d A fraction, usually between 0 and 1
-     * @return {string}
+     * Format percentages on the range 0 - 100
+     * @param  {number} d    A value to format, between 0 and 100
+     * @return {string}      The formatted value
      */
     percent: function(d) {
+      // Uses unix thin space
+      return format.number(d) + ' %';
+    },
+
+    /**
+     * Format percentages on the range 0 - 1
+     * @param  {number} d    A value to format, between 0 and 1
+     * @return {string}      The formatted value
+     */
+    fractionPercent: function(d) {
+      // Uses unix thin space
       return format.number(d * 100) + ' %';
     },
 

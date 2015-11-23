@@ -129,7 +129,7 @@
       .scale(yScale)
       .orient('right')
       .tickFormat(function(d) {
-        return d === 0 ? null : sszvis.format.percent(d);
+        return d === 0 ? null : sszvis.format.fractionPercent(d);
       })
       .contour(true);
 

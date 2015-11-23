@@ -216,7 +216,7 @@
       .orient('right')
       .tickFormat(function(d) {
         // Have to implement our own hiding for zero, because showZeroY is implemented through tickFormat
-        return d === 0 ? null : sszvis.format.percent(d);
+        return d === 0 ? null : sszvis.format.fractionPercent(d);
       })
       .contour(true);
 
@@ -233,7 +233,7 @@
       .body(function(d) {
         return [
           ['Beschäftige', sszvis.format.number(xAcc(d))],
-          ['Frauenanteil', sszvis.format.percent(yAcc(d) / 100)]
+          ['Frauenanteil', sszvis.format.percent(yAcc(d))]
         ];
       });
 

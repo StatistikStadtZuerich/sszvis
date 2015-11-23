@@ -161,7 +161,7 @@
       .bold(cAcc);
 
     var tooltipText = sszvis.svgUtils.modularText.html()
-      .plain(sszvis.fn.compose(sszvis.format.percent, function(d) { return xAcc(d) / 100; }));
+      .plain(sszvis.fn.compose(sszvis.format.percent, xAcc));
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)

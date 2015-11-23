@@ -139,7 +139,7 @@
       .orient('right');
 
     var tooltipTitle = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.percent, yAcc));
+      .bold(sszvis.fn.compose(sszvis.format.fractionPercent, yAcc));
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
@@ -177,7 +177,7 @@
   }
 
   function yAxisLabel(d) {
-    return (d === 0) ? null : sszvis.format.percent(d);
+    return (d === 0) ? null : sszvis.format.fractionPercent(d);
   }
 
 

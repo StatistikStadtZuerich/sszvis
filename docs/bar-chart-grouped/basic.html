@@ -133,7 +133,7 @@
       .scale(yScale)
       .orient('right')
       .tickFormat(function(d) {
-        return d === 0 ? null : sszvis.format.percent(d);
+        return d === 0 ? null : sszvis.format.percent(Math.round(d * 100));
       });
 
     var colorLegend = sszvis.legend.ordinalColorScale()

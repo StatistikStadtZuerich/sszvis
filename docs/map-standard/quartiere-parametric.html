@@ -37,9 +37,9 @@
     // Data column to use for the geographic values
     geoIdColumn: 'Qcode',
     // Formatting function to use for the legend label. In this example, it defaults
-    // to "sszvis.format.percent" to render values from 0–1 as 0–100%, for other
+    // to "sszvis.format.percent" to render values from 0–100 as 0–100%, for other
     // values "sszvis.format.number" is maybe more appropriate
-    labelFormat: sszvis.format.percent,
+    labelFormat: sszvis.format.fractionPercent,
     // Data column to use for the name of the geographic values
     nameColumn: 'Qname',
     // Data column to use for the values
@@ -172,7 +172,7 @@
 
     var tooltipBody = sszvis.svgUtils.modularText.html()
       .plain(sszvis.fn.compose(function(v) {
-        return isNaN(v) ? 'keine Daten' : sszvis.format.percent(v);
+        return isNaN(v) ? 'keine Daten' : sszvis.format.fractionPercent(v);
       }, vAcc, mDatumAcc))
       .plain(config.valueLabel);
 
