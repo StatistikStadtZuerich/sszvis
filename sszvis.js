@@ -666,6 +666,18 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.flatten
+     *
+     * Flattens the nested input array by one level. The input array is expected to be
+     * a two-dimensional array (i.e. its elements are also arrays). The result is a
+     * one-dimensional array consisting of all the elements of the sub-arrays.
+     * 
+     * @param  {Array}        The Array to flatten
+     * @return {Array}        A flattened Array
+     */
+    flatten: function(arr) { return Array.prototype.concat.apply([], arr); },
+
+    /**
      * fn.hashableSet
      *
      * takes an array of elements and returns the unique elements of that array, optionally
