@@ -97,12 +97,13 @@
 
     // Components
 
+    // You can optionally use .withLake(false) to hide the textured lake shape and reveal
+    // the four lake zones underneath
     var mapMaker = sszvis.map.zurichStatistischeZonen()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
-      .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), vAcc))
-      .withLake(false);
+      .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), vAcc));
 
 
     // Rendering
