@@ -4960,9 +4960,9 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         barLabelHitBoxes
           .attr('fill', 'transparent')
-          .attr('x', function(node) { return xPosition(node) + (props.labelSide(node.columnIndex) === 'left' ? -props.labelHitBoxSize : props.nodeThickness); })
+          .attr('x', function(node) { return xPosition(node) + (props.labelSide(node.columnIndex) === 'left' ? -props.labelHitBoxSize : 0); })
           .attr('y', function(node) { return yPosition(node) - (props.nodePadding / 2); })
-          .attr('width', props.labelHitBoxSize)
+          .attr('width', props.labelHitBoxSize + props.nodeThickness)
           .attr('height', function(node) { return yExtent(node) + props.nodePadding; });
 
 

@@ -185,10 +185,6 @@
 
     var nodesGroup = sankeyGroup.selectGroup('nodes');
 
-    nodesGroup.selectAll('.sszvis-bar')
-      .on('mouseover', actions.onNodeOver)
-      .on('mouseout', actions.onNodeOut);
-
     nodesGroup.selectAll('[data-tooltip-anchor]')
       .call(nodeTooltip);
 
