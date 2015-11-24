@@ -15,6 +15,9 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('labelSide', d3.functor).labelSide('left')
       .prop('labelHitBoxSize').labelHitBoxSize(0)
       .prop('nameLabel').nameLabel(sszvis.fn.identity)
+      .prop('linkSourceLabels').linkSourceLabels([])
+      .prop('linkTargetLabels').linkTargetLabels([])
+      .prop('linkLabel')
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
@@ -105,13 +108,47 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         linksGroup.call(linkTooltipAnchor);
 
+        // If no props.linkSourceLabels are provided, most of this rendering is no-op
+        var linkSourceLabels = linksGroup.selectAll('.sszvis-sankey-link-source-label')
+          .data(props.linkSourceLabels);
+
+        linkSourceLabels.enter()
+          .append('text')
+          .attr('class', 'sszvis-sankey-label sszvis-sankey-link-source-label');
+
+        linkSourceLabels.exit().remove();
+
+        linkSourceLabels
+          .attr('transform', function(link) {
+            var bbox = linkBoundingBox(link);
+            return sszvis.svgUtils.translateString(bbox[0] + 6, bbox[2]);
+          })
+          .text(props.linkLabel);
+
+        // If no props.linkTargetLabels are provided, most of this rendering is no-op
+        var linkTargetLabels = linksGroup.selectAll('.sszvis-sankey-link-target-label')
+          .data(props.linkTargetLabels);
+
+        linkTargetLabels.enter()
+          .append('text')
+          .attr('class', 'sszvis-sankey-label sszvis-sankey-link-target-label');
+
+        linkTargetLabels.exit().remove();
+
+        linkTargetLabels
+          .attr('transform', function(link) {
+            var bbox = linkBoundingBox(link);
+            return sszvis.svgUtils.translateString(bbox[1] - 6, bbox[3]);
+          })
+          .text(props.linkLabel);
+
         var barLabels = selection.selectGroup('nodelabels')
-          .selectAll('.sszvis-sankey-label')
+          .selectAll('.sszvis-sankey-node-label')
           .data(data.nodes);
 
         barLabels.enter()
           .append('text')
-          .attr('class', 'sszvis-sankey-label');
+          .attr('class', 'sszvis-sankey-label sszvis-sankey-node-label');
 
         barLabels.exit().remove();
 

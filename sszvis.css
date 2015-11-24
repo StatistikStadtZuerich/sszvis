@@ -152,6 +152,14 @@
   font-weight: normal;
 }
 
+.sszvis-sankey-link-source-label {
+  text-anchor: start;
+}
+
+.sszvis-sankey-link-target-label {
+  text-anchor: end;
+}
+
 /**
  * Map component
  *

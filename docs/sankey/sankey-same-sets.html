@@ -40,7 +40,9 @@
   var state = {
     data: [],
     hoveredNode: {},
-    hoveredLink: {}
+    hoveredLink: {},
+    linkSourceLabels: [],
+    linkTargetLabels: []
   };
 
 
@@ -63,12 +65,16 @@
 
     onNodeOver: function(d) {
       state.hoveredNode = d;
+      state.linkSourceLabels = d.linksTo;
+      state.linkTargetLabels = d.linksFrom;
 
       render(state);
     },
 
     onNodeOut: function(d) {
       state.hoveredNode = {};
+      state.linkSourceLabels = [];
+      state.linkTargetLabels = [];
 
       render(state);
     },
@@ -149,6 +155,8 @@
 
     // Components
 
+    var formatValue = sszvis.fn.compose(sszvis.format.preciseNumber(0), valueAcc);
+
     var sankeyGen = sszvis.component.sankey()
       .sizeScale(valueScale)
       .columnPosition(columnPosition)
@@ -158,19 +166,22 @@
       .nodeColor(nodeBlue)
       .linkColor(function(d) { return linkIsSelected(d) ? highlightLinkBlue : linkGrey; })
       .linkSort(function(a, b) { return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)); })
+      .linkSourceLabels(state.linkSourceLabels)
+      .linkTargetLabels(state.linkTargetLabels)
+      .linkLabel(formatValue)
       .labelSide(function(columnIndex) { return columnPosition(columnIndex) > bounds.innerWidth / 2 ? 'right' : 'left'; })
       .labelHitBoxSize(150)
       .nameLabel(function(id) { return id.slice(2); }); // Remove the leading 'f-' or 't-' from the ids
 
     var linkTooltip = sszvis.annotation.tooltip()
       .renderInto(linkTooltipLayer)
-      .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.preciseNumber(0), valueAcc)))
+      .header(sszvis.svgUtils.modularText.html().bold(formatValue))
       .visible(linkIsHovered);
 
     var nodeTooltip = sszvis.annotation.tooltip()
       .renderInto(nodeTooltipLayer)
       .visible(nodeIsHovered)
-      .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.preciseNumber(0), valueAcc)))
+      .header(sszvis.svgUtils.modularText.html().bold(formatValue))
       .orientation(function(d) { return d.x >= bounds.innerWidth / 2 ? 'right' : 'left'; })
       .dx(20);
 
