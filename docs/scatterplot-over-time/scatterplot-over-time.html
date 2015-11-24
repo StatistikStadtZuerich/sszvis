@@ -74,17 +74,6 @@
     setYear: function(inputYear) {
       state.activeYear = closestDatum(state.years, sszvis.fn.identity, inputYear);
 
-      state.currentData = state.data.filter(function(d) { return yearAcc(d) === state.activeYear; });
-
-      // For the voronoi component, it is essential that no two input vertices lie at the same point
-      state.voronoiPoints = sszvis.fn.derivedSet(state.currentData, function(d) {
-        return xAcc(d) + '__' + yAcc(d);
-      });
-
-      if (state.currentData.length !== state.voronoiPoints.length) {
-        sszvis.logger.warn('some data were filtered out of the voronoi points because the voronoi interaction layer requires that no two input vertices lie at the same point.');
-      }
-
       state.currentLinesData = state.linesData.map(function(line) {
         return line.filter(function(d) { return yearAcc(d) <= state.activeYear; });
       });
@@ -92,6 +81,35 @@
       state.futureLinesData = state.linesData.map(function(line) {
         return line.filter(function(d) { return yearAcc(d) >= state.activeYear; });
       });
+
+      var splitData = state.data.reduce(function(memo, datum) {
+        var year = yearAcc(datum);
+
+        // We only render dots for the current year's data
+        if (year === state.activeYear) {
+          memo.currentData.push(datum);
+        }
+        // The voronoi interaction layer includes both current and past data
+        if (year <= state.activeYear) {
+          memo.currentAndPastData.push(datum);
+        }
+
+        return memo;
+      }, {
+        currentData: [],
+        currentAndPastData: []
+      });
+
+      state.currentData = splitData.currentData;
+
+      // For the voronoi component, it is essential that no two input vertices lie at the same point
+      state.voronoiPoints = sszvis.fn.derivedSet(splitData.currentAndPastData, function(d) {
+        return xAcc(d) + '__' + yAcc(d);
+      });
+
+      if (splitData.currentAndPastData.length !== state.voronoiPoints.length) {
+        sszvis.logger.warn((splitData.currentAndPastData.length - state.voronoiPoints.length) + ' data points were filtered out of the voronoi points because the voronoi interaction layer requires that no two input vertices lie at the same point.');
+      }
 
       render(state);
     },
@@ -179,13 +197,22 @@
       .strokeWidth(1.8)
       .transition(false);
 
-    var dots = sszvis.component.dot()
+    var visibleDots = sszvis.component.dot()
       .x(sszvis.fn.compose(xScale, xAcc))
       .y(sszvis.fn.compose(yScale, yAcc))
       .radius(4)
       .fill(sszvis.fn.compose(cScale, branchAcc))
       // use white outlines in scatterplots to assist in identifying distinct circles
       .stroke('#FFFFFF')
+      .transition(false);
+
+    var invisibleDots = sszvis.component.dot()
+      .x(sszvis.fn.compose(xScale, xAcc))
+      .y(sszvis.fn.compose(yScale, yAcc))
+      .radius(0)
+      .fill('none')
+      // use white outlines in scatterplots to assist in identifying distinct circles
+      .stroke('none')
       .transition(false);
 
     var mouseOverlay = sszvis.behavior.voronoi()
@@ -216,7 +243,7 @@
       .orient('right')
       .tickFormat(function(d) {
         // Have to implement our own hiding for zero, because showZeroY is implemented through tickFormat
-        return d === 0 ? null : sszvis.format.fractionPercent(d);
+        return d === 0 ? null : sszvis.format.percent(d);
       })
       .contour(true);
 
@@ -232,6 +259,7 @@
       .header(sszvis.svgUtils.modularText.html().bold(branchAcc))
       .body(function(d) {
         return [
+          ['Jahr', sszvis.format.text(yearAcc(d))],
           ['Beschäftige', sszvis.format.number(xAcc(d))],
           ['Frauenanteil', sszvis.format.percent(yAcc(d))]
         ];
@@ -251,10 +279,16 @@
       .selectAll('.sszvis-line')
       .classed('sszvis-referenceline', true); // Adding this CSS class gives the future lines the same visual styling as the reference line component
 
-    // state.data renders the individual dots
-    chartLayer.selectGroup('dots')
+    // the visible dots are just the ones for the current 'activeYear'
+    chartLayer.selectGroup('visibleDots')
       .datum(state.currentData)
-      .call(dots)
+      .call(visibleDots);
+
+    // we render invisible dots which are for both current and past years.
+    // These enable attaching a tooltip to their positions
+    chartLayer.selectGroup('invisibleDots')
+      .datum(state.voronoiPoints)
+      .call(invisibleDots)
       .selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
