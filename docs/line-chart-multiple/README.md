@@ -114,4 +114,30 @@ Using a config object to define chart.
 }
 ```
 
+## Demonstrating the label adjustment code
+
+Note the use of `.labelId` and `.reduceOverlap(true)` on the ruler component.
+
+```project
+{
+    "name": "line-chart-label-adjustment",
+    "files": {
+        "index.html": {
+            "source": "docs/line-chart-multiple/label-adjustment.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/line-chart-multiple/data/arbeitslose.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"],
+    "size": {
+        "width": 516,
+        "height": 460
+    }
+}
+```
+
 

@@ -1,0 +1,186 @@
+Datum,Kategorie,Arbeitslosenquote
+01.03.2012,Stadt Zürich,3.40
+01.03.2012,Kanton Zürich,3.00
+01.03.2012,Schweiz,2.90
+01.03.2012,Winterthur,3.30
+01.03.2012,Basel Stadt,3.70
+01.04.2012,Stadt Zürich,3.30
+01.04.2012,Kanton Zürich,2.90
+01.04.2012,Schweiz,2.80
+01.04.2012,Winterthur,3.20
+01.04.2012,Basel Stadt,3.70
+01.05.2012,Stadt Zürich,3.22
+01.05.2012,Kanton Zürich,2.90
+01.05.2012,Schweiz,2.70
+01.05.2012,Winterthur,3.20
+01.05.2012,Basel Stadt,3.60
+01.06.2012,Stadt Zürich,3.20
+01.06.2012,Kanton Zürich,2.80
+01.06.2012,Schweiz,2.70
+01.06.2012,Winterthur,3.00
+01.06.2012,Basel Stadt,3.40
+01.07.2012,Stadt Zürich,3.20
+01.07.2012,Kanton Zürich,2.80
+01.07.2012,Schweiz,2.70
+01.07.2012,Winterthur,3.10
+01.07.2012,Basel Stadt,3.40
+01.08.2012,Stadt Zürich,3.26
+01.08.2012,Kanton Zürich,2.86
+01.08.2012,Schweiz,2.80
+01.08.2012,Winterthur,3.30
+01.08.2012,Basel Stadt,3.44
+01.09.2012,Stadt Zürich,3.30
+01.09.2012,Kanton Zürich,2.90
+01.09.2012,Schweiz,2.80
+01.09.2012,Winterthur,3.40
+01.09.2012,Basel Stadt,3.50
+01.10.2012,Stadt Zürich,3.42
+01.10.2012,Kanton Zürich,2.99
+01.10.2012,Schweiz,2.90
+01.10.2012,Winterthur,3.40
+01.10.2012,Basel Stadt,3.62
+01.11.2012,Stadt Zürich,3.57
+01.11.2012,Kanton Zürich,3.12
+01.11.2012,Schweiz,3.06
+01.11.2012,Winterthur,3.49
+01.11.2012,Basel Stadt,3.69
+01.12.2012,Stadt Zürich,3.70
+01.12.2012,Kanton Zürich,3.30
+01.12.2012,Schweiz,3.30
+01.12.2012,Winterthur,3.60
+01.12.2012,Basel Stadt,3.90
+01.01.2013,Stadt Zürich,3.80
+01.01.2013,Kanton Zürich,3.36
+01.01.2013,Schweiz,3.43
+01.01.2013,Winterthur,3.70
+01.01.2013,Basel Stadt,4.10
+01.02.2013,Stadt Zürich,3.80
+01.02.2013,Kanton Zürich,3.30
+01.02.2013,Schweiz,3.40
+01.02.2013,Winterthur,3.70
+01.02.2013,Basel Stadt,4.00
+01.03.2013,Stadt Zürich,3.70
+01.03.2013,Kanton Zürich,3.24
+01.03.2013,Schweiz,3.22
+01.03.2013,Winterthur,3.50
+01.03.2013,Basel Stadt,3.90
+01.04.2013,Stadt Zürich,3.70
+01.04.2013,Kanton Zürich,3.20
+01.04.2013,Schweiz,3.10
+01.04.2013,Winterthur,3.40
+01.04.2013,Basel Stadt,3.80
+01.05.2013,Stadt Zürich,3.70
+01.05.2013,Kanton Zürich,3.10
+01.05.2013,Schweiz,3.00
+01.05.2013,Winterthur,3.30
+01.05.2013,Basel Stadt,3.60
+01.06.2013,Stadt Zürich,3.60
+01.06.2013,Kanton Zürich,3.00
+01.06.2013,Schweiz,2.90
+01.06.2013,Winterthur,3.10
+01.06.2013,Basel Stadt,3.50
+01.07.2013,Stadt Zürich,3.70
+01.07.2013,Kanton Zürich,3.10
+01.07.2013,Schweiz,3.00
+01.07.2013,Winterthur,3.30
+01.07.2013,Basel Stadt,3.50
+01.08.2013,Stadt Zürich,3.60
+01.08.2013,Kanton Zürich,3.10
+01.08.2013,Schweiz,3.00
+01.08.2013,Winterthur,3.20
+01.08.2013,Basel Stadt,3.50
+01.09.2013,Stadt Zürich,3.70
+01.09.2013,Kanton Zürich,3.10
+01.09.2013,Schweiz,3.00
+01.09.2013,Winterthur,3.30
+01.09.2013,Basel Stadt,3.60
+01.10.2013,Stadt Zürich,3.70
+01.10.2013,Kanton Zürich,3.15
+01.10.2013,Schweiz,3.09
+01.10.2013,Winterthur,3.40
+01.10.2013,Basel Stadt,3.60
+01.11.2013,Stadt Zürich,3.80
+01.11.2013,Kanton Zürich,3.30
+01.11.2013,Schweiz,3.20
+01.11.2013,Winterthur,3.50
+01.11.2013,Basel Stadt,3.70
+01.12.2013,Stadt Zürich,3.99
+01.12.2013,Kanton Zürich,3.46
+01.12.2013,Schweiz,3.46
+01.12.2013,Winterthur,3.80
+01.12.2013,Basel Stadt,3.93
+01.01.2014,Stadt Zürich,4.08
+01.01.2014,Kanton Zürich,3.55
+01.01.2014,Schweiz,3.55
+01.01.2014,Winterthur,3.90
+01.01.2014,Basel Stadt,3.95
+01.02.2014,Stadt Zürich,4.00
+01.02.2014,Kanton Zürich,3.48
+01.02.2014,Schweiz,3.50
+01.02.2014,Winterthur,3.80
+01.02.2014,Basel Stadt,3.90
+01.03.2014,Stadt Zürich,3.90
+01.03.2014,Kanton Zürich,3.40
+01.03.2014,Schweiz,3.30
+01.03.2014,Winterthur,3.60
+01.03.2014,Basel Stadt,3.80
+01.04.2014,Stadt Zürich,3.80
+01.04.2014,Kanton Zürich,3.30
+01.04.2014,Schweiz,3.20
+01.04.2014,Winterthur,3.40
+01.04.2014,Basel Stadt,3.60
+01.05.2014,Stadt Zürich,3.70
+01.05.2014,Kanton Zürich,3.20
+01.05.2014,Schweiz,3.00
+01.05.2014,Winterthur,3.30
+01.05.2014,Basel Stadt,3.40
+01.06.2014,Stadt Zürich,3.66
+01.06.2014,Kanton Zürich,3.14
+01.06.2014,Schweiz,2.93
+01.06.2014,Winterthur,3.26
+01.06.2014,Basel Stadt,3.29
+01.07.2014,Stadt Zürich,3.65
+01.07.2014,Kanton Zürich,3.12
+01.07.2014,Schweiz,2.94
+01.07.2014,Winterthur,3.28
+01.07.2014,Basel Stadt,3.30
+01.08.2014,Stadt Zürich,3.60
+01.08.2014,Kanton Zürich,3.10
+01.08.2014,Schweiz,3.00
+01.08.2014,Winterthur,3.20
+01.08.2014,Basel Stadt,3.30
+01.09.2014,Stadt Zürich,3.70
+01.09.2014,Kanton Zürich,3.20
+01.09.2014,Schweiz,3.00
+01.09.2014,Winterthur,3.30
+01.09.2014,Basel Stadt,3.40
+01.10.2014,Stadt Zürich,3.74
+01.10.2014,Kanton Zürich,3.26
+01.10.2014,Schweiz,3.06
+01.10.2014,Winterthur,3.30
+01.10.2014,Basel Stadt,3.45
+01.11.2014,Stadt Zürich,3.80
+01.11.2014,Kanton Zürich,3.30
+01.11.2014,Schweiz,3.20
+01.11.2014,Winterthur,3.40
+01.11.2014,Basel Stadt,3.70
+01.12.2014,Stadt Zürich,4.00
+01.12.2014,Kanton Zürich,3.50
+01.12.2014,Schweiz,3.40
+01.12.2014,Winterthur,3.60
+01.12.2014,Basel Stadt,3.90
+01.01.2015,Stadt Zürich,4.04
+01.01.2015,Kanton Zürich,3.59
+01.01.2015,Schweiz,3.41
+01.01.2015,Winterthur,3.72
+01.01.2015,Basel Stadt,4.10
+01.02.2015,Stadt Zürich,4.02
+01.02.2015,Kanton Zürich,3.59
+01.02.2015,Schweiz,3.47
+01.02.2015,Winterthur,3.67
+01.02.2015,Basel Stadt,4.00
+01.03.2015,Stadt Zürich,4.01
+01.03.2015,Kanton Zürich,3.59
+01.03.2015,Schweiz,3.36
+01.03.2015,Winterthur,3.65
+01.03.2015,Basel Stadt,3.97
