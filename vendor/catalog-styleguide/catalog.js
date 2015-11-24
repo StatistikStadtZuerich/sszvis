@@ -23013,7 +23013,7 @@
 	  render: function() {
 	    return div({
 	      className: 'cg-Specimen-TabbedSourceView'
-	    }, this.props.sourceFiles.length > 1 ? this.props.sourceFiles.map((function(_this) {
+	    }, this.props.sourceFiles.length > 0 ? this.props.sourceFiles.map((function(_this) {
 	      return function(file, i) {
 	        return button({
 	          className: "cg-Specimen-TabbedSourceView-tab " + (i === _this.state.tab ? 'active' : void 0),
