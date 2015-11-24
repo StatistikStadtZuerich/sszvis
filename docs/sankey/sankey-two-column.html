@@ -170,13 +170,13 @@
 
     var linkTooltip = sszvis.annotation.tooltip()
       .renderInto(linkTooltipLayer)
-      .header(sszvis.svgUtils.modularText.html().bold(valueAcc))
+      .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.preciseNumber(0), valueAcc)))
       .visible(linkIsHovered);
 
     var nodeTooltip = sszvis.annotation.tooltip()
       .renderInto(nodeTooltipLayer)
       .visible(nodeIsHovered)
-      .header(sszvis.svgUtils.modularText.html().bold(valueAcc))
+      .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.preciseNumber(0), valueAcc)))
       .orientation(function(d) { return d.x >= bounds.innerWidth / 2 ? 'right' : 'left'; })
       .dx(20);
 
