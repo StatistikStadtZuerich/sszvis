@@ -5505,8 +5505,24 @@ sszvis_namespace('sszvis.component.sunburst', function(module) {
           .innerRadius(innerRadius)
           .outerRadius(outerRadius);
 
+        data.forEach(function(d) {
+          // _x and _dx are the destination values for the transition.
+          // We set these to the computed x and dx.
+          d._x = d.x;
+          d._dx = d.dx;
+        });
+
         var arcs = selection.selectAll('.sszvis-sunburst-arc')
-          .data(data.filter(function(d) { return !d.isSunburstRoot; }));
+          .each(function(d, i) {
+            if (data[i]) {
+              // x and dx are the current/transitioning values
+              // We set these here, in case any datums already exist which have values set
+              data[i].x = d.x;
+              data[i].dx = d.dx;
+              // The transition tweens from x and dx to _x and _dx
+            }
+          })
+          .data(data);
 
         arcs.enter()
           .append('path')
@@ -5515,9 +5531,20 @@ sszvis_namespace('sszvis.component.sunburst', function(module) {
         arcs.exit().remove();
 
         arcs
-          .attr('d', arcGen)
           .attr('stroke', props.stroke)
           .attr('fill', getColorRecursive);
+
+        arcs.transition()
+          .call(sszvis.transition)
+          .attrTween('d', function(d) {
+            var xInterp = d3.interpolate(d.x, d._x);
+            var dxInterp = d3.interpolate(d.dx, d._dx);
+            return function(t) {
+              d.x = xInterp(t);
+              d.dx = dxInterp(t);
+              return arcGen(d);
+            }
+          });
 
         // Add tooltip anchors
         var arcTooltipAnchor = sszvis.annotation.tooltipAnchor()
