@@ -162,7 +162,7 @@ An optional formatter function for the end labels. Usually should be sszvis.form
             "source": "docs/map-standard/switzerland.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/map-standard/data/M_swiss_fake.csv",
+        "data.csv": "docs/map-standard/data/M_swiss_fake.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",

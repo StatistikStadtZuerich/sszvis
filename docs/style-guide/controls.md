@@ -144,7 +144,7 @@ A boolean or boolean function which determines whether the ruler should be flipp
             "source": "docs/map-standard/cml-quartier-years.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map/data/CML_quartier_years.csv",
+        "data.csv": "docs/map-standard/data/CML_quartier_years.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
