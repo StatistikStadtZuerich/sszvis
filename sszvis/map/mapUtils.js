@@ -21,6 +21,20 @@ sszvis_namespace('sszvis.map.utils', function(module) {
   // a different featureBoundsCacheKey must be used.
   var featureBoundsCache = {};
 
+  /**
+   * swissMapProjection
+   *
+   * A function for creating d3 projection functions, customized for the dimensions of the map you need.
+   * Because this projection generator involves calculating the boundary of the features that will be
+   * projected, the result of these calculations is cached internally. Hence the featureBoundsCacheKey.
+   * You don't need to worry about this - mostly it's the map module components which use this function.
+   *
+   * @param  {Number} width                           The width of the projection destination space.
+   * @param  {Number} height                          The height of the projection destination space.
+   * @param  {Object} featureCollection               The feature collection that will be projected by the returned function. Needed to calculated a good size.
+   * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
+   * @return {Function}                               The projection function.
+   */
   module.exports.swissMapProjection = function(width, height, featureCollection, featureBoundsCacheKey) {
     var mercatorProjection = d3.geo.mercator()
       // .rotate([-7.439583333333333, -46.95240555555556]); // This rotation was, I think, part of the offset problem
@@ -119,6 +133,20 @@ sszvis_namespace('sszvis.map.utils', function(module) {
 
   module.exports.GEO_KEY_DEFAULT = 'geoId';
 
+  /**
+   * prepareMergedData
+   *
+   * Merges a dataset with a geojson object by matching elements in the dataset to elements in the geojson.
+   * it expects a keyname to be given, which is the key in each data object which has the id of the geojson
+   * element to which that data object should be matched. Expects an array of data objects, and a geojson object
+   * which has a features array. Each feature is mapped to one data object.
+   *
+   * @param  {Array} dataset           The array of input data to match
+   * @param  {Object} geoJson          The geojson object. This function will attempt to match each geojson feature to a data object
+   * @param  {String} keyName          The name of the property on each data object which will be matched with each geojson id.
+   * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
+   *                                   geoJson property which is the feature, and a datum property which is the matched datum.
+   */
   module.exports.prepareMergedData = function(dataset, geoJson, keyName) {
     keyName || (keyName = sszvis.map.utils.GEO_KEY_DEFAULT);
 
@@ -139,6 +167,21 @@ sszvis_namespace('sszvis.map.utils', function(module) {
     return mergedData;
   };
 
+  /**
+   * getGeoJsonCenter
+   *
+   * Gets the geographic centroid of a geojson feature object. Caches the result of the calculation
+   * on the object as an optimization (note that this is a coordinate position and is independent
+   * of the map projection). If the geoJson object's properties contain a 'center' property, that
+   * is expected to be a string of the form "longitude,latitude" which will be parsed into a [lon, lat]
+   * pair expected by d3's projection functions. These strings can be added to the properties array
+   * using the topojson command line tool's -e option (see the Makefile rule for the zurich statistical
+   * quarters map for an example of this use).
+   * 
+   * @param  {Object} geoJson                 The geoJson object for which you want the center.
+   * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
+   *                                          (or user-specified center) of the object.
+   */
   module.exports.getGeoJsonCenter = function(geoJson) {
     if (!geoJson.properties.cachedCenter) {
       var setCenter = geoJson.properties.center;
