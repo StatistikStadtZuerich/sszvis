@@ -107,7 +107,7 @@ sszvis_namespace('sszvis.map.zurichStatistischeZonen', function(module) {
       .prop('width')
       .prop('height')
       .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT)
-      .prop('withLake').withLake(true)
+      .prop('withLake').withLake(false) // Lake is not visible by default
       .prop('anchoredShape')
       .delegate('defined', base)
       .delegate('fill', base)
