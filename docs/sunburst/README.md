@@ -28,7 +28,7 @@
 
 ```project
 {
-    "name": "sunburst-2",
+    "name": "sunburst-3",
     "files": {
         "index.html": {
             "source": "docs/sunburst/sunburst-three-cat.html",
@@ -52,7 +52,7 @@
 
 ```project
 {
-    "name": "sunburst-2",
+    "name": "sunburst-4",
     "files": {
         "index.html": {
             "source": "docs/sunburst/sunburst-four-cat.html",
