@@ -25,6 +25,18 @@ A light grey scale is included for use in cases where a data background should b
 </script>
 ```
 
+### `color.paleGry()`
+
+A pale grey shade which is used for elements which should be in the background, but shouldn't completely fade out. Currently used as the color of the links in the sankey diagram.
+
+```html|plain,run-script
+<div id='paleGreyScale' class='scale-container'></div>
+<script>
+    var scale = sszvis.color.paleGry();
+    colorSwatchFromLinearScale('paleGreyScale', scale, 1);
+</script>
+```
+
 ### `color.gry()`
 
 A grey scale is included for use in cases where a data value should be shaded out. Currently, it is used for the color of inactive lines in the coordinated map and line chart example. At the moment, it has only one value.
@@ -34,6 +46,18 @@ A grey scale is included for use in cases where a data value should be shaded ou
 <script>
     var scale = sszvis.color.gry();
     colorSwatchFromLinearScale('greyScale', scale, 1);
+</script>
+```
+
+### `color.dimGry()`
+
+A dim grey shade used for highlighting elements which are normally grey (`color.gry()`). Currently, it is used as the highlight color in the "bubble map".
+
+```html|plain,run-script
+<div id='dimGreyScale' class='scale-container'></div>
+<script>
+    var scale = sszvis.color.dimGry();
+    colorSwatchFromLinearScale('dimGreyScale', scale, 1);
 </script>
 ```
 
