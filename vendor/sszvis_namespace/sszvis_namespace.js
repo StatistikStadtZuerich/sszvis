@@ -1,3 +1,8 @@
+/**
+ * sszvis_namespace
+ *
+ * A global function for creating namespaced objects and functions in Javascript.
+ */
 (function(global){
   'use strict';
 
