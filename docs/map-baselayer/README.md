@@ -184,7 +184,7 @@ A base layer example using the Switzerland map data. This is a static map
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js",
         "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-zurich-switzerland.js"
+        "map.js": "map-modules/sszvis-map-switzerland.js"
     },
     "sourceView": ["index.html"],
     "size": {
