@@ -31,7 +31,7 @@ The multiple line chart uses the same components as the [single line chart](/#/l
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 460
+        "height": 385
     }
 }
 ```
@@ -57,7 +57,7 @@ Observations for the same variable across many years.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 485
+        "height": 410
     }
 }
 ```
@@ -83,7 +83,7 @@ Comparison of two datasets with huge differences in values over the same time pe
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 525
+        "height": 450
     }
 }
 ```
@@ -109,7 +109,7 @@ Using a config object to define chart.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 460
+        "height": 410
     }
 }
 ```
@@ -135,7 +135,7 @@ Note the use of `.labelId` and `.reduceOverlap(true)` on the ruler component.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 460
+        "height": 411
     }
 }
 ```

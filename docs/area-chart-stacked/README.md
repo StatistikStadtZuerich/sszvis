@@ -64,7 +64,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 535
+        "height": 460
     }
 }
 ```
@@ -129,7 +129,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 529
+        "height": 454
     }
 }
 ```
@@ -153,7 +153,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 730
+        "height": 917
     }
 }
 ```

@@ -66,7 +66,7 @@ This x-axis displays time values
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 440
+        "height": 365
     }
 }
 ```
@@ -92,7 +92,7 @@ This x-axis displays ordinal categories
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 545
+        "height": 470
     }
 }
 ```
@@ -118,7 +118,7 @@ The x-axis title is centered because there are two y-axes. In addition, the tick
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 525
+        "height": 450
     }
 }
 ```
@@ -144,7 +144,7 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 470
+        "height": 410
     }
 }
 ```
@@ -169,8 +169,8 @@ The y-axis convers the y-dimension, both placement and height. Note also that ss
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 393,
-        "width": 516
+        "width": 516,
+        "height": 318
     }
 }
 ```
@@ -196,7 +196,7 @@ By default, sszvis y-axes don't show a label at 0. Since values go negative in t
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 515
+        "height": 440
     }
 }
 ```
@@ -222,7 +222,7 @@ This y-axis shows ordinal categories
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 637
+        "height": 645
     }
 }
 ```
@@ -247,8 +247,8 @@ Sometimes, the axis labels are long enough that they will overlap their neighbor
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 428,
-        "width": 516
+        "width": 516,
+        "height": 353
     }
 }
 ```
@@ -304,7 +304,7 @@ This x-axis has a diagonal slant. Here are the guidelines for changing the slant
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 505
+        "height": 430
     }
 }
 ```
@@ -330,7 +330,7 @@ Contours are used to make labels stand out, especially when they are positioned 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 455
+        "height": 380
     }
 }
 ```

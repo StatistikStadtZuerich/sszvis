@@ -52,7 +52,7 @@ The caption for the data area. (default position is the center of the circle).
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 440
+        "height": 365
     }
 }
 ```
@@ -111,7 +111,7 @@ The caption for the data area. (default position is the center of the rectangle)
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 495
+        "height": 420
     }
 }
 ```
@@ -176,7 +176,7 @@ A reference line caption. (default position is centered at the midpoint of the l
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 469
+        "height": 394
     }
 }
 ```
@@ -235,7 +235,7 @@ A boolean or function which returns a boolean that specifies whether the labels 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 460
+        "height": 385
     }
 }
 ```
@@ -314,7 +314,7 @@ A value for the y-value of the upper range flag dot
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 529
+        "height": 454
     }
 }
 ```

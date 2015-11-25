@@ -31,7 +31,7 @@ For each chart the following can always be configured:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 414
+        "height": 360
     }
 }
 ```
@@ -56,7 +56,7 @@ For each chart the following can always be configured:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 460
+        "height": 410
     }
 }
 ```
@@ -80,8 +80,8 @@ For each chart the following can always be configured:
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 393,
-        "width": 516
+        "width": 516,
+        "height": 370
     }
 }
 ```
@@ -106,7 +106,7 @@ For each chart the following can always be configured:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 524
+        "height": 470
     }
 }
 ```
@@ -191,7 +191,7 @@ Configuration:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 515
+        "height": 456
     }
 }
 ```
@@ -227,7 +227,7 @@ Configuration:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 445
+        "height": 391
     }
 }
 ```
@@ -402,7 +402,7 @@ Configuration:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 450
+        "height": 410
     }
 }
 ```
@@ -436,7 +436,7 @@ Configuration:
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 445
+        "height": 391
     }
 }
 ```
@@ -475,7 +475,7 @@ Configurations
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 474
+        "height": 420
     }
 }
 ```

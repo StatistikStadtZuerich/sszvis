@@ -64,7 +64,7 @@ Supply an accessor function for reference data for the right side. If this optio
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 470
+        "height": 410
     }
 }
 ```
@@ -98,7 +98,7 @@ The configuration options are the same as for the standard pyramid component, in
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 534
+        "height": 433
     }
 }
 ```
@@ -124,7 +124,7 @@ Reference lines can be shown to compare another set of data with the data displa
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 514
+        "height": 413
     }
 }
 ```

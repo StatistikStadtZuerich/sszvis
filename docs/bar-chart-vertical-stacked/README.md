@@ -69,7 +69,7 @@ Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 505
+        "height": 430
     }
 }
 ```
@@ -95,7 +95,7 @@ Eight layers of values, with tooltips.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 545
+        "height": 470
     }
 }
 ```

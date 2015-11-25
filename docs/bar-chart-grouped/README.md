@@ -67,7 +67,7 @@ A predicate function which can be used to determine whether a bar has a defined 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 459
+        "height": 384
     }
 }
 ```
@@ -91,7 +91,7 @@ A predicate function which can be used to determine whether a bar has a defined 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 515
+        "height": 440
     }
 }
 ```
@@ -115,7 +115,7 @@ A predicate function which can be used to determine whether a bar has a defined 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 461
+        "height": 386
     }
 }
 ```
@@ -139,7 +139,7 @@ A predicate function which can be used to determine whether a bar has a defined 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 459
+        "height": 456
     }
 }
 ```

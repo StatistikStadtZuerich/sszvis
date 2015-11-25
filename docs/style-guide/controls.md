@@ -97,7 +97,7 @@ A callback function called whenever user interaction attempts to change the slid
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 535
+        "height": 460
     }
 }
 ```
@@ -153,7 +153,7 @@ A boolean or boolean function which determines whether the ruler should be flipp
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 693
+        "height": 675
     }
 }
 ```

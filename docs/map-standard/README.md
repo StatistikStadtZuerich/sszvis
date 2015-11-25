@@ -140,7 +140,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 592
+        "height": 675
     }
 }
 ```

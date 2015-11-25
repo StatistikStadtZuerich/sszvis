@@ -54,8 +54,8 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 393,
-        "width": 516
+        "width": 516,
+        "height": 318
     }
 }
 ```
@@ -84,8 +84,8 @@ This example shows several edge cases and specialties:
     },
     "sourceView": ["index.html", "data.csv"],
     "size": {
-        "height": 428,
-        "width": 516
+        "width": 516,
+        "height": 353
     }
 }
 ```
@@ -111,7 +111,7 @@ In some cases, many values in a category should be shown. In this example, a lin
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "height": 393,
-        "width": 516
+        "width": 318
     }
 }
 ```

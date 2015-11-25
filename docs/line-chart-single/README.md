@@ -48,7 +48,7 @@ String or function to set the stroke thickness (default: 1)
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 440
+        "height": 365
     }
 }
 ```
@@ -74,7 +74,7 @@ Based on the default chart. Additionally shows the numeric values at the current
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 393
+        "height": 318
     }
 }
 ```
@@ -100,7 +100,7 @@ Shows an annotation at a given position or data point. The time axis shows days 
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 440
+        "height": 365
     }
 }
 ```
@@ -126,7 +126,7 @@ Shows how to use negative x-values.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 440
+        "height": 365
     }
 }
 ```
@@ -152,7 +152,7 @@ Shows how to use negative y-values.
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 455
+        "height": 380
     }
 }
 ```
@@ -178,7 +178,7 @@ Generates a chart based on a config object
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 414
+        "height": 360
     }
 }
 ```

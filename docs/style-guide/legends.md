@@ -70,7 +70,7 @@ The maximum width of the horizontal float layout. Default 600px
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 525
+        "height": 450
     }
 }
 ```
@@ -118,7 +118,7 @@ The maximum width of the horizontal float layout. Default 600px
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 459
+        "height": 384
     }
 }
 ```
@@ -269,7 +269,7 @@ Formatter function for the labels
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 495
+        "height": 420
     }
 }
 ```

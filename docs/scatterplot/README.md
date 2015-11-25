@@ -51,7 +51,7 @@ To clip the contents of the chart to chart boundaries (useful for scatterplots w
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 469
+        "height": 394
     }
 }
 ```
@@ -77,7 +77,7 @@ Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 495
+        "height": 420
     }
 }
 ```
@@ -101,7 +101,7 @@ Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/
     "sourceView": ["index.html", "data.csv"],
     "size": {
         "width": 516,
-        "height": 535
+        "height": 460
     }
 }
 ```
