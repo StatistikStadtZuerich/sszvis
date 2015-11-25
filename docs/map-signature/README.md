@@ -1,8 +1,12 @@
 # Signature Maps
 
-> This component can be used to create maps with sized circle data overlays
+## Bubble Map
 
-## sszvis.dot
+The "bubble map" concept is a map with sized circle data overlays for each map entity. The map shapes should be rendered with the standard map class for the type you want, and then the circles overhead are rendered as an "anchored shape".
+
+## sszvis.map.anchoredCircles
+
+This is an "anchored shape" used to render circles above map entities.
 
 ### Data Structures 
 
