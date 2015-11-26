@@ -89,6 +89,8 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiereBaseMap', function(modul
  * @property {String, Function} fill                  A string or function for the fill of the map entities
  * @property {String} borderColor                     A string for the border color of the map entities
  * @property {Boolean} withLake                       Whether or not to show the textured outline of the end of lake Zurich that is within the city. Default true
+ * @property {Component} anchoredShape                A shape to anchor to the base map elements of this map. For example, anchoredCircles for a bubble map.
+ * @property {Boolean} transitionColor                Whether or not to transition the color of the base shapes. Default true.
  * @function on(String, function)                     This component has an event handler interface for binding events to the map entities.
  *                                                    The available events are 'over', 'out', and 'click'. These are triggered on map
  *                                                    elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
