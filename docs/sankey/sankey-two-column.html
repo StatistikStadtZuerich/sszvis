@@ -121,7 +121,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 700, top: 20, right: 115, bottom: 20, left: 115 });
+    var bounds = sszvis.bounds({ height: 700, top: 40, right: 115, bottom: 20, left: 115 });
 
     // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
     // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
@@ -166,6 +166,7 @@
     var sankeyGen = sszvis.component.sankey()
       .sizeScale(valueScale)
       .columnPosition(columnPosition)
+      .columnLabel(function(columnIndex) { return ['Zuzugsregion', 'Stadtquartier'][columnIndex]; })
       .nodeThickness(sankeyLayout.nodeThickness)
       .nodePadding(sankeyLayout.nodePadding)
       .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })

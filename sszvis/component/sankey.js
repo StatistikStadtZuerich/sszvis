@@ -8,6 +8,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('nodeThickness')
       .prop('nodePadding')
       .prop('columnPadding', d3.functor)
+      .prop('columnLabel', d3.functor)
       .prop('linkCurvature').linkCurvature(0.5)
       .prop('nodeColor', d3.functor)
       .prop('linkColor', d3.functor)
@@ -53,6 +54,41 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         barGroup.call(barTooltipAnchor);
 
+        // Draw the column labels
+        var columnLabelX = function(colIndex) { return props.columnPosition(colIndex) + props.nodeThickness / 2; };
+        var columnLabelY = -24;
+
+        var columnLabels = barGroup
+          .selectAll('.sszvis-sankey-column-label')
+          // One number for each column
+          .data(data.columnLengths);
+
+        columnLabels.enter()
+          .append('text')
+          .attr('class', 'sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label');
+
+        columnLabels.exit().remove();
+
+        columnLabels
+          .attr('transform', function(d, i) { return sszvis.svgUtils.translateString(columnLabelX(i), columnLabelY); })
+          .text(function(d, i) { return props.columnLabel(i); });
+
+        var columnLabelTicks = barGroup
+          .selectAll('.sszvis-sankey-column-label-tick')
+          .data(data.columnLengths);
+
+        columnLabelTicks.enter()
+          .append('line')
+          .attr('class', 'sszvis-sankey-column-label-tick');
+
+        columnLabelTicks.exit().remove();
+
+        columnLabelTicks
+          .attr('x1', function(d, i) { return sszvis.svgUtils.crisp.halfPixel(columnLabelX(i)); })
+          .attr('x2', function(d, i) { return sszvis.svgUtils.crisp.halfPixel(columnLabelX(i)); })
+          .attr('y1', sszvis.svgUtils.crisp.halfPixel(columnLabelY + 8))
+          .attr('y2', sszvis.svgUtils.crisp.halfPixel(columnLabelY + 12));
+
         // Draw the links
         var linkPoints = function(link) {
           var curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
@@ -80,6 +116,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         var linkThickness = function(link) { return Math.max(props.sizeScale(link.value), 1); };
 
+        // Render the links
         var linksGroup = selection.selectGroup('links');
 
         var linksElems = linksGroup.selectAll('.sszvis-link')
@@ -108,13 +145,17 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         linksGroup.call(linkTooltipAnchor);
 
+        // Render the link labels
+        var linkLabelsGroup = selection.selectGroup('linklabels');
+
         // If no props.linkSourceLabels are provided, most of this rendering is no-op
-        var linkSourceLabels = linksGroup.selectAll('.sszvis-sankey-link-source-label')
+        var linkSourceLabels = linkLabelsGroup
+          .selectAll('.sszvis-sankey-link-source-label')
           .data(props.linkSourceLabels);
 
         linkSourceLabels.enter()
           .append('text')
-          .attr('class', 'sszvis-sankey-label sszvis-sankey-link-source-label');
+          .attr('class', 'sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label');
 
         linkSourceLabels.exit().remove();
 
@@ -126,12 +167,13 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .text(props.linkLabel);
 
         // If no props.linkTargetLabels are provided, most of this rendering is no-op
-        var linkTargetLabels = linksGroup.selectAll('.sszvis-sankey-link-target-label')
+        var linkTargetLabels = linkLabelsGroup
+          .selectAll('.sszvis-sankey-link-target-label')
           .data(props.linkTargetLabels);
 
         linkTargetLabels.enter()
           .append('text')
-          .attr('class', 'sszvis-sankey-label sszvis-sankey-link-target-label');
+          .attr('class', 'sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label');
 
         linkTargetLabels.exit().remove();
 
@@ -142,13 +184,16 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           })
           .text(props.linkLabel);
 
-        var barLabels = selection.selectGroup('nodelabels')
+        // Render the node labels and their hit boxes
+        var nodeLabelsGroup = selection.selectGroup('nodelabels');
+
+        var barLabels = nodeLabelsGroup
           .selectAll('.sszvis-sankey-node-label')
           .data(data.nodes);
 
         barLabels.enter()
           .append('text')
-          .attr('class', 'sszvis-sankey-label sszvis-sankey-node-label');
+          .attr('class', 'sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label');
 
         barLabels.exit().remove();
 
@@ -159,7 +204,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .attr('x', function(node) { return props.labelSide(node.columnIndex) === 'left' ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6; })
           .attr('y', function(node) { return yPosition(node) + yExtent(node) / 2; });
 
-        var barLabelHitBoxes = selection.selectGroup('nodelabels')
+        var barLabelHitBoxes = nodeLabelsGroup
           .selectAll('.sszvis-sankey-hitbox')
           .data(data.nodes);
 
