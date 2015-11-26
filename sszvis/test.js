@@ -1,6 +1,24 @@
+/**
+ * @module sszvis/test
+ *
+ * A module for tests. Exposes an assert function for running a single test, and a runTests function
+ * for running all available tests of the library. As features are added or changed, especially for functions
+ * with a variety of input, output, and expected behavior, it is a good idea to write tests for those
+ * features or functions, to check that future changes don't cause regressions or errors.
+ *
+ */
 sszvis_namespace('sszvis.test', function(module) {
   'use strict';
 
+  /**
+   * sszvis.test.assert
+   *
+   * Assert a boolean. Provide a message and a boolean value. The boolean should be
+   * the evaluation of a statement which is something you want to test.
+   *
+   * @param  {String} assertion      A string descriptor for the test
+   * @param  {Boolean} test          The value of the test
+   */
   module.exports.assert = function assert(assertion, test) {
     if (test) {
       sszvis.logger.log('assertion passed: ' + assertion);
@@ -9,13 +27,20 @@ sszvis_namespace('sszvis.test', function(module) {
     }
   }
 
-  /* Test Suite */
+  /**
+   * sszvis.test.runTests
+   *
+   * The test suite. Call this function to run all tests of the library. You'll get a lot of console output.
+   * 
+   */
   module.exports.runTests = function() {
     runFormatTests();
   };
 
+  // Just a shortcut alias
   var assert = module.exports.assert;
 
+  // Tests for format functions
   function runFormatTests() {
     /* sszvis.format.number */
     var nfmt = sszvis.format.number;
