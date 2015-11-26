@@ -40,6 +40,80 @@ The size (in pixels) of the side of each raster pixel. Raster pixels are all squ
 
 The opacity of the entire layer. The default is 1. Use a lower value to slightly reveal the layers underneath.
 
+## sszvis.map.renderer.geojson
+
+### Data Structure
+
+Takes the same data as the map module components. That is, an array of data objects, where each one has a property that can be used to match it with a feature from the GeoJson.
+
+### Configuration
+
+#### `renderer.geojson.dataKeyName`
+
+The keyname in the data which will be used to match data entities with geographic entities. Default 'geoId'.
+
+#### `renderer.geojson.geoJsonKeyName`
+
+The keyname in the GeoJson (should be in the `properties` object of each feature in the GeoJson) which will be used to match map entities with data entities. Default 'id'.
+
+#### `renderer.geojson.geoJson`
+
+The GeoJson object which should be rendered. Needs to have a 'features' property that is an array of features to render. And each feature should have a `properties` object which contains the id to match with a data element.
+
+#### `renderer.geojson.mapPath`
+
+A path generator for drawing the GeoJson as SVG Path elements.
+
+#### `renderer.geojson.defined`
+
+A function which, when given a data value, returns whether or not data in that value is defined.
+
+#### `renderer.geojson.fill`
+
+A function that returns a string, or a string, for the fill color of the GeoJson entities. Default black.
+
+#### `renderer.geojson.stroke`
+
+The stroke color of the entities. Can be a string or a function returning a string. Default black.
+
+#### `renderer.geojson.strokeWidth`
+
+The thickness of the strokes of the shapes. Can be a number or a function returning a number. Default 1.25.
+
+#### `renderer.geojson.transitionColor`
+
+Whether or not to transition the fill color of the geojson when it changes. Default true.
+
+## sszvis.map.renderer.image
+
+### Data Structure
+
+This layer doesn't require any data. It renders the image provided by the .src property.
+
+### Configuration
+
+#### `renderer.raster.projection`
+
+The map projection function used to position the image in pixels. Uses the upper left and lower right corners of the image as geographical place markers to align with other map layers.
+
+#### `renderer.raster.src`
+
+The source of the image you want to use. This should be ither a URL for an image hosted on the same server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
+
+#### `renderer.raster.geoBounds`
+
+This should be a 2D array containing the upper-left (north-west) and lower-right (south-east) coordinates of the corresponding corners of the image. The structure expected is:
+
+[[nw-longitude, nw-latitude], [se-longitude, se-latitude]].
+
+This is consistent with the way D3 handles similar geographic data. These coordinates are used to represent the edge of the image being used, and to align the image with other map layers (using the projection function). Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This will happen if the image itself is generated using a different type of map projection than the one used by the projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
+
+#### `renderer.raster.opacity`
+
+The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
+
+## Examples
+
 New settlements, topographic maps, and raster maps
 
 ## Grundkarte der Stadt Zürcher Quartiere mit Neubausiedlungen
