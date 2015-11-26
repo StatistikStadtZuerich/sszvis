@@ -11,7 +11,8 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
       var partitionLayout = d3.layout.partition()
         .children(sszvis.fn.prop('values'))
         .value(function(d) { return valueAcc(d.values); })
-        .sort(function(a, b) { return d3.descending(a.value, b.value); });
+        // Don't sort the output. This component expects sorted inputs
+        .sort(function() { return 0; });
 
       return partitionLayout({
           isSunburstRoot: true,

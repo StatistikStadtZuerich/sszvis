@@ -51,19 +51,16 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
-      var totals = data.reduce(function(memo, value) {
-        var continent = continentAcc(value);
-        memo[continent] = memo[continent] ? memo[continent] + numAcc(value) : numAcc(value);
-        return memo;
-      });
+      var continentsList = ["Europa", "Asien", "Amerika", "Afrika", "Ozeanien", "Unzuteilbar"];
 
+      // Sort the input data according to the desired order of the continents first, then by descending order of size
       data.sort(function(a, b) {
-        var totalDiff = d3.descending(totals[continentAcc(a)], totals[continentAcc(b)]);
-        if (totalDiff !== 0) return totalDiff;
+        var indexDiff = d3.ascending(continentsList.indexOf(continentAcc(a)), continentsList.indexOf(continentAcc(b)));
+        if (indexDiff !== 0) return indexDiff;
         return d3.descending(numAcc(a), numAcc(b));
       });
 
-      state.continents = sszvis.fn.set(data, continentAcc);
+      state.continents = continentsList;
 
       state.data = sszvis.layout.sunburst.prepareData()
         .layer(continentAcc)
