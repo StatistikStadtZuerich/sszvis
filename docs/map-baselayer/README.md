@@ -9,6 +9,7 @@ Available base map generators:
 * `sszvis.map.zurichStadtKreiseBaseMap()`
 * `sszvis.map.zurichStatistischeQuartiereBaseMap()`
 * `sszvis.map.zurichWahlKreiseBaseMap()`
+* `sszvis.map.zurichStatistischeZonenBaseMap()`
 * `sszvis.map.zurichAgglomeration2012BaseMap()`
 * `sszvis.map.switzerlandBaseMap()`
 
