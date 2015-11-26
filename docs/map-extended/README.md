@@ -2,7 +2,43 @@
 
 > These generators extend the capabilities of the sszvis.map package.
 
-## sszvis.map
+## sszvis.map.renderer.raster
+
+Used to render a layer of raster data into an HTML layer (a div). Uses a canvas element internally.
+
+### Data Structure
+
+An array of data objects, where each object represents a single square "pixel" in the raster. You provide a function for computing the position (as an [x, y] pair) of the pixel, one for the fill color of the pixel, and a value for the size of the side of each pixel (sszvis.map.utils.pixelsFromDistance is good for this).
+
+### Configuration
+
+#### `renderer.raster.debug(isDebug)`
+
+Pass true to this option to enable "debug" mode. This draws a large red rectangle over the entire canvas. Use this for gauging alignment of the raster layer with other map layers.
+
+#### `renderer.raster.width(width)`
+
+Use this to set the width of the canvas to be used
+
+#### `renderer.raster.height(height)`
+
+Use this to set the height of the canvas to be used
+
+#### `renderer.raster.fill(fillFunc)`
+
+A fill function for each raster pixel. Gets passed the data value for that pixel, and should return a color.
+
+#### `renderer.raster.position(positionFunc)`
+
+The position for each raster pixel. Gets passed the datum and should return an [x, y] position. This function usually involves a map projection.
+
+#### `renderer.raster.cellSide(sideLength)`
+
+The size (in pixels) of the side of each raster pixel. Raster pixels are all squares, and all have the same side length. sszvis.map.utils.pixelsFromDistance is a good function to use for calculating this pixel length, given a distance in meters and a projection function.
+
+#### `renderer.raster.opacity(opacityValue)`
+
+The opacity of the entire layer. The default is 1. Use a lower value to slightly reveal the layers underneath.
 
 New settlements, topographic maps, and raster maps
 
