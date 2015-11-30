@@ -5,7 +5,7 @@ sszvis_namespace('sszvis.component.sunburst', function(module) {
 
   module.exports = function() {
     return d3.component()
-      .prop('angleScale')
+      .prop('angleScale').angleScale(d3.scale.linear().range([0, 2 * Math.PI]))
       .prop('radiusScale')
       .prop('centerRadius')
       .prop('fill')

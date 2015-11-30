@@ -117,8 +117,6 @@
     // Scales
     var colorScale = sszvis.color.qual6().domain(state.continents);
 
-    var angleScale = d3.scale.linear().range([0, 2 * Math.PI]);
-
     var radiusScale = d3.scale.linear()
           .domain(state.radiusExtent)
           .range([0, burstLayout.numLayers * burstLayout.ringWidth]);
@@ -136,9 +134,10 @@
 
 
     // Components
+    // Note: the angleScale property has a sensible default, but should be
+    // configured if you're not using sszvis.layout.sunburst
     var sunburstMaker = sszvis.component.sunburst()
       .fill(colorScale)
-      .angleScale(angleScale)
       .radiusScale(radiusScale)
       .centerRadius(burstLayout.centerRadius);
 
