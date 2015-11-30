@@ -8,7 +8,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('nodeThickness')
       .prop('nodePadding')
       .prop('columnPadding', d3.functor)
-      .prop('columnLabel', d3.functor)
+      .prop('columnLabel', d3.functor).columnLabel('')
       .prop('linkCurvature').linkCurvature(0.5)
       .prop('nodeColor', d3.functor)
       .prop('linkColor', d3.functor)
@@ -18,7 +18,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('nameLabel').nameLabel(sszvis.fn.identity)
       .prop('linkSourceLabels').linkSourceLabels([])
       .prop('linkTargetLabels').linkTargetLabels([])
-      .prop('linkLabel')
+      .prop('linkLabel', d3.functor)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
