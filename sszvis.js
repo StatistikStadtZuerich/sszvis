@@ -4854,6 +4854,58 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * Sankey component
+ *
+ * This component is used for making sankey diagrams, also known as parallel sets diagrams. They
+ * depict individual entities as bars, and flows between those entities as thick links connecting
+ * those bars. The entities can be many things associated with flows, for example organizations,
+ * geographic regions, or websites, while the links between them can represent many kinds of flows,
+ * for example payments of money, movements of people, or referral of browsing traffic. In this component,
+ * the entities are referred to as 'nodes', and the connections between them are referred to as 'links'.
+ *
+ * @module sszvis/component/sankey
+ *
+ * @property {Function} sizeScale                    A scale function for the size of the nodes. The domain and the range should
+ *                                                   be configured using values returned by the sszvis.layout.sankey.computeLayout
+ *                                                   function.
+ * @property {Function} columnPosition               A scale function for the position of the columns of nodes.
+ *                                                   Should be configured using a value returned by the sszvis.layout.sankey.computeLayout function.
+ * @property {Number} nodeThickness                  A number for the horizontal thickness of the node bars.
+ *                                                   Should be configured using a value returned by the sszvis.layout.sankey.computeLayout function.
+ * @property {Number} nodePadding                    A number for padding between the nodes.
+ *                                                   Should be configured using a value returned by the sszvis.layout.sankey.computeLayout function.
+ * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number,
+ *                                                   for padding at the top of each column. Used to vertically center the columns.
+ * @property {String, Function} columnLabel          A string, or a function that returns a string, for the label at the top of each column.
+ * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default 0.5.
+ * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color.
+ * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color.
+ * @property {Function} linkSort                     A function determining how to sort the links, which are rendered stacked on top of each other.
+ *                                                   The default implementation stacks links in decresing order of value, i.e. larger, thicker links
+ *                                                   are below smaller, thinner ones.
+ * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
+ *                                                   return a side ('left' or 'right'). Default is always 'left'.
+ * @property {Number} labelHitBoxSize                A number for the width of 'hit boxes' added underneath the labels. This should basically be
+ *                                                   equal to the width of the widest label. For performance reasons, it doesn't make sense to calculate
+ *                                                   this value at run time while the component is rendered. Far better is to position the chart so that the
+ *                                                   labels are visible, find the value of the widest label, and use that.
+ * @property {Function} nameLabel                    A function which takes the id of a node and should return the label for that node. Defaults tousing
+ *                                                   the id directly.
+ * @property {Array} linkSourceLabels                An array containing the data for links which should have labels on their 'source' end, that is the
+ *                                                   end of the link which is connected to the source node. These data values should match the values
+ *                                                   returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give the data
+ *                                                   values themselves here. See the examples for an implementation of the most straightforward
+ *                                                   mechanism for this.
+ * @property {Array} linkTargetLabels                An array containing data for links which should have labels on their 'target' end, that is the
+ *                                                   end of the link which is connected to the target node. Works the same as linkSourceLabels, but used
+ *                                                   for another set of possible link labels.
+ * @property {String, Function} linkLabel            A string or function returning a string to use for the label of each link. Function
+ *                                                   versions should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels)
+ *                                                   and return text.
+ *
+ * @return {d3.component}
+ */
 sszvis_namespace('sszvis.component.sankey', function(module) {
   'use strict';
 

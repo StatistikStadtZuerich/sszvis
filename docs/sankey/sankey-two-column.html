@@ -121,6 +121,12 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
+    // The right and left padding are chosen so that there is enough space on either side of the chart
+    // to see all labels. For performance reasons, it doesn't make sense to calculate these values while
+    // the chart is being rendered, so it is much more efficient to simply choose a value for the left
+    // and right padding which reveals the labels. When using the sszvis.layout.sankey.computeLayout function,
+    // the chart will be positioned such that the node bars themselves line up with the edges of the available
+    // space, and any outside bar labels (e.g. 'left' labels for a lefthand column) are outside, in the padding space.
     var bounds = sszvis.bounds({ height: 700, top: 40, right: 115, bottom: 20, left: 115 });
 
     // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
