@@ -1,3 +1,32 @@
+/**
+ * Sunburst component
+ *
+ * This component renders a sunburst diagram, which is kind of like a layered pie chart. There is an
+ * inner ring of values, which are total values for some large category. Each of these categories can
+ * be broken down into smaller categories, which are shown in another layer around the inner ring. If these
+ * categories can in turn be broken down into smaller ones, you can add yet another layer. The result
+ * is a hierarchical display with the level of aggregation getting finer and finer as you get further
+ * from the center of the chart.
+ *
+ * This component uses the data structure returned by the sszvis.layout.sunbust.prepareData function, and
+ * can be configured using the sszvis.layout.sunburst.computeLayout function. Under the hood, the prepareData
+ * function uses d3's nest data transformer (d3.nest) to construct a nested data structure from the input
+ * array, and d3's partition layout (d3.layout.partition), and the resulting data structure will be
+ * familiar to those familiar with the partition layout.
+ *
+ * @property {Function} angleScale              Scale function for the angle of the segments of the sunburst chart. If using the
+ *                                              sszvis.layout.sunburst.prepareData function, the domain will be [0, 1]. The range
+ *                                              should usually be [0, 2 * PI]. That domain and range are used as default for this property.
+ * @property {Function} radiusScale             Scale function for the radius of segments. Can be configured using values returned from
+ *                                              sszvis.layout.sunburst.computeLayout. See the examples for how the scale setup works.
+ * @property {Number} centerRadius              The radius of the center of the chart. Can be configured with sszvis.layout.sunburst.computeLayout.
+ * @property {Function} fill                    Function that returns the fill color for the segments in the center of the chart. Note that this will only be
+ *                                              called on the centermost segments. The segments which are subcategories of these center segments
+ *                                              will have their fill determined recursively, by lightening the color of its parent segment.
+ * @property {Color, Function} stroke           The stroke color of the segments. Defaults to white.
+ *
+ * @return {d3.component}
+ */
 sszvis_namespace('sszvis.component.sunburst', function(module) {
   'use strict';
 
