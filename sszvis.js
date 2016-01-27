@@ -6787,12 +6787,25 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
    *                                  This uses d3.nest under the hood, and applys the key function as a d3.nest().key, so it works like that.
    * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of 
    *                                  the ring segment for each datum.
+   * @property {Function} sort        Provide a sorting function for sibling nodes of the sunburst. The d3.partition layout probably uses a
+   *                                  javascript object internally for some bookkeeping. At the moment, not all browsers handle key ordering in
+   *                                  objects similarly. This sorting function is used to sort the output values of the d3.partition layout, according
+   *                                  to user wishes. It receives two node values (which are created by d3), which should have at least a "key" property
+   *                                  (corresponding to the layer key), and a "value" property (corresponding to the value amount of the slice).
+   *                                  Otherwise, it behaves like a normal javascript array sorting function. The default value attempts to preserve the
+   *                                  existing sort order of the data.
    *
    * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
    */
   module.exports.prepareData = function() {
     var nester = d3.nest();
     var valueAcc = sszvis.fn.identity;
+    // Sibling nodes of the partition layout are sorted according to this sort function.
+    // The default value for this component tries to preserve the order of the input data.
+    // However, input data order preservation is not guaranteed, because of an implementation
+    // detail of d3.partition, probably having to do with the way that each browser can
+    // implement its own key ordering for javascript objects.
+    var sortFn = function() { return 0; };
 
     function main(data) {
       nester.rollup(sszvis.fn.first);
@@ -6800,8 +6813,7 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
       var partitionLayout = d3.layout.partition()
         .children(sszvis.fn.prop('values'))
         .value(function(d) { return valueAcc(d.values); })
-        // Don't sort the output. This component expects sorted inputs
-        .sort(function() { return 0; });
+        .sort(sortFn);
 
       return partitionLayout({
           isSunburstRoot: true,
@@ -6819,6 +6831,11 @@ sszvis_namespace('sszvis.layout.sunburst', function(module) {
 
     main.value = function(accfn) {
       valueAcc = accfn;
+      return main;
+    };
+
+    main.sort = function(sortFunc) {
+      sortFn = sortFunc;
       return main;
     };
 

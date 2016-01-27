@@ -50,19 +50,18 @@
     prepareState: function(data) {
       var continentsList = ["Europa", "Asien", "Amerika", "Afrika", "Ozeanien", "Unzuteilbar"];
 
-      // Sort the input data according to the desired order of the continents first, then by descending order of size
-      data.sort(function(a, b) {
-        var indexDiff = d3.ascending(continentsList.indexOf(continentAcc(a)), continentsList.indexOf(continentAcc(b)));
-        if (indexDiff !== 0) return indexDiff;
-        return d3.descending(numAcc(a), numAcc(b));
-      });
-
       state.continents = continentsList;
 
       state.data = sszvis.layout.sunburst.prepareData()
         .layer(continentAcc)
         .layer(regionAcc)
         .value(numAcc)
+        // Sorts the output data according to the desired order of the continents first, then by descending order of value
+        .sort(function(a, b) {
+          var indexDiff = d3.ascending(continentsList.indexOf(a.key), continentsList.indexOf(b.key));
+          if (indexDiff !== 0) return indexDiff;
+          return d3.descending(a.value, b.value);
+        })
         .calculate(data);
 
       state.radiusExtent = sszvis.layout.sunburst.getRadiusExtent(state.data);
