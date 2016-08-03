@@ -10,22 +10,20 @@
 <script src="../../vendor/d3/d3.min.js"></script>
 <script src="../../sszvis.js"></script>
 
-<div id="sszvis-chart-1"></div>
-
-<script type="text/javascript">
-    var arbeitsloseParams = {
-        data: 'data/arbeitslose.csv',
-        title: 'sdf',
-        description: 'af',
-        fallback: '',
-        fallback_alt: 'af',
-        id: '#sszvis-chart-1'
-    };
-</script>
+<div id="sszvis-chart"></div>
 
 <script data-catalog-project-expose="script.js">
-(function(d3, sszvis,arbeitsloseParams) {
+(function(d3, sszvis) {
   'use strict';
+
+  var arbeitsloseParams = {
+      data: 'data/arbeitslose.csv',
+      title: 'sdf',
+      description: 'af',
+      fallback: '',
+      fallback_alt: 'af',
+      id: '#sszvis-chart'
+  };
 
   /* Configuration
   ----------------------------------------------- */
@@ -296,7 +294,7 @@
   }
 
 
-}(d3, sszvis, arbeitsloseParams));
+}(d3, sszvis));
 </script>
 </body>
 </html>
