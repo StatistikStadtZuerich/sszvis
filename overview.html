@@ -52,13 +52,13 @@
 <label for='global-scale' id='global-scale-label'></label>
 <input type='range' id='global-scale' min='250' max='1200' label='true' />
 <script>
-  var __globalRenderFunctionCache__ = {};
-
   (function() {
     var state = {
       graphWidth: Math.min(1000, window.innerWidth),
     };
     state.graphLabel = state.graphWidth;
+
+    var functionCache = window.__globalRenderFunctionCache__ = {};
 
     function rerender() {
       objForEach(__globalRenderFunctionCache__, function(render) { render(); });
@@ -98,17 +98,13 @@
     ];
 
     document.addEventListener("DOMContentLoaded", function() {
-      insertAll(charts);
-    });
-
-    function insertAll(listOfCharts) {
-      listOfCharts.forEach(function(chartFile, i) {
+      charts.forEach(function(chartFile, i) {
         var containerId = 'sszvis-chart-' + i;
         addLabel(document.body, (i + 1) + '.  ' + chartFile);
         addDiv(document.body, containerId);
         loadFileInto(chartFile, containerId);
       });
-    }
+    });
 
     function addDiv(parent, divId) {
       var el = document.createElement('div');
