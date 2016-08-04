@@ -85,7 +85,7 @@
   function addLabel(parent, text) {
     var el = document.createElement('div');
     el.innerHTML = text;
-    el.setAttribute('class', 'overview-label');
+    el.style = "margin: 3em 0 2.5em 0; text-align: center;";
     parent.appendChild(el);
     return el;
   }
