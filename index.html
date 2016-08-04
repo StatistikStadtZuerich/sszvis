@@ -4,39 +4,46 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>sszvis TIMESTAMP</title>
-  <script src="vendor/catalog-styleguide/catalog.min.js"></script>
+  <script src="vendor/catalog/catalog.min.js"></script>
+  <script src="vendor/jszip/jszip.js"></script>
+  <script src="vendor/catalog/ProjectSpecimen.js"></script>
 </head>
 <body>
+  <div id="catalog"></div>
   <script>
-    Catalog.start('body', {
-      title: 'SSZVIS',
+    Catalog.render({
+      title: 'Statistik Stadt Zürich',
       styles: ['sszvis.css'],
+      specimens: {project: ProjectSpecimen},
+      theme: {
+
+      },
       pages: [
         {
-          name: 'intro-group',
+          path: 'intro-group',
           title: 'Introduction',
           pages: [
-            {name: 'intro', path: '/', title: 'Overview', src: 'docs/intro.md'},
-            {name: 'faq', title: 'FAQ', src: 'docs/faq.md'}
+            {path: 'intro', path: '/', title: 'Overview', src: 'docs/intro.md'},
+            {path: 'faq', title: 'FAQ', src: 'docs/faq.md'}
           ]
         },
         {
-          name: 'style-guide',
+          path: 'style-guide',
           title: 'Style guide',
           pages: [
-            {name: 'annotations', title: 'Annotations', src: 'docs/style-guide/annotations.md'},
-            {name: 'axes', title: 'Axes', src: 'docs/style-guide/axes.md'},
+            {path: 'annotations', title: 'Annotations', src: 'docs/style-guide/annotations.md'},
+            {path: 'axes', title: 'Axes', src: 'docs/style-guide/axes.md'},
             {
-              name: 'colors',
+              path: 'colors',
               title: 'Colors',
               src: 'docs/style-guide/colors.md',
               styles: ['docs/style-guide/colors.css'],
               scripts: ['vendor/d3/d3.js', 'sszvis.js', 'docs/style-guide/colors.js']
             },
-            {name: 'controls', title: 'Controls', src: 'docs/style-guide/controls.md'},
-            {name: 'legends', title: 'Legends', src: 'docs/style-guide/legends.md'},
+            {path: 'controls', title: 'Controls', src: 'docs/style-guide/controls.md'},
+            {path: 'legends', title: 'Legends', src: 'docs/style-guide/legends.md'},
             {
-              name: 'tooltips',
+              path: 'tooltips',
               title: 'Tooltips',
               src: 'docs/style-guide/tooltips.md',
               styles: ['sszvis.css', 'docs/style-guide/tooltips.css'],
@@ -45,58 +52,58 @@
           ]
         },
         {
-          name: 'beginners',
+          path: 'beginners',
           title: 'Beginner charts',
           src: 'docs/beginners.md'
         },
         {
-          name: 'line-charts',
+          path: 'line-charts',
           title: 'Line charts',
           pages: [
-            {name: 'line-chart-single', title: 'Single', src: 'docs/line-chart-single/README.md'},
-            {name: 'line-chart-multiple', title: 'Multiple', src: 'docs/line-chart-multiple/README.md'}
+            {path: 'line-chart-single', title: 'Single', src: 'docs/line-chart-single/README.md'},
+            {path: 'line-chart-multiple', title: 'Multiple', src: 'docs/line-chart-multiple/README.md'}
           ]
         },
         {
-          name: 'bar-charts',
+          path: 'bar-charts',
           title: 'Bar charts',
           pages: [
-            {name: 'bar-chart-vertical', title: 'Vertical', src: 'docs/bar-chart-vertical/README.md'},
-            {name: 'bar-chart-vertical-stacked', title: 'Vertical (stacked)', src: 'docs/bar-chart-vertical-stacked/README.md'},
-            {name: 'bar-chart-horizontal', title: 'Horizontal', src: 'docs/bar-chart-horizontal/README.md'},
-            {name: 'bar-chart-horizontal-stacked', title: 'Horizontal (stacked)', src: 'docs/bar-chart-horizontal-stacked/README.md'},
-            {name: 'bar-chart-grouped', title: 'Grouped', src: 'docs/bar-chart-grouped/README.md'}
+            {path: 'bar-chart-vertical', title: 'Vertical', src: 'docs/bar-chart-vertical/README.md'},
+            {path: 'bar-chart-vertical-stacked', title: 'Vertical (stacked)', src: 'docs/bar-chart-vertical-stacked/README.md'},
+            {path: 'bar-chart-horizontal', title: 'Horizontal', src: 'docs/bar-chart-horizontal/README.md'},
+            {path: 'bar-chart-horizontal-stacked', title: 'Horizontal (stacked)', src: 'docs/bar-chart-horizontal-stacked/README.md'},
+            {path: 'bar-chart-grouped', title: 'Grouped', src: 'docs/bar-chart-grouped/README.md'}
           ]
         },
         {
-          name: 'area-chart-stacked',
+          path: 'area-chart-stacked',
           title: 'Area charts',
           src: 'docs/area-chart-stacked/README.md'
         },
         {
-          name: 'map',
+          path: 'map',
           title: 'Maps',
           pages: [
-            {name: 'map-standard', title: 'Standard Shapes', src: 'docs/map-standard/README.md'},
-            {name: 'map-baselayer', title: 'Map Base Layers', src: 'docs/map-baselayer/README.md'},
-            {name: 'map-extended', title: 'Extended Maps', src: 'docs/map-extended/README.md'},
-            {name: 'map-signature', title: 'Signature Maps', src: 'docs/map-signature/README.md'}
+            {path: 'map-standard', title: 'Standard Shapes', src: 'docs/map-standard/README.md'},
+            {path: 'map-baselayer', title: 'Map Base Layers', src: 'docs/map-baselayer/README.md'},
+            {path: 'map-extended', title: 'Extended Maps', src: 'docs/map-extended/README.md'},
+            {path: 'map-signature', title: 'Signature Maps', src: 'docs/map-signature/README.md'}
           ]
         },
         {
-          name: 'various',
+          path: 'various',
           title: 'Various',
           pages: [
-            {name: 'heat-table', title: 'Heat table', src: 'docs/heat-table/README.md' },
-            {name: 'pie-charts', title: 'Pie chart', src: 'docs/pie-charts/README.md' },
-            {name: 'population-pyramid', title: 'Population pyramid', src: 'docs/population-pyramid/README.md'},
-            {name: 'scatterplot', title: 'Scatterplot', src: 'docs/scatterplot/README.md'},
-            {name: 'scatterplot-over-time', title: 'Scatterplot Over Time', src: 'docs/scatterplot-over-time/README.md'},
-            {name: 'sunburst', title: 'Sunburst', src: 'docs/sunburst/README.md'},
-            {name: 'sankey', title: 'Sankey Diagram (Parallel Sets)', src: 'docs/sankey/README.md'}
+            {path: 'heat-table', title: 'Heat table', src: 'docs/heat-table/README.md' },
+            {path: 'pie-charts', title: 'Pie chart', src: 'docs/pie-charts/README.md' },
+            {path: 'population-pyramid', title: 'Population pyramid', src: 'docs/population-pyramid/README.md'},
+            {path: 'scatterplot', title: 'Scatterplot', src: 'docs/scatterplot/README.md'},
+            {path: 'scatterplot-over-time', title: 'Scatterplot Over Time', src: 'docs/scatterplot-over-time/README.md'},
+            {path: 'sunburst', title: 'Sunburst', src: 'docs/sunburst/README.md'},
+            {path: 'sankey', title: 'Sankey Diagram (Parallel Sets)', src: 'docs/sankey/README.md'}
           ]
         }
       ]
-    });
+    }, document.getElementById('catalog'));
   </script>
 </body>
