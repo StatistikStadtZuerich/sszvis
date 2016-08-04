@@ -122,7 +122,7 @@ CENTER_DATA = geodata/centers.csv
 
 all: server
 
-build:
+build: Makefile
 	@cat \
 		docs/banner/_index.js \
 		docs/banner/_vendor.js \
@@ -135,11 +135,12 @@ build:
 server: build
 	@browser-sync start \
 	  --server \
+	  --files="Makefile" \
 		--files=$(BUILD_TARGET) \
 		--files="index.html" \
 		--files="sszvis.css" \
 		--files="docs/**/*" \
-		& fswatch -0 -o sszvis/ -o vendor/ | xargs -0 -n1 -I{} make build
+		& fswatch -0 -o sszvis/ -o vendor/ -o Makefile | xargs -0 -n1 -I{} make build
 
 
 deploy: build
