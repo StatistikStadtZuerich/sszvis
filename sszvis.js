@@ -842,6 +842,25 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.selectionWidth
+     *
+     * Provides the width of the given d3.selection's first element,
+     * if the given value is defined and a selection, otherwise undefined.
+     * 
+     * @param  {d3.selection} sel      The selection to measure (possibly undefined)
+     * @return {Number, undefined}     The measurement of the width of the selection
+     */
+    selectionWidth: function(sel) {
+        if (sszvis.fn.isSelection(sel)) {
+            var node = sel.node();
+            if (node) {
+                return node.getBoundingClientRect().width;
+            }
+        }
+        // Return undefined
+    },
+
+    /**
      * fn.set
      *
      * takes an array of elements and returns the unique elements of that array, optionally
@@ -1383,6 +1402,94 @@ sszvis_namespace('sszvis.axis', function(module) {
 
 
 /**
+ * Functions related to aspect ratio calculations
+ * 
+ * @module sszvis/aspectRatio
+ *
+ * The base module is a function which creates an aspect ratio function.
+ * You provide a width and a height of the aspect ratio,
+ * and the returned function accepts any width, returning the corresponding
+ * height for the aspect ratio you configured.
+ * 
+ * @param {Number} width    The width of the aspect ratio.
+ * @param {Number} height   The height of the aspect ratio.
+ * @return {Function}       The aspect ratio function. Provide a width and
+ *                          it returns a corresponding height.
+ */
+sszvis_namespace('sszvis.aspectRatio', function(module) {
+  'use strict';
+
+  var aspectRatio = module.exports = function(width, height) {
+    var ar = width / height;
+    return function(w) { return w / ar; };
+  };
+
+  var ar16to9 = aspectRatio(16, 9);
+
+  /**
+   * aspectRatio.default
+   *
+   * A property on the aspectRatio module, provides a set of default aspect
+   * ratios for different widths. If you provide a width, it will provide the
+   * default value of the height for that width. Note that the aspect ratio chosen
+   * may depend on the width itself. This is because of default breakpoints.
+   * 
+   * @param  {Number} width   The width for which you want a height value
+   * @return {Number}         The height which corresponds to the default aspect ratio for that width
+   */
+  module.exports.default = function(width) {
+    if (width < sszvis.breakpoint.SMALL) {
+      return ar16to9(width);
+    } else if (width >= sszvis.breakpoint.SMALL && width < sszvis.breakpoint.NARROW) {
+      return ar16to9(width);
+    } else if (width >= sszvis.breakpoint.NARROW && width < sszvis.breakpoint.TABLET) {
+      return ar16to9(width);
+    } else if (width >= sszvis.breakpoint.TABLET && width < sszvis.breakpoint.NORMAL) {
+      return ar16to9(width);
+    } else if (width >= sszvis.breakpoint.NORMAL && width < sszvis.breakpoint.WIDE) {
+      return ar16to9(width);
+    } else { // width >= sszvis.breakpoint.WIDE
+      return ar16to9(width);
+    }
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Responsive design breakpoints for sszvis
+ *
+ * @module sszvis/breakpoint
+ *
+ * Provides the default breakpoint sizes for SSZVIS. The breakpoints are upper limits,
+ * i.e. [0 - 601) is the first range, [601 - 800) is the second, and so on.
+ * 
+ * @property  {Number} SMALL    The small breakpoint
+ * @property {Number} NARROW    The narrow breakpoint
+ * @property {Number} TABLET    The tablet breakpoint
+ * @property {Number} NORMAL    The normal breakpoint
+ * @property {Number} WIDE      The wide breakpoint
+ */
+sszvis_namespace('sszvis.breakpoint', function(module) {
+
+  module.exports = {
+    SMALL: 601,
+    NARROW: 800,
+    TABLET: 1025,
+    NORMAL: 1261,
+    WIDE: 1441,
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Bounds
  *
  * Creates a bounds object to help with the construction of d3 charts
@@ -1415,15 +1522,31 @@ sszvis_namespace('sszvis.bounds', function(module) {
   // the default innerWidth is calculated as width - leftpadding - rightpadding
   var DEFAULT_WIDTH = 516;
 
-  // This is the default aspect ratio. It is defined as: width / innerHeight
-  // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
-  var ASPECT_RATIO = 16 / 9;
-  // To calculate innerHeight, do width / ASPECT_RATIO
-  // This means that by default, innerHeight = 9 / 16 * width
-  // These are configurable by passing your own width and height to the bounds function
+  module.exports = function(arg1, arg2) {
+    var bounds = null, selection = null;
+    if (arguments.length === 0) {
+      bounds = {};
+    }
+    if (arguments.length === 1) {
+      if (sszvis.fn.isSelection(arg1)) {
+        bounds = {};
+        selection = arg1;
+      } else if (sszvis.fn.isString(arg1)) {
+        bounds = {};
+        selection = d3.select(arg1);
+      } else if (sszvis.fn.isObject(arg1)) {
+        bounds = arg1;
+      }
+    }
+    if (arguments.length === 2) {
+      bounds = arg1;
+      if (sszvis.fn.isSelection(arg2)) {
+        selection = arg2;
+      } else if (sszvis.fn.isString(arg2)) {
+        selection = d3.select(arg2);
+      }
+    }
 
-  module.exports = function(bounds) {
-    bounds || (bounds = {});
     // All padding sides have default values
     var padding = {
       top:    either(bounds.top, 0),
@@ -1431,9 +1554,11 @@ sszvis_namespace('sszvis.bounds', function(module) {
       bottom: either(bounds.bottom, 0),
       left:   either(bounds.left, 1)
     };
-    var width   = either(bounds.width, DEFAULT_WIDTH);
+
+    // Width is calculated as: bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
+    var width   = either(bounds.width, either(sszvis.fn.selectionWidth(selection), DEFAULT_WIDTH));
     // The first term (inside Math.round) is the default innerHeight calculation
-    var height  = either(bounds.height, Math.round(width / ASPECT_RATIO) + padding.top + padding.bottom);
+    var height  = either(bounds.height, sszvis.aspectRatio.default(width) + padding.top + padding.bottom);
 
     return {
       innerHeight: height - padding.top  - padding.bottom,
@@ -1445,8 +1570,14 @@ sszvis_namespace('sszvis.bounds', function(module) {
   };
 
   module.exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
-  module.exports.RATIO = ASPECT_RATIO;
 
+  // This is the default aspect ratio. It is defined as: width / innerHeight
+  // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
+  // To calculate the default innerHeight, do width / ASPECT_RATIO
+  // Since the responsive revisions, the default aspect ratio has changed,
+  // so that it is now responsive to the container width.
+  // This property is preserved for compatibility reasons.
+  module.exports.RATIO = 16 / 9;
 
   /* Helper functions
   ----------------------------------------------- */

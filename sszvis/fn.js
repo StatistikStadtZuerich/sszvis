@@ -349,6 +349,25 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.selectionWidth
+     *
+     * Provides the width of the given d3.selection's first element,
+     * if the given value is defined and a selection, otherwise undefined.
+     * 
+     * @param  {d3.selection} sel      The selection to measure (possibly undefined)
+     * @return {Number, undefined}     The measurement of the width of the selection
+     */
+    selectionWidth: function(sel) {
+        if (sszvis.fn.isSelection(sel)) {
+            var node = sel.node();
+            if (node) {
+                return node.getBoundingClientRect().width;
+            }
+        }
+        // Return undefined
+    },
+
+    /**
      * fn.set
      *
      * takes an array of elements and returns the unique elements of that array, optionally

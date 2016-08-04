@@ -30,6 +30,8 @@ VENDOR_FILES = \
 SOURCE_FILES = \
 	sszvis/fn.js \
 	sszvis/axis.js \
+	sszvis/aspectRatio.js \
+	sszvis/breakpoint.js \
 	sszvis/bounds.js \
 	sszvis/cascade.js \
 	sszvis/color.js \
