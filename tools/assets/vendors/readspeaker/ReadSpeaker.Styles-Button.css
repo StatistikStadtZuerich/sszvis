@@ -1,0 +1,75 @@
+.rsbtn {
+    position: relative;
+    height: 26px;
+    margin-bottom: 10px;
+    z-index: 100;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+.rsbtn span, .rsbtn a {
+    position: relative;
+    display: block;
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+}
+
+.rsbtn .rsbtn_play {
+    text-decoration: none;
+    font-family: "Lucida Grande", "Lucida Sans", "Lucida", sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+    font-style: normal;
+    line-height: 16px;
+    color: #333;
+    position: static;
+    display: inline;
+    margin: auto;
+    padding: inherit;
+    float: left;
+}
+
+.rsbtn .rsimg, #rslightbox_logo.rsimg, .rsbtn a.rsimg {
+    background: transparent url(img/rs_button.png) no-repeat scroll 0 0;
+}
+
+.rsbtn .rspart {
+    position: relative;
+    float: left;
+    height: 26px;
+}
+
+.rsbtn .rsbtn_left .rsbtn_text {
+    font-family: "Lucida Grande", "Lucida Sans", "Lucida", sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+    font-style: normal;
+    line-height: 16px;
+    margin: 5px 10px;
+    padding-left: 20px;
+    background: transparent url(img/icon_16px.gif) no-repeat scroll 0 0;
+}
+
+.rsdeferred .rsbtn_left .rsbtn_text span {
+    padding-right: 20px;
+    background: transparent url(img/rs_loader_anim.gif) no-repeat scroll top right;
+}
+
+.rsbtn .rsbtn_right.rsimg, .rsbtn .rsbtn_pause {
+    width: 42px;
+    background-position: 0 -26px;
+}
+
+.rsbtn a:hover .rsbtn_right, .rsbtn.rsfocus .rsbtn_right.rsimg {
+    background-position: -42px -26px;
+}
+
+.rsbtn .rsbtn_right.rsimg.rsanim {
+    background: transparent url(img/play-anim.gif) no-repeat scroll 0 0;
+}
