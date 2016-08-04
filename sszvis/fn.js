@@ -101,6 +101,55 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.isNumber
+     *
+     * determine whether the value is a number
+     * 
+     * @param  {*}  val     The value to check
+     * @return {Boolean}    Whether the value is a number
+     */
+    isNumber: function(val) {
+        return Object.prototype.toString.call(val) === '[object Number]';
+    },
+
+    /**
+     * fn.isObject
+     *
+     * determines if the passed value is of an "object" type, or if it is something else,
+     * e.g. a raw number, string, null, undefined, NaN, something like that.
+     * 
+     * @param  {*}  value      The value to test
+     * @return {Boolean}       Whether the value is an object
+     */
+    isObject: function(val) {
+        return Object(val) === val;
+    },
+
+    /**
+     * fn.isSelection
+     *
+     * determine whether the value is a d3.selection.
+     * 
+     * @param  {*}  val         The value to check
+     * @return {Boolean}        Whether the value is a d3.selection
+     */
+    isSelection: function(val) {
+        return val instanceof d3.selection;
+    },
+
+    /**
+     * fn.isString
+     *
+     * determine whether the value is a string
+     * 
+     * @param  {*}  val       The value to check
+     * @return {Boolean}      Whether the value is a string
+     */
+    isString: function(val) {
+        return Object.prototype.toString.call(val) === '[object String]';
+    },
+
+    /**
      * fn.derivedSet
      *
      * fn.derivedSet is used to create sets of objects from an input array. The objects are
