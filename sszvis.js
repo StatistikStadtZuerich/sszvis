@@ -1424,7 +1424,9 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
     return function(w) { return w / ar; };
   };
 
+  var ar10to9 = aspectRatio(10, 9);
   var ar16to9 = aspectRatio(16, 9);
+  var ar40to9 = aspectRatio(40, 9);
 
   /**
    * aspectRatio.default
@@ -1437,19 +1439,21 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @param  {Number} width   The width for which you want a height value
    * @return {Number}         The height which corresponds to the default aspect ratio for that width
    */
-  module.exports.default = function(width) {
-    if (width < sszvis.breakpoint.SMALL) {
+  module.exports.default = function(params) {
+    var width = params.containerWidth;
+    var height = params.screenHeight;
+    if (width < sszvis.breakpoint.SMALL) { // SMALL
+      return ar10to9(width);
+    } else if (width >= sszvis.breakpoint.SMALL && width < sszvis.breakpoint.NARROW) { // NARROW
+      return ar10to9(width);
+    } else if (width >= sszvis.breakpoint.NARROW && width < sszvis.breakpoint.TABLET) { // TABLET
       return ar16to9(width);
-    } else if (width >= sszvis.breakpoint.SMALL && width < sszvis.breakpoint.NARROW) {
+    } else if (width >= sszvis.breakpoint.TABLET && width < sszvis.breakpoint.NORMAL) { // NORMAL
       return ar16to9(width);
-    } else if (width >= sszvis.breakpoint.NARROW && width < sszvis.breakpoint.TABLET) {
-      return ar16to9(width);
-    } else if (width >= sszvis.breakpoint.TABLET && width < sszvis.breakpoint.NORMAL) {
-      return ar16to9(width);
-    } else if (width >= sszvis.breakpoint.NORMAL && width < sszvis.breakpoint.WIDE) {
-      return ar16to9(width);
-    } else { // width >= sszvis.breakpoint.WIDE
-      return ar16to9(width);
+    } else if (width >= sszvis.breakpoint.NORMAL && width < sszvis.breakpoint.WIDE) { // WIDE
+      return ar40to9(width);
+    } else { // width >= sszvis.breakpoint.WIDE // XXL
+      return ar40to9(width);
     }
   };
 
@@ -1558,7 +1562,7 @@ sszvis_namespace('sszvis.bounds', function(module) {
     // Width is calculated as: bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
     var width   = either(bounds.width, either(sszvis.fn.selectionWidth(selection), DEFAULT_WIDTH));
     // The first term (inside Math.round) is the default innerHeight calculation
-    var height  = either(bounds.height, sszvis.aspectRatio.default(width) + padding.top + padding.bottom);
+    var height  = either(bounds.height, sszvis.aspectRatio.default({ containerWidth: width, screenHeight: window.innerHeight }) + padding.top + padding.bottom);
 
     return {
       innerHeight: height - padding.top  - padding.bottom,
