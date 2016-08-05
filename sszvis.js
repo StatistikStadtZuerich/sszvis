@@ -2724,6 +2724,216 @@ sszvis_namespace('sszvis.patterns', function(module) {
 
 
 /**
+ * Props Query module
+ *
+ * @module sszvis/propsQuery
+ *
+ * PropsQuery module. Use this as an easy way to configure properties or options
+ * which need to change based on some breakpoints. SSZVIS comes with a default
+ * set of breakpoints (see sszvis.breakpoints), but you can also use this module
+ * to define your own breakpoints.
+ *
+ * The module should be configured with any number of different properties that change based on breakpoints,
+ * plus (optional) breakpoint configuration, and then called as a function. You can pass
+ * in either a number (the width used to calculate which breakpoints apply), a string
+ * (should be a selector string which refers to the object you wish to measure), or a
+ * d3.selection (the first element's width will be measured and used to figure the breakpoints).
+ * The return value of the function call is an object which has properties corresponding to
+ * the properties you configured before. The property values are equal to the value based on the
+ * breakpoint application.
+ *
+ * Example usage:
+ *
+ * var responsiveQuery = sszvis.propsQuery()
+ *   .breakpoints({
+ *     small: 400,
+ *     medium: 800,
+ *     large: 1000,
+ *   })
+ *   .prop('axisOrientation', {
+ *     medium: 'left',
+ *     _: 'bottom'
+ *   })
+ *   .prop('height', {
+ *     small: function(w) { return w / (16 / 9); },
+ *     medium: function(w) { return w / (20 / 9); },
+ *     large: function(w) { return w / (28 / 9); },
+ *     _: function(w) { return w / (38 / 9); },
+ *   })
+ *   .prop('numAxisTicks', {
+ *     small: 4,
+ *     medium: 8,
+ *     large: 12,
+ *     _: 16,
+ *   });
+ *
+ * // Also possible to pass a d3.selection or just the width as a number
+ * var settings = responsiveQuery('#sszvis-chart');
+ * 
+ * ... use settings.axisOrientation, settings.height, and settings.numAxisTicks ...
+ *
+ * @method breakpoints (object)        Use this method to configure optional custom breakpoints for the propsQuery.
+ *                                     You should provide an object where the keys are breakpoint names and
+ *                                     the values are pixel values for the maximum width at which that breakpoint
+ *                                     applies. These are 'max-width' breakpoints, and if the width is equal to
+ *                                     the breakpoint value, the next largets breakpoint will be applied. This
+ *                                     component has default breakpoints which are equal to the ones described in
+ *                                     the sszvis.breakpoint module, but with lower-case names. This method can
+ *                                     also be called without arguments, as a getter which returns the breakpoints object.
+ *                                     Use like:
+ *                                     .breakpoints({
+ *                                       small: 300,
+ *                                       medium: 500,
+ *                                       large: 700
+ *                                     })
+ *                                     Then configure a prop like:
+ *                                     .prop('someProp', {
+   *                                     small: 2,
+   *                                     medium: 4,
+   *                                     large: 8,
+   *                                     _: 16,
+ *                                     })
+ *                                     For width values larger than the largest breakpoint, the property listed as
+ *                                     '_' in the props config will be supplied.
+ * @method prop (string, object)       Use this method to configure a responsive property. Accepts the name
+ *                                     of the prop to be configured, and an object describing the property's
+ *                                     values at different breakpoints. The breakpoints represent a 'maximum width'
+ *                                     at which the property will be valid, with an exclusive range. That is, if the
+ *                                     width is equal to or greater than any given breakpoint, the property for that
+ *                                     breakpoint will not apply. The algorithm looks for the lowest applicable breakpoing.
+ *                                     There should also be a value provided for the case when the screen is larger than
+ *                                     any given breakpoint. This value should be provided with the name '_'. The names
+ *                                     in the object should be breakpoint names. You can skip certain breakpoints if
+ *                                     you want. The algorithm will look for the next smallest breakpoint which applies and use it.
+ *                                     Each value can be either a raw value or a function which takes the current width
+ *                                     and returns a value for the property. These functions can be used to lazily calculate 
+ *                                     properties (they are only executed when the module is called as a function),
+ *                                     and to change property values for a given breakpoint as a function of the width,
+ *                                     for example to do height calculation with a custom aspect ratio.
+ *                                     Use like:
+ *                                     .prop('propName', {
+ *                                       small: 20,
+ *                                       narrow: function(w) { return w * 0.4; },
+ *                                       tablet: function(w) { return sszvis.breakpoint.TABLET - w < 50 ? w * 0.6 : w * 0.8; },
+ *                                       // (skipping 'normal'. You can skip any breakpoint)
+ *                                       wide: 1000,
+ *                                       _: 1200, // You must provide a case for '_', otherwise the module will complain when you use it
+ *                                     })
+ *
+ * @returns       An instance of sszvis.propsQuery
+ */
+sszvis_namespace('sszvis.propsQuery', function(module) {
+'use strict';
+
+  function propSpecValid(propSpec, breakpointSpec) {
+    // Ensure that the propSpec contains a '_' value.
+    // This is used as the default value when the test width
+    // is larger than any breakpoint.
+    if (!sszvis.fn.defined(propSpec._)) { return false; }
+
+    // Validate the properties of the propSpec:
+    // each should be a valid breakpoint name, and its value should be a number
+    for (var breakpointName in propSpec) {
+      if (propSpec.hasOwnProperty(breakpointName)) {
+        if (breakpointName !== '_' && !sszvis.fn.defined(breakpointSpec[breakpointName])) {
+          return false;
+        }
+      }
+    }
+
+    // All checks passed, propSpec is valid
+    return true;
+  }
+
+  module.exports = function() {
+    var breakpointSpec = {
+      small: sszvis.breakpoint.SMALL,
+      narrow: sszvis.breakpoint.NARROW,
+      tablet: sszvis.breakpoint.TABLET,
+      normal: sszvis.breakpoint.NORMAL,
+      wide: sszvis.breakpoint.WIDE,
+    };
+    var breakpointKeys = ['small', 'narrow', 'tablet', 'normal', 'wide'];
+    var propsConfig = {};
+
+    function query(arg1) {
+      // Accepts either a number, a d3 selection, or a string selector
+      var width = sszvis.fn.isNumber(arg1) ? arg1 : sszvis.fn.selectionWidth(sszvis.fn.isSelection(arg1) ? arg1 : d3.select(arg1));
+
+      // Can't handle it if the provided selection isn't valid
+      // This is possible if an empty selection or some other bad value
+      // is given as the argument
+      if (!sszvis.fn.defined(width)) { return {}; }
+
+      // Finds out which breakpoints the provided width matches up with
+      // Assumes that breakpointKeys is an array of breakpoint names sorted
+      // in increasing order of breakpoint size and that all keys in
+      // breakpointKeys are also in breakpointSpec.
+      // The default value. '_' stands for 'everything else'
+      var bpMatches = ['_'];
+      // If there are no breakpoints set, or if the width is equal to
+      // or larger than the largest breakpoint, don't bother searching.
+      if (breakpointKeys.length > 0 && width < breakpointSpec[sszvis.fn.last(breakpointKeys)]) {
+          // Once we get to the first breakpoint which the width falls under,
+          // that means that the width matches it and all subsequent breakpoints.
+          var bpIndex = breakpointKeys.findIndex(function(key) {
+            return width < breakpointSpec[key];
+          });
+          // Attach '_' as the last value in the list of breakpoint keys. That's for
+          // situations where we're searching these keys for something that also
+          // appears in the propSpec, but the propSpec doesn't include anything low enough.
+          bpMatches = (bpIndex === -1 ? [] : breakpointKeys.slice(bpIndex)).concat('_');
+      }
+
+      return Object.keys(propsConfig).reduce(function(memo, propKey) {
+        var propSpec = propsConfig[propKey];
+
+        if (!propSpecValid(propSpec, breakpointSpec)) {
+          sszvis.logger.warn('propsQuery was given an invalid propSpec for property: "' + propKey + '". the spec: ', propSpec);
+          return memo;
+        }
+
+        // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
+        // This function should always at least find '_' at the end of the array.
+        var matchedBreakpoint = bpMatches.find(function(bpName) { return sszvis.fn.defined(propSpec[bpName]) });
+        // the value in the query object for that property equals the propSpec value as a functor,
+        // invoked if necessary with the current width. Providing the width allows aspect ratio
+        // calculations based on element width.
+        memo[propKey] = d3.functor(propSpec[matchedBreakpoint])(width);
+
+        return memo;
+      }, {});
+    }
+
+    query.prop = function(propName, propSpec) {
+      propsConfig[propName] = propSpec;
+      return query;
+    };
+
+    query.breakpoints = function(bps) {
+      if (arguments.length === 0) {
+        return breakpointSpec;
+      }
+
+      breakpointSpec = bps;
+      breakpointKeys = Object.keys(bps)
+        .sort(function(keyA, keyB) {
+          return bps[keyA] - bps[keyB];
+        });
+
+      return query;
+    };
+
+    return query;
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Scale utilities
  *
  * @module sszvis/scale
@@ -2802,6 +3012,7 @@ sszvis_namespace('sszvis.test', function(module) {
    */
   module.exports.runTests = function() {
     runFormatTests();
+    runPropsQueryTests();
   };
 
   // Just a shortcut alias
@@ -2859,6 +3070,90 @@ sszvis_namespace('sszvis.test', function(module) {
     assert('(negative number) abs 0 - 1, leading zeroes, all digits cut off', precNfmt(3, -0.000124) === '-0.000');
     assert('raw numbers with explicit zero decimals lose those decimals because of Javascript', nfmt(42.000) === '42');
     assert('to add zeroes to a raw number with explicit zero decimals, pass a precision value', precNfmt(3, 42.000) === '42.000');
+  }
+
+  function runPropsQueryTests() {
+    var pqT1 = sszvis.propsQuery()
+      .prop('test', {
+        small: 2,
+        narrow: 4,
+        tablet: 8,
+        normal: 16,
+        wide: 32,
+        _: 64
+      });
+
+    assert('propsQuery works as expected for small', pqT1(sszvis.breakpoint.SMALL - 1).test === 2);
+    assert('propsQuery works as expected for narrow', pqT1(sszvis.breakpoint.NARROW - 1).test === 4);
+    assert('propsQuery works as expected for tablet', pqT1(sszvis.breakpoint.TABLET - 1).test === 8);
+    assert('propsQuery works as expected for normal', pqT1(sszvis.breakpoint.NORMAL - 1).test === 16);
+    assert('propsQuery works as expected for wide', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
+    assert('propsQuery works as expected for _', pqT1(sszvis.breakpoint.WIDE + 20).test === 64);
+    assert('propsQuery works as expected when width is exactly on the breakpoint', pqT1(sszvis.breakpoint.WIDE).test === 64);
+
+    var pqT2 = sszvis.propsQuery()
+      .breakpoints({
+        small: 30,
+        medium: 50,
+        large: 70,
+      })
+      .prop('test', {
+        small: 2,
+        medium: 4,
+        large: 8,
+        _: 16
+      });
+
+    assert('propsQuery works for user-defined breakpoints (small)', pqT2(10).test === 2);
+    assert('propsQuery works for user-defined breakpoints (medium)', pqT2(40).test === 4);
+    assert('propsQuery works for user-defined breakpoints (large)', pqT2(60).test === 8);
+    assert('propsQuery works for user-defined breakpoints (_)', pqT2(90).test === 16);
+
+    var pqT3 = sszvis.propsQuery()
+      .prop('test', {
+        small: 2,
+      });
+
+    assert('propsQuery should complain and return undefined when you do not provide a _ option', !sszvis.fn.defined(pqT3(1000).test));
+
+    var pqT4 = sszvis.propsQuery()
+      .prop('test', {
+        notvalidbp: 8,
+        _: 16,
+      });
+
+    assert('propsQuery should complain and return undefined when you provide an invalid breakpoint', !sszvis.fn.defined(pqT4(650).test));
+
+    var pqT5 = sszvis.propsQuery()
+      .breakpoints({
+        small: 30,
+        medium: 50,
+        large: 70
+      })
+      .prop('first_test', {
+        medium: 4,
+        _: 64,
+      })
+      .prop('second_test', {
+        large: 16,
+        _: 32
+      })
+      .prop('third_test', {
+        small: 2,
+        _: 8
+      });
+
+    assert('propsQuery behaves as expected even when not all breakpoints are provided - under', pqT5(40).first_test === 4);
+    assert('propsQuery behaves as expected even when not all breakpoints are provided - over', pqT5(60).first_test === 64);
+    assert('propsQuery behaves as expected even when not all breakpoints are provided - way over', pqT5(100).first_test === 64);
+    assert('propsQuery does the right thing with multiple props - under', pqT5(20).second_test === 16);
+    assert('propsQuery does the right thing with multiple props - still under', pqT5(60).second_test === 16);
+    assert('propsQuery does the right thing with multiple props - over', pqT5(100).second_test === 32);
+    assert('propsQuery multiple props - small', pqT5(20).third_test === 2);
+    assert('propsQuery multiple props - small over', pqT5(40).third_test === 8);
+    assert('propsQuery tests widths to be strictly less than the breakpoint - first', pqT5(50).first_test === 64);
+    assert('propsQuery tests widths to be strictly less than the breakpoint - second', pqT5(70).second_test === 32);
+    assert('propsQuery tests widths to be strictly less than the breakpoint - third', pqT5(30).third_test === 8);
   }
 
 });

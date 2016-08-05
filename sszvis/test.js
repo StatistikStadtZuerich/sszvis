@@ -35,6 +35,7 @@ sszvis_namespace('sszvis.test', function(module) {
    */
   module.exports.runTests = function() {
     runFormatTests();
+    runPropsQueryTests();
   };
 
   // Just a shortcut alias
@@ -92,6 +93,90 @@ sszvis_namespace('sszvis.test', function(module) {
     assert('(negative number) abs 0 - 1, leading zeroes, all digits cut off', precNfmt(3, -0.000124) === '-0.000');
     assert('raw numbers with explicit zero decimals lose those decimals because of Javascript', nfmt(42.000) === '42');
     assert('to add zeroes to a raw number with explicit zero decimals, pass a precision value', precNfmt(3, 42.000) === '42.000');
+  }
+
+  function runPropsQueryTests() {
+    var pqT1 = sszvis.propsQuery()
+      .prop('test', {
+        small: 2,
+        narrow: 4,
+        tablet: 8,
+        normal: 16,
+        wide: 32,
+        _: 64
+      });
+
+    assert('propsQuery works as expected for small', pqT1(sszvis.breakpoint.SMALL - 1).test === 2);
+    assert('propsQuery works as expected for narrow', pqT1(sszvis.breakpoint.NARROW - 1).test === 4);
+    assert('propsQuery works as expected for tablet', pqT1(sszvis.breakpoint.TABLET - 1).test === 8);
+    assert('propsQuery works as expected for normal', pqT1(sszvis.breakpoint.NORMAL - 1).test === 16);
+    assert('propsQuery works as expected for wide', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
+    assert('propsQuery works as expected for _', pqT1(sszvis.breakpoint.WIDE + 20).test === 64);
+    assert('propsQuery works as expected when width is exactly on the breakpoint', pqT1(sszvis.breakpoint.WIDE).test === 64);
+
+    var pqT2 = sszvis.propsQuery()
+      .breakpoints({
+        small: 30,
+        medium: 50,
+        large: 70,
+      })
+      .prop('test', {
+        small: 2,
+        medium: 4,
+        large: 8,
+        _: 16
+      });
+
+    assert('propsQuery works for user-defined breakpoints (small)', pqT2(10).test === 2);
+    assert('propsQuery works for user-defined breakpoints (medium)', pqT2(40).test === 4);
+    assert('propsQuery works for user-defined breakpoints (large)', pqT2(60).test === 8);
+    assert('propsQuery works for user-defined breakpoints (_)', pqT2(90).test === 16);
+
+    var pqT3 = sszvis.propsQuery()
+      .prop('test', {
+        small: 2,
+      });
+
+    assert('propsQuery should complain and return undefined when you do not provide a _ option', !sszvis.fn.defined(pqT3(1000).test));
+
+    var pqT4 = sszvis.propsQuery()
+      .prop('test', {
+        notvalidbp: 8,
+        _: 16,
+      });
+
+    assert('propsQuery should complain and return undefined when you provide an invalid breakpoint', !sszvis.fn.defined(pqT4(650).test));
+
+    var pqT5 = sszvis.propsQuery()
+      .breakpoints({
+        small: 30,
+        medium: 50,
+        large: 70
+      })
+      .prop('first_test', {
+        medium: 4,
+        _: 64,
+      })
+      .prop('second_test', {
+        large: 16,
+        _: 32
+      })
+      .prop('third_test', {
+        small: 2,
+        _: 8
+      });
+
+    assert('propsQuery behaves as expected even when not all breakpoints are provided - under', pqT5(40).first_test === 4);
+    assert('propsQuery behaves as expected even when not all breakpoints are provided - over', pqT5(60).first_test === 64);
+    assert('propsQuery behaves as expected even when not all breakpoints are provided - way over', pqT5(100).first_test === 64);
+    assert('propsQuery does the right thing with multiple props - under', pqT5(20).second_test === 16);
+    assert('propsQuery does the right thing with multiple props - still under', pqT5(60).second_test === 16);
+    assert('propsQuery does the right thing with multiple props - over', pqT5(100).second_test === 32);
+    assert('propsQuery multiple props - small', pqT5(20).third_test === 2);
+    assert('propsQuery multiple props - small over', pqT5(40).third_test === 8);
+    assert('propsQuery tests widths to be strictly less than the breakpoint - first', pqT5(50).first_test === 64);
+    assert('propsQuery tests widths to be strictly less than the breakpoint - second', pqT5(70).second_test === 32);
+    assert('propsQuery tests widths to be strictly less than the breakpoint - third', pqT5(30).third_test === 8);
   }
 
 });
