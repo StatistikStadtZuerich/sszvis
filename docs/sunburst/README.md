@@ -46,11 +46,7 @@ The stroke color of the segments. Defaults to white.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 552
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -70,11 +66,7 @@ The stroke color of the segments. Defaults to white.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 552
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -94,10 +86,6 @@ The stroke color of the segments. Defaults to white.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 552
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

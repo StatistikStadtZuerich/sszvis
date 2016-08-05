@@ -85,7 +85,9 @@
       state.selection = [];
 
       render(state);
-    }
+    },
+
+    onResize: function() { render(state); }
   };
 
 
@@ -113,7 +115,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 552, top: 20, right: 20, bottom: 80, left: 20 });
+    var bounds = sszvis.bounds({ top: 20, right: 20, bottom: 80, left: 20 }, '#sszvis-chart');
 
     var burstLayout = sszvis.layout.sunburst.computeLayout(4, Math.min(bounds.innerWidth, bounds.innerHeight));
 
@@ -176,6 +178,7 @@
     sunburstGroup.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
+    sszvis.behavior.resize().on('resize', actions.onResize);
   }
 
   function isSelected(d) {
