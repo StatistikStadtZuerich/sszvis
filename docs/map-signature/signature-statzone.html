@@ -139,9 +139,19 @@
 
     // Components
 
+    var responsiveProps = sszvis.propsQuery()
+      .prop('strokeWidth', {
+        small: 0.5,
+        tablet: 1,
+        _: 2
+      });
+
+    var responsiveSettings = responsiveProps('#sszvis-chart');
+
     var anchoredShape = sszvis.map.anchoredCircles()
       .fill('rgb(81, 130, 179)')
       .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : radiusScale(birthsAcc(d)); })
+      .strokeWidth(responsiveSettings.strokeWidth)
       .on('over', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
@@ -150,6 +160,7 @@
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(function(d) { return isSelected(d) ? sszvis.color.dimGry()(0) : sszvis.color.gry()(0) })
+      .strokeWidth(responsiveSettings.strokeWidth)
       .transitionColor(false)
       .anchoredShape(anchoredShape)
       .on('over', actions.selectHovered)

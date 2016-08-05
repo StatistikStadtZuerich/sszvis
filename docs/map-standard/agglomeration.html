@@ -135,10 +135,21 @@
 
     // Components
 
+    var responsiveProps = sszvis.propsQuery()
+      .prop('strokeWidth', {
+        small: 0.5,
+        tablet: 1,
+        _: 2
+      });
+
+    var responsiveSettings = responsiveProps('#sszvis-chart');
+
     var mapMaker = sszvis.map.zurichAgglomeration2012()
       .highlight(state.selection)
       // gets the fill color and darken it
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
+      .strokeWidth(responsiveSettings.strokeWidth)
+      .highlightStrokeWidth(responsiveSettings.strokeWidth + 1)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
@@ -173,7 +184,7 @@
       .orientation('vertical')
       .rows(state.categories.length / 3)
       .columnWidth(bounds.innerWidth / 3)
-      .columns(3)
+      .columns(3);
 
 
     // Rendering
