@@ -133,7 +133,7 @@
     var bounds = sszvis.bounds({ height: 552, top: 20, right: 20, bottom: 70, left: 20 });
 
     // Compute the layout for 2 layers, with bounds.innerWidth total width available
-    var burstLayout = sszvis.layout.sunburst.computeLayout(2, bounds.innerWidth);
+    var burstLayout = sszvis.layout.sunburst.computeLayout(2, Math.min(bounds.innerWidth, bounds.innerHeight));
 
     // Scales
     var colorScale = sszvis.color.qual6().domain(state.continents);

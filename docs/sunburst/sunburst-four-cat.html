@@ -115,7 +115,7 @@
   function render(state) {
     var bounds = sszvis.bounds({ height: 552, top: 20, right: 20, bottom: 80, left: 20 });
 
-    var burstLayout = sszvis.layout.sunburst.computeLayout(4, bounds.innerWidth);
+    var burstLayout = sszvis.layout.sunburst.computeLayout(4, Math.min(bounds.innerWidth, bounds.innerHeight));
 
 
     // Scales
