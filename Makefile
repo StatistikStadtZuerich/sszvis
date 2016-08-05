@@ -56,6 +56,7 @@ SOURCE_FILES = \
 	sszvis/annotation/tooltip.js \
 	sszvis/annotation/tooltipAnchor.js \
 	sszvis/behavior/move.js \
+	sszvis/behavior/resize.js \
 	sszvis/behavior/voronoi.js \
 	sszvis/component/bar.js \
 	sszvis/component/dot.js \
