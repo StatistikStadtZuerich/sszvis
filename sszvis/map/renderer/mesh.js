@@ -23,6 +23,7 @@ sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
       .prop('geoJson')
       .prop('mapPath')
       .prop('borderColor').borderColor('white') // A function or string for the color of all borders. Note: all borders have the same color
+      .prop('strokeWidth').strokeWidth(1.25)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -40,7 +41,8 @@ sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
 
         meshLine
           .attr('d', props.mapPath)
-          .style('stroke', props.borderColor);
+          .style('stroke', props.borderColor)
+          .style('stroke-width', props.strokeWidth);
       });
   };
 

@@ -8310,6 +8310,7 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
       .prop('radius', d3.functor)
       .prop('fill', d3.functor)
       .prop('strokeColor', d3.functor).strokeColor('#ffffff')
+      .prop('strokeWidth', d3.functor).strokeWidth(1)
       .prop('transition').transition(true)
       .render(function() {
         var selection = d3.select(this);
@@ -8329,7 +8330,8 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
             return sszvis.svgUtils.translateString(position[0], position[1]);
           })
           .attr('fill', function(d) { return props.fill(d.datum); })
-          .attr('stroke', function(d) { return props.strokeColor(d.datum); })
+          .style('stroke', function(d) { return props.strokeColor(d.datum); })
+          .style('stroke-width', function(d) { return props.strokeWidth(d.datum); })
           .sort(function(a, b) {
             return props.radius(b.datum) - props.radius(a.datum);
           });
@@ -8768,6 +8770,7 @@ sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
       .prop('geoJson')
       .prop('mapPath')
       .prop('borderColor').borderColor('white') // A function or string for the color of all borders. Note: all borders have the same color
+      .prop('strokeWidth').strokeWidth(1.25)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -8785,7 +8788,8 @@ sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
 
         meshLine
           .attr('d', props.mapPath)
-          .style('stroke', props.borderColor);
+          .style('stroke', props.borderColor)
+          .style('stroke-width', props.strokeWidth);
       });
   };
 
@@ -8822,6 +8826,7 @@ sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
       .prop('mapPath')
       .prop('highlight').highlight([]) // an array of data values to highlight
       .prop('highlightStroke', d3.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
+      .prop('strokeWidth', d3.functor).strokeWidth(2)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -8859,12 +8864,9 @@ sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
         highlightBorders.exit().remove();
 
         highlightBorders
-          .attr('d', function(d) {
-            return props.mapPath(d.geoJson);
-          })
-          .attr('stroke', function(d) {
-            return props.highlightStroke(d.datum);
-          });
+          .attr('d', function(d) { return props.mapPath(d.geoJson); })
+          .style('stroke', function(d) { return props.highlightStroke(d.datum); })
+          .style('stroke-width', function(d) { return props.strokeWidth(d.datum); });
       });
   };
 

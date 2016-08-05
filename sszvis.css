@@ -190,13 +190,11 @@
 .sszvis-map__border {
   fill: none;
   pointer-events: none;
-  stroke-width: 1.25;
   stroke-linejoin: round;
 }
 
 .sszvis-map__highlight {
   fill: none;
-  stroke-width: 2;
   stroke-linejoin: round;
 }
 

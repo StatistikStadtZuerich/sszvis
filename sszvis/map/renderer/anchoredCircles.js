@@ -25,6 +25,7 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
       .prop('radius', d3.functor)
       .prop('fill', d3.functor)
       .prop('strokeColor', d3.functor).strokeColor('#ffffff')
+      .prop('strokeWidth', d3.functor).strokeWidth(1)
       .prop('transition').transition(true)
       .render(function() {
         var selection = d3.select(this);
@@ -44,7 +45,8 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
             return sszvis.svgUtils.translateString(position[0], position[1]);
           })
           .attr('fill', function(d) { return props.fill(d.datum); })
-          .attr('stroke', function(d) { return props.strokeColor(d.datum); })
+          .style('stroke', function(d) { return props.strokeColor(d.datum); })
+          .style('stroke-width', function(d) { return props.strokeWidth(d.datum); })
           .sort(function(a, b) {
             return props.radius(b.datum) - props.radius(a.datum);
           });
