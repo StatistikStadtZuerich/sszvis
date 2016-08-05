@@ -52,9 +52,6 @@ sszvis_namespace('sszvis.map.renderer.base', function(module) {
           .append('path')
           .classed('sszvis-map__area', true)
           .attr('data-event-target', '')
-          .attr('d', function(d) {
-            return props.mapPath(d.geoJson);
-          })
           .attr('fill', getMapFill);
 
         mapAreas.exit().remove();
@@ -64,7 +61,8 @@ sszvis_namespace('sszvis.map.renderer.base', function(module) {
 
         // change the fill if necessary
         mapAreas
-          .classed('sszvis-map__area--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); });
+          .classed('sszvis-map__area--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); })
+          .attr('d', function(d) { return props.mapPath(d.geoJson); });
 
         if (props.transitionColor) {
           mapAreas
