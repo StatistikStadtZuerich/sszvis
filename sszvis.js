@@ -1667,7 +1667,6 @@ sszvis_namespace('sszvis.bounds', function(module) {
  *
  * @returns                 An instance of sszvis.cascade
  */
-
 sszvis_namespace('sszvis.cascade', function(module) {
 'use strict';
 
