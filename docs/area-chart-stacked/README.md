@@ -61,11 +61,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 460
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -126,11 +122,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 454
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -150,10 +142,6 @@ Specify an accessor for the values of the layer objects. The default treats the 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 917
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

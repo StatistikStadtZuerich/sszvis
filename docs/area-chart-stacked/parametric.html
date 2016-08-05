@@ -131,7 +131,9 @@
     resetDate: function() {
       var mostRecent = d3.max(state.data, xAcc);
       actions.changeDate(mostRecent, 0);
-    }
+    },
+
+    onResize: function() { render(state); }
   };
 
 
@@ -164,7 +166,7 @@
 
     var colorLegend = flexibleLegend(cScale, state.categories.length)
 
-    var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)});
+    var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)}, '#sszvis-chart');
 
 
     // Scales
@@ -296,6 +298,8 @@
       .call(rangeFlag);
 
     flagGroup.selectAll('[data-tooltip-anchor]').call(rangeTooltip);
+
+    sszvis.behavior.resize().on('resize', actions.onResize);
 
 
     // Interaction

@@ -75,7 +75,9 @@
       state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
-    }
+    },
+
+    onResize: function() { render(state); }
   };
 
 
@@ -101,7 +103,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 40, bottom: 130 });
+    var bounds = sszvis.bounds({ top: 40, bottom: 130 }, '#sszvis-chart');
 
 
     // Scales
@@ -165,6 +167,8 @@
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
+
+    sszvis.behavior.resize().on('resize', actions.onResize);
   }
 
 }(d3, sszvis));

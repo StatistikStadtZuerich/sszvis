@@ -110,7 +110,9 @@
     resetDate: function() {
       var mostRecent = d3.max(state.data, xAcc);
       actions.changeDate(mostRecent, 0);
-    }
+    },
+
+    onResize: function() { render(state); }
   };
 
 
@@ -136,7 +138,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 60, bottom: 104 });
+    var bounds = sszvis.bounds({ top: 60, bottom: 104 }, '#sszvis-chart');
     var multiplesLayout = sszvis.layout.stackedAreaMultiplesLayout(bounds.innerHeight, state.stackedData.length, 0.1);
 
 
@@ -336,6 +338,8 @@
 
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
+
+    sszvis.behavior.resize().on('resize', actions.onResize);
   }
 
 

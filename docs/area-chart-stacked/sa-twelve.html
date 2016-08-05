@@ -126,7 +126,9 @@
       // resets the date to the last date in the dataset
       var mostRecent = d3.max(state.data, xAcc);
       actions.changeDate(mostRecent);
-    }
+    },
+
+    onResize: function() { render(state); }
   };
 
 
@@ -407,6 +409,8 @@
 
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
+
+    sszvis.behavior.resize().on('resize', actions.onResize);
   }
 
 
