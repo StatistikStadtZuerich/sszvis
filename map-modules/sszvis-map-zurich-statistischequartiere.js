@@ -46,6 +46,7 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiereBaseMap', function(modul
       .prop('width')
       .prop('height')
       .prop('borderColor').borderColor('black')
+      .delegate('strokeWidth', mesh)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -128,8 +129,10 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiere', function(module) {
       .delegate('fill', base)
       .delegate('transitionColor', base)
       .delegate('borderColor', mesh)
+      .delegate('strokeWidth', mesh)
       .delegate('highlight', highlight)
       .delegate('highlightStroke', highlight)
+      .delegate('highlightStrokeWidth', highlight)
       .render(function(data) {
         var selection = d3.select(this);
         var props = selection.props();
