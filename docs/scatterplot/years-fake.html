@@ -67,7 +67,9 @@
       state.activeQuarter = closestDatum(state.quarters, sszvis.fn.identity, inputQ);
 
       render(state);
-    }
+    },
+
+    onResize: function() { render(state); }
   };
 
 
@@ -95,7 +97,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 20, bottom: 150 });
+    var bounds = sszvis.bounds({ top: 20, bottom: 150 }, '#sszvis-chart');
 
 
     // Scales
@@ -180,6 +182,8 @@
     chartLayer.selectGroup('cScale')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 122))
       .call(cLegend);
+
+    sszvis.behavior.resize().on('resize', actions.onResize);
   }
 
 

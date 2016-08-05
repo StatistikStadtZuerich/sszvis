@@ -96,7 +96,9 @@
     resetHighlight: function() {
       state.highlightData = [];
       render(state);
-    }
+    },
+
+    onResize: function() { render(state); }
   };
 
 
@@ -129,7 +131,7 @@
 
     var colorLegend = flexibleLegend(cScale, state.categories.length)
 
-    var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length) });
+    var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length) }, '#sszvis-chart');
 
 
     // Scales
@@ -233,6 +235,8 @@
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+    sszvis.behavior.resize().on('resize', actions.onResize);
 
 
     // Interaction

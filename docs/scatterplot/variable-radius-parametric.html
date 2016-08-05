@@ -102,7 +102,9 @@ var config = {
     resetHighlight: function() {
       state.highlightData = [];
       render(state);
-    }
+    },
+
+    onResize: function() { render(state); }
   };
 
 
@@ -129,7 +131,7 @@ var config = {
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 20, bottom: 110 });
+    var bounds = sszvis.bounds({ top: 20, bottom: 110 }, '#sszvis-chart');
 
 
     // Scales
@@ -248,6 +250,8 @@ var config = {
     chartLayer.selectGroup('yAxis')
       .call(yAxis)
       .call(removeOverlappingYTickLabels(bounds.innerHeight));
+
+    sszvis.behavior.resize().on('resize', actions.onResize);
 
 
     // Interaction
