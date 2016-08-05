@@ -116,13 +116,13 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 
 ```project
 {
-    "name": "map-tabs",
+    "name": "map-quartiere",
     "files": {
         "index.html": {
-            "source": "docs/map-standard/tabs.html",
+            "source": "docs/map-standard/quartiere.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map-standard/data/S_tabs.csv",
+        "data.csv": "docs/map-standard/data/S_quartiere.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",

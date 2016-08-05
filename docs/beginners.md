@@ -279,7 +279,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 
 ```project
 {
-    "name": "map-tabs",
+    "name": "map-quartiere",
     "files": {
         "index.html": {
             "source": "docs/map-standard/quartiere-parametric.html",
