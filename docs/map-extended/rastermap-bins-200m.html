@@ -177,6 +177,8 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 60))
       .call(legend);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
 }(d3, topojson, sszvis));

@@ -89,6 +89,8 @@
     htmlLayer.call(topoLayer);
 
     chartLayer.call(mapMaker);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
 }(d3, topojson, sszvis));

@@ -201,6 +201,8 @@
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
   function isSelected(d) {

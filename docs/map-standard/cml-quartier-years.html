@@ -403,6 +403,8 @@
 
     highlightLayer.selectGroup('interaction')
       .call(hoverBehavior);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
 

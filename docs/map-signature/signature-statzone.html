@@ -193,6 +193,8 @@
       .style('left', (bounds.innerWidth - control.width()) / 2 + 'px')
       .style('top', '-40px')
       .call(control);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
   function isSelected(d) {
