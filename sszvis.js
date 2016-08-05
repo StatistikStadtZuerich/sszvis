@@ -8418,9 +8418,6 @@ sszvis_namespace('sszvis.map.renderer.base', function(module) {
           .append('path')
           .classed('sszvis-map__area', true)
           .attr('data-event-target', '')
-          .attr('d', function(d) {
-            return props.mapPath(d.geoJson);
-          })
           .attr('fill', getMapFill);
 
         mapAreas.exit().remove();
@@ -8430,7 +8427,8 @@ sszvis_namespace('sszvis.map.renderer.base', function(module) {
 
         // change the fill if necessary
         mapAreas
-          .classed('sszvis-map__area--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); });
+          .classed('sszvis-map__area--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); })
+          .attr('d', function(d) { return props.mapPath(d.geoJson); });
 
         if (props.transitionColor) {
           mapAreas
@@ -8539,9 +8537,6 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
           .append('path')
           .classed('sszvis-map__geojsonelement', true)
           .attr('data-event-target', '')
-          .attr('d', function(d) {
-            return props.mapPath(d.geoJson);
-          })
           .attr('fill', getMapFill);
 
         geoElements.exit().remove();
@@ -8550,7 +8545,8 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
           .attr('fill', getMapFill);
 
         geoElements
-          .classed('sszvis-map__geojsonelement--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); });
+          .classed('sszvis-map__geojsonelement--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); })
+          .attr('d', function(d) { return props.mapPath(d.geoJson); });
 
         if (props.transitionColor) {
           geoElements
@@ -8581,12 +8577,7 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
           .position(function(d) {
             d.geoJson.properties || (d.geoJson.properties = {});
 
-            var computedCenter = d.geoJson.properties.computedCenter;
-            if (!computedCenter) {
-              d.geoJson.properties.computedCenter = computedCenter = props.mapPath.centroid(d.geoJson);
-            }
-
-            return computedCenter;
+            return props.mapPath.centroid(d.geoJson);
           });
 
         var tooltipGroup = selection.selectGroup('tooltipAnchors')
