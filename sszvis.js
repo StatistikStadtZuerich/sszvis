@@ -8826,7 +8826,7 @@ sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
       .prop('mapPath')
       .prop('highlight').highlight([]) // an array of data values to highlight
       .prop('highlightStroke', d3.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
-      .prop('strokeWidth', d3.functor).strokeWidth(2)
+      .prop('highlightStrokeWidth', d3.functor).highlightStrokeWidth(2)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -8866,7 +8866,7 @@ sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
         highlightBorders
           .attr('d', function(d) { return props.mapPath(d.geoJson); })
           .style('stroke', function(d) { return props.highlightStroke(d.datum); })
-          .style('stroke-width', function(d) { return props.strokeWidth(d.datum); });
+          .style('stroke-width', function(d) { return props.highlightStrokeWidth(d.datum); });
       });
   };
 
