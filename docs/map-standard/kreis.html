@@ -92,9 +92,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ top: 30, right: padding, bottom: 90, left: padding }, '#sszvis-chart');
+    var bounds = sszvis.bounds({ top: 30, bottom: 90 }, '#sszvis-chart');
 
 
     // Scales

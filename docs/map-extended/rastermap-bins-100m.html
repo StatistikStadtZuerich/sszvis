@@ -83,9 +83,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    // Padding
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 640, top: 30, right: padding, bottom: 90, left: padding });
+    var bounds = sszvis.bounds({ bottom: 110 }, '#sszvis-chart');
 
 
     // Scales
@@ -178,7 +176,7 @@
       .call(mapMaker);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 40))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 60))
       .call(legend);
   }
 
