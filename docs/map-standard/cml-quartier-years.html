@@ -213,17 +213,19 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var mapHeight = 542;
-    // The line chart's height is 1/4th of the default height plus top and bottom padding
-    var lineChartHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO / 4 + 40 + 20;
+    var outerBounds = sszvis.bounds({ top: 0, right: 0, bottom: 0, left: 0 }, '#sszvis-chart');
 
-    var outerBounds = sszvis.bounds({ height: mapHeight + lineChartHeight, top: 0, right: 0, bottom: 0, left: 0 });
-    // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
+    // The line chart's height is 1/4th of the default height plus top and bottom padding
+    var lineChartHeight = outerBounds.height / 4;
+    var lineChartTopPad = 40, lineChartBottomPad = 20;
+    // The map height is the rest
+    var mapHeight = outerBounds.height - lineChartHeight;
+    var mapTopPad = 30, mapBottomPad = 90;
+
     // bounds for the map section of the chart
-    var mapBounds = sszvis.bounds({ height: mapHeight, top: 30, right: padding, bottom: 90, left: padding });
+    var mapBounds = sszvis.bounds({ height: mapHeight - mapTopPad - mapBottomPad, top: mapTopPad, bottom: mapBottomPad }, '#sszvis-chart');
     // bounds for the line chart section
-    var lineChartBounds = sszvis.bounds({ height: lineChartHeight, top: 40, right: 6, bottom: 20, left: 6 });
+    var lineChartBounds = sszvis.bounds({ height: lineChartHeight - lineChartTopPad - lineChartBottomPad, top: lineChartTopPad, right: 6, bottom: lineChartBottomPad, left: 6 }, '#sszvis-chart');
 
 
     // Scales
