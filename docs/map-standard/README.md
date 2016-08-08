@@ -134,6 +134,30 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 }
 ```
 
+## Zürich: Quartiere (viewBox example)
+
+A map of the statistische quartiere of Zürich, which demonstrates the use of the SVG viewBox attribute for automatic scaling at different screen resolutions, including things like stroke size.
+
+```project
+{
+    "name": "map-quartiere-viewbox",
+    "files": {
+        "index.html": {
+            "source": "docs/map-standard/quartiere-viewbox.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map-standard/data/S_quartiere.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
+    },
+    "sourceView": ["index.html", "data.csv"]
+}
+```
+
 ## Coordinated Map and Line Chart
 
 A map of the Statistische Quartiere of Zürich, demonstrating the coordination of the map dataset with a line chart which displays the full range of the data.
