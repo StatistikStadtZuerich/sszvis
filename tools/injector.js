@@ -7,25 +7,12 @@
 (function() {
   /// ****** The Business Part of the Injector
   var functionCache = window.__globalRenderFunctionCache__ = {};
-  var containerCache = null;
 
   window.__globalRerenderAll__ = function() {
     objForEach(functionCache, function(render) { render(); });
   };
 
   window.addEventListener('resize', function() { __globalRerenderAll__(); })
-
-  function monkeypatch(sszvis) {
-    var _oldsszvisbounds = sszvis.bounds;
-    sszvis.bounds = function(params) {
-      params || (params = {});
-      params.width = containerCache.getBoundingClientRect().width;
-      return _oldsszvisbounds(params);
-    };
-    objForEach(_oldsszvisbounds, function(val, key) {
-      sszvis.bounds[key] = val;
-    });
-  }
 
   var linkDependencies = [
     "sszvis.css"
@@ -50,8 +37,6 @@
     var scriptAnchor = document.querySelector('#sszvis-injector');
     var basepath = scriptAnchor.getAttribute('data-basepath');
     var container = document.querySelector(scriptAnchor.getAttribute('data-component'));
-    // Save the container
-    containerCache = container;
     // Clear the container
     while (container.firstChild) { container.removeChild(container.firstChild); }
 
@@ -68,8 +53,6 @@
         addDiv(container, chartId);
         loadFileInto(basepath + chartFile, chartId);
       });
-      // Yep
-      monkeypatch(sszvis);
     });
   });
 
