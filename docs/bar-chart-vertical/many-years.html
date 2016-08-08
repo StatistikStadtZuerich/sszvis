@@ -158,7 +158,17 @@
       .bold(yAcc)
       .plain('Hotelübernachtungen');
 
+    function fitTooltip(defaultVal, bounds) {
+      var lo = bounds.innerWidth * 1 / 4;
+      var hi = bounds.innerWidth * 3 / 4;
+      return function(d) {
+        var x = d.x;
+        return x > hi ? 'right' : x < lo ? 'left' : defaultVal;
+      };
+    }
+
     var tooltip = sszvis.annotation.tooltip()
+      .orientation(fitTooltip('bottom', bounds))
       .renderInto(tooltipLayer)
       .header(tooltipTitle)
       .body(function(d) {
