@@ -34,10 +34,13 @@ sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
           return false;
         }
 
+        var domain = props.scale.domain();
+
         var values = props.displayValues;
         if (!values.length && props.scale.ticks) {
-          values = props.scale.ticks(props.segments);
+          values = props.scale.ticks(props.segments - 1);
         }
+        values.push(sszvis.fn.last(domain));
 
         // Avoid division by zero
         var segWidth = values.length > 0 ? props.width / values.length : 0;
@@ -59,8 +62,7 @@ sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
           .attr('height', segHeight)
           .attr('fill', function(d) { return props.scale(d); });
 
-        var domain = props.scale.domain();
-        var startEnd = [domain[0], domain[domain.length - 1]];
+        var startEnd = [sszvis.fn.first(domain), sszvis.fn.last(domain)];
         var labelText = props.labelText || startEnd;
 
         // rounded end caps for the segments
@@ -69,13 +71,15 @@ sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
 
         endCaps.enter()
           .append('circle')
-          .attr('class', 'ssvis-legend--mark')
+          .attr('class', 'ssvis-legend--mark');
+
+        endCaps.exit().remove();
+
+        endCaps
           .attr('cx', function(d, i) { return i * props.width; })
           .attr('cy', segHeight / 2)
           .attr('r', segHeight / 2)
           .attr('fill', function(d) { return props.scale(d); });
-
-        endCaps.exit().remove();
 
         var labels = selection.selectAll('.sszvis-legend__label')
           .data(labelText);
