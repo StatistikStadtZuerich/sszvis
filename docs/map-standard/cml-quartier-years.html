@@ -213,19 +213,52 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var outerBounds = sszvis.bounds({ top: 0, right: 0, bottom: 0, left: 0 }, '#sszvis-chart');
+    var responsiveQuery = sszvis.propsQuery()
+      .prop('height', {
+        narrow: 600,
+        tablet: sszvis.aspectRatio(4, 3),
+        wide: sszvis.aspectRatio(2, 1),
+        _: sszvis.aspectRatio(4, 1)
+      })
+      .prop('lineChartPadding', {
+        narrow: 12,
+        tablet: function(w) { return w / 10; },
+        wide: function(w) { return w / 5; },
+        _: function(w) { return w / 4; }
+      })
+
+    var rSettings = responsiveQuery('#sszvis-chart');
+
+    var outerBounds = sszvis.bounds({
+      height: rSettings.height,
+      top: 0,
+      bottom: 0
+    }, '#sszvis-chart');
 
     // The line chart's height is 1/4th of the default height plus top and bottom padding
-    var lineChartHeight = outerBounds.height / 4;
-    var lineChartTopPad = 40, lineChartBottomPad = 20;
+    var lineChartHeight = outerBounds.height * 2 / 7;
+    var lineChartTopPad = 18, lineChartBottomPad = 20;
     // The map height is the rest
     var mapHeight = outerBounds.height - lineChartHeight;
-    var mapTopPad = 30, mapBottomPad = 90;
+    var mapTopPad = 10, mapBottomPad = 45;
+    var colorScalePad = 15;
 
     // bounds for the map section of the chart
-    var mapBounds = sszvis.bounds({ height: mapHeight - mapTopPad - mapBottomPad, top: mapTopPad, bottom: mapBottomPad }, '#sszvis-chart');
+    var mapBounds = sszvis.bounds({
+      height: mapHeight - mapTopPad - mapBottomPad,
+      top: mapTopPad,
+      bottom: mapBottomPad,
+      right: 0,
+      left: 0
+    }, '#sszvis-chart');
     // bounds for the line chart section
-    var lineChartBounds = sszvis.bounds({ height: lineChartHeight - lineChartTopPad - lineChartBottomPad, top: lineChartTopPad, bottom: lineChartBottomPad }, '#sszvis-chart');
+    var lineChartBounds = sszvis.bounds({
+      height: lineChartHeight - lineChartTopPad - lineChartBottomPad,
+      top: lineChartTopPad,
+      bottom: lineChartBottomPad,
+      left: rSettings.lineChartPadding,
+      right: rSettings.lineChartPadding
+    }, '#sszvis-chart');
 
 
     // Scales
@@ -348,7 +381,7 @@
 
     var legend = sszvis.legend.linearColorScale()
       .scale(fillScale)
-      .width(mapBounds.width / 2)
+      .width(mapBounds.innerWidth / 2)
       .labelFormat(sszvis.format.number);
 
     // Rendering
@@ -378,7 +411,7 @@
 
     // for Zurich maps, the color legend should be positioned 60 pixels below the bottom of the map
     chart.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(mapBounds.width / 4, mapBounds.padding.top + mapBounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(mapBounds.width / 4, mapBounds.padding.top + mapBounds.innerHeight + colorScalePad))
       .call(legend);
 
 
