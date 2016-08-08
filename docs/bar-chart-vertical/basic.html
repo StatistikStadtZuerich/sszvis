@@ -85,7 +85,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 3, bottom: 25 });
+    var bounds = sszvis.bounds({ top: 3, bottom: 25 }, '#sszvis-chart');
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
 
@@ -167,6 +167,8 @@
     bars.selectAll('.sszvis-bar')
       .on('mouseover', actions.showTooltip)
       .on('mouseout', actions.hideTooltip);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
 

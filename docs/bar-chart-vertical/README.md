@@ -52,11 +52,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 318
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -82,11 +78,7 @@ This example shows several edge cases and specialties:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 353
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -108,10 +100,6 @@ In some cases, many values in a category should be shown. In this example, a lin
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "height": 393,
-        "width": 318
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

@@ -96,7 +96,7 @@
   ----------------------------------------------- */
   function render(state) {
 
-    var bounds = sszvis.bounds({ top: 3, bottom: 25 });
+    var bounds = sszvis.bounds({ top: 3, bottom: 25 }, '#sszvis-chart');
 
 
     // Scales
@@ -197,6 +197,8 @@
 
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
 
