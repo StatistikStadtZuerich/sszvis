@@ -28,11 +28,7 @@ For each chart the following can always be configured:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 360
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -53,11 +49,7 @@ For each chart the following can always be configured:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 410
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -78,11 +70,7 @@ For each chart the following can always be configured:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 370
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -103,11 +91,7 @@ For each chart the following can always be configured:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 470
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -128,11 +112,7 @@ For each chart the following can always be configured:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 622
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -153,11 +133,7 @@ For each chart the following can always be configured:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 296
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -188,11 +164,7 @@ Configuration:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 456
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -224,11 +196,7 @@ Configuration:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 391
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -259,11 +227,7 @@ Configuration:
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -293,11 +257,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 592
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -329,11 +289,7 @@ Configuration
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 800
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -360,11 +316,7 @@ Configuration:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 300
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -399,11 +351,7 @@ Configuration:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 410
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -433,11 +381,7 @@ Configuration:
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 391
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -472,10 +416,6 @@ Configurations
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 420
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
