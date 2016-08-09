@@ -138,6 +138,7 @@
       .y(sszvis.fn.compose(yScale, cAcc))
       .width(sszvis.fn.compose(widthScale, xAcc))
       .height(chartDimensions.barHeight)
+      .centerTooltip(true)
       .fill(sszvis.color.qual12());
 
     var xAxis = sszvis.axis.x()
@@ -162,6 +163,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .header(tooltipHeader)
       .visible(isSelected);
 

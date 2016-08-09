@@ -256,6 +256,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected)
       .header(sszvis.svgUtils.modularText.html().bold(branchAcc))
       .body(function(d) {

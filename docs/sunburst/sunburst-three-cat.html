@@ -148,6 +148,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected)
       .header(tooltipText)
       .body(function(d) { return sszvis.format.number(d.value); })

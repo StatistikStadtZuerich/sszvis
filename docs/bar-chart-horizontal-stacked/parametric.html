@@ -200,6 +200,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .header(tooltipHeader)
       .body(tooltipText)
       .visible(isSelected);

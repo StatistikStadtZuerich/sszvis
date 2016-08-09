@@ -130,6 +130,7 @@
       // will result in slightly narrower bars than the default.
       .width(xScale.rangeBand())
       .height(sszvis.fn.compose(heightScale, yAcc))
+      .centerTooltip(true)
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
       });
@@ -153,6 +154,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .header(tooltipHeader)
       .visible(isSelected);
 

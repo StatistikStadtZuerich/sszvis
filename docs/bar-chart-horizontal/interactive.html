@@ -139,6 +139,7 @@
       .y(sszvis.fn.compose(yScale, yAcc))
       .width(sszvis.fn.compose(widthScale, xAcc))
       .height(chartDimensions.barHeight)
+      .centerTooltip(true)
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
       });
@@ -168,6 +169,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .header(tooltipHeader)
       .visible(isSelected);
 
