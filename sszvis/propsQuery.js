@@ -10,9 +10,9 @@
  *
  * The module should be configured with any number of different properties that change based on breakpoints,
  * plus (optional) breakpoint configuration, and then called as a function. You can pass
- * in either a number (the width used to calculate which breakpoints apply), a string
- * (should be a selector string which refers to the object you wish to measure), or a
- * d3.selection (the first element's width will be measured and used to figure the breakpoints).
+ * in either a number (the width used to calculate which breakpoints apply) or an object with
+ * a 'width' property. The latter makes it possible to directly pass in a sszvis.bounds object.
+ *
  * The return value of the function call is an object which has properties corresponding to
  * the properties you configured before. The property values are equal to the value based on the
  * breakpoint application.
@@ -42,7 +42,7 @@
  *     _: 16,
  *   });
  *
- * var props = queryProps('#sszvis-chart');
+ * var props = queryProps({width: 450});
  *
  * ... use settings.axisOrientation, settings.height, and settings.numAxisTicks ...
  *
@@ -67,20 +67,19 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
     /**
      * Constructor
      *
-     * @param   {number|string|d3.selection} arg1 Accepts either a number, a CSS selector or
-     *          a d3 selection. If no breakpoint can be found for this argument the function
-     *          logs an error and returns the properties for the default breakpoint
+     * @param   {number|{width: number}} arg1 Accepts either a number or an object with a
+     *          'width' property. This makes it possible to pass in a sszvis.bounds object.
      *
      * @returns {Object.<string, any>} A map of all properties for the currently selected
      *          breakpoint as defined by the parameter `arg1`
      */
     function query(arg1) {
-      var width = sszvis.fn.isNumber(arg1) ? arg1 : sszvis.fn.elementWidth(arg1);
-
-      // Can't handle it if the provided selection isn't valid
-      // This can happen if an empty selection or some other bad value
-      // is given as the argument
-      if (!sszvis.fn.defined(width)) {
+      var width;
+      if (sszvis.fn.isNumber(arg1)) {
+        width = arg1;
+      } else if (sszvis.fn.isObject(arg1) && sszvis.fn.defined(arg1.width)) {
+        width = arg1.width;
+      } else {
         sszvis.logger.warn('Could not determine the breakpoint, returning the default props');
         return undefined; // FIXME: return default props
       }
