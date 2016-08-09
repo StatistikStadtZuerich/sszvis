@@ -52,11 +52,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 622
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -76,11 +72,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 645
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -102,10 +94,6 @@ Long axis ticks can be toggled to aid chart reading, which can be useful to see 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 613
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
