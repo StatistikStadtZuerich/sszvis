@@ -1424,14 +1424,18 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
     return function(w) { return w / ar; };
   };
 
-  // Desktop
-  // iPad portrait
-  var ar16to9 = aspectRatio(16, 9);
-  // iPad landscape
-  // iPhone SE landscape
-  var ar5to2 = aspectRatio(5, 2);
   // iPhone SE portrait
   var ar4to3 = aspectRatio(4, 3);
+  // iPhone SE landscape
+  // iPad landscape
+  var ar5to2 = aspectRatio(5, 2);
+  // iPad portrait
+  // Desktop
+  var ar16to9 = aspectRatio(16, 9);
+  // container max width: 877px
+  // ipad dimensions: 768 w x 1024 h
+  // iphone se dimensions: 320 w x 568 h
+
 
   /**
    * aspectRatio.default
@@ -1447,17 +1451,15 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
   module.exports.default = function(params) {
     var width = params.containerWidth;
     var height = params.screenHeight;
-    if (width < sszvis.breakpoint.SMALL) { // SMALL
-      return ar10to9(width);
-    } else if (width >= sszvis.breakpoint.SMALL && width < sszvis.breakpoint.NARROW) { // NARROW
-      return ar10to9(width);
-    } else if (width >= sszvis.breakpoint.NARROW && width < sszvis.breakpoint.TABLET) { // TABLET
+    if (width < 321) { // iPhone SE portrait
+      return ar4to3(width);
+    } else if (width >= 321 && width < 569) { // iPhone SE landscape
+      return ar5to2(width);
+    } else if (width >= 569 && width < 769) { // iPad portrait
       return ar16to9(width);
-    } else if (width >= sszvis.breakpoint.TABLET && width < sszvis.breakpoint.NORMAL) { // NORMAL
-      return ar16to9(width);
-    } else if (width >= sszvis.breakpoint.NORMAL && width < sszvis.breakpoint.WIDE) { // WIDE
-      return ar16to9(width);
-    } else { // width >= sszvis.breakpoint.WIDE // XXL
+    } else if (width >= 769 && width < 1025 && height < 769) { // iPad landscape
+      return ar5to2(width);
+    } else { // Desktop
       return ar16to9(width);
     }
   };
