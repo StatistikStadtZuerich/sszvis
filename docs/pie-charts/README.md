@@ -48,11 +48,7 @@ A basic pie chart example, with tooltip interaction.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 300
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -74,11 +70,7 @@ Shows the creation of a pie chart with many categories
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 300
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -136,10 +128,6 @@ Shows the use of the multiples component to render several pie charts, each one 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 880
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
