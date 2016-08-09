@@ -69,10 +69,6 @@ In this example, twelve distinct categories make up each stack, and the total fo
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 322
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
