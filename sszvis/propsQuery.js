@@ -133,7 +133,7 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
 
     function query(arg1) {
       // Accepts either a number, a d3 selection, or a string selector
-      var width = sszvis.fn.isNumber(arg1) ? arg1 : sszvis.fn.selectionWidth(sszvis.fn.isSelection(arg1) ? arg1 : d3.select(arg1));
+      var width = sszvis.fn.isNumber(arg1) ? arg1 : sszvis.fn.elementWidth(arg1);
 
       // Can't handle it if the provided selection isn't valid
       // This is possible if an empty selection or some other bad value

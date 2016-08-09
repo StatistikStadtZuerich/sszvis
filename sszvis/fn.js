@@ -89,6 +89,29 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.elementWidth
+     *
+     * Calculates the width of the first DOM element defined by a CSS selector string,
+     * a DOM element reference, or a d3 selection. If the DOM element can't be
+     * measured `undefined` is returned.
+     *
+     * @param  {string|DOMElement|d3.selection} el The element to measure
+     *
+     * @return {number|undefined} The measurement of the width of the element
+     */
+    elementWidth: function(arg) {
+      var node;
+      if (sszvis.fn.isString(arg)) {
+        node = d3.select(arg).node();
+      } else if (sszvis.fn.isSelection(arg)) {
+        node = arg.node();
+      } else {
+        node = arg;
+      }
+      return node ? node.getBoundingClientRect().width : undefined;
+    },
+
+    /**
      * fn.isNull
      *
      * determines if the passed value is null.
@@ -346,25 +369,6 @@ sszvis_namespace('sszvis.fn', function(module) {
             var value = object !== undefined ? object[key] : undefined;
             return value !== undefined ? value : defaultVal;
         };
-    },
-
-    /**
-     * fn.selectionWidth
-     *
-     * Provides the width of the given d3.selection's first element,
-     * if the given value is defined and a selection, otherwise undefined.
-     * 
-     * @param  {d3.selection} sel      The selection to measure (possibly undefined)
-     * @return {Number, undefined}     The measurement of the width of the selection
-     */
-    selectionWidth: function(sel) {
-        if (sszvis.fn.isSelection(sel)) {
-            var node = sel.node();
-            if (node) {
-                return node.getBoundingClientRect().width;
-            }
-        }
-        // Return undefined
     },
 
     /**
