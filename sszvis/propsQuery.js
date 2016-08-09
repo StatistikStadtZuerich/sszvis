@@ -138,7 +138,10 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
       // Can't handle it if the provided selection isn't valid
       // This is possible if an empty selection or some other bad value
       // is given as the argument
-      if (!sszvis.fn.defined(width)) { return {}; }
+      if (!sszvis.fn.defined(width)) {
+        sszvis.logger.warn('invalid argument passed to propsQuery function');
+        return {};
+      }
 
       // Finds out which breakpoints the provided width matches up with
       // Assumes that breakpointKeys is an array of breakpoint names sorted
