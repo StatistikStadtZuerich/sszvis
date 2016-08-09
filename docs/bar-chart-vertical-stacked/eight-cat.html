@@ -102,7 +102,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 150 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 150 }, '#sszvis-chart');
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.years.length);
 
 
