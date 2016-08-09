@@ -45,11 +45,7 @@ String or function to set the stroke thickness (default: 1)
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 365
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -71,11 +67,7 @@ Based on the default chart. Additionally shows the numeric values at the current
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 318
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -97,11 +89,7 @@ Shows an annotation at a given position or data point. The time axis shows days 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 365
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -123,11 +111,7 @@ Shows how to use negative x-values.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 365
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -149,11 +133,7 @@ Shows how to use negative y-values.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 380
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -175,11 +155,7 @@ Generates a chart based on a config object
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 360
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
