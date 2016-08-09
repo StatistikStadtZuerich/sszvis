@@ -32,7 +32,7 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
 
     var elementDataKey = 'data-sszvis-svg-' + key;
 
-    var root = d3.select(selector);
+    var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
     var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
     var svgEnter = svg.enter().append('svg');
 

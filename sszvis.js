@@ -2015,7 +2015,7 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
 
     var elementDataKey = 'data-sszvis-svg-' + key;
 
-    var root = d3.select(selector);
+    var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
     var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
     var svgEnter = svg.enter().append('svg');
 
@@ -2104,7 +2104,7 @@ sszvis_namespace('sszvis.createHtmlLayer', function(module) {
 
     var elementDataKey = 'data-sszvis-html-' + key;
 
-    var root = d3.select(selector);
+    var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
     root.classed('sszvis-outer-container', true);
 
     var layer = root.selectAll('[data-sszvis-html-layer][' + elementDataKey + ']').data([0]);
@@ -2157,7 +2157,8 @@ sszvis_namespace('sszvis.fallback', function(module) {
   module.exports.render = function(selector, options) {
     options || (options = {});
     options.src    || (options.src    = 'fallback.png');
-    d3.select(selector).append('img')
+    var selection = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
+    selection.append('img')
       .attr('src', options.src);
   };
 
