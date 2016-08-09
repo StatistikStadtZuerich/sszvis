@@ -1579,10 +1579,9 @@ sszvis_namespace('sszvis.bounds', function(module) {
     var width   = either( bounds.width,
                           either( sszvis.fn.selectionWidth(selection),
                                   DEFAULT_WIDTH ));
-    // The first term (inside Math.round) is the default innerHeight calculation
-    var aspectRatio = sszvis.aspectRatio.default({ containerWidth: width, screenHeight: window.innerHeight });
+    var computedHeight = sszvis.aspectRatio.default({ containerWidth: width, screenHeight: window.innerHeight });
     var height  = either( bounds.height,
-                          aspectRatio + padding.top + padding.bottom );
+                          computedHeight + padding.top + padding.bottom );
 
     return {
       innerHeight: height - padding.top  - padding.bottom,
