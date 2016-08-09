@@ -127,7 +127,7 @@
     // and right padding which reveals the labels. When using the sszvis.layout.sankey.computeLayout function,
     // the chart will be positioned such that the node bars themselves line up with the edges of the available
     // space, and any outside bar labels (e.g. 'left' labels for a lefthand column) are outside, in the padding space.
-    var bounds = sszvis.bounds({ height: 700, top: 40, right: 115, bottom: 20, left: 115 });
+    var bounds = sszvis.bounds({ top: 40, right: 115, bottom: 20, left: 115 }, '#sszvis-chart');
 
     // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
     // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.

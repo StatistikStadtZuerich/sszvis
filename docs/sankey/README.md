@@ -93,11 +93,7 @@ A string or function returning a string to use for the label of each link.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 700
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -118,10 +114,6 @@ A string or function returning a string to use for the label of each link.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 700
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
