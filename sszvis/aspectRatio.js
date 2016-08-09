@@ -21,9 +21,14 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
     return function(w) { return w / ar; };
   };
 
-  var ar10to9 = aspectRatio(10, 9);
+  // Desktop
+  // iPad portrait
   var ar16to9 = aspectRatio(16, 9);
-  var ar40to9 = aspectRatio(40, 9);
+  // iPad landscape
+  // iPhone SE landscape
+  var ar5to2 = aspectRatio(5, 2);
+  // iPhone SE portrait
+  var ar4to3 = aspectRatio(4, 3);
 
   /**
    * aspectRatio.default
@@ -48,9 +53,9 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
     } else if (width >= sszvis.breakpoint.TABLET && width < sszvis.breakpoint.NORMAL) { // NORMAL
       return ar16to9(width);
     } else if (width >= sszvis.breakpoint.NORMAL && width < sszvis.breakpoint.WIDE) { // WIDE
-      return ar40to9(width);
+      return ar16to9(width);
     } else { // width >= sszvis.breakpoint.WIDE // XXL
-      return ar40to9(width);
+      return ar16to9(width);
     }
   };
 
