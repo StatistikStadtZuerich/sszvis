@@ -133,13 +133,9 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-
-    var w = 516;
-    var ih = w*(9/16);
     var t = 30;
     var b = 90;
-    var h = ih+t+b;
-    var bounds = sszvis.bounds({ top: t, bottom: b, height: h});
+    var bounds = sszvis.bounds({ top: t, bottom: b }, '#sszvis-chart');
 
     // Scales
     var xScale = d3.time.scale()
