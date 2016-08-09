@@ -24,28 +24,28 @@
 
   /* Configuration
   ----------------------------------------------- */
-    var config = {
-      // The path to the CSV file containing the data for this chart
-      dataPath: 'data/SA_2Categories_yearly.csv',
-      // The title and description of this chart for visually impaired users
-      title: '',
-      description: '',
-      // Data column to use for the x-axis
-      xColumn: 'Jahr',
-      // Data column to use for the y-axis
-      yColumn: 'Anzahl',
-      // Data column to use for the values
-      cColumn:'Nationalität',
-      // The labels for the x and y-axis. Set to empty ('') to hide the label
-      yAxisLabel: '',
-      xAxisLabel: '',
-      // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
-      xTicks: null,
-      yTicks: null,
-      // Padding between legend and x-axis in pixels. The recommended default is 60px.
-      legendPadding: 60,
-      //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
-      fallback: false
+  var config = {
+    // The path to the CSV file containing the data for this chart
+    dataPath: 'data/SA_2Categories_yearly.csv',
+    // The title and description of this chart for visually impaired users
+    title: '',
+    description: '',
+    // Data column to use for the x-axis
+    xColumn: 'Jahr',
+    // Data column to use for the y-axis
+    yColumn: 'Anzahl',
+    // Data column to use for the values
+    cColumn:'Nationalität',
+    // The labels for the x and y-axis. Set to empty ('') to hide the label
+    yAxisLabel: '',
+    xAxisLabel: '',
+    // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
+    xTicks: null,
+    yTicks: null,
+    // Padding between legend and x-axis in pixels. The recommended default is 60px.
+    legendPadding: 60,
+    //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
+    fallback: false
   };
 
   // This example works in much the same way as the twelve-category stacked area chart.
@@ -325,7 +325,7 @@
     return datum - d0 > d1 - datum ? d1 : d0;
   }
 
-    function flexibleLegend(scale, numEntries) {
+  function flexibleLegend(scale, numEntries) {
     var legend = sszvis.legend.ordinalColorScale().scale(scale)
     if (numEntries <= 4) {
       legend.horizontalFloat(true)
