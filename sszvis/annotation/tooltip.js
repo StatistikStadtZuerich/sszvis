@@ -63,13 +63,13 @@ sszvis_namespace('sszvis.annotation.tooltip', function(module) {
       .prop('visible', d3.functor).visible(false)
       .renderSelection(function(selection) {
         var props = selection.props();
+        var intoBCR = props.renderInto.node().getBoundingClientRect();
 
         var tooltipData = [];
         selection.each(function(d) {
-          var thisBCR = this.getBoundingClientRect();
-          var intoBCR = props.renderInto.node().getBoundingClientRect();
-          var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
           if (props.visible(d)) {
+            var thisBCR = this.getBoundingClientRect();
+            var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
             tooltipData.push({
               datum: d,
               x: pos[0],
