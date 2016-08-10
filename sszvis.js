@@ -8695,7 +8695,12 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
           .position(function(d) {
             d.geoJson.properties || (d.geoJson.properties = {});
 
-            return props.mapPath.centroid(d.geoJson);
+            var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
+            if (!sphericalCentroid) {
+              d.geoJson.properties.sphericalCentroid = sphericalCentroid = d3.geo.centroid(d.geoJson);
+            }
+
+            return props.mapPath.projection()(sphericalCentroid);
           });
 
         var tooltipGroup = selection.selectGroup('tooltipAnchors')
