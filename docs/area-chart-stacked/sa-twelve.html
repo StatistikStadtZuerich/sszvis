@@ -334,7 +334,8 @@
     // set up the color legend. Should also already be familiar
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .columnWidth(bounds.innerWidth / 2)
+      // Sets a maximum width for the columns - otherwise it gets out of hand on some sizes
+      .columnWidth(Math.min(bounds.innerWidth / 2, 260))
       .rows(6)
       .orientation('vertical');
 
