@@ -381,7 +381,7 @@
 
     var legend = sszvis.legend.linearColorScale()
       .scale(fillScale)
-      .width(mapBounds.innerWidth / 2)
+      .width(lineChartBounds.innerWidth / 2)
       .labelFormat(sszvis.format.number);
 
     // Rendering
@@ -411,7 +411,7 @@
 
     // for Zurich maps, the color legend should be positioned 60 pixels below the bottom of the map
     chart.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(mapBounds.width / 4, mapBounds.padding.top + mapBounds.innerHeight + colorScalePad))
+      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left + lineChartBounds.innerWidth / 4, mapBounds.padding.top + mapBounds.innerHeight + colorScalePad))
       .call(legend);
 
 
