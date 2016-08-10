@@ -1,9 +1,9 @@
 /**
- * Props Query module
+ * ResponsiveProps module
  *
- * @module sszvis/propsQuery
+ * @module sszvis/responsiveProps
  *
- * The PropsQuery module provides a declarative way to configure properties or options
+ * The ResponsiveProps module provides a declarative way to configure properties or options
  * which need to change based on some breakpoints. SSZVIS comes with a default
  * set of breakpoints (see sszvis.breakpoints), but you can also use this module
  * to define your own breakpoints.
@@ -19,7 +19,7 @@
  *
  * Example usage:
  *
- * var queryProps = sszvis.propsQuery()
+ * var queryProps = sszvis.responsiveProps()
  *   .breakpoints({
  *     small: 400,
  *     medium: 800,
@@ -46,9 +46,9 @@
  *
  * ... use settings.axisOrientation, settings.height, and settings.numAxisTicks ...
  *
- * @returns {propsQuery}
+ * @returns {responsiveProps}
  */
-sszvis_namespace('sszvis.propsQuery', function(module) {
+sszvis_namespace('sszvis.responsiveProps', function(module) {
   'use strict';
 
   /* Exported module
@@ -73,14 +73,14 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
      * @returns {Object.<string, any>} A map of all properties for the currently selected
      *          breakpoint as defined by the parameter `arg1`
      */
-    function query(arg1) {
+    function responsiveProps(arg1) {
       var width;
       if (sszvis.fn.isNumber(arg1)) {
         width = arg1;
       } else if (sszvis.fn.isObject(arg1) && sszvis.fn.defined(arg1.width)) {
         width = arg1.width;
       } else {
-        sszvis.logger.warn('Could not determine the breakpoint, returning the default props');
+        sszvis.logger.warn('Could not determine the current breakpoint, returning the default props');
         return undefined; // FIXME: return default props
       }
 
@@ -108,7 +108,7 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
         var propSpec = propsConfig[propKey];
 
         if (!validatePropSpec(propSpec, breakpointSpec)) {
-          sszvis.logger.warn('propsQuery was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
+          sszvis.logger.warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
           return memo;
         }
 
@@ -125,13 +125,13 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
     }
 
     /**
-     * query.prop
+     * responsiveProps.prop
      *
      * Define a responsive property that can assume different values depending on the
      * currently active breakpoint.
      *
      * @example
-     * var queryProps = sszvis.propsQuery()
+     * var queryProps = sszvis.responsiveProps()
      *   .prop('height', {
      *     small: function(width) { return width / (4/3); },
      *     tablet: function(width) { return width / (16/9); },
@@ -157,17 +157,17 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
      *        breakpoint the next smallest breakpoint will be used. Values must be numbers or
      *        functions that accept the current breakpoint width and return a number
      *
-     * @return {propsQuery}
+     * @return {responsiveProps}
      */
-    query.prop = function(propName, propSpec) {
+    responsiveProps.prop = function(propName, propSpec) {
       propsConfig[propName] = functorizeValues(propSpec);
-      return query;
+      return responsiveProps;
     };
 
     /**
-     * query.breakpoints
+     * responsiveProps.breakpoints
      *
-     * Configure custom breakpoints for the propsQuery. If not defined, defaults
+     * Configure custom breakpoints for the responsiveProps. If not defined, defaults
      * are used. You should provide an object where the keys are breakpoint names
      * and the values are pixel values for the maximum width at which that breakpoint
      * applies. These are 'max-width' breakpoints, and if the width is equal to
@@ -180,14 +180,14 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
      * @param {Object.<string, number>} [bps] Define the breakpoints to be used
      *
      * @example
-     * var queryProps = sszvis.propsQuery()
+     * var queryProps = sszvis.responsiveProps()
      * .breakpoints({
      *   small: 300,
      *   medium: 500,
      *   large: 700
      * })
      */
-    query.breakpoints = function(bps) {
+    responsiveProps.breakpoints = function(bps) {
       if (arguments.length === 0) {
         return breakpointSpec;
       }
@@ -195,10 +195,10 @@ sszvis_namespace('sszvis.propsQuery', function(module) {
       breakpointSpec = bps;
       breakpointKeys = orderedBreakpointKeys(bps);
 
-      return query;
+      return responsiveProps;
     };
 
-    return query;
+    return responsiveProps;
   };
 
 

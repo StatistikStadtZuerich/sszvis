@@ -96,7 +96,7 @@ sszvis_namespace('sszvis.test', function(module) {
   }
 
   function runPropsQueryTests() {
-    var pqT1 = sszvis.propsQuery()
+    var pqT1 = sszvis.responsiveProps()
       .prop('test', {
         small: 2,
         narrow: 4,
@@ -106,19 +106,19 @@ sszvis_namespace('sszvis.test', function(module) {
         _: 64
       });
 
-    assert('propsQuery works as expected for small', pqT1(sszvis.breakpoint.SMALL - 1).test === 2);
-    assert('propsQuery works as expected for narrow', pqT1(sszvis.breakpoint.NARROW - 1).test === 4);
-    assert('propsQuery works as expected for tablet', pqT1(sszvis.breakpoint.TABLET - 1).test === 8);
-    assert('propsQuery works as expected for normal', pqT1(sszvis.breakpoint.NORMAL - 1).test === 16);
-    assert('propsQuery works as expected for wide', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
-    assert('propsQuery works as expected for _', pqT1(sszvis.breakpoint.WIDE + 20).test === 64);
-    assert('propsQuery works as expected when width is exactly on the breakpoint', pqT1(sszvis.breakpoint.WIDE).test === 64);
+    assert('responsiveProps works as expected for small', pqT1(sszvis.breakpoint.SMALL - 1).test === 2);
+    assert('responsiveProps works as expected for narrow', pqT1(sszvis.breakpoint.NARROW - 1).test === 4);
+    assert('responsiveProps works as expected for tablet', pqT1(sszvis.breakpoint.TABLET - 1).test === 8);
+    assert('responsiveProps works as expected for normal', pqT1(sszvis.breakpoint.NORMAL - 1).test === 16);
+    assert('responsiveProps works as expected for wide', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
+    assert('responsiveProps works as expected for _', pqT1(sszvis.breakpoint.WIDE + 20).test === 64);
+    assert('responsiveProps works as expected when width is exactly on the breakpoint', pqT1(sszvis.breakpoint.WIDE).test === 64);
 
-    var pqT2 = sszvis.propsQuery()
+    var pqT2 = sszvis.responsiveProps()
       .breakpoints({
         small: 30,
         medium: 50,
-        large: 70,
+        large: 70
       })
       .prop('test', {
         small: 2,
@@ -127,27 +127,27 @@ sszvis_namespace('sszvis.test', function(module) {
         _: 16
       });
 
-    assert('propsQuery works for user-defined breakpoints (small)', pqT2(10).test === 2);
-    assert('propsQuery works for user-defined breakpoints (medium)', pqT2(40).test === 4);
-    assert('propsQuery works for user-defined breakpoints (large)', pqT2(60).test === 8);
-    assert('propsQuery works for user-defined breakpoints (_)', pqT2(90).test === 16);
+    assert('responsiveProps works for user-defined breakpoints (small)', pqT2(10).test === 2);
+    assert('responsiveProps works for user-defined breakpoints (medium)', pqT2(40).test === 4);
+    assert('responsiveProps works for user-defined breakpoints (large)', pqT2(60).test === 8);
+    assert('responsiveProps works for user-defined breakpoints (_)', pqT2(90).test === 16);
 
-    var pqT3 = sszvis.propsQuery()
+    var pqT3 = sszvis.responsiveProps()
       .prop('test', {
-        small: 2,
+        small: 2
       });
 
-    assert('propsQuery should complain and return undefined when you do not provide a _ option', !sszvis.fn.defined(pqT3(1000).test));
+    assert('responsiveProps should complain and return undefined when you do not provide a _ option', !sszvis.fn.defined(pqT3(1000).test));
 
-    var pqT4 = sszvis.propsQuery()
+    var pqT4 = sszvis.responsiveProps()
       .prop('test', {
         notvalidbp: 8,
-        _: 16,
+        _: 16
       });
 
-    assert('propsQuery should complain and return undefined when you provide an invalid breakpoint', !sszvis.fn.defined(pqT4(650).test));
+    assert('responsiveProps should complain and return undefined when you provide an invalid breakpoint', !sszvis.fn.defined(pqT4(650).test));
 
-    var pqT5 = sszvis.propsQuery()
+    var pqT5 = sszvis.responsiveProps()
       .breakpoints({
         small: 30,
         medium: 50,
@@ -166,17 +166,17 @@ sszvis_namespace('sszvis.test', function(module) {
         _: 8
       });
 
-    assert('propsQuery behaves as expected even when not all breakpoints are provided - under', pqT5(40).first_test === 4);
-    assert('propsQuery behaves as expected even when not all breakpoints are provided - over', pqT5(60).first_test === 64);
-    assert('propsQuery behaves as expected even when not all breakpoints are provided - way over', pqT5(100).first_test === 64);
-    assert('propsQuery does the right thing with multiple props - under', pqT5(20).second_test === 16);
-    assert('propsQuery does the right thing with multiple props - still under', pqT5(60).second_test === 16);
-    assert('propsQuery does the right thing with multiple props - over', pqT5(100).second_test === 32);
-    assert('propsQuery multiple props - small', pqT5(20).third_test === 2);
-    assert('propsQuery multiple props - small over', pqT5(40).third_test === 8);
-    assert('propsQuery tests widths to be strictly less than the breakpoint - first', pqT5(50).first_test === 64);
-    assert('propsQuery tests widths to be strictly less than the breakpoint - second', pqT5(70).second_test === 32);
-    assert('propsQuery tests widths to be strictly less than the breakpoint - third', pqT5(30).third_test === 8);
+    assert('responsiveProps behaves as expected even when not all breakpoints are provided - under', pqT5(40).first_test === 4);
+    assert('responsiveProps behaves as expected even when not all breakpoints are provided - over', pqT5(60).first_test === 64);
+    assert('responsiveProps behaves as expected even when not all breakpoints are provided - way over', pqT5(100).first_test === 64);
+    assert('responsiveProps does the right thing with multiple props - under', pqT5(20).second_test === 16);
+    assert('responsiveProps does the right thing with multiple props - still under', pqT5(60).second_test === 16);
+    assert('responsiveProps does the right thing with multiple props - over', pqT5(100).second_test === 32);
+    assert('responsiveProps multiple props - small', pqT5(20).third_test === 2);
+    assert('responsiveProps multiple props - small over', pqT5(40).third_test === 8);
+    assert('responsiveProps tests widths to be strictly less than the breakpoint - first', pqT5(50).first_test === 64);
+    assert('responsiveProps tests widths to be strictly less than the breakpoint - second', pqT5(70).second_test === 32);
+    assert('responsiveProps tests widths to be strictly less than the breakpoint - third', pqT5(30).third_test === 8);
   }
 
 });

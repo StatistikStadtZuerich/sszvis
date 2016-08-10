@@ -31,6 +31,12 @@
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var INITIAL_YEAR = '2012';
+  var queryProps = sszvis.responsiveProps()
+    .prop('strokeWidth', {
+      small: 0.5,
+      tablet: 1,
+      _: 2
+    });
 
 
   /* Shortcuts
@@ -110,6 +116,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 80, bottom: 90 }, '#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
@@ -134,17 +141,6 @@
 
     // Components
 
-    var responsiveProps = sszvis.propsQuery()
-      .prop('strokeWidth', {
-        small: 0.5,
-        tablet: 1,
-        _: 2
-      });
-
-    var responsiveSettings = responsiveProps('#sszvis-chart');
-
-    // Button group control for switching the data year
-
     var controlWidth = bounds.width / 2;
 
     var control = sszvis.control.buttonGroup()
@@ -161,8 +157,8 @@
         var v = vAcc(d);
         return isNaN(v) ? 'white' : sszvis.color.muchDarker(colorScale(vAcc(d)));
       })
-      .highlightStrokeWidth(responsiveSettings.strokeWidth + 1)
-      .strokeWidth(responsiveSettings.strokeWidth)
+      .highlightStrokeWidth(props.strokeWidth + 1)
+      .strokeWidth(props.strokeWidth)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .defined(function(d) {

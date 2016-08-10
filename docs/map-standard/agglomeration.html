@@ -29,80 +29,86 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('strokeWidth', {
+      small: 0.5,
+      tablet: 1,
+      _: 2
+    });
 
 
-  /* Shortcuts
-  ----------------------------------------------- */
-  var cAcc = sszvis.fn.prop('category');
-  var vAcc = sszvis.fn.prop('value');
-  var nameAcc = sszvis.fn.prop('name');
-  var mDatumAcc = sszvis.fn.prop('datum');
-  var catName = sszvis.fn.prop('name');
-  var catValue = sszvis.fn.prop('value');
+   /* Shortcuts
+      ----------------------------------------------- */
+   var cAcc = sszvis.fn.prop('category');
+   var vAcc = sszvis.fn.prop('value');
+   var nameAcc = sszvis.fn.prop('name');
+   var mDatumAcc = sszvis.fn.prop('datum');
+   var catName = sszvis.fn.prop('name');
+   var catValue = sszvis.fn.prop('value');
 
 
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    selection: [],
-    valueDomain: [0, 0],
-    binEdges: []
-  };
+   /* Application state
+      ----------------------------------------------- */
+   var state = {
+     data: [],
+     selection: [],
+     valueDomain: [0, 0],
+     binEdges: []
+   };
 
 
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.valueDomain = [d3.min(state.data, vAcc), d3.max(state.data, vAcc)];
-      state.categories = sszvis.cascade()
-        .arrayBy(cAcc)
-        .apply(state.data)
-        .map(function(d) {
-          return {
-            name: cAcc(d[0]),
-            value: d3.min(d, vAcc),
-          }
-        })
-        .sort(function(a, b) {
-          return d3.ascending(catValue(a), catValue(b));
-        });
+   /* State transitions
+      ----------------------------------------------- */
+   var actions = {
+     prepareState: function(data) {
+       state.data = data;
+       state.valueDomain = [d3.min(state.data, vAcc), d3.max(state.data, vAcc)];
+       state.categories = sszvis.cascade()
+                                .arrayBy(cAcc)
+                                .apply(state.data)
+                                .map(function(d) {
+                                  return {
+                                    name: cAcc(d[0]),
+                                    value: d3.min(d, vAcc),
+                                  }
+                                })
+                                .sort(function(a, b) {
+                                  return d3.ascending(catValue(a), catValue(b));
+                                });
 
-      render(state);
-    },
+       render(state);
+     },
 
-    // manage which datum is selected. These data are highlighted by the map.
-    selectHovered: function(d) {
-      state.selection = [d];
-      render(state);
-    },
+     // manage which datum is selected. These data are highlighted by the map.
+     selectHovered: function(d) {
+       state.selection = [d];
+       render(state);
+     },
 
-    deselectHovered: function() {
-      state.selection = [];
-      render(state);
-    }
-  };
+     deselectHovered: function() {
+       state.selection = [];
+       render(state);
+     }
+   };
 
 
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/agglomeration_2012.csv')
-    .row(function(d) {
-      return {
-        geoId: sszvis.parse.number(d['Nr']),
-        name: d['Gemeinde'],
-        category: d['Klasse'],
-        value: sszvis.parse.number(d['Wert'])
-      };
-    })
-    .get(function(error, data) {
-      if (error) {
-        sszvis.loadError(error);
-        return;
-      }
-      actions.prepareState(data);
+   /* Data initialization
+      ----------------------------------------------- */
+   d3.csv('data/agglomeration_2012.csv')
+     .row(function(d) {
+       return {
+         geoId: sszvis.parse.number(d['Nr']),
+         name: d['Gemeinde'],
+         category: d['Klasse'],
+         value: sszvis.parse.number(d['Wert'])
+       };
+     })
+     .get(function(error, data) {
+       if (error) {
+         sszvis.loadError(error);
+         return;
+       }
+       actions.prepareState(data);
     });
 
 
@@ -110,6 +116,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 30, bottom: 110 }, '#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
@@ -135,21 +142,12 @@
 
     // Components
 
-    var responsiveProps = sszvis.propsQuery()
-      .prop('strokeWidth', {
-        small: 0.5,
-        tablet: 1,
-        _: 2
-      });
-
-    var responsiveSettings = responsiveProps('#sszvis-chart');
-
     var mapMaker = sszvis.map.zurichAgglomeration2012()
       .highlight(state.selection)
       // gets the fill color and darken it
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
-      .strokeWidth(responsiveSettings.strokeWidth)
-      .highlightStrokeWidth(responsiveSettings.strokeWidth + 1)
+      .strokeWidth(props.strokeWidth)
+      .highlightStrokeWidth(props.strokeWidth + 1)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))

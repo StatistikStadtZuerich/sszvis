@@ -43,7 +43,7 @@ SOURCE_FILES = \
 	sszvis/logger.js \
 	sszvis/parse.js \
 	sszvis/patterns.js \
-	sszvis/propsQuery.js \
+	sszvis/responsiveProps.js \
 	sszvis/scale.js \
 	sszvis/test.js \
 	sszvis/transition.js \

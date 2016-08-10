@@ -29,6 +29,12 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('strokeWidth', {
+      small: 0.5,
+      tablet: 1,
+      _: 2
+    });
 
 
   /* Shortcuts
@@ -93,6 +99,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds('#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
@@ -120,19 +127,10 @@
 
     // Components
 
-    var responsiveProps = sszvis.propsQuery()
-      .prop('strokeWidth', {
-        small: 0.5,
-        tablet: 1,
-        _: 2
-      });
-
-    var responsiveSettings = responsiveProps('#sszvis-chart');
-
     var anchoredShape = sszvis.map.anchoredCircles()
       .fill('rgb(81, 130, 179)')
       .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : radiusScale(valueAcc(d)); })
-      .strokeWidth(responsiveSettings.strokeWidth)
+      .strokeWidth(props.strokeWidth)
       .on('over', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
@@ -141,7 +139,7 @@
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(function(d) { return isSelected(d) ? sszvis.color.dimGry()(0) : sszvis.color.gry()(0) })
-      .strokeWidth(responsiveSettings.strokeWidth)
+      .strokeWidth(props.strokeWidth)
       .transitionColor(false)
       .anchoredShape(anchoredShape)
       .on('over', actions.selectHovered)

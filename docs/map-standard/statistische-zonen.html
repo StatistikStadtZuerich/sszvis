@@ -29,6 +29,12 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('strokeWidth', {
+       small: 0.5,
+       tablet: 1,
+       _: 2
+     });
 
 
   /* Shortcuts
@@ -78,7 +84,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds('#sszvis-chart');
-
+    var props = queryProps(bounds);
 
     // Scales
 
@@ -97,22 +103,13 @@
 
     // Components
 
-    var responsiveProps = sszvis.propsQuery()
-      .prop('strokeWidth', {
-        small: 0.5,
-        tablet: 1,
-        _: 2
-      });
-
-    var responsiveSettings = responsiveProps('#sszvis-chart');
-
     // You can optionally use .withLake(false) to hide the textured lake shape and reveal
     // the four lake zones underneath
     var mapMaker = sszvis.map.zurichStatistischeZonen()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
-      .strokeWidth(responsiveSettings.strokeWidth)
+      .strokeWidth(props.strokeWidth)
       .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), vAcc));
 
 

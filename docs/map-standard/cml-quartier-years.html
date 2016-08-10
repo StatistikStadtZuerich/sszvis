@@ -32,6 +32,19 @@
   // Only select an entity if the distance to an input value is lower than
   // this threshold.
   var VALUE_PROXIMITY_THRESHOLD = 800;
+  var propsQuery = sszvis.responsiveProps()
+    .prop('height', {
+      narrow: 600,
+      tablet: sszvis.aspectRatio(4, 3),
+      wide: sszvis.aspectRatio(2, 1),
+      _: sszvis.aspectRatio(4, 1)
+    })
+    .prop('lineChartPadding', {
+      narrow: 12,
+      tablet: function(w) { return w / 10; },
+      wide: function(w) { return w / 5; },
+      _: function(w) { return w / 4; }
+    });
 
 
   /* Shortcuts
@@ -213,24 +226,10 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var responsiveQuery = sszvis.propsQuery()
-      .prop('height', {
-        narrow: 600,
-        tablet: sszvis.aspectRatio(4, 3),
-        wide: sszvis.aspectRatio(2, 1),
-        _: sszvis.aspectRatio(4, 1)
-      })
-      .prop('lineChartPadding', {
-        narrow: 12,
-        tablet: function(w) { return w / 10; },
-        wide: function(w) { return w / 5; },
-        _: function(w) { return w / 4; }
-      })
-
-    var rSettings = responsiveQuery('#sszvis-chart');
+    var props = propsQuery(sszvis.fn.elementWidth('#sszvis-chart'));
 
     var outerBounds = sszvis.bounds({
-      height: rSettings.height,
+      height: props.height,
       top: 0,
       bottom: 0
     }, '#sszvis-chart');
@@ -251,13 +250,14 @@
       right: 0,
       left: 0
     }, '#sszvis-chart');
+
     // bounds for the line chart section
     var lineChartBounds = sszvis.bounds({
       height: lineChartHeight - lineChartTopPad - lineChartBottomPad,
       top: lineChartTopPad,
       bottom: lineChartBottomPad,
-      left: rSettings.lineChartPadding,
-      right: rSettings.lineChartPadding
+      left: props.lineChartPadding,
+      right: props.lineChartPadding
     }, '#sszvis-chart');
 
 
