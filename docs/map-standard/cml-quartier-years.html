@@ -296,7 +296,7 @@
       .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .datum(state.lineHighlightData);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', outerBounds)
       .datum(state.mapHighlightData);
 
 
