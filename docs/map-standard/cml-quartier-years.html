@@ -34,10 +34,9 @@
   var VALUE_PROXIMITY_THRESHOLD = 800;
   var propsQuery = sszvis.responsiveProps()
     .prop('height', {
-      narrow: 600,
-      tablet: sszvis.aspectRatio(4, 3),
-      wide: sszvis.aspectRatio(2, 1),
-      _: sszvis.aspectRatio(4, 1)
+      _: function(w){
+        return Math.min(Math.max(600, sszvis.aspectRatio(16, 9)(w)), 720);
+      }
     })
     .prop('lineChartPadding', {
       narrow: 12,
