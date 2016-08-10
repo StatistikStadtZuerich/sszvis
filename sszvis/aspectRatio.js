@@ -45,19 +45,17 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @param  {Number} width   The width for which you want a height value
    * @return {Number}         The height which corresponds to the default aspect ratio for that width
    */
-  module.exports.default = function(params) {
-    var width = params.containerWidth;
-    var height = params.screenHeight;
-    if (width < 321) { // iPhone SE portrait
-      return ar4to3(width);
-    } else if (width >= 321 && width < 569) { // iPhone SE landscape
-      return ar5to2(width);
-    } else if (width >= 569 && width < 769) { // iPad portrait
-      return ar16to9(width);
-    } else if (width >= 769 && width < 1025 && height < 769) { // iPad landscape
-      return ar5to2(width);
-    } else { // Desktop
-      return ar16to9(width);
+  module.exports.default = function(measurements) {
+    if (sszvis.breakpoint.defaults.phone_p(measurements)) { // phone portrait orientation
+      return ar4to3(measurements.width);
+    } else if (sszvis.breakpoint.defaults.phone_l(measurements)) { // phone landscape orientation
+      return ar5to2(measurements.width);
+    } else if (sszvis.breakpoint.defaults.tablet_p(measurements)) { // tablet portrait orientation
+      return ar16to9(measurements.width);
+    } else if (sszvis.breakpoint.defaults.tablet_l(measurements)) { // tablet landscape orientation
+      return ar5to2(measurements.width);
+    } else { // all other cases, includes desktop
+      return ar16to9(measurements.width);
     }
   };
 

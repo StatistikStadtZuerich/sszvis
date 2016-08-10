@@ -21,9 +21,9 @@
  *
  * var queryProps = sszvis.responsiveProps()
  *   .breakpoints({
- *     small: 400,
- *     medium: 800,
- *     large: 1000,
+ *     small: sszvis.breakpoint.make({ width: 400 }),
+ *     medium: sszvis.breakpoint.make({ width: 800 }),
+ *     large: sszvis.breakpoint.make({ width: 1000 }),
  *   })
  *   .prop('axisOrientation', {
  *     medium: 'left',
@@ -42,9 +42,12 @@
  *     _: 16,
  *   });
  *
- * var props = queryProps({width: 450});
+ * var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+ * --- OR ---
+ * var bounds = sszvis.fn.bounds({}, '#sszvis-chart');
+ * var props = queryProps(bounds);
  *
- * ... use settings.axisOrientation, settings.height, and settings.numAxisTicks ...
+ * ... use props.axisOrientation, props.height, and props.numAxisTicks ...
  *
  * @returns {responsiveProps}
  */
@@ -54,12 +57,12 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
   /* Exported module
   ----------------------------------------------- */
   module.exports = function() {
+    // This is essentially a defensive clone of sszvis.breakpoint.defaults
     var breakpointSpec = {
-      small: sszvis.breakpoint.SMALL,
-      narrow: sszvis.breakpoint.NARROW,
-      tablet: sszvis.breakpoint.TABLET,
-      normal: sszvis.breakpoint.NORMAL,
-      wide: sszvis.breakpoint.WIDE
+      phone_p: sszvis.breakpoint.defaults.phone_p,
+      phone_l: sszvis.breakpoint.defaults.phone_l,
+      tablet_p: sszvis.breakpoint.defaults.tablet_p,
+      tablet_l: sszvis.breakpoint.defaults.tablet_l
     };
     var breakpointKeys = orderedBreakpointKeys(breakpointSpec);
     var propsConfig = {};
@@ -73,13 +76,8 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
      * @returns {Object.<string, any>} A map of all properties for the currently selected
      *          breakpoint as defined by the parameter `arg1`
      */
-    function responsiveProps(arg1) {
-      var width;
-      if (sszvis.fn.isNumber(arg1)) {
-        width = arg1;
-      } else if (sszvis.fn.isObject(arg1) && sszvis.fn.defined(arg1.width)) {
-        width = arg1.width;
-      } else {
+    function responsiveProps(measurements) {
+      if (!sszvis.fn.isObject(measurements) || !isBounds(measurements)) {
         sszvis.logger.warn('Could not determine the current breakpoint, returning the default props');
         return undefined; // FIXME: return default props
       }
@@ -92,11 +90,11 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
       var bpMatches = ['_'];
       // If there are no breakpoints set, or if the width is equal to
       // or larger than the largest breakpoint, don't bother searching.
-      if (breakpointKeys.length > 0 && width < breakpointSpec[sszvis.fn.last(breakpointKeys)]) {
+      if (breakpointKeys.length > 0 && breakpointSpec[sszvis.fn.last(breakpointKeys)](measurements)) {
           // Once we get to the first breakpoint which the width falls under,
           // that means that the width matches it and all subsequent breakpoints.
           var bpIndex = breakpointKeys.findIndex(function(key) {
-            return width < breakpointSpec[key];
+            return breakpointSpec[key](measurements);
           });
           // Attach '_' as the last value in the list of breakpoint keys. That's for
           // situations where we're searching these keys for something that also
@@ -204,6 +202,10 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
 
   // Helpers
 
+  function isBounds(obj) {
+    return sszvis.fn.defined(arg1.width) && sszvis.fn.defined(arg1.screenWidth) && sszvis.fn.defined(arg1.screenHeight);
+  }
+
   /**
    * functorizeValues
    * @prop    {object} obj Original key-value object
@@ -218,7 +220,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
 
   function orderedBreakpointKeys(bps) {
     return Object.keys(bps).sort(function(keyA, keyB) {
-      return bps[keyA] - bps[keyB];
+      return bps[keyA].getValue() - bps[keyB].getValue();
     });
   }
 
@@ -229,7 +231,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
     if (!sszvis.fn.defined(propSpec._)) { return false; }
 
     // Validate the properties of the propSpec:
-    // each should be a valid breakpoint name, and its value should be a number
+    // each should be a valid breakpoint name, and its value should be defined
     for (var breakpointName in propSpec) {
       if (propSpec.hasOwnProperty(breakpointName)) {
         if (breakpointName !== '_' && !sszvis.fn.defined(breakpointSpec[breakpointName])) {

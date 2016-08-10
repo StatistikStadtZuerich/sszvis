@@ -31,6 +31,7 @@
  *                               if unspecified. It will also contain 'innerWidth', which is the width minus left and right padding,
  *                               and 'innerHeight', which is the height minus top and bottom padding. And it includes a 'padding' sub-object,
  *                               which contains calculated or default values for top, bottom, left, and right padding.
+ *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
 sszvis_namespace('sszvis.bounds', function(module) {
   'use strict';
@@ -81,10 +82,11 @@ sszvis_namespace('sszvis.bounds', function(module) {
     };
 
     // Width is calculated as: bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
+    var dimensions = sszvis.fn.measureDimensions(selection);
     var width   = either( bounds.width,
-                          either( sszvis.fn.elementWidth(selection),
+                          either( dimensions.width,
                                   DEFAULT_WIDTH ));
-    var computedHeight = sszvis.aspectRatio.default({ containerWidth: width, screenHeight: window.innerHeight });
+    var computedHeight = sszvis.aspectRatio.default(dimensions);
     var height  = either( bounds.height,
                           computedHeight + padding.top + padding.bottom );
 
@@ -93,7 +95,9 @@ sszvis_namespace('sszvis.bounds', function(module) {
       innerWidth:  width  - padding.left - padding.right,
       padding:     padding,
       height:      height,
-      width:       width
+      width:       width,
+      screenWidth: dimensions.screenWidth,
+      screenHeight: dimensions.screenHeight
     };
   };
 

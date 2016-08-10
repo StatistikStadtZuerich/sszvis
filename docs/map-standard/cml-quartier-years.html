@@ -32,7 +32,7 @@
   // Only select an entity if the distance to an input value is lower than
   // this threshold.
   var VALUE_PROXIMITY_THRESHOLD = 800;
-  var propsQuery = sszvis.responsiveProps()
+  var queryProps = sszvis.responsiveProps()
     .prop('height', {
       _: function(w){
         return Math.min(Math.max(600, sszvis.aspectRatio(16, 9)(w)), 720);
@@ -225,7 +225,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = propsQuery(sszvis.fn.elementWidth('#sszvis-chart'));
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
 
     var outerBounds = sszvis.bounds({
       height: props.height,

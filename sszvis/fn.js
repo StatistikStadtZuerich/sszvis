@@ -89,17 +89,22 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.elementWidth
+     * fn.measureDimensions
      *
      * Calculates the width of the first DOM element defined by a CSS selector string,
      * a DOM element reference, or a d3 selection. If the DOM element can't be
-     * measured `undefined` is returned.
+     * measured `undefined` is returned for the width. Returns also measurements of
+     * the screen, which are used by some responsive components.
      *
      * @param  {string|DOMElement|d3.selection} el The element to measure
      *
-     * @return {number|undefined} The measurement of the width of the element
+     * @return {Object} The measurement of the width of the element, plus dimensions of the screen
+     *                  The returned object contains:
+     *                      width: {number|undefined} The width of the element
+     *                      screenWidth: {number} The innerWidth of the screen
+     *                      screenHeight: {number} The innerHeight of the screen
      */
-    elementWidth: function(arg) {
+    measureDimensions: function(arg) {
       var node;
       if (sszvis.fn.isString(arg)) {
         node = d3.select(arg).node();
@@ -108,7 +113,11 @@ sszvis_namespace('sszvis.fn', function(module) {
       } else {
         node = arg;
       }
-      return node ? node.getBoundingClientRect().width : undefined;
+      return {
+        width: node ? node.getBoundingClientRect().width : undefined,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+      };
     },
 
     /**
