@@ -89,35 +89,34 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.measureDimensions
+     * fn.find
      *
-     * Calculates the width of the first DOM element defined by a CSS selector string,
-     * a DOM element reference, or a d3 selection. If the DOM element can't be
-     * measured `undefined` is returned for the width. Returns also measurements of
-     * the screen, which are used by some responsive components.
+     * Finds the first occurrence of an element in an array that passes the predicate function
      *
-     * @param  {string|DOMElement|d3.selection} el The element to measure
+     * @param {function} predicate A function that is run on each array element and returns a boolean
+     * @param {array} arr An array
      *
-     * @return {Object} The measurement of the width of the element, plus dimensions of the screen
-     *                  The returned object contains:
-     *                      width: {number|undefined} The width of the element
-     *                      screenWidth: {number} The innerWidth of the screen
-     *                      screenHeight: {number} The innerHeight of the screen
+     * @returns {arrayElement|undefined}
      */
-    measureDimensions: function(arg) {
-      var node;
-      if (sszvis.fn.isString(arg)) {
-        node = d3.select(arg).node();
-      } else if (sszvis.fn.isSelection(arg)) {
-        node = arg.node();
-      } else {
-        node = arg;
+    find: function(predicate, arr) {
+      for (var i = 0; i < arr.length; i++) {
+        if (predicate(arr[i])) {
+          return arr[i];
+        }
       }
-      return {
-        width: node ? node.getBoundingClientRect().width : undefined,
-        screenWidth: window.innerWidth,
-        screenHeight: window.innerHeight
-      };
+      return undefined;
+    },
+
+    /**
+     * fn.isFunction
+     *
+     * Determines if the passed value is a function
+     *
+     * @param {*} val the value to check
+     * @return {Boolean} true if the value is a function, false otherwise
+     */
+    isFunction: function(val) {
+      return typeof val == 'function';
     },
 
     /**
@@ -325,6 +324,38 @@ sszvis_namespace('sszvis.fn', function(module) {
      */
     last: function(arr) {
       return arr[arr.length - 1];
+    },
+
+        /**
+     * fn.measureDimensions
+     *
+     * Calculates the width of the first DOM element defined by a CSS selector string,
+     * a DOM element reference, or a d3 selection. If the DOM element can't be
+     * measured `undefined` is returned for the width. Returns also measurements of
+     * the screen, which are used by some responsive components.
+     *
+     * @param  {string|DOMElement|d3.selection} el The element to measure
+     *
+     * @return {Object} The measurement of the width of the element, plus dimensions of the screen
+     *                  The returned object contains:
+     *                      width: {number|undefined} The width of the element
+     *                      screenWidth: {number} The innerWidth of the screen
+     *                      screenHeight: {number} The innerHeight of the screen
+     */
+    measureDimensions: function(arg) {
+      var node;
+      if (sszvis.fn.isString(arg)) {
+        node = d3.select(arg).node();
+      } else if (sszvis.fn.isSelection(arg)) {
+        node = arg.node();
+      } else {
+        node = arg;
+      }
+      return {
+        width: node ? node.getBoundingClientRect().width : undefined,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+      };
     },
 
     /**
