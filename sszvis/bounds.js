@@ -35,19 +35,7 @@
 sszvis_namespace('sszvis.bounds', function(module) {
   'use strict';
 
-  // This is the default width (not to be confused with innerWidth)
-  // the default innerWidth is calculated as `width - leftpadding - rightpadding`
-  // @deprecated Since the responsive revisions, the default width should not be used
-  //             anymore. This property is preserved for compatibility reasons.
-  var DEFAULT_WIDTH = module.exports.DEFAULT_WIDTH = 516;
-
-  // This is the default aspect ratio. It is defined as: width / innerHeight
-  // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
-  // To calculate the default innerHeight, do width / ASPECT_RATIO
-  // @deprecated Since the responsive revisions, the default aspect ratio has changed,
-  //             so that it is now responsive to the container width.
-  //             This property is preserved for compatibility reasons.
-  module.exports.RATIO = 16 / 9;
+  var DEFAULT_WIDTH = 516;
 
   module.exports = function(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     var bounds = null, selection = null;
@@ -96,6 +84,21 @@ sszvis_namespace('sszvis.bounds', function(module) {
       width:       width
     };
   };
+
+  // This is the default width (not to be confused with innerWidth)
+  // the default innerWidth is calculated as `width - leftpadding - rightpadding`
+  // @deprecated Since the responsive revisions, the default width should not be used
+  //             anymore. This property is preserved for compatibility reasons.
+  module.exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
+
+  // This is the default aspect ratio. It is defined as: width / innerHeight
+  // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
+  // To calculate the default innerHeight, do width / ASPECT_RATIO
+  // @deprecated Since the responsive revisions, the default aspect ratio has changed,
+  //             so that it is now responsive to the container width.
+  //             This property is preserved for compatibility reasons.
+  module.exports.RATIO = 16 / 9;
+
 
   /* Helper functions
   ----------------------------------------------- */
