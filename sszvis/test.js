@@ -16,16 +16,19 @@ sszvis_namespace('sszvis.test', function(module) {
    * Assert a boolean. Provide a message and a boolean value. The boolean should be
    * the evaluation of a statement which is something you want to test.
    *
+   * @param  {String} context        The name of the context the assertion is operating in
    * @param  {String} assertion      A string descriptor for the test
    * @param  {Boolean} test          The value of the test
    */
-  module.exports.assert = function assert(assertion, test) {
-    if (test) {
-      sszvis.logger.log('assertion passed: ' + assertion);
-    } else {
-      sszvis.logger.error('assertion failed: ' + assertion);
-    }
-  }
+  var assert = module.exports.assert = function(context) {
+    return function(message, test) {
+      if (test) {
+        sszvis.logger.log('[' + context + '] ✔ ' + message);
+      } else {
+        sszvis.logger.error('[' + context + '] ✘ ' + message);
+      }
+    };
+  };
 
   /**
    * sszvis.test.runTests
@@ -34,15 +37,13 @@ sszvis_namespace('sszvis.test', function(module) {
    * 
    */
   module.exports.runTests = function() {
-    runFormatTests();
-    runPropsQueryTests();
+    runFormatTests(assert('runFormatTests'));
+    runBreakpointTests(assert('runBreakpointTests'));
+    runPropsQueryTests(assert('runPropsQueryTests'));
   };
 
-  // Just a shortcut alias
-  var assert = module.exports.assert;
-
   // Tests for format functions
-  function runFormatTests() {
+  function runFormatTests(assert) {
     /* sszvis.format.number */
     var nfmt = sszvis.format.number;
     var precNfmt = sszvis.format.preciseNumber;
@@ -95,22 +96,33 @@ sszvis_namespace('sszvis.test', function(module) {
     assert('to add zeroes to a raw number with explicit zero decimals, pass a precision value', precNfmt(3, 42.000) === '42.000');
   }
 
-  function runPropsQueryTests() {
+
+  // FIXME: more tests
+  function runBreakpointTests(assert) {
+    var bps = sszvis.breakpoint.spec({
+      s: {width: 10},
+      l: {width: 20}
+    });
+
+    var accName = sszvis.fn.prop('name');
+
+    // Selection
+    assert('select breakpoints "s", "l", and "_"', arraysEqual(bps({width: 5}).map(accName), ['s', 'l', '_']));
+    assert('select breakpoint "l" and "_"', arraysEqual(bps({width: 10}).map(accName), ['l', '_']));
+    assert('select catch all breakpoint "_"', arraysEqual(bps({width: 21}).map(accName), ['_']));
+  }
+
+
+  function runPropsQueryTests(assert) {
     var pqT1 = sszvis.responsiveProps()
       .prop('test', {
         small: 2,
-        narrow: 4,
-        tablet: 8,
-        normal: 16,
-        wide: 32,
-        _: 64
+        large: 4,
+        _: 8
       });
 
     assert('responsiveProps works as expected for small', pqT1(sszvis.breakpoint.SMALL - 1).test === 2);
-    assert('responsiveProps works as expected for narrow', pqT1(sszvis.breakpoint.NARROW - 1).test === 4);
-    assert('responsiveProps works as expected for tablet', pqT1(sszvis.breakpoint.TABLET - 1).test === 8);
-    assert('responsiveProps works as expected for normal', pqT1(sszvis.breakpoint.NORMAL - 1).test === 16);
-    assert('responsiveProps works as expected for wide', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
+    assert('responsiveProps works as expected for large', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
     assert('responsiveProps works as expected for _', pqT1(sszvis.breakpoint.WIDE + 20).test === 64);
     assert('responsiveProps works as expected when width is exactly on the breakpoint', pqT1(sszvis.breakpoint.WIDE).test === 64);
 
@@ -177,6 +189,26 @@ sszvis_namespace('sszvis.test', function(module) {
     assert('responsiveProps tests widths to be strictly less than the breakpoint - first', pqT5(50).first_test === 64);
     assert('responsiveProps tests widths to be strictly less than the breakpoint - second', pqT5(70).second_test === 32);
     assert('responsiveProps tests widths to be strictly less than the breakpoint - third', pqT5(30).third_test === 8);
+
   }
+
+
+
+
+
+  function arraysEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+
+    // If you don't care about the order of the elements inside
+    // the array, you should sort both arrays here.
+
+    for (var i = 0; i < a.length; ++i) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
 
 });

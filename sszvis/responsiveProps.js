@@ -57,14 +57,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
   /* Exported module
   ----------------------------------------------- */
   module.exports = function() {
-    // This is essentially a defensive clone of sszvis.breakpoint.defaults
-    var breakpointSpec = {
-      phoneP: sszvis.breakpoint.defaults.phoneP,
-      phoneL: sszvis.breakpoint.defaults.phoneL,
-      tabletP: sszvis.breakpoint.defaults.tabletP,
-      tabletL: sszvis.breakpoint.defaults.tabletL
-    };
-    var breakpointKeys = orderedBreakpointKeys(breakpointSpec);
+    var breakpointSpec = sszvis.breakpoint.spec();
     var propsConfig = {};
 
     /**
@@ -76,8 +69,8 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
      * @returns {Object.<string, any>} A map of all properties for the currently selected
      *          breakpoint as defined by the parameter `arg1`
      */
-    function responsiveProps(measurements) {
-      if (!sszvis.fn.isObject(measurements) || !isBounds(measurements)) {
+    function responsiveProps(measurement) {
+      if (!sszvis.fn.isObject(measurement) || !isBounds(measurement)) {
         sszvis.logger.warn('Could not determine the current breakpoint, returning the default props');
         return undefined; // FIXME: return default props
       }
@@ -87,36 +80,24 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
       // in increasing order of breakpoint size and that all keys in
       // breakpointKeys are also in breakpointSpec.
       // The default value. '_' stands for 'everything else'
-      var bpMatches = ['_'];
-      // If there are no breakpoints set, or if the width is equal to
-      // or larger than the largest breakpoint, don't bother searching.
-      if (breakpointKeys.length > 0 && breakpointSpec[sszvis.fn.last(breakpointKeys)](measurements)) {
-          // Once we get to the first breakpoint which the width falls under,
-          // that means that the width matches it and all subsequent breakpoints.
-          var bpIndex = breakpointKeys.findIndex(function(key) {
-            return breakpointSpec[key](measurements);
-          });
-          // Attach '_' as the last value in the list of breakpoint keys. That's for
-          // situations where we're searching these keys for something that also
-          // appears in the propSpec, but the propSpec doesn't include anything low enough.
-          bpMatches = (bpIndex === -1 ? [] : breakpointKeys.slice(bpIndex)).concat('_');
-      }
+      var breakpoints = breakpointSpec(measurement);
 
       return Object.keys(propsConfig).reduce(function(memo, propKey) {
         var propSpec = propsConfig[propKey];
 
-        if (!validatePropSpec(propSpec, breakpointSpec)) {
+        // FIXME: the breakpointSpec() here is a bit weird
+        if (!validatePropSpec(propSpec, breakpointSpec())) {
           sszvis.logger.warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
           return memo;
         }
 
         // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
         // This function should always at least find '_' at the end of the array.
-        var matchedBreakpoint = bpMatches.find(function(bpName) { return sszvis.fn.defined(propSpec[bpName]); });
+        var matchedBreakpoint = sszvis.fn.find(function(bp) { return sszvis.fn.defined(propSpec[bp.name]); }, breakpoints);
         // the value in the query object for that property equals the propSpec value as a functor,
         // invoked if necessary with the current width. Providing the width allows aspect ratio
         // calculations based on element width.
-        memo[propKey] = propSpec[matchedBreakpoint](width);
+        memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
 
         return memo;
       }, {});
@@ -189,10 +170,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
       if (arguments.length === 0) {
         return breakpointSpec;
       }
-
-      breakpointSpec = bps;
-      breakpointKeys = orderedBreakpointKeys(bps);
-
+      breakpointSpec = sszvis.breakpoint.spec(bps);
       return responsiveProps;
     };
 
@@ -202,7 +180,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
 
   // Helpers
 
-  function isBounds(obj) {
+  function isBounds(arg1) {
     return sszvis.fn.defined(arg1.width) && sszvis.fn.defined(arg1.screenWidth) && sszvis.fn.defined(arg1.screenHeight);
   }
 
@@ -216,12 +194,6 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
       memo[key] = d3.functor(obj[key]);
       return memo;
     }, {});
-  }
-
-  function orderedBreakpointKeys(bps) {
-    return Object.keys(bps).sort(function(keyA, keyB) {
-      return bps[keyA].getValue() - bps[keyB].getValue();
-    });
   }
 
   function validatePropSpec(propSpec, breakpointSpec) {

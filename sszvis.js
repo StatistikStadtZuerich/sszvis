@@ -582,35 +582,34 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.measureDimensions
+     * fn.find
      *
-     * Calculates the width of the first DOM element defined by a CSS selector string,
-     * a DOM element reference, or a d3 selection. If the DOM element can't be
-     * measured `undefined` is returned for the width. Returns also measurements of
-     * the screen, which are used by some responsive components.
+     * Finds the first occurrence of an element in an array that passes the predicate function
      *
-     * @param  {string|DOMElement|d3.selection} el The element to measure
+     * @param {function} predicate A function that is run on each array element and returns a boolean
+     * @param {array} arr An array
      *
-     * @return {Object} The measurement of the width of the element, plus dimensions of the screen
-     *                  The returned object contains:
-     *                      width: {number|undefined} The width of the element
-     *                      screenWidth: {number} The innerWidth of the screen
-     *                      screenHeight: {number} The innerHeight of the screen
+     * @returns {arrayElement|undefined}
      */
-    measureDimensions: function(arg) {
-      var node;
-      if (sszvis.fn.isString(arg)) {
-        node = d3.select(arg).node();
-      } else if (sszvis.fn.isSelection(arg)) {
-        node = arg.node();
-      } else {
-        node = arg;
+    find: function(predicate, arr) {
+      for (var i = 0; i < arr.length; i++) {
+        if (predicate(arr[i])) {
+          return arr[i];
+        }
       }
-      return {
-        width: node ? node.getBoundingClientRect().width : undefined,
-        screenWidth: window.innerWidth,
-        screenHeight: window.innerHeight
-      };
+      return undefined;
+    },
+
+    /**
+     * fn.isFunction
+     *
+     * Determines if the passed value is a function
+     *
+     * @param {*} val the value to check
+     * @return {Boolean} true if the value is a function, false otherwise
+     */
+    isFunction: function(val) {
+      return typeof val == 'function';
     },
 
     /**
@@ -818,6 +817,38 @@ sszvis_namespace('sszvis.fn', function(module) {
      */
     last: function(arr) {
       return arr[arr.length - 1];
+    },
+
+        /**
+     * fn.measureDimensions
+     *
+     * Calculates the width of the first DOM element defined by a CSS selector string,
+     * a DOM element reference, or a d3 selection. If the DOM element can't be
+     * measured `undefined` is returned for the width. Returns also measurements of
+     * the screen, which are used by some responsive components.
+     *
+     * @param  {string|DOMElement|d3.selection} el The element to measure
+     *
+     * @return {Object} The measurement of the width of the element, plus dimensions of the screen
+     *                  The returned object contains:
+     *                      width: {number|undefined} The width of the element
+     *                      screenWidth: {number} The innerWidth of the screen
+     *                      screenHeight: {number} The innerHeight of the screen
+     */
+    measureDimensions: function(arg) {
+      var node;
+      if (sszvis.fn.isString(arg)) {
+        node = d3.select(arg).node();
+      } else if (sszvis.fn.isSelection(arg)) {
+        node = arg.node();
+      } else {
+        node = arg;
+      }
+      return {
+        width: node ? node.getBoundingClientRect().width : undefined,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+      };
     },
 
     /**
@@ -1462,13 +1493,13 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @return {Number}         The height which corresponds to the default aspect ratio for that width
    */
   module.exports.default = function(measurements) {
-    if (sszvis.breakpoint.defaults.phoneP(measurements)) { // phone portrait orientation
+    if (sszvis.breakpoint.phoneP(measurements)) { // phone portrait orientation
       return ar4to3(measurements.width);
-    } else if (sszvis.breakpoint.defaults.phoneL(measurements)) { // phone landscape orientation
+    } else if (sszvis.breakpoint.phoneL(measurements)) { // phone landscape orientation
       return ar5to2(measurements.width);
-    } else if (sszvis.breakpoint.defaults.tabletP(measurements)) { // tablet portrait orientation
+    } else if (sszvis.breakpoint.tabletP(measurements)) { // tablet portrait orientation
       return ar16to9(measurements.width);
-    } else if (sszvis.breakpoint.defaults.tabletL(measurements)) { // tablet landscape orientation
+    } else if (sszvis.breakpoint.tabletL(measurements)) { // tablet landscape orientation
       return ar5to2(measurements.width);
     } else { // all other cases, includes desktop
       return ar16to9(measurements.width);
@@ -1490,10 +1521,10 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
  * i.e. [0 - 320] is the first range, [0 - 568] is the second, and so on. The user should, where possible,
  * test against breakpoints in increasing order of size
  *
- * @property {Function} phoneP    The phone portrait orientation breakpoint
- * @property {Function} phoneL    The phone landscape orientation breakpoint
- * @property {Function} tabletP    The tablet portrait orientation breakpoint
- * @property {Function} tabletL    The tablet landscape orientation breakpoint
+ * @property {Function} phoneP  The phone portrait orientation breakpoint
+ * @property {Function} phoneL  The phone landscape orientation breakpoint
+ * @property {Function} tabletP The tablet portrait orientation breakpoint
+ * @property {Function} tabletL The tablet landscape orientation breakpoint
  */
 sszvis_namespace('sszvis.breakpoint', function(module) {
 
@@ -1522,14 +1553,159 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
     return breakpointFunc;
   }
 
+  /*
   module.exports.defaults = {
     phoneP: makeBreakpoint({ width: 320 }),
     phoneL: makeBreakpoint({ width: 568 }),
     tabletP: makeBreakpoint({ width: 768 }),
-    tabletL: makeBreakpoint({ width: 1024, screenHeight: 768 }),
+    tabletL: makeBreakpoint({ width: 1024, screenHeight: 768 })
+  };
+*/
+
+
+  // ---------------------------------------------------------------------------
+
+
+  /**
+   * Measurement
+   *
+   *   {
+   *     width: number,
+   *     height: number,
+   *     screenWidth: number,
+   *     screenHeight: number
+   *   }
+   */
+
+  function parseMeasurement(partialMeasurement) {
+    return {
+      width: sszvis.fn.propOr('width', Infinity)(partialMeasurement),
+      height: sszvis.fn.propOr('height', Infinity)(partialMeasurement), // FIXME: sszvis.measureDimensions() doesn't have this
+      screenWidth: sszvis.fn.propOr('screenWidth', Infinity)(partialMeasurement),
+      screenHeight: sszvis.fn.propOr('screenHeight', Infinity)(partialMeasurement)
+    };
+  }
+
+  function compareMeasurements(mA, mB) {
+    // FIXME: real comparison here
+    return (mA.width <= mB.width) ? -1 : 1;
+  }
+
+
+  /**
+   * Breakpoint
+   *
+   *   {
+   *     name: string,
+   *     measurement: Measurement,
+   *     test: (measurement) -> boolean
+   *   }
+   */
+
+  function parseBreakpoint(name, def) {
+    var test, measurement;
+
+    if (sszvis.fn.isFunction(def)) {
+      measurement = def();
+      test = def;
+    } else {
+      measurement = parseMeasurement(def);
+      test = function(_measurement) {
+        if (arguments.length === 0) {
+          return measurement;
+        }
+        return compareMeasurements(measurement, _measurement); // FIXME: return boolean
+      };
+    }
+
+    return {
+      name: name,
+      measurement: measurement,
+      test: test
+    };
+  }
+
+  function compareBreakpoints(bpA, bpB) {
+    return compareMeasurements(bpA.measurement, bpB.measurement);
+  }
+
+  function catchAllBreakpoint() {
+    return {
+      name: '_',
+      measurement: parseMeasurement({}),
+      test: function() {
+        return true;
+      }
+    };
+  }
+
+
+
+  /**
+   * BreakpointSpec
+   */
+
+  function parseSpec(_spec) {
+    return Object.keys(_spec)
+      .map(function(specName) {
+        return parseBreakpoint(specName, _spec[specName]);
+      })
+      .sort(compareBreakpoints);
+  }
+
+  // FIXME: we currently have two ways to represent breakpoints, once as
+  // a key-value object and once as an array. The latter is the better
+  // representation as it has order to it, but is it usable?
+  function exportSpec(_spec) {
+    return _spec.reduce(function(def, breakpoint) {
+      def[breakpoint.name] = breakpoint.test;
+      return def;
+    }, {});
+  }
+
+  function matchBreakpoints(breakpoints, measurement) {
+    return breakpoints
+      .filter(function(bp) {
+        return compareMeasurements(bp.measurement, measurement) >= 0;
+      })
+      .concat(catchAllBreakpoint());
+  }
+
+
+  /**
+   * External API
+   */
+
+  var defaultSpec = exportSpec(parseSpec({
+    phoneP:  { width: 320 },
+    phoneL:  { width: 568 },
+    tabletP: { width: 768 },
+    tabletL: { width: 1024, screenHeight: 768 }
+  }));
+
+  var spec = function(partialBpSpec) {
+    if (arguments.length === 0) {
+      return defaultSpec;
+    }
+
+    var breakpoints = parseSpec(partialBpSpec);
+
+    return function(measurement) {
+      if (arguments.length === 0) {
+        return exportSpec(breakpoints);
+      }
+      return matchBreakpoints(breakpoints, measurement);
+    };
   };
 
-  module.exports.make = makeBreakpoint;
+
+  module.exports = {
+    spec: spec,
+    phoneP: defaultSpec.phoneP,
+    phoneL: defaultSpec.phoneL,
+    tabletP: defaultSpec.tabletP,
+    tabletL: defaultSpec.tabletL
+  };
 
 });
 
@@ -2804,9 +2980,9 @@ sszvis_namespace('sszvis.patterns', function(module) {
  *
  * var queryProps = sszvis.responsiveProps()
  *   .breakpoints({
- *     small: sszvis.breakpoint.make({ width: 400 }),
- *     medium: sszvis.breakpoint.make({ width: 800 }),
- *     large: sszvis.breakpoint.make({ width: 1000 }),
+ *     small:  { width:  400 },
+ *     medium: { width:  800 },
+ *     large:  { width: 1000 }
  *   })
  *   .prop('axisOrientation', {
  *     medium: 'left',
@@ -2827,7 +3003,7 @@ sszvis_namespace('sszvis.patterns', function(module) {
  *
  * var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
  * --- OR ---
- * var bounds = sszvis.fn.bounds({}, '#sszvis-chart');
+ * var bounds = sszvis.fn.bounds('#sszvis-chart');
  * var props = queryProps(bounds);
  *
  * ... use props.axisOrientation, props.height, and props.numAxisTicks ...
@@ -2840,14 +3016,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
   /* Exported module
   ----------------------------------------------- */
   module.exports = function() {
-    // This is essentially a defensive clone of sszvis.breakpoint.defaults
-    var breakpointSpec = {
-      phoneP: sszvis.breakpoint.defaults.phoneP,
-      phoneL: sszvis.breakpoint.defaults.phoneL,
-      tabletP: sszvis.breakpoint.defaults.tabletP,
-      tabletL: sszvis.breakpoint.defaults.tabletL
-    };
-    var breakpointKeys = orderedBreakpointKeys(breakpointSpec);
+    var breakpointSpec = sszvis.breakpoint.spec();
     var propsConfig = {};
 
     /**
@@ -2859,8 +3028,8 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
      * @returns {Object.<string, any>} A map of all properties for the currently selected
      *          breakpoint as defined by the parameter `arg1`
      */
-    function responsiveProps(measurements) {
-      if (!sszvis.fn.isObject(measurements) || !isBounds(measurements)) {
+    function responsiveProps(measurement) {
+      if (!sszvis.fn.isObject(measurement) || !isBounds(measurement)) {
         sszvis.logger.warn('Could not determine the current breakpoint, returning the default props');
         return undefined; // FIXME: return default props
       }
@@ -2870,36 +3039,24 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
       // in increasing order of breakpoint size and that all keys in
       // breakpointKeys are also in breakpointSpec.
       // The default value. '_' stands for 'everything else'
-      var bpMatches = ['_'];
-      // If there are no breakpoints set, or if the width is equal to
-      // or larger than the largest breakpoint, don't bother searching.
-      if (breakpointKeys.length > 0 && breakpointSpec[sszvis.fn.last(breakpointKeys)](measurements)) {
-          // Once we get to the first breakpoint which the width falls under,
-          // that means that the width matches it and all subsequent breakpoints.
-          var bpIndex = breakpointKeys.findIndex(function(key) {
-            return breakpointSpec[key](measurements);
-          });
-          // Attach '_' as the last value in the list of breakpoint keys. That's for
-          // situations where we're searching these keys for something that also
-          // appears in the propSpec, but the propSpec doesn't include anything low enough.
-          bpMatches = (bpIndex === -1 ? [] : breakpointKeys.slice(bpIndex)).concat('_');
-      }
+      var breakpoints = breakpointSpec(measurement);
 
       return Object.keys(propsConfig).reduce(function(memo, propKey) {
         var propSpec = propsConfig[propKey];
 
-        if (!validatePropSpec(propSpec, breakpointSpec)) {
+        // FIXME: the breakpointSpec() here is a bit weird
+        if (!validatePropSpec(propSpec, breakpointSpec())) {
           sszvis.logger.warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
           return memo;
         }
 
         // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
         // This function should always at least find '_' at the end of the array.
-        var matchedBreakpoint = bpMatches.find(function(bpName) { return sszvis.fn.defined(propSpec[bpName]); });
+        var matchedBreakpoint = sszvis.fn.find(function(bp) { return sszvis.fn.defined(propSpec[bp.name]); }, breakpoints);
         // the value in the query object for that property equals the propSpec value as a functor,
         // invoked if necessary with the current width. Providing the width allows aspect ratio
         // calculations based on element width.
-        memo[propKey] = propSpec[matchedBreakpoint](width);
+        memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
 
         return memo;
       }, {});
@@ -2972,10 +3129,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
       if (arguments.length === 0) {
         return breakpointSpec;
       }
-
-      breakpointSpec = bps;
-      breakpointKeys = orderedBreakpointKeys(bps);
-
+      breakpointSpec = sszvis.breakpoint.spec(bps);
       return responsiveProps;
     };
 
@@ -2985,7 +3139,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
 
   // Helpers
 
-  function isBounds(obj) {
+  function isBounds(arg1) {
     return sszvis.fn.defined(arg1.width) && sszvis.fn.defined(arg1.screenWidth) && sszvis.fn.defined(arg1.screenHeight);
   }
 
@@ -2999,12 +3153,6 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
       memo[key] = d3.functor(obj[key]);
       return memo;
     }, {});
-  }
-
-  function orderedBreakpointKeys(bps) {
-    return Object.keys(bps).sort(function(keyA, keyB) {
-      return bps[keyA].getValue() - bps[keyB].getValue();
-    });
   }
 
   function validatePropSpec(propSpec, breakpointSpec) {
@@ -3093,16 +3241,19 @@ sszvis_namespace('sszvis.test', function(module) {
    * Assert a boolean. Provide a message and a boolean value. The boolean should be
    * the evaluation of a statement which is something you want to test.
    *
+   * @param  {String} context        The name of the context the assertion is operating in
    * @param  {String} assertion      A string descriptor for the test
    * @param  {Boolean} test          The value of the test
    */
-  module.exports.assert = function assert(assertion, test) {
-    if (test) {
-      sszvis.logger.log('assertion passed: ' + assertion);
-    } else {
-      sszvis.logger.error('assertion failed: ' + assertion);
-    }
-  }
+  var assert = module.exports.assert = function(context) {
+    return function(message, test) {
+      if (test) {
+        sszvis.logger.log('[' + context + '] ✔ ' + message);
+      } else {
+        sszvis.logger.error('[' + context + '] ✘ ' + message);
+      }
+    };
+  };
 
   /**
    * sszvis.test.runTests
@@ -3111,15 +3262,13 @@ sszvis_namespace('sszvis.test', function(module) {
    * 
    */
   module.exports.runTests = function() {
-    runFormatTests();
-    runPropsQueryTests();
+    runFormatTests(assert('runFormatTests'));
+    runBreakpointTests(assert('runBreakpointTests'));
+    runPropsQueryTests(assert('runPropsQueryTests'));
   };
 
-  // Just a shortcut alias
-  var assert = module.exports.assert;
-
   // Tests for format functions
-  function runFormatTests() {
+  function runFormatTests(assert) {
     /* sszvis.format.number */
     var nfmt = sszvis.format.number;
     var precNfmt = sszvis.format.preciseNumber;
@@ -3172,22 +3321,33 @@ sszvis_namespace('sszvis.test', function(module) {
     assert('to add zeroes to a raw number with explicit zero decimals, pass a precision value', precNfmt(3, 42.000) === '42.000');
   }
 
-  function runPropsQueryTests() {
+
+  // FIXME: more tests
+  function runBreakpointTests(assert) {
+    var bps = sszvis.breakpoint.spec({
+      s: {width: 10},
+      l: {width: 20}
+    });
+
+    var accName = sszvis.fn.prop('name');
+
+    // Selection
+    assert('select breakpoints "s", "l", and "_"', arraysEqual(bps({width: 5}).map(accName), ['s', 'l', '_']));
+    assert('select breakpoint "l" and "_"', arraysEqual(bps({width: 10}).map(accName), ['l', '_']));
+    assert('select catch all breakpoint "_"', arraysEqual(bps({width: 21}).map(accName), ['_']));
+  }
+
+
+  function runPropsQueryTests(assert) {
     var pqT1 = sszvis.responsiveProps()
       .prop('test', {
         small: 2,
-        narrow: 4,
-        tablet: 8,
-        normal: 16,
-        wide: 32,
-        _: 64
+        large: 4,
+        _: 8
       });
 
     assert('responsiveProps works as expected for small', pqT1(sszvis.breakpoint.SMALL - 1).test === 2);
-    assert('responsiveProps works as expected for narrow', pqT1(sszvis.breakpoint.NARROW - 1).test === 4);
-    assert('responsiveProps works as expected for tablet', pqT1(sszvis.breakpoint.TABLET - 1).test === 8);
-    assert('responsiveProps works as expected for normal', pqT1(sszvis.breakpoint.NORMAL - 1).test === 16);
-    assert('responsiveProps works as expected for wide', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
+    assert('responsiveProps works as expected for large', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
     assert('responsiveProps works as expected for _', pqT1(sszvis.breakpoint.WIDE + 20).test === 64);
     assert('responsiveProps works as expected when width is exactly on the breakpoint', pqT1(sszvis.breakpoint.WIDE).test === 64);
 
@@ -3254,7 +3414,27 @@ sszvis_namespace('sszvis.test', function(module) {
     assert('responsiveProps tests widths to be strictly less than the breakpoint - first', pqT5(50).first_test === 64);
     assert('responsiveProps tests widths to be strictly less than the breakpoint - second', pqT5(70).second_test === 32);
     assert('responsiveProps tests widths to be strictly less than the breakpoint - third', pqT5(30).third_test === 8);
+
   }
+
+
+
+
+
+  function arraysEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+
+    // If you don't care about the order of the elements inside
+    // the array, you should sort both arrays here.
+
+    for (var i = 0; i < a.length; ++i) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
 
 });
 
