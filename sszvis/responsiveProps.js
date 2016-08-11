@@ -21,9 +21,9 @@
  *
  * var queryProps = sszvis.responsiveProps()
  *   .breakpoints({
- *     small: sszvis.breakpoint.make({ width: 400 }),
- *     medium: sszvis.breakpoint.make({ width: 800 }),
- *     large: sszvis.breakpoint.make({ width: 1000 }),
+ *     small:  { width:  400 },
+ *     medium: { width:  800 },
+ *     large:  { width: 1000 }
  *   })
  *   .prop('axisOrientation', {
  *     medium: 'left',
@@ -44,7 +44,7 @@
  *
  * var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
  * --- OR ---
- * var bounds = sszvis.fn.bounds({}, '#sszvis-chart');
+ * var bounds = sszvis.fn.bounds('#sszvis-chart');
  * var props = queryProps(bounds);
  *
  * ... use props.axisOrientation, props.height, and props.numAxisTicks ...
