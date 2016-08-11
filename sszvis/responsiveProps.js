@@ -59,10 +59,10 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
   module.exports = function() {
     // This is essentially a defensive clone of sszvis.breakpoint.defaults
     var breakpointSpec = {
-      phone_p: sszvis.breakpoint.defaults.phone_p,
-      phone_l: sszvis.breakpoint.defaults.phone_l,
-      tablet_p: sszvis.breakpoint.defaults.tablet_p,
-      tablet_l: sszvis.breakpoint.defaults.tablet_l
+      phoneP: sszvis.breakpoint.defaults.phoneP,
+      phoneL: sszvis.breakpoint.defaults.phoneL,
+      tabletP: sszvis.breakpoint.defaults.tabletP,
+      tabletL: sszvis.breakpoint.defaults.tabletL
     };
     var breakpointKeys = orderedBreakpointKeys(breakpointSpec);
     var propsConfig = {};

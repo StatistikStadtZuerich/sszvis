@@ -1462,13 +1462,13 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @return {Number}         The height which corresponds to the default aspect ratio for that width
    */
   module.exports.default = function(measurements) {
-    if (sszvis.breakpoint.defaults.phone_p(measurements)) { // phone portrait orientation
+    if (sszvis.breakpoint.defaults.phoneP(measurements)) { // phone portrait orientation
       return ar4to3(measurements.width);
-    } else if (sszvis.breakpoint.defaults.phone_l(measurements)) { // phone landscape orientation
+    } else if (sszvis.breakpoint.defaults.phoneL(measurements)) { // phone landscape orientation
       return ar5to2(measurements.width);
-    } else if (sszvis.breakpoint.defaults.tablet_p(measurements)) { // tablet portrait orientation
+    } else if (sszvis.breakpoint.defaults.tabletP(measurements)) { // tablet portrait orientation
       return ar16to9(measurements.width);
-    } else if (sszvis.breakpoint.defaults.tablet_l(measurements)) { // tablet landscape orientation
+    } else if (sszvis.breakpoint.defaults.tabletL(measurements)) { // tablet landscape orientation
       return ar5to2(measurements.width);
     } else { // all other cases, includes desktop
       return ar16to9(measurements.width);
@@ -1490,10 +1490,10 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
  * i.e. [0 - 320] is the first range, [0 - 568] is the second, and so on. The user should, where possible,
  * test against breakpoints in increasing order of size
  *
- * @property {Function} phone_p    The phone portrait orientation breakpoint
- * @property {Function} phone_l    The phone landscape orientation breakpoint
- * @property {Function} tablet_p    The tablet portrait orientation breakpoint
- * @property {Function} tablet_l    The tablet landscape orientation breakpoint
+ * @property {Function} phoneP    The phone portrait orientation breakpoint
+ * @property {Function} phoneL    The phone landscape orientation breakpoint
+ * @property {Function} tabletP    The tablet portrait orientation breakpoint
+ * @property {Function} tabletL    The tablet landscape orientation breakpoint
  */
 sszvis_namespace('sszvis.breakpoint', function(module) {
 
@@ -1523,10 +1523,10 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
   }
 
   module.exports.defaults = {
-    phone_p: makeBreakpoint({ width: 320 }),
-    phone_l: makeBreakpoint({ width: 568 }),
-    tablet_p: makeBreakpoint({ width: 768 }),
-    tablet_l: makeBreakpoint({ width: 1024, screenHeight: 768 }),
+    phoneP: makeBreakpoint({ width: 320 }),
+    phoneL: makeBreakpoint({ width: 568 }),
+    tabletP: makeBreakpoint({ width: 768 }),
+    tabletL: makeBreakpoint({ width: 1024, screenHeight: 768 }),
   };
 
   module.exports.make = makeBreakpoint;
@@ -2842,10 +2842,10 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
   module.exports = function() {
     // This is essentially a defensive clone of sszvis.breakpoint.defaults
     var breakpointSpec = {
-      phone_p: sszvis.breakpoint.defaults.phone_p,
-      phone_l: sszvis.breakpoint.defaults.phone_l,
-      tablet_p: sszvis.breakpoint.defaults.tablet_p,
-      tablet_l: sszvis.breakpoint.defaults.tablet_l
+      phoneP: sszvis.breakpoint.defaults.phoneP,
+      phoneL: sszvis.breakpoint.defaults.phoneL,
+      tabletP: sszvis.breakpoint.defaults.tabletP,
+      tabletL: sszvis.breakpoint.defaults.tabletL
     };
     var breakpointKeys = orderedBreakpointKeys(breakpointSpec);
     var propsConfig = {};

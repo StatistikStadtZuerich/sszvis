@@ -7,10 +7,10 @@
  * i.e. [0 - 320] is the first range, [0 - 568] is the second, and so on. The user should, where possible,
  * test against breakpoints in increasing order of size
  *
- * @property {Function} phone_p    The phone portrait orientation breakpoint
- * @property {Function} phone_l    The phone landscape orientation breakpoint
- * @property {Function} tablet_p    The tablet portrait orientation breakpoint
- * @property {Function} tablet_l    The tablet landscape orientation breakpoint
+ * @property {Function} phoneP    The phone portrait orientation breakpoint
+ * @property {Function} phoneL    The phone landscape orientation breakpoint
+ * @property {Function} tabletP    The tablet portrait orientation breakpoint
+ * @property {Function} tabletL    The tablet landscape orientation breakpoint
  */
 sszvis_namespace('sszvis.breakpoint', function(module) {
 
@@ -40,10 +40,10 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
   }
 
   module.exports.defaults = {
-    phone_p: makeBreakpoint({ width: 320 }),
-    phone_l: makeBreakpoint({ width: 568 }),
-    tablet_p: makeBreakpoint({ width: 768 }),
-    tablet_l: makeBreakpoint({ width: 1024, screenHeight: 768 }),
+    phoneP: makeBreakpoint({ width: 320 }),
+    phoneL: makeBreakpoint({ width: 568 }),
+    tabletP: makeBreakpoint({ width: 768 }),
+    tabletL: makeBreakpoint({ width: 1024, screenHeight: 768 }),
   };
 
   module.exports.make = makeBreakpoint;
