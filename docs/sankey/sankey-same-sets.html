@@ -214,6 +214,7 @@
     linksGroup.selectAll('[data-tooltip-anchor]')
       .call(linkTooltip);
 
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
   function linkIsSelected(d) {

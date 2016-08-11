@@ -214,6 +214,8 @@
     pieCharts.selectAll('path')
       .on('mouseover', actions.showTooltip)
       .on('mouseout',  actions.hideTooltip);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
 

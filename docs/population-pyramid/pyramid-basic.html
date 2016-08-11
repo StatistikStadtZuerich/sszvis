@@ -173,7 +173,7 @@
   function render(state) {
     var defaultHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO;
     var pyramidDimensions = sszvis.layout.populationPyramidLayout(defaultHeight, state.ages.length);
-    var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 86, top: 25, bottom: 86 });
+    var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 86, top: 25, bottom: 86 }, '#sszvis-chart');
 
 
     // Scales
@@ -293,6 +293,8 @@
 
     chartLayer.selectGroup('interactionLayer')
       .call(interactionLayer);
+
+    sszvis.behavior.resize().on('resize', function() { render(state); });
   }
 
 
