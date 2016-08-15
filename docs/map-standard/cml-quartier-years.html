@@ -39,9 +39,10 @@
       }
     })
     .prop('lineChartPadding', {
-      narrow: 12,
-      tablet: function(w) { return w / 10; },
-      wide: function(w) { return w / 5; },
+      phoneP: 12,
+      phoneL: 12,
+      tabletP: function(w) { return w / 10; },
+      tabletL: function(w) { return w / 10; },
       _: function(w) { return w / 4; }
     });
 
