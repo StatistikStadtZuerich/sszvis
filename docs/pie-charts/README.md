@@ -4,6 +4,10 @@
 
 Because the wedge angles are offset in different ways, it is difficult to compare values for the same quantity across different pie charts. In these circumstances, a stacked chart is often a suitable alternative.
 
+```hint
+Keep the single pie charts together with their color legends and horizontally centered. On small screens, move the color legend below the pie. We also need to enforce a particular height, since the default aspect ratio-determined height will likely be wrong.
+```
+
 ## sszvis.component.pie
 
 ### Data structure
@@ -78,6 +82,10 @@ Shows the creation of a pie chart with many categories
 ## sszvis.layout.smallMultiples
 
 To render pie charts in a group, the multiples component can be used to create SVG groups into which charts can be rendered.
+
+```hint
+For the small multiples chart, on narrow screens we will have a color legend both at the top and at the bottom of the list of pie charts. We should also switch between two and one columns of ordinal color labels. And the pies should go from two columns to one at the same time. We also need to introduce a max size for the pies, a max spacing between them, and centering of the group.
+```
 
 ### Data structure
 

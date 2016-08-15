@@ -2,6 +2,10 @@
 
 ## sszvis.component.sankey
 
+```hint
+Just put the labels inside the chart on small screens. You might need to provide smaller labels for the columns. Unfortunately, when there are a lot of rows, the chart can't simply be rotated 90 degrees to make room for the row labels and the connecting arcs, since you don't have enough horizontal space for them not to overlap. On a small screen, you'll probably have to fade the row labels in response to a mouse over event, to allow for the visibility of the hover tooltips.
+```
+
 ### Data structure
 
 You can use the sszvis.layout.sankey.prepareData configurable transform function to simplify creating the data structure expected by this component.
