@@ -37,9 +37,9 @@ sszvis_namespace('sszvis.test', function(module) {
    * 
    */
   module.exports.runTests = function() {
-    runFormatTests(assert('runFormatTests'));
+    //runFormatTests(assert('runFormatTests'));
     runBreakpointTests(assert('runBreakpointTests'));
-    runPropsQueryTests(assert('runPropsQueryTests'));
+    //runPropsQueryTests(assert('runPropsQueryTests'));
   };
 
   // Tests for format functions
@@ -99,16 +99,43 @@ sszvis_namespace('sszvis.test', function(module) {
 
   // FIXME: more tests
   function runBreakpointTests(assert) {
-    var bps = sszvis.breakpoint.spec({
-      s: {width: 10},
-      l: {width: 20}
-    });
-
     var accName = sszvis.fn.prop('name');
 
+    // sszvis.breakpoint([...])
+    // sszvis.breakpoint(measurement)
+    // sszvis.breakpoint()
+
+    // sszvis.breakpoint.parseSpec([{}])
+    // sszvis.breakpoint.createSpec([{}])
+    // sszvis.breakpoint.createSpec() -> Default spec???
+    // sszvis.breakpoint.define({...})
+    // sszvis.breakpoint.match({...})
+    // sszvis.breakpoint.phoneP({...})
+
+    // find
+
+    // test
+
+    // match
+
+
+
+
+    var bps = sszvis.breakpoint.spec([
+      {name: 's', width: 10},
+      {name: 'l', width: 20}
+    ]);
+
+
+    /*
+     var bps = sszvis.breakpoint.spec([{name: 's', width: 300}])
+     bps(measurement)
+     bps()
+     */
     // Selection
-    assert('select breakpoints "s", "l", and "_"', arraysEqual(bps({width: 5}).map(accName), ['s', 'l', '_']));
-    assert('select breakpoint "l" and "_"', arraysEqual(bps({width: 10}).map(accName), ['l', '_']));
+    assert('select breakpoints "s", "l", and "_"', arraysEqual(bps({width: 1}).map(accName), ['s', 'l', '_']));
+    assert('select breakpoints "s", "l", and "_"', arraysEqual(bps({width: 10}).map(accName), ['s', 'l', '_']));
+    assert('select breakpoint "l" and "_"', arraysEqual(bps({width: 11}).map(accName), ['l', '_']));
     assert('select catch all breakpoint "_"', arraysEqual(bps({width: 21}).map(accName), ['_']));
   }
 

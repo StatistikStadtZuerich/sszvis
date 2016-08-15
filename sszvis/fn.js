@@ -226,6 +226,7 @@ sszvis_namespace('sszvis.fn', function(module) {
       while (++idx < len) {
         if (predicate(list[idx])) return list[idx];
       }
+      return undefined;
     },
 
     /**

@@ -57,7 +57,7 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
   /* Exported module
   ----------------------------------------------- */
   module.exports = function() {
-    var breakpointSpec = sszvis.breakpoint.spec();
+    var breakpointSpec = sszvis.breakpoint.defaultSpec();
     var propsConfig = {};
 
     /**
