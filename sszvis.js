@@ -6899,9 +6899,10 @@ sszvis_namespace('sszvis.layout.horizontalBarChartDimensions', function(module) 
  *
  * @module sszvis/layout/populationPyramidLayout
  *
- * @property {number} defaultHeight   The default height of the chart. This is used as a base for calculating rounded bar heights.
- *                                    however, the returned total height will not necessarily be the same as this value.
- * @property {number} numBars         The number of bars in the population pyramid. In other words, the number of ages or age groups in the dataset.
+ * @parameter {number} spaceWidth      The available width for the chart. This is used as a base for calculating the size of the chart
+ *                                    (there's a default aspect ratio for its height), and then for calculating the rounded bar heights.
+ *                                    The returned total height should be nicely proportionate to this value.
+ * @parameter {number} numBars         The number of bars in the population pyramid. In other words, the number of ages or age groups in the dataset.
  *
  * @return {object}                   An object containing configuration information for the population pyramid:
  *                                    {
@@ -6911,19 +6912,27 @@ sszvis_namespace('sszvis.layout.horizontalBarChartDimensions', function(module) 
  *                                      positions: an array of positions, which go from the bottom of the chart (lowest age) to the top. These positions should
  *                                      be set as the range of a d3.scale.ordinal scale, where the domain is the list of ages or age groups that will be displayed
  *                                      in the chart. The domain ages or age groups should be sorted in ascending order, so that the positions will match up. If everything
- *                                      has gone well, the positions array's length will be numBars
+ *                                      has gone well, the positions array's length will be numBars,
+ *                                      maxBarLength: The maximum length of the bars to fit within the space while keeping a good aspect ratio.
+ *                                      In situations with very wide screens, this limits the width of the entire pyramid to a reasonable size.
+ *                                      chartPadding: left padding for the chart. When the maxBarLength is less than what would fill the entire width
+ *                                      of the chart, this value is needed to offset the axes and legend so that they line up with the chart. Otherwise,
+ *                                      the value is 0 and no padding is needed.
  *                                    }
  */
 sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
   'use strict';
 
-  module.exports = function(defaultHeight, numBars) {
+  module.exports = function(spaceWidth, numBars) {
+    var MAX_HEIGHT = 480; // Chart no taller than this
+    var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
+    var defaultHeight = Math.min(sszvis.aspectRatio(16, 9)(spaceWidth), MAX_HEIGHT);
     var padding = 1;
     var numPads = numBars - 1;
     var totalPadding = padding * numPads;
 
     var roundedBarHeight = Math.round((defaultHeight - totalPadding) / numBars);
-    roundedBarHeight = Math.max(roundedBarHeight, 2); // bars no shorter than 2
+    roundedBarHeight = Math.max(roundedBarHeight, MIN_BAR_HEIGHT);
 
     var totalHeight = numBars * roundedBarHeight + totalPadding;
 
@@ -6935,11 +6944,16 @@ sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
       barPos -= step;
     }
 
+    var maxBarLength = Math.min(spaceWidth / 2, 400);
+    var chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
+
     return {
       barHeight: roundedBarHeight,
       padding: padding,
       totalHeight: totalHeight,
-      positions: positions
+      positions: positions,
+      maxBarLength: maxBarLength,
+      chartPadding: chartPadding
     };
   };
 

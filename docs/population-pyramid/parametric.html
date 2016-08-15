@@ -192,16 +192,17 @@ var config = {
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var defaultHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO;
-    var pyramidDimensions = sszvis.layout.populationPyramidLayout(defaultHeight, state.ages.length);
-    var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 86, top: 25, bottom: 86 }, '#sszvis-chart');
+    var pyramidWidth = sszvis.fn.elementWidth('#sszvis-chart');
+    var pyramidDimensions = sszvis.layout.populationPyramidLayout(pyramidWidth, state.ages.length);
+    var chartPadding = { top: 25, bottom: 86 };
+    var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
 
 
     // Scales
 
     var lengthScale = d3.scale.linear()
       .domain([0, state.maxValue])
-      .range([0, bounds.innerWidth / 2]);
+      .range([0, pyramidDimensions.maxBarLength]);
 
     var colorScale = sszvis.color.qual6()
       .domain(state.groups);
