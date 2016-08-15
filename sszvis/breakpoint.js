@@ -3,9 +3,23 @@
  *
  * @module sszvis/breakpoint
  *
- * Provides the default breakpoint sizes for SSZVIS. The breakpoints are inclusive upper limits,
- * i.e. [0 - 320] is the first range, [0 - 568] is the second, and so on. The user should, where possible,
- * test against breakpoints in increasing order of size
+ * Provides breakpoint-related functions, including those which build special
+ * breakpoint objects that can be used to test against screen measurements to see
+ * if the breakpoint matches, and this module also includes the default breakpoint
+ * sizes for SSZVIS. The breakpoints are inclusive upper limits, i.e. when testing a
+ * breakpoint against a given set of measurements, if the breakpoint value is greater than
+ * or equal to all measurements, the breakpoint will match. In code where the user should
+ * supply breakpoints, the user is responsible for specifying the testing order of the breakpoints
+ * provided. The breakpoints are then tested in order, and the first one which matches the measurements
+ * is chosen. The user should, where possible, specify breakpoints in increasing order of size.
+ * Since there are multiple dimensions on which 'size' can be defined, we do not specify our own
+ * algorithm for sorting user-defined breakpoints. We rely on the judgment of the user to do that.
+ *
+ * @property {Function} createSpec
+ * @property {Function} findByName
+ * @property {Function} match
+ * @property {Function} test
+ * @property {Function} defaultSpec
  *
  * @property {Function} phoneP  The phone portrait orientation breakpoint
  * @property {Function} phoneL  The phone landscape orientation breakpoint
@@ -14,6 +28,8 @@
  */
 sszvis_namespace('sszvis.breakpoint', function(module) {
 
+  var widthOrInf = sszvis.fn.propOr('width', Infinity);
+  var screenHeightOrInf = sszvis.fn.propOr('screenHeight', Infinity);
   /**
    * Measurement
    *
@@ -22,11 +38,10 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
    *     screenHeight: number
    *   }
    */
-
   function parseMeasurement(partialMeasurement) {
     return {
-      width: sszvis.fn.propOr('width', Infinity)(partialMeasurement),
-      screenHeight: sszvis.fn.propOr('screenHeight', Infinity)(partialMeasurement)
+      width: widthOrInf(partialMeasurement),
+      screenHeight: screenHeightOrInf(partialMeasurement)
     };
   }
 
@@ -39,7 +54,6 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
    *     measurement: Measurement
    *   }
    */
-
   function parseBreakpoint(_bp) {
     var measurement = parseMeasurement({width: _bp.width, screenHeight: _bp.screenHeight});
     var bp = {
@@ -49,7 +63,7 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
     return bp;
   }
 
-  function find(breakpoints, name) {
+  function findByName(breakpoints, name) {
     var eqName = function(bp) { return bp.name === name; };
     return sszvis.fn.find(eqName, breakpoints);
   }
@@ -60,10 +74,18 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
     return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
   }
 
-  function match(breakpoints, measurement) {
+  function match(breakpoints, partialMeasurement) {
+    var measurement = parseMeasurement(partialMeasurement);
     return breakpoints.filter(function(bp) {
       return test(bp, measurement);
     });
+  }
+
+  function find(breakpoints, partialMeasurement) {
+    var measurement = parseMeasurement(partialMeasurement);
+    return sszvis.fn.find(function(bp) {
+      return test(bp, measurement);
+    }, breakpoints);
   }
 
 
@@ -71,7 +93,7 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
    * BreakpointSpec
    */
 
-  function parseSpec(spec) {
+  function createSpec(spec) {
     return spec
       .map(parseBreakpoint)
       .concat(parseBreakpoint({name: '_'}));
@@ -82,42 +104,26 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
    * External API
    */
 
-  var defaultSpec = parseSpec([
-    {name: 'phoneP',  width:  320 },
-    {name: 'phoneL',  width:  568, screenHeight:  320 },
-    {name: 'tabletP', width:  768 },
-    {name: 'tabletL', width: 1024, screenHeight:  768 }
+  var defaultSpec = createSpec([
+    { name: 'phoneP',  width:  320 },
+    { name: 'phoneL',  width:  568, screenHeight:  320 },
+    { name: 'tabletL', width: 1024, screenHeight:  768 },
+    { name: 'tabletP', width:  768 }
   ]);
 
-
-  // Magic going on here: default use of match
-  // What if we want to test?
-  // Or is it a good default?
-  // sszvis.spec([])(measurement)
-  // sszvis.breakpoint.match(sszvis.createSpec([]), measurement)
-  var spec = function(partialBpSpec) {
-    var breakpoints = parseSpec(partialBpSpec);
-    return function(partialMeasurement) {
-      var measurement = parseMeasurement(partialMeasurement);
-      return match(breakpoints, measurement);
-    };
-  };
-
   module.exports = {
-    spec: spec,
+    createSpec: createSpec,
+    findByName: findByName,
     find: find,
     match: match,
     test: test,
-    defaultSpec: function() {
-      return defaultSpec;
-    },
+    defaultSpec: function() { return defaultSpec; },
 
     // Default tests
-    phoneP:  function(m){ return test(find(defaultSpec, 'phoneP'), m)},
-    phoneL:  function(m){ return test(find(defaultSpec, 'phoneL'), m)},
-    phoneX:  function(m){ return test(find(defaultSpec, 'phoneX'), m)},
-    tabletP: function(m){ return test(find(defaultSpec, 'tabletP'), m)},
-    tabletL: function(m){ return test(find(defaultSpec, 'tabletL'), m)}
+    phoneP:  function(m){ return test(findByName(defaultSpec, 'phoneP'), m); },
+    phoneL:  function(m){ return test(findByName(defaultSpec, 'phoneL'), m); },
+    tabletL: function(m){ return test(findByName(defaultSpec, 'tabletL'), m); },
+    tabletP: function(m){ return test(findByName(defaultSpec, 'tabletP'), m); }
   };
 
 });
