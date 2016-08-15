@@ -21,15 +21,16 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
     return function(w) { return w / ar; };
   };
 
-  // iPhone SE portrait
+  // phone portrait
   var ar4to3 = aspectRatio(4, 3);
-  // iPhone SE landscape
-  // iPad landscape
+  // phone landscape
+  // tablet landscape
   var ar5to2 = aspectRatio(5, 2);
-  // iPad portrait
-  // Desktop
+  // tablet portrait
+  // desktop
   var ar16to9 = aspectRatio(16, 9);
-  // container max width: 877px
+  // Notes on dimensions in practice
+  // (after SSZ website redesign): container max width: 877px
   // ipad dimensions: 768 w x 1024 h
   // iphone se dimensions: 320 w x 568 h
 
@@ -38,26 +39,29 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * aspectRatio.default
    *
    * A property on the aspectRatio module, provides a set of default aspect
-   * ratios for different widths. If you provide a width, it will provide the
-   * default value of the height for that width. Note that the aspect ratio chosen
-   * may depend on the width itself. This is because of default breakpoints.
-   * 
-   * @param  {Number} width   The width for which you want a height value
-   * @return {Number}         The height which corresponds to the default aspect ratio for that width
+   * ratios for different widths. If you provide a set of measurements for a container
+   * and the window itself, it will provide the default value of the height for that
+   * container. Note that the aspect ratio chosen may depend on the container width itself.
+   * This is because of default breakpoints.
+   *
+   * @param  {Measurements} measurement   The measurements object for the container for which you
+   *                                      want a height value. Should have at least the properties:
+   *                                        `width`: container's width
+   *                                        `screenHeight`: the height of the window at the current time.
+   *
+   * @return {Number}         The height which corresponds to the default aspect ratio for these measurements
    */
-  module.exports.default = function(params) {
-    var width = params.containerWidth;
-    var height = params.screenHeight;
-    if (width < 321) { // iPhone SE portrait
-      return ar4to3(width);
-    } else if (width >= 321 && width < 569) { // iPhone SE landscape
-      return ar5to2(width);
-    } else if (width >= 569 && width < 769) { // iPad portrait
-      return ar16to9(width);
-    } else if (width >= 769 && width < 1025 && height < 769) { // iPad landscape
-      return ar5to2(width);
-    } else { // Desktop
-      return ar16to9(width);
+  module.exports.default = function(measurement) {
+    if (sszvis.breakpoint.phoneP(measurement)) { // phone portrait orientation
+      return ar4to3(measurement.width);
+    } else if (sszvis.breakpoint.phoneL(measurement)) { // phone landscape orientation
+      return ar5to2(measurement.width);
+    } else if (sszvis.breakpoint.tabletL(measurement)) { // tablet landscape orientation
+      return ar5to2(measurement.width);
+    } else if (sszvis.breakpoint.tabletP(measurement)) { // tablet portrait orientation
+      return ar16to9(measurement.width);
+    } else { // all other cases, includes desktop
+      return ar16to9(measurement.width);
     }
   };
 
