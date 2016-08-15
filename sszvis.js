@@ -582,6 +582,52 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.derivedSet
+     *
+     * fn.derivedSet is used to create sets of objects from an input array. The objects are
+     * first passed through an accessor function, which should produce a value. The set is calculated
+     * using that value, but the actual members of the set are the input objects. This allows you
+     * to use .derivedSet to create a group of obejcts, where the values of some derived property
+     * of those objects forms a set. This is distinct from other set functions in this toolkit because
+     * in the other set functions, the set of derived properties is returned, whereas this function
+     * returns a set of objects from the input array.
+     *
+     * @param  {array} arr        The array of elements from which the set is calculated
+     * @param  {function} acc     An accessor function which calculates the set determiner.
+     * @return {array}            An array of objects from the input array.
+     */
+    derivedSet: function(arr, acc) {
+      acc || (acc = sszvis.fn.identity);
+      var seen = [], sValue, cValue, result = [];
+      for (var i = 0, l = arr.length; i < l; ++i) {
+        sValue = arr[i];
+        cValue = acc(sValue, i, arr);
+        if (seen.indexOf(cValue) < 0) {
+          seen.push(cValue);
+          result.push(sValue);
+        }
+      }
+      return result;
+    },
+
+    /**
+     * fn.filledArray
+     *
+     * returns a new array with length `len` filled with `val`
+     * 
+     * @param  {Number} len     The length of the desired array
+     * @param  {Any} val        The value with which to fill the array
+     * @return {Array}          An array of length len filled with val
+     */
+    filledArray: function(len, val) {
+      var arr = new Array(len);
+      for (var i = 0; i < len; ++i) {
+        arr[i] = val;
+      }
+      return arr;
+    },
+
+    /**
      * fn.find
      *
      * Finds the first occurrence of an element in an array that passes the predicate function
@@ -598,6 +644,75 @@ sszvis_namespace('sszvis.fn', function(module) {
         }
       }
       return undefined;
+    },
+
+    /**
+     * fn.first
+     *
+     * Returns the first value in the passed array, or undefined if the array is empty
+     *
+     * @param  {Array} arr an array
+     * @return {*}     the first value in the array
+     */
+    first: function(arr) {
+      return arr[0];
+    },
+
+    /**
+     * fn.flatten
+     *
+     * Flattens the nested input array by one level. The input array is expected to be
+     * a two-dimensional array (i.e. its elements are also arrays). The result is a
+     * one-dimensional array consisting of all the elements of the sub-arrays.
+     * 
+     * @param  {Array}        The Array to flatten
+     * @return {Array}        A flattened Array
+     */
+    flatten: function(arr) { return Array.prototype.concat.apply([], arr); },
+
+    /**
+     * fn.hashableSet
+     *
+     * takes an array of elements and returns the unique elements of that array, optionally
+     * after passing them through an accessor function.
+     * the returned array is ordered according to the elements' order of appearance
+     * in the input array. This function differs from fn.set in that the elements
+     * in the input array (or the values returned by the accessor function)
+     * MUST be "hashable" - convertible to unique keys of a JavaScript object.
+     * As payoff for obeying this restriction, the algorithm can run much faster.
+     *
+     * @param  {Array} arr the Array of source elements
+     * @param {Function} [acc(element, index, array)=(v) -> v] - an accessor function which
+     * is called on each element of the Array. Defaults to the identity function.
+     * The result is equivalent to calling array.map(acc) before computing the set.
+     * When the accessor function is invoked, it is passed the element from the input array,
+     * the element's index in the input array, and the input array itself.
+     * @return {Array} an Array of unique elements
+     */
+    hashableSet: function(arr, acc) {
+      acc || (acc = sszvis.fn.identity);
+      var seen = {}, value, result = [];
+      for (var i = 0, l = arr.length; i < l; ++i) {
+        value = acc(arr[i], i, arr);
+        if (!seen[value]) {
+          seen[value] = true;
+          result.push(value);
+        }
+      }
+      return result;
+    },
+
+    /**
+     * fn.identity
+     *
+     * The identity function. It returns the first argument passed to it.
+     * Useful as a default where a function is required.
+     *
+     * @param  {*} value any value
+     * @return {*}       returns its argument
+     */
+    identity: function(value) {
+      return value;
     },
 
     /**
@@ -671,141 +786,6 @@ sszvis_namespace('sszvis.fn', function(module) {
      */
     isString: function(val) {
         return Object.prototype.toString.call(val) === '[object String]';
-    },
-
-    /**
-     * fn.derivedSet
-     *
-     * fn.derivedSet is used to create sets of objects from an input array. The objects are
-     * first passed through an accessor function, which should produce a value. The set is calculated
-     * using that value, but the actual members of the set are the input objects. This allows you
-     * to use .derivedSet to create a group of obejcts, where the values of some derived property
-     * of those objects forms a set. This is distinct from other set functions in this toolkit because
-     * in the other set functions, the set of derived properties is returned, whereas this function
-     * returns a set of objects from the input array.
-     *
-     * @param  {array} arr        The array of elements from which the set is calculated
-     * @param  {function} acc     An accessor function which calculates the set determiner.
-     * @return {array}            An array of objects from the input array.
-     */
-    derivedSet: function(arr, acc) {
-      acc || (acc = sszvis.fn.identity);
-      var seen = [], sValue, cValue, result = [];
-      for (var i = 0, l = arr.length; i < l; ++i) {
-        sValue = arr[i];
-        cValue = acc(sValue, i, arr);
-        if (seen.indexOf(cValue) < 0) {
-          seen.push(cValue);
-          result.push(sValue);
-        }
-      }
-      return result;
-    },
-
-    /**
-     * fn.find
-     *
-     * given a predicate function and a list, returns the first value
-     * in the list such that the predicate function returns true
-     * when passed that value.
-     *
-     * @param  {Function} predicate A predicate function to be called on elements in the list
-     * @param  {Array} list      An array in which to search for a truthy predicate value
-     * @return {*}           the first value in the array for which the predicate returns true.
-     */
-    find: function(predicate, list) {
-      var idx = -1;
-      var len = list.length;
-      while (++idx < len) {
-        if (predicate(list[idx])) return list[idx];
-      }
-      return undefined;
-    },
-
-    /**
-     * fn.filledArray
-     *
-     * returns a new array with length `len` filled with `val`
-     * 
-     * @param  {Number} len     The length of the desired array
-     * @param  {Any} val        The value with which to fill the array
-     * @return {Array}          An array of length len filled with val
-     */
-    filledArray: function(len, val) {
-      var arr = new Array(len);
-      for (var i = 0; i < len; ++i) {
-        arr[i] = val;
-      }
-      return arr;
-    },
-
-    /**
-     * fn.first
-     *
-     * Returns the first value in the passed array, or undefined if the array is empty
-     *
-     * @param  {Array} arr an array
-     * @return {*}     the first value in the array
-     */
-    first: function(arr) {
-      return arr[0];
-    },
-
-    /**
-     * fn.flatten
-     *
-     * Flattens the nested input array by one level. The input array is expected to be
-     * a two-dimensional array (i.e. its elements are also arrays). The result is a
-     * one-dimensional array consisting of all the elements of the sub-arrays.
-     * 
-     * @param  {Array}        The Array to flatten
-     * @return {Array}        A flattened Array
-     */
-    flatten: function(arr) { return Array.prototype.concat.apply([], arr); },
-
-    /**
-     * fn.hashableSet
-     *
-     * takes an array of elements and returns the unique elements of that array, optionally
-     * after passing them through an accessor function.
-     * the returned array is ordered according to the elements' order of appearance
-     * in the input array. This function differs from fn.set in that the elements
-     * in the input array (or the values returned by the accessor function)
-     * MUST be "hashable" - convertible to unique keys of a JavaScript object.
-     * As payoff for obeying this restriction, the algorithm can run much faster.
-     *
-     * @param  {Array} arr the Array of source elements
-     * @param {Function} [acc(element, index, array)=(v) -> v] - an accessor function which
-     * is called on each element of the Array. Defaults to the identity function.
-     * The result is equivalent to calling array.map(acc) before computing the set.
-     * When the accessor function is invoked, it is passed the element from the input array,
-     * the element's index in the input array, and the input array itself.
-     * @return {Array} an Array of unique elements
-     */
-    hashableSet: function(arr, acc) {
-      acc || (acc = sszvis.fn.identity);
-      var seen = {}, value, result = [];
-      for (var i = 0, l = arr.length; i < l; ++i) {
-        value = acc(arr[i], i, arr);
-        if (!seen[value]) {
-          seen[value] = true;
-          result.push(value);
-        }
-      }
-      return result;
-    },
-
-    /**
-     * fn.identity
-     *
-     * The identity function. It returns the first argument passed to it.
-     * Useful as a default where a function is required.
-     *
-     * @param  {*} value any value
-     * @return {*}       returns its argument
-     */
-    identity: function(value) {
-      return value;
     },
 
     /**
