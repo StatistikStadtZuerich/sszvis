@@ -2053,7 +2053,9 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
 
     var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0]);
     viewport.enter().append('g')
-      .attr('data-sszvis-svg-layer', '')
+      .attr('data-sszvis-svg-layer', '');
+
+    viewport
       .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
     return viewport;
