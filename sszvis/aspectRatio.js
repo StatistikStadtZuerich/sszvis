@@ -50,10 +50,10 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
       return ar4to3(measurement.width);
     } else if (sszvis.breakpoint.phoneL(measurement)) { // phone landscape orientation
       return ar5to2(measurement.width);
-    } else if (sszvis.breakpoint.tabletP(measurement)) { // tablet portrait orientation
-      return ar16to9(measurement.width);
     } else if (sszvis.breakpoint.tabletL(measurement)) { // tablet landscape orientation
       return ar5to2(measurement.width);
+    } else if (sszvis.breakpoint.tabletP(measurement)) { // tablet portrait orientation
+      return ar16to9(measurement.width);
     } else { // all other cases, includes desktop
       return ar16to9(measurement.width);
     }
