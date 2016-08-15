@@ -104,12 +104,13 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var pyramidWidth = sszvis.fn.elementWidth('#sszvis-chart');
+    var chartDimensions = sszvis.fn.measureDimensions('#sszvis-chart');
 
-    var props = queryProps(pyramidWidth);
-    var pyramidDimensions = sszvis.layout.populationPyramidLayout(pyramidWidth, state.ages.length);
+    var props = queryProps(chartDimensions);
+    var pyramidDimensions = sszvis.layout.populationPyramidLayout(chartDimensions.width, state.ages.length);
 
     var chartPadding = { top: 25, bottom: props.bottomPadding };
+
     var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
 
 

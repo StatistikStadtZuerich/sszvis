@@ -97,7 +97,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var containerWidth = sszvis.fn.elementWidth('#sszvis-chart');
+    var containerWidth = sszvis.fn.measureDimensions('#sszvis-chart').width;
     var squarePadding = 2;
     // When you write your own code, these values should be big enough to fit all axis labels
     // And the legend below the chart

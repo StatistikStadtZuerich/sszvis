@@ -117,7 +117,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var containerWidth = sszvis.fn.elementWidth('#sszvis-chart');
+    var containerWidth = sszvis.fn.measureDimensions('#sszvis-chart').width;
     var squarePadding = 2;
     var tablePadding = {
       top: 60,
