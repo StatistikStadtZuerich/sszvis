@@ -29,14 +29,6 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var queryProps = sszvis.responsiveProps()
-    .prop('strokeWidth', {
-       phoneL: 0.5,
-       phoneP: 0.5,
-       tabletL: 1,
-       tabletP: 1,
-       _: 2
-    });
 
 
    /* Shortcuts
@@ -117,8 +109,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 110 }, '#sszvis-chart');
-    var props = queryProps(bounds);
+    var bounds = sszvis.bounds({ top: 10, bottom: 64 }, '#sszvis-chart');
 
 
     // Scales
@@ -148,8 +139,8 @@
       .highlight(state.selection)
       // gets the fill color and darken it
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
-      .strokeWidth(props.strokeWidth)
-      .highlightStrokeWidth(props.strokeWidth + 1)
+      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
+      .highlightStrokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width) + 1)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
@@ -179,12 +170,15 @@
       .body(tooltipBody)
       .visible(isSelected);
 
+    var numColumns = 3;
+    var columnWidth = Math.min(bounds.innerWidth / numColumns, 100);
+
     var legend = sszvis.legend.ordinalColorScale()
       .scale(categoryColorScale)
       .orientation('vertical')
-      .rows(state.categories.length / 3)
-      .columnWidth(bounds.innerWidth / 3)
-      .columns(3);
+      .rows(state.categories.length / numColumns)
+      .columnWidth(columnWidth)
+      .columns(numColumns);
 
 
     // Rendering
@@ -195,7 +189,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - (columnWidth * numColumns)) / 2, bounds.innerHeight + 20))
       .call(legend);
 
     sszvis.behavior.resize().on('resize', function() { render(state); });

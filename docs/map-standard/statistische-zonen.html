@@ -29,14 +29,6 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var queryProps = sszvis.responsiveProps()
-    .prop('strokeWidth', {
-       phoneL: 0.5,
-       phoneP: 0.5,
-       tabletL: 1,
-       tabletP: 1,
-       _: 2
-     });
 
 
   /* Shortcuts
@@ -86,7 +78,6 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds('#sszvis-chart');
-    var props = queryProps(bounds);
 
     // Scales
 
@@ -111,7 +102,7 @@
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
-      .strokeWidth(props.strokeWidth)
+      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
       .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), vAcc));
 
 

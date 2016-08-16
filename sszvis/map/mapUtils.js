@@ -195,4 +195,17 @@ sszvis_namespace('sszvis.map.utils', function(module) {
     return geoJson.properties.cachedCenter;
   };
 
+  /**
+   * widthAdaptiveMapPathStroke
+   *
+   * A little "magic" function for automatically calculating map stroke sizes based on
+   * the width of the container they're in. Used for responsive designs.
+   * 
+   * @param  {number} width    The width of the container holding the map.
+   * @return {number}          The stroke width that the map elements should have.
+   */
+  module.exports.widthAdaptiveMapPathStroke = function(width) {
+    return Math.max(0.6, width / 1000);
+  };
+
 });
