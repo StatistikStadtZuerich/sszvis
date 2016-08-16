@@ -5857,6 +5857,10 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
  * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number,
  *                                                   for padding at the top of each column. Used to vertically center the columns.
  * @property {String, Function} columnLabel          A string, or a function that returns a string, for the label at the top of each column.
+ * @property {Number} columnLabelOffset              A value for offsetting the column labels in the x axis. Used to move the column labels around if you
+ *                                                   don't want them to be centered on the columns. This is useful in situations where the normal label would
+ *                                                   overlap outer boundaries or otherwise be inconveniently positioned. You can usually forget this, except
+ *                                                   perhaps in very narrow screen layouts.
  * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default 0.5.
  * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color.
  * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color.
@@ -5865,6 +5869,11 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
  *                                                   are below smaller, thinner ones.
  * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
  *                                                   return a side ('left' or 'right'). Default is always 'left'.
+ * @property {Boolean} labelSideSwitch               A boolean used to determine whether to switch the label side. When true, 'left' labels will be shown on
+ *                                                   the right side, and 'right' labels on the left side. This is useful as a switch to be flipped in very
+ *                                                   narrow screen layouts, when you want the labels to appear on the opposite side of the columns they refer to.
+ * @property {Number} labelOpacity                   A value for the opacity of the column labels. You can change this to affect the visibility of the column
+ *                                                   labels, for instance to hide them when they would overlap with user-triggered hover labels.
  * @property {Number} labelHitBoxSize                A number for the width of 'hit boxes' added underneath the labels. This should basically be
  *                                                   equal to the width of the widest label. For performance reasons, it doesn't make sense to calculate
  *                                                   this value at run time while the component is rendered. Far better is to position the chart so that the
@@ -5896,11 +5905,14 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('nodePadding')
       .prop('columnPadding', d3.functor)
       .prop('columnLabel', d3.functor).columnLabel('')
+      .prop('columnLabelOffset', d3.functor).columnLabelOffset(0)
       .prop('linkCurvature').linkCurvature(0.5)
       .prop('nodeColor', d3.functor)
       .prop('linkColor', d3.functor)
       .prop('linkSort', d3.functor).linkSort(function(a, b) { return a.value - b.value; }) // Default sorts in descending order of value
       .prop('labelSide', d3.functor).labelSide('left')
+      .prop('labelSideSwitch')
+      .prop('labelOpacity', d3.functor).labelOpacity(1)
       .prop('labelHitBoxSize').labelHitBoxSize(0)
       .prop('nameLabel').nameLabel(sszvis.fn.identity)
       .prop('linkSourceLabels').linkSourceLabels([])
@@ -5957,7 +5969,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
         columnLabels.exit().remove();
 
         columnLabels
-          .attr('transform', function(d, i) { return sszvis.svgUtils.translateString(columnLabelX(i), columnLabelY); })
+          .attr('transform', function(d, i) { return sszvis.svgUtils.translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY); })
           .text(function(d, i) { return props.columnLabel(i); });
 
         var columnLabelTicks = barGroup
@@ -6072,6 +6084,14 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .text(props.linkLabel);
 
         // Render the node labels and their hit boxes
+        var getLabelSide = function(colIndex) {
+          var side = props.labelSide(colIndex);
+          if (props.labelSideSwitch) {
+            side = side === 'left' ? 'right' : 'left';
+          }
+          return side;
+        }
+
         var nodeLabelsGroup = selection.selectGroup('nodelabels');
 
         var barLabels = nodeLabelsGroup
@@ -6087,9 +6107,10 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
         barLabels
           .text(function(node) { return props.nameLabel(node.id); })
           .attr('text-align', 'middle')
-          .attr('text-anchor', function(node) { return props.labelSide(node.columnIndex) === 'left' ? 'end' : 'start'; })
-          .attr('x', function(node) { return props.labelSide(node.columnIndex) === 'left' ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6; })
-          .attr('y', function(node) { return yPosition(node) + yExtent(node) / 2; });
+          .attr('text-anchor', function(node) { return getLabelSide(node.columnIndex) === 'left' ? 'end' : 'start'; })
+          .attr('x', function(node) { return getLabelSide(node.columnIndex) === 'left' ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6; })
+          .attr('y', function(node) { return yPosition(node) + yExtent(node) / 2; })
+          .style('opacity', props.labelOpacity)
 
         var barLabelHitBoxes = nodeLabelsGroup
           .selectAll('.sszvis-sankey-hitbox')
@@ -6103,7 +6124,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         barLabelHitBoxes
           .attr('fill', 'transparent')
-          .attr('x', function(node) { return xPosition(node) + (props.labelSide(node.columnIndex) === 'left' ? -props.labelHitBoxSize : 0); })
+          .attr('x', function(node) { return xPosition(node) + (getLabelSide(node.columnIndex) === 'left' ? -props.labelHitBoxSize : 0); })
           .attr('y', function(node) { return yPosition(node) - (props.nodePadding / 2); })
           .attr('width', props.labelHitBoxSize + props.nodeThickness)
           .attr('height', function(node) { return yExtent(node) + props.nodePadding; });
