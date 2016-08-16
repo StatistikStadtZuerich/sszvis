@@ -136,7 +136,11 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 
 ## Zürich: Quartiere (viewBox example)
 
-A map of the statistische quartiere of Zürich, which demonstrates the use of the SVG viewBox attribute for automatic scaling at different screen resolutions, including things like stroke size.
+A map of the statistische quartiere of Zürich, which demonstrates the use of the SVG viewBox attribute for automatic scaling at different screen resolutions. Scaling using viewbox works by scaling the whole SVG to fit within the given bounds, so it can be useful to create a small version of a detail rich map.
+
+```hint
+Because the whole SVG will be resized labels and other elements will be scaled as well, making this method of scaling unusable in most cases. Use `sszvis.responsiveProps()` instead.
+```
 
 ```project
 {
