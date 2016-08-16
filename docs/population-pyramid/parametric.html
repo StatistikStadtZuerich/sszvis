@@ -242,6 +242,7 @@ var config = {
       .barPosition(sszvis.fn.compose(positionScale, aAcc))
       .barHeight(pyramidDimensions.barHeight)
       .barWidth(sszvis.fn.compose(lengthScale, vAcc))
+      .tooltipAnchor([0.0, 0.5])
       .leftAccessor(sszvis.fn.prop(config.leftCategory))
       .rightAccessor(sszvis.fn.prop(config.rightCategory));
 
@@ -276,7 +277,7 @@ var config = {
         });
         return rows.concat([[config.yAxisLabel, state.selectedAge.age]]);
       })
-      .orientation('left')
+      .orientation('bottom')
       .visible(function(d) {
         return state.selectedAge.age === aAcc(d) && cAcc(d) === config.rightCategory;
       });

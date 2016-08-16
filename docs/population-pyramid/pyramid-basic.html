@@ -221,6 +221,7 @@
       .barPosition(sszvis.fn.compose(positionScale, aAcc))
       .barHeight(pyramidDimensions.barHeight)
       .barWidth(sszvis.fn.compose(lengthScale, vAcc))
+      .tooltipAnchor([0.0, 0.5])
       .leftAccessor(womenAcc)
       .rightAccessor(menAcc);
 
@@ -253,7 +254,7 @@
         });
         return rows.concat([['Alter', state.selectedAge.age]]);
       })
-      .orientation('left')
+      .orientation('bottom')
       .visible(function(d) {
         return state.selectedAge.age === aAcc(d) && gAcc(d) === 'Männer';
       });

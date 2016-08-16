@@ -40,6 +40,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
       .prop('barFill', d3.functor).barFill('#000')
+      .prop('tooltipAnchor').tooltipAnchor([0.5, 0.5])
       .prop('leftAccessor')
       .prop('rightAccessor')
       .prop('leftRefAccessor')
@@ -61,7 +62,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var rightBar = sszvis.component.bar()
           .x(function(d){ return SPINE_PADDING + d.y0; })
@@ -69,7 +70,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var leftStack = stackComponent()
           .stackElement(leftBar);

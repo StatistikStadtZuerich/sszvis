@@ -40,6 +40,7 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
       .prop('barFill', d3.functor).barFill('#000')
+      .prop('tooltipAnchor').tooltipAnchor([0.5, 0.5])
       .prop('leftAccessor')
       .prop('rightAccessor')
       .prop('leftRefAccessor')
@@ -57,7 +58,7 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
           .height(props.barHeight)
           .width(props.barWidth)
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var rightBar = sszvis.component.bar()
           .x(SPINE_PADDING)
@@ -65,7 +66,7 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
           .height(props.barHeight)
           .width(props.barWidth)
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var leftLine = lineComponent()
           .barPosition(props.barPosition)
