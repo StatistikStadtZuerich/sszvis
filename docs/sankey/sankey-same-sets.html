@@ -26,6 +26,34 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .breakpoints([
+      { name: 'smallP', width: 320 },
+      { name: 'smallL', width: 568, screenHeight: 500 },
+      { name: 'mediumP', width: 768 },
+      { name: 'mediumL', width: 1024, screenHeight: 768 }
+    ])
+    .prop('chartHeight', {
+      smallP: function(w) { return Math.max(sszvis.aspectRatio(1, 2)(w), 600); },
+      smallL: function(w) { return Math.max(sszvis.aspectRatio(2, 3)(w), 600); },
+      mediumP: function(w) { return Math.max(sszvis.aspectRatio(1, 1)(w), 600); },
+      mediumL: function(w) { return Math.max(sszvis.aspectRatio(1.3, 1)(w), 600); },
+      _: function(w) { return Math.max(sszvis.aspectRatio(2, 1.2)(w), 600); }
+    })
+    .prop('labelSide', {
+      smallP: 'inside',
+      smallL: 'inside',
+      mediumP: 'inside',
+      mediumL: 'outside',
+      _: 'outside'
+    })
+    .prop('sidePadding', {
+      smallP: 0,
+      smallL: 0,
+      mediumP: function(w) { return w / 10; },
+      mediumL: function(w) { return Math.max(w / 6, 115); },
+      _: function(w) { return w / 4; }
+    });
 
 
   /* Shortcuts
@@ -60,6 +88,8 @@
         .idLists( [ leftColIds, rightColIds ] )
         .apply(data);
 
+      state.hoveredNode = null;
+
       render(state);
     },
 
@@ -72,7 +102,7 @@
     },
 
     onNodeOut: function(d) {
-      state.hoveredNode = {};
+      state.hoveredNode = null;
       state.linkSourceLabels = [];
       state.linkTargetLabels = [];
 
@@ -81,12 +111,14 @@
 
     onLinkOver: function(d) {
       state.hoveredLink = d;
+      state.hoveredNode = null;
 
       render(state);
     },
 
     onLinkOut: function() {
       state.hoveredLink = {};
+      state.hoveredNode = null;
 
       render(state);
     }
@@ -115,7 +147,9 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 40, right: 115, bottom: 20, left: 115 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+
+    var bounds = sszvis.bounds({ height: props.chartHeight, top: 40, right: props.sidePadding, bottom: 20, left: props.sidePadding }, '#sszvis-chart');
 
     // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
     // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
@@ -164,14 +198,23 @@
       .nodeThickness(sankeyLayout.nodeThickness)
       .nodePadding(sankeyLayout.nodePadding)
       .columnPadding(function(columnIndex) { return sankeyLayout.columnPaddings[columnIndex]; })
+      .columnLabelOffset(function(d, i) {
+        if (props.labelSide === 'inside') {
+          return i === 0 ? 24 : -24;
+        } else {
+          return 0;
+        }
+      })
       .nodeColor(nodeBlue)
       .linkColor(function(d) { return linkIsSelected(d) ? highlightLinkBlue : linkGrey; })
       .linkSort(function(a, b) { return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)); })
       .linkSourceLabels(state.linkSourceLabels)
       .linkTargetLabels(state.linkTargetLabels)
       .linkLabel(formatValue)
+      .labelSideSwitch(props.labelSide === 'inside')
       .labelSide(function(columnIndex) { return columnPosition(columnIndex) > bounds.innerWidth / 2 ? 'right' : 'left'; })
-      .labelHitBoxSize(150)
+      .labelOpacity(function(d) { return props.labelSide === 'inside' && state.hoveredNode !== null ? 0 : 1; })
+      .labelHitBoxSize(120)
       .nameLabel(function(id) { return id.slice(2); }); // Remove the leading 'f-' or 't-' from the ids
 
     var linkTooltip = sszvis.annotation.tooltip()
