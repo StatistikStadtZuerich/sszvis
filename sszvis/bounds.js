@@ -74,7 +74,7 @@ sszvis_namespace('sszvis.bounds', function(module) {
     var width   = either( bounds.width,
                           either( dimensions.width,
                                   DEFAULT_WIDTH ));
-    var computedHeight = sszvis.aspectRatio.default(dimensions);
+    var computedHeight = sszvis.aspectRatio.auto(dimensions);
     var height  = either( bounds.height,
                           computedHeight + padding.top + padding.bottom );
 
