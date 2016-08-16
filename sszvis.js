@@ -7714,6 +7714,9 @@ sszvis_namespace('sszvis.layout.smallMultiples', function(module) {
         var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
         var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
 
+        var horizontalCenter = unitWidth / 2;
+        var verticalCenter = unitHeight / 2;
+
         var multiples = selection.selectAll('g.sszvis-multiple')
           .data(data);
 
@@ -7738,8 +7741,10 @@ sszvis_namespace('sszvis.layout.smallMultiples', function(module) {
           .datum(function(d, i) {
             d.gx = (i % props.cols) * (unitWidth + props.paddingX);
             d.gw = unitWidth;
+            d.cx = horizontalCenter;
             d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
             d.gh = unitHeight;
+            d.cy = verticalCenter;
             return d;
           })
           .attr('transform', function(d) {
