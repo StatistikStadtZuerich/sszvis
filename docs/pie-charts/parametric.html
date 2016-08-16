@@ -36,7 +36,24 @@
     vColumn: 'Schweiz Import',
     //View of the chart when interactivity is not available. Does not render mouse interaction when true
     fallback: false
-  }
+  };
+  var colorLegendWidth = 210;
+  var colorLegendHeight = 260;
+  var colorLegendPadding = 20;
+  var queryProps = sszvis.responsiveProps()
+    .prop('legendPosition', {
+      tabletP: 'bottom',
+      _: 'side'
+    })
+    .prop('rightPadding', {
+      tabletP: 0,
+      _: colorLegendWidth + colorLegendPadding
+    })
+    .prop('bottomPadding', {
+      tabletP: colorLegendHeight + colorLegendPadding,
+      _: 0
+    });
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -97,7 +114,10 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 300, top: 20, right: 230, bottom: 20, left: 20 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 10, bottom: props.bottomPadding, right: props.rightPadding }, '#sszvis-chart');
+    var pieRadius = Math.min(bounds.innerWidth / 2, bounds.innerHeight / 2, 200);
+    var leftCenterOffset = (bounds.innerWidth - 2 * pieRadius) / 2;
 
 
     // Scales
@@ -126,14 +146,13 @@
     // Components
 
     var pieMaker = sszvis.component.pie()
-      .radius(d3.min([bounds.innerWidth / 2, bounds.innerHeight / 2]))
+      .radius(pieRadius)
       .angle(sszvis.fn.compose(aScale, vAcc))
       .fill(sszvis.fn.compose(cScale, cAcc));
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .rows(state.categories.length)
-      .verticallyCentered(true)
       .orientation('vertical');
 
     var headerText = sszvis.svgUtils.modularText.html()
@@ -148,6 +167,7 @@
     // Rendering
 
     var pie = chartLayer.selectGroup('piechart')
+      .attr('transform', sszvis.svgUtils.translateString(leftCenterOffset, 0))
       .call(pieMaker);
 
     pie.selectAll('[data-tooltip-anchor]')
@@ -155,7 +175,13 @@
 
     chartLayer.selectGroup('colorLegend')
       // the magic number y-offset here vertically centers the color legend.
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth + 20, bounds.innerWidth / 2))
+      .attr('transform', function() {
+        if (props.legendPosition == 'bottom') {
+          return sszvis.svgUtils.translateString(leftCenterOffset, 2 * pieRadius + colorLegendPadding);
+        } else {
+          return sszvis.svgUtils.translateString(leftCenterOffset + 2 * pieRadius + colorLegendPadding, 5);
+        }
+      })
       .call(colorLegend);
 
 
