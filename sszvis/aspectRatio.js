@@ -77,20 +77,20 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    *
    * @return {Number} The height which corresponds to the default aspect ratio for these measurements
    */
-  function auto(measurement) {
-    if (sszvis.breakpoint.phoneP(measurement)) { // phone portrait orientation
-      return ar4to3(measurement.width);
-    } else if (sszvis.breakpoint.phoneL(measurement)) { // phone landscape orientation
-      return ar5to2(measurement.width);
-    } else if (sszvis.breakpoint.tabletL(measurement)) { // tablet landscape orientation
-      return ar5to2(measurement.width);
-    } else if (sszvis.breakpoint.tabletP(measurement)) { // tablet portrait orientation
-      return ar16to9(measurement.width);
-    } else { // all other cases, includes desktop
-      return ar16to9(measurement.width);
-    }
-  };
-
+  var auto = (function() {
+    var defaultAspectRatios = {
+      phoneP:   ar4to3, // phone portrait orientation
+      phoneL:   ar5to2, // phone landscape orientation
+      tabletP: ar16to9, // tablet portrait orientation
+      tabletL:  ar5to2, // tablet landscape orientation
+      _:       ar16to9  // all other cases, includes desktop
+    };
+    return function(measurement) {
+      var bp = sszvis.breakpoint.find(sszvis.breakpoint.defaultSpec(), measurement);
+      var ar = defaultAspectRatios[bp.name];
+      return ar(measurement.width);
+    };
+  }());
 
   // Exports
   module.exports         = aspectRatio;
