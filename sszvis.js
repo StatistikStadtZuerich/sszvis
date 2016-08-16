@@ -5172,12 +5172,26 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
  *
  * @module sszvis/component/bar
  *
- * @property {number, function} x       the x-value of the rectangles. Becomes a functor.
- * @property {number, function} y       the y-value of the rectangles. Becomes a functor.
- * @property {number, function} width   the width-value of the rectangles. Becomes a functor.
- * @property {number, function} height  the height-value of the rectangles. Becomes a functor.
- * @property {string, function} fill    the fill-value of the rectangles. Becomes a functor.
- * @property {string, function} stroke  the stroke-value of the rectangles. Becomes a functor.
+ * @property {number, function} x             the x-value of the rectangles. Becomes a functor.
+ * @property {number, function} y             the y-value of the rectangles. Becomes a functor.
+ * @property {number, function} width         the width-value of the rectangles. Becomes a functor.
+ * @property {number, function} height        the height-value of the rectangles. Becomes a functor.
+ * @property {string, function} fill          the fill-value of the rectangles. Becomes a functor.
+ * @property {string, function} stroke        the stroke-value of the rectangles. Becomes a functor.
+ * @property {boolean} centerTooltip          Whether or not to center the tooltip anchor within the bar.
+ *                                            The default tooltip anchor position is at the top of the bar,
+ *                                            centered in the width dimension. When this property is true,
+ *                                            the tooltip anchor will also be centered in the height dimension.
+ * @property {Array<Number>} tooltipAnchor    Where, relative to the box formed by the bar, to position the tooltip
+ *                                            anchor. This property is overriden if centerTooltip is true. The
+ *                                            value should be a two-element array, [x, y], where x is the position (in 0 - 1)
+ *                                            of the tooltip in the width dimension, and y is the position (also range 0 - 1)
+ *                                            in the height dimension. For example, the upper left corner would be [0, 0],
+ *                                            the center of the bar would be [0.5, 0.5], the middle of the right side
+ *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
+ *                                            the pyramid chart.
+ * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
+ *                                            are changed.
  *
  * @return {d3.component}
  */
@@ -5198,6 +5212,7 @@ sszvis_namespace('sszvis.component.bar', function(module) {
       .prop('fill', d3.functor)
       .prop('stroke', d3.functor)
       .prop('centerTooltip')
+      .prop('tooltipAnchor')
       .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
@@ -5237,6 +5252,11 @@ sszvis_namespace('sszvis.component.bar', function(module) {
         if (props.centerTooltip) {
           tooltipPosition = function(d) {
             return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+          };
+        } else if (props.tooltipAnchor) {
+          var uv = props.tooltipAnchor.map(parseFloat);
+          tooltipPosition = function(d) {
+            return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
           };
         } else {
           tooltipPosition = function(d) {
