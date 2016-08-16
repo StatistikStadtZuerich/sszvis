@@ -92,7 +92,9 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
     };
   }());
 
+
   // Exports
+
   module.exports         = aspectRatio;
   module.exports.ar4to3  = ar4to3;
   module.exports.ar5to2  = ar5to2;
