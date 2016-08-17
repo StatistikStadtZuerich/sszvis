@@ -105,6 +105,7 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
               win.on('mouseup.sszvis-behavior-move', null);
               win.on('mousemove.sszvis-behavior-move', null);
               doc.on('mouseout.sszvis-behavior-move', null);
+              event.end();
             };
 
             win.on('mousemove.sszvis-behavior-move', drag);
@@ -130,8 +131,6 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
           })
           .on('mouseout', event.end)
           .on('touchstart', function() {
-            d3.event.preventDefault();
-
             var xy = sszvis.fn.first(d3.touches(this));
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);

@@ -83,7 +83,10 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
             event.out.apply(this, [d.point, i]);
 
             // calling preventDefault here prevents the browser from sending imitation mouse events
-            d3.event.preventDefault();
+            if (d3.event.cancelable) {
+              // Event is not cancelable under certain circumstances, often mid-scrolling
+              d3.event.preventDefault();
+            }
           });
 
           if (props.debug) {
