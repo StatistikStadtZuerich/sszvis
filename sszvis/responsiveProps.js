@@ -85,14 +85,11 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
       }
 
       // Finds out which breakpoints the provided measurements match up with
-      // Assumes that breakpointSpec is an array of breakpoint objects sorted
-      // in the order in which they should be tested.
       var matchingBreakpoints = sszvis.breakpoint.match(breakpointSpec, measurement);
 
       return Object.keys(propsConfig).reduce(function(memo, propKey) {
         var propSpec = propsConfig[propKey];
 
-        // FIXME: the breakpointSpec() here is a bit weird
         if (!validatePropSpec(propSpec, breakpointSpec)) {
           sszvis.logger.warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
           return memo;
