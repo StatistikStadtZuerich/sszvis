@@ -5734,6 +5734,9 @@ sszvis_namespace('sszvis.component.pie', function(module) {
  * @property {number, d3.scale} barHeight          The height of a bar
  * @property {number, d3.scale} barWidth           The width of a bar
  * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {Array<number, number>} tooltipAnchor The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
+ *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
+ *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars
  * @property {function}         leftAccessor       Data for the left side
  * @property {function}         rightAccessor      Data for the right side
  * @property {function}         [leftRefAccessor]  Reference data for the left side
@@ -6448,6 +6451,9 @@ sszvis_namespace('sszvis.component.stackedBar', function(module) {
  * @property {number, d3.scale} barHeight          The height of a bar
  * @property {number, d3.scale} barWidth           The width of a bar
  * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {Array<number, number>} tooltipAnchor The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
+ *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
+ *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars
  * @property {function}         leftAccessor       Data for the left side
  * @property {function}         rightAccessor      Data for the right side
  * @property {function}         [leftRefAccessor]  Reference data for the left side
