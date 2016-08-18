@@ -121,7 +121,9 @@
       state.hoveredNode = null;
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -263,7 +265,7 @@
     linksGroup.selectAll('[data-tooltip-anchor]')
       .call(linkTooltip);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function linkIsSelected(d) {

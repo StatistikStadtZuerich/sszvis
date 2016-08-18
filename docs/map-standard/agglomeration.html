@@ -82,7 +82,9 @@
      deselectHovered: function() {
        state.selection = [];
        render(state);
-     }
+     },
+
+     resize: function() { render(state); }
    };
 
 
@@ -192,7 +194,7 @@
       .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - (columnWidth * numColumns)) / 2, bounds.innerHeight + 20))
       .call(legend);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

@@ -95,10 +95,13 @@
       state.selection = [datum];
       render(state);
     },
+
     hideTooltip: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -229,6 +232,8 @@
     bars.selectAll('.sszvis-bar')
       .on('mouseover', actions.showTooltip)
       .on('mouseout',  actions.hideTooltip);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

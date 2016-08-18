@@ -72,7 +72,9 @@
     hideTooltip: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -257,7 +259,7 @@
       .on('mouseover', actions.showTooltip)
       .on('mouseout',  actions.hideTooltip);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

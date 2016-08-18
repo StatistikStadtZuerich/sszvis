@@ -199,7 +199,9 @@
       });
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -437,7 +439,7 @@
     highlightLayer.selectGroup('interaction')
       .call(hoverBehavior);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

@@ -74,7 +74,9 @@
     hideTooltip: function(x, y) {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -213,6 +215,8 @@
 
     chartLayer.selectGroup('interactionLayer')
       .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

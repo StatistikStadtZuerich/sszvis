@@ -90,7 +90,9 @@
     deselectHovered: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -208,7 +210,7 @@
       .style('top', (22) + 'px')
       .call(control);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

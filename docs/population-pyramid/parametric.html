@@ -166,7 +166,9 @@ var config = {
     deselectBar: function() {
       state.selectedAge = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -305,7 +307,7 @@ var config = {
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
       .call(colorLegend);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
 
 
     // Interaction

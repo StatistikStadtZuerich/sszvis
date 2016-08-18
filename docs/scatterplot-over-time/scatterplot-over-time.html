@@ -124,7 +124,9 @@
       state.selection = [];
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -312,6 +314,8 @@
     chartLayer.selectGroup('cScale')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 122))
       .call(cLegend);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function closestDatum(data, accessor, datum) {

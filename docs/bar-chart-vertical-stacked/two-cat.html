@@ -153,6 +153,8 @@
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
+
+    sszvis.viewport.on('resize', function() { render(state); });
   }
 
 

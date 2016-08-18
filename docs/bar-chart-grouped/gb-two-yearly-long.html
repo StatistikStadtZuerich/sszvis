@@ -61,7 +61,9 @@
       state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -169,6 +171,8 @@
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

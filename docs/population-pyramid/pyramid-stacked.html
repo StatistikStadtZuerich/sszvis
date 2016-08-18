@@ -77,7 +77,9 @@
       });
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -190,7 +192,7 @@
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

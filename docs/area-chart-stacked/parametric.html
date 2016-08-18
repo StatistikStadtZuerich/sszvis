@@ -133,7 +133,7 @@
       actions.changeDate(mostRecent, 0);
     },
 
-    onResize: function() { render(state); }
+    resize: function() { render(state); }
   };
 
 
@@ -299,7 +299,7 @@
 
     flagGroup.selectAll('[data-tooltip-anchor]').call(rangeTooltip);
 
-    sszvis.behavior.resize().on('resize', actions.onResize);
+    sszvis.viewport.on('resize', actions.resize);
 
 
     // Interaction

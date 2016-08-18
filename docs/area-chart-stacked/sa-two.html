@@ -112,7 +112,7 @@
       actions.changeDate(mostRecent, 0);
     },
 
-    onResize: function() { render(state); }
+    resize: function() { render(state); }
   };
 
 
@@ -339,7 +339,7 @@
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
 
-    sszvis.behavior.resize().on('resize', actions.onResize);
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

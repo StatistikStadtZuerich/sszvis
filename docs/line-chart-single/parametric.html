@@ -68,6 +68,7 @@
 
       actions.resetDate();
     },
+
     changeDate: function(inputDate) {
       var date = closestDatum(state.data, sszvis.fn.prop('date'), inputDate).date;
       if (state.currentDate === date) return;
@@ -79,10 +80,13 @@
 
       render(state);
     },
+
     resetDate: function() {
       var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
       actions.changeDate(mostRecentDate);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -207,6 +211,8 @@
 
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

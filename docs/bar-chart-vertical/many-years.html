@@ -70,7 +70,9 @@
     resetDate: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -199,7 +201,7 @@
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

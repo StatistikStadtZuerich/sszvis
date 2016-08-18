@@ -57,7 +57,9 @@
     selectTickType: function(type) {
       state.tickType = type;
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -155,6 +157,8 @@
       .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
       .style('top', 16 + 'px')
       .call(buttonGroup);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

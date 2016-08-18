@@ -84,7 +84,9 @@
       // Find the most recent date in the data and set it as the selected date
       var mostRecentDate = d3.max(state.data, xAcc);
       actions.changeDate(mostRecentDate);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -214,6 +216,7 @@
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
 
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

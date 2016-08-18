@@ -55,7 +55,9 @@
       state.valueDomain = d3.extent(data, valAcc);
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -201,7 +203,7 @@
       .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
       .call(legend);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, topojson, sszvis));

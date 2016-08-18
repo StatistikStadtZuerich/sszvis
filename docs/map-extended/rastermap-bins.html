@@ -65,7 +65,9 @@
       state.currentKey = key;
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -230,7 +232,7 @@
       .style('top', (-85) + 'px')
       .call(control);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, topojson, sszvis));

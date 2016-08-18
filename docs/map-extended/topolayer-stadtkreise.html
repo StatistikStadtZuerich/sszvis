@@ -36,6 +36,10 @@
   ----------------------------------------------- */
   var state = {};
 
+  var actions = {
+    resize: function() { render(state); }
+  };
+
 
   /* Initialization
   ----------------------------------------------- */
@@ -90,7 +94,7 @@
 
     chartLayer.call(mapMaker);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, topojson, sszvis));

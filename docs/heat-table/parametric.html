@@ -91,7 +91,9 @@
     hideTooltip: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -277,7 +279,7 @@
       .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset + (tableDimensions.width - legendWidth) / 2, bounds.innerHeight + 16))
       .call(legend);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
 
 
     // Interaction

@@ -52,7 +52,9 @@
       state.lineData = [state.data];
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -132,6 +134,8 @@
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

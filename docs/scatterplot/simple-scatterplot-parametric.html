@@ -98,7 +98,7 @@
       render(state);
     },
 
-    onResize: function() { render(state); }
+    resize: function() { render(state); }
   };
 
 
@@ -236,7 +236,7 @@
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
-    sszvis.behavior.resize().on('resize', actions.onResize);
+    sszvis.viewport.on('resize', actions.resize);
 
 
     // Interaction

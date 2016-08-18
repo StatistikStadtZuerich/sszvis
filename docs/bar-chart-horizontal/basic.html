@@ -41,6 +41,10 @@
     categories: []
   };
 
+  var actions = {
+    resize: function() { render(state); }
+  };
+
 
   /* Data initialization
   ----------------------------------------------- */
@@ -60,6 +64,8 @@
       state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
+
+      sszvis.viewport.on('resize', actions.resize);
     });
 
 

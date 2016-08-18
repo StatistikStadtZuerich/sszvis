@@ -77,7 +77,7 @@
       render(state);
     },
 
-    onResize: function() { render(state); }
+    resize: function() { render(state); }
   };
 
 
@@ -226,7 +226,7 @@
       .datum(state.voronoiFiltered)
       .call(mouseOverlay);
 
-    sszvis.behavior.resize().on('resize', actions.onResize);
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

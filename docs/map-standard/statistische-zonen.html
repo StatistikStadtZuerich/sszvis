@@ -52,7 +52,9 @@
       state.valueDomain = [0, d3.max(state.data, vAcc)];
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -110,7 +112,7 @@
 
     chartLayer.call(mapMaker);
 
-    sszvis.behavior.resize().on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, topojson, sszvis));

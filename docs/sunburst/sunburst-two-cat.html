@@ -81,7 +81,7 @@
       render(state);
     },
 
-    onResize: function() { render(state); }
+    resize: function() { render(state); }
   };
 
 
@@ -198,7 +198,7 @@
     sunburstGroup.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
-    sszvis.behavior.resize().on('resize', actions.onResize);
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

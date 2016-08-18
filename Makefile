@@ -56,7 +56,6 @@ SOURCE_FILES = \
 	sszvis/annotation/tooltip.js \
 	sszvis/annotation/tooltipAnchor.js \
 	sszvis/behavior/move.js \
-	sszvis/behavior/resize.js \
 	sszvis/behavior/voronoi.js \
 	sszvis/component/bar.js \
 	sszvis/component/dot.js \
@@ -99,7 +98,8 @@ SOURCE_FILES = \
 	sszvis/svgUtils/ensureDefsElement.js \
 	sszvis/svgUtils/modularText.js \
 	sszvis/svgUtils/textWrap.js \
-	sszvis/svgUtils/translateString.js
+	sszvis/svgUtils/translateString.js \
+	sszvis/viewport/resize.js
 
 section = docs/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
