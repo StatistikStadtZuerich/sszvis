@@ -26,6 +26,18 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .breakpoints([
+      { name: 'small', width: 510 }
+    ])
+    .prop('numLegendRows', {
+      small: 7,
+      _: 4
+    })
+    .prop('bottomPadding', {
+      small: 400,
+      _: 200
+    });
 
 
   /* Shortcuts
@@ -153,7 +165,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, right: 5, bottom: 210, left: 5 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 10, right: 5, bottom: props.bottomPadding, left: 5 }, '#sszvis-chart');
 
 
     // Scales
@@ -250,11 +263,15 @@
       })
       .contour(true);
 
+    var numColumns = Math.ceil(cScale.domain().length / props.numLegendRows);
+    var columnWidth = Math.min(Math.max(bounds.innerWidth / numColumns, 260), 350);
+    var legendWidth = columnWidth * numColumns;
+
     var cLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .orientation("vertical")
-      .rows(4)
-      .columnWidth(bounds.innerWidth / 2);
+      .rows(props.numLegendRows)
+      .columnWidth(columnWidth);
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
@@ -312,7 +329,7 @@
       .call(slider);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 122))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 122))
       .call(cLegend);
 
     sszvis.viewport.on('resize', actions.resize);
