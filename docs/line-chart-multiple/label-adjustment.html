@@ -42,7 +42,17 @@
     ticks: 5,
     fallback: false, //optional, creates long ticks when true
     targetElement: arbeitsloseParams.id
-  }
+  };
+  var queryProps = sszvis.responsiveProps()
+    .breakpoints([
+      { name: 'small', width: 280 },
+      { name: 'narrow', width: 516 },
+    ])
+    .prop('bottomPadding', {
+      small: 130,
+      narrow: 110,
+      _: 90
+    });
 
 
   if (sszvis.fallback.unsupported()) {
@@ -135,9 +145,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var t = 30;
-    var b = 90;
-    var bounds = sszvis.bounds({ top: t, bottom: b }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, '#sszvis-chart');
 
     // Scales
     var xScale = d3.time.scale()
@@ -229,9 +238,11 @@
       .labelId(cAcc)
       .reduceOverlap(true);
 
+    // Because we use the horizontalFloat layout, this legend will fit within its bounds
     var cLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .horizontalFloat(true);
+      .horizontalFloat(true)
+      .floatWidth(bounds.innerWidth);
 
 
     // Rendering
