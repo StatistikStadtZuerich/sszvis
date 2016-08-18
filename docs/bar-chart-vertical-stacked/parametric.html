@@ -48,7 +48,16 @@
     yLabel: 'Beschäftigte', //optional
     xLabel: '',
     ticks: 5
-  }
+  };
+  var queryProps = sszvis.responsiveProps()
+    .prop('targetNumColumns', {
+      tabletP: 1,
+      _: 2
+    })
+    .prop('bottomPadding', {
+      tabletP: 230,
+      _: 150
+    });
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -127,7 +136,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 150 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, '#sszvis-chart');
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.years.length);
 
 
@@ -186,9 +196,9 @@
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .rows(state.categories.length / 2)
-      .columnWidth(bounds.innerWidth / 2)
-      .columns(2)
+      .rows(state.categories.length / props.targetNumColumns)
+      .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 320))
+      .columns(props.targetNumColumns)
       .orientation('horizontal');
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
