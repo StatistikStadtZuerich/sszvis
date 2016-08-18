@@ -26,6 +26,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('targetNumColumns', {
+      tabletP: 1,
+      _: 2
+    })
+    .prop('bottomPadding', {
+      tabletP: 320,
+      _: 190
+    });
 
 
   /* Shortcuts
@@ -104,7 +113,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 322, top: 14, bottom: 170 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ height: 170 + props.bottomPadding, top: 14, bottom: props.bottomPadding }, '#sszvis-chart');
 
 
     // Scales
@@ -156,8 +166,8 @@
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .orientation('horizontal')
-      .rows(state.categories.length / 2)
-      .columnWidth(bounds.innerWidth / 2)
+      .rows(state.categories.length / props.targetNumColumns)
+      .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 260))
       .orientation('vertical');
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()

@@ -47,7 +47,16 @@
     categoryColumnY: 'Gebiet',
     xLabel: 'Prozent',
     ticks: 4
-  }
+  };
+  var queryProps = sszvis.responsiveProps()
+    .prop('targetNumColumns', {
+      tabletP: 1,
+      _: 2
+    })
+    .prop('bottomPadding', {
+      tabletP: 320,
+      _: 190
+    });
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -126,13 +135,11 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
     //the height and the bottom padding need to be calculated
     var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.areas.length);
     var paddingTop = 14;
-    //TODO calculate this 
-    var paddingBottom = 170;
-    var bounds = sszvis.bounds({ height: paddingTop + chartDimensions.totalHeight + paddingBottom, top: paddingTop, bottom: paddingBottom }, '#sszvis-chart');
+    var bounds = sszvis.bounds({ height: paddingTop + chartDimensions.totalHeight + props.bottomPadding, top: paddingTop, bottom: props.bottomPadding }, '#sszvis-chart');
 
 
     // Scales
@@ -187,12 +194,11 @@
       .scale(yScale)
       .orient('right');
 
-    //TODO to be calculated
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .orientation('horizontal')
-      .rows(state.categories.length / 2)
-      .columnWidth(bounds.innerWidth / 2)
+      .rows(state.categories.length / props.targetNumColumns)
+      .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 260))
       .orientation('vertical');
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
