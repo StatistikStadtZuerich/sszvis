@@ -26,6 +26,12 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('bottomPadding', {
+      phoneP: 124, // For making sure the color legend is visible
+      phoneL: 124,
+      _: 84
+    });
 
 
   /* Shortcuts
@@ -87,7 +93,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, bottom: 84 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 10, bottom: props.bottomPadding }, '#sszvis-chart');
 
 
     // Scales
