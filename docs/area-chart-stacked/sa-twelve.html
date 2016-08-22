@@ -26,6 +26,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('numLegendColumns', {
+      phoneP: 1,
+      _: 2
+    })
+    .prop('bottomPadding', {
+      phoneP: 310,
+      _: 190
+    });
 
 
   /* Shortcuts
@@ -154,7 +163,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 70, bottom: 190}, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 70, bottom: props.bottomPadding }, '#sszvis-chart');
     // this layout function computes values, including an array of baseline y-positions, for the
     // area multiples component. The most important is the array of y-baselines, which are used
     // for the yPositionMultiples scale
@@ -336,7 +346,7 @@
       .scale(cScale)
       // Sets a maximum width for the columns - otherwise it gets out of hand on some sizes
       .columnWidth(Math.min(bounds.innerWidth / 2, 260))
-      .rows(6)
+      .rows(cScale.domain().length / props.numLegendColumns)
       .orientation('vertical');
 
     // set up the button group control for choosing between joined and separated views
