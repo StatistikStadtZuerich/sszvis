@@ -26,6 +26,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+   var queryProps = sszvis.responsiveProps()
+     .prop('tooltipAnchor', {
+       tabletP: [0.0, 0.5],
+       _: [0.5, 0.5]
+     })
+     .prop('tooltipOrientation', {
+       tabletP: 'bottom',
+       _: 'left'
+     });
 
 
   /* Shortcuts
@@ -177,6 +186,7 @@
     var pyramidDimensions = sszvis.layout.populationPyramidLayout(pyramidWidth, state.ages.length);
     var chartPadding = { top: 25, bottom: 86 };
     var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
@@ -223,7 +233,7 @@
       .barPosition(sszvis.fn.compose(positionScale, aAcc))
       .barHeight(pyramidDimensions.barHeight)
       .barWidth(sszvis.fn.compose(lengthScale, vAcc))
-      .tooltipAnchor([0.0, 0.5])
+      .tooltipAnchor(props.tooltipAnchor)
       .leftAccessor(womenAcc)
       .rightAccessor(menAcc);
 
@@ -256,7 +266,7 @@
         });
         return rows.concat([['Alter', state.selectedAge.age]]);
       })
-      .orientation('bottom')
+      .orientation(props.tooltipOrientation)
       .visible(function(d) {
         return state.selectedAge.age === aAcc(d) && gAcc(d) === 'Männer';
       });
