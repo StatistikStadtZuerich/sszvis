@@ -46,6 +46,13 @@
   };
 
 
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    resize: function() { render(state); }
+  }
+
+
   /* Data initialization
   ----------------------------------------------- */
   d3.csv('data/StVB_2Categories_yearly.csv')
@@ -154,7 +161,7 @@
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
-    sszvis.viewport.on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

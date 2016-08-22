@@ -36,6 +36,13 @@
   var state = {};
 
 
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    resize: function() { render(state); }
+  }
+
+
   /* Initialize
   ----------------------------------------------- */
   // Because no data needs to be loaded, here we just render the Application
@@ -68,7 +75,7 @@
 
     chartLayer.call(mapMaker);
 
-    sszvis.viewport.on('resize', function() { render(state); });
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, topojson, sszvis));
