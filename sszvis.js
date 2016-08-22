@@ -5032,7 +5032,8 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
 
         polys.enter()
           .append('path')
-          .attr('data-sszvis-behavior-voronoi', '');
+          .attr('data-sszvis-behavior-voronoi', '')
+          .attr('class', 'sszvis-interactive');
 
         polys.exit().remove();
 
