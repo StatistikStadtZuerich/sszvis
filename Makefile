@@ -20,6 +20,7 @@ CLI_RESET   = \033[0m
 BUILD_TARGET = sszvis.js
 
 VENDOR_FILES = \
+	vendor/d3-iecompat/d3-iecompat.js \
 	vendor/d3-component/d3-component.js \
 	vendor/d3-de/d3-de.js \
 	vendor/d3-selectgroup/d3-selectgroup.js \

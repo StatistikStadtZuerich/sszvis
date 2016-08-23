@@ -32,6 +32,28 @@
   'use strict';
 
   /**
+   * Internet Explorer 9 does not work with instanceof checks on
+   * d3 selections, i.e. `d3.select(body) instanceof d3.selection`.
+   * We need this functionality in order to wrap plain DOM nodes
+   * into d3.selections in some cases.
+   *
+   * What this solution does is add a global property to all
+   * selection's prototypes that can also be checked in IE9.
+   *
+   * @see http://stackoverflow.com/a/33236441/84816
+   */
+  d3.selection.prototype.isD3Selection = true;
+
+}(d3));
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+(function(d3) {
+  'use strict';
+
+  /**
    * d3 plugin to simplify creating reusable charts. Implements
    * the reusable chart interface and can thus be used interchangeably
    * with any other reusable charts.
@@ -795,7 +817,12 @@ sszvis_namespace('sszvis.fn', function(module) {
      * @return {Boolean}        Whether the value is a d3.selection
      */
     isSelection: function(val) {
-        return val instanceof d3.selection;
+      // We can't use this because we need to support IE9:
+      // return val instanceof d3.selection;
+      //
+      // We're using a property that is added by our own compatibility
+      // library in vendor/d3-iecompat.
+      return val.isD3Selection;
     },
 
     /**
