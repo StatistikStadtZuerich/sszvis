@@ -59,7 +59,7 @@
 
     // manage which datum is selected. These data are highlighted by the map.
     selectHovered: function(d) {
-      state.selection = [d];
+      state.selection = [d.datum];
       render(state);
     },
 
@@ -123,11 +123,14 @@
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc))
-      // add mouse/touch interaction
-      .on('over', actions.selectHovered)
-      .on('click', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      .fill(sszvis.fn.compose(colorScale, vAcc));
+
+    // add mouse/touch interaction
+    var interaction = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(sszvis.format.number, vAcc, mDatumAcc))
@@ -152,7 +155,7 @@
 
     // Rendering
 
-    chartLayer.call(mapMaker);
+    chartLayer.call(mapMaker).call(interaction);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
