@@ -39,18 +39,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
   var ar4to3 = aspectRatio(4, 3);
 
   /**
-   * aspectRatio.ar5to2
-   *
-   * Recommended breakpoints:
-   *   - desk
-   *
-   * @param {Number} width
-   * @returns {Number} height
-   */
-  var ar5to2 = aspectRatio(5, 2);
-
-  /**
-   * aspectRatio.ar16to9
+   * aspectRatio.ar16to10
    *
    * Recommended breakpoints:
    *   - lap
@@ -58,7 +47,54 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @param {Number} width
    * @returns {Number} height
    */
-  var ar16to9 = aspectRatio(16, 9);
+  var ar16to10 = aspectRatio(16, 10);
+
+  /**
+   * aspectRatio.ar12to5
+   *
+   * Recommended breakpoints:
+   *   - desk
+   *
+   * @param {Number} width
+   * @returns {Number} height
+   */
+  var ar12to5 = aspectRatio(12, 5);
+
+  /**
+   * aspectRatio.square
+   *
+   * This aspect ratio constrains the returned height to a maximum of 520px.
+   * It is recommended to center charts within this aspect ratio.
+   *
+   * Recommended breakpoints:
+   *   - palm
+   *   - lap
+   *   - desk
+   *
+   * @param {Number} width
+   * @returns {Number} height
+   */
+  var square = function(width) {
+    return d3.min([520, aspectRatio(1, 1)]);
+  };
+
+  /**
+   * aspectRatio.portrait
+   *
+   * This aspect ratio constrains the returned height to a maximum of 600px.
+   * It is recommended to center charts within this aspect ratio.
+   *
+   * Recommended breakpoints:
+   *   - palm
+   *   - lap
+   *   - desk
+   *
+   * @param {Number} width
+   * @returns {Number} height
+   */
+  var portrait = function(width) {
+    return d3.min([600, aspectRatio(4, 5)]);
+  };
 
   /**
    * aspectRatio.auto
@@ -77,9 +113,9 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    */
   var auto = (function() {
     var defaultAspectRatios = {
-      palm: ar4to3,  // palm-sized devices
-      lap:  ar16to9, // lap-sized devices
-      _:    ar5to2   // all other cases, including desk
+      palm: ar4to3,   // palm-sized devices
+      lap:  ar16to10, // lap-sized devices
+      _:    ar12to5   // all other cases, including desk
     };
     return function(measurement) {
       var bp = sszvis.breakpoint.find(sszvis.breakpoint.defaultSpec(), measurement);
@@ -91,10 +127,12 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
 
   // Exports
 
-  module.exports         = aspectRatio;
-  module.exports.ar4to3  = ar4to3;
-  module.exports.ar5to2  = ar5to2;
-  module.exports.ar16to9 = ar16to9;
-  module.exports.auto    = auto;
+  module.exports            = aspectRatio;
+  module.exports.ar4to3     = ar4to3;
+  module.exports.ar16to10   = ar16to10;
+  module.exports.ar12to5    = ar12to5;
+  module.exports.square   = square;
+  module.exports.portrait = portrait;
+  module.exports.auto       = auto;
 
 });

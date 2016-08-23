@@ -32,7 +32,7 @@ sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
   module.exports = function(spaceWidth, numBars) {
     var MAX_HEIGHT = 480; // Chart no taller than this
     var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
-    var defaultHeight = Math.min(sszvis.aspectRatio(16, 9)(spaceWidth), MAX_HEIGHT);
+    var defaultHeight = Math.min(sszvis.aspectRatio.ar16to10(spaceWidth), MAX_HEIGHT);
     var padding = 1;
     var numPads = numBars - 1;
     var totalPadding = padding * numPads;

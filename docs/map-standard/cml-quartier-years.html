@@ -34,9 +34,7 @@
   var VALUE_PROXIMITY_THRESHOLD = 800;
   var queryProps = sszvis.responsiveProps()
     .prop('height', {
-      _: function(w){
-        return Math.min(Math.max(600, sszvis.aspectRatio(16, 9)(w)), 720);
-      }
+      _: sszvis.aspectRatio.square
     })
     .prop('lineChartPadding', {
       palm: 12,
@@ -229,9 +227,7 @@
     var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
 
     var outerBounds = sszvis.bounds({
-      height: props.height,
-      top: 0,
-      bottom: 0
+      height: props.height
     }, '#sszvis-chart');
 
     // The line chart's height is 1/4th of the default height plus top and bottom padding
