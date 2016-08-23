@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -33,13 +34,21 @@
   // this threshold.
   var VALUE_PROXIMITY_THRESHOLD = 800;
   var queryProps = sszvis.responsiveProps()
-    .prop('height', {
+    .prop('mapInnerHeight', {
       _: sszvis.aspectRatio.square
+    })
+    .prop('mapBottomPadding', {
+      palm: 60,
+      _: 90
+    })
+    .prop('lineChartInnerHeight', {
+      palm: 80,
+      _: 100
     })
     .prop('lineChartPadding', {
       palm: 12,
       lap: function(w) { return w / 10; },
-      _: function(w) { return w / 4; }
+      _: function(w) { return w / 5; }
     });
 
 
@@ -226,34 +235,24 @@
   function render(state) {
     var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
 
-    var outerBounds = sszvis.bounds({
-      height: props.height
-    }, '#sszvis-chart');
-
-    // The line chart's height is 1/4th of the default height plus top and bottom padding
-    var lineChartHeight = outerBounds.height * 2 / 7;
-    var lineChartTopPad = 18, lineChartBottomPad = 20;
-    // The map height is the rest
-    var mapHeight = outerBounds.height - lineChartHeight;
-    var mapTopPad = 10, mapBottomPad = 45;
-    var colorScalePad = 15;
-
-    // bounds for the map section of the chart
+    // Bounds for the map section of the chart
     var mapBounds = sszvis.bounds({
-      height: mapHeight - mapTopPad - mapBottomPad,
-      top: mapTopPad,
-      bottom: mapBottomPad,
-      right: 0,
-      left: 0
+      height: props.mapInnerHeight + 30 + props.mapBottomPadding,
+      top: 30,
+      bottom: props.mapBottomPadding
     }, '#sszvis-chart');
 
     // bounds for the line chart section
     var lineChartBounds = sszvis.bounds({
-      height: lineChartHeight - lineChartTopPad - lineChartBottomPad,
-      top: lineChartTopPad,
-      bottom: lineChartBottomPad,
+      height: props.lineChartInnerHeight + props.mapBottomPadding / 2 + 20,
+      top: props.mapBottomPadding / 2,
+      bottom: 20,
       left: props.lineChartPadding,
       right: props.lineChartPadding
+    }, '#sszvis-chart');
+
+    var outerBounds = sszvis.bounds({
+      height: mapBounds.height + lineChartBounds.height
     }, '#sszvis-chart');
 
 
@@ -366,6 +365,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', outerBounds))
       .header(tooltipHeader)
       .body(function(d) {
         return [
@@ -405,9 +405,8 @@
     highlightLayer.selectGroup('handleRuler')
       .call(handleRuler);
 
-    // for Zurich maps, the color legend should be positioned 60 pixels below the bottom of the map
     chart.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left + lineChartBounds.innerWidth / 4, mapBounds.padding.top + mapBounds.innerHeight + colorScalePad))
+      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left + lineChartBounds.innerWidth / 4, mapBounds.padding.top + mapBounds.innerHeight + props.mapBottomPadding * 2/3))
       .call(legend);
 
 

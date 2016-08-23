@@ -63,7 +63,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
   /**
    * aspectRatio.square
    *
-   * This aspect ratio constrains the returned height to a maximum of 520px.
+   * This aspect ratio constrains the returned height to a maximum of 420px.
    * It is recommended to center charts within this aspect ratio.
    *
    * Recommended breakpoints:
@@ -75,7 +75,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @returns {Number} height
    */
   var square = function(width) {
-    return d3.min([520, aspectRatio(1, 1)]);
+    return d3.min([420, aspectRatio(1, 1)(width)]);
   };
 
   /**
