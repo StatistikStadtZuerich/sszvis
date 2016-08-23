@@ -11,7 +11,7 @@ sszvis_namespace('sszvis.behavior.panning', function(module) {
   module.exports = function() {
     var event = d3.dispatch('start', 'pan', 'end');
 
-    var moveComponent = d3.component()
+    var panningComponent = d3.component()
       .prop('elementSelector')
       .render(function() {
         var selection = d3.select(this);
@@ -52,9 +52,9 @@ sszvis_namespace('sszvis.behavior.panning', function(module) {
           .on('touchend', event.end);
       });
 
-    d3.rebind(moveComponent, event, 'on');
+    d3.rebind(panningComponent, event, 'on');
 
-    return moveComponent;
+    return panningComponent;
   };
 
   function datumFromEvent(evt) {
@@ -71,14 +71,6 @@ sszvis_namespace('sszvis.behavior.panning', function(module) {
       }
     }
     return null;
-
-    // Alternate Version?
-    // var elementUnder, selection, datum;
-    // return sszvis.fn.isNull(evt) || !sszvis.fn.defined(evt) ? null :
-    //        sszvis.fn.isNull(elementUnder = document.elementFromPoint(evt.clientX, evt.clientY)) ? null :
-    //        !sszvis.fn.defined((selection = d3.select(elementUnder), selection.attr('data-sszvis-behavior-panning'))) ? null :
-    //        !sszvis.fn.defined(datum = selection.datum()) ? null :
-    //        datum;
   }
 
 });
