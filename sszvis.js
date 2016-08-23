@@ -671,6 +671,28 @@ sszvis_namespace('sszvis.fn', function(module) {
     flatten: function(arr) { return Array.prototype.concat.apply([], arr); },
 
     /**
+     * fn.firstTouch
+     *
+     * Used to retrieve the first touch from a touch event. Note that in some
+     * cases, the touch event doesn't have any touches in the event.touches list,
+     * but it does have some in the event.changedTouches list (notably the touchend
+     * event works like this).
+     * 
+     * @param  {TouchEvent} event   The TouchEvent object from which to retrieve the
+     *                              first Touch object.
+     * @return {Touch|null}         The first Touch object from the TouchEvent's lists
+     *                              of touches.
+     */
+    firstTouch: function(event) {
+      if (event.touches && event.touches.length) {
+        return event.touches[0];
+      } else if (event.changedTouches && event.changedTouches.length) {
+        return event.changedTouches[0];
+      }
+      return null;
+    },
+
+    /**
      * fn.hashableSet
      *
      * takes an array of elements and returns the unique elements of that array, optionally
@@ -4993,6 +5015,95 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
 
 
 /**
+ * Panning behavior
+ *
+ * @module sszvis/behavior/panning
+ *
+ * @return {d3.component}
+ */
+sszvis_namespace('sszvis.behavior.panning', function(module) {
+  'use strict';
+
+  module.exports = function() {
+    var event = d3.dispatch('start', 'pan', 'end');
+
+    var moveComponent = d3.component()
+      .prop('elementSelector')
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var elements = selection.selectAll(props.elementSelector);
+
+        elements
+          .attr('data-sszvis-behavior-panning', '')
+          .classed('sszvis-interactive', true)
+          .on('mouseover', function() {
+            var datum = datumFromEvent(d3.event);
+            if (datum !== null) { event.start(datum); }
+          })
+          .on('mousemove', function() {
+            var datum = datumFromEvent(d3.event);
+            if (datum !== null) {
+              event.pan(datum);
+            } else {
+              event.end();
+            }
+          })
+          .on('mouseout', event.end)
+          .on('touchstart', function() {
+            d3.event.preventDefault();
+            var datum = datumFromEvent(sszvis.fn.firstTouch(d3.event));
+            if (datum !== null) { event.start(datum); }
+          })
+          .on('touchmove', function() {
+            d3.event.preventDefault();
+            var datum = datumFromEvent(sszvis.fn.firstTouch(d3.event));
+            if (datum !== null) {
+              event.pan(datum);
+            } else {
+              event.end();
+            }
+          })
+          .on('touchend', event.end);
+      });
+
+    d3.rebind(moveComponent, event, 'on');
+
+    return moveComponent;
+  };
+
+  function datumFromEvent(evt) {
+    if (!sszvis.fn.isNull(evt) && sszvis.fn.defined(evt)) {
+      var elementUnder = document.elementFromPoint(evt.clientX, evt.clientY);
+      if (!sszvis.fn.isNull(elementUnder)) {
+        var selection = d3.select(elementUnder);
+        if (!sszvis.fn.isNull(selection.attr('data-sszvis-behavior-panning'))) {
+          var datum = selection.datum();
+          if (sszvis.fn.defined(datum)) {
+            return datum;
+          }
+        }
+      }
+    }
+    return null;
+
+    // Alternate Version?
+    // var elementUnder, selection, datum;
+    // return sszvis.fn.isNull(evt) || !sszvis.fn.defined(evt) ? null :
+    //        sszvis.fn.isNull(elementUnder = document.elementFromPoint(evt.clientX, evt.clientY)) ? null :
+    //        !sszvis.fn.defined((selection = d3.select(elementUnder), selection.attr('data-sszvis-behavior-panning'))) ? null :
+    //        !sszvis.fn.defined(datum = selection.datum()) ? null :
+    //        datum;
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Voronoi behavior
  *
  * The voronoi behavior adds an invisible layer of voronoi cells to a chart. The voronoi cells are calculated
@@ -5057,7 +5168,8 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
 
         polys.enter()
           .append('path')
-          .attr('data-sszvis-behavior-voronoi', '');
+          .attr('data-sszvis-behavior-voronoi', '')
+          .attr('class', 'sszvis-interactive');
 
         polys.exit().remove();
 

@@ -178,6 +178,28 @@ sszvis_namespace('sszvis.fn', function(module) {
     flatten: function(arr) { return Array.prototype.concat.apply([], arr); },
 
     /**
+     * fn.firstTouch
+     *
+     * Used to retrieve the first touch from a touch event. Note that in some
+     * cases, the touch event doesn't have any touches in the event.touches list,
+     * but it does have some in the event.changedTouches list (notably the touchend
+     * event works like this).
+     * 
+     * @param  {TouchEvent} event   The TouchEvent object from which to retrieve the
+     *                              first Touch object.
+     * @return {Touch|null}         The first Touch object from the TouchEvent's lists
+     *                              of touches.
+     */
+    firstTouch: function(event) {
+      if (event.touches && event.touches.length) {
+        return event.touches[0];
+      } else if (event.changedTouches && event.changedTouches.length) {
+        return event.changedTouches[0];
+      }
+      return null;
+    },
+
+    /**
      * fn.hashableSet
      *
      * takes an array of elements and returns the unique elements of that array, optionally
