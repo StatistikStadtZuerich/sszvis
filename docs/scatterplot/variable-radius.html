@@ -68,7 +68,7 @@
     },
 
     setHighlight: function(d) {
-      state.highlightData = [d.point];
+      state.highlightData = [d];
       render(state);
     },
 
@@ -218,19 +218,13 @@
     var mouseOverlay = sszvis.behavior.voronoi()
       .x(xValue)
       .y(yValue)
-      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]]);
-
-    // add mouse/touch interaction
-    var interaction = sszvis.behavior.panning()
-      .elementSelector('.sszvis-interactive')
-      .on('start', actions.setHighlight)
-      .on('pan', actions.setHighlight)
-      .on('end', actions.resetHighlight);
+      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
+      .on('over', actions.setHighlight)
+      .on('out', actions.resetHighlight);
 
     chartLayer.selectGroup('voronoiMouse')
       .datum(state.voronoiFiltered)
-      .call(mouseOverlay)
-      .call(interaction);
+      .call(mouseOverlay);
 
     sszvis.viewport.on('resize', actions.resize);
   }
