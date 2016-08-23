@@ -31,14 +31,6 @@
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var INITIAL_YEAR = '2012';
-  var queryProps = sszvis.responsiveProps()
-    .prop('strokeWidth', {
-       phoneL: 0.5,
-       phoneP: 0.5,
-       tabletL: 1,
-       tabletP: 1,
-       _: 2
-    });
 
 
   /* Shortcuts
@@ -120,7 +112,6 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 80, bottom: 90 }, '#sszvis-chart');
-    var props = queryProps(bounds);
 
 
     // Scales
@@ -161,8 +152,8 @@
         var v = vAcc(d);
         return isNaN(v) ? 'white' : sszvis.color.muchDarker(colorScale(vAcc(d)));
       })
-      .highlightStrokeWidth(props.strokeWidth + 1)
-      .strokeWidth(props.strokeWidth)
+      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
+      .highlightStrokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width) + 1)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .defined(function(d) {

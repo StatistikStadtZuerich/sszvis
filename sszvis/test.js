@@ -110,7 +110,7 @@ sszvis_namespace('sszvis.test', function(module) {
     // sszvis.breakpoint.createSpec() -> Default spec???
     // sszvis.breakpoint.define({...})
     // sszvis.breakpoint.match({...})
-    // sszvis.breakpoint.phoneP({...})
+    // sszvis.breakpoint.palm({...})
 
     // find
 

@@ -29,32 +29,28 @@
   var colorLabelColumnWidth = 210;
   var queryProps = sszvis.responsiveProps()
     .prop('sidePadding', {
-      tabletL: function(w) { return 0; },
-      tabletP: function(w) { return w / 10; },
+      palm: function(w) { return 0; },
+      lap: function(w) { return w / 10; },
       _: function(w) { return w / 4; }
     })
     .prop('rowsCols', {
-      phoneP: [5, 1],
-      tabletL: [3, 2],
-      tabletP: [5, 1],
+      palm: [5, 1],
+      lap: [5, 1],
       _: [3, 2]
     })
     .prop('colorLegendColumns', {
-      phoneP: 1,
-      tabletL: 1,
-      tabletP: 1,
+      palm: 1,
+      lap: 1,
       _: 2
     })
     .prop('height', {
-      phoneP: 1200,
-      tabletL: 1200,
-      tabletP: 1200,
+      palm: 1200,
+      lap: 1200,
       _: 880
     })
     .prop('bottomPadding', {
-      phoneP: 210,
-      tabletL: 210,
-      tabletP: 210,
+      palm: 210,
+      lap: 210,
       _: 135
     });
 

@@ -1459,7 +1459,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * aspectRatio.ar4to3
    *
    * Recommended breakpoints:
-   *   - phoneP
+   *   - palm
    *
    * @param {Number} width
    * @returns {Number} height
@@ -1470,8 +1470,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * aspectRatio.ar5to2
    *
    * Recommended breakpoints:
-   *   - phoneL
-   *   - tabletL
+   *   - desk
    *
    * @param {Number} width
    * @returns {Number} height
@@ -1482,8 +1481,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * aspectRatio.ar16to9
    *
    * Recommended breakpoints:
-   *   - tabletP
-   *   - desktop
+   *   - lap
    *
    * @param {Number} width
    * @returns {Number} height
@@ -1507,11 +1505,9 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    */
   var auto = (function() {
     var defaultAspectRatios = {
-      phoneP:   ar4to3, // phone portrait orientation
-      phoneL:   ar5to2, // phone landscape orientation
-      tabletP: ar16to9, // tablet portrait orientation
-      tabletL:  ar5to2, // tablet landscape orientation
-      _:       ar16to9  // all other cases, includes desktop
+      palm: ar4to3,  // palm-sized devices
+      lap:  ar16to9, // lap-sized devices
+      _:    ar5to2   // all other cases, including desk
     };
     return function(measurement) {
       var bp = sszvis.breakpoint.find(sszvis.breakpoint.defaultSpec(), measurement);
@@ -1559,10 +1555,8 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
  * @property {Function} match
  * @property {Function} test
  *
- * @property {Function} phoneP  The phone portrait orientation breakpoint
- * @property {Function} phoneL  The phone landscape orientation breakpoint
- * @property {Function} tabletP The tablet portrait orientation breakpoint
- * @property {Function} tabletL The tablet landscape orientation breakpoint
+ * @property {Function} palm Breakpoint for plam-sized devices (phones)
+ * @property {Function} lap  Breakpoint for lap-sized devices (tablets, small notebooks)
  *
  * @type Measurement {
  *   width: number,
@@ -1664,18 +1658,13 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
   /**
    * breakpoint.defaultSpec
    *
-   * Note the order of phoneL and tabletL: we match for screens with small heights first
-   * before we match for screens that are narrow but of large enough height.
-   *
    * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
    *          default breakpoint spec.
    */
   var defaultSpec = (function() {
     var DEFAULT_SPEC = createSpec([
-      { name: 'phoneP',  width:  320 },
-      { name: 'phoneL',  width:  568, screenHeight:  320 },
-      { name: 'tabletL', width: 1024, screenHeight:  768 },
-      { name: 'tabletP', width:  768 }
+      { name: 'palm', width: 540 },
+      { name: 'lap',  width: 749 }
     ]);
     return function() { return DEFAULT_SPEC; };
   }());
@@ -1692,10 +1681,8 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
     test: test,
 
     // Default tests
-    phoneP:  makeTest('phoneP'),
-    phoneL:  makeTest('phoneL'),
-    tabletP: makeTest('tabletP'),
-    tabletL: makeTest('tabletL')
+    palm: makeTest('palm'),
+    lap: makeTest('lap')
   };
 
 
@@ -3149,8 +3136,8 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
      * @example
      * var queryProps = sszvis.responsiveProps()
      *   .prop('height', {
-     *     phoneP: function(width) { return width / (4/3); },
-     *     tabletP: function(width) { return width / (16/9); },
+     *     palm: function(width) { return width /  (4/3); },
+     *     lap:  function(width) { return width / (16/9); },
      *     _: 600 // You must always define a default case
      *   });
      *
@@ -3426,7 +3413,7 @@ sszvis_namespace('sszvis.test', function(module) {
     // sszvis.breakpoint.createSpec() -> Default spec???
     // sszvis.breakpoint.define({...})
     // sszvis.breakpoint.match({...})
-    // sszvis.breakpoint.phoneP({...})
+    // sszvis.breakpoint.palm({...})
 
     // find
 

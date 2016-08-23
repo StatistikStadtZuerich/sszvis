@@ -116,8 +116,8 @@ sszvis_namespace('sszvis.responsiveProps', function(module) {
      * @example
      * var queryProps = sszvis.responsiveProps()
      *   .prop('height', {
-     *     phoneP: function(width) { return width / (4/3); },
-     *     tabletP: function(width) { return width / (16/9); },
+     *     palm: function(width) { return width /  (4/3); },
+     *     lap:  function(width) { return width / (16/9); },
      *     _: 600 // You must always define a default case
      *   });
      *

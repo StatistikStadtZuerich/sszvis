@@ -31,7 +31,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * aspectRatio.ar4to3
    *
    * Recommended breakpoints:
-   *   - phoneP
+   *   - palm
    *
    * @param {Number} width
    * @returns {Number} height
@@ -42,8 +42,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * aspectRatio.ar5to2
    *
    * Recommended breakpoints:
-   *   - phoneL
-   *   - tabletL
+   *   - desk
    *
    * @param {Number} width
    * @returns {Number} height
@@ -54,8 +53,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * aspectRatio.ar16to9
    *
    * Recommended breakpoints:
-   *   - tabletP
-   *   - desktop
+   *   - lap
    *
    * @param {Number} width
    * @returns {Number} height
@@ -79,11 +77,9 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    */
   var auto = (function() {
     var defaultAspectRatios = {
-      phoneP:   ar4to3, // phone portrait orientation
-      phoneL:   ar5to2, // phone landscape orientation
-      tabletP: ar16to9, // tablet portrait orientation
-      tabletL:  ar5to2, // tablet landscape orientation
-      _:       ar16to9  // all other cases, includes desktop
+      palm: ar4to3,  // palm-sized devices
+      lap:  ar16to9, // lap-sized devices
+      _:    ar5to2   // all other cases, including desk
     };
     return function(measurement) {
       var bp = sszvis.breakpoint.find(sszvis.breakpoint.defaultSpec(), measurement);

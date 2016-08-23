@@ -22,10 +22,8 @@
  * @property {Function} match
  * @property {Function} test
  *
- * @property {Function} phoneP  The phone portrait orientation breakpoint
- * @property {Function} phoneL  The phone landscape orientation breakpoint
- * @property {Function} tabletP The tablet portrait orientation breakpoint
- * @property {Function} tabletL The tablet landscape orientation breakpoint
+ * @property {Function} palm Breakpoint for plam-sized devices (phones)
+ * @property {Function} lap  Breakpoint for lap-sized devices (tablets, small notebooks)
  *
  * @type Measurement {
  *   width: number,
@@ -127,18 +125,13 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
   /**
    * breakpoint.defaultSpec
    *
-   * Note the order of phoneL and tabletL: we match for screens with small heights first
-   * before we match for screens that are narrow but of large enough height.
-   *
    * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
    *          default breakpoint spec.
    */
   var defaultSpec = (function() {
     var DEFAULT_SPEC = createSpec([
-      { name: 'phoneP',  width:  320 },
-      { name: 'phoneL',  width:  568, screenHeight:  320 },
-      { name: 'tabletL', width: 1024, screenHeight:  768 },
-      { name: 'tabletP', width:  768 }
+      { name: 'palm', width: 540 },
+      { name: 'lap',  width: 749 }
     ]);
     return function() { return DEFAULT_SPEC; };
   }());
@@ -155,10 +148,8 @@ sszvis_namespace('sszvis.breakpoint', function(module) {
     test: test,
 
     // Default tests
-    phoneP:  makeTest('phoneP'),
-    phoneL:  makeTest('phoneL'),
-    tabletP: makeTest('tabletP'),
-    tabletL: makeTest('tabletL')
+    palm: makeTest('palm'),
+    lap: makeTest('lap')
   };
 
 
