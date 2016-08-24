@@ -97,13 +97,17 @@
       state.linkSourceLabels = d.linksTo;
       state.linkTargetLabels = d.linksFrom;
 
+      state.hoveredLink = {};
+
       render(state);
     },
 
-    onNodeOut: function(d) {
+    onNodeOut: function() {
       state.hoveredNode = null;
       state.linkSourceLabels = [];
       state.linkTargetLabels = [];
+
+      state.hoveredLink = {};
 
       render(state);
     },
@@ -236,6 +240,12 @@
       .orientation(function(d) { return d.x >= bounds.innerWidth / 2 ? 'right' : 'left'; })
       .dx(20);
 
+    var interaction = sszvis.behavior.panning()
+      .elementSelector('.sszvis-sankey-hitbox')
+      .on('start', actions.onNodeOver)
+      .on('pan', actions.onNodeOver)
+      .on('end', actions.onNodeOut);
+
 
     // Rendering
 
@@ -251,9 +261,7 @@
       .call(nodeTooltip);
 
     sankeyGroup.selectGroup('nodelabels')
-      .selectAll('.sszvis-sankey-hitbox')
-      .on('mouseover', actions.onNodeOver)
-      .on('mouseout', actions.onNodeOut);
+      .call(interaction);
 
     var linksGroup = sankeyGroup.selectGroup('links');
 
