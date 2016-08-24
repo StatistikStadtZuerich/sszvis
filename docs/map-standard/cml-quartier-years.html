@@ -358,6 +358,13 @@
       .color(sszvis.color.qual12())
       .label(rulerLabel);
 
+    // add mouse/touch interaction
+    var interaction = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);    
+
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
     var tooltipHeader = sszvis.svgUtils.modularText.html()
@@ -382,7 +389,7 @@
 
     // Rendering
 
-    map.call(mapMaker);
+    map.call(mapMaker).call(interaction);
 
     map.selectAll('[data-tooltip-anchor]')
       .call(tooltip);

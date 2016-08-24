@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Heat Table – Kreise</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -229,6 +230,9 @@
       .width(legendWidth)
       .labelFormat(sszvis.format.number);
 
+    var tooltipHeaderText = sszvis.svgUtils.modularText.html()
+      .bold('Paare');
+
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
       .header(function(d) {
@@ -278,15 +282,20 @@
       .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset + (tableDimensions.width - legendWidth) / 2, bounds.innerHeight + 16))
       .call(legend);
 
+
+    //Interaction
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-bar')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    bars
+      .call(interactionLayer);
+
     sszvis.viewport.on('resize', actions.resize);
 
-
-    // Interaction
-    if (!config.fallback) {
-      bars.selectAll('.sszvis-bar')
-        .on('mouseover', actions.showTooltip)
-        .on('mouseout',  actions.hideTooltip)
-    };
   }
 
 

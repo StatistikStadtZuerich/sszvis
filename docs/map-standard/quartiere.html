@@ -75,7 +75,7 @@
     },
 
     selectHovered: function(d) {
-      state.selection = [d];
+      state.selection = [d.datum];
       render(state);
     },
 
@@ -161,10 +161,15 @@
         // undefined or empty string values become NaN
         return !isNaN(vAcc(d));
       })
-      .fill(sszvis.fn.compose(colorScale, vAcc))
-      .on('over', actions.selectHovered)
-      .on('click', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      .fill(sszvis.fn.compose(colorScale, vAcc));
+
+
+    // add mouse/touch interaction
+    var interaction = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
@@ -187,7 +192,7 @@
 
     // Rendering
 
-    chartLayer.call(mapMaker);
+    chartLayer.call(mapMaker).call(interaction);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);

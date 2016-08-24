@@ -1,8 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Heat Table – Binned</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -234,11 +234,10 @@
 
     var bars = chartLayer.selectGroup('bars')
       .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset, 0))
-      .call(barGen);
+      .call(barGen)
 
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
-
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset, -10))
@@ -255,9 +254,14 @@
 
     // Interaction
 
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-bar')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    bars
+      .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }
