@@ -1,4 +1,5 @@
 .DS_Store
+.projectile
 .sass-cache
 node_modules
 scripts
