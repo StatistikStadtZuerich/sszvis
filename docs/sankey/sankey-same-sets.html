@@ -233,12 +233,6 @@
       .orientation(function(d) { return d.x >= bounds.innerWidth / 2 ? 'right' : 'left'; })
       .dx(20);
 
-    var interaction = sszvis.behavior.panning()
-      .elementSelector('.sszvis-sankey-hitbox')
-      .on('start', actions.onNodeOver)
-      .on('pan', actions.onNodeOver)
-      .on('end', actions.onNodeOut);
-
 
     // Rendering
 
@@ -253,9 +247,6 @@
     nodesGroup.selectAll('[data-tooltip-anchor]')
       .call(nodeTooltip);
 
-    sankeyGroup.selectGroup('nodelabels')
-      .call(interaction);
-
     var linksGroup = sankeyGroup.selectGroup('links');
 
     linksGroup.selectAll('.sszvis-link')
@@ -264,6 +255,18 @@
 
     linksGroup.selectAll('[data-tooltip-anchor]')
       .call(linkTooltip);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-sankey-hitbox')
+      .on('start', actions.onNodeOver)
+      .on('pan', actions.onNodeOver)
+      .on('end', actions.onNodeOut);
+
+    sankeyGroup.selectGroup('nodelabels')
+      .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }
