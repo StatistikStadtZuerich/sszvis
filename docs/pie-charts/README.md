@@ -4,10 +4,6 @@
 
 Because the wedge angles are offset in different ways, it is difficult to compare values for the same quantity across different pie charts. In these circumstances, a stacked chart is often a suitable alternative.
 
-```hint
-Keep the single pie charts together with their color legends and horizontally centered. On small screens, move the color legend below the pie. We also need to enforce a particular height, since the default aspect ratio-determined height will likely be wrong.
-```
-
 ## sszvis.component.pie
 
 ### Data structure
