@@ -76,7 +76,7 @@
 
     // manage which datum is selected. These data are highlighted by the map.
     selectHovered: function(d) {
-      state.selection = [d];
+      state.selection = [d.datum];
       render(state);
     },
 
@@ -142,14 +142,6 @@
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc))
 
-    // add mouse/touch interaction
-    if (!config.fallback) {
-      mapMaker
-        .on('over', actions.selectHovered)
-        .on('click', actions.selectHovered)
-        .on('out', actions.deselectHovered)
-    };
-
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(nameAcc, mDatumAcc));
 
@@ -186,6 +178,20 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
       .call(legend);
+
+    
+    //Interaction 
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    if (!config.fallback) {
+    chartLayer
+      .call(interactionLayer);
+    }
 
     sszvis.viewport.on('resize', actions.resize);
   }

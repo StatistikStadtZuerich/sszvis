@@ -146,6 +146,7 @@
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.fn.compose(colorScale, vAcc));
+<<<<<<< Updated upstream
 
 
     // add mouse/touch interaction
@@ -154,6 +155,8 @@
       .on('start', actions.selectHovered)
       .on('pan', actions.selectHovered)
       .on('end', actions.deselectHovered);
+=======
+>>>>>>> Stashed changes
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(nameAcc, mDatumAcc));
@@ -197,6 +200,18 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - (columnWidth * numColumns)) / 2, bounds.innerHeight + 20))
       .call(legend);
+
+
+    //Interaction
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    chartLayer
+      .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }

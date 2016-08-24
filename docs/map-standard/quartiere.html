@@ -162,6 +162,7 @@
         return !isNaN(vAcc(d));
       })
       .fill(sszvis.fn.compose(colorScale, vAcc));
+<<<<<<< Updated upstream
 
 
     // add mouse/touch interaction
@@ -170,6 +171,8 @@
       .on('start', actions.selectHovered)
       .on('pan', actions.selectHovered)
       .on('end', actions.deselectHovered);
+=======
+>>>>>>> Stashed changes
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
@@ -205,6 +208,18 @@
       .style('left', ((bounds.width - controlWidth) / 2) + 'px')
       .style('top', (22) + 'px')
       .call(control);
+
+
+    //Interaction 
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    chartLayer
+      .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }

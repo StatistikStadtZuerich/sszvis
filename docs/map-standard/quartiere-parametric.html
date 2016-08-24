@@ -80,7 +80,7 @@
     },
 
     selectHovered: function(d) {
-      state.selection = [d];
+      state.selection = [d.datum];
       render(state);
     },
 
@@ -158,12 +158,6 @@
       })
       .fill(sszvis.fn.compose(colorScale, vAcc))
 
-    if (!config.fallback) {
-      mapMaker
-      .on('over', actions.selectHovered)
-      .on('click', actions.selectHovered)
-      .on('out', actions.deselectHovered)
-    };
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
@@ -200,6 +194,20 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
       .call(legend);
+
+
+    //Interaction 
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+    
+    if (!config.fallback) {
+      chartLayer
+      .call(interactionLayer);
+    };
 
     sszvis.viewport.on('resize', actions.resize);
   }
