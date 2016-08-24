@@ -27,33 +27,57 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var colorLabelColumnWidth = 210;
+  var PIE_DIAMETER = 204;
+  var LEGEND_PADDING = 40;
+  var MAX_WIDTH = 2 * PIE_DIAMETER + 30;
+
   var queryProps = sszvis.responsiveProps()
-    .prop('sidePadding', {
-      palm: function(w) { return 0; },
-      lap: function(w) { return w / 10; },
-      _: function(w) { return w / 4; }
-    })
     .prop('rowsCols', {
       palm: [5, 1],
-      lap: [5, 1],
       _: [3, 2]
     })
     .prop('colorLegendColumns', {
       palm: 1,
-      lap: 1,
       _: 2
     })
-    .prop('height', {
-      palm: 1200,
-      lap: 1200,
-      _: 880
+    .prop('bounds', {
+      palm: function(w) {
+        var legendHeight = 182;
+        var bottomPadding = LEGEND_PADDING + legendHeight + 20;
+        return {
+          top: 20,
+          right: 10,
+          bottom: bottomPadding,
+          left: 10,
+          height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding
+        }
+      },
+      _: function(w) {
+        var legendHeight = 98;
+        var bottomPadding = LEGEND_PADDING + legendHeight + 20;
+        return {
+          top: 20,
+          right: 20,
+          bottom: bottomPadding,
+          left: 20,
+          height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding
+        }
+      }
     })
-    .prop('bottomPadding', {
-      palm: 210,
-      lap: 210,
-      _: 135
-    });
+    .prop('legendPosition', {
+      palm: function(w) {
+        return {
+          top: LEGEND_PADDING,
+          left: (w - 2 * 10)/2 - PIE_DIAMETER/2
+        }
+      },
+      _: function(w) {
+        return {
+          top: LEGEND_PADDING,
+          left: 0
+        }
+      }
+    })
 
 
   /* Shortcuts
@@ -152,7 +176,7 @@
   ----------------------------------------------- */
   function render(state) {
     var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
-    var bounds = sszvis.bounds({ height: props.height, top: 20, right: props.sidePadding, bottom: props.bottomPadding, left: props.sidePadding }, '#sszvis-chart');
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -184,7 +208,7 @@
 
     // this component generates svg 'g' tags into which chart instances can be rendered
     var multiplesMaker = sszvis.layout.smallMultiples()
-      .width(bounds.innerWidth)
+      .width(d3.min([MAX_WIDTH, bounds.innerWidth]))
       .height(bounds.innerHeight)
       .paddingX(30)
       .paddingY(30)
@@ -193,7 +217,7 @@
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .columnWidth(bounds.innerWidth / 2)
+      .columnWidth(d3.min([MAX_WIDTH, bounds.innerWidth]) / 2)
       .columns(props.colorLegendColumns)
       .orientation('horizontal');
 
@@ -239,7 +263,7 @@
       .call(tooltip);
 
     chart.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - colorLabelColumnWidth * props.colorLegendColumns) / 2, bounds.innerHeight + 20))
+      .attr('transform', sszvis.svgUtils.translateString(props.legendPosition.left, bounds.innerHeight + props.legendPosition.top))
       .call(colorLegend);
 
 
