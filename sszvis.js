@@ -5063,29 +5063,18 @@ sszvis_namespace('sszvis.behavior.panning', function(module) {
         var elements = selection.selectAll(props.elementSelector);
 
         elements
-          .attr('data-sszvis-behavior-panning', '')
+          .attr('data-sszvis-behavior-pannable', '')
           .classed('sszvis-interactive', true)
-          .on('mouseover', function() {
-            var datum = datumFromEvent(d3.event);
-            if (datum !== null) { event.start(datum); }
-          })
-          .on('mousemove', function() {
-            var datum = datumFromEvent(d3.event);
-            if (datum !== null) {
-              event.pan(datum);
-            } else {
-              event.end();
-            }
-          })
+          .on('mouseover', event.start)
+          .on('mousemove', event.pan)
           .on('mouseout', event.end)
-          .on('touchstart', function() {
+          .on('touchstart', function(d) {
             d3.event.preventDefault();
-            var datum = datumFromEvent(sszvis.fn.firstTouch(d3.event));
-            if (datum !== null) { event.start(datum); }
+            event.start(d);
           })
           .on('touchmove', function() {
             d3.event.preventDefault();
-            var datum = datumFromEvent(sszvis.fn.firstTouch(d3.event));
+            var datum = sszvis.behavior.util.datumFromPanEvent(sszvis.fn.firstTouch(d3.event));
             if (datum !== null) {
               event.pan(datum);
             } else {
@@ -5100,21 +5089,37 @@ sszvis_namespace('sszvis.behavior.panning', function(module) {
     return panningComponent;
   };
 
-  function datumFromEvent(evt) {
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+sszvis_namespace('sszvis.behavior.util', function(module) {
+
+  module.exports.elementFromEvent = function(evt) {
     if (!sszvis.fn.isNull(evt) && sszvis.fn.defined(evt)) {
-      var elementUnder = document.elementFromPoint(evt.clientX, evt.clientY);
-      if (!sszvis.fn.isNull(elementUnder)) {
-        var selection = d3.select(elementUnder);
-        if (!sszvis.fn.isNull(selection.attr('data-sszvis-behavior-panning'))) {
-          var datum = selection.datum();
-          if (sszvis.fn.defined(datum)) {
-            return datum;
-          }
+      return document.elementFromPoint(evt.clientX, evt.clientY);
+    }
+    return null;
+  };
+
+  module.exports.datumFromPannableElement = function(element) {
+    if (!sszvis.fn.isNull(element)) {
+      var selection = d3.select(element);
+      if (!sszvis.fn.isNull(selection.attr('data-sszvis-behavior-pannable'))) {
+        var datum = selection.datum();
+        if (sszvis.fn.defined(datum)) {
+          return datum;
         }
       }
     }
     return null;
-  }
+  };
+
+  module.exports.datumFromPanEvent = function(evt) {
+    return module.exports.datumFromPannableElement(module.exports.elementFromEvent(evt));
+  };
 
 });
 
