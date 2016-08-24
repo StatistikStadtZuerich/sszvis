@@ -5286,30 +5286,43 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
             if (eventNearPoint(sszvis.fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
               d3.event.preventDefault();
               event.over(datum.point);
-            }
-          })
-          .on('touchmove', function() {
-            var touchEvent = sszvis.fn.firstTouch(d3.event);
-            var element = sszvis.behavior.util.elementFromEvent(touchEvent);
-            var datum = sszvis.behavior.util.datumFromPannableElement(element);
-            if (datum !== null) {
-              var cbox = element.parentElement.getBoundingClientRect();
-              if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
-                // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
-                // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
-                // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
-                // we want to avoid.
-                if (d3.event.cancelable) { d3.event.preventDefault(); }
-                event.over(datum.point);
-              } else {
+
+              // Attach these handlers only if the initial touch is within the max distance from the voronoi center
+              // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
+              // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
+              // when users are performing touches that cause scrolling, we want to avoid firing the events.
+              var pan = function() {
+                var touchEvent = sszvis.fn.firstTouch(d3.event);
+                var element = sszvis.behavior.util.elementFromEvent(touchEvent);
+                var datum = sszvis.behavior.util.datumFromPannableElement(element);
+                if (datum !== null) {
+                  var cbox = element.parentElement.getBoundingClientRect();
+                  if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+                    // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
+                    // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
+                    // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
+                    // we want to avoid.
+                    if (d3.event.cancelable) { d3.event.preventDefault(); }
+                    event.over(datum.point);
+                  } else {
+                    event.out();
+                  }
+                } else {
+                  event.out();
+                }
+              };
+
+              var end = function() {
                 event.out();
-              }
-            } else {
-              event.out();
+                d3.select(this)
+                  .on('touchmove', null)
+                  .on('touchend', null);
+              };
+
+              d3.select(this)
+                .on('touchmove', pan)
+                .on('touchend', end);
             }
-          })
-          .on('touchend', function() {
-            event.out();
           });
 
           if (props.debug) {
