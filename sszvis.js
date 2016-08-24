@@ -5044,7 +5044,38 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
 /**
  * Panning behavior
  *
+ * This behavior is used for adding "panning" functionality to a set of chart elements.
+ * The "panning" functionality refers to a combination of mouseover and touch responsiveness,
+ * where on a mouse interaction an event is fired on hover, but the touch interaction is more
+ * complex. The idea is to sort of imitate the way a hover interaction works, but with only a
+ * finger. When a user starts a touch on an element which has this behavior enabled, the
+ * default scrolling behavior of the browser will be canceled. The user can then move
+ * their finger across the surface of the screen, onto other elements, and the scroll
+ * will be canceled. When the finger moves onto other elements with this behavior attached,
+ * the event will be fired. Meanwhile, if the user starts the interaction somewhere outside
+ * an element, the scroll will happen as usual, and if they move onto an activated element,
+ * no event will be fired and the scrolling will continue.
+ *
+ * This behavior is applied to all the children of a selection which match the elementSelector
+ * property. Event listeners are attached to each of the child elements. The elementSelector
+ * property is necessary to know which elements to attach to (and therefore to also avoid
+ * attaching event listeners to elements which shouldn't be interaction-active).
+ *
  * @module sszvis/behavior/panning
+ *
+ * @property {String} elementSelector    This should be a string selector that matches child
+ *                                       elements of the selection on which this component
+ *                                       is rendered using the .call(component) pattern. All
+ *                                       child elements will have the panning event listeners
+ *                                       attached to them.
+ * @property {String, Function} on       The .on() method should specify an event name and a handler
+ *                                       function for that event. The supported events are:
+ *                                       'start' - when the interaction starts on an element.
+ *                                       'pan' - when the user pans on the same element or onto another
+ *                                       element (note, no 'start' event will be fired when the user
+ *                                       pans with a touch from one element onto another, since this
+ *                                       behavior is too difficult to test for and emulate).
+ *                                       'end' - when the interaction with an element ends.
  *
  * @return {d3.component}
  */
@@ -5095,6 +5126,31 @@ sszvis_namespace('sszvis.behavior.panning', function(module) {
 //////////////////////////////////// SECTION ///////////////////////////////////
 
 
+/**
+ * Behavior utilities
+ *
+ * These utilities are intended for internal usage by the sszvis.behavior components.
+ * They aren't intended for use in example code, but should be in a separate module
+ * because they are accessed by several different behavior components.
+ *
+ * @function {Event} elementFromEvent             Accepts an event, and returns the element, if any,
+ *                                                which is in the document under that event. Uses
+ *                                                document.elementFromPoint to determine the element.
+ *                                                If there is no such element, or the event is invalid,
+ *                                                this function will return null.
+ * @function {Element} datumFromPannableElement   Accepts an element, determines if it's "pannable",
+ *                                                and returns the datum, if any, attached to this element.
+ *                                                This is determined by the presence of the data-sszvis-behavior-pannable
+ *                                                attribute on the element. Behaviors which use "panning" behavior
+ *                                                will attach this attribute to the elements they target.
+ *                                                Elements which have panning behaviors attached to them
+ *                                                will get this attribute assigned to them. If the element doesn't
+ *                                                have this attriute, or doesn't have a datum assigned, this funciton
+ *                                                returns null.
+ * @function {Event} datumFromPanEvent            A combination of elementFromEvent and datumFromPannableElement, which
+ *                                                accepts an event and returns the datum attached to the element under
+ *                                                that event, if such an element and such a datum exists.
+ */
 sszvis_namespace('sszvis.behavior.util', function(module) {
 
   module.exports.elementFromEvent = function(evt) {
