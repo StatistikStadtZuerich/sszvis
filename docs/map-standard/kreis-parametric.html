@@ -140,15 +140,15 @@
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc))
+      .fill(sszvis.fn.compose(colorScale, vAcc));
 
     // add mouse/touch interaction
     if (!config.fallback) {
       mapMaker
         .on('over', actions.selectHovered)
         .on('click', actions.selectHovered)
-        .on('out', actions.deselectHovered)
-    };
+        .on('out', actions.deselectHovered);
+    }
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(nameAcc, mDatumAcc));
