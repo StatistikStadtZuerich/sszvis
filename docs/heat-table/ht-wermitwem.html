@@ -222,13 +222,6 @@
       .width(legendWidth)
       .labelFormat(sszvis.format.number);
 
-    // add mouse/touch interaction
-    var interaction = sszvis.behavior.panning()
-      .elementSelector('.sszvis-bar')
-      .on('start', actions.showTooltip)
-      .on('pan', actions.showTooltip)
-      .on('end', actions.hideTooltip);
-
     var tooltipHeaderText = sszvis.svgUtils.modularText.html()
       .bold('Paare');
 
@@ -249,8 +242,7 @@
 
     var bars = chartLayer.selectGroup('bars')
       .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset, 0))
-      .call(barGen)
-      .call(interaction);
+      .call(barGen);
 
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
@@ -266,6 +258,18 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset + (tableDimensions.width - legendWidth) / 2, bounds.innerHeight + 16))
       .call(legend);
+
+
+    // Interaction 
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-bar')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    bars
+      .call(interactionLayer)
 
     sszvis.viewport.on('resize', actions.resize);
   }

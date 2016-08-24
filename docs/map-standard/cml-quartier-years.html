@@ -412,6 +412,14 @@
 
     // Interaction
 
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', function(d) { actions.changeMapEntity(d.datum); })
+      .on('pan', function(d) { actions.changeMapEntity(d.datum); })
+      .on('end', function() { actions.resetMapEntity(); });
+
+    map.call(interactionLayer);
+
     mapMaker
       .on('over', actions.changeMapEntity)
       .on('out', actions.resetMapEntity);
