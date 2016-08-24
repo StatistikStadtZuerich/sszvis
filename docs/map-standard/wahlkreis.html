@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -57,14 +58,16 @@
     },
 
     selectHovered: function(d) {
-      state.selection = [d];
+      state.selection = [d.datum];
       render(state);
     },
 
     deselectHovered: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -90,9 +93,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 90, left: padding });
+    var bounds = sszvis.bounds({ top: 30, bottom: 90 }, '#sszvis-chart');
 
 
     // Scales
@@ -109,7 +110,7 @@
       })
       .datum(state.data);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
 
@@ -121,10 +122,7 @@
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc))
-      .on('over', actions.selectHovered)
-      .on('click', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      .fill(sszvis.fn.compose(colorScale, vAcc));
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
@@ -156,6 +154,20 @@
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
       .call(legend);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    chartLayer
+      .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

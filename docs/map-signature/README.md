@@ -50,11 +50,7 @@ Whether or not to transition the sizes of the circles when data changes. Default
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -76,10 +72,6 @@ Whether or not to transition the sizes of the circles when data changes. Default
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

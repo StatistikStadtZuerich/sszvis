@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pie Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -29,14 +30,59 @@
     dataPath: 'data/P_7Categories.csv',
     // The title and description of this chart for visually impaired users
     title: '',
-    description: '', 
+    description: '',
     // Data column to use for the categories
     cColumn: 'Kategorie',
     // Data column to use for the values
     vColumn: 'Schweiz Import',
     //View of the chart when interactivity is not available. Does not render mouse interaction when true
     fallback: false
-  }
+  };
+
+   var PIE_DIAMETER = 260;
+   var LEGEND_TOP_PADDING = 40;
+   var LEGEND_LEFT_PADDING = 25;
+   var LEGEND_HEIGHT = 245;
+   var LEGEND_WIDTH = 196;
+
+   var queryProps = sszvis.responsiveProps()
+     .prop('layout', {
+       palm: function(width) {
+         var sidePadding = d3.max([10, (width - PIE_DIAMETER) / 2]);
+         var diameter = (width - 2 * sidePadding);
+         var legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
+         return {
+           bounds: {
+             top: 20,
+             bottom: legendHeight,
+             left: sidePadding,
+             right: sidePadding,
+             height: 20 + diameter + legendHeight
+           },
+           pieRadius: diameter / 2,
+           legendPosition: {
+             top: diameter + LEGEND_TOP_PADDING,
+             left: 0
+           }
+         }
+       },
+       _: {
+         bounds: {
+           top: 20,
+           bottom: 20,
+           left: 20,
+           right: LEGEND_WIDTH,
+           height: 20 + 20 + PIE_DIAMETER
+         },
+         pieRadius: PIE_DIAMETER / 2,
+         legendPosition: {
+           top: PIE_DIAMETER/2 - LEGEND_HEIGHT/2,
+           left: PIE_DIAMETER + LEGEND_LEFT_PADDING
+         }
+       }
+     });
+
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -72,7 +118,9 @@
     hideTooltip: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -97,7 +145,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 300, top: 20, right: 230, bottom: 20, left: 20 });
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.layout.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -119,21 +168,20 @@
       })
       .datum(state.data);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
 
     // Components
 
     var pieMaker = sszvis.component.pie()
-      .radius(d3.min([bounds.innerWidth / 2, bounds.innerHeight / 2]))
+      .radius(props.layout.pieRadius)
       .angle(sszvis.fn.compose(aScale, vAcc))
       .fill(sszvis.fn.compose(cScale, cAcc));
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .rows(state.categories.length)
-      .verticallyCentered(true)
       .orientation('vertical');
 
     var headerText = sszvis.svgUtils.modularText.html()
@@ -154,8 +202,9 @@
       .call(tooltip);
 
     chartLayer.selectGroup('colorLegend')
-      // the magic number y-offset here vertically centers the color legend.
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth + 20, bounds.innerWidth / 2))
+      .attr('transform', function() {
+        return sszvis.svgUtils.translateString(props.layout.legendPosition.left, props.layout.legendPosition.top);
+      })
       .call(colorLegend);
 
 
@@ -165,6 +214,8 @@
       .on('mouseover', actions.showTooltip)
       .on('mouseout',  actions.hideTooltip)
     };
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Grouped Bar Chart – Three Yearly Negative</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -26,6 +27,11 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('bottomPadding', {
+      palm: 124,
+      _: 84
+    });
 
 
   /* Shortcuts
@@ -59,7 +65,9 @@
       state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -85,7 +93,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, bottom: 84 });
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 10, bottom: props.bottomPadding }, '#sszvis-chart');
 
 
     // Scales
@@ -157,6 +166,8 @@
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

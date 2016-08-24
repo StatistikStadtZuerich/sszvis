@@ -15,7 +15,7 @@ Kcode,KName,Altersgruppe,Anzahl
 01,Kreis 1,35-39,497
 01,Kreis 1,45-49,443
 01,Kreis 1,30-34,563
-01,Kreis 1,100 und mehr,0
+01,Kreis 1,100+,0
 01,Kreis 1,90-94,47
 01,Kreis 1,75-79,144
 01,Kreis 1,95-99,14
@@ -27,7 +27,7 @@ Kcode,KName,Altersgruppe,Anzahl
 10,Kreis 10,35-39,3656
 10,Kreis 10,60-64,1730
 10,Kreis 10,40-44,3109
-10,Kreis 10,100 und mehr,5
+10,Kreis 10,100+,5
 10,Kreis 10,90-94,371
 10,Kreis 10,45-49,2835
 10,Kreis 10,0-4,1839
@@ -49,7 +49,7 @@ Kcode,KName,Altersgruppe,Anzahl
 11,Kreis 11,40-44,5030
 11,Kreis 11,75-79,1964
 11,Kreis 11,65-69,2453
-11,Kreis 11,100 und mehr,9
+11,Kreis 11,100+,9
 11,Kreis 11,0-4,3792
 11,Kreis 11,5-9,2808
 11,Kreis 11,15-19,2673
@@ -82,7 +82,7 @@ Kcode,KName,Altersgruppe,Anzahl
 12,Kreis 12,50-54,1750
 12,Kreis 12,5-9,1574
 12,Kreis 12,65-69,1081
-12,Kreis 12,100 und mehr,7
+12,Kreis 12,100+,7
 02,Kreis 2,90-94,386
 02,Kreis 2,80-84,975
 02,Kreis 2,70-74,1082
@@ -91,7 +91,7 @@ Kcode,KName,Altersgruppe,Anzahl
 02,Kreis 2,30-34,3111
 02,Kreis 2,0-4,1647
 02,Kreis 2,60-64,1354
-02,Kreis 2,100 und mehr,19
+02,Kreis 2,100+,19
 02,Kreis 2,50-54,1839
 02,Kreis 2,85-89,784
 02,Kreis 2,95-99,103
@@ -117,7 +117,7 @@ Kcode,KName,Altersgruppe,Anzahl
 03,Kreis 3,70-74,1228
 03,Kreis 3,45-49,3432
 03,Kreis 3,0-4,2727
-03,Kreis 3,100 und mehr,10
+03,Kreis 3,100+,10
 03,Kreis 3,90-94,348
 03,Kreis 3,50-54,2791
 03,Kreis 3,95-99,87
@@ -138,7 +138,7 @@ Kcode,KName,Altersgruppe,Anzahl
 04,Kreis 4,85-89,317
 04,Kreis 4,45-49,2041
 04,Kreis 4,35-39,3137
-04,Kreis 4,100 und mehr,6
+04,Kreis 4,100+,6
 04,Kreis 4,90-94,143
 04,Kreis 4,0-4,1151
 04,Kreis 4,70-74,588
@@ -162,7 +162,7 @@ Kcode,KName,Altersgruppe,Anzahl
 05,Kreis 5,75-79,186
 05,Kreis 5,20-24,880
 05,Kreis 5,65-69,315
-05,Kreis 5,100 und mehr,1
+05,Kreis 5,100+,1
 05,Kreis 5,45-49,1181
 05,Kreis 5,25-29,1725
 05,Kreis 5,90-94,39
@@ -173,7 +173,7 @@ Kcode,KName,Altersgruppe,Anzahl
 06,Kreis 6,30-34,3682
 06,Kreis 6,45-49,2404
 06,Kreis 6,35-39,3108
-06,Kreis 6,100 und mehr,5
+06,Kreis 6,100+,5
 06,Kreis 6,90-94,260
 06,Kreis 6,25-29,3343
 06,Kreis 6,95-99,61
@@ -190,7 +190,7 @@ Kcode,KName,Altersgruppe,Anzahl
 06,Kreis 6,50-54,1912
 07,Kreis 7,85-89,858
 07,Kreis 7,95-99,109
-07,Kreis 7,100 und mehr,13
+07,Kreis 7,100+,13
 07,Kreis 7,80-84,1150
 07,Kreis 7,90-94,510
 07,Kreis 7,35-39,2984
@@ -215,7 +215,7 @@ Kcode,KName,Altersgruppe,Anzahl
 08,Kreis 8,30-34,1803
 08,Kreis 8,90-94,135
 08,Kreis 8,70-74,571
-08,Kreis 8,100 und mehr,7
+08,Kreis 8,100+,7
 08,Kreis 8,60-64,805
 08,Kreis 8,95-99,36
 08,Kreis 8,45-49,1295
@@ -236,7 +236,7 @@ Kcode,KName,Altersgruppe,Anzahl
 09,Kreis 9,30-34,5354
 09,Kreis 9,85-89,1086
 09,Kreis 9,40-44,3675
-09,Kreis 9,100 und mehr,10
+09,Kreis 9,100+,10
 09,Kreis 9,70-74,1924
 09,Kreis 9,0-4,2668
 09,Kreis 9,50-54,3063

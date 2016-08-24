@@ -134,11 +134,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -159,11 +155,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html"]
 }
 ```
 
@@ -185,11 +177,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -211,11 +199,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 640
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -237,11 +221,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -263,11 +243,7 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 640
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -289,10 +265,6 @@ New settlements, topographic maps, and raster maps
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 640
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

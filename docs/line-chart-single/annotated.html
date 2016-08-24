@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Line Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -57,7 +58,9 @@
       });
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -82,7 +85,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 45 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 45 }, '#sszvis-chart');
 
 
     // Scales
@@ -148,6 +151,8 @@
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

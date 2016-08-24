@@ -28,10 +28,6 @@ Configuration should follow the example below. It involves a combination of conf
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 510
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

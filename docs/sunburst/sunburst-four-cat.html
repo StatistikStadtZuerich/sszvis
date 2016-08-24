@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sunburst</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -26,6 +27,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('bottomPadding', {
+      palm: 90,
+      _: 70
+    })
+    .prop('numLegendRows', {
+      palm: 3,
+      _: 2
+    });
 
 
   /* Shortcuts
@@ -85,7 +95,9 @@
       state.selection = [];
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -113,9 +125,10 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 552, top: 20, right: 20, bottom: 80, left: 20 });
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 20, right: 20, bottom: props.bottomPadding, left: 20 }, '#sszvis-chart');
 
-    var burstLayout = sszvis.layout.sunburst.computeLayout(4, bounds.innerWidth);
+    var burstLayout = sszvis.layout.sunburst.computeLayout(4, Math.min(bounds.innerWidth, bounds.innerHeight));
 
 
     // Scales
@@ -150,13 +163,19 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected)
       .header(tooltipText)
       .body(function(d) { return sszvis.format.number(d.value); });
 
+    var numColumns = Math.ceil(colorScale.domain().length / props.numLegendRows);
+    var columnWidth = Math.min(bounds.innerWidth / numColumns, 100);
+    var legendWidth = columnWidth * numColumns;
+
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(colorScale)
-      .rows(2)
+      .columnWidth(columnWidth)
+      .rows(props.numLegendRows)
       .orientation('vertical');
 
 
@@ -170,12 +189,13 @@
       .on('mouseout', actions.onSliceOut);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 30))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 20))
       .call(colorLegend);
 
     sunburstGroup.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

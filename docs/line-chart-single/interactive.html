@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Line chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -71,7 +72,9 @@
     resetDate: function() {
       var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
       actions.changeDate(mostRecentDate);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -96,7 +99,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 3, bottom: 25 });
+    var bounds = sszvis.bounds({ top: 3, bottom: 25 }, '#sszvis-chart');
 
 
     // Scales
@@ -185,6 +188,8 @@
 
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

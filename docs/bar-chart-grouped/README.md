@@ -64,11 +64,7 @@ A predicate function which can be used to determine whether a bar has a defined 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 384
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -88,11 +84,7 @@ A predicate function which can be used to determine whether a bar has a defined 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 440
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -112,11 +104,7 @@ A predicate function which can be used to determine whether a bar has a defined 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 386
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -136,10 +124,6 @@ A predicate function which can be used to determine whether a bar has a defined 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 456
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

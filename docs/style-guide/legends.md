@@ -67,11 +67,7 @@ The maximum width of the horizontal float layout. Default 600px
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 450
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -91,11 +87,7 @@ The maximum width of the horizontal float layout. Default 600px
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 322
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -115,11 +107,7 @@ The maximum width of the horizontal float layout. Default 600px
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 384
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -168,11 +156,7 @@ An optional formatter function for the end labels. Usually should be sszvis.form
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 516
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -217,11 +201,7 @@ A formatter function for the labels of the displayValues.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 372
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -266,10 +246,6 @@ Formatter function for the labels
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 420
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

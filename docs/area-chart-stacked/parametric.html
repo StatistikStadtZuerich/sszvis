@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Area Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -24,28 +25,28 @@
 
   /* Configuration
   ----------------------------------------------- */
-    var config = {
-      // The path to the CSV file containing the data for this chart
-      dataPath: 'data/SA_2Categories_yearly.csv',
-      // The title and description of this chart for visually impaired users
-      title: '',
-      description: '',
-      // Data column to use for the x-axis
-      xColumn: 'Jahr',
-      // Data column to use for the y-axis
-      yColumn: 'Anzahl',
-      // Data column to use for the values
-      cColumn:'Nationalität',
-      // The labels for the x and y-axis. Set to empty ('') to hide the label
-      yAxisLabel: '',
-      xAxisLabel: '',
-      // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
-      xTicks: null,
-      yTicks: null,
-      // Padding between legend and x-axis in pixels. The recommended default is 60px.
-      legendPadding: 60,
-      //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
-      fallback: false
+  var config = {
+    // The path to the CSV file containing the data for this chart
+    dataPath: 'data/SA_2Categories_yearly.csv',
+    // The title and description of this chart for visually impaired users
+    title: '',
+    description: '',
+    // Data column to use for the x-axis
+    xColumn: 'Jahr',
+    // Data column to use for the y-axis
+    yColumn: 'Anzahl',
+    // Data column to use for the values
+    cColumn:'Nationalität',
+    // The labels for the x and y-axis. Set to empty ('') to hide the label
+    yAxisLabel: '',
+    xAxisLabel: '',
+    // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
+    xTicks: null,
+    yTicks: null,
+    // Padding between legend and x-axis in pixels. The recommended default is 60px.
+    legendPadding: 60,
+    //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
+    fallback: false
   };
 
   // This example works in much the same way as the twelve-category stacked area chart.
@@ -131,7 +132,9 @@
     resetDate: function() {
       var mostRecent = d3.max(state.data, xAcc);
       actions.changeDate(mostRecent, 0);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -164,7 +167,7 @@
 
     var colorLegend = flexibleLegend(cScale, state.categories.length)
 
-    var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)});
+    var bounds = sszvis.bounds({ top: 20, bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)}, '#sszvis-chart');
 
 
     // Scales
@@ -186,7 +189,7 @@
       })
       .datum(state.stackedData);
 
-    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart');
+    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
 
 
     // Components
@@ -297,6 +300,8 @@
 
     flagGroup.selectAll('[data-tooltip-anchor]').call(rangeTooltip);
 
+    sszvis.viewport.on('resize', actions.resize);
+
 
     // Interaction
     if (!config.fallback) {
@@ -321,7 +326,7 @@
     return datum - d0 > d1 - datum ? d1 : d0;
   }
 
-    function flexibleLegend(scale, numEntries) {
+  function flexibleLegend(scale, numEntries) {
     var legend = sszvis.legend.ordinalColorScale().scale(scale)
     if (numEntries <= 4) {
       legend.horizontalFloat(true)

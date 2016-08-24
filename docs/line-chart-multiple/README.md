@@ -28,11 +28,7 @@ The multiple line chart uses the same components as the [single line chart](/#/l
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 385
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -54,11 +50,7 @@ Observations for the same variable across many years.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 410
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -80,11 +72,7 @@ Comparison of two datasets with huge differences in values over the same time pe
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 450
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -106,11 +94,7 @@ Using a config object to define chart.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 410
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -132,11 +116,7 @@ Note the use of `.labelId` and `.reduceOverlap(true)` on the ruler component.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 411
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 

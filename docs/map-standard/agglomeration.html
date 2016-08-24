@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -31,87 +32,87 @@
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
 
 
-  /* Shortcuts
-  ----------------------------------------------- */
-  var cAcc = sszvis.fn.prop('category');
-  var vAcc = sszvis.fn.prop('value');
-  var nameAcc = sszvis.fn.prop('name');
-  var mDatumAcc = sszvis.fn.prop('datum');
-  var catName = sszvis.fn.prop('name');
-  var catValue = sszvis.fn.prop('value');
+   /* Shortcuts
+      ----------------------------------------------- */
+   var cAcc = sszvis.fn.prop('category');
+   var vAcc = sszvis.fn.prop('value');
+   var nameAcc = sszvis.fn.prop('name');
+   var mDatumAcc = sszvis.fn.prop('datum');
+   var catName = sszvis.fn.prop('name');
+   var catValue = sszvis.fn.prop('value');
 
 
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    selection: [],
-    valueDomain: [0, 0],
-    binEdges: []
-  };
+   /* Application state
+      ----------------------------------------------- */
+   var state = {
+     data: [],
+     selection: [],
+     valueDomain: [0, 0],
+     binEdges: []
+   };
 
 
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.valueDomain = [d3.min(state.data, vAcc), d3.max(state.data, vAcc)];
-      state.categories = sszvis.cascade()
-        .arrayBy(cAcc)
-        .apply(state.data)
-        .map(function(d) {
-          return {
-            name: cAcc(d[0]),
-            value: d3.min(d, vAcc),
-          }
-        })
-        .sort(function(a, b) {
-          return d3.ascending(catValue(a), catValue(b));
-        });
+   /* State transitions
+      ----------------------------------------------- */
+   var actions = {
+     prepareState: function(data) {
+       state.data = data;
+       state.valueDomain = [d3.min(state.data, vAcc), d3.max(state.data, vAcc)];
+       state.categories = sszvis.cascade()
+                                .arrayBy(cAcc)
+                                .apply(state.data)
+                                .map(function(d) {
+                                  return {
+                                    name: cAcc(d[0]),
+                                    value: d3.min(d, vAcc),
+                                  }
+                                })
+                                .sort(function(a, b) {
+                                  return d3.ascending(catValue(a), catValue(b));
+                                });
 
-      render(state);
-    },
+       render(state);
+     },
 
-    // manage which datum is selected. These data are highlighted by the map.
-    selectHovered: function(d) {
-      state.selection = [d];
-      render(state);
-    },
+     // manage which datum is selected. These data are highlighted by the map.
+     selectHovered: function(d) {
+       state.selection = [d.datum];
+       render(state);
+     },
 
-    deselectHovered: function() {
-      state.selection = [];
-      render(state);
-    }
-  };
+     deselectHovered: function() {
+       state.selection = [];
+       render(state);
+     },
+
+     resize: function() { render(state); }
+   };
 
 
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/agglomeration_2012.csv')
-    .row(function(d) {
-      return {
-        geoId: sszvis.parse.number(d['Nr']),
-        name: d['Gemeinde'],
-        category: d['Klasse'],
-        value: sszvis.parse.number(d['Wert'])
-      };
-    })
-    .get(function(error, data) {
-      if (error) {
-        sszvis.loadError(error);
-        return;
-      }
-      actions.prepareState(data);
+   /* Data initialization
+      ----------------------------------------------- */
+   d3.csv('data/agglomeration_2012.csv')
+     .row(function(d) {
+       return {
+         geoId: sszvis.parse.number(d['Nr']),
+         name: d['Gemeinde'],
+         category: d['Klasse'],
+         value: sszvis.parse.number(d['Wert'])
+       };
+     })
+     .get(function(error, data) {
+       if (error) {
+         sszvis.loadError(error);
+         return;
+       }
+       actions.prepareState(data);
     });
 
 
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    // The map should use the whole width. We make it 730px high in order to
-    // achieve this optimal fit.
-    var bounds = sszvis.bounds({ height: 730, top: 30, bottom: 110 });
+    var bounds = sszvis.bounds({ top: 10, bottom: 64 }, '#sszvis-chart');
 
 
     // Scales
@@ -131,7 +132,7 @@
       })
       .datum(state.data);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
 
@@ -141,13 +142,11 @@
       .highlight(state.selection)
       // gets the fill color and darken it
       .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
+      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
+      .highlightStrokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width) + 1)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc))
-      // add mouse/touch interaction
-      .on('over', actions.selectHovered)
-      .on('click', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      .fill(sszvis.fn.compose(colorScale, vAcc));
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .bold(sszvis.fn.compose(nameAcc, mDatumAcc));
@@ -170,12 +169,15 @@
       .body(tooltipBody)
       .visible(isSelected);
 
+    var numColumns = 3;
+    var columnWidth = Math.min(bounds.innerWidth / numColumns, 100);
+
     var legend = sszvis.legend.ordinalColorScale()
       .scale(categoryColorScale)
       .orientation('vertical')
-      .rows(state.categories.length / 3)
-      .columnWidth(bounds.innerWidth / 3)
-      .columns(3)
+      .rows(state.categories.length / numColumns)
+      .columnWidth(columnWidth)
+      .columns(numColumns);
 
 
     // Rendering
@@ -186,8 +188,22 @@
       .call(tooltip);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - (columnWidth * numColumns)) / 2, bounds.innerHeight + 20))
       .call(legend);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    chartLayer
+      .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

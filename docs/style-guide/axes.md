@@ -37,11 +37,7 @@ The x-axis covers the x-dimension, both placement and width
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 622
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -63,11 +59,7 @@ This x-axis displays time values
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 365
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -89,11 +81,7 @@ This x-axis displays ordinal categories
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 470
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -115,11 +103,7 @@ The x-axis title is centered because there are two y-axes. In addition, the tick
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 450
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -141,11 +125,7 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 410
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -167,11 +147,7 @@ The y-axis convers the y-dimension, both placement and height. Note also that ss
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 318
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -193,11 +169,7 @@ By default, sszvis y-axes don't show a label at 0. Since values go negative in t
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 440
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -219,11 +191,7 @@ This y-axis shows ordinal categories
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 645
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -245,11 +213,7 @@ Sometimes, the axis labels are long enough that they will overlap their neighbor
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 353
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -271,11 +235,7 @@ This x-axis (with a 'top' orientation) has a diagonal slant
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 800
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -301,11 +261,7 @@ This x-axis has a diagonal slant. Here are the guidelines for changing the slant
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 430
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -327,11 +283,7 @@ Contours are used to make labels stand out, especially when they are positioned 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 380
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -353,10 +305,6 @@ This x-axis displays the use of the tickLength property to create ticks which ex
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 613
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

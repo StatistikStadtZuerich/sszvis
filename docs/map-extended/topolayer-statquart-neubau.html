@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -74,7 +75,9 @@
     deselectHovered: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -116,9 +119,7 @@
       return true;
     }
 
-    // Padding
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+    var bounds = sszvis.bounds('#sszvis-chart');
 
 
     // Scales
@@ -203,6 +204,8 @@
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

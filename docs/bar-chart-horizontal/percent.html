@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Horizontal Bar Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -57,7 +58,9 @@
     selectTickType: function(type) {
       state.tickType = type;
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -84,7 +87,7 @@
   ----------------------------------------------- */
   function render(state) {
     var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.categories.length);
-    var bounds = sszvis.bounds({ height: 80 + chartDimensions.totalHeight + 25, top: 80, bottom: 25 });
+    var bounds = sszvis.bounds({ height: 80 + chartDimensions.totalHeight + 25, top: 80, bottom: 25 }, '#sszvis-chart');
 
 
     // Scales
@@ -106,7 +109,7 @@
       })
       .datum(state.data);
 
-    var controlLayer = sszvis.createHtmlLayer('#sszvis-chart');
+    var controlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
 
 
     // Components
@@ -155,6 +158,8 @@
       .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
       .style('top', 16 + 'px')
       .call(buttonGroup);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

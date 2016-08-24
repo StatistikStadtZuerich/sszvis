@@ -66,11 +66,7 @@ Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 430
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -92,10 +88,6 @@ Eight layers of values, with tooltips.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 470
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

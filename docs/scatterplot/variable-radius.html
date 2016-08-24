@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Scatterplot</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -75,7 +76,9 @@
     resetHighlight: function() {
       state.highlightData = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -102,7 +105,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 20, bottom: 110 });
+    var bounds = sszvis.bounds({ top: 20, bottom: 110 }, '#sszvis-chart');
 
 
     // Scales
@@ -134,7 +137,7 @@
       })
       .datum(state.data);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.highlightData);
 
 
@@ -216,13 +219,15 @@
     var mouseOverlay = sszvis.behavior.voronoi()
       .x(xValue)
       .y(yValue)
-      .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
+      .bounds([[0, 0], [bounds.innerWidth, bounds.innerHeight]])
       .on('over', actions.setHighlight)
       .on('out', actions.resetHighlight);
 
     chartLayer.selectGroup('voronoiMouse')
       .datum(state.voronoiFiltered)
       .call(mouseOverlay);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

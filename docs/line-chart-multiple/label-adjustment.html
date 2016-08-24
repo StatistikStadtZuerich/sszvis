@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Multiple Line Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -42,7 +43,17 @@
     ticks: 5,
     fallback: false, //optional, creates long ticks when true
     targetElement: arbeitsloseParams.id
-  }
+  };
+  var queryProps = sszvis.responsiveProps()
+    .breakpoints([
+      { name: 'small', width: 280 },
+      { name: 'narrow', width: 516 },
+    ])
+    .prop('bottomPadding', {
+      small: 130,
+      narrow: 110,
+      _: 90
+    });
 
 
   if (sszvis.fallback.unsupported()) {
@@ -106,7 +117,9 @@
       // Find the most recent date in the data and set it as the selected date
       var mostRecentDate = d3.max(state.data, xAcc);
       actions.changeDate(mostRecentDate);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -133,13 +146,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-
-    var w = 516;
-    var ih = w*(9/16);
-    var t = 30;
-    var b = 90;
-    var h = ih+t+b;
-    var bounds = sszvis.bounds({ top: t, bottom: b, height: h});
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, '#sszvis-chart');
 
     // Scales
     var xScale = d3.time.scale()
@@ -231,9 +239,11 @@
       .labelId(cAcc)
       .reduceOverlap(true);
 
+    // Because we use the horizontalFloat layout, this legend will fit within its bounds
     var cLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .horizontalFloat(true);
+      .horizontalFloat(true)
+      .floatWidth(bounds.innerWidth);
 
 
     // Rendering
@@ -276,6 +286,7 @@
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
 
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

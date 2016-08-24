@@ -20,6 +20,7 @@ CLI_RESET   = \033[0m
 BUILD_TARGET = sszvis.js
 
 VENDOR_FILES = \
+	vendor/d3-iecompat/d3-iecompat.js \
 	vendor/d3-component/d3-component.js \
 	vendor/d3-de/d3-de.js \
 	vendor/d3-selectgroup/d3-selectgroup.js \
@@ -30,6 +31,8 @@ VENDOR_FILES = \
 SOURCE_FILES = \
 	sszvis/fn.js \
 	sszvis/axis.js \
+	sszvis/aspectRatio.js \
+	sszvis/breakpoint.js \
 	sszvis/bounds.js \
 	sszvis/cascade.js \
 	sszvis/color.js \
@@ -41,6 +44,7 @@ SOURCE_FILES = \
 	sszvis/logger.js \
 	sszvis/parse.js \
 	sszvis/patterns.js \
+	sszvis/responsiveProps.js \
 	sszvis/scale.js \
 	sszvis/test.js \
 	sszvis/transition.js \
@@ -53,6 +57,8 @@ SOURCE_FILES = \
 	sszvis/annotation/tooltip.js \
 	sszvis/annotation/tooltipAnchor.js \
 	sszvis/behavior/move.js \
+	sszvis/behavior/panning.js \
+	sszvis/behavior/util.js \
 	sszvis/behavior/voronoi.js \
 	sszvis/component/bar.js \
 	sszvis/component/dot.js \
@@ -95,7 +101,8 @@ SOURCE_FILES = \
 	sszvis/svgUtils/ensureDefsElement.js \
 	sszvis/svgUtils/modularText.js \
 	sszvis/svgUtils/textWrap.js \
-	sszvis/svgUtils/translateString.js
+	sszvis/svgUtils/translateString.js \
+	sszvis/viewport/resize.js
 
 section = docs/banner/_section.js $(1)
 VENDOR_FILES_SEP = $(foreach file, $(VENDOR_FILES), $(call section, $(file)))
@@ -122,7 +129,7 @@ CENTER_DATA = geodata/centers.csv
 
 all: server
 
-build:
+build: Makefile
 	@cat \
 		docs/banner/_index.js \
 		docs/banner/_vendor.js \
@@ -135,11 +142,12 @@ build:
 server: build
 	@browser-sync start \
 	  --server \
+	  --files="Makefile" \
 		--files=$(BUILD_TARGET) \
 		--files="index.html" \
 		--files="sszvis.css" \
 		--files="docs/**/*" \
-		& fswatch -0 -o sszvis/ -o vendor/ | xargs -0 -n1 -I{} make build
+		& fswatch -0 -o sszvis/ -o vendor/ -o Makefile | xargs -0 -n1 -I{} make build
 
 
 deploy: build

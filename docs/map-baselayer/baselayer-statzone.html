@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -36,6 +37,13 @@
   var state = {};
 
 
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    resize: function() { render(state); }
+  }
+
+
   /* Initialize
   ----------------------------------------------- */
   // Because no data needs to be loaded, here we just render the Application
@@ -45,8 +53,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 30, right: padding, bottom: 30, left: padding });
+    var bounds = sszvis.bounds('#sszvis-chart');
 
 
     // Layers
@@ -68,6 +75,8 @@
     // Rendering
 
     chartLayer.call(mapMaker);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, topojson, sszvis));

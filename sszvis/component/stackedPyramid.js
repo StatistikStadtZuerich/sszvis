@@ -17,6 +17,9 @@
  * @property {number, d3.scale} barHeight          The height of a bar
  * @property {number, d3.scale} barWidth           The width of a bar
  * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {Array<number, number>} tooltipAnchor The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
+ *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
+ *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars
  * @property {function}         leftAccessor       Data for the left side
  * @property {function}         rightAccessor      Data for the right side
  * @property {function}         [leftRefAccessor]  Reference data for the left side
@@ -40,6 +43,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
       .prop('barFill', d3.functor).barFill('#000')
+      .prop('tooltipAnchor').tooltipAnchor([0.5, 0.5])
       .prop('leftAccessor')
       .prop('rightAccessor')
       .prop('leftRefAccessor')
@@ -61,7 +65,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var rightBar = sszvis.component.bar()
           .x(function(d){ return SPINE_PADDING + d.y0; })
@@ -69,7 +73,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var leftStack = stackComponent()
           .stackElement(leftBar);

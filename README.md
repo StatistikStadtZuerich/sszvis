@@ -12,6 +12,8 @@ This library doesn't have any outside dependencies and doesn't require any speci
 
 To simplify development, we use GNU Make and some helpful libraries on Mac OS X. If you need to develop on another system, check the `Makefile` for the list of files that need to be concatenated.
 
+We use IxT's styleguide generator, Catalog, in development to show off charts in progress. Catalog, and a special project plugin for SSZVIS, are included as dependencies in the vender folder. As of this writing (9/8/16), the current version of Catalog used is 2.4.0, and the current version of the ProjectSpecimen Catalog plugin is 1.1.0
+
 ## Installation
 
 If you want to use the build system we have put in place, make sure you have the following software installed.

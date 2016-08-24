@@ -49,11 +49,7 @@ The caption for the data area. (default position is the center of the circle).
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 365
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -108,11 +104,7 @@ The caption for the data area. (default position is the center of the rectangle)
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 420
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -173,11 +165,7 @@ A reference line caption. (default position is centered at the midpoint of the l
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 394
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -232,11 +220,7 @@ A boolean or function which returns a boolean that specifies whether the labels 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 385
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -311,10 +295,6 @@ A value for the y-value of the upper range flag dot
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 454
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

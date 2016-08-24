@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Multiple Line Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -84,7 +85,9 @@
       // Find the most recent date in the data and set it as the selected date
       var mostRecentDate = d3.max(state.data, xAcc);
       actions.changeDate(mostRecentDate);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -110,7 +113,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 5, bottom: 90 });
+    var bounds = sszvis.bounds({ top: 5, bottom: 90 }, '#sszvis-chart');
 
 
     // Scales
@@ -214,6 +217,7 @@
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
 
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

@@ -48,11 +48,7 @@ To clip the contents of the chart to chart boundaries (useful for scatterplots w
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 394
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -74,11 +70,7 @@ Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 420
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -98,10 +90,6 @@ Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 460
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

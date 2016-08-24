@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -83,7 +84,9 @@
     deselectHovered: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -110,9 +113,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    // Padding
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 542, top: 60, right: padding, bottom: 0, left: padding });
+    var bounds = sszvis.bounds('#sszvis-chart');
 
 
     // Scales
@@ -144,6 +145,7 @@
     var anchoredShape = sszvis.map.anchoredCircles()
       .fill('rgb(81, 130, 179)')
       .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : radiusScale(birthsAcc(d)); })
+      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
       .on('over', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
@@ -152,6 +154,7 @@
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(function(d) { return isSelected(d) ? sszvis.color.dimGry()(0) : sszvis.color.gry()(0) })
+      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
       .transitionColor(false)
       .anchoredShape(anchoredShape)
       .on('over', actions.selectHovered)
@@ -195,6 +198,8 @@
       .style('left', (bounds.innerWidth - control.width()) / 2 + 'px')
       .style('top', '-40px')
       .call(control);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

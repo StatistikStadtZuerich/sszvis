@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Scatterplot</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -26,6 +27,18 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .breakpoints([
+      { name: 'small', width: 510 }
+    ])
+    .prop('numLegendRows', {
+      small: 7,
+      _: 4
+    })
+    .prop('bottomPadding', {
+      small: 400,
+      _: 200
+    });
 
 
   /* Shortcuts
@@ -124,7 +137,9 @@
       state.selection = [];
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -151,7 +166,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, right: 5, bottom: 210, left: 5 });
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 10, right: 5, bottom: props.bottomPadding, left: 5 }, '#sszvis-chart');
 
 
     // Scales
@@ -248,14 +264,19 @@
       })
       .contour(true);
 
+    var numColumns = Math.ceil(cScale.domain().length / props.numLegendRows);
+    var columnWidth = Math.min(Math.max(bounds.innerWidth / numColumns, 260), 350);
+    var legendWidth = columnWidth * numColumns;
+
     var cLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .orientation("vertical")
-      .rows(4)
-      .columnWidth(bounds.innerWidth / 2);
+      .rows(props.numLegendRows)
+      .columnWidth(columnWidth);
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected)
       .header(sszvis.svgUtils.modularText.html().bold(branchAcc))
       .body(function(d) {
@@ -309,8 +330,10 @@
       .call(slider);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 122))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 122))
       .call(cLegend);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function closestDatum(data, accessor, datum) {

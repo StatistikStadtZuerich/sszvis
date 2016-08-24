@@ -2,6 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Vertical Bar Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -20,7 +22,7 @@
     return;
   }
 
-    /* Globals 
+    /* Globals
  ------------------------------------------------*/
  var DEFAULT_TITLE = 'Diagrammtitel';
  var DEFAULT_DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
@@ -80,7 +82,9 @@
     hideTooltip: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -105,7 +109,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 50 });
+    var bounds = sszvis.bounds({ top: 30, bottom: 50 }, '#sszvis-chart');
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
     // Scales
@@ -131,7 +135,7 @@
       })
       .datum(state.data);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
     // Components
@@ -140,6 +144,7 @@
       .y(sszvis.fn.compose(yPosScale, yAcc))
       .width(chartDimensions.barWidth)
       .height(sszvis.fn.compose(heightScale, yAcc))
+      .centerTooltip(true)
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
       });
@@ -166,6 +171,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .header(tooltipTitle)
       .body(yAcc)
       .visible(isSelected);
@@ -189,6 +195,8 @@
     bars.selectAll('.sszvis-bar')
       .on('mouseover', actions.showTooltip)
       .on('mouseout', actions.hideTooltip);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

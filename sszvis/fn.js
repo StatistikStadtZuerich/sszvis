@@ -89,18 +89,6 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.isNull
-     *
-     * determines if the passed value is null.
-     *
-     * @param {*} val the value to check
-     * @return {Boolean}     true if the value is null, false if the value is not null
-     */
-    isNull: function(val) {
-        return val === null;
-    },
-
-    /**
      * fn.derivedSet
      *
      * fn.derivedSet is used to create sets of objects from an input array. The objects are
@@ -130,25 +118,6 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.find
-     *
-     * given a predicate function and a list, returns the first value
-     * in the list such that the predicate function returns true
-     * when passed that value.
-     *
-     * @param  {Function} predicate A predicate function to be called on elements in the list
-     * @param  {Array} list      An array in which to search for a truthy predicate value
-     * @return {*}           the first value in the array for which the predicate returns true.
-     */
-    find: function(predicate, list) {
-      var idx = -1;
-      var len = list.length;
-      while (++idx < len) {
-        if (predicate(list[idx])) return list[idx];
-      }
-    },
-
-    /**
      * fn.filledArray
      *
      * returns a new array with length `len` filled with `val`
@@ -163,6 +132,25 @@ sszvis_namespace('sszvis.fn', function(module) {
         arr[i] = val;
       }
       return arr;
+    },
+
+    /**
+     * fn.find
+     *
+     * Finds the first occurrence of an element in an array that passes the predicate function
+     *
+     * @param {function} predicate A function that is run on each array element and returns a boolean
+     * @param {array} arr An array
+     *
+     * @returns {arrayElement|undefined}
+     */
+    find: function(predicate, arr) {
+      for (var i = 0; i < arr.length; i++) {
+        if (predicate(arr[i])) {
+          return arr[i];
+        }
+      }
+      return undefined;
     },
 
     /**
@@ -188,6 +176,28 @@ sszvis_namespace('sszvis.fn', function(module) {
      * @return {Array}        A flattened Array
      */
     flatten: function(arr) { return Array.prototype.concat.apply([], arr); },
+
+    /**
+     * fn.firstTouch
+     *
+     * Used to retrieve the first touch from a touch event. Note that in some
+     * cases, the touch event doesn't have any touches in the event.touches list,
+     * but it does have some in the event.changedTouches list (notably the touchend
+     * event works like this).
+     * 
+     * @param  {TouchEvent} event   The TouchEvent object from which to retrieve the
+     *                              first Touch object.
+     * @return {Touch|null}         The first Touch object from the TouchEvent's lists
+     *                              of touches.
+     */
+    firstTouch: function(event) {
+      if (event.touches && event.touches.length) {
+        return event.touches[0];
+      } else if (event.changedTouches && event.changedTouches.length) {
+        return event.changedTouches[0];
+      }
+      return null;
+    },
 
     /**
      * fn.hashableSet
@@ -235,6 +245,84 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.isFunction
+     *
+     * Determines if the passed value is a function
+     *
+     * @param {*} val the value to check
+     * @return {Boolean} true if the value is a function, false otherwise
+     */
+    isFunction: function(val) {
+      return typeof val == 'function';
+    },
+
+    /**
+     * fn.isNull
+     *
+     * determines if the passed value is null.
+     *
+     * @param {*} val the value to check
+     * @return {Boolean}     true if the value is null, false if the value is not null
+     */
+    isNull: function(val) {
+        return val === null;
+    },
+
+    /**
+     * fn.isNumber
+     *
+     * determine whether the value is a number
+     * 
+     * @param  {*}  val     The value to check
+     * @return {Boolean}    Whether the value is a number
+     */
+    isNumber: function(val) {
+        return Object.prototype.toString.call(val) === '[object Number]';
+    },
+
+    /**
+     * fn.isObject
+     *
+     * determines if the passed value is of an "object" type, or if it is something else,
+     * e.g. a raw number, string, null, undefined, NaN, something like that.
+     * 
+     * @param  {*}  value      The value to test
+     * @return {Boolean}       Whether the value is an object
+     */
+    isObject: function(val) {
+        return Object(val) === val;
+    },
+
+    /**
+     * fn.isSelection
+     *
+     * determine whether the value is a d3.selection.
+     * 
+     * @param  {*}  val         The value to check
+     * @return {Boolean}        Whether the value is a d3.selection
+     */
+    isSelection: function(val) {
+      // We can't use this because we need to support IE9:
+      // return val instanceof d3.selection;
+      //
+      // We're using a property that is added by our own compatibility
+      // library in vendor/d3-iecompat.
+      return val.isD3Selection;
+    },
+
+    /**
+     * fn.isString
+     *
+     * determine whether the value is a string
+     * 
+     * @param  {*}  val       The value to check
+     * @return {Boolean}      Whether the value is a string
+     */
+    isString: function(val) {
+        return Object.prototype.toString.call(val) === '[object String]';
+    },
+
+    /**
      * fn.last
      *
      * Returns the last value in the passed array, or undefined if the array is empty
@@ -244,6 +332,38 @@ sszvis_namespace('sszvis.fn', function(module) {
      */
     last: function(arr) {
       return arr[arr.length - 1];
+    },
+
+        /**
+     * fn.measureDimensions
+     *
+     * Calculates the width of the first DOM element defined by a CSS selector string,
+     * a DOM element reference, or a d3 selection. If the DOM element can't be
+     * measured `undefined` is returned for the width. Returns also measurements of
+     * the screen, which are used by some responsive components.
+     *
+     * @param  {string|DOMElement|d3.selection} el The element to measure
+     *
+     * @return {Object} The measurement of the width of the element, plus dimensions of the screen
+     *                  The returned object contains:
+     *                      width: {number|undefined} The width of the element
+     *                      screenWidth: {number} The innerWidth of the screen
+     *                      screenHeight: {number} The innerHeight of the screen
+     */
+    measureDimensions: function(arg) {
+      var node;
+      if (sszvis.fn.isString(arg)) {
+        node = d3.select(arg).node();
+      } else if (sszvis.fn.isSelection(arg)) {
+        node = arg.node();
+      } else {
+        node = arg;
+      }
+      return {
+        width: node ? node.getBoundingClientRect().width : undefined,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+      };
     },
 
     /**

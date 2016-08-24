@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Population Pyramid</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -166,7 +167,9 @@ var config = {
     deselectBar: function() {
       state.selectedAge = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -192,16 +195,17 @@ var config = {
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var defaultHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO;
-    var pyramidDimensions = sszvis.layout.populationPyramidLayout(defaultHeight, state.ages.length);
-    var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 86, top: 25, bottom: 86 });
+    var pyramidWidth = sszvis.fn.measureDimensions('#sszvis-chart').width;
+    var pyramidDimensions = sszvis.layout.populationPyramidLayout(pyramidWidth, state.ages.length);
+    var chartPadding = { top: 25, bottom: 86 };
+    var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
 
 
     // Scales
 
     var lengthScale = d3.scale.linear()
       .domain([0, state.maxValue])
-      .range([0, bounds.innerWidth / 2]);
+      .range([0, pyramidDimensions.maxBarLength]);
 
     var colorScale = sszvis.color.qual6()
       .domain(state.groups);
@@ -227,7 +231,7 @@ var config = {
     })
       .datum(state.populations);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selectedAge);
 
 
@@ -241,6 +245,7 @@ var config = {
       .barPosition(sszvis.fn.compose(positionScale, aAcc))
       .barHeight(pyramidDimensions.barHeight)
       .barWidth(sszvis.fn.compose(lengthScale, vAcc))
+      .tooltipAnchor([0.0, 0.5])
       .leftAccessor(sszvis.fn.prop(config.leftCategory))
       .rightAccessor(sszvis.fn.prop(config.rightCategory));
 
@@ -275,7 +280,7 @@ var config = {
         });
         return rows.concat([[config.yAxisLabel, state.selectedAge.age]]);
       })
-      .orientation('left')
+      .orientation('bottom')
       .visible(function(d) {
         return state.selectedAge.age === aAcc(d) && cAcc(d) === config.rightCategory;
       });
@@ -302,6 +307,8 @@ var config = {
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
       .call(colorLegend);
+
+    sszvis.viewport.on('resize', actions.resize);
 
 
     // Interaction

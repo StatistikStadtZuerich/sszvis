@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>sszvis TIMESTAMP</title>
   <script src="vendor/catalog/catalog.min.js"></script>
-<!--   <script src="vendor/jszip/jszip.js"></script> -->
+  <script src="vendor/jszip/jszip.js"></script>
   <script src="vendor/catalog/ProjectSpecimen.js"></script>
 </head>
 <body>
@@ -14,7 +15,13 @@
     Catalog.render({
       title: 'Statistik Stadt Zürich',
       styles: ['sszvis.css'],
-      specimens: {project: ProjectSpecimen},
+      specimens: {project: ProjectSpecimen({
+        sizes: [
+          {width: '750px', height: '600px'},
+          {width: '541px', height: '500px'},
+          {width: '284px', height: '500px'}
+        ]
+      })},
       theme: {
         background: '#fdfdfd',
         brandColor: '#0070bc',

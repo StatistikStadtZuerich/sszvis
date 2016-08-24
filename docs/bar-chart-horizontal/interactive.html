@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Horizontal Bar Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -75,7 +76,9 @@
     hideTooltip: function() {
       state.selected = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -102,7 +105,7 @@
   ----------------------------------------------- */
   function render(state) {
     var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.categories.length);
-    var bounds = sszvis.bounds({ height: 60 + chartDimensions.totalHeight + 33, top: 68, bottom: 25 });
+    var bounds = sszvis.bounds({ height: 60 + chartDimensions.totalHeight + 33, top: 68, bottom: 25 }, '#sszvis-chart');
 
 
     // Scales
@@ -126,9 +129,9 @@
       })
       .datum(state.selectedData);
 
-    var controlLayer = sszvis.createHtmlLayer('#sszvis-chart');
+    var controlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selected);
 
 
@@ -139,6 +142,7 @@
       .y(sszvis.fn.compose(yScale, yAcc))
       .width(sszvis.fn.compose(widthScale, xAcc))
       .height(chartDimensions.barHeight)
+      .centerTooltip(true)
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
       });
@@ -168,6 +172,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .header(tooltipHeader)
       .visible(isSelected);
 
@@ -207,6 +212,7 @@
     chartLayer.selectGroup('interaction')
       .call(interactionLayer);
 
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

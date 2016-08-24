@@ -32,6 +32,28 @@
   'use strict';
 
   /**
+   * Internet Explorer 9 does not work with instanceof checks on
+   * d3 selections, i.e. `d3.select(body) instanceof d3.selection`.
+   * We need this functionality in order to wrap plain DOM nodes
+   * into d3.selections in some cases.
+   *
+   * What this solution does is add a global property to all
+   * selection's prototypes that can also be checked in IE9.
+   *
+   * @see http://stackoverflow.com/a/33236441/84816
+   */
+  d3.selection.prototype.isD3Selection = true;
+
+}(d3));
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+(function(d3) {
+  'use strict';
+
+  /**
    * d3 plugin to simplify creating reusable charts. Implements
    * the reusable chart interface and can thus be used interchangeably
    * with any other reusable charts.
@@ -582,18 +604,6 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.isNull
-     *
-     * determines if the passed value is null.
-     *
-     * @param {*} val the value to check
-     * @return {Boolean}     true if the value is null, false if the value is not null
-     */
-    isNull: function(val) {
-        return val === null;
-    },
-
-    /**
      * fn.derivedSet
      *
      * fn.derivedSet is used to create sets of objects from an input array. The objects are
@@ -623,25 +633,6 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
-     * fn.find
-     *
-     * given a predicate function and a list, returns the first value
-     * in the list such that the predicate function returns true
-     * when passed that value.
-     *
-     * @param  {Function} predicate A predicate function to be called on elements in the list
-     * @param  {Array} list      An array in which to search for a truthy predicate value
-     * @return {*}           the first value in the array for which the predicate returns true.
-     */
-    find: function(predicate, list) {
-      var idx = -1;
-      var len = list.length;
-      while (++idx < len) {
-        if (predicate(list[idx])) return list[idx];
-      }
-    },
-
-    /**
      * fn.filledArray
      *
      * returns a new array with length `len` filled with `val`
@@ -656,6 +647,25 @@ sszvis_namespace('sszvis.fn', function(module) {
         arr[i] = val;
       }
       return arr;
+    },
+
+    /**
+     * fn.find
+     *
+     * Finds the first occurrence of an element in an array that passes the predicate function
+     *
+     * @param {function} predicate A function that is run on each array element and returns a boolean
+     * @param {array} arr An array
+     *
+     * @returns {arrayElement|undefined}
+     */
+    find: function(predicate, arr) {
+      for (var i = 0; i < arr.length; i++) {
+        if (predicate(arr[i])) {
+          return arr[i];
+        }
+      }
+      return undefined;
     },
 
     /**
@@ -681,6 +691,28 @@ sszvis_namespace('sszvis.fn', function(module) {
      * @return {Array}        A flattened Array
      */
     flatten: function(arr) { return Array.prototype.concat.apply([], arr); },
+
+    /**
+     * fn.firstTouch
+     *
+     * Used to retrieve the first touch from a touch event. Note that in some
+     * cases, the touch event doesn't have any touches in the event.touches list,
+     * but it does have some in the event.changedTouches list (notably the touchend
+     * event works like this).
+     * 
+     * @param  {TouchEvent} event   The TouchEvent object from which to retrieve the
+     *                              first Touch object.
+     * @return {Touch|null}         The first Touch object from the TouchEvent's lists
+     *                              of touches.
+     */
+    firstTouch: function(event) {
+      if (event.touches && event.touches.length) {
+        return event.touches[0];
+      } else if (event.changedTouches && event.changedTouches.length) {
+        return event.changedTouches[0];
+      }
+      return null;
+    },
 
     /**
      * fn.hashableSet
@@ -728,6 +760,84 @@ sszvis_namespace('sszvis.fn', function(module) {
     },
 
     /**
+     * fn.isFunction
+     *
+     * Determines if the passed value is a function
+     *
+     * @param {*} val the value to check
+     * @return {Boolean} true if the value is a function, false otherwise
+     */
+    isFunction: function(val) {
+      return typeof val == 'function';
+    },
+
+    /**
+     * fn.isNull
+     *
+     * determines if the passed value is null.
+     *
+     * @param {*} val the value to check
+     * @return {Boolean}     true if the value is null, false if the value is not null
+     */
+    isNull: function(val) {
+        return val === null;
+    },
+
+    /**
+     * fn.isNumber
+     *
+     * determine whether the value is a number
+     * 
+     * @param  {*}  val     The value to check
+     * @return {Boolean}    Whether the value is a number
+     */
+    isNumber: function(val) {
+        return Object.prototype.toString.call(val) === '[object Number]';
+    },
+
+    /**
+     * fn.isObject
+     *
+     * determines if the passed value is of an "object" type, or if it is something else,
+     * e.g. a raw number, string, null, undefined, NaN, something like that.
+     * 
+     * @param  {*}  value      The value to test
+     * @return {Boolean}       Whether the value is an object
+     */
+    isObject: function(val) {
+        return Object(val) === val;
+    },
+
+    /**
+     * fn.isSelection
+     *
+     * determine whether the value is a d3.selection.
+     * 
+     * @param  {*}  val         The value to check
+     * @return {Boolean}        Whether the value is a d3.selection
+     */
+    isSelection: function(val) {
+      // We can't use this because we need to support IE9:
+      // return val instanceof d3.selection;
+      //
+      // We're using a property that is added by our own compatibility
+      // library in vendor/d3-iecompat.
+      return val.isD3Selection;
+    },
+
+    /**
+     * fn.isString
+     *
+     * determine whether the value is a string
+     * 
+     * @param  {*}  val       The value to check
+     * @return {Boolean}      Whether the value is a string
+     */
+    isString: function(val) {
+        return Object.prototype.toString.call(val) === '[object String]';
+    },
+
+    /**
      * fn.last
      *
      * Returns the last value in the passed array, or undefined if the array is empty
@@ -737,6 +847,38 @@ sszvis_namespace('sszvis.fn', function(module) {
      */
     last: function(arr) {
       return arr[arr.length - 1];
+    },
+
+        /**
+     * fn.measureDimensions
+     *
+     * Calculates the width of the first DOM element defined by a CSS selector string,
+     * a DOM element reference, or a d3 selection. If the DOM element can't be
+     * measured `undefined` is returned for the width. Returns also measurements of
+     * the screen, which are used by some responsive components.
+     *
+     * @param  {string|DOMElement|d3.selection} el The element to measure
+     *
+     * @return {Object} The measurement of the width of the element, plus dimensions of the screen
+     *                  The returned object contains:
+     *                      width: {number|undefined} The width of the element
+     *                      screenWidth: {number} The innerWidth of the screen
+     *                      screenHeight: {number} The innerHeight of the screen
+     */
+    measureDimensions: function(arg) {
+      var node;
+      if (sszvis.fn.isString(arg)) {
+        node = d3.select(arg).node();
+      } else if (sszvis.fn.isSelection(arg)) {
+        node = arg.node();
+      } else {
+        node = arg;
+      }
+      return {
+        width: node ? node.getBoundingClientRect().width : undefined,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+      };
     },
 
     /**
@@ -1334,11 +1476,392 @@ sszvis_namespace('sszvis.axis', function(module) {
 
 
 /**
+ * Functions related to aspect ratio calculations. An "auto" function is
+ * provided and should be used in most cases to find the recommended
+ * aspect ratio.
+ *
+ * @module sszvis/aspectRatio
+ */
+sszvis_namespace('sszvis.aspectRatio', function(module) {
+  'use strict';
+
+  /**
+   * aspectRatio
+   *
+   * The base module is a function which creates an aspect ratio function.
+   * You provide a width and a height of the aspect ratio, and the
+   * returned function accepts any width, returning the corresponding
+   * height for the aspect ratio you configured.
+   *
+   * @param {Number} x  The number of parts on the horizontal axis (dividend)
+   * @param {Number} y  The number of parts on the vertical axis (divisor)
+   * @return {Function} The aspect ratio function. Takes a width as an argument
+   *                    and returns the corresponding height based on the
+   *                    aspect ratio defined by x:y.
+   */
+  function aspectRatio(x, y) {
+    var ar = x / y;
+    return function(width) { return width / ar; };
+  };
+
+  /**
+   * aspectRatio.ar4to3
+   *
+   * Recommended breakpoints:
+   *   - palm
+   *
+   * @param {Number} width
+   * @returns {Number} height
+   */
+  var ar4to3 = aspectRatio(4, 3);
+
+  /**
+   * aspectRatio.ar16to10
+   *
+   * Recommended breakpoints:
+   *   - lap
+   *
+   * @param {Number} width
+   * @returns {Number} height
+   */
+  var ar16to10 = aspectRatio(16, 10);
+
+  /**
+   * aspectRatio.ar12to5
+   *
+   * Recommended breakpoints:
+   *   - desk
+   *
+   * @param {Number} width
+   * @returns {Number} height
+   */
+  var ar12to5 = aspectRatio(12, 5);
+
+  /**
+   * aspectRatio.square
+   *
+   * This aspect ratio constrains the returned height to a maximum of 420px.
+   * It is recommended to center charts within this aspect ratio.
+   *
+   * Recommended breakpoints:
+   *   - palm
+   *   - lap
+   *   - desk
+   *
+   * @param {Number} width
+   * @returns {Number} height
+   */
+  var square = function(width) {
+    return d3.min([420, aspectRatio(1, 1)(width)]);
+  };
+
+  /**
+   * aspectRatio.portrait
+   *
+   * This aspect ratio constrains the returned height to a maximum of 600px.
+   * It is recommended to center charts within this aspect ratio.
+   *
+   * Recommended breakpoints:
+   *   - palm
+   *   - lap
+   *   - desk
+   *
+   * @param {Number} width
+   * @returns {Number} height
+   */
+  var portrait = function(width) {
+    return d3.min([600, aspectRatio(4, 5)]);
+  };
+
+  /**
+   * aspectRatio.auto
+   *
+   * Provides a set of default aspect ratios for different widths. If you provide a set
+   * of measurements for a container and the window itself, it will provide the default
+   * value of the height for that container. Note that the aspect ratio chosen may
+   * depend on the container width itself. This is because of default breakpoints.
+   *
+   * @param  {Measurement} measurement The measurements object for the container for which you
+   *                                   want a height value. Should have at least the properties:
+   *                                     - `width`: container's width
+   *                                     - `screenHeight`: the height of the window at the current time.
+   *
+   * @return {Number} The height which corresponds to the default aspect ratio for these measurements
+   */
+  var auto = (function() {
+    var defaultAspectRatios = {
+      palm: ar4to3,   // palm-sized devices
+      lap:  ar16to10, // lap-sized devices
+      _:    ar12to5   // all other cases, including desk
+    };
+    return function(measurement) {
+      var bp = sszvis.breakpoint.find(sszvis.breakpoint.defaultSpec(), measurement);
+      var ar = defaultAspectRatios[bp.name];
+      return ar(measurement.width);
+    };
+  }());
+
+
+  // Exports
+
+  module.exports            = aspectRatio;
+  module.exports.ar4to3     = ar4to3;
+  module.exports.ar16to10   = ar16to10;
+  module.exports.ar12to5    = ar12to5;
+  module.exports.square   = square;
+  module.exports.portrait = portrait;
+  module.exports.auto       = auto;
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Responsive design breakpoints for sszvis
+ *
+ * @module sszvis/breakpoint
+ *
+ * Provides breakpoint-related functions, including those which build special
+ * breakpoint objects that can be used to test against screen measurements to see
+ * if the breakpoint matches, and this module also includes the default breakpoint
+ * sizes for SSZVIS. The breakpoints are inclusive upper limits, i.e. when testing a
+ * breakpoint against a given set of measurements, if the breakpoint value is greater than
+ * or equal to all measurements, the breakpoint will match. In code where the user should
+ * supply breakpoints, the user is responsible for specifying the testing order of the breakpoints
+ * provided. The breakpoints are then tested in order, and the first one which matches the measurements
+ * is chosen. The user should, where possible, specify breakpoints in increasing order of size.
+ * Since there are multiple dimensions on which 'size' can be defined, we do not specify our own
+ * algorithm for sorting user-defined breakpoints. We rely on the judgment of the user to do that.
+ *
+ * @property {Function} createSpec
+ * @property {Function} defaultSpec
+ * @property {Function} findByName
+ * @property {Function} find
+ * @property {Function} match
+ * @property {Function} test
+ *
+ * @property {Function} palm Breakpoint for plam-sized devices (phones)
+ * @property {Function} lap  Breakpoint for lap-sized devices (tablets, small notebooks)
+ *
+ * @type Measurement {
+ *   width: number,
+ *   screenHeight: number
+ * }
+ *
+ * @type Breakpoint {
+ *   name: string,
+ *   measurement: Measurement
+ * }
+ */
+sszvis_namespace('sszvis.breakpoint', function(module) {
+
+  /**
+   * breakpoint.find
+   *
+   * Returns the first matching breakpoint for a given measurement
+   *
+   * @param {Array<Breakpoint>} breakpoints A breakpoint spec
+   * @param {Measurement} partialMeasurement A partial measurement to match to the spec
+   * @returns {Breakpoint}
+   */
+  function find(breakpoints, partialMeasurement) {
+    var measurement = parseMeasurement(partialMeasurement);
+    return sszvis.fn.find(function(bp) {
+      return test(bp, measurement);
+    }, breakpoints);
+  }
+
+
+  /**
+   * breakpoint.findByName
+   *
+   * Returns the breakpoint with the given name. If there is no such breakpoint,
+   * undefined is returned
+   *
+   * @param {Array<Breakpoint>} breakpoints A breakpoint spec
+   * @param {string} name A breakpoint name
+   * @returns {Breakpoint?} If no breakpoint matches, undefined is returned. If a
+   *          breakpoint for the given name exists, that breakpoint is returned
+   */
+  function findByName(breakpoints, name) {
+    var eqName = function(bp) { return bp.name === name; };
+    return sszvis.fn.find(eqName, breakpoints);
+  }
+
+
+  /**
+   * breakpoint.test
+   *
+   * Returns true if the given measurement fits within the breakpoint.
+   *
+   * @param {Breakpoint} breakpoint A single breakpoint
+   * @param {Measurement} partialMeasurement A partial measurement to match to the breakpoint
+   * @returns {boolean}
+   */
+  function test(breakpoint, partialMeasurement) {
+    var bpm = breakpoint.measurement;
+    var measurement = parseMeasurement(partialMeasurement);
+    return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
+  }
+
+
+  /**
+   * breakpoint.match
+   *
+   * Returns an array of breakpoints the given measurement fits into. Use this in situations
+   * where you need to match a sparse list of breakpoints.
+   *
+   * @param {Array<Breakpoint>} breakpoints A breakpoint spec
+   * @param {Measurement} partialMeasurement A partial measurement to match to the spec
+   * @returns {Array<Breakpoint>}
+   */
+  function match(breakpoints, partialMeasurement) {
+    var measurement = parseMeasurement(partialMeasurement);
+    return breakpoints.filter(function(bp) {
+      return test(bp, measurement);
+    });
+  }
+
+
+  /**
+   * breakpoint.createSpec
+   *
+   * Parses an array of partial breakpoints into a valid breakpoint spec.
+   *
+   * @param {Array<{name: string, width?: number, screenHeight?: number}>} spec An array
+   *        of breakpoint definitions. All breakpoints are parsed into a full representation,
+   *        so it's possible to only provide partial breakpoint definitions.
+   * @returns {Array<Breakpoint>}
+   */
+  function createSpec(spec) {
+    return spec
+      .map(parseBreakpoint)
+      .concat(parseBreakpoint({name: '_'}));
+  }
+
+
+  /**
+   * breakpoint.defaultSpec
+   *
+   * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
+   *          default breakpoint spec.
+   */
+  var defaultSpec = (function() {
+    var DEFAULT_SPEC = createSpec([
+      { name: 'palm', width: 540 },
+      { name: 'lap',  width: 749 }
+    ]);
+    return function() { return DEFAULT_SPEC; };
+  }());
+
+
+  // Exports
+
+  module.exports = {
+    createSpec: createSpec,
+    defaultSpec: defaultSpec,
+    find: find,
+    findByName: findByName,
+    match: match,
+    test: test,
+
+    // Default tests
+    palm: makeTest('palm'),
+    lap: makeTest('lap')
+  };
+
+
+  // Helpers
+
+  /**
+   * Measurement
+   *
+   * A measurement is defined as an object with width and screenHeight props.
+   * It is used throughout the breakpoint calculations.
+   *
+   * For parsing, a partial measurement can be supplied. If a property is
+   * not defined, it is initialized to Infinity, which matches all breakpoints.
+   *
+   * @example
+   *   var Measurement = {
+   *     width: number,
+   *     screenHeight: number
+   *   }
+   *
+   * @param {{width?: number, screenHeight?: number}} partialMeasurement
+   * @returns Measurement
+   */
+  function parseMeasurement(partialMeasurement) {
+    var widthOrInf = sszvis.fn.propOr('width', Infinity);
+    var screenHeightOrInf = sszvis.fn.propOr('screenHeight', Infinity);
+    return {
+      width: widthOrInf(partialMeasurement),
+      screenHeight: screenHeightOrInf(partialMeasurement)
+    };
+  }
+
+
+  /**
+   * Breakpoint
+   *
+   * A breakpoint is defined as an object with name and measurement props.
+   * It is used throughout the breakpoint calculations.
+   *
+   * For parsing, a partial breakpoint can be supplied where measurements
+   * can be directly supplied on the top object.
+   *
+   * @example
+   *   var PartialBreakpoint = {
+   *     name: string,
+   *     width?: number,
+   *     screenHeight?: number
+   *   }
+   *
+   *   var Breakpoint = {
+   *     name: string,
+   *     measurement: Measurement
+   *   }
+   *
+   * @param {{name: string, width?: number, screenHeight?: number, measurement?: Measurement}} bp
+   * @returns Breakpoint
+   */
+  function parseBreakpoint(bp) {
+    var measurement;
+    if (sszvis.fn.defined(bp.measurement)) {
+      measurement = parseMeasurement(bp.measurement);
+    } else {
+      measurement = parseMeasurement({width: bp.width, screenHeight: bp.screenHeight});
+    }
+    return {
+      name: bp.name,
+      measurement: measurement
+    };
+  }
+
+
+  /**
+   * Create a partially applied test function
+   */
+  function makeTest(name) {
+    return function(measurement) {
+      return test(findByName(defaultSpec(), name), measurement);
+    };
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Bounds
  *
  * Creates a bounds object to help with the construction of d3 charts
  * that follow the d3 margin convention. The result of this function
- * is comsumed by sszvis.createSvgLayer and sszvis.createHtmlLayer.
+ * is consumed by sszvis.createSvgLayer and sszvis.createHtmlLayer.
  *
  * @module sszvis/bounds
  *
@@ -1347,34 +1870,55 @@ sszvis_namespace('sszvis.axis', function(module) {
  * @property {number} DEFAULT_WIDTH The default width used across all charts
  * @property {number} RATIO The default side length ratio
  *
- * @param  {Object} bounds       Specifies the bounds of a chart area. Valid properties are:
- *                               width: the total width of the chart (default: DEFAULT_WIDTH)
- *                               height: the total height of the chart (default: height / RATIO)
- *                               top: top padding (default: 0)
- *                               left: left padding (default: 1)
- *                               bottom: bottom padding (default: 0)
- *                               right: right padding (default: 1)
+ * @param {Object} bounds Specifies the bounds of a chart area. Valid properties are:
+ *   @property {number} bounds.width The total width of the chart (default: DEFAULT_WIDTH)
+ *   @property {number} bounds.height The total height of the chart (default: height / RATIO)
+ *   @property {number} bounds.top Top padding (default: 0)
+ *   @property {number} bounds.left Left padding (default: 1)
+ *   @property {number} bounds.bottom Bottom padding (default: 0)
+ *   @property {number} bounds.right Right padding (default: 1)
+ * @param {string|d3.selection} [selection] A CSS selector or d3 selection that will be measured to
+ *                                          automatically calculate the bounds width and height using
+ *                                          the SSZVIS responsive aspect ratio calculation. Custom
+ *                                          width and height settings have priority over these auto-
+ *                                          matic calculations, so if they are defined, this argument
+ *                                          has no effect.
+ *                                          This argument is optional to maintain backwards compatibility.
+ *
  * @return {Object}              The returned object will preserve the properties width and height, or give them default values
  *                               if unspecified. It will also contain 'innerWidth', which is the width minus left and right padding,
  *                               and 'innerHeight', which is the height minus top and bottom padding. And it includes a 'padding' sub-object,
  *                               which contains calculated or default values for top, bottom, left, and right padding.
+ *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
 sszvis_namespace('sszvis.bounds', function(module) {
   'use strict';
 
-  // This is the default width (not to be confused with innerWidth)
-  // the default innerWidth is calculated as width - leftpadding - rightpadding
   var DEFAULT_WIDTH = 516;
 
-  // This is the default aspect ratio. It is defined as: width / innerHeight
-  // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
-  var ASPECT_RATIO = 16 / 9;
-  // To calculate innerHeight, do width / ASPECT_RATIO
-  // This means that by default, innerHeight = 9 / 16 * width
-  // These are configurable by passing your own width and height to the bounds function
+  module.exports = function(arg1 /* bounds or selection */, arg2 /* [selection] */) {
+    var bounds = null, selection = null;
+    if (arguments.length === 0) {
+      bounds = {};
+    } else if (arguments.length === 1) {
+      if (sszvis.fn.isObject(arg1)) {
+        bounds = arg1;
+      } else if (sszvis.fn.isSelection(arg1)) {
+        bounds = {};
+        selection = arg1;
+      } else {
+        bounds = {};
+        selection = d3.select(arg1);
+      }
+    } else {
+      bounds = arg1;
+      if (sszvis.fn.isSelection(arg2)) {
+        selection = arg2;
+      } else {
+        selection = d3.select(arg2);
+      }
+    }
 
-  module.exports = function(bounds) {
-    bounds || (bounds = {});
     // All padding sides have default values
     var padding = {
       top:    either(bounds.top, 0),
@@ -1382,21 +1926,40 @@ sszvis_namespace('sszvis.bounds', function(module) {
       bottom: either(bounds.bottom, 0),
       left:   either(bounds.left, 1)
     };
-    var width   = either(bounds.width, DEFAULT_WIDTH);
-    // The first term (inside Math.round) is the default innerHeight calculation
-    var height  = either(bounds.height, Math.round(width / ASPECT_RATIO) + padding.top + padding.bottom);
+
+    // Width is calculated as: bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
+    var dimensions = sszvis.fn.measureDimensions(selection);
+    var width   = either( bounds.width,
+                          either( dimensions.width,
+                                  DEFAULT_WIDTH ));
+    var innerHeight = sszvis.aspectRatio.auto(dimensions);
+    var height  = either( bounds.height,
+                          innerHeight + padding.top + padding.bottom );
 
     return {
       innerHeight: height - padding.top  - padding.bottom,
       innerWidth:  width  - padding.left - padding.right,
       padding:     padding,
       height:      height,
-      width:       width
+      width:       width,
+      screenWidth: dimensions.screenWidth,
+      screenHeight: dimensions.screenHeight
     };
   };
 
+  // This is the default width (not to be confused with innerWidth)
+  // the default innerWidth is calculated as `width - leftpadding - rightpadding`
+  // @deprecated Since the responsive revisions, the default width should not be used
+  //             anymore. This property is preserved for compatibility reasons.
   module.exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
-  module.exports.RATIO = ASPECT_RATIO;
+
+  // This is the default aspect ratio. It is defined as: width / innerHeight
+  // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
+  // To calculate the default innerHeight, do width / ASPECT_RATIO
+  // @deprecated Since the responsive revisions, the default aspect ratio has changed,
+  //             so that it is now responsive to the container width.
+  //             This property is preserved for compatibility reasons.
+  module.exports.RATIO = 16 / 9;
 
 
   /* Helper functions
@@ -1483,7 +2046,6 @@ sszvis_namespace('sszvis.bounds', function(module) {
  *
  * @returns                 An instance of sszvis.cascade
  */
-
 sszvis_namespace('sszvis.cascade', function(module) {
 'use strict';
 
@@ -1823,7 +2385,7 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
 
     var elementDataKey = 'data-sszvis-svg-' + key;
 
-    var root = d3.select(selector);
+    var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
     var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
     var svgEnter = svg.enter().append('svg');
 
@@ -1847,7 +2409,9 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
 
     var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0]);
     viewport.enter().append('g')
-      .attr('data-sszvis-svg-layer', '')
+      .attr('data-sszvis-svg-layer', '');
+
+    viewport
       .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
     return viewport;
@@ -1912,7 +2476,7 @@ sszvis_namespace('sszvis.createHtmlLayer', function(module) {
 
     var elementDataKey = 'data-sszvis-html-' + key;
 
-    var root = d3.select(selector);
+    var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
     root.classed('sszvis-outer-container', true);
 
     var layer = root.selectAll('[data-sszvis-html-layer][' + elementDataKey + ']').data([0]);
@@ -1965,7 +2529,8 @@ sszvis_namespace('sszvis.fallback', function(module) {
   module.exports.render = function(selector, options) {
     options || (options = {});
     options.src    || (options.src    = 'fallback.png');
-    d3.select(selector).append('img')
+    var selection = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
+    selection.append('img')
       .attr('src', options.src);
   };
 
@@ -2541,6 +3106,247 @@ sszvis_namespace('sszvis.patterns', function(module) {
 
 
 /**
+ * ResponsiveProps module
+ *
+ * @module sszvis/responsiveProps
+ *
+ * The ResponsiveProps module provides a declarative way to configure properties or options
+ * which need to change based on some breakpoints. SSZVIS comes with a default
+ * set of breakpoints (see sszvis.breakpoint), but you can also define your own breakpoints.
+ *
+ * The module should be configured with any number of different properties that change
+ * based on breakpoints, plus (optional) breakpoint configuration, and then called
+ * as a function. You must pass in an object with 'width' and 'screenHeight' properties.
+ * This is the kind of thing which is returned from sszvis.bounds and sszvis.fn.measureDimensions.
+ *
+ * The properties you configure must include an '_' option, which is used when no breakpoints match.
+ * It represents the 'default' case and will also be returned when the responsiveProps function is
+ * invoked with an invalid argument. If you configure special breakpoints, they should be passed in as
+ * an array, sorted in testing order, of objects with a 'name' property, and one or both of 'width' and
+ * 'screenHeight' properties. This will generate breakpoints which can be applied internally.
+ *
+ * The return value of the function call is an object which has properties corresponding to
+ * the properties you configured before. The property values are decided based on testing the breakpoints
+ * against the measured values and finding the first one in which the measured values fit.
+ *
+ * Example usage:
+ *
+ * var queryProps = sszvis.responsiveProps()
+ *   .breakpoints([
+ *     { name: 'small', width:  400 },
+ *     { name: 'medium', width:  800 },
+ *     { name: 'large', width: 1000 }
+ *   ])
+ *   .prop('axisOrientation', {
+ *     medium: 'left',
+ *     _: 'bottom'
+ *   })
+ *   .prop('height', {
+ *     small: function(w) { return w / (16 / 9); },
+ *     medium: function(w) { return w / (20 / 9); },
+ *     large: function(w) { return w / (28 / 9); },
+ *     _: function(w) { return w / (38 / 9); }
+ *   })
+ *   .prop('numAxisTicks', {
+ *     small: 4,
+ *     medium: 8,
+ *     large: 12,
+ *     _: 16
+ *   });
+ *
+ * var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+ * --- OR ---
+ * var props = queryProps(sszvis.fn.bounds({ ... }, '#sszvis-chart'));
+ *
+ * ... use props.axisOrientation, props.height, and props.numAxisTicks ...
+ *
+ * @returns {responsiveProps}
+ */
+sszvis_namespace('sszvis.responsiveProps', function(module) {
+  'use strict';
+
+  /* Exported module
+  ----------------------------------------------- */
+  module.exports = function() {
+    var breakpointSpec = sszvis.breakpoint.defaultSpec();
+    var propsConfig = {};
+
+    /**
+     * Constructor
+     *
+     * @param   {{width: number, screenHeight: number}} arg1 Accepts a 'measurements' object with a
+     *          'width' property and a 'screenHeight' property. This makes it possible to pass
+     *          in a sszvis.bounds object or the result of sszvis.fn.measureDimensions.
+     *
+     * @returns {Object.<string, any>} A map of all properties for the currently selected
+     *          breakpoint as defined by the parameter `arg1`
+     */
+    function responsiveProps(measurement) {
+      if (!sszvis.fn.isObject(measurement) || !isBounds(measurement)) {
+        sszvis.logger.warn('Could not determine the current breakpoint, returning the default props');
+        // We choose the _ option for all configured props as a default.
+        return Object.keys(propsConfig).reduce(function(memo, val, key) {
+          memo[key] = val._;
+          return memo;
+        }, {});
+      }
+
+      // Finds out which breakpoints the provided measurements match up with
+      var matchingBreakpoints = sszvis.breakpoint.match(breakpointSpec, measurement);
+
+      return Object.keys(propsConfig).reduce(function(memo, propKey) {
+        var propSpec = propsConfig[propKey];
+
+        if (!validatePropSpec(propSpec, breakpointSpec)) {
+          sszvis.logger.warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
+          return memo;
+        }
+
+        // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
+        // This function should always at least find '_' at the end of the array.
+        var matchedBreakpoint = sszvis.fn.find(function(bp) { return sszvis.fn.defined(propSpec[bp.name]); }, matchingBreakpoints);
+        // the value in the query object for that property equals the propSpec value as a functor,
+        // invoked if necessary with the current width. Providing the width allows aspect ratio
+        // calculations based on element width.
+        memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
+
+        return memo;
+      }, {});
+    }
+
+    /**
+     * responsiveProps.prop
+     *
+     * Define a responsive property that can assume different values depending on the
+     * currently active breakpoint.
+     *
+     * @example
+     * var queryProps = sszvis.responsiveProps()
+     *   .prop('height', {
+     *     palm: function(width) { return width /  (4/3); },
+     *     lap:  function(width) { return width / (16/9); },
+     *     _: 600 // You must always define a default case
+     *   });
+     *
+     * The algorithm looks for the lowest applicable breakpoint. If a breakpoint's width or
+     * screenHeight are larger than the current container and screen dimensions, its properties
+     * will not apply. In case no breakpoint matches, the fallback value is used; it must always
+     * be provided with the key name '_'.
+     *
+     * Each value can be either a raw value or a function which takes the current width
+     * and returns a value for the property. These functions can be used to lazily calculate
+     * properties (they are only executed when the module is called as a function),
+     * and to change property values for a given breakpoint as a function of the width,
+     * for example to do height calculation with a custom aspect ratio.
+     *
+     * @param {string} propName The name of the property you want to define
+     * @param {Object.<string, (Function(number) -> *|*)>} propSpec A map of breakpoint names to
+     *        property values. Key names must be valid breakpoint names. These can either be the
+     *        default breakpoint names (see sszvis.breakpoint) or user-defined names that match up
+     *        to breakpoints you have provided. Additionally, the fallback key `_` must be defined;
+     *        its value will be used for screens larger than the largest breakpoint. You don't
+     *        have to define all breakpoints; if you skip a breakpoint, the next applicable breakpoint
+     *        in the test list will be used. Values can be either plain values or
+     *        functions that accept the current breakpoint width and return a value.
+     *
+     * @return {responsiveProps}
+     */
+    responsiveProps.prop = function(propName, propSpec) {
+      propsConfig[propName] = functorizeValues(propSpec);
+      return responsiveProps;
+    };
+
+    /**
+     * responsiveProps.breakpoints
+     *
+     * Configure custom breakpoints for the responsiveProps. You don't need to call
+     * this method; there are default breakpoints (see sszvis.breakpoint).
+     * You should provide an array of breakpoint specifiers, each one an object with at
+     * least a 'name' property (used as an identifier for the breakpoint), and one or both
+     * of a 'width' or 'screenHeight' property. When choosing a matching breakpoint, the
+     * 'width' will be compared to the provided container width, and the 'screenHeight'
+     * to the window.innerHeight. These values are inclusive, so if the measured value is
+     * equal to or less than the provided breakpoint value, that breakpoint matches.
+     *
+     * This component has default breakpoints which are equal to the ones described
+     * in the sszvis.breakpoint module. This method can also be called without arguments
+     * to get the breakpoints list.
+     *
+     * @param {Array.<Object.<string, (string|number)>>} [bps] Define the breakpoints to be used.
+     *                                                   Object format is:
+     *                                                     {
+     *                                                       name: breakpointname,
+     *                                                       width: (optional) container width of this bp
+     *                                                       screenHeight: (optional) window.innerHeight of this bp
+     *                                                     }
+     *                                                   if neither width nor screenHeight is provided, the breakpoint
+     *                                                   will match all possible dimensions.
+     *
+     * @example
+     * var queryProps = sszvis.responsiveProps()
+     * .breakpoints([
+     *   { name: 'small', width: 300 },
+     *   { name: 'medium', width: 500 },
+     *   { name: 'large', width: 700 }
+     * ])
+     */
+    responsiveProps.breakpoints = function(bps) {
+      if (arguments.length === 0) {
+        return breakpointSpec;
+      }
+      breakpointSpec = sszvis.breakpoint.createSpec(bps);
+      return responsiveProps;
+    };
+
+    return responsiveProps;
+  };
+
+
+  // Helpers
+
+  function isBounds(arg1) {
+    return sszvis.fn.defined(arg1) && sszvis.fn.defined(arg1.width) && sszvis.fn.defined(arg1.screenWidth) && sszvis.fn.defined(arg1.screenHeight);
+  }
+
+  /**
+   * functorizeValues
+   * @prop    {object} obj Original key-value object
+   * @returns {object} Same as input object but with all values transformed to d3.functors
+   */
+  function functorizeValues(obj) {
+    return Object.keys(obj).reduce(function(memo, key) {
+      memo[key] = d3.functor(obj[key]);
+      return memo;
+    }, {});
+  }
+
+  function validatePropSpec(propSpec, breakpointSpec) {
+    // Ensure that the propSpec contains a '_' value.
+    // This is used as the default value when the test width
+    // is larger than any breakpoint.
+    if (!sszvis.fn.defined(propSpec._)) { return false; }
+
+    // Validate the properties of the propSpec:
+    // each should be a valid breakpoint name, and its value should be defined
+    for (var breakpointName in propSpec) {
+      if (propSpec.hasOwnProperty(breakpointName)) {
+        if (breakpointName !== '_' && !sszvis.fn.defined(sszvis.breakpoint.findByName(breakpointSpec, breakpointName))) {
+          return false;
+        }
+      }
+    }
+
+    // All checks passed, propSpec is valid
+    return true;
+  }
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Scale utilities
  *
  * @module sszvis/scale
@@ -2600,16 +3406,19 @@ sszvis_namespace('sszvis.test', function(module) {
    * Assert a boolean. Provide a message and a boolean value. The boolean should be
    * the evaluation of a statement which is something you want to test.
    *
+   * @param  {String} context        The name of the context the assertion is operating in
    * @param  {String} assertion      A string descriptor for the test
    * @param  {Boolean} test          The value of the test
    */
-  module.exports.assert = function assert(assertion, test) {
-    if (test) {
-      sszvis.logger.log('assertion passed: ' + assertion);
-    } else {
-      sszvis.logger.error('assertion failed: ' + assertion);
-    }
-  }
+  var assert = module.exports.assert = function(context) {
+    return function(message, test) {
+      if (test) {
+        sszvis.logger.log('[' + context + '] ✔ ' + message);
+      } else {
+        sszvis.logger.error('[' + context + '] ✘ ' + message);
+      }
+    };
+  };
 
   /**
    * sszvis.test.runTests
@@ -2618,14 +3427,13 @@ sszvis_namespace('sszvis.test', function(module) {
    * 
    */
   module.exports.runTests = function() {
-    runFormatTests();
+    //runFormatTests(assert('runFormatTests'));
+    runBreakpointTests(assert('runBreakpointTests'));
+    //runPropsQueryTests(assert('runPropsQueryTests'));
   };
 
-  // Just a shortcut alias
-  var assert = module.exports.assert;
-
   // Tests for format functions
-  function runFormatTests() {
+  function runFormatTests(assert) {
     /* sszvis.format.number */
     var nfmt = sszvis.format.number;
     var precNfmt = sszvis.format.preciseNumber;
@@ -2677,6 +3485,148 @@ sszvis_namespace('sszvis.test', function(module) {
     assert('raw numbers with explicit zero decimals lose those decimals because of Javascript', nfmt(42.000) === '42');
     assert('to add zeroes to a raw number with explicit zero decimals, pass a precision value', precNfmt(3, 42.000) === '42.000');
   }
+
+
+  // FIXME: more tests
+  function runBreakpointTests(assert) {
+    var accName = sszvis.fn.prop('name');
+
+    // sszvis.breakpoint([...])
+    // sszvis.breakpoint(measurement)
+    // sszvis.breakpoint()
+
+    // sszvis.breakpoint.parseSpec([{}])
+    // sszvis.breakpoint.createSpec([{}])
+    // sszvis.breakpoint.createSpec() -> Default spec???
+    // sszvis.breakpoint.define({...})
+    // sszvis.breakpoint.match({...})
+    // sszvis.breakpoint.palm({...})
+
+    // find
+
+    // test
+
+    // match
+
+
+
+
+    var bps = sszvis.breakpoint.spec([
+      {name: 's', width: 10},
+      {name: 'l', width: 20}
+    ]);
+
+
+    /*
+     var bps = sszvis.breakpoint.spec([{name: 's', width: 300}])
+     bps(measurement)
+     bps()
+     */
+    // Selection
+    assert('select breakpoints "s", "l", and "_"', arraysEqual(bps({width: 1}).map(accName), ['s', 'l', '_']));
+    assert('select breakpoints "s", "l", and "_"', arraysEqual(bps({width: 10}).map(accName), ['s', 'l', '_']));
+    assert('select breakpoint "l" and "_"', arraysEqual(bps({width: 11}).map(accName), ['l', '_']));
+    assert('select catch all breakpoint "_"', arraysEqual(bps({width: 21}).map(accName), ['_']));
+  }
+
+
+  function runPropsQueryTests(assert) {
+    var pqT1 = sszvis.responsiveProps()
+      .prop('test', {
+        small: 2,
+        large: 4,
+        _: 8
+      });
+
+    assert('responsiveProps works as expected for small', pqT1(sszvis.breakpoint.SMALL - 1).test === 2);
+    assert('responsiveProps works as expected for large', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
+    assert('responsiveProps works as expected for _', pqT1(sszvis.breakpoint.WIDE + 20).test === 64);
+    assert('responsiveProps works as expected when width is exactly on the breakpoint', pqT1(sszvis.breakpoint.WIDE).test === 64);
+
+    var pqT2 = sszvis.responsiveProps()
+      .breakpoints({
+        small: 30,
+        medium: 50,
+        large: 70
+      })
+      .prop('test', {
+        small: 2,
+        medium: 4,
+        large: 8,
+        _: 16
+      });
+
+    assert('responsiveProps works for user-defined breakpoints (small)', pqT2(10).test === 2);
+    assert('responsiveProps works for user-defined breakpoints (medium)', pqT2(40).test === 4);
+    assert('responsiveProps works for user-defined breakpoints (large)', pqT2(60).test === 8);
+    assert('responsiveProps works for user-defined breakpoints (_)', pqT2(90).test === 16);
+
+    var pqT3 = sszvis.responsiveProps()
+      .prop('test', {
+        small: 2
+      });
+
+    assert('responsiveProps should complain and return undefined when you do not provide a _ option', !sszvis.fn.defined(pqT3(1000).test));
+
+    var pqT4 = sszvis.responsiveProps()
+      .prop('test', {
+        notvalidbp: 8,
+        _: 16
+      });
+
+    assert('responsiveProps should complain and return undefined when you provide an invalid breakpoint', !sszvis.fn.defined(pqT4(650).test));
+
+    var pqT5 = sszvis.responsiveProps()
+      .breakpoints({
+        small: 30,
+        medium: 50,
+        large: 70
+      })
+      .prop('first_test', {
+        medium: 4,
+        _: 64,
+      })
+      .prop('second_test', {
+        large: 16,
+        _: 32
+      })
+      .prop('third_test', {
+        small: 2,
+        _: 8
+      });
+
+    assert('responsiveProps behaves as expected even when not all breakpoints are provided - under', pqT5(40).first_test === 4);
+    assert('responsiveProps behaves as expected even when not all breakpoints are provided - over', pqT5(60).first_test === 64);
+    assert('responsiveProps behaves as expected even when not all breakpoints are provided - way over', pqT5(100).first_test === 64);
+    assert('responsiveProps does the right thing with multiple props - under', pqT5(20).second_test === 16);
+    assert('responsiveProps does the right thing with multiple props - still under', pqT5(60).second_test === 16);
+    assert('responsiveProps does the right thing with multiple props - over', pqT5(100).second_test === 32);
+    assert('responsiveProps multiple props - small', pqT5(20).third_test === 2);
+    assert('responsiveProps multiple props - small over', pqT5(40).third_test === 8);
+    assert('responsiveProps tests widths to be strictly less than the breakpoint - first', pqT5(50).first_test === 64);
+    assert('responsiveProps tests widths to be strictly less than the breakpoint - second', pqT5(70).second_test === 32);
+    assert('responsiveProps tests widths to be strictly less than the breakpoint - third', pqT5(30).third_test === 8);
+
+  }
+
+
+
+
+
+  function arraysEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    if (a.length != b.length) return false;
+
+    // If you don't care about the order of the elements inside
+    // the array, you should sort both arrays here.
+
+    for (var i = 0; i < a.length; ++i) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
 
 });
 
@@ -3418,6 +4368,19 @@ sszvis_namespace('sszvis.annotation.ruler', function(module) {
  * @property {function} opacity         A function or number which determines the opacity of the tooltip. Default is 1.
  *
  * @return {d3.component}
+ *
+ * @function sszvis.annotation.tooltip.fit
+ *
+ * This is a useful default function for making a tooltip fit within a horizontal space.
+ * You provide a default orientation for the tooltip, but also provide the bounds of the
+ * space within which the tooltip should stay. When the tooltip is too close to the left
+ * or right edge of the bounds, it is oriented away from the edge. Otherwise the default
+ * is used.
+ *
+ * @param {String} defaultValue         The default value for the tooltip orientation
+ * @param {Object} bounds               The bounds object within which the tooltip should stay.
+ *
+ * @returns {Function}                  A function for calculating the orientation of the tooltips.
  */
 sszvis_namespace('sszvis.annotation.tooltip', function(module) {
   'use strict';
@@ -3447,13 +4410,13 @@ sszvis_namespace('sszvis.annotation.tooltip', function(module) {
       .prop('visible', d3.functor).visible(false)
       .renderSelection(function(selection) {
         var props = selection.props();
+        var intoBCR = props.renderInto.node().getBoundingClientRect();
 
         var tooltipData = [];
         selection.each(function(d) {
-          var thisBCR = this.getBoundingClientRect();
-          var intoBCR = props.renderInto.node().getBoundingClientRect();
-          var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
           if (props.visible(d)) {
+            var thisBCR = this.getBoundingClientRect();
+            var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
             tooltipData.push({
               datum: d,
               x: pos[0],
@@ -3466,6 +4429,15 @@ sszvis_namespace('sszvis.annotation.tooltip', function(module) {
           .datum(tooltipData)
           .call(renderer);
       });
+  };
+
+  module.exports.fit = function(defaultVal, bounds) {
+    var lo = bounds.innerWidth * 1 / 4;
+    var hi = bounds.innerWidth * 3 / 4;
+    return function(d) {
+      var x = d.x;
+      return x > hi ? 'right' : x < lo ? 'left' : defaultVal;
+    };
   };
 
 
@@ -3990,6 +4962,7 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
               win.on('mouseup.sszvis-behavior-move', null);
               win.on('mousemove.sszvis-behavior-move', null);
               doc.on('mouseout.sszvis-behavior-move', null);
+              event.end();
             };
 
             win.on('mousemove.sszvis-behavior-move', drag);
@@ -4015,8 +4988,6 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
           })
           .on('mouseout', event.end)
           .on('touchstart', function() {
-            d3.event.preventDefault();
-
             var xy = sszvis.fn.first(d3.touches(this));
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
@@ -4071,6 +5042,148 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
 
 
 /**
+ * Panning behavior
+ *
+ * This behavior is used for adding "panning" functionality to a set of chart elements.
+ * The "panning" functionality refers to a combination of mouseover and touch responsiveness,
+ * where on a mouse interaction an event is fired on hover, but the touch interaction is more
+ * complex. The idea is to sort of imitate the way a hover interaction works, but with only a
+ * finger. When a user starts a touch on an element which has this behavior enabled, the
+ * default scrolling behavior of the browser will be canceled. The user can then move
+ * their finger across the surface of the screen, onto other elements, and the scroll
+ * will be canceled. When the finger moves onto other elements with this behavior attached,
+ * the event will be fired. Meanwhile, if the user starts the interaction somewhere outside
+ * an element, the scroll will happen as usual, and if they move onto an activated element,
+ * no event will be fired and the scrolling will continue.
+ *
+ * This behavior is applied to all the children of a selection which match the elementSelector
+ * property. Event listeners are attached to each of the child elements. The elementSelector
+ * property is necessary to know which elements to attach to (and therefore to also avoid
+ * attaching event listeners to elements which shouldn't be interaction-active).
+ *
+ * @module sszvis/behavior/panning
+ *
+ * @property {String} elementSelector    This should be a string selector that matches child
+ *                                       elements of the selection on which this component
+ *                                       is rendered using the .call(component) pattern. All
+ *                                       child elements will have the panning event listeners
+ *                                       attached to them.
+ * @property {String, Function} on       The .on() method should specify an event name and a handler
+ *                                       function for that event. The supported events are:
+ *                                       'start' - when the interaction starts on an element.
+ *                                       'pan' - when the user pans on the same element or onto another
+ *                                       element (note, no 'start' event will be fired when the user
+ *                                       pans with a touch from one element onto another, since this
+ *                                       behavior is too difficult to test for and emulate).
+ *                                       'end' - when the interaction with an element ends.
+ *
+ * @return {d3.component}
+ */
+sszvis_namespace('sszvis.behavior.panning', function(module) {
+  'use strict';
+
+  module.exports = function() {
+    var event = d3.dispatch('start', 'pan', 'end');
+
+    var panningComponent = d3.component()
+      .prop('elementSelector')
+      .render(function() {
+        var selection = d3.select(this);
+        var props = selection.props();
+
+        var elements = selection.selectAll(props.elementSelector);
+
+        elements
+          .attr('data-sszvis-behavior-pannable', '')
+          .classed('sszvis-interactive', true)
+          .on('mouseover', event.start)
+          .on('mousemove', event.pan)
+          .on('mouseout', event.end)
+          .on('touchstart', function(d) {
+            d3.event.preventDefault();
+            event.start(d);
+          })
+          .on('touchmove', function() {
+            d3.event.preventDefault();
+            var datum = sszvis.behavior.util.datumFromPanEvent(sszvis.fn.firstTouch(d3.event));
+            if (datum !== null) {
+              event.pan(datum);
+            } else {
+              event.end();
+            }
+          })
+          .on('touchend', event.end);
+      });
+
+    d3.rebind(panningComponent, event, 'on');
+
+    return panningComponent;
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Behavior utilities
+ *
+ * These utilities are intended for internal usage by the sszvis.behavior components.
+ * They aren't intended for use in example code, but should be in a separate module
+ * because they are accessed by several different behavior components.
+ *
+ * @function {Event} elementFromEvent             Accepts an event, and returns the element, if any,
+ *                                                which is in the document under that event. Uses
+ *                                                document.elementFromPoint to determine the element.
+ *                                                If there is no such element, or the event is invalid,
+ *                                                this function will return null.
+ * @function {Element} datumFromPannableElement   Accepts an element, determines if it's "pannable",
+ *                                                and returns the datum, if any, attached to this element.
+ *                                                This is determined by the presence of the data-sszvis-behavior-pannable
+ *                                                attribute on the element. Behaviors which use "panning" behavior
+ *                                                will attach this attribute to the elements they target.
+ *                                                Elements which have panning behaviors attached to them
+ *                                                will get this attribute assigned to them. If the element doesn't
+ *                                                have this attriute, or doesn't have a datum assigned, this funciton
+ *                                                returns null.
+ * @function {Event} datumFromPanEvent            A combination of elementFromEvent and datumFromPannableElement, which
+ *                                                accepts an event and returns the datum attached to the element under
+ *                                                that event, if such an element and such a datum exists.
+ */
+sszvis_namespace('sszvis.behavior.util', function(module) {
+
+  module.exports.elementFromEvent = function(evt) {
+    if (!sszvis.fn.isNull(evt) && sszvis.fn.defined(evt)) {
+      return document.elementFromPoint(evt.clientX, evt.clientY);
+    }
+    return null;
+  };
+
+  module.exports.datumFromPannableElement = function(element) {
+    if (!sszvis.fn.isNull(element)) {
+      var selection = d3.select(element);
+      if (!sszvis.fn.isNull(selection.attr('data-sszvis-behavior-pannable'))) {
+        var datum = selection.datum();
+        if (sszvis.fn.defined(datum)) {
+          return datum;
+        }
+      }
+    }
+    return null;
+  };
+
+  module.exports.datumFromPanEvent = function(evt) {
+    return module.exports.datumFromPannableElement(module.exports.elementFromEvent(evt));
+  };
+
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
  * Voronoi behavior
  *
  * The voronoi behavior adds an invisible layer of voronoi cells to a chart. The voronoi cells are calculated
@@ -4089,6 +5202,9 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
  * are also associated with the voronoi cells, so that when a user interacts with them, the datum and its index within the
  * bound data are passed to the callback functions. This component extends a d3.dispatch instance.
  *
+ * The event handler functions are only called when the event happens within a certain distance
+ * (see MAX_INTERACTION_RADIUS_SQUARED in this file) from the voronoi area's center.
+ *
  * @module sszvis/behavior/voronoi
  *
  * @property {function} x                         Specify an accessor function for the x-position of the voronoi point
@@ -4101,8 +5217,12 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
  *                                                Possible event names are:
  *                                                'over' - when the user interacts with a voronoi area, either with a mouseover or touchstart
  *                                                'out' - when the user ceases to interact with a voronoi area, either with a mouseout or touchend
- *                                                All event handler functions are passed the datum which is the center of the voronoi area,
- *                                                and that datum's index within the data bound to the interaction layer.
+ *                                                All event handler functions are passed the datum which is the center of the voronoi area.
+ *                                                Note: previously, event handlers were also passed the index of the datum within the dataset.
+ *                                                However, this is no longer the case, due to the difficulty of inferring that information when hit
+ *                                                testing a touch interaction on arbitrary rendered elements in the scene. In addition, the 'out' event
+ *                                                used to be passed the datum itself, but this is no longer the case, also having to do with the impossibility
+ *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
  *
  */
 sszvis_namespace('sszvis.behavior.voronoi', function(module) {
@@ -4135,27 +5255,74 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
 
         polys.enter()
           .append('path')
-          .attr('data-sszvis-behavior-voronoi', '');
+          .attr('data-sszvis-behavior-voronoi', '')
+          .attr('data-sszvis-behavior-pannable', '')
+          .attr('class', 'sszvis-interactive');
 
         polys.exit().remove();
 
         polys
           .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
           .attr('fill', 'transparent')
-          .on('mouseover', function(d, i) {
-            event.over.apply(this, [d.point, i]);
+          .on('mouseover', function(datum) {
+            var cbox = this.parentElement.getBoundingClientRect();
+            if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+              event.over(datum.point);
+            }
           })
-          .on('mouseout', function(d, i) {
-            event.out.apply(this, [d.point, i]);
+          .on('mousemove', function(datum) {
+            var cbox = this.parentElement.getBoundingClientRect();
+            if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+              event.over(datum.point);
+            } else {
+              event.out();
+            }
           })
-          .on('touchstart', function(d, i) {
-            event.over.apply(this, [d.point, i]);
+          .on('mouseout', function() {
+            event.out();
           })
-          .on('touchend', function(d, i) {
-            event.out.apply(this, [d.point, i]);
+          .on('touchstart', function(datum) {
+            var cbox = this.parentElement.getBoundingClientRect();
+            if (eventNearPoint(sszvis.fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+              d3.event.preventDefault();
+              event.over(datum.point);
 
-            // calling preventDefault here prevents the browser from sending imitation mouse events
-            d3.event.preventDefault();
+              // Attach these handlers only if the initial touch is within the max distance from the voronoi center
+              // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
+              // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
+              // when users are performing touches that cause scrolling, we want to avoid firing the events.
+              var pan = function() {
+                var touchEvent = sszvis.fn.firstTouch(d3.event);
+                var element = sszvis.behavior.util.elementFromEvent(touchEvent);
+                var datum = sszvis.behavior.util.datumFromPannableElement(element);
+                if (datum !== null) {
+                  var cbox = element.parentElement.getBoundingClientRect();
+                  if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+                    // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
+                    // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
+                    // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
+                    // we want to avoid.
+                    if (d3.event.cancelable) { d3.event.preventDefault(); }
+                    event.over(datum.point);
+                  } else {
+                    event.out();
+                  }
+                } else {
+                  event.out();
+                }
+              };
+
+              var end = function() {
+                event.out();
+                d3.select(this)
+                  .on('touchmove', null)
+                  .on('touchend', null);
+              };
+
+              d3.select(this)
+                .on('touchmove', pan)
+                .on('touchend', end);
+            }
           });
 
           if (props.debug) {
@@ -4167,6 +5334,15 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
 
     return voronoiComponent;
   };
+
+  // Perform distance calculations in units squared to avoid a costly Math.sqrt
+  var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(25, 2);
+
+  function eventNearPoint(event, point) {
+    var dx = event.clientX - point[0];
+    var dy = event.clientY - point[1];
+    return (dx * dx + dy * dy) < MAX_INTERACTION_RADIUS_SQUARED;
+  }
 
 });
 
@@ -4193,12 +5369,26 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
  *
  * @module sszvis/component/bar
  *
- * @property {number, function} x       the x-value of the rectangles. Becomes a functor.
- * @property {number, function} y       the y-value of the rectangles. Becomes a functor.
- * @property {number, function} width   the width-value of the rectangles. Becomes a functor.
- * @property {number, function} height  the height-value of the rectangles. Becomes a functor.
- * @property {string, function} fill    the fill-value of the rectangles. Becomes a functor.
- * @property {string, function} stroke  the stroke-value of the rectangles. Becomes a functor.
+ * @property {number, function} x             the x-value of the rectangles. Becomes a functor.
+ * @property {number, function} y             the y-value of the rectangles. Becomes a functor.
+ * @property {number, function} width         the width-value of the rectangles. Becomes a functor.
+ * @property {number, function} height        the height-value of the rectangles. Becomes a functor.
+ * @property {string, function} fill          the fill-value of the rectangles. Becomes a functor.
+ * @property {string, function} stroke        the stroke-value of the rectangles. Becomes a functor.
+ * @property {boolean} centerTooltip          Whether or not to center the tooltip anchor within the bar.
+ *                                            The default tooltip anchor position is at the top of the bar,
+ *                                            centered in the width dimension. When this property is true,
+ *                                            the tooltip anchor will also be centered in the height dimension.
+ * @property {Array<Number>} tooltipAnchor    Where, relative to the box formed by the bar, to position the tooltip
+ *                                            anchor. This property is overriden if centerTooltip is true. The
+ *                                            value should be a two-element array, [x, y], where x is the position (in 0 - 1)
+ *                                            of the tooltip in the width dimension, and y is the position (also range 0 - 1)
+ *                                            in the height dimension. For example, the upper left corner would be [0, 0],
+ *                                            the center of the bar would be [0.5, 0.5], the middle of the right side
+ *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
+ *                                            the pyramid chart.
+ * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
+ *                                            are changed.
  *
  * @return {d3.component}
  */
@@ -4219,6 +5409,7 @@ sszvis_namespace('sszvis.component.bar', function(module) {
       .prop('fill', d3.functor)
       .prop('stroke', d3.functor)
       .prop('centerTooltip')
+      .prop('tooltipAnchor')
       .prop('transition').transition(true)
       .render(function(data) {
         var selection = d3.select(this);
@@ -4258,6 +5449,11 @@ sszvis_namespace('sszvis.component.bar', function(module) {
         if (props.centerTooltip) {
           tooltipPosition = function(d) {
             return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+          };
+        } else if (props.tooltipAnchor) {
+          var uv = props.tooltipAnchor.map(parseFloat);
+          tooltipPosition = function(d) {
+            return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
           };
         } else {
           tooltipPosition = function(d) {
@@ -4736,6 +5932,9 @@ sszvis_namespace('sszvis.component.pie', function(module) {
  * @property {number, d3.scale} barHeight          The height of a bar
  * @property {number, d3.scale} barWidth           The width of a bar
  * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {Array<number, number>} tooltipAnchor The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
+ *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
+ *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars
  * @property {function}         leftAccessor       Data for the left side
  * @property {function}         rightAccessor      Data for the right side
  * @property {function}         [leftRefAccessor]  Reference data for the left side
@@ -4759,6 +5958,7 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
       .prop('barFill', d3.functor).barFill('#000')
+      .prop('tooltipAnchor').tooltipAnchor([0.5, 0.5])
       .prop('leftAccessor')
       .prop('rightAccessor')
       .prop('leftRefAccessor')
@@ -4776,7 +5976,7 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
           .height(props.barHeight)
           .width(props.barWidth)
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var rightBar = sszvis.component.bar()
           .x(SPINE_PADDING)
@@ -4784,7 +5984,7 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
           .height(props.barHeight)
           .width(props.barWidth)
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var leftLine = lineComponent()
           .barPosition(props.barPosition)
@@ -4878,6 +6078,10 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
  * @property {Number, Function} columnPadding        A number, or function that takes a column index and returns a number,
  *                                                   for padding at the top of each column. Used to vertically center the columns.
  * @property {String, Function} columnLabel          A string, or a function that returns a string, for the label at the top of each column.
+ * @property {Number} columnLabelOffset              A value for offsetting the column labels in the x axis. Used to move the column labels around if you
+ *                                                   don't want them to be centered on the columns. This is useful in situations where the normal label would
+ *                                                   overlap outer boundaries or otherwise be inconveniently positioned. You can usually forget this, except
+ *                                                   perhaps in very narrow screen layouts.
  * @property {Number} linkCurvature                  A number to specify the amount of 'curvature' of the links. Should be between 0 and 1. Default 0.5.
  * @property {Color, Function} nodeColor             Color for the nodes. Can be a function that takes a node's data and returns a color.
  * @property {Color, Function} linkColor             Color for the links. Can be a function that takes a link's data and returns a color.
@@ -4886,6 +6090,11 @@ sszvis_namespace('sszvis.component.pyramid', function(module) {
  *                                                   are below smaller, thinner ones.
  * @property {String, Function} labelSide            A function determining the position of labels for the nodes. Should take a column index and
  *                                                   return a side ('left' or 'right'). Default is always 'left'.
+ * @property {Boolean} labelSideSwitch               A boolean used to determine whether to switch the label side. When true, 'left' labels will be shown on
+ *                                                   the right side, and 'right' labels on the left side. This is useful as a switch to be flipped in very
+ *                                                   narrow screen layouts, when you want the labels to appear on the opposite side of the columns they refer to.
+ * @property {Number} labelOpacity                   A value for the opacity of the column labels. You can change this to affect the visibility of the column
+ *                                                   labels, for instance to hide them when they would overlap with user-triggered hover labels.
  * @property {Number} labelHitBoxSize                A number for the width of 'hit boxes' added underneath the labels. This should basically be
  *                                                   equal to the width of the widest label. For performance reasons, it doesn't make sense to calculate
  *                                                   this value at run time while the component is rendered. Far better is to position the chart so that the
@@ -4917,11 +6126,14 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
       .prop('nodePadding')
       .prop('columnPadding', d3.functor)
       .prop('columnLabel', d3.functor).columnLabel('')
+      .prop('columnLabelOffset', d3.functor).columnLabelOffset(0)
       .prop('linkCurvature').linkCurvature(0.5)
       .prop('nodeColor', d3.functor)
       .prop('linkColor', d3.functor)
       .prop('linkSort', d3.functor).linkSort(function(a, b) { return a.value - b.value; }) // Default sorts in descending order of value
       .prop('labelSide', d3.functor).labelSide('left')
+      .prop('labelSideSwitch')
+      .prop('labelOpacity', d3.functor).labelOpacity(1)
       .prop('labelHitBoxSize').labelHitBoxSize(0)
       .prop('nameLabel').nameLabel(sszvis.fn.identity)
       .prop('linkSourceLabels').linkSourceLabels([])
@@ -4978,7 +6190,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
         columnLabels.exit().remove();
 
         columnLabels
-          .attr('transform', function(d, i) { return sszvis.svgUtils.translateString(columnLabelX(i), columnLabelY); })
+          .attr('transform', function(d, i) { return sszvis.svgUtils.translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY); })
           .text(function(d, i) { return props.columnLabel(i); });
 
         var columnLabelTicks = barGroup
@@ -5093,6 +6305,14 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
           .text(props.linkLabel);
 
         // Render the node labels and their hit boxes
+        var getLabelSide = function(colIndex) {
+          var side = props.labelSide(colIndex);
+          if (props.labelSideSwitch) {
+            side = side === 'left' ? 'right' : 'left';
+          }
+          return side;
+        }
+
         var nodeLabelsGroup = selection.selectGroup('nodelabels');
 
         var barLabels = nodeLabelsGroup
@@ -5108,9 +6328,10 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
         barLabels
           .text(function(node) { return props.nameLabel(node.id); })
           .attr('text-align', 'middle')
-          .attr('text-anchor', function(node) { return props.labelSide(node.columnIndex) === 'left' ? 'end' : 'start'; })
-          .attr('x', function(node) { return props.labelSide(node.columnIndex) === 'left' ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6; })
-          .attr('y', function(node) { return yPosition(node) + yExtent(node) / 2; });
+          .attr('text-anchor', function(node) { return getLabelSide(node.columnIndex) === 'left' ? 'end' : 'start'; })
+          .attr('x', function(node) { return getLabelSide(node.columnIndex) === 'left' ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6; })
+          .attr('y', function(node) { return yPosition(node) + yExtent(node) / 2; })
+          .style('opacity', props.labelOpacity)
 
         var barLabelHitBoxes = nodeLabelsGroup
           .selectAll('.sszvis-sankey-hitbox')
@@ -5124,7 +6345,7 @@ sszvis_namespace('sszvis.component.sankey', function(module) {
 
         barLabelHitBoxes
           .attr('fill', 'transparent')
-          .attr('x', function(node) { return xPosition(node) + (props.labelSide(node.columnIndex) === 'left' ? -props.labelHitBoxSize : 0); })
+          .attr('x', function(node) { return xPosition(node) + (getLabelSide(node.columnIndex) === 'left' ? -props.labelHitBoxSize : 0); })
           .attr('y', function(node) { return yPosition(node) - (props.nodePadding / 2); })
           .attr('width', props.labelHitBoxSize + props.nodeThickness)
           .attr('height', function(node) { return yExtent(node) + props.nodePadding; });
@@ -5428,6 +6649,9 @@ sszvis_namespace('sszvis.component.stackedBar', function(module) {
  * @property {number, d3.scale} barHeight          The height of a bar
  * @property {number, d3.scale} barWidth           The width of a bar
  * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {Array<number, number>} tooltipAnchor The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
+ *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
+ *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars
  * @property {function}         leftAccessor       Data for the left side
  * @property {function}         rightAccessor      Data for the right side
  * @property {function}         [leftRefAccessor]  Reference data for the left side
@@ -5451,6 +6675,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
       .prop('barWidth', d3.functor)
       .prop('barPosition', d3.functor)
       .prop('barFill', d3.functor).barFill('#000')
+      .prop('tooltipAnchor').tooltipAnchor([0.5, 0.5])
       .prop('leftAccessor')
       .prop('rightAccessor')
       .prop('leftRefAccessor')
@@ -5472,7 +6697,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var rightBar = sszvis.component.bar()
           .x(function(d){ return SPINE_PADDING + d.y0; })
@@ -5480,7 +6705,7 @@ sszvis_namespace('sszvis.component.stackedPyramid', function(module) {
           .height(props.barHeight)
           .width(sszvis.fn.prop('y'))
           .fill(props.barFill)
-          .centerTooltip(true);
+          .tooltipAnchor(props.tooltipAnchor);
 
         var leftStack = stackComponent()
           .stackElement(leftBar);
@@ -6147,9 +7372,14 @@ sszvis_namespace('sszvis.control.slider', function(module) {
  * @module sszvis/layout/heatTableDimensions
  *
  * @param  {Number} spaceWidth   the total available width for the heat table within its container
- * @param  {Number} padding the padding, in pixels, between squares in the heat table
+ * @param  {Number} squarePadding the padding, in pixels, between squares in the heat table
  * @param  {Number} numX     The number of columns that need to fit within the heat table width
  * @param {Number} numY The number of rows in the table
+ * @param {Object} chartPadding An object that includes padding values for the left, right, top,
+ *                              and bottom padding which the heat table should have within its container.
+ *                              These padding values should be enough to include any axis labels or other things
+ *                              that show up around the table itself. The heat table will then fill the rest
+ *                              of the available space as appropriate (up to a certain maximum size of box)
  * @return {object}         An object with dimension information about the heat table:
  *                          {
  *                              side: the length of one side of a table box
@@ -6157,27 +7387,28 @@ sszvis_namespace('sszvis.control.slider', function(module) {
  *                              padRatio: the ratio of padding to paddedSide (used for configuring d3.scale.ordinal.rangeBands as the second parameter)
  *                              width: the total width of all table boxes plus padding in between
  *                              height: the total height of all table boxes plus padding in between
- *                              centeredOffset: the left offset required to center the table horizontally within spaceWidth
+ *                              centeredOffset: the left offset required to center the table horizontally within its container
  *                          }
  */
 sszvis_namespace('sszvis.layout.heatTableDimensions', function(module) {
   'use strict';
 
-  module.exports = function(spaceWidth, padding, numX, numY) {
+  module.exports = function(spaceWidth, squarePadding, numX, numY, chartPadding) {
     // this includes the default side length for the heat table
     var DEFAULT_SIDE = 30,
-        side = Math.min((spaceWidth - padding * (numX - 1)) / numX, DEFAULT_SIDE),
-        paddedSide = side + padding,
+        availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
+        side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
+        paddedSide = side + squarePadding,
         padRatio = 1 - (side / paddedSide),
-        tableWidth = numX * paddedSide - padding, // subtract the padding at the end
-        tableHeight = numY * paddedSide - padding; // subtract the padding at the end
+        tableWidth = (numX * paddedSide) - squarePadding, // subtract the squarePadding at the end
+        tableHeight = (numY * paddedSide) - squarePadding; // subtract the squarePadding at the end
     return {
       side: side,
       paddedSide: paddedSide,
       padRatio: padRatio,
       width: tableWidth,
       height: tableHeight,
-      centeredOffset: (spaceWidth - tableWidth) / 2
+      centeredOffset: Math.max((availableChartWidth - tableWidth) / 2, 0)
     };
   };
 
@@ -6251,9 +7482,10 @@ sszvis_namespace('sszvis.layout.horizontalBarChartDimensions', function(module) 
  *
  * @module sszvis/layout/populationPyramidLayout
  *
- * @property {number} defaultHeight   The default height of the chart. This is used as a base for calculating rounded bar heights.
- *                                    however, the returned total height will not necessarily be the same as this value.
- * @property {number} numBars         The number of bars in the population pyramid. In other words, the number of ages or age groups in the dataset.
+ * @parameter {number} spaceWidth      The available width for the chart. This is used as a base for calculating the size of the chart
+ *                                    (there's a default aspect ratio for its height), and then for calculating the rounded bar heights.
+ *                                    The returned total height should be nicely proportionate to this value.
+ * @parameter {number} numBars         The number of bars in the population pyramid. In other words, the number of ages or age groups in the dataset.
  *
  * @return {object}                   An object containing configuration information for the population pyramid:
  *                                    {
@@ -6263,19 +7495,27 @@ sszvis_namespace('sszvis.layout.horizontalBarChartDimensions', function(module) 
  *                                      positions: an array of positions, which go from the bottom of the chart (lowest age) to the top. These positions should
  *                                      be set as the range of a d3.scale.ordinal scale, where the domain is the list of ages or age groups that will be displayed
  *                                      in the chart. The domain ages or age groups should be sorted in ascending order, so that the positions will match up. If everything
- *                                      has gone well, the positions array's length will be numBars
+ *                                      has gone well, the positions array's length will be numBars,
+ *                                      maxBarLength: The maximum length of the bars to fit within the space while keeping a good aspect ratio.
+ *                                      In situations with very wide screens, this limits the width of the entire pyramid to a reasonable size.
+ *                                      chartPadding: left padding for the chart. When the maxBarLength is less than what would fill the entire width
+ *                                      of the chart, this value is needed to offset the axes and legend so that they line up with the chart. Otherwise,
+ *                                      the value is 0 and no padding is needed.
  *                                    }
  */
 sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
   'use strict';
 
-  module.exports = function(defaultHeight, numBars) {
+  module.exports = function(spaceWidth, numBars) {
+    var MAX_HEIGHT = 480; // Chart no taller than this
+    var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
+    var defaultHeight = Math.min(sszvis.aspectRatio.ar16to10(spaceWidth), MAX_HEIGHT);
     var padding = 1;
     var numPads = numBars - 1;
     var totalPadding = padding * numPads;
 
     var roundedBarHeight = Math.round((defaultHeight - totalPadding) / numBars);
-    roundedBarHeight = Math.max(roundedBarHeight, 2); // bars no shorter than 2
+    roundedBarHeight = Math.max(roundedBarHeight, MIN_BAR_HEIGHT);
 
     var totalHeight = numBars * roundedBarHeight + totalPadding;
 
@@ -6287,11 +7527,16 @@ sszvis_namespace('sszvis.layout.populationPyramidLayout', function(module) {
       barPos -= step;
     }
 
+    var maxBarLength = Math.min(spaceWidth / 2, 400);
+    var chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
+
     return {
       barHeight: roundedBarHeight,
       padding: padding,
       totalHeight: totalHeight,
-      positions: positions
+      positions: positions,
+      maxBarLength: maxBarLength,
+      chartPadding: chartPadding
     };
   };
 
@@ -6672,6 +7917,9 @@ sszvis_namespace('sszvis.layout.smallMultiples', function(module) {
         var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
         var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
 
+        var horizontalCenter = unitWidth / 2;
+        var verticalCenter = unitHeight / 2;
+
         var multiples = selection.selectAll('g.sszvis-multiple')
           .data(data);
 
@@ -6696,8 +7944,10 @@ sszvis_namespace('sszvis.layout.smallMultiples', function(module) {
           .datum(function(d, i) {
             d.gx = (i % props.cols) * (unitWidth + props.paddingX);
             d.gw = unitWidth;
+            d.cx = horizontalCenter;
             d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
             d.gh = unitHeight;
+            d.cy = verticalCenter;
             return d;
           })
           .attr('transform', function(d) {
@@ -7136,10 +8386,13 @@ sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
           return false;
         }
 
+        var domain = props.scale.domain();
+
         var values = props.displayValues;
         if (!values.length && props.scale.ticks) {
-          values = props.scale.ticks(props.segments);
+          values = props.scale.ticks(props.segments - 1);
         }
+        values.push(sszvis.fn.last(domain));
 
         // Avoid division by zero
         var segWidth = values.length > 0 ? props.width / values.length : 0;
@@ -7161,8 +8414,7 @@ sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
           .attr('height', segHeight)
           .attr('fill', function(d) { return props.scale(d); });
 
-        var domain = props.scale.domain();
-        var startEnd = [domain[0], domain[domain.length - 1]];
+        var startEnd = [sszvis.fn.first(domain), sszvis.fn.last(domain)];
         var labelText = props.labelText || startEnd;
 
         // rounded end caps for the segments
@@ -7171,13 +8423,15 @@ sszvis_namespace('sszvis.legend.linearColorScale', function(module) {
 
         endCaps.enter()
           .append('circle')
-          .attr('class', 'ssvis-legend--mark')
+          .attr('class', 'ssvis-legend--mark');
+
+        endCaps.exit().remove();
+
+        endCaps
           .attr('cx', function(d, i) { return i * props.width; })
           .attr('cy', segHeight / 2)
           .attr('r', segHeight / 2)
           .attr('fill', function(d) { return props.scale(d); });
-
-        endCaps.exit().remove();
 
         var labels = selection.selectAll('.sszvis-legend__label')
           .data(labelText);
@@ -7707,6 +8961,19 @@ sszvis_namespace('sszvis.map.utils', function(module) {
     return geoJson.properties.cachedCenter;
   };
 
+  /**
+   * widthAdaptiveMapPathStroke
+   *
+   * A little "magic" function for automatically calculating map stroke sizes based on
+   * the width of the container they're in. Used for responsive designs.
+   * 
+   * @param  {number} width    The width of the container holding the map.
+   * @return {number}          The stroke width that the map elements should have.
+   */
+  module.exports.widthAdaptiveMapPathStroke = function(width) {
+    return Math.max(0.6, width / 1000);
+  };
+
 });
 
 
@@ -7783,6 +9050,7 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
       .prop('radius', d3.functor)
       .prop('fill', d3.functor)
       .prop('strokeColor', d3.functor).strokeColor('#ffffff')
+      .prop('strokeWidth', d3.functor).strokeWidth(1)
       .prop('transition').transition(true)
       .render(function() {
         var selection = d3.select(this);
@@ -7802,7 +9070,8 @@ sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
             return sszvis.svgUtils.translateString(position[0], position[1]);
           })
           .attr('fill', function(d) { return props.fill(d.datum); })
-          .attr('stroke', function(d) { return props.strokeColor(d.datum); })
+          .style('stroke', function(d) { return props.strokeColor(d.datum); })
+          .style('stroke-width', function(d) { return props.strokeWidth(d.datum); })
           .sort(function(a, b) {
             return props.radius(b.datum) - props.radius(a.datum);
           });
@@ -8050,7 +9319,12 @@ sszvis_namespace('sszvis.map.renderer.geojson', function(module) {
           .position(function(d) {
             d.geoJson.properties || (d.geoJson.properties = {});
 
-            return props.mapPath.centroid(d.geoJson);
+            var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
+            if (!sphericalCentroid) {
+              d.geoJson.properties.sphericalCentroid = sphericalCentroid = d3.geo.centroid(d.geoJson);
+            }
+
+            return props.mapPath.projection()(sphericalCentroid);
           });
 
         var tooltipGroup = selection.selectGroup('tooltipAnchors')
@@ -8241,6 +9515,7 @@ sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
       .prop('geoJson')
       .prop('mapPath')
       .prop('borderColor').borderColor('white') // A function or string for the color of all borders. Note: all borders have the same color
+      .prop('strokeWidth').strokeWidth(1.25)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -8258,7 +9533,8 @@ sszvis_namespace('sszvis.map.renderer.mesh', function(module) {
 
         meshLine
           .attr('d', props.mapPath)
-          .style('stroke', props.borderColor);
+          .style('stroke', props.borderColor)
+          .style('stroke-width', props.strokeWidth);
       });
   };
 
@@ -8295,6 +9571,7 @@ sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
       .prop('mapPath')
       .prop('highlight').highlight([]) // an array of data values to highlight
       .prop('highlightStroke', d3.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
+      .prop('highlightStrokeWidth', d3.functor).highlightStrokeWidth(2)
       .render(function() {
         var selection = d3.select(this);
         var props = selection.props();
@@ -8332,12 +9609,9 @@ sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
         highlightBorders.exit().remove();
 
         highlightBorders
-          .attr('d', function(d) {
-            return props.mapPath(d.geoJson);
-          })
-          .attr('stroke', function(d) {
-            return props.highlightStroke(d.datum);
-          });
+          .attr('d', function(d) { return props.mapPath(d.geoJson); })
+          .style('stroke', function(d) { return props.highlightStroke(d.datum); })
+          .style('stroke-width', function(d) { return props.highlightStrokeWidth(d.datum); });
       });
   };
 
@@ -8833,4 +10107,101 @@ sszvis_namespace('sszvis.svgUtils.translateString', function(module) {
     return 'translate(' + x + ',' + y + ')';
   };
 
+});
+
+
+//////////////////////////////////// SECTION ///////////////////////////////////
+
+
+/**
+ * Viewport Resize watcher
+ *
+ * The resize watcher in the sszvis.viewport module can be used for alerting user code to
+ * changes in the browser window size. This includes window resizing on desktop computers
+ * and browsers, but also orientation changes on mobile browsers. Functions which listen
+ * to the 'resize' event of the sszvis.viewport module will be fired on window resize.
+ * You can add a resize listener to your application very easily:
+ *
+ * sszvis.viewport.on('resize', listenerFunction);
+ *
+ * The listener function will be called once per resize event, but at a slight delay. This is because,
+ * while a user is resizing their browser window, many resize events can fire very quickly. This component
+ * automatically throttles the rate at which the listener function is called, since you probably don't need
+ * to respond to every single resize event. This throttling provides for a smoother user experience as they
+ * resize the browser, and increases performance across the board. The listener function will always be
+ * called after one or more window resize events, it just won't be called as often as the window fires the
+ * events.
+ *
+ * @module sszvis/viewport
+ * 
+ * @function {string, function} on      the .on() function is used to listen to the resize event itself.
+ *                                      There is only one event supported by this component at the moment, so
+ *                                      the first argument to .on must be 'resize' for it to have any effect.
+ *                                      Although this is somewhat redundant, it is done to keep this component's
+ *                                      API clear and in line with other components.
+ * 
+ * @return {Object}
+ */
+sszvis_namespace('sszvis.viewport', function(module) {
+  'use strict';
+
+  // throttles a function to the trailing edge. Copied mostly verbatim from underscore.js
+  function throttle(wait, func) {
+    var context, args, result;
+    var timeout = null;
+    var previous = 0;
+    var lastCall = function() {
+      previous = 0;
+      result = func.apply(context, args);
+      timeout = context = args = null;
+    };
+    return function() {
+      var now = Date.now();
+      if (!previous) previous = now; // Sets up so that the function isn't called immediately
+      var remaining = wait - (now - previous);
+      context = this;
+      args = arguments;
+      if (remaining <= 0 || remaining > wait) {
+        if (timeout) {
+          clearTimeout(timeout);
+          timeout = null;
+        }
+        previous = now;
+        result = func.apply(context, args);
+        if (!timeout) context = args = null;
+      } else if (!timeout) {
+        timeout = setTimeout(lastCall, remaining);
+      }
+      return result;
+    };
+  }
+
+  // This rather strange set of functions is designed to support the API:
+  // sszvis.viewport.on('resize', callback);
+  // While still enabling the user to register multiple callbacks for the 'resize'
+  // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
+  // object would not allow.
+  var callbacks = {
+    resize: []
+  };
+
+  d3.select(window).on('resize', throttle(500, function() { module.exports.trigger('resize'); }));
+
+  module.exports.on = function(name, cb) {
+    if (!callbacks[name]) { callbacks[name] = []; }
+    callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; }).concat(cb);
+    return this;
+  };
+
+  module.exports.off = function(name, cb) {
+    if (!callbacks[name]) { return this; }
+    callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; });
+    return this;
+  };
+
+  module.exports.trigger = function(name) {
+    var evtArgs = Array.prototype.slice.call(arguments, 1);
+    if (callbacks[name]) { callbacks[name].forEach(function(fn) { fn.apply(null, evtArgs); }); }
+    return this;
+  };
 });

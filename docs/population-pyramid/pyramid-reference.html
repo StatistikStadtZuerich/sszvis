@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Population Pyramid</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -64,7 +65,9 @@
         .apply(state.data);
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -91,16 +94,17 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var defaultHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO;
-    var pyramidDimensions = sszvis.layout.populationPyramidLayout(defaultHeight, state.ages.length);
-    var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 86, top: 25, bottom: 86 });
+    var pyramidWidth = sszvis.fn.measureDimensions('#sszvis-chart').width;
+    var pyramidDimensions = sszvis.layout.populationPyramidLayout(pyramidWidth, state.ages.length);
+    var chartPadding = { top: 25, bottom: 86 };
+    var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
 
 
     // Scales
 
     var lengthScale = d3.scale.linear()
       .domain([0, state.maxValue])
-      .range([0, bounds.innerWidth / 2]);
+      .range([0, pyramidDimensions.maxBarLength]);
 
     var positionScale = d3.scale.ordinal()
       .domain(state.ages)
@@ -171,6 +175,8 @@
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

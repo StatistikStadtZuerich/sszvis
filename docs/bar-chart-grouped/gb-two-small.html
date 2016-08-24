@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Grouped Bar Chart – Two Small</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -74,7 +75,9 @@
     hideTooltip: function(x, y) {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -100,7 +103,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 10, bottom: 140 });
+    var bounds = sszvis.bounds({ top: 10, bottom: 140 }, '#sszvis-chart');
 
 
     // Scales
@@ -134,7 +137,7 @@
       })
       .datum(state.groupedData);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
 
@@ -168,6 +171,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .header(sszvis.svgUtils.modularText.html().bold(function(d) {
         return xAcc(sszvis.fn.first(d));
       }))
@@ -212,6 +216,8 @@
 
     chartLayer.selectGroup('interactionLayer')
       .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, sszvis));

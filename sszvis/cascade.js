@@ -70,7 +70,6 @@
  *
  * @returns                 An instance of sszvis.cascade
  */
-
 sszvis_namespace('sszvis.cascade', function(module) {
 'use strict';
 

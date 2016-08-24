@@ -1,8 +1,9 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Heat Table – Binned</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -72,7 +73,9 @@
     hideTooltip: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -98,28 +101,28 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
+    var containerWidth = sszvis.fn.measureDimensions('#sszvis-chart').width;
     var squarePadding = 2;
+    var tablePadding = {
+      top: 40,
+      right: 0,
+      bottom: 60,
+      left: 40
+    };
     // heatTableDimensions calculates a set of useful properties for configuring the heat table.
     // give it the targeted width (final width will not necessarily match this), the padding between squares, and the number of squares
     // in each dimension (x, then y)
-    var tableDimensions = sszvis.layout.heatTableDimensions(sszvis.bounds.DEFAULT_WIDTH, squarePadding, state.g1List.length, state.g2List.length);
-    // this object represents the padding around the heat table. The centeredOffset value is computed by tableDimensions in such a way that using it as padding bounds will center the table within the chart area
-    var tablePadding = {
-      top: 60,
-      right: tableDimensions.centeredOffset,
-      bottom: 80,
-      left: tableDimensions.centeredOffset
-    };
+    var tableDimensions = sszvis.layout.heatTableDimensions(containerWidth, squarePadding, state.g1List.length, state.g2List.length, tablePadding);
+
     // construct the bounds as usual, but add the left and right padding to the width, and the top and bottom padding to the height
     // This is because, when bounds are being constructed, the padding is subtracted from width and height to provide innerWidth and innerHeight, but we want these values to represent the table's dimensions
     var bounds = sszvis.bounds({
-      width: tablePadding.left + tableDimensions.width + tablePadding.right,
+      height: tablePadding.top + tableDimensions.height + tablePadding.bottom,
       left: tablePadding.left,
       right: tablePadding.right,
-      height: tablePadding.top + tableDimensions.height + tablePadding.bottom,
       top: tablePadding.top,
       bottom: tablePadding.bottom
-    });
+    }, '#sszvis-chart');
 
 
     // Scales
@@ -159,7 +162,7 @@
       })
       .datum(state.data);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
 
@@ -204,11 +207,13 @@
         });
       });
 
+    var legendWidth = Math.min(bounds.innerWidth / 2, 260);
+
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
       .displayValues(BIN_EDGES)
       .endpoints(state.valueDomain)
-      .width(tableDimensions.width)
+      .width(legendWidth)
       .labelFormat(sszvis.format.number);
 
     var tooltipHeaderText = sszvis.svgUtils.modularText.html().bold('Units');
@@ -229,31 +234,37 @@
     // Rendering
 
     var bars = chartLayer.selectGroup('bars')
-      .call(barGen);
+      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset, 0))
+      .call(barGen)
 
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
-
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, -10))
+      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset, -10))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(-10, 0))
+      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset - 10, 0))
       .call(yAxis);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 40))
+      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset + (tableDimensions.width - legendWidth) / 2, bounds.innerHeight + 16))
       .call(legend);
 
 
     // Interaction
 
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-bar')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
 
+    bars
+      .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

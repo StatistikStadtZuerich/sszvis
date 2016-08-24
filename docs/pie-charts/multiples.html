@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pie Chart Multiples</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -26,6 +27,57 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var PIE_DIAMETER = 204;
+  var LEGEND_PADDING = 40;
+  var MAX_WIDTH = 2 * PIE_DIAMETER + 30;
+
+  var queryProps = sszvis.responsiveProps()
+    .prop('rowsCols', {
+      palm: [5, 1],
+      _: [3, 2]
+    })
+    .prop('colorLegendColumns', {
+      palm: 1,
+      _: 2
+    })
+    .prop('bounds', {
+      palm: function(w) {
+        var legendHeight = 182;
+        var bottomPadding = LEGEND_PADDING + legendHeight + 20;
+        return {
+          top: 20,
+          right: 10,
+          bottom: bottomPadding,
+          left: 10,
+          height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding
+        }
+      },
+      _: function(w) {
+        var legendHeight = 98;
+        var bottomPadding = LEGEND_PADDING + legendHeight + 20;
+        return {
+          top: 20,
+          right: 20,
+          bottom: bottomPadding,
+          left: 20,
+          height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding
+        }
+      }
+    })
+    .prop('legendPosition', {
+      palm: function(w) {
+        return {
+          top: LEGEND_PADDING,
+          left: (w - 2 * 10)/2 - PIE_DIAMETER/2
+        }
+      },
+      _: function(w) {
+        return {
+          top: LEGEND_PADDING,
+          left: 0
+        }
+      }
+    })
 
 
   /* Shortcuts
@@ -95,7 +147,9 @@
       state.selection = [];
       state.selectedCategories = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -121,7 +175,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ width: 516, height: 880, top: 40, right: 40, bottom: 165, left: 40 });
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -143,7 +198,7 @@
       })
       .datum(state.pieGroups);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart');
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
 
 
     // Components
@@ -153,17 +208,17 @@
 
     // this component generates svg 'g' tags into which chart instances can be rendered
     var multiplesMaker = sszvis.layout.smallMultiples()
-      .width(bounds.innerWidth)
+      .width(d3.min([MAX_WIDTH, bounds.innerWidth]))
       .height(bounds.innerHeight)
       .paddingX(30)
       .paddingY(30)
-      .rows(3)
-      .cols(2);
+      .rows(props.rowsCols[0])
+      .cols(props.rowsCols[1]);
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .columnWidth(bounds.innerWidth / 2)
-      .columns(2)
+      .columnWidth(d3.min([MAX_WIDTH, bounds.innerWidth]) / 2)
+      .columns(props.colorLegendColumns)
       .orientation('horizontal');
 
     // the infotip has special behavior because it shows up even when its directly
@@ -190,13 +245,16 @@
       var groupScale = aScale.copy()
         .domain([0, state.totalValues[d.group]]);
 
+      var pieRadius = Math.min(d.gw, d.gh) / 2;
+
       // configure the pieMaker component for this particular group
       pieMaker
-        .radius(Math.min(d.gw, d.gh) / 2)
+        .radius(pieRadius)
         .angle(sszvis.fn.compose(groupScale, vAcc));
 
       // render the pie chart inside this group
       d3.select(this).selectAll('.sszvis-multiple-chart')
+        .attr('transform', sszvis.svgUtils.translateString(d.cx - pieRadius, d.cy - pieRadius))
         .call(pieMaker);
     });
 
@@ -205,7 +263,7 @@
       .call(tooltip);
 
     chart.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 50))
+      .attr('transform', sszvis.svgUtils.translateString(props.legendPosition.left, bounds.innerHeight + props.legendPosition.top))
       .call(colorLegend);
 
 
@@ -214,6 +272,8 @@
     pieCharts.selectAll('path')
       .on('mouseover', actions.showTooltip)
       .on('mouseout',  actions.hideTooltip);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

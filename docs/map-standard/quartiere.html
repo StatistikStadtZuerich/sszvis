@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -75,20 +76,22 @@
     },
 
     selectHovered: function(d) {
-      state.selection = [d];
+      state.selection = [d.datum];
       render(state);
     },
 
     deselectHovered: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
   /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/S_tabs.csv')
+  d3.csv('data/S_quartiere.csv')
     .row(function(d) {
       return {
         quarternum: sszvis.parse.number(d['Qcode']),
@@ -109,9 +112,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    // to match the design, the map should be 442 pixels across. This calculates padding required to achieve that.
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 592, top: 80, right: padding, bottom: 90, left: padding });
+    var bounds = sszvis.bounds({ top: 80, bottom: 90 }, '#sszvis-chart');
 
 
     // Scales
@@ -128,15 +129,13 @@
       })
       .datum(state.currentMapData);
 
-    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart');
+    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
 
     // Components
-
-    // Button group control for switching the data year
 
     var controlWidth = bounds.width / 2;
 
@@ -154,6 +153,8 @@
         var v = vAcc(d);
         return isNaN(v) ? 'white' : sszvis.color.muchDarker(colorScale(vAcc(d)));
       })
+      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
+      .highlightStrokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width) + 1)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .defined(function(d) {
@@ -161,10 +162,7 @@
         // undefined or empty string values become NaN
         return !isNaN(vAcc(d));
       })
-      .fill(sszvis.fn.compose(colorScale, vAcc))
-      .on('over', actions.selectHovered)
-      .on('click', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      .fill(sszvis.fn.compose(colorScale, vAcc));
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
@@ -200,6 +198,20 @@
       .style('left', ((bounds.width - controlWidth) / 2) + 'px')
       .style('top', (22) + 'px')
       .call(control);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    chartLayer
+      .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
   function isSelected(d) {

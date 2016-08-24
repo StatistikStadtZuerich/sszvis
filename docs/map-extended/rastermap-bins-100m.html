@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Map</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -57,7 +58,9 @@
       state.valueDomain = d3.extent(data, kinderAcc);
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -83,9 +86,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    // Padding
-    var padding = (sszvis.bounds.DEFAULT_WIDTH - 442) / 2;
-    var bounds = sszvis.bounds({ height: 640, top: 30, right: padding, bottom: 90, left: padding });
+    var bounds = sszvis.bounds({ bottom: 110 }, '#sszvis-chart');
 
 
     // Scales
@@ -178,8 +179,10 @@
       .call(mapMaker);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 40))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 60))
       .call(legend);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 }(d3, topojson, sszvis));

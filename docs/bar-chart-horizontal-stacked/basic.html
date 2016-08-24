@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stacked Horizontal Bar Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -26,6 +27,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('targetNumColumns', {
+      palm: 1,
+      _: 2
+    })
+    .prop('bottomPadding', {
+      palm: 320,
+      _: 190
+    });
 
 
   /* Shortcuts
@@ -72,10 +82,13 @@
       state.selection = [datum];
       render(state);
     },
+
     hideTooltip: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -101,7 +114,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ height: 322, top: 14, bottom: 170 });
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ height: 170 + props.bottomPadding, top: 14, bottom: props.bottomPadding }, '#sszvis-chart');
 
 
     // Scales
@@ -126,7 +140,7 @@
       })
       .datum(state.stackedData);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
 
@@ -153,8 +167,8 @@
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
       .orientation('horizontal')
-      .rows(state.categories.length / 2)
-      .columnWidth(bounds.innerWidth / 2)
+      .rows(state.categories.length / props.targetNumColumns)
+      .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 260))
       .orientation('vertical');
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
@@ -165,6 +179,7 @@
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .header(tooltipHeader)
       .body(tooltipText)
       .visible(isSelected);
@@ -196,6 +211,8 @@
     bars.selectAll('.sszvis-bar')
       .on('mouseover', actions.showTooltip)
       .on('mouseout',  actions.hideTooltip);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

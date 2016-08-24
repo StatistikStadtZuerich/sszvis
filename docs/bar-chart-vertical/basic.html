@@ -2,6 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Vertical Bar Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -60,7 +62,9 @@
     hideTooltip: function() {
       state.selection = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -85,7 +89,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 3, bottom: 25 });
+    var bounds = sszvis.bounds({ top: 3, bottom: 25 }, '#sszvis-chart');
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
 
@@ -114,7 +118,7 @@
       })
       .datum(state.data);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selection);
 
 
@@ -167,6 +171,8 @@
     bars.selectAll('.sszvis-bar')
       .on('mouseover', actions.showTooltip)
       .on('mouseout', actions.hideTooltip);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

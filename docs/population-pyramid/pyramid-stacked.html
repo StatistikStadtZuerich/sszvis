@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Population Pyramid</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -26,6 +27,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('bottomPadding', {
+      lap: 150,
+      _: 100
+    })
+    .prop('numLegendRows', {
+      lap: 4,
+      _: 2
+    });
 
 
   /* Shortcuts
@@ -66,7 +76,9 @@
       });
 
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -93,16 +105,21 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var defaultHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO;
-    var pyramidDimensions = sszvis.layout.populationPyramidLayout(defaultHeight, state.ages.length);
-    var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 106, top: 25, bottom: 106 });
+    var chartDimensions = sszvis.fn.measureDimensions('#sszvis-chart');
+
+    var props = queryProps(chartDimensions);
+    var pyramidDimensions = sszvis.layout.populationPyramidLayout(chartDimensions.width, state.ages.length);
+
+    var chartPadding = { top: 25, bottom: props.bottomPadding };
+
+    var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
 
 
     // Scales
 
     var lengthScale = d3.scale.linear()
       .domain([0, state.maxStackedValue])
-      .range([0, bounds.innerWidth / 2]);
+      .range([0, pyramidDimensions.maxBarLength]);
 
     var positionScale = d3.scale.ordinal()
       .domain(state.ages)
@@ -151,8 +168,8 @@
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(colorScale)
       .orientation('vertical')
-      .rows(2)
-      .columnWidth(bounds.innerWidth / 2);
+      .rows(props.numLegendRows)
+      .columnWidth(Math.min(bounds.innerWidth / 2, 300));
 
 
     // Rendering
@@ -173,6 +190,8 @@
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 

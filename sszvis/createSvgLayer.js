@@ -32,7 +32,7 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
 
     var elementDataKey = 'data-sszvis-svg-' + key;
 
-    var root = d3.select(selector);
+    var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
     var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
     var svgEnter = svg.enter().append('svg');
 
@@ -56,7 +56,9 @@ sszvis_namespace('sszvis.createSvgLayer', function(module) {
 
     var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0]);
     viewport.enter().append('g')
-      .attr('data-sszvis-svg-layer', '')
+      .attr('data-sszvis-svg-layer', '');
+
+    viewport
       .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
     return viewport;

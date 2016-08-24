@@ -38,11 +38,7 @@ A callback/event handler function to call when the user clicks on a value. Note 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 645
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -94,11 +90,7 @@ A callback function called whenever user interaction attempts to change the slid
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 460
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -150,10 +142,6 @@ A boolean or boolean function which determines whether the ruler should be flipp
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 675
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

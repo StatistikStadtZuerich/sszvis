@@ -48,11 +48,7 @@ A basic pie chart example, with tooltip interaction.
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 300
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -74,11 +70,7 @@ Shows the creation of a pie chart with many categories
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 300
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -86,6 +78,10 @@ Shows the creation of a pie chart with many categories
 ## sszvis.layout.smallMultiples
 
 To render pie charts in a group, the multiples component can be used to create SVG groups into which charts can be rendered.
+
+```hint
+For the small multiples chart, on narrow screens we will have a color legend both at the top and at the bottom of the list of pie charts. We should also switch between two and one columns of ordinal color labels. And the pies should go from two columns to one at the same time. We also need to introduce a max size for the pies, a max spacing between them, and centering of the group.
+```
 
 ### Data structure
 
@@ -136,10 +132,6 @@ Shows the use of the multiples component to render several pie charts, each one 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 880
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

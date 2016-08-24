@@ -52,11 +52,7 @@ A base layer example using the Stadtkreise map data. This is a static map
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html"]
 }
 ```
 
@@ -79,11 +75,7 @@ A base layer example using the Statistische Quartiere map data. This is a static
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html"]
 }
 ```
 
@@ -106,11 +98,7 @@ A base layer example that uses the Statistische Zonen map data. This is a static
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
     },
-    "sourceView": ["index.html"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html"]
 }
 ```
 
@@ -133,11 +121,7 @@ A base layer example using the Wahlkreise map data. This is a static map
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-wahlkreise.js"
     },
-    "sourceView": ["index.html"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html"]
 }
 ```
 
@@ -160,11 +144,7 @@ A base layer example using the Agglomeration (2012) map data. This is a static m
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-agglomeration-2012.js"
     },
-    "sourceView": ["index.html"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html"]
 }
 ```
 
@@ -187,10 +167,6 @@ A base layer example using the Switzerland map data. This is a static map
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-switzerland.js"
     },
-    "sourceView": ["index.html"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html"]
 }
 ```

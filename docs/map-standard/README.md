@@ -82,11 +82,7 @@ A map of Zürich's Stadtkreise.
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -110,11 +106,7 @@ A map of Zürich's Wahlkreise.
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-wahlkreise.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 542
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -124,13 +116,13 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 
 ```project
 {
-    "name": "map-tabs",
+    "name": "map-quartiere",
     "files": {
         "index.html": {
-            "source": "docs/map-standard/tabs.html",
+            "source": "docs/map-standard/quartiere.html",
             "template": "docs/template.html"
         },
-        "data.csv": "docs/map-standard/data/S_tabs.csv",
+        "data.csv": "docs/map-standard/data/S_quartiere.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
@@ -138,11 +130,35 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 675
-    }
+    "sourceView": ["index.html", "data.csv"]
+}
+```
+
+## Zürich: Quartiere (viewBox example)
+
+A map of the statistische quartiere of Zürich, which demonstrates the use of the SVG viewBox attribute for automatic scaling at different screen resolutions. Scaling using viewbox works by scaling the whole SVG to fit within the given bounds, so it can be useful to create a small version of a detail rich map.
+
+```hint
+Because the whole SVG will be resized labels and other elements will be scaled as well, making this method of scaling unusable in most cases. Use `sszvis.responsiveProps()` instead.
+```
+
+```project
+{
+    "name": "map-quartiere-viewbox",
+    "files": {
+        "index.html": {
+            "source": "docs/map-standard/quartiere-viewbox.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map-standard/data/S_quartiere.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
+    },
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -166,11 +182,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 693
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -194,11 +206,7 @@ A map of the "statistical zones" of Zürich
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 516
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -222,11 +230,7 @@ A map of Zürich's agglomeration.
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-zurich-agglomeration-2012.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 730
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -250,10 +254,6 @@ A map of Switzerland.
         "topojson.js": "vendor/topojson/topojson.js",
         "map.js": "map-modules/sszvis-map-switzerland.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 516
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

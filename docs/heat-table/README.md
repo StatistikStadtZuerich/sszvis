@@ -6,6 +6,13 @@
 
 The heat table does not have a special component. Instead, it is constructed using [sszvis.component.bar](/#/bar-chart-vertical) by setting the width and height equal to each other, and with the use of the *x*- and *y*-position functions. Both *x*- and *y*-scales are ordinal scales which use the rangeBands function to calculate the output range.
 
+
+```hint
+## Responsive Layout
+
+The heat table's responsive layout is based on dynamically resizing the boxes of the heat table and positioning it in an appropriate place. On very narrow screens, it also might require slight adjustments to the length and orientation of axis labels. There should also not be much (if any) padding around the outside of the chart. This is because the embedding context on sszvis.com provides its own padding. Axis labels along the top edge can and should be turned completely vertical. Axis labels along the left side of the chart should be kept as short as possible. It might be necessary in some cases to provide an alternate set of shortened axis labels for a narrow mobile screen. The number of columns should be kept within a reasonable range. Unfortunately, with the heat table, it's just not possible to cram too many columns into a narrow space. The heat table box size will still be chosen automatically (by the layout function). The heat table layout function also provides information for centering the whole thing horizontally within its container.
+```
+
 ### Data structure
 
 This component requires a flat array of objects, and each object is turned into one square in the heat table.
@@ -36,11 +43,7 @@ Heat tables are based on [sszvis.component.bar](/#/bar-chart-vertical) and thus 
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 800
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -64,11 +67,7 @@ This example shows what age each partner in a partnership had when they had thei
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 372
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```
 
@@ -90,10 +89,6 @@ This example uses regularly spaced bins and shows positive/negative trends throu
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
     },
-    "sourceView": ["index.html", "data.csv"],
-    "size": {
-        "width": 516,
-        "height": 458
-    }
+    "sourceView": ["index.html", "data.csv"]
 }
 ```

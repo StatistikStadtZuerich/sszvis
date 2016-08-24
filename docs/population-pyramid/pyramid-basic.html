@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Population Pyramid</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -26,6 +27,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+   var queryProps = sszvis.responsiveProps()
+     .prop('tooltipAnchor', {
+       palm: [0.0, 0.5],
+       _: [0.5, 0.5]
+     })
+     .prop('tooltipOrientation', {
+       palm: 'bottom',
+       _: 'left'
+     });
 
 
   /* Shortcuts
@@ -145,7 +155,9 @@
     deselectBar: function() {
       state.selectedAge = [];
       render(state);
-    }
+    },
+
+    resize: function() { render(state); }
   };
 
 
@@ -171,16 +183,18 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var defaultHeight = sszvis.bounds.DEFAULT_WIDTH / sszvis.bounds.RATIO;
-    var pyramidDimensions = sszvis.layout.populationPyramidLayout(defaultHeight, state.ages.length);
-    var bounds = sszvis.bounds({ height: 25 + pyramidDimensions.totalHeight + 86, top: 25, bottom: 86 });
+    var pyramidWidth = sszvis.fn.measureDimensions('#sszvis-chart').width;
+    var pyramidDimensions = sszvis.layout.populationPyramidLayout(pyramidWidth, state.ages.length);
+    var chartPadding = { top: 25, bottom: 86 };
+    var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
 
     var lengthScale = d3.scale.linear()
       .domain([0, state.maxValue])
-      .range([0, bounds.innerWidth / 2]);
+      .range([0, pyramidDimensions.maxBarLength]);
 
     var colorScale = sszvis.color.qual6()
       .domain(state.groups);
@@ -206,7 +220,7 @@
     })
       .datum(state.populations);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart')
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
       .datum(state.selectedAge);
 
 
@@ -220,6 +234,7 @@
       .barPosition(sszvis.fn.compose(positionScale, aAcc))
       .barHeight(pyramidDimensions.barHeight)
       .barWidth(sszvis.fn.compose(lengthScale, vAcc))
+      .tooltipAnchor(props.tooltipAnchor)
       .leftAccessor(womenAcc)
       .rightAccessor(menAcc);
 
@@ -252,7 +267,7 @@
         });
         return rows.concat([['Alter', state.selectedAge.age]]);
       })
-      .orientation('left')
+      .orientation(props.tooltipOrientation)
       .visible(function(d) {
         return state.selectedAge.age === aAcc(d) && gAcc(d) === 'Männer';
       });
@@ -282,6 +297,7 @@
 
 
     // Interaction
+
     var interactionLayer = sszvis.behavior.move()
       .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
       // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
@@ -293,6 +309,8 @@
 
     chartLayer.selectGroup('interactionLayer')
       .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
   }
 
 
