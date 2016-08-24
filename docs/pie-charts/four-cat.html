@@ -28,23 +28,27 @@
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var PIE_DIAMETER = 260;
+  var LEGEND_TOP_PADDING = 40;
+  var LEGEND_LEFT_PADDING = 25;
   var LEGEND_HEIGHT = 76;
+  var LEGEND_WIDTH = 102;
   var queryProps = sszvis.responsiveProps()
     .prop('layout', {
       palm: function(width) {
         var sidePadding = d3.max([10, (width - PIE_DIAMETER) / 2]);
         var diameter = (width - 2 * sidePadding);
+        var legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
         return {
           bounds: {
             top: 20,
-            bottom: 140,
+            bottom: legendHeight,
             left: sidePadding,
             right: sidePadding,
-            height: 20 + 140 + diameter
+            height: 20 + diameter + legendHeight
           },
           pieRadius: diameter / 2,
           legendPosition: {
-            top: diameter + 40,
+            top: diameter + LEGEND_TOP_PADDING,
             left: 0
           }
         }
@@ -54,13 +58,13 @@
           top: 20,
           bottom: 20,
           left: 20,
-          right: 140,
+          right: LEGEND_WIDTH,
           height: 20 + 20 + PIE_DIAMETER
         },
         pieRadius: PIE_DIAMETER / 2,
         legendPosition: {
           top: PIE_DIAMETER/2 - LEGEND_HEIGHT/2,
-          left: PIE_DIAMETER + 25
+          left: PIE_DIAMETER + LEGEND_LEFT_PADDING
         }
       }
     })

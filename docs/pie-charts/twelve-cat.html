@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pie Chart</title>
 </head>
 <body style="margin:0;padding:0;">
@@ -26,22 +27,47 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var colorLegendWidth = 210;
-  var colorLegendHeight = 260;
-  var colorLegendPadding = 20;
+  var PIE_DIAMETER = 260;
+  var LEGEND_TOP_PADDING = 40;
+  var LEGEND_LEFT_PADDING = 25;
+  var LEGEND_HEIGHT = 245;
+  var LEGEND_WIDTH = 196;
   var queryProps = sszvis.responsiveProps()
-    .prop('legendPosition', {
-      lap: 'bottom',
-      _: 'side'
+    .prop('layout', {
+      palm: function(width) {
+        var sidePadding = d3.max([10, (width - PIE_DIAMETER) / 2]);
+        var diameter = (width - 2 * sidePadding);
+        var legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
+        return {
+          bounds: {
+            top: 20,
+            bottom: legendHeight,
+            left: sidePadding,
+            right: sidePadding,
+            height: 20 + diameter + legendHeight
+          },
+          pieRadius: diameter / 2,
+          legendPosition: {
+            top: diameter + LEGEND_TOP_PADDING,
+            left: 0
+          }
+        }
+      },
+      _: {
+        bounds: {
+          top: 20,
+          bottom: 20,
+          left: 20,
+          right: LEGEND_WIDTH,
+          height: 20 + 20 + PIE_DIAMETER
+        },
+        pieRadius: PIE_DIAMETER / 2,
+        legendPosition: {
+          top: PIE_DIAMETER/2 - LEGEND_HEIGHT/2,
+          left: PIE_DIAMETER + LEGEND_LEFT_PADDING
+        }
+      }
     })
-    .prop('rightPadding', {
-      lap: 0,
-      _: colorLegendWidth + colorLegendPadding
-    })
-    .prop('bottomPadding', {
-      lap: colorLegendHeight + colorLegendPadding,
-      _: 0
-    });
 
 
   /* Shortcuts
@@ -106,9 +132,7 @@
   ----------------------------------------------- */
   function render(state) {
     var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
-    var bounds = sszvis.bounds({ top: 10, bottom: props.bottomPadding, right: props.rightPadding }, '#sszvis-chart');
-    var pieRadius = Math.min(bounds.innerWidth / 2, bounds.innerHeight / 2, 200);
-    var leftCenterOffset = (bounds.innerWidth - 2 * pieRadius) / 2;
+    var bounds = sszvis.bounds(props.layout.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -136,7 +160,7 @@
     // Components
 
     var pieMaker = sszvis.component.pie()
-      .radius(pieRadius)
+      .radius(props.layout.pieRadius)
       .angle(sszvis.fn.compose(aScale, vAcc))
       .fill(sszvis.fn.compose(cScale, cAcc));
 
@@ -157,7 +181,6 @@
     // Rendering
 
     var pie = chartLayer.selectGroup('piechart')
-      .attr('transform', sszvis.svgUtils.translateString(leftCenterOffset, 0))
       .call(pieMaker);
 
     pie.selectAll('[data-tooltip-anchor]')
@@ -166,11 +189,7 @@
     chartLayer.selectGroup('colorLegend')
       // the magic number y-offset here vertically centers the color legend.
       .attr('transform', function() {
-        if (props.legendPosition == 'bottom') {
-          return sszvis.svgUtils.translateString(leftCenterOffset, 2 * pieRadius + colorLegendPadding);
-        } else {
-          return sszvis.svgUtils.translateString(leftCenterOffset + 2 * pieRadius + colorLegendPadding, 5);
-        }
+        return sszvis.svgUtils.translateString(props.layout.legendPosition.left, props.layout.legendPosition.top);
       })
       .call(colorLegend);
 
