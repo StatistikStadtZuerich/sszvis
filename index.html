@@ -15,7 +15,13 @@
     Catalog.render({
       title: 'Statistik Stadt Zürich',
       styles: ['sszvis.css'],
-      specimens: {project: ProjectSpecimen},
+      specimens: {project: ProjectSpecimen({
+        sizes: [
+          {width: '750px', height: '600px'},
+          {width: '541px', height: '500px'},
+          {width: '284px', height: '500px'}
+        ]
+      })},
       theme: {
         background: '#fdfdfd',
         brandColor: '#0070bc',
