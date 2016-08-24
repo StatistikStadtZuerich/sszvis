@@ -259,7 +259,7 @@ var config = {
       var mouseOverlay = sszvis.behavior.voronoi()
         .x(xValue)
         .y(yValue)
-        .bounds([[-bounds.padding.left, -bounds.padding.top], [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]])
+        .bounds([[0, 0], [bounds.innerWidth, bounds.innerHeight]])
         .on('over', actions.setHighlight)
         .on('out', actions.resetHighlight);
 
