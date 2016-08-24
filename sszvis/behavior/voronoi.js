@@ -17,6 +17,9 @@
  * are also associated with the voronoi cells, so that when a user interacts with them, the datum and its index within the
  * bound data are passed to the callback functions. This component extends a d3.dispatch instance.
  *
+ * The event handler functions are only called when the event happens within a certain distance
+ * (see MAX_INTERACTION_RADIUS_SQUARED in this file) from the voronoi area's center.
+ *
  * @module sszvis/behavior/voronoi
  *
  * @property {function} x                         Specify an accessor function for the x-position of the voronoi point
@@ -29,8 +32,12 @@
  *                                                Possible event names are:
  *                                                'over' - when the user interacts with a voronoi area, either with a mouseover or touchstart
  *                                                'out' - when the user ceases to interact with a voronoi area, either with a mouseout or touchend
- *                                                All event handler functions are passed the datum which is the center of the voronoi area,
- *                                                and that datum's index within the data bound to the interaction layer.
+ *                                                All event handler functions are passed the datum which is the center of the voronoi area.
+ *                                                Note: previously, event handlers were also passed the index of the datum within the dataset.
+ *                                                However, this is no longer the case, due to the difficulty of inferring that information when hit
+ *                                                testing a touch interaction on arbitrary rendered elements in the scene. In addition, the 'out' event
+ *                                                used to be passed the datum itself, but this is no longer the case, also having to do with the impossibility
+ *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
  *
  */
 sszvis_namespace('sszvis.behavior.voronoi', function(module) {
@@ -64,6 +71,7 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
         polys.enter()
           .append('path')
           .attr('data-sszvis-behavior-voronoi', '')
+          .attr('data-sszvis-behavior-pannable', '')
           .attr('class', 'sszvis-interactive');
 
         polys.exit().remove();
@@ -71,23 +79,52 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
         polys
           .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
           .attr('fill', 'transparent')
-          .on('mouseover', function(d, i) {
-            event.over.apply(this, [d.point, i]);
-          })
-          .on('mouseout', function(d, i) {
-            event.out.apply(this, [d.point, i]);
-          })
-          .on('touchstart', function(d, i) {
-            event.over.apply(this, [d.point, i]);
-          })
-          .on('touchend', function(d, i) {
-            event.out.apply(this, [d.point, i]);
-
-            // calling preventDefault here prevents the browser from sending imitation mouse events
-            if (d3.event.cancelable) {
-              // Event is not cancelable under certain circumstances, often mid-scrolling
-              d3.event.preventDefault();
+          .on('mouseover', function(datum) {
+            var cbox = this.parentElement.getBoundingClientRect();
+            if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+              event.over(datum.point);
             }
+          })
+          .on('mousemove', function(datum) {
+            var cbox = this.parentElement.getBoundingClientRect();
+            if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+              event.over(datum.point);
+            } else {
+              event.out();
+            }
+          })
+          .on('mouseout', function() {
+            event.out();
+          })
+          .on('touchstart', function(datum) {
+            var cbox = this.parentElement.getBoundingClientRect();
+            if (eventNearPoint(sszvis.fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+              d3.event.preventDefault();
+              event.over(datum.point);
+            }
+          })
+          .on('touchmove', function() {
+            var touchEvent = sszvis.fn.firstTouch(d3.event);
+            var element = sszvis.behavior.util.elementFromEvent(touchEvent);
+            var datum = sszvis.behavior.util.datumFromPannableElement(element);
+            if (datum !== null) {
+              var cbox = element.parentElement.getBoundingClientRect();
+              if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+                // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
+                // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
+                // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
+                // we want to avoid.
+                if (d3.event.cancelable) { d3.event.preventDefault(); }
+                event.over(datum.point);
+              } else {
+                event.out();
+              }
+            } else {
+              event.out();
+            }
+          })
+          .on('touchend', function() {
+            event.out();
           });
 
           if (props.debug) {
@@ -99,5 +136,14 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
 
     return voronoiComponent;
   };
+
+  // Perform distance calculations in units squared to avoid a costly Math.sqrt
+  var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(25, 2);
+
+  function eventNearPoint(event, point) {
+    var dx = event.clientX - point[0];
+    var dy = event.clientY - point[1];
+    return (dx * dx + dy * dy) < MAX_INTERACTION_RADIUS_SQUARED;
+  }
 
 });
