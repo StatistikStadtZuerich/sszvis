@@ -177,11 +177,18 @@
       .header(headerText)
       .visible(isSelected);
 
+    var interaction = sszvis.behavior.panning()
+      .elementSelector('.sszvis-path')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
 
     // Rendering
 
     var pie = chartLayer.selectGroup('piechart')
-      .call(pieMaker);
+      .call(pieMaker)
+      .call(interaction);
 
     pie.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
