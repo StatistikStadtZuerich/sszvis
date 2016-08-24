@@ -179,18 +179,18 @@
       .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
       .call(legend);
 
-    
-    //Interaction 
 
-    var interactionLayer = sszvis.behavior.panning()
-      .elementSelector('.sszvis-map__area')
-      .on('start', actions.selectHovered)
-      .on('pan', actions.selectHovered)
-      .on('end', actions.deselectHovered);
+    // Interaction
 
     if (!config.fallback) {
-    chartLayer
-      .call(interactionLayer);
+      var interactionLayer = sszvis.behavior.panning()
+        .elementSelector('.sszvis-map__area')
+        .on('start', actions.selectHovered)
+        .on('pan', actions.selectHovered)
+        .on('end', actions.deselectHovered);
+
+      chartLayer
+        .call(interactionLayer);
     }
 
     sszvis.viewport.on('resize', actions.resize);

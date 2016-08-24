@@ -196,17 +196,17 @@
       .call(legend);
 
 
-    //Interaction 
+    // Interaction
 
-    var interactionLayer = sszvis.behavior.panning()
-      .elementSelector('.sszvis-map__area')
-      .on('start', actions.selectHovered)
-      .on('pan', actions.selectHovered)
-      .on('end', actions.deselectHovered);
-    
     if (!config.fallback) {
+      var interactionLayer = sszvis.behavior.panning()
+        .elementSelector('.sszvis-map__area')
+        .on('start', actions.selectHovered)
+        .on('pan', actions.selectHovered)
+        .on('end', actions.deselectHovered);
+
       chartLayer
-      .call(interactionLayer);
+        .call(interactionLayer);
     };
 
     sszvis.viewport.on('resize', actions.resize);
