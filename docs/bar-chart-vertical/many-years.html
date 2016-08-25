@@ -38,8 +38,8 @@
   var MAX_WIDTH = 600;
   var queryProps = sszvis.responsiveProps()
     .prop('barPadding', {
-      palm: 0.5,
-      _: 0.3
+      palm: 0.2,
+      _: 0.1
     });
 
 
@@ -114,7 +114,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(sszvis.fn.set(state.data, xAcc))
-      .rangeRoundBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.4, 0.1);
+      .rangeRoundBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.4, props.barPadding);
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
