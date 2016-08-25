@@ -34,6 +34,7 @@
  var DEFAULT_RULER_LABEL = '';
  var DEFAULT_Y_LABEL = '';
  var DEFAULT_X_LABEL = '';
+ var MAX_WIDTH = 600;
 
 
   /* Configuration
@@ -58,6 +59,10 @@
     .prop('bottomPadding', {
       palm: 230,
       _: 150
+    })
+    .prop('barPadding', {
+      palm: 0.5,
+      _: 0.34
     });
 
   /* Shortcuts
@@ -139,14 +144,14 @@
   function render(state) {
     var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, '#sszvis-chart');
-    var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.years.length);
+    var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
 
 
     // Scales
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.34);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, props.barPadding);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])

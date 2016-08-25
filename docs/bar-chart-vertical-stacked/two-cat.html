@@ -27,7 +27,12 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
+  var MAX_WIDTH = 600;
+  var queryProps = sszvis.responsiveProps()
+    .prop('barPadding', {
+      palm: 0.5,
+      _: 0.34
+    });
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -93,13 +98,14 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 30, bottom: 110 }, '#sszvis-chart');
-
+    var props = queryProps(bounds);
+    var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
 
     // Scales
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, bounds.innerWidth], 0.35, 1.5);
+      .rangeBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.35, props.barPadding);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])
