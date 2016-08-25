@@ -211,6 +211,8 @@
     var interactionLayer = sszvis.behavior.move()
       .xScale(xScale)
       .yScale(yScale)
+      .cancelScrolling(isWithinBarContour)
+      .fireOnPanOnly(true)
       .on('move', actions.showTooltip)
       .on('end', actions.hideTooltip);
 
@@ -218,6 +220,26 @@
       .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
+  }
+
+  function isWithinBarContour(category, yValue) {
+    var barGroup = sszvis.fn.find(function(g) {
+      return xAcc(g[0]) === category;
+    }, state.groupedData);
+    var cursorAbs = Math.abs(yValue);
+    var absThreshold = 2;
+    return barGroup && sszvis.fn.some(function(d) {
+      if (!sszvis.fn.defined(d)) { return false; }
+      var dataValue = yAcc(d);
+      if (isNaN(dataValue) && cursorAbs < absThreshold) { return true; }
+      if (Math.abs(dataValue) < absThreshold && cursorAbs < absThreshold) { return true; }
+      if (dataValue < 0) {
+        return yValue < 0 && yValue > dataValue;
+      } else {
+        return yValue >= 0 && yValue < dataValue;
+      }
+      // return sszvis.behavior.util.testBarThreshold(cursorAbs, d, sszvis.fn.compose(Math.abs, yAcc), 3);
+    }, barGroup);
   }
 
 }(d3, sszvis));

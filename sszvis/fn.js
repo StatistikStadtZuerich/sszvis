@@ -118,6 +118,25 @@ module.exports = {
   },
 
   /**
+   * fn.every
+   *
+   * Use a predicate function to test if every element in an array passes some test.
+   * Returns false as soon as an element fails the predicate test. Returns true otherwise.
+   * 
+   * @param  {Function} predicate     The predicate test function
+   * @param  {Array} arr              The array to test
+   * @return {Boolean}                Whether every element in the array passes the test
+   */
+  every: function(predicate, arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (!predicate(arr[i])) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  /**
    * fn.filledArray
    *
    * returns a new array with length `len` filled with `val`
@@ -445,6 +464,25 @@ module.exports = {
       var computed = acc(value, i, arr);
       return m.indexOf(computed) < 0 ? m.concat(computed) : m;
     }, []);
+  },
+
+  /**
+   * fn.some
+   *
+   * Test an array with a predicate and determine whether some element in the array passes the test.
+   * Returns true as soon as an element passes the test. Returns false otherwise.
+   * 
+   * @param  {Function} predicate     The predicate test function
+   * @param  {Array} arr              The array to test
+   * @return {Boolean}                Whether some element in the array passes the test
+   */
+  some: function(predicate, arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (predicate(arr[i])) {
+        return true;
+      }
+    }
+    return false;
   },
 
   /**

@@ -633,6 +633,25 @@ module.exports = {
   },
 
   /**
+   * fn.every
+   *
+   * Use a predicate function to test if every element in an array passes some test.
+   * Returns false as soon as an element fails the predicate test. Returns true otherwise.
+   * 
+   * @param  {Function} predicate     The predicate test function
+   * @param  {Array} arr              The array to test
+   * @return {Boolean}                Whether every element in the array passes the test
+   */
+  every: function(predicate, arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (!predicate(arr[i])) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  /**
    * fn.filledArray
    *
    * returns a new array with length `len` filled with `val`
@@ -960,6 +979,25 @@ module.exports = {
       var computed = acc(value, i, arr);
       return m.indexOf(computed) < 0 ? m.concat(computed) : m;
     }, []);
+  },
+
+  /**
+   * fn.some
+   *
+   * Test an array with a predicate and determine whether some element in the array passes the test.
+   * Returns true as soon as an element passes the test. Returns false otherwise.
+   * 
+   * @param  {Function} predicate     The predicate test function
+   * @param  {Array} arr              The array to test
+   * @return {Boolean}                Whether some element in the array passes the test
+   */
+  some: function(predicate, arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (predicate(arr[i])) {
+        return true;
+      }
+    }
+    return false;
   },
 
   /**
@@ -4872,22 +4910,32 @@ sszvis_namespace('sszvis.annotation.tooltipAnchor', function(module) {
  *
  * @module sszvis/behavior/move
  *
- * @property {boolean} debug            Whether or not to render the component in debug mode, which reveals its position in the chart.
- * @property {function} xScale          The x-scale for the component. The extent of this scale, plus component padding, is the width of the
- *                                      component's active area.
- * @property {function} yScale          The y-scale for the component. The extent of this scale, plus component padding, is the height of the
- *                                      component's active area.
- * @property {boolean} draggable        Whether or not this component is draggable. This changes certain display properties of the component.
- * @property {object} padding           An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
- *                                      The options are { top, right, bottom, left }
- * @property {string and function} on   The .on() method of this component should specify an event name and an event handler function.
- *                                      Possible event names are:
- *                                      'start' - when the move action starts - mouseover or touchstart
- *                                      'move' - called when a 'moving' action happens - mouseover on the element
- *                                      'drag' - called when a 'dragging' action happens - mouseover with the mouse click down, or touchmove
- *                                      'end' - called when the event ends - mouseout or touchend
- *                                      Event handler functions, excepting end, are passed an x-value and a y-value, which are the data values,
- *                                      computed by inverting the provided xScale and yScale, which correspond to the screen pixel location of the event.
+ * @property {boolean} debug                      Whether or not to render the component in debug mode, which reveals its position in the chart.
+ * @property {function} xScale                    The x-scale for the component. The extent of this scale, plus component padding, is the width of the
+ *                                                component's active area.
+ * @property {function} yScale                    The y-scale for the component. The extent of this scale, plus component padding, is the height of the
+ *                                                component's active area.
+ * @property {boolean} draggable                  Whether or not this component is draggable. This changes certain display properties of the component.
+ * @property {object} padding                     An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
+ *                                                The options are { top, right, bottom, left }
+ * @property {boolean|function} cancelScrolling   A predicate function, or a constant boolean, that determines whether the browser's default scrolling
+ *                                                behavior in response to a touch event should be canceled. In area charts and line charts, for example,
+ *                                                you generally don't want to cancel scrolling, as this creates a scroll trap. However, in bar charts
+ *                                                which use this behavior, you want to pass a predicate function here which will determine whether the touch
+ *                                                event falls within the "profile" of the bar chart, and should therefore cancel scrolling and trigger an event.
+ * @property {boolean} fireOnPanOnly              In response to touch events, whether to fire events only while "panning", that is only while performing
+ *                                                a touch move where the default scrolling behavior is canceled, and not otherwise. In area and line charts, this
+ *                                                should be false, since you want to fire events all the time, even while scrolling. In bar charts, we want to
+ *                                                limit the firing of events (and therefore, the showing of tooltips) to only cases where the touch event has its
+ *                                                default scrolling prevented, and the user is therefore "panning" across bars. So this should be true for bar charts.
+ * @property {string and function} on             The .on() method of this component should specify an event name and an event handler function.
+ *                                                Possible event names are:
+ *                                                'start' - when the move action starts - mouseover or touchstart
+ *                                                'move' - called when a 'moving' action happens - mouseover on the element
+ *                                                'drag' - called when a 'dragging' action happens - mouseover with the mouse click down, or touchmove
+ *                                                'end' - called when the event ends - mouseout or touchend
+ *                                                Event handler functions, excepting end, are passed an x-value and a y-value, which are the data values,
+ *                                                computed by inverting the provided xScale and yScale, which correspond to the screen pixel location of the event.
  *
  * @return {d3.component}
  */
@@ -4903,6 +4951,7 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
       .prop('yScale')
       .prop('draggable')
       .prop('cancelScrolling', d3.functor).cancelScrolling(false)
+      .prop('fireOnPanOnly', d3.functor).fireOnPanOnly(false)
       .prop('padding', function(p) {
         var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
         for (var prop in p) { defaults[prop] = p[prop]; }
@@ -4993,8 +5042,25 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
 
-            if (props.cancelScrolling(x, y)) {
+            var cancelScrolling = props.cancelScrolling(x, y);
+
+            if (cancelScrolling) {
               d3.event.preventDefault();
+            }
+
+            // if fireOnPanOnly => cancelScrolling must be true
+            // if !fireOnPanOnly => always fire events
+            // This is in place because this behavior needs to only fire
+            // events on a successful "pan" action in the bar charts, i.e.
+            // only when scrolling is prevented, but then it also needs to fire
+            // events all the time in the line and area charts, i.e. allow
+            // scrolling to continue as normal but also fire events.
+            // To configure the chart for use in the bar charts, you need
+            // to configure a cancelScrolling function for determining when to
+            // cancel scrolling, i.e. what constitutes a "pan" event, and also
+            // pass fireOnPanOnly = true, which flips this switch and relies on
+            // cancelScrolling to determine whether to fire the events.
+            if (!props.fireOnPanOnly() || cancelScrolling) {
               event.start(x, y);
               event.drag(x, y);
               event.move(x, y);
@@ -5004,8 +5070,14 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
                 var x = scaleInvert(props.xScale, xy[0]);
                 var y = scaleInvert(props.yScale, xy[1]);
 
-                if (props.cancelScrolling(x, y)) {
+                var cancelScrolling = props.cancelScrolling(x, y);
+
+                if (cancelScrolling) {
                   d3.event.preventDefault();
+                }
+
+                // See comment above about the same if condition.
+                if (!props.fireOnPanOnly() || cancelScrolling) {
                   event.drag(x, y);
                   event.move(x, y);
                 } else {
@@ -5172,6 +5244,39 @@ sszvis_namespace('sszvis.behavior.panning', function(module) {
  * @function {Event} datumFromPanEvent            A combination of elementFromEvent and datumFromPannableElement, which
  *                                                accepts an event and returns the datum attached to the element under
  *                                                that event, if such an element and such a datum exists.
+ * @function {Number, Object, Function, Number} testBarThreshold        This function is a convenience function for encapsulating
+ *                                                                      the test which should be performed on a touch interaction,
+ *                                                                      to see whether the touch falls within the "profile" of a bar
+ *                                                                      chart. If so, that is, if the test passes, then scrolling should
+ *                                                                      be prevented on the bar charts, and a tooltip should be shown.
+ *                                                                      This is the behavior known as "panning" over the surface of the chart,
+ *                                                                      while on a mobile device. The function returns true if the touch is
+ *                                                                      considered to be within the "profile" of the bar chart, and false otherwise.
+ *                                                                      The function takes four arguments:
+ *                                                                        cursorValue - This the value, specified in the same units as the original
+ *                                                                                      data, at the touch event's position. This value is
+ *                                                                                      automatically calculated by the 'move' behavior,
+ *                                                                                      by inverting the scale used for the bar charts' extent.
+ *                                                                        datum -       This is the data value at the touch event's position,
+ *                                                                                      against which you are comparing the profile. Since data
+ *                                                                                      values all live in user-land, you should retrieve this
+ *                                                                                      datum yourself. Usually this can be done by using the
+ *                                                                                      inverted value from the other axis of the bar chart,
+ *                                                                                      and searching the data for the datum which matches that
+ *                                                                                      value. However, note that the datum argument can be
+ *                                                                                      undefined, in which case the touch is considered invalid and
+ *                                                                                      the test will return false.
+ *                                                                        accessor -    This is an accessor function for retrieving a numeric value
+ *                                                                                      from the datum. This function should be used to retrieve out
+ *                                                                                      of the datum the value against which cursorValue is compared. 
+ *                                                                        threshold -   A small threshold, specified in datum units, i.e. in the units
+ *                                                                                      of the domain (NOT the range) of the scale function. When a bar
+ *                                                                                      value is very small, or 0, or NaN, it would be impossible to have
+ *                                                                                      a touch which is over the "profile" of this bar. So in those cases,
+ *                                                                                      we consider the touch to be within the profile if it and the data
+ *                                                                                      value are under this threshold. This number should be some small
+ *                                                                                      number in the data's domain, and will be compared against both
+ *                                                                                      cursorValue and the value accessed from the datum.
  */
 sszvis_namespace('sszvis.behavior.util', function(module) {
 
@@ -5197,6 +5302,20 @@ sszvis_namespace('sszvis.behavior.util', function(module) {
 
   module.exports.datumFromPanEvent = function(evt) {
     return module.exports.datumFromPannableElement(module.exports.elementFromEvent(evt));
+  };
+
+  module.exports.testBarThreshold = function(cursorValue, datum, accessor, threshold) {
+    if (!sszvis.fn.defined(datum)) { return false; }
+    var dataValue = accessor(datum);
+    // For bars that are very small, or have a NaN value, then 
+    // when the touch is close enough to the 0-axis, we prevent scrolling
+    // and show the tooltip. The proximity which the touch must have to the 0-axis
+    // is determined by threshold, which must be a value in the axis' domain (NOT range).
+    return (
+      (cursorValue < threshold && isNaN(dataValue)) ||
+      (cursorValue < threshold && dataValue < threshold) ||
+      (cursorValue < dataValue)
+    );
   };
 
 });

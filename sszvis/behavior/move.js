@@ -15,22 +15,32 @@
  *
  * @module sszvis/behavior/move
  *
- * @property {boolean} debug            Whether or not to render the component in debug mode, which reveals its position in the chart.
- * @property {function} xScale          The x-scale for the component. The extent of this scale, plus component padding, is the width of the
- *                                      component's active area.
- * @property {function} yScale          The y-scale for the component. The extent of this scale, plus component padding, is the height of the
- *                                      component's active area.
- * @property {boolean} draggable        Whether or not this component is draggable. This changes certain display properties of the component.
- * @property {object} padding           An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
- *                                      The options are { top, right, bottom, left }
- * @property {string and function} on   The .on() method of this component should specify an event name and an event handler function.
- *                                      Possible event names are:
- *                                      'start' - when the move action starts - mouseover or touchstart
- *                                      'move' - called when a 'moving' action happens - mouseover on the element
- *                                      'drag' - called when a 'dragging' action happens - mouseover with the mouse click down, or touchmove
- *                                      'end' - called when the event ends - mouseout or touchend
- *                                      Event handler functions, excepting end, are passed an x-value and a y-value, which are the data values,
- *                                      computed by inverting the provided xScale and yScale, which correspond to the screen pixel location of the event.
+ * @property {boolean} debug                      Whether or not to render the component in debug mode, which reveals its position in the chart.
+ * @property {function} xScale                    The x-scale for the component. The extent of this scale, plus component padding, is the width of the
+ *                                                component's active area.
+ * @property {function} yScale                    The y-scale for the component. The extent of this scale, plus component padding, is the height of the
+ *                                                component's active area.
+ * @property {boolean} draggable                  Whether or not this component is draggable. This changes certain display properties of the component.
+ * @property {object} padding                     An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
+ *                                                The options are { top, right, bottom, left }
+ * @property {boolean|function} cancelScrolling   A predicate function, or a constant boolean, that determines whether the browser's default scrolling
+ *                                                behavior in response to a touch event should be canceled. In area charts and line charts, for example,
+ *                                                you generally don't want to cancel scrolling, as this creates a scroll trap. However, in bar charts
+ *                                                which use this behavior, you want to pass a predicate function here which will determine whether the touch
+ *                                                event falls within the "profile" of the bar chart, and should therefore cancel scrolling and trigger an event.
+ * @property {boolean} fireOnPanOnly              In response to touch events, whether to fire events only while "panning", that is only while performing
+ *                                                a touch move where the default scrolling behavior is canceled, and not otherwise. In area and line charts, this
+ *                                                should be false, since you want to fire events all the time, even while scrolling. In bar charts, we want to
+ *                                                limit the firing of events (and therefore, the showing of tooltips) to only cases where the touch event has its
+ *                                                default scrolling prevented, and the user is therefore "panning" across bars. So this should be true for bar charts.
+ * @property {string and function} on             The .on() method of this component should specify an event name and an event handler function.
+ *                                                Possible event names are:
+ *                                                'start' - when the move action starts - mouseover or touchstart
+ *                                                'move' - called when a 'moving' action happens - mouseover on the element
+ *                                                'drag' - called when a 'dragging' action happens - mouseover with the mouse click down, or touchmove
+ *                                                'end' - called when the event ends - mouseout or touchend
+ *                                                Event handler functions, excepting end, are passed an x-value and a y-value, which are the data values,
+ *                                                computed by inverting the provided xScale and yScale, which correspond to the screen pixel location of the event.
  *
  * @return {d3.component}
  */
@@ -46,6 +56,7 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
       .prop('yScale')
       .prop('draggable')
       .prop('cancelScrolling', d3.functor).cancelScrolling(false)
+      .prop('fireOnPanOnly', d3.functor).fireOnPanOnly(false)
       .prop('padding', function(p) {
         var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
         for (var prop in p) { defaults[prop] = p[prop]; }
@@ -136,8 +147,25 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
 
-            if (props.cancelScrolling(x, y)) {
+            var cancelScrolling = props.cancelScrolling(x, y);
+
+            if (cancelScrolling) {
               d3.event.preventDefault();
+            }
+
+            // if fireOnPanOnly => cancelScrolling must be true
+            // if !fireOnPanOnly => always fire events
+            // This is in place because this behavior needs to only fire
+            // events on a successful "pan" action in the bar charts, i.e.
+            // only when scrolling is prevented, but then it also needs to fire
+            // events all the time in the line and area charts, i.e. allow
+            // scrolling to continue as normal but also fire events.
+            // To configure the chart for use in the bar charts, you need
+            // to configure a cancelScrolling function for determining when to
+            // cancel scrolling, i.e. what constitutes a "pan" event, and also
+            // pass fireOnPanOnly = true, which flips this switch and relies on
+            // cancelScrolling to determine whether to fire the events.
+            if (!props.fireOnPanOnly() || cancelScrolling) {
               event.start(x, y);
               event.drag(x, y);
               event.move(x, y);
@@ -147,8 +175,14 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
                 var x = scaleInvert(props.xScale, xy[0]);
                 var y = scaleInvert(props.yScale, xy[1]);
 
-                if (props.cancelScrolling(x, y)) {
+                var cancelScrolling = props.cancelScrolling(x, y);
+
+                if (cancelScrolling) {
                   d3.event.preventDefault();
+                }
+
+                // See comment above about the same if condition.
+                if (!props.fireOnPanOnly() || cancelScrolling) {
                   event.drag(x, y);
                   event.move(x, y);
                 } else {
