@@ -76,8 +76,7 @@
     },
 
     selectHovered: function(d) {
-      state.selection = d ? [d] : [];
-
+      state.selection = [d.datum];
       render(state);
     },
 
@@ -198,6 +197,18 @@
       .style('left', (bounds.innerWidth - control.width()) / 2 + 'px')
       .style('top', (20 - bounds.padding.top) + 'px')
       .call(control);
+
+
+    // Interaction 
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    chartLayer
+      .call(interactionLayer);    
 
     sszvis.viewport.on('resize', actions.resize);
   }

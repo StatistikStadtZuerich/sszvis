@@ -69,6 +69,16 @@
       render(state);
     },
 
+    selectHovered: function(d) {
+      state.selection = [d.datum];
+      render(state);
+    },
+
+    deselectHovered: function() {
+      state.selection = [];
+      render(state);
+    },
+
     resize: function() { render(state); }
   };
 
@@ -168,6 +178,18 @@
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+    
+    // Interaction 
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    chartLayer
+      .call(interactionLayer);    
 
     sszvis.viewport.on('resize', actions.resize);
   }
