@@ -49,6 +49,7 @@
     xLabel: 'Prozent',
     ticks: 4
   };
+  var MAX_WIDTH = 600;
   var queryProps = sszvis.responsiveProps()
     .prop('targetNumColumns', {
       palm: 1,
@@ -147,7 +148,7 @@
 
     var xScale = d3.scale.linear()
       .domain([0, state.maxStacked])
-      .range([0, bounds.innerWidth]);
+      .range([0, Math.min(MAX_WIDTH, bounds.innerWidth)]);
 
     var yScale = d3.scale.ordinal()
       .domain(state.areas) 

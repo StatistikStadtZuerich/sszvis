@@ -27,10 +27,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var MAX_WIDTH = 600;
   var queryProps = sszvis.responsiveProps()
     .prop('bottomPadding', {
       palm: 124,
       _: 84
+    })
+    .prop('barPadding', {
+      palm: 0.5,
+      _: 0.3
     });
 
 
@@ -101,7 +106,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeRoundBands([0, bounds.innerWidth], 0.30, 0.5);
+      .rangeRoundBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.30, props.barPadding);
 
     var yScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
