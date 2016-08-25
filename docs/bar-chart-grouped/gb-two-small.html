@@ -27,8 +27,8 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
-
+  var MAX_WIDTH = 600;
+  
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('region');
@@ -110,7 +110,7 @@
 
     var xScale = d3.scale.ordinal()
       .domain(state.regions)
-      .rangeRoundBands([0, bounds.innerWidth], 0.26, 0.80);
+      .rangeRoundBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.26, 0.80);
 
     // because the bar chart must display negative values, scales for the y-axis are a little weird
     // see also: http://bl.ocks.org/mbostock/2368837 (http://stackoverflow.com/questions/10127402/bar-chart-with-negative-values)
