@@ -80,7 +80,6 @@
     },
 
     onSliceOver: function(d) {
-      console.log(d);
       state.selection = [d];
 
       render(state);
@@ -198,18 +197,12 @@
       .rows(props.numLegendRows)
       .orientation('vertical');
 
-    var interaction = sszvis.behavior.panning()
-      .elementSelector('.sszvis-sunburst-arc')
-      .on('start', actions.onSliceOver)
-      .on('pan', actions.onSliceOver)
-      .on('end', actions.onSliceOut);
-
 
     // Rendering
+    
     var sunburstGroup = chartLayer.selectGroup('sunburst')
       .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2))
-      .call(sunburstMaker)
-      .call(interaction);
+      .call(sunburstMaker);
 
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 20))
@@ -217,6 +210,17 @@
 
     sunburstGroup.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+
+    // Interaction 
+    
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-sunburst-arc')
+      .on('start', actions.onSliceOver)
+      .on('pan', actions.onSliceOver)
+      .on('end', actions.onSliceOut);
+
+    sunburstGroup.call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }

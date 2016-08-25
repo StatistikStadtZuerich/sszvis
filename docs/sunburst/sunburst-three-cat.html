@@ -176,6 +176,7 @@
 
 
     // Rendering
+
     var sunburstGroup = chartLayer.selectGroup('sunburst')
       .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2))
       .call(sunburstMaker);
@@ -190,6 +191,17 @@
 
     sunburstGroup.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
+
+    
+    // Interaction 
+    
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-sunburst-arc')
+      .on('start', actions.onSliceOver)
+      .on('pan', actions.onSliceOver)
+      .on('end', actions.onSliceOut);
+
+    sunburstGroup.call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }
