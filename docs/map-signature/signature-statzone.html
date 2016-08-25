@@ -30,6 +30,34 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var MAX_LEGEND_WIDTH = 420;
+  var queryProps = sszvis.responsiveProps()
+     .prop('bounds', {
+       _: function(width) {
+         var innerHeight = sszvis.aspectRatio.square(width);
+         return {
+           top: 90,
+           bottom: 30,
+           height: 90 + innerHeight + 30
+         }
+       }
+     })
+     .prop('legendX', {
+       _: function(width) {
+         return Math.max(width/2 - 205, 5);
+       }
+     })
+     .prop('radiusMax', {
+       _: function(width) {
+         return Math.min(14, Math.max(width / 28, 10));
+       }
+     })
+     .prop('controlWidth', {
+       _: function(width) {
+         return Math.min(width, MAX_LEGEND_WIDTH);
+         return Math.max(420, Math.min(MAX_LEGEND_WIDTH, width / 2));
+       }
+     });
 
 
   /* Shortcuts
@@ -112,7 +140,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds('#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -123,7 +152,7 @@
     // This scale takes the square root of the input and uses that to scale the radius. When the
     // result is used as the radius of a circle, the area of the circle will be linearly
     // proportional to the input quantity.
-    var radiusScale = d3.scale.sqrt().domain(state.birthsRange).range([0, 14]);
+    var radiusScale = d3.scale.sqrt().domain(state.birthsRange).range([0, props.radiusMax]);
 
 
     // Layers
@@ -170,7 +199,7 @@
     var control = sszvis.control.buttonGroup()
       .values(['Männlich 1993', 'Weiblich 1993', 'Männlich 2014', 'Weiblich 2014'])
       .current(state.currentFilter)
-      .width(bounds.innerWidth)
+      .width(props.controlWidth)
       .change(actions.setFilter);
 
     var radiusLegend = sszvis.legend.radius()
@@ -183,7 +212,7 @@
     chartLayer.call(mapMaker);
 
     chartLayer.selectGroup('radiusLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight - 65))
+      .attr('transform', sszvis.svgUtils.translateString(props.legendX, bounds.innerHeight - 65))
       .call(radiusLegend);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
