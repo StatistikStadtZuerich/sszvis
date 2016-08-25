@@ -30,6 +30,23 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var MAX_LEGEND_WIDTH = 320;
+  var queryProps = sszvis.responsiveProps()
+    .prop('bounds', {
+      _: function(width) {
+        var innerHeight = sszvis.aspectRatio.square(width);
+        return {
+          top: 30,
+          bottom: 90,
+          height: 30 + innerHeight + 90
+        }
+      }
+    })
+    .prop('legendWidth', {
+      _: function(width) {
+        return Math.min(width / 2, MAX_LEGEND_WIDTH);
+      }
+    });
 
 
   /* Shortcuts
@@ -95,7 +112,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 90 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -143,19 +161,21 @@
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
-      .width(bounds.width / 2)
+      .width(props.legendWidth)
       .labelFormat(sszvis.format.number);
 
 
     // Rendering
 
-    chartLayer.call(mapMaker);
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.padding.left, bounds.padding.top))
+      .call(mapMaker);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 60))
       .call(legend);
 
 
