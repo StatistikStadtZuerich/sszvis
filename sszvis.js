@@ -4995,23 +4995,36 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
 
             if (props.cancelScrolling(x, y)) {
               d3.event.preventDefault();
-              event.start.apply(this, Array.prototype.slice.call(arguments));
+              event.start(x, y);
               event.drag(x, y);
               event.move(x, y);
-            }
-          })
-          .on('touchmove', function() {
-            var xy = sszvis.fn.first(d3.touches(this));
-            var x = scaleInvert(props.xScale, xy[0]);
-            var y = scaleInvert(props.yScale, xy[1]);
 
-            if (props.cancelScrolling(x, y)) {
-              d3.event.preventDefault();
-              event.drag(x, y);
-              event.move(x, y);
+              var pan = function() {
+                var xy = sszvis.fn.first(d3.touches(this));
+                var x = scaleInvert(props.xScale, xy[0]);
+                var y = scaleInvert(props.yScale, xy[1]);
+
+                if (props.cancelScrolling(x, y)) {
+                  d3.event.preventDefault();
+                  event.drag(x, y);
+                  event.move(x, y);
+                } else {
+                  event.end();
+                }
+              };
+
+              var end = function() {
+                event.end();
+                d3.select(this)
+                  .on('touchmove', null)
+                  .on('touchend', null);
+              };
+
+              d3.select(this)
+                .on('touchmove', pan)
+                .on('touchend', end);
             }
-          })
-          .on('touchend', event.end);
+          });
 
         if (props.debug) {
           layer.attr('fill', 'rgba(255,0,0,0.2)');
