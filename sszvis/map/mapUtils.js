@@ -205,7 +205,7 @@ sszvis_namespace('sszvis.map.utils', function(module) {
    * @return {number}          The stroke width that the map elements should have.
    */
   module.exports.widthAdaptiveMapPathStroke = function(width) {
-    return Math.max(0.6, width / 1000);
+    return Math.min(Math.max(0.8, width / 400), 1.1);
   };
 
 });
