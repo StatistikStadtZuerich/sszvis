@@ -48,6 +48,12 @@
     slant: '',
     textWrap: false
   }
+  var MAX_WIDTH = 600;
+  var queryProps = sszvis.responsiveProps()
+    .prop('barPadding', {
+      palm: 0.5,
+      _: 0.3
+  });
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -110,12 +116,13 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 30, bottom: 50 }, '#sszvis-chart');
-    var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
+    var props = queryProps(bounds);
+    var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
 
     // Scales
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.3);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, props.barPadding);
 
     var heightScale = d3.scale.linear()
       .range([0, bounds.innerHeight])
