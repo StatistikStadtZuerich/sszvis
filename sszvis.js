@@ -4902,6 +4902,7 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
       .prop('xScale')
       .prop('yScale')
       .prop('draggable')
+      .prop('cancelScrolling', d3.functor).cancelScrolling(false)
       .prop('padding', function(p) {
         var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
         for (var prop in p) { defaults[prop] = p[prop]; }
@@ -4992,17 +4993,23 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
 
-            event.start.apply(this, Array.prototype.slice.call(arguments));
-            event.drag(x, y);
-            event.move(x, y);
+            if (props.cancelScrolling(x, y)) {
+              d3.event.preventDefault();
+              event.start.apply(this, Array.prototype.slice.call(arguments));
+              event.drag(x, y);
+              event.move(x, y);
+            }
           })
           .on('touchmove', function() {
             var xy = sszvis.fn.first(d3.touches(this));
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
 
-            event.drag(x, y);
-            event.move(x, y);
+            if (props.cancelScrolling(x, y)) {
+              d3.event.preventDefault();
+              event.drag(x, y);
+              event.move(x, y);
+            }
           })
           .on('touchend', event.end);
 
