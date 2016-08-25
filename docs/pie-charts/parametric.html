@@ -217,10 +217,6 @@
         .on('end', actions.hideTooltip);
 
       pie.call(interactionLayer);
-
-      pie.selectAll('path')
-        .on('mouseover', actions.showTooltip)
-        .on('mouseout',  actions.hideTooltip);
     };
 
     sszvis.viewport.on('resize', actions.resize);
