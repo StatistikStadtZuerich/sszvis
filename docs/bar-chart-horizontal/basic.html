@@ -27,7 +27,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
+  var MAX_WIDTH = 600;
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -75,11 +75,11 @@
   function render(state) {
     var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.categories.length);
     var bounds = sszvis.bounds({ height: 30 + chartDimensions.totalHeight + 40, top: 30, bottom: 40 }, '#sszvis-chart');
-
+    
     // Scales
 
     var widthScale = d3.scale.linear()
-      .range([0, bounds.innerWidth])
+      .range([0, Math.min(MAX_WIDTH, bounds.innerWidth)])
       .domain([0, d3.max(state.data, xAcc)]);
 
     var yScale = d3.scale.ordinal()
