@@ -28,7 +28,12 @@
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var SHOW_YAXIS_TICKS = true;
-
+  var MAX_WIDTH = 600;
+  var queryProps = sszvis.responsiveProps()
+    .prop('barPadding', {
+      palm: 0.5,
+      _: 0.3
+    });
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -92,13 +97,14 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 3, bottom: 60 }, '#sszvis-chart');
-    var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
+    var props = queryProps(bounds);
+    var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
 
     // Scales
 
     var xScale = d3.scale.ordinal()
       .domain(state.categories)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, 0.2);
+      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, props.barPadding);
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
@@ -146,7 +152,7 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
-      .tickLength(SHOW_YAXIS_TICKS ? bounds.innerWidth : null)
+      .tickLength(SHOW_YAXIS_TICKS ? Math.min(MAX_WIDTH, bounds.innerWidth) : null)
       .orient('right');
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()

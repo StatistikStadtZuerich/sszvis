@@ -35,6 +35,12 @@
   // It should be noted that in situations with this much time-series data,
   // a line chart is almost always the optimal display strategy.
   var BAR_WIDTH = 3;
+  var MAX_WIDTH = 600;
+  var queryProps = sszvis.responsiveProps()
+    .prop('barPadding', {
+      palm: 0.5,
+      _: 0.3
+    });
 
 
   /* Shortcuts
@@ -101,13 +107,14 @@
   function render(state) {
 
     var bounds = sszvis.bounds({ top: 3, bottom: 25 }, '#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
 
     var xScale = d3.scale.ordinal()
       .domain(sszvis.fn.set(state.data, xAcc))
-      .rangeRoundBands([0, bounds.innerWidth], 0.4, 0.1);
+      .rangeRoundBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.4, 0.1);
 
     var heightScale = d3.scale.linear()
       .domain([0, d3.max(state.data, yAcc)])
