@@ -280,15 +280,12 @@
     });
 
     var map = chart.selectGroup('map')
-      .attr('transform', sszvis.svgUtils.translateString(mapBounds.padding.left, mapBounds.padding.top))
       .datum(state.currentMapData);
 
     var lineChart = chart.selectGroup('line')
-      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .datum(state.lineData);
 
     var highlightLayer = chart.selectGroup('highlight')
-      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .datum(state.lineHighlightData);
 
     var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', outerBounds)
@@ -382,12 +379,16 @@
 
     // Rendering
 
-    map.call(mapMaker);
+    map
+      .attr('transform', sszvis.svgUtils.translateString(mapBounds.padding.left, mapBounds.padding.top))
+      .call(mapMaker);
 
     map.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
-    lineChart.call(lineMaker);
+    lineChart
+      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
+      .call(lineMaker);
 
     // this sorts the highlighted line to the front of all lines
     lineChart.selectAll('.sszvis-line').sort(function(a, b) {
@@ -401,6 +402,9 @@
 
     lineChart.selectGroup('yAxis')
       .call(lineYAxis);
+
+    highlightLayer
+      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top));
 
     highlightLayer.selectGroup('handleRuler')
       .call(handleRuler);

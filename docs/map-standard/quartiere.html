@@ -32,6 +32,28 @@
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var INITIAL_YEAR = '2012';
+  var MAX_LEGEND_WIDTH = 320;
+  var queryProps = sszvis.responsiveProps()
+    .prop('bounds', {
+      _: function(width) {
+        var innerHeight = sszvis.aspectRatio.square(width);
+        return {
+          top: 80,
+          bottom: 90,
+          height: 80 + innerHeight + 90
+        }
+      }
+    })
+    .prop('legendWidth', {
+      _: function(width) {
+        return Math.min(width / 2, MAX_LEGEND_WIDTH);
+      }
+    })
+    .prop('controlWidth', {
+      _: function(width) {
+        return Math.max(200, Math.min(MAX_LEGEND_WIDTH, width / 2));
+      }
+    });
 
 
   /* Shortcuts
@@ -112,7 +134,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 80, bottom: 90 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -137,11 +160,9 @@
 
     // Components
 
-    var controlWidth = bounds.width / 2;
-
     var control = sszvis.control.buttonGroup()
       .values(state.years)
-      .width(controlWidth)
+      .width(props.controlWidth)
       .current(state.currentYear)
       .change(actions.setYear);
 
@@ -179,24 +200,26 @@
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
-      .width(bounds.width / 2)
+      .width(props.legendWidth)
       .labelFormat(sszvis.format.fractionPercent);
 
 
     // Rendering
 
-    chartLayer.call(mapMaker);
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.padding.left, bounds.padding.top))
+      .call(mapMaker);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 60))
       .call(legend);
 
     htmlLayer.selectDiv('controls')
-      .style('left', ((bounds.width - controlWidth) / 2) + 'px')
-      .style('top', (22) + 'px')
+      .style('left', ((bounds.width - props.controlWidth) / 2) + 'px')
+      .style('top', (20 - bounds.padding.top) + 'px')
       .call(control);
 
 

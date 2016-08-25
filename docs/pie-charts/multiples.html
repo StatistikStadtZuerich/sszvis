@@ -269,9 +269,13 @@
 
     // Interaction
 
-    pieCharts.selectAll('path')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout',  actions.hideTooltip);
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-path')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    pieCharts.call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }

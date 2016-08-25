@@ -230,7 +230,7 @@
 
     htmlOverLayer.selectDiv('controls')
       .style('left', ((bounds.innerWidth - controlWidth) / 2) + 'px')
-      .style('top', (-85) + 'px')
+      .style('top', (20 - bounds.padding.top) + 'px')
       .call(control);
 
     sszvis.viewport.on('resize', actions.resize);

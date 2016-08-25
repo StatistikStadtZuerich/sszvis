@@ -192,7 +192,7 @@
 
     controlLayer.selectDiv('controls')
       .style('left', (bounds.width / 4) + 'px')
-      .style('top', 10 + 'px')
+      .style('top', (20 - bounds.padding.top) + 'px')
       .call(buttonGroup);
 
     bars.selectAll('[data-tooltip-anchor]')

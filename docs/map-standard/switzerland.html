@@ -30,6 +30,23 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var MAX_LEGEND_WIDTH = 320;
+  var queryProps = sszvis.responsiveProps()
+    .prop('bounds', {
+      _: function(width) {
+        var innerHeight = Math.min(sszvis.aspectRatio.ar4to3(width), 400);
+        return {
+          bottom: 40,
+          height: innerHeight + 40
+        }
+      }
+    })
+    .prop('legendWidth', {
+      _: function(width) {
+        return Math.min(width / 2, MAX_LEGEND_WIDTH);
+      }
+    });
+
 
 
   /* Shortcuts
@@ -80,7 +97,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ bottom: 50 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -108,16 +126,18 @@
 
     var legend = sszvis.legend.linearColorScale()
       .scale(colorScale)
-      .width(bounds.width / 2)
+      .width(props.legendWidth)
       .labelText(['Frauen', 'Männer']);
 
 
     // Rendering
 
-    chartLayer.call(mapMaker);
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.padding.left, bounds.padding.top))
+      .call(mapMaker);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.width / 4 - bounds.padding.left, bounds.innerHeight + 20))
+      .attr('transform', sszvis.svgUtils.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 25))
       .call(legend);
 
     sszvis.viewport.on('resize', actions.resize);

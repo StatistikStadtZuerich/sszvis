@@ -76,8 +76,7 @@
     },
 
     selectHovered: function(d) {
-      state.selection = d ? [d] : [];
-
+      state.selection = [d.datum];
       render(state);
     },
 
@@ -145,9 +144,7 @@
     var anchoredShape = sszvis.map.anchoredCircles()
       .fill('rgb(81, 130, 179)')
       .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : radiusScale(birthsAcc(d)); })
-      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
-      .on('over', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width));
 
     var mapMaker = sszvis.map.zurichStatistischeZonen()
       .keyName('id')
@@ -156,9 +153,7 @@
       .fill(function(d) { return isSelected(d) ? sszvis.color.dimGry()(0) : sszvis.color.gry()(0) })
       .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
       .transitionColor(false)
-      .anchoredShape(anchoredShape)
-      .on('over', actions.selectHovered)
-      .on('out', actions.deselectHovered);
+      .anchoredShape(anchoredShape);
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .plain(function(geod) { return birthsAcc(geod.datum) + " Geburten"; });
@@ -196,8 +191,20 @@
 
     tooltipLayer.selectDiv('controls')
       .style('left', (bounds.innerWidth - control.width()) / 2 + 'px')
-      .style('top', '-40px')
+      .style('top', (20 - bounds.padding.top) + 'px')
       .call(control);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-map__area, .sszvis-anchored-circle')
+      .on('start', actions.selectHovered)
+      .on('pan', actions.selectHovered)
+      .on('end', actions.deselectHovered);
+
+    chartLayer
+      .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }
