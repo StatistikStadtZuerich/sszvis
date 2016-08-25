@@ -156,7 +156,8 @@
 
     controlLayer.selectDiv('controls')
       .style('left', (bounds.width * 0.1 - bounds.padding.left) + 'px')
-      .style('top', 16 + 'px')
+//      .style('top', 16 + 'px')
+      .style('top', (20 - bounds.padding.top) + 'px')
       .call(buttonGroup);
 
     sszvis.viewport.on('resize', actions.resize);
