@@ -5030,8 +5030,10 @@ sszvis_namespace('sszvis.behavior.move', function(module) {
     } else {
       // Ordinal scale
       var bandWidth = scale.rangeBand();
+      var scaleRange = scale.range();
+      var paddingWidth = scaleRange.length < 2 ? 0 : (scaleRange[1] - scaleRange[0]) - bandWidth;
       var leftEdges = scale.range().map(function(d) {
-        return [d, d + bandWidth];
+        return [d - paddingWidth / 2, d + bandWidth + paddingWidth / 2];
       });
       for (var i = 0, l = leftEdges.length; i < l; i++) {
         if (leftEdges[i][0] < px && px <= leftEdges[i][1]) {
