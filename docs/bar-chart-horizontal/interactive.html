@@ -206,6 +206,8 @@
     var interactionLayer = sszvis.behavior.move()
       .xScale(widthScale)
       .yScale(yScale)
+      .cancelScrolling(isWithinBarContour)
+      .fireOnPanOnly(true)
       .on('move', actions.showTooltip)
       .on('end',  actions.hideTooltip);
 
@@ -213,6 +215,13 @@
       .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
+  }
+
+  function isWithinBarContour(xValue, category) {
+    var barDatum = sszvis.fn.find(function(d) {
+      return jAcc(d) === state.selectedYear && yAcc(d) === category;
+    }, state.data);
+    return sszvis.behavior.util.testBarThreshold(xValue, barDatum, xAcc, 2000);
   }
 
   function isSelected(d) {

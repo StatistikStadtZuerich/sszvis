@@ -175,9 +175,18 @@
 
 
     // Interaction
-    bars.selectAll('.sszvis-bar')
-      .on('mouseover', actions.showTooltip)
-      .on('mouseout', actions.hideTooltip);
+
+    // Using the panning behavior here, because the bars are so tall.
+    // They take up enough of the space on the screen that a "profile"-based
+    // approach would cover too much of the screen in a scroll trap. Panning
+    // works better in these situations.
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-bar')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    bars.call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }
