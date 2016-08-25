@@ -181,10 +181,6 @@
       .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2))
       .call(sunburstMaker);
 
-    sunburstGroup.selectAll('.sszvis-sunburst-arc')
-      .on('mouseover', actions.onSliceOver)
-      .on('mouseout', actions.onSliceOut);
-
     chartLayer.selectGroup('colorLegend')
       .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 20))
       .call(colorLegend);
