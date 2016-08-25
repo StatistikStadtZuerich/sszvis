@@ -59,17 +59,6 @@
     },
 
     selectHovered: function(d) {
-      state.selection = d ? [d] : [];
-
-      render(state);
-    },
-
-    deselectHovered: function() {
-      state.selection = [];
-      render(state);
-    },
-
-    selectHovered: function(d) {
       state.selection = [d.datum];
       render(state);
     },
@@ -137,8 +126,6 @@
       .fill('rgb(81, 130, 179)')
       .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : radiusScale(valueAcc(d)); })
       .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
-      .on('over', actions.selectHovered)
-      .on('out', actions.deselectHovered);
 
     var mapMaker = sszvis.map.zurichStatistischeQuartiere()
       .keyName('id')
@@ -148,8 +135,6 @@
       .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
       .transitionColor(false)
       .anchoredShape(anchoredShape)
-      .on('over', actions.selectHovered)
-      .on('out', actions.deselectHovered);
 
     var tooltipHeader = sszvis.svgUtils.modularText.html()
       .plain(sszvis.fn.compose(sszvis.format.number, valueAcc, datumAcc));
@@ -179,17 +164,17 @@
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
-    
-    // Interaction 
+
+    // Interaction
 
     var interactionLayer = sszvis.behavior.panning()
-      .elementSelector('.sszvis-map__area')
+      .elementSelector('.sszvis-map__area, .sszvis-anchored-circle')
       .on('start', actions.selectHovered)
       .on('pan', actions.selectHovered)
       .on('end', actions.deselectHovered);
 
     chartLayer
-      .call(interactionLayer);    
+      .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }

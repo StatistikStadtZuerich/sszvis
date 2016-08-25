@@ -199,16 +199,16 @@
       .call(control);
 
 
-    // Interaction 
+    // Interaction
 
     var interactionLayer = sszvis.behavior.panning()
-      .elementSelector('.sszvis-map__area')
+      .elementSelector('.sszvis-map__area, .sszvis-anchored-circle')
       .on('start', actions.selectHovered)
       .on('pan', actions.selectHovered)
       .on('end', actions.deselectHovered);
 
     chartLayer
-      .call(interactionLayer);    
+      .call(interactionLayer);
 
     sszvis.viewport.on('resize', actions.resize);
   }
