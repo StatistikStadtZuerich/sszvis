@@ -75,7 +75,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @returns {Number} height
    */
   var square = function(width) {
-    return d3.min([420, aspectRatio(1, 1)(width)]);
+    return Math.min(aspectRatio(1, 1)(width), 420);
   };
 
   /**
@@ -93,7 +93,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @returns {Number} height
    */
   var portrait = function(width) {
-    return d3.min([600, aspectRatio(4, 5)]);
+    return Math.min(aspectRatio(4, 5)(width), 600);
   };
 
   /**
