@@ -177,18 +177,11 @@
       .header(headerText)
       .visible(isSelected);
 
-    var interaction = sszvis.behavior.panning()
-      .elementSelector('.sszvis-path')
-      .on('start', actions.showTooltip)
-      .on('pan', actions.showTooltip)
-      .on('end', actions.hideTooltip);
-
 
     // Rendering
 
     var pie = chartLayer.selectGroup('piechart')
-      .call(pieMaker)
-      .call(interaction);
+      .call(pieMaker);
 
     pie.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
@@ -201,6 +194,14 @@
 
 
     // Interaction
+
+    var interactionLayer = sszvis.behavior.panning()
+      .elementSelector('.sszvis-path')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    pie.call(interactionLayer);
 
     pie.selectAll('path')
       .on('mouseover', actions.showTooltip)
