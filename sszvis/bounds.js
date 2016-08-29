@@ -71,9 +71,10 @@ sszvis_namespace('sszvis.bounds', function(module) {
 
     // Width is calculated as: bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
     var dimensions = sszvis.fn.measureDimensions(selection);
+    var dimensions = sszvis.fn.defined(selection) ? sszvis.fn.measureDimensions(selection) : {width: DEFAULT_WIDTH};
+
     var width   = either( bounds.width,
-                          either( dimensions.width,
-                                  DEFAULT_WIDTH ));
+                          dimensions.width );
     var innerHeight = sszvis.aspectRatio.auto(dimensions);
     var height  = either( bounds.height,
                           innerHeight + padding.top + padding.bottom );
