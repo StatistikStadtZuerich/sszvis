@@ -9,7 +9,7 @@
  * @param  {Number} squarePadding the padding, in pixels, between squares in the heat table
  * @param  {Number} numX     The number of columns that need to fit within the heat table width
  * @param {Number} numY The number of rows in the table
- * @param {Object} chartPadding An object that includes padding values for the left, right, top,
+ * @param {Object} [chartPadding] An object that includes padding values for the left, right, top,
  *                              and bottom padding which the heat table should have within its container.
  *                              These padding values should be enough to include any axis labels or other things
  *                              that show up around the table itself. The heat table will then fill the rest
@@ -28,6 +28,12 @@ sszvis_namespace('sszvis.layout.heatTableDimensions', function(module) {
   'use strict';
 
   module.exports = function(spaceWidth, squarePadding, numX, numY, chartPadding) {
+    chartPadding || (chartPadding = {});
+    chartPadding.top || (chartPadding.top = 0);
+    chartPadding.right || (chartPadding.right = 0);
+    chartPadding.bottom || (chartPadding.bottom = 0);
+    chartPadding.left || (chartPadding.left = 0);
+
     // this includes the default side length for the heat table
     var DEFAULT_SIDE = 30,
         availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
