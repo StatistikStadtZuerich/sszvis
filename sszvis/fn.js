@@ -85,7 +85,7 @@ module.exports = {
    * @return {Boolean}     true if the value is defined, false if the value is undefined
    */
   defined: function(val) {
-    return typeof val !== 'undefined';
+    return (typeof val !== 'undefined') && val != null;
   },
 
   /**
