@@ -30,6 +30,17 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('bounds', {
+      _: function(width) {
+        var innerHeight = sszvis.aspectRatio.square(width);
+        return {
+          top: 30,
+          bottom: 30,
+          height: 30 + innerHeight + 30
+        }
+      }
+    });
 
 
   /* Application state
@@ -53,7 +64,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds('#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Layers
