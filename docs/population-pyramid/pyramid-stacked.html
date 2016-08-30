@@ -108,7 +108,7 @@
     var chartDimensions = sszvis.fn.measureDimensions('#sszvis-chart');
 
     var props = queryProps(chartDimensions);
-    var pyramidDimensions = sszvis.layout.populationPyramidLayout(chartDimensions.width, state.ages.length);
+    var pyramidDimensions = sszvis.layout.populationPyramidLayout(chartDimensions.width - 2, state.ages.length);
 
     var chartPadding = { top: 25, bottom: props.bottomPadding };
 

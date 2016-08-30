@@ -35,7 +35,11 @@
      .prop('tooltipOrientation', {
        palm: 'bottom',
        _: 'left'
-     });
+     })
+     .prop('xTicks', {
+       palm: 4,
+       _: null // auto
+     })
 
 
   /* Shortcuts
@@ -183,7 +187,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var pyramidWidth = sszvis.fn.measureDimensions('#sszvis-chart').width;
+    var pyramidWidth = sszvis.fn.measureDimensions('#sszvis-chart').width - 2;
     var pyramidDimensions = sszvis.layout.populationPyramidLayout(pyramidWidth, state.ages.length);
     var chartPadding = { top: 25, bottom: 86 };
     var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
@@ -243,7 +247,8 @@
       .orient('bottom')
       .title('Anzahl Frauen und Männer')
       .titleAnchor('middle')
-      .titleCenter(true);
+      .titleCenter(true)
+      .ticks(props.xTicks);
 
     var yAxis = sszvis.axis.y.ordinal()
       .scale(yAxisLabelScale)
