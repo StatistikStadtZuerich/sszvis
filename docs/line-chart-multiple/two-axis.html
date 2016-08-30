@@ -27,6 +27,11 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('yAxis2Label', {
+      palm: '(schweizweit)',
+      _: 'Anzahl Arbeitslose (schweizweit)'
+    });
 
 
   /* Shortcuts
@@ -93,8 +98,8 @@
     },
 
     resetDate: function() {
-      var mostRecentDate = d3.max(state.data, xAcc);
-      actions.changeDate(mostRecentDate);
+      state.selection = [];
+      render(state);
     },
 
     resize: function() { render(state); }
@@ -124,6 +129,7 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 30, bottom: 130 }, '#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
@@ -210,7 +216,7 @@
       .scale(yScale2)
       .orient('left')
       .contour(true)
-      .title('Anzahl Arbeitslose (schweizweit)')
+      .title(props.yAxis2Label)
       .dyTitle(-20);
 
     var cLegend1 = sszvis.legend.ordinalColorScale()
