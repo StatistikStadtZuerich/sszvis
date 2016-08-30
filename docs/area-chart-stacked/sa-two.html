@@ -27,6 +27,15 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var MAX_BUTTON_WIDTH = 300;
+  var queryProps = sszvis.responsiveProps()
+    .prop('controlWidth', {
+      _: function(width) {
+        return Math.min(width, MAX_BUTTON_WIDTH);
+        return Math.max(420, Math.min(MAX_BUTTON_WIDTH, width / 2));
+      }
+    });
+
 
   // This example works in much the same way as the twelve-category stacked area chart.
   // Much of the code is similar, if not the same. For a detailed description of the
@@ -139,7 +148,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 60, bottom: 104 }, '#sszvis-chart');
+    var bounds = sszvis.bounds({ top: 70, bottom: 104 }, '#sszvis-chart');
+    var props = queryProps(bounds);
     var multiplesLayout = sszvis.layout.stackedAreaMultiplesLayout(bounds.innerHeight, state.stackedData.length, 0.1);
 
 
@@ -282,7 +292,8 @@
     var buttonGroup = sszvis.control.buttonGroup()
       .values(options)
       .current(options[Number(state.isMultiples)])
-      .change(actions.toggleMultiples);
+      .change(actions.toggleMultiples)
+      .width(props.controlWidth);
 
 
     // Rendering

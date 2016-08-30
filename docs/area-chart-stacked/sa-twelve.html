@@ -27,6 +27,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var MAX_BUTTON_WIDTH = 300;
   var queryProps = sszvis.responsiveProps()
     .prop('numLegendColumns', {
       palm: 1,
@@ -35,7 +36,14 @@
     .prop('bottomPadding', {
       palm: 310,
       _: 190
-    });
+    })
+   .prop('controlWidth', {
+     _: function(width) {
+       return Math.min(width, MAX_BUTTON_WIDTH);
+       return Math.max(420, Math.min(MAX_BUTTON_WIDTH, width / 2));
+     }
+   });
+
 
 
   /* Shortcuts
@@ -165,7 +173,7 @@
   ----------------------------------------------- */
   function render(state) {
     var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
-    var bounds = sszvis.bounds({ top: 70, bottom: props.bottomPadding }, '#sszvis-chart');
+    var bounds = sszvis.bounds({ top: 80, bottom: props.bottomPadding }, '#sszvis-chart');
     // this layout function computes values, including an array of baseline y-positions, for the
     // area multiples component. The most important is the array of y-baselines, which are used
     // for the yPositionMultiples scale
@@ -355,7 +363,8 @@
     var buttonGroup = sszvis.control.buttonGroup()
       .values(options)
       .current(options[Number(state.isMultiples)])
-      .change(actions.toggleMultiples);
+      .change(actions.toggleMultiples)
+      .width(props.controlWidth);
 
 
     // Rendering
