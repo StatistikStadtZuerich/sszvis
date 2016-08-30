@@ -45,7 +45,6 @@
     valueColumn: 'Wert', //optional
     categoryColumn: 'Stadt',
     yLabel: 'Beschäftigte', //optional
-    slant: '',
     textWrap: false
   }
   var MAX_WIDTH = 600;
@@ -53,7 +52,16 @@
     .prop('barPadding', {
       palm: 0.5,
       _: 0.3
-  });
+    })
+    .prop('slant', {
+      palm: 'vertical',
+      _: 'horizontal'
+    })
+    .prop('bottomPadding', {
+      palm: 100,
+      _: 60
+    });
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -115,8 +123,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 50 }, '#sszvis-chart');
-    var props = queryProps(bounds);
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, '#sszvis-chart');
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
 
     // Scales
@@ -159,8 +167,7 @@
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
       .orient('bottom')
-      .slant((config.slant || ''));
-      
+      .slant(props.slant);
 
       if(config.textWrap){
         xAxis.textWrap(labelWrapWidth(xScale.range()));
