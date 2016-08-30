@@ -219,6 +219,7 @@
           ['Einwohner', isNaN(v) ? '–' : sszvis.format.number(v)]
         ];
       })
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected);
 
 

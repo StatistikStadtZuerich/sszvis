@@ -33,6 +33,13 @@
   // in BIN_EDGES will be grouped in the first bin, and anything greater than or
   // equal to the last element will be grouped in the last bin.
   var BIN_EDGES = [5, 40, 200, 600];
+  var MAX_LEGEND_WIDTH = 260;
+  var queryProps = sszvis.responsiveProps()
+    .prop('legendWidth', {
+      _: function(width) {
+        return Math.min(width * 0.9, MAX_LEGEND_WIDTH);
+      }
+    });
 
 
   /* Shortcuts
@@ -123,6 +130,7 @@
       top: tablePadding.top,
       bottom: tablePadding.bottom
     }, '#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
@@ -213,13 +221,11 @@
         });
       });
 
-    var legendWidth = Math.min(bounds.innerWidth / 2, 260);
-
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
       .displayValues(BIN_EDGES)
       .endpoints(state.valueDomain)
-      .width(legendWidth)
+      .width(props.legendWidth)
       .labelFormat(sszvis.format.number);
 
     var tooltipHeaderText = sszvis.svgUtils.modularText.html()
@@ -235,6 +241,7 @@
           ['Anzahl: ', cAcc(d)]
         ];
       })
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected);
 
 
@@ -255,12 +262,18 @@
       .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset - 10, 0))
       .call(yAxis);
 
+    // At very small screen sizes, we position the legend centered on the screen,
+    // at larger sizes centered on the table
+    var legendX = (tableDimensions.width < MAX_LEGEND_WIDTH)
+                ? (bounds.width - props.legendWidth)/2 - bounds.padding.left
+                : tableDimensions.centeredOffset + (tableDimensions.width - props.legendWidth) / 2;
+
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset + (tableDimensions.width - legendWidth) / 2, bounds.innerHeight + 16))
+      .attr('transform', sszvis.svgUtils.translateString(legendX, bounds.innerHeight + 16))
       .call(legend);
 
 
-    // Interaction 
+    // Interaction
 
     var interactionLayer = sszvis.behavior.panning()
       .elementSelector('.sszvis-bar')

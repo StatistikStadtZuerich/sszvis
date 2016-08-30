@@ -33,6 +33,13 @@
   // anything less than or equal to the first element in BIN_EDGES will be grouped in the first bin,
   // and anything greater than or equal to the last element will be grouped in the last bin
   var BIN_EDGES = d3.range(100, 1000, 100);
+  var MAX_LEGEND_WIDTH = 260;
+  var queryProps = sszvis.responsiveProps()
+    .prop('legendWidth', {
+      _: function(width) {
+        return Math.min(width * 0.8, MAX_LEGEND_WIDTH);
+      }
+    });
 
 
   /* Shortcuts
@@ -123,6 +130,7 @@
       top: tablePadding.top,
       bottom: tablePadding.bottom
     }, '#sszvis-chart');
+    var props = queryProps(bounds);
 
 
     // Scales
@@ -207,13 +215,11 @@
         });
       });
 
-    var legendWidth = Math.min(bounds.innerWidth / 2, 260);
-
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
       .displayValues(BIN_EDGES)
       .endpoints(state.valueDomain)
-      .width(legendWidth)
+      .width(props.legendWidth)
       .labelFormat(sszvis.format.number);
 
     var tooltipHeaderText = sszvis.svgUtils.modularText.html().bold('Units');
@@ -228,6 +234,7 @@
           ['Wert', cAcc(d)]
         ];
       })
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected);
 
 
@@ -249,7 +256,7 @@
       .call(yAxis);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset + (tableDimensions.width - legendWidth) / 2, bounds.innerHeight + 16))
+      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset + (tableDimensions.width - props.legendWidth) / 2, bounds.innerHeight + 16))
       .call(legend);
 
 
