@@ -27,7 +27,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var MAX_BUTTON_WIDTH = 300;
+  var MAX_CONTROL_WIDTH = 300;
   var queryProps = sszvis.responsiveProps()
     .prop('numLegendColumns', {
       palm: 1,
@@ -39,8 +39,8 @@
     })
    .prop('controlWidth', {
      _: function(width) {
-       return Math.min(width, MAX_BUTTON_WIDTH);
-       return Math.max(420, Math.min(MAX_BUTTON_WIDTH, width / 2));
+       return Math.min(width, MAX_CONTROL_WIDTH);
+       return Math.max(420, Math.min(MAX_CONTROL_WIDTH, width / 2));
      }
    });
 

@@ -28,6 +28,12 @@
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var MAX_WIDTH = 600;
+  var queryProps = sszvis.responsiveProps()
+    .prop('ticks', {
+      palm: 4,
+      _: 10
+    });
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -75,7 +81,9 @@
   function render(state) {
     var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.categories.length);
     var bounds = sszvis.bounds({ height: 30 + chartDimensions.totalHeight + 40, top: 30, bottom: 40 }, '#sszvis-chart');
-    
+    var props = queryProps(bounds);
+
+
     // Scales
 
     var widthScale = d3.scale.linear()
@@ -109,7 +117,7 @@
       .scale(widthScale)
       .orient('bottom')
       .alignOuterLabels(true)
-      .ticks(10)
+      .ticks(props.ticks)
       .title('Erwerbstätige');
 
     var yAxis = sszvis.axis.y.ordinal()
