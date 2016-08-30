@@ -66,6 +66,8 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * This aspect ratio constrains the returned height to a maximum of 420px.
    * It is recommended to center charts within this aspect ratio.
    *
+   * Exposes the MAX_HEIGHT used as a property on the function.
+   *
    * Recommended breakpoints:
    *   - palm
    *   - lap
@@ -74,9 +76,11 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @param {Number} width
    * @returns {Number} height
    */
+  var SQUARE_MAX_HEIGHT = 420;
   var square = function(width) {
-    return Math.min(aspectRatio(1, 1)(width), 420);
+    return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
   };
+  square.MAX_HEIGHT = 420;
 
   /**
    * aspectRatio.portrait
@@ -84,6 +88,8 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * This aspect ratio constrains the returned height to a maximum of 600px.
    * It is recommended to center charts within this aspect ratio.
    *
+   * Exposes the MAX_HEIGHT used as a property on the function.
+   *
    * Recommended breakpoints:
    *   - palm
    *   - lap
@@ -92,9 +98,11 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @param {Number} width
    * @returns {Number} height
    */
+  var PORTRAIT_MAX_HEIGHT = 600;
   var portrait = function(width) {
-    return Math.min(aspectRatio(4, 5)(width), 600);
+    return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
   };
+  portrait.MAX_HEIGHT = 600;
 
   /**
    * aspectRatio.auto
