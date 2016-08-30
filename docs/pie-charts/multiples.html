@@ -208,7 +208,7 @@
 
     // this component generates svg 'g' tags into which chart instances can be rendered
     var multiplesMaker = sszvis.layout.smallMultiples()
-      .width(d3.min([MAX_WIDTH, bounds.innerWidth]))
+      .width(Math.min(bounds.innerWidth, MAX_WIDTH))
       .height(bounds.innerHeight)
       .paddingX(30)
       .paddingY(30)
@@ -217,7 +217,7 @@
 
     var colorLegend = sszvis.legend.ordinalColorScale()
       .scale(cScale)
-      .columnWidth(d3.min([MAX_WIDTH, bounds.innerWidth]) / 2)
+      .columnWidth(Math.min(bounds.innerWidth, MAX_WIDTH) / 2)
       .columns(props.colorLegendColumns)
       .orientation('horizontal');
 

@@ -48,7 +48,7 @@
    var queryProps = sszvis.responsiveProps()
      .prop('layout', {
        palm: function(width) {
-         var sidePadding = d3.max([10, (width - PIE_DIAMETER) / 2]);
+         var sidePadding = Math.max((width - PIE_DIAMETER) / 2, 10);
          var diameter = (width - 2 * sidePadding);
          var legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
          return {
