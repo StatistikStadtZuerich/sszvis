@@ -195,6 +195,7 @@
 
 .sszvis-map__highlight {
   fill: none;
+  pointer-events: none;
   stroke-linejoin: round;
 }
 
