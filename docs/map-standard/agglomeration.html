@@ -179,6 +179,7 @@
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(tooltipBody)
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected);
 
     var numColumns = 3;

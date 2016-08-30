@@ -196,6 +196,7 @@
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(sszvis.fn.compose(qnameAcc, mDatumAcc))
+      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
       .visible(isSelected);
 
     var legend = sszvis.legend.linearColorScale()
