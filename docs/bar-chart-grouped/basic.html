@@ -36,6 +36,10 @@
     .prop('barPadding', {
       palm: 0.5,
       _: 0.3
+    })
+    .prop('xAxisSlant', {
+      palm: 'diagonal',
+      _: 'horizontal'
     });
 
 
@@ -141,6 +145,7 @@
 
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
+      .slant(props.xAxisSlant)
       .orient('bottom');
 
     var yAxis = sszvis.axis.y()
