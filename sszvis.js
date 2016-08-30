@@ -5496,7 +5496,7 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
   };
 
   // Perform distance calculations in units squared to avoid a costly Math.sqrt
-  var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(25, 2);
+  var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
 
   function eventNearPoint(event, point) {
     var dx = event.clientX - point[0];
