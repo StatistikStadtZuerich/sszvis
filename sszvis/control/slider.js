@@ -58,10 +58,10 @@ sszvis_namespace('sszvis.control.slider', function(module) {
         // the mostly unchanging bits
         var bg = selection.selectAll('g.sszvis-control-slider__backgroundgroup')
           .data([1]);
-
-        var enterBg = bg.enter()
+        bg.enter()
           .append('g')
           .classed('sszvis-control-slider__backgroundgroup', true);
+        bg.exit().remove();
 
         // create the axis
         var axis = sszvis.axis.x()
@@ -75,21 +75,23 @@ sszvis_namespace('sszvis.control.slider', function(module) {
             return contains(d, props.majorTicks) ? props.tickLabels(d) : '';
           });
 
-        var axisSelection = enterBg.selectAll('g.sszvis-axisGroup')
+        var axisSelection = bg.selectAll('g.sszvis-axisGroup')
           .data([1]);
 
         axisSelection.enter()
           .append('g')
-          .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider', true)
-          .attr('transform', sszvis.svgUtils.translateString(0, axisOffset));
+          .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider', true);
 
-        axisSelection.call(axis);
+        axisSelection
+          .attr('transform', sszvis.svgUtils.translateString(0, axisOffset))
+          .call(axis);
 
         // adjust visual aspects of the axis to fit the design
-        axisSelection.selectAll('.tick line').filter(function(d) {
-          return !contains(d, props.majorTicks);
-        })
-        .attr('y2', 4);
+        axisSelection.selectAll('.tick line')
+          .filter(function(d) {
+            return !contains(d, props.majorTicks);
+          })
+          .attr('y2', 4);
 
         var majorAxisText = axisSelection.selectAll('.tick text').filter(function(d) {
           return contains(d, props.majorTicks);
@@ -100,47 +102,53 @@ sszvis_namespace('sszvis.control.slider', function(module) {
         });
 
         // create the slider background
-        var backgroundSelection = enterBg.selectAll('g.sszvis-slider__background')
-          .data([1])
-          .enter()
+        var backgroundSelection = bg.selectAll('g.sszvis-slider__background')
+          .data([1]);
+        backgroundSelection.enter()
           .append('g')
-          .attr('transform', sszvis.svgUtils.translateString(0, backgroundOffset))
           .classed('sszvis-slider__background', true);
-
         backgroundSelection
+          .attr('transform', sszvis.svgUtils.translateString(0, backgroundOffset));
+
+        var bg1 = backgroundSelection.selectAll('.sszvis-slider__background__bg1')
+          .data([1]);
+        bg1.enter()
           .append('line')
+          .classed('sszvis-slider__background__bg1', true)
           .style('stroke-width', bgWidth)
           .style('stroke', '#888')
-          .style('stroke-linecap', 'round')
+          .style('stroke-linecap', 'round');
+        bg1
           .attr('x1', Math.ceil(scaleRange[0] + lineEndOffset))
           .attr('x2', Math.floor(scaleRange[1] - lineEndOffset));
 
-        backgroundSelection
+        var bg2 = backgroundSelection.selectAll('.sszvis-slider__background__bg2')
+          .data([1]);
+        bg2.enter()
           .append('line')
+          .classed('sszvis-slider__background__bg2', true)
           .style('stroke-width', bgWidth - 1)
           .style('stroke', '#fff')
-          .style('stroke-linecap', 'round')
+          .style('stroke-linecap', 'round');
+        bg2
           .attr('x1', Math.ceil(scaleRange[0] + lineEndOffset))
           .attr('x2', Math.floor(scaleRange[1] - lineEndOffset));
 
-        var shadow = selection.selectAll('g.sszvis-slider__background').selectAll('.sszvis-slider__backgroundshadow')
+        var shadow = backgroundSelection.selectAll('.sszvis-slider__backgroundshadow')
           .data([props.value]);
-
         shadow.enter()
           .append('line')
           .attr('class', 'sszvis-slider__backgroundshadow')
           .attr('stroke-width', bgWidth - 1)
           .style('stroke', '#E0E0E0')
           .style('stroke-linecap', 'round');
-
-          shadow
-            .attr('x1', Math.ceil(scaleRange[0] + lineEndOffset))
-            .attr('x2', sszvis.fn.compose(Math.floor, alteredScale));
+        shadow
+          .attr('x1', Math.ceil(scaleRange[0] + lineEndOffset))
+          .attr('x2', sszvis.fn.compose(Math.floor, alteredScale));
 
         // draw the handle and the label
         var handle = selection.selectAll('g.sszvis-control-slider__handle')
           .data([props.value]);
-
         handle.exit().remove();
 
         var handleEntering = handle.enter()
