@@ -37,6 +37,7 @@
  * @property {boolean} showZeroY                        Whether the axis should display a label for at y=0.
  * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
  *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
+ *                                                      Use "horizontal" to reset to a horizontal slant.
  * @property {number} textWrap                          Specify a width at which to wrap the axis label text.
  * @property {number, function} tickLength              specify a number or a function which returns a number for setting the tick length.
  * @property {string} title                             Specify a string to use as the title of this chart. Default title position depends on the chart orientation
@@ -453,6 +454,11 @@ sszvis_namespace('sszvis.axis', function(module) {
 
   var slantLabel = {
     top: {
+      horizontal: function(selection) {
+        selection.style('text-anchor', 'middle')
+          .attr('dx', null)
+          .attr('transform', null);
+      },
       vertical: function(selection) {
         selection.style('text-anchor', 'start')
           .attr('dx', '0em')
@@ -467,6 +473,11 @@ sszvis_namespace('sszvis.axis', function(module) {
       }
     },
     bottom: {
+      horizontal: function(selection) {
+        selection.style('text-anchor', 'middle')
+          .attr('dx', null)
+          .attr('transform', null);
+      },
       vertical: function(selection) {
         selection.style('text-anchor', 'end')
           .attr('dx', '-1em')
