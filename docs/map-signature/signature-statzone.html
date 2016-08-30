@@ -30,7 +30,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var MAX_LEGEND_WIDTH = 420;
+  var MAX_LEGEND_WIDTH = sszvis.aspectRatio.square.MAX_HEIGHT;
   var queryProps = sszvis.responsiveProps()
      .prop('bounds', {
        _: function(width) {

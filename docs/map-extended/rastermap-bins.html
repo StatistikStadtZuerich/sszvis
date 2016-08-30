@@ -33,6 +33,57 @@
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var DEFAULT_KEY = 'Kinder';
   var KEY_OPTIONS = ['Kinder', 'Random'];
+  var MAX_LEGEND_WIDTH = 320;
+  var queryProps = sszvis.responsiveProps()
+    .prop('bounds', {
+      _: function(width) {
+        // The calculation of the rastermap bounds is a bit more complex due to the fact
+        // that we have to deal with a raster image in the background that has a bigger
+        // size than the vector map.
+        //
+        // At the maximum map size (420x420px) the raster image overlaps the image by
+        // the magic padding numbers below. At smaller sizes, we apply a scale factor
+        // to calculate the respective paddings.
+        var scale = width/(sszvis.aspectRatio.square.MAX_HEIGHT + 49 + 42);
+
+        var padding = {
+          top: 74 + Math.min(36 * scale, 36),
+          right: 49 * scale,
+          bottom: 60 + Math.min(31 * scale, 31),
+          left: 42 * scale
+        };
+
+        var innerWidth = width - padding.left - padding.right;
+        var innerHeight = sszvis.aspectRatio.square(innerWidth);
+
+        // We always want a 1:1 ratio, so we restrict the innerWidth to the max height
+        // by increasing the horizontal padding.
+        if (innerHeight < innerWidth) {
+          var excessPadding = innerWidth - innerHeight;
+          padding.right = padding.right + excessPadding/2;
+          padding.left = padding.left + excessPadding/2;
+        }
+
+        return {
+          top: padding.top,
+          bottom: padding.bottom,
+          left: padding.left,
+          right: padding.right,
+          height: padding.top + innerHeight + padding.bottom
+        }
+      }
+    })
+    .prop('legendWidth', {
+      _: function(width) {
+        return Math.min(width / 2, MAX_LEGEND_WIDTH);
+      }
+    })
+    .prop('controlWidth', {
+      _: function(width) {
+        return Math.max(200, Math.min(MAX_LEGEND_WIDTH, width / 2));
+      }
+    });
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -95,7 +146,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ bottom: 100 }, '#sszvis-chart');
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
@@ -154,13 +206,13 @@
     });
 
 
-    // Components
 
-    var controlWidth = bounds.innerWidth / 2;
+
+    // Components
 
     var control = sszvis.control.buttonGroup()
       .values(KEY_OPTIONS)
-      .width(controlWidth)
+      .width(props.controlWidth)
       .current(state.currentKey)
       .change(actions.setKey);
 
@@ -205,31 +257,29 @@
       .geoBounds(layerBounds)
       .opacity(0.4);
 
-    var legendWidth = bounds.innerWidth / 2;
-
     var legend = sszvis.legend.binnedColorScale()
       .scale(colorScale)
       .displayValues(binEdges)
       .endpoints(state.valueDomain)
-      .width(legendWidth)
+      .width(props.legendWidth)
       .labelFormat(sszvis.format.number);
 
 
     // Rendering
 
-    htmlUnderLayer.call(topoLayer);
-
-    htmlUnderLayer.call(rasterLayer);
+    htmlUnderLayer
+      .call(topoLayer)
+      .call(rasterLayer);
 
     chartLayer.selectGroup('outline')
       .call(mapMaker);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 60))
+      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - props.legendWidth) / 2, bounds.innerHeight + bounds.padding.bottom - 40))
       .call(legend);
 
     htmlOverLayer.selectDiv('controls')
-      .style('left', ((bounds.innerWidth - controlWidth) / 2) + 'px')
+      .style('left', ((bounds.innerWidth - props.controlWidth) / 2) + 'px')
       .style('top', (20 - bounds.padding.top) + 'px')
       .call(control);
 
