@@ -33,7 +33,16 @@
     .prop('barPadding', {
       palm: 0.4,
       _: 0.2
+    })
+    .prop('bottomPadding', {
+      palm: 140,
+      _: 60
+    })
+    .prop('slant', {
+      palm: 'vertical',
+      _: 'horizontal'
     });
+
 
   /* Shortcuts
   ----------------------------------------------- */
@@ -96,8 +105,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var bounds = sszvis.bounds({ top: 3, bottom: 60 }, '#sszvis-chart');
-    var props = queryProps(bounds);
+    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 3, bottom: props.bottomPadding }, '#sszvis-chart');
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
 
     // Scales
@@ -148,7 +157,11 @@
     var xAxis = sszvis.axis.x.ordinal()
       .scale(xScale)
       .orient('bottom')
-      .textWrap(labelWrapWidth(xScale.range()));
+      .slant(props.slant)
+
+    if (props.slant === 'horizontal') {
+      xAxis.textWrap(labelWrapWidth(xScale.range()));
+    }
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)

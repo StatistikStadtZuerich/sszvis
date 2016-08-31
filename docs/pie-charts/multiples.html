@@ -78,6 +78,12 @@
         }
       }
     })
+    .prop('tooltipVisibility', {
+      palm: function(){
+        return function() { return false; }
+      },
+      _: function() { return isSelected; }
+    });
 
 
   /* Shortcuts
@@ -230,7 +236,7 @@
       .header(cAcc)
       .body(function(d){ return 'Anzahl: ' + d.value; })
       .opacity(tooltipOpacity)
-      .visible(isSelected);
+      .visible(props.tooltipVisibility);
 
 
     // Rendering

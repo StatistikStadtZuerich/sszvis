@@ -38,6 +38,10 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
 
 ### Chart
 
+```hint|neutral
+Note that long labels don't work on small mobile screens. For these screens you should keep the labels short.
+```
+
 ```project
 {
     "name": "bar-chart-horizontal-basic",

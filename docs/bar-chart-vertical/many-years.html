@@ -159,7 +159,8 @@
     var xAxis = sszvis.axis.x()
       .scale(xScale)
       .orient('bottom')
-      .tickValues(d3.range(state.yearRange[0], state.yearRange[1], 10));
+      .alignOuterLabels(true)
+      .tickValues(d3.range(state.yearRange[0], state.yearRange[1], 20));
 
     var yAxis = sszvis.axis.y()
       .scale(yPosScale)
