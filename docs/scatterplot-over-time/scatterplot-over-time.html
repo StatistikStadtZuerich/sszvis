@@ -330,7 +330,7 @@
       .call(slider);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 122))
+      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 122))
       .call(cLegend);
 
     sszvis.viewport.on('resize', actions.resize);
