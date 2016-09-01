@@ -4,6 +4,9 @@
  * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
+ * This control exposes the same interface as control.select, meaning the two can be used
+ * interchangeably.
+ *
  * @module sszvis/control/buttonGroup
  *
  * @property {array} values         an array of values which are the options available in the control. Each one will become a button

@@ -74,6 +74,7 @@ SOURCE_FILES = \
 	sszvis/component/sunburst.js \
 	sszvis/control/buttonGroup.js \
 	sszvis/control/handleRuler.js \
+	sszvis/control/select.js \
 	sszvis/control/slider.js \
 	sszvis/layout/heatTableDimensions.js \
 	sszvis/layout/horizontalBarChartDimensions.js \

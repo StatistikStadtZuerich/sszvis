@@ -253,7 +253,7 @@
   vertical-align: middle;
 }
 
-/** 
+/**
 * uses same background color as "Zurücksetzen" form button on stzh Website
 */
 .sszvis-control-buttonGroup__item.selected {
@@ -270,6 +270,51 @@
 .sszvis-control-buttonGroup__item:last-child {
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px;
+}
+
+/**
+ * Select control
+ *
+ * @module sszvis/control/select
+ */
+.sszvis-control-select {
+  border: 1px solid #767676;
+  border-radius: 3px;
+  background-color: #FFFFFF;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABQElEQVR4nO3TzW2DUBDEcZdACSnBpe1lVhzdCSXZnaQE55JJSOJgMO9rH/OTOK70/iNxOomIiIiIiMi3cRzfar8hlc0tAM4A3gFMeZ5UDoDps+W86sDMBgBXd7+7+z3yCACmWcfVzIbFg9/xkUeYx68a4b/4iCM8in86wlJ8pBGW4ucj/Dhy98uzowgjrImffZevQzMb3P0WeYSN8bc/v0HkEXbHU8QRksVTpBGSx1OEEbLFU8sjZI+nFkcoFk8tjVA8nloYoVo81RyhejzVGKGZeCo5QnPxVGKEZuMp5wjNx1OOEcLEU8oRwsVTihHCxtOeEcLH0ysjdBNPW0foKp4yjBAnnhKOEC+eEowQN552jBA/nl4YoZ942jBCf/G0YoR+42lhhP7j6cEIx4mn2QjHiyczGw4bLyIiIiIiUtMHjJmBk7uXEiAAAAAASUVORK5CYII=');
+  background-position: 96% 51%;
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  box-sizing: border-box;
+  cursor: pointer;
+  height: 34px;
+  overflow: hidden;
+}
+
+.sszvis-control-select__element {
+  background: transparent;
+  border: 1px solid #FFFFFF;
+  color: #767676;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  height: 34px;
+  outline: 0;
+}
+
+/* Hide focus ring on Firefox */
+.sszvis-control-select__element:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #000;
+}
+
+.sszvis-control-select__metrics {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  height: auto;
+  position: absolute;
+  visibility: hidden;
+  width: auto;
+  white-space: nowrap;
 }
 
 /**
