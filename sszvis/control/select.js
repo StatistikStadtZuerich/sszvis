@@ -4,8 +4,8 @@
  * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
- * This control exposes the same interface as control.buttonGroup, meaning the two can be used
- * interchangeably.
+ * This control is part of the `optionSelectable` class of controls and can be used interchangeably
+ * with other controls of this class (sszvis.control.buttonGroup).
  *
  * @module sszvis/control/select
  *
@@ -30,8 +30,15 @@ sszvis_namespace('sszvis.control.select', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var wrapperEl = selection.selectDiv('selectWrapper')
-          .classed('sszvis-control-select', true)
+        var wrapperEl = selection.selectAll('.sszvis-control-optionSelectable')
+          .data(['sszvis-control-select'], function(d){return d;});
+        wrapperEl.enter()
+          .append('div')
+          .classed('sszvis-control-optionSelectable', true)
+          .classed('sszvis-control-select', true);
+        wrapperEl.exit().remove();
+
+        wrapperEl
           .style('width', props.width + 'px');
 
         var metricsEl = wrapperEl.selectDiv('selectMetrics')
