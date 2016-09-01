@@ -52,6 +52,14 @@
          return Math.min(14, Math.max(width / 28, 10));
        }
      })
+     .prop('control', {
+       palm: function(width) {
+         return sszvis.control.select;
+       },
+       _: function(width) {
+         return sszvis.control.buttonGroup;
+       }
+     })
      .prop('controlWidth', {
        _: function(width) {
          return Math.min(width, MAX_LEGEND_WIDTH);
@@ -196,7 +204,7 @@
       .body(tooltipBody)
       .visible(sszvis.fn.compose(isSelected, datumAcc));
 
-    var control = sszvis.control.buttonGroup()
+    var control = props.control()
       .values(['Männlich 1993', 'Weiblich 1993', 'Männlich 2014', 'Weiblich 2014'])
       .current(state.currentFilter)
       .width(props.controlWidth)

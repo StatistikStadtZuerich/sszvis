@@ -9,9 +9,9 @@
  *
  * @module sszvis/control/select
  *
- * @property {array} values         an array of values which are the options available in the control. Each one will become a button
- * @property {any} current          the current value of the button group. Should be one of the options passed to .values()
- * @property {number} width         The total width of the button group. Each option will have 1/3rd of this width. (default: 300px)
+ * @property {array} values         an array of values which are the options available in the control.
+ * @property {any} current          the currently selected value of the select control. Should be one of the options passed to .values()
+ * @property {number} width         The total width of the select control. If text labels exceed this width they will be trimmed to fit using an ellipsis mark. (default: 300px)
  * @property {function} change      A callback/event handler function to call when the user clicks on a value.
  *                                  Note that clicking on a value does not necessarily change any state unless this callback function does something.
  *

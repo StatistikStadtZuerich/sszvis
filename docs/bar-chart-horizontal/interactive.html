@@ -169,7 +169,7 @@
         return sszvis.fn.contains(state.selected.map(sszvis.fn.compose(String, yAcc)), String(d));
       });
 
-    var buttonGroup = sszvis.control.select()
+    var buttonGroup = sszvis.control.buttonGroup()
       .values(state.years)
       .width(props.controlWidth)
       .current(state.selectedYear)

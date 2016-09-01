@@ -6,6 +6,10 @@ Controls can be used to provide a graphical tool for interacting with a chart's 
 
 ### sszvis.control.buttonGroup
 
+```hint|directive
+This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.control.select).
+```
+
 #### `buttonGroup.values`
 
 an array of values which are the options available in the control. Each one will become a button
@@ -37,6 +41,54 @@ A callback/event handler function to call when the user clicks on a value. Note 
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
         "d3.js": "vendor/d3/d3.min.js"
+    },
+    "sourceView": ["index.html", "data.csv"]
+}
+```
+
+## Select Control
+
+### sszvis.control.select
+
+```hint|directive
+This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.control.buttonGroup).
+```
+
+#### `select.values`
+
+an array of values which are the options available in the control.
+
+#### `select.current`
+
+the currently selected value of the select control. Should be one of the options passed to .values()
+
+#### `select.[width]`
+
+The total width of the select control. If text labels exceed this width they will be trimmed to fit using an ellipsis mark. (default: 300px)
+
+#### `select.change`
+
+A callback/event handler function to call when the user clicks on a value. Note that clicking on a value does not necessarily change any state unless this callback function does something.
+
+### Example
+
+This example shows how a button group can be used interchangeably with a select. The button group is used when enough horizontal space is available and falls back to the select on narrow screens.
+
+```project
+{
+    "name": "map-signature-statzone",
+    "files": {
+        "index.html": {
+            "source": "docs/map-signature/signature-statzone.html",
+            "template": "docs/template.html"
+        },
+        "data.csv": "docs/map-signature/data/births_year_statisticalZones.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "docs/fallback.png",
+        "d3.js": "vendor/d3/d3.min.js",
+        "topojson.js": "vendor/topojson/topojson.js",
+        "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }

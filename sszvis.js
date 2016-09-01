@@ -7113,8 +7113,8 @@ sszvis_namespace('sszvis.component.sunburst', function(module) {
  * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
- * This control exposes the same interface as control.select, meaning the two can be used
- * interchangeably.
+ * This control is part of the `optionSelectable` class of controls and can be used interchangeably
+ * with other controls of this class (sszvis.control.select).
  *
  * @module sszvis/control/buttonGroup
  *
@@ -7141,10 +7141,15 @@ sszvis_namespace('sszvis.control.buttonGroup', function(module) {
 
         var buttonWidth = props.width / props.values.length;
 
-        var container = selection.selectDiv('buttonGroup');
+        var container = selection.selectAll('.sszvis-control-optionSelectable')
+          .data(['sszvis-control-buttonGroup'], function(d){return d;});
+        container.enter()
+          .append('div')
+          .classed('sszvis-control-optionSelectable', true)
+          .classed('sszvis-control-buttonGroup', true);
+        container.exit().remove();
 
         container
-          .classed('sszvis-control-buttonGroup', true)
           .style('width', props.width + 'px');
 
         var buttons = container.selectAll('.sszvis-control-buttonGroup__item')
@@ -7331,14 +7336,14 @@ sszvis_namespace('sszvis.control.handleRuler', function(module) {
  * Control for switching top-level filter values. Use this control for changing between several
  * options which affect the state of the chart. This component should be rendered into an html layer.
  *
- * This control exposes the same interface as control.buttonGroup, meaning the two can be used
- * interchangeably.
+ * This control is part of the `optionSelectable` class of controls and can be used interchangeably
+ * with other controls of this class (sszvis.control.buttonGroup).
  *
  * @module sszvis/control/select
  *
- * @property {array} values         an array of values which are the options available in the control. Each one will become a button
- * @property {any} current          the current value of the button group. Should be one of the options passed to .values()
- * @property {number} width         The total width of the button group. Each option will have 1/3rd of this width. (default: 300px)
+ * @property {array} values         an array of values which are the options available in the control.
+ * @property {any} current          the currently selected value of the select control. Should be one of the options passed to .values()
+ * @property {number} width         The total width of the select control. If text labels exceed this width they will be trimmed to fit using an ellipsis mark. (default: 300px)
  * @property {function} change      A callback/event handler function to call when the user clicks on a value.
  *                                  Note that clicking on a value does not necessarily change any state unless this callback function does something.
  *
@@ -7357,11 +7362,18 @@ sszvis_namespace('sszvis.control.select', function(module) {
         var selection = d3.select(this);
         var props = selection.props();
 
-        var wrapperEl = selection.selectDiv('selectWrapper')
-          .classed('sszvis-control-select', true)
+        var wrapperEl = selection.selectAll('.sszvis-control-optionSelectable')
+          .data(['sszvis-control-select'], function(d){return d;});
+        wrapperEl.enter()
+          .append('div')
+          .classed('sszvis-control-optionSelectable', true)
+          .classed('sszvis-control-select', true);
+        wrapperEl.exit().remove();
+
+        wrapperEl
           .style('width', props.width + 'px');
 
-        var metricsEl = selection.selectDiv('selectMetrics')
+        var metricsEl = wrapperEl.selectDiv('selectMetrics')
           .classed('sszvis-control-select__metrics', true);
 
         var selectEl = wrapperEl.selectAll('.sszvis-control-select__element')
