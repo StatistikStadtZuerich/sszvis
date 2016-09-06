@@ -29,6 +29,7 @@ sszvis_namespace('sszvis.fallback', function(module) {
     options.src    || (options.src    = 'fallback.png');
     var selection = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
     selection.append('img')
+      .attr('class', 'sszvis-fallback-image')
       .attr('src', options.src);
   };
 

@@ -15,6 +15,13 @@
   position: absolute;
 }
 
+.sszvis-fallback-image {
+  display: block;
+  margin: 0 auto;
+  max-width: 516px;
+  width: 100%;
+}
+
 /**
  * Specify that objects are interactive
  */
