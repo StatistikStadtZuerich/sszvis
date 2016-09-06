@@ -97,9 +97,15 @@ sszvis_namespace('sszvis.annotation.tooltip', function(module) {
       });
   };
 
+  /**
+   * tooltip.fit
+   *
+   * We don't have access to the tooltip dimensions, so we introduce
+   * a safe area that is likely to work.
+   */
   module.exports.fit = function(defaultVal, bounds) {
-    var lo = bounds.innerWidth * 1 / 4;
-    var hi = bounds.innerWidth * 3 / 4;
+    var lo = Math.min(bounds.innerWidth * 1 / 4, 100);
+    var hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
     return function(d) {
       var x = d.x;
       return x > hi ? 'right' : x < lo ? 'left' : defaultVal;
