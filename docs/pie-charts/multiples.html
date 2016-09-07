@@ -29,12 +29,13 @@
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var PIE_DIAMETER = 204;
   var LEGEND_PADDING = 40;
-  var MAX_WIDTH = 2 * PIE_DIAMETER + 30;
+  var MAX_WIDTH = 3 * PIE_DIAMETER + 30;
 
   var queryProps = sszvis.responsiveProps()
     .prop('rowsCols', {
       palm: [5, 1],
-      _: [3, 2]
+      lap: [3, 2],
+      _: [2, 3]
     })
     .prop('colorLegendColumns', {
       palm: 1,
@@ -52,7 +53,7 @@
           height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding
         }
       },
-      _: function(w) {
+      lap: function(w) {
         var legendHeight = 98;
         var bottomPadding = LEGEND_PADDING + legendHeight + 20;
         return {
@@ -62,19 +63,44 @@
           left: 20,
           height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding
         }
+      },
+      _: function(w) {
+        var legendHeight = 98;
+        var bottomPadding = LEGEND_PADDING + legendHeight + 20;
+        return {
+          top: 20,
+          right: 20,
+          bottom: bottomPadding,
+          left: 20,
+          height: 20 + 2 * PIE_DIAMETER + 3 * 30 + bottomPadding
+        }
       }
     })
     .prop('legendPosition', {
       palm: function(w) {
-        return {
-          top: LEGEND_PADDING,
-          left: (w - 2 * 10)/2 - PIE_DIAMETER/2
+        return function(g) {
+          return {
+            top: LEGEND_PADDING,
+            left: (w - 2 * 10)/2 - PIE_DIAMETER/2
+          }
+        }
+      },
+      lap: function(w) {
+        return function(bounds, g) {
+          var left = bounds.innerWidth/2 - g.cx - 10 - pieRadius(g.gw, g.gh);
+          return {
+            top: LEGEND_PADDING,
+            left: left
+          }
         }
       },
       _: function(w) {
-        return {
-          top: LEGEND_PADDING,
-          left: 0
+        return function(g) {
+          var colWidth = Math.min(w, MAX_WIDTH) / 2;
+          return {
+            top: LEGEND_PADDING,
+            left: (w - 2 * 10)/2 - colWidth
+          }
         }
       }
     })
@@ -242,6 +268,7 @@
     // Rendering
 
     var pieCharts = chart.selectGroup('piecharts')
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - multiplesMaker.width()/2, 0))
       .call(multiplesMaker);
 
     // grab all of the prepared groups, and render a pie chart into each of them
@@ -251,16 +278,16 @@
       var groupScale = aScale.copy()
         .domain([0, state.totalValues[d.group]]);
 
-      var pieRadius = Math.min(d.gw, d.gh) / 2;
+      var pieR = pieRadius(d.gw, d.gh);
 
       // configure the pieMaker component for this particular group
       pieMaker
-        .radius(pieRadius)
+        .radius(pieR)
         .angle(sszvis.fn.compose(groupScale, vAcc));
 
       // render the pie chart inside this group
       d3.select(this).selectAll('.sszvis-multiple-chart')
-        .attr('transform', sszvis.svgUtils.translateString(d.cx - pieRadius, d.cy - pieRadius))
+        .attr('transform', sszvis.svgUtils.translateString(d.cx - pieR, d.cy - pieR))
         .call(pieMaker);
     });
 
@@ -268,8 +295,9 @@
     pieCharts.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
+    var legendPosition = props.legendPosition(bounds, state.pieGroups[0]);
     chart.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(props.legendPosition.left, bounds.innerHeight + props.legendPosition.top))
+      .attr('transform', sszvis.svgUtils.translateString(legendPosition.left, bounds.innerHeight + legendPosition.top))
       .call(colorLegend);
 
 
@@ -291,6 +319,10 @@
   ----------------------------------------------- */
   function isSelected(d) {
     return sszvis.fn.contains(state.selectedCategories, d.category);
+  }
+
+  function pieRadius(w, h) {
+    return Math.min(w, h) / 2;
   }
 
   function tooltipOpacity(d) {
