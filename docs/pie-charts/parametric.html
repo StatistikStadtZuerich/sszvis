@@ -60,24 +60,34 @@
              height: 20 + diameter + legendHeight
            },
            pieRadius: diameter / 2,
+           piePosition: {
+             top: 0,
+             left: sidePadding
+           },
            legendPosition: {
              top: diameter + LEGEND_TOP_PADDING,
              left: 0
            }
          }
        },
-       _: {
-         bounds: {
-           top: 20,
-           bottom: 20,
-           left: 20,
-           right: LEGEND_WIDTH,
-           height: 20 + 20 + PIE_DIAMETER
-         },
-         pieRadius: PIE_DIAMETER / 2,
-         legendPosition: {
-           top: PIE_DIAMETER/2 - LEGEND_HEIGHT/2,
-           left: PIE_DIAMETER + LEGEND_LEFT_PADDING
+       _: function(width) {
+         return {
+           bounds: {
+             top: 20,
+             bottom: 20,
+             left: 20,
+             right: LEGEND_WIDTH,
+             height: 20 + 20 + PIE_DIAMETER
+           },
+           pieRadius: PIE_DIAMETER / 2,
+           piePosition: {
+             top: 0,
+             left: width/2 - (PIE_DIAMETER + LEGEND_LEFT_PADDING + LEGEND_WIDTH)/2
+           },
+           legendPosition: {
+             top: PIE_DIAMETER/2 - LEGEND_HEIGHT/2,
+             left: PIE_DIAMETER + LEGEND_LEFT_PADDING
+           }
          }
        }
      });
@@ -173,6 +183,9 @@
 
 
     // Components
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(props.layout.piePosition.left, props.layout.piePosition.top));
 
     var pieMaker = sszvis.component.pie()
       .radius(props.layout.pieRadius)
