@@ -141,7 +141,7 @@
     selectBar: function(x, age) {
       // use the age lookup index to figure out which age range is closest
       // to the mouse
-      var nearestAgeRange = state.ageLookupIndex[Math.floor(age)];
+      var nearestAgeRange = findNearestAgeRange(age, state.ageLookupIndex);
       // find the binned data rows with that age range
       var rows = state.binnedData.filter(function(v) {
         return aAcc(v) === nearestAgeRange;
@@ -303,12 +303,16 @@
 
     // Interaction
 
+    var mouseXScale = d3.scale.linear().domain([0, 1]).range([0, bounds.innerWidth]);
+    // using a continuous linear scale for the y mouse position ensures that the tooltip doesn't flicker on and off
+    // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
+    // between the bars, because the ordinal scale has no value there, while a linear scale does.
+    var mouseYScale = d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]);
     var interactionLayer = sszvis.behavior.move()
-      .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
-      // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
-      // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
-      // between the bars, because the ordinal scale has no value there, while a linear scale does.
-      .yScale(d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
+      .xScale(mouseXScale)
+      .yScale(mouseYScale)
+      .cancelScrolling(isWithinBarContour(state.binnedData, bounds.innerWidth/2, mouseXScale, lengthScale))
+      .fireOnPanOnly(true)
       .on('move', actions.selectBar)
       .on('end', actions.deselectBar);
 
@@ -321,6 +325,25 @@
 
   /* Helper Functions
   ----------------------------------------------- */
+  function isWithinBarContour(binnedData, xCenter, xRelToPx, lengthScale) {
+    return function(xRel, age) {
+      var ageBin = findNearestAgeRange(age, state.ageLookupIndex);
+      var dataRow = binnedData.filter(function(d){ return aAcc(d) === ageBin; });
+      var x = xRelToPx(xRel);
+      return sszvis.fn.every(function(d) {
+        if (isLeft(d)) {
+          return x >= xCenter - lengthScale(vAcc(d));
+        } else {
+          return x <= xCenter + lengthScale(vAcc(d));
+        }
+      }, dataRow);
+    }
+  }
+
+  function findNearestAgeRange(age, lookupIndex) {
+    return lookupIndex[Math.floor(age)]
+  }
+
   function isLeft(d) {
     return gAcc(d) === 'Frauen';
   }
