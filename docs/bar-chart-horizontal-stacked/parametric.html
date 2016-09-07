@@ -23,7 +23,7 @@
   }
 
 
-   /* Globals 
+ /* Globals
  ------------------------------------------------*/
  var DEFAULT_TITLE = 'Diagrammtitel';
  var DEFAULT_DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
@@ -49,7 +49,7 @@
     xLabel: 'Prozent',
     ticks: 4
   };
-  var MAX_WIDTH = 600;
+  var MAX_WIDTH = 800;
   var queryProps = sszvis.responsiveProps()
     .prop('targetNumColumns', {
       palm: 1,
@@ -142,13 +142,14 @@
     var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.areas.length);
     var paddingTop = 14;
     var bounds = sszvis.bounds({ height: paddingTop + chartDimensions.totalHeight + props.bottomPadding, top: paddingTop, bottom: props.bottomPadding }, '#sszvis-chart');
+    var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
 
 
     // Scales
 
     var xScale = d3.scale.linear()
       .domain([0, state.maxStacked])
-      .range([0, Math.min(MAX_WIDTH, bounds.innerWidth)]);
+      .range([0, chartWidth]);
 
     var yScale = d3.scale.ordinal()
       .domain(state.areas) 
@@ -218,6 +219,9 @@
 
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('barchart')
       .call(horizontalBars);

@@ -25,7 +25,7 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var MAX_WIDTH = 600;
+  var MAX_WIDTH = 800;
   var config = {
     // The path to the CSV file containing the data for this chart
     dataPath: 'data/GB_2Categories_smallVals.csv',
@@ -127,7 +127,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-   
+
     // the color scale for the layers, based on the number of categories
     var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
     cScale.domain(state.categories);
@@ -139,11 +139,13 @@
       bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
     }, '#sszvis-chart');
 
+    var chartWidth = Math.min(MAX_WIDTH, bounds.innerWidth);
+
 
     // Scales
     var xScale = d3.scale.ordinal()
       .domain(state.regions)
-      .rangeRoundBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.26, 0.80);
+      .rangeRoundBands([0, chartWidth], 0.26, 0.80);
 
     var yScale = d3.scale.linear()
       .domain(state.valueExtent)
@@ -220,6 +222,9 @@
 
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))

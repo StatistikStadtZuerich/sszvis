@@ -47,7 +47,7 @@
     yLabel: 'Beschäftigte', //optional
     textWrap: false
   }
-  var MAX_WIDTH = 600;
+  var MAX_WIDTH = 800;
   var queryProps = sszvis.responsiveProps()
     .prop('barPadding', {
       palm: 0.5,
@@ -191,6 +191,10 @@
       .visible(isSelected);
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
+
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 

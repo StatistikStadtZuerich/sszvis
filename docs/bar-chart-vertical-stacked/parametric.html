@@ -34,7 +34,7 @@
  var DEFAULT_RULER_LABEL = '';
  var DEFAULT_Y_LABEL = '';
  var DEFAULT_X_LABEL = '';
- var MAX_WIDTH = 600;
+ var MAX_WIDTH = 800;
 
 
   /* Configuration
@@ -223,6 +223,9 @@
 
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('barchart')
       .call(stackedBars);

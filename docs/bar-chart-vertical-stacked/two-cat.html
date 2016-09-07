@@ -27,7 +27,6 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var MAX_WIDTH = 600;
   var queryProps = sszvis.responsiveProps()
     .prop('barPadding', {
       _: 0.8
@@ -98,13 +97,13 @@
   function render(state) {
     var bounds = sszvis.bounds({ top: 30, bottom: 110 }, '#sszvis-chart');
     var props = queryProps(bounds);
-    var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
+    var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
 
     // Scales
 
     var xScale = d3.scale.ordinal()
       .domain(state.years)
-      .rangeBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.35, props.barPadding);
+      .rangeBands([0, bounds.innerWidth], 0.35, props.barPadding);
 
     var yScale = d3.scale.linear()
       .domain([0, state.maxStacked])
@@ -152,6 +151,9 @@
 
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
 
     chartLayer.selectGroup('barchart')
       .call(stackedBars);

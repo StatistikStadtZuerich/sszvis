@@ -27,7 +27,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var MAX_WIDTH = 600;
+  var MAX_WIDTH = 800;
   var queryProps = sszvis.responsiveProps()
     .prop('targetNumColumns', {
       palm: 1,
@@ -198,6 +198,9 @@
 
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('barchart')
       .call(stackedBars);

@@ -47,7 +47,7 @@
     yLabel: 'Beschäftigte', //optional
     ticks: 5
   };
-  var MAX_WIDTH = 600;
+  var MAX_WIDTH = 800;
 
 
   /* Shortcuts
@@ -111,11 +111,13 @@
   function render(state) {
     var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.categories.length);
     var bounds = sszvis.bounds({ height: 30 + chartDimensions.totalHeight + 40, top: 30, bottom: 40 }, '#sszvis-chart');
+    var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
+
 
     // Scales
 
     var widthScale = d3.scale.linear()
-      .range([0, Math.min(MAX_WIDTH, bounds.innerWidth)])
+      .range([0, chartWidth])
       .domain([0, d3.max(state.data, xAcc)]);
 
     var yScale = d3.scale.ordinal()
@@ -173,6 +175,9 @@
 
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);

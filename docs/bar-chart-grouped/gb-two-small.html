@@ -27,8 +27,8 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var MAX_WIDTH = 600;
-  
+  var MAX_WIDTH = 800;
+
   /* Shortcuts
   ----------------------------------------------- */
   var xAcc = sszvis.fn.prop('region');
@@ -104,13 +104,13 @@
   ----------------------------------------------- */
   function render(state) {
     var bounds = sszvis.bounds({ top: 10, bottom: 140 }, '#sszvis-chart');
-
+    var chartWidth = Math.min(MAX_WIDTH, bounds.innerWidth);
 
     // Scales
 
     var xScale = d3.scale.ordinal()
       .domain(state.regions)
-      .rangeRoundBands([0, Math.min(MAX_WIDTH, bounds.innerWidth)], 0.26, 0.80);
+      .rangeRoundBands([0, chartWidth], 0.26, 0.80);
 
     // because the bar chart must display negative values, scales for the y-axis are a little weird
     // see also: http://bl.ocks.org/mbostock/2368837 (http://stackoverflow.com/questions/10127402/bar-chart-with-negative-values)
@@ -188,6 +188,9 @@
 
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('bars')
       .call(barLayout);

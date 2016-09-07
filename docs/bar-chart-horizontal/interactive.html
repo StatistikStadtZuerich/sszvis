@@ -27,7 +27,7 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var MAX_WIDTH = 600;
+  var MAX_WIDTH = 800;
   var MAX_CONTROL_WIDTH = 300;
   var queryProps = sszvis.responsiveProps()
     .prop('controlWidth', {
@@ -116,12 +116,13 @@
     var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.categories.length);
     var bounds = sszvis.bounds({ height: 80 + chartDimensions.totalHeight + 33, top: 80, bottom: 25 }, '#sszvis-chart');
     var props = queryProps(bounds);
+    var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
 
 
     // Scales
 
     var widthScale = d3.scale.linear()
-      .range([0, Math.min(MAX_WIDTH, bounds.innerWidth)])
+      .range([0, chartWidth])
       .domain([0, d3.max(state.data, xAcc)]);
 
     var yScale = d3.scale.ordinal()
@@ -189,6 +190,9 @@
 
     // Rendering
 
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
+
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 
@@ -201,7 +205,7 @@
       .call(yAxis);
 
     controlLayer.selectDiv('controls')
-      .style('left', Math.min(bounds.padding.left + MAX_WIDTH/2 - MAX_CONTROL_WIDTH/2, (bounds.innerWidth - buttonGroup.width()) / 2) + 'px')
+      .style('left', Math.max(0, (bounds.innerWidth - buttonGroup.width()) / 2) + 'px')
       .style('top', (20 - bounds.padding.top) + 'px')
       .call(buttonGroup);
 

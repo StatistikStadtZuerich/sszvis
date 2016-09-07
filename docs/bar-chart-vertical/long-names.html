@@ -28,7 +28,7 @@
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
   var SHOW_YAXIS_TICKS = true;
-  var MAX_WIDTH = 600;
+  var MAX_WIDTH = 800;
   var queryProps = sszvis.responsiveProps()
     .prop('barPadding', {
       palm: 0.4,
@@ -183,6 +183,9 @@
 
 
     // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
 
     chartLayer.selectGroup('xAxis')
       .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
