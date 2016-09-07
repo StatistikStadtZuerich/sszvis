@@ -79,10 +79,6 @@ Shows the creation of a pie chart with many categories
 
 To render pie charts in a group, the multiples component can be used to create SVG groups into which charts can be rendered.
 
-```hint
-For the small multiples chart, on narrow screens we will have a color legend both at the top and at the bottom of the list of pie charts. We should also switch between two and one columns of ordinal color labels. And the pies should go from two columns to one at the same time. We also need to introduce a max size for the pies, a max spacing between them, and centering of the group.
-```
-
 ### Data structure
 
 This component takes an array of data objects, each of which represents a single group. Each group object should have a property called 'values' which is data to be stored for each group. The group objects will also be given properties by this component, when the component is called. These properties can then be used to identify the group's data, and to position overlays and interfaces relative to the group.

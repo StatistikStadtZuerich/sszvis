@@ -4,10 +4,6 @@
 
 The most common example is to show the number of people in the population for each age. In addition, population pyramids are mirrored, with a left and right side. The sides contrast differences across a binary variable, usually gender. More generally, the mirrored bar charts form could be used to display any contrast across a binary variable, with any type of variable mapped to the vertical dimension, but it is almost always used for population display, and it should be explicitly noted where that is not the case. As you will see from the examples, it is also possible to display bins computed from the population based on age range.
 
-```hint
-The population pyramid should have the tooltips repositioned in between the bars on small screens, with orientation facing down. (In case this is a crazy amount of work to implement, just flip the orientation of the tooltips to 'right' on small screens). In case the population pyramid must be very tall, on small screens where the user must scroll, use of horizontal axis guidelines to guide the eye are recommended. There should be a max width of the population pyramid, and the layout function should center the pyramid on wide screens.
-```
-
 ## sszvis.component.pyramid
 
 ### Data structure
