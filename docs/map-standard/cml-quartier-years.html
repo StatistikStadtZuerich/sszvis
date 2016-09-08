@@ -435,6 +435,7 @@
       .yScale(yScale)
       .padding({ top: 30 })
       .draggable(true)
+      .cancelScrolling(true)
       .on('drag', actions.changeYear)
       .on('move', function(date, entity){
         actions.changeEntityNearDate(entity, date);
