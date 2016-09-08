@@ -4878,7 +4878,6 @@ sszvis_namespace('sszvis.annotation.tooltipAnchor', function(module) {
         // Update
 
         anchor
-          .style('pointer-events', 'none')
           .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
 
 

@@ -200,37 +200,69 @@
   fill: none;
   pointer-events: none;
   stroke-linejoin: round;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .sszvis-map__highlight {
   fill: none;
   pointer-events: none;
   stroke-linejoin: round;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .sszvis-map__lakezurich {
+  pointer-events: none;
   stroke: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .sszvis-map__lakepath {
   fill: none;
+  pointer-events: none;
   stroke: #d3d3d3;
   stroke-width: 1.25;
   stroke-dasharray: 3 3;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .sszvis-map__geojsonelement {
-
+  pointer-events: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .sszvis-map__image {
   display: block;
   position: absolute;
+  pointer-events: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 .sszvis-map__rasterimage {
   display: block;
   position: absolute;
+  pointer-events: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
 /**
@@ -534,6 +566,22 @@
   font-weight: bold;
   padding-right: 0;
   text-align: right;
+}
+
+/**
+ * Tooltip anchor
+ *
+ * @module sszvis/annotation/tooltipAnchor
+ */
+.sszvis-tooltipAnchor {
+  pointer-events: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+
 }
 
 /**
