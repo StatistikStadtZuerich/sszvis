@@ -337,7 +337,7 @@
   border: 1px solid #FFFFFF;
   color: #767676;
   font-family: Arial, sans-serif;
-  font-size: 12px;
+  font-size: 16px; /* Minimum of 16px to prevent iOS to zoom page */
   height: 34px;
   outline: 0;
 }
