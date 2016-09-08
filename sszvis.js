@@ -1584,7 +1584,11 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
    * @param {Number} width
    * @returns {Number} height
    */
-  var ar12to5 = aspectRatio(12, 5);
+  var AR12TO5_MAX_HEIGHT = 500;
+  var ar12to5 = function(width) {
+    return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
+  };
+  ar12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
 
   /**
    * aspectRatio.square
@@ -1606,7 +1610,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
   var square = function(width) {
     return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
   };
-  square.MAX_HEIGHT = 420;
+  square.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
 
   /**
    * aspectRatio.portrait
@@ -1628,7 +1632,7 @@ sszvis_namespace('sszvis.aspectRatio', function(module) {
   var portrait = function(width) {
     return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
   };
-  portrait.MAX_HEIGHT = 600;
+  portrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
 
   /**
    * aspectRatio.auto
