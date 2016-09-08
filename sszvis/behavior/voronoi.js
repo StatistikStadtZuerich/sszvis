@@ -80,13 +80,13 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
           .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
           .attr('fill', 'transparent')
           .on('mouseover', function(datum) {
-            var cbox = this.parentElement.getBoundingClientRect();
+            var cbox = this.parentNode.getBoundingClientRect();
             if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
               event.over(datum.point);
             }
           })
           .on('mousemove', function(datum) {
-            var cbox = this.parentElement.getBoundingClientRect();
+            var cbox = this.parentNode.getBoundingClientRect();
             if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
               event.over(datum.point);
             } else {
@@ -97,7 +97,7 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
             event.out();
           })
           .on('touchstart', function(datum) {
-            var cbox = this.parentElement.getBoundingClientRect();
+            var cbox = this.parentNode.getBoundingClientRect();
             if (eventNearPoint(sszvis.fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
               d3.event.preventDefault();
               event.over(datum.point);
@@ -111,7 +111,7 @@ sszvis_namespace('sszvis.behavior.voronoi', function(module) {
                 var element = sszvis.behavior.util.elementFromEvent(touchEvent);
                 var datum = sszvis.behavior.util.datumFromPannableElement(element);
                 if (datum !== null) {
-                  var cbox = element.parentElement.getBoundingClientRect();
+                  var cbox = element.parentNode.getBoundingClientRect();
                   if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
                     // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
                     // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
