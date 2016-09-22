@@ -37,7 +37,7 @@ Build the project with
 
     make build
 
-Start a development server on http://localhost:3000 to automatically rebuild and push changes to the browser:
+Start a development server on http://localhost:8000 to automatically rebuild and push changes to the browser:
 
     make server
 
