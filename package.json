@@ -1,7 +1,13 @@
 {
+  "license": "MIT",
   "devDependencies": {
+    "babel-register": "^6.24.1",
+    "recursive-readdir-sync": "^1.0.6",
     "wdio-mocha-framework": "^0.5.10",
     "wdio-visual-regression-service": "^0.8.0",
     "webdriverio": "^4.8.0"
+  },
+  "scripts": {
+    "test": "wdio config/wdio.conf.js"
   }
 }
