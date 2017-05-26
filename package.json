@@ -1,4 +1,6 @@
 {
+  "name": "sszvis",
+  "version": "0.0.1",
   "license": "MIT",
   "devDependencies": {
     "babel-register": "^6.24.1",
@@ -12,6 +14,8 @@
   "scripts": {
     "lint": "eslint sszvis",
     "test": "wdio config/wdio.conf.js",
-    "build:sszvis": "rollup --config config/rollup/sszvis.js"
+    "build:sszvis": "rollup --config config/rollup/sszvis.js",
+    "dist": "npm run build:sszvis",
+    "prepublishOnly": "npm run dist"
   }
 }
