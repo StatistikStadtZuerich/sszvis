@@ -9,26 +9,29 @@
  * @param {Number} width            The width of the map to be rendered
  * @param {Number} height           The height of the map to be rendered
  */
+
+import { swissMapProjection, constants } from './mapUtils.js';
+
 export const zurichStadtKreise = function(width, height) {
-  return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStadtKreiseMapData.featureData(), sszvis.map.utils.constants.STADT_KREISE_KEY);
+  return swissMapProjection(width, height, window.sszvis.map.zurichStadtKreiseMapData.featureData(), constants.STADT_KREISE_KEY);
 };
 
 export const zurichStatistischeQuartiere = function(width, height) {
-  return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStatistischeQuartiereMapData.featureData(), sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY);
+  return swissMapProjection(width, height, window.sszvis.map.zurichStatistischeQuartiereMapData.featureData(), constants.STATISTISCHE_QUARTIERE_KEY);
 };
 
 export const zurichWahlKreise = function(width, height) {
-  return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichWahlKreiseMapData.featureData(), sszvis.map.utils.constants.WAHL_KREISE_KEY);
+  return swissMapProjection(width, height, window.sszvis.map.zurichWahlKreiseMapData.featureData(), constants.WAHL_KREISE_KEY);
 };
 
 export const zurichStatistischeZonen = function(width, height) {
-  return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichStatistischeZonenMapData.featureData(), sszvis.map.utils.constants.STATISTISCHE_ZONEN_KEY);
+  return swissMapProjection(width, height, window.sszvis.map.zurichStatistischeZonenMapData.featureData(), constants.STATISTISCHE_ZONEN_KEY);
 };
 
 export const zurichAgglomeration2012 = function(width, height) {
-  return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.zurichAgglomeration2012MapData.featureData(), sszvis.map.utils.constants.AGGLOMERATION_2012_KEY);
+  return swissMapProjection(width, height, window.sszvis.map.zurichAgglomeration2012MapData.featureData(), constants.AGGLOMERATION_2012_KEY);
 };
 
 export const switzerland = function(width, height) {
-  return sszvis.map.utils.swissMapProjection(width, height, sszvis.map.switzerlandMapData.featureData(), sszvis.map.utils.constants.SWITZERLAND_KEY);
+  return swissMapProjection(width, height, window.sszvis.map.switzerlandMapData.featureData(), constants.SWITZERLAND_KEY);
 };

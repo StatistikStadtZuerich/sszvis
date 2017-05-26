@@ -19,9 +19,11 @@
 
 import d3 from 'd3';
 
+import { GEO_KEY_DEFAULT } from '../mapUtils.js';
+
 export default function() {
   return d3.component()
-    .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
+    .prop('keyName').keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
     .prop('geoJson')
     .prop('mapPath')
     .prop('highlight').highlight([]) // an array of data values to highlight

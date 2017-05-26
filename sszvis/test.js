@@ -12,6 +12,8 @@
 import fn from './fn.js';
 import logger from './logger.js';
 import format from './format.js';
+import breakpoint from './breakpoint.js';
+import responsiveProps from './responsiveProps.js';
 
 /**
  * sszvis.test.assert
@@ -40,9 +42,9 @@ export const assert = function(context) {
  *
  */
 export const runTests = function() {
-  //runFormatTests(assert('runFormatTests'));
+  runFormatTests(assert('runFormatTests'));
   runBreakpointTests(assert('runBreakpointTests'));
-  //runPropsQueryTests(assert('runPropsQueryTests'));
+  runPropsQueryTests(assert('runPropsQueryTests'));
 };
 
 // Tests for format functions
@@ -124,7 +126,7 @@ function runBreakpointTests(assert) {
 
 
 
-  var bps = sszvis.breakpoint.spec([
+  var bps = breakpoint.spec([
     {name: 's', width: 10},
     {name: 'l', width: 20}
   ]);
@@ -144,19 +146,19 @@ function runBreakpointTests(assert) {
 
 
 function runPropsQueryTests(assert) {
-  var pqT1 = sszvis.responsiveProps()
+  var pqT1 = responsiveProps()
     .prop('test', {
       small: 2,
       large: 4,
       _: 8
     });
 
-  assert('responsiveProps works as expected for small', pqT1(sszvis.breakpoint.SMALL - 1).test === 2);
-  assert('responsiveProps works as expected for large', pqT1(sszvis.breakpoint.WIDE - 1).test === 32);
-  assert('responsiveProps works as expected for _', pqT1(sszvis.breakpoint.WIDE + 20).test === 64);
-  assert('responsiveProps works as expected when width is exactly on the breakpoint', pqT1(sszvis.breakpoint.WIDE).test === 64);
+  assert('responsiveProps works as expected for small', pqT1(breakpoint.SMALL - 1).test === 2);
+  assert('responsiveProps works as expected for large', pqT1(breakpoint.WIDE - 1).test === 32);
+  assert('responsiveProps works as expected for _', pqT1(breakpoint.WIDE + 20).test === 64);
+  assert('responsiveProps works as expected when width is exactly on the breakpoint', pqT1(breakpoint.WIDE).test === 64);
 
-  var pqT2 = sszvis.responsiveProps()
+  var pqT2 = responsiveProps()
     .breakpoints({
       small: 30,
       medium: 50,
@@ -174,14 +176,14 @@ function runPropsQueryTests(assert) {
   assert('responsiveProps works for user-defined breakpoints (large)', pqT2(60).test === 8);
   assert('responsiveProps works for user-defined breakpoints (_)', pqT2(90).test === 16);
 
-  var pqT3 = sszvis.responsiveProps()
+  var pqT3 = responsiveProps()
     .prop('test', {
       small: 2
     });
 
   assert('responsiveProps should complain and return undefined when you do not provide a _ option', !fn.defined(pqT3(1000).test));
 
-  var pqT4 = sszvis.responsiveProps()
+  var pqT4 = responsiveProps()
     .prop('test', {
       notvalidbp: 8,
       _: 16
@@ -189,7 +191,7 @@ function runPropsQueryTests(assert) {
 
   assert('responsiveProps should complain and return undefined when you provide an invalid breakpoint', !fn.defined(pqT4(650).test));
 
-  var pqT5 = sszvis.responsiveProps()
+  var pqT5 = responsiveProps()
     .breakpoints({
       small: 30,
       medium: 50,

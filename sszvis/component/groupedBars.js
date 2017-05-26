@@ -102,7 +102,7 @@ export default function() {
       unitsWithValue.selectAll('*').remove();
 
       //sszsch: fix: reset previously assigned translations
-      unitsWithValue.attr('transform',function(d,i){
+      unitsWithValue.attr('transform',function() {
         return translateString(0,0);
       });
 

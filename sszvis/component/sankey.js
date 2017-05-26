@@ -99,7 +99,7 @@ export default function() {
       var getNodePosition = function(node) { return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex)); };
       var xPosition = function(node) { return props.columnPosition(node.columnIndex); };
       var yPosition = function(node) { return getNodePosition(node); };
-      var xExtent = function(node) { return Math.max(props.nodeThickness, 1); };
+      var xExtent = function() { return Math.max(props.nodeThickness, 1); };
       var yExtent = function(node) { return Math.ceil(Math.max(props.sizeScale(node.value), 1)); };
       var linkPathString = function(x0, x1, x2, x3, y0, y1) { return 'M' + x0 + ',' + y0 + 'C' + x1 + ',' + y0 + ' ' + x2 + ',' + y1 + ' ' + x3 + ',' + y1; };
       var linkBounds = function(x0, x1, y0, y1) { return [x0, x1, y0, y1]; };

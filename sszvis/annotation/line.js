@@ -79,14 +79,6 @@ export default function() {
             var vx = x2 - x1;
             var vy = y2 - y1;
             var angle = Math.atan2(vy, vx) * 180 / Math.PI;
-            var rotation;
-            if (angle > 0) {
-              // in top half
-              rotation = angle < 90 ? -angle : angle;
-            } else {
-              // in bottom semicircle
-              rotation = angle > -90 ? -angle : angle; // display angle math is weird
-            }
             return 'translate(' + ((x1 + x2) / 2) + ',' + ((y1 + y2) / 2) + ') rotate(' + (angle) + ')';
           })
           .attr('dx', props.dx)

@@ -3,7 +3,7 @@
  *
  * @module  sszvis/map/renderer/raster
  *
- * Used for rendering a raster layer within a map (can also be used in other contexts, but the map usage
+ * Used for rendering a raster layer within a map (can also be used in other contexts, but the map usage
  * is the most straightforward). Requires a width and a height for the raster layer, a function which
  * returns raster positions, and one which returns fill colors.
  *

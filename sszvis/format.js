@@ -71,6 +71,7 @@ var format = {
    * @return {string}     Fully formatted number
    */
   number: function(d) {
+    var p;
     var dAbs = Math.abs(d);
     // decLen is the number of decimal places in the number
     // 0.0002 -> 4
@@ -85,8 +86,8 @@ var format = {
       return '–';
     }
 
-    // 10250    -> "10 250"
-    // 10250.91 -> "10 251"
+    // 10250    -> "10 250"
+    // 10250.91 -> "10 251"
     else if (dAbs >= 1e4) {
       // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
       // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
@@ -96,7 +97,7 @@ var format = {
     // 2350     -> "2350"
     // 2350.29  -> "2350.3"
     else if (dAbs >= 100) {
-      var p = decLen === 0 ? 0 : 1;
+      p = decLen === 0 ? 0 : 1;
       // Where there are decimals, round to 1 position
       // To display more precision, use the preciseNumber function.
       return d3.format('.'+ p +'f')(d);
@@ -107,7 +108,7 @@ var format = {
     // 1.329    -> "1.33"
     // 0.00034  -> "0.00034"
     else if (dAbs > 0) {
-      var p = Math.min(2, decLen);
+      p = Math.min(2, decLen);
       // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
       // but not more. To display more precision, use the preciseNumber function.
       return d3.format('.' + p + 'f')(d);
@@ -188,9 +189,4 @@ export default format;
 ----------------------------------------------- */
 function decimalPlaces(num) {
   return (String(Math.abs(num)).split('.')[1] || '').length;
-}
-
-function integerPlaces(num) {
-  num = Math.floor(Math.abs(+num));
-  return String(num === 0 ? '' : num).length;
 }
