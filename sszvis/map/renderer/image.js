@@ -13,19 +13,21 @@
  *                                      server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
  * @property {Array} geoBounds          This should be a 2D array containing the upper-left (north-west) and lower-right (south-east)
  *                                      coordinates of the corresponding corners of the image. The structure expected is:
- *          
+ *
  *                                      [[nw-longitude, nw-latitude], [se-longitude, se-latitude]]
- *     
+ *
  *                                      This is consistent with the way D3 handles similar geographic data. These coordinates are used to represent
  *                                      the edge of the image being used, and to align the image with other map layers (using the projection function).
  *                                      Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This
  *                                      will happen if the image itself is generated using a different type of map projection than the one used by the
  *                                      projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
  * @property {Number} opacity           The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
- * 
+ *
  * @return {d3.component}
  */
 'use strict';
+
+import d3 from 'd3';
 
 export default function() {
   return d3.component()

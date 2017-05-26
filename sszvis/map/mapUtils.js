@@ -5,6 +5,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 export const constants = {
   STADT_KREISE_KEY: 'zurichStadtKreise',
   STATISTISCHE_QUARTIERE_KEY: 'zurichStatistischeQuartiere',

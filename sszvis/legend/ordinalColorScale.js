@@ -89,6 +89,8 @@
 
 'use strict';
 
+import d3 from 'd3';
+
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
 

@@ -22,6 +22,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 import fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import format from '../format.js';

@@ -29,6 +29,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 import logger from '../logger.js';
 import transition from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';

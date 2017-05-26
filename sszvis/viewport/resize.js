@@ -18,16 +18,18 @@
  * events.
  *
  * @module sszvis/viewport
- * 
+ *
  * @function {string, function} on      the .on() function is used to listen to the resize event itself.
  *                                      There is only one event supported by this component at the moment, so
  *                                      the first argument to .on must be 'resize' for it to have any effect.
  *                                      Although this is somewhat redundant, it is done to keep this component's
  *                                      API clear and in line with other components.
- * 
+ *
  * @return {Object}
  */
 'use strict';
+
+import d3 from 'd3';
 
 // throttles a function to the trailing edge. Copied mostly verbatim from underscore.js
 function throttle(wait, func) {

@@ -17,6 +17,10 @@ export function bundle(name) {
     targets: [
       { dest: dist(name), format: 'iife' },
     ],
+    external: ['d3'],
+    globals: {
+      'd3': 'd3'
+    },
   };
 }
 

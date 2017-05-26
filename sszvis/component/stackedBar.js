@@ -30,6 +30,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 import bar from './bar.js';
 
 function stackedBar() {

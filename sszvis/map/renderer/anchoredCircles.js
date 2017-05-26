@@ -15,6 +15,8 @@
  * @return {d3.component}
  */
 
+import d3 from 'd3';
+
 import transition from '../../transition.js';
 import { getGeoJsonCenter } from '../mapUtils.js';
 import translateString from '../../svgUtils/translateString.js';

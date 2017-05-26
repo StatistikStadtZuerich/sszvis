@@ -19,6 +19,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
 import { dataAreaPattern } from '../patterns.js';
 

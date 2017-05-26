@@ -42,6 +42,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 /* Constants
 ----------------------------------------------- */
 var LIGHTNESS_STEP = 0.6;

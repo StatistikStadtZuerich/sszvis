@@ -16,6 +16,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 import transition from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 

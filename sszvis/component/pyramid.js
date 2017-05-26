@@ -29,6 +29,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 import transition from '../transition.js';
 import bar from './bar.js';
 

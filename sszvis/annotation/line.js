@@ -23,6 +23,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 // reference line specified in the form y = mx + b
 // user supplies m and b
 // default line is y = x

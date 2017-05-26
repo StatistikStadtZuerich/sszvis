@@ -5,6 +5,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 var yearParser = d3.time.format('%Y');
 
 export default {

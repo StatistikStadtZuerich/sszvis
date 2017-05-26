@@ -57,6 +57,8 @@
  *                                                                                      cursorValue and the value accessed from the datum.
  */
 
+import d3 from 'd3';
+
 import fn from '../fn.js';
 
 export const elementFromEvent = function(evt) {

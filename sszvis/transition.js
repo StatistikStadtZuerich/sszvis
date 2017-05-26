@@ -11,6 +11,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 var defaultEase = d3.ease('poly-out', 4);
 
 export default function(transition) {

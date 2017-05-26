@@ -21,6 +21,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 import fn from './fn.js';
 import mkBounds from './bounds.js';
 

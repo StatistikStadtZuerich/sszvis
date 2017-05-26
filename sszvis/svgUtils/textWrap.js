@@ -21,6 +21,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 export default function(text, width, paddingRightLeft, paddingTopBottom) {
   paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
   paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders

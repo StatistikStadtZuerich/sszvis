@@ -17,6 +17,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 export default function() {
   return d3.component()
     .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to

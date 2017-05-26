@@ -16,6 +16,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { mapLakePattern, mapLakeFadeGradient, mapLakeGradientMask } from '../../patterns.js';
 

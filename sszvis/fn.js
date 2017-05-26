@@ -5,6 +5,8 @@
  */
 'use strict';
 
+import d3 from 'd3';
+
 const identity = function(value) {
   return value;
 };
