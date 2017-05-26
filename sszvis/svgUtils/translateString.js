@@ -10,11 +10,8 @@
  * @param  {number} y     The y-component of the transform
  * @return {string}       The translate string
  */
-sszvis_namespace('sszvis.svgUtils.translateString', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function(x, y) {
-    return 'translate(' + x + ',' + y + ')';
-  };
-
-});
+export default function(x, y) {
+  return 'translate(' + x + ',' + y + ')';
+};

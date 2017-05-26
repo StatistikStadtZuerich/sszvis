@@ -55,182 +55,179 @@
  *
  * @returns {responsiveProps}
  */
-sszvis_namespace('sszvis.responsiveProps', function(module) {
-  'use strict';
+'use strict';
 
-  /* Exported module
-  ----------------------------------------------- */
-  module.exports = function() {
-    var breakpointSpec = sszvis.breakpoint.defaultSpec();
-    var propsConfig = {};
+/* Exported module
+----------------------------------------------- */
+export default function() {
+  var breakpointSpec = sszvis.breakpoint.defaultSpec();
+  var propsConfig = {};
 
-    /**
-     * Constructor
-     *
-     * @param   {{width: number, screenHeight: number}} arg1 Accepts a 'measurements' object with a
-     *          'width' property and a 'screenHeight' property. This makes it possible to pass
-     *          in a sszvis.bounds object or the result of sszvis.fn.measureDimensions.
-     *
-     * @returns {Object.<string, any>} A map of all properties for the currently selected
-     *          breakpoint as defined by the parameter `arg1`
-     */
-    function responsiveProps(measurement) {
-      if (!sszvis.fn.isObject(measurement) || !isBounds(measurement)) {
-        sszvis.logger.warn('Could not determine the current breakpoint, returning the default props');
-        // We choose the _ option for all configured props as a default.
-        return Object.keys(propsConfig).reduce(function(memo, val, key) {
-          memo[key] = val._;
-          return memo;
-        }, {});
-      }
-
-      // Finds out which breakpoints the provided measurements match up with
-      var matchingBreakpoints = sszvis.breakpoint.match(breakpointSpec, measurement);
-
-      return Object.keys(propsConfig).reduce(function(memo, propKey) {
-        var propSpec = propsConfig[propKey];
-
-        if (!validatePropSpec(propSpec, breakpointSpec)) {
-          sszvis.logger.warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
-          return memo;
-        }
-
-        // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
-        // This function should always at least find '_' at the end of the array.
-        var matchedBreakpoint = sszvis.fn.find(function(bp) { return sszvis.fn.defined(propSpec[bp.name]); }, matchingBreakpoints);
-        // the value in the query object for that property equals the propSpec value as a functor,
-        // invoked if necessary with the current width. Providing the width allows aspect ratio
-        // calculations based on element width.
-        memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
-
+  /**
+   * Constructor
+   *
+   * @param   {{width: number, screenHeight: number}} arg1 Accepts a 'measurements' object with a
+   *          'width' property and a 'screenHeight' property. This makes it possible to pass
+   *          in a sszvis.bounds object or the result of sszvis.fn.measureDimensions.
+   *
+   * @returns {Object.<string, any>} A map of all properties for the currently selected
+   *          breakpoint as defined by the parameter `arg1`
+   */
+  function responsiveProps(measurement) {
+    if (!sszvis.fn.isObject(measurement) || !isBounds(measurement)) {
+      sszvis.logger.warn('Could not determine the current breakpoint, returning the default props');
+      // We choose the _ option for all configured props as a default.
+      return Object.keys(propsConfig).reduce(function(memo, val, key) {
+        memo[key] = val._;
         return memo;
       }, {});
     }
 
-    /**
-     * responsiveProps.prop
-     *
-     * Define a responsive property that can assume different values depending on the
-     * currently active breakpoint.
-     *
-     * @example
-     * var queryProps = sszvis.responsiveProps()
-     *   .prop('height', {
-     *     palm: function(width) { return width /  (4/3); },
-     *     lap:  function(width) { return width / (16/9); },
-     *     _: 600 // You must always define a default case
-     *   });
-     *
-     * The algorithm looks for the lowest applicable breakpoint. If a breakpoint's width or
-     * screenHeight are larger than the current container and screen dimensions, its properties
-     * will not apply. In case no breakpoint matches, the fallback value is used; it must always
-     * be provided with the key name '_'.
-     *
-     * Each value can be either a raw value or a function which takes the current width
-     * and returns a value for the property. These functions can be used to lazily calculate
-     * properties (they are only executed when the module is called as a function),
-     * and to change property values for a given breakpoint as a function of the width,
-     * for example to do height calculation with a custom aspect ratio.
-     *
-     * @param {string} propName The name of the property you want to define
-     * @param {Object.<string, (Function(number) -> *|*)>} propSpec A map of breakpoint names to
-     *        property values. Key names must be valid breakpoint names. These can either be the
-     *        default breakpoint names (see sszvis.breakpoint) or user-defined names that match up
-     *        to breakpoints you have provided. Additionally, the fallback key `_` must be defined;
-     *        its value will be used for screens larger than the largest breakpoint. You don't
-     *        have to define all breakpoints; if you skip a breakpoint, the next applicable breakpoint
-     *        in the test list will be used. Values can be either plain values or
-     *        functions that accept the current breakpoint width and return a value.
-     *
-     * @return {responsiveProps}
-     */
-    responsiveProps.prop = function(propName, propSpec) {
-      propsConfig[propName] = functorizeValues(propSpec);
-      return responsiveProps;
-    };
+    // Finds out which breakpoints the provided measurements match up with
+    var matchingBreakpoints = sszvis.breakpoint.match(breakpointSpec, measurement);
 
-    /**
-     * responsiveProps.breakpoints
-     *
-     * Configure custom breakpoints for the responsiveProps. You don't need to call
-     * this method; there are default breakpoints (see sszvis.breakpoint).
-     * You should provide an array of breakpoint specifiers, each one an object with at
-     * least a 'name' property (used as an identifier for the breakpoint), and one or both
-     * of a 'width' or 'screenHeight' property. When choosing a matching breakpoint, the
-     * 'width' will be compared to the provided container width, and the 'screenHeight'
-     * to the window.innerHeight. These values are inclusive, so if the measured value is
-     * equal to or less than the provided breakpoint value, that breakpoint matches.
-     *
-     * This component has default breakpoints which are equal to the ones described
-     * in the sszvis.breakpoint module. This method can also be called without arguments
-     * to get the breakpoints list.
-     *
-     * @param {Array.<Object.<string, (string|number)>>} [bps] Define the breakpoints to be used.
-     *                                                   Object format is:
-     *                                                     {
-     *                                                       name: breakpointname,
-     *                                                       width: (optional) container width of this bp
-     *                                                       screenHeight: (optional) window.innerHeight of this bp
-     *                                                     }
-     *                                                   if neither width nor screenHeight is provided, the breakpoint
-     *                                                   will match all possible dimensions.
-     *
-     * @example
-     * var queryProps = sszvis.responsiveProps()
-     * .breakpoints([
-     *   { name: 'small', width: 300 },
-     *   { name: 'medium', width: 500 },
-     *   { name: 'large', width: 700 }
-     * ])
-     */
-    responsiveProps.breakpoints = function(bps) {
-      if (arguments.length === 0) {
-        return breakpointSpec;
+    return Object.keys(propsConfig).reduce(function(memo, propKey) {
+      var propSpec = propsConfig[propKey];
+
+      if (!validatePropSpec(propSpec, breakpointSpec)) {
+        sszvis.logger.warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
+        return memo;
       }
-      breakpointSpec = sszvis.breakpoint.createSpec(bps);
-      return responsiveProps;
-    };
 
-    return responsiveProps;
-  };
+      // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
+      // This function should always at least find '_' at the end of the array.
+      var matchedBreakpoint = sszvis.fn.find(function(bp) { return sszvis.fn.defined(propSpec[bp.name]); }, matchingBreakpoints);
+      // the value in the query object for that property equals the propSpec value as a functor,
+      // invoked if necessary with the current width. Providing the width allows aspect ratio
+      // calculations based on element width.
+      memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
 
-
-  // Helpers
-
-  function isBounds(arg1) {
-    return sszvis.fn.defined(arg1) && sszvis.fn.defined(arg1.width) && sszvis.fn.defined(arg1.screenWidth) && sszvis.fn.defined(arg1.screenHeight);
-  }
-
-  /**
-   * functorizeValues
-   * @prop    {object} obj Original key-value object
-   * @returns {object} Same as input object but with all values transformed to d3.functors
-   */
-  function functorizeValues(obj) {
-    return Object.keys(obj).reduce(function(memo, key) {
-      memo[key] = d3.functor(obj[key]);
       return memo;
     }, {});
   }
 
-  function validatePropSpec(propSpec, breakpointSpec) {
-    // Ensure that the propSpec contains a '_' value.
-    // This is used as the default value when the test width
-    // is larger than any breakpoint.
-    if (!sszvis.fn.defined(propSpec._)) { return false; }
+  /**
+   * responsiveProps.prop
+   *
+   * Define a responsive property that can assume different values depending on the
+   * currently active breakpoint.
+   *
+   * @example
+   * var queryProps = sszvis.responsiveProps()
+   *   .prop('height', {
+   *     palm: function(width) { return width /  (4/3); },
+   *     lap:  function(width) { return width / (16/9); },
+   *     _: 600 // You must always define a default case
+   *   });
+   *
+   * The algorithm looks for the lowest applicable breakpoint. If a breakpoint's width or
+   * screenHeight are larger than the current container and screen dimensions, its properties
+   * will not apply. In case no breakpoint matches, the fallback value is used; it must always
+   * be provided with the key name '_'.
+   *
+   * Each value can be either a raw value or a function which takes the current width
+   * and returns a value for the property. These functions can be used to lazily calculate
+   * properties (they are only executed when the module is called as a function),
+   * and to change property values for a given breakpoint as a function of the width,
+   * for example to do height calculation with a custom aspect ratio.
+   *
+   * @param {string} propName The name of the property you want to define
+   * @param {Object.<string, (Function(number) -> *|*)>} propSpec A map of breakpoint names to
+   *        property values. Key names must be valid breakpoint names. These can either be the
+   *        default breakpoint names (see sszvis.breakpoint) or user-defined names that match up
+   *        to breakpoints you have provided. Additionally, the fallback key `_` must be defined;
+   *        its value will be used for screens larger than the largest breakpoint. You don't
+   *        have to define all breakpoints; if you skip a breakpoint, the next applicable breakpoint
+   *        in the test list will be used. Values can be either plain values or
+   *        functions that accept the current breakpoint width and return a value.
+   *
+   * @return {responsiveProps}
+   */
+  responsiveProps.prop = function(propName, propSpec) {
+    propsConfig[propName] = functorizeValues(propSpec);
+    return responsiveProps;
+  };
 
-    // Validate the properties of the propSpec:
-    // each should be a valid breakpoint name, and its value should be defined
-    for (var breakpointName in propSpec) {
-      if (propSpec.hasOwnProperty(breakpointName)) {
-        if (breakpointName !== '_' && !sszvis.fn.defined(sszvis.breakpoint.findByName(breakpointSpec, breakpointName))) {
-          return false;
-        }
+  /**
+   * responsiveProps.breakpoints
+   *
+   * Configure custom breakpoints for the responsiveProps. You don't need to call
+   * this method; there are default breakpoints (see sszvis.breakpoint).
+   * You should provide an array of breakpoint specifiers, each one an object with at
+   * least a 'name' property (used as an identifier for the breakpoint), and one or both
+   * of a 'width' or 'screenHeight' property. When choosing a matching breakpoint, the
+   * 'width' will be compared to the provided container width, and the 'screenHeight'
+   * to the window.innerHeight. These values are inclusive, so if the measured value is
+   * equal to or less than the provided breakpoint value, that breakpoint matches.
+   *
+   * This component has default breakpoints which are equal to the ones described
+   * in the sszvis.breakpoint module. This method can also be called without arguments
+   * to get the breakpoints list.
+   *
+   * @param {Array.<Object.<string, (string|number)>>} [bps] Define the breakpoints to be used.
+   *                                                   Object format is:
+   *                                                     {
+   *                                                       name: breakpointname,
+   *                                                       width: (optional) container width of this bp
+   *                                                       screenHeight: (optional) window.innerHeight of this bp
+   *                                                     }
+   *                                                   if neither width nor screenHeight is provided, the breakpoint
+   *                                                   will match all possible dimensions.
+   *
+   * @example
+   * var queryProps = sszvis.responsiveProps()
+   * .breakpoints([
+   *   { name: 'small', width: 300 },
+   *   { name: 'medium', width: 500 },
+   *   { name: 'large', width: 700 }
+   * ])
+   */
+  responsiveProps.breakpoints = function(bps) {
+    if (arguments.length === 0) {
+      return breakpointSpec;
+    }
+    breakpointSpec = sszvis.breakpoint.createSpec(bps);
+    return responsiveProps;
+  };
+
+  return responsiveProps;
+};
+
+
+// Helpers
+
+function isBounds(arg1) {
+  return sszvis.fn.defined(arg1) && sszvis.fn.defined(arg1.width) && sszvis.fn.defined(arg1.screenWidth) && sszvis.fn.defined(arg1.screenHeight);
+}
+
+/**
+ * functorizeValues
+ * @prop    {object} obj Original key-value object
+ * @returns {object} Same as input object but with all values transformed to d3.functors
+ */
+function functorizeValues(obj) {
+  return Object.keys(obj).reduce(function(memo, key) {
+    memo[key] = d3.functor(obj[key]);
+    return memo;
+  }, {});
+}
+
+function validatePropSpec(propSpec, breakpointSpec) {
+  // Ensure that the propSpec contains a '_' value.
+  // This is used as the default value when the test width
+  // is larger than any breakpoint.
+  if (!sszvis.fn.defined(propSpec._)) { return false; }
+
+  // Validate the properties of the propSpec:
+  // each should be a valid breakpoint name, and its value should be defined
+  for (var breakpointName in propSpec) {
+    if (propSpec.hasOwnProperty(breakpointName)) {
+      if (breakpointName !== '_' && !sszvis.fn.defined(sszvis.breakpoint.findByName(breakpointSpec, breakpointName))) {
+        return false;
       }
     }
-
-    // All checks passed, propSpec is valid
-    return true;
   }
 
-});
+  // All checks passed, propSpec is valid
+  return true;
+}

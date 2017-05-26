@@ -42,34 +42,31 @@
  *                             will handle the situation gracefully, and not cause an unexpected termination
  *                             of execution.
  */
-sszvis_namespace('sszvis.logger', function(module) {
-  'use strict';
+'use strict';
 
-  window.console || (window.console = {});
+window.console || (window.console = {});
 
-  // Polyfill for console logging
-  console.log || (console.log = function() { /* IE8 users get no error messages */ });
-  console.warn || (console.warn = function() { console.log.apply(console, arguments); });
-  console.error || (console.error = function() { console.log.apply(console, arguments); });
+// Polyfill for console logging
+console.log || (console.log = function() { /* IE8 users get no error messages */ });
+console.warn || (console.warn = function() { console.log.apply(console, arguments); });
+console.error || (console.error = function() { console.log.apply(console, arguments); });
 
-  module.exports = {
-    log: logger('log'),
-    warn: logger('warn'),
-    error: logger('error')
+export default {
+  log: logger('log'),
+  warn: logger('warn'),
+  error: logger('error')
+};
+
+/* Helper functions
+----------------------------------------------- */
+function logger(type) {
+  return function() {
+    if (window.console && window.console[type]) {
+      slice(arguments).forEach(function(msg) { window.console[type](msg); });
+    }
   };
+}
 
-  /* Helper functions
-  ----------------------------------------------- */
-  function logger(type) {
-    return function() {
-      if (window.console && window.console[type]) {
-        slice(arguments).forEach(function(msg) { window.console[type](msg); });
-      }
-    };
-  }
-
-  function slice(array) {
-    return Array.prototype.slice.call(array);
-  }
-
-});
+function slice(array) {
+  return Array.prototype.slice.call(array);
+}

@@ -33,56 +33,53 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.component.line', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
+export default function() {
 
-    return d3.component()
-      .prop('x')
-      .prop('y')
-      .prop('stroke')
-      .prop('strokeWidth')
-      .prop('key').key(function(d, i){ return i; })
-      .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
-      .prop('transition').transition(true)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
-
-
-        // Layouts
-
-        var line = d3.svg.line()
-          .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), props.y))
-          .x(props.x)
-          .y(props.y);
+  return d3.component()
+    .prop('x')
+    .prop('y')
+    .prop('stroke')
+    .prop('strokeWidth')
+    .prop('key').key(function(d, i){ return i; })
+    .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
+    .prop('transition').transition(true)
+    .render(function(data) {
+      var selection = d3.select(this);
+      var props = selection.props();
 
 
-        // Rendering
+      // Layouts
 
-        var path = selection.selectAll('.sszvis-line')
-          .data(data, props.key);
+      var line = d3.svg.line()
+        .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), props.y))
+        .x(props.x)
+        .y(props.y);
 
-        path.enter()
-          .append('path')
-          .classed('sszvis-line', true)
-          .style('stroke', props.stroke);
 
-        path.exit().remove();
+      // Rendering
 
-        path.order();
+      var path = selection.selectAll('.sszvis-line')
+        .data(data, props.key);
 
-        if (props.transition) {
-          path = path.transition()
-            .call(sszvis.transition);
-        }
+      path.enter()
+        .append('path')
+        .classed('sszvis-line', true)
+        .style('stroke', props.stroke);
 
-        path
-          .attr('d', sszvis.fn.compose(line, props.valuesAccessor))
-          .style('stroke', props.stroke)
-          .style('stroke-width', props.strokeWidth);
-      });
-  };
+      path.exit().remove();
 
-});
+      path.order();
+
+      if (props.transition) {
+        path = path.transition()
+          .call(sszvis.transition);
+      }
+
+      path
+        .attr('d', sszvis.fn.compose(line, props.valuesAccessor))
+        .style('stroke', props.stroke)
+        .style('stroke-width', props.strokeWidth);
+    });
+};

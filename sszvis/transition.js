@@ -9,27 +9,24 @@
  * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
  * too slow.
  */
-sszvis_namespace('sszvis.transition', function(module) {
-  'use strict';
+'use strict';
 
-  var defaultEase = d3.ease('poly-out', 4);
+var defaultEase = d3.ease('poly-out', 4);
 
-  module.exports = function(transition) {
-    transition
-      .ease(defaultEase)
-      .duration(300);
-  };
+export default function(transition) {
+  transition
+    .ease(defaultEase)
+    .duration(300);
+};
 
-  module.exports.fastTransition = function(transition) {
-    transition
-      .ease(defaultEase)
-      .duration(50);
-  };
+export const fastTransition = function(transition) {
+  transition
+    .ease(defaultEase)
+    .duration(50);
+};
 
-  module.exports.slowTransition = function(transition) {
-    transition
-      .ease(defaultEase)
-      .duration(500);
-  };
-
-});
+export const slowTransition = function(transition) {
+  transition
+    .ease(defaultEase)
+    .duration(500);
+};

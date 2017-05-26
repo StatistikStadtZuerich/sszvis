@@ -23,24 +23,21 @@
  *                                padHeight:      This is the amount of vertical padding between each area multiple.
  *                              }
  */
-sszvis_namespace('sszvis.layout.stackedAreaMultiplesLayout', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function(height, num, pct) {
-    pct || (pct = 0.1);
-    var step = height / (num - pct),
-        bandHeight = step * (1 - pct),
-        level = bandHeight, // count from the top, and start at the bottom of the first band
-        range = [];
-    while (level - height < 1) {
-      range.push(level);
-      level += step;
-    }
-    return {
-      range: range,
-      bandHeight: bandHeight,
-      padHeight: step * pct
-    };
+export default function(height, num, pct) {
+  pct || (pct = 0.1);
+  var step = height / (num - pct),
+      bandHeight = step * (1 - pct),
+      level = bandHeight, // count from the top, and start at the bottom of the first band
+      range = [];
+  while (level - height < 1) {
+    range.push(level);
+    level += step;
+  }
+  return {
+    range: range,
+    bandHeight: bandHeight,
+    padHeight: step * pct
   };
-
-});
+};

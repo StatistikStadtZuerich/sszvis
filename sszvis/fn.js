@@ -3,10 +3,9 @@
  *
  * @module sszvis/fn
  */
-sszvis_namespace('sszvis.fn', function(module) {
 'use strict';
 
-module.exports = {
+export default {
   /**
    * fn.arity
    *
@@ -501,5 +500,3 @@ module.exports = {
   }
 
 };
-
-});

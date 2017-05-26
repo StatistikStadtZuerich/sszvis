@@ -18,133 +18,130 @@
  *
  * @returns {d3.component}
  */
-sszvis_namespace('sszvis.control.handleRuler', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    return d3.component()
-      .prop('x', d3.functor)
-      .prop('y', d3.functor)
-      .prop('top')
-      .prop('bottom')
-      .prop('label').label(d3.functor(''))
-      .prop('color')
-      .prop('flip', d3.functor).flip(false)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('x', d3.functor)
+    .prop('y', d3.functor)
+    .prop('top')
+    .prop('bottom')
+    .prop('label').label(d3.functor(''))
+    .prop('color')
+    .prop('flip', d3.functor).flip(false)
+    .render(function(data) {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        // Elements need to be placed on half-pixels in order to be rendered
-        // crisply across browsers. That's why we create this position accessor
-        // here that takes a datum as input, reads out its value (props.x) and
-        // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
-        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-        var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
+      // Elements need to be placed on half-pixels in order to be rendered
+      // crisply across browsers. That's why we create this position accessor
+      // here that takes a datum as input, reads out its value (props.x) and
+      // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
+      var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+      var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
 
-        var bottom = props.bottom - 4;
-        var handleWidth = 10;
-        var handleHeight = 24;
-        var handleTop = props.top - handleHeight;
+      var bottom = props.bottom - 4;
+      var handleWidth = 10;
+      var handleHeight = 24;
+      var handleTop = props.top - handleHeight;
 
-        var group = selection.selectAll('.sszvis-handleRuler__group')
-          .data([0]);
+      var group = selection.selectAll('.sszvis-handleRuler__group')
+        .data([0]);
 
-        var entering = group.enter()
-          .append('g')
-          .classed('sszvis-handleRuler__group', true);
+      var entering = group.enter()
+        .append('g')
+        .classed('sszvis-handleRuler__group', true);
 
-        group.exit().remove();
+      group.exit().remove();
 
-        entering
-          .append('line')
-          .classed('sszvis-ruler__rule', true);
+      entering
+        .append('line')
+        .classed('sszvis-ruler__rule', true);
 
-        entering
-          .append('rect')
-          .classed('sszvis-handleRuler__handle', true);
+      entering
+        .append('rect')
+        .classed('sszvis-handleRuler__handle', true);
 
-        entering
-          .append('line')
-          .classed('sszvis-handleRuler__handle-mark', true);
+      entering
+        .append('line')
+        .classed('sszvis-handleRuler__handle-mark', true);
 
-        group.selectAll('.sszvis-ruler__rule')
-          .attr('x1', crispX)
-          .attr('y1', sszvis.svgUtils.crisp.halfPixel(props.top))
-          .attr('x2', crispX)
-          .attr('y2', sszvis.svgUtils.crisp.halfPixel(bottom));
+      group.selectAll('.sszvis-ruler__rule')
+        .attr('x1', crispX)
+        .attr('y1', sszvis.svgUtils.crisp.halfPixel(props.top))
+        .attr('x2', crispX)
+        .attr('y2', sszvis.svgUtils.crisp.halfPixel(bottom));
 
-        group.selectAll('.sszvis-handleRuler__handle')
-          .attr('x', function(d) {
-            return crispX(d) - handleWidth / 2;
-          })
-          .attr('y', sszvis.svgUtils.crisp.halfPixel(handleTop))
-          .attr('width', handleWidth)
-          .attr('height', handleHeight)
-          .attr('rx', 2)
-          .attr('ry', 2);
+      group.selectAll('.sszvis-handleRuler__handle')
+        .attr('x', function(d) {
+          return crispX(d) - handleWidth / 2;
+        })
+        .attr('y', sszvis.svgUtils.crisp.halfPixel(handleTop))
+        .attr('width', handleWidth)
+        .attr('height', handleHeight)
+        .attr('rx', 2)
+        .attr('ry', 2);
 
-        group.selectAll('.sszvis-handleRuler__handle-mark')
-          .attr('x1', crispX)
-          .attr('y1', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.15))
-          .attr('x2', crispX)
-          .attr('y2', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.85));
+      group.selectAll('.sszvis-handleRuler__handle-mark')
+        .attr('x1', crispX)
+        .attr('y1', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.15))
+        .attr('x2', crispX)
+        .attr('y2', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.85));
 
-        var dots = group.selectAll('.sszvis-ruler__dot')
-          .data(data);
+      var dots = group.selectAll('.sszvis-ruler__dot')
+        .data(data);
 
-        dots.enter()
-          .append('circle')
-          .classed('sszvis-ruler__dot', true);
+      dots.enter()
+        .append('circle')
+        .classed('sszvis-ruler__dot', true);
 
-        dots.exit().remove();
+      dots.exit().remove();
 
-        dots
-          .attr('cx', crispX)
-          .attr('cy', crispY)
-          .attr('r', 3.5)
-          .attr('fill', props.color);
-
-
-        var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
-          .data(data);
-
-        labelOutline.enter()
-          .append('text')
-          .classed('sszvis-ruler__label-outline', true);
-
-        labelOutline.exit().remove();
+      dots
+        .attr('cx', crispX)
+        .attr('cy', crispY)
+        .attr('r', 3.5)
+        .attr('fill', props.color);
 
 
-        var label = selection.selectAll('.sszvis-ruler__label')
-          .data(data);
+      var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
+        .data(data);
 
-        label.enter()
-          .append('text')
-          .classed('sszvis-ruler__label', true);
+      labelOutline.enter()
+        .append('text')
+        .classed('sszvis-ruler__label-outline', true);
 
-        label.exit().remove();
+      labelOutline.exit().remove();
 
 
-        // Update both labelOutline and labelOutline selections
+      var label = selection.selectAll('.sszvis-ruler__label')
+        .data(data);
 
-        selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
-          .attr('transform', function(d) {
-            var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
-            var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
+      label.enter()
+        .append('text')
+        .classed('sszvis-ruler__label', true);
 
-            var dx = props.flip(d) ? -10 : 10;
-            var dy = (y < props.top + dy) ? 2 * dy
-                   : (y > props.bottom - dy) ? 0
-                   : 5;
+      label.exit().remove();
 
-            return sszvis.svgUtils.translateString(x + dx, y + dy);
-          })
-          .style('text-anchor', function(d) {
-            return props.flip(d) ? 'end' : 'start';
-          })
-          .html(props.label);
 
-      });
-  };
+      // Update both labelOutline and labelOutline selections
 
-});
+      selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
+        .attr('transform', function(d) {
+          var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
+          var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
+
+          var dx = props.flip(d) ? -10 : 10;
+          var dy = (y < props.top + dy) ? 2 * dy
+                 : (y > props.bottom - dy) ? 0
+                 : 5;
+
+          return sszvis.svgUtils.translateString(x + dx, y + dy);
+        })
+        .style('text-anchor', function(d) {
+          return props.flip(d) ? 'end' : 'start';
+        })
+        .html(props.label);
+
+    });
+};

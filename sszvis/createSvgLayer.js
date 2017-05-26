@@ -19,49 +19,46 @@
  *
  * @returns {d3.selection}
  */
-sszvis_namespace('sszvis.createSvgLayer', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function(selector, bounds, metadata) {
-    bounds || (bounds = sszvis.bounds());
-    metadata || (metadata = {});
+export default function(selector, bounds, metadata) {
+  bounds || (bounds = sszvis.bounds());
+  metadata || (metadata = {});
 
-    var key = metadata.key || 'default';
-    var title = metadata.title || '';
-    var description = metadata.description || '';
+  var key = metadata.key || 'default';
+  var title = metadata.title || '';
+  var description = metadata.description || '';
 
-    var elementDataKey = 'data-sszvis-svg-' + key;
+  var elementDataKey = 'data-sszvis-svg-' + key;
 
-    var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
-    var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
-    var svgEnter = svg.enter().append('svg');
+  var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
+  var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
+  var svgEnter = svg.enter().append('svg');
 
-    svgEnter
-      .classed('sszvis-svg-layer', true)
-      .attr(elementDataKey, '')
-      .attr('role', 'img')
-      .attr('aria-label', title + ' – ' + description);
+  svgEnter
+    .classed('sszvis-svg-layer', true)
+    .attr(elementDataKey, '')
+    .attr('role', 'img')
+    .attr('aria-label', title + ' – ' + description);
 
-    svgEnter
-      .append('title')
-      .text(title);
+  svgEnter
+    .append('title')
+    .text(title);
 
-    svgEnter
-      .append('desc')
-      .text(description);
+  svgEnter
+    .append('desc')
+    .text(description);
 
-    svg
-      .attr('height', bounds.height)
-      .attr('width',  bounds.width);
+  svg
+    .attr('height', bounds.height)
+    .attr('width',  bounds.width);
 
-    var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0]);
-    viewport.enter().append('g')
-      .attr('data-sszvis-svg-layer', '');
+  var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0]);
+  viewport.enter().append('g')
+    .attr('data-sszvis-svg-layer', '');
 
-    viewport
-      .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
+  viewport
+    .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
-    return viewport;
-  };
-
-});
+  return viewport;
+};

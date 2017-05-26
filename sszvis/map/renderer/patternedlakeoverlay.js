@@ -14,71 +14,68 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.map.renderer.patternedlakeoverlay', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    return d3.component()
-      .prop('mapPath')
-      .prop('lakeFeature')
-      .prop('lakeBounds')
-      .prop('lakePathColor')
-      .prop('fadeOut').fadeOut(true)
-      .render(function() {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('mapPath')
+    .prop('lakeFeature')
+    .prop('lakeBounds')
+    .prop('lakePathColor')
+    .prop('fadeOut').fadeOut(true)
+    .render(function() {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        // the lake texture
-        sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'lake-pattern')
-          .call(sszvis.patterns.mapLakePattern);
+      // the lake texture
+      sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'lake-pattern')
+        .call(sszvis.patterns.mapLakePattern);
 
-        if (props.fadeOut) {
-          // the fade gradient
-          sszvis.svgUtils.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
-            .call(sszvis.patterns.mapLakeFadeGradient);
+      if (props.fadeOut) {
+        // the fade gradient
+        sszvis.svgUtils.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
+          .call(sszvis.patterns.mapLakeFadeGradient);
 
-          // the mask, which uses the fade gradient
-          sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
-            .call(sszvis.patterns.mapLakeGradientMask);
-        }
+        // the mask, which uses the fade gradient
+        sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
+          .call(sszvis.patterns.mapLakeGradientMask);
+      }
 
-        // generate the Lake Zurich path
-        var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
-          .data([props.lakeFeature]);
+      // generate the Lake Zurich path
+      var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
+        .data([props.lakeFeature]);
 
-        zurichSee.enter()
-          .append('path')
-          .classed('sszvis-map__lakezurich', true);
+      zurichSee.enter()
+        .append('path')
+        .classed('sszvis-map__lakezurich', true);
 
-        zurichSee.exit().remove();
+      zurichSee.exit().remove();
 
-        zurichSee
-          .attr('d', props.mapPath)
-          .attr('fill', 'url(#lake-pattern)')
+      zurichSee
+        .attr('d', props.mapPath)
+        .attr('fill', 'url(#lake-pattern)')
 
-        if (props.fadeOut) {
-          // this mask applies the fade effect
-          zurichSee.attr('mask', 'url(#lake-fade-mask)');
-        }
+      if (props.fadeOut) {
+        // this mask applies the fade effect
+        zurichSee.attr('mask', 'url(#lake-fade-mask)');
+      }
 
-        // add a path for the boundaries of map entities which extend over the lake.
-        // This path is rendered as a dotted line over the lake shape
-        var lakePath = selection.selectAll('.sszvis-map__lakepath')
-          .data([props.lakeBounds]);
+      // add a path for the boundaries of map entities which extend over the lake.
+      // This path is rendered as a dotted line over the lake shape
+      var lakePath = selection.selectAll('.sszvis-map__lakepath')
+        .data([props.lakeBounds]);
 
-        lakePath.enter()
-          .append('path')
-          .classed('sszvis-map__lakepath', true);
+      lakePath.enter()
+        .append('path')
+        .classed('sszvis-map__lakepath', true);
 
-        lakePath.exit().remove();
+      lakePath.exit().remove();
 
-        lakePath
-          .attr('d', props.mapPath);
+      lakePath
+        .attr('d', props.mapPath);
 
-        if (props.lakePathColor) {
-          lakePath.style('stroke', props.lakePathColor);
-        }
-      });
-  };
-
-});
+      if (props.lakePathColor) {
+        lakePath.style('stroke', props.lakePathColor);
+      }
+    });
+};

@@ -39,73 +39,70 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.annotation.tooltipAnchor', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
+export default function() {
 
-    return d3.component()
-      .prop('position').position(d3.functor([0, 0]))
-      .prop('debug')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+  return d3.component()
+    .prop('position').position(d3.functor([0, 0]))
+    .prop('debug')
+    .render(function(data) {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var anchor = selection.selectAll('[data-tooltip-anchor]')
+      var anchor = selection.selectAll('[data-tooltip-anchor]')
+        .data(data);
+
+
+      // Enter
+
+      anchor.enter()
+        .append('rect')
+        .attr('height', 1)
+        .attr('width', 1)
+        .attr('fill', 'none')
+        .attr('stroke', 'none')
+        .attr('visibility', 'none')
+        .attr('data-tooltip-anchor', '');
+
+
+      // Update
+
+      anchor
+        .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
+
+
+      // Exit
+
+      anchor.exit().remove();
+
+
+      // Visible anchor if debug is true
+      if (props.debug) {
+        var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
           .data(data);
 
+        referencePoint.enter()
+          .append('circle')
+          .attr('data-tooltip-anchor-debug', '');
 
-        // Enter
-
-        anchor.enter()
-          .append('rect')
-          .attr('height', 1)
-          .attr('width', 1)
-          .attr('fill', 'none')
-          .attr('stroke', 'none')
-          .attr('visibility', 'none')
-          .attr('data-tooltip-anchor', '');
-
-
-        // Update
-
-        anchor
+        referencePoint
+          .attr('r', 2)
+          .attr('fill', '#fff')
+          .attr('stroke', '#f00')
+          .attr('stroke-width', 1.5)
           .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
 
+        referencePoint.exit().remove();
+      }
 
-        // Exit
-
-        anchor.exit().remove();
-
-
-        // Visible anchor if debug is true
-        if (props.debug) {
-          var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
-            .data(data);
-
-          referencePoint.enter()
-            .append('circle')
-            .attr('data-tooltip-anchor-debug', '');
-
-          referencePoint
-            .attr('r', 2)
-            .attr('fill', '#fff')
-            .attr('stroke', '#f00')
-            .attr('stroke-width', 1.5)
-            .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
-
-          referencePoint.exit().remove();
-        }
-
-      });
+    });
 
 
-    /* Helper functions
-    ----------------------------------------------- */
-    function vectorToTranslateString(vec) {
-      return sszvis.svgUtils.translateString.apply(null, vec);
-    }
+  /* Helper functions
+  ----------------------------------------------- */
+  function vectorToTranslateString(vec) {
+    return sszvis.svgUtils.translateString.apply(null, vec);
+  }
 
-  };
-
-});
+};

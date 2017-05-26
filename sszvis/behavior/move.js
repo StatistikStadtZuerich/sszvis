@@ -44,194 +44,191 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.behavior.move', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    var event = d3.dispatch('start', 'move', 'drag', 'end');
+export default function() {
+  var event = d3.dispatch('start', 'move', 'drag', 'end');
 
-    var moveComponent = d3.component()
-      .prop('debug')
-      .prop('xScale')
-      .prop('yScale')
-      .prop('draggable')
-      .prop('cancelScrolling', d3.functor).cancelScrolling(false)
-      .prop('fireOnPanOnly', d3.functor).fireOnPanOnly(false)
-      .prop('padding', function(p) {
-        var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
-        for (var prop in p) { defaults[prop] = p[prop]; }
-        return defaults;
-      }).padding({})
-      .render(function() {
+  var moveComponent = d3.component()
+    .prop('debug')
+    .prop('xScale')
+    .prop('yScale')
+    .prop('draggable')
+    .prop('cancelScrolling', d3.functor).cancelScrolling(false)
+    .prop('fireOnPanOnly', d3.functor).fireOnPanOnly(false)
+    .prop('padding', function(p) {
+      var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
+      for (var prop in p) { defaults[prop] = p[prop]; }
+      return defaults;
+    }).padding({})
+    .render(function() {
 
-        var selection = d3.select(this);
-        var props = selection.props();
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var xExtent = sszvis.scale.range(props.xScale).sort(d3.ascending);
-        var yExtent = sszvis.scale.range(props.yScale).sort(d3.ascending);
+      var xExtent = sszvis.scale.range(props.xScale).sort(d3.ascending);
+      var yExtent = sszvis.scale.range(props.yScale).sort(d3.ascending);
 
-        xExtent[0] -= props.padding.left;
-        xExtent[1] += props.padding.right;
-        yExtent[0] -= props.padding.top;
-        yExtent[1] += props.padding.bottom;
+      xExtent[0] -= props.padding.left;
+      xExtent[1] += props.padding.right;
+      yExtent[0] -= props.padding.top;
+      yExtent[1] += props.padding.bottom;
 
-        var layer = selection.selectAll('[data-sszvis-behavior-move]')
-          .data([0]);
+      var layer = selection.selectAll('[data-sszvis-behavior-move]')
+        .data([0]);
 
-        layer.enter()
-          .append('rect')
-          .attr('data-sszvis-behavior-move', '')
-          .attr('class', 'sszvis-interactive');
+      layer.enter()
+        .append('rect')
+        .attr('data-sszvis-behavior-move', '')
+        .attr('class', 'sszvis-interactive');
 
-        if (props.draggable) {
-          layer.classed('sszvis-interactive--draggable', true);
-        }
+      if (props.draggable) {
+        layer.classed('sszvis-interactive--draggable', true);
+      }
 
-        layer
-          .attr('x', xExtent[0])
-          .attr('y', yExtent[0])
-          .attr('width',  xExtent[1] - xExtent[0])
-          .attr('height', yExtent[1] - yExtent[0])
-          .attr('fill', 'transparent')
-          .on('mouseover', event.start)
-          .on('mousedown', function() {
-            var target = this;
-            var doc = d3.select(document);
-            var win = d3.select(window);
+      layer
+        .attr('x', xExtent[0])
+        .attr('y', yExtent[0])
+        .attr('width',  xExtent[1] - xExtent[0])
+        .attr('height', yExtent[1] - yExtent[0])
+        .attr('fill', 'transparent')
+        .on('mouseover', event.start)
+        .on('mousedown', function() {
+          var target = this;
+          var doc = d3.select(document);
+          var win = d3.select(window);
 
-            var drag = function() {
-              var xy = d3.mouse(target);
-              var x = scaleInvert(props.xScale, xy[0]);
-              var y = scaleInvert(props.yScale, xy[1]);
-              d3.event.preventDefault();
-              event.drag(x, y);
-            };
-
-            var startDragging = function() {
-              target.__dragging__ = true;
-              drag();
-            };
-
-            var stopDragging = function() {
-              target.__dragging__ = false;
-              win.on('mouseup.sszvis-behavior-move', null);
-              win.on('mousemove.sszvis-behavior-move', null);
-              doc.on('mouseout.sszvis-behavior-move', null);
-              event.end();
-            };
-
-            win.on('mousemove.sszvis-behavior-move', drag);
-            win.on('mouseup.sszvis-behavior-move', stopDragging);
-            doc.on('mouseout.sszvis-behavior-move', function() {
-              var from = d3.event.relatedTarget || d3.event.toElement;
-              if (!from || from.nodeName === 'HTML') {
-                stopDragging();
-              }
-            });
-
-            startDragging();
-          })
-          .on('mousemove', function() {
-            var target = this;
-            var xy = d3.mouse(this);
+          var drag = function() {
+            var xy = d3.mouse(target);
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
+            d3.event.preventDefault();
+            event.drag(x, y);
+          };
 
-            if (!target.__dragging__) {
-              event.move(x, y);
-            }
-          })
-          .on('mouseout', event.end)
-          .on('touchstart', function() {
-            var xy = sszvis.fn.first(d3.touches(this));
-            var x = scaleInvert(props.xScale, xy[0]);
-            var y = scaleInvert(props.yScale, xy[1]);
+          var startDragging = function() {
+            target.__dragging__ = true;
+            drag();
+          };
 
-            var cancelScrolling = props.cancelScrolling(x, y);
+          var stopDragging = function() {
+            target.__dragging__ = false;
+            win.on('mouseup.sszvis-behavior-move', null);
+            win.on('mousemove.sszvis-behavior-move', null);
+            doc.on('mouseout.sszvis-behavior-move', null);
+            event.end();
+          };
 
-            if (cancelScrolling) {
-              d3.event.preventDefault();
-            }
-
-            // if fireOnPanOnly => cancelScrolling must be true
-            // if !fireOnPanOnly => always fire events
-            // This is in place because this behavior needs to only fire
-            // events on a successful "pan" action in the bar charts, i.e.
-            // only when scrolling is prevented, but then it also needs to fire
-            // events all the time in the line and area charts, i.e. allow
-            // scrolling to continue as normal but also fire events.
-            // To configure the chart for use in the bar charts, you need
-            // to configure a cancelScrolling function for determining when to
-            // cancel scrolling, i.e. what constitutes a "pan" event, and also
-            // pass fireOnPanOnly = true, which flips this switch and relies on
-            // cancelScrolling to determine whether to fire the events.
-            if (!props.fireOnPanOnly() || cancelScrolling) {
-              event.start(x, y);
-              event.drag(x, y);
-              event.move(x, y);
-
-              var pan = function() {
-                var xy = sszvis.fn.first(d3.touches(this));
-                var x = scaleInvert(props.xScale, xy[0]);
-                var y = scaleInvert(props.yScale, xy[1]);
-
-                var cancelScrolling = props.cancelScrolling(x, y);
-
-                if (cancelScrolling) {
-                  d3.event.preventDefault();
-                }
-
-                // See comment above about the same if condition.
-                if (!props.fireOnPanOnly() || cancelScrolling) {
-                  event.drag(x, y);
-                  event.move(x, y);
-                } else {
-                  event.end();
-                }
-              };
-
-              var end = function() {
-                event.end();
-                d3.select(this)
-                  .on('touchmove', null)
-                  .on('touchend', null);
-              };
-
-              d3.select(this)
-                .on('touchmove', pan)
-                .on('touchend', end);
+          win.on('mousemove.sszvis-behavior-move', drag);
+          win.on('mouseup.sszvis-behavior-move', stopDragging);
+          doc.on('mouseout.sszvis-behavior-move', function() {
+            var from = d3.event.relatedTarget || d3.event.toElement;
+            if (!from || from.nodeName === 'HTML') {
+              stopDragging();
             }
           });
 
-        if (props.debug) {
-          layer.attr('fill', 'rgba(255,0,0,0.2)');
-        }
-      });
+          startDragging();
+        })
+        .on('mousemove', function() {
+          var target = this;
+          var xy = d3.mouse(this);
+          var x = scaleInvert(props.xScale, xy[0]);
+          var y = scaleInvert(props.yScale, xy[1]);
 
-    d3.rebind(moveComponent, event, 'on');
+          if (!target.__dragging__) {
+            event.move(x, y);
+          }
+        })
+        .on('mouseout', event.end)
+        .on('touchstart', function() {
+          var xy = sszvis.fn.first(d3.touches(this));
+          var x = scaleInvert(props.xScale, xy[0]);
+          var y = scaleInvert(props.yScale, xy[1]);
 
-    return moveComponent;
-  };
+          var cancelScrolling = props.cancelScrolling(x, y);
 
-  function scaleInvert(scale, px) {
-    if (scale.invert) {
-      // Linear scale
-      return scale.invert(px);
-    } else {
-      // Ordinal scale
-      var bandWidth = scale.rangeBand();
-      var scaleRange = scale.range();
-      var paddingWidth = scaleRange.length < 2 ? 0 : (scaleRange[1] - scaleRange[0]) - bandWidth;
-      var leftEdges = scale.range().map(function(d) {
-        return [d - paddingWidth / 2, d + bandWidth + paddingWidth / 2];
-      });
-      for (var i = 0, l = leftEdges.length; i < l; i++) {
-        if (leftEdges[i][0] < px && px <= leftEdges[i][1]) {
-          return scale.domain()[i];
-        }
+          if (cancelScrolling) {
+            d3.event.preventDefault();
+          }
+
+          // if fireOnPanOnly => cancelScrolling must be true
+          // if !fireOnPanOnly => always fire events
+          // This is in place because this behavior needs to only fire
+          // events on a successful "pan" action in the bar charts, i.e.
+          // only when scrolling is prevented, but then it also needs to fire
+          // events all the time in the line and area charts, i.e. allow
+          // scrolling to continue as normal but also fire events.
+          // To configure the chart for use in the bar charts, you need
+          // to configure a cancelScrolling function for determining when to
+          // cancel scrolling, i.e. what constitutes a "pan" event, and also
+          // pass fireOnPanOnly = true, which flips this switch and relies on
+          // cancelScrolling to determine whether to fire the events.
+          if (!props.fireOnPanOnly() || cancelScrolling) {
+            event.start(x, y);
+            event.drag(x, y);
+            event.move(x, y);
+
+            var pan = function() {
+              var xy = sszvis.fn.first(d3.touches(this));
+              var x = scaleInvert(props.xScale, xy[0]);
+              var y = scaleInvert(props.yScale, xy[1]);
+
+              var cancelScrolling = props.cancelScrolling(x, y);
+
+              if (cancelScrolling) {
+                d3.event.preventDefault();
+              }
+
+              // See comment above about the same if condition.
+              if (!props.fireOnPanOnly() || cancelScrolling) {
+                event.drag(x, y);
+                event.move(x, y);
+              } else {
+                event.end();
+              }
+            };
+
+            var end = function() {
+              event.end();
+              d3.select(this)
+                .on('touchmove', null)
+                .on('touchend', null);
+            };
+
+            d3.select(this)
+              .on('touchmove', pan)
+              .on('touchend', end);
+          }
+        });
+
+      if (props.debug) {
+        layer.attr('fill', 'rgba(255,0,0,0.2)');
       }
-      return null;
-    }
-  }
+    });
 
-});
+  d3.rebind(moveComponent, event, 'on');
+
+  return moveComponent;
+};
+
+function scaleInvert(scale, px) {
+  if (scale.invert) {
+    // Linear scale
+    return scale.invert(px);
+  } else {
+    // Ordinal scale
+    var bandWidth = scale.rangeBand();
+    var scaleRange = scale.range();
+    var paddingWidth = scaleRange.length < 2 ? 0 : (scaleRange[1] - scaleRange[0]) - bandWidth;
+    var leftEdges = scale.range().map(function(d) {
+      return [d - paddingWidth / 2, d + bandWidth + paddingWidth / 2];
+    });
+    for (var i = 0, l = leftEdges.length; i < l; i++) {
+      if (leftEdges[i][0] < px && px <= leftEdges[i][1]) {
+        return scale.domain()[i];
+      }
+    }
+    return null;
+  }
+}

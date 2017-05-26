@@ -29,161 +29,158 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.annotation.ruler', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
+export default function() {
 
-    return d3.component()
-      .prop('top')
-      .prop('bottom')
-      .prop('x', d3.functor)
-      .prop('y', d3.functor)
-      .prop('label').label(d3.functor(''))
-      .prop('color')
-      .prop('flip', d3.functor).flip(false)
-      .prop('labelId', d3.functor)
-      .prop('reduceOverlap').reduceOverlap(false)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+  return d3.component()
+    .prop('top')
+    .prop('bottom')
+    .prop('x', d3.functor)
+    .prop('y', d3.functor)
+    .prop('label').label(d3.functor(''))
+    .prop('color')
+    .prop('flip', d3.functor).flip(false)
+    .prop('labelId', d3.functor)
+    .prop('reduceOverlap').reduceOverlap(false)
+    .render(function(data) {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var labelId = props.labelId || function(d) { return props.x(d) + '_' + props.y(d) };
+      var labelId = props.labelId || function(d) { return props.x(d) + '_' + props.y(d) };
 
-        var ruler = selection.selectAll('.sszvis-ruler__rule')
-          .data(data, labelId);
+      var ruler = selection.selectAll('.sszvis-ruler__rule')
+        .data(data, labelId);
 
-        ruler.enter()
-          .append('line')
-          .classed('sszvis-ruler__rule', true);
+      ruler.enter()
+        .append('line')
+        .classed('sszvis-ruler__rule', true);
 
-        ruler
-          .attr('x1', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
-          .attr('y1', props.y)
-          .attr('x2', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
-          .attr('y2', props.bottom);
+      ruler
+        .attr('x1', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+        .attr('y1', props.y)
+        .attr('x2', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+        .attr('y2', props.bottom);
 
-        ruler.exit().remove();
+      ruler.exit().remove();
 
-        var dot = selection.selectAll('.sszvis-ruler__dot')
-          .data(data, labelId);
+      var dot = selection.selectAll('.sszvis-ruler__dot')
+        .data(data, labelId);
 
-        dot.enter()
-          .append('circle')
-          .classed('sszvis-ruler__dot', true);
+      dot.enter()
+        .append('circle')
+        .classed('sszvis-ruler__dot', true);
 
-        dot
-          .attr('cx', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
-          .attr('cy', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y))
-          .attr('r', 3.5)
-          .attr('fill', props.color);
+      dot
+        .attr('cx', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+        .attr('cy', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y))
+        .attr('r', 3.5)
+        .attr('fill', props.color);
 
-        dot.exit().remove();
-
-
-        var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
-          .data(data, labelId);
-
-        labelOutline.enter()
-          .append('text')
-          .classed('sszvis-ruler__label-outline', true);
-
-        labelOutline.exit().remove();
+      dot.exit().remove();
 
 
-        var label = selection.selectAll('.sszvis-ruler__label')
-          .data(data, labelId);
+      var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
+        .data(data, labelId);
 
-        label.enter()
-          .append('text')
-          .classed('sszvis-ruler__label', true);
+      labelOutline.enter()
+        .append('text')
+        .classed('sszvis-ruler__label-outline', true);
 
-        label.exit().remove();
+      labelOutline.exit().remove();
 
 
-        // Update both label and labelOutline selections
+      var label = selection.selectAll('.sszvis-ruler__label')
+        .data(data, labelId);
 
-        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-        var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
+      label.enter()
+        .append('text')
+        .classed('sszvis-ruler__label', true);
 
-        var textSelection = selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
-          .attr('transform', function(d) {
-            var x = crispX(d);
-            var y = crispY(d);
+      label.exit().remove();
 
-            var dx = props.flip(d) ? -10 : 10;
-            var dy = (y < props.top + dy) ? 2 * dy
-                   : (y > props.bottom - dy) ? 0
-                   : 5;
 
-            return sszvis.svgUtils.translateString(x + dx, y + dy);
-          })
-          .style('text-anchor', function(d) {
-            return props.flip(d) ? 'end' : 'start';
-          })
-          .html(props.label);
+      // Update both label and labelOutline selections
 
-        if (props.reduceOverlap) {
-          var THRESHOLD = 2;
-          var ITERATIONS = 10;
-          var labelBounds = [];
-          // Optimization for the lookup later
-          var labelBoundsIndex = {};
+      var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+      var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
 
-          // Reset vertical shift (set by previous renders)
-          textSelection.attr('y', '');
+      var textSelection = selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
+        .attr('transform', function(d) {
+          var x = crispX(d);
+          var y = crispY(d);
 
-          // Create bounds objects
-          label.each(function(d) {
-            var bounds = this.getBoundingClientRect();
-            var item = {
-              top: bounds.top,
-              bottom: bounds.bottom,
-              dy: 0
-            };
-            labelBounds.push(item);
-            labelBoundsIndex[labelId(d)] = item;
-          });
+          var dx = props.flip(d) ? -10 : 10;
+          var dy = (y < props.top + dy) ? 2 * dy
+                 : (y > props.bottom - dy) ? 0
+                 : 5;
 
-          // Sort array in place by vertical position
-          // (only supports labels of same height)
-          labelBounds.sort(function(a, b) {
-            return d3.ascending(a.top, b.top);
-          });
+          return sszvis.svgUtils.translateString(x + dx, y + dy);
+        })
+        .style('text-anchor', function(d) {
+          return props.flip(d) ? 'end' : 'start';
+        })
+        .html(props.label);
 
-          // Using postfix decrement means the expression evaluates to the value of the variable
-          // before the decrement takes place. In the case of 10 iterations, this means that the
-          // variable gets to 0 after the truthiness of the 10th iteration is tested, and the
-          // expression is false at the beginning of the 11th, so 10 iterations are executed.
-          // If you use prefix decrement (--ITERATIONS), the variable gets to 0 at the beginning of
-          // the 10th iteration, meaning that only 9 iterations are executed.
-          while (ITERATIONS--) {
-            // Calculate overlap and correct position
-            labelBounds.forEach(function(firstLabel, index) {
-              labelBounds.slice(index + 1).forEach(function(secondLabel) {
-                var overlap = firstLabel.bottom - secondLabel.top;
-                if (overlap >= THRESHOLD) {
-                  var offset = overlap / 2;
-                  firstLabel.bottom -= offset;
-                  firstLabel.top -= offset;
-                  firstLabel.dy -= offset;
-                  secondLabel.bottom += offset;
-                  secondLabel.top += offset;
-                  secondLabel.dy += offset;
-                }
-              });
+      if (props.reduceOverlap) {
+        var THRESHOLD = 2;
+        var ITERATIONS = 10;
+        var labelBounds = [];
+        // Optimization for the lookup later
+        var labelBoundsIndex = {};
+
+        // Reset vertical shift (set by previous renders)
+        textSelection.attr('y', '');
+
+        // Create bounds objects
+        label.each(function(d) {
+          var bounds = this.getBoundingClientRect();
+          var item = {
+            top: bounds.top,
+            bottom: bounds.bottom,
+            dy: 0
+          };
+          labelBounds.push(item);
+          labelBoundsIndex[labelId(d)] = item;
+        });
+
+        // Sort array in place by vertical position
+        // (only supports labels of same height)
+        labelBounds.sort(function(a, b) {
+          return d3.ascending(a.top, b.top);
+        });
+
+        // Using postfix decrement means the expression evaluates to the value of the variable
+        // before the decrement takes place. In the case of 10 iterations, this means that the
+        // variable gets to 0 after the truthiness of the 10th iteration is tested, and the
+        // expression is false at the beginning of the 11th, so 10 iterations are executed.
+        // If you use prefix decrement (--ITERATIONS), the variable gets to 0 at the beginning of
+        // the 10th iteration, meaning that only 9 iterations are executed.
+        while (ITERATIONS--) {
+          // Calculate overlap and correct position
+          labelBounds.forEach(function(firstLabel, index) {
+            labelBounds.slice(index + 1).forEach(function(secondLabel) {
+              var overlap = firstLabel.bottom - secondLabel.top;
+              if (overlap >= THRESHOLD) {
+                var offset = overlap / 2;
+                firstLabel.bottom -= offset;
+                firstLabel.top -= offset;
+                firstLabel.dy -= offset;
+                secondLabel.bottom += offset;
+                secondLabel.top += offset;
+                secondLabel.dy += offset;
+              }
             });
-          }
-
-          // Shift vertically to remove overlap
-          textSelection.attr('y', function(d) {
-            var label = labelBoundsIndex[labelId(d)];
-            return label.dy;
           });
-
         }
 
-      });
-  };
+        // Shift vertically to remove overlap
+        textSelection.attr('y', function(d) {
+          var label = labelBoundsIndex[labelId(d)];
+          return label.dy;
+        });
 
-});
+      }
+
+    });
+};

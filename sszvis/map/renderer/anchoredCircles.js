@@ -14,65 +14,61 @@
  * 
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.map.anchoredCircles', function(module) {
+export default function() {
+  var event = d3.dispatch('over', 'out', 'click');
 
-  module.exports = function() {
-    var event = d3.dispatch('over', 'out', 'click');
+  var component = d3.component()
+    .prop('mergedData')
+    .prop('mapPath')
+    .prop('radius', d3.functor)
+    .prop('fill', d3.functor)
+    .prop('strokeColor', d3.functor).strokeColor('#ffffff')
+    .prop('strokeWidth', d3.functor).strokeWidth(1)
+    .prop('transition').transition(true)
+    .render(function() {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-    var component = d3.component()
-      .prop('mergedData')
-      .prop('mapPath')
-      .prop('radius', d3.functor)
-      .prop('fill', d3.functor)
-      .prop('strokeColor', d3.functor).strokeColor('#ffffff')
-      .prop('strokeWidth', d3.functor).strokeWidth(1)
-      .prop('transition').transition(true)
-      .render(function() {
-        var selection = d3.select(this);
-        var props = selection.props();
+      var anchoredCircles = selection.selectGroup('anchoredCircles')
+        .selectAll('.sszvis-anchored-circle')
+        .data(props.mergedData, function(d) { return d.geoJson.id; });
 
-        var anchoredCircles = selection.selectGroup('anchoredCircles')
-          .selectAll('.sszvis-anchored-circle')
-          .data(props.mergedData, function(d) { return d.geoJson.id; });
+      anchoredCircles.enter()
+        .append('circle')
+        .attr('class', 'sszvis-anchored-circle');
 
-        anchoredCircles.enter()
-          .append('circle')
-          .attr('class', 'sszvis-anchored-circle');
+      anchoredCircles
+        .attr('transform', function(d) {
+          var position = props.mapPath.projection()(sszvis.map.utils.getGeoJsonCenter(d.geoJson));
+          return sszvis.svgUtils.translateString(position[0], position[1]);
+        })
+        .attr('fill', function(d) { return props.fill(d.datum); })
+        .style('stroke', function(d) { return props.strokeColor(d.datum); })
+        .style('stroke-width', function(d) { return props.strokeWidth(d.datum); })
+        .sort(function(a, b) {
+          return props.radius(b.datum) - props.radius(a.datum);
+        });
 
-        anchoredCircles
-          .attr('transform', function(d) {
-            var position = props.mapPath.projection()(sszvis.map.utils.getGeoJsonCenter(d.geoJson));
-            return sszvis.svgUtils.translateString(position[0], position[1]);
-          })
-          .attr('fill', function(d) { return props.fill(d.datum); })
-          .style('stroke', function(d) { return props.strokeColor(d.datum); })
-          .style('stroke-width', function(d) { return props.strokeWidth(d.datum); })
-          .sort(function(a, b) {
-            return props.radius(b.datum) - props.radius(a.datum);
-          });
+      anchoredCircles
+        .on('mouseover', function(d) {
+          event.over(d.datum);
+        })
+        .on('mouseout', function(d) {
+          event.out(d.datum);
+        })
+        .on('click', function(d) {
+          event.click(d.datum);
+        });
 
-        anchoredCircles
-          .on('mouseover', function(d) {
-            event.over(d.datum);
-          })
-          .on('mouseout', function(d) {
-            event.out(d.datum);
-          })
-          .on('click', function(d) {
-            event.click(d.datum);
-          });
+      if (props.transition) {
+        anchoredCircles = anchoredCircles.transition()
+          .call(sszvis.transition);
+      }
 
-        if (props.transition) {
-          anchoredCircles = anchoredCircles.transition()
-            .call(sszvis.transition);
-        }
+      anchoredCircles.attr('r', function(d) { return props.radius(d.datum); });
+    });
 
-        anchoredCircles.attr('r', function(d) { return props.radius(d.datum); });
-      });
+  d3.rebind(component, event, 'on');
 
-    d3.rebind(component, event, 'on');
-
-    return component;
-  };
-
-});
+  return component;
+};

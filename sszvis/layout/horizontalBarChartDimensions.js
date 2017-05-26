@@ -24,29 +24,26 @@
  *                                               to translate scales below the bars.
  *                                 }
  */
-sszvis_namespace('sszvis.layout.horizontalBarChartDimensions', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports =  function(numBars) {
-    var DEFAULT_HEIGHT = 24, // the default bar height
-        MIN_PADDING = 20, // the minimum padding size
-        barHeight = DEFAULT_HEIGHT, // the bar height
-        numPads = numBars - 1,
-        padding = MIN_PADDING,
-        // compute other information
-        padRatio = 1 - (barHeight / (barHeight + padding)),
-        computedBarSpace = barHeight * numBars + padding * numPads,
-        outerRatio = 0; // no outer padding
+export default function(numBars) {
+  var DEFAULT_HEIGHT = 24, // the default bar height
+      MIN_PADDING = 20, // the minimum padding size
+      barHeight = DEFAULT_HEIGHT, // the bar height
+      numPads = numBars - 1,
+      padding = MIN_PADDING,
+      // compute other information
+      padRatio = 1 - (barHeight / (barHeight + padding)),
+      computedBarSpace = barHeight * numBars + padding * numPads,
+      outerRatio = 0; // no outer padding
 
-    return {
-      barHeight: barHeight,
-      padHeight: padding,
-      padRatio: padRatio,
-      outerRatio: outerRatio,
-      axisOffset: -(barHeight / 2) - 10,
-      barGroupHeight: computedBarSpace,
-      totalHeight: computedBarSpace + (outerRatio * (barHeight + padding) * 2)
-    };
+  return {
+    barHeight: barHeight,
+    padHeight: padding,
+    padRatio: padRatio,
+    outerRatio: outerRatio,
+    axisOffset: -(barHeight / 2) - 10,
+    barGroupHeight: computedBarSpace,
+    totalHeight: computedBarSpace + (outerRatio * (barHeight + padding) * 2)
   };
-
-});
+};

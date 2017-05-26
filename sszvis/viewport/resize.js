@@ -27,66 +27,64 @@
  * 
  * @return {Object}
  */
-sszvis_namespace('sszvis.viewport', function(module) {
-  'use strict';
+'use strict';
 
-  // throttles a function to the trailing edge. Copied mostly verbatim from underscore.js
-  function throttle(wait, func) {
-    var context, args, result;
-    var timeout = null;
-    var previous = 0;
-    var lastCall = function() {
-      previous = 0;
-      result = func.apply(context, args);
-      timeout = context = args = null;
-    };
-    return function() {
-      var now = Date.now();
-      if (!previous) previous = now; // Sets up so that the function isn't called immediately
-      var remaining = wait - (now - previous);
-      context = this;
-      args = arguments;
-      if (remaining <= 0 || remaining > wait) {
-        if (timeout) {
-          clearTimeout(timeout);
-          timeout = null;
-        }
-        previous = now;
-        result = func.apply(context, args);
-        if (!timeout) context = args = null;
-      } else if (!timeout) {
-        timeout = setTimeout(lastCall, remaining);
+// throttles a function to the trailing edge. Copied mostly verbatim from underscore.js
+function throttle(wait, func) {
+  var context, args, result;
+  var timeout = null;
+  var previous = 0;
+  var lastCall = function() {
+    previous = 0;
+    result = func.apply(context, args);
+    timeout = context = args = null;
+  };
+  return function() {
+    var now = Date.now();
+    if (!previous) previous = now; // Sets up so that the function isn't called immediately
+    var remaining = wait - (now - previous);
+    context = this;
+    args = arguments;
+    if (remaining <= 0 || remaining > wait) {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
       }
-      return result;
-    };
-  }
-
-  // This rather strange set of functions is designed to support the API:
-  // sszvis.viewport.on('resize', callback);
-  // While still enabling the user to register multiple callbacks for the 'resize'
-  // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
-  // object would not allow.
-  var callbacks = {
-    resize: []
+      previous = now;
+      result = func.apply(context, args);
+      if (!timeout) context = args = null;
+    } else if (!timeout) {
+      timeout = setTimeout(lastCall, remaining);
+    }
+    return result;
   };
+}
 
-  d3.select(window).on('resize', throttle(500, function() { module.exports.trigger('resize'); }));
+// This rather strange set of functions is designed to support the API:
+// sszvis.viewport.on('resize', callback);
+// While still enabling the user to register multiple callbacks for the 'resize'
+// event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
+// object would not allow.
+var callbacks = {
+  resize: []
+};
 
-  module.exports.on = function(name, cb) {
-    if (!callbacks[name]) { callbacks[name] = []; }
-    callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; }).concat(cb);
-    return this;
-  };
+d3.select(window).on('resize', throttle(500, function() { trigger('resize'); }));
 
-  module.exports.off = function(name, cb) {
-    if (!callbacks[name]) { return this; }
-    callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; });
-    return this;
-  };
+export const on = function(name, cb) {
+  if (!callbacks[name]) { callbacks[name] = []; }
+  callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; }).concat(cb);
+  return this;
+};
 
-  module.exports.trigger = function(name) {
-    var evtArgs = Array.prototype.slice.call(arguments, 1);
-    if (callbacks[name]) { callbacks[name].forEach(function(fn) { fn.apply(null, evtArgs); }); }
-    return this;
-  };
-});
+export const off = function(name, cb) {
+  if (!callbacks[name]) { return this; }
+  callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; });
+  return this;
+};
+
+export const trigger = function(name) {
+  var evtArgs = Array.prototype.slice.call(arguments, 1);
+  if (callbacks[name]) { callbacks[name].forEach(function(fn) { fn.apply(null, evtArgs); }); }
+  return this;
+};

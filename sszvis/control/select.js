@@ -17,81 +17,78 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.control.select', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    return d3.component()
-      .prop('values')
-      .prop('current')
-      .prop('width').width(300)
-      .prop('change').change(sszvis.fn.identity)
-      .render(function() {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('values')
+    .prop('current')
+    .prop('width').width(300)
+    .prop('change').change(sszvis.fn.identity)
+    .render(function() {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var wrapperEl = selection.selectAll('.sszvis-control-optionSelectable')
-          .data(['sszvis-control-select'], function(d){return d;});
-        wrapperEl.enter()
-          .append('div')
-          .classed('sszvis-control-optionSelectable', true)
-          .classed('sszvis-control-select', true);
-        wrapperEl.exit().remove();
+      var wrapperEl = selection.selectAll('.sszvis-control-optionSelectable')
+        .data(['sszvis-control-select'], function(d){return d;});
+      wrapperEl.enter()
+        .append('div')
+        .classed('sszvis-control-optionSelectable', true)
+        .classed('sszvis-control-select', true);
+      wrapperEl.exit().remove();
 
-        wrapperEl
-          .style('width', props.width + 'px');
+      wrapperEl
+        .style('width', props.width + 'px');
 
-        var metricsEl = wrapperEl.selectDiv('selectMetrics')
-          .classed('sszvis-control-select__metrics', true);
+      var metricsEl = wrapperEl.selectDiv('selectMetrics')
+        .classed('sszvis-control-select__metrics', true);
 
-        var selectEl = wrapperEl.selectAll('.sszvis-control-select__element')
-          .data([1]);
+      var selectEl = wrapperEl.selectAll('.sszvis-control-select__element')
+        .data([1]);
 
-        selectEl.enter()
-          .append('select')
-          .classed('sszvis-control-select__element', true)
-          .on('change', function() {
-            // We store the index in the select's value instead of the datum
-            // because an option's value can only hold strings.
-            var i = d3.select(this).property('value');
-            props.change(props.values[i]);
-            // Prevent highlights on the select element after users have selected
-            // an option by moving away from it.
-            setTimeout(function(){ window.focus(); }, 0);
-          });
+      selectEl.enter()
+        .append('select')
+        .classed('sszvis-control-select__element', true)
+        .on('change', function() {
+          // We store the index in the select's value instead of the datum
+          // because an option's value can only hold strings.
+          var i = d3.select(this).property('value');
+          props.change(props.values[i]);
+          // Prevent highlights on the select element after users have selected
+          // an option by moving away from it.
+          setTimeout(function(){ window.focus(); }, 0);
+        });
 
-        selectEl
-          .style('width', (props.width + 30) + 'px');
+      selectEl
+        .style('width', (props.width + 30) + 'px');
 
-        var optionEls = selectEl.selectAll('option')
-          .data(props.values);
+      var optionEls = selectEl.selectAll('option')
+        .data(props.values);
 
-        optionEls.enter()
-          .append('option');
+      optionEls.enter()
+        .append('option');
 
-        optionEls.exit().remove();
+      optionEls.exit().remove();
 
-        optionEls
-          .attr('selected', function(d) { return d === props.current ? 'selected' : null; })
-          .attr('value', function(d, i){ return i; })
-          .text(function(d) {
-            return truncateToWidth(metricsEl, props.width - 40, d);
-          });
-      });
+      optionEls
+        .attr('selected', function(d) { return d === props.current ? 'selected' : null; })
+        .attr('value', function(d, i){ return i; })
+        .text(function(d) {
+          return truncateToWidth(metricsEl, props.width - 40, d);
+        });
+    });
+};
+
+function truncateToWidth(metricsEl, maxWidth, originalString) {
+  var MAX_RECURSION = 1000;
+  var fitText = function(str, i) {
+    metricsEl.text(str);
+    var textWidth = Math.ceil(metricsEl.node().clientWidth);
+    if (i < MAX_RECURSION && textWidth > maxWidth) {
+      return fitText(str.slice(0, str.length - 2) + '…', i + 1);
+    } else {
+      return str;
+    }
   };
-
-  function truncateToWidth(metricsEl, maxWidth, originalString) {
-    var MAX_RECURSION = 1000;
-    var fitText = function(str, i) {
-      metricsEl.text(str);
-      var textWidth = Math.ceil(metricsEl.node().clientWidth);
-      if (i < MAX_RECURSION && textWidth > maxWidth) {
-        return fitText(str.slice(0, str.length - 2) + '…', i + 1);
-      } else {
-        return str;
-      }
-    };
-    return fitText(originalString, 0);
-  }
-
-});
+  return fitText(originalString, 0);
+}

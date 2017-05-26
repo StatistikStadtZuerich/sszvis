@@ -15,58 +15,55 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.map.renderer.highlight', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    return d3.component()
-      .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
-      .prop('geoJson')
-      .prop('mapPath')
-      .prop('highlight').highlight([]) // an array of data values to highlight
-      .prop('highlightStroke', d3.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
-      .prop('highlightStrokeWidth', d3.functor).highlightStrokeWidth(2)
-      .render(function() {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('keyName').keyName(sszvis.map.utils.GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
+    .prop('geoJson')
+    .prop('mapPath')
+    .prop('highlight').highlight([]) // an array of data values to highlight
+    .prop('highlightStroke', d3.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
+    .prop('highlightStrokeWidth', d3.functor).highlightStrokeWidth(2)
+    .render(function() {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var highlightBorders = selection
-          .selectAll('.sszvis-map__highlight');
+      var highlightBorders = selection
+        .selectAll('.sszvis-map__highlight');
 
-        if (!props.highlight.length) {
-          highlightBorders.remove();
-          return true; // no highlight, no worry
+      if (!props.highlight.length) {
+        highlightBorders.remove();
+        return true; // no highlight, no worry
+      }
+
+      var groupedMapData = props.geoJson.features.reduce(function(m, feature) {
+        m[feature.id] = feature;
+        return m;
+      }, {});
+
+      // merge the highlight data
+      var mergedHighlight = props.highlight.reduce(function(m, v) {
+        if (v) {
+          m.push({
+            geoJson: groupedMapData[v[props.keyName]],
+            datum: v
+          });
         }
+        return m;
+      }, []);
 
-        var groupedMapData = props.geoJson.features.reduce(function(m, feature) {
-          m[feature.id] = feature;
-          return m;
-        }, {});
+      highlightBorders = highlightBorders.data(mergedHighlight);
 
-        // merge the highlight data
-        var mergedHighlight = props.highlight.reduce(function(m, v) {
-          if (v) {
-            m.push({
-              geoJson: groupedMapData[v[props.keyName]],
-              datum: v
-            });
-          }
-          return m;
-        }, []);
+      highlightBorders.enter()
+        .append('path')
+        .classed('sszvis-map__highlight', true);
 
-        highlightBorders = highlightBorders.data(mergedHighlight);
+      highlightBorders.exit().remove();
 
-        highlightBorders.enter()
-          .append('path')
-          .classed('sszvis-map__highlight', true);
-
-        highlightBorders.exit().remove();
-
-        highlightBorders
-          .attr('d', function(d) { return props.mapPath(d.geoJson); })
-          .style('stroke', function(d) { return props.highlightStroke(d.datum); })
-          .style('stroke-width', function(d) { return props.highlightStrokeWidth(d.datum); });
-      });
-  };
-
-});
+      highlightBorders
+        .attr('d', function(d) { return props.mapPath(d.geoJson); })
+        .style('stroke', function(d) { return props.highlightStroke(d.datum); })
+        .style('stroke-width', function(d) { return props.highlightStrokeWidth(d.datum); });
+    });
+};

@@ -87,116 +87,113 @@
  * |fooBaz    barFoo |
  */
 
-sszvis_namespace('sszvis.legend.ordinalColorScale', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    return d3.component()
-      .prop('scale')
-      .prop('rowHeight').rowHeight(21)
-      .prop('columnWidth').columnWidth(200)
-      .prop('rows').rows(3)
-      .prop('columns').columns(3)
-      .prop('verticallyCentered').verticallyCentered(false)
-      .prop('orientation')
-      .prop('reverse').reverse(false)
-      .prop('rightAlign').rightAlign(false)
-      .prop('horizontalFloat').horizontalFloat(false)
-      .prop('floatPadding').floatPadding(20)
-      .prop('floatWidth').floatWidth(600)
-      .render(function() {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('scale')
+    .prop('rowHeight').rowHeight(21)
+    .prop('columnWidth').columnWidth(200)
+    .prop('rows').rows(3)
+    .prop('columns').columns(3)
+    .prop('verticallyCentered').verticallyCentered(false)
+    .prop('orientation')
+    .prop('reverse').reverse(false)
+    .prop('rightAlign').rightAlign(false)
+    .prop('horizontalFloat').horizontalFloat(false)
+    .prop('floatPadding').floatPadding(20)
+    .prop('floatWidth').floatWidth(600)
+    .render(function() {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var domain = props.scale.domain();
+      var domain = props.scale.domain();
 
-        if (props.reverse) {
-          domain = domain.slice().reverse();
-        }
+      if (props.reverse) {
+        domain = domain.slice().reverse();
+      }
 
-        var rows, cols;
-        if (props.orientation === 'horizontal') {
-          cols = Math.ceil(props.columns);
-          rows = Math.ceil(domain.length / cols);
-        } else if (props.orientation === 'vertical') {
-          rows = Math.ceil(props.rows);
-          cols = Math.ceil(domain.length / rows);
-        }
+      var rows, cols;
+      if (props.orientation === 'horizontal') {
+        cols = Math.ceil(props.columns);
+        rows = Math.ceil(domain.length / cols);
+      } else if (props.orientation === 'vertical') {
+        rows = Math.ceil(props.rows);
+        cols = Math.ceil(domain.length / rows);
+      }
 
-        var groups = selection.selectAll('.sszvis-legend--entry')
-          .data(domain);
+      var groups = selection.selectAll('.sszvis-legend--entry')
+        .data(domain);
 
-        groups.enter()
-          .append('g')
-          .classed('sszvis-legend--entry', true);
+      groups.enter()
+        .append('g')
+        .classed('sszvis-legend--entry', true);
 
-        groups.exit().remove();
+      groups.exit().remove();
 
-        var marks = groups.selectAll('.sszvis-legend__mark')
-          .data(function(d) { return [d]; });
+      var marks = groups.selectAll('.sszvis-legend__mark')
+        .data(function(d) { return [d]; });
 
-        marks.enter()
-          .append('circle')
-          .classed('sszvis-legend__mark', true);
+      marks.enter()
+        .append('circle')
+        .classed('sszvis-legend__mark', true);
 
-        marks.exit().remove();
+      marks.exit().remove();
 
-        marks
-          .attr('cx', props.rightAlign ? -5 : 5)
-          .attr('cy', sszvis.svgUtils.crisp.halfPixel(props.rowHeight / 2))
-          .attr('r', 5)
-          .attr('fill', function(d) { return props.scale(d); })
-          .attr('stroke', function(d) { return props.scale(d); })
-          .attr('stroke-width', 1);
+      marks
+        .attr('cx', props.rightAlign ? -5 : 5)
+        .attr('cy', sszvis.svgUtils.crisp.halfPixel(props.rowHeight / 2))
+        .attr('r', 5)
+        .attr('fill', function(d) { return props.scale(d); })
+        .attr('stroke', function(d) { return props.scale(d); })
+        .attr('stroke-width', 1);
 
-        var labels = groups.selectAll('.sszvis-legend__label')
-          .data(function(d) { return [d]; });
+      var labels = groups.selectAll('.sszvis-legend__label')
+        .data(function(d) { return [d]; });
 
-        labels.enter()
-          .append('text')
-          .classed('sszvis-legend__label', true);
+      labels.enter()
+        .append('text')
+        .classed('sszvis-legend__label', true);
 
-        labels.exit().remove();
+      labels.exit().remove();
 
-        labels
-          .text(function(d) { return d; })
-          .attr('dy', '0.35em') // vertically-center
-          .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
-          .attr('transform', function() {
-            var x = props.rightAlign ? -18 : 18;
-            var y = sszvis.svgUtils.crisp.halfPixel(props.rowHeight / 2);
-            return sszvis.svgUtils.translateString(x, y);
-          });
+      labels
+        .text(function(d) { return d; })
+        .attr('dy', '0.35em') // vertically-center
+        .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
+        .attr('transform', function() {
+          var x = props.rightAlign ? -18 : 18;
+          var y = sszvis.svgUtils.crisp.halfPixel(props.rowHeight / 2);
+          return sszvis.svgUtils.translateString(x, y);
+        });
 
-        var verticalOffset = '';
-        if (props.verticallyCentered) {
-          verticalOffset = 'translate(0,' + String(-(domain.length * props.rowHeight / 2)) + ') ';
-        }
+      var verticalOffset = '';
+      if (props.verticallyCentered) {
+        verticalOffset = 'translate(0,' + String(-(domain.length * props.rowHeight / 2)) + ') ';
+      }
 
-        if (props.horizontalFloat) {
-          var rowPosition = 0, horizontalPosition = 0;
-          groups.attr('transform', function() {
-            // not affected by scroll position
-            var width = this.getBoundingClientRect().width;
-            if (horizontalPosition + width > props.floatWidth) {
-              rowPosition += props.rowHeight;
-              horizontalPosition = 0;
-            }
-            var translate = sszvis.svgUtils.translateString(horizontalPosition, rowPosition);
-            horizontalPosition += width + props.floatPadding;
-            return verticalOffset + translate;
-          });
-        } else {
-          groups.attr('transform', function(d, i) {
-            if (props.orientation === 'horizontal') {
-              return verticalOffset + 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
-            } else if (props.orientation === 'vertical') {
-              return verticalOffset + 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
-            }
-          });
-        }
+      if (props.horizontalFloat) {
+        var rowPosition = 0, horizontalPosition = 0;
+        groups.attr('transform', function() {
+          // not affected by scroll position
+          var width = this.getBoundingClientRect().width;
+          if (horizontalPosition + width > props.floatWidth) {
+            rowPosition += props.rowHeight;
+            horizontalPosition = 0;
+          }
+          var translate = sszvis.svgUtils.translateString(horizontalPosition, rowPosition);
+          horizontalPosition += width + props.floatPadding;
+          return verticalOffset + translate;
+        });
+      } else {
+        groups.attr('transform', function(d, i) {
+          if (props.orientation === 'horizontal') {
+            return verticalOffset + 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
+          } else if (props.orientation === 'vertical') {
+            return verticalOffset + 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
+          }
+        });
+      }
 
-      });
-  };
-
-});
+    });
+};

@@ -20,69 +20,66 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.map.renderer.base', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    return d3.component()
-      .prop('mergedData')
-      .prop('geoJson')
-      .prop('mapPath')
-      .prop('defined', d3.functor).defined(true) // a predicate function to determine whether a datum has a defined value
-      .prop('fill', d3.functor).fill(function() { return 'black'; }) // a function for the entity fill color. default is black
-      .prop('transitionColor').transitionColor(true)
-      .render(function() {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('mergedData')
+    .prop('geoJson')
+    .prop('mapPath')
+    .prop('defined', d3.functor).defined(true) // a predicate function to determine whether a datum has a defined value
+    .prop('fill', d3.functor).fill(function() { return 'black'; }) // a function for the entity fill color. default is black
+    .prop('transitionColor').transitionColor(true)
+    .render(function() {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        // render the missing value pattern
-        sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'missing-pattern')
-          .call(sszvis.patterns.mapMissingValuePattern);
+      // render the missing value pattern
+      sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'missing-pattern')
+        .call(sszvis.patterns.mapMissingValuePattern);
 
-        // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
-        function getMapFill(d) {
-          return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
-        }
+      // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
+      function getMapFill(d) {
+        return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
+      }
 
-        var mapAreas = selection.selectAll('.sszvis-map__area')
-          .data(props.mergedData);
+      var mapAreas = selection.selectAll('.sszvis-map__area')
+        .data(props.mergedData);
 
-        // add the base map paths - these are filled according to the map fill function
-        mapAreas.enter()
-          .append('path')
-          .classed('sszvis-map__area', true)
-          .attr('data-event-target', '')
-          .attr('fill', getMapFill);
+      // add the base map paths - these are filled according to the map fill function
+      mapAreas.enter()
+        .append('path')
+        .classed('sszvis-map__area', true)
+        .attr('data-event-target', '')
+        .attr('fill', getMapFill);
 
-        mapAreas.exit().remove();
+      mapAreas.exit().remove();
 
-        selection.selectAll('.sszvis-map__area--undefined')
-          .attr('fill', getMapFill);
+      selection.selectAll('.sszvis-map__area--undefined')
+        .attr('fill', getMapFill);
 
-        // change the fill if necessary
+      // change the fill if necessary
+      mapAreas
+        .classed('sszvis-map__area--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); })
+        .attr('d', function(d) { return props.mapPath(d.geoJson); });
+
+      if (props.transitionColor) {
         mapAreas
-          .classed('sszvis-map__area--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); })
-          .attr('d', function(d) { return props.mapPath(d.geoJson); });
+          .transition()
+          .call(sszvis.transition.slowTransition)
+          .attr('fill', getMapFill);
+      } else {
+        mapAreas.attr('fill', getMapFill);
+      }
 
-        if (props.transitionColor) {
-          mapAreas
-            .transition()
-            .call(sszvis.transition.slowTransition)
-            .attr('fill', getMapFill);
-        } else {
-          mapAreas.attr('fill', getMapFill);
-        }
+      // the tooltip anchor generator
+      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+        .position(function(d) { return props.mapPath.projection()(sszvis.map.utils.getGeoJsonCenter(d.geoJson)); });
 
-        // the tooltip anchor generator
-        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
-          .position(function(d) { return props.mapPath.projection()(sszvis.map.utils.getGeoJsonCenter(d.geoJson)); });
+      var tooltipGroup = selection.selectGroup('tooltipAnchors')
+        .datum(props.mergedData);
 
-        var tooltipGroup = selection.selectGroup('tooltipAnchors')
-          .datum(props.mergedData);
-
-        // attach tooltip anchors
-        tooltipGroup.call(tooltipAnchor);
-      });
-  };
-
-});
+      // attach tooltip anchors
+      tooltipGroup.call(tooltipAnchor);
+    });
+};

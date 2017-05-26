@@ -40,81 +40,78 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.component.bar', function(module) {
-  'use strict';
+'use strict';
 
-  // replaces NaN values with 0
-  function handleMissingVal(v) {
-    return isNaN(v) ? 0 : v;
-  }
+// replaces NaN values with 0
+function handleMissingVal(v) {
+  return isNaN(v) ? 0 : v;
+}
 
-  module.exports = function() {
-    return d3.component()
-      .prop('x', d3.functor)
-      .prop('y', d3.functor)
-      .prop('width', d3.functor)
-      .prop('height', d3.functor)
-      .prop('fill', d3.functor)
-      .prop('stroke', d3.functor)
-      .prop('centerTooltip')
-      .prop('tooltipAnchor')
-      .prop('transition').transition(true)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('x', d3.functor)
+    .prop('y', d3.functor)
+    .prop('width', d3.functor)
+    .prop('height', d3.functor)
+    .prop('fill', d3.functor)
+    .prop('stroke', d3.functor)
+    .prop('centerTooltip')
+    .prop('tooltipAnchor')
+    .prop('transition').transition(true)
+    .render(function(data) {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var xAcc = sszvis.fn.compose(handleMissingVal, props.x);
-        var yAcc = sszvis.fn.compose(handleMissingVal, props.y);
-        var wAcc = sszvis.fn.compose(handleMissingVal, props.width);
-        var hAcc = sszvis.fn.compose(handleMissingVal, props.height);
+      var xAcc = sszvis.fn.compose(handleMissingVal, props.x);
+      var yAcc = sszvis.fn.compose(handleMissingVal, props.y);
+      var wAcc = sszvis.fn.compose(handleMissingVal, props.width);
+      var hAcc = sszvis.fn.compose(handleMissingVal, props.height);
 
-        var bars = selection.selectAll('.sszvis-bar')
-          .data(data);
+      var bars = selection.selectAll('.sszvis-bar')
+        .data(data);
 
-        bars.enter()
-          .append('rect')
-          .classed('sszvis-bar', true);
+      bars.enter()
+        .append('rect')
+        .classed('sszvis-bar', true);
 
-        bars.exit().remove();
+      bars.exit().remove();
 
-        bars
-          .attr('fill', props.fill)
-          .attr('stroke', props.stroke);
+      bars
+        .attr('fill', props.fill)
+        .attr('stroke', props.stroke);
 
-        if (props.transition) {
-          bars = bars.transition()
-            .call(sszvis.transition);
-        }
+      if (props.transition) {
+        bars = bars.transition()
+          .call(sszvis.transition);
+      }
 
-        bars
-          .attr('x', xAcc)
-          .attr('y', yAcc)
-          .attr('width', wAcc)
-          .attr('height', hAcc);
+      bars
+        .attr('x', xAcc)
+        .attr('y', yAcc)
+        .attr('width', wAcc)
+        .attr('height', hAcc);
 
-        // Tooltip anchors
-        var tooltipPosition;
-        if (props.centerTooltip) {
-          tooltipPosition = function(d) {
-            return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
-          };
-        } else if (props.tooltipAnchor) {
-          var uv = props.tooltipAnchor.map(parseFloat);
-          tooltipPosition = function(d) {
-            return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
-          };
-        } else {
-          tooltipPosition = function(d) {
-            return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
-          };
-        }
+      // Tooltip anchors
+      var tooltipPosition;
+      if (props.centerTooltip) {
+        tooltipPosition = function(d) {
+          return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+        };
+      } else if (props.tooltipAnchor) {
+        var uv = props.tooltipAnchor.map(parseFloat);
+        tooltipPosition = function(d) {
+          return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
+        };
+      } else {
+        tooltipPosition = function(d) {
+          return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+        };
+      }
 
-        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
-          .position(tooltipPosition);
+      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+        .position(tooltipPosition);
 
-        selection.call(tooltipAnchor);
+      selection.call(tooltipAnchor);
 
-      });
-  };
-
-});
+    });
+};

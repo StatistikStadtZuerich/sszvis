@@ -40,123 +40,120 @@
  *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
  *
  */
-sszvis_namespace('sszvis.behavior.voronoi', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    var event = d3.dispatch('over', 'out');
+export default function() {
+  var event = d3.dispatch('over', 'out');
 
-    var voronoiComponent = d3.component()
-      .prop('x')
-      .prop('y')
-      .prop('bounds')
-      .prop('debug')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+  var voronoiComponent = d3.component()
+    .prop('x')
+    .prop('y')
+    .prop('bounds')
+    .prop('debug')
+    .render(function(data) {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        if (!props.bounds) {
-          sszvis.logger.error('behavior.voronoi - requires bounds');
-          return false;
-        }
+      if (!props.bounds) {
+        sszvis.logger.error('behavior.voronoi - requires bounds');
+        return false;
+      }
 
-        var voronoi = d3.geom.voronoi()
-          .x(props.x)
-          .y(props.y)
-          .clipExtent(props.bounds);
+      var voronoi = d3.geom.voronoi()
+        .x(props.x)
+        .y(props.y)
+        .clipExtent(props.bounds);
 
-        var polys = selection.selectAll('[data-sszvis-behavior-voronoi]')
-          .data(voronoi(data));
+      var polys = selection.selectAll('[data-sszvis-behavior-voronoi]')
+        .data(voronoi(data));
 
-        polys.enter()
-          .append('path')
-          .attr('data-sszvis-behavior-voronoi', '')
-          .attr('data-sszvis-behavior-pannable', '')
-          .attr('class', 'sszvis-interactive');
+      polys.enter()
+        .append('path')
+        .attr('data-sszvis-behavior-voronoi', '')
+        .attr('data-sszvis-behavior-pannable', '')
+        .attr('class', 'sszvis-interactive');
 
-        polys.exit().remove();
+      polys.exit().remove();
 
-        polys
-          .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
-          .attr('fill', 'transparent')
-          .on('mouseover', function(datum) {
-            var cbox = this.parentNode.getBoundingClientRect();
-            if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
-              event.over(datum.point);
-            }
-          })
-          .on('mousemove', function(datum) {
-            var cbox = this.parentNode.getBoundingClientRect();
-            if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
-              event.over(datum.point);
-            } else {
-              event.out();
-            }
-          })
-          .on('mouseout', function() {
+      polys
+        .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
+        .attr('fill', 'transparent')
+        .on('mouseover', function(datum) {
+          var cbox = this.parentNode.getBoundingClientRect();
+          if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+            event.over(datum.point);
+          }
+        })
+        .on('mousemove', function(datum) {
+          var cbox = this.parentNode.getBoundingClientRect();
+          if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+            event.over(datum.point);
+          } else {
             event.out();
-          })
-          .on('touchstart', function(datum) {
-            var cbox = this.parentNode.getBoundingClientRect();
-            if (eventNearPoint(sszvis.fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
-              d3.event.preventDefault();
-              event.over(datum.point);
+          }
+        })
+        .on('mouseout', function() {
+          event.out();
+        })
+        .on('touchstart', function(datum) {
+          var cbox = this.parentNode.getBoundingClientRect();
+          if (eventNearPoint(sszvis.fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+            d3.event.preventDefault();
+            event.over(datum.point);
 
-              // Attach these handlers only if the initial touch is within the max distance from the voronoi center
-              // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
-              // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
-              // when users are performing touches that cause scrolling, we want to avoid firing the events.
-              var pan = function() {
-                var touchEvent = sszvis.fn.firstTouch(d3.event);
-                var element = sszvis.behavior.util.elementFromEvent(touchEvent);
-                var datum = sszvis.behavior.util.datumFromPannableElement(element);
-                if (datum !== null) {
-                  var cbox = element.parentNode.getBoundingClientRect();
-                  if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
-                    // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
-                    // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
-                    // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
-                    // we want to avoid.
-                    if (d3.event.cancelable) { d3.event.preventDefault(); }
-                    event.over(datum.point);
-                  } else {
-                    event.out();
-                  }
+            // Attach these handlers only if the initial touch is within the max distance from the voronoi center
+            // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
+            // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
+            // when users are performing touches that cause scrolling, we want to avoid firing the events.
+            var pan = function() {
+              var touchEvent = sszvis.fn.firstTouch(d3.event);
+              var element = sszvis.behavior.util.elementFromEvent(touchEvent);
+              var datum = sszvis.behavior.util.datumFromPannableElement(element);
+              if (datum !== null) {
+                var cbox = element.parentNode.getBoundingClientRect();
+                if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+                  // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
+                  // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
+                  // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
+                  // we want to avoid.
+                  if (d3.event.cancelable) { d3.event.preventDefault(); }
+                  event.over(datum.point);
                 } else {
                   event.out();
                 }
-              };
-
-              var end = function() {
+              } else {
                 event.out();
-                d3.select(this)
-                  .on('touchmove', null)
-                  .on('touchend', null);
-              };
+              }
+            };
 
+            var end = function() {
+              event.out();
               d3.select(this)
-                .on('touchmove', pan)
-                .on('touchend', end);
-            }
-          });
+                .on('touchmove', null)
+                .on('touchend', null);
+            };
 
-          if (props.debug) {
-            polys.attr('stroke', '#f00');
+            d3.select(this)
+              .on('touchmove', pan)
+              .on('touchend', end);
           }
-      });
+        });
 
-    d3.rebind(voronoiComponent, event, 'on');
+        if (props.debug) {
+          polys.attr('stroke', '#f00');
+        }
+    });
 
-    return voronoiComponent;
-  };
+  d3.rebind(voronoiComponent, event, 'on');
 
-  // Perform distance calculations in units squared to avoid a costly Math.sqrt
-  var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
+  return voronoiComponent;
+};
 
-  function eventNearPoint(event, point) {
-    var dx = event.clientX - point[0];
-    var dy = event.clientY - point[1];
-    return (dx * dx + dy * dy) < MAX_INTERACTION_RADIUS_SQUARED;
-  }
+// Perform distance calculations in units squared to avoid a costly Math.sqrt
+var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
 
-});
+function eventNearPoint(event, point) {
+  var dx = event.clientX - point[0];
+  var dy = event.clientY - point[1];
+  return (dx * dx + dy * dy) < MAX_INTERACTION_RADIUS_SQUARED;
+}

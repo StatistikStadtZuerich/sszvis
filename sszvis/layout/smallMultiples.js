@@ -50,62 +50,59 @@
  *
  * @return {d3.component}
  */
-sszvis_namespace('sszvis.layout.smallMultiples', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    return d3.component()
-      .prop('width')
-      .prop('height')
-      .prop('paddingX')
-      .prop('paddingY')
-      .prop('rows')
-      .prop('cols')
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('width')
+    .prop('height')
+    .prop('paddingX')
+    .prop('paddingY')
+    .prop('rows')
+    .prop('cols')
+    .render(function(data) {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
-        var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
+      var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
+      var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
 
-        var horizontalCenter = unitWidth / 2;
-        var verticalCenter = unitHeight / 2;
+      var horizontalCenter = unitWidth / 2;
+      var verticalCenter = unitHeight / 2;
 
-        var multiples = selection.selectAll('g.sszvis-multiple')
-          .data(data);
+      var multiples = selection.selectAll('g.sszvis-multiple')
+        .data(data);
 
-        multiples.enter()
-          .append('g')
-          .classed('sszvis-g sszvis-multiple', true);
+      multiples.enter()
+        .append('g')
+        .classed('sszvis-g sszvis-multiple', true);
 
-        multiples.exit().remove();
+      multiples.exit().remove();
 
-        var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
-          .data(function(d) {
-            return [d.values];
-          });
+      var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
+        .data(function(d) {
+          return [d.values];
+        });
 
-        subGroups.enter()
-          .append('g')
-          .classed('sszvis-multiple-chart', true);
+      subGroups.enter()
+        .append('g')
+        .classed('sszvis-multiple-chart', true);
 
-        subGroups.exit().remove();
+      subGroups.exit().remove();
 
-        multiples
-          .datum(function(d, i) {
-            d.gx = (i % props.cols) * (unitWidth + props.paddingX);
-            d.gw = unitWidth;
-            d.cx = horizontalCenter;
-            d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
-            d.gh = unitHeight;
-            d.cy = verticalCenter;
-            return d;
-          })
-          .attr('transform', function(d) {
-            return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
-          });
+      multiples
+        .datum(function(d, i) {
+          d.gx = (i % props.cols) * (unitWidth + props.paddingX);
+          d.gw = unitWidth;
+          d.cx = horizontalCenter;
+          d.gy = Math.floor(i / props.cols) * (unitHeight + props.paddingY);
+          d.gh = unitHeight;
+          d.cy = verticalCenter;
+          return d;
+        })
+        .attr('transform', function(d) {
+          return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
+        });
 
-      });
-  };
-
-});
+    });
+};

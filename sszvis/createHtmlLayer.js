@@ -40,33 +40,30 @@
  *
  * @returns {d3.selection}
  */
-sszvis_namespace('sszvis.createHtmlLayer', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function(selector, bounds, metadata) {
-    bounds || (bounds = sszvis.bounds());
-    metadata || (metadata = {});
+export default function(selector, bounds, metadata) {
+  bounds || (bounds = sszvis.bounds());
+  metadata || (metadata = {});
 
-    var key = metadata.key || 'default';
+  var key = metadata.key || 'default';
 
-    var elementDataKey = 'data-sszvis-html-' + key;
+  var elementDataKey = 'data-sszvis-html-' + key;
 
-    var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
-    root.classed('sszvis-outer-container', true);
+  var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
+  root.classed('sszvis-outer-container', true);
 
-    var layer = root.selectAll('[data-sszvis-html-layer][' + elementDataKey + ']').data([0]);
-    layer.enter().append('div')
-      .classed('sszvis-html-layer', true)
-      .attr('data-sszvis-html-layer', '')
-      .attr(elementDataKey, '');
+  var layer = root.selectAll('[data-sszvis-html-layer][' + elementDataKey + ']').data([0]);
+  layer.enter().append('div')
+    .classed('sszvis-html-layer', true)
+    .attr('data-sszvis-html-layer', '')
+    .attr(elementDataKey, '');
 
-    layer.style({
-      position: 'absolute',
-      left: bounds.padding.left + 'px',
-      top: bounds.padding.top + 'px'
-    });
+  layer.style({
+    position: 'absolute',
+    left: bounds.padding.left + 'px',
+    top: bounds.padding.top + 'px'
+  });
 
-    return layer;
-  };
-
-});
+  return layer;
+};

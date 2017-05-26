@@ -56,44 +56,40 @@
  *                                                                                      number in the data's domain, and will be compared against both
  *                                                                                      cursorValue and the value accessed from the datum.
  */
-sszvis_namespace('sszvis.behavior.util', function(module) {
+export const elementFromEvent = function(evt) {
+  if (!sszvis.fn.isNull(evt) && sszvis.fn.defined(evt)) {
+    return document.elementFromPoint(evt.clientX, evt.clientY);
+  }
+  return null;
+};
 
-  module.exports.elementFromEvent = function(evt) {
-    if (!sszvis.fn.isNull(evt) && sszvis.fn.defined(evt)) {
-      return document.elementFromPoint(evt.clientX, evt.clientY);
-    }
-    return null;
-  };
-
-  module.exports.datumFromPannableElement = function(element) {
-    if (!sszvis.fn.isNull(element)) {
-      var selection = d3.select(element);
-      if (!sszvis.fn.isNull(selection.attr('data-sszvis-behavior-pannable'))) {
-        var datum = selection.datum();
-        if (sszvis.fn.defined(datum)) {
-          return datum;
-        }
+export const datumFromPannableElement = function(element) {
+  if (!sszvis.fn.isNull(element)) {
+    var selection = d3.select(element);
+    if (!sszvis.fn.isNull(selection.attr('data-sszvis-behavior-pannable'))) {
+      var datum = selection.datum();
+      if (sszvis.fn.defined(datum)) {
+        return datum;
       }
     }
-    return null;
-  };
+  }
+  return null;
+};
 
-  module.exports.datumFromPanEvent = function(evt) {
-    return module.exports.datumFromPannableElement(module.exports.elementFromEvent(evt));
-  };
+export const datumFromPanEvent = function(evt) {
+  return datumFromPannableElement(elementFromEvent(evt));
+};
 
-  module.exports.testBarThreshold = function(cursorValue, datum, accessor, threshold) {
-    if (!sszvis.fn.defined(datum)) { return false; }
-    var dataValue = accessor(datum);
-    // For bars that are very small, or have a NaN value, then 
-    // when the touch is close enough to the 0-axis, we prevent scrolling
-    // and show the tooltip. The proximity which the touch must have to the 0-axis
-    // is determined by threshold, which must be a value in the axis' domain (NOT range).
-    return (
-      (cursorValue < threshold && isNaN(dataValue)) ||
-      (cursorValue < threshold && dataValue < threshold) ||
-      (cursorValue < dataValue)
-    );
-  };
-
-});
+export const testBarThreshold = function(cursorValue, datum, accessor, threshold) {
+  if (!sszvis.fn.defined(datum)) { return false; }
+  var dataValue = accessor(datum);
+  // For bars that are very small, or have a NaN value, then 
+  // when the touch is close enough to the 0-axis, we prevent scrolling
+  // and show the tooltip. The proximity which the touch must have to the 0-axis
+  // is determined by threshold, which must be a value in the axis' domain (NOT range).
+  return (
+    (cursorValue < threshold && isNaN(dataValue)) ||
+    (cursorValue < threshold && dataValue < threshold) ||
+    (cursorValue < dataValue)
+  );
+};

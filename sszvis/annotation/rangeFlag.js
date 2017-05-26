@@ -15,58 +15,55 @@
  *
  * @returns {d3.component}
  */
-sszvis_namespace('sszvis.annotation.rangeFlag', function(module) {
-  'use strict';
+'use strict';
 
-  module.exports = function() {
-    return d3.component()
-      .prop('x', d3.functor)
-      .prop('y0', d3.functor)
-      .prop('y1', d3.functor)
-      .render(function(data) {
-        var selection = d3.select(this);
-        var props = selection.props();
+export default function() {
+  return d3.component()
+    .prop('x', d3.functor)
+    .prop('y0', d3.functor)
+    .prop('y1', d3.functor)
+    .render(function(data) {
+      var selection = d3.select(this);
+      var props = selection.props();
 
-        var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-        var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
-        var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
+      var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
+      var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
+      var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
 
-        var bottomDot = selection.selectAll('.sszvis-rangeFlag__mark.bottom')
-          .data(data);
+      var bottomDot = selection.selectAll('.sszvis-rangeFlag__mark.bottom')
+        .data(data);
 
-        var topDot = selection.selectAll('.sszvis-rangeFlag__mark.top')
-          .data(data);
+      var topDot = selection.selectAll('.sszvis-rangeFlag__mark.top')
+        .data(data);
 
-        bottomDot
-          .call(makeFlagDot)
-          .classed('bottom', true)
-          .attr('cx', crispX)
-          .attr('cy', crispY0);
+      bottomDot
+        .call(makeFlagDot)
+        .classed('bottom', true)
+        .attr('cx', crispX)
+        .attr('cy', crispY0);
 
-        topDot
-          .call(makeFlagDot)
-          .classed('top', true)
-          .attr('cx', crispX)
-          .attr('cy', crispY1);
+      topDot
+        .call(makeFlagDot)
+        .classed('top', true)
+        .attr('cx', crispX)
+        .attr('cy', crispY1);
 
-        var tooltipAnchor = sszvis.annotation.tooltipAnchor()
-          .position(function(d) {
-            return [crispX(d), sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2)];
-          });
+      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+        .position(function(d) {
+          return [crispX(d), sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2)];
+        });
 
-        selection.call(tooltipAnchor);
-      });
-  };
+      selection.call(tooltipAnchor);
+    });
+};
 
-  function makeFlagDot(dot) {
-    dot.enter()
-      .append('circle')
-      .attr('class', 'sszvis-rangeFlag__mark');
+function makeFlagDot(dot) {
+  dot.enter()
+    .append('circle')
+    .attr('class', 'sszvis-rangeFlag__mark');
 
-    dot.exit().remove();
+  dot.exit().remove();
 
-    dot
-      .attr('r', 3.5);
-  }
-
-});
+  dot
+    .attr('r', 3.5);
+}
