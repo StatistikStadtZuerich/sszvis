@@ -1,5 +1,4 @@
 import { join } from 'path';
-import commonjs from 'rollup-plugin-commonjs';
 
 
 // The main entry points are all stored in the main/ top-level directory.
@@ -13,7 +12,6 @@ const dist = name => join(__dirname, '..', '..', 'dist', name + '.js');
 export function bundle(name) {
   return {
     entry: main(name),
-    plugins: [ commonjs() ],
     targets: [
       { dest: dist(name), format: 'iife' },
     ],
@@ -28,7 +26,6 @@ export function bundle(name) {
 export function bundleMap(name) {
   return {
     entry: main(name),
-    plugins: [ commonjs() ],
     targets: [
       { dest: dist(name), format: 'iife' },
     ],
