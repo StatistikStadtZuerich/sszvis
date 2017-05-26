@@ -3,7 +3,6 @@
  *
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
-'use strict';
 
 import d3 from 'd3';
 

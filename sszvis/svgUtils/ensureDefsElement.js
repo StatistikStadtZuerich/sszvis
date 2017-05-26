@@ -11,7 +11,6 @@
  * @param {string}       type       Element to create
  * @param {string}       elementId  The ID to assign to the created element
  */
-'use strict';
 
 export default function(selection, type, elementId) {
   var element = ensureDefsSelection(selection)

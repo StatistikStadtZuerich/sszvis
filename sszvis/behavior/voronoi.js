@@ -40,7 +40,6 @@
  *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
  *
  */
-'use strict';
 
 import d3 from 'd3';
 

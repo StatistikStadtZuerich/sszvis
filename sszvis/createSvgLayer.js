@@ -19,7 +19,6 @@
  *
  * @returns {d3.selection}
  */
-'use strict';
 
 import d3 from 'd3';
 

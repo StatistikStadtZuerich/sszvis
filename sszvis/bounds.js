@@ -33,7 +33,6 @@
  *                               which contains calculated or default values for top, bottom, left, and right padding.
  *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
-'use strict';
 
 import d3 from 'd3';
 

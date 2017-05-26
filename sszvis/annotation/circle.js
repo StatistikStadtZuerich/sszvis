@@ -17,7 +17,6 @@
  *
  * @returns {d3.component} a circular data area component
  */
-'use strict';
 
 import d3 from 'd3';
 

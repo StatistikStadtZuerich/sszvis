@@ -26,7 +26,6 @@
  *                                      the value is 0 and no padding is needed.
  *                                    }
  */
-'use strict';
 
 import aspectRatio from '../aspectRatio.js';
 

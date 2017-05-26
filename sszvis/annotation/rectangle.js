@@ -18,7 +18,6 @@
  *
  * @returns {d3.component} a rectangular data area component
  */
-'use strict';
 
 import d3 from 'd3';
 

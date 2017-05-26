@@ -20,7 +20,6 @@
  *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
  *                                }
  */
-'use strict';
 
 export default function(width, numBars) {
   var MAX_BAR_WIDTH = 48, // the maximum width of a bar

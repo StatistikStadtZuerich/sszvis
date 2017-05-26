@@ -40,7 +40,6 @@
  * @function gry       1-color scale for shaded values
  * @function lightGry  1-color scale for shaded backgrounds
  */
-'use strict';
 
 import d3 from 'd3';
 

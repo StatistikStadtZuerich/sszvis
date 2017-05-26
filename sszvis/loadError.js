@@ -5,7 +5,6 @@
  *
  * @param  {Error} The error object
  */
-'use strict';
 
 import * as logger from './logger.js';
 

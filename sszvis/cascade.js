@@ -70,7 +70,6 @@
  *
  * @returns                 An instance of sszvis.cascade
  */
-'use strict';
 
 function groupBy(data, keyFunc) {
   var group = {}, key;

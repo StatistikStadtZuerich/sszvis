@@ -5,7 +5,6 @@
  *
  * @module sszvis/aspectRatio
  */
-'use strict';
 
 import * as breakpoint from './breakpoint.js';
 

@@ -21,7 +21,6 @@
  * @param {string} [caption]      A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
  * @returns {d3.component} a linear data area component (reference line)
  */
-'use strict';
 
 import d3 from 'd3';
 

@@ -50,7 +50,6 @@
  *
  * @return {d3.component}
  */
-'use strict';
 
 import d3 from 'd3';
 

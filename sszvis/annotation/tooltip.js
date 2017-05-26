@@ -48,7 +48,6 @@
  *
  * @returns {Function}                  A function for calculating the orientation of the tooltips.
  */
-'use strict';
 
 import d3 from 'd3';
 

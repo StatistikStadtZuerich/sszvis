@@ -9,7 +9,6 @@
  * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
  * too slow.
  */
-'use strict';
 
 import d3 from 'd3';
 

@@ -4,7 +4,6 @@
  * A module of helper functions for computing the data structure
  * and layout required by the sankey component.
  */
-'use strict';
 
 import d3 from 'd3';
 

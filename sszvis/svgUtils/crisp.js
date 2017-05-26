@@ -18,7 +18,6 @@
  * @module sszvis/svgUtils/crisp
  */
 
-'use strict';
 
 import * as fn from '../fn.js';
 

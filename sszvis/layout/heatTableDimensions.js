@@ -24,7 +24,6 @@
  *                              centeredOffset: the left offset required to center the table horizontally within its container
  *                          }
  */
-'use strict';
 
 export default function(spaceWidth, squarePadding, numX, numY, chartPadding) {
   chartPadding || (chartPadding = {});

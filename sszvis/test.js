@@ -7,7 +7,6 @@
  * features or functions, to check that future changes don't cause regressions or errors.
  *
  */
-'use strict';
 
 import * as fn from './fn.js';
 import * as logger from './logger.js';

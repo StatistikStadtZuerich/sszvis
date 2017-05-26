@@ -42,7 +42,6 @@
  *                             will handle the situation gracefully, and not cause an unexpected termination
  *                             of execution.
  */
-'use strict';
 
 window.console || (window.console = {});
 

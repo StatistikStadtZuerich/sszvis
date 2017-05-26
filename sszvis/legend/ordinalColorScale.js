@@ -87,7 +87,6 @@
  * |fooBaz    barFoo |
  */
 
-'use strict';
 
 import d3 from 'd3';
 

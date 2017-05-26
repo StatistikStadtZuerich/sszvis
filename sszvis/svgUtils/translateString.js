@@ -10,7 +10,6 @@
  * @param  {number} y     The y-component of the transform
  * @return {string}       The translate string
  */
-'use strict';
 
 export default function(x, y) {
   return 'translate(' + x + ',' + y + ')';

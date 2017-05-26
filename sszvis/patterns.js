@@ -16,7 +16,6 @@
  * @method  dataAreaPattern                 The pattern for the data area texture.
  *
  */
-'use strict';
 
 import { lightGry } from './color.js';
 

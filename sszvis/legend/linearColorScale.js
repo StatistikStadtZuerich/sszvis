@@ -14,7 +14,6 @@
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.format.number.
  */
-'use strict';
 
 import d3 from 'd3';
 

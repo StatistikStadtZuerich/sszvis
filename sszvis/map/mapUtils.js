@@ -3,7 +3,6 @@
  *
  * @module sszvis/map/utils
  */
-'use strict';
 
 import d3 from 'd3';
 

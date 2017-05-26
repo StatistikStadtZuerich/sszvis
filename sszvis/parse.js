@@ -3,7 +3,6 @@
  *
  * @module sszvis/parse
  */
-'use strict';
 
 import d3 from 'd3';
 

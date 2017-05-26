@@ -23,7 +23,6 @@
  *                                padHeight:      This is the amount of vertical padding between each area multiple.
  *                              }
  */
-'use strict';
 
 export default function(height, num, pct) {
   pct || (pct = 0.1);

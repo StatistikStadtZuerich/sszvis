@@ -31,7 +31,6 @@
  *
  * @return {function} Formatting function that accepts a datum
  */
-'use strict';
 
 import d3 from 'd3';
 

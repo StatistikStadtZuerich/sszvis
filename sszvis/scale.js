@@ -3,7 +3,6 @@
  *
  * @module sszvis/scale
  */
-'use strict';
 
 /**
  * Scale range

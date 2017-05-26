@@ -24,7 +24,6 @@
  *                                               to translate scales below the bars.
  *                                 }
  */
-'use strict';
 
 export default function(numBars) {
   var DEFAULT_HEIGHT = 24, // the default bar height
