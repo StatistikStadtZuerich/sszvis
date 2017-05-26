@@ -35,7 +35,7 @@
 
 import d3 from 'd3';
 
-import fn from '../fn.js';
+import * as fn from '../fn.js';
 
 function formatHTML() {
   var styles = {
@@ -116,7 +116,5 @@ function makeTextWithFormat(format) {
   };
 }
 
-export default {
-  html: makeTextWithFormat(formatHTML()),
-  svg:  makeTextWithFormat(formatSVG())
-};
+export var html = makeTextWithFormat(formatHTML());
+export var svg = makeTextWithFormat(formatSVG());

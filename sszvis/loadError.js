@@ -7,7 +7,7 @@
  */
 'use strict';
 
-import logger from './logger.js';
+import * as logger from './logger.js';
 
 var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 

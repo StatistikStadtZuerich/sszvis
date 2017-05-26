@@ -15,7 +15,7 @@
 
 import d3 from 'd3';
 
-import fn from './fn.js';
+import * as fn from './fn.js';
 
 export var unsupported = function() {
   var supportsSVG = !!document.createElementNS && !!document.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect;

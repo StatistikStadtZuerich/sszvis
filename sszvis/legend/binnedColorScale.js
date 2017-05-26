@@ -19,8 +19,8 @@
 
 import d3 from 'd3';
 
-import fn from '../fn.js';
-import logger from '../logger.js';
+import * as fn from '../fn.js';
+import * as logger from '../logger.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 
 export default function() {

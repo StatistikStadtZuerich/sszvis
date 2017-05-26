@@ -24,7 +24,7 @@
 
 import d3 from 'd3';
 
-import fn from '../../fn.js';
+import * as fn from '../../fn.js';
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { mapMissingValuePattern } from '../../patterns.js';
 import { slowTransition } from '../../transition.js';

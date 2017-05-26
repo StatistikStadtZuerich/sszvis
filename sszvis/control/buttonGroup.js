@@ -21,7 +21,7 @@
 
 import d3 from 'd3';
 
-import fn from '../fn.js';
+import * as fn from '../fn.js';
 
 export default function() {
   return d3.component()

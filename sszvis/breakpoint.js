@@ -36,7 +36,7 @@
  * }
  */
 
-import fn from './fn.js';
+import * as fn from './fn.js';
 
 /**
  * breakpoint.find
@@ -47,7 +47,7 @@ import fn from './fn.js';
  * @param {Measurement} partialMeasurement A partial measurement to match to the spec
  * @returns {Breakpoint}
  */
-function find(breakpoints, partialMeasurement) {
+export function find(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
   return fn.find(function(bp) {
     return test(bp, measurement);
@@ -66,7 +66,7 @@ function find(breakpoints, partialMeasurement) {
  * @returns {Breakpoint?} If no breakpoint matches, undefined is returned. If a
  *          breakpoint for the given name exists, that breakpoint is returned
  */
-function findByName(breakpoints, name) {
+export function findByName(breakpoints, name) {
   var eqName = function(bp) { return bp.name === name; };
   return fn.find(eqName, breakpoints);
 }
@@ -81,7 +81,7 @@ function findByName(breakpoints, name) {
  * @param {Measurement} partialMeasurement A partial measurement to match to the breakpoint
  * @returns {boolean}
  */
-function test(breakpoint, partialMeasurement) {
+export function test(breakpoint, partialMeasurement) {
   var bpm = breakpoint.measurement;
   var measurement = parseMeasurement(partialMeasurement);
   return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
@@ -98,7 +98,7 @@ function test(breakpoint, partialMeasurement) {
  * @param {Measurement} partialMeasurement A partial measurement to match to the spec
  * @returns {Array<Breakpoint>}
  */
-function match(breakpoints, partialMeasurement) {
+export function match(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
   return breakpoints.filter(function(bp) {
     return test(bp, measurement);
@@ -116,7 +116,7 @@ function match(breakpoints, partialMeasurement) {
  *        so it's possible to only provide partial breakpoint definitions.
  * @returns {Array<Breakpoint>}
  */
-function createSpec(spec) {
+export function createSpec(spec) {
   return spec
     .map(parseBreakpoint)
     .concat(parseBreakpoint({name: '_'}));
@@ -129,7 +129,7 @@ function createSpec(spec) {
  * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
  *          default breakpoint spec.
  */
-var defaultSpec = (function() {
+export var defaultSpec = (function() {
   var DEFAULT_SPEC = createSpec([
     { name: 'palm', width: 540 },
     { name: 'lap',  width: 749 }
@@ -138,20 +138,9 @@ var defaultSpec = (function() {
 }());
 
 
-// Exports
-
-export default {
-  createSpec: createSpec,
-  defaultSpec: defaultSpec,
-  find: find,
-  findByName: findByName,
-  match: match,
-  test: test,
-
-  // Default tests
-  palm: makeTest('palm'),
-  lap: makeTest('lap')
-};
+// Default tests
+export var palm = makeTest('palm');
+export var lap = makeTest('lap')
 
 
 // Helpers

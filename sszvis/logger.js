@@ -51,11 +51,9 @@ console.log || (console.log = function() { /* IE8 users get no error messages */
 console.warn || (console.warn = function() { console.log.apply(console, arguments); });
 console.error || (console.error = function() { console.log.apply(console, arguments); });
 
-export default {
-  log: logger('log'),
-  warn: logger('warn'),
-  error: logger('error')
-};
+export var log = logger('log');
+export var warn = logger('warn');
+export var error = logger('error');
 
 /* Helper functions
 ----------------------------------------------- */

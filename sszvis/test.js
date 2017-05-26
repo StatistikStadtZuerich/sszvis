@@ -9,10 +9,10 @@
  */
 'use strict';
 
-import fn from './fn.js';
-import logger from './logger.js';
+import * as fn from './fn.js';
+import * as logger from './logger.js';
 import format from './format.js';
-import breakpoint from './breakpoint.js';
+import * as breakpoint from './breakpoint.js';
 import responsiveProps from './responsiveProps.js';
 
 /**

@@ -20,7 +20,7 @@
 
 'use strict';
 
-import fn from '../fn.js';
+import * as fn from '../fn.js';
 
 /**
  * crisp.halfPixel

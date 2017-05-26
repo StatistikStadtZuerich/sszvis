@@ -7,7 +7,7 @@
  */
 'use strict';
 
-import breakpoint from './breakpoint.js';
+import * as breakpoint from './breakpoint.js';
 
 /**
  * aspectRatio

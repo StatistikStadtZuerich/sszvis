@@ -43,7 +43,7 @@
 
 import d3 from 'd3';
 
-import fn from '../fn.js';
+import * as fn from '../fn.js';
 import translateString from '../svgUtils/translateString.js';
 
 export default function() {
