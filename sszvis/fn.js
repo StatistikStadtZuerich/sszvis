@@ -7,15 +7,15 @@
 
 import d3 from 'd3';
 
-const identity = function(value) {
+var identity = function(value) {
   return value;
 };
 
-const isString = function(val) {
+var isString = function(val) {
   return Object.prototype.toString.call(val) === '[object String]';
 };
 
-const isSelection = function(val) {
+var isSelection = function(val) {
   // We can't use this because we need to support IE9:
   // return val instanceof d3.selection;
   //

@@ -57,7 +57,7 @@ function qualColorScale(colors) {
   };
 }
 
-export const qual12 = qualColorScale([
+export var qual12 = qualColorScale([
   '#5182B3', '#B8CFE6',
   '#60BF97', '#B8E6D2',
   '#94BF69', '#CFE6B8',
@@ -65,17 +65,17 @@ export const qual12 = qualColorScale([
   '#E67D73', '#F2CEC2',
   '#CC6788', '#E6B7C7'
 ]);
-export const qual6 = qualColorScale([
+export var qual6 = qualColorScale([
   '#5182B3', '#60BF97',
   '#94BF69', '#E6CF73',
   '#E67D73', '#CC6788'
 ]);
-export const qual6a = qualColorScale([
+export var qual6a = qualColorScale([
   '#5182B3', '#B8CFE6',
   '#60BF97', '#B8E6D2',
   '#94BF69', '#CFE6B8'
 ]);
-export const qual6b = qualColorScale([
+export var qual6b = qualColorScale([
   '#E6CF73', '#FAEBAF',
   '#E67D73', '#F2CEC2',
   '#CC6788', '#E6B7C7'
@@ -89,10 +89,10 @@ function seqColorScale(colors) {
   }
 }
 
-export const seqBlu = seqColorScale(['#DDE9FE', '#3B76B3', '#343F4D']);
-export const seqRed = seqColorScale(['#FEECEC', '#CC6171', '#4D353A']);
-export const seqGrn = seqColorScale(['#D2DFDE', '#4A807C', '#2C3C3F']);
-export const seqBrn = seqColorScale(['#E9DFD6', '#A67D5A', '#4C3735']);
+export var seqBlu = seqColorScale(['#DDE9FE', '#3B76B3', '#343F4D']);
+export var seqRed = seqColorScale(['#FEECEC', '#CC6171', '#4D353A']);
+export var seqGrn = seqColorScale(['#D2DFDE', '#4A807C', '#2C3C3F']);
+export var seqBrn = seqColorScale(['#E9DFD6', '#A67D5A', '#4C3735']);
 
 
 function divColorScale(colors) {
@@ -102,10 +102,10 @@ function divColorScale(colors) {
   };
 }
 
-export const divVal = divColorScale(    ['#CC6171', '#FFFFFF', '#3B76B3']);
-export const divValGry = divColorScale( ['#CC6171', '#F3F3F3', '#3B76B3']);
-export const divNtr = divColorScale(    ['#A67D5A', '#FFFFFF', '#4A807C']);
-export const divNtrGry = divColorScale( ['#A67D5A', '#F3F3F3', '#4A807C']);
+export var divVal = divColorScale(    ['#CC6171', '#FFFFFF', '#3B76B3']);
+export var divValGry = divColorScale( ['#CC6171', '#F3F3F3', '#3B76B3']);
+export var divNtr = divColorScale(    ['#A67D5A', '#FFFFFF', '#4A807C']);
+export var divNtrGry = divColorScale( ['#A67D5A', '#F3F3F3', '#4A807C']);
 
 
 function greyColorScale(colors) {
@@ -115,24 +115,24 @@ function greyColorScale(colors) {
   };
 };
 
-export const lightGry = greyColorScale(['#FAFAFA']);
-export const paleGry = greyColorScale(['#EAEAEA']);
-export const gry = greyColorScale(['#D6D6D6']);
-export const dimGry = greyColorScale(['#B8B8B8']);
-export const medGry = greyColorScale(['#7C7C7C']);
-export const deepGry = greyColorScale(['#545454']);
+export var lightGry = greyColorScale(['#FAFAFA']);
+export var paleGry = greyColorScale(['#EAEAEA']);
+export var gry = greyColorScale(['#D6D6D6']);
+export var dimGry = greyColorScale(['#B8B8B8']);
+export var medGry = greyColorScale(['#7C7C7C']);
+export var deepGry = greyColorScale(['#545454']);
 
 
 
-export const slightlyDarker = function(c) {
+export var slightlyDarker = function(c) {
   return d3.hsl(c).darker(0.4);
 };
 
-export const muchDarker = function(c) {
+export var muchDarker = function(c) {
   return d3.hsl(c).darker(0.7);
 };
 
-export const withAlpha = function(c, a) {
+export var withAlpha = function(c, a) {
   var rgbColor = d3.rgb(c);
   return 'rgba(' + rgbColor.r + ',' + rgbColor.g + ',' + rgbColor.b + ',' + a + ')';
 };

@@ -73,19 +73,19 @@ var callbacks = {
 
 d3.select(window).on('resize', throttle(500, function() { trigger('resize'); }));
 
-export const on = function(name, cb) {
+export var on = function(name, cb) {
   if (!callbacks[name]) { callbacks[name] = []; }
   callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; }).concat(cb);
   return this;
 };
 
-export const off = function(name, cb) {
+export var off = function(name, cb) {
   if (!callbacks[name]) { return this; }
   callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; });
   return this;
 };
 
-export const trigger = function(name) {
+export var trigger = function(name) {
   var evtArgs = Array.prototype.slice.call(arguments, 1);
   if (callbacks[name]) { callbacks[name].forEach(function(fn) { fn.apply(null, evtArgs); }); }
   return this;

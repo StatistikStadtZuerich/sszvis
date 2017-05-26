@@ -21,13 +21,13 @@ export default function(transition) {
     .duration(300);
 };
 
-export const fastTransition = function(transition) {
+export var fastTransition = function(transition) {
   transition
     .ease(defaultEase)
     .duration(50);
 };
 
-export const slowTransition = function(transition) {
+export var slowTransition = function(transition) {
   transition
     .ease(defaultEase)
     .duration(500);

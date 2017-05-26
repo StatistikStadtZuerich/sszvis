@@ -61,14 +61,14 @@ import d3 from 'd3';
 
 import fn from '../fn.js';
 
-export const elementFromEvent = function(evt) {
+export var elementFromEvent = function(evt) {
   if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
   return null;
 };
 
-export const datumFromPannableElement = function(element) {
+export var datumFromPannableElement = function(element) {
   if (!fn.isNull(element)) {
     var selection = d3.select(element);
     if (!fn.isNull(selection.attr('data-sszvis-behavior-pannable'))) {
@@ -81,11 +81,11 @@ export const datumFromPannableElement = function(element) {
   return null;
 };
 
-export const datumFromPanEvent = function(evt) {
+export var datumFromPanEvent = function(evt) {
   return datumFromPannableElement(elementFromEvent(evt));
 };
 
-export const testBarThreshold = function(cursorValue, datum, accessor, threshold) {
+export var testBarThreshold = function(cursorValue, datum, accessor, threshold) {
   if (!fn.defined(datum)) { return false; }
   var dataValue = accessor(datum);
   // For bars that are very small, or have a NaN value, then

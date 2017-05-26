@@ -45,7 +45,7 @@ var newLinkId = (function() {
  *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  */
-export const prepareData = function() {
+export var prepareData = function() {
   var mGetSource = fn.identity;
   var mGetTarget = fn.identity;
   var mGetValue = fn.identity;
@@ -232,7 +232,7 @@ export const prepareData = function() {
  *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  */
-export const computeLayout = function(columnLengths, columnTotals, columnHeight, columnWidth) {
+export var computeLayout = function(columnLengths, columnTotals, columnHeight, columnWidth) {
   // Calculate appropriate scale and padding values (in pixels)
   var padSpaceRatio = 0.15;
   var padMin = 12;

@@ -94,5 +94,5 @@ function stackedBar() {
     });
 }
 
-export const horizontal = function() { return stackedBar().orientation('horizontal'); };
-export const vertical = function() { return stackedBar().orientation('vertical'); };
+export var horizontal = function() { return stackedBar().orientation('horizontal'); };
+export var vertical = function() { return stackedBar().orientation('vertical'); };

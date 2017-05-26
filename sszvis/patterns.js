@@ -20,7 +20,7 @@
 
 import { lightGry } from './color.js';
 
-export const heatTableMissingValuePattern = function(selection) {
+export var heatTableMissingValuePattern = function(selection) {
   var rectFill = lightGry(),
       crossStroke = '#A4A4A4',
       crossStrokeWidth = 0.035,
@@ -58,7 +58,7 @@ export const heatTableMissingValuePattern = function(selection) {
     .attr('stroke', crossStroke);
 };
 
-export const mapMissingValuePattern = function(selection) {
+export var mapMissingValuePattern = function(selection) {
   var pWidth = 14,
       pHeight = 14,
       fillColor = '#FAFAFA',
@@ -105,7 +105,7 @@ export const mapMissingValuePattern = function(selection) {
     .attr('stroke', lineStroke);
 };
 
-export const mapLakePattern = function(selection) {
+export var mapLakePattern = function(selection) {
   var pWidth = 6;
   var pHeight = 6;
   var offset = 0.5;
@@ -145,7 +145,7 @@ export const mapLakePattern = function(selection) {
     .attr('stroke-linecap', 'square');
 };
 
-export const mapLakeFadeGradient = function(selection) {
+export var mapLakeFadeGradient = function(selection) {
   selection
     .attr('x1', 0)
     .attr('y1', 0)
@@ -166,7 +166,7 @@ export const mapLakeFadeGradient = function(selection) {
     .attr('stop-opacity', 0);
 };
 
-export const mapLakeGradientMask = function(selection) {
+export var mapLakeGradientMask = function(selection) {
   selection
     .attr('maskContentUnits', 'objectBoundingBox');
 
@@ -177,7 +177,7 @@ export const mapLakeGradientMask = function(selection) {
     .attr('height', 1);
 };
 
-export const dataAreaPattern = function(selection) {
+export var dataAreaPattern = function(selection) {
   var pWidth = 6;
   var pHeight = 6;
   var offset = 0.5;

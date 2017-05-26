@@ -34,7 +34,7 @@ import fn from '../fn.js';
  *
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
-export const prepareData = function() {
+export var prepareData = function() {
   var nester = d3.nest();
   var valueAcc = fn.identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
@@ -79,10 +79,10 @@ export const prepareData = function() {
   return main;
 };
 
-export const MAX_SUNBURST_RING_WIDTH = 60;
+export var MAX_SUNBURST_RING_WIDTH = 60;
 var MAX_RW = MAX_SUNBURST_RING_WIDTH;
 
-export const MIN_SUNBURST_RING_WIDTH = 10;
+export var MIN_SUNBURST_RING_WIDTH = 10;
 var MIN_RW = MIN_SUNBURST_RING_WIDTH;
 
 /**
@@ -97,7 +97,7 @@ var MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  */
-export const computeLayout = function(numLayers, chartWidth) {
+export var computeLayout = function(numLayers, chartWidth) {
   // Diameter of the center circle is one-third the width
   var halfWidth = chartWidth / 2;
   var centerRadius = halfWidth / 3;
@@ -119,7 +119,7 @@ export const computeLayout = function(numLayers, chartWidth) {
  *                                    function which abstracts away the way d3 stores positions within the partition layout used
  *                                    by the sunburst chart.
  */
-export const getRadiusExtent = function(formattedData) {
+export var getRadiusExtent = function(formattedData) {
   return [
     d3.min(formattedData, function(d) { return d.y; }),
     d3.max(formattedData, function(d) { return d.y + d.dy; })

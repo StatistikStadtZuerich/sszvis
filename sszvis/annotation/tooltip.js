@@ -106,7 +106,7 @@ export default function() {
  * We don't have access to the tooltip dimensions, so we introduce
  * a safe area that is likely to work.
  */
-export const fit = function(defaultVal, bounds) {
+export var fit = function(defaultVal, bounds) {
   var lo = Math.min(bounds.innerWidth * 1 / 4, 100);
   var hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
   return function(d) {

@@ -7,7 +7,7 @@
 
 import d3 from 'd3';
 
-export const constants = {
+export var constants = {
   STADT_KREISE_KEY: 'zurichStadtKreise',
   STATISTISCHE_QUARTIERE_KEY: 'zurichStatistischeQuartiere',
   STATISTISCHE_ZONEN_KEY: 'zurichStatistischeZonen',
@@ -36,7 +36,7 @@ var featureBoundsCache = {};
  * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
  * @return {Function}                               The projection function.
  */
-export const swissMapProjection = function(width, height, featureCollection, featureBoundsCacheKey) {
+export var swissMapProjection = function(width, height, featureCollection, featureBoundsCacheKey) {
   var mercatorProjection = d3.geo.mercator()
     // .rotate([-7.439583333333333, -46.95240555555556]); // This rotation was, I think, part of the offset problem
 
@@ -89,7 +89,7 @@ export const swissMapProjection = function(width, height, featureCollection, fea
  *                                            and returns an svg path string which represents that geojson, projected using
  *                                            a map projection optimal for Swiss areas.
  */
-export const swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
+export var swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
   var mercatorPath = d3.geo.path()
     .projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
 
@@ -109,7 +109,7 @@ export const swissMapPath = function(width, height, featureCollection, featureBo
  *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
  * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
  */
-export const pixelsFromDistance = function(projection, centerPoint, meterDistance) {
+export var pixelsFromDistance = function(projection, centerPoint, meterDistance) {
   // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
   var APPROX_EARTH_RADIUS = 6367475;
@@ -132,7 +132,7 @@ export const pixelsFromDistance = function(projection, centerPoint, meterDistanc
   return averageSideSize;
 };
 
-export const GEO_KEY_DEFAULT = 'geoId';
+export var GEO_KEY_DEFAULT = 'geoId';
 
 /**
  * prepareMergedData
@@ -148,7 +148,7 @@ export const GEO_KEY_DEFAULT = 'geoId';
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
-export const prepareMergedData = function(dataset, geoJson, keyName) {
+export var prepareMergedData = function(dataset, geoJson, keyName) {
   keyName || (keyName = GEO_KEY_DEFAULT);
 
   // group the input data by map entity id
@@ -183,7 +183,7 @@ export const prepareMergedData = function(dataset, geoJson, keyName) {
  * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
  *                                          (or user-specified center) of the object.
  */
-export const getGeoJsonCenter = function(geoJson) {
+export var getGeoJsonCenter = function(geoJson) {
   if (!geoJson.properties.cachedCenter) {
     var setCenter = geoJson.properties.center;
     if (setCenter) {
@@ -205,6 +205,6 @@ export const getGeoJsonCenter = function(geoJson) {
  * @param  {number} width    The width of the container holding the map.
  * @return {number}          The stroke width that the map elements should have.
  */
-export const widthAdaptiveMapPathStroke = function(width) {
+export var widthAdaptiveMapPathStroke = function(width) {
   return Math.min(Math.max(0.8, width / 400), 1.1);
 };

@@ -25,7 +25,7 @@ import responsiveProps from './responsiveProps.js';
  * @param  {String} assertion      A string descriptor for the test
  * @param  {Boolean} test          The value of the test
  */
-export const assert = function(context) {
+export var assert = function(context) {
   return function(message, test) {
     if (test) {
       logger.log('[' + context + '] ✔ ' + message);
@@ -41,7 +41,7 @@ export const assert = function(context) {
  * The test suite. Call this function to run all tests of the library. You'll get a lot of console output.
  *
  */
-export const runTests = function() {
+export var runTests = function() {
   runFormatTests(assert('runFormatTests'));
   runBreakpointTests(assert('runBreakpointTests'));
   runPropsQueryTests(assert('runPropsQueryTests'));

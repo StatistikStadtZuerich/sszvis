@@ -101,7 +101,7 @@ export { DEFAULT_WIDTH };
 // @deprecated Since the responsive revisions, the default aspect ratio has changed,
 //             so that it is now responsive to the container width.
 //             This property is preserved for compatibility reasons.
-export const RATIO = 16 / 9;
+export var RATIO = 16 / 9;
 
 
 /* Helper functions

@@ -12,26 +12,26 @@
 
 import { swissMapProjection, constants } from './mapUtils.js';
 
-export const zurichStadtKreise = function(width, height) {
+export var zurichStadtKreise = function(width, height) {
   return swissMapProjection(width, height, window.sszvis.map.zurichStadtKreiseMapData.featureData(), constants.STADT_KREISE_KEY);
 };
 
-export const zurichStatistischeQuartiere = function(width, height) {
+export var zurichStatistischeQuartiere = function(width, height) {
   return swissMapProjection(width, height, window.sszvis.map.zurichStatistischeQuartiereMapData.featureData(), constants.STATISTISCHE_QUARTIERE_KEY);
 };
 
-export const zurichWahlKreise = function(width, height) {
+export var zurichWahlKreise = function(width, height) {
   return swissMapProjection(width, height, window.sszvis.map.zurichWahlKreiseMapData.featureData(), constants.WAHL_KREISE_KEY);
 };
 
-export const zurichStatistischeZonen = function(width, height) {
+export var zurichStatistischeZonen = function(width, height) {
   return swissMapProjection(width, height, window.sszvis.map.zurichStatistischeZonenMapData.featureData(), constants.STATISTISCHE_ZONEN_KEY);
 };
 
-export const zurichAgglomeration2012 = function(width, height) {
+export var zurichAgglomeration2012 = function(width, height) {
   return swissMapProjection(width, height, window.sszvis.map.zurichAgglomeration2012MapData.featureData(), constants.AGGLOMERATION_2012_KEY);
 };
 
-export const switzerland = function(width, height) {
+export var switzerland = function(width, height) {
   return swissMapProjection(width, height, window.sszvis.map.switzerlandMapData.featureData(), constants.SWITZERLAND_KEY);
 };
