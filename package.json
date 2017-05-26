@@ -10,6 +10,7 @@
     "webdriverio": "^4.8.0"
   },
   "scripts": {
+    "lint": "eslint sszvis",
     "test": "wdio config/wdio.conf.js"
   }
 }
