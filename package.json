@@ -1,7 +1,6 @@
 {
   "license": "MIT",
   "devDependencies": {
-    "5to6-codemod": "^1.6.0",
     "babel-register": "^6.24.1",
     "eslint": "^3.19.0",
     "recursive-readdir-sync": "^1.0.6",
@@ -12,8 +11,5 @@
   },
   "scripts": {
     "test": "wdio config/wdio.conf.js"
-  },
-  "dependencies": {
-    "jscodeshift": "^0.3.30"
   }
 }
