@@ -35,6 +35,9 @@
  *   measurement: Measurement
  * }
  */
+
+import fn from './fn.js';
+
 /**
  * breakpoint.find
  *
@@ -46,7 +49,7 @@
  */
 function find(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
-  return sszvis.fn.find(function(bp) {
+  return fn.find(function(bp) {
     return test(bp, measurement);
   }, breakpoints);
 }
@@ -65,7 +68,7 @@ function find(breakpoints, partialMeasurement) {
  */
 function findByName(breakpoints, name) {
   var eqName = function(bp) { return bp.name === name; };
-  return sszvis.fn.find(eqName, breakpoints);
+  return fn.find(eqName, breakpoints);
 }
 
 
@@ -172,8 +175,8 @@ export default {
  * @returns Measurement
  */
 function parseMeasurement(partialMeasurement) {
-  var widthOrInf = sszvis.fn.propOr('width', Infinity);
-  var screenHeightOrInf = sszvis.fn.propOr('screenHeight', Infinity);
+  var widthOrInf = fn.propOr('width', Infinity);
+  var screenHeightOrInf = fn.propOr('screenHeight', Infinity);
   return {
     width: widthOrInf(partialMeasurement),
     screenHeight: screenHeightOrInf(partialMeasurement)
@@ -207,7 +210,7 @@ function parseMeasurement(partialMeasurement) {
  */
 function parseBreakpoint(bp) {
   var measurement;
-  if (sszvis.fn.defined(bp.measurement)) {
+  if (fn.defined(bp.measurement)) {
     measurement = parseMeasurement(bp.measurement);
   } else {
     measurement = parseMeasurement({width: bp.width, screenHeight: bp.screenHeight});

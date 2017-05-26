@@ -18,7 +18,7 @@
  *                                  The first specified layer will be the innermost one of the sunburst, with subsequent layers adding
  *                                  around the sunburst. Data are grouped according to the first layer, then the second layer, then the third, etc.
  *                                  This uses d3.nest under the hood, and applys the key function as a d3.nest().key, so it works like that.
- * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of 
+ * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of
  *                                  the ring segment for each datum.
  * @property {Function} sort        Provide a sorting function for sibling nodes of the sunburst. The d3.partition layout probably uses a
  *                                  javascript object internally for some bookkeeping. At the moment, not all browsers handle key ordering in
@@ -75,14 +75,17 @@ export const prepareData = function() {
   return main;
 };
 
-var MAX_RW = module.exports.MAX_SUNBURST_RING_WIDTH = 60;
-var MIN_RW = module.exports.MIN_SUNBURST_RING_WIDTH = 10;
+export const MAX_SUNBURST_RING_WIDTH = 60;
+var MAX_RW = MAX_SUNBURST_RING_WIDTH;
+
+export const MIN_SUNBURST_RING_WIDTH = 10;
+var MIN_RW = MIN_SUNBURST_RING_WIDTH;
 
 /**
  * sszvis.layout.sunburst.computeLayout
  *
  * Computes layout parameters for good visual display of the sunburst chart.
- * 
+ *
  * @param  {Number} numLayers          The number of layers in the sunburst chart.
  * @param  {Number} chartWidth         The total width available for displaying the sunburst chart.
  * @return {Object}                    Some parameters for the sunburst chart:

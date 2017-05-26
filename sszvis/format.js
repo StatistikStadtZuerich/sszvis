@@ -5,6 +5,8 @@
  */
 'use strict';
 
+import fn from './fn.js';
+
 var format = {
   /**
    * Format a number as an age
@@ -32,7 +34,7 @@ var format = {
   /**
    * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
    */
-  month: sszvis.fn.compose(function(m) {
+  month: fn.compose(function(m) {
     return m.toUpperCase();
   }, d3.time.format('%b')),
 
@@ -125,7 +127,7 @@ var format = {
    * preciseNumber(2) -> function that accepts numbers and returns formatted values
    *
    * Note that preciseNumber(2, 14.1234) is equivalent to preciseNumber(2)(14.1234)
-   * 
+   *
    * @param  {Number} p           The desired precision
    * @param  {Number} d           The number to be formatted
    * @return {String}             The formatted number

@@ -58,7 +58,7 @@ var TICK_PROXIMITY_THRESHOLD = 8;
 var TICK_END_THRESHOLD = 12;
 var LABEL_PROXIMITY_THRESHOLD = 10;
 
-export default function() {
+export default (function() {
 
   var axis = function() {
     var axisDelegate = d3.svg.axis();
@@ -90,7 +90,7 @@ export default function() {
       .prop('titleVertical')
       .prop('vertical').vertical(false)
       //this property is typically used for the x-axis, but not for the y axis
-      //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels 
+      //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels
       .prop('yOffset').yOffset(0)
       .render(function() {
         var selection = d3.select(this);
@@ -434,7 +434,7 @@ export default function() {
     y: axisY
   };
 
-}();
+})();
 
 
 /* Helper functions

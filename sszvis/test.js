@@ -19,7 +19,7 @@
  * @param  {String} assertion      A string descriptor for the test
  * @param  {Boolean} test          The value of the test
  */
-var assert = module.exports.assert = function(context) {
+export const assert = function(context) {
   return function(message, test) {
     if (test) {
       sszvis.logger.log('[' + context + '] ✔ ' + message);
@@ -33,7 +33,7 @@ var assert = module.exports.assert = function(context) {
  * sszvis.test.runTests
  *
  * The test suite. Call this function to run all tests of the library. You'll get a lot of console output.
- * 
+ *
  */
 export const runTests = function() {
   //runFormatTests(assert('runFormatTests'));
@@ -47,7 +47,7 @@ function runFormatTests(assert) {
   var nfmt = sszvis.format.number;
   var precNfmt = sszvis.format.preciseNumber;
 
-  // Note: this uses an mdash 
+  // Note: this uses an mdash
   assert('NaN is mdash –', nfmt(NaN) === '–');
   assert('0, without precision', nfmt(0) === '0');
   assert('0, with precision', precNfmt(3, 0) === '0.000');
