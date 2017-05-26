@@ -59,7 +59,7 @@ import * as fn from './fn.js';
 import { halfPixel, transformTranslateSubpixelShift } from './svgUtils/crisp.js';
 import translateString from './svgUtils/translateString.js';
 import textWrap from './svgUtils/textWrap.js';
-import format from './format.js';
+import * as format from './format.js';
 import { range } from './scale.js';
 import * as logger from './logger.js';
 

@@ -25,7 +25,7 @@ import d3 from 'd3';
 
 import * as fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
-import format from '../format.js';
+import * as format from '../format.js';
 
 export default function() {
   return d3.component()

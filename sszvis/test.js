@@ -10,7 +10,7 @@
 
 import * as fn from './fn.js';
 import * as logger from './logger.js';
-import format from './format.js';
+import * as format from './format.js';
 import * as breakpoint from './breakpoint.js';
 import responsiveProps from './responsiveProps.js';
 
