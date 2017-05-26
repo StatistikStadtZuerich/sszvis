@@ -23,6 +23,13 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import { halfPixel } from '../svgUtils/crisp.js';
+import translateString from '../svgUtils/translateString.js';
+import { range } from '../scale.js';
+import move from '../behavior/move.js';
+import axisComponent from '../axis.js';
+
 function contains(x, a) {
   return a.indexOf(x) >= 0;
 }
@@ -34,15 +41,15 @@ export default function() {
     .prop('onchange')
     .prop('minorTicks').minorTicks([])
     .prop('majorTicks').majorTicks([])
-    .prop('tickLabels', d3.functor).tickLabels(sszvis.fn.identity)
-    .prop('label', d3.functor).label(sszvis.fn.identity)
+    .prop('tickLabels', d3.functor).tickLabels(fn.identity)
+    .prop('label', d3.functor).label(fn.identity)
     .render(function() {
       var selection = d3.select(this);
       var props = selection.props();
 
       var axisOffset = 28; // vertical offset for the axis
       var majorTickSize = 12;
-      var backgroundOffset = sszvis.svgUtils.crisp.halfPixel(18); // vertical offset for the middle of the background
+      var backgroundOffset = halfPixel(18); // vertical offset for the middle of the background
       var handleWidth = 10; // the width of the handle
       var handleHeight = 23; // the height of the handle
       var bgWidth = 6; // the width of the background
@@ -50,7 +57,7 @@ export default function() {
       var handleSideOffset = (handleWidth / 2) + 0.5; // the amount by which to offset the position of the handle
 
       var scaleDomain = props.scale.domain();
-      var scaleRange = sszvis.scale.range(props.scale);
+      var scaleRange = range(props.scale);
       var alteredScale = props.scale.copy()
         .range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
 
@@ -63,13 +70,13 @@ export default function() {
       bg.exit().remove();
 
       // create the axis
-      var axis = sszvis.axis.x()
+      var axis = axisComponent.x()
         .scale(alteredScale)
         .orient('bottom')
         .hideBorderTickThreshold(0)
         .tickSize(majorTickSize)
         .tickPadding(6)
-        .tickValues(sszvis.fn.set([].concat(props.majorTicks, props.minorTicks)))
+        .tickValues(fn.set([].concat(props.majorTicks, props.minorTicks)))
         .tickFormat(function(d) {
           return contains(d, props.majorTicks) ? props.tickLabels(d) : '';
         });
@@ -82,7 +89,7 @@ export default function() {
         .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider', true);
 
       axisSelection
-        .attr('transform', sszvis.svgUtils.translateString(0, axisOffset))
+        .attr('transform', translateString(0, axisOffset))
         .call(axis);
 
       // adjust visual aspects of the axis to fit the design
@@ -107,7 +114,7 @@ export default function() {
         .append('g')
         .classed('sszvis-slider__background', true);
       backgroundSelection
-        .attr('transform', sszvis.svgUtils.translateString(0, backgroundOffset));
+        .attr('transform', translateString(0, backgroundOffset));
 
       var bg1 = backgroundSelection.selectAll('.sszvis-slider__background__bg1')
         .data([1]);
@@ -143,7 +150,7 @@ export default function() {
         .style('stroke-linecap', 'round');
       shadow
         .attr('x1', Math.ceil(scaleRange[0] + lineEndOffset))
-        .attr('x2', sszvis.fn.compose(Math.floor, alteredScale));
+        .attr('x2', fn.compose(Math.floor, alteredScale));
 
       // draw the handle and the label
       var handle = selection.selectAll('g.sszvis-control-slider__handle')
@@ -155,7 +162,7 @@ export default function() {
 
       handle
         .attr('transform', function(d) {
-          return sszvis.svgUtils.translateString(sszvis.svgUtils.crisp.halfPixel(alteredScale(d)), 0.5);
+          return translateString(halfPixel(alteredScale(d)), 0.5);
         });
 
       handleEntering
@@ -166,10 +173,10 @@ export default function() {
         .data(function(d) { return [d]; })
         .text(props.label)
         .style('text-anchor', function(d) {
-          return sszvis.fn.stringEqual(d, scaleDomain[0]) ? 'start' : sszvis.fn.stringEqual(d, scaleDomain[1]) ? 'end' : 'middle';
+          return fn.stringEqual(d, scaleDomain[0]) ? 'start' : fn.stringEqual(d, scaleDomain[1]) ? 'end' : 'middle';
         })
         .attr('dx', function(d) {
-          return sszvis.fn.stringEqual(d, scaleDomain[0]) ? -(handleWidth / 2) : sszvis.fn.stringEqual(d, scaleDomain[1]) ? (handleWidth / 2) : 0;
+          return fn.stringEqual(d, scaleDomain[0]) ? -(handleWidth / 2) : fn.stringEqual(d, scaleDomain[1]) ? (handleWidth / 2) : 0;
         });
 
       handleEntering
@@ -187,7 +194,7 @@ export default function() {
         .classed('sszvis-control-slider__handleline', true)
         .attr('y1', backgroundOffset - handleLineDimension).attr('y2', backgroundOffset + handleLineDimension);
 
-      var sliderInteraction = sszvis.behavior.move()
+      var sliderInteraction = move()
         .xScale(props.scale)
         // range goes from the text top (text is 11px tall) to the bottom of the axis
         .yScale(d3.scale.linear().range([-11, axisOffset + majorTickSize]))
@@ -196,7 +203,7 @@ export default function() {
 
       selection.selectGroup('sliderInteraction')
         .classed('sszvis-control-slider--interactionLayer', true)
-        .attr('transform', sszvis.svgUtils.translateString(0, 4))
+        .attr('transform', translateString(0, 4))
         .call(sliderInteraction);
     });
 };

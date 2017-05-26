@@ -17,6 +17,10 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import { halfPixel } from '../svgUtils/crisp.js';
+import tooltipAnchor from '../annotation/tooltipAnchor.js';
+
 export default function() {
   return d3.component()
     .prop('x', d3.functor)
@@ -26,9 +30,9 @@ export default function() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-      var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
-      var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
+      var crispX = fn.compose(halfPixel, props.x);
+      var crispY0 = fn.compose(halfPixel, props.y0);
+      var crispY1 = fn.compose(halfPixel, props.y1);
 
       var bottomDot = selection.selectAll('.sszvis-rangeFlag__mark.bottom')
         .data(data);
@@ -48,12 +52,12 @@ export default function() {
         .attr('cx', crispX)
         .attr('cy', crispY1);
 
-      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var ta = tooltipAnchor()
         .position(function(d) {
-          return [crispX(d), sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2)];
+          return [crispX(d), halfPixel((props.y0(d) + props.y1(d)) / 2)];
         });
 
-      selection.call(tooltipAnchor);
+      selection.call(ta);
     });
 };
 

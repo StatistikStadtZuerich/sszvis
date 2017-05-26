@@ -29,6 +29,9 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import transition from '../transition.js';
+
 export default function() {
   return d3.component()
     .prop('x')
@@ -37,7 +40,7 @@ export default function() {
     .prop('fill')
     .prop('stroke')
     .prop('key').key(function(d, i){ return i; })
-    .prop('valuesAccessor').valuesAccessor(sszvis.fn.identity)
+    .prop('valuesAccessor').valuesAccessor(fn.identity)
     .prop('transition').transition(true)
     .render(function(data) {
       var selection = d3.select(this);
@@ -68,11 +71,11 @@ export default function() {
 
       if (props.transition) {
         paths = paths.transition()
-          .call(sszvis.transition);
+          .call(transition);
       }
 
       paths
-        .attr('d', sszvis.fn.compose(areaGen, props.valuesAccessor))
+        .attr('d', fn.compose(areaGen, props.valuesAccessor))
         .attr('fill', props.fill)
         .attr('stroke', props.stroke);
     });

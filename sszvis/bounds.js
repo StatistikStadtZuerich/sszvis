@@ -35,6 +35,9 @@
  */
 'use strict';
 
+import fn from './fn.js';
+import aspectRatio from './aspectRatio.js';
+
 var DEFAULT_WIDTH = 516;
 
 export default function(arg1 /* bounds or selection */, arg2 /* [selection] */) {
@@ -42,9 +45,9 @@ export default function(arg1 /* bounds or selection */, arg2 /* [selection] */) 
   if (arguments.length === 0) {
     bounds = {};
   } else if (arguments.length === 1) {
-    if (sszvis.fn.isObject(arg1)) {
+    if (fn.isObject(arg1)) {
       bounds = arg1;
-    } else if (sszvis.fn.isSelection(arg1)) {
+    } else if (fn.isSelection(arg1)) {
       bounds = {};
       selection = arg1;
     } else {
@@ -53,7 +56,7 @@ export default function(arg1 /* bounds or selection */, arg2 /* [selection] */) 
     }
   } else {
     bounds = arg1;
-    if (sszvis.fn.isSelection(arg2)) {
+    if (fn.isSelection(arg2)) {
       selection = arg2;
     } else {
       selection = d3.select(arg2);
@@ -69,11 +72,11 @@ export default function(arg1 /* bounds or selection */, arg2 /* [selection] */) 
   };
 
   // Width is calculated as: bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
-  var dimensions = sszvis.fn.defined(selection) ? sszvis.fn.measureDimensions(selection) : {width: DEFAULT_WIDTH};
+  var dimensions = fn.defined(selection) ? fn.measureDimensions(selection) : {width: DEFAULT_WIDTH};
 
   var width   = either( bounds.width,
                         dimensions.width );
-  var innerHeight = sszvis.aspectRatio.auto(dimensions);
+  var innerHeight = aspectRatio.auto(dimensions);
   var height  = either( bounds.height,
                         innerHeight + padding.top + padding.bottom );
 

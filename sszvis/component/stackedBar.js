@@ -30,6 +30,8 @@
  */
 'use strict';
 
+import bar from './bar.js';
+
 function stackedBar() {
   return d3.component()
     .prop('xAccessor', d3.functor)
@@ -69,7 +71,7 @@ function stackedBar() {
         heightValue = function(d) { return props.yScale(d.y0) - props.yScale(d.y0 + d.y); };
       }
 
-      var barGen = sszvis.component.bar()
+      var barGen = bar()
         .x(xValue)
         .y(yValue)
         .width(widthValue)

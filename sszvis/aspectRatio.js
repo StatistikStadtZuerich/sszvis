@@ -7,6 +7,8 @@
  */
 'use strict';
 
+import breakpoint from './breakpoint.js';
+
 /**
  * aspectRatio
  *
@@ -129,7 +131,7 @@ var auto = (function() {
     _:    ar12to5   // all other cases, including desk
   };
   return function(measurement) {
-    var bp = sszvis.breakpoint.find(sszvis.breakpoint.defaultSpec(), measurement);
+    var bp = breakpoint.find(breakpoint.defaultSpec(), measurement);
     var ar = defaultAspectRatios[bp.name];
     return ar(measurement.width);
   };

@@ -5,6 +5,23 @@
  */
 'use strict';
 
+const identity = function(value) {
+  return value;
+};
+
+const isString = function(val) {
+  return Object.prototype.toString.call(val) === '[object String]';
+};
+
+const isSelection = function(val) {
+  // We can't use this because we need to support IE9:
+  // return val instanceof d3.selection;
+  //
+  // We're using a property that is added by our own compatibility
+  // library in vendor/d3-iecompat.
+  return val.isD3Selection;
+};
+
 export default {
   /**
    * fn.arity
@@ -103,7 +120,7 @@ export default {
    * @return {array}            An array of objects from the input array.
    */
   derivedSet: function(arr, acc) {
-    acc || (acc = sszvis.fn.identity);
+    acc || (acc = identity);
     var seen = [], sValue, cValue, result = [];
     for (var i = 0, l = arr.length; i < l; ++i) {
       sValue = arr[i];
@@ -121,7 +138,7 @@ export default {
    *
    * Use a predicate function to test if every element in an array passes some test.
    * Returns false as soon as an element fails the predicate test. Returns true otherwise.
-   * 
+   *
    * @param  {Function} predicate     The predicate test function
    * @param  {Array} arr              The array to test
    * @return {Boolean}                Whether every element in the array passes the test
@@ -139,7 +156,7 @@ export default {
    * fn.filledArray
    *
    * returns a new array with length `len` filled with `val`
-   * 
+   *
    * @param  {Number} len     The length of the desired array
    * @param  {Any} val        The value with which to fill the array
    * @return {Array}          An array of length len filled with val
@@ -189,7 +206,7 @@ export default {
    * Flattens the nested input array by one level. The input array is expected to be
    * a two-dimensional array (i.e. its elements are also arrays). The result is a
    * one-dimensional array consisting of all the elements of the sub-arrays.
-   * 
+   *
    * @param  {Array}        The Array to flatten
    * @return {Array}        A flattened Array
    */
@@ -202,7 +219,7 @@ export default {
    * cases, the touch event doesn't have any touches in the event.touches list,
    * but it does have some in the event.changedTouches list (notably the touchend
    * event works like this).
-   * 
+   *
    * @param  {TouchEvent} event   The TouchEvent object from which to retrieve the
    *                              first Touch object.
    * @return {Touch|null}         The first Touch object from the TouchEvent's lists
@@ -237,7 +254,7 @@ export default {
    * @return {Array} an Array of unique elements
    */
   hashableSet: function(arr, acc) {
-    acc || (acc = sszvis.fn.identity);
+    acc || (acc = identity);
     var seen = {}, value, result = [];
     for (var i = 0, l = arr.length; i < l; ++i) {
       value = acc(arr[i], i, arr);
@@ -258,9 +275,7 @@ export default {
    * @param  {*} value any value
    * @return {*}       returns its argument
    */
-  identity: function(value) {
-    return value;
-  },
+  identity: identity,
 
   /**
    * fn.isFunction
@@ -290,7 +305,7 @@ export default {
    * fn.isNumber
    *
    * determine whether the value is a number
-   * 
+   *
    * @param  {*}  val     The value to check
    * @return {Boolean}    Whether the value is a number
    */
@@ -303,7 +318,7 @@ export default {
    *
    * determines if the passed value is of an "object" type, or if it is something else,
    * e.g. a raw number, string, null, undefined, NaN, something like that.
-   * 
+   *
    * @param  {*}  value      The value to test
    * @return {Boolean}       Whether the value is an object
    */
@@ -315,30 +330,21 @@ export default {
    * fn.isSelection
    *
    * determine whether the value is a d3.selection.
-   * 
+   *
    * @param  {*}  val         The value to check
    * @return {Boolean}        Whether the value is a d3.selection
    */
-  isSelection: function(val) {
-    // We can't use this because we need to support IE9:
-    // return val instanceof d3.selection;
-    //
-    // We're using a property that is added by our own compatibility
-    // library in vendor/d3-iecompat.
-    return val.isD3Selection;
-  },
+  isSelection: isSelection,
 
   /**
    * fn.isString
    *
    * determine whether the value is a string
-   * 
+   *
    * @param  {*}  val       The value to check
    * @return {Boolean}      Whether the value is a string
    */
-  isString: function(val) {
-      return Object.prototype.toString.call(val) === '[object String]';
-  },
+  isString: isString,
 
   /**
    * fn.last
@@ -370,9 +376,9 @@ export default {
    */
   measureDimensions: function(arg) {
     var node;
-    if (sszvis.fn.isString(arg)) {
+    if (isString(arg)) {
       node = d3.select(arg).node();
-    } else if (sszvis.fn.isSelection(arg)) {
+    } else if (isSelection(arg)) {
       node = arg.node();
     } else {
       node = arg;
@@ -425,7 +431,7 @@ export default {
    * the object. If either is false, it returns a default value. The default value is the second
    * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
    * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
-   * 
+   *
    * @param  {String} key         the name of the property for which an accessor function is desired
    * @param  {any} defaultVal     the default value to return when either the object or the requested property are undefined
    * @return {Function}           A property-accessor function
@@ -458,7 +464,7 @@ export default {
    * @return {Array} an Array of unique elements
    */
   set: function(arr, acc) {
-    acc || (acc = sszvis.fn.identity);
+    acc || (acc = identity);
     return arr.reduce(function(m, value, i) {
       var computed = acc(value, i, arr);
       return m.indexOf(computed) < 0 ? m.concat(computed) : m;
@@ -470,7 +476,7 @@ export default {
    *
    * Test an array with a predicate and determine whether some element in the array passes the test.
    * Returns true as soon as an element passes the test. Returns false otherwise.
-   * 
+   *
    * @param  {Function} predicate     The predicate test function
    * @param  {Array} arr              The array to test
    * @return {Boolean}                Whether some element in the array passes the test

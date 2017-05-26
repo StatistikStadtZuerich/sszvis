@@ -42,6 +42,10 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import logger from '../logger.js';
+import { elementFromEvent, datumFromPannableElement } from './util.js';
+
 export default function() {
   var event = d3.dispatch('over', 'out');
 
@@ -55,7 +59,7 @@ export default function() {
       var props = selection.props();
 
       if (!props.bounds) {
-        sszvis.logger.error('behavior.voronoi - requires bounds');
+        logger.error('behavior.voronoi - requires bounds');
         return false;
       }
 
@@ -97,7 +101,7 @@ export default function() {
         })
         .on('touchstart', function(datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          if (eventNearPoint(sszvis.fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+          if (eventNearPoint(fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
             d3.event.preventDefault();
             event.over(datum.point);
 
@@ -106,9 +110,9 @@ export default function() {
             // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
             // when users are performing touches that cause scrolling, we want to avoid firing the events.
             var pan = function() {
-              var touchEvent = sszvis.fn.firstTouch(d3.event);
-              var element = sszvis.behavior.util.elementFromEvent(touchEvent);
-              var datum = sszvis.behavior.util.datumFromPannableElement(element);
+              var touchEvent = fn.firstTouch(d3.event);
+              var element = elementFromEvent(touchEvent);
+              var datum = datumFromPannableElement(element);
               if (datum !== null) {
                 var cbox = element.parentNode.getBoundingClientRect();
                 if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {

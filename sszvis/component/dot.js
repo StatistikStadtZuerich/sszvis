@@ -16,6 +16,9 @@
  */
 'use strict';
 
+import transition from '../transition.js';
+import tooltipAnchor from '../annotation/tooltipAnchor.js';
+
 export default function() {
   return d3.component()
     .prop('x', d3.functor)
@@ -43,7 +46,7 @@ export default function() {
 
       if (props.transition) {
         dots = dots.transition()
-          .call(sszvis.transition);
+          .call(transition);
       }
 
       dots
@@ -53,11 +56,11 @@ export default function() {
 
       // Tooltip anchors
 
-      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var ta = tooltipAnchor()
         .position(function(d) {
           return [props.x(d), props.y(d)];
         });
 
-      selection.call(tooltipAnchor);
+      selection.call(ta);
     });
 };

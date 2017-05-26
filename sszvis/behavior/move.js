@@ -46,6 +46,9 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import { range } from '../scale.js';
+
 export default function() {
   var event = d3.dispatch('start', 'move', 'drag', 'end');
 
@@ -66,8 +69,8 @@ export default function() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var xExtent = sszvis.scale.range(props.xScale).sort(d3.ascending);
-      var yExtent = sszvis.scale.range(props.yScale).sort(d3.ascending);
+      var xExtent = range(props.xScale).sort(d3.ascending);
+      var yExtent = range(props.yScale).sort(d3.ascending);
 
       xExtent[0] -= props.padding.left;
       xExtent[1] += props.padding.right;
@@ -142,7 +145,7 @@ export default function() {
         })
         .on('mouseout', event.end)
         .on('touchstart', function() {
-          var xy = sszvis.fn.first(d3.touches(this));
+          var xy = fn.first(d3.touches(this));
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
 
@@ -170,7 +173,7 @@ export default function() {
             event.move(x, y);
 
             var pan = function() {
-              var xy = sszvis.fn.first(d3.touches(this));
+              var xy = fn.first(d3.touches(this));
               var x = scaleInvert(props.xScale, xy[0]);
               var y = scaleInvert(props.yScale, xy[1]);
 

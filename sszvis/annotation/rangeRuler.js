@@ -22,6 +22,10 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import { halfPixel } from '../svgUtils/crisp.js';
+import format from '../format.js';
+
 export default function() {
   return d3.component()
     .prop('x', d3.functor)
@@ -36,11 +40,11 @@ export default function() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-      var crispY0 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y0);
-      var crispY1 = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y1);
+      var crispX = fn.compose(halfPixel, props.x);
+      var crispY0 = fn.compose(halfPixel, props.y0);
+      var crispY1 = fn.compose(halfPixel, props.y1);
       var middleY = function(d) {
-        return sszvis.svgUtils.crisp.halfPixel((props.y0(d) + props.y1(d)) / 2);
+        return halfPixel((props.y0(d) + props.y1(d)) / 2);
       };
 
       var dotRadius = 1.5;
@@ -96,10 +100,10 @@ export default function() {
         .style('text-anchor', function(d) {
           return props.flip(d) ? 'end' : 'start';
         })
-        .text(sszvis.fn.compose(sszvis.format.number, props.label));
+        .text(fn.compose(format.number, props.label));
 
       var total = selection.selectAll('.sszvis-rangeRuler__total')
-        .data([sszvis.fn.last(data)]);
+        .data([fn.last(data)]);
 
       total.enter()
         .append('text')
@@ -116,6 +120,6 @@ export default function() {
         .style('text-anchor', function(d) {
           return props.flip(d) ? 'end' : 'start';
         })
-        .text('Total ' + sszvis.format.number(props.total));
+        .text('Total ' + format.number(props.total));
     });
 };

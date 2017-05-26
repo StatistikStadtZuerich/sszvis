@@ -28,10 +28,12 @@
  */
 'use strict';
 
+import aspectRatio from '../aspectRatio.js';
+
 export default function(spaceWidth, numBars) {
   var MAX_HEIGHT = 480; // Chart no taller than this
   var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
-  var defaultHeight = Math.min(sszvis.aspectRatio.portrait(spaceWidth), MAX_HEIGHT);
+  var defaultHeight = Math.min(aspectRatio.portrait(spaceWidth), MAX_HEIGHT);
   var padding = 1;
   var numPads = numBars - 1;
   var totalPadding = padding * numPads;
@@ -49,7 +51,7 @@ export default function(spaceWidth, numBars) {
     barPos -= step;
   }
 
-  var maxBarLength = Math.min(spaceWidth / 2, sszvis.aspectRatio.portrait.MAX_HEIGHT * (4/5) / 2);
+  var maxBarLength = Math.min(spaceWidth / 2, aspectRatio.portrait.MAX_HEIGHT * (4/5) / 2);
   var chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
 
   return {

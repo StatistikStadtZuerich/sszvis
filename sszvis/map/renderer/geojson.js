@@ -17,16 +17,23 @@
  * @property {String} stroke                The stroke color of the entities. Can be a string or a function returning a string. Default black.
  * @property {Number} strokeWidth           The thickness of the strokes of the shapes. Can be a number or a function returning a number. Default 1.25.
  * @property {Boolean} transitionColor      Whether or not to transition the fill color of the geojson when it changes. Default true.
- * 
+ *
  * @return {d3.component}
  */
 'use strict';
+
+import fn from '../../fn.js';
+import tooltipAnchor from '../../annotation/tooltipAnchor.js';
+import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
+import { mapMissingValuePattern } from '../../patterns.js';
+import { slowTransition } from '../../transition.js';
+import { GEO_KEY_DEFAULT } from '../mapUtils.js';
 
 export default function() {
   var event = d3.dispatch('over', 'out', 'click');
 
   var component = d3.component()
-    .prop('dataKeyName').dataKeyName(sszvis.map.utils.GEO_KEY_DEFAULT)
+    .prop('dataKeyName').dataKeyName(GEO_KEY_DEFAULT)
     .prop('geoJsonKeyName').geoJsonKeyName('id')
     .prop('geoJson')
     .prop('mapPath')
@@ -40,15 +47,15 @@ export default function() {
       var props = selection.props();
 
       // render the missing value pattern
-      sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'missing-pattern')
-        .call(sszvis.patterns.mapMissingValuePattern);
+      ensureDefsElement(selection, 'pattern', 'missing-pattern')
+        .call(mapMissingValuePattern);
 
       // getDataKeyName will be called on data values. It should return a map entity id.
       // getMapKeyName will be called on the 'properties' of each map feature. It should
       // return a map entity id. Data values are matched with corresponding map features using
       // these entity ids.
-      var getDataKeyName = sszvis.fn.prop(props.dataKeyName);
-      var getMapKeyName = sszvis.fn.prop(props.geoJsonKeyName);
+      var getDataKeyName = fn.prop(props.dataKeyName);
+      var getMapKeyName = fn.prop(props.geoJsonKeyName);
 
       var groupedInputData = data.reduce(function(m, v) {
         m[getDataKeyName(v)] = v;
@@ -63,11 +70,11 @@ export default function() {
       });
 
       function getMapFill(d) {
-        return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
+        return fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
       }
 
       function getMapStroke(d) {
-        return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : '';
+        return fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : '';
       }
 
       var geoElements = selection.selectAll('.sszvis-map__geojsonelement')
@@ -85,13 +92,13 @@ export default function() {
         .attr('fill', getMapFill);
 
       geoElements
-        .classed('sszvis-map__geojsonelement--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); })
+        .classed('sszvis-map__geojsonelement--undefined', function(d) { return !fn.defined(d.datum) || !props.defined(d.datum); })
         .attr('d', function(d) { return props.mapPath(d.geoJson); });
 
       if (props.transitionColor) {
         geoElements
           .transition()
-          .call(sszvis.transition.slowTransition)
+          .call(slowTransition)
           .attr('fill', getMapFill);
       } else {
         geoElements.attr('fill', getMapFill);
@@ -113,7 +120,7 @@ export default function() {
         });
 
       // the tooltip anchor generator
-      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var ta = tooltipAnchor()
         .position(function(d) {
           d.geoJson.properties || (d.geoJson.properties = {});
 
@@ -129,7 +136,7 @@ export default function() {
         .datum(mergedData);
 
       // attach tooltip anchors
-      tooltipGroup.call(tooltipAnchor);
+      tooltipGroup.call(ta);
     });
 
   d3.rebind(component, event, 'on');

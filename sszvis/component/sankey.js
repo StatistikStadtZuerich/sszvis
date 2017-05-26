@@ -61,6 +61,12 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import tooltipAnchor from '../annotation/tooltipAnchor.js';
+import { halfPixel } from '../svgUtils/crisp.js';
+import translateString from '../svgUtils/translateString.js';
+import bar from './bar.js';
+
 export default function() {
   return d3.component()
     .prop('sizeScale')
@@ -78,7 +84,7 @@ export default function() {
     .prop('labelSideSwitch')
     .prop('labelOpacity', d3.functor).labelOpacity(1)
     .prop('labelHitBoxSize').labelHitBoxSize(0)
-    .prop('nameLabel').nameLabel(sszvis.fn.identity)
+    .prop('nameLabel').nameLabel(fn.identity)
     .prop('linkSourceLabels').linkSourceLabels([])
     .prop('linkTargetLabels').linkTargetLabels([])
     .prop('linkLabel', d3.functor)
@@ -86,7 +92,7 @@ export default function() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var idAcc = sszvis.fn.prop('id');
+      var idAcc = fn.prop('id');
 
       var getNodePosition = function(node) { return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex)); };
       var xPosition = function(node) { return props.columnPosition(node.columnIndex); };
@@ -98,7 +104,7 @@ export default function() {
       var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
       // Draw the nodes
-      var barGen = sszvis.component.bar()
+      var barGen = bar()
         .x(xPosition)
         .y(yPosition)
         .width(xExtent)
@@ -110,7 +116,7 @@ export default function() {
 
       barGroup.call(barGen);
 
-      var barTooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var barTooltipAnchor = tooltipAnchor()
         .position(function(node) {
           return [xPosition(node) + xExtent(node) / 2, yPosition(node) + yExtent(node) / 2];
         });
@@ -133,7 +139,7 @@ export default function() {
       columnLabels.exit().remove();
 
       columnLabels
-        .attr('transform', function(d, i) { return sszvis.svgUtils.translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY); })
+        .attr('transform', function(d, i) { return translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY); })
         .text(function(d, i) { return props.columnLabel(i); });
 
       var columnLabelTicks = barGroup
@@ -147,10 +153,10 @@ export default function() {
       columnLabelTicks.exit().remove();
 
       columnLabelTicks
-        .attr('x1', function(d, i) { return sszvis.svgUtils.crisp.halfPixel(columnLabelX(i)); })
-        .attr('x2', function(d, i) { return sszvis.svgUtils.crisp.halfPixel(columnLabelX(i)); })
-        .attr('y1', sszvis.svgUtils.crisp.halfPixel(columnLabelY + 8))
-        .attr('y2', sszvis.svgUtils.crisp.halfPixel(columnLabelY + 12));
+        .attr('x1', function(d, i) { return halfPixel(columnLabelX(i)); })
+        .attr('x2', function(d, i) { return halfPixel(columnLabelX(i)); })
+        .attr('y1', halfPixel(columnLabelY + 8))
+        .attr('y2', halfPixel(columnLabelY + 12));
 
       // Draw the links
       var linkPoints = function(link) {
@@ -200,7 +206,7 @@ export default function() {
 
       linksGroup.datum(data.links);
 
-      var linkTooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var linkTooltipAnchor = tooltipAnchor()
         .position(function(link) {
           var bbox = linkBoundingBox(link);
           return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
@@ -225,7 +231,7 @@ export default function() {
       linkSourceLabels
         .attr('transform', function(link) {
           var bbox = linkBoundingBox(link);
-          return sszvis.svgUtils.translateString(bbox[0] + 6, bbox[2]);
+          return translateString(bbox[0] + 6, bbox[2]);
         })
         .text(props.linkLabel);
 
@@ -243,7 +249,7 @@ export default function() {
       linkTargetLabels
         .attr('transform', function(link) {
           var bbox = linkBoundingBox(link);
-          return sszvis.svgUtils.translateString(bbox[1] - 6, bbox[3]);
+          return translateString(bbox[1] - 6, bbox[3]);
         })
         .text(props.linkLabel);
 

@@ -13,6 +13,8 @@
  */
 'use strict';
 
+import fn from './fn.js';
+
 export const unsupported = function() {
   var supportsSVG = !!document.createElementNS && !!document.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect;
   return !supportsSVG;
@@ -26,7 +28,7 @@ export const canvasUnsupported = function() {
 export const render = function(selector, options) {
   options || (options = {});
   options.src    || (options.src    = 'fallback.png');
-  var selection = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
+  var selection = fn.isSelection(selector) ? selector : d3.select(selector);
   selection.append('img')
     .attr('class', 'sszvis-fallback-image')
     .attr('src', options.src);

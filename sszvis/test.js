@@ -9,6 +9,10 @@
  */
 'use strict';
 
+import fn from './fn.js';
+import logger from './logger.js';
+import format from './format.js';
+
 /**
  * sszvis.test.assert
  *
@@ -22,9 +26,9 @@
 export const assert = function(context) {
   return function(message, test) {
     if (test) {
-      sszvis.logger.log('[' + context + '] ✔ ' + message);
+      logger.log('[' + context + '] ✔ ' + message);
     } else {
-      sszvis.logger.error('[' + context + '] ✘ ' + message);
+      logger.error('[' + context + '] ✘ ' + message);
     }
   };
 };
@@ -44,8 +48,8 @@ export const runTests = function() {
 // Tests for format functions
 function runFormatTests(assert) {
   /* sszvis.format.number */
-  var nfmt = sszvis.format.number;
-  var precNfmt = sszvis.format.preciseNumber;
+  var nfmt = format.number;
+  var precNfmt = format.preciseNumber;
 
   // Note: this uses an mdash
   assert('NaN is mdash –', nfmt(NaN) === '–');
@@ -98,7 +102,7 @@ function runFormatTests(assert) {
 
 // FIXME: more tests
 function runBreakpointTests(assert) {
-  var accName = sszvis.fn.prop('name');
+  var accName = fn.prop('name');
 
   // sszvis.breakpoint([...])
   // sszvis.breakpoint(measurement)
@@ -175,7 +179,7 @@ function runPropsQueryTests(assert) {
       small: 2
     });
 
-  assert('responsiveProps should complain and return undefined when you do not provide a _ option', !sszvis.fn.defined(pqT3(1000).test));
+  assert('responsiveProps should complain and return undefined when you do not provide a _ option', !fn.defined(pqT3(1000).test));
 
   var pqT4 = sszvis.responsiveProps()
     .prop('test', {
@@ -183,7 +187,7 @@ function runPropsQueryTests(assert) {
       _: 16
     });
 
-  assert('responsiveProps should complain and return undefined when you provide an invalid breakpoint', !sszvis.fn.defined(pqT4(650).test));
+  assert('responsiveProps should complain and return undefined when you provide an invalid breakpoint', !fn.defined(pqT4(650).test));
 
   var pqT5 = sszvis.responsiveProps()
     .breakpoints({

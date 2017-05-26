@@ -11,9 +11,14 @@
  * @property {Color, Function} fill                 The fill color of the circles. Can be a function
  * @property {Color, Function} strokeColor          The stroke color of the circles. Can be a function
  * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data changes. Default true
- * 
+ *
  * @return {d3.component}
  */
+
+import transition from '../../transition.js';
+import { getGeoJsonCenter } from '../mapUtils.js';
+import translateString from '../../svgUtils/translateString.js';
+
 export default function() {
   var event = d3.dispatch('over', 'out', 'click');
 
@@ -39,8 +44,8 @@ export default function() {
 
       anchoredCircles
         .attr('transform', function(d) {
-          var position = props.mapPath.projection()(sszvis.map.utils.getGeoJsonCenter(d.geoJson));
-          return sszvis.svgUtils.translateString(position[0], position[1]);
+          var position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
+          return translateString(position[0], position[1]);
         })
         .attr('fill', function(d) { return props.fill(d.datum); })
         .style('stroke', function(d) { return props.strokeColor(d.datum); })
@@ -62,7 +67,7 @@ export default function() {
 
       if (props.transition) {
         anchoredCircles = anchoredCircles.transition()
-          .call(sszvis.transition);
+          .call(transition);
       }
 
       anchoredCircles.attr('r', function(d) { return props.radius(d.datum); });

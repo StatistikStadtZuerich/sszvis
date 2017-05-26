@@ -16,6 +16,9 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import logger from '../logger.js';
+
 export default function() {
   return d3.component()
     .prop('scale')
@@ -23,13 +26,13 @@ export default function() {
     .prop('width').width(200)
     .prop('segments').segments(8)
     .prop('labelText')
-    .prop('labelFormat').labelFormat(sszvis.fn.identity)
+    .prop('labelFormat').labelFormat(fn.identity)
     .render(function() {
       var selection = d3.select(this);
       var props = selection.props();
 
       if (!props.scale) {
-        sszvis.logger.error('legend.linearColorScale - a scale must be specified.');
+        logger.error('legend.linearColorScale - a scale must be specified.');
         return false;
       }
 
@@ -39,7 +42,7 @@ export default function() {
       if (!values.length && props.scale.ticks) {
         values = props.scale.ticks(props.segments - 1);
       }
-      values.push(sszvis.fn.last(domain));
+      values.push(fn.last(domain));
 
       // Avoid division by zero
       var segWidth = values.length > 0 ? props.width / values.length : 0;
@@ -61,7 +64,7 @@ export default function() {
         .attr('height', segHeight)
         .attr('fill', function(d) { return props.scale(d); });
 
-      var startEnd = [sszvis.fn.first(domain), sszvis.fn.last(domain)];
+      var startEnd = [fn.first(domain), fn.last(domain)];
       var labelText = props.labelText || startEnd;
 
       // rounded end caps for the segments

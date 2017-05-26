@@ -22,6 +22,13 @@
  */
 'use strict';
 
+import fn from '../../fn.js';
+import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
+import { mapMissingValuePattern } from '../../patterns.js';
+import { slowTransition } from '../../transition.js';
+import tooltipAnchor from '../../annotation/tooltipAnchor.js';
+import { getGeoJsonCenter } from '../mapUtils.js';
+
 export default function() {
   return d3.component()
     .prop('mergedData')
@@ -35,12 +42,12 @@ export default function() {
       var props = selection.props();
 
       // render the missing value pattern
-      sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'missing-pattern')
-        .call(sszvis.patterns.mapMissingValuePattern);
+      ensureDefsElement(selection, 'pattern', 'missing-pattern')
+        .call(mapMissingValuePattern);
 
       // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
       function getMapFill(d) {
-        return sszvis.fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
+        return fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
       }
 
       var mapAreas = selection.selectAll('.sszvis-map__area')
@@ -60,26 +67,26 @@ export default function() {
 
       // change the fill if necessary
       mapAreas
-        .classed('sszvis-map__area--undefined', function(d) { return !sszvis.fn.defined(d.datum) || !props.defined(d.datum); })
+        .classed('sszvis-map__area--undefined', function(d) { return !fn.defined(d.datum) || !props.defined(d.datum); })
         .attr('d', function(d) { return props.mapPath(d.geoJson); });
 
       if (props.transitionColor) {
         mapAreas
           .transition()
-          .call(sszvis.transition.slowTransition)
+          .call(slowTransition)
           .attr('fill', getMapFill);
       } else {
         mapAreas.attr('fill', getMapFill);
       }
 
       // the tooltip anchor generator
-      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
-        .position(function(d) { return props.mapPath.projection()(sszvis.map.utils.getGeoJsonCenter(d.geoJson)); });
+      var ta = tooltipAnchor()
+        .position(function(d) { return props.mapPath.projection()(getGeoJsonCenter(d.geoJson)); });
 
       var tooltipGroup = selection.selectGroup('tooltipAnchors')
         .datum(props.mergedData);
 
       // attach tooltip anchors
-      tooltipGroup.call(tooltipAnchor);
+      tooltipGroup.call(ta);
     });
 };

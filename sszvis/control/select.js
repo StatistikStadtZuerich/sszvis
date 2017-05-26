@@ -19,12 +19,14 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+
 export default function() {
   return d3.component()
     .prop('values')
     .prop('current')
     .prop('width').width(300)
-    .prop('change').change(sszvis.fn.identity)
+    .prop('change').change(fn.identity)
     .render(function() {
       var selection = d3.select(this);
       var props = selection.props();

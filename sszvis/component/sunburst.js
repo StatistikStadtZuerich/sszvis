@@ -29,6 +29,10 @@
  */
 'use strict';
 
+import logger from '../logger.js';
+import transition from '../transition.js';
+import tooltipAnchor from '../annotation/tooltipAnchor.js';
+
 var TWO_PI = 2 * Math.PI;
 
 export default function() {
@@ -49,7 +53,7 @@ export default function() {
           return 'transparent';
         } else if (!node.parent) {
           // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
-          sszvis.logger.warn('Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData');
+          logger.warn('Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData');
           return d3.hsl(props.fill(node.key));
         } else if (node.parent.isSunburstRoot) {
           // Use the color scale
@@ -103,7 +107,7 @@ export default function() {
         .attr('fill', getColorRecursive);
 
       arcs.transition()
-        .call(sszvis.transition)
+        .call(transition)
         .attrTween('d', function(d) {
           var xInterp = d3.interpolate(d.x, d._x);
           var dxInterp = d3.interpolate(d.dx, d._dx);
@@ -115,7 +119,7 @@ export default function() {
         });
 
       // Add tooltip anchors
-      var arcTooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var arcTooltipAnchor = tooltipAnchor()
         .position(function(d) {
           var startA = startAngle(d);
           var endA = endAngle(d);

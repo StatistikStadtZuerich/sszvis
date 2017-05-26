@@ -18,8 +18,10 @@
  */
 'use strict';
 
+import { lightGry } from './color.js';
+
 export const heatTableMissingValuePattern = function(selection) {
-  var rectFill = sszvis.color.lightGry(),
+  var rectFill = lightGry(),
       crossStroke = '#A4A4A4',
       crossStrokeWidth = 0.035,
       cross1 = 0.35,

@@ -46,7 +46,7 @@
  *                                                                                      the test will return false.
  *                                                                        accessor -    This is an accessor function for retrieving a numeric value
  *                                                                                      from the datum. This function should be used to retrieve out
- *                                                                                      of the datum the value against which cursorValue is compared. 
+ *                                                                                      of the datum the value against which cursorValue is compared.
  *                                                                        threshold -   A small threshold, specified in datum units, i.e. in the units
  *                                                                                      of the domain (NOT the range) of the scale function. When a bar
  *                                                                                      value is very small, or 0, or NaN, it would be impossible to have
@@ -56,19 +56,22 @@
  *                                                                                      number in the data's domain, and will be compared against both
  *                                                                                      cursorValue and the value accessed from the datum.
  */
+
+import fn from '../fn.js';
+
 export const elementFromEvent = function(evt) {
-  if (!sszvis.fn.isNull(evt) && sszvis.fn.defined(evt)) {
+  if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
   return null;
 };
 
 export const datumFromPannableElement = function(element) {
-  if (!sszvis.fn.isNull(element)) {
+  if (!fn.isNull(element)) {
     var selection = d3.select(element);
-    if (!sszvis.fn.isNull(selection.attr('data-sszvis-behavior-pannable'))) {
+    if (!fn.isNull(selection.attr('data-sszvis-behavior-pannable'))) {
       var datum = selection.datum();
-      if (sszvis.fn.defined(datum)) {
+      if (fn.defined(datum)) {
         return datum;
       }
     }
@@ -81,9 +84,9 @@ export const datumFromPanEvent = function(evt) {
 };
 
 export const testBarThreshold = function(cursorValue, datum, accessor, threshold) {
-  if (!sszvis.fn.defined(datum)) { return false; }
+  if (!fn.defined(datum)) { return false; }
   var dataValue = accessor(datum);
-  // For bars that are very small, or have a NaN value, then 
+  // For bars that are very small, or have a NaN value, then
   // when the touch is close enough to the 0-axis, we prevent scrolling
   // and show the tooltip. The proximity which the touch must have to the 0-axis
   // is determined by threshold, which must be a value in the axis' domain (NOT range).

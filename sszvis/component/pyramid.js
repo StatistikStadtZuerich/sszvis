@@ -29,6 +29,9 @@
  */
 'use strict';
 
+import transition from '../transition.js';
+import bar from './bar.js';
+
 /* Constants
 ----------------------------------------------- */
 var SPINE_PADDING = 0.5;
@@ -54,7 +57,7 @@ export default function() {
 
       // Components
 
-      var leftBar = sszvis.component.bar()
+      var leftBar = bar()
         .x(function(d){ return -SPINE_PADDING - props.barWidth(d); })
         .y(props.barPosition)
         .height(props.barHeight)
@@ -62,7 +65,7 @@ export default function() {
         .fill(props.barFill)
         .tooltipAnchor(props.tooltipAnchor);
 
-      var rightBar = sszvis.component.bar()
+      var rightBar = bar()
         .x(SPINE_PADDING)
         .y(props.barPosition)
         .height(props.barHeight)
@@ -125,7 +128,7 @@ function lineComponent() {
       line
         .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
         .transition()
-        .call(sszvis.transition)
+        .call(transition)
         .attr('d', lineGen);
 
       line.exit().remove();

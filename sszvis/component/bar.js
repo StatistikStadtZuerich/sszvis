@@ -42,6 +42,10 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import transition from '../transition.js';
+import tooltipAnchor from '../annotation/tooltipAnchor.js';
+
 // replaces NaN values with 0
 function handleMissingVal(v) {
   return isNaN(v) ? 0 : v;
@@ -62,10 +66,10 @@ export default function() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var xAcc = sszvis.fn.compose(handleMissingVal, props.x);
-      var yAcc = sszvis.fn.compose(handleMissingVal, props.y);
-      var wAcc = sszvis.fn.compose(handleMissingVal, props.width);
-      var hAcc = sszvis.fn.compose(handleMissingVal, props.height);
+      var xAcc = fn.compose(handleMissingVal, props.x);
+      var yAcc = fn.compose(handleMissingVal, props.y);
+      var wAcc = fn.compose(handleMissingVal, props.width);
+      var hAcc = fn.compose(handleMissingVal, props.height);
 
       var bars = selection.selectAll('.sszvis-bar')
         .data(data);
@@ -82,7 +86,7 @@ export default function() {
 
       if (props.transition) {
         bars = bars.transition()
-          .call(sszvis.transition);
+          .call(transition);
       }
 
       bars
@@ -108,10 +112,10 @@ export default function() {
         };
       }
 
-      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var ta = tooltipAnchor()
         .position(tooltipPosition);
 
-      selection.call(tooltipAnchor);
+      selection.call(ta);
 
     });
 };

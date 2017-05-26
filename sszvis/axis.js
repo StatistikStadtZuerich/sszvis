@@ -54,6 +54,14 @@
  */
 'use strict';
 
+import fn from './fn.js';
+import { halfPixel, transformTranslateSubpixelShift } from './svgUtils/crisp.js';
+import translateString from './svgUtils/translateString.js';
+import textWrap from './svgUtils/textWrap.js';
+import format from './format.js';
+import { range } from './scale.js';
+import logger from './logger.js';
+
 var TICK_PROXIMITY_THRESHOLD = 8;
 var TICK_END_THRESHOLD = 12;
 var LABEL_PROXIMITY_THRESHOLD = 10;
@@ -103,7 +111,7 @@ export default (function() {
           .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
           .classed('sszvis-axis--bottom', isBottom)
           .classed('sszvis-axis--vertical', props.vertical)
-          .attr('transform', sszvis.svgUtils.translateString(0, props.yOffset))
+          .attr('transform', translateString(0, props.yOffset))
           .call(axisDelegate);
 
         var axisScale = axisDelegate.scale();
@@ -123,20 +131,20 @@ export default (function() {
         // grid by taking the translation of the group into account.
         tickGroups
           .each(function() {
-            var subpixelShift = sszvis.svgUtils.crisp.transformTranslateSubpixelShift(this.getAttribute('transform'));
-            var dx = sszvis.svgUtils.crisp.halfPixel(0) - subpixelShift[0];
-            var dy = sszvis.svgUtils.crisp.halfPixel(isBottom ? 2 : 0) - subpixelShift[1];
+            var subpixelShift = transformTranslateSubpixelShift(this.getAttribute('transform'));
+            var dx = halfPixel(0) - subpixelShift[0];
+            var dy = halfPixel(isBottom ? 2 : 0) - subpixelShift[1];
             d3.select(this).select('line')
-              .attr('transform', sszvis.svgUtils.translateString(dx, dy));
+              .attr('transform', translateString(dx, dy));
           });
 
         // Place axis line on a half-pixel grid to prevent anti-aliasing
         group.selectAll('path.domain')
-          .attr('transform', sszvis.svgUtils.translateString(sszvis.svgUtils.crisp.halfPixel(0), sszvis.svgUtils.crisp.halfPixel(0)));
+          .attr('transform', translateString(halfPixel(0), halfPixel(0)));
 
 
         // hide ticks which are too close to one endpoint
-        var rangeExtent = sszvis.scale.range(axisScale);
+        var rangeExtent = range(axisScale);
         tickGroups.selectAll('line')
           .each(function(d) {
             var pos = axisScale(d),
@@ -145,11 +153,11 @@ export default (function() {
               .classed('hidden', !d3this.classed('sszvis-axis__longtick') && (absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold));
           });
 
-        if (sszvis.fn.defined(props.tickLength)) {
+        if (fn.defined(props.tickLength)) {
           var domainExtent = d3.extent(axisScale.domain());
           var ticks = tickGroups
             .filter(function(d) {
-              return !sszvis.fn.stringEqual(d, domainExtent[0]) && !sszvis.fn.stringEqual(d, domainExtent[1]);
+              return !fn.stringEqual(d, domainExtent[0]) && !fn.stringEqual(d, domainExtent[1]);
             });
           var orientation = axisDelegate.orient();
 
@@ -192,7 +200,7 @@ export default (function() {
         }
 
         if (props.alignOuterLabels) {
-          var alignmentBounds = sszvis.scale.range(axisScale);
+          var alignmentBounds = range(axisScale);
           var min = alignmentBounds[0];
           var max = alignmentBounds[1];
 
@@ -208,9 +216,9 @@ export default (function() {
             });
         }
 
-        if (sszvis.fn.defined(props.textWrap)) {
+        if (fn.defined(props.textWrap)) {
           tickTexts
-            .call(sszvis.svgUtils.textWrap, props.textWrap);
+            .call(textWrap, props.textWrap);
         }
 
         if (props.slant) {
@@ -277,7 +285,7 @@ export default (function() {
             })
             .attr('transform', function() {
               var orientation = axisDelegate.orient(),
-                extent = sszvis.scale.range(axisScale),
+                extent = range(axisScale),
                 titleProps;
 
               if (props.titleCenter) {
@@ -317,7 +325,7 @@ export default (function() {
          * colored backgrounds
          */
         if (props.contour && props.slant) {
-          sszvis.logger.warn('Can\'t apply contour to slanted labels');
+          logger.warn('Can\'t apply contour to slanted labels');
         } else if (props.contour) {
           tickGroups.each(function() {
             var g = d3.select(this);
@@ -363,12 +371,12 @@ export default (function() {
       .ticks(3)
       .tickSize(4, 6)
       .tickPadding(6)
-      .tickFormat(sszvis.fn.arity(1, sszvis.format.number));
+      .tickFormat(fn.arity(1, format.number));
   };
 
   axisX.time = function() {
     return axisX()
-      .tickFormat(sszvis.format.axisTimeFormat)
+      .tickFormat(format.axisTimeFormat)
       .alignOuterLabels(true);
   };
 
@@ -378,7 +386,7 @@ export default (function() {
       // that allows you to set a custom number of ticks,
       // including the first and last value in the ordinal scale
       .prop('ticks', setOrdinalTicks)
-      .tickFormat(sszvis.format.text);
+      .tickFormat(format.text);
   };
 
   // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
@@ -402,7 +410,7 @@ export default (function() {
       .tickFormat(function(v) {
         // this tick format means that the axis appears to be divergent around 0
         // when in fact it is -domain[1] -> +domain[1]
-        return sszvis.format.number(Math.abs(v));
+        return format.number(Math.abs(v));
       });
   };
 
@@ -412,21 +420,21 @@ export default (function() {
       .tickSize(0, 0)
       .tickPadding(0)
       .tickFormat(function(d) {
-        return 0 === d && !newAxis.showZeroY() ? null : sszvis.format.number(d);
+        return 0 === d && !newAxis.showZeroY() ? null : format.number(d);
       })
       .vertical(true);
     return newAxis;
   };
 
   axisY.time = function() {
-    return axisY().tickFormat(sszvis.format.axisTimeFormat);
+    return axisY().tickFormat(format.axisTimeFormat);
   };
 
   axisY.ordinal = function() {
     return axisY()
       // add custom 'ticks' function
       .prop('ticks', setOrdinalTicks)
-      .tickFormat(sszvis.format.text);
+      .tickFormat(format.text);
   };
 
   return {

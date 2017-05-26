@@ -16,6 +16,9 @@
  */
 'use strict';
 
+import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
+import { mapLakePattern, mapLakeFadeGradient, mapLakeGradientMask } from '../../patterns.js';
+
 export default function() {
   return d3.component()
     .prop('mapPath')
@@ -28,17 +31,17 @@ export default function() {
       var props = selection.props();
 
       // the lake texture
-      sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'lake-pattern')
-        .call(sszvis.patterns.mapLakePattern);
+      ensureDefsElement(selection, 'pattern', 'lake-pattern')
+        .call(mapLakePattern);
 
       if (props.fadeOut) {
         // the fade gradient
-        sszvis.svgUtils.ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
-          .call(sszvis.patterns.mapLakeFadeGradient);
+        ensureDefsElement(selection, 'linearGradient', 'lake-fade-gradient')
+          .call(mapLakeFadeGradient);
 
         // the mask, which uses the fade gradient
-        sszvis.svgUtils.ensureDefsElement(selection, 'mask', 'lake-fade-mask')
-          .call(sszvis.patterns.mapLakeGradientMask);
+        ensureDefsElement(selection, 'mask', 'lake-fade-mask')
+          .call(mapLakeGradientMask);
       }
 
       // generate the Lake Zurich path

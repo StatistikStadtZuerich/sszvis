@@ -13,10 +13,15 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import { range } from '../scale.js';
+import { halfPixel } from '../svgUtils/crisp.js';
+import translateString from '../svgUtils/translateString.js';
+
 export default function() {
   return d3.component()
     .prop('scale')
-    .prop('tickFormat').tickFormat(sszvis.fn.identity)
+    .prop('tickFormat').tickFormat(fn.identity)
     .prop('tickValues')
     .render(function() {
       var selection = d3.select(this);
@@ -24,14 +29,14 @@ export default function() {
 
       var domain = props.scale.domain();
       var tickValues = props.tickValues || [domain[1], props.scale.invert(d3.mean(props.scale.range())), domain[0]];
-      var maxRadius = sszvis.scale.range(props.scale)[1];
+      var maxRadius = range(props.scale)[1];
 
       var group = selection.selectAll('g.sszvis-legend__elementgroup')
         .data([0]);
 
       group.enter().append('g').attr('class', 'sszvis-legend__elementgroup');
 
-      group.attr('transform', sszvis.svgUtils.translateString(sszvis.svgUtils.crisp.halfPixel(maxRadius), sszvis.svgUtils.crisp.halfPixel(maxRadius)));
+      group.attr('transform', translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
 
       var circles = group.selectAll('circle.sszvis-legend__greyline')
         .data(tickValues);

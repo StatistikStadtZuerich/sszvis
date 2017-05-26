@@ -33,6 +33,8 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+
 function formatHTML() {
   var styles = {
     plain: function(d){ return d;},
@@ -76,7 +78,7 @@ function structuredText() {
     },
 
     addWord: function(style, text) {
-      sszvis.fn.last(lines).push({
+      fn.last(lines).push({
         text: d3.functor(text),
         style: style
       });

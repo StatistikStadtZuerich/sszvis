@@ -21,8 +21,11 @@
  */
 'use strict';
 
+import fn from './fn.js';
+import mkBounds from './bounds.js';
+
 export default function(selector, bounds, metadata) {
-  bounds || (bounds = sszvis.bounds());
+  bounds || (bounds = mkBounds());
   metadata || (metadata = {});
 
   var key = metadata.key || 'default';
@@ -31,7 +34,7 @@ export default function(selector, bounds, metadata) {
 
   var elementDataKey = 'data-sszvis-svg-' + key;
 
-  var root = sszvis.fn.isSelection(selector) ? selector : d3.select(selector);
+  var root = fn.isSelection(selector) ? selector : d3.select(selector);
   var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
   var svgEnter = svg.enter().append('svg');
 

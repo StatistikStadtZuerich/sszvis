@@ -38,6 +38,9 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import { datumFromPanEvent } from './util.js';
+
 export default function() {
   var event = d3.dispatch('start', 'pan', 'end');
 
@@ -61,7 +64,7 @@ export default function() {
         })
         .on('touchmove', function() {
           d3.event.preventDefault();
-          var datum = sszvis.behavior.util.datumFromPanEvent(sszvis.fn.firstTouch(d3.event));
+          var datum = datumFromPanEvent(fn.firstTouch(d3.event));
           if (datum !== null) {
             event.pan(datum);
           } else {

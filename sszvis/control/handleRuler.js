@@ -20,6 +20,10 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import { halfPixel } from '../svgUtils/crisp.js';
+import translateString from '../svgUtils/translateString.js';
+
 export default function() {
   return d3.component()
     .prop('x', d3.functor)
@@ -37,8 +41,8 @@ export default function() {
       // crisply across browsers. That's why we create this position accessor
       // here that takes a datum as input, reads out its value (props.x) and
       // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
-      var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-      var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
+      var crispX = fn.compose(halfPixel, props.x);
+      var crispY = fn.compose(halfPixel, props.y);
 
       var bottom = props.bottom - 4;
       var handleWidth = 10;
@@ -68,15 +72,15 @@ export default function() {
 
       group.selectAll('.sszvis-ruler__rule')
         .attr('x1', crispX)
-        .attr('y1', sszvis.svgUtils.crisp.halfPixel(props.top))
+        .attr('y1', halfPixel(props.top))
         .attr('x2', crispX)
-        .attr('y2', sszvis.svgUtils.crisp.halfPixel(bottom));
+        .attr('y2', halfPixel(bottom));
 
       group.selectAll('.sszvis-handleRuler__handle')
         .attr('x', function(d) {
           return crispX(d) - handleWidth / 2;
         })
-        .attr('y', sszvis.svgUtils.crisp.halfPixel(handleTop))
+        .attr('y', halfPixel(handleTop))
         .attr('width', handleWidth)
         .attr('height', handleHeight)
         .attr('rx', 2)
@@ -84,9 +88,9 @@ export default function() {
 
       group.selectAll('.sszvis-handleRuler__handle-mark')
         .attr('x1', crispX)
-        .attr('y1', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.15))
+        .attr('y1', halfPixel(handleTop + handleHeight * 0.15))
         .attr('x2', crispX)
-        .attr('y2', sszvis.svgUtils.crisp.halfPixel(handleTop + handleHeight * 0.85));
+        .attr('y2', halfPixel(handleTop + handleHeight * 0.85));
 
       var dots = group.selectAll('.sszvis-ruler__dot')
         .data(data);
@@ -128,15 +132,15 @@ export default function() {
 
       selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
         .attr('transform', function(d) {
-          var x = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x)(d);
-          var y = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y)(d);
+          var x = fn.compose(halfPixel, props.x)(d);
+          var y = fn.compose(halfPixel, props.y)(d);
 
           var dx = props.flip(d) ? -10 : 10;
           var dy = (y < props.top + dy) ? 2 * dy
                  : (y > props.bottom - dy) ? 0
                  : 5;
 
-          return sszvis.svgUtils.translateString(x + dx, y + dy);
+          return translateString(x + dx, y + dy);
         })
         .style('text-anchor', function(d) {
           return props.flip(d) ? 'end' : 'start';

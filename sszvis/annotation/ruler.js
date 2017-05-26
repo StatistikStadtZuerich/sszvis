@@ -31,6 +31,10 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import { halfPixel } from '../svgUtils/crisp.js';
+import translateString from '../svgUtils/translateString.js';
+
 export default function() {
 
   return d3.component()
@@ -57,9 +61,9 @@ export default function() {
         .classed('sszvis-ruler__rule', true);
 
       ruler
-        .attr('x1', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+        .attr('x1', fn.compose(halfPixel, props.x))
         .attr('y1', props.y)
-        .attr('x2', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
+        .attr('x2', fn.compose(halfPixel, props.x))
         .attr('y2', props.bottom);
 
       ruler.exit().remove();
@@ -72,8 +76,8 @@ export default function() {
         .classed('sszvis-ruler__dot', true);
 
       dot
-        .attr('cx', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x))
-        .attr('cy', sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y))
+        .attr('cx', fn.compose(halfPixel, props.x))
+        .attr('cy', fn.compose(halfPixel, props.y))
         .attr('r', 3.5)
         .attr('fill', props.color);
 
@@ -102,8 +106,8 @@ export default function() {
 
       // Update both label and labelOutline selections
 
-      var crispX = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.x);
-      var crispY = sszvis.fn.compose(sszvis.svgUtils.crisp.halfPixel, props.y);
+      var crispX = fn.compose(halfPixel, props.x);
+      var crispY = fn.compose(halfPixel, props.y);
 
       var textSelection = selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
         .attr('transform', function(d) {
@@ -115,7 +119,7 @@ export default function() {
                  : (y > props.bottom - dy) ? 0
                  : 5;
 
-          return sszvis.svgUtils.translateString(x + dx, y + dy);
+          return translateString(x + dx, y + dy);
         })
         .style('text-anchor', function(d) {
           return props.flip(d) ? 'end' : 'start';

@@ -19,6 +19,9 @@
  */
 'use strict';
 
+import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
+import { dataAreaPattern } from '../patterns.js';
+
 export default function() {
   return d3.component()
     .prop('x', d3.functor)
@@ -31,8 +34,8 @@ export default function() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      sszvis.svgUtils.ensureDefsElement(selection, 'pattern', 'data-area-pattern')
-        .call(sszvis.patterns.dataAreaPattern);
+      ensureDefsElement(selection, 'pattern', 'data-area-pattern')
+        .call(dataAreaPattern);
 
       var dataArea = selection.selectAll('.sszvis-dataareacircle')
         .data(data);

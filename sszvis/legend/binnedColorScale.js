@@ -17,20 +17,24 @@
 
 'use strict';
 
+import fn from '../fn.js';
+import logger from '../logger.js';
+import { halfPixel } from '../svgUtils/crisp.js';
+
 export default function() {
   return d3.component()
     .prop('scale')
     .prop('displayValues')
     .prop('endpoints')
     .prop('width').width(200)
-    .prop('labelFormat').labelFormat(sszvis.fn.identity)
+    .prop('labelFormat').labelFormat(fn.identity)
     .render(function() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      if (!props.scale) return sszvis.logger.error('legend.binnedColorScale - a scale must be specified.');
-      if (!props.displayValues) return sszvis.logger.error('legend.binnedColorScale - display values must be specified.');
-      if (!props.endpoints) return sszvis.logger.error('legend.binnedColorScale - endpoints must be specified');
+      if (!props.scale) return logger.error('legend.binnedColorScale - a scale must be specified.');
+      if (!props.displayValues) return logger.error('legend.binnedColorScale - display values must be specified.');
+      if (!props.endpoints) return logger.error('legend.binnedColorScale - endpoints must be specified');
 
       var segHeight = 10;
       var circleRad = segHeight / 2;
@@ -107,8 +111,8 @@ export default function() {
       lines.exit().remove();
 
       lines
-        .attr('x1', function(d) { return sszvis.svgUtils.crisp.halfPixel(d.x + d.w); })
-        .attr('x2', function(d) { return sszvis.svgUtils.crisp.halfPixel(d.x + d.w); })
+        .attr('x1', function(d) { return halfPixel(d.x + d.w); })
+        .attr('x2', function(d) { return halfPixel(d.x + d.w); })
         .attr('y1', segHeight + 1)
         .attr('y2', segHeight + 6)
         .attr('stroke', '#B8B8B8');

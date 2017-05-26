@@ -6,6 +6,9 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import logger from '../logger.js';
+
 var newLinkId = (function() {
   var id = 0;
   return function() { return ++id; };
@@ -18,7 +21,7 @@ var newLinkId = (function() {
  *
  * Throughout the code, the rectangles representing entities are referred to as 'nodes', while
  * the chords connection them which represent flows among those entities are referred to as 'links'.
- * 
+ *
  * @property {Array} apply                    Applies the preparation to a dataset of links. Expects a list of links, where the (unique) id
  *                                            of the source node can be accessed with the source function, and the (unique) id of the target
  *                                            can be accessed with the target function. Note that no source can have the same id as a target and
@@ -41,13 +44,13 @@ var newLinkId = (function() {
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  */
 export const prepareData = function() {
-  var mGetSource = sszvis.fn.identity;
-  var mGetTarget = sszvis.fn.identity;
-  var mGetValue = sszvis.fn.identity;
+  var mGetSource = fn.identity;
+  var mGetTarget = fn.identity;
+  var mGetValue = fn.identity;
   var mColumnIds = [];
 
   // Helper functions
-  var valueAcc = sszvis.fn.prop('value');
+  var valueAcc = fn.prop('value');
   var byAscendingValue = function(a, b) { return d3.ascending(valueAcc(a), valueAcc(b)); };
   var byDescendingValue = function(a, b) { return d3.descending(valueAcc(a), valueAcc(b)); };
 
@@ -57,7 +60,7 @@ export const prepareData = function() {
     var columnIndex = mColumnIds.reduce(function(index, columnIdsList, columnIndex) {
       columnIdsList.forEach(function(id) {
         if (index.has(id)) {
-          sszvis.logger.warn('Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:', id, 'The existing value will be overwritten');
+          logger.warn('Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:', id, 'The existing value will be overwritten');
         }
 
         var item = {
@@ -69,7 +72,7 @@ export const prepareData = function() {
           linksFrom: [],
           linksTo: []
         };
-        
+
         index.set(id, item);
       });
 
@@ -85,12 +88,12 @@ export const prepareData = function() {
       var tgtNode = columnIndex.get(tgtId);
 
       if (!srcNode) {
-        sszvis.logger.warn('Found invalid source column id:', srcId);
+        logger.warn('Found invalid source column id:', srcId);
         return null;
       }
 
       if (!tgtNode) {
-        sszvis.logger.warn('Found invalid target column id:', tgtId);
+        logger.warn('Found invalid target column id:', tgtId);
         return null;
       }
 
@@ -123,7 +126,7 @@ export const prepareData = function() {
       totals[node.columnIndex] += node.value;
 
       return totals;
-    }, sszvis.fn.filledArray(mColumnIds.length, 0));
+    }, fn.filledArray(mColumnIds.length, 0));
 
     // An array with the number of nodes in each column
     var columnLengths = mColumnIds.map(function(colIds) { return colIds.length; });
@@ -151,8 +154,8 @@ export const prepareData = function() {
 
       return columnData;
     }, [
-      sszvis.fn.filledArray(mColumnIds.length, 0),
-      sszvis.fn.filledArray(mColumnIds.length, 0)
+      fn.filledArray(mColumnIds.length, 0),
+      fn.filledArray(mColumnIds.length, 0)
     ]);
 
     // Once the order of nodes is calculated, we need to sort the links going into the
@@ -212,10 +215,10 @@ export const prepareData = function() {
  * including padding between each node, paddings for the tops of columns to vertically center
  * them, the domain and range of values in the nodes (used for scaling the node rectangles),
  * the node thickness, and the domain and range of the column positioning scale.
- * 
+ *
  * @param  {Array} columnLengths      An array of lengths (number of nodes) of each column in the diagram.
  *                                    Used to compute optimal padding between nodes. Provided by the layout.sankey.prepareData function
- * @param  {Array} columnTotals       An array of column totals (total of all values of all ndoes). Provided by the 
+ * @param  {Array} columnTotals       An array of column totals (total of all values of all ndoes). Provided by the
  * @param  {Number} columnHeight      The vertical height available for the columns. The tallest column will be this height. (Usually bounds.innerHeight)
  * @param  {Number} columnWidth       The width of all columns. The sankey chart will be this width. (Usually bounds.innerWidth)
  * @return {Object}                   An object of configuration parameters to be passed to the sankey component

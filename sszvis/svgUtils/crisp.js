@@ -20,6 +20,8 @@
 
 'use strict';
 
+import fn from '../fn.js';
+
 /**
  * crisp.halfPixel
  *
@@ -47,7 +49,7 @@ export const halfPixel = function(pos) {
  * @return {string}              An SVG transform string with rounded values
  */
 export const roundTransformString = function(transformStr) {
-  var roundNumber = sszvis.fn.compose(Math.floor, Number);
+  var roundNumber = fn.compose(Math.floor, Number);
   return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function(_, left, vecStr, right) {
     var roundVec = vecStr
       .replace(',', ' ')
@@ -70,7 +72,7 @@ export const roundTransformString = function(transformStr) {
  * @return {vecor}               Two-element array ([dx, dy])
  */
 export const transformTranslateSubpixelShift = function(transformStr) {
-  var roundNumber = sszvis.fn.compose(Math.floor, Number);
+  var roundNumber = fn.compose(Math.floor, Number);
   var m = transformStr.match(/(translate\()\s*([0-9.,\- ]+)\s*(\))/i);
   var vec = m[2]
     .replace(',', ' ')

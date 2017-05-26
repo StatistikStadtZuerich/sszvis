@@ -41,6 +41,9 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import translateString from '../svgUtils/translateString.js';
+
 export default function() {
 
   return d3.component()
@@ -69,7 +72,7 @@ export default function() {
       // Update
 
       anchor
-        .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
+        .attr('transform', fn.compose(vectorToTranslateString, props.position));
 
 
       // Exit
@@ -91,7 +94,7 @@ export default function() {
           .attr('fill', '#fff')
           .attr('stroke', '#f00')
           .attr('stroke-width', 1.5)
-          .attr('transform', sszvis.fn.compose(vectorToTranslateString, props.position));
+          .attr('transform', fn.compose(vectorToTranslateString, props.position));
 
         referencePoint.exit().remove();
       }
@@ -102,7 +105,7 @@ export default function() {
   /* Helper functions
   ----------------------------------------------- */
   function vectorToTranslateString(vec) {
-    return sszvis.svgUtils.translateString.apply(null, vec);
+    return translateString.apply(null, vec);
   }
 
 };

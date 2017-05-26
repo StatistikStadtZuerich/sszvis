@@ -50,6 +50,8 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+
 /* Configuration
 ----------------------------------------------- */
 var SMALL_CORNER_RADIUS = 3;
@@ -128,7 +130,7 @@ var tooltipRenderer = function() {
       var tooltipData = selection.datum();
       var props = selection.props();
 
-      var isDef = sszvis.fn.defined;
+      var isDef = fn.defined;
       var isSmall = (
         isDef(props.header) && !isDef(props.body)) || (!isDef(props.header) && isDef(props.body)
       );
@@ -215,11 +217,11 @@ var tooltipRenderer = function() {
       // Update: content
 
       tooltip.select('.sszvis-tooltip__header')
-        .datum(sszvis.fn.prop('datum'))
+        .datum(fn.prop('datum'))
         .html(props.header || d3.functor(''));
 
       tooltip.select('.sszvis-tooltip__body')
-        .datum(sszvis.fn.prop('datum'))
+        .datum(fn.prop('datum'))
         .html(function(d) {
           var body = props.body ? d3.functor(props.body)(d) : '';
           return Array.isArray(body) ? formatTable(body) : body;

@@ -46,6 +46,10 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+import tooltipAnchor from '../annotation/tooltipAnchor.js';
+import translateString from '../svgUtils/translateString.js';
+
 export default function() {
   return d3.component()
     .prop('groupScale')
@@ -97,7 +101,7 @@ export default function() {
 
       //sszsch: fix: reset previously assigned translations
       unitsWithValue.attr('transform',function(d,i){
-        return sszvis.svgUtils.translateString(0,0);
+        return translateString(0,0);
       });
 
       unitsWithValue
@@ -112,13 +116,13 @@ export default function() {
         .attr('width', inGroupScale.rangeBand())
         .attr('height', props.height);
 
-      var unitsWithoutValue = barUnits.filter(sszvis.fn.not(props.defined));
+      var unitsWithoutValue = barUnits.filter(fn.not(props.defined));
 
       unitsWithoutValue.selectAll('*').remove();
 
       unitsWithoutValue
         .attr('transform', function(d, i) {
-          return sszvis.svgUtils.translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2, props.y(d, i));
+          return translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2, props.y(d, i));
         });
 
       unitsWithoutValue
@@ -133,7 +137,7 @@ export default function() {
         .attr('x1', 4).attr('y1', -4)
         .attr('x2', -4).attr('y2', 4);
 
-      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var ta = tooltipAnchor()
         .position(function(group) {
           var xTotal = 0;
           var tallest = Infinity;
@@ -146,6 +150,6 @@ export default function() {
           return [xAverage, tallest];
         });
 
-      selection.call(tooltipAnchor);
+      selection.call(ta);
     });
 };

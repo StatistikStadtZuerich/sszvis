@@ -20,6 +20,9 @@
 */
 'use strict';
 
+import transition from '../transition.js';
+import tooltipAnchor from '../annotation/tooltipAnchor.js';
+
 export default function() {
   return d3.component()
     .prop('radius')
@@ -76,7 +79,7 @@ export default function() {
 
       segments
         .transition()
-        .call(sszvis.transition)
+        .call(transition)
         .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
         .attrTween('d', function(d) {
           var angle0Interp = d3.interpolate(d.a0, d._a0);
@@ -90,7 +93,7 @@ export default function() {
         .attr('fill', props.fill)
         .attr('stroke', props.stroke);
 
-      var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+      var ta = tooltipAnchor()
         .position(function(d) {
           // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
           // makes the same correction to svg.arc() angles :o
@@ -101,7 +104,7 @@ export default function() {
 
       selection
         .datum(data)
-        .call(tooltipAnchor);
+        .call(ta);
 
     });
 };

@@ -63,7 +63,7 @@ export const swissMapProjection = function(width, height, featureCollection, fea
   // calculate the scale and translation values from the bounds, width, and height
   var scale = 1 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height),
       translation = [(width - scale * (bounds[1][0] + bounds[0][0])) / 2, (height - scale * (bounds[1][1] + bounds[0][1])) / 2];
-      
+
   mercatorProjection
     .scale(scale)
     .translate(translation);
@@ -89,7 +89,7 @@ export const swissMapProjection = function(width, height, featureCollection, fea
  */
 export const swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
   var mercatorPath = d3.geo.path()
-    .projection(sszvis.map.utils.swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
+    .projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
 
   return mercatorPath;
 };
@@ -112,7 +112,7 @@ export const pixelsFromDistance = function(projection, centerPoint, meterDistanc
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
   var APPROX_EARTH_RADIUS = 6367475;
   var APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
-  // Compute the size of the angle made by the meter distance 
+  // Compute the size of the angle made by the meter distance
   var degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360;
   // Construct a square, centered at centerPoint, with sides that span that number of degrees
   var halfDegrees = degrees / 2;
@@ -147,7 +147,7 @@ export const GEO_KEY_DEFAULT = 'geoId';
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
 export const prepareMergedData = function(dataset, geoJson, keyName) {
-  keyName || (keyName = sszvis.map.utils.GEO_KEY_DEFAULT);
+  keyName || (keyName = GEO_KEY_DEFAULT);
 
   // group the input data by map entity id
   var groupedInputData = dataset.reduce(function(m, v) {
@@ -176,7 +176,7 @@ export const prepareMergedData = function(dataset, geoJson, keyName) {
  * pair expected by d3's projection functions. These strings can be added to the properties array
  * using the topojson command line tool's -e option (see the Makefile rule for the zurich statistical
  * quarters map for an example of this use).
- * 
+ *
  * @param  {Object} geoJson                 The geoJson object for which you want the center.
  * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
  *                                          (or user-specified center) of the object.
@@ -199,7 +199,7 @@ export const getGeoJsonCenter = function(geoJson) {
  *
  * A little "magic" function for automatically calculating map stroke sizes based on
  * the width of the container they're in. Used for responsive designs.
- * 
+ *
  * @param  {number} width    The width of the container holding the map.
  * @return {number}          The stroke width that the map elements should have.
  */

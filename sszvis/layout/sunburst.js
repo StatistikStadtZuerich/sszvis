@@ -5,6 +5,8 @@
  */
 'use strict';
 
+import fn from '../fn.js';
+
 /**
  * sszvis.layout.sunburst.prepareData
  *
@@ -32,7 +34,7 @@
  */
 export const prepareData = function() {
   var nester = d3.nest();
-  var valueAcc = sszvis.fn.identity;
+  var valueAcc = fn.identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
   // The default value for this component tries to preserve the order of the input data.
   // However, input data order preservation is not guaranteed, because of an implementation
@@ -41,10 +43,10 @@ export const prepareData = function() {
   var sortFn = function() { return 0; };
 
   function main(data) {
-    nester.rollup(sszvis.fn.first);
+    nester.rollup(fn.first);
 
     var partitionLayout = d3.layout.partition()
-      .children(sszvis.fn.prop('values'))
+      .children(fn.prop('values'))
       .value(function(d) { return valueAcc(d.values); })
       .sort(sortFn);
 
