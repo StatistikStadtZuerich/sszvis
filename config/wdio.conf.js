@@ -5,12 +5,12 @@ const VisualRegressionCompare = require('wdio-visual-regression-service/compare'
 const cwd = process.cwd();
 function getScreenshotName(dir) {
   return function(context) {
-    const { type, test: { title }, meta: { viewport }, options: { capabilities: { platform, browserName } } } = context;
+    const { type, test: { title }, meta: { viewport }, options: { test, capabilities: { platform, browserName } } } = context;
 
     // We only handle document screeshots with a fixed viewport.
     if (type === 'document' && viewport !== undefined) {
       const {width, height} = viewport;
-      return join(cwd, 'screenshots', dir, title, platform, browserName, `${width}x${height}.png`);
+      return join(cwd, 'screenshots', dir, title, platform, browserName, `${width}x${height}`, `${test}.png`);
     } else {
       throw new Error(`getScreenshotName: UNEXPECTED`);
     }
