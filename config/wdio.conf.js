@@ -73,4 +73,8 @@ exports.config = {
       'js:babel-register'
     ],
   },
+  reporters: ['dot', 'json'],
+  reporterOptions: {
+    outputDir: './',
+  },
 }

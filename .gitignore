@@ -9,3 +9,5 @@ dist/
 
 screenshots/taken/
 screenshots/diff/
+
+/WDIO.*
