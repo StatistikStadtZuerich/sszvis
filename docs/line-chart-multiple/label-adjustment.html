@@ -29,8 +29,8 @@
   /* Configuration
   ----------------------------------------------- */
   // CONFIG
-  // if a variable is optional, the code needs to work with default values 
-  // if variable is missing. 
+  // if a variable is optional, the code needs to work with default values
+  // if variable is missing.
   var config = {
     dataPath: arbeitsloseParams.data, //optional
     title: arbeitsloseParams.title, //optional
@@ -39,7 +39,7 @@
     valueColumn: 'Arbeitslosenquote',
     categoryColumn: 'Kategorie',
     yLabel: '',
-    xLabel: '', 
+    xLabel: '',
     ticks: 5,
     fallback: false, //optional, creates long ticks when true
     targetElement: arbeitsloseParams.id
@@ -150,11 +150,11 @@
     var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, '#sszvis-chart');
 
     // Scales
-    var xScale = d3.time.scale()
+    var xScale = d3.scaleTime()
       .domain(state.dates)
       .range([0, bounds.innerWidth]);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain([0, state.maxY])
       .range([bounds.innerHeight, 0]);
 
@@ -184,6 +184,9 @@
     // CONFIG use config.ticks if defined in config object
     var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();
     xTickValues = xTickValues.concat(state.selection.map(xAcc));
+    xTickValues = xTickValues.filter(function(v, i) {
+      return xTickValues.map(String).indexOf(String(v)) === i;
+    });
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
@@ -196,11 +199,11 @@
 
     var yAxis = sszvis.axis.y()
       .scale(yScale)
-      .tickFormat(function(d) { 
+      .tickFormat(function(d) {
         if(d===0){
           return null;
         }
-        return d  + "%"; 
+        return d  + "%";
       })
       .orient('right')
       .contour(true)
@@ -210,8 +213,8 @@
       .title((config.yLabel || ''))
       .dyTitle(-20);
 
-    // CONFIG use a second x-Axis with only tick labels. 
-    // Necessary in order to prevent horizontal lines to be drawn above data lines 
+    // CONFIG use a second x-Axis with only tick labels.
+    // Necessary in order to prevent horizontal lines to be drawn above data lines
     // if config.fallback == true
     var yAxis2 = sszvis.axis.y()
       .scale(yScale)
@@ -224,7 +227,7 @@
         return yAcc(d).toFixed(1) + '%';
       })
       .plain(cAcc);
-   
+
 
     var highlightLayer = sszvis.annotation.ruler()
       .top(0)

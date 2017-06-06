@@ -42,8 +42,8 @@ export default function() {
     .prop('onchange')
     .prop('minorTicks').minorTicks([])
     .prop('majorTicks').majorTicks([])
-    .prop('tickLabels', d3.functor).tickLabels(fn.identity)
-    .prop('label', d3.functor).label(fn.identity)
+    .prop('tickLabels', fn.functor).tickLabels(fn.identity)
+    .prop('label', fn.functor).label(fn.identity)
     .render(function() {
       var selection = d3.select(this);
       var props = selection.props();
@@ -65,9 +65,10 @@ export default function() {
       // the mostly unchanging bits
       var bg = selection.selectAll('g.sszvis-control-slider__backgroundgroup')
         .data([1]);
-      bg.enter()
+      var newBg = bg.enter()
         .append('g')
         .classed('sszvis-control-slider__backgroundgroup', true);
+      bg = bg.merge(newBg);
       bg.exit().remove();
 
       // create the axis
@@ -85,9 +86,10 @@ export default function() {
       var axisSelection = bg.selectAll('g.sszvis-axisGroup')
         .data([1]);
 
-      axisSelection.enter()
+      var newAxisSelection = axisSelection.enter()
         .append('g')
         .classed('sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider', true);
+      axisSelection = axisSelection.merge(newAxisSelection);
 
       axisSelection
         .attr('transform', translateString(0, axisOffset))
@@ -111,44 +113,48 @@ export default function() {
       // create the slider background
       var backgroundSelection = bg.selectAll('g.sszvis-slider__background')
         .data([1]);
-      backgroundSelection.enter()
+      var newBackgroundSelection = backgroundSelection.enter()
         .append('g')
         .classed('sszvis-slider__background', true);
+      backgroundSelection = backgroundSelection.merge(newBackgroundSelection);
       backgroundSelection
         .attr('transform', translateString(0, backgroundOffset));
 
       var bg1 = backgroundSelection.selectAll('.sszvis-slider__background__bg1')
         .data([1]);
-      bg1.enter()
+      var newBg1 = bg1.enter()
         .append('line')
         .classed('sszvis-slider__background__bg1', true)
         .style('stroke-width', bgWidth)
         .style('stroke', '#888')
         .style('stroke-linecap', 'round');
+      bg1 = bg1.merge(newBg1);
       bg1
         .attr('x1', Math.ceil(scaleRange[0] + lineEndOffset))
         .attr('x2', Math.floor(scaleRange[1] - lineEndOffset));
 
       var bg2 = backgroundSelection.selectAll('.sszvis-slider__background__bg2')
         .data([1]);
-      bg2.enter()
+      var newBg2 = bg2.enter()
         .append('line')
         .classed('sszvis-slider__background__bg2', true)
         .style('stroke-width', bgWidth - 1)
         .style('stroke', '#fff')
         .style('stroke-linecap', 'round');
+      bg2 = bg2.merge(newBg2);
       bg2
         .attr('x1', Math.ceil(scaleRange[0] + lineEndOffset))
         .attr('x2', Math.floor(scaleRange[1] - lineEndOffset));
 
       var shadow = backgroundSelection.selectAll('.sszvis-slider__backgroundshadow')
         .data([props.value]);
-      shadow.enter()
+      var newShadow = shadow.enter()
         .append('line')
         .attr('class', 'sszvis-slider__backgroundshadow')
         .attr('stroke-width', bgWidth - 1)
         .style('stroke', '#E0E0E0')
         .style('stroke-linecap', 'round');
+      shadow = shadow.merge(newShadow);
       shadow
         .attr('x1', Math.ceil(scaleRange[0] + lineEndOffset))
         .attr('x2', fn.compose(Math.floor, alteredScale));
@@ -160,6 +166,7 @@ export default function() {
 
       var handleEntering = handle.enter()
         .append('g').classed('sszvis-control-slider__handle', true);
+      handle = handle.merge(handleEntering);
 
       handle
         .attr('transform', function(d) {
@@ -198,7 +205,7 @@ export default function() {
       var sliderInteraction = move()
         .xScale(props.scale)
         // range goes from the text top (text is 11px tall) to the bottom of the axis
-        .yScale(d3.scale.linear().range([-11, axisOffset + majorTickSize]))
+        .yScale(d3.scaleLinear().range([-11, axisOffset + majorTickSize]))
         .draggable(true)
         .on('drag', props.onchange);
 

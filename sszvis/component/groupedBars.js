@@ -10,7 +10,7 @@
  * In addition to the raw data, the user must provide other information necessary for calculating
  * the layout of the groups of bars, namely the number of bars in each group (this component requires that
  * all groups have the same number of bars), a scale for finding the x-offset of each group (usually an
- * instance of d3.scale.ordinal), a width for groups, and y- and height- scales for the bars in the group.
+ * instance of d3.scaleOrdinal), a width for groups, and y- and height- scales for the bars in the group.
  * Note that the number of bars in each group and the group width determines how wide each bar will be, and
  * this width is calculated internally to the groupedBars component.
  *
@@ -29,7 +29,7 @@
  *                                      groups. Groups with less members than this number will have visible gaps. (Note that having less members
  *                                      in a group is not the same as having a member with a missing value, which will be discussed later)
  * @property {number} groupWidth        The width of the groups. This value is treated as the same for all groups. The width available to the groups
- *                                      is divided up among the bars. Often, this value will be the result of calling .rangeBand() on a d3.scale.ordinal scale.
+ *                                      is divided up among the bars. Often, this value will be the result of calling .rangeBand() on a d3.scaleOrdinal scale.
  * @property {number} groupSpace        The percentage of space between each group. (default: 0.05). Usually the default is fine here.
  * @property {function} y               The y-position of the bars in the group. This function is given a data value and should return
  *                                      a y-value. It should be similar to other functions you have already seen for positioning bars.
@@ -57,36 +57,40 @@ export default function() {
     .prop('groupSize')
     .prop('groupWidth')
     .prop('groupSpace').groupSpace(0.05)
-    .prop('y', d3.functor)
+    .prop('y', fn.functor)
     .prop('height')
     .prop('fill')
     .prop('stroke')
-    .prop('defined', d3.functor).defined(true)
+    .prop('defined', fn.functor).defined(true)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var inGroupScale = d3.scale.ordinal()
+      var inGroupScale = d3.scaleBand()
         .domain(d3.range(props.groupSize))
-        .rangeRoundBands([0, props.groupWidth], props.groupSpace, 0);
+        .padding(props.groupSpace)
+        .paddingOuter(0)
+        .rangeRound([0, props.groupWidth]);
 
       var groups = selection.selectAll('g.sszvis-bargroup')
         .data(data);
 
-      groups.enter()
+      var newGroups = groups.enter()
         .append('g')
         .classed('sszvis-bargroup', true);
 
       groups.exit().remove();
+      groups = groups.merge(newGroups);
 
       var barUnits = groups.selectAll('g.sszvis-barunit')
         .data(function(d) { return d; });
 
-      barUnits.enter()
+      var newBarUnits = barUnits.enter()
         .append('g')
         .classed('sszvis-barunit', true);
 
       barUnits.exit().remove();
+      barUnits = barUnits.merge(newBarUnits);
 
       barUnits.each(function(d, i) {
         // necessary for the within-group scale
@@ -114,7 +118,7 @@ export default function() {
           return props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__);
         })
         .attr('y', props.y)
-        .attr('width', inGroupScale.rangeBand())
+        .attr('width', inGroupScale.bandwidth())
         .attr('height', props.height);
 
       var unitsWithoutValue = barUnits.filter(fn.not(props.defined));
@@ -123,7 +127,7 @@ export default function() {
 
       unitsWithoutValue
         .attr('transform', function(d, i) {
-          return translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2, props.y(d, i));
+          return translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.bandwidth() / 2, props.y(d, i));
         });
 
       unitsWithoutValue
@@ -143,7 +147,7 @@ export default function() {
           var xTotal = 0;
           var tallest = Infinity;
           group.forEach(function(d, i) {
-            xTotal += props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.rangeBand() / 2;
+            xTotal += props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.bandwidth() / 2;
             // smaller y is higher
             tallest = Math.min(tallest, props.y(d, i));
           });

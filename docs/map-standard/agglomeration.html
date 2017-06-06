@@ -132,7 +132,7 @@
     var colorScale = sszvis.color.seqBlu()
       .domain(state.valueDomain);
 
-    var categoryColorScale = d3.scale.ordinal()
+    var categoryColorScale = d3.scaleOrdinal()
       .domain(state.categories.map(catName))
       .range(state.categories.map(sszvis.fn.compose(colorScale, catValue)));
 

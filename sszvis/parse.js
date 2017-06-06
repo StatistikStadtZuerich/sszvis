@@ -11,8 +11,9 @@ import d3 from 'd3';
  * @param  {String} d A Swiss date string, e.g. 17.08.2014
  * @return {Date}
  */
+var dateParser = d3.timeParse('%d.%m.%Y');
 export var date = function(d) {
-  return d3.time.format('%d.%m.%Y').parse(d);
+  return dateParser(d);
 }
 
 /**
@@ -20,9 +21,9 @@ export var date = function(d) {
  * @param  {string} d   A string which should be parsed as if it were a year, like "2014"
  * @return {Date}       A javascript date object for the first time in the given year
  */
-var yearParser = d3.time.format('%Y');
+var yearParser = d3.timeParse('%Y');
 export var year = function(d) {
-  return yearParser.parse(d);
+  return yearParser(d);
 };
 
 /**

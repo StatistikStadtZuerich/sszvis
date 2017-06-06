@@ -122,10 +122,10 @@
     // so we currently simplify to the most common use-case:
     // getting props.
     if (arguments.length) throw new Error('selection.props() does not accept any arguments');
-    if (this.length != 1) throw new Error('only one group is supported');
-    if (this[0].length != 1) throw new Error('only one node is supported');
+    if (this.size() != 1) throw new Error('only one group is supported');
+    if (this._groups[0].length != 1) throw new Error('only one node is supported');
 
-    var group = this[0];
+    var group = this._groups[0];
     var node  = group[0];
     return node.__props__ || {};
   };

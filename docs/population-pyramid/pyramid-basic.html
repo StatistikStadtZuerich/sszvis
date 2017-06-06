@@ -196,14 +196,14 @@
 
     // Scales
 
-    var lengthScale = d3.scale.linear()
+    var lengthScale = d3.scaleLinear()
       .domain([0, state.maxValue])
       .range([0, pyramidDimensions.maxBarLength]);
 
     var colorScale = sszvis.color.qual6()
       .domain(state.groups);
 
-    var positionScale = d3.scale.ordinal()
+    var positionScale = d3.scaleOrdinal()
       .domain(state.ages)
       .range(pyramidDimensions.positions);
 
@@ -303,11 +303,11 @@
 
     // Interaction
 
-    var mouseXScale = d3.scale.linear().domain([0, 1]).range([0, bounds.innerWidth]);
+    var mouseXScale = d3.scaleLinear().domain([0, 1]).range([0, bounds.innerWidth]);
     // using a continuous linear scale for the y mouse position ensures that the tooltip doesn't flicker on and off
     // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
     // between the bars, because the ordinal scale has no value there, while a linear scale does.
-    var mouseYScale = d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]);
+    var mouseYScale = d3.scaleLinear().domain(state.ageExtent).range([bounds.innerHeight, 0]);
     var interactionLayer = sszvis.behavior.move()
       .xScale(mouseXScale)
       .yScale(mouseYScale)

@@ -54,12 +54,12 @@ function handleMissingVal(v) {
 
 export default function() {
   return d3.component()
-    .prop('x', d3.functor)
-    .prop('y', d3.functor)
-    .prop('width', d3.functor)
-    .prop('height', d3.functor)
-    .prop('fill', d3.functor)
-    .prop('stroke', d3.functor)
+    .prop('x', fn.functor)
+    .prop('y', fn.functor)
+    .prop('width', fn.functor)
+    .prop('height', fn.functor)
+    .prop('fill', fn.functor)
+    .prop('stroke', fn.functor)
     .prop('centerTooltip')
     .prop('tooltipAnchor')
     .prop('transition').transition(true)
@@ -75,9 +75,10 @@ export default function() {
       var bars = selection.selectAll('.sszvis-bar')
         .data(data);
 
-      bars.enter()
+      var newBars = bars.enter()
         .append('rect')
         .classed('sszvis-bar', true);
+      bars = bars.merge(newBars);
 
       bars.exit().remove();
 

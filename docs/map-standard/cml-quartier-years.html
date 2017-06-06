@@ -263,11 +263,11 @@
       .domain(state.valueDomain);
 
     // line chart scales
-    var xScale = d3.time.scale()
+    var xScale = d3.scaleTime()
       .domain(state.yearDomain)
       .range([0, lineChartBounds.innerWidth]);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain(state.valueDomain)
       .range([lineChartBounds.innerHeight, 0]);
 

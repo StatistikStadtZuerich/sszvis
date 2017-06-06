@@ -123,12 +123,16 @@
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
-      .rangeBands([0, tableDimensions.width], tableDimensions.padRatio, 0)
+    var xScale = d3.scaleBand()
+      .padding(tableDimensions.padRatio)
+      .paddingOuter(0)
+      .rangeRound([0, tableDimensions.width])
       .domain(state.kreisList);
 
-    var yScale = d3.scale.ordinal()
-      .rangeBands([0, tableDimensions.height], tableDimensions.padRatio, 0)
+    var yScale = d3.scaleBand()
+      .padding(tableDimensions.padRatio)
+      .paddingOuter(0)
+      .rangeRound([0, tableDimensions.height])
       .domain(state.agesList);
 
     var colorScale = sszvis.color.seqBlu()

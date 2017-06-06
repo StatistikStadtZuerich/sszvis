@@ -33,11 +33,13 @@ export default function() {
         .selectAll('.sszvis-map__border')
         .data([props.geoJson]);
 
-      meshLine.enter()
+      var newMeshLine = meshLine.enter()
         .append('path')
         .classed('sszvis-map__border', true);
 
       meshLine.exit().remove();
+
+      meshLine = meshLine.merge(newMeshLine);
 
       meshLine
         .attr('d', props.mapPath)

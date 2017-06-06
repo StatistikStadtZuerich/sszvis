@@ -197,7 +197,7 @@
 
     var projection = sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight);
 
-    var mapPathGen = d3.geo.path()
+    var mapPathGen = d3.geoPath()
       .projection(projection);
 
     var newBuildings = sszvis.map.renderer.geojson()

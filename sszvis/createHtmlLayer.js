@@ -58,16 +58,16 @@ export default function(selector, bounds, metadata) {
   root.classed('sszvis-outer-container', true);
 
   var layer = root.selectAll('[data-sszvis-html-layer][' + elementDataKey + ']').data([0]);
-  layer.enter().append('div')
+  var newLayer = layer.enter().append('div')
     .classed('sszvis-html-layer', true)
     .attr('data-sszvis-html-layer', '')
     .attr(elementDataKey, '');
 
-  layer.style({
-    position: 'absolute',
-    left: bounds.padding.left + 'px',
-    top: bounds.padding.top + 'px'
-  });
+  layer = layer.merge(newLayer);
+  layer
+    .style('position', 'absolute')
+    .style('left', bounds.padding.left + 'px')
+    .style('top', bounds.padding.top + 'px');
 
   return layer;
 };

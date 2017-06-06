@@ -111,11 +111,13 @@
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
+    var xScale = d3.scaleBand()
       .domain(sszvis.fn.set(state.data, xAcc))
-      .rangeRoundBands([0, bounds.innerWidth], 0.4, props.barPadding);
+      .padding(0.4)
+      .paddingOuter(props.barPadding)
+      .rangeRound([0, bounds.innerWidth]);
 
-    var heightScale = d3.scale.linear()
+    var heightScale = d3.scaleLinear()
       .domain([0, d3.max(state.data, yAcc)])
       .range([0, bounds.innerHeight]);
 
@@ -149,7 +151,7 @@
     var barGen = sszvis.component.bar()
       .x(xValue)
       .y(yValue)
-      .width(xScale.rangeBand())
+      .width(xScale.bandwidth())
       .height(hValue)
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);

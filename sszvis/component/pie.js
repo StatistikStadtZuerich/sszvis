@@ -1,7 +1,7 @@
 /**
  * Pie component
  *
- * The pie component is used to draw pie charts. It uses the d3.svg.arc() generator
+ * The pie component is used to draw pie charts. It uses the d3.arc() generator
  * to create pie wedges.
  *
  * THe input data should be an array of data values, where each data value represents one wedge in the pie.
@@ -21,6 +21,7 @@
 
 import d3 from 'd3';
 
+import * as fn from '../fn.js';
 import transition from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 
@@ -29,7 +30,7 @@ export default function() {
     .prop('radius')
     .prop('fill')
     .prop('stroke')
-    .prop('angle', d3.functor)
+    .prop('angle', fn.functor)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -52,7 +53,7 @@ export default function() {
         if (isNaN(value.a1)) value.a1 = angle;
       });
 
-      var arcGen = d3.svg.arc()
+      var arcGen = d3.arc()
         .innerRadius(4)
         .outerRadius(props.radius)
         .startAngle(function(d) { return d.a0; })
@@ -69,7 +70,7 @@ export default function() {
         })
         .data(data);
 
-      segments.enter()
+      var newSegments = segments.enter()
         .append('path')
         .classed('sszvis-path', true)
         .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
@@ -77,6 +78,8 @@ export default function() {
         .attr('stroke', props.stroke);
 
       segments.exit().remove();
+
+      segments = segments.merge(newSegments);
 
       segments
         .transition()

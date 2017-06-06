@@ -53,16 +53,16 @@ export default function(selector, bounds, metadata) {
     .append('desc')
     .text(description);
 
-  svg
+  svg.merge(svgEnter)
     .attr('height', bounds.height)
     .attr('width',  bounds.width);
 
-  var viewport = svg.selectAll('[data-sszvis-svg-layer]').data([0]);
-  viewport.enter().append('g')
+  var viewport = svg.merge(svgEnter).selectAll('[data-sszvis-svg-layer]').data(function() { return [0]; });
+  var viewportEnter = viewport.enter().append('g')
     .attr('data-sszvis-svg-layer', '');
 
-  viewport
+  viewport.merge(viewportEnter)
     .attr('transform', 'translate(' + (bounds.padding.left) + ',' + (bounds.padding.top) + ')');
 
-  return viewport;
+  return viewport.merge(viewportEnter);
 };

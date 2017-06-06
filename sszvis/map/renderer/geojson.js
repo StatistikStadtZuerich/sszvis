@@ -38,10 +38,10 @@ export default function() {
     .prop('geoJsonKeyName').geoJsonKeyName('id')
     .prop('geoJson')
     .prop('mapPath')
-    .prop('defined', d3.functor).defined(true)
-    .prop('fill', d3.functor).fill('black')
-    .prop('stroke', d3.functor).stroke('black')
-    .prop('strokeWidth', d3.functor).strokeWidth(1.25)
+    .prop('defined', fn.functor).defined(true)
+    .prop('fill', fn.functor).fill('black')
+    .prop('stroke', fn.functor).stroke('black')
+    .prop('strokeWidth', fn.functor).strokeWidth(1.25)
     .prop('transitionColor').transitionColor(true)
     .render(function(data) {
       var selection = d3.select(this);
@@ -81,13 +81,15 @@ export default function() {
       var geoElements = selection.selectAll('.sszvis-map__geojsonelement')
         .data(mergedData);
 
-      geoElements.enter()
+      var newGeoElements = geoElements.enter()
         .append('path')
         .classed('sszvis-map__geojsonelement', true)
         .attr('data-event-target', '')
         .attr('fill', getMapFill);
 
       geoElements.exit().remove();
+
+      geoElements = geoElements.merge(newGeoElements);
 
       selection.selectAll('.sszvis-map__geojsonelement--undefined')
         .attr('fill', getMapFill);
@@ -127,7 +129,7 @@ export default function() {
 
           var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
           if (!sphericalCentroid) {
-            d.geoJson.properties.sphericalCentroid = sphericalCentroid = d3.geo.centroid(d.geoJson);
+            d.geoJson.properties.sphericalCentroid = sphericalCentroid = d3.geoCentroid(d.geoJson);
           }
 
           return props.mapPath.projection()(sphericalCentroid);
@@ -140,7 +142,10 @@ export default function() {
       tooltipGroup.call(ta);
     });
 
-  d3.rebind(component, event, 'on');
+  component.on = function() {
+    var value = event.on.apply(event, arguments);
+    return value === event ? component : value;
+  };
 
   return component;
 };

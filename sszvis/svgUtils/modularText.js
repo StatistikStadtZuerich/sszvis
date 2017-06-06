@@ -32,8 +32,6 @@
  * @return {function} Formatting function that accepts a datum
  */
 
-import d3 from 'd3';
-
 import * as fn from '../fn.js';
 
 function formatHTML() {
@@ -80,7 +78,7 @@ function structuredText() {
 
     addWord: function(style, text) {
       fn.last(lines).push({
-        text: d3.functor(text),
+        text: fn.functor(text),
         style: style
       });
     },

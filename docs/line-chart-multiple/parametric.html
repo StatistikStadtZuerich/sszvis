@@ -22,7 +22,7 @@
     return;
   }
 
-    /* Globals 
+    /* Globals
  ------------------------------------------------*/
  // CONFIG
  // some default values for the chart configuration
@@ -32,8 +32,8 @@
   /* Configuration
   ----------------------------------------------- */
   // CONFIG
-  // if a variable is optional, the code needs to work with default values 
-  // if variable is missing. 
+  // if a variable is optional, the code needs to work with default values
+  // if variable is missing.
   var config = {
     dataPath: 'data/ML_2Categories_Quarterly.csv', //optional
     title: 'Diagrammtitel', //optional
@@ -42,7 +42,7 @@
     valueColumn: 'Anzahl',
     categoryColumn: 'Kategorie',
     yLabel: '',
-    xLabel: '', 
+    xLabel: '',
     ticks: 5,
     fallback: false //optional, creates long ticks when true
   }
@@ -134,11 +134,11 @@
     var bounds = sszvis.bounds({ top: 30, bottom: 90 }, '#sszvis-chart');
 
     // Scales
-    var xScale = d3.time.scale()
+    var xScale = d3.scaleTime()
       .domain(state.dates)
       .range([0, bounds.innerWidth]);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain([0, state.maxY])
       .range([bounds.innerHeight, 0]);
 
@@ -168,6 +168,9 @@
     // CONFIG use config.ticks if defined in config object
     var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();
     xTickValues = xTickValues.concat(state.selection.map(xAcc));
+    xTickValues = xTickValues.filter(function(v, i) {
+      return xTickValues.map(String).indexOf(String(v)) === i;
+    });
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)
@@ -188,8 +191,8 @@
       .title((config.yLabel || ''))
       .dyTitle(-20);
 
-    // CONFIG use a second x-Axis with only tick labels. 
-    // Necessary in order to prevent horizontal lines to be drawn above data lines 
+    // CONFIG use a second x-Axis with only tick labels.
+    // Necessary in order to prevent horizontal lines to be drawn above data lines
     // if config.fallback == true
     var yAxis2 = sszvis.axis.y()
       .scale(yScale)
@@ -237,7 +240,7 @@
     chartLayer.selectGroup('yAxis2')
       .call(yAxis2);
 
-    
+
     chartLayer.selectGroup('cScale')
       // the color legend should always be positioned 60px below the bottom axis
       .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 60))

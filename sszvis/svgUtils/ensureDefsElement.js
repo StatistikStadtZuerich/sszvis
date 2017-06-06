@@ -15,12 +15,14 @@
 export default function(selection, type, elementId) {
   var element = ensureDefsSelection(selection)
     .selectAll(type + '#' + elementId)
-    .data([0])
+    .data([0]);
+
+  var newElement = element
     .enter()
     .append(type)
     .attr('id', elementId);
 
-  return element;
+  return element.merge(newElement);
 };
 
 
@@ -37,8 +39,8 @@ function ensureDefsSelection(selection) {
   var defs = selection.selectAll('defs')
     .data([0]);
 
-  defs.enter()
+  var newDefs = defs.enter()
     .append('defs');
 
-  return defs;
+  return defs.merge(newDefs);
 }

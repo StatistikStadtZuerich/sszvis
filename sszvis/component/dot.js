@@ -17,13 +17,14 @@
 
 import d3 from 'd3';
 
+import * as fn from '../fn.js';
 import transition from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 
 export default function() {
   return d3.component()
-    .prop('x', d3.functor)
-    .prop('y', d3.functor)
+    .prop('x', fn.functor)
+    .prop('y', fn.functor)
     .prop('radius')
     .prop('stroke')
     .prop('fill')
@@ -35,9 +36,10 @@ export default function() {
       var dots = selection.selectAll('.sszvis-circle')
         .data(data);
 
-      dots.enter()
+      var newDots = dots.enter()
         .append('circle')
         .classed('sszvis-circle', true);
+      dots = newDots.merge(dots);
 
       dots.exit().remove();
 

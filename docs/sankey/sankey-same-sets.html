@@ -167,11 +167,11 @@
 
     // Scales
 
-    var valueScale = d3.scale.linear()
+    var valueScale = d3.scaleLinear()
       .domain(sankeyLayout.valueDomain)
       .range(sankeyLayout.valueRange);
 
-    var columnPosition = d3.scale.linear()
+    var columnPosition = d3.scaleLinear()
       .domain(sankeyLayout.columnDomain)
       .range(sankeyLayout.columnRange);
 

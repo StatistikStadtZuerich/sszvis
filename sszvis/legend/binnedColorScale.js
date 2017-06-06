@@ -41,7 +41,7 @@ export default function() {
       var circleRad = segHeight / 2;
       var innerRange = [0, props.width - (2 * circleRad)];
 
-      var barWidth = d3.scale.linear()
+      var barWidth = d3.scaleLinear()
         .domain(props.endpoints)
         .range(innerRange);
       var sum = 0;
@@ -70,9 +70,10 @@ export default function() {
       var circles = selection.selectAll('circle.sszvis-legend__circle')
         .data(props.endpoints);
 
-      circles.enter()
+      var newCircles = circles.enter()
         .append('circle')
         .classed('sszvis-legend__circle', true);
+      circles = circles.merge(newCircles);
 
       circles.exit().remove();
 
@@ -87,9 +88,10 @@ export default function() {
       var segments = selection.selectAll('rect.sszvis-legend__crispmark')
         .data(rectData);
 
-      segments.enter()
+      var newSegments = segments.enter()
         .append('rect')
         .classed('sszvis-legend__crispmark', true);
+      segments = segments.merge(newSegments);
 
       segments.exit().remove();
 
@@ -105,9 +107,10 @@ export default function() {
       var lines = selection.selectAll('line.sszvis-legend__crispmark')
         .data(lineData);
 
-      lines.enter()
+      var newLines = lines.enter()
         .append('line')
         .classed('sszvis-legend__crispmark', true);
+      lines.merge(newLines);
 
       lines.exit().remove();
 
@@ -121,9 +124,10 @@ export default function() {
       var labels = selection.selectAll('.sszvis-legend__axislabel')
         .data(lineData);
 
-      labels.enter()
+      var newLabels = labels.enter()
         .append('text')
         .classed('sszvis-legend__axislabel', true);
+      labels = labels.merge(newLabels);
 
       labels.exit().remove();
 

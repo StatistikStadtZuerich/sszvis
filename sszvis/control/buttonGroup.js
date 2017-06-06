@@ -36,11 +36,13 @@ export default function() {
 
       var container = selection.selectAll('.sszvis-control-optionSelectable')
         .data(['sszvis-control-buttonGroup'], function(d){return d;});
-      container.enter()
+      var newContainer = container.enter()
         .append('div')
         .classed('sszvis-control-optionSelectable', true)
         .classed('sszvis-control-buttonGroup', true);
       container.exit().remove();
+
+      container = container.merge(newContainer);
 
       container
         .style('width', props.width + 'px');
@@ -48,11 +50,13 @@ export default function() {
       var buttons = container.selectAll('.sszvis-control-buttonGroup__item')
         .data(props.values);
 
-      buttons.enter()
+      var newButtons = buttons.enter()
         .append('div')
         .classed('sszvis-control-buttonGroup__item', true);
 
       buttons.exit().remove();
+
+      buttons = buttons.merge(newButtons);
 
       buttons
         .style('width', buttonWidth + 'px')

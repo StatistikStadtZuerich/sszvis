@@ -13,9 +13,9 @@
  *                                  barWidth:             the width of each bar in the bar chart
  *                                  padWidth:             the width of the padding between the bars in the bar chart
  *                                  padRatio:             the ratio between the padding and the step (barWidth + padding). This can be passed
- *                                                        as the second parameter to d3.scale.ordinal().rangeBands().
+ *                                                        as the second parameter to d3.scaleOrdinal().rangeBands().
  *                                  outerRatio:           the outer ratio between the outer padding and the step. This can be passed as the
- *                                                        third parameter to d3.scale.ordinal().rangeBands().
+ *                                                        third parameter to d3.scaleOrdinal().rangeBands().
  *                                  barGroupWidth:        the width of all the bars plus all the padding between the bars.
  *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
  *                                }

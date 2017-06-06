@@ -41,11 +41,13 @@ export default function() {
       var image = selection.selectAll('.sszvis-map__image')
         .data([0]); // At the moment, 1 image per container
 
-      image.enter()
+      var newImage = image.enter()
         .append('img')
         .classed('sszvis-map__image', true);
 
       image.exit().remove();
+
+      image = image.merge(newImage);
 
       var topLeft = props.projection(props.geoBounds[0]);
       var bottomRight = props.projection(props.geoBounds[1]);

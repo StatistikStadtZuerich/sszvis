@@ -27,13 +27,13 @@ import translateString from '../svgUtils/translateString.js';
 
 export default function() {
   return d3.component()
-    .prop('x', d3.functor)
-    .prop('y', d3.functor)
+    .prop('x', fn.functor)
+    .prop('y', fn.functor)
     .prop('top')
     .prop('bottom')
-    .prop('label').label(d3.functor(''))
+    .prop('label').label(fn.functor(''))
     .prop('color')
-    .prop('flip', d3.functor).flip(false)
+    .prop('flip', fn.functor).flip(false)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -58,6 +58,8 @@ export default function() {
         .classed('sszvis-handleRuler__group', true);
 
       group.exit().remove();
+
+      group = group.merge(entering);
 
       entering
         .append('line')
@@ -96,11 +98,13 @@ export default function() {
       var dots = group.selectAll('.sszvis-ruler__dot')
         .data(data);
 
-      dots.enter()
+      var newDots = dots.enter()
         .append('circle')
         .classed('sszvis-ruler__dot', true);
 
       dots.exit().remove();
+
+      dots = dots.merge(newDots);
 
       dots
         .attr('cx', crispX)
@@ -112,21 +116,25 @@ export default function() {
       var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
         .data(data);
 
-      labelOutline.enter()
+      var newLabelOutline = labelOutline.enter()
         .append('text')
         .classed('sszvis-ruler__label-outline', true);
 
       labelOutline.exit().remove();
 
+      labelOutline = labelOutline.merge(newLabelOutline);
+
 
       var label = selection.selectAll('.sszvis-ruler__label')
         .data(data);
 
-      label.enter()
+      var newLabel = label.enter()
         .append('text')
         .classed('sszvis-ruler__label', true);
 
       label.exit().remove();
+
+      label = label.merge(newLabel);
 
 
       // Update both labelOutline and labelOutline selections

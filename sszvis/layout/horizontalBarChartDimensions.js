@@ -13,9 +13,9 @@
  *                                  barHeight: the height of an individual bar
  *                                  padHeight: the height of the padding between each bar
  *                                  padRatio: the ratio of padding to barHeight + padding.
- *                                            this can be passed as the second argument to d3.scale.ordinal().rangeBands
+ *                                            this can be passed as the second argument to d3.scaleOrdinal().rangeBands
  *                                  outerRatio: the ratio of outer padding to barHeight + padding.
- *                                              this can be passed as the third parameter to d3.scale.ordinal().rangeBands
+ *                                              this can be passed as the third parameter to d3.scaleOrdinal().rangeBands
  *                                  axisOffset: the amount by which to vertically offset the y-axis of the horizontal bar chart
  *                                              in order to ensure that the axis labels are visible. This can be used as the y-component
  *                                              of a call to sszvis.svgUtils.translateString.

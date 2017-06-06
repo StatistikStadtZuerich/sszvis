@@ -31,67 +31,108 @@
 
 import d3 from 'd3';
 
+import * as fn from '../fn.js';
+import cascade from '../cascade.js';
 import bar from './bar.js';
 
-function stackedBar() {
+var stackAcc = fn.prop('stack');
+
+// Accessors for the first and second element of a tuple (2-element array).
+var fst = fn.prop('0');
+var snd = fn.prop('1');
+
+function stackedBarData(order) {
+  return function(stackAcc, seriesAcc, valueAcc) {
+    return function(data) {
+      var rows = cascade()
+        .arrayBy(stackAcc)
+        .objectBy(seriesAcc)
+        .apply(data);
+
+      // Collect all keys ()
+      var keys = rows.reduce(function(a, row) {
+        return fn.set(a.concat(Object.keys(row)));
+      }, []);
+
+      var stacks = d3.stack()
+        .keys(keys)
+        .value(function(x, key) { return valueAcc(x[key][0]); })
+        .order(order)(rows);
+
+      // Simplify the 'data' property.
+      stacks.forEach(function(stack) {
+        stack.forEach(function(d) {
+          d.series = stack.key
+          d.data = d.data[stack.key][0];
+          d.stack = stackAcc(d.data);
+        });
+      });
+
+      stacks.keys = keys;
+
+      stacks.maxValue = d3.max(stacks, function(stack) {
+        return d3.max(stack, function(d) { return d[1]; });
+      });
+
+      return stacks;
+    };
+  };
+}
+
+export var horizontalStackedBarData = stackedBarData(d3.stackOrderNone);
+export var verticalStackedBarData = stackedBarData(d3.stackOrderReverse);
+
+function stackedBar(config) {
   return d3.component()
-    .prop('xAccessor', d3.functor)
-    .prop('xScale', d3.functor)
-    .prop('width', d3.functor)
-    .prop('yAccessor', d3.functor)
-    .prop('yScale', d3.functor)
-    .prop('height', d3.functor)
+    .prop('xScale', fn.functor)
+    .prop('width', fn.functor)
+    .prop('yScale', fn.functor)
+    .prop('height', fn.functor)
     .prop('fill')
     .prop('stroke')
-    .prop('orientation').orientation('vertical')
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var isHorizontal = props.orientation === 'horizontal';
-
-      if (!isHorizontal) {
-        data = data.slice().reverse();
-      }
-
-      var stackLayout = d3.layout.stack()
-        .x(isHorizontal ? props.yAccessor : props.xAccessor)
-        .y(isHorizontal ? props.xAccessor : props.yAccessor);
-
-      var xValue, yValue, widthValue, heightValue;
-
-      if (isHorizontal) {
-        xValue = function(d) { return props.xScale(d.y0); };
-        yValue = function(d) { return props.yScale(props.yAccessor(d)); };
-        widthValue = function(d) { return props.xScale(d.y0 + d.y) - props.xScale(d.y0); };
-        heightValue = function() { return props.height.apply(this, arguments); };
-      } else {
-        xValue = function(d) { return props.xScale(props.xAccessor(d)); };
-        yValue = function(d) { return props.yScale(d.y0 + d.y); };
-        widthValue = function() { return props.width.apply(this, arguments); };
-        heightValue = function(d) { return props.yScale(d.y0) - props.yScale(d.y0 + d.y); };
-      }
-
       var barGen = bar()
-        .x(xValue)
-        .y(yValue)
-        .width(widthValue)
-        .height(heightValue)
+        .x(config.x(props))
+        .y(config.y(props))
+        .width(config.width(props))
+        .height(config.height(props))
         .fill(props.fill)
         .stroke(props.stroke);
 
       var groups = selection.selectAll('.sszvis-stack')
-        .data(stackLayout(data));
+        .data(data);
 
-      groups.enter()
+      var newGroups = groups.enter()
         .append('g')
         .classed('sszvis-stack', true);
 
       groups.exit().remove();
 
+      groups = groups.merge(newGroups);
+
       groups.call(barGen);
     });
 }
 
-export var horizontal = function() { return stackedBar().orientation('horizontal'); };
-export var vertical = function() { return stackedBar().orientation('vertical'); };
+var horizontalStackedBarConfig = {
+  x: function(props) { return fn.compose(props.xScale, fst); },
+  y: function(props) { return fn.compose(props.yScale, stackAcc); },
+  width: function(props) { return function(d) { return props.xScale(d[1]) - props.xScale(d[0]); }; },
+  height: function(props) { return props.height },
+}
+export var horizontal = function() {
+  return stackedBar(horizontalStackedBarConfig);
+};
+
+var verticalStackedBarConfig = {
+  x: function(props) { return fn.compose(props.xScale, stackAcc); },
+  y: function(props) { return fn.compose(props.yScale, snd); },
+  width: function(props) { return props.width; },
+  height: function(props) { return function(d) { return props.yScale(d[0]) - props.yScale(d[1]); }; },
+}
+export var vertical = function() {
+  return stackedBar(verticalStackedBarConfig);
+};

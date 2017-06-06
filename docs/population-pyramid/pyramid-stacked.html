@@ -44,8 +44,8 @@
   var gAcc = sszvis.fn.prop('gender');
   var aAcc = sszvis.fn.prop('age');
   var stackAcc = sszvis.fn.prop('group');
-  var womenAcc = sszvis.fn.prop('Frauen');
-  var menAcc = sszvis.fn.prop('Männer');
+  var womenAcc = sszvis.fn.prop('0');
+  var menAcc = sszvis.fn.prop('1');
 
 
   /* Application state
@@ -66,14 +66,9 @@
       state.data = data;
       state.groups = sszvis.fn.set(state.data, groupAndStackAcc);
 
-      state.populations = sszvis.cascade()
-        .objectBy(gAcc)
-        .arrayBy(stackAcc)
-        .apply(state.data);
+      state.stackedPyramidData = sszvis.component.stackedPyramid.stackedPyramidData(gAcc, aAcc, stackAcc, vAcc)(data);
 
-      state.maxStackedValue = d3.max(d3.values(state.populations), function(stacks) {
-        return d3.max(d3.transpose(stacks), function(s) { return d3.sum(s, vAcc); });
-      });
+      state.maxStackedValue = state.stackedPyramidData.maxValue;
 
       render(state);
     },
@@ -117,11 +112,11 @@
 
     // Scales
 
-    var lengthScale = d3.scale.linear()
+    var lengthScale = d3.scaleLinear()
       .domain([0, state.maxStackedValue])
       .range([0, pyramidDimensions.maxBarLength]);
 
-    var positionScale = d3.scale.ordinal()
+    var positionScale = d3.scaleOrdinal()
       .domain(state.ages)
       .range(pyramidDimensions.positions);
 
@@ -135,16 +130,16 @@
         title: TITLE,
         description: DESCRIPTION
       })
-      .datum(state.populations);
+      .datum(state.stackedPyramidData);
 
 
     // Components
 
     var pyramid = sszvis.component.stackedPyramid()
       .barFill(sszvis.fn.compose(colorScale, groupAndStackAcc))
-      .barPosition(sszvis.fn.compose(positionScale, aAcc))
+      .barPosition(positionScale)
       .barHeight(pyramidDimensions.barHeight)
-      .barWidth(sszvis.fn.compose(lengthScale, vAcc))
+      .barWidth(lengthScale)
       .leftAccessor(womenAcc)
       .rightAccessor(menAcc);
 
@@ -175,7 +170,6 @@
     // Rendering
 
     chartLayer.selectGroup('populationPyramid')
-      .datum(state.populations)
       .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, 0))
       .call(pyramid);
 

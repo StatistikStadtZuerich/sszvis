@@ -8,7 +8,7 @@
 </head>
 <body style="margin:0;padding:0;">
 <link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/d3/d3.js"></script>
 <script src="../../sszvis.js"></script>
 
 <div id="sszvis-chart"></div>
@@ -203,14 +203,14 @@ var config = {
 
     // Scales
 
-    var lengthScale = d3.scale.linear()
+    var lengthScale = d3.scaleLinear()
       .domain([0, state.maxValue])
       .range([0, pyramidDimensions.maxBarLength]);
 
     var colorScale = sszvis.color.qual6()
       .domain(state.groups);
 
-    var positionScale = d3.scale.ordinal()
+    var positionScale = d3.scaleOrdinal()
       .domain(state.ages)
       .range(pyramidDimensions.positions);
 
@@ -314,11 +314,11 @@ var config = {
     // Interaction
     if (!config.fallback) {
       var interactionLayer = sszvis.behavior.move()
-        .xScale(d3.scale.linear().range([0, bounds.innerWidth]))
+        .xScale(d3.scaleLinear().range([0, bounds.innerWidth]))
         // using a continuous linear scale here ensures that the tooltip doesn't flicker on and off
         // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
         // between the bars, because the ordinal scale has no value there, while a linear scale does.
-        .yScale(d3.scale.linear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
+        .yScale(d3.scaleLinear().domain(state.ageExtent).range([bounds.innerHeight, 0]))
         .on('move', actions.selectBar)
         .on('end', actions.deselectBar);
 

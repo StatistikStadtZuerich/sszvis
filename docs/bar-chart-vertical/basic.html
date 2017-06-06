@@ -102,11 +102,13 @@
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
-      .domain(state.categories)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, props.barPadding);
+    var xScale = d3.scaleBand()
+      .padding(chartDimensions.padRatio)
+      .paddingOuter(props.barPadding)
+      .range([0, chartDimensions.totalWidth])
+      .domain(state.categories);
 
-    var heightScale = d3.scale.linear()
+    var heightScale = d3.scaleLinear()
       .range([0, bounds.innerHeight])
       .domain([0, state.maxValue]);
 

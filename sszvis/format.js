@@ -20,16 +20,24 @@ export var age = function(d) {
 /**
  * A multi time formatter used by the axis class
  */
-export var axisTimeFormat = d3.time.format.multi([
-  ['.%L', function(d) { return d.getMilliseconds(); }],
-  [':%S', function(d) { return d.getSeconds(); }],
-  ['%H:%M', function(d) { return d.getMinutes(); }],
-  ['%H Uhr', function(d) { return d.getHours(); }],
-  ['%a., %d.', function(d) { return d.getDay() && d.getDate() != 1; }],
-  ['%e. %b', function(d) { return d.getDate() != 1; }],
-  ['%B', function(d) { return d.getMonth(); }],
-  ['%Y', function() { return true; }]
-]);
+export var axisTimeFormat = function(d) {
+  var xs = [
+    ['.%L', function(d) { return d.getMilliseconds(); }],
+    [':%S', function(d) { return d.getSeconds(); }],
+    ['%H:%M', function(d) { return d.getMinutes(); }],
+    ['%H Uhr', function(d) { return d.getHours(); }],
+    ['%a., %d.', function(d) { return d.getDay() && d.getDate() != 1; }],
+    ['%e. %b', function(d) { return d.getDate() != 1; }],
+    ['%B', function(d) { return d.getMonth(); }],
+    ['%Y', function() { return true; }]
+  ];
+
+  for (var i = 0; i < xs.length; ++i) {
+    if (xs[i][1](d)) {
+      return d3.timeFormat(xs[i][0])(d);
+    }
+  }
+};
 
 /**
  * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.

@@ -35,18 +35,24 @@ export default function() {
       var group = selection.selectAll('g.sszvis-legend__elementgroup')
         .data([0]);
 
-      group.enter().append('g').attr('class', 'sszvis-legend__elementgroup');
+      var newGroup = group.enter().append('g').attr('class', 'sszvis-legend__elementgroup');
+
+      // FIXME: No exit?
+
+      group = group.merge(newGroup);
 
       group.attr('transform', translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
 
       var circles = group.selectAll('circle.sszvis-legend__greyline')
         .data(tickValues);
 
-      circles.enter()
+      var newCircles = circles.enter()
         .append('circle')
         .classed('sszvis-legend__greyline', true);
 
       circles.exit().remove();
+
+      circles = circles.merge(newCircles);
 
       function getCircleCenter(d) {
         return maxRadius - props.scale(d);
@@ -64,11 +70,13 @@ export default function() {
       var lines = group.selectAll('line.sszvis-legend__dashedline')
         .data(tickValues);
 
-      lines.enter()
+      var newLines = lines.enter()
         .append('line')
         .classed('sszvis-legend__dashedline', true);
 
       lines.exit().remove();
+
+      lines = lines.merge(newLines)
 
       lines
         .attr('x1', 0)
@@ -79,11 +87,13 @@ export default function() {
       var labels = group.selectAll('.sszvis-legend__label')
         .data(tickValues);
 
-      labels.enter()
+      var newLabels = labels.enter()
         .append('text')
         .attr('class', 'sszvis-legend__label sszvis-legend__label--small');
 
       labels.exit().remove();
+
+      labels = labels.merge(newLabels);
 
       labels
         .attr('dx', maxRadius + 18)

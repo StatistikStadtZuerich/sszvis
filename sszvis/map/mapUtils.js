@@ -36,7 +36,7 @@ var featureBoundsCache = {};
  * @return {Function}                               The projection function.
  */
 export var swissMapProjection = function(width, height, featureCollection, featureBoundsCacheKey) {
-  var mercatorProjection = d3.geo.mercator()
+  var mercatorProjection = d3.geoMercator()
     // .rotate([-7.439583333333333, -46.95240555555556]); // This rotation was, I think, part of the offset problem
 
   var bounds;
@@ -50,7 +50,7 @@ export var swissMapProjection = function(width, height, featureCollection, featu
       .scale(1)
       .translate([0, 0]);
 
-    var boundsGenerator = d3.geo.path()
+    var boundsGenerator = d3.geoPath()
       .projection(mercatorProjection);
 
     bounds = boundsGenerator.bounds(featureCollection);
@@ -89,7 +89,7 @@ export var swissMapProjection = function(width, height, featureCollection, featu
  *                                            a map projection optimal for Swiss areas.
  */
 export var swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
-  var mercatorPath = d3.geo.path()
+  var mercatorPath = d3.geoPath()
     .projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
 
   return mercatorPath;
@@ -188,7 +188,7 @@ export var getGeoJsonCenter = function(geoJson) {
     if (setCenter) {
       geoJson.properties.cachedCenter = setCenter.split(',').map(parseFloat);
     } else {
-      geoJson.properties.cachedCenter = d3.geo.centroid(geoJson);
+      geoJson.properties.cachedCenter = d3.geoCentroid(geoJson);
     }
   }
 

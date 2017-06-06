@@ -48,7 +48,7 @@ export default function() {
       //sszsch why reverse?
       data = data.slice().reverse();
 
-      var areaGen = d3.svg.area()
+      var areaGen = d3.area()
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);
@@ -56,12 +56,13 @@ export default function() {
       var paths = selection.selectAll('path.sszvis-path')
         .data(data, props.key);
 
-      paths.enter()
+      var newPaths = paths.enter()
         .append('path')
-        .classed('sszvis-path', true)
-        .attr('fill', props.fill);
+        .classed('sszvis-path', true);
 
       paths.exit().remove();
+
+      paths = newPaths.merge(paths);
 
       if (props.transition) {
         paths = paths.transition()

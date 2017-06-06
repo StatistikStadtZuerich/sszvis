@@ -172,18 +172,18 @@
 
     // Scales
 
-    var xScale = d3.scale.linear()
+    var xScale = d3.scaleLinear()
       .domain(state.xExtent)
       .range([0, bounds.innerWidth]);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain(state.yExtent)
       .range([bounds.innerHeight, 0]);
 
     var cScale = sszvis.color.qual12()
       .domain(state.branches);
 
-    var tScale = d3.time.scale()
+    var tScale = d3.scaleTime()
       .domain(state.tExtent)
       .range([0, bounds.innerWidth]);
 

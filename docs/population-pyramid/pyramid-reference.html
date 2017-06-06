@@ -102,11 +102,11 @@
 
     // Scales
 
-    var lengthScale = d3.scale.linear()
+    var lengthScale = d3.scaleLinear()
       .domain([0, state.maxValue])
       .range([0, pyramidDimensions.maxBarLength]);
 
-    var positionScale = d3.scale.ordinal()
+    var positionScale = d3.scaleOrdinal()
       .domain(state.ages)
       .range(pyramidDimensions.positions);
 

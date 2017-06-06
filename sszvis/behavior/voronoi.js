@@ -64,47 +64,48 @@ export default function() {
         return false;
       }
 
-      var voronoi = d3.geom.voronoi()
+      var voronoi = d3.voronoi()
         .x(props.x)
         .y(props.y)
-        .clipExtent(props.bounds);
+        .extent(props.bounds);
 
       var polys = selection.selectAll('[data-sszvis-behavior-voronoi]')
-        .data(voronoi(data));
+        .data(voronoi.polygons(data));
 
-      polys.enter()
+      var newPolys = polys.enter()
         .append('path')
         .attr('data-sszvis-behavior-voronoi', '')
         .attr('data-sszvis-behavior-pannable', '')
         .attr('class', 'sszvis-interactive');
 
       polys.exit().remove();
+      polys = polys.merge(newPolys);
 
       polys
         .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
         .attr('fill', 'transparent')
         .on('mouseover', function(datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
-            event.over(datum.point);
+          if (eventNearPoint(d3.event, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
+            event.apply('over', this, [datum.data]);
           }
         })
         .on('mousemove', function(datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          if (eventNearPoint(d3.event, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
-            event.over(datum.point);
+          if (eventNearPoint(d3.event, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
+            event.apply('over', this, [datum.data]);
           } else {
-            event.out();
+            event.apply('out', this, []);
           }
         })
         .on('mouseout', function() {
-          event.out();
+          event.apply('out', this, []);
         })
         .on('touchstart', function(datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          if (eventNearPoint(fn.firstTouch(d3.event), [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+          if (eventNearPoint(fn.firstTouch(d3.event), [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
             d3.event.preventDefault();
-            event.over(datum.point);
+            event.apply('over', this, [datum.data]);
 
             // Attach these handlers only if the initial touch is within the max distance from the voronoi center
             // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
@@ -116,23 +117,23 @@ export default function() {
               var datum = datumFromPannableElement(element);
               if (datum !== null) {
                 var cbox = element.parentNode.getBoundingClientRect();
-                if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.point), cbox.top + props.y(datum.point)])) {
+                if (eventNearPoint(touchEvent, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
                   // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
                   // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
                   // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
                   // we want to avoid.
                   if (d3.event.cancelable) { d3.event.preventDefault(); }
-                  event.over(datum.point);
+                  event.apply('over', this, [datum.data]);
                 } else {
-                  event.out();
+                  event.apply('out', this, []);
                 }
               } else {
-                event.out();
+                event.apply('out', this, []);
               }
             };
 
             var end = function() {
-              event.out();
+              event.apply('out', this, []);
               d3.select(this)
                 .on('touchmove', null)
                 .on('touchend', null);
@@ -149,7 +150,10 @@ export default function() {
         }
     });
 
-  d3.rebind(voronoiComponent, event, 'on');
+  voronoiComponent.on = function() {
+    var value = event.on.apply(event, arguments);
+    return value === event ? voronoiComponent : value;
+  };
 
   return voronoiComponent;
 };

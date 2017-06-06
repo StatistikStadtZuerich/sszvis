@@ -134,7 +134,7 @@
     // Scales
     var colorScale = sszvis.color.qual6().domain(state.continents);
 
-    var radiusScale = d3.scale.linear()
+    var radiusScale = d3.scaleLinear()
           .domain(state.radiusExtent)
           .range([0, burstLayout.numLayers * burstLayout.ringWidth]);
 
@@ -159,7 +159,7 @@
       .centerRadius(burstLayout.centerRadius);
 
     var tooltipText = sszvis.svgUtils.modularText.html()
-      .bold(function(d) { return d.key; });
+      .bold(function(d) { return d.data.key; });
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
@@ -193,8 +193,8 @@
       .call(tooltip);
 
 
-    // Interaction 
-    
+    // Interaction
+
     var interactionLayer = sszvis.behavior.panning()
       .elementSelector('.sszvis-sunburst-arc')
       .on('start', actions.onSliceOver)

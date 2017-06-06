@@ -88,11 +88,11 @@
 
     // Scales
 
-    var xScale = d3.scale.linear()
+    var xScale = d3.scaleLinear()
       .domain(state.xExtent)
       .range([0, bounds.innerWidth]);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain(state.yExtent)
       .range([bounds.innerHeight, 0]);
 

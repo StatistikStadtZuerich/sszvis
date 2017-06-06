@@ -49,11 +49,13 @@ export default function() {
       var zurichSee = selection.selectAll('.sszvis-map__lakezurich')
         .data([props.lakeFeature]);
 
-      zurichSee.enter()
+      var newZurichSee = zurichSee.enter()
         .append('path')
         .classed('sszvis-map__lakezurich', true);
 
       zurichSee.exit().remove();
+
+      zurichSee = zurichSee.merge(newZurichSee);
 
       zurichSee
         .attr('d', props.mapPath)
@@ -69,11 +71,13 @@ export default function() {
       var lakePath = selection.selectAll('.sszvis-map__lakepath')
         .data([props.lakeBounds]);
 
-      lakePath.enter()
+      var newLakePath = lakePath.enter()
         .append('path')
         .classed('sszvis-map__lakepath', true);
 
       lakePath.exit().remove();
+
+      lakePath = lakePath.merge(newLakePath);
 
       lakePath
         .attr('d', props.mapPath);

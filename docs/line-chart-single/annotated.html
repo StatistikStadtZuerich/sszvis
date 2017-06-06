@@ -90,11 +90,11 @@
 
     // Scales
 
-    var xScale = d3.time.scale()
+    var xScale = d3.scaleTime()
       .domain(state.dates)
       .range([0, bounds.innerWidth]);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain([0, d3.max(state.data, yAcc)])
       .range([bounds.innerHeight, 0]);
 

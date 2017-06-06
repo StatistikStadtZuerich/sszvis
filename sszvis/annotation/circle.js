@@ -20,17 +20,18 @@
 
 import d3 from 'd3';
 
+import * as fn from '../fn.js';
 import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
 import { dataAreaPattern } from '../patterns.js';
 
 export default function() {
   return d3.component()
-    .prop('x', d3.functor)
-    .prop('y', d3.functor)
-    .prop('r', d3.functor)
-    .prop('dx', d3.functor)
-    .prop('dy', d3.functor)
-    .prop('caption', d3.functor)
+    .prop('x', fn.functor)
+    .prop('y', fn.functor)
+    .prop('r', fn.functor)
+    .prop('dx', fn.functor)
+    .prop('dy', fn.functor)
+    .prop('caption', fn.functor)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -41,9 +42,10 @@ export default function() {
       var dataArea = selection.selectAll('.sszvis-dataareacircle')
         .data(data);
 
-      dataArea.enter()
+      var newDataArea = dataArea.enter()
         .append('circle')
         .classed('sszvis-dataareacircle', true);
+      dataArea = dataArea.merge(newDataArea);
 
       dataArea
         .attr('cx', props.x)
@@ -55,9 +57,10 @@ export default function() {
         var dataCaptions = selection.selectAll('.sszvis-dataareacircle__caption')
           .data(data);
 
-        dataCaptions.enter()
+        var newDataCaptions = dataCaptions.enter()
           .append('text')
           .classed('sszvis-dataareacircle__caption', true);
+        dataCaptions = dataCaptions.merge(newDataCaptions);
 
         dataCaptions
           .attr('x', props.x)

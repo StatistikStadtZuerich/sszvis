@@ -108,13 +108,16 @@
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
+    var xScale = d3.scaleBand()
       .domain(state.regions)
-      .rangeRoundBands([0, chartWidth], 0.26, 0.80);
+      .padding(0.26)
+      .paddingOuter(0.80)
+      .rangeRound([0, chartWidth]);
+      // .rangeRoundBands([0, chartWidth], 0.26, 0.80);
 
     // because the bar chart must display negative values, scales for the y-axis are a little weird
     // see also: http://bl.ocks.org/mbostock/2368837 (http://stackoverflow.com/questions/10127402/bar-chart-with-negative-values)
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain(state.valueExtent)
       .range([bounds.innerHeight, 0]);
 
@@ -145,7 +148,7 @@
 
     var barLayout = sszvis.component.groupedBars()
       .groupScale(sszvis.fn.compose(xScale, xAcc))
-      .groupWidth(xScale.rangeBand())
+      .groupWidth(xScale.bandwidth())
       .groupSize(state.longestGroup)
       .y(sszvis.fn.compose(yPosScale, yAcc))
       .height(sszvis.fn.compose(hScale, yAcc))

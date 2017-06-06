@@ -73,7 +73,7 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiereBaseMap', function(modul
 
 /**
  * zurichStatistischeQuartiere Map Component
- * 
+ *
  * To use this component, pass data in the usual manner. Each data object is expected to have a value which
  * will be used to match that object with a particular map entity. The possible id values depend on the map type.
  * They are covered in more detail in the file sszvis/map/map-ids.txt. Which data key is used to fetch this value is configurable.
@@ -185,17 +185,20 @@ sszvis_namespace('sszvis.map.zurichStatistischeQuartiere', function(module) {
 
         selection.selectAll('[data-event-target]')
           .on('mouseover', function(d) {
-            event.over(d.datum);
+            event.apply('over', this, [d.datum]);
           })
           .on('mouseout', function(d) {
-            event.out(d.datum);
+            event.apply('out', this, [d.datum]);
           })
           .on('click', function(d) {
-            event.click(d.datum);
+            event.apply('click', this, [d.datum]);
           });
       });
 
-    d3.rebind(component, event, 'on');
+    component.on = function() {
+      var value = event.on.apply(event, arguments);
+      return value === event ? component : value;
+    };
 
     return component;
   };

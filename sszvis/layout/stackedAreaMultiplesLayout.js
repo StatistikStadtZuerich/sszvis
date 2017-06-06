@@ -14,7 +14,7 @@
  * @return {object}             An object containing configuration properties for use in laying out the stacked area multiples.
  *                              {
  *                                range:          This is an array of baseline positions, counting from the top of the stack downwards.
- *                                                It should be used to configure a d3.scale.ordinal(). The values passed into the ordinal
+ *                                                It should be used to configure a d3.scaleOrdinal(). The values passed into the ordinal
  *                                                scale will be given a y-value which descends from the top of the stack, so that the resulting
  *                                                scale will match the organization scheme of sszvis.stackedArea. Use the ordinal scale to
  *                                                configure the sszvis.stackedAreaMultiples component.

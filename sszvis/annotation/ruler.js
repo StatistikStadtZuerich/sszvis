@@ -41,12 +41,12 @@ export default function() {
   return d3.component()
     .prop('top')
     .prop('bottom')
-    .prop('x', d3.functor)
-    .prop('y', d3.functor)
-    .prop('label').label(d3.functor(''))
+    .prop('x', fn.functor)
+    .prop('y', fn.functor)
+    .prop('label').label(fn.functor(''))
     .prop('color')
-    .prop('flip', d3.functor).flip(false)
-    .prop('labelId', d3.functor)
+    .prop('flip', fn.functor).flip(false)
+    .prop('labelId', fn.functor)
     .prop('reduceOverlap').reduceOverlap(false)
     .render(function(data) {
       var selection = d3.select(this);
@@ -57,9 +57,12 @@ export default function() {
       var ruler = selection.selectAll('.sszvis-ruler__rule')
         .data(data, labelId);
 
-      ruler.enter()
+      var newRuler = ruler.enter()
         .append('line')
         .classed('sszvis-ruler__rule', true);
+
+      ruler.exit().remove();
+      ruler = ruler.merge(newRuler);
 
       ruler
         .attr('x1', fn.compose(halfPixel, props.x))
@@ -67,14 +70,16 @@ export default function() {
         .attr('x2', fn.compose(halfPixel, props.x))
         .attr('y2', props.bottom);
 
-      ruler.exit().remove();
 
       var dot = selection.selectAll('.sszvis-ruler__dot')
         .data(data, labelId);
 
-      dot.enter()
+      var newDot = dot.enter()
         .append('circle')
         .classed('sszvis-ruler__dot', true);
+
+      dot.exit().remove();
+      dot = dot.merge(newDot);
 
       dot
         .attr('cx', fn.compose(halfPixel, props.x))
@@ -82,27 +87,27 @@ export default function() {
         .attr('r', 3.5)
         .attr('fill', props.color);
 
-      dot.exit().remove();
-
 
       var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
         .data(data, labelId);
 
-      labelOutline.enter()
+      var newLabelOutline = labelOutline.enter()
         .append('text')
         .classed('sszvis-ruler__label-outline', true);
 
       labelOutline.exit().remove();
+      labelOutline = labelOutline.merge(newLabelOutline);
 
 
       var label = selection.selectAll('.sszvis-ruler__label')
         .data(data, labelId);
 
-      label.enter()
+      var newLabel = label.enter()
         .append('text')
         .classed('sszvis-ruler__label', true);
 
       label.exit().remove();
+      label = label.merge(newLabel);
 
 
       // Update both label and labelOutline selections

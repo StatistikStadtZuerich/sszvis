@@ -16,7 +16,7 @@ global.renderTooltip = function(containerId, size, data, position, tooltip, debu
 
   var tooltipAnchor = sszvis.annotation.tooltipAnchor()
     .debug(!!debug)
-    .position(d3.functor(position));
+    .position(sszvis.fn.functor(position));
 
   container.call(tooltipAnchor);
 

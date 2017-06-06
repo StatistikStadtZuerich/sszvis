@@ -93,16 +93,18 @@
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
+    var xScale = d3.scaleBand()
       .domain(state.years)
-      .rangeRoundBands([0, bounds.innerWidth], 0.1, 0.1);
+      .padding(0.1)
+      .paddingOuter(0.1)
+      .rangeRound([0, bounds.innerWidth]);
 
     var maxAbsVal = d3.max(state.valueExtent, Math.abs);
 
     // Note that the bounds of the y-scale are different than in other examples.
     // Here, the bounds are the positive and negative values of the largest absolute value in the dataset.
     // This is distinct from an ordinary range of the largest and smallest values in the dataset.
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain([-maxAbsVal, maxAbsVal])
       .range([bounds.innerHeight, 0]);
 
@@ -134,7 +136,7 @@
 
     var barLayout = sszvis.component.groupedBars()
       .groupScale(sszvis.fn.compose(xScale, xAcc))
-      .groupWidth(xScale.rangeBand())
+      .groupWidth(xScale.bandwidth())
       .groupSize(state.longestGroup)
       .y(sszvis.fn.compose(yPosScale, yAcc))
       .height(sszvis.fn.compose(hScale, yAcc))

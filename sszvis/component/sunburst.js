@@ -38,7 +38,7 @@ var TWO_PI = 2 * Math.PI;
 
 export default function() {
   return d3.component()
-    .prop('angleScale').angleScale(d3.scale.linear().range([0, 2 * Math.PI]))
+    .prop('angleScale').angleScale(d3.scaleLinear().range([0, 2 * Math.PI]))
     .prop('radiusScale')
     .prop('centerRadius')
     .prop('fill')
@@ -50,15 +50,15 @@ export default function() {
       // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
       function getColorRecursive(node) {
         // Center node (if the data were prepared using sszvis.layout.sunburst.prepareData)
-        if (node.isSunburstRoot) {
+        if (node.data.isSunburstRoot) {
           return 'transparent';
         } else if (!node.parent) {
           // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
           logger.warn('Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData');
-          return d3.hsl(props.fill(node.key));
-        } else if (node.parent.isSunburstRoot) {
+          return d3.hsl(props.fill(node.data.key));
+        } else if (node.parent.data.isSunburstRoot) {
           // Use the color scale
-          return d3.hsl(props.fill(node.key));
+          return d3.hsl(props.fill(node.data.key));
         } else {
           // Recurse up the tree and adjust the lightness value
           var pColor = getColorRecursive(node.parent);
@@ -67,12 +67,12 @@ export default function() {
         }
       }
 
-      var startAngle = function(d) { return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x))); };
-      var endAngle = function(d) { return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x + d.dx))); };
-      var innerRadius = function(d) { return props.centerRadius + Math.max(0, props.radiusScale(d.y)); };
-      var outerRadius = function(d) { return props.centerRadius + Math.max(0, props.radiusScale(d.y + d.dy)); };
+      var startAngle = function(d) { return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0))); };
+      var endAngle = function(d) { return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1))); };
+      var innerRadius = function(d) { return props.centerRadius + Math.max(0, props.radiusScale(d.y0)); };
+      var outerRadius = function(d) { return props.centerRadius + Math.max(0, props.radiusScale(d.y1)); };
 
-      var arcGen = d3.svg.arc()
+      var arcGen = d3.arc()
         .startAngle(startAngle)
         .endAngle(endAngle)
         .innerRadius(innerRadius)
@@ -81,8 +81,8 @@ export default function() {
       data.forEach(function(d) {
         // _x and _dx are the destination values for the transition.
         // We set these to the computed x and dx.
-        d._x = d.x;
-        d._dx = d.dx;
+        d._x0 = d.x0;
+        d._x1 = d.x1;
       });
 
       var arcs = selection.selectAll('.sszvis-sunburst-arc')
@@ -90,18 +90,20 @@ export default function() {
           if (data[i]) {
             // x and dx are the current/transitioning values
             // We set these here, in case any datums already exist which have values set
-            data[i].x = d.x;
-            data[i].dx = d.dx;
+            data[i].x0 = d.x0;
+            data[i].x1 = d.x1;
             // The transition tweens from x and dx to _x and _dx
           }
         })
         .data(data);
 
-      arcs.enter()
+      var newArcs = arcs.enter()
         .append('path')
         .attr('class', 'sszvis-sunburst-arc')
 
       arcs.exit().remove();
+
+      arcs = arcs.merge(newArcs);
 
       arcs
         .attr('stroke', props.stroke)
@@ -110,11 +112,11 @@ export default function() {
       arcs.transition()
         .call(transition)
         .attrTween('d', function(d) {
-          var xInterp = d3.interpolate(d.x, d._x);
-          var dxInterp = d3.interpolate(d.dx, d._dx);
+          var x0Interp = d3.interpolate(d.x0, d._x0);
+          var x1Interp = d3.interpolate(d.x1, d._x1);
           return function(t) {
-            d.x = xInterp(t);
-            d.dx = dxInterp(t);
+            d.x0 = x0Interp(t);
+            d.x1 = x1Interp(t);
             return arcGen(d);
           }
         });

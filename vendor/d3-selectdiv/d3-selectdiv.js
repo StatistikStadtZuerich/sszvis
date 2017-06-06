@@ -14,12 +14,12 @@
     var div = this.selectAll('[data-d3-selectdiv="' + key + '"]')
       .data(function(d) { return [d]; });
 
-    div.enter()
+    var newDiv = div.enter()
       .append('div')
       .attr('data-d3-selectdiv', key)
       .style('position', 'absolute');
 
-    return div;
+    return div.merge(newDiv);
   };
 
 }(d3));

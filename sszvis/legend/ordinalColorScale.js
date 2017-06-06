@@ -5,7 +5,7 @@
  *
  * @module sszvis/legend/ordinalColorScale
  *
- * @property {d3.scale.ordinal()} scale         An ordinal scale which will be transformed into the legend.
+ * @property {d3.scaleOrdinal()} scale         An ordinal scale which will be transformed into the legend.
  * @property {Number} rowHeight                 The height of the rows of the legend.
  * @property {Number} columnWidth               The width of the columns of the legend.
  * @property {Number} rows                      The target number of rows for the legend.
@@ -129,22 +129,22 @@ export default function() {
       var groups = selection.selectAll('.sszvis-legend--entry')
         .data(domain);
 
-      groups.enter()
+      var newGroups = groups.enter()
         .append('g')
         .classed('sszvis-legend--entry', true);
 
       groups.exit().remove();
 
-      var marks = groups.selectAll('.sszvis-legend__mark')
+      var marks = groups.merge(newGroups).selectAll('.sszvis-legend__mark')
         .data(function(d) { return [d]; });
 
-      marks.enter()
+      var newMarks = marks.enter()
         .append('circle')
         .classed('sszvis-legend__mark', true);
 
       marks.exit().remove();
 
-      marks
+      marks.merge(newMarks)
         .attr('cx', props.rightAlign ? -5 : 5)
         .attr('cy', halfPixel(props.rowHeight / 2))
         .attr('r', 5)
@@ -152,16 +152,16 @@ export default function() {
         .attr('stroke', function(d) { return props.scale(d); })
         .attr('stroke-width', 1);
 
-      var labels = groups.selectAll('.sszvis-legend__label')
+      var labels = groups.merge(newGroups).selectAll('.sszvis-legend__label')
         .data(function(d) { return [d]; });
 
-      labels.enter()
+      var newLabels = labels.enter()
         .append('text')
         .classed('sszvis-legend__label', true);
 
       labels.exit().remove();
 
-      labels
+      labels.merge(newLabels)
         .text(function(d) { return d; })
         .attr('dy', '0.35em') // vertically-center
         .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
@@ -178,7 +178,7 @@ export default function() {
 
       if (props.horizontalFloat) {
         var rowPosition = 0, horizontalPosition = 0;
-        groups.attr('transform', function() {
+        groups.merge(newGroups).attr('transform', function() {
           // not affected by scroll position
           var width = this.getBoundingClientRect().width;
           if (horizontalPosition + width > props.floatWidth) {
@@ -190,7 +190,7 @@ export default function() {
           return verticalOffset + translate;
         });
       } else {
-        groups.attr('transform', function(d, i) {
+        groups.merge(newGroups).attr('transform', function(d, i) {
           if (props.orientation === 'horizontal') {
             return verticalOffset + 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
           } else if (props.orientation === 'vertical') {

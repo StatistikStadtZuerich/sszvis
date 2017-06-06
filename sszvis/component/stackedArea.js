@@ -30,45 +30,36 @@
 
 import d3 from 'd3';
 
-import * as fn from '../fn.js';
 import transition from '../transition.js';
 
 export default function() {
   return d3.component()
     .prop('x')
-    .prop('yAccessor')
-    .prop('yScale')
+    .prop('y0')
+    .prop('y1')
     .prop('fill')
     .prop('stroke')
     .prop('key').key(function(d, i){ return i; })
-    .prop('valuesAccessor').valuesAccessor(fn.identity)
     .prop('transition').transition(true)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
 
-      data = data.slice().reverse();
-
-      var stackLayout = d3.layout.stack()
+      var areaGen = d3.area()
         .x(props.x)
-        .y(props.yAccessor);
-
-      stackLayout(data.map(props.valuesAccessor));
-
-      var areaGen = d3.svg.area()
-        .x(props.x)
-        .y0(function(d) { return props.yScale(d.y0); })
-        .y1(function(d) { return props.yScale(d.y0 + d.y); });
+        .y0(props.y0)
+        .y1(props.y1);
 
       var paths = selection.selectAll('path.sszvis-path')
         .data(data, props.key);
 
-      paths.enter()
+      var newPaths = paths.enter()
         .append('path')
-        .classed('sszvis-path', true)
-        .attr('fill', props.fill);
+        .classed('sszvis-path', true);
 
       paths.exit().remove();
+
+      paths = paths.merge(newPaths);
 
       if (props.transition) {
         paths = paths.transition()
@@ -76,7 +67,7 @@ export default function() {
       }
 
       paths
-        .attr('d', fn.compose(areaGen, props.valuesAccessor))
+        .attr('d', areaGen)
         .attr('fill', props.fill)
         .attr('stroke', props.stroke);
     });

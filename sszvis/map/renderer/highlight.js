@@ -18,6 +18,7 @@
 
 import d3 from 'd3';
 
+import * as fn from '../../fn.js';
 import { GEO_KEY_DEFAULT } from '../mapUtils.js';
 
 export default function() {
@@ -26,8 +27,8 @@ export default function() {
     .prop('geoJson')
     .prop('mapPath')
     .prop('highlight').highlight([]) // an array of data values to highlight
-    .prop('highlightStroke', d3.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
-    .prop('highlightStrokeWidth', d3.functor).highlightStrokeWidth(2)
+    .prop('highlightStroke', fn.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
+    .prop('highlightStrokeWidth', fn.functor).highlightStrokeWidth(2)
     .render(function() {
       var selection = d3.select(this);
       var props = selection.props();
@@ -58,11 +59,13 @@ export default function() {
 
       highlightBorders = highlightBorders.data(mergedHighlight);
 
-      highlightBorders.enter()
+      var newHighlightBorders = highlightBorders.enter()
         .append('path')
         .classed('sszvis-map__highlight', true);
 
       highlightBorders.exit().remove();
+
+      highlightBorders = highlightBorders.merge(newHighlightBorders);
 
       highlightBorders
         .attr('d', function(d) { return props.mapPath(d.geoJson); })

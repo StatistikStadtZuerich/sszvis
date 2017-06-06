@@ -75,7 +75,7 @@ export default function() {
     .delegate('dy', renderer)
     .delegate('opacity', renderer)
     .prop('renderInto')
-    .prop('visible', d3.functor).visible(false)
+    .prop('visible', fn.functor).visible(false)
     .renderSelection(function(selection) {
       var props = selection.props();
       var intoBCR = props.renderInto.node().getBoundingClientRect();
@@ -123,10 +123,10 @@ var tooltipRenderer = function() {
   return d3.component()
     .prop('header')
     .prop('body')
-    .prop('orientation', d3.functor).orientation('bottom')
-    .prop('dx', d3.functor).dx(1)
-    .prop('dy', d3.functor).dy(1)
-    .prop('opacity', d3.functor).opacity(1)
+    .prop('orientation', fn.functor).orientation('bottom')
+    .prop('dx', fn.functor).dx(1)
+    .prop('dy', fn.functor).dy(1)
+    .prop('opacity', fn.functor).opacity(1)
     .renderSelection(function(selection) {
       var tooltipData = selection.datum();
       var props = selection.props();
@@ -149,6 +149,8 @@ var tooltipRenderer = function() {
 
       var enterTooltip = tooltip.enter()
         .append('div');
+
+      tooltip = tooltip.merge(enterTooltip);
 
       tooltip
         .style('pointer-events', 'none')
@@ -219,12 +221,12 @@ var tooltipRenderer = function() {
 
       tooltip.select('.sszvis-tooltip__header')
         .datum(fn.prop('datum'))
-        .html(props.header || d3.functor(''));
+        .html(props.header || fn.functor(''));
 
       tooltip.select('.sszvis-tooltip__body')
         .datum(fn.prop('datum'))
         .html(function(d) {
-          var body = props.body ? d3.functor(props.body)(d) : '';
+          var body = props.body ? fn.functor(props.body)(d) : '';
           return Array.isArray(body) ? formatTable(body) : body;
         });
 
@@ -241,28 +243,24 @@ var tooltipRenderer = function() {
 
           switch (orientation) {
             case 'top':
-              tip.style({
-                left: (d.x - this.offsetWidth / 2) + 'px',
-                top:  d.y + props.dy(d) + 'px'
-              });
+              tip
+                .style('left', (d.x - dimensions.width / 2) + 'px')
+                .style('top', d.y + props.dy(d) + 'px');
               break;
             case 'bottom':
-              tip.style({
-                left: (d.x - this.offsetWidth / 2) + 'px',
-                top:  (d.y - props.dy(d) - this.offsetHeight) + 'px'
-              });
+              tip
+                .style('left', (d.x - dimensions.width / 2) + 'px')
+                .style('top', (d.y - props.dy(d) - dimensions.height) + 'px');
               break;
             case 'left':
-              tip.style({
-                left: d.x + props.dx(d) + 'px',
-                top:  (d.y - this.offsetHeight / 2) + 'px'
-              });
+              tip
+                .style('left', d.x + props.dx(d) + 'px')
+                .style('top', (d.y - dimensions.height / 2) + 'px');
               break;
             case 'right':
-              tip.style({
-                left: (d.x - props.dx(d) - this.offsetWidth) + 'px',
-                top:  (d.y - this.offsetHeight / 2) + 'px'
-              });
+              tip
+                .style('left', (d.x - props.dx(d) - dimensions.width) + 'px')
+                .style('top', (d.y - dimensions.height / 2) + 'px');
               break;
           }
 

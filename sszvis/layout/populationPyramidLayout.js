@@ -16,7 +16,7 @@
  *                                      padding: the height of the padding between bars in the pyramid
  *                                      totalHeight: the total height of all bars plus the padding between them. This should be the basis for the bounds calculation
  *                                      positions: an array of positions, which go from the bottom of the chart (lowest age) to the top. These positions should
- *                                      be set as the range of a d3.scale.ordinal scale, where the domain is the list of ages or age groups that will be displayed
+ *                                      be set as the range of a d3.scaleOrdinal scale, where the domain is the list of ages or age groups that will be displayed
  *                                      in the chart. The domain ages or age groups should be sorted in ascending order, so that the positions will match up. If everything
  *                                      has gone well, the positions array's length will be numBars,
  *                                      maxBarLength: The maximum length of the bars to fit within the space while keeping a good aspect ratio.

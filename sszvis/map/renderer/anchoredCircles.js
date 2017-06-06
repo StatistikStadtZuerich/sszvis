@@ -17,6 +17,7 @@
 
 import d3 from 'd3';
 
+import * as fn from '../../fn.js';
 import transition from '../../transition.js';
 import { getGeoJsonCenter } from '../mapUtils.js';
 import translateString from '../../svgUtils/translateString.js';
@@ -27,10 +28,10 @@ export default function() {
   var component = d3.component()
     .prop('mergedData')
     .prop('mapPath')
-    .prop('radius', d3.functor)
-    .prop('fill', d3.functor)
-    .prop('strokeColor', d3.functor).strokeColor('#ffffff')
-    .prop('strokeWidth', d3.functor).strokeWidth(1)
+    .prop('radius', fn.functor)
+    .prop('fill', fn.functor)
+    .prop('strokeColor', fn.functor).strokeColor('#ffffff')
+    .prop('strokeWidth', fn.functor).strokeWidth(1)
     .prop('transition').transition(true)
     .render(function() {
       var selection = d3.select(this);
@@ -40,9 +41,11 @@ export default function() {
         .selectAll('.sszvis-anchored-circle')
         .data(props.mergedData, function(d) { return d.geoJson.id; });
 
-      anchoredCircles.enter()
+      var newAnchoredCircles = anchoredCircles.enter()
         .append('circle')
         .attr('class', 'sszvis-anchored-circle');
+
+      anchoredCircles = anchoredCircles.merge(newAnchoredCircles);
 
       anchoredCircles
         .attr('transform', function(d) {
@@ -58,13 +61,13 @@ export default function() {
 
       anchoredCircles
         .on('mouseover', function(d) {
-          event.over(d.datum);
+          event.apply('over', this, [d.datum]);
         })
         .on('mouseout', function(d) {
-          event.out(d.datum);
+          event.apply('out', this, [d.datum]);
         })
         .on('click', function(d) {
-          event.click(d.datum);
+          event.apply('click', this, [d.datum]);
         });
 
       if (props.transition) {
@@ -75,7 +78,10 @@ export default function() {
       anchoredCircles.attr('r', function(d) { return props.radius(d.datum); });
     });
 
-  d3.rebind(component, event, 'on');
+  component.on = function() {
+    var value = event.on.apply(event, arguments);
+    return value === event ? component : value;
+  };
 
   return component;
 };

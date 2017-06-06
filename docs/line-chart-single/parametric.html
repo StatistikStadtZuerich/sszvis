@@ -32,7 +32,7 @@
   var config = {
     dataPath: 'data/SL_quarterly.csv',
     title: 'Title',
-    description: 'Description', 
+    description: 'Description',
     dateColumn: 'Datum',
     valueColumn: 'Wert',
     rulerLabel: '',
@@ -119,19 +119,19 @@
 
 
     // Scales
-    var xScale = d3.time.scale()
+    var xScale = d3.scaleTime()
       .domain(state.years)
       .range([0, bounds.innerWidth]);
 
     //if smallest y value is great than 0, then minY is 0, otherwise (when there are negatives) its
-    //the smallest value 
+    //the smallest value
     var minY = d3.min([d3.min(state.data,yAcc),0]);
     var maxY = d3.max(state.data, yAcc);
     // Add a bit of additional bottom padding to prevent the y-axis value from
     // touching the x-axis if we are having negative y values
     var bottomPadding = (minY < 0) ? 15 : 0;
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain([minY, maxY])
       .range([bounds.innerHeight, 0]);
 
@@ -238,7 +238,7 @@
 
 
 
-  
+
 
 }(d3, sszvis));
 </script>

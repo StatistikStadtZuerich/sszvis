@@ -54,16 +54,26 @@
     prepareState: function(data) {
       state.data = data;
       state.timeExtent = d3.extent(state.data, xAcc);
+      state.categories = sszvis.fn.set(state.data, cAcc);
 
-      state.stackedData = sszvis.cascade()
-        .arrayBy(cAcc)
+      var stackLayout = d3.stack().keys(state.categories.slice().reverse());
+      state.stackedData = stackLayout(sszvis.cascade()
+        .arrayBy(xAcc)
+        .objectBy(cAcc)
         .apply(state.data)
-        .map(function(stack) {
-          return {
-            category: cAcc(stack[0]),
-            values: stack
-          };
+        .map(function(d) {
+          var r = { year: d[Object.keys(d)[0]][0].year };
+          state.categories.forEach(function(k) {
+            r[k] = yAcc(d[k][0]);
+          });
+          return r;
+        }));
+
+      state.stackedData.forEach(function(stack, i) {
+        stack.forEach(function(d) {
+          d.key = state.categories.slice().reverse()[i];
         });
+      });
 
       var dateValues = sszvis.cascade()
         .objectBy(sszvis.fn.compose(String, xAcc))
@@ -73,7 +83,6 @@
         return d3.sum(s, yAcc);
       });
 
-      state.categories = sszvis.fn.set(state.data, cAcc);
 
       render(state);
     },
@@ -109,11 +118,11 @@
 
     // Scales
 
-    var xScale = d3.time.scale()
+    var xScale = d3.scaleTime()
       .domain(state.timeExtent)
       .range([0, bounds.innerWidth]);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 0]);
 
@@ -133,12 +142,11 @@
     // Components
 
     var stackedArea = sszvis.component.stackedArea()
-      .key(sszvis.fn.prop('category'))
-      .valuesAccessor(sszvis.fn.prop('values'))
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .yAccessor(yAcc)
-      .yScale(yScale)
-      .fill(function(d) { return cScale(d.category); });
+      .key(sszvis.fn.prop('key'))
+      .x(sszvis.fn.compose(xScale, xAcc, function(d) { return d.data; }))
+      .y0(sszvis.fn.compose(yScale, function(d) { return d[0]; }))
+      .y1(sszvis.fn.compose(yScale, function(d) { return d[1]; }))
+      .fill(sszvis.fn.compose(cScale, function(d) { return d.key }));
 
     var xAxis = sszvis.axis.x.time()
       .scale(xScale)

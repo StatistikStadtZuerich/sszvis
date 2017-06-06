@@ -87,12 +87,14 @@
 
     // Scales
 
-    var widthScale = d3.scale.linear()
+    var widthScale = d3.scaleLinear()
       .range([0, chartWidth])
       .domain([0, d3.max(state.data, xAcc)]);
 
-    var yScale = d3.scale.ordinal()
-      .rangeBands([0, chartDimensions.totalHeight], chartDimensions.padRatio, chartDimensions.outerRatio)
+    var yScale = d3.scaleBand()
+      .padding(chartDimensions.padRatio)
+      .paddingOuter(chartDimensions.outerRatio)
+      .rangeRound([0, chartDimensions.totalHeight])
       .domain(state.categories);
 
 

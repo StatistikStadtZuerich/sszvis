@@ -30,6 +30,7 @@
 
 import d3 from 'd3';
 
+import * as fn from '../fn.js';
 import transition from '../transition.js';
 import bar from './bar.js';
 
@@ -42,10 +43,10 @@ var SPINE_PADDING = 0.5;
 ----------------------------------------------- */
 export default function() {
   return d3.component()
-    .prop('barHeight', d3.functor)
-    .prop('barWidth', d3.functor)
-    .prop('barPosition', d3.functor)
-    .prop('barFill', d3.functor).barFill('#000')
+    .prop('barHeight', fn.functor)
+    .prop('barWidth', fn.functor)
+    .prop('barPosition', fn.functor)
+    .prop('barFill', fn.functor).barFill('#000')
     .prop('tooltipAnchor').tooltipAnchor([0.5, 0.5])
     .prop('leftAccessor')
     .prop('rightAccessor')
@@ -115,16 +116,20 @@ function lineComponent() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var lineGen = d3.svg.line()
+      var lineGen = d3.line()
         .x(props.barWidth)
         .y(props.barPosition);
 
       var line = selection.selectAll('.sszvis-pyramid__referenceline')
         .data(data);
 
-      line.enter()
+      line.exit().remove();
+
+      var newLine = line.enter()
         .append('path')
         .attr('class', 'sszvis-pyramid__referenceline');
+
+      line = line.merge(newLine);
 
       line
         .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
@@ -132,6 +137,6 @@ function lineComponent() {
         .call(transition)
         .attr('d', lineGen);
 
-      line.exit().remove();
+
     });
 }

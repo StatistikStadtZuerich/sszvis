@@ -29,14 +29,14 @@ import * as format from '../format.js';
 
 export default function() {
   return d3.component()
-    .prop('x', d3.functor)
-    .prop('y0', d3.functor)
-    .prop('y1', d3.functor)
+    .prop('x', fn.functor)
+    .prop('y0', fn.functor)
+    .prop('y1', fn.functor)
     .prop('top')
     .prop('bottom')
-    .prop('label').label(d3.functor(''))
+    .prop('label').label(fn.functor(''))
     .prop('total')
-    .prop('flip', d3.functor).flip(false)
+    .prop('flip', fn.functor).flip(false)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -53,11 +53,13 @@ export default function() {
       var line = selection.selectAll('.sszvis-rangeRuler__rule')
         .data([0]);
 
-      line.enter()
+      var newLine = line.enter()
         .append('line')
         .classed('sszvis-rangeRuler__rule', true);
 
       line.exit().remove();
+
+      line = line.merge(newLine);
 
       line
         .attr('x1', crispX)
@@ -73,6 +75,8 @@ export default function() {
         .classed('sszvis-rangeRuler--mark', true);
 
       marks.exit().remove();
+
+      marks = marks.merge(enteringMarks);
 
       enteringMarks.append('circle').classed('sszvis-rangeRuler__p1', true);
       enteringMarks.append('circle').classed('sszvis-rangeRuler__p2', true);
@@ -106,11 +110,13 @@ export default function() {
       var total = selection.selectAll('.sszvis-rangeRuler__total')
         .data([fn.last(data)]);
 
-      total.enter()
+      var newTotal = total.enter()
         .append('text')
         .classed('sszvis-rangeRuler__total', true);
 
       total.exit().remove();
+
+      total = total.merge(newTotal);
 
       total
         .attr('x', function(d) {

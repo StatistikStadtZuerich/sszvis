@@ -8,7 +8,7 @@
 </head>
 <body style="margin:0;padding:0;">
 <link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
+<script src="../../vendor/d3/d3.js"></script>
 <script src="../../sszvis.js"></script>
 
 <div id="sszvis-chart"></div>
@@ -107,11 +107,15 @@
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
+    var xScale = d3.scaleBand()
       .domain(state.years)
-      .rangeRoundBands([0, bounds.innerWidth], 0.30, props.barPadding);
+      .padding(props.barPadding)
+      .paddingOuter(0.30)
+      .rangeRound([0, bounds.innerWidth]);
 
-    var yScale = d3.scale.linear()
+    console.log(xScale.bandwidth());
+
+    var yScale = d3.scaleLinear()
       .domain([0, d3.max(state.data, yAcc)])
       .range([bounds.innerHeight, 0]);
 
@@ -131,12 +135,11 @@
       })
       .datum(state.groupedData);
 
-
     // Components
 
     var barLayout = sszvis.component.groupedBars()
       .groupScale(sszvis.fn.compose(xScale, xAcc))
-      .groupWidth(xScale.rangeBand())
+      .groupWidth(xScale.bandwidth())
       .groupSize(state.longestGroup)
       .y(sszvis.fn.compose(yScale, yAcc))
       .height(sszvis.fn.compose(hScale, yAcc))
@@ -161,6 +164,8 @@
 
 
     // Rendering
+
+    console.log(chartLayer.selectGroup('bars'));
 
     chartLayer.selectGroup('bars')
       .call(barLayout);

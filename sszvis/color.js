@@ -51,7 +51,7 @@ var LIGHTNESS_STEP = 0.6;
 ----------------------------------------------- */
 function qualColorScale(colors) {
   return function() {
-    var scale = d3.scale.ordinal().range(colors.map(convertLab));
+    var scale = d3.scaleOrdinal().range(colors.map(convertLab));
     return decorateOrdinalScale(scale);
   };
 }
@@ -83,7 +83,7 @@ export var qual6b = qualColorScale([
 
 function seqColorScale(colors) {
   return function() {
-    var scale = d3.scale.linear().range(colors.map(convertLab));
+    var scale = d3.scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   }
 }
@@ -96,7 +96,7 @@ export var seqBrn = seqColorScale(['#E9DFD6', '#A67D5A', '#4C3735']);
 
 function divColorScale(colors) {
   return function() {
-    var scale = d3.scale.linear().range(colors.map(convertLab));
+    var scale = d3.scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
 }
@@ -109,7 +109,7 @@ export var divNtrGry = divColorScale( ['#A67D5A', '#F3F3F3', '#4A807C']);
 
 function greyColorScale(colors) {
   return function() {
-    var scale = d3.scale.ordinal().range(colors.map(convertLab));
+    var scale = d3.scaleOrdinal().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
 };

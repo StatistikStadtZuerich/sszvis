@@ -24,9 +24,9 @@ import tooltipAnchor from '../annotation/tooltipAnchor.js';
 
 export default function() {
   return d3.component()
-    .prop('x', d3.functor)
-    .prop('y0', d3.functor)
-    .prop('y1', d3.functor)
+    .prop('x', fn.functor)
+    .prop('y0', fn.functor)
+    .prop('y1', fn.functor)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -35,23 +35,13 @@ export default function() {
       var crispY0 = fn.compose(halfPixel, props.y0);
       var crispY1 = fn.compose(halfPixel, props.y1);
 
-      var bottomDot = selection.selectAll('.sszvis-rangeFlag__mark.bottom')
-        .data(data);
+      selection.selectAll('.sszvis-rangeFlag__mark.bottom')
+        .data(data)
+        .call(makeFlagDot('bottom', crispX, crispY0));
 
-      var topDot = selection.selectAll('.sszvis-rangeFlag__mark.top')
-        .data(data);
-
-      bottomDot
-        .call(makeFlagDot)
-        .classed('bottom', true)
-        .attr('cx', crispX)
-        .attr('cy', crispY0);
-
-      topDot
-        .call(makeFlagDot)
-        .classed('top', true)
-        .attr('cx', crispX)
-        .attr('cy', crispY1);
+      selection.selectAll('.sszvis-rangeFlag__mark.top')
+        .data(data)
+        .call(makeFlagDot('top', crispX, crispY1));
 
       var ta = tooltipAnchor()
         .position(function(d) {
@@ -62,13 +52,20 @@ export default function() {
     });
 };
 
-function makeFlagDot(dot) {
-  dot.enter()
-    .append('circle')
-    .attr('class', 'sszvis-rangeFlag__mark');
+function makeFlagDot(classed, cx, cy) {
+  return function(dot) {
+    var newDot = dot.enter()
+      .append('circle')
+      .classed('sszvis-rangeFlag__mark', true)
+      .classed(classed, true);
 
-  dot.exit().remove();
+    dot.exit().remove();
 
-  dot
-    .attr('r', 3.5);
+    dot = dot.merge(newDot);
+
+    dot
+      .attr('r', 3.5)
+      .attr('cx', cx)
+      .attr('cy', cy);
+  };
 }

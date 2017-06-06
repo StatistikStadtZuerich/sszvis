@@ -74,22 +74,26 @@ export default function() {
       var multiples = selection.selectAll('g.sszvis-multiple')
         .data(data);
 
-      multiples.enter()
+      var newMultiples = multiples.enter()
         .append('g')
         .classed('sszvis-g sszvis-multiple', true);
 
       multiples.exit().remove();
+
+      multiples = multiples.merge(newMultiples);
 
       var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
         .data(function(d) {
           return [d.values];
         });
 
-      subGroups.enter()
+      var newSubGroups = subGroups.enter()
         .append('g')
         .classed('sszvis-multiple-chart', true);
 
       subGroups.exit().remove();
+
+      subGroups = subGroups.merge(newSubGroups);
 
       multiples
         .datum(function(d, i) {

@@ -68,23 +68,28 @@ var TICK_END_THRESHOLD = 12;
 var LABEL_PROXIMITY_THRESHOLD = 10;
 
 var axis = function() {
-  var axisDelegate = d3.svg.axis();
+  // var axisDelegate = d3.axisBottom();
+  // axisDelegate.orient = function() { return 'bottom'; };
 
   var axisComponent = d3.component()
-    .delegate('scale', axisDelegate)
-    .delegate('orient', axisDelegate)
-    .delegate('ticks', axisDelegate)
-    .delegate('tickValues', axisDelegate)
-    .delegate('tickSize', axisDelegate)
-    .delegate('innerTickSize', axisDelegate)
-    .delegate('outerTickSize', axisDelegate)
-    .delegate('tickPadding', axisDelegate)
-    .delegate('tickFormat', axisDelegate)
+    .prop('scale')
+    .prop('orient')
+    .prop('ticks')
+    .prop('tickValues')
+    .prop('tickSize')
+    .prop('tickSizeInner')
+    .prop('tickSizeOuter')
+    .prop('tickPadding')
+    .prop('tickFormat')
+
+    .prop('_scale')
+
+    .prop('orient').orient('bottom')
     .prop('alignOuterLabels').alignOuterLabels(false)
     .prop('contour')
     .prop('hideBorderTickThreshold').hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
     .prop('hideLabelThreshold').hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD)
-    .prop('highlightTick', d3.functor)
+    .prop('highlightTick', fn.functor)
     .prop('showZeroY').showZeroY(false)
     .prop('slant')
     .prop('textWrap')
@@ -103,15 +108,44 @@ var axis = function() {
       var selection = d3.select(this);
       var props = selection.props();
 
-      var isBottom = !props.vertical && axisDelegate.orient() === 'bottom';
+      var isBottom = !props.vertical && props.orient === 'bottom';
+
+      var axisDelegate = (function() {
+        switch (props.orient) {
+        case 'bottom': return d3.axisBottom();
+        case 'top': return d3.axisTop();
+        case 'left': return d3.axisLeft();
+        case 'right': return d3.axisRight();
+        }
+      })();
+
+      ['scale', 'ticks', 'tickValues', 'tickSizeInner',
+       'tickSizeOuter', 'tickPadding', 'tickFormat', 'tickSize'].forEach(function(prop) {
+        if (props[prop] !== undefined) {
+          if (axisDelegate[prop] === undefined) {
+            throw new Error('axis: "' + prop + '" not available');
+          }
+          axisDelegate[prop](props[prop]);
+        }
+      });
+
+      if (props._scale) {
+        axisDelegate.scale(props._scale);
+      }
 
       var group = selection.selectGroup('sszvis-axis')
         .classed('sszvis-axis', true)
-        .classed('sszvis-axis--top', !props.vertical && axisDelegate.orient() === 'top')
+        .classed('sszvis-axis--top', !props.vertical && props.orient === 'top')
         .classed('sszvis-axis--bottom', isBottom)
         .classed('sszvis-axis--vertical', props.vertical)
         .attr('transform', translateString(0, props.yOffset))
         .call(axisDelegate);
+
+      group
+        .attr("fill", null)
+        .attr("font-size", null)
+        .attr("font-family", null)
+        // .attr("text-anchor", null);
 
       var axisScale = axisDelegate.scale();
 
@@ -132,14 +166,23 @@ var axis = function() {
         .each(function() {
           var subpixelShift = transformTranslateSubpixelShift(this.getAttribute('transform'));
           var dx = halfPixel(0) - subpixelShift[0];
-          var dy = halfPixel(isBottom ? 2 : 0) - subpixelShift[1];
+          var dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
           d3.select(this).select('line')
             .attr('transform', translateString(dx, dy));
         });
 
+      tickTexts.each(function() {
+        if (props.orient === 'top' || props.orient === 'bottom') {
+          d3.select(this).attr('dx', "-0.5");
+        }
+        if (props.orient === 'left' || props.orient === 'right') {
+          d3.select(this).attr('y', "-0.5");
+        }
+      });
+
       // Place axis line on a half-pixel grid to prevent anti-aliasing
       group.selectAll('path.domain')
-        .attr('transform', translateString(halfPixel(0), halfPixel(0)));
+        // .attr('transform', translateString(halfPixel(0), halfPixel(0)));
 
 
       // hide ticks which are too close to one endpoint
@@ -158,7 +201,7 @@ var axis = function() {
           .filter(function(d) {
             return !fn.stringEqual(d, domainExtent[0]) && !fn.stringEqual(d, domainExtent[1]);
           });
-        var orientation = axisDelegate.orient();
+        var orientation = props.orient;
 
         var longLinePadding = 2;
         if (orientation === 'left' || orientation === 'right') {
@@ -172,8 +215,10 @@ var axis = function() {
           .data([0]);
 
         if (props.tickLength > longLinePadding) {
-          lines.enter().append('line')
+          var newLines = lines.enter().append('line')
             .classed('sszvis-axis__longtick', true);
+
+          lines = lines.merge(newLines);
 
           if (orientation === 'top') {
             lines
@@ -222,7 +267,7 @@ var axis = function() {
 
       if (props.slant) {
         tickTexts
-          .call(slantLabel[axisDelegate.orient()][props.slant]);
+          .call(slantLabel[props.orient][props.slant]);
       }
 
       // Highlight axis labels that return true for props.highlightTick.
@@ -272,18 +317,18 @@ var axis = function() {
         var title = group.selectAll('.sszvis-axis__title')
           .data([props.title]);
 
-        title.enter()
+        var newTitle = title.enter()
           .append('text')
           .classed('sszvis-axis__title', true);
 
         title.exit().remove();
 
-        title
+        title.merge(newTitle)
           .text(function(d) {
             return d;
           })
           .attr('transform', function() {
-            var orientation = axisDelegate.orient(),
+            var orientation = props.orient,
               extent = range(axisScale),
               titleProps;
 
@@ -305,7 +350,7 @@ var axis = function() {
             return 'translate(' + (titleProps.left) + ', ' + (titleProps.top) + ') rotate(' + (titleProps.vertical ? '-90' : '0') + ')';
           })
           .style('text-anchor', function() {
-            var orientation = axisDelegate.orient();
+            var orientation = props.orient;
             if (typeof props.titleAnchor !== 'undefined') {
               return props.titleAnchor;
             } else if (orientation === 'left') {
@@ -340,7 +385,7 @@ var axis = function() {
       }
     });
 
-  axisComponent.__delegate__ = axisDelegate;
+  // axisComponent.__delegate__ = axisDelegate;
 
   return axisComponent;
 };
@@ -368,7 +413,8 @@ var axisX = function() {
   return axis()
     .yOffset(2) //gap between chart and x-axis
     .ticks(3)
-    .tickSize(4, 6)
+    .tickSizeInner(4)
+    .tickSizeOuter(6.5)
     .tickPadding(6)
     .tickFormat(fn.arity(1, format.number));
 };
@@ -403,7 +449,7 @@ axisX.pyramid = function() {
         // the range is mirrored – ±range[1]
         .range([range[0] - range[1], range[0] + range[1]]);
 
-      this.__delegate__.scale(extended);
+      this._scale(extended);
       return extended;
     })
     .tickFormat(function(v) {
@@ -415,7 +461,7 @@ axisX.pyramid = function() {
 
 var axisY = function() {
   var newAxis = axis()
-    .ticks(7)
+    .ticks(6)
     .tickSize(0, 0)
     .tickPadding(0)
     .tickFormat(function(d) {
@@ -458,7 +504,7 @@ var slantLabel = {
   top: {
     horizontal: function(selection) {
       selection.style('text-anchor', 'middle')
-        .attr('dx', null)
+        .attr('dx', "-0.5")
         .attr('transform', null);
     },
     vertical: function(selection) {
@@ -471,13 +517,13 @@ var slantLabel = {
       selection.style('text-anchor', 'start')
         .attr('dx', '0.1em')
         .attr('dy', '0.1em')
-        .attr('transform', 'rotate(-45)');
+        .attr('transform', 'translate(-0.5) rotate(-45)');
     }
   },
   bottom: {
     horizontal: function(selection) {
       selection.style('text-anchor', 'middle')
-        .attr('dx', null)
+        .attr('dx', "-0.5")
         .attr('transform', null);
     },
     vertical: function(selection) {

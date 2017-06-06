@@ -22,6 +22,8 @@
 
 import d3 from 'd3';
 
+import * as fn from '../../fn.js';
+
 export default function() {
   return d3.component()
     .prop('debug').debug(false)
@@ -29,7 +31,7 @@ export default function() {
     .prop('height')
     .prop('position')
     .prop('cellSide').cellSide(2)
-    .prop('fill', d3.functor)
+    .prop('fill', fn.functor)
     .prop('opacity').opacity(1)
     .render(function(data) {
       var selection = d3.select(this);
@@ -38,11 +40,13 @@ export default function() {
       var canvas = selection.selectAll('.sszvis-map__rasterimage')
         .data([0]);
 
-      canvas.enter()
+      var newCanvas = canvas.enter()
         .append('canvas')
         .classed('sszvis-map__rasterimage', true);
 
       canvas.exit().remove();
+
+      canvas = canvas.merge(newCanvas);
 
       canvas
         .attr('width', props.width)

@@ -46,16 +46,18 @@ export var prepareData = function() {
   function main(data) {
     nester.rollup(fn.first);
 
-    var partitionLayout = d3.layout.partition()
-      .children(fn.prop('values'))
-      .value(function(d) { return valueAcc(d.values); })
-      .sort(sortFn);
+    var root = d3.hierarchy({ isSunburstRoot: true, values: nester.entries(data) }, fn.prop('values'))
+      .sort(sortFn)
+      .sum(function(x) { return x.value ? valueAcc(x.value) : 0; });
 
-    return partitionLayout({
-        isSunburstRoot: true,
-        values: nester.entries(data)
-      // Remove the root element from the data (but it still exists in memory so long as the data is alive)
-      }).filter(function(d) { return !d.isSunburstRoot; });
+    d3.partition()(root);
+
+    function flatten(node) {
+      return [].concat.apply([node], (node.children || []).map(flatten));
+    }
+
+    // Remove the root element from the data (but it still exists in memory so long as the data is alive)
+    return flatten(root).filter(function(d) { return !d.data.isSunburstRoot; });
   };
 
   main.calculate = function(data) { return main(data); };
@@ -120,7 +122,7 @@ export var computeLayout = function(numLayers, chartWidth) {
  */
 export var getRadiusExtent = function(formattedData) {
   return [
-    d3.min(formattedData, function(d) { return d.y; }),
-    d3.max(formattedData, function(d) { return d.y + d.dy; })
+    d3.min(formattedData, function(d) { return d.y0; }),
+    d3.max(formattedData, function(d) { return d.y1; })
   ];
 };

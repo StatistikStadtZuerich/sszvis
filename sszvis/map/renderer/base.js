@@ -35,8 +35,8 @@ export default function() {
     .prop('mergedData')
     .prop('geoJson')
     .prop('mapPath')
-    .prop('defined', d3.functor).defined(true) // a predicate function to determine whether a datum has a defined value
-    .prop('fill', d3.functor).fill(function() { return 'black'; }) // a function for the entity fill color. default is black
+    .prop('defined', fn.functor).defined(true) // a predicate function to determine whether a datum has a defined value
+    .prop('fill', fn.functor).fill(function() { return 'black'; }) // a function for the entity fill color. default is black
     .prop('transitionColor').transitionColor(true)
     .render(function() {
       var selection = d3.select(this);
@@ -55,13 +55,15 @@ export default function() {
         .data(props.mergedData);
 
       // add the base map paths - these are filled according to the map fill function
-      mapAreas.enter()
+      var newMapAreas = mapAreas.enter()
         .append('path')
         .classed('sszvis-map__area', true)
         .attr('data-event-target', '')
         .attr('fill', getMapFill);
 
       mapAreas.exit().remove();
+
+      mapAreas = mapAreas.merge(newMapAreas);
 
       selection.selectAll('.sszvis-map__area--undefined')
         .attr('fill', getMapFill);

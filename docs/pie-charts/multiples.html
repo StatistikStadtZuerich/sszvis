@@ -87,6 +87,7 @@
       },
       lap: function(w) {
         return function(bounds, g) {
+          console.log(bounds, g)
           var left = bounds.innerWidth/2 - g.cx - 10 - pieRadius(g.gw, g.gh);
           return {
             top: LEGEND_PADDING,
@@ -162,6 +163,8 @@
       // a list of categories (for the color scale)
       state.categories = sszvis.fn.set(state.data, cAcc);
 
+      console.log(state.pieGroups);
+
       render(state);
     },
 
@@ -215,7 +218,7 @@
 
     // this is a basic scale for the pie chart segment angles. It has no range because it will be copied
     // and a different range set, for each pie chart in the multiples.
-    var aScale = d3.scale.linear()
+    var aScale = d3.scaleLinear()
       .range([0, 2 * Math.PI]);
 
     var cScale = sszvis.color.qual12()

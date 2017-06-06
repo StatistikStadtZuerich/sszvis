@@ -56,8 +56,6 @@
  * @returns {responsiveProps}
  */
 
-import d3 from 'd3';
-
 import * as fn from './fn.js';
 import * as logger from './logger.js';
 import * as breakpoint from './breakpoint.js';
@@ -208,11 +206,11 @@ function isBounds(arg1) {
 /**
  * functorizeValues
  * @prop    {object} obj Original key-value object
- * @returns {object} Same as input object but with all values transformed to d3.functors
+ * @returns {object} Same as input object but with all values transformed to fn.functors
  */
 function functorizeValues(obj) {
   return Object.keys(obj).reduce(function(memo, key) {
-    memo[key] = d3.functor(obj[key]);
+    memo[key] = fn.functor(obj[key]);
     return memo;
   }, {});
 }

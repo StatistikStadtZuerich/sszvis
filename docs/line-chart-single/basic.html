@@ -85,11 +85,11 @@
 
     // Scales
 
-    var xScale = d3.time.scale()
+    var xScale = d3.scaleTime()
       .range([0, bounds.innerWidth])
       .domain(state.years);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .range([bounds.innerHeight, 0])
       .domain([0, d3.max(state.data, yAcc)]);
 

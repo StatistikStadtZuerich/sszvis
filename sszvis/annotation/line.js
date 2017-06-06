@@ -24,6 +24,8 @@
 
 import d3 from 'd3';
 
+import * as fn from '../fn.js';
+
 // reference line specified in the form y = mx + b
 // user supplies m and b
 // default line is y = x
@@ -36,9 +38,9 @@ export default function() {
     .prop('y2')
     .prop('xScale')
     .prop('yScale')
-    .prop('dx', d3.functor).dx(0)
-    .prop('dy', d3.functor).dy(0)
-    .prop('caption', d3.functor)
+    .prop('dx', fn.functor).dx(0)
+    .prop('dy', fn.functor).dy(0)
+    .prop('caption', fn.functor)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -51,11 +53,13 @@ export default function() {
       var line = selection.selectAll('.sszvis-referenceline')
         .data(data);
 
-      line.enter()
+      line.exit().remove();
+
+      var newLine = line.enter()
         .append('line')
         .classed('sszvis-referenceline', true);
 
-      line.exit().remove();
+      line = line.merge(newLine)
 
       line
         .attr('x1', x1)
@@ -67,11 +71,13 @@ export default function() {
         var caption = selection.selectAll('.sszvis-referenceline__caption')
           .data([0]);
 
-        caption.enter()
+        caption.exit().remove();
+
+        var newCaption = caption.enter()
           .append('text')
           .classed('sszvis-referenceline__caption', true);
 
-        caption.exit().remove();
+        caption = caption.merge(newCaption)
 
         caption
           .attr('transform', function() {

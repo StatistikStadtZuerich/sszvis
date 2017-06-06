@@ -10,7 +10,7 @@
  *
  * Each data object in a line's array is passed to the x- and y- accessors, along with
  * that data object's index in the array. For more information, see the documentation for
- * d3.svg.line.
+ * d3.line.
  *
  * In addition, the user can specify stroke and strokeWidth accessor functions. Because these
  * functions apply properties to the entire line, when called, they are give the entire array of line data
@@ -56,7 +56,7 @@ export default function() {
 
       // Layouts
 
-      var line = d3.svg.line()
+      var line = d3.line()
         .defined(fn.compose(fn.not(isNaN), props.y))
         .x(props.x)
         .y(props.y);
@@ -67,10 +67,12 @@ export default function() {
       var path = selection.selectAll('.sszvis-line')
         .data(data, props.key);
 
-      path.enter()
+      var newPath = path.enter()
         .append('path')
         .classed('sszvis-line', true)
         .style('stroke', props.stroke);
+
+      path = path.merge(newPath);
 
       path.exit().remove();
 

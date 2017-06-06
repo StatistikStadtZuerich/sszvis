@@ -52,11 +52,13 @@ export default function() {
       var segments = selection.selectAll('rect.sszvis-legend__mark')
         .data(values);
 
-      segments.enter()
+      var newSegments = segments.enter()
         .append('rect')
         .classed('sszvis-legend__mark', true);
 
       segments.exit().remove();
+
+      segments = segments.merge(newSegments);
 
       segments
         .attr('x', function(d, i) { return i * segWidth - 1; }) // The offsets here cover up half-pixel antialiasing artifacts
@@ -72,11 +74,13 @@ export default function() {
       var endCaps = selection.selectAll('circle.ssvis-legend--mark')
         .data(startEnd);
 
-      endCaps.enter()
+      var newEndCaps = endCaps.enter()
         .append('circle')
         .attr('class', 'ssvis-legend--mark');
 
       endCaps.exit().remove();
+
+      endCaps = endCaps.merge(newEndCaps);
 
       endCaps
         .attr('cx', function(d, i) { return i * props.width; })
@@ -87,11 +91,13 @@ export default function() {
       var labels = selection.selectAll('.sszvis-legend__label')
         .data(labelText);
 
-      labels.enter()
+      var newLabels = labels.enter()
         .append('text')
         .classed('sszvis-legend__label', true);
 
       labels.exit().remove();
+
+      labels = labels.merge(newLabels);
 
       var labelPadding = 16;
 

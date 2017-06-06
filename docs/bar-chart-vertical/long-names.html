@@ -111,11 +111,13 @@
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
+    var xScale = d3.scaleBand()
       .domain(state.categories)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, props.barPadding);
+      .padding(chartDimensions.padRatio)
+      .paddingOuter(props.barPadding)
+      .range([0, chartDimensions.totalWidth]);
 
-    var heightScale = d3.scale.linear()
+    var heightScale = d3.scaleLinear()
       .domain([0, d3.max(state.data, yAcc)])
       .range([0, bounds.innerHeight]);
 
@@ -147,7 +149,7 @@
       // Because we use sszvis.behavior.move in this example, we need to make
       // sure that bars have the exact same size as the scale's rangeBand. This
       // will result in slightly narrower bars than the default.
-      .width(xScale.rangeBand())
+      .width(xScale.bandwidth())
       .height(sszvis.fn.compose(heightScale, yAcc))
       .centerTooltip(true)
       .fill(function(d) {
@@ -160,7 +162,7 @@
       .slant(props.slant)
 
     if (props.slant === 'horizontal') {
-      xAxis.textWrap(labelWrapWidth(xScale.range()));
+      xAxis.textWrap(xScale.step());
     }
 
     var yAxis = sszvis.axis.y()

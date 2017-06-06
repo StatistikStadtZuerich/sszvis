@@ -112,7 +112,7 @@
       }
 
       // Render the first time
-      actions.prepareState(data);
+      actions.prepareState(data.reverse());
 
       // Set up a source for new random data
       var sourceData = data.map(function(d) {
@@ -152,9 +152,9 @@
     var colorScale = sszvis.color.qual6().domain(state.continents);
 
     // Note: this is the same as the default angleScale funciton, shown here for completeness
-    var angleScale = d3.scale.linear().range([0, 2 * Math.PI]);
+    var angleScale = d3.scaleLinear().range([0, 2 * Math.PI]);
 
-    var radiusScale = d3.scale.linear()
+    var radiusScale = d3.scaleLinear()
           .domain(state.radiusExtent)
           .range([0, burstLayout.numLayers * burstLayout.ringWidth]);
 
@@ -178,7 +178,7 @@
       .centerRadius(burstLayout.centerRadius);
 
     var tooltipText = sszvis.svgUtils.modularText.html()
-      .bold(function(d) { return d.key; });
+      .bold(function(d) { return d.data.key; });
 
     var tooltip = sszvis.annotation.tooltip()
       .renderInto(tooltipLayer)
@@ -199,7 +199,7 @@
 
 
     // Rendering
-    
+
     var sunburstGroup = chartLayer.selectGroup('sunburst')
       .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2))
       .call(sunburstMaker);
@@ -212,8 +212,8 @@
       .call(tooltip);
 
 
-    // Interaction 
-    
+    // Interaction
+
     var interactionLayer = sszvis.behavior.panning()
       .elementSelector('.sszvis-sunburst-arc')
       .on('start', actions.onSliceOver)

@@ -74,21 +74,21 @@ export default function() {
     .prop('columnPosition')
     .prop('nodeThickness')
     .prop('nodePadding')
-    .prop('columnPadding', d3.functor)
-    .prop('columnLabel', d3.functor).columnLabel('')
-    .prop('columnLabelOffset', d3.functor).columnLabelOffset(0)
+    .prop('columnPadding', fn.functor)
+    .prop('columnLabel', fn.functor).columnLabel('')
+    .prop('columnLabelOffset', fn.functor).columnLabelOffset(0)
     .prop('linkCurvature').linkCurvature(0.5)
-    .prop('nodeColor', d3.functor)
-    .prop('linkColor', d3.functor)
-    .prop('linkSort', d3.functor).linkSort(function(a, b) { return a.value - b.value; }) // Default sorts in descending order of value
-    .prop('labelSide', d3.functor).labelSide('left')
+    .prop('nodeColor', fn.functor)
+    .prop('linkColor', fn.functor)
+    .prop('linkSort', fn.functor).linkSort(function(a, b) { return a.value - b.value; }) // Default sorts in descending order of value
+    .prop('labelSide', fn.functor).labelSide('left')
     .prop('labelSideSwitch')
-    .prop('labelOpacity', d3.functor).labelOpacity(1)
+    .prop('labelOpacity', fn.functor).labelOpacity(1)
     .prop('labelHitBoxSize').labelHitBoxSize(0)
     .prop('nameLabel').nameLabel(fn.identity)
     .prop('linkSourceLabels').linkSourceLabels([])
     .prop('linkTargetLabels').linkTargetLabels([])
-    .prop('linkLabel', d3.functor)
+    .prop('linkLabel', fn.functor)
     .render(function(data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -133,9 +133,11 @@ export default function() {
         // One number for each column
         .data(data.columnLengths);
 
-      columnLabels.enter()
+      var newColumnLabels = columnLabels.enter()
         .append('text')
         .attr('class', 'sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label');
+
+      columnLabels = columnLabels.merge(newColumnLabels);
 
       columnLabels.exit().remove();
 
@@ -147,9 +149,11 @@ export default function() {
         .selectAll('.sszvis-sankey-column-label-tick')
         .data(data.columnLengths);
 
-      columnLabelTicks.enter()
+      var newColumnLabelTicks = columnLabelTicks.enter()
         .append('line')
         .attr('class', 'sszvis-sankey-column-label-tick');
+
+      columnLabelTicks = columnLabelTicks.merge(newColumnLabelTicks);
 
       columnLabelTicks.exit().remove();
 
@@ -192,9 +196,10 @@ export default function() {
       var linksElems = linksGroup.selectAll('.sszvis-link')
         .data(data.links, idAcc);
 
-      linksElems.enter()
+      var newLinksElems = linksElems.enter()
         .append('path')
         .attr('class', 'sszvis-link');
+      linksElems = linksElems.merge(newLinksElems);
 
       linksElems.exit().remove();
 
@@ -223,9 +228,10 @@ export default function() {
         .selectAll('.sszvis-sankey-link-source-label')
         .data(props.linkSourceLabels);
 
-      linkSourceLabels.enter()
+      var newLinkSourceLabels = linkSourceLabels.enter()
         .append('text')
         .attr('class', 'sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label');
+      linkSourceLabels = linkSourceLabels.merge(newLinkSourceLabels);
 
       linkSourceLabels.exit().remove();
 
@@ -241,9 +247,10 @@ export default function() {
         .selectAll('.sszvis-sankey-link-target-label')
         .data(props.linkTargetLabels);
 
-      linkTargetLabels.enter()
+      var newLinkTargetLabels = linkTargetLabels.enter()
         .append('text')
         .attr('class', 'sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label');
+      linkTargetLabels = linkTargetLabels.merge(newLinkTargetLabels);
 
       linkTargetLabels.exit().remove();
 
@@ -269,9 +276,10 @@ export default function() {
         .selectAll('.sszvis-sankey-node-label')
         .data(data.nodes);
 
-      barLabels.enter()
+      var newBarLabels = barLabels.enter()
         .append('text')
         .attr('class', 'sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label');
+      barLabels = barLabels.merge(newBarLabels);
 
       barLabels.exit().remove();
 
@@ -287,9 +295,10 @@ export default function() {
         .selectAll('.sszvis-sankey-hitbox')
         .data(data.nodes);
 
-      barLabelHitBoxes.enter()
+      var newBarLabelHitBoxes = barLabelHitBoxes.enter()
         .append('rect')
         .attr('class', 'sszvis-sankey-hitbox');
+      barLabelHitBoxes = barLabelHitBoxes.merge(newBarLabelHitBoxes);
 
       barLabelHitBoxes.exit().remove();
 

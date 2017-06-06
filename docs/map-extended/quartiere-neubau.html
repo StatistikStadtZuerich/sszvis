@@ -136,7 +136,7 @@
       .height(bounds.innerHeight)
       .borderColor('#7C7C7C');
 
-    var mapPathGen = d3.geo.path()
+    var mapPathGen = d3.geoPath()
       .projection(sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight));
 
     var newBuildings = sszvis.map.renderer.geojson()

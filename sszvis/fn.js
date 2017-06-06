@@ -40,12 +40,7 @@ export var isString = function(val) {
  * @return {Boolean}        Whether the value is a d3.selection
  */
 export var isSelection = function(val) {
-  // We can't use this because we need to support IE9:
-  // return val instanceof d3.selection;
-  //
-  // We're using a property that is added by our own compatibility
-  // library in vendor/d3-iecompat.
-  return val.isD3Selection;
+  return val instanceof d3.selection;
 };
 
 /**
@@ -498,4 +493,14 @@ export var some = function(predicate, arr) {
  */
 export var stringEqual = function(a, b) {
   return a.toString() === b.toString();
+};
+
+
+/**
+ * fn.functor
+ *
+ * Same as fn.functor in d3v3
+ */
+export function functor(v) {
+  return typeof v === "function" ? v : function() { return v; };
 };

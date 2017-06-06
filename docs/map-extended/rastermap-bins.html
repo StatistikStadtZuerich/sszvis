@@ -177,7 +177,7 @@
     // d3.range(0, numBins) returns a range including the integers in [0, numBins - 1]
     var binColors = d3.range(0, numBins).map(interpolateColor);
 
-    var colorScale = d3.scale.threshold()
+    var colorScale = d3.scaleThreshold()
       .domain(binEdges)
       .range(binColors);
 

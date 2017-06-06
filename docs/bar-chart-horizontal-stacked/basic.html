@@ -44,6 +44,7 @@
   var xAcc = sszvis.fn.prop('value');
   var yAcc = sszvis.fn.prop('area');
   var cAcc = sszvis.fn.prop('sector');
+  var dataAcc = sszvis.fn.prop('data');
 
 
   /* Application state
@@ -63,18 +64,12 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.areas = state.data.map(yAcc);
+
+      state.areas = sszvis.fn.set(state.data, yAcc);
       state.categories = sszvis.fn.set(state.data, cAcc);
 
-      state.stackedData = sszvis.cascade()
-        .arrayBy(cAcc)
-        .apply(state.data);
-
-      var stackedValues = sszvis.cascade()
-        .objectBy(yAcc)
-        .apply(state.data);
-
-      state.maxStacked = d3.max(d3.values(stackedValues), function(s) { return d3.sum(s, xAcc); });
+      state.stackedData = sszvis.component.stackedBar.horizontalStackedBarData(yAcc, cAcc, xAcc)(data);
+      state.maxStacked = state.stackedData.maxValue;
 
       render(state);
     },
@@ -122,13 +117,15 @@
 
     // Scales
 
-    var xScale = d3.scale.linear()
+    var xScale = d3.scaleLinear()
       .domain([0, state.maxStacked])
       .range([0, chartWidth]);
 
-    var yScale = d3.scale.ordinal()
+    var yScale = d3.scaleBand()
       .domain(state.areas)
-      .rangeBands([0, bounds.innerHeight], 0.40, 0.1);
+      .padding(0.40)
+      .paddingOuter(0.1)
+      .range([0, bounds.innerHeight]);
 
     var cScale = sszvis.color.qual12()
       .domain(state.categories);
@@ -149,12 +146,10 @@
     // Components
 
     var horizontalBars = sszvis.component.stackedBar.horizontal()
-      .xAccessor(xAcc)
       .xScale(xScale)
-      .height(yScale.rangeBand())
-      .yAccessor(yAcc)
+      .height(yScale.bandwidth())
       .yScale(yScale)
-      .fill(sszvis.fn.compose(cScale, cAcc));
+      .fill(sszvis.fn.compose(cScale, cAcc, dataAcc));
 
     var xAxis = sszvis.axis.x()
       .scale(xScale)
@@ -203,7 +198,7 @@
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, -(yScale.rangeBand() / 2 + 10)))
+      .attr('transform', sszvis.svgUtils.translateString(0, -(yScale.bandwidth() / 2 + 10)))
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')

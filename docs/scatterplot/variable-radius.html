@@ -110,7 +110,7 @@
 
     // Scales
 
-    var xScale = d3.scale.log()
+    var xScale = d3.scaleLog()
       .domain(state.xExtent)
       .range([0, bounds.innerWidth]);
 
@@ -118,13 +118,13 @@
         return v <= 0.1 ? 0 : xScale(v);
       }, xAcc);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain(state.yExtent)
       .range([bounds.innerHeight, 0]);
 
     var yValue = sszvis.fn.compose(yScale, yAcc);
 
-    var rScale = d3.scale.linear()
+    var rScale = d3.scaleLinear()
       .domain(state.rExtent)
       .range([1, 20]);
 

@@ -159,7 +159,7 @@
     // This scale takes the square root of the input and uses that to scale the radius. When the
     // result is used as the radius of a circle, the area of the circle will be linearly
     // proportional to the input quantity.
-    var radiusScale = d3.scale.sqrt().domain(state.birthsRange).range([0, props.radiusMax]);
+    var radiusScale = d3.scaleSqrt().domain(state.birthsRange).range([0, props.radiusMax]);
 
 
     // Layers

@@ -172,17 +172,20 @@ sszvis_namespace('sszvis.map.zurichStatistischeZonen', function(module) {
 
         selection.selectAll('[data-event-target]')
           .on('mouseover', function(d) {
-            event.over(d.datum);
+            event.apply('over', this, [d.datum]);
           })
           .on('mouseout', function(d) {
-            event.out(d.datum);
+            event.apply('out', this, [d.datum]);
           })
           .on('click', function(d) {
-            event.click(d.datum);
+            event.apply('click', this, [d.datum]);
           });
       });
 
-    d3.rebind(component, event, 'on');
+    component.on = function() {
+      var value = event.on.apply(event, arguments);
+      return value === event ? component : value;
+    };
 
     return component;
   };

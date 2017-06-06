@@ -105,11 +105,12 @@
 
     // Scales
 
-    var xScale = d3.scale.ordinal()
+    var xScale = d3.scalePoint()
       .domain(state.months)
-      .rangePoints([0, bounds.innerWidth], 0);
+      .range([0, bounds.innerWidth])
+      .padding(0);
 
-    var yScale = d3.scale.linear()
+    var yScale = d3.scaleLinear()
       .domain([0, state.maxY])
       .range([bounds.innerHeight, 0]);
 

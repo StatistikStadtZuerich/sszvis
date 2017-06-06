@@ -128,11 +128,13 @@
     var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
 
     // Scales
-    var xScale = d3.scale.ordinal()
+    var xScale = d3.scaleBand()
       .domain(state.categories)
-      .rangeBands([0, chartDimensions.totalWidth], chartDimensions.padRatio, props.barPadding);
+      .padding(chartDimensions.padRatio)
+      .paddingOuter(props.barPadding)
+      .range([0, chartDimensions.totalWidth]);
 
-    var heightScale = d3.scale.linear()
+    var heightScale = d3.scaleLinear()
       .range([0, bounds.innerHeight])
       .domain([0, state.maxValue]);
 

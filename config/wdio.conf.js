@@ -51,6 +51,7 @@ exports.config = {
       referenceName: getScreenshotName('reference'),
       screenshotName: getScreenshotName('taken'),
       diffName: getScreenshotName('diff'),
+      misMatchTolerance: 0
     }),
 
     // Testing only a single viewport at the moment. The tests don't run parallel – mocha

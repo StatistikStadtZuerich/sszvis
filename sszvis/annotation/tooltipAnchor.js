@@ -48,7 +48,7 @@ import translateString from '../svgUtils/translateString.js';
 export default function() {
 
   return d3.component()
-    .prop('position').position(d3.functor([0, 0]))
+    .prop('position').position(fn.functor([0, 0]))
     .prop('debug')
     .render(function(data) {
       var selection = d3.select(this);
@@ -60,7 +60,7 @@ export default function() {
 
       // Enter
 
-      anchor.enter()
+      var newAnchor = anchor.enter()
         .append('rect')
         .attr('height', 1)
         .attr('width', 1)
@@ -70,15 +70,16 @@ export default function() {
         .attr('data-tooltip-anchor', '');
 
 
+      // Exit
+
+      anchor.exit().remove();
+      anchor = anchor.merge(newAnchor);
+
+
       // Update
 
       anchor
         .attr('transform', fn.compose(vectorToTranslateString, props.position));
-
-
-      // Exit
-
-      anchor.exit().remove();
 
 
       // Visible anchor if debug is true
@@ -86,9 +87,12 @@ export default function() {
         var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
           .data(data);
 
-        referencePoint.enter()
+        var newReferencePoint = referencePoint.enter()
           .append('circle')
           .attr('data-tooltip-anchor-debug', '');
+
+        referencePoint.exit().remove();
+        referencePoint = referencePoint.merge(newReferencePoint);
 
         referencePoint
           .attr('r', 2)
@@ -96,8 +100,6 @@ export default function() {
           .attr('stroke', '#f00')
           .attr('stroke-width', 1.5)
           .attr('transform', fn.compose(vectorToTranslateString, props.position));
-
-        referencePoint.exit().remove();
       }
 
     });

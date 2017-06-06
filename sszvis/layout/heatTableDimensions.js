@@ -18,7 +18,7 @@
  *                          {
  *                              side: the length of one side of a table box
  *                              paddedSide: the length of the side plus padding
- *                              padRatio: the ratio of padding to paddedSide (used for configuring d3.scale.ordinal.rangeBands as the second parameter)
+ *                              padRatio: the ratio of padding to paddedSide (used for configuring d3.scaleOrdinal.rangeBands as the second parameter)
  *                              width: the total width of all table boxes plus padding in between
  *                              height: the total height of all table boxes plus padding in between
  *                              centeredOffset: the left offset required to center the table horizontally within its container

@@ -56,26 +56,37 @@ export default function() {
       elements
         .attr('data-sszvis-behavior-pannable', '')
         .classed('sszvis-interactive', true)
-        .on('mouseover', event.start)
-        .on('mousemove', event.pan)
-        .on('mouseout', event.end)
-        .on('touchstart', function(d) {
+        .on('mouseover', function() {
+          event.apply('start', this, arguments);
+        })
+        .on('mousemove', function() {
+          event.apply('pan', this, arguments);
+        })
+        .on('mouseout', function() {
+          event.apply('end', this, arguments);
+        })
+        .on('touchstart', function() {
           d3.event.preventDefault();
-          event.start(d);
+          event.apply('start', this, arguments);
         })
         .on('touchmove', function() {
           d3.event.preventDefault();
           var datum = datumFromPanEvent(fn.firstTouch(d3.event));
           if (datum !== null) {
-            event.pan(datum);
+            event.apply('pan', this, arguments);
           } else {
-            event.end();
+            event.apply('end', this, arguments);
           }
         })
-        .on('touchend', event.end);
+        .on('touchend', function() {
+          event.apply('end', this, arguments);
+        });
     });
 
-  d3.rebind(panningComponent, event, 'on');
+  panningComponent.on = function() {
+    var value = event.on.apply(event, arguments);
+    return value === event ? panningComponent : value;
+  };
 
   return panningComponent;
 };
