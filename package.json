@@ -18,7 +18,7 @@
     "build:sszvis": "rollup --config config/rollup/sszvis.js",
     "dist": "npm run build:sszvis",
     "prepublishOnly": "npm run dist",
-    "start": "catalog start"
+    "start": "catalog start -p 8000"
   },
   "dependencies": {
     "catalog": "^3.0.0-rc.3",
