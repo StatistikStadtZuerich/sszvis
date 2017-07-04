@@ -21,8 +21,8 @@
   'use strict';
 
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -38,9 +38,9 @@
     // Data column to use for the geographic values
     geoIdColumn: 'Qcode',
     // Formatting function to use for the legend label. In this example, it defaults
-    // to "sszvis.format.percent" to render values from 0–100 as 0–100%, for other
-    // values "sszvis.format.number" is maybe more appropriate
-    labelFormat: sszvis.format.fractionPercent,
+    // to "sszvis.formatPercent" to render values from 0–100 as 0–100%, for other
+    // values "sszvis.formatNumber" is maybe more appropriate
+    labelFormat: sszvis.formatFractionPercent,
     // Data column to use for the name of the geographic values
     nameColumn: 'Qname',
     // Data column to use for the values
@@ -56,7 +56,7 @@
   var queryProps = sszvis.responsiveProps()
     .prop('bounds', {
       _: function(width) {
-        var innerHeight = sszvis.aspectRatio.square(width);
+        var innerHeight = sszvis.aspectRatioSquare(width);
         return {
           top: 30,
           bottom: 90,
@@ -73,9 +73,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var vAcc = sszvis.fn.prop('value');
-  var qnameAcc = sszvis.fn.prop('quartername');
-  var mDatumAcc = sszvis.fn.prop('datum');
+  var vAcc = sszvis.prop('value');
+  var qnameAcc = sszvis.prop('quartername');
+  var mDatumAcc = sszvis.prop('datum');
 
 
   /* Application state
@@ -118,9 +118,9 @@
   d3.csv(config.dataPath)
     .row(function(d) {
       return {
-        quarternum: sszvis.parse.number(d[config.geoIdColumn]),
+        quarternum: sszvis.parseNumber(d[config.geoIdColumn]),
         quartername: d[config.nameColumn],
-        value: sszvis.parse.number(d[config.valueColumn]),
+        value: sszvis.parseNumber(d[config.valueColumn]),
       };
     })
     .get(function(error, data) {
@@ -135,13 +135,13 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
 
-    var colorScale = sszvis.color.seqBlu()
+    var colorScale = sszvis.scaleSeqBlu()
       .domain(state.valueDomain);
 
 
@@ -167,7 +167,7 @@
       .highlightStroke(function(d) {
         // checks for undefined values and makes those white
         var v = vAcc(d);
-        return isNaN(v) ? 'white' : sszvis.color.muchDarker(colorScale(vAcc(d)));
+        return isNaN(v) ? 'white' : sszvis.muchDarker(colorScale(vAcc(d)));
       })
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
@@ -176,28 +176,28 @@
         // undefined or empty string values become NaN
         return !isNaN(vAcc(d));
       })
-      .fill(sszvis.fn.compose(colorScale, vAcc))
+      .fill(sszvis.compose(colorScale, vAcc))
 
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
-    var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(qnameAcc, mDatumAcc));
+    var tooltipHeader = sszvis.modularTextHTML()
+      .bold(sszvis.compose(qnameAcc, mDatumAcc));
 
-    var tooltipBody = sszvis.svgUtils.modularText.html()
-      .plain(sszvis.fn.compose(function(v) {
-        return isNaN(v) ? 'keine Daten' : sszvis.format.fractionPercent(v);
+    var tooltipBody = sszvis.modularTextHTML()
+      .plain(sszvis.compose(function(v) {
+        return isNaN(v) ? 'keine Daten' : sszvis.formatFractionPercent(v);
       }, vAcc, mDatumAcc))
       .plain(config.valueLabel);
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(tooltipBody)
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
+      .orientation(sszvis.fitTooltip('bottom', bounds))
       .visible(isSelected);
 
-    var legend = sszvis.legend.linearColorScale()
+    var legend = sszvis.legendColorLinear()
       .scale(colorScale)
       .width(props.legendWidth)
       .labelFormat(config.labelFormat);
@@ -206,7 +206,7 @@
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.padding.left, bounds.padding.top))
+      .attr('transform', sszvis.translateString(bounds.padding.left, bounds.padding.top))
       .call(mapMaker);
 
     if (!config.fallback) {
@@ -215,14 +215,14 @@
     }
 
     chartLayer.selectGroup('legend')
-       .attr('transform', sszvis.svgUtils.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 60))
+       .attr('transform', sszvis.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 60))
       .call(legend);
 
 
     // Interaction
 
     if (!config.fallback) {
-      var interactionLayer = sszvis.behavior.panning()
+      var interactionLayer = sszvis.panning()
         .elementSelector('.sszvis-map__area')
         .on('start', actions.selectHovered)
         .on('pan', actions.selectHovered)

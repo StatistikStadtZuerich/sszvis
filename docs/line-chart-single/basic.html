@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -31,8 +31,8 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('date');
-  var yAcc = sszvis.fn.prop('value');
+  var xAcc = sszvis.prop('date');
+  var yAcc = sszvis.prop('value');
 
 
   /* Application state
@@ -64,8 +64,8 @@
   d3.csv('data/SL_quarterly.csv')
     .row(function(d) {
       return {
-        date:  sszvis.parse.date(d['Datum']),
-        value: sszvis.parse.number(d['Wert'])
+        date:  sszvis.parseDate(d['Datum']),
+        value: sszvis.parseNumber(d['Wert'])
       };
     })
     .get(function(error, data) {
@@ -105,18 +105,18 @@
 
     // Components
 
-    var line = sszvis.component.line()
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yScale, yAcc))
-      .stroke(sszvis.color.qual12());
+    var line = sszvis.line()
+      .x(sszvis.compose(xScale, xAcc))
+      .y(sszvis.compose(yScale, yAcc))
+      .stroke(sszvis.scaleQual12());
 
-    var xAxis = sszvis.axis.x.time()
+    var xAxis = sszvis.axisX.time()
       .scale(xScale)
       .orient('bottom')
       .title('Datum')
       .ticks(4);
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .orient('right')
       .title('Wert')
@@ -130,7 +130,7 @@
       .call(line);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')

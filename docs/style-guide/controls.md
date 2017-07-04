@@ -4,10 +4,10 @@ Controls can be used to provide a graphical tool for interacting with a chart's 
 
 ## Button Group Control
 
-### sszvis.control.buttonGroup
+### sszvis.buttonGroup
 
 ```hint|directive
-This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.control.select).
+This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.selectMenu).
 ```
 
 #### `buttonGroup.values`
@@ -48,10 +48,10 @@ A callback/event handler function to call when the user clicks on a value. Note 
 
 ## Select Control
 
-### sszvis.control.select
+### sszvis.selectMenu
 
 ```hint|directive
-This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.control.buttonGroup).
+This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.buttonGroup).
 ```
 
 #### `select.values`
@@ -96,7 +96,7 @@ This example shows how a button group can be used interchangeably with a select.
 
 ## Slider Control
 
-### sszvis.control.slider
+### sszvis.slider
 
 #### `slider.scale`
 
@@ -148,7 +148,7 @@ A callback function called whenever user interaction attempts to change the slid
 
 ## Handle Ruler
 
-### sszvis.control.handleRuler
+### sszvis.handleRuler
 
 #### `handleRuler.x`
 

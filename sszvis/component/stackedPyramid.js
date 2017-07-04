@@ -31,8 +31,8 @@
 import d3 from 'd3';
 
 import * as fn from '../fn.js';
-import cascade from '../cascade.js';
-import transition from '../transition.js';
+import { cascade } from '../cascade.js';
+import { transition } from '../transition.js';
 import bar from './bar.js';
 import { component } from '../d3-component.js';
 
@@ -99,7 +99,7 @@ export function stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc) {
 
 /* Module
 ----------------------------------------------- */
-export default function() {
+export function stackedPyramid() {
   return component()
     .prop('barHeight', fn.functor)
     .prop('barWidth', fn.functor)

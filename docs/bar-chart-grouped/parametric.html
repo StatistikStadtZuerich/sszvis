@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -53,9 +53,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('region');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('category');
+  var xAcc = sszvis.prop('region');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('category');
 
 
   /* Application state
@@ -77,21 +77,21 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.regions = sszvis.fn.set(state.data, xAcc);
+      state.regions = sszvis.set(state.data, xAcc);
       state.valueExtent = zeroBasedAxisDomain(d3.extent(state.data, yAcc));
-      state.groups = sszvis.fn.set(state.data, cAcc);
+      state.groups = sszvis.set(state.data, cAcc);
       state.groupedData = sszvis.cascade()
         .arrayBy(xAcc)
         .apply(state.data);
-      state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
-      state.categories = sszvis.fn.set(state.data, cAcc);
+      state.longestGroup = d3.max(state.groupedData, sszvis.prop('length'));
+      state.categories = sszvis.set(state.data, cAcc);
 
       render(state);
     },
 
     showTooltip: function(x, y) {
       state.selection = state.groupedData.filter(function(d) {
-        return sszvis.fn.contains(d.map(xAcc), x);
+        return sszvis.contains(d.map(xAcc), x);
       });
       render(state);
     },
@@ -112,7 +112,7 @@
       return {
         region: d[config.xColumn],
         category: d[config.cColumn],
-        value: sszvis.parse.number(d[config.yColumn])
+        value: sszvis.parseNumber(d[config.yColumn])
       };
     })
     .get(function(error, data) {
@@ -129,7 +129,7 @@
   function render(state) {
 
     // the color scale for the layers, based on the number of categories
-    var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
+    var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
     cScale.domain(state.categories);
 
     var colorLegend = flexibleLegend(cScale, state.categories.length)
@@ -177,27 +177,27 @@
 
     // Components
 
-    var barLayout = sszvis.component.groupedBars()
-      .groupScale(sszvis.fn.compose(xScale, xAcc))
+    var barLayout = sszvis.groupedBars()
+      .groupScale(sszvis.compose(xScale, xAcc))
       .groupWidth(xScale.bandwidth())
       .groupSize(state.longestGroup)
-      .y(sszvis.fn.compose(yPosScale, yAcc))
-      .height(sszvis.fn.compose(hScale, yAcc))
-      .fill(sszvis.fn.compose(cScale, cAcc))
-      .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), yAcc));
+      .y(sszvis.compose(yPosScale, yAcc))
+      .height(sszvis.compose(hScale, yAcc))
+      .fill(sszvis.compose(cScale, cAcc))
+      .defined(sszvis.compose(sszvis.not(isNaN), yAcc));
 
-    var xAxis = sszvis.axis.x.ordinal()
+    var xAxis = sszvis.axisX.ordinal()
       .scale(xScale)
       .orient('bottom')
       .slant(config.textDirection)
       .highlightTick(function(d) {
-        return sszvis.fn.contains(state.selection.map(sszvis.fn.compose(xAcc, sszvis.fn.first)), d);
+        return sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d);
       });
       if (!config.textDirection) {
         xAxis.textWrap(labelWrapWidth(xScale.range()));
       };
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .showZeroY(isTwoSidedDomain(state.valueExtent))
       .orient('right')
@@ -205,11 +205,11 @@
       .tickLength(config.fallback ? bounds.innerWidth : null)
       .title(config.yAxisLabel);
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
-      .header(sszvis.svgUtils.modularText.html().plain(function(d) {
-        return xAcc(sszvis.fn.first(d));
+      .orientation(sszvis.fitTooltip('bottom', bounds))
+      .header(sszvis.modularTextHTML().plain(function(d) {
+        return xAcc(sszvis.first(d));
       }))
       .body(function(d) {
         // generates a row from each data element
@@ -226,10 +226,10 @@
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
@@ -242,7 +242,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + config.legendPadding))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + config.legendPadding))
       .call(colorLegend);
 
     sszvis.viewport.on('resize', actions.resize);
@@ -250,7 +250,7 @@
 
     // Interaction
     if (!config.fallback) {
-      var interactionLayer = sszvis.behavior.move()
+      var interactionLayer = sszvis.move()
         .xScale(xScale)
         .yScale(yScale)
         .on('move', actions.showTooltip)
@@ -287,7 +287,7 @@
   }
 
   function flexibleLegend(scale, numEntries) {
-    var legend = sszvis.legend.ordinalColorScale().scale(scale)
+    var legend = sszvis.legendColorOrdinal().scale(scale)
     if (numEntries <= 4) {
       legend.horizontalFloat(true)
     } else {

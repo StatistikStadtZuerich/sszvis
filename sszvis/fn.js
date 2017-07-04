@@ -501,6 +501,6 @@ export var stringEqual = function(a, b) {
  *
  * Same as fn.functor in d3v3
  */
-export function functor(v) {
+export var functor = function(v) {
   return typeof v === "function" ? v : function() { return v; };
 };

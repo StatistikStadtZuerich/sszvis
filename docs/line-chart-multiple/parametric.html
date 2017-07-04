@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -49,9 +49,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('date');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('category');
+  var xAcc = sszvis.prop('date');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('category');
 
   /* Application state
   ----------------------------------------------- */
@@ -75,7 +75,7 @@
         .apply(state.data);
       state.dates = d3.extent(state.data, xAcc);
       state.maxY = d3.max(state.data, yAcc);
-      state.categories = sszvis.fn.set(state.data, cAcc);
+      state.categories = sszvis.set(state.data, cAcc);
 
       actions.resetDate();
     },
@@ -86,13 +86,13 @@
       // Find all data that have the same date as the closest datum
       var closestData = state.lineData.map(function(linePoints) {
         // For each line pick the first datum that matches
-        return sszvis.fn.find(function(d) {
+        return sszvis.find(function(d) {
           return xAcc(d).toString() === closestDate.toString();
         }, linePoints);
       });
       // Make sure that the selection has a value to display
       state.selection = closestData.filter(
-        sszvis.fn.compose(sszvis.fn.not(isNaN), yAcc)
+        sszvis.compose(sszvis.not(isNaN), yAcc)
       );
 
       render(state);
@@ -114,8 +114,8 @@
     .row(function(d) {
       return {
         // CONFIG
-        date: sszvis.parse.date(d[config.dateColumn]),
-        value: sszvis.parse.number(d[config.valueColumn]),
+        date: sszvis.parseDate(d[config.dateColumn]),
+        value: sszvis.parseNumber(d[config.valueColumn]),
         category: d[config.categoryColumn]
       };
     })
@@ -144,7 +144,7 @@
 
     // CONFIG
     //choose color scale depending on number of categories
-    var cScale = state.categories.length > 6 ? sszvis.color.qual12() : sszvis.color.qual6();
+    var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
     cScale.domain(state.categories);
 
 
@@ -158,11 +158,11 @@
 
 
     // Components
-    var line = sszvis.component.line()
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yScale, yAcc))
+    var line = sszvis.line()
+      .x(sszvis.compose(xScale, xAcc))
+      .y(sszvis.compose(yScale, yAcc))
       // Access the first data point of the line to decide on the stroke color
-      .stroke(sszvis.fn.compose(cScale, cAcc, sszvis.fn.first));
+      .stroke(sszvis.compose(cScale, cAcc, sszvis.first));
 
     // Add the highlighted data as additional ticks to the xScale
     // CONFIG use config.ticks if defined in config object
@@ -172,7 +172,7 @@
       return xTickValues.map(String).indexOf(String(v)) === i;
     });
 
-    var xAxis = sszvis.axis.x.time()
+    var xAxis = sszvis.axisX.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
@@ -181,7 +181,7 @@
       // CONFIG
       .title((config.xLabel || ''));
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .orient('right')
       .contour(true)
@@ -194,28 +194,28 @@
     // CONFIG use a second x-Axis with only tick labels.
     // Necessary in order to prevent horizontal lines to be drawn above data lines
     // if config.fallback == true
-    var yAxis2 = sszvis.axis.y()
+    var yAxis2 = sszvis.axisY()
       .scale(yScale)
       .orient('right')
       .contour(true);
 
-    var rulerLabel = sszvis.svgUtils.modularText.svg()
-      .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
+    var rulerLabel = sszvis.modularTextSVG()
+      .bold(sszvis.compose(sszvis.formatNumber, yAcc))
       // CONFIG use category name as ruler label
       .plain(cAcc);
 
-    var highlightLayer = sszvis.annotation.ruler()
+    var highlightLayer = sszvis.annotationRuler()
       .top(0)
       .bottom(bounds.innerHeight)
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yScale, yAcc))
+      .x(sszvis.compose(xScale, xAcc))
+      .y(sszvis.compose(yScale, yAcc))
       .label(rulerLabel)
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
       })
-      .color(sszvis.fn.compose(cScale, cAcc));
+      .color(sszvis.compose(cScale, cAcc));
 
-    var cLegend = sszvis.legend.ordinalColorScale()
+    var cLegend = sszvis.legendColorOrdinal()
       .scale(cScale)
       .horizontalFloat(true);
 
@@ -223,7 +223,7 @@
     // Rendering
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     // CONFIG draw yAxis with long horizontal ticks (if config.fallback == true)
@@ -243,7 +243,7 @@
 
     chartLayer.selectGroup('cScale')
       // the color legend should always be positioned 60px below the bottom axis
-      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(1, bounds.innerHeight + 60))
       .call(cLegend);
 
     chartLayer.selectGroup('highlight')
@@ -252,7 +252,7 @@
 
 
     // Interaction
-    var interactionLayer = sszvis.behavior.move()
+    var interactionLayer = sszvis.move()
       .xScale(xScale)
       .yScale(yScale)
       .on('move', actions.changeDate)
@@ -276,7 +276,7 @@
   }
 
   function isSelected(d) {
-    return sszvis.fn.contains(state.selection.map(xAcc).map(String), String(d));
+    return sszvis.contains(state.selection.map(xAcc).map(String), String(d));
   }
 
 

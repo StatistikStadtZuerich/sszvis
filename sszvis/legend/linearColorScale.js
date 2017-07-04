@@ -12,7 +12,7 @@
  *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default)
  * @property {array} labelText                  Text or a text-returning function to use as the titles for the legend endpoints. If not supplied,
  *                                              defaults to using the first and last tick values.
- * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.format.number.
+ * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
  */
 
 import d3 from 'd3';

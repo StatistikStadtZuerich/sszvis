@@ -20,7 +20,7 @@ A light grey scale is included for use in cases where a data background should b
 ```html|plain,run-script
 <div id='lightGreyScale' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.lightGry();
+    var scale = sszvis.scaleLightGry();
     colorSwatchFromLinearScale('lightGreyScale', scale, 1);
 </script>
 ```
@@ -32,7 +32,7 @@ A pale grey shade which is used for elements which should be in the background, 
 ```html|plain,run-script
 <div id='paleGreyScale' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.paleGry();
+    var scale = sszvis.scalePaleGry();
     colorSwatchFromLinearScale('paleGreyScale', scale, 1);
 </script>
 ```
@@ -44,7 +44,7 @@ A grey scale is included for use in cases where a data value should be shaded ou
 ```html|plain,run-script
 <div id='greyScale' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.gry();
+    var scale = sszvis.scaleGry();
     colorSwatchFromLinearScale('greyScale', scale, 1);
 </script>
 ```
@@ -56,7 +56,7 @@ A dim grey shade used for highlighting elements which are normally grey (`color.
 ```html|plain,run-script
 <div id='dimGreyScale' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.dimGry();
+    var scale = sszvis.scaleDimGry();
     colorSwatchFromLinearScale('dimGreyScale', scale, 1);
 </script>
 ```
@@ -68,7 +68,7 @@ The medium grey color, as a standalone value.
 ```html|plain,run-script
 <div id='medGreyScale' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.medGry();
+    var scale = sszvis.scaleMedGry();
     colorSwatchFromLinearScale('medGreyScale', scale, 1);
 </script>
 ```
@@ -80,7 +80,7 @@ The deep grey color, as a standalone value.
 ```html|plain,run-script
 <div id='deepGreyScale' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.deepGry();
+    var scale = sszvis.scaleDeepGry();
     colorSwatchFromLinearScale('deepGreyScale', scale, 1);
 </script>
 ```
@@ -95,7 +95,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 ```html|plain,run-script
 <div id='scaleQual' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual12();
+    var scale = sszvis.scaleQual12();
     colorSwatchFromColors('scaleQual', scale.range());
 </script>
 ```
@@ -106,7 +106,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 ```html|plain,run-script
 <div id='scaleQual6' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual6();
+    var scale = sszvis.scaleQual6();
     colorSwatchFromColors('scaleQual6', scale.range());
 </script>
 ```
@@ -116,7 +116,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 ```html|plain,run-script
 <div id='scaleQual6a' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual6a();
+    var scale = sszvis.scaleQual6a();
     colorSwatchFromColors('scaleQual6a', scale.range());
 </script>
 ```
@@ -126,7 +126,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 ```html|plain,run-script
 <div id='scaleQual6b' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual6b();
+    var scale = sszvis.scaleQual6b();
     colorSwatchFromColors('scaleQual6b', scale.range());
 </script>
 ```
@@ -138,7 +138,7 @@ Qualitative scales can be brightened or darkened with the `scale.brighter()` and
 <div id='scaleQualDefault' class='scale-container'></div>
 <div id='scaleQualDarker' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual12();
+    var scale = sszvis.scaleQual12();
     colorSwatchFromColors('scaleQualBrigther', scale.brighter().range());
     colorSwatchFromColors('scaleQualDefault', scale.range());
     colorSwatchFromColors('scaleQualDarker', scale.darker().range());
@@ -149,7 +149,7 @@ Qualitative scales can be reversed with the `scale.reverse()` instance method. T
 ```html|plain,run-script
 <div id='scaleQualReverse' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.qual12().reverse();
+    var scale = sszvis.scaleQual12().reverse();
     colorSwatchFromColors('scaleQualReverse', scale.range());
 </script>
 ```
@@ -163,7 +163,7 @@ Sequential sales are used to compare values. These scales are designed to have t
 ```html|plain,run-script
 <div id='scale1' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.seqBlu();
+    var scale = sszvis.scaleSeqBlu();
     colorSwatchFromLinearScale('scale1', scale, 9);
 </script>
 ```
@@ -173,7 +173,7 @@ Sequential sales are used to compare values. These scales are designed to have t
 ```html|plain,run-script
 <div id='scale2' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.seqRed();
+    var scale = sszvis.scaleSeqRed();
     colorSwatchFromLinearScale('scale2', scale, 9);
 </script>
 ```
@@ -183,7 +183,7 @@ Sequential sales are used to compare values. These scales are designed to have t
 ```html|plain,run-script
 <div id='scale3' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.seqGrn();
+    var scale = sszvis.scaleSeqGrn();
     colorSwatchFromLinearScale('scale3', scale, 9);
 </script>
 ```
@@ -193,7 +193,7 @@ Sequential sales are used to compare values. These scales are designed to have t
 ```html|plain,run-script
 <div id='scale4' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.seqBrn();
+    var scale = sszvis.scaleSeqBrn();
     colorSwatchFromLinearScale('scale4', scale, 9);
 </script>
 ```
@@ -203,7 +203,7 @@ Sequential scales can be reversed using the `scale.reverse()` instance method. T
 ```html|plain,run-script
 <div id='scaleSeqBluRev' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.seqBlu();
+    var scale = sszvis.scaleSeqBlu();
     colorSwatchFromLinearScale('scaleSeqBluRev', scale.reverse(), 9);
 </script>```
 
@@ -219,7 +219,7 @@ They come in two color variations: the valued (red-blue) variation is used for d
 ```html|plain,run-script
 <div id='scale5' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.divVal();
+    var scale = sszvis.scaleDivVal();
     colorSwatchFromLinearScale('scale5', scale, 9);
 </script>
 ```
@@ -229,7 +229,7 @@ They come in two color variations: the valued (red-blue) variation is used for d
 ```html|plain,run-script
 <div id='scale7' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.divNtr();
+    var scale = sszvis.scaleDivNtr();
     colorSwatchFromLinearScale('scale7', scale, 9);
 </script>
 ```
@@ -241,7 +241,7 @@ A grey midpoint can be used in situations where the contour of a data mark must 
 ```html|plain,run-script
 <div id='scale6' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.divValGry();
+    var scale = sszvis.scaleDivValGry();
     colorSwatchFromLinearScale('scale6', scale, 9);
 </script>
 ```
@@ -251,7 +251,7 @@ A grey midpoint can be used in situations where the contour of a data mark must 
 ```html|plain,run-script
 <div id='scale8' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.divNtrGry();
+    var scale = sszvis.scaleDivNtrGry();
     colorSwatchFromLinearScale('scale8', scale, 9);
 </script>
 ```
@@ -261,7 +261,7 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
 ```html|plain,run-script
 <div id='scaleDivValRev' class='scale-container'></div>
 <script>
-    var scale = sszvis.color.divVal();
+    var scale = sszvis.scaleDivVal();
     colorSwatchFromLinearScale('scaleDivValRev', scale.reverse(), 9);
 </script>
 ```

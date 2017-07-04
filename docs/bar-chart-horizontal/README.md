@@ -2,7 +2,7 @@
 
 > Bar charts are suited to comparing numeric values for different categories. The categories can be ordered or unordered, numeric or non-numeric.
 
-## sszvis.component.bar
+## sszvis.bar
 
 ### Data structure
 

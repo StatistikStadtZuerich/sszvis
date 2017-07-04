@@ -20,8 +20,8 @@
 (function(d3, topojson, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -35,7 +35,7 @@
   var VALUE_PROXIMITY_THRESHOLD = 800;
   var queryProps = sszvis.responsiveProps()
     .prop('mapInnerHeight', {
-      _: sszvis.aspectRatio.square
+      _: sszvis.aspectRatioSquare
     })
     .prop('mapBottomPadding', {
       palm: 60,
@@ -54,11 +54,11 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var vAcc = sszvis.fn.prop('value');
-  var yearAcc = sszvis.fn.prop('year');
-  var geoIdAcc = sszvis.fn.prop('geoId');
-  var nameAcc = sszvis.fn.prop('name');
-  var mDatumAcc = sszvis.fn.prop('datum');
+  var vAcc = sszvis.prop('value');
+  var yearAcc = sszvis.prop('year');
+  var geoIdAcc = sszvis.prop('geoId');
+  var nameAcc = sszvis.prop('name');
+  var mDatumAcc = sszvis.prop('datum');
 
 
   /* Application state
@@ -71,8 +71,8 @@
     currentYear: new Date(),
     currentMapData: [],
     highlightEntity: null,
-    lineBaseColor: sszvis.color.gry()(0),
-    lineHighlightColor: sszvis.color.qual12()(0),
+    lineBaseColor: sszvis.scaleGry()(0),
+    lineHighlightColor: sszvis.scaleQual12()(0),
     mapHighlightData: [],
     lineHighlightData: []
   };
@@ -97,7 +97,7 @@
       // transform the data into line objects, one for each line
       state.lineData = cascadedData.map(function(lineData) {
         return {
-          geoId: geoIdAcc(sszvis.fn.first(lineData)),
+          geoId: geoIdAcc(sszvis.first(lineData)),
           values: lineData
         };
       });
@@ -134,7 +134,7 @@
 
       // within the closest year's data values, find the one closest to the mouse position
       var entitiesForYear = state.data.filter(function(d) {
-        return sszvis.fn.stringEqual(closestYear, yearAcc(d));
+        return sszvis.stringEqual(closestYear, yearAcc(d));
       })
       // entries have to be sorted so that d3.bisector will work on it.
       .sort(sortWithAcc(vAcc));
@@ -148,7 +148,7 @@
         // select the entity's sibling from the currently selected year instead
         // of from what's near the mouse in order to highlight the correct
         // entity on the ruler
-        state.highlightEntity = sszvis.fn.find(function(d) {
+        state.highlightEntity = sszvis.find(function(d) {
           return geoIdAcc(d) === geoIdAcc(closestEntity);
         }, state.currentMapData);
 
@@ -215,9 +215,9 @@
   d3.csv('data/CML_quartier_years.csv')
     .row(function(d) {
       return {
-        geoId: sszvis.parse.number(d['QNr']),
-        year: sszvis.parse.year(d['Jahr']),
-        value: sszvis.parse.number(d['Anzahl']),
+        geoId: sszvis.parseNumber(d['QNr']),
+        year: sszvis.parseYear(d['Jahr']),
+        value: sszvis.parseNumber(d['Anzahl']),
         name: d['Qname']
       };
     })
@@ -233,7 +233,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
 
     // Bounds for the map section of the chart
     var mapBounds = sszvis.bounds({
@@ -259,7 +259,7 @@
     // Scales
 
     // map fill scale
-    var fillScale = sszvis.color.seqBlu()
+    var fillScale = sszvis.scaleSeqBlu()
       .domain(state.valueDomain);
 
     // line chart scales
@@ -296,20 +296,20 @@
 
     var mapMaker = sszvis.map.zurichStatistischeQuartiere()
       .highlight(state.mapHighlightData)
-      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, fillScale, vAcc))
+      .highlightStroke(sszvis.compose(sszvis.muchDarker, fillScale, vAcc))
       .width(mapBounds.innerWidth)
       .height(mapBounds.innerHeight)
       .transitionColor(false)
-      .fill(sszvis.fn.compose(fillScale, vAcc));
+      .fill(sszvis.compose(fillScale, vAcc));
 
-    var lineMaker = sszvis.component.line()
+    var lineMaker = sszvis.line()
       // passing a key function here is important, because the DOM order of the lines is changed
       // by highlighting a line. When a line is highlighted, it is sorted to the front of other lines.
       // This sorting is performed later in the code.
-      .key(sszvis.fn.prop('geoId'))
-      .valuesAccessor(sszvis.fn.prop('values'))
-      .x(sszvis.fn.compose(xScale, yearAcc))
-      .y(sszvis.fn.compose(yScale, vAcc))
+      .key(sszvis.prop('geoId'))
+      .valuesAccessor(sszvis.prop('values'))
+      .x(sszvis.compose(xScale, yearAcc))
+      .y(sszvis.compose(yScale, vAcc))
       .stroke(function(lineData) {
         // this function determines whether the line is the highlighted line or not
         var isBlue;
@@ -325,69 +325,69 @@
       .ticks(4)
       .concat(state.currentYear);
 
-    var lineXAxis = sszvis.axis.x.time()
+    var lineXAxis = sszvis.axisX.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
       .highlightTick(tickIsSelected);
 
-    var lineYAxis = sszvis.axis.y()
+    var lineYAxis = sszvis.axisY()
       .scale(yScale)
       .ticks(3)
       .orient('right')
       .contour(true);
 
-    var rulerLabel = sszvis.svgUtils.modularText.svg()
-      .bold(sszvis.fn.compose(sszvis.format.number, vAcc))
+    var rulerLabel = sszvis.modularTextSVG()
+      .bold(sszvis.compose(sszvis.formatNumber, vAcc))
       .plain(function(d) {
         return d.isAverageValue ? 'Durchschnitt' : d.name;
       });
 
     // The bar which marks the current year and shows the value of the highlighted entity
-    var handleRuler = sszvis.control.handleRuler()
+    var handleRuler = sszvis.handleRuler()
       .x(xScale(state.currentYear))
-      .y(sszvis.fn.compose(yScale, vAcc))
+      .y(sszvis.compose(yScale, vAcc))
       .top(0)
       .bottom(lineChartBounds.innerHeight)
       .flip(function(d) {
         return xScale(yearAcc(d)) >= lineChartBounds.innerWidth / 2;
       })
-      .color(sszvis.color.qual12())
+      .color(sszvis.scaleQual12())
       .label(rulerLabel);
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
-    var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(nameAcc, mDatumAcc));
+    var tooltipHeader = sszvis.modularTextHTML()
+      .bold(sszvis.compose(nameAcc, mDatumAcc));
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
-      .orientation(sszvis.annotation.tooltip.fit('bottom', outerBounds))
+      .orientation(sszvis.fitTooltip('bottom', outerBounds))
       .header(tooltipHeader)
       .body(function(d) {
         return [
-          ['Jahr', sszvis.format.year(yearAcc(mDatumAcc(d)))],
-          ['Einwohner', sszvis.format.number(vAcc(mDatumAcc(d)))]
+          ['Jahr', sszvis.formatYear(yearAcc(mDatumAcc(d)))],
+          ['Einwohner', sszvis.formatNumber(vAcc(mDatumAcc(d)))]
         ];
       })
       .visible(entityIsSelected);
 
-    var legend = sszvis.legend.linearColorScale()
+    var legend = sszvis.legendColorLinear()
       .scale(fillScale)
       .width(lineChartBounds.innerWidth / 2)
-      .labelFormat(sszvis.format.number);
+      .labelFormat(sszvis.formatNumber);
 
     // Rendering
 
     map
-      .attr('transform', sszvis.svgUtils.translateString(mapBounds.padding.left, mapBounds.padding.top))
+      .attr('transform', sszvis.translateString(mapBounds.padding.left, mapBounds.padding.top))
       .call(mapMaker);
 
     map.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
     lineChart
-      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
+      .attr('transform', sszvis.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top))
       .call(lineMaker);
 
     // this sorts the highlighted line to the front of all lines
@@ -397,26 +397,26 @@
     });
 
     lineChart.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, lineChartBounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, lineChartBounds.innerHeight))
       .call(lineXAxis);
 
     lineChart.selectGroup('yAxis')
       .call(lineYAxis);
 
     highlightLayer
-      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top));
+      .attr('transform', sszvis.translateString(lineChartBounds.padding.left, mapBounds.height + lineChartBounds.padding.top));
 
     highlightLayer.selectGroup('handleRuler')
       .call(handleRuler);
 
     chart.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(lineChartBounds.padding.left + lineChartBounds.innerWidth / 4, mapBounds.padding.top + mapBounds.innerHeight + props.mapBottomPadding * 2/3))
+      .attr('transform', sszvis.translateString(lineChartBounds.padding.left + lineChartBounds.innerWidth / 4, mapBounds.padding.top + mapBounds.innerHeight + props.mapBottomPadding * 2/3))
       .call(legend);
 
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-map__area')
       .on('start', function(d) { actions.changeMapEntity(d.datum); })
       .on('pan', function(d) { actions.changeMapEntity(d.datum); })
@@ -430,7 +430,7 @@
 
     // add the hover behavior for the line chart, including top padding so that
     // the area around the slide bar handle is responsive to mouse events.
-    var hoverBehavior = sszvis.behavior.move()
+    var hoverBehavior = sszvis.move()
       .xScale(xScale)
       .yScale(yScale)
       .padding({ top: 30 })
@@ -460,7 +460,7 @@
   }
 
   function findEntityWithGeoId(geoId, data) {
-    return sszvis.fn.find(function(d) {
+    return sszvis.find(function(d) {
       return geoIdAcc(d) === geoId;
     }, data);
   }
@@ -472,7 +472,7 @@
   }
 
   function tickIsSelected(d) {
-    return sszvis.fn.stringEqual(state.currentYear, d);
+    return sszvis.stringEqual(state.currentYear, d);
   }
 
   function entityIsSelected(d) {

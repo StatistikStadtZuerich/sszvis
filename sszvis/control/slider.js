@@ -29,7 +29,7 @@ import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
 import { range } from '../scale.js';
 import move from '../behavior/move.js';
-import * as axisComponent from '../axis.js';
+import { axisX } from '../axis.js';
 import { component } from '../d3-component.js';
 
 function contains(x, a) {
@@ -73,7 +73,7 @@ export default function() {
       bg.exit().remove();
 
       // create the axis
-      var axis = axisComponent.x()
+      var axis = axisX()
         .scale(alteredScale)
         .orient('bottom')
         .hideBorderTickThreshold(0)

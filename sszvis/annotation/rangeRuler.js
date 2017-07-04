@@ -25,7 +25,7 @@ import d3 from 'd3';
 
 import * as fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
-import * as format from '../format.js';
+import { formatNumber } from '../format.js';
 import { component } from '../d3-component.js';
 
 export default function() {
@@ -106,7 +106,7 @@ export default function() {
         .style('text-anchor', function(d) {
           return props.flip(d) ? 'end' : 'start';
         })
-        .text(fn.compose(format.number, props.label));
+        .text(fn.compose(formatNumber, props.label));
 
       var total = selection.selectAll('.sszvis-rangeRuler__total')
         .data([fn.last(data)]);
@@ -128,6 +128,6 @@ export default function() {
         .style('text-anchor', function(d) {
           return props.flip(d) ? 'end' : 'start';
         })
-        .text('Total ' + format.number(props.total));
+        .text('Total ' + formatNumber(props.total));
     });
 };

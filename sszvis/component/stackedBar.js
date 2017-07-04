@@ -32,7 +32,7 @@
 import d3 from 'd3';
 
 import * as fn from '../fn.js';
-import cascade from '../cascade.js';
+import { cascade } from '../cascade.js';
 import bar from './bar.js';
 import { component } from '../d3-component.js';
 
@@ -80,8 +80,8 @@ function stackedBarData(order) {
   };
 }
 
-export var horizontalStackedBarData = stackedBarData(d3.stackOrderNone);
-export var verticalStackedBarData = stackedBarData(d3.stackOrderReverse);
+export var stackedBarHorizontalData = stackedBarData(d3.stackOrderNone);
+export var stackedBarVerticalData = stackedBarData(d3.stackOrderReverse);
 
 function stackedBar(config) {
   return component()
@@ -124,7 +124,7 @@ var horizontalStackedBarConfig = {
   width: function(props) { return function(d) { return props.xScale(d[1]) - props.xScale(d[0]); }; },
   height: function(props) { return props.height },
 }
-export var horizontal = function() {
+export var stackedBarHorizontal = function() {
   return stackedBar(horizontalStackedBarConfig);
 };
 
@@ -134,6 +134,6 @@ var verticalStackedBarConfig = {
   width: function(props) { return props.width; },
   height: function(props) { return function(d) { return props.yScale(d[0]) - props.yScale(d[1]); }; },
 }
-export var vertical = function() {
+export var stackedBarVertical = function() {
   return stackedBar(verticalStackedBarConfig);
 };

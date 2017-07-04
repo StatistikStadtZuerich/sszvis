@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -44,8 +44,8 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('year');
-  var yAcc = sszvis.fn.prop('value');
+  var xAcc = sszvis.prop('year');
+  var yAcc = sszvis.prop('value');
 
 
   /* Application state
@@ -88,8 +88,8 @@
   d3.csv('data/SiVB_yearly_many.csv')
     .row(function(d) {
       return {
-        year: sszvis.parse.number(d['Jahr']),
-        value: sszvis.parse.number(d['Hotelübernachtungen'])
+        year: sszvis.parseNumber(d['Jahr']),
+        value: sszvis.parseNumber(d['Hotelübernachtungen'])
       };
     })
     .get(function(error, data) {
@@ -112,7 +112,7 @@
     // Scales
 
     var xScale = d3.scaleBand()
-      .domain(sszvis.fn.set(state.data, xAcc))
+      .domain(sszvis.set(state.data, xAcc))
       .padding(0.4)
       .paddingOuter(props.barPadding)
       .rangeRound([0, bounds.innerWidth]);
@@ -125,12 +125,12 @@
       .copy()
       .range(heightScale.range().slice().reverse());
 
-    var xValue = sszvis.fn.compose(xScale, xAcc);
+    var xValue = sszvis.compose(xScale, xAcc);
     // rounding the y-values and the height prevents the bars from jumping around
-    var yValue = sszvis.fn.compose(Math.round, yPosScale, yAcc);
-    var hValue = sszvis.fn.compose(Math.round, heightScale, yAcc)
+    var yValue = sszvis.compose(Math.round, yPosScale, yAcc);
+    var hValue = sszvis.compose(Math.round, heightScale, yAcc)
 
-    var cScale = sszvis.color.qual12();
+    var cScale = sszvis.scaleQual12();
     var cScaleDark = cScale.darker();
 
 
@@ -148,7 +148,7 @@
 
     // Components
 
-    var barGen = sszvis.component.bar()
+    var barGen = sszvis.bar()
       .x(xValue)
       .y(yValue)
       .width(xScale.bandwidth())
@@ -157,22 +157,22 @@
         return isSelected(d) ? cScaleDark(d): cScale(d);
       });
 
-    var xAxis = sszvis.axis.x()
+    var xAxis = sszvis.axisX()
       .scale(xScale)
       .orient('bottom')
       .alignOuterLabels(true)
       .tickValues(d3.range(state.yearRange[0], state.yearRange[1], 20));
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yPosScale)
       .orient('right');
 
-    var tooltipTitle = sszvis.svgUtils.modularText.html()
+    var tooltipTitle = sszvis.modularTextHTML()
       .bold(yAcc)
       .plain('Hotelübernachtungen');
 
-    var tooltip = sszvis.annotation.tooltip()
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
+    var tooltip = sszvis.tooltip()
+      .orientation(sszvis.fitTooltip('bottom', bounds))
       .renderInto(tooltipLayer)
       .header(tooltipTitle)
       .body(function(d) {
@@ -190,17 +190,17 @@
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, 0))
+      .attr('transform', sszvis.translateString(0, 0))
       .call(yAxis);
 
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.move()
+    var interactionLayer = sszvis.move()
       .padding({
         right: BAR_WIDTH
       })
@@ -219,7 +219,7 @@
   /* Helper functions
   ----------------------------------------------- */
   function isSelected(d) {
-    return sszvis.fn.contains(state.selection, d);
+    return sszvis.contains(state.selection, d);
   }
 
 

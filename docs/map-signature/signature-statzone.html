@@ -20,8 +20,8 @@
 (function(d3, topojson, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -30,11 +30,11 @@
   ----------------------------------------------- */
   var TITLE = 'Diagrammtitel';
   var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var MAX_LEGEND_WIDTH = sszvis.aspectRatio.square.MAX_HEIGHT;
+  var MAX_LEGEND_WIDTH = sszvis.aspectRatioSquare.MAX_HEIGHT;
   var queryProps = sszvis.responsiveProps()
      .prop('bounds', {
        _: function(width) {
-         var innerHeight = sszvis.aspectRatio.square(width);
+         var innerHeight = sszvis.aspectRatioSquare(width);
          return {
            top: 90,
            bottom: 30,
@@ -54,10 +54,10 @@
      })
      .prop('control', {
        palm: function(width) {
-         return sszvis.control.select;
+         return sszvis.selectMenu;
        },
        _: function(width) {
-         return sszvis.control.buttonGroup;
+         return sszvis.buttonGroup;
        }
      })
      .prop('controlWidth', {
@@ -69,12 +69,12 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var datumAcc = sszvis.fn.prop('datum');
-  var idAcc = sszvis.fn.propOr('id', null);
-  var yearAcc = sszvis.fn.prop('year');
-  var genderAcc = sszvis.fn.prop('gender');
-  var birthsAcc = sszvis.fn.propOr('births', 0);
-  var zoneNameAcc = sszvis.fn.propOr('zonename', '--');
+  var datumAcc = sszvis.prop('datum');
+  var idAcc = sszvis.propOr('id', null);
+  var yearAcc = sszvis.prop('year');
+  var genderAcc = sszvis.prop('gender');
+  var birthsAcc = sszvis.propOr('births', 0);
+  var zoneNameAcc = sszvis.propOr('zonename', '--');
 
 
   /* Application state
@@ -129,10 +129,10 @@
   d3.csv('data/births_year_statisticalZones.csv')
     .row(function(d) {
       return {
-        id: sszvis.parse.number(d['statistischeZoneId']),
-        year: sszvis.parse.number(d['Jahr']),
+        id: sszvis.parseNumber(d['statistischeZoneId']),
+        year: sszvis.parseNumber(d['Jahr']),
         gender: d['Geschlecht'],
-        births: sszvis.parse.number(d['Geburten']),
+        births: sszvis.parseNumber(d['Geburten']),
         zonename: d['statistischeZoneName']
       };
     })
@@ -147,7 +147,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
@@ -179,29 +179,29 @@
 
     var anchoredShape = sszvis.map.anchoredCircles()
       .fill('rgb(81, 130, 179)')
-      .radius(function(d) { return !sszvis.fn.defined(d) ? 0 : radiusScale(birthsAcc(d)); })
+      .radius(function(d) { return !sszvis.defined(d) ? 0 : radiusScale(birthsAcc(d)); })
       .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width));
 
     var mapMaker = sszvis.map.zurichStatistischeZonen()
       .keyName('id')
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(function(d) { return isSelected(d) ? sszvis.color.dimGry()(0) : sszvis.color.gry()(0) })
+      .fill(function(d) { return isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0) })
       .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
       .transitionColor(false)
       .anchoredShape(anchoredShape);
 
-    var tooltipHeader = sszvis.svgUtils.modularText.html()
+    var tooltipHeader = sszvis.modularTextHTML()
       .plain(function(geod) { return birthsAcc(geod.datum) + " Geburten"; });
 
-    var tooltipBody = sszvis.svgUtils.modularText.html()
+    var tooltipBody = sszvis.modularTextHTML()
       .plain(function(geod) { return zoneNameAcc(geod.datum); });
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(tooltipBody)
-      .visible(sszvis.fn.compose(isSelected, datumAcc));
+      .visible(sszvis.compose(isSelected, datumAcc));
 
     var control = props.control()
       .values(['Männlich 1993', 'Weiblich 1993', 'Männlich 2014', 'Weiblich 2014'])
@@ -209,9 +209,9 @@
       .width(props.controlWidth)
       .change(actions.setFilter);
 
-    var radiusLegend = sszvis.legend.radius()
+    var radiusLegend = sszvis.legendRadius()
       .scale(radiusScale)
-      .tickFormat(sszvis.format.preciseNumber(1));
+      .tickFormat(sszvis.formatPreciseNumber(1));
 
 
     // Rendering
@@ -219,7 +219,7 @@
     chartLayer.call(mapMaker);
 
     chartLayer.selectGroup('radiusLegend')
-      .attr('transform', sszvis.svgUtils.translateString(props.legendX, bounds.innerHeight - 65))
+      .attr('transform', sszvis.translateString(props.legendX, bounds.innerHeight - 65))
       .call(radiusLegend);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
@@ -233,7 +233,7 @@
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-map__area, .sszvis-anchored-circle')
       .on('start', actions.selectHovered)
       .on('pan', actions.selectHovered)
@@ -246,7 +246,7 @@
   }
 
   function isSelected(d) {
-    return sszvis.fn.defined(d) && state.selection.indexOf(d) !== -1;
+    return sszvis.defined(d) && state.selection.indexOf(d) !== -1;
   }
 
 }(d3, topojson, sszvis));

@@ -4,7 +4,7 @@ Tooltips are used to highlight particular data values or chart points of interes
 
 ## Tooltip Class
 
-### sszvis.annotation.tooltip
+### sszvis.tooltip
 
 The tooltip class is used to generate all tooltips. This class can be called on any selection. A potential tooltip is created for each element in the selection, and it uses whatever data is already bound to those elements. Within the sszvis library, a useful abstraction called tooltipAnchor is used as the root element to which tooltips are bound. However, any element, with or without bound data, can be used as the base for tooltips. Tooltips are created on a selection using selection.call(tooltipInstance). Unlike most sszvis components, tooltips do not render into or as siblings of the selection on which the function is called. Instead, you must pass a selection containing an HTML DOM element as the `renderInto` option. The tooltips get their data and position information from the elements of the selection on which the component is called, but they are rendered into the selection passed as the `renderInto` option. This enables the library to present HTML content next to or over SVG content without needing to mix the two.
 
@@ -63,7 +63,7 @@ var position = [ 35, 41 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('bottom')
-    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+    .header(sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -85,7 +85,7 @@ var position = [ 35, 0 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('top')
-    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+    .header(sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -107,7 +107,7 @@ var position = [ 0, 17 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('left')
-    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+    .header(sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -129,7 +129,7 @@ var position = [ 76, 17 ];
 
 var tooltip = getTooltipComponent(id, data)
     .orientation('right')
-    .header(sszvis.svgUtils.modularText.html().bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value'))));
+    .header(sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value'))));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -159,8 +159,8 @@ var position = [ 55, 63 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('bottom')
     .header(
-        sszvis.svgUtils.modularText.html()
-            .bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value')))
+        sszvis.modularTextHTML()
+            .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value')))
             .plain('Anteile')
     )
     .body('im Kanton Zurich');
@@ -186,8 +186,8 @@ var position = [ 55, 0 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('top')
     .header(
-        sszvis.svgUtils.modularText.html()
-            .bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value')))
+        sszvis.modularTextHTML()
+            .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value')))
             .plain('Anteile')
     )
     .body('im Kanton Zurich');
@@ -213,8 +213,8 @@ var position = [ 0, 28 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('left')
     .header(
-        sszvis.svgUtils.modularText.html()
-            .bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value')))
+        sszvis.modularTextHTML()
+            .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value')))
             .plain('Anteile')
     )
     .body('im Kanton Zurich');
@@ -240,8 +240,8 @@ var position = [ 119, 28 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('right')
     .header(
-        sszvis.svgUtils.modularText.html()
-            .bold(sszvis.fn.compose(sszvis.format.percent, sszvis.fn.prop('value')))
+        sszvis.modularTextHTML()
+            .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value')))
             .plain('Anteile')
     )
     .body('im Kanton Zurich');
@@ -262,8 +262,8 @@ var id = 'maxBot';
 
 var data = [{
     value: [
-        ['Frauen', sszvis.format.percent(49)],
-        ['Männer', sszvis.format.percent(51)]
+        ['Frauen', sszvis.formatPercent(49)],
+        ['Männer', sszvis.formatPercent(51)]
     ]
 }];
 
@@ -277,10 +277,10 @@ var position = [ 75, 110 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('bottom')
     .header(
-        sszvis.svgUtils.modularText.html()
+        sszvis.modularTextHTML()
             .plain('Titel')
     )
-    .body(sszvis.fn.prop('value'));
+    .body(sszvis.prop('value'));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -291,8 +291,8 @@ var id = 'maxTop';
 
 var data = [{
     value: [
-        ['Frauen', sszvis.format.percent(49)],
-        ['Männer', sszvis.format.percent(51)]
+        ['Frauen', sszvis.formatPercent(49)],
+        ['Männer', sszvis.formatPercent(51)]
     ]
 }];
 
@@ -306,10 +306,10 @@ var position = [ 75, 0 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('top')
     .header(
-        sszvis.svgUtils.modularText.html()
+        sszvis.modularTextHTML()
             .plain('Titel')
     )
-    .body(sszvis.fn.prop('value'));
+    .body(sszvis.prop('value'));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -320,8 +320,8 @@ var id = 'maxLeft';
 
 var data = [{
     value: [
-        ['Frauen', sszvis.format.percent(49)],
-        ['Männer', sszvis.format.percent(51)]
+        ['Frauen', sszvis.formatPercent(49)],
+        ['Männer', sszvis.formatPercent(51)]
     ]
 }];
 
@@ -335,10 +335,10 @@ var position = [ 0, 52 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('left')
     .header(
-        sszvis.svgUtils.modularText.html()
+        sszvis.modularTextHTML()
             .plain('Titel')
     )
-    .body(sszvis.fn.prop('value'));
+    .body(sszvis.prop('value'));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>
@@ -349,8 +349,8 @@ var id = 'maxRight';
 
 var data = [{
     value: [
-        ['Frauen', sszvis.format.percent(49)],
-        ['Männer', sszvis.format.percent(51)]
+        ['Frauen', sszvis.formatPercent(49)],
+        ['Männer', sszvis.formatPercent(51)]
     ]
 }];
 
@@ -364,10 +364,10 @@ var position = [ 156, 52 ];
 var tooltip = getTooltipComponent(id, data)
     .orientation('right')
     .header(
-        sszvis.svgUtils.modularText.html()
+        sszvis.modularTextHTML()
             .plain('Titel')
     )
-    .body(sszvis.fn.prop('value'));
+    .body(sszvis.prop('value'));
 
 renderTooltip(id, dimensions, data, position, tooltip);
 </script>

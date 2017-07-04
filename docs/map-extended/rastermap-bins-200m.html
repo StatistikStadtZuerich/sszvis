@@ -21,8 +21,8 @@
 (function(d3, topojson, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported() || sszvis.fallback.canvasUnsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported() || sszvis.fallbackCanvasUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -44,7 +44,7 @@
         // At the maximum map size (420x420px) the raster image overlaps the image by
         // the magic padding numbers below. At smaller sizes, we apply a scale factor
         // to calculate the respective paddings.
-        var scale = width/(sszvis.aspectRatio.square.MAX_HEIGHT + 49 + 42);
+        var scale = width/(sszvis.aspectRatioSquare.MAX_HEIGHT + 49 + 42);
 
         var padding = {
           top: Math.min(36 * scale, 36),
@@ -54,7 +54,7 @@
         };
 
         var innerWidth = width - padding.left - padding.right;
-        var innerHeight = sszvis.aspectRatio.square(innerWidth);
+        var innerHeight = sszvis.aspectRatioSquare(innerWidth);
 
         // We always want a 1:1 ratio, so we restrict the innerWidth to the max height
         // by increasing the horizontal padding.
@@ -82,9 +82,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('xpos');
-  var yAcc = sszvis.fn.prop('ypos');
-  var kinderAcc = sszvis.fn.prop('kinder');
+  var xAcc = sszvis.prop('xpos');
+  var yAcc = sszvis.prop('ypos');
+  var kinderAcc = sszvis.prop('kinder');
 
 
   /* Application state
@@ -114,9 +114,9 @@
   d3.csv('data/kinder200.csv')
     .row(function(d) {
       return {
-        xpos: sszvis.parse.number(d['xkoord']),
-        ypos: sszvis.parse.number(d['ykoord']),
-        kinder: sszvis.parse.number(d['kinder'])
+        xpos: sszvis.parseNumber(d['xkoord']),
+        ypos: sszvis.parseNumber(d['ykoord']),
+        kinder: sszvis.parseNumber(d['kinder'])
       };
     })
     .get(function(error, data) {
@@ -131,7 +131,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
@@ -143,7 +143,7 @@
     var numBins = 5;
     var binStep = Math.ceil(((state.valueDomain[1] - state.valueDomain[0]) / numBins) * 100) / 100;
     var binEdges = d3.range(state.valueDomain[0] + binStep, state.valueDomain[0] + binStep * numBins, binStep);
-    var interpolateColor = sszvis.color.divValGry().reverse()
+    var interpolateColor = sszvis.scaleDivValGry().reverse()
       .domain([0, numBins - 1]);
     var binColors = d3.range(0, numBins).map(interpolateColor);
 
@@ -193,9 +193,9 @@
     var rasterLayer = sszvis.map.renderer.raster()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .position(sszvis.fn.compose(projection, getRoundVal))
+      .position(sszvis.compose(projection, getRoundVal))
       .cellSide(pixelSide)
-      .fill(sszvis.fn.compose(colorScale, kinderAcc))
+      .fill(sszvis.compose(colorScale, kinderAcc))
       .opacity(0.6);
 
     var topoLayer = sszvis.map.renderer.image()
@@ -205,12 +205,12 @@
       .geoBounds(layerBounds)
       .opacity(0.4);
 
-    var legend = sszvis.legend.binnedColorScale()
+    var legend = sszvis.legendColorBinned()
       .scale(colorScale)
       .displayValues(binEdges)
       .endpoints(state.valueDomain)
       .width(props.legendWidth)
-      .labelFormat(sszvis.format.number);
+      .labelFormat(sszvis.formatNumber);
 
 
     // Rendering
@@ -223,7 +223,7 @@
       .call(mapMaker);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - props.legendWidth) / 2, bounds.innerHeight + bounds.padding.bottom - 40))
+      .attr('transform', sszvis.translateString((bounds.innerWidth - props.legendWidth) / 2, bounds.innerHeight + bounds.padding.bottom - 40))
       .call(legend);
 
     sszvis.viewport.on('resize', actions.resize);

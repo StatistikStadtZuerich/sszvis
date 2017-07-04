@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -48,9 +48,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('year');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('category');
+  var xAcc = sszvis.prop('year');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('category');
 
 
   /* Application state
@@ -77,7 +77,7 @@
       state.timeExtent = d3.extent(state.data, xAcc);
 
       // unique categories - for the color scale
-      state.categories = sszvis.fn.set(state.data, cAcc);
+      state.categories = sszvis.set(state.data, cAcc);
 
       // create the stacked data layers, and transform them into "layer objects", with a "category" property
       // for determining the correct color.
@@ -102,7 +102,7 @@
 
       // get the values to configure the stack and multiples component y-scales
       var dateValues = sszvis.cascade()
-        .objectBy(sszvis.fn.compose(String, xAcc))
+        .objectBy(sszvis.compose(String, xAcc))
         .apply(state.data);
 
       // the maximum individual category value - used for the multiples y-scale
@@ -114,7 +114,7 @@
       });
 
       // unique dates - for the ruler interaction
-      state.dates = sszvis.fn.set(state.data, xAcc);
+      state.dates = sszvis.set(state.data, xAcc);
 
       actions.resetDate();
     },
@@ -171,8 +171,8 @@
     .row(function(d) {
       return {
         category: d['Branche'],
-        year: sszvis.parse.year(d['Jahr']),
-        value: sszvis.parse.number(d['Wert'])
+        year: sszvis.parseYear(d['Jahr']),
+        value: sszvis.parseNumber(d['Wert'])
       };
     })
     .get(function(error, data) {
@@ -187,12 +187,12 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds({ top: 80, bottom: props.bottomPadding }, '#sszvis-chart');
     // this layout function computes values, including an array of baseline y-positions, for the
     // area multiples component. The most important is the array of y-baselines, which are used
     // for the yPositionMultiples scale
-    var multiplesLayout = sszvis.layout.stackedAreaMultiplesLayout(bounds.innerHeight, state.stackedData.length, 0.1);
+    var multiplesLayout = sszvis.layoutStackedAreaMultiples(bounds.innerHeight, state.stackedData.length, 0.1);
 
 
     // Scales
@@ -220,7 +220,7 @@
       .range(multiplesLayout.range);
 
     // the color scale for the layers, based on the category values
-    var cScale = sszvis.color.qual12()
+    var cScale = sszvis.scaleQual12()
       .domain(state.categories);
 
 
@@ -239,26 +239,26 @@
     // Components
 
     // the stacked area component (for the joined view)
-    var stackedArea = sszvis.component.stackedArea()
+    var stackedArea = sszvis.stackedArea()
       // Because both this and the multiples component render using the
       // same pre-existing elements, a key function is important to ensure
       // that the data is bound in the correct way.
-      .key(sszvis.fn.prop('key'))
-      .x(sszvis.fn.compose(xScale, xAcc, function(d) { return d.data; }))
-      .y0(sszvis.fn.compose(yScale, function(d) { return d[0]; }))
-      .y1(sszvis.fn.compose(yScale, function(d) { return d[1]; }))
-      .fill(sszvis.fn.compose(cScale, function(d) { return d.key }));
+      .key(sszvis.prop('key'))
+      .x(sszvis.compose(xScale, xAcc, function(d) { return d.data; }))
+      .y0(sszvis.compose(yScale, function(d) { return d[0]; }))
+      .y1(sszvis.compose(yScale, function(d) { return d[1]; }))
+      .fill(sszvis.compose(cScale, function(d) { return d.key }));
 
     // the area multiples component (for the separated view)
-    var stackedAreaMultiples = sszvis.component.stackedAreaMultiples()
+    var stackedAreaMultiples = sszvis.stackedAreaMultiples()
       // a key function must be passed here as well
-      .key(sszvis.fn.prop('key'))
-      .x(sszvis.fn.compose(xScale, xAcc, function(d) { return d.data; }))
-      .y0(sszvis.fn.compose(yPositionMultiples, function(d) { return d.key }))
+      .key(sszvis.prop('key'))
+      .x(sszvis.compose(xScale, xAcc, function(d) { return d.data; }))
+      .y0(sszvis.compose(yPositionMultiples, function(d) { return d.key }))
       .y1(function(d) {
         return yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key]);
       })
-      .fill(sszvis.fn.compose(cScale, function(d) { return d.key }));
+      .fill(sszvis.compose(cScale, function(d) { return d.key }));
 
     // here we compute the pixel position of the "top", which is needed by the rangeRuler.
     // The "top" is different depending on which view we're in, so we need two different options
@@ -266,7 +266,7 @@
     var topValue;
     if (state.isMultiples) {
       // the top of the first area instance, at the current value
-      var first = sszvis.fn.first(state.highlightData);
+      var first = sszvis.first(state.highlightData);
       topValue = yPositionMultiples(cAcc(first)) - yScaleMultiples(yAcc(first));
     } else {
       // the top of the stack, at the current value (a.k.a. the y-position of the "total" value)
@@ -275,7 +275,7 @@
 
     // the range ruler - has different display positions for the individual dots and the
     // value labels depending on if this is the separated or the joined view.
-    var rangeRuler = sszvis.annotation.rangeRuler()
+    var rangeRuler = sszvis.annotationRangeRuler()
       .top(topValue)
       .bottom(bounds.innerHeight)
       // the x-scale is the same
@@ -308,13 +308,13 @@
       });
 
     // modular text for the flag tooltip
-    var tooltipText = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.number, function(d) { return d.data[d.key]; }))
+    var tooltipText = sszvis.modularTextHTML()
+      .bold(sszvis.compose(sszvis.formatNumber, function(d) { return d.data[d.key]; }))
       .plain(function(d) { return d.key });
 
     // attached to the rangeFlag tooltip anchor, this tooltip displays
     // the current value of the shape the mouse is currently hovered over
-    var rangeTooltip = sszvis.annotation.tooltip()
+    var rangeTooltip = sszvis.tooltip()
         .header(tooltipText)
         .orientation(function(d) {
           // uses the same flip logic as the rangeRuler
@@ -325,7 +325,7 @@
 
     // The rangeFlag highlights two points, the top and bottom of a certain area segment, and also
     // creates a tooltip anchor between these points, to which we can bind rangeTooltip.
-    var rangeFlag = sszvis.annotation.rangeFlag()
+    var rangeFlag = sszvis.annotationRangeFlag()
       // same x-position as the other highlight components
       .x(xScale(state.highlightDate))
       // two y-baseline scales, like the rangeRuler
@@ -351,20 +351,20 @@
 
     // set up the x- and y-axes. This should be familiar if you're familiar with the
     // interactive simple single line chart example.
-    var xAxis = sszvis.axis.x.time()
+    var xAxis = sszvis.axisX.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xAxisTicks)
       .highlightTick(function(d) {
-        return sszvis.fn.stringEqual(d, state.highlightDate);
+        return sszvis.stringEqual(d, state.highlightDate);
       });
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .orient('right');
 
     // set up the color legend. Should also already be familiar
-    var colorLegend = sszvis.legend.ordinalColorScale()
+    var colorLegend = sszvis.legendColorOrdinal()
       .scale(cScale)
       // Sets a maximum width for the columns - otherwise it gets out of hand on some sizes
       .columnWidth(Math.min(bounds.innerWidth / 2, 260))
@@ -373,7 +373,7 @@
 
     // set up the button group control for choosing between joined and separated views
     var options = ['Summiert', 'Separiert'];
-    var buttonGroup = sszvis.control.buttonGroup()
+    var buttonGroup = sszvis.buttonGroup()
       .values(options)
       .current(options[Number(state.isMultiples)])
       .change(actions.toggleMultiples)
@@ -388,7 +388,7 @@
 
     // render the axes, legends, controls, and ruler
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
@@ -398,7 +398,7 @@
       .style('opacity', Number(!state.isMultiples));
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
     htmlLayer.selectDiv('controls')
@@ -434,7 +434,7 @@
 
     // Mouse Interaction
 
-    var interactionLayer = sszvis.behavior.move()
+    var interactionLayer = sszvis.move()
       .xScale(xScale)
       .yScale(yScale)
       // these functions control the placement of the range flag and the choice of highlight data

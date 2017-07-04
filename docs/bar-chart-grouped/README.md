@@ -2,7 +2,7 @@
 
 > Grouped bar charts are suited to making direct comparisons between multiple sets of similar things, while also comparing those sets using another differentiating dimension.
 
-## sszvis.component.groupedBars
+## sszvis.groupedBars
 
 ### Data structure
 

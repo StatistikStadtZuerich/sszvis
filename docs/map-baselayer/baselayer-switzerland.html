@@ -20,8 +20,8 @@
 (function(d3, topojson, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -33,7 +33,7 @@
   var queryProps = sszvis.responsiveProps()
     .prop('bounds', {
       _: function(width) {
-        var innerHeight = Math.min(sszvis.aspectRatio.ar4to3(width), 400);
+        var innerHeight = Math.min(sszvis.aspectRatio4to3(width), 400);
         return {
           bottom: 40,
           height: innerHeight + 40
@@ -62,7 +62,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 

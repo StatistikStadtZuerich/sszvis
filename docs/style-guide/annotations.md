@@ -5,7 +5,7 @@ Annotations are used to highlight certain sections of a chart. They are added as
 
 ## Data Circle
 
-### sszvis.annotation.circle
+### sszvis.annotationCircle
 
 All properties of the data circle can be specified as either a constant or a function of data.
 
@@ -56,7 +56,7 @@ The caption for the data area. (default position is the center of the circle).
 
 ## Data Area
 
-### sszvis.annotation.rectangle
+### sszvis.annotationRectangle
 
 All properties of the annotation rectangle can be specified as either a constant or a function of data.
 
@@ -111,7 +111,7 @@ The caption for the data area. (default position is the center of the rectangle)
 
 ## Reference Line
 
-### sszvis.annotation.line
+### sszvis.annotationLine
 
 #### `line.x1`
 
@@ -174,7 +174,7 @@ A reference line caption. (default position is centered at the midpoint of the l
 
 The ruler depicts information at a certain x value
 
-### sszvis.annotation.ruler
+### sszvis.annotationRuler
 
 #### `ruler.top`
 
@@ -227,7 +227,7 @@ A boolean or function which returns a boolean that specifies whether the labels 
 
 ## Range Ruler / Range Flag
 
-### sszvis.annotation.rangeRuler
+### sszvis.annotationRangeRuler
 
 The rangeRuler is a ruler which depicts ranges. It also shows a label for each range section, and a total value of all ranges.
 
@@ -263,7 +263,7 @@ A number to display as the total of the range ruler (at the top)
 
 Determines whether the rangeRuler labels should be flipped (they default to the right side)
 
-### sszvis.annotation.rangeFlag
+### sszvis.annotationRangeFlag
 
 The rangeFlag creates a pair of dots which identify a specific vertical range of data, and a tooltipAnchor between them. Used here in the stacked area chart, but could also be used in other chart types that have several data series sharing the same vertical space, for example a multi-line chart.
 

@@ -6,7 +6,7 @@
  * @module sszvis/aspectRatio
  */
 
-import * as breakpoint from './breakpoint.js';
+import {breakpointFind, breakpointDefaultSpec} from './breakpoint.js';
 
 /**
  * aspectRatio
@@ -22,13 +22,13 @@ import * as breakpoint from './breakpoint.js';
  *                    and returns the corresponding height based on the
  *                    aspect ratio defined by x:y.
  */
-function aspectRatio(x, y) {
+export function aspectRatio(x, y) {
   var ar = x / y;
   return function(width) { return width / ar; };
 }
 
 /**
- * aspectRatio.ar4to3
+ * aspectRatio4to3
  *
  * Recommended breakpoints:
  *   - palm
@@ -36,10 +36,10 @@ function aspectRatio(x, y) {
  * @param {Number} width
  * @returns {Number} height
  */
-var ar4to3 = aspectRatio(4, 3);
+export var aspectRatio4to3 = aspectRatio(4, 3);
 
 /**
- * aspectRatio.ar16to10
+ * aspectRatio16to10
  *
  * Recommended breakpoints:
  *   - lap
@@ -47,10 +47,10 @@ var ar4to3 = aspectRatio(4, 3);
  * @param {Number} width
  * @returns {Number} height
  */
-var ar16to10 = aspectRatio(16, 10);
+export var aspectRatio16to10 = aspectRatio(16, 10);
 
 /**
- * aspectRatio.ar12to5
+ * aspectRatio12to5
  *
  * Recommended breakpoints:
  *   - desk
@@ -59,13 +59,13 @@ var ar16to10 = aspectRatio(16, 10);
  * @returns {Number} height
  */
 var AR12TO5_MAX_HEIGHT = 500;
-var ar12to5 = function(width) {
+export var aspectRatio12to5 = function(width) {
   return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
 };
-ar12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
+aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
 
 /**
- * aspectRatio.square
+ * aspectRatioSquare
  *
  * This aspect ratio constrains the returned height to a maximum of 420px.
  * It is recommended to center charts within this aspect ratio.
@@ -81,13 +81,13 @@ ar12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
  * @returns {Number} height
  */
 var SQUARE_MAX_HEIGHT = 420;
-var square = function(width) {
+export var aspectRatioSquare = function(width) {
   return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
 };
-square.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
+aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
 
 /**
- * aspectRatio.portrait
+ * aspectRatioPortrait
  *
  * This aspect ratio constrains the returned height to a maximum of 600px.
  * It is recommended to center charts within this aspect ratio.
@@ -103,13 +103,13 @@ square.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
  * @returns {Number} height
  */
 var PORTRAIT_MAX_HEIGHT = 600;
-var portrait = function(width) {
+export var aspectRatioPortrait = function(width) {
   return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
 };
-portrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
+aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
 
 /**
- * aspectRatio.auto
+ * aspectRatioAuto
  *
  * Provides a set of default aspect ratios for different widths. If you provide a set
  * of measurements for a container and the window itself, it will provide the default
@@ -123,22 +123,14 @@ portrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
  *
  * @return {Number} The height which corresponds to the default aspect ratio for these measurements
  */
-var auto = (function() {
-  var defaultAspectRatios = {
-    palm: ar4to3,   // palm-sized devices
-    lap:  ar16to10, // lap-sized devices
-    _:    ar12to5   // all other cases, including desk
-  };
-  return function(measurement) {
-    var bp = breakpoint.find(breakpoint.defaultSpec(), measurement);
-    var ar = defaultAspectRatios[bp.name];
-    return ar(measurement.width);
-  };
-}());
+var defaultAspectRatios = {
+  palm: aspectRatio4to3,   // palm-sized devices
+  lap:  aspectRatio16to10, // lap-sized devices
+  _:    aspectRatio12to5   // all other cases, including desk
+};
 
-
-// Exports
-
-export default aspectRatio;
-
-export { ar4to3, ar16to10, ar12to5, square, portrait, auto };
+export var aspectRatioAuto = function(measurement) {
+  var bp = breakpointFind(breakpointDefaultSpec(), measurement);
+  var ar = defaultAspectRatios[bp.name];
+  return ar(measurement.width);
+};

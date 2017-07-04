@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -36,14 +36,14 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('date');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('region');
+  var xAcc = sszvis.prop('date');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('region');
 
   // a few helpers to distinguish between data that belongs on axis1 (left) and axis2 (right)
   var axis2 = ['Schweiz']; // the values for "Region" that go in axis2
-  var valueIsOnAxis2 = function(d) { return sszvis.fn.contains(axis2, d); };
-  var datumIsOnAxis2 = sszvis.fn.compose(valueIsOnAxis2, cAcc);
+  var valueIsOnAxis2 = function(d) { return sszvis.contains(axis2, d); };
+  var datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
 
 
   /* Application State
@@ -73,12 +73,12 @@
       // Compute two different maximum y values - one for each axis.
       // Multiply axis1maxY by a small number to ensure that the data for
       // category 1 doesn't overlap with category 2 data
-      state.axis1maxY = d3.max(state.data.filter(sszvis.fn.not(datumIsOnAxis2)), yAcc) * 1.2;
+      state.axis1maxY = d3.max(state.data.filter(sszvis.not(datumIsOnAxis2)), yAcc) * 1.2;
       state.axis2maxY = d3.max(state.data.filter(datumIsOnAxis2), yAcc);
 
       // Two different sets of categories for two color scales
-      state.categories1 = sszvis.fn.set(state.data.filter(sszvis.fn.not(datumIsOnAxis2)), cAcc);
-      state.categories2 = sszvis.fn.set(state.data.filter(datumIsOnAxis2), cAcc);
+      state.categories1 = sszvis.set(state.data.filter(sszvis.not(datumIsOnAxis2)), cAcc);
+      state.categories2 = sszvis.set(state.data.filter(datumIsOnAxis2), cAcc);
 
       render(state);
     },
@@ -86,12 +86,12 @@
     changeDate: function(inputDate) {
       var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
       var closestData = state.lineData.map(function(linePoints) {
-        return sszvis.fn.find(function(d) {
-          return sszvis.fn.stringEqual(xAcc(d), closestDate);
+        return sszvis.find(function(d) {
+          return sszvis.stringEqual(xAcc(d), closestDate);
         }, linePoints);
       });
       state.selection = closestData.filter(
-        sszvis.fn.compose(sszvis.fn.not(isNaN), yAcc)
+        sszvis.compose(sszvis.not(isNaN), yAcc)
       );
 
       render(state);
@@ -111,9 +111,9 @@
   d3.csv('data/S_2yAxis.csv')
     .row(function(d) {
       return {
-        date: sszvis.parse.date(d['Jahr']),
+        date: sszvis.parseDate(d['Jahr']),
         region: d['Region'],
-        value: sszvis.parse.number(d['Schweiz'])
+        value: sszvis.parseNumber(d['Schweiz'])
       };
     })
     .get(function(error, data) {
@@ -146,8 +146,8 @@
       .domain([0, state.axis2maxY])
       .range([bounds.innerHeight, 0]);
 
-    var cScale1 = sszvis.color.qual6a();
-    var cScale2 = sszvis.color.qual6b();
+    var cScale1 = sszvis.scaleQual6a();
+    var cScale2 = sszvis.scaleQual6b();
 
 
     // Layers
@@ -161,26 +161,26 @@
 
     // Components
 
-    var line = sszvis.component.line()
-      .x(sszvis.fn.compose(xScale, xAcc))
+    var line = sszvis.line()
+      .x(sszvis.compose(xScale, xAcc))
       .y(function(d) {
         return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
       })
       // Access the first data point of the line to decide on the stroke color
       .stroke(function(lineData) {
-        var d = sszvis.fn.first(lineData);
+        var d = sszvis.first(lineData);
         return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
       });
 
-    var rulerLabel = sszvis.svgUtils.modularText.svg()
-      .bold(sszvis.fn.compose(sszvis.format.number, yAcc))
+    var rulerLabel = sszvis.modularTextSVG()
+      .bold(sszvis.compose(sszvis.formatNumber, yAcc))
       .plain(cAcc);
 
-    var ruler = sszvis.annotation.ruler()
+    var ruler = sszvis.annotationRuler()
       .top(0)
       .bottom(bounds.innerHeight)
       .label(rulerLabel)
-      .x(sszvis.fn.compose(xScale, xAcc))
+      .x(sszvis.compose(xScale, xAcc))
       .y(function(d) {
         return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
       })
@@ -195,7 +195,7 @@
       .ticks(5)
       .concat(state.selection.map(xAcc));
 
-    var xAxis = sszvis.axis.x.time()
+    var xAxis = sszvis.axisX.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
@@ -205,25 +205,25 @@
       .titleCenter(true)
       .titleAnchor('middle');
 
-    var yAxis1 = sszvis.axis.y()
+    var yAxis1 = sszvis.axisY()
       .scale(yScale1)
       .orient('right')
       .contour(true)
       .title('Anzahl Arbeitslose (regional)')
       .dyTitle(-20);
 
-    var yAxis2 = sszvis.axis.y()
+    var yAxis2 = sszvis.axisY()
       .scale(yScale2)
       .orient('left')
       .contour(true)
       .title(props.yAxis2Label)
       .dyTitle(-20);
 
-    var cLegend1 = sszvis.legend.ordinalColorScale()
+    var cLegend1 = sszvis.legendColorOrdinal()
       .scale(cScale1)
       .orientation('vertical');
 
-    var cLegend2 = sszvis.legend.ordinalColorScale()
+    var cLegend2 = sszvis.legendColorOrdinal()
       .scale(cScale2)
       .orientation('vertical')
       .rightAlign(true);
@@ -235,22 +235,22 @@
       .call(line);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis1')
       .call(yAxis1);
 
     chartLayer.selectGroup('yAxis2')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth, 0))
+      .attr('transform', sszvis.translateString(bounds.innerWidth, 0))
       .call(yAxis2);
 
     chartLayer.selectGroup('cScale1')
-      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(1, bounds.innerHeight + 60))
       .call(cLegend1);
 
     chartLayer.selectGroup('cScale2')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(bounds.innerWidth, bounds.innerHeight + 60))
       .call(cLegend2);
 
     chartLayer.selectGroup('rulerLayer')
@@ -260,7 +260,7 @@
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.move()
+    var interactionLayer = sszvis.move()
       .xScale(xScale)
       .yScale(yScale1) // In this example, which scale you use for the y-dimension of the move component doesn't matter
       .on('move', actions.changeDate)
@@ -284,7 +284,7 @@
   }
 
   function isSelected(d) {
-    return sszvis.fn.contains(state.selection.map(xAcc).map(String), String(d));
+    return sszvis.contains(state.selection.map(xAcc).map(String), String(d));
   }
 
 }(d3, sszvis));

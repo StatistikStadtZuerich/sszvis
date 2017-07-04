@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -30,9 +30,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('year');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('category');
+  var xAcc = sszvis.prop('year');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('category');
 
 
   /* Application state
@@ -52,13 +52,13 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.years = sszvis.fn.set(state.data, xAcc);
+      state.years = sszvis.set(state.data, xAcc);
       state.valueExtent = d3.extent(state.data, yAcc);
-      state.groups = sszvis.fn.set(state.data, cAcc);
+      state.groups = sszvis.set(state.data, cAcc);
       state.groupedData = sszvis.cascade()
         .arrayBy(xAcc)
         .apply(state.data);
-      state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
+      state.longestGroup = d3.max(state.groupedData, sszvis.prop('length'));
 
       render(state);
     },
@@ -74,7 +74,7 @@
       return {
         year: d['Jahr'],
         category: d['Nationalität'],
-        value: sszvis.parse.number(d['Anzahl'])
+        value: sszvis.parseNumber(d['Anzahl'])
       };
     })
     .get(function(error, data) {
@@ -119,7 +119,7 @@
       return Math.abs(yScale(v) - yScale(0));
     };
 
-    var cScale = sszvis.color.qual12()
+    var cScale = sszvis.scaleQual12()
       .domain(state.groups);
 
 
@@ -134,25 +134,25 @@
 
     // Components
 
-    var barLayout = sszvis.component.groupedBars()
-      .groupScale(sszvis.fn.compose(xScale, xAcc))
+    var barLayout = sszvis.groupedBars()
+      .groupScale(sszvis.compose(xScale, xAcc))
       .groupWidth(xScale.bandwidth())
       .groupSize(state.longestGroup)
-      .y(sszvis.fn.compose(yPosScale, yAcc))
-      .height(sszvis.fn.compose(hScale, yAcc))
-      .fill(sszvis.fn.compose(cScale, cAcc));
+      .y(sszvis.compose(yPosScale, yAcc))
+      .height(sszvis.compose(hScale, yAcc))
+      .fill(sszvis.compose(cScale, cAcc));
 
-    var xAxis = sszvis.axis.x.ordinal()
+    var xAxis = sszvis.axisX.ordinal()
       .scale(xScale)
       .orient('bottom')
       .ticks(4);
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .showZeroY(true)
       .orient('right');
 
-    var colorLegend = sszvis.legend.ordinalColorScale()
+    var colorLegend = sszvis.legendColorOrdinal()
       .scale(cScale)
       .horizontalFloat(true);
 
@@ -163,14 +163,14 @@
       .call(barLayout);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
     sszvis.viewport.on('resize', actions.resize);

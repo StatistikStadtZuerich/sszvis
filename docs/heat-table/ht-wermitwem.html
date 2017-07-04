@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -44,9 +44,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('manAge');
-  var yAcc = sszvis.fn.prop('womAge');
-  var cAcc = sszvis.fn.prop('value');
+  var xAcc = sszvis.prop('manAge');
+  var yAcc = sszvis.prop('womAge');
+  var cAcc = sszvis.prop('value');
 
 
   /* Application state
@@ -65,8 +65,8 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.manAgeList = sszvis.fn.set(state.data, xAcc);
-      state.womAgeList = sszvis.fn.set(state.data, yAcc);
+      state.manAgeList = sszvis.set(state.data, xAcc);
+      state.womAgeList = sszvis.set(state.data, yAcc);
       state.valueDomain = d3.extent(state.data, cAcc);
 
       render(state);
@@ -93,7 +93,7 @@
       return {
         manAge: d['Altersgruppe Männer'],
         womAge: d['Altersgruppe Frauen'],
-        value: sszvis.parse.number(d['Anzahl'])
+        value: sszvis.parseNumber(d['Anzahl'])
       };
     })
     .get(function(error, data) {
@@ -108,7 +108,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var containerWidth = sszvis.fn.measureDimensions('#sszvis-chart').width;
+    var containerWidth = sszvis.measureDimensions('#sszvis-chart').width;
     var squarePadding = 2;
     var tablePadding = {
       top: 60,
@@ -119,7 +119,7 @@
     // heatTableDimensions calculates a set of useful properties for configuring the heat table.
     // give it the targeted width (final width will not necessarily match this), the padding between squares, and the number of squares
     // in each dimension (x, then y)
-    var tableDimensions = sszvis.layout.heatTableDimensions(containerWidth, squarePadding, state.manAgeList.length, state.womAgeList.length, tablePadding);
+    var tableDimensions = sszvis.dimensionsHeatTable(containerWidth, squarePadding, state.manAgeList.length, state.womAgeList.length, tablePadding);
 
     // construct the bounds as usual, but add the left and right padding to the width, and the top and bottom padding to the height
     // This is because, when bounds are being constructed, the padding is subtracted from width and height to provide innerWidth and innerHeight, but we want these values to represent the table's dimensions
@@ -148,7 +148,7 @@
       .domain(state.womAgeList);
 
     // create a linear color interpolator for generating the output range of bin colors
-    var interpolateColor = sszvis.color.seqBlu()
+    var interpolateColor = sszvis.scaleSeqBlu()
       .domain(state.valueDomain);
 
     // the range is composed of colors sampled at equal distances along the color spectrum
@@ -161,12 +161,12 @@
       .domain(BIN_EDGES)
       .range(binColors);
 
-    var xValue = sszvis.fn.compose(xScale, xAcc);
-    var yValue = sszvis.fn.compose(yScale, yAcc);
+    var xValue = sszvis.compose(xScale, xAcc);
+    var yValue = sszvis.compose(yScale, yAcc);
 
     function cValue(d) {
       var v = cAcc(d);
-      return v === 0 ? sszvis.color.lightGry()(v) : colorScale(v);
+      return v === 0 ? sszvis.scaleLightGry()(v) : colorScale(v);
     }
 
 
@@ -184,17 +184,17 @@
 
     // Components
 
-    var barGen = sszvis.component.bar()
+    var barGen = sszvis.bar()
       .x(xValue)
       .y(yValue)
       .width(tableDimensions.side)
       .height(tableDimensions.side)
       .fill(cValue)
       .stroke(function(d) {
-        return sszvis.fn.contains(state.selection, d) ? sszvis.color.slightlyDarker(cValue(d)) : 'none';
+        return sszvis.contains(state.selection, d) ? sszvis.slightlyDarker(cValue(d)) : 'none';
       });
 
-    var xAxis = sszvis.axis.x.ordinal()
+    var xAxis = sszvis.axisX.ordinal()
       .scale(xScale)
       .orient('top')
       .tickSize(0, 0)
@@ -211,7 +211,7 @@
         });
       });
 
-    var yAxis = sszvis.axis.y.ordinal()
+    var yAxis = sszvis.axisY.ordinal()
       .scale(yScale)
       .orient('left')
       .title('Altersgruppe Frauen')
@@ -225,17 +225,17 @@
         });
       });
 
-    var legend = sszvis.legend.binnedColorScale()
+    var legend = sszvis.legendColorBinned()
       .scale(colorScale)
       .displayValues(BIN_EDGES)
       .endpoints(state.valueDomain)
       .width(props.legendWidth)
-      .labelFormat(sszvis.format.number);
+      .labelFormat(sszvis.formatNumber);
 
-    var tooltipHeaderText = sszvis.svgUtils.modularText.html()
+    var tooltipHeaderText = sszvis.modularTextHTML()
       .bold('Paare');
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeaderText)
       .body(function(d) {
@@ -245,25 +245,25 @@
           ['Anzahl: ', cAcc(d)]
         ];
       })
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
+      .orientation(sszvis.fitTooltip('bottom', bounds))
       .visible(isSelected);
 
 
     // Rendering
 
     var bars = chartLayer.selectGroup('bars')
-      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset, 0))
+      .attr('transform', sszvis.translateString(tableDimensions.centeredOffset, 0))
       .call(barGen);
 
     bars.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset, -10))
+      .attr('transform', sszvis.translateString(tableDimensions.centeredOffset, -10))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(tableDimensions.centeredOffset - 10, 0))
+      .attr('transform', sszvis.translateString(tableDimensions.centeredOffset - 10, 0))
       .call(yAxis);
 
     // At very small screen sizes, we position the legend centered on the screen,
@@ -273,13 +273,13 @@
                 : tableDimensions.centeredOffset + (tableDimensions.width - props.legendWidth) / 2;
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(legendX, bounds.innerHeight + 16))
+      .attr('transform', sszvis.translateString(legendX, bounds.innerHeight + 16))
       .call(legend);
 
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-bar')
       .on('start', actions.showTooltip)
       .on('pan', actions.showTooltip)
@@ -295,7 +295,7 @@
   /* Helper functions
   ----------------------------------------------- */
   function isSelected(d) {
-    return sszvis.fn.contains(state.selection, d);
+    return sszvis.contains(state.selection, d);
   }
 
 

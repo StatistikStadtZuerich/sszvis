@@ -5,7 +5,7 @@ global.getTooltipComponent = function(containerId, data) {
   var tooltipLayer = sszvis.createHtmlLayer('#' + containerId)
     .datum(data);
 
-  return sszvis.annotation.tooltip()
+  return sszvis.tooltip()
     .renderInto(tooltipLayer)
     .visible(true);
 };
@@ -14,9 +14,9 @@ global.renderTooltip = function(containerId, size, data, position, tooltip, debu
   var container = sszvis.createSvgLayer('#' + containerId, sszvis.bounds(size), {})
     .datum(data);
 
-  var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+  var tooltipAnchor = sszvis.tooltipAnchor()
     .debug(!!debug)
-    .position(sszvis.fn.functor(position));
+    .position(sszvis.functor(position));
 
   container.call(tooltipAnchor);
 

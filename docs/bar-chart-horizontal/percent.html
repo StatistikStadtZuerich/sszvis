@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -41,9 +41,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('value');
-  var yAcc = sszvis.fn.prop('category');
-  var aAcc = sszvis.fn.prop('area');
+  var xAcc = sszvis.prop('value');
+  var yAcc = sszvis.prop('category');
+  var aAcc = sszvis.prop('area');
 
 
   /* Application state
@@ -60,7 +60,7 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.categories = sszvis.fn.set(state.data, yAcc);
+      state.categories = sszvis.set(state.data, yAcc);
       actions.selectTickType(TICK_TYPES[0]);
     },
 
@@ -79,7 +79,7 @@
     .row(function(d) {
       return {
         category: d['Branche'],
-        value: sszvis.parse.number(d['BIP']),
+        value: sszvis.parseNumber(d['BIP']),
         area: d['Gebiet']
       };
     })
@@ -95,7 +95,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.categories.length);
+    var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
     var bounds = sszvis.bounds({ height: 80 + chartDimensions.totalHeight + 25, top: 80, bottom: 25 }, '#sszvis-chart');
     var props = queryProps(bounds);
     var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
@@ -127,27 +127,27 @@
 
     // Components
 
-    var barGen = sszvis.component.bar()
+    var barGen = sszvis.bar()
       .x(0)
-      .y(sszvis.fn.compose(yScale, yAcc))
-      .width(sszvis.fn.compose(widthScale, xAcc))
+      .y(sszvis.compose(yScale, yAcc))
+      .width(sszvis.compose(widthScale, xAcc))
       .height(chartDimensions.barHeight)
-      .fill(sszvis.color.qual12());
+      .fill(sszvis.scaleQual12());
 
-    var xAxis = sszvis.axis.x()
+    var xAxis = sszvis.axisX()
       .scale(widthScale)
       .orient('bottom')
-      .tickFormat(function(v) { return sszvis.format.percent(v); })
+      .tickFormat(function(v) { return sszvis.formatPercent(v); })
       .tickValues(d3.range(0, 20, 3))
       .tickLength(state.tickType === 'Ohne Gitter' ? 0 : bounds.innerHeight + -chartDimensions.axisOffset)
       .alignOuterLabels(true);
 
-    var yAxis = sszvis.axis.y.ordinal()
+    var yAxis = sszvis.axisY.ordinal()
       .scale(yScale)
       .orient('right')
       .contour('outline');
 
-    var buttonGroup = sszvis.control.buttonGroup()
+    var buttonGroup = sszvis.buttonGroup()
       .values(TICK_TYPES)
       .width(props.controlWidth)
       .current(state.tickType)
@@ -157,17 +157,17 @@
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
 
     chartLayer.selectGroup('underAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.totalHeight))
+      .attr('transform', sszvis.translateString(0, chartDimensions.totalHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('bars')
       .call(barGen);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.axisOffset))
+      .attr('transform', sszvis.translateString(0, chartDimensions.axisOffset))
       .call(yAxis);
 
     controlLayer.selectDiv('controls')

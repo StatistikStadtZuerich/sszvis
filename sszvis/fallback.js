@@ -16,17 +16,17 @@ import d3 from 'd3';
 
 import * as fn from './fn.js';
 
-export var unsupported = function() {
+export var fallbackUnsupported = function() {
   var supportsSVG = !!document.createElementNS && !!document.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect;
   return !supportsSVG;
 };
 
-export var canvasUnsupported = function() {
+export var fallbackCanvasUnsupported = function() {
   var supportsCanvas = !!document.createElement('canvas').getContext;
   return !supportsCanvas;
 };
 
-export var render = function(selector, options) {
+export var fallbackRender = function(selector, options) {
   options || (options = {});
   options.src    || (options.src    = 'fallback.png');
   var selection = fn.isSelection(selector) ? selector : d3.select(selector);

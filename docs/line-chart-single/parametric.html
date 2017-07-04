@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -45,8 +45,8 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('date');
-  var yAcc = sszvis.fn.prop('value');
+  var xAcc = sszvis.prop('date');
+  var yAcc = sszvis.prop('value');
 
   /* Application state
   ----------------------------------------------- */
@@ -71,7 +71,7 @@
     },
 
     changeDate: function(inputDate) {
-      var date = closestDatum(state.data, sszvis.fn.prop('date'), inputDate).date;
+      var date = closestDatum(state.data, sszvis.prop('date'), inputDate).date;
       if (state.currentDate === date) return;
 
       state.currentDate = date;
@@ -83,7 +83,7 @@
     },
 
     resetDate: function() {
-      var mostRecentDate = d3.max(state.data, sszvis.fn.prop('date'));
+      var mostRecentDate = d3.max(state.data, sszvis.prop('date'));
       actions.changeDate(mostRecentDate);
     },
 
@@ -98,8 +98,8 @@
       return {
         //probably need to distinguish time or discreet values here...
         //although for a line chart it is rarely not time on x-axis.
-        date:  sszvis.parse.date(d[config.dateColumn]),
-        value: sszvis.parse.number(d[config.valueColumn])
+        date:  sszvis.parseDate(d[config.dateColumn]),
+        value: sszvis.parseNumber(d[config.valueColumn])
       };
     })
     .get(function(error, data) {
@@ -144,22 +144,22 @@
 
 
     // Components
-    var line = sszvis.component.line()
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yScale, yAcc))
-      .stroke(sszvis.color.qual6());
+    var line = sszvis.line()
+      .x(sszvis.compose(xScale, xAcc))
+      .y(sszvis.compose(yScale, yAcc))
+      .stroke(sszvis.scaleQual6());
 
     var xTickValues = config.ticks ? xScale.ticks(config.ticks) : xScale.ticks();//xScale.ticks(d3.time.year,1);
       xTickValues = xTickValues.concat(state.selection.map(xAcc));
 
-    var xAxis = sszvis.axis.x.time()
+    var xAxis = sszvis.axisX.time()
       .scale(xScale)
       .orient('bottom')
       .tickValues(xTickValues)
       .highlightTick(isSelected)
       .title(config.xLabel)
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .orient('right')
       .title(config.yLabel)
@@ -167,18 +167,18 @@
       .contour(true)
       .showZeroY((minY < 0));
 
-    var ruler = sszvis.annotation.ruler()
+    var ruler = sszvis.annotationRuler()
       .top(0)
       .bottom(bounds.innerHeight + bottomPadding)
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yScale, yAcc))
+      .x(sszvis.compose(xScale, xAcc))
+      .y(sszvis.compose(yScale, yAcc))
       .label(function(d) {
-        return sszvis.format.number(d.value) + ' ' + config.rulerLabel;
+        return sszvis.formatNumber(d.value) + ' ' + config.rulerLabel;
       })
       .flip(function(d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;
       })
-      .color(sszvis.color.qual6());
+      .color(sszvis.scaleQual6());
 
 
     // Rendering
@@ -191,7 +191,7 @@
 
 
     lineChart.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + bottomPadding))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + bottomPadding))
       .call(xAxis);
 
     lineChart.selectGroup('yAxis')
@@ -204,7 +204,7 @@
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.move()
+    var interactionLayer = sszvis.move()
       .xScale(xScale)
       .yScale(yScale)
       .on('move', actions.changeDate)
@@ -227,7 +227,7 @@
   }
 
   function isSelected(d) {
-    return sszvis.fn.contains(state.selection.map(xAcc).map(String), String(d));
+    return sszvis.contains(state.selection.map(xAcc).map(String), String(d));
   }
 
   function isStartOfYear(d) {

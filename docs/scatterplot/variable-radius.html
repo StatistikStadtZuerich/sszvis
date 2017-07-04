@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -31,10 +31,10 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('neubauabs');
-  var yAcc = sszvis.fn.prop('leerzunrel');
-  var rAcc = sszvis.fn.prop('best13radius');
-  var cAcc = sszvis.fn.prop('quname');
+  var xAcc = sszvis.prop('neubauabs');
+  var yAcc = sszvis.prop('leerzunrel');
+  var rAcc = sszvis.prop('best13radius');
+  var cAcc = sszvis.prop('quname');
 
 
   /* Application state
@@ -56,7 +56,7 @@
 
       // for the voronoi component to work, the data must first be filtered such that no two vertices
       // fall at exactly the same point.
-      state.voronoiFiltered = sszvis.fn.derivedSet(state.data, function(d) {
+      state.voronoiFiltered = sszvis.derivedSet(state.data, function(d) {
         return xAcc(d) + '__' + yAcc(d);
       });
 
@@ -87,9 +87,9 @@
   d3.csv('data/VRS_basic.csv')
     .row(function(d) {
       return {
-        neubauabs: sszvis.parse.number(d['NeubauAbs (x-Achse)']),
-        leerzunrel: sszvis.parse.number(d['LeerZunRel (y-Achse) ']),
-        best13radius: sszvis.parse.number(d['Best13Radius (bubble)']),
+        neubauabs: sszvis.parseNumber(d['NeubauAbs (x-Achse)']),
+        leerzunrel: sszvis.parseNumber(d['LeerZunRel (y-Achse) ']),
+        best13radius: sszvis.parseNumber(d['Best13Radius (bubble)']),
         quname: d['QuName']
       };
     })
@@ -114,7 +114,7 @@
       .domain(state.xExtent)
       .range([0, bounds.innerWidth]);
 
-    var xValue = sszvis.fn.compose(function(v) {
+    var xValue = sszvis.compose(function(v) {
         return v <= 0.1 ? 0 : xScale(v);
       }, xAcc);
 
@@ -122,7 +122,7 @@
       .domain(state.yExtent)
       .range([bounds.innerHeight, 0]);
 
-    var yValue = sszvis.fn.compose(yScale, yAcc);
+    var yValue = sszvis.compose(yScale, yAcc);
 
     var rScale = d3.scaleLinear()
       .domain(state.rExtent)
@@ -143,18 +143,18 @@
 
     // Components
 
-    var dots = sszvis.component.dot()
+    var dots = sszvis.dot()
       .x(xValue)
       .y(yValue)
-      .radius(sszvis.fn.compose(rScale, rAcc))
-      .fill(sszvis.color.qual12())
+      .radius(sszvis.compose(rScale, rAcc))
+      .fill(sszvis.scaleQual12())
       // use white outlines in scatterplots to assist in identifying distinct circles
       .stroke('#FFFFFF');
 
     // the built-in .ticks() function for d3.scale.log() produces far too many ticks
     var xTicks = [0.1, 0.5, 1, 5, 10, 50, 100];
 
-    var xAxis = sszvis.axis.x()
+    var xAxis = sszvis.axisX()
       .scale(xScale)
       .tickValues(xTicks)
       .orient('bottom')
@@ -163,28 +163,28 @@
       })
       .title('Logarithmische Skala');
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .orient('right')
       .showZeroY(true)
       .contour(true);
 
-    var annotation = sszvis.annotation.rectangle()
+    var annotation = sszvis.annotationRectangle()
       .x(xScale(8))
       .y(0)
       .width(bounds.innerWidth - xScale(15))
       .height(bounds.innerHeight);
 
-    var radiusLegend = sszvis.legend.radius()
+    var radiusLegend = sszvis.legendRadius()
       .scale(rScale)
       .tickFormat(function(d) {
         return Math.round(d * 100) / 100;
       });
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
       .header(function(d) { return cAcc(d); })
-      .visible(function(d) { return sszvis.fn.contains(state.highlightData, d); })
+      .visible(function(d) { return sszvis.contains(state.highlightData, d); })
       .orientation(function(d) {
         return xValue(d.datum) <= bounds.innerWidth / 2 ? 'left' : 'right';
       });
@@ -203,11 +203,11 @@
       .call(tooltip);
 
     chartLayer.selectGroup('radiusLegend')
-      .attr('transform', sszvis.svgUtils.translateString(1, bounds.innerHeight + 65))
+      .attr('transform', sszvis.translateString(1, bounds.innerHeight + 65))
       .call(radiusLegend);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
@@ -216,7 +216,7 @@
 
     // Interaction
 
-    var mouseOverlay = sszvis.behavior.voronoi()
+    var mouseOverlay = sszvis.voronoi()
       .x(xValue)
       .y(yValue)
       .bounds([[0, 0], [bounds.innerWidth, bounds.innerHeight]])

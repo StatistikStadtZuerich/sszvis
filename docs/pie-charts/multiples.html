@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -115,9 +115,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var gAcc = sszvis.fn.prop('group');
-  var vAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('category');
+  var gAcc = sszvis.prop('group');
+  var vAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('category');
 
 
   /* Application state
@@ -147,7 +147,7 @@
 
       state.data = data;
       // a list of groups
-      state.groups = sszvis.fn.set(state.data, gAcc);
+      state.groups = sszvis.set(state.data, gAcc);
       // an index of the total values of the groups. Used for calculating the slice size of each component of the pie chart
       state.totalValues = grouped.reduce(function(memo, group, i) {
         memo[state.groups[i]] = d3.sum(group, vAcc);
@@ -161,7 +161,7 @@
         };
       });
       // a list of categories (for the color scale)
-      state.categories = sszvis.fn.set(state.data, cAcc);
+      state.categories = sszvis.set(state.data, cAcc);
 
       console.log(state.pieGroups);
 
@@ -195,7 +195,7 @@
       return {
         group: d['Gruppe'],
         category: d['Kategorie'],
-        value: sszvis.parse.number(d['Anzahl'])
+        value: sszvis.parseNumber(d['Anzahl'])
       };
     })
     .get(function(error, data) {
@@ -210,7 +210,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
@@ -221,7 +221,7 @@
     var aScale = d3.scaleLinear()
       .range([0, 2 * Math.PI]);
 
-    var cScale = sszvis.color.qual12()
+    var cScale = sszvis.scaleQual12()
       .domain(state.categories);
 
 
@@ -238,11 +238,11 @@
 
     // Components
 
-    var pieMaker = sszvis.component.pie()
-      .fill(sszvis.fn.compose(cScale, cAcc));
+    var pieMaker = sszvis.pie()
+      .fill(sszvis.compose(cScale, cAcc));
 
     // this component generates svg 'g' tags into which chart instances can be rendered
-    var multiplesMaker = sszvis.layout.smallMultiples()
+    var multiplesMaker = sszvis.layoutSmallMultiples()
       .width(Math.min(bounds.innerWidth, MAX_WIDTH))
       .height(bounds.innerHeight)
       .paddingX(30)
@@ -250,7 +250,7 @@
       .rows(props.rowsCols[0])
       .cols(props.rowsCols[1]);
 
-    var colorLegend = sszvis.legend.ordinalColorScale()
+    var colorLegend = sszvis.legendColorOrdinal()
       .scale(cScale)
       .columnWidth(Math.min(bounds.innerWidth, MAX_WIDTH) / 2)
       .columns(props.colorLegendColumns)
@@ -260,7 +260,7 @@
     // associate element isn't hovered, but another element in the same category is.
     // In these case, the infotip is faded slightly (by the infotipOpacity function),
     // but the infotip under the mouse position has full opacity.
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
       .header(cAcc)
       .body(function(d){ return 'Anzahl: ' + d.value; })
@@ -271,7 +271,7 @@
     // Rendering
 
     var pieCharts = chart.selectGroup('piecharts')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - multiplesMaker.width()/2, 0))
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - multiplesMaker.width()/2, 0))
       .call(multiplesMaker);
 
     // grab all of the prepared groups, and render a pie chart into each of them
@@ -286,11 +286,11 @@
       // configure the pieMaker component for this particular group
       pieMaker
         .radius(pieR)
-        .angle(sszvis.fn.compose(groupScale, vAcc));
+        .angle(sszvis.compose(groupScale, vAcc));
 
       // render the pie chart inside this group
       d3.select(this).selectAll('.sszvis-multiple-chart')
-        .attr('transform', sszvis.svgUtils.translateString(d.cx - pieR, d.cy - pieR))
+        .attr('transform', sszvis.translateString(d.cx - pieR, d.cy - pieR))
         .call(pieMaker);
     });
 
@@ -300,13 +300,13 @@
 
     var legendPosition = props.legendPosition(bounds, state.pieGroups[0]);
     chart.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(legendPosition.left, bounds.innerHeight + legendPosition.top))
+      .attr('transform', sszvis.translateString(legendPosition.left, bounds.innerHeight + legendPosition.top))
       .call(colorLegend);
 
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-path')
       .on('start', actions.showTooltip)
       .on('pan', actions.showTooltip)
@@ -321,7 +321,7 @@
   /* Helper functions
   ----------------------------------------------- */
   function isSelected(d) {
-    return sszvis.fn.contains(state.selectedCategories, d.category);
+    return sszvis.contains(state.selectedCategories, d.category);
   }
 
   function pieRadius(w, h) {

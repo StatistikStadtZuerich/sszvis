@@ -37,26 +37,26 @@
 import d3 from 'd3';
 
 import * as fn from './fn.js';
-import aspectRatio from './aspectRatio.js';
+import { aspectRatioAuto } from './aspectRatio.js';
 
 var DEFAULT_WIDTH = 516;
 
-export default function(arg1 /* bounds or selection */, arg2 /* [selection] */) {
-  var bounds = null, selection = null;
+export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
+  var _bounds = null, selection = null;
   if (arguments.length === 0) {
-    bounds = {};
+    _bounds = {};
   } else if (arguments.length === 1) {
     if (fn.isObject(arg1)) {
-      bounds = arg1;
+      _bounds = arg1;
     } else if (fn.isSelection(arg1)) {
-      bounds = {};
+      _bounds = {};
       selection = arg1;
     } else {
-      bounds = {};
+      _bounds = {};
       selection = d3.select(arg1);
     }
   } else {
-    bounds = arg1;
+    _bounds = arg1;
     if (fn.isSelection(arg2)) {
       selection = arg2;
     } else {
@@ -66,19 +66,19 @@ export default function(arg1 /* bounds or selection */, arg2 /* [selection] */) 
 
   // All padding sides have default values
   var padding = {
-    top:    either(bounds.top, 0),
-    right:  either(bounds.right, 1),
-    bottom: either(bounds.bottom, 0),
-    left:   either(bounds.left, 1)
+    top:    either(_bounds.top, 0),
+    right:  either(_bounds.right, 1),
+    bottom: either(_bounds.bottom, 0),
+    left:   either(_bounds.left, 1)
   };
 
-  // Width is calculated as: bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
+  // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
   var dimensions = fn.defined(selection) ? fn.measureDimensions(selection) : {width: DEFAULT_WIDTH};
 
-  var width   = either( bounds.width,
+  var width   = either( _bounds.width,
                         dimensions.width );
-  var innerHeight = aspectRatio.auto(dimensions);
-  var height  = either( bounds.height,
+  var innerHeight = aspectRatioAuto(dimensions);
+  var height  = either( _bounds.height,
                         innerHeight + padding.top + padding.bottom );
 
   return {

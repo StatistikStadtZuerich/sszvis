@@ -59,7 +59,7 @@ import * as fn from './fn.js';
 import { halfPixel, transformTranslateSubpixelShift } from './svgUtils/crisp.js';
 import translateString from './svgUtils/translateString.js';
 import textWrap from './svgUtils/textWrap.js';
-import * as format from './format.js';
+import { formatNumber, formatAxisTimeFormat, formatText } from './format.js';
 import { range } from './scale.js';
 import * as logger from './logger.js';
 import { component } from './d3-component.js';
@@ -410,19 +410,19 @@ var setOrdinalTicks = function(count) {
   return count;
 };
 
-var axisX = function() {
+export var axisX = function() {
   return axis()
     .yOffset(2) //gap between chart and x-axis
     .ticks(3)
     .tickSizeInner(4)
     .tickSizeOuter(6.5)
     .tickPadding(6)
-    .tickFormat(fn.arity(1, format.number));
+    .tickFormat(fn.arity(1, formatNumber));
 };
 
 axisX.time = function() {
   return axisX()
-    .tickFormat(format.axisTimeFormat)
+    .tickFormat(formatAxisTimeFormat)
     .alignOuterLabels(true);
 };
 
@@ -432,7 +432,7 @@ axisX.ordinal = function() {
     // that allows you to set a custom number of ticks,
     // including the first and last value in the ordinal scale
     .prop('ticks', setOrdinalTicks)
-    .tickFormat(format.text);
+    .tickFormat(formatText);
 };
 
 // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
@@ -456,36 +456,32 @@ axisX.pyramid = function() {
     .tickFormat(function(v) {
       // this tick format means that the axis appears to be divergent around 0
       // when in fact it is -domain[1] -> +domain[1]
-      return format.number(Math.abs(v));
+      return formatNumber(Math.abs(v));
     });
 };
 
-var axisY = function() {
+export var axisY = function() {
   var newAxis = axis()
     .ticks(6)
     .tickSize(0, 0)
     .tickPadding(0)
     .tickFormat(function(d) {
-      return 0 === d && !newAxis.showZeroY() ? null : format.number(d);
+      return 0 === d && !newAxis.showZeroY() ? null : formatNumber(d);
     })
     .vertical(true);
   return newAxis;
 };
 
 axisY.time = function() {
-  return axisY().tickFormat(format.axisTimeFormat);
+  return axisY().tickFormat(formatAxisTimeFormat);
 };
 
 axisY.ordinal = function() {
   return axisY()
     // add custom 'ticks' function
     .prop('ticks', setOrdinalTicks)
-    .tickFormat(format.text);
+    .tickFormat(formatText);
 };
-
-export var x = axisX;
-export var y = axisY;
-
 
 /* Helper functions
 ----------------------------------------------- */

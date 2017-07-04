@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -31,9 +31,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('percent');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('city');
+  var xAcc = sszvis.prop('percent');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('city');
 
 
   /* Application state
@@ -52,7 +52,7 @@
     prepareState: function(data) {
       state.data = data;
       state.yExtent = [0, d3.max(state.data, yAcc)];
-      state.cities = sszvis.fn.set(state.data, cAcc);
+      state.cities = sszvis.set(state.data, cAcc);
 
       render(state);
     },
@@ -67,8 +67,8 @@
     .row(function(d) {
       return {
         city: d['Stadt'],
-        percent: sszvis.parse.number(d['Prozent']),
-        value: sszvis.parse.number(d['Wert'])
+        percent: sszvis.parseNumber(d['Prozent']),
+        value: sszvis.parseNumber(d['Wert'])
       };
     })
     .get(function(error, data) {
@@ -96,7 +96,7 @@
       .domain(state.yExtent)
       .range([bounds.innerHeight, 0]);
 
-    var cScale = sszvis.color.qual6()
+    var cScale = sszvis.scaleQual6()
       .domain(state.cities);
 
 
@@ -111,15 +111,15 @@
 
     // Components
 
-    var dots = sszvis.component.dot()
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yScale, yAcc))
+    var dots = sszvis.dot()
+      .x(sszvis.compose(xScale, xAcc))
+      .y(sszvis.compose(yScale, yAcc))
       .radius(4)
-      .fill(sszvis.fn.compose(cScale, cAcc))
+      .fill(sszvis.compose(cScale, cAcc))
       // use white outlines in scatterplots to assist in identifying distinct circles
       .stroke('#FFFFFF');
 
-    var referenceLine = sszvis.annotation.line()
+    var referenceLine = sszvis.annotationLine()
       .x1(0.0) // 0%
       .y1(40)
       .x2(1.0) // 100%
@@ -131,20 +131,20 @@
       .dy(-5)
       .caption('Reference Line');
 
-    var xAxis = sszvis.axis.x()
+    var xAxis = sszvis.axisX()
       .scale(xScale)
       .ticks(4)
-      .tickFormat(sszvis.format.fractionPercent)
+      .tickFormat(sszvis.formatFractionPercent)
       .orient('bottom')
       .alignOuterLabels(true);
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .ticks(6)
       .orient('right')
       .contour(true);
 
-    var cLegend = sszvis.legend.ordinalColorScale()
+    var cLegend = sszvis.legendColorOrdinal()
       .scale(cScale)
       .horizontalFloat(true);
 
@@ -162,14 +162,14 @@
       .call(dots);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
       .call(cLegend);
 
     sszvis.viewport.on('resize', actions.resize);

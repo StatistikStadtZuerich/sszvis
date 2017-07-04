@@ -23,9 +23,9 @@
 import d3 from 'd3';
 
 import * as fn from './fn.js';
-import mkBounds from './bounds.js';
+import { bounds as mkBounds } from './bounds.js';
 
-export default function(selector, bounds, metadata) {
+export function createSvgLayer(selector, bounds, metadata) {
   bounds || (bounds = mkBounds());
   metadata || (metadata = {});
 

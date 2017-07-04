@@ -113,5 +113,5 @@ function makeTextWithFormat(format) {
   };
 }
 
-export var html = makeTextWithFormat(formatHTML());
-export var svg = makeTextWithFormat(formatSVG());
+export var modularTextHTML = makeTextWithFormat(formatHTML());
+export var modularTextSVG = makeTextWithFormat(formatSVG());

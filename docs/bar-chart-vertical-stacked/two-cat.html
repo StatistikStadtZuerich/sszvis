@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -34,10 +34,10 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('year');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('region');
-  var dataAcc = sszvis.fn.prop('data');
+  var xAcc = sszvis.prop('year');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('region');
+  var dataAcc = sszvis.prop('data');
 
 
   /* Application state
@@ -65,7 +65,7 @@
       return {
         year: d['Jahr'],
         region: d['Region'],
-        value: sszvis.parse.number(d['Wert'])
+        value: sszvis.parseNumber(d['Wert'])
       };
     })
     .get(function(error, data) {
@@ -75,9 +75,9 @@
 
       state.data = data;
       state.years = state.data.map(xAcc);
-      state.categories = sszvis.fn.set(state.data, cAcc);
+      state.categories = sszvis.set(state.data, cAcc);
 
-      state.stackedData = sszvis.component.stackedBar.verticalStackedBarData(xAcc, cAcc, yAcc)(data);
+      state.stackedData = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc)(data);
       state.maxStacked = state.stackedData.maxValue;
 
       render(state);
@@ -89,7 +89,7 @@
   function render(state) {
     var bounds = sszvis.bounds({ top: 30, bottom: 110 }, '#sszvis-chart');
     var props = queryProps(bounds);
-    var chartDimensions = sszvis.layout.verticalBarChartDimensions(bounds.innerWidth, state.categories.length);
+    var chartDimensions = sszvis.dimensionsVerticalBarChart(bounds.innerWidth, state.categories.length);
 
     // Scales
 
@@ -103,7 +103,7 @@
       .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 0]);
 
-    var cScale = sszvis.color.qual12()
+    var cScale = sszvis.scaleQual12()
       .domain(state.categories);
 
 
@@ -118,26 +118,26 @@
 
     // Components
 
-    var stackedBars = sszvis.component.stackedBar.vertical()
+    var stackedBars = sszvis.stackedBarVertical()
       .xScale(xScale)
       .width(xScale.bandwidth())
       .yScale(yScale)
-      .fill(sszvis.fn.compose(cScale, cAcc, dataAcc));
+      .fill(sszvis.compose(cScale, cAcc, dataAcc));
 
-    var xAxis = sszvis.axis.x.ordinal()
+    var xAxis = sszvis.axisX.ordinal()
       .scale(xScale)
       .orient('bottom')
       .slant('diagonal')
       .title('Jahr');
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .orient('right')
       .title('Anzahl')
       .dyTitle(-20)
       .tickFormat(yAxisLabel);
 
-    var colorLegend = sszvis.legend.ordinalColorScale()
+    var colorLegend = sszvis.legendColorOrdinal()
       .scale(cScale)
       .orientation('vertical');
 
@@ -145,20 +145,20 @@
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
 
     chartLayer.selectGroup('barchart')
       .call(stackedBars);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
     sszvis.viewport.on('resize', actions.resize);
@@ -168,7 +168,7 @@
   /* Helper functions
   ----------------------------------------------- */
   function yAxisLabel(d) {
-    return (d === 0) ? null : sszvis.format.fractionPercent(d);
+    return (d === 0) ? null : sszvis.formatFractionPercent(d);
   }
 
 

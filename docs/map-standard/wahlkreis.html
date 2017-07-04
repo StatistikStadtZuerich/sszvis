@@ -20,8 +20,8 @@
 (function(d3, topojson, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -34,7 +34,7 @@
   var queryProps = sszvis.responsiveProps()
     .prop('bounds', {
       _: function(width) {
-        var innerHeight = sszvis.aspectRatio.square(width);
+        var innerHeight = sszvis.aspectRatioSquare(width);
         return {
           top: 30,
           bottom: 90,
@@ -51,9 +51,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var vAcc = sszvis.fn.prop('value');
-  var nameAcc = sszvis.fn.prop('name');
-  var mDatumAcc = sszvis.fn.prop('datum');
+  var vAcc = sszvis.prop('value');
+  var nameAcc = sszvis.prop('name');
+  var mDatumAcc = sszvis.prop('datum');
 
 
   /* Application state
@@ -95,7 +95,7 @@
       return {
         name: d['ID'],
         // magic number 20 here is based on the range of the fake data. It transforms the values into percentages
-        value: sszvis.parse.number(d['Value']) / 20
+        value: sszvis.parseNumber(d['Value']) / 20
       };
     })
     .get(function(error, data) {
@@ -110,13 +110,13 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
 
-    var colorScale = sszvis.color.seqBlu()
+    var colorScale = sszvis.scaleSeqBlu()
       .domain(state.valueDomain);
 
 
@@ -137,49 +137,49 @@
     var mapMaker = sszvis.map.zurichWahlKreise()
       .keyName('name')
       .highlight(state.selection)
-      .highlightStroke(sszvis.fn.compose(sszvis.color.muchDarker, colorScale, vAcc))
+      .highlightStroke(sszvis.compose(sszvis.muchDarker, colorScale, vAcc))
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .fill(sszvis.fn.compose(colorScale, vAcc));
+      .fill(sszvis.compose(colorScale, vAcc));
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
-    var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.fractionPercent, vAcc, mDatumAcc));
+    var tooltipHeader = sszvis.modularTextHTML()
+      .bold(sszvis.compose(sszvis.formatFractionPercent, vAcc, mDatumAcc));
 
-    var tooltipBody = sszvis.svgUtils.modularText.html()
-      .plain('Wahlkreis ').plain(sszvis.fn.compose(nameAcc, mDatumAcc));
+    var tooltipBody = sszvis.modularTextHTML()
+      .plain('Wahlkreis ').plain(sszvis.compose(nameAcc, mDatumAcc));
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
       .body(tooltipBody)
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
+      .orientation(sszvis.fitTooltip('bottom', bounds))
       .visible(isSelected);
 
-    var legend = sszvis.legend.linearColorScale()
+    var legend = sszvis.legendColorLinear()
       .scale(colorScale)
       .width(props.legendWidth)
-      .labelFormat(sszvis.format.fractionPercent);
+      .labelFormat(sszvis.formatFractionPercent);
 
 
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.padding.left, bounds.padding.top))
+      .attr('transform', sszvis.translateString(bounds.padding.left, bounds.padding.top))
       .call(mapMaker);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
 
     chartLayer.selectGroup('legend')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 60))
       .call(legend);
 
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-map__area')
       .on('start', actions.selectHovered)
       .on('pan', actions.selectHovered)

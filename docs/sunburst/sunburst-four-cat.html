@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -40,11 +40,11 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var continentAcc = sszvis.fn.prop('continent');
-  var regionAcc = sszvis.fn.prop('region');
-  var countryAcc = sszvis.fn.prop('country');
-  var cantonAcc = sszvis.fn.prop('canton');
-  var numAcc = sszvis.fn.prop('number');
+  var continentAcc = sszvis.prop('continent');
+  var regionAcc = sszvis.prop('region');
+  var countryAcc = sszvis.prop('country');
+  var cantonAcc = sszvis.prop('canton');
+  var numAcc = sszvis.prop('number');
 
 
   /* Application state
@@ -72,7 +72,7 @@
 
       state.continents = continentsList;
 
-      state.data = sszvis.layout.sunburst.prepareData()
+      state.data = sszvis.sunburstPrepareData()
         .layer(continentAcc)
         .layer(regionAcc)
         .layer(countryAcc)
@@ -80,7 +80,7 @@
         .value(numAcc)
         .calculate(data);
 
-      state.radiusExtent = sszvis.layout.sunburst.getRadiusExtent(state.data);
+      state.radiusExtent = sszvis.sunburstGetRadiusExtent(state.data);
 
       render(state);
     },
@@ -110,7 +110,7 @@
         region: d['region'],
         country: d['land'],
         canton: d['kanton'],
-        number: sszvis.parse.number(d['anzahl'])
+        number: sszvis.parseNumber(d['anzahl'])
       };
     })
     .get(function(error, data) {
@@ -125,14 +125,14 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds({ top: 20, right: 20, bottom: props.bottomPadding, left: 20 }, '#sszvis-chart');
 
-    var burstLayout = sszvis.layout.sunburst.computeLayout(4, Math.min(bounds.innerWidth, bounds.innerHeight));
+    var burstLayout = sszvis.sunburstLayout(4, Math.min(bounds.innerWidth, bounds.innerHeight));
 
 
     // Scales
-    var colorScale = sszvis.color.qual6().domain(state.continents);
+    var colorScale = sszvis.scaleQual6().domain(state.continents);
 
     var radiusScale = d3.scaleLinear()
           .domain(state.radiusExtent)
@@ -152,27 +152,27 @@
 
     // Components
     // Note: the angleScale property has a sensible default, but should be
-    // configured if you're not using sszvis.layout.sunburst
-    var sunburstMaker = sszvis.component.sunburst()
+    // configured if you're not using sszvis.sunburstLayout
+    var sunburstMaker = sszvis.sunburst()
       .fill(colorScale)
       .radiusScale(radiusScale)
       .centerRadius(burstLayout.centerRadius);
 
-    var tooltipText = sszvis.svgUtils.modularText.html()
+    var tooltipText = sszvis.modularTextHTML()
       .bold(function(d) { return d.data.key; });
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
+      .orientation(sszvis.fitTooltip('bottom', bounds))
       .visible(isSelected)
       .header(tooltipText)
-      .body(function(d) { return sszvis.format.number(d.value); });
+      .body(function(d) { return sszvis.formatNumber(d.value); });
 
     var numColumns = Math.ceil(colorScale.domain().length / props.numLegendRows);
     var columnWidth = Math.min(bounds.innerWidth / numColumns, 100);
     var legendWidth = columnWidth * numColumns;
 
-    var colorLegend = sszvis.legend.ordinalColorScale()
+    var colorLegend = sszvis.legendColorOrdinal()
       .scale(colorScale)
       .columnWidth(columnWidth)
       .rows(props.numLegendRows)
@@ -182,11 +182,11 @@
     // Rendering
 
     var sunburstGroup = chartLayer.selectGroup('sunburst')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2))
+      .attr('transform', sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2))
       .call(sunburstMaker);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 20))
+      .attr('transform', sszvis.translateString((bounds.innerWidth - legendWidth) / 2, bounds.innerHeight + 20))
       .call(colorLegend);
 
     sunburstGroup.selectAll('[data-tooltip-anchor]')
@@ -195,7 +195,7 @@
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-sunburst-arc')
       .on('start', actions.onSliceOver)
       .on('pan', actions.onSliceOver)

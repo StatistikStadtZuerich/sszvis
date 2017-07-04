@@ -1,6 +1,6 @@
 # Stacked Bar Chart - Horizontal
 
-## sszvis.component.stackedBar.horizontal
+## sszvis.stackedBarHorizontal
 
 ### Data structure
 

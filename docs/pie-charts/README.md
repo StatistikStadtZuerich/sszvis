@@ -4,7 +4,7 @@
 
 Because the wedge angles are offset in different ways, it is difficult to compare values for the same quantity across different pie charts. In these circumstances, a stacked chart is often a suitable alternative.
 
-## sszvis.component.pie
+## sszvis.pie
 
 ### Data structure
 
@@ -75,7 +75,7 @@ Shows the creation of a pie chart with many categories
 ```
 
 
-## sszvis.layout.smallMultiples
+## sszvis.layoutSmallMultiples
 
 To render pie charts in a group, the multiples component can be used to create SVG groups into which charts can be rendered.
 

@@ -12,7 +12,7 @@
  * @module sszvis/annotation/tooltipAnchor
  *
  * @example
- * var tooltip = sszvis.annotation.tooltip();
+ * var tooltip = sszvis.tooltip();
  * bars.selectAll('[data-tooltip-anchor]').call(tooltip);
  *
  * Tooltips use HTML5 data attributes to clarify their intent, which is not
@@ -28,7 +28,7 @@
  * render bar <rect>s into.
  *
  * @example
- * var tooltipAnchor = sszvis.annotation.tooltipAnchor()
+ * var tooltipAnchor = sszvis.tooltipAnchor()
  *   .position(function(d) {
  *     return [xScale(d), yScale(d)];
  *   });

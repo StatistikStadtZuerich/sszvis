@@ -125,7 +125,7 @@ function runBreakpointTests(assert) {
 
 
 
-  var bps = breakpoint.spec([
+  var bps = breakpointSpec([
     {name: 's', width: 10},
     {name: 'l', width: 20}
   ]);

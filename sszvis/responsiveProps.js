@@ -58,12 +58,12 @@
 
 import * as fn from './fn.js';
 import * as logger from './logger.js';
-import * as breakpoint from './breakpoint.js';
+import {breakpointDefaultSpec, breakpointMatch, breakpointCreateSpec, breakpointFindByName} from './breakpoint.js';
 
 /* Exported module
 ----------------------------------------------- */
-export default function() {
-  var breakpointSpec = breakpoint.defaultSpec();
+export function responsiveProps() {
+  var breakpointSpec = breakpointDefaultSpec();
   var propsConfig = {};
 
   /**
@@ -87,7 +87,7 @@ export default function() {
     }
 
     // Finds out which breakpoints the provided measurements match up with
-    var matchingBreakpoints = breakpoint.match(breakpointSpec, measurement);
+    var matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
 
     return Object.keys(propsConfig).reduce(function(memo, propKey) {
       var propSpec = propsConfig[propKey];
@@ -189,7 +189,7 @@ export default function() {
     if (arguments.length === 0) {
       return breakpointSpec;
     }
-    breakpointSpec = breakpoint.createSpec(bps);
+    breakpointSpec = breakpointCreateSpec(bps);
     return responsiveProps;
   };
 
@@ -225,7 +225,7 @@ function validatePropSpec(propSpec, breakpointSpec) {
   // each should be a valid breakpoint name, and its value should be defined
   for (var breakpointName in propSpec) {
     if (propSpec.hasOwnProperty(breakpointName)) {
-      if (breakpointName !== '_' && !fn.defined(breakpoint.findByName(breakpointSpec, breakpointName))) {
+      if (breakpointName !== '_' && !fn.defined(breakpointFindByName(breakpointSpec, breakpointName))) {
         return false;
       }
     }

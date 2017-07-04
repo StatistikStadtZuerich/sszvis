@@ -1,10 +1,10 @@
 # Sankey Diagram (Parallel Sets)
 
-## sszvis.component.sankey
+## sszvis.sankey
 
 ### Data structure
 
-You can use the sszvis.layout.sankey.prepareData configurable transform function to simplify creating the data structure expected by this component.
+You can use the sszvis.sankeyPrepareData configurable transform function to simplify creating the data structure expected by this component.
 
 The sankey.prepareData function expects a list of links, with a unique source node and target node id, and lists of node ids which fall into each column of the chart. Note that the same id should not appear multiple times, even in different columns. When this happens, an error is generated. The sizes of the nodes are defined implicitly by the fact that they have a link going to them or from them, and each node is the size of the sum of its links.
 
@@ -66,7 +66,7 @@ A function which takes the id of a node and should return the label for that nod
 
 #### `sankey.linkSourceLabels`
 
-An array containing the data for links which should have labels on their 'source' end, that is the end of the link which is connected to the source node. These data values should match the values returned by sszvis.layout.sankey.prepareData. For performance reasons, you need to give the data values themselves here. See the examples for an implementation of the most straightforward mechanism for this.
+An array containing the data for links which should have labels on their 'source' end, that is the end of the link which is connected to the source node. These data values should match the values returned by sszvis.sankeyPrepareData. For performance reasons, you need to give the data values themselves here. See the examples for an implementation of the most straightforward mechanism for this.
 
 #### `sankey.linkTargetLabels`
 

@@ -2,7 +2,7 @@
 
 > Line charts are suited to show a functional relation between two attributes.
 
-## sszvis.component.line
+## sszvis.line
 
 ### Data structure
 

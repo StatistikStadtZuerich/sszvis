@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -31,14 +31,14 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var vAcc = sszvis.fn.prop('value');
-  var gAcc = sszvis.fn.prop('gender');
-  var aAcc = sszvis.fn.prop('age');
-  var refAcc = sszvis.fn.prop('group');
-  var womenAcc = sszvis.fn.prop('Frauen');
-  var menAcc = sszvis.fn.prop('Männer');
-  var collegeAcc = sszvis.fn.prop('Hochschulabschluss');
-  var otherAcc = sszvis.fn.prop('Andere');
+  var vAcc = sszvis.prop('value');
+  var gAcc = sszvis.prop('gender');
+  var aAcc = sszvis.prop('age');
+  var refAcc = sszvis.prop('group');
+  var womenAcc = sszvis.prop('Frauen');
+  var menAcc = sszvis.prop('Männer');
+  var collegeAcc = sszvis.prop('Hochschulabschluss');
+  var otherAcc = sszvis.prop('Andere');
 
 
   /* Application state
@@ -57,7 +57,7 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.groups = sszvis.fn.set(state.data, gAcc);
+      state.groups = sszvis.set(state.data, gAcc);
       state.maxValue = d3.max(state.data, vAcc);
       state.populations = sszvis.cascade()
         .objectBy(refAcc)
@@ -76,10 +76,10 @@
   d3.csv('data/BP_reference.csv')
     .row(function(d) {
       return {
-        age: sszvis.parse.number(d['Alter']),
+        age: sszvis.parseNumber(d['Alter']),
         gender: d['Geschlecht'],
         group: d['Ausbildung'],
-        value: sszvis.parse.number(d['Anzahl'])
+        value: sszvis.parseNumber(d['Anzahl'])
       };
     })
     .get(function(error, data) {
@@ -94,8 +94,8 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var pyramidWidth = sszvis.fn.measureDimensions('#sszvis-chart').width - 2;
-    var pyramidDimensions = sszvis.layout.populationPyramidLayout(pyramidWidth, state.ages.length);
+    var pyramidWidth = sszvis.measureDimensions('#sszvis-chart').width - 2;
+    var pyramidDimensions = sszvis.layoutPopulationPyramid(pyramidWidth, state.ages.length);
     var chartPadding = { top: 25, bottom: 86 };
     var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
 
@@ -110,7 +110,7 @@
       .domain(state.ages)
       .range(pyramidDimensions.positions);
 
-    var colorScale = sszvis.color.qual6()
+    var colorScale = sszvis.scaleQual6()
       .domain(state.groups);
 
     // Layers
@@ -124,17 +124,17 @@
 
     // Components
 
-    var pyramid = sszvis.component.pyramid()
-      .barFill(sszvis.fn.compose(colorScale, gAcc))
-      .barPosition(sszvis.fn.compose(positionScale, aAcc))
+    var pyramid = sszvis.pyramid()
+      .barFill(sszvis.compose(colorScale, gAcc))
+      .barPosition(sszvis.compose(positionScale, aAcc))
       .barHeight(pyramidDimensions.barHeight)
-      .barWidth(sszvis.fn.compose(lengthScale, vAcc))
-      .leftAccessor(sszvis.fn.compose(womenAcc, collegeAcc))
-      .rightAccessor(sszvis.fn.compose(menAcc, collegeAcc))
-      .leftRefAccessor(sszvis.fn.compose(womenAcc, otherAcc))
-      .rightRefAccessor(sszvis.fn.compose(menAcc, otherAcc));
+      .barWidth(sszvis.compose(lengthScale, vAcc))
+      .leftAccessor(sszvis.compose(womenAcc, collegeAcc))
+      .rightAccessor(sszvis.compose(menAcc, collegeAcc))
+      .leftRefAccessor(sszvis.compose(womenAcc, otherAcc))
+      .rightRefAccessor(sszvis.compose(menAcc, otherAcc));
 
-    var xAxis = sszvis.axis.x.pyramid()
+    var xAxis = sszvis.axisX.pyramid()
       .scale(lengthScale)
       .orient('bottom')
       .ticks(5)
@@ -142,17 +142,17 @@
       .titleAnchor('middle')
       .titleCenter(true);
 
-    var yAxis = sszvis.axis.y.ordinal()
+    var yAxis = sszvis.axisY.ordinal()
       .scale(positionScale)
       .orient('right')
       .tickFormat(function(d) {
-        return (d === 0) ? '' : sszvis.format.age(d);
+        return (d === 0) ? '' : sszvis.formatAge(d);
       })
       .ticks(5)
       .title('Alter in Jahren')
       .dyTitle(-18);
 
-    var colorLegend = sszvis.legend.ordinalColorScale()
+    var colorLegend = sszvis.legendColorOrdinal()
       .scale(colorScale)
       .horizontalFloat(true);
 
@@ -161,19 +161,19 @@
 
     chartLayer.selectGroup('populationPyramid')
       .datum(state.populations)
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, 0))
+      .attr('transform', sszvis.translateString(bounds.innerWidth / 2, 0))
       .call(pyramid);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth / 2, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, 0))
+      .attr('transform', sszvis.translateString(0, 0))
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
     sszvis.viewport.on('resize', actions.resize);

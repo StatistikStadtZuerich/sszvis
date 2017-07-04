@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -40,9 +40,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('value');
-  var yAcc = sszvis.fn.prop('category');
-  var jAcc = sszvis.fn.prop('year');
+  var xAcc = sszvis.prop('value');
+  var yAcc = sszvis.prop('category');
+  var jAcc = sszvis.prop('year');
 
 
   /* Application state
@@ -62,8 +62,8 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.categories = sszvis.fn.set(state.data, yAcc);
-      state.years = sszvis.fn.set(state.data, jAcc);
+      state.categories = sszvis.set(state.data, yAcc);
+      state.years = sszvis.set(state.data, jAcc);
       actions.selectYear(d3.max(state.years));
     },
 
@@ -97,8 +97,8 @@
     .row(function(d) {
       return {
         category: d['Sektor'],
-        value: sszvis.parse.number(d['Zupendler']),
-        year: sszvis.parse.number(d['Jahr'])
+        value: sszvis.parseNumber(d['Zupendler']),
+        year: sszvis.parseNumber(d['Jahr'])
       };
     })
     .get(function(error, data) {
@@ -113,7 +113,7 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var chartDimensions = sszvis.layout.horizontalBarChartDimensions(state.categories.length);
+    var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
     var bounds = sszvis.bounds({ height: 80 + chartDimensions.totalHeight + 33, top: 80, bottom: 25 }, '#sszvis-chart');
     var props = queryProps(bounds);
     var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
@@ -131,7 +131,7 @@
       .rangeRound([0, chartDimensions.totalHeight])
       .domain(state.categories);
 
-    var cScale = sszvis.color.qual12();
+    var cScale = sszvis.scaleQual12();
     var cScaleDark = cScale.darker();
 
     // Layers
@@ -150,42 +150,42 @@
 
     // Components
 
-    var barGen = sszvis.component.bar()
+    var barGen = sszvis.bar()
       .x(0)
-      .y(sszvis.fn.compose(yScale, yAcc))
-      .width(sszvis.fn.compose(widthScale, xAcc))
+      .y(sszvis.compose(yScale, yAcc))
+      .width(sszvis.compose(widthScale, xAcc))
       .height(chartDimensions.barHeight)
       .centerTooltip(true)
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
       });
 
-    var xAxis = sszvis.axis.x()
+    var xAxis = sszvis.axisX()
       .scale(widthScale)
       .orient('bottom')
       .alignOuterLabels(true);
 
-    var yAxis = sszvis.axis.y.ordinal()
+    var yAxis = sszvis.axisY.ordinal()
       .scale(yScale)
       .orient('right')
       .highlightTick(function(d) {
-        return sszvis.fn.contains(state.selected.map(sszvis.fn.compose(String, yAcc)), String(d));
+        return sszvis.contains(state.selected.map(sszvis.compose(String, yAcc)), String(d));
       });
 
-    var buttonGroup = sszvis.control.buttonGroup()
+    var buttonGroup = sszvis.buttonGroup()
       .values(state.years)
       .width(props.controlWidth)
       .current(state.selectedYear)
       .change(actions.selectYear);
 
-    var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(function(d) {
-        return isNaN(d) ? 'k. A.' : sszvis.format.number(d);
+    var tooltipHeader = sszvis.modularTextHTML()
+      .bold(sszvis.compose(function(d) {
+        return isNaN(d) ? 'k. A.' : sszvis.formatNumber(d);
       }, xAcc));
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
+      .orientation(sszvis.fitTooltip('bottom', bounds))
       .header(tooltipHeader)
       .visible(isSelected);
 
@@ -193,17 +193,17 @@
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.totalHeight))
+      .attr('transform', sszvis.translateString(0, chartDimensions.totalHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, chartDimensions.axisOffset))
+      .attr('transform', sszvis.translateString(0, chartDimensions.axisOffset))
       .call(yAxis);
 
     controlLayer.selectDiv('controls')
@@ -219,7 +219,7 @@
 
     // Use the move behavior to provide tooltips in the absence of a bar, i.e.
     // when we have missing data.
-    var interactionLayer = sszvis.behavior.move()
+    var interactionLayer = sszvis.move()
       .xScale(widthScale)
       .yScale(yScale)
       .cancelScrolling(isWithinBarContour)
@@ -234,10 +234,10 @@
   }
 
   function isWithinBarContour(xValue, category) {
-    var barDatum = sszvis.fn.find(function(d) {
+    var barDatum = sszvis.find(function(d) {
       return jAcc(d) === state.selectedYear && yAcc(d) === category;
     }, state.data);
-    return sszvis.behavior.util.testBarThreshold(xValue, barDatum, xAcc, 2000);
+    return sszvis.util.testBarThreshold(xValue, barDatum, xAcc, 2000);
   }
 
   function isSelected(d) {

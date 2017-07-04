@@ -17,10 +17,10 @@
  *
  */
 
-import { lightGry } from './color.js';
+import { scaleLightGry } from './color.js';
 
 export var heatTableMissingValuePattern = function(selection) {
-  var rectFill = lightGry(),
+  var rectFill = scaleLightGry(),
       crossStroke = '#A4A4A4',
       crossStrokeWidth = 0.035,
       cross1 = 0.35,

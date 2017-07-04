@@ -131,7 +131,7 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
 
 ## Y-axis (Custom Tick Formatting)
 
-The y-axis convers the y-dimension, both placement and height. Note also that sszvis.format.percent has been used to format the y-axis tick labels.
+The y-axis convers the y-dimension, both placement and height. Note also that sszvis.formatPercent has been used to format the y-axis tick labels.
 
 ```project
 {
@@ -289,7 +289,7 @@ Contours are used to make labels stand out, especially when they are positioned 
 
 ## Long Ticks (With Formatted Tick Labels)
 
-This x-axis displays the use of the tickLength property to create ticks which extend across the entire chart. This approach adds visual clutter to the chart, but it can be useful to facilitate chart reading. Note also that sszvis.format.percent has been used to format the x-axis tick labels.
+This x-axis displays the use of the tickLength property to create ticks which extend across the entire chart. This approach adds visual clutter to the chart, but it can be useful to facilitate chart reading. Note also that sszvis.formatPercent has been used to format the x-axis tick labels.
 
 ```project
 {

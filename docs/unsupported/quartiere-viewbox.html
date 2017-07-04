@@ -28,8 +28,8 @@
   'use strict';
 
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -43,10 +43,10 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var vAcc = sszvis.fn.prop('value');
-  var yAcc = sszvis.fn.prop('year');
-  var qnameAcc = sszvis.fn.prop('quartername');
-  var mDatumAcc = sszvis.fn.prop('datum');
+  var vAcc = sszvis.prop('value');
+  var yAcc = sszvis.prop('year');
+  var qnameAcc = sszvis.prop('quartername');
+  var mDatumAcc = sszvis.prop('datum');
 
 
   /* Application state
@@ -67,7 +67,7 @@
     prepareState: function(data) {
       state.data = data;
       state.valueDomain = [0, d3.max(state.data, vAcc)];
-      state.years = sszvis.fn.set(state.data, yAcc).sort(d3.ascending);
+      state.years = sszvis.set(state.data, yAcc).sort(d3.ascending);
 
       state.currentYear = INITIAL_YEAR;
       // filter the data to match the selected year
@@ -87,9 +87,9 @@
   d3.csv('data/S_quartiere.csv')
     .row(function(d) {
       return {
-        quarternum: sszvis.parse.number(d['Qcode']),
+        quarternum: sszvis.parseNumber(d['Qcode']),
         quartername: d['Qname'],
-        value: sszvis.parse.number(d['Ausländeranteil']),
+        value: sszvis.parseNumber(d['Ausländeranteil']),
         year: d['Jahr']
       };
     })
@@ -113,7 +113,7 @@
 
     // Scales
 
-    var colorScale = sszvis.color.seqBlu()
+    var colorScale = sszvis.scaleSeqBlu()
       .domain(state.valueDomain);
 
 
@@ -141,7 +141,7 @@
         // undefined or empty string values become NaN
         return !isNaN(vAcc(d));
       })
-      .fill(sszvis.fn.compose(colorScale, vAcc));
+      .fill(sszvis.compose(colorScale, vAcc));
 
 
     // Rendering

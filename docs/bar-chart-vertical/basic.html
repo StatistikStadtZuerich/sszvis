@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -37,8 +37,8 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('category');
-  var yAcc = sszvis.fn.prop('value');
+  var xAcc = sszvis.prop('category');
+  var yAcc = sszvis.prop('value');
 
 
   /* Application state
@@ -80,7 +80,7 @@
     .row(function(d) {
       return {
         category: d['Stadt'],
-        value: sszvis.parse.number(d['Wert']) / 100
+        value: sszvis.parseNumber(d['Wert']) / 100
       };
     })
     .get(function(error, data) {
@@ -97,7 +97,7 @@
   function render(state) {
     var bounds = sszvis.bounds({ top: 3, bottom: 25 }, '#sszvis-chart');
     var props = queryProps(bounds);
-    var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
+    var chartDimensions = sszvis.dimensionsVerticalBarChart(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
 
 
     // Scales
@@ -116,7 +116,7 @@
       .copy()
       .range(heightScale.range().slice().reverse());
 
-    var cScale = sszvis.color.qual12();
+    var cScale = sszvis.scaleQual12();
     var cScaleDark = cScale.darker();
 
     // Layers
@@ -133,28 +133,28 @@
 
     // Components
 
-    var barGen = sszvis.component.bar()
-      .x(sszvis.fn.compose(xScale, xAcc))
-      .y(sszvis.fn.compose(yPosScale, yAcc))
+    var barGen = sszvis.bar()
+      .x(sszvis.compose(xScale, xAcc))
+      .y(sszvis.compose(yPosScale, yAcc))
       .width(chartDimensions.barWidth)
-      .height(sszvis.fn.compose(heightScale, yAcc))
+      .height(sszvis.compose(heightScale, yAcc))
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
       });
 
-    var xAxis = sszvis.axis.x.ordinal()
+    var xAxis = sszvis.axisX.ordinal()
       .scale(xScale)
       .orient('bottom');
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yPosScale)
       .tickFormat(yAxisLabel)
       .orient('right');
 
-    var tooltipTitle = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(sszvis.format.fractionPercent, yAcc));
+    var tooltipTitle = sszvis.modularTextHTML()
+      .bold(sszvis.compose(sszvis.formatFractionPercent, yAcc));
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipTitle)
       .visible(isSelected);
@@ -163,7 +163,7 @@
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);
@@ -172,7 +172,7 @@
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
@@ -185,7 +185,7 @@
     // They take up enough of the space on the screen that a "profile"-based
     // approach would cover too much of the screen in a scroll trap. Panning
     // works better in these situations.
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-bar')
       .on('start', actions.showTooltip)
       .on('pan', actions.showTooltip)
@@ -200,11 +200,11 @@
   /* Helper functions
   ----------------------------------------------- */
   function isSelected(d) {
-    return sszvis.fn.contains(state.selection, d);
+    return sszvis.contains(state.selection, d);
   }
 
   function yAxisLabel(d) {
-    return (d === 0) ? null : sszvis.format.fractionPercent(d);
+    return (d === 0) ? null : sszvis.formatFractionPercent(d);
   }
 
 

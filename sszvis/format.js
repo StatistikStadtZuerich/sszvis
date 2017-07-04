@@ -4,7 +4,7 @@
  * @module sszvis/format
  */
 
-import d3 from 'd3';
+import {timeFormat, format} from 'd3';
 
 import * as fn from './fn.js';
 
@@ -13,14 +13,14 @@ import * as fn from './fn.js';
  * @param  {number} d
  * @return {string}
  */
-export var age = function(d) {
+export var formatAge = function(d) {
   return String(Math.round(d));
 };
 
 /**
  * A multi time formatter used by the axis class
  */
-export var axisTimeFormat = function(d) {
+export var formatAxisTimeFormat = function(d) {
   var xs = [
     ['.%L', function(d) { return d.getMilliseconds(); }],
     [':%S', function(d) { return d.getSeconds(); }],
@@ -34,7 +34,7 @@ export var axisTimeFormat = function(d) {
 
   for (var i = 0; i < xs.length; ++i) {
     if (xs[i][1](d)) {
-      return d3.timeFormat(xs[i][0])(d);
+      return timeFormat(xs[i][0])(d);
     }
   }
 };
@@ -42,20 +42,20 @@ export var axisTimeFormat = function(d) {
 /**
  * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
  */
-export var month = fn.compose(function(m) {
+export var formatMonth = fn.compose(function(m) {
   return m.toUpperCase();
-}, d3.timeFormat('%b'));
+}, timeFormat('%b'));
 
 /**
  * A year formatter for date objects. Gives the date's year.
  */
-export var year = d3.timeFormat('%Y')
+export var formatYear = timeFormat('%Y')
 
 /**
  * Formatter for no label
  * @return {string} the empty string
  */
-export var none = function() {
+export var formatNone = function() {
   return '';
 };
 
@@ -76,7 +76,7 @@ export var none = function() {
  * @param  {number} [p] Decimal precision
  * @return {string}     Fully formatted number
  */
-export var number = function(d) {
+export var formatNumber = function(d) {
   var p;
   var dAbs = Math.abs(d);
   // decLen is the number of decimal places in the number
@@ -97,7 +97,7 @@ export var number = function(d) {
   else if (dAbs >= 1e4) {
     // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
     // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
-    return d3.format(',.0f')(d);
+    return format(',.0f')(d);
   }
 
   // 2350     -> "2350"
@@ -106,7 +106,7 @@ export var number = function(d) {
     p = decLen === 0 ? 0 : 1;
     // Where there are decimals, round to 1 position
     // To display more precision, use the preciseNumber function.
-    return d3.format('.'+ p +'f')(d);
+    return format('.'+ p +'f')(d);
   }
 
   // 41       -> "41"
@@ -117,13 +117,13 @@ export var number = function(d) {
     p = Math.min(2, decLen);
     // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
     // but not more. To display more precision, use the preciseNumber function.
-    return d3.format('.' + p + 'f')(d);
+    return format('.' + p + 'f')(d);
   }
 
   // If abs(num) is not > 0, num is 0
   // 0       -> "0"
   else {
-    return d3.format('.0f')(0);
+    return format('.0f')(0);
   }
 };
 
@@ -141,18 +141,18 @@ export var number = function(d) {
  * @param  {Number} d           The number to be formatted
  * @return {String}             The formatted number
  */
-export var preciseNumber = function(p, d) {
+export var formatPreciseNumber = function(p, d) {
   // This curries the function
-  if (arguments.length > 1) return preciseNumber(p)(d);
+  if (arguments.length > 1) return formatPreciseNumber(p)(d);
 
   return function formatPreciseNumber(d) {
     var dAbs = Math.abs(d);
     if (dAbs >= 100 && dAbs < 1e4) {
       // No thousands separator
-      return d3.format('.' + p + 'f')(d);
+      return format('.' + p + 'f')(d);
     } else {
       // Use the thousands separator
-      return d3.format(',.' + p + 'f')(d);
+      return format(',.' + p + 'f')(d);
     }
   };
 };
@@ -162,9 +162,9 @@ export var preciseNumber = function(p, d) {
  * @param  {number} d    A value to format, between 0 and 100
  * @return {string}      The formatted value
  */
-export var percent = function(d) {
+export var formatPercent = function(d) {
   // Uses unix thin space
-  return number(d) + ' %';
+  return formatNumber(d) + ' %';
 };
 
 /**
@@ -172,9 +172,9 @@ export var percent = function(d) {
  * @param  {number} d    A value to format, between 0 and 1
  * @return {string}      The formatted value
  */
-export var fractionPercent = function(d) {
+export var formatFractionPercent = function(d) {
   // Uses unix thin space
-  return number(d * 100) + ' %';
+  return formatNumber(d * 100) + ' %';
 };
 
 /**
@@ -182,7 +182,7 @@ export var fractionPercent = function(d) {
  * @param  {number} d
  * @return {string} Fully formatted text
  */
-export var text = function(d) {
+export var formatText = function(d) {
   return String(d);
 };
 

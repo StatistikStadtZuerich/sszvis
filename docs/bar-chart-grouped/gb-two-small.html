@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -31,9 +31,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('region');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('category');
+  var xAcc = sszvis.prop('region');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('category');
 
 
   /* Application state
@@ -54,20 +54,20 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.regions = sszvis.fn.set(state.data, xAcc);
+      state.regions = sszvis.set(state.data, xAcc);
       state.valueExtent = d3.extent(state.data, yAcc);
-      state.groups = sszvis.fn.set(state.data, cAcc);
+      state.groups = sszvis.set(state.data, cAcc);
       state.groupedData = sszvis.cascade()
         .arrayBy(xAcc)
         .apply(state.data);
-      state.longestGroup = d3.max(state.groupedData, sszvis.fn.prop('length'));
+      state.longestGroup = d3.max(state.groupedData, sszvis.prop('length'));
 
       render(state);
     },
 
     showTooltip: function(x, y) {
       state.selection = state.groupedData.filter(function(d) {
-        return sszvis.fn.contains(d.map(xAcc), x);
+        return sszvis.contains(d.map(xAcc), x);
       });
       render(state);
     },
@@ -88,7 +88,7 @@
       return {
         region: d['Region'],
         category: d['Kategorie'],
-        value: sszvis.parse.number(d['Wert'])
+        value: sszvis.parseNumber(d['Wert'])
       };
     })
     .get(function(error, data) {
@@ -130,7 +130,7 @@
       return Math.abs(yScale(v) - yScale(0));
     };
 
-    var cScale = sszvis.color.qual12();
+    var cScale = sszvis.scaleQual12();
 
     // Layers
 
@@ -146,37 +146,37 @@
 
     // Components
 
-    var barLayout = sszvis.component.groupedBars()
-      .groupScale(sszvis.fn.compose(xScale, xAcc))
+    var barLayout = sszvis.groupedBars()
+      .groupScale(sszvis.compose(xScale, xAcc))
       .groupWidth(xScale.bandwidth())
       .groupSize(state.longestGroup)
-      .y(sszvis.fn.compose(yPosScale, yAcc))
-      .height(sszvis.fn.compose(hScale, yAcc))
-      .fill(sszvis.fn.compose(cScale, cAcc))
-      .defined(sszvis.fn.compose(sszvis.fn.not(isNaN), yAcc));
+      .y(sszvis.compose(yPosScale, yAcc))
+      .height(sszvis.compose(hScale, yAcc))
+      .fill(sszvis.compose(cScale, cAcc))
+      .defined(sszvis.compose(sszvis.not(isNaN), yAcc));
 
-    var xAxis = sszvis.axis.x.ordinal()
+    var xAxis = sszvis.axisX.ordinal()
       .scale(xScale)
       .orient('bottom')
       .slant('diagonal')
       .highlightTick(function(d) {
-        return sszvis.fn.contains(state.selection.map(sszvis.fn.compose(xAcc, sszvis.fn.first)), d);
+        return sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d);
       });
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .showZeroY(true)
       .orient('right');
 
-    var colorLegend = sszvis.legend.ordinalColorScale()
+    var colorLegend = sszvis.legendColorOrdinal()
       .scale(cScale)
       .horizontalFloat(true);
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
-      .header(sszvis.svgUtils.modularText.html().bold(function(d) {
-        return xAcc(sszvis.fn.first(d));
+      .orientation(sszvis.fitTooltip('bottom', bounds))
+      .header(sszvis.modularTextHTML().bold(function(d) {
+        return xAcc(sszvis.first(d));
       }))
       .body(function(d) {
         // generates a row from each data element
@@ -193,7 +193,7 @@
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('bars')
       .call(barLayout);
@@ -202,19 +202,19 @@
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 115))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 115))
       .call(colorLegend);
 
 
     // Interaction
-    var interactionLayer = sszvis.behavior.move()
+    var interactionLayer = sszvis.move()
       .xScale(xScale)
       .yScale(yScale)
       .cancelScrolling(isWithinBarContour)
@@ -229,13 +229,13 @@
   }
 
   function isWithinBarContour(category, yValue) {
-    var barGroup = sszvis.fn.find(function(g) {
+    var barGroup = sszvis.find(function(g) {
       return xAcc(g[0]) === category;
     }, state.groupedData);
     var cursorAbs = Math.abs(yValue);
     var absThreshold = 2;
-    return barGroup && sszvis.fn.some(function(d) {
-      if (!sszvis.fn.defined(d)) { return false; }
+    return barGroup && sszvis.some(function(d) {
+      if (!sszvis.defined(d)) { return false; }
       var dataValue = yAcc(d);
       if (isNaN(dataValue) && cursorAbs < absThreshold) { return true; }
       if (Math.abs(dataValue) < absThreshold && cursorAbs < absThreshold) { return true; }
@@ -244,7 +244,7 @@
       } else {
         return yValue >= 0 && yValue < dataValue;
       }
-      // return sszvis.behavior.util.testBarThreshold(cursorAbs, d, sszvis.fn.compose(Math.abs, yAcc), 3);
+      // return sszvis.util.testBarThreshold(cursorAbs, d, sszvis.compose(Math.abs, yAcc), 3);
     }, barGroup);
   }
 

@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -46,7 +46,7 @@
   function render() {
     var bounds = sszvis.bounds({ height: 800 }, '#sszvis-chart');
 
-    var cScale = sszvis.color.qual12();
+    var cScale = sszvis.scaleQual12();
 
     var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {})
       .datum(appdata);
@@ -54,12 +54,12 @@
 
     // Components
 
-    var barGen = sszvis.component.bar()
-      .x(sszvis.fn.prop('x'))
-      .y(sszvis.fn.prop('y'))
-      .width(sszvis.fn.prop('w'))
-      .height(sszvis.fn.prop('h'))
-      .fill(sszvis.fn.compose(cScale, sszvis.fn.prop('id')));
+    var barGen = sszvis.bar()
+      .x(sszvis.prop('x'))
+      .y(sszvis.prop('y'))
+      .width(sszvis.prop('w'))
+      .height(sszvis.prop('h'))
+      .fill(sszvis.compose(cScale, sszvis.prop('id')));
 
     var bars = chartLayer.selectGroup('bars')
       .call(barGen);
@@ -82,7 +82,7 @@
       .attr('height', bounds.innerHeight)
       .attr('fill', 'rgba(255, 0, 0, 0.1)')
       .on('touchstart', function() {
-        var xy = sszvis.fn.first(d3.touches(this));
+        var xy = sszvis.first(d3.touches(this));
         var pickId = colorToId(ctx.getRawPixelAt(xy[0], xy[1]));
         if (pickId !== -1) {
           d3.event.preventDefault();
@@ -92,7 +92,7 @@
         }
       })
       .on('touchmove', function() {
-        var xy = sszvis.fn.first(d3.touches(this));
+        var xy = sszvis.first(d3.touches(this));
         var pickId = colorToId(ctx.getRawPixelAt(xy[0], xy[1]));
         if (isPanning && pickId !== -1) {
           d3.event.preventDefault();
@@ -111,7 +111,7 @@
       ctx.drawRect(d.x, d.y, d.w, d.h);
     });
 
-    sszvis.behavior.resize().on('resize', function() { render(); });
+    sszvis.resize().on('resize', function() { render(); });
   }
 
   function getCanvas(width, height) {

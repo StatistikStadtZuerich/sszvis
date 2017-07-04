@@ -47,10 +47,10 @@ import * as fn from './fn.js';
  * @param {Measurement} partialMeasurement A partial measurement to match to the spec
  * @returns {Breakpoint}
  */
-export function find(breakpoints, partialMeasurement) {
+export function breakpointFind(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
   return fn.find(function(bp) {
-    return test(bp, measurement);
+    return breakpointTest(bp, measurement);
   }, breakpoints);
 }
 
@@ -66,7 +66,7 @@ export function find(breakpoints, partialMeasurement) {
  * @returns {Breakpoint?} If no breakpoint matches, undefined is returned. If a
  *          breakpoint for the given name exists, that breakpoint is returned
  */
-export function findByName(breakpoints, name) {
+export function breakpointFindByName(breakpoints, name) {
   var eqName = function(bp) { return bp.name === name; };
   return fn.find(eqName, breakpoints);
 }
@@ -81,7 +81,7 @@ export function findByName(breakpoints, name) {
  * @param {Measurement} partialMeasurement A partial measurement to match to the breakpoint
  * @returns {boolean}
  */
-export function test(breakpoint, partialMeasurement) {
+export function breakpointTest(breakpoint, partialMeasurement) {
   var bpm = breakpoint.measurement;
   var measurement = parseMeasurement(partialMeasurement);
   return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
@@ -98,10 +98,10 @@ export function test(breakpoint, partialMeasurement) {
  * @param {Measurement} partialMeasurement A partial measurement to match to the spec
  * @returns {Array<Breakpoint>}
  */
-export function match(breakpoints, partialMeasurement) {
+export function breakpointMatch(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
   return breakpoints.filter(function(bp) {
-    return test(bp, measurement);
+    return breakpointTest(bp, measurement);
   });
 }
 
@@ -116,7 +116,7 @@ export function match(breakpoints, partialMeasurement) {
  *        so it's possible to only provide partial breakpoint definitions.
  * @returns {Array<Breakpoint>}
  */
-export function createSpec(spec) {
+export function breakpointCreateSpec(spec) {
   return spec
     .map(parseBreakpoint)
     .concat(parseBreakpoint({name: '_'}));
@@ -129,8 +129,8 @@ export function createSpec(spec) {
  * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
  *          default breakpoint spec.
  */
-export var defaultSpec = (function() {
-  var DEFAULT_SPEC = createSpec([
+export var breakpointDefaultSpec = (function() {
+  var DEFAULT_SPEC = breakpointCreateSpec([
     { name: 'palm', width: 540 },
     { name: 'lap',  width: 749 }
   ]);
@@ -139,8 +139,8 @@ export var defaultSpec = (function() {
 
 
 // Default tests
-export var palm = makeTest('palm');
-export var lap = makeTest('lap')
+export var breakpointPalm = makeTest('palm');
+export var breakpointLap = makeTest('lap')
 
 
 // Helpers
@@ -216,6 +216,6 @@ function parseBreakpoint(bp) {
  */
 function makeTest(name) {
   return function(measurement) {
-    return test(findByName(defaultSpec(), name), measurement);
+    return breakpointTest(breakpointFindByName(breakpointDefaultSpec(), name), measurement);
   };
 }

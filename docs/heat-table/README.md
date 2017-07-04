@@ -2,9 +2,9 @@
 
 > A heat table can be used to show off a matrix of values. Use it to display how a single variable varies across all the combinations of two categorical variables.
 
-## sszvis.component.bar
+## sszvis.bar
 
-The heat table does not have a special component. Instead, it is constructed using [sszvis.component.bar](/#/bar-chart-vertical) by setting the width and height equal to each other, and with the use of the *x*- and *y*-position functions. Both *x*- and *y*-scales are ordinal scales which use the rangeBands function to calculate the output range.
+The heat table does not have a special component. Instead, it is constructed using [sszvis.bar](/#/bar-chart-vertical) by setting the width and height equal to each other, and with the use of the *x*- and *y*-position functions. Both *x*- and *y*-scales are ordinal scales which use the rangeBands function to calculate the output range.
 
 
 ```hint
@@ -25,7 +25,7 @@ This component requires a flat array of objects, and each object is turned into 
 
 ### Configuration
 
-Heat tables are based on [sszvis.component.bar](/#/bar-chart-vertical) and thus have the same configuration options.
+Heat tables are based on [sszvis.bar](/#/bar-chart-vertical) and thus have the same configuration options.
 
 ### Chart
 

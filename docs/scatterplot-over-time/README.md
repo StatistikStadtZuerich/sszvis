@@ -2,7 +2,7 @@
 
 > The scatterplot over time can be used to show how values in a scatterplot have changed in time. This serves as an example of how to combine the line and dot components of sszvis with a time filter, in order to achieve the desired design. It is not a component itself, but it is a combination of several other components, used together for a very customizable chart type.
 
-## sszvis.component.line and sszvis.component.dot
+## sszvis.line and sszvis.dot
 
 ### Data Structure
 

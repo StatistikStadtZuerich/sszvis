@@ -93,7 +93,7 @@ function arrEach(arr, func) {
   }
 }
 
-export default function() {
+export function cascade() {
   var cascade = {},
       keys = [],
       sorts = [],

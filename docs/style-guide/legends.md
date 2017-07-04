@@ -5,7 +5,7 @@ Legends, like axes, are used to display information about a scale. Typically, th
 
 ## Ordinal Color Scale Legend
 
-### sszvis.legend.ordinalColorScale
+### sszvis.legendColorOrdinal
 
 #### `ordinalColorScale.scale`
 
@@ -114,7 +114,7 @@ The maximum width of the horizontal float layout. Default 600px
 
 ## Linear Color Scale Legend
 
-### sszvis.legend.linearColorScale
+### sszvis.legendColorLinear
 
 #### `linearColorScale.scale`
 
@@ -138,7 +138,7 @@ Text or a text-returning function to use as the titles for the legend endpoints.
 
 #### `linearColorScale.[labelFormat]`
 
-An optional formatter function for the end labels. Usually should be sszvis.format.number.
+An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
 
 ### Example - With custom labels
 
@@ -163,7 +163,7 @@ An optional formatter function for the end labels. Usually should be sszvis.form
 
 ## Binned Color Scale Legend
 
-### sszvis.legend.binnedColorScale
+### sszvis.legendColorBinned
 
 #### `binnedColorScale.scale`
 
@@ -208,7 +208,7 @@ A formatter function for the labels of the displayValues.
 
 ## Variable Radius Legend
 
-### sszvis.legend.radius
+### sszvis.legendRadius
 
 #### `radius.scale`
 

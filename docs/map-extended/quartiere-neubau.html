@@ -21,8 +21,8 @@
 (function(d3, topojson, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -34,7 +34,7 @@
   var queryProps = sszvis.responsiveProps()
     .prop('bounds', {
       _: function(width) {
-        var innerHeight = sszvis.aspectRatio.square(width);
+        var innerHeight = sszvis.aspectRatioSquare(width);
         return {
           top: 30,
           bottom: 30,
@@ -46,10 +46,10 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var idAcc = sszvis.fn.prop('id');
-  var datumAcc = sszvis.fn.prop('datum');
-  var nameAcc = sszvis.fn.prop('name');
-  var yearAcc = sszvis.fn.prop('year');
+  var idAcc = sszvis.prop('id');
+  var datumAcc = sszvis.prop('datum');
+  var nameAcc = sszvis.prop('name');
+  var yearAcc = sszvis.prop('year');
 
 
   /* Application state
@@ -89,10 +89,10 @@
   ----------------------------------------------- */
   d3.csv('data/gemeinnuetzige.csv')
     .row(function(d) {
-      var parsedYear = sszvis.parse.number(d['bezugsjahr']);
+      var parsedYear = sszvis.parseNumber(d['bezugsjahr']);
       parsedYear = parsedYear === 0 ? NaN : parsedYear;
       return {
-        id: sszvis.parse.number(d['id']),
+        id: sszvis.parseNumber(d['id']),
         name: d['name'],
         ownership: d['traegerschaft'],
         year: parsedYear
@@ -109,12 +109,12 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
 
     // Scales
-    var colorScale = sszvis.color.seqBlu().reverse().domain(state.yearRange);
+    var colorScale = sszvis.scaleSeqBlu().reverse().domain(state.yearRange);
 
 
     // Layers
@@ -144,21 +144,21 @@
       .geoJsonKeyName('OBJECTID')
       .geoJson(sszvis.map.data.neubausiedlungen)
       .mapPath(mapPathGen)
-      .defined(sszvis.fn.compose(sszvis.fn.defined, idAcc))
-      .fill(sszvis.fn.compose(colorScale, yearAcc))
-      .stroke(sszvis.fn.compose(colorScale, yearAcc))
+      .defined(sszvis.compose(sszvis.defined, idAcc))
+      .fill(sszvis.compose(colorScale, yearAcc))
+      .stroke(sszvis.compose(colorScale, yearAcc))
       .strokeWidth(1.25)
       .on('over', actions.selectHovered)
       .on('click', actions.selectHovered)
       .on('out', actions.deselectHovered);
 
-    var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(nameAcc, datumAcc));
+    var tooltipHeader = sszvis.modularTextHTML()
+      .bold(sszvis.compose(nameAcc, datumAcc));
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
-      .body(sszvis.fn.compose(yearAcc, datumAcc))
+      .body(sszvis.compose(yearAcc, datumAcc))
       .visible(isSelected);
 
 

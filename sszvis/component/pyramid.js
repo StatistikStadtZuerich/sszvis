@@ -31,7 +31,7 @@
 import d3 from 'd3';
 
 import * as fn from '../fn.js';
-import transition from '../transition.js';
+import { transition } from '../transition.js';
 import bar from './bar.js';
 import { component } from '../d3-component.js';
 

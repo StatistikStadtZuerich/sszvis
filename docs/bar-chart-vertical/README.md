@@ -2,7 +2,7 @@
 
 > Bar charts are suited to comparing numeric values for different categories. The categories can be ordered or unordered, numeric or non-numeric.
 
-## sszvis.component.bar
+## sszvis.bar
 
 ### Data structure
 
@@ -62,7 +62,7 @@ This example shows several edge cases and specialties:
 
 * Long axis labels can be word-wrapped by configuring the axis component
 * Long axis ticks can be toggled as guide lines to aid chart reading, which can be useful to see when looking at static charts
-* Missing data renders a tooltip stating that there is no data. This uses `sszvis.behavior.move` to provide hover functionality in the absence of a bar.
+* Missing data renders a tooltip stating that there is no data. This uses `sszvis.move` to provide hover functionality in the absence of a bar.
 
 ```project
 {

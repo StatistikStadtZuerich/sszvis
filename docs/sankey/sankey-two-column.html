@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -36,7 +36,7 @@
           left: 0,
           bottom: 20,
           right: 0,
-          height: Math.max(sszvis.aspectRatio.ar4to3(w), MIN_CHART_HEIGHT + 40 + 20)
+          height: Math.max(sszvis.aspectRatio4to3(w), MIN_CHART_HEIGHT + 40 + 20)
         }
       },
       _: function(w) {
@@ -45,7 +45,7 @@
           left: w / 4,
           bottom: 20,
           right: w / 4,
-          height: Math.max(sszvis.aspectRatio.ar4to3(w), MIN_CHART_HEIGHT + 40 + 20)
+          height: Math.max(sszvis.aspectRatio4to3(w), MIN_CHART_HEIGHT + 40 + 20)
         }
       }
     })
@@ -61,9 +61,9 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var sourceAcc = sszvis.fn.prop('source');
-  var targetAcc = sszvis.fn.prop('target');
-  var valueAcc = sszvis.fn.prop('value');
+  var sourceAcc = sszvis.prop('source');
+  var targetAcc = sszvis.prop('target');
+  var valueAcc = sszvis.prop('value');
 
 
   /* Application state
@@ -81,10 +81,10 @@
   ----------------------------------------------- */
   var actions = {
     prepareState: function(data) {
-      var leftColIds = sszvis.fn.set(data, sourceAcc);
-      var rightColIds = sszvis.fn.set(data, targetAcc);
+      var leftColIds = sszvis.set(data, sourceAcc);
+      var rightColIds = sszvis.set(data, targetAcc);
 
-      state.data = sszvis.layout.sankey.prepareData()
+      state.data = sszvis.sankeyPrepareData()
         .source(sourceAcc)
         .target(targetAcc)
         .value(valueAcc)
@@ -141,7 +141,7 @@
       return {
         source: d['Zuzugsregion'],
         target: d['Stadtquartier'],
-        value: sszvis.parse.number(d['Anzahl'])
+        value: sszvis.parseNumber(d['Anzahl'])
       };
     })
     .get(function(error, data) {
@@ -156,12 +156,12 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
 
     // The right and left padding are chosen so that there is enough space on either side of the chart
     // to see all labels. For performance reasons, it doesn't make sense to calculate these values while
     // the chart is being rendered, so it is much more efficient to simply choose a value for the left
-    // and right padding which reveals the labels. When using the sszvis.layout.sankey.computeLayout function,
+    // and right padding which reveals the labels. When using the sszvis.sankeyLayout function,
     // the chart will be positioned such that the node bars themselves line up with the edges of the available
     // space, and any outside bar labels (e.g. 'left' labels for a lefthand column) are outside, in the padding space.
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
@@ -169,7 +169,7 @@
     // Compute visual display dimensions of the sankey diagram, like the visible pixels per unit,
     // and the domain and range of the linear scale which displays the sankey nodes as bars and links as arcs.
     // The order of bounds.innerHeight and bounds.innerWidth needs to be reversed when doing a horizontal orientation
-    var sankeyLayout = sszvis.layout.sankey.computeLayout(state.data.columnLengths, state.data.columnTotals, bounds.innerHeight, bounds.innerWidth);
+    var sankeyLayout = sszvis.sankeyLayout(state.data.columnLengths, state.data.columnTotals, bounds.innerHeight, bounds.innerWidth);
 
 
     // Scales
@@ -198,15 +198,15 @@
       key: 'nodeTooltipLayer'
     });
 
-    var nodeBlue = sszvis.color.qual12().range()[0];
-    var highlightLinkBlue = sszvis.color.qual12().range()[1];
-    var linkGrey = sszvis.color.paleGry()(0);
+    var nodeBlue = sszvis.scaleQual12().range()[0];
+    var highlightLinkBlue = sszvis.scaleQual12().range()[1];
+    var linkGrey = sszvis.scalePaleGry()(0);
 
     // Components
 
-    var formatValue = sszvis.fn.compose(sszvis.format.preciseNumber(0), valueAcc);
+    var formatValue = sszvis.compose(sszvis.formatPreciseNumber(0), valueAcc);
 
-    var sankeyGen = sszvis.component.sankey()
+    var sankeyGen = sszvis.sankey()
       .sizeScale(valueScale)
       .columnPosition(columnPosition)
       .columnLabel(function(columnIndex) { return ['Zuzugsregion', 'Stadtquartier'][columnIndex]; })
@@ -232,15 +232,15 @@
       .labelHitBoxSize(props.hitboxSize)
       .nameLabel(function(id) { return id; });
 
-    var linkTooltip = sszvis.annotation.tooltip()
+    var linkTooltip = sszvis.tooltip()
       .renderInto(linkTooltipLayer)
-      .header(sszvis.svgUtils.modularText.html().bold(formatValue))
+      .header(sszvis.modularTextHTML().bold(formatValue))
       .visible(linkIsHovered);
 
-    var nodeTooltip = sszvis.annotation.tooltip()
+    var nodeTooltip = sszvis.tooltip()
       .renderInto(nodeTooltipLayer)
       .visible(nodeIsHovered)
-      .header(sszvis.svgUtils.modularText.html().bold(formatValue))
+      .header(sszvis.modularTextHTML().bold(formatValue))
       .orientation(function(d) { return d.x >= bounds.innerWidth / 2 ? 'right' : 'left'; })
       .dx(20);
 
@@ -270,7 +270,7 @@
 
     // Interaction
 
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-sankey-hitbox')
       .on('start', actions.onNodeOver)
       .on('pan', actions.onNodeOver)

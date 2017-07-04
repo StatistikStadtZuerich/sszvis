@@ -17,8 +17,8 @@
 (function(d3, sszvis) {
   'use strict';
 
-  if (sszvis.fallback.unsupported()) {
-    sszvis.fallback.render('#sszvis-chart');
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
     return;
   }
 
@@ -45,10 +45,10 @@
 
   /* Shortcuts
   ----------------------------------------------- */
-  var xAcc = sszvis.fn.prop('year');
-  var yAcc = sszvis.fn.prop('value');
-  var cAcc = sszvis.fn.prop('field');
-  var dataAcc = sszvis.fn.prop('data');
+  var xAcc = sszvis.prop('year');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('field');
+  var dataAcc = sszvis.prop('data');
 
   /* Application state
   ----------------------------------------------- */
@@ -67,10 +67,10 @@
   var actions = {
     prepareState: function(data) {
       state.data = data;
-      state.years = sszvis.fn.set(state.data, xAcc);
-      state.categories = sszvis.fn.set(state.data, cAcc);
+      state.years = sszvis.set(state.data, xAcc);
+      state.categories = sszvis.set(state.data, cAcc);
 
-      state.stackedData = sszvis.component.stackedBar.verticalStackedBarData(xAcc, cAcc, yAcc)(data);
+      state.stackedData = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc)(data);
       state.maxStacked = state.stackedData.maxValue;
 
       render(state);
@@ -97,7 +97,7 @@
       return {
         year: d['Jahr'],
         field: d['Berufsfeld'],
-        value: sszvis.parse.number(d['Anzahl'])
+        value: sszvis.parseNumber(d['Anzahl'])
       };
     })
     .get(function(error, data) {
@@ -112,9 +112,9 @@
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    var props = queryProps(sszvis.fn.measureDimensions('#sszvis-chart'));
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, '#sszvis-chart');
-    var chartDimensions = sszvis.layout.verticalBarChartDimensions(Math.min(MAX_WIDTH, bounds.innerWidth), state.years.length);
+    var chartDimensions = sszvis.dimensionsVerticalBarChart(Math.min(MAX_WIDTH, bounds.innerWidth), state.years.length);
 
 
     // Scales
@@ -129,7 +129,7 @@
       .domain([0, state.maxStacked])
       .range([bounds.innerHeight, 0]);
 
-    var cScale = sszvis.color.qual12()
+    var cScale = sszvis.scaleQual12()
       .domain(state.categories);
 
 
@@ -147,43 +147,43 @@
 
     // Components
 
-    var stackedBars = sszvis.component.stackedBar.vertical()
+    var stackedBars = sszvis.stackedBarVertical()
       .xScale(xScale)
       .width(xScale.bandwidth())
       .yScale(yScale)
       .fill(function(d) {
         var color = cScale(cAcc(dataAcc(d)));
-        return isSelected(d) ? sszvis.color.slightlyDarker(color) : color;
+        return isSelected(d) ? sszvis.slightlyDarker(color) : color;
       });
 
-    var xAxis = sszvis.axis.x.ordinal()
+    var xAxis = sszvis.axisX.ordinal()
       .scale(xScale)
       .orient('bottom')
       .title('Jahr');
 
-    var yAxis = sszvis.axis.y()
+    var yAxis = sszvis.axisY()
       .scale(yScale)
       .orient('right')
       .title('Anzahl')
       .dyTitle(-20);
 
-    var colorLegend = sszvis.legend.ordinalColorScale()
+    var colorLegend = sszvis.legendColorOrdinal()
       .scale(cScale)
       .rows(state.categories.length / props.targetNumColumns)
       .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 320))
       .columns(props.targetNumColumns)
       .orientation('horizontal');
 
-    var tooltipHeader = sszvis.svgUtils.modularText.html()
-      .bold(sszvis.fn.compose(cAcc, dataAcc));
+    var tooltipHeader = sszvis.modularTextHTML()
+      .bold(sszvis.compose(cAcc, dataAcc));
 
-    var tooltipText = sszvis.svgUtils.modularText.html()
-      .plain(sszvis.fn.compose(sszvis.format.number, yAcc, dataAcc))
+    var tooltipText = sszvis.modularTextHTML()
+      .plain(sszvis.compose(sszvis.formatNumber, yAcc, dataAcc))
       .plain('Angestellte');
 
-    var tooltip = sszvis.annotation.tooltip()
+    var tooltip = sszvis.tooltip()
       .renderInto(tooltipLayer)
-      .orientation(sszvis.annotation.tooltip.fit('bottom', bounds))
+      .orientation(sszvis.fitTooltip('bottom', bounds))
       .header(tooltipHeader)
       .body(tooltipText)
       .visible(isSelected);
@@ -192,7 +192,7 @@
     // Rendering
 
     chartLayer
-      .attr('transform', sszvis.svgUtils.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
 
     var bars = chartLayer.selectGroup('barchart')
       .call(stackedBars);
@@ -201,20 +201,20 @@
       .call(tooltip);
 
     chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
       .call(xAxis);
 
     chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.svgUtils.translateString(0, 0))
+      .attr('transform', sszvis.translateString(0, 0))
       .call(yAxis);
 
     chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.svgUtils.translateString(0, bounds.innerHeight + 60))
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
       .call(colorLegend);
 
 
     // Interaction
-    var interactionLayer = sszvis.behavior.panning()
+    var interactionLayer = sszvis.panning()
       .elementSelector('.sszvis-bar')
       .on('start', actions.showTooltip)
       .on('pan', actions.showTooltip)
@@ -229,7 +229,7 @@
   /* Helper functions
   ----------------------------------------------- */
   function isSelected(d) {
-    return sszvis.fn.contains(state.selection, d);
+    return sszvis.contains(state.selection, d);
   }
 
 
