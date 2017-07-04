@@ -18,9 +18,10 @@ import * as fn from '../fn.js';
 import { range } from '../scale.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
+import { component } from '../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('scale')
     .prop('tickFormat').tickFormat(fn.identity)
     .prop('tickValues')

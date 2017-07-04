@@ -62,6 +62,7 @@ import textWrap from './svgUtils/textWrap.js';
 import * as format from './format.js';
 import { range } from './scale.js';
 import * as logger from './logger.js';
+import { component } from './d3-component.js';
 
 var TICK_PROXIMITY_THRESHOLD = 8;
 var TICK_END_THRESHOLD = 12;
@@ -71,7 +72,7 @@ var axis = function() {
   // var axisDelegate = d3.axisBottom();
   // axisDelegate.orient = function() { return 'bottom'; };
 
-  var axisComponent = d3.component()
+  var axisComponent = component()
     .prop('scale')
     .prop('orient')
     .prop('ticks')

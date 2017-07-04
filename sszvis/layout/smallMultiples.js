@@ -52,9 +52,10 @@
  */
 
 import d3 from 'd3';
+import { component } from '../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('width')
     .prop('height')
     .prop('paddingX')

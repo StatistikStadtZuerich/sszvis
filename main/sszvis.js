@@ -37,7 +37,6 @@ function mergeDefaultExport(obj) {
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-import '../vendor/d3-component/d3-component.js';
 import '../vendor/d3-de/d3-de.js';
 import '../vendor/d3-selectgroup/d3-selectgroup.js';
 import '../vendor/d3-selectdiv/d3-selectdiv.js';

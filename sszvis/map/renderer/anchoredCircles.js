@@ -21,11 +21,12 @@ import * as fn from '../../fn.js';
 import transition from '../../transition.js';
 import { getGeoJsonCenter } from '../mapUtils.js';
 import translateString from '../../svgUtils/translateString.js';
+import { component } from '../../d3-component.js';
 
 export default function() {
   var event = d3.dispatch('over', 'out', 'click');
 
-  var component = d3.component()
+  var component = component()
     .prop('mergedData')
     .prop('mapPath')
     .prop('radius', fn.functor)

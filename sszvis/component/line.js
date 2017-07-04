@@ -38,10 +38,11 @@ import d3 from 'd3';
 
 import * as fn from '../fn.js';
 import transition from '../transition.js';
+import { component } from '../d3-component.js';
 
 export default function() {
 
-  return d3.component()
+  return component()
     .prop('x')
     .prop('y')
     .prop('stroke')

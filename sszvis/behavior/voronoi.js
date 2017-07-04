@@ -46,11 +46,12 @@ import d3 from 'd3';
 import * as fn from '../fn.js';
 import * as logger from '../logger.js';
 import { elementFromEvent, datumFromPannableElement } from './util.js';
+import { component } from '../d3-component.js';
 
 export default function() {
   var event = d3.dispatch('over', 'out');
 
-  var voronoiComponent = d3.component()
+  var voronoiComponent = component()
     .prop('x')
     .prop('y')
     .prop('bounds')

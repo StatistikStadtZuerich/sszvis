@@ -29,9 +29,10 @@ import { mapMissingValuePattern } from '../../patterns.js';
 import { slowTransition } from '../../transition.js';
 import tooltipAnchor from '../../annotation/tooltipAnchor.js';
 import { getGeoJsonCenter } from '../mapUtils.js';
+import { component } from '../../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('mergedData')
     .prop('geoJson')
     .prop('mapPath')

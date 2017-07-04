@@ -19,9 +19,10 @@ import d3 from 'd3';
 
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { mapLakePattern, mapLakeFadeGradient, mapLakeGradientMask } from '../../patterns.js';
+import { component } from '../../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('mapPath')
     .prop('lakeFeature')
     .prop('lakeBounds')

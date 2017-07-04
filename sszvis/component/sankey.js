@@ -67,9 +67,10 @@ import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
 import bar from './bar.js';
+import { component } from '../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('sizeScale')
     .prop('columnPosition')
     .prop('nodeThickness')

@@ -46,6 +46,7 @@ import d3 from 'd3';
 import * as fn from '../fn.js';
 import transition from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
+import { component } from '../d3-component.js';
 
 // replaces NaN values with 0
 function handleMissingVal(v) {
@@ -53,7 +54,7 @@ function handleMissingVal(v) {
 }
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('x', fn.functor)
     .prop('y', fn.functor)
     .prop('width', fn.functor)

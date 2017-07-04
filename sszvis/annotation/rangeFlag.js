@@ -21,9 +21,10 @@ import d3 from 'd3';
 import * as fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
+import { component } from '../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('x', fn.functor)
     .prop('y0', fn.functor)
     .prop('y1', fn.functor)

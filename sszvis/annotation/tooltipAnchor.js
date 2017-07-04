@@ -44,10 +44,11 @@ import d3 from 'd3';
 
 import * as fn from '../fn.js';
 import translateString from '../svgUtils/translateString.js';
+import { component } from '../d3-component.js';
 
 export default function() {
 
-  return d3.component()
+  return component()
     .prop('position').position(fn.functor([0, 0]))
     .prop('debug')
     .render(function(data) {

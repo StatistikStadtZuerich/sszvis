@@ -33,11 +33,12 @@ import d3 from 'd3';
 import * as logger from '../logger.js';
 import transition from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
+import { component } from '../d3-component.js';
 
 var TWO_PI = 2 * Math.PI;
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('angleScale').angleScale(d3.scaleLinear().range([0, 2 * Math.PI]))
     .prop('radiusScale')
     .prop('centerRadius')

@@ -19,9 +19,10 @@ import d3 from 'd3';
 
 import * as fn from '../fn.js';
 import * as logger from '../logger.js';
+import { component } from '../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('scale')
     .prop('displayValues').displayValues([])
     .prop('width').width(200)

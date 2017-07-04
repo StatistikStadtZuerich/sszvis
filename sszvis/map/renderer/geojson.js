@@ -29,11 +29,12 @@ import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { mapMissingValuePattern } from '../../patterns.js';
 import { slowTransition } from '../../transition.js';
 import { GEO_KEY_DEFAULT } from '../mapUtils.js';
+import { component } from '../../d3-component.js';
 
 export default function() {
   var event = d3.dispatch('over', 'out', 'click');
 
-  var component = d3.component()
+  var component = component()
     .prop('dataKeyName').dataKeyName(GEO_KEY_DEFAULT)
     .prop('geoJsonKeyName').geoJsonKeyName('id')
     .prop('geoJson')

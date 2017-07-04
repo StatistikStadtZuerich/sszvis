@@ -92,9 +92,10 @@ import d3 from 'd3';
 
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
+import { component } from '../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('scale')
     .prop('rowHeight').rowHeight(21)
     .prop('columnWidth').columnWidth(200)

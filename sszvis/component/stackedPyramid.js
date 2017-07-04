@@ -34,6 +34,7 @@ import * as fn from '../fn.js';
 import cascade from '../cascade.js';
 import transition from '../transition.js';
 import bar from './bar.js';
+import { component } from '../d3-component.js';
 
 /* Constants
 ----------------------------------------------- */
@@ -99,7 +100,7 @@ export function stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc) {
 /* Module
 ----------------------------------------------- */
 export default function() {
-  return d3.component()
+  return component()
     .prop('barHeight', fn.functor)
     .prop('barWidth', fn.functor)
     .prop('barPosition', fn.functor)
@@ -170,7 +171,7 @@ export default function() {
 
 
 function stackComponent() {
-  return d3.component()
+  return component()
     .prop('stackElement')
     .renderSelection(function(selection) {
       var datum = selection.datum();
@@ -197,7 +198,7 @@ function stackComponent() {
 
 
 function lineComponent() {
-  return d3.component()
+  return component()
     .prop('barPosition')
     .prop('barWidth')
     .prop('mirror').mirror(false)

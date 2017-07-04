@@ -30,13 +30,14 @@ import translateString from '../svgUtils/translateString.js';
 import { range } from '../scale.js';
 import move from '../behavior/move.js';
 import * as axisComponent from '../axis.js';
+import { component } from '../d3-component.js';
 
 function contains(x, a) {
   return a.indexOf(x) >= 0;
 }
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('scale')
     .prop('value')
     .prop('onchange')

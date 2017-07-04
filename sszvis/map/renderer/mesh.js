@@ -17,9 +17,10 @@
  */
 
 import d3 from 'd3';
+import { component } from '../../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('geoJson')
     .prop('mapPath')
     .prop('borderColor').borderColor('white') // A function or string for the color of all borders. Note: all borders have the same color

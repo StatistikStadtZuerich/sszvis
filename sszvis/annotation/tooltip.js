@@ -52,6 +52,7 @@
 import d3 from 'd3';
 
 import * as fn from '../fn.js';
+import { component } from '../d3-component.js';
 
 /* Configuration
 ----------------------------------------------- */
@@ -67,7 +68,7 @@ export default function() {
 
   var renderer = tooltipRenderer();
 
-  return d3.component()
+  return component()
     .delegate('header', renderer)
     .delegate('body', renderer)
     .delegate('orientation', renderer)
@@ -120,7 +121,7 @@ export var fit = function(defaultVal, bounds) {
  * @private
  */
 var tooltipRenderer = function() {
-  return d3.component()
+  return component()
     .prop('header')
     .prop('body')
     .prop('orientation', fn.functor).orientation('bottom')

@@ -50,9 +50,10 @@ import d3 from 'd3';
 import * as fn from '../fn.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import translateString from '../svgUtils/translateString.js';
+import { component } from '../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('groupScale')
     .prop('groupSize')
     .prop('groupWidth')

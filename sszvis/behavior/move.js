@@ -49,11 +49,12 @@ import d3 from 'd3';
 
 import * as fn from '../fn.js';
 import { range } from '../scale.js';
+import { component } from '../d3-component.js';
 
 export default function() {
   var event = d3.dispatch('start', 'move', 'drag', 'end');
 
-  var moveComponent = d3.component()
+  var moveComponent = component()
     .prop('debug')
     .prop('xScale')
     .prop('yScale')

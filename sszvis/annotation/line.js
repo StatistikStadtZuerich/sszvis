@@ -25,13 +25,14 @@
 import d3 from 'd3';
 
 import * as fn from '../fn.js';
+import { component } from '../d3-component.js';
 
 // reference line specified in the form y = mx + b
 // user supplies m and b
 // default line is y = x
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('x1')
     .prop('x2')
     .prop('y1')

@@ -34,6 +34,7 @@ import d3 from 'd3';
 import * as fn from '../fn.js';
 import cascade from '../cascade.js';
 import bar from './bar.js';
+import { component } from '../d3-component.js';
 
 var stackAcc = fn.prop('stack');
 
@@ -83,7 +84,7 @@ export var horizontalStackedBarData = stackedBarData(d3.stackOrderNone);
 export var verticalStackedBarData = stackedBarData(d3.stackOrderReverse);
 
 function stackedBar(config) {
-  return d3.component()
+  return component()
     .prop('xScale', fn.functor)
     .prop('width', fn.functor)
     .prop('yScale', fn.functor)

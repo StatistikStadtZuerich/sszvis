@@ -41,11 +41,12 @@ import d3 from 'd3';
 
 import * as fn from '../fn.js';
 import { datumFromPanEvent } from './util.js';
+import { component } from '../d3-component.js';
 
 export default function() {
   var event = d3.dispatch('start', 'pan', 'end');
 
-  var panningComponent = d3.component()
+  var panningComponent = component()
     .prop('elementSelector')
     .render(function() {
       var selection = d3.select(this);

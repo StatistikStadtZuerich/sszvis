@@ -33,6 +33,7 @@ import d3 from 'd3';
 import * as fn from '../fn.js';
 import transition from '../transition.js';
 import bar from './bar.js';
+import { component } from '../d3-component.js';
 
 /* Constants
 ----------------------------------------------- */
@@ -42,7 +43,7 @@ var SPINE_PADDING = 0.5;
 /* Module
 ----------------------------------------------- */
 export default function() {
-  return d3.component()
+  return component()
     .prop('barHeight', fn.functor)
     .prop('barWidth', fn.functor)
     .prop('barPosition', fn.functor)
@@ -108,7 +109,7 @@ export default function() {
 
 
 function lineComponent() {
-  return d3.component()
+  return component()
     .prop('barPosition')
     .prop('barWidth')
     .prop('mirror').mirror(false)

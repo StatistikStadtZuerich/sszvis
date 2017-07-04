@@ -27,9 +27,10 @@
  */
 
 import d3 from 'd3';
+import { component } from '../../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('projection')
     .prop('src')
     .prop('geoBounds')

@@ -20,9 +20,10 @@ import d3 from 'd3';
 
 import * as fn from '../../fn.js';
 import { GEO_KEY_DEFAULT } from '../mapUtils.js';
+import { component } from '../../d3-component.js';
 
 export default function() {
-  return d3.component()
+  return component()
     .prop('keyName').keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
     .prop('geoJson')
     .prop('mapPath')
