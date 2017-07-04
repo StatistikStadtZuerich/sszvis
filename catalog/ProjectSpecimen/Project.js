@@ -89,7 +89,7 @@ export default function ProjectConfigurator(opts) {
           }
           <div style={sourceFiles.length > 1 ? styles.tabBar : null}>
             <a key={'new-window'} style={styles.link} href={index.source} target='_blank'>Open in new tab</a>
-            <a key={'responsive-testbed'} style={styles.link} href={'tools/content_testbed.html?file=' + index.source}>Open in responsive testbed</a>
+            <a key={'responsive-testbed'} style={styles.link} href={'/tools/content_testbed.html?file=' + index.source}>Open in responsive testbed</a>
             <a key={'download'} style={styles.link} href='#' onClick={this.download.bind(this, projectConfig)}>Download as .zip</a>
             <TabbedSourceView
               rootPath={fileUtils.dirname(index.source)}
