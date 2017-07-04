@@ -17,6 +17,14 @@
     "test": "wdio config/wdio.conf.js",
     "build:sszvis": "rollup --config config/rollup/sszvis.js",
     "dist": "npm run build:sszvis",
-    "prepublishOnly": "npm run dist"
+    "prepublishOnly": "npm run dist",
+    "start": "catalog start"
+  },
+  "dependencies": {
+    "catalog": "^3.0.0-rc.3",
+    "d3": "^4.9.1",
+    "jszip": "^3.1.3",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1"
   }
 }
