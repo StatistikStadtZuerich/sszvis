@@ -13,7 +13,7 @@ export function bundle(name) {
   return {
     entry: main(name),
     targets: [
-      { dest: dist(name), format: 'iife' },
+      { dest: dist(name), format: 'umd', moduleName: 'sszvis' },
     ],
     external: ['d3'],
     globals: {
@@ -27,11 +27,12 @@ export function bundleMap(name) {
   return {
     entry: main(name),
     targets: [
-      { dest: dist(name), format: 'iife' },
+      { dest: dist(name), format: 'umd', moduleName: 'sszvis' },
     ],
-    external: ['sszvis'],
+    external: ['d3', 'sszvis'],
     globals: {
       'sszvis': 'sszvis',
+      'd3': 'd3',
     },
   };
 }
