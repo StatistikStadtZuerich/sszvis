@@ -44,12 +44,12 @@ export var axisTimeFormat = function(d) {
  */
 export var month = fn.compose(function(m) {
   return m.toUpperCase();
-}, d3.time.format('%b'));
+}, d3.timeFormat('%b'));
 
 /**
  * A year formatter for date objects. Gives the date's year.
  */
-export var year = d3.time.format('%Y')
+export var year = d3.timeFormat('%Y')
 
 /**
  * Formatter for no label
