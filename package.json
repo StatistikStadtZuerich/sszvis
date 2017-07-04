@@ -8,6 +8,7 @@
     "eslint": "^3.19.0",
     "recursive-readdir-sync": "^1.0.6",
     "rollup": "^0.41.6",
+    "rollup-watch": "^4.0.0",
     "wdio-json-reporter": "^0.2.1",
     "wdio-mocha-framework": "^0.5.10",
     "wdio-visual-regression-service": "^0.8.0",
