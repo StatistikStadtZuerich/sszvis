@@ -4,9 +4,13 @@
  * @module sszvis/format
  */
 
-import {timeFormat, format} from 'd3';
+import {timeFormatLocale, formatLocale} from 'd3';
 
 import * as fn from './fn.js';
+import { locale } from './locale.js';
+
+const timeFormat = timeFormatLocale(locale).format;
+const format = formatLocale(locale).format;
 
 /**
  * Format a number as an age

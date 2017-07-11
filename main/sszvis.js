@@ -21,11 +21,9 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-import '../vendor/d3-de/d3-de.js';
 import '../vendor/d3-selectgroup/d3-selectgroup.js';
 import '../vendor/d3-selectdiv/d3-selectdiv.js';
 // import '../vendor/innerSvg-polyfill/innersvg.js';
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +57,7 @@ export * from '../sszvis/component/index.js';
 export * from '../sszvis/legend/index.js';
 export * from '../sszvis/responsiveProps.js';
 export * from '../sszvis/scale.js';
+export * from '../sszvis/locale.js';
 
 export * from '../sszvis/breakpoint.js';
 export * from '../sszvis/logger.js';

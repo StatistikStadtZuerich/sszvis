@@ -4,7 +4,10 @@
  * @module sszvis/parse
  */
 
-import {timeParse} from 'd3';
+import {timeFormatLocale} from 'd3';
+import { locale } from './locale.js';
+
+const timeParse = timeFormatLocale(locale).parse;
 
 /**
  * Parse Swiss date strings
