@@ -21,10 +21,9 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-import '../vendor/d3-selectgroup/d3-selectgroup.js';
-import '../vendor/d3-selectdiv/d3-selectdiv.js';
-// import '../vendor/innerSvg-polyfill/innersvg.js';
-
+import '../sszvis/polyfills/index.js';
+import '../sszvis/d3-selectgroup.js';
+import '../sszvis/d3-selectdiv.js';
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //

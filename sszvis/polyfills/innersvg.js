@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * innerHTML property for SVGElement
  * Copyright(c) 2010, Jeff Schiller
