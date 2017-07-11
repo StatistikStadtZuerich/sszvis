@@ -5,6 +5,7 @@
 ### Internals
 
 - sszvis_namespace -> *removed*
+- No more setting of default locale, instead locale and localized formatting and parsing functions are exported
 
 ### D3 extensions
 
