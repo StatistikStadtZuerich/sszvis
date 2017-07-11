@@ -42,17 +42,17 @@
  *                                                Event handler functions, excepting end, are passed an x-value and a y-value, which are the data values,
  *                                                computed by inverting the provided xScale and yScale, which correspond to the screen pixel location of the event.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, dispatch, ascending, mouse, touches, event as d3Event} from 'd3';
 
 import * as fn from '../fn.js';
 import { range } from '../scale.js';
 import { component } from '../d3-component.js';
 
 export default function() {
-  var event = d3.dispatch('start', 'move', 'drag', 'end');
+  var event = dispatch('start', 'move', 'drag', 'end');
 
   var moveComponent = component()
     .prop('debug')
@@ -68,11 +68,11 @@ export default function() {
     }).padding({})
     .render(function() {
 
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
-      var xExtent = range(props.xScale).sort(d3.ascending);
-      var yExtent = range(props.yScale).sort(d3.ascending);
+      var xExtent = range(props.xScale).sort(ascending);
+      var yExtent = range(props.yScale).sort(ascending);
 
       xExtent[0] -= props.padding.left;
       xExtent[1] += props.padding.right;
@@ -103,14 +103,14 @@ export default function() {
         })
         .on('mousedown', function() {
           var target = this;
-          var doc = d3.select(document);
-          var win = d3.select(window);
+          var doc = select(document);
+          var win = select(window);
 
           var drag = function() {
-            var xy = d3.mouse(target);
+            var xy = mouse(target);
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
-            d3.event.preventDefault();
+            d3Event.preventDefault();
             event.apply('drag', this, [x, y]);
           };
 
@@ -130,7 +130,7 @@ export default function() {
           win.on('mousemove.sszvis-behavior-move', drag);
           win.on('mouseup.sszvis-behavior-move', stopDragging);
           doc.on('mouseout.sszvis-behavior-move', function() {
-            var from = d3.event.relatedTarget || d3.event.toElement;
+            var from = d3Event.relatedTarget || d3Event.toElement;
             if (!from || from.nodeName === 'HTML') {
               stopDragging();
             }
@@ -140,7 +140,7 @@ export default function() {
         })
         .on('mousemove', function() {
           var target = this;
-          var xy = d3.mouse(this);
+          var xy = mouse(this);
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
 
@@ -152,14 +152,14 @@ export default function() {
           event.apply('end', this, []);
         })
         .on('touchstart', function() {
-          var xy = fn.first(d3.touches(this));
+          var xy = fn.first(touches(this));
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
 
           var cancelScrolling = props.cancelScrolling(x, y);
 
           if (cancelScrolling) {
-            d3.event.preventDefault();
+            d3Event.preventDefault();
           }
 
           // if fireOnPanOnly => cancelScrolling must be true
@@ -180,20 +180,20 @@ export default function() {
             event.apply('move', this, [x, y]);
 
             var pan = function() {
-              var xy = fn.first(d3.touches(this));
-              var x = scaleInvert(props.xScale, xy[0]);
-              var y = scaleInvert(props.yScale, xy[1]);
+              var panXY = fn.first(touches(this));
+              var panX = scaleInvert(props.xScale, panXY[0]);
+              var panY = scaleInvert(props.yScale, panXY[1]);
 
-              var cancelScrolling = props.cancelScrolling(x, y);
+              var panCancelScrolling = props.cancelScrolling(panX, panY);
 
-              if (cancelScrolling) {
-                d3.event.preventDefault();
+              if (panCancelScrolling) {
+                d3Event.preventDefault();
               }
 
               // See comment above about the same if condition.
-              if (!props.fireOnPanOnly() || cancelScrolling) {
-                event.apply('drag', this, [x, y]);
-                event.apply('move', this, [x, y]);
+              if (!props.fireOnPanOnly() || panCancelScrolling) {
+                event.apply('drag', this, [panX, panY]);
+                event.apply('move', this, [panX, panY]);
               } else {
                 event.apply('end', this, []);
               }
@@ -201,12 +201,12 @@ export default function() {
 
             var end = function() {
               event.apply('end', this, []);
-              d3.select(this)
+              select(this)
                 .on('touchmove', null)
                 .on('touchend', null);
             };
 
-            d3.select(this)
+            select(this)
               .on('touchmove', pan)
               .on('touchend', end);
           }

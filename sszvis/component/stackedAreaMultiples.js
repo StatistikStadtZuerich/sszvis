@@ -22,11 +22,11 @@
  *                                            as an array of values. Use this if your layer objects should be treated as something other than
  *                                            arrays of values.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
 
-import d3 from 'd3';
+import {select, area} from 'd3';
 
 import * as fn from '../fn.js';
 import { transition } from '../transition.js';
@@ -43,13 +43,13 @@ export default function() {
     .prop('valuesAccessor').valuesAccessor(fn.identity)
     .prop('transition').transition(true)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       //sszsch why reverse?
       data = data.slice().reverse();
 
-      var areaGen = d3.area()
+      var areaGen = area()
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);

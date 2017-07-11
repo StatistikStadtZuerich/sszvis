@@ -34,7 +34,7 @@
  *
  * chart.selectAll('.sszvis-multiple')
  *   .each(function(d) {
- *     var groupSelection = d3.select(this);
+ *     var groupSelection = select(this);
  *
  *     ... do something which creates a chart using groupSelection ...
  *   });
@@ -48,10 +48,10 @@
  * @property {number} rows            the number of rows to generate
  * @property {number} cols            the number of columns to generate
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 import { component } from '../d3-component.js';
 
 export default function() {
@@ -63,7 +63,7 @@ export default function() {
     .prop('rows')
     .prop('cols')
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;

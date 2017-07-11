@@ -13,10 +13,10 @@
  * @property {Array} highlight                        An array of data elements to highlight. The corresponding map entities are highlighted.
  * @property {String, Function} highlightStroke       A function for the stroke of the highlighted entities
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../../fn.js';
 import { GEO_KEY_DEFAULT } from '../mapUtils.js';
@@ -31,7 +31,7 @@ export default function() {
     .prop('highlightStroke', fn.functor).highlightStroke('white') // a function for highlighted entity stroke colors (default: white)
     .prop('highlightStrokeWidth', fn.functor).highlightStrokeWidth(2)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var highlightBorders = selection

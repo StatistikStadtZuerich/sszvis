@@ -17,10 +17,10 @@
  * @property {Function} fill         The fill function. Takes a datum and should return a fill color for the datum's pixel.
  * @property {Number} opacity        The opacity of the canvas. Defaults to 1
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../../fn.js';
 import { component } from '../../d3-component.js';
@@ -35,7 +35,7 @@ export default function() {
     .prop('fill', fn.functor)
     .prop('opacity').opacity(1)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var canvas = selection.selectAll('.sszvis-map__rasterimage')

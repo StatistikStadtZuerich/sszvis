@@ -18,10 +18,10 @@
  * @property {Number} strokeWidth           The thickness of the strokes of the shapes. Can be a number or a function returning a number. Default 1.25.
  * @property {Boolean} transitionColor      Whether or not to transition the fill color of the geojson when it changes. Default true.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, dispatch, geoCentroid} from 'd3';
 
 import * as fn from '../../fn.js';
 import tooltipAnchor from '../../annotation/tooltipAnchor.js';
@@ -32,9 +32,9 @@ import { GEO_KEY_DEFAULT } from '../mapUtils.js';
 import { component } from '../../d3-component.js';
 
 export default function() {
-  var event = d3.dispatch('over', 'out', 'click');
+  var event = dispatch('over', 'out', 'click');
 
-  var component = component()
+  var geojsonComponent = component()
     .prop('dataKeyName').dataKeyName(GEO_KEY_DEFAULT)
     .prop('geoJsonKeyName').geoJsonKeyName('id')
     .prop('geoJson')
@@ -45,7 +45,7 @@ export default function() {
     .prop('strokeWidth', fn.functor).strokeWidth(1.25)
     .prop('transitionColor').transitionColor(true)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       // render the missing value pattern
@@ -130,7 +130,7 @@ export default function() {
 
           var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
           if (!sphericalCentroid) {
-            d.geoJson.properties.sphericalCentroid = sphericalCentroid = d3.geoCentroid(d.geoJson);
+            d.geoJson.properties.sphericalCentroid = sphericalCentroid = geoCentroid(d.geoJson);
           }
 
           return props.mapPath.projection()(sphericalCentroid);
@@ -143,10 +143,10 @@ export default function() {
       tooltipGroup.call(ta);
     });
 
-  component.on = function() {
+  geojsonComponent.on = function() {
     var value = event.on.apply(event, arguments);
-    return value === event ? component : value;
+    return value === event ? geojsonComponent : value;
   };
 
-  return component;
+  return geojsonComponent;
 };

@@ -12,10 +12,10 @@
  * @property {string, function} stroke          An accessor function or string for the stroke color of the dots.
  * @property {string, function} fill            An accessor function or string for the fill color of the dots.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import { transition } from '../transition.js';
@@ -31,7 +31,7 @@ export default function() {
     .prop('fill')
     .prop('transition').transition(true)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var dots = selection.selectAll('.sszvis-circle')

@@ -42,10 +42,10 @@
  *                                      will be displayed as a faint "x" in the grouped bar chart. This is in order to distinguish bars with
  *                                      missing values from bars with very small values, which would display as a very thin rectangle.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, scaleBand, range} from 'd3';
 
 import * as fn from '../fn.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
@@ -64,11 +64,11 @@ export default function() {
     .prop('stroke')
     .prop('defined', fn.functor).defined(true)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
-      var inGroupScale = d3.scaleBand()
-        .domain(d3.range(props.groupSize))
+      var inGroupScale = scaleBand()
+        .domain(range(props.groupSize))
         .padding(props.groupSpace)
         .paddingOuter(0)
         .rangeRound([0, props.groupWidth]);

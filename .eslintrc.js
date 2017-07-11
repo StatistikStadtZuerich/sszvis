@@ -9,7 +9,8 @@ module.exports = {
         "sourceType": "module"
     },
     "rules": {
-        "no-console": 0,
-        "no-extra-semi": 0,
+        "no-console": "off",
+        "no-extra-semi": "off",
+        "no-shadow": "error"
     },
 };

@@ -26,10 +26,10 @@
  * @property {string} orientation           Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart.
  *                                          Used internally to configure the verticalBar and the horizontalBar. Should probably never be changed.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, stack as d3Stack, max, stackOrderNone, stackOrderReverse} from 'd3';
 
 import * as fn from '../fn.js';
 import { cascade } from '../cascade.js';
@@ -43,10 +43,10 @@ var fst = fn.prop('0');
 var snd = fn.prop('1');
 
 function stackedBarData(order) {
-  return function(stackAcc, seriesAcc, valueAcc) {
+  return function(_stackAcc, seriesAcc, valueAcc) {
     return function(data) {
       var rows = cascade()
-        .arrayBy(stackAcc)
+        .arrayBy(_stackAcc)
         .objectBy(seriesAcc)
         .apply(data);
 
@@ -55,7 +55,7 @@ function stackedBarData(order) {
         return fn.set(a.concat(Object.keys(row)));
       }, []);
 
-      var stacks = d3.stack()
+      var stacks = d3Stack()
         .keys(keys)
         .value(function(x, key) { return valueAcc(x[key][0]); })
         .order(order)(rows);
@@ -65,14 +65,14 @@ function stackedBarData(order) {
         stack.forEach(function(d) {
           d.series = stack.key
           d.data = d.data[stack.key][0];
-          d.stack = stackAcc(d.data);
+          d.stack = _stackAcc(d.data);
         });
       });
 
       stacks.keys = keys;
 
-      stacks.maxValue = d3.max(stacks, function(stack) {
-        return d3.max(stack, function(d) { return d[1]; });
+      stacks.maxValue = max(stacks, function(stack) {
+        return max(stack, function(d) { return d[1]; });
       });
 
       return stacks;
@@ -80,8 +80,8 @@ function stackedBarData(order) {
   };
 }
 
-export var stackedBarHorizontalData = stackedBarData(d3.stackOrderNone);
-export var stackedBarVerticalData = stackedBarData(d3.stackOrderReverse);
+export var stackedBarHorizontalData = stackedBarData(stackOrderNone);
+export var stackedBarVerticalData = stackedBarData(stackOrderReverse);
 
 function stackedBar(config) {
   return component()
@@ -92,7 +92,7 @@ function stackedBar(config) {
     .prop('fill')
     .prop('stroke')
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var barGen = bar()

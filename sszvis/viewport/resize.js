@@ -28,7 +28,7 @@
  * @return {Object}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 // throttles a function to the trailing edge. Copied mostly verbatim from underscore.js
 function throttle(wait, func) {
@@ -70,7 +70,7 @@ var callbacks = {
   resize: []
 };
 
-d3.select(window).on('resize', throttle(500, function() { trigger('resize'); }));
+select(window).on('resize', throttle(500, function() { trigger('resize'); }));
 
 var on = function(name, cb) {
   if (!callbacks[name]) { callbacks[name] = []; }

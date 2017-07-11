@@ -15,10 +15,10 @@
  * @param {number, function} dy       The y-offset of the data area caption.
  * @param {string, function} caption  The caption for the data area. Default position is the center of the circle
  *
- * @returns {d3.component} a circular data area component
+ * @returns {sszvis.component} a circular data area component
  */
 
-import d3 from 'd3';
+import { select } from 'd3';
 
 import * as fn from '../fn.js';
 import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
@@ -34,7 +34,7 @@ export default function() {
     .prop('dy', fn.functor)
     .prop('caption', fn.functor)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       ensureDefsElement(selection, 'pattern', 'data-area-pattern')

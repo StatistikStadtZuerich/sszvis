@@ -4,7 +4,7 @@
  * @module sszvis/map/utils
  */
 
-import d3 from 'd3';
+import {geoMercator, geoPath, geoCentroid} from 'd3';
 
 export var constants = {
   STADT_KREISE_KEY: 'zurichStadtKreise',
@@ -36,7 +36,7 @@ var featureBoundsCache = {};
  * @return {Function}                               The projection function.
  */
 export var swissMapProjection = function(width, height, featureCollection, featureBoundsCacheKey) {
-  var mercatorProjection = d3.geoMercator()
+  var mercatorProjection = geoMercator()
     // .rotate([-7.439583333333333, -46.95240555555556]); // This rotation was, I think, part of the offset problem
 
   var bounds;
@@ -50,7 +50,7 @@ export var swissMapProjection = function(width, height, featureCollection, featu
       .scale(1)
       .translate([0, 0]);
 
-    var boundsGenerator = d3.geoPath()
+    var boundsGenerator = geoPath()
       .projection(mercatorProjection);
 
     bounds = boundsGenerator.bounds(featureCollection);
@@ -73,7 +73,7 @@ export var swissMapProjection = function(width, height, featureCollection, featu
 };
 
 /**
- * This is a special d3.geo.path generator function tailored for rendering maps of
+ * This is a special d3.geoPath generator function tailored for rendering maps of
  * Switzerland. The values are chosen specifically to optimize path generation for
  * Swiss map regions and is not necessarily optimal for displaying other areas of the globe.
  *
@@ -84,12 +84,12 @@ export var swissMapProjection = function(width, height, featureCollection, featu
  *                                            This key should be the same every time the same featureCollection object
  *                                            is passed to this function. If the featureCollection is different, use a different
  *                                            cache key. If provided, this can enable large performance improvements in map rendering.
- * @return {d3.geo.path}                      A path generator function. This function takes a geojson datum as argument
+ * @return {d3.geoPath}                       A path generator function. This function takes a geojson datum as argument
  *                                            and returns an svg path string which represents that geojson, projected using
  *                                            a map projection optimal for Swiss areas.
  */
 export var swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
-  var mercatorPath = d3.geoPath()
+  var mercatorPath = geoPath()
     .projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
 
   return mercatorPath;
@@ -188,7 +188,7 @@ export var getGeoJsonCenter = function(geoJson) {
     if (setCenter) {
       geoJson.properties.cachedCenter = setCenter.split(',').map(parseFloat);
     } else {
-      geoJson.properties.cachedCenter = d3.geoCentroid(geoJson);
+      geoJson.properties.cachedCenter = geoCentroid(geoJson);
     }
   }
 

@@ -25,10 +25,10 @@
  *                                             as an array of values. Use this if your layer objects should be treated as something other than
  *                                             arrays of values.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, area} from 'd3';
 
 import { transition } from '../transition.js';
 import { component } from '../d3-component.js';
@@ -43,10 +43,10 @@ export default function() {
     .prop('key').key(function(d, i){ return i; })
     .prop('transition').transition(true)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
-      var areaGen = d3.area()
+      var areaGen = area()
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);

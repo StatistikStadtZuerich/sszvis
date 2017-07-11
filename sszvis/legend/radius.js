@@ -9,10 +9,10 @@
  * @property {function} [tickFormat]  Formatter function for the labels (default identity)
  * @property {array} [tickValues]     An array of domain values to be used as radii that the legend shows
  *
- * @returns {d3.component}
+ * @returns {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, mean} from 'd3';
 
 import * as fn from '../fn.js';
 import { range } from '../scale.js';
@@ -26,11 +26,11 @@ export default function() {
     .prop('tickFormat').tickFormat(fn.identity)
     .prop('tickValues')
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var domain = props.scale.domain();
-      var tickValues = props.tickValues || [domain[1], props.scale.invert(d3.mean(props.scale.range())), domain[0]];
+      var tickValues = props.tickValues || [domain[1], props.scale.invert(mean(props.scale.range())), domain[0]];
       var maxRadius = range(props.scale)[1];
 
       var group = selection.selectAll('g.sszvis-legend__elementgroup')

@@ -18,10 +18,10 @@
  * @property {number} total                A number to display as the total of the range ruler (at the top)
  * @property {boolean functor} flip        Determines whether the rangeRuler labels should be flipped (they default to the right side)
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import { select } from 'd3';
 
 import * as fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
@@ -39,7 +39,7 @@ export default function() {
     .prop('total')
     .prop('flip', fn.functor).flip(false)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var crispX = fn.compose(halfPixel, props.x);

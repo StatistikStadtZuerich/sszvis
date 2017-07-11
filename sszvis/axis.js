@@ -50,10 +50,10 @@
  * @property {boolean} titleVertical                    whether or not to rotate the title 90 degrees so that it appears vertical, reading from bottom to top. (default: false)
  * @property {boolean} vertical                         whether the axis is a vertical axis. When true, this property changes certain display properties of the axis according to the style guide.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, axisBottom, axisTop, axisLeft, axisRight, extent} from 'd3';
 
 import * as fn from './fn.js';
 import { halfPixel, transformTranslateSubpixelShift } from './svgUtils/crisp.js';
@@ -106,17 +106,17 @@ var axis = function() {
     //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels
     .prop('yOffset').yOffset(0)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var isBottom = !props.vertical && props.orient === 'bottom';
 
       var axisDelegate = (function() {
         switch (props.orient) {
-        case 'bottom': return d3.axisBottom();
-        case 'top': return d3.axisTop();
-        case 'left': return d3.axisLeft();
-        case 'right': return d3.axisRight();
+        case 'bottom': return axisBottom();
+        case 'top': return axisTop();
+        case 'left': return axisLeft();
+        case 'right': return axisRight();
         }
       })();
 
@@ -168,16 +168,16 @@ var axis = function() {
           var subpixelShift = transformTranslateSubpixelShift(this.getAttribute('transform'));
           var dx = halfPixel(0) - subpixelShift[0];
           var dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
-          d3.select(this).select('line')
+          select(this).select('line')
             .attr('transform', translateString(dx, dy));
         });
 
       tickTexts.each(function() {
         if (props.orient === 'top' || props.orient === 'bottom') {
-          d3.select(this).attr('dx', "-0.5");
+          select(this).attr('dx', "-0.5");
         }
         if (props.orient === 'left' || props.orient === 'right') {
-          d3.select(this).attr('y', "-0.5");
+          select(this).attr('y', "-0.5");
         }
       });
 
@@ -191,13 +191,13 @@ var axis = function() {
       tickGroups.selectAll('line')
         .each(function(d) {
           var pos = axisScale(d),
-              d3this = d3.select(this);
+              d3this = select(this);
           d3this
             .classed('hidden', !d3this.classed('sszvis-axis__longtick') && (absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold));
         });
 
       if (fn.defined(props.tickLength)) {
-        var domainExtent = d3.extent(axisScale.domain());
+        var domainExtent = extent(axisScale.domain());
         var ticks = tickGroups
           .filter(function(d) {
             return !fn.stringEqual(d, domainExtent[0]) && !fn.stringEqual(d, domainExtent[1]);
@@ -308,7 +308,7 @@ var axis = function() {
 
           activeBounds.forEach(function(active) {
             passiveBounds.forEach(function(passive) {
-              d3.select(passive.node).classed('hidden', boundsOverlap(passive.bounds, active.bounds));
+              select(passive.node).classed('hidden', boundsOverlap(passive.bounds, active.bounds));
             });
           });
         }
@@ -329,19 +329,19 @@ var axis = function() {
             return d;
           })
           .attr('transform', function() {
-            var orientation = props.orient,
-              extent = range(axisScale),
+            var orient = props.orient,
+              axisScaleExtent = range(axisScale),
               titleProps;
 
             if (props.titleCenter) {
               titleProps = {
-                left: orientation === 'left' || orientation === 'right' ? 0 : orientation === 'top' || orientation === 'bottom' ? (extent[0] + extent[1]) / 2 : 0,
-                top: orientation === 'left' || orientation === 'right' ? (extent[0] + extent[1]) / 2 : orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
+                left: orient === 'left' || orient === 'right' ? 0 : orient === 'top' || orient === 'bottom' ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : 0,
+                top: orient === 'left' || orient === 'right' ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : orient === 'top' ? 0 : orient === 'bottom' ? 32 : 0
               };
             } else {
               titleProps = {
-                left: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? extent[1] : 0,
-                top: orientation === 'left' || orientation === 'right' || orientation === 'top' ? 0 : orientation === 'bottom' ? 32 : 0
+                left: orient === 'left' || orient === 'right' || orient === 'top' ? 0 : orient === 'bottom' ? axisScaleExtent[1] : 0,
+                top: orient === 'left' || orient === 'right' || orient === 'top' ? 0 : orient === 'bottom' ? 32 : 0
               };
             }
 
@@ -351,14 +351,14 @@ var axis = function() {
             return 'translate(' + (titleProps.left) + ', ' + (titleProps.top) + ') rotate(' + (titleProps.vertical ? '-90' : '0') + ')';
           })
           .style('text-anchor', function() {
-            var orientation = props.orient;
+            var orient = props.orient;
             if (typeof props.titleAnchor !== 'undefined') {
               return props.titleAnchor;
-            } else if (orientation === 'left') {
+            } else if (orient === 'left') {
               return 'end';
-            } else if (orientation === 'right') {
+            } else if (orient === 'right') {
               return 'start';
-            } else if (orientation === 'top' || orientation === 'bottom') {
+            } else if (orient === 'top' || orient === 'bottom') {
               return 'end';
             }
           });
@@ -373,11 +373,11 @@ var axis = function() {
         logger.warn('Can\'t apply contour to slanted labels');
       } else if (props.contour) {
         tickGroups.each(function() {
-          var g = d3.select(this);
+          var g = select(this);
           var textNode = g.select('text').node();
           var textContour = g.select('.sszvis-axis__label-contour');
           if (textContour.empty()) {
-            textContour = d3.select(textNode.cloneNode())
+            textContour = select(textNode.cloneNode())
               .classed('sszvis-axis__label-contour', true);
             this.insertBefore(textContour.node(), textNode);
           }
@@ -441,14 +441,14 @@ axisX.pyramid = function() {
     .ticks(10)
     .prop('scale', function(s) {
       var extended = s.copy(),
-        domain = extended.domain(),
-        range = extended.range();
+        extendedDomain = extended.domain(),
+        extendedRange = extended.range();
 
       extended
       // the domain is mirrored - ±domain[1]
-        .domain([-domain[1], domain[1]])
+        .domain([-extendedDomain[1], extendedDomain[1]])
         // the range is mirrored – ±range[1]
-        .range([range[0] - range[1], range[0] + range[1]]);
+        .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
 
       this._scale(extended);
       return extended;

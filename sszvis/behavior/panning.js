@@ -37,19 +37,19 @@
  * @return {d3.component}
  */
 
-import d3 from 'd3';
+import {select, dispatch, event as d3Event} from 'd3';
 
 import * as fn from '../fn.js';
 import { datumFromPanEvent } from './util.js';
 import { component } from '../d3-component.js';
 
 export default function() {
-  var event = d3.dispatch('start', 'pan', 'end');
+  var event = dispatch('start', 'pan', 'end');
 
   var panningComponent = component()
     .prop('elementSelector')
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var elements = selection.selectAll(props.elementSelector);
@@ -67,12 +67,12 @@ export default function() {
           event.apply('end', this, arguments);
         })
         .on('touchstart', function() {
-          d3.event.preventDefault();
+          d3Event.preventDefault();
           event.apply('start', this, arguments);
         })
         .on('touchmove', function() {
-          d3.event.preventDefault();
-          var datum = datumFromPanEvent(fn.firstTouch(d3.event));
+          d3Event.preventDefault();
+          var datum = datumFromPanEvent(fn.firstTouch(d3Event));
           if (datum !== null) {
             event.apply('pan', this, arguments);
           } else {

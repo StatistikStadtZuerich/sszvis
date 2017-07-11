@@ -13,10 +13,10 @@
  * @property {number functor} y0          A value for the y-value of the lower range flag dot
  * @property {number functor} y1          A value for the y-value of the upper range flag dot
  *
- * @returns {d3.component}
+ * @returns {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
@@ -29,7 +29,7 @@ export default function() {
     .prop('y0', fn.functor)
     .prop('y1', fn.functor)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var crispX = fn.compose(halfPixel, props.x);

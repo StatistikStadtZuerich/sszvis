@@ -15,10 +15,10 @@
  * @property {function} change      A callback/event handler function to call when the user clicks on a value.
  *                                  Note that clicking on a value does not necessarily change any state unless this callback function does something.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import { component } from '../d3-component.js';
@@ -30,7 +30,7 @@ export default function() {
     .prop('width').width(300)
     .prop('change').change(fn.identity)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var buttonWidth = props.width / props.values.length;

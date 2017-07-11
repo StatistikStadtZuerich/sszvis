@@ -27,10 +27,10 @@
  *                                        than one label) so that they don't overlap. This can be computationally expensive, when there are
  *                                        many labels that need adjusting. This is turned off by default.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, ascending} from 'd3';
 
 import * as fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
@@ -50,7 +50,7 @@ export default function() {
     .prop('labelId', fn.functor)
     .prop('reduceOverlap').reduceOverlap(false)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var labelId = props.labelId || function(d) { return props.x(d) + '_' + props.y(d) };
@@ -158,7 +158,7 @@ export default function() {
         // Sort array in place by vertical position
         // (only supports labels of same height)
         labelBounds.sort(function(a, b) {
-          return d3.ascending(a.top, b.top);
+          return ascending(a.top, b.top);
         });
 
         // Using postfix decrement means the expression evaluates to the value of the variable
@@ -187,8 +187,8 @@ export default function() {
 
         // Shift vertically to remove overlap
         textSelection.attr('y', function(d) {
-          var label = labelBoundsIndex[labelId(d)];
-          return label.dy;
+          var textLabel = labelBoundsIndex[labelId(d)];
+          return textLabel.dy;
         });
 
       }

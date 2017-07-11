@@ -4,7 +4,7 @@
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
 
-import d3 from 'd3';
+import {nest, hierarchy, partition, min, max} from 'd3';
 
 import * as fn from '../fn.js';
 
@@ -34,7 +34,7 @@ import * as fn from '../fn.js';
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
 export var prepareData = function() {
-  var nester = d3.nest();
+  var nester = nest();
   var valueAcc = fn.identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
   // The default value for this component tries to preserve the order of the input data.
@@ -46,11 +46,11 @@ export var prepareData = function() {
   function main(data) {
     nester.rollup(fn.first);
 
-    var root = d3.hierarchy({ isSunburstRoot: true, values: nester.entries(data) }, fn.prop('values'))
+    var root = hierarchy({ isSunburstRoot: true, values: nester.entries(data) }, fn.prop('values'))
       .sort(sortFn)
       .sum(function(x) { return x.value ? valueAcc(x.value) : 0; });
 
-    d3.partition()(root);
+    partition()(root);
 
     function flatten(node) {
       return [].concat.apply([node], (node.children || []).map(flatten));
@@ -122,7 +122,7 @@ export var computeLayout = function(numLayers, chartWidth) {
  */
 export var getRadiusExtent = function(formattedData) {
   return [
-    d3.min(formattedData, function(d) { return d.y0; }),
-    d3.max(formattedData, function(d) { return d.y1; })
+    min(formattedData, function(d) { return d.y0; }),
+    max(formattedData, function(d) { return d.y1; })
   ];
 };

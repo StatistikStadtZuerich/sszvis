@@ -16,10 +16,10 @@
  *                                            a constant, but that would make for a very strange pie. Ideally, this
  *                                            is a function which takes a data value and returns the angle in radians.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
 */
 
-import d3 from 'd3';
+import {select, arc, interpolate} from 'd3';
 
 import * as fn from '../fn.js';
 import { transition } from '../transition.js';
@@ -33,7 +33,7 @@ export default function() {
     .prop('stroke')
     .prop('angle', fn.functor)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var angle = 0;
@@ -54,7 +54,7 @@ export default function() {
         if (isNaN(value.a1)) value.a1 = angle;
       });
 
-      var arcGen = d3.arc()
+      var arcGen = arc()
         .innerRadius(4)
         .outerRadius(props.radius)
         .startAngle(function(d) { return d.a0; })
@@ -87,8 +87,8 @@ export default function() {
         .call(transition)
         .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
         .attrTween('d', function(d) {
-          var angle0Interp = d3.interpolate(d.a0, d._a0);
-          var angle1Interp = d3.interpolate(d.a1, d._a1);
+          var angle0Interp = interpolate(d.a0, d._a0);
+          var angle1Interp = interpolate(d.a1, d._a1);
           return function(t) {
             d.a0 = angle0Interp(t);
             d.a1 = angle1Interp(t);

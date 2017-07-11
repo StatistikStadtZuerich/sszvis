@@ -41,7 +41,7 @@
  * @function lightGry  1-color scale for shaded backgrounds
  */
 
-import d3 from 'd3';
+import {scaleOrdinal, scaleLinear, hsl, rgb, mean, lab} from 'd3';
 
 /* Constants
 ----------------------------------------------- */
@@ -51,7 +51,7 @@ var LIGHTNESS_STEP = 0.6;
 ----------------------------------------------- */
 function qualColorScale(colors) {
   return function() {
-    var scale = d3.scaleOrdinal().range(colors.map(convertLab));
+    var scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateOrdinalScale(scale);
   };
 }
@@ -83,7 +83,7 @@ export var scaleQual6b = qualColorScale([
 
 function seqColorScale(colors) {
   return function() {
-    var scale = d3.scaleLinear().range(colors.map(convertLab));
+    var scale = scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   }
 }
@@ -96,7 +96,7 @@ export var scaleSeqBrn = seqColorScale(['#E9DFD6', '#A67D5A', '#4C3735']);
 
 function divColorScale(colors) {
   return function() {
-    var scale = d3.scaleLinear().range(colors.map(convertLab));
+    var scale = scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
 }
@@ -109,7 +109,7 @@ export var scaleDivNtrGry = divColorScale( ['#A67D5A', '#F3F3F3', '#4A807C']);
 
 function greyColorScale(colors) {
   return function() {
-    var scale = d3.scaleOrdinal().range(colors.map(convertLab));
+    var scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
 };
@@ -124,15 +124,15 @@ export var scaleDeepGry = greyColorScale(['#545454']);
 
 
 export var slightlyDarker = function(c) {
-  return d3.hsl(c).darker(0.4);
+  return hsl(c).darker(0.4);
 };
 
 export var muchDarker = function(c) {
-  return d3.hsl(c).darker(0.7);
+  return hsl(c).darker(0.7);
 };
 
 export var withAlpha = function(c, a) {
-  var rgbColor = d3.rgb(c);
+  var rgbColor = rgb(c);
   return 'rgba(' + rgbColor.r + ',' + rgbColor.g + ',' + rgbColor.b + ',' + a + ')';
 };
 
@@ -172,7 +172,7 @@ function interpolatedColorScale(scale) {
   var nativeDomain = scale.domain;
   scale.domain = function(dom) {
     if (arguments.length === 1) {
-      var threeDomain = [dom[0], d3.mean(dom), dom[1]];
+      var threeDomain = [dom[0], mean(dom), dom[1]];
       return nativeDomain.call(this, threeDomain);
     } else {
       return nativeDomain.apply(this, arguments);
@@ -185,7 +185,7 @@ function interpolatedColorScale(scale) {
 /* Helper functions
 ----------------------------------------------- */
 function convertLab(d) {
-  return d3.lab(d);
+  return lab(d);
 }
 
 function func(fName) {

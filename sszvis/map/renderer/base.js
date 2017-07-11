@@ -18,10 +18,10 @@
  * @property {String, Function} fill                  A string or function for the fill of the map entities
  * @property {Boolean} transitionColor                Whether or not to transition the fill color of the map entities. (default: true)
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../../fn.js';
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
@@ -40,7 +40,7 @@ export default function() {
     .prop('fill', fn.functor).fill(function() { return 'black'; }) // a function for the entity fill color. default is black
     .prop('transitionColor').transitionColor(true)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       // render the missing value pattern

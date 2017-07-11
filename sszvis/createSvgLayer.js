@@ -20,7 +20,7 @@
  * @returns {d3.selection}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from './fn.js';
 import { bounds as mkBounds } from './bounds.js';
@@ -35,7 +35,7 @@ export function createSvgLayer(selector, bounds, metadata) {
 
   var elementDataKey = 'data-sszvis-svg-' + key;
 
-  var root = fn.isSelection(selector) ? selector : d3.select(selector);
+  var root = fn.isSelection(selector) ? selector : select(selector);
   var svg = root.selectAll('svg[' + elementDataKey + ']').data([0]);
   var svgEnter = svg.enter().append('svg');
 

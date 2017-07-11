@@ -37,10 +37,10 @@
  * @property {function} position A vector of the tooltip's [x, y] coordinates
  * @property {boolean}  debug    Renders a visible tooltip anchor when true
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import translateString from '../svgUtils/translateString.js';
@@ -52,7 +52,7 @@ export default function() {
     .prop('position').position(fn.functor([0, 0]))
     .prop('debug')
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var anchor = selection.selectAll('[data-tooltip-anchor]')

@@ -13,10 +13,10 @@
  * @property {d3.geo.path} mapPath                    A path-generator function used to create the path data string of the provided GeoJson.
  * @property {string, function} borderColor           The color of the border path stroke. Default is white
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 import { component } from '../../d3-component.js';
 
 export default function() {
@@ -26,7 +26,7 @@ export default function() {
     .prop('borderColor').borderColor('white') // A function or string for the color of all borders. Note: all borders have the same color
     .prop('strokeWidth').strokeWidth(1.25)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       // add the map borders. These are rendered as one single path element

@@ -38,10 +38,10 @@
  * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
  *                                            are changed.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import { transition } from '../transition.js';
@@ -65,7 +65,7 @@ export default function() {
     .prop('tooltipAnchor')
     .prop('transition').transition(true)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var xAcc = fn.compose(handleMissingVal, props.x);

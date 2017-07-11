@@ -57,7 +57,7 @@
  *                                                                                      cursorValue and the value accessed from the datum.
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 
@@ -70,7 +70,7 @@ export var elementFromEvent = function(evt) {
 
 export var datumFromPannableElement = function(element) {
   if (!fn.isNull(element)) {
-    var selection = d3.select(element);
+    var selection = select(element);
     if (!fn.isNull(selection.attr('data-sszvis-behavior-pannable'))) {
       var datum = selection.datum();
       if (fn.defined(datum)) {

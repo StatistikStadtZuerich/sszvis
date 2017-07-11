@@ -12,10 +12,10 @@
  * @property {GeoJson} lakeBounds       A GeoJson object which provides data for the shape of map entity borders which lie over the
  *                                      lake. These borders will be drawn over the lake shape, as grey dotted lines.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { mapLakePattern, mapLakeFadeGradient, mapLakeGradientMask } from '../../patterns.js';
@@ -29,7 +29,7 @@ export default function() {
     .prop('lakePathColor')
     .prop('fadeOut').fadeOut(true)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       // the lake texture

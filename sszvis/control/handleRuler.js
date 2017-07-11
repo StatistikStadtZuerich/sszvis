@@ -16,10 +16,10 @@
  * @property {string, function} color       A string or color for the fill color of the ruler dots.
  * @property {boolean, function} flip       A boolean or boolean function which determines whether the ruler should be flipped (they default to the right side)
  *
- * @returns {d3.component}
+ * @returns {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
@@ -36,7 +36,7 @@ export default function() {
     .prop('color')
     .prop('flip', fn.functor).flip(false)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       // Elements need to be placed on half-pixels in order to be rendered

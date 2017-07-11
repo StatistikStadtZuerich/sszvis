@@ -33,11 +33,11 @@
  * @property {number} dy                A number for the y-offset of the tooltip
  * @property {function} opacity         A function or number which determines the opacity of the tooltip. Default is 1.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  *
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import { component } from '../d3-component.js';
@@ -206,7 +206,7 @@ var tooltipRenderer = function() {
       selection.selectAll('.sszvis-tooltip')
         .classed('sszvis-tooltip--small', isSmall)
         .each(function(d) {
-          var tip = d3.select(this);
+          var tip = select(this);
           // only using dimensions.width and dimensions.height here. Not affected by scroll position
           var dimensions = tip.node().getBoundingClientRect();
           var orientation = props.orientation.apply(this, arguments);

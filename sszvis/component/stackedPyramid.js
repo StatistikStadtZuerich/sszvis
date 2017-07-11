@@ -25,10 +25,10 @@
  * @property {function}         [leftRefAccessor]  Reference data for the left side
  * @property {function}         [rightRefAccessor] Reference data for the right side
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, stack as d3Stack, max, line as d3Line} from 'd3';
 
 import * as fn from '../fn.js';
 import { cascade } from '../cascade.js';
@@ -56,18 +56,18 @@ var rowAcc = fn.prop('row');
  * The combination of each distinct (side,row,series) triplet MUST appear only once
  * in the data. This function makes no effort to normalize the data if that's not the case.
  */
-export function stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc) {
+export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
   return function(data) {
     var sides = cascade()
       .arrayBy(sideAcc)
-      .arrayBy(rowAcc)
+      .arrayBy(_rowAcc)
       .objectBy(seriesAcc)
       .apply(data)
       .map(function(rows) {
         var keys = Object.keys(rows[0]);
         var side = sideAcc(rows[0][keys[0]][0]);
 
-        var stacks = d3.stack()
+        var stacks = d3Stack()
           .keys(keys)
           .value(function(x, key) { return valueAcc(x[key][0]); })(rows);
 
@@ -87,9 +87,9 @@ export function stackedPyramidData(sideAcc, rowAcc, seriesAcc, valueAcc) {
 
     // Compute the max value, for convenience. This value is needed to construct
     // the horizontal scale.
-    sides.maxValue = d3.max(sides, function(side) {
-      return d3.max(side, function(rows) {
-        return d3.max(rows, function(row) { return row[1]; });
+    sides.maxValue = max(sides, function(side) {
+      return max(side, function(rows) {
+        return max(rows, function(row) { return row[1]; });
       });
     });
 
@@ -111,7 +111,7 @@ export function stackedPyramid() {
     .prop('leftRefAccessor')
     .prop('rightRefAccessor')
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       // Components
@@ -189,7 +189,7 @@ function stackComponent() {
       stack = stack.merge(newStack);
 
       stack.each(function(d) {
-        d3.select(this)
+        select(this)
           .datum(d)
           .call(props.stackElement);
       });
@@ -203,10 +203,10 @@ function lineComponent() {
     .prop('barWidth')
     .prop('mirror').mirror(false)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
-      var lineGen = d3.line()
+      var lineGen = d3Line()
         .x(props.barWidth)
         .y(props.barPosition);
 

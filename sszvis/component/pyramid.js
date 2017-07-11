@@ -25,10 +25,10 @@
  * @property {function}         [leftRefAccessor]  Reference data for the left side
  * @property {function}         [rightRefAccessor] Reference data for the right side
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, line as d3Line} from 'd3';
 
 import * as fn from '../fn.js';
 import { transition } from '../transition.js';
@@ -54,7 +54,7 @@ export default function() {
     .prop('leftRefAccessor')
     .prop('rightRefAccessor')
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
 
@@ -114,10 +114,10 @@ function lineComponent() {
     .prop('barWidth')
     .prop('mirror').mirror(false)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
-      var lineGen = d3.line()
+      var lineGen = d3Line()
         .x(props.barWidth)
         .y(props.barPosition);
 

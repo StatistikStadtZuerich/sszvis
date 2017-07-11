@@ -15,7 +15,7 @@
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import * as logger from '../logger.js';
@@ -30,7 +30,7 @@ export default function() {
     .prop('labelText')
     .prop('labelFormat').labelFormat(fn.identity)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       if (!props.scale) {

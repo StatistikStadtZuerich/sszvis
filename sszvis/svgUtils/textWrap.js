@@ -20,17 +20,17 @@
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
-export default function(text, width, paddingRightLeft, paddingTopBottom) {
+export default function(selection, width, paddingRightLeft, paddingTopBottom) {
   paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
   paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
   var maxWidth = width; //I store the tooltip max width
   width = width - (paddingRightLeft * 2); //Take the padding into account
 
   var arrLineCreatedCount = [];
-  text.each(function() {
-    var text = d3.select(this);
+  selection.each(function() {
+    var text = select(this);
     var words = text.text().split(/[ \f\n\r\t\v]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
     var word;
     var line = [];
@@ -46,7 +46,7 @@ export default function(text, width, paddingRightLeft, paddingTopBottom) {
     if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
 
     //Offset the text position based on the text-anchor
-    var wrapTickLabels = d3.select(text.node().parentNode).classed('tick'); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
+    var wrapTickLabels = select(text.node().parentNode).classed('tick'); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
     if (wrapTickLabels) {
       switch (textAlign) {
         case 'start':

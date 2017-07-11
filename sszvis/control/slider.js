@@ -19,10 +19,10 @@
  *                                            Note that this component will not change its own state. The callback function must affect some state change
  *                                            in order for this component's display to be updated.
  *
- * @returns {d3.component}
+ * @returns {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, scaleLinear} from 'd3';
 
 import * as fn from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
@@ -46,7 +46,7 @@ export default function() {
     .prop('tickLabels', fn.functor).tickLabels(fn.identity)
     .prop('label', fn.functor).label(fn.identity)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var axisOffset = 28; // vertical offset for the axis
@@ -206,7 +206,7 @@ export default function() {
       var sliderInteraction = move()
         .xScale(props.scale)
         // range goes from the text top (text is 11px tall) to the bottom of the axis
-        .yScale(d3.scaleLinear().range([-11, axisOffset + majorTickSize]))
+        .yScale(scaleLinear().range([-11, axisOffset + majorTickSize]))
         .draggable(true)
         .on('drag', props.onchange);
 

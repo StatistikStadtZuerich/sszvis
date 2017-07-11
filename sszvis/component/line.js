@@ -31,10 +31,10 @@
  *                                       or a function which, when passed the entire array representing the line,
  *                                       returns a value for the stroke-width. The default value is 1.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, line as d3Line} from 'd3';
 
 import * as fn from '../fn.js';
 import { transition } from '../transition.js';
@@ -51,13 +51,13 @@ export default function() {
     .prop('valuesAccessor').valuesAccessor(fn.identity)
     .prop('transition').transition(true)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
 
       // Layouts
 
-      var line = d3.line()
+      var line = d3Line()
         .defined(fn.compose(fn.not(isNaN), props.y))
         .x(props.x)
         .y(props.y);

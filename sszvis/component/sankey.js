@@ -57,10 +57,10 @@
  *                                                   versions should accept a link datum (like the ones passed into linkSourceLabels or linkTargetLabels)
  *                                                   and return text.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, interpolateNumber} from 'd3';
 
 import * as fn from '../fn.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
@@ -91,7 +91,7 @@ export default function() {
     .prop('linkTargetLabels').linkTargetLabels([])
     .prop('linkLabel', fn.functor)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var idAcc = fn.prop('id');
@@ -176,7 +176,7 @@ export default function() {
 
       var linkPath = function(link) {
         var points = linkPoints(link),
-            curveInterp = d3.interpolateNumber(points[0], points[1]),
+            curveInterp = interpolateNumber(points[0], points[1]),
             curveControlPtA = curveInterp(props.linkCurvature),
             curveControlPtB = curveInterp(1 - props.linkCurvature);
 

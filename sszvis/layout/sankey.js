@@ -5,7 +5,7 @@
  * and layout required by the sankey component.
  */
 
-import d3 from 'd3';
+import {ascending, descending, map, sum, min, max} from 'd3';
 
 import * as fn from '../fn.js';
 import * as logger from '../logger.js';
@@ -52,13 +52,13 @@ export var prepareData = function() {
 
   // Helper functions
   var valueAcc = fn.prop('value');
-  var byAscendingValue = function(a, b) { return d3.ascending(valueAcc(a), valueAcc(b)); };
-  var byDescendingValue = function(a, b) { return d3.descending(valueAcc(a), valueAcc(b)); };
+  var byAscendingValue = function(a, b) { return ascending(valueAcc(a), valueAcc(b)); };
+  var byDescendingValue = function(a, b) { return descending(valueAcc(a), valueAcc(b)); };
 
   var valueSortFunc = byDescendingValue;
 
   var main = function(inputData) {
-    var columnIndex = mColumnIds.reduce(function(index, columnIdsList, columnIndex) {
+    var columnIndex = mColumnIds.reduce(function(index, columnIdsList, colIndex) {
       columnIdsList.forEach(function(id) {
         if (index.has(id)) {
           logger.warn('Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:', id, 'The existing value will be overwritten');
@@ -66,7 +66,7 @@ export var prepareData = function() {
 
         var item = {
           id: id,
-          columnIndex: columnIndex, // This is the index of the column containing this node
+          columnIndex: colIndex, // This is the index of the column containing this node
           nodeIndex: 0, // This will be overwritten at a later stage with the index of this node within its column
           value: 0,
           valueOffset: 0,
@@ -78,7 +78,7 @@ export var prepareData = function() {
       });
 
       return index;
-    }, d3.map());
+    }, map());
 
     var listOfLinks = inputData.map(function(datum) {
       var srcId = mGetSource(datum);
@@ -118,8 +118,8 @@ export var prepareData = function() {
 
     // Calculate an array of total values for each column
     var columnTotals = listOfNodes.reduce(function(totals, node) {
-      var fromTotal = d3.sum(node.linksFrom, valueAcc);
-      var toTotal = d3.sum(node.linksTo, valueAcc);
+      var fromTotal = sum(node.linksFrom, valueAcc);
+      var toTotal = sum(node.linksTo, valueAcc);
 
       // For correct visual display, the node's value is the max of the from and to links
       node.value = Math.max(0, fromTotal, toTotal);
@@ -239,7 +239,7 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
   var minDisplayPixels = 1; // Minimum number of pixels used for display area
 
   // Compute the padding value (in pixels) for each column, then take the minimum value
-  var computedPixPadding = d3.min(
+  var computedPixPadding = min(
     columnLengths.map(function(colLength) {
       // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
       var colPadding = (columnHeight * padSpaceRatio) / (colLength - 1);
@@ -251,7 +251,7 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
   // Given the computed padding value, compute each column's resulting "pixels per unit"
   // This is the number of remaining pixels available to display the column's total units,
   // after padding pixels have been subtracted. Then take the minimum value of that.
-  var pixPerUnit = d3.min(
+  var pixPerUnit = min(
     columnLengths.map(function(colLength, colIndex) {
       // The non-padding pixels must have at least minDisplayPixels
       var nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - ((colLength - 1) * computedPixPadding));
@@ -265,11 +265,11 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
   var nodePadding = computedPixPadding;
 
   // The maximum total value of any column
-  var maxTotal = d3.max(columnTotals);
+  var maxTotal = max(columnTotals);
 
   // Compute y-padding required to vertically center each column (in pixels)
   var paddedHeights = columnLengths.map(function(colLength, colIndex) { return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding; });
-  var maxPaddedHeight = d3.max(paddedHeights);
+  var maxPaddedHeight = max(paddedHeights);
   var columnPaddings = columnLengths.map(function(colLength, colIndex) { return (maxPaddedHeight - paddedHeights[colIndex]) / 2; });
 
   // The domain of the size scale

@@ -88,7 +88,7 @@
  */
 
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
@@ -109,7 +109,7 @@ export default function() {
     .prop('floatPadding').floatPadding(20)
     .prop('floatWidth').floatWidth(600)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var domain = props.scale.domain();

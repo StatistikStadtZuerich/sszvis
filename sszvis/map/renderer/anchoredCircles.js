@@ -12,10 +12,10 @@
  * @property {Color, Function} strokeColor          The stroke color of the circles. Can be a function
  * @property {Boolean} transition                   Whether or not to transition the sizes of the circles when data changes. Default true
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select, dispatch} from 'd3';
 
 import * as fn from '../../fn.js';
 import { transition } from '../../transition.js';
@@ -24,9 +24,9 @@ import translateString from '../../svgUtils/translateString.js';
 import { component } from '../../d3-component.js';
 
 export default function() {
-  var event = d3.dispatch('over', 'out', 'click');
+  var event = dispatch('over', 'out', 'click');
 
-  var component = component()
+  var anchoredCirclesComponent = component()
     .prop('mergedData')
     .prop('mapPath')
     .prop('radius', fn.functor)
@@ -35,7 +35,7 @@ export default function() {
     .prop('strokeWidth', fn.functor).strokeWidth(1)
     .prop('transition').transition(true)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var anchoredCircles = selection.selectGroup('anchoredCircles')
@@ -79,10 +79,10 @@ export default function() {
       anchoredCircles.attr('r', function(d) { return props.radius(d.datum); });
     });
 
-  component.on = function() {
+  anchoredCirclesComponent.on = function() {
     var value = event.on.apply(event, arguments);
-    return value === event ? component : value;
+    return value === event ? anchoredCirclesComponent : value;
   };
 
-  return component;
+  return anchoredCirclesComponent;
 };

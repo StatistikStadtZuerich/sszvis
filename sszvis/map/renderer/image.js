@@ -23,10 +23,10 @@
  *                                      projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
  * @property {Number} opacity           The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 import { component } from '../../d3-component.js';
 
 export default function() {
@@ -36,7 +36,7 @@ export default function() {
     .prop('geoBounds')
     .prop('opacity').opacity(1)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var image = selection.selectAll('.sszvis-map__image')

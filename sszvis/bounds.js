@@ -34,7 +34,7 @@
  *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from './fn.js';
 import { aspectRatioAuto } from './aspectRatio.js';
@@ -53,14 +53,14 @@ export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
       selection = arg1;
     } else {
       _bounds = {};
-      selection = d3.select(arg1);
+      selection = select(arg1);
     }
   } else {
     _bounds = arg1;
     if (fn.isSelection(arg2)) {
       selection = arg2;
     } else {
-      selection = d3.select(arg2);
+      selection = select(arg2);
     }
   }
 

@@ -12,11 +12,11 @@
  * @param {number} width                The pixel width of the legend. Default 200
  * @param {function} labelFormat        A formatter function for the labels of the displayValues.
  *
- * @return {d3.component}
+ * @return {sszvis.component}
  */
 
 
-import d3 from 'd3';
+import {select, scaleLinear} from 'd3';
 
 import * as fn from '../fn.js';
 import * as logger from '../logger.js';
@@ -31,7 +31,7 @@ export default function() {
     .prop('width').width(200)
     .prop('labelFormat').labelFormat(fn.identity)
     .render(function() {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       if (!props.scale) return logger.error('legend.binnedColorScale - a scale must be specified.');
@@ -42,7 +42,7 @@ export default function() {
       var circleRad = segHeight / 2;
       var innerRange = [0, props.width - (2 * circleRad)];
 
-      var barWidth = d3.scaleLinear()
+      var barWidth = scaleLinear()
         .domain(props.endpoints)
         .range(innerRange);
       var sum = 0;

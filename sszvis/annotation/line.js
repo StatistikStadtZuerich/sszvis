@@ -19,10 +19,10 @@
  * @param {number} [dx]           The x-offset of the caption
  * @param {number} [dy]           The y-offset of the caption
  * @param {string} [caption]      A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
- * @returns {d3.component} a linear data area component (reference line)
+ * @returns {sszvis.component} a linear data area component (reference line)
  */
 
-import d3 from 'd3';
+import {select} from 'd3';
 
 import * as fn from '../fn.js';
 import { component } from '../d3-component.js';
@@ -43,7 +43,7 @@ export default function() {
     .prop('dy', fn.functor).dy(0)
     .prop('caption', fn.functor)
     .render(function(data) {
-      var selection = d3.select(this);
+      var selection = select(this);
       var props = selection.props();
 
       var x1 = props.xScale(props.x1);
