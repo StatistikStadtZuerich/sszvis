@@ -61,16 +61,9 @@ export * from '../sszvis/locale.js';
 export * from '../sszvis/breakpoint.js';
 export * from '../sszvis/logger.js';
 export * from '../sszvis/patterns.js';
-export * from '../sszvis/map/mapUtils.js';
-export * from '../sszvis/map/projections.js';
-export * from '../sszvis/map/renderer/anchoredCircles.js';
-export * from '../sszvis/map/renderer/base.js';
-export * from '../sszvis/map/renderer/geojson.js';
-export * from '../sszvis/map/renderer/image.js';
-export * from '../sszvis/map/renderer/raster.js';
-export * from '../sszvis/map/renderer/mesh.js';
-export * from '../sszvis/map/renderer/highlight.js';
-export * from '../sszvis/map/renderer/patternedlakeoverlay.js';
+export * from '../sszvis/map/index.js';
 export * from '../sszvis/viewport/resize.js';
+
+export * from '../sszvis/maps/index.js';
 
 // export * from '../sszvis/test.js';

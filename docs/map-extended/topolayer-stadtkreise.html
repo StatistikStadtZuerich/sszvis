@@ -113,7 +113,7 @@
       .height(bounds.innerHeight)
       .borderColor('#545454');
 
-    var projection = sszvis.map.projection.zurichStadtKreise(bounds.innerWidth, bounds.innerHeight);
+    var projection = sszvis.zurichStadtKreiseProjection(bounds.innerWidth, bounds.innerHeight);
 
     // Offset is applied for better alignment with the map data
     var geoOffset = -0.0011;
@@ -121,7 +121,7 @@
     var layerBounds = [[8.431443 + geoOffset, 47.448978 + geoOffset], [8.647471 + geoOffset, 47.309726 + geoOffset]];
 
     // This example uses the map data modules containing base64-encoded clipped data
-    var topoLayer = sszvis.map.renderer.image()
+    var topoLayer = sszvis.mapRendererImage()
       .projection(projection)
       .src(sszvis.map.data.stadtZurichTopoLayerClipped)
       // This map data module contains the same data as if you had done:

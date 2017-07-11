@@ -171,3 +171,36 @@
 - sszvis.patterns.mapLakeFadeGradient -> sszvis.mapLakeFadeGradient
 - sszvis.patterns.mapLakeGradientMask -> sszvis.mapLakeGradientMask
 - sszvis.patterns.dataAreaPattern -> sszvis.dataAreaPattern
+
+### Maps
+
+- sszvis.map.utils.constants.STADT_KREISE_KEY -> sszvis.STADT_KREISE_KEY
+- sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY -> sszvis.STATISTISCHE_QUARTIERE_KEY
+- sszvis.map.utils.constants.STATISTISCHE_ZONEN_KEY -> sszvis.STATISTISCHE_ZONEN_KEY
+- sszvis.map.utils.constants.WAHL_KREISE_KEY -> sszvis.WAHL_KREISE_KEY
+- sszvis.map.utils.constants.AGGLOMERATION_2012_KEY -> sszvis.AGGLOMERATION_2012_KEY
+- sszvis.map.utils.constants.SWITZERLAND_KEY -> sszvis.SWITZERLAND_KEY
+- sszvis.map.utils.GEO_KEY_DEFAULT -> sszvis.GEO_KEY_DEFAULT
+
+- sszvis.map.utils.swissMapProjection -> sszvis.swissMapProjection
+- sszvis.map.utils.swissMapPath -> sszvis.swissMapPath
+- sszvis.map.utils.pixelsFromDistance -> sszvis.pixelsFromGeoDistance
+- sszvis.map.utils.prepareMergedData -> sszvis.prepareMergedGeoData
+- sszvis.map.utils.getGeoJsonCenter -> sszvis.getGeoJsonCenter
+- sszvis.map.utils.widthAdaptiveMapPathStroke -> sszvis.widthAdaptiveMapPathStroke
+
+- sszvis.map.projection.zurichStadtKreise -> sszvis.zurichStadtKreiseProjection
+- sszvis.map.projection.zurichStatistischeQuartiere -> sszvis.zurichStatistischeQuartiereProjection
+- sszvis.map.projection.zurichWahlKreise -> sszvis.zurichWahlKreiseProjection
+- sszvis.map.projection.zurichStatistischeZonen -> sszvis.zurichStatistischeZonenProjection
+- sszvis.map.projection.zurichAgglomeration2012 -> sszvis.zurichAgglomeration2012Projection
+- sszvis.map.projection.switzerland -> sszvis.switzerlandProjection
+
+- sszvis.map.renderer.anchoredCircles -> sszvis.mapRendererAnchoredCircles
+- sszvis.map.renderer.base -> sszvis.mapRendererBase
+- sszvis.map.renderer.geojson -> sszvis.mapRendererGeoJson
+- sszvis.map.renderer.highlight -> sszvis.mapRendererHighlight
+- sszvis.map.renderer.image -> sszvis.mapRendererImage
+- sszvis.map.renderer.mesh -> sszvis.mapRendererMesh
+- sszvis.map.renderer.patternedlakeoverlay -> sszvis.mapRendererPatternedLakeOverlay
+- sszvis.map.renderer.raster -> sszvis.mapRendererRaster

@@ -195,12 +195,12 @@
       // In order to highlight the building shapes, use a subtle grey here
       .borderColor('#545454');
 
-    var projection = sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight);
+    var projection = sszvis.zurichStatistischeQuartiereProjection(bounds.innerWidth, bounds.innerHeight);
 
     var mapPathGen = d3.geoPath()
       .projection(projection);
 
-    var newBuildings = sszvis.map.renderer.geojson()
+    var newBuildings = sszvis.mapRendererGeoJson()
       .dataKeyName('id')
       .geoJsonKeyName('OBJECTID')
       .geoJson(state.buildingsGeoJson)
@@ -218,7 +218,7 @@
 
     var layerBounds = [[8.431443 + geoOffset, 47.448978 + geoOffset], [8.647471 + geoOffset, 47.309726 + geoOffset]];
 
-    var topoLayer = sszvis.map.renderer.image()
+    var topoLayer = sszvis.mapRendererImage()
       .projection(projection)
       .src(sszvis.map.data.stadtZurichTopoLayer)
       // Expects longitude, latitude

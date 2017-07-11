@@ -4,7 +4,7 @@
  * @module sszvis/fn
  */
 
-import {select} from 'd3';
+import {select, map} from 'd3';
 
 /**
  * fn.identity
@@ -504,3 +504,30 @@ export var stringEqual = function(a, b) {
 export var functor = function(v) {
   return typeof v === "function" ? v : function() { return v; };
 };
+
+
+/**
+ * fn.memoize
+ *
+ * Adapted from lodash's memoize() but using d3.map() as cache
+ * See https://lodash.com/docs/4.17.4#memoize
+ */
+export var memoize = function(func, resolver) {
+  if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
+    throw new TypeError('Expected a function');
+  }
+  var memoized = function() {
+    var args = arguments,
+        key = resolver ? resolver.apply(this, args) : args[0],
+        cache = memoized.cache;
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    var result = func.apply(this, args);
+    memoized.cache = cache.set(key, result) || cache;
+    return result;
+  };
+  memoized.cache = map();
+  return memoized;
+}

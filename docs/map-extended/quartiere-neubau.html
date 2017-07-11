@@ -137,9 +137,9 @@
       .borderColor('#7C7C7C');
 
     var mapPathGen = d3.geoPath()
-      .projection(sszvis.map.projection.zurichStatistischeQuartiere(bounds.innerWidth, bounds.innerHeight));
+      .projection(sszvis.zurichStatistischeQuartiereProjection(bounds.innerWidth, bounds.innerHeight));
 
-    var newBuildings = sszvis.map.renderer.geojson()
+    var newBuildings = sszvis.mapRendererGeoJson()
       .dataKeyName('id')
       .geoJsonKeyName('OBJECTID')
       .geoJson(sszvis.map.data.neubausiedlungen)

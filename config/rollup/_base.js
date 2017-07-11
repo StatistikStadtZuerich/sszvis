@@ -17,7 +17,8 @@ export function bundle(name) {
     ],
     external: ['d3'],
     globals: {
-      'd3': 'd3'
+      'd3': 'd3',
+      'topojson': 'topojson'
     },
   };
 }
@@ -29,10 +30,11 @@ export function bundleMap(name) {
     targets: [
       { dest: dist(name), format: 'umd', moduleName: 'sszvis' },
     ],
-    external: ['d3', 'sszvis'],
+    external: ['d3', 'sszvis', 'topojson'],
     globals: {
       'sszvis': 'sszvis',
       'd3': 'd3',
+      'topojson': 'topojson'
     },
   };
 }

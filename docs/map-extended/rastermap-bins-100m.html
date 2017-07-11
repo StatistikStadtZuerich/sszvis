@@ -174,7 +174,7 @@
       .height(bounds.innerHeight)
       .borderColor('#fff');
 
-    var projection = sszvis.map.projection.zurichStadtKreise(bounds.innerWidth, bounds.innerHeight);
+    var projection = sszvis.zurichStadtKreiseProjection(bounds.innerWidth, bounds.innerHeight);
 
     function roundPow10(n, pow10) {
       var divisor = Math.pow(10, pow10);
@@ -189,9 +189,9 @@
     }
 
     var layerBounds = [[8.431443 + geoOffset, 47.448978 + geoOffset], [8.647471 + geoOffset, 47.309726 + geoOffset]];
-    var pixelSide = sszvis.map.utils.pixelsFromDistance(projection, [ (layerBounds[0][0] + layerBounds[1][0]) / 2, (layerBounds[0][1] + layerBounds[1][1]) / 2 ], 100);
+    var pixelSide = sszvis.pixelsFromGeoDistance(projection, [ (layerBounds[0][0] + layerBounds[1][0]) / 2, (layerBounds[0][1] + layerBounds[1][1]) / 2 ], 100);
 
-    var rasterLayer = sszvis.map.renderer.raster()
+    var rasterLayer = sszvis.mapRendererRaster()
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .position(sszvis.compose(projection, getRoundVal))
@@ -199,7 +199,7 @@
       .fill(sszvis.compose(colorScale, kinderAcc))
       .opacity(0.6);
 
-    var topoLayer = sszvis.map.renderer.image()
+    var topoLayer = sszvis.mapRendererImage()
       .projection(projection)
       .src(sszvis.map.data.stadtZurichTopoLayer)
       // Expects longitude, latitude

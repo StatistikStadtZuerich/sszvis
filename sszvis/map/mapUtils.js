@@ -5,21 +5,14 @@
  */
 
 import {geoMercator, geoPath, geoCentroid} from 'd3';
+import {memoize} from '../fn.js';
 
-export var constants = {
-  STADT_KREISE_KEY: 'zurichStadtKreise',
-  STATISTISCHE_QUARTIERE_KEY: 'zurichStatistischeQuartiere',
-  STATISTISCHE_ZONEN_KEY: 'zurichStatistischeZonen',
-  WAHL_KREISE_KEY: 'zurichWahlKreise',
-  AGGLOMERATION_2012_KEY: 'zurichAgglomeration2012',
-  SWITZERLAND_KEY: 'switzerland'
-};
-
-// This is for caching feature bounds calculations, which are pretty expensive.
-// Given the current architecture, you need to pass a featureBoundsCacheKey in order to
-// enable using cached values. If the featureCollection passed to this function changes,
-// a different featureBoundsCacheKey must be used.
-var featureBoundsCache = {};
+export var STADT_KREISE_KEY = 'zurichStadtKreise';
+export var STATISTISCHE_QUARTIERE_KEY = 'zurichStatistischeQuartiere';
+export var STATISTISCHE_ZONEN_KEY = 'zurichStatistischeZonen';
+export var WAHL_KREISE_KEY = 'zurichWahlKreise';
+export var AGGLOMERATION_2012_KEY = 'zurichAgglomeration2012';
+export var SWITZERLAND_KEY = 'switzerland';
 
 /**
  * swissMapProjection
@@ -35,42 +28,19 @@ var featureBoundsCache = {};
  * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
  * @return {Function}                               The projection function.
  */
-export var swissMapProjection = function(width, height, featureCollection, featureBoundsCacheKey) {
-  var mercatorProjection = geoMercator()
-    // .rotate([-7.439583333333333, -46.95240555555556]); // This rotation was, I think, part of the offset problem
+export var swissMapProjection = 
+memoize(
+  function(width, height, featureCollection) {
+    var mercatorProjection = geoMercator()
+      .fitSize([width, height], featureCollection)
 
-  var bounds;
-
-  if (featureBoundsCacheKey && featureBoundsCache[featureBoundsCacheKey]) {
-    // Use cached bounds calculation
-    bounds = featureBoundsCache[featureBoundsCacheKey];
-  } else {
-    // Calculate bounds
-    mercatorProjection
-      .scale(1)
-      .translate([0, 0]);
-
-    var boundsGenerator = geoPath()
-      .projection(mercatorProjection);
-
-    bounds = boundsGenerator.bounds(featureCollection);
-
-    // Cache for later
-    if (featureBoundsCacheKey) {
-      featureBoundsCache[featureBoundsCacheKey] = bounds;
-    }
+    return mercatorProjection;
+  },
+  // Memoize resolver
+  function(width, height, _, featureBoundsCacheKey) {
+    return '' + width + ',' + height + ',' + featureBoundsCacheKey;
   }
-
-  // calculate the scale and translation values from the bounds, width, and height
-  var scale = 1 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height),
-      translation = [(width - scale * (bounds[1][0] + bounds[0][0])) / 2, (height - scale * (bounds[1][1] + bounds[0][1])) / 2];
-
-  mercatorProjection
-    .scale(scale)
-    .translate(translation);
-
-  return mercatorProjection;
-};
+);
 
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
@@ -91,7 +61,6 @@ export var swissMapProjection = function(width, height, featureCollection, featu
 export var swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
   var mercatorPath = geoPath()
     .projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
-
   return mercatorPath;
 };
 
@@ -108,7 +77,7 @@ export var swissMapPath = function(width, height, featureCollection, featureBoun
  *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
  * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
  */
-export var pixelsFromDistance = function(projection, centerPoint, meterDistance) {
+export var pixelsFromGeoDistance = function(projection, centerPoint, meterDistance) {
   // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
   var APPROX_EARTH_RADIUS = 6367475;
@@ -147,7 +116,7 @@ export var GEO_KEY_DEFAULT = 'geoId';
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
-export var prepareMergedData = function(dataset, geoJson, keyName) {
+export var prepareMergedGeoData = function(dataset, geoJson, keyName) {
   keyName || (keyName = GEO_KEY_DEFAULT);
 
   // group the input data by map entity id

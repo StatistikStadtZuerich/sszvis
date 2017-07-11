@@ -2,13 +2,13 @@
 
 > These generators extend the capabilities of the sszvis.map package.
 
-## sszvis.map.renderer.raster
+## sszvis.mapRendererRaster
 
 Used to render a layer of raster data into an HTML layer (a div). Uses a canvas element internally.
 
 ### Data Structure
 
-An array of data objects, where each object represents a single square "pixel" in the raster. You provide a function for computing the position (as an [x, y] pair) of the pixel, one for the fill color of the pixel, and a value for the size of the side of each pixel (sszvis.map.utils.pixelsFromDistance is good for this).
+An array of data objects, where each object represents a single square "pixel" in the raster. You provide a function for computing the position (as an [x, y] pair) of the pixel, one for the fill color of the pixel, and a value for the size of the side of each pixel (sszvis.pixelsFromGeoDistance is good for this).
 
 ### Configuration
 
@@ -34,13 +34,13 @@ The position for each raster pixel. Gets passed the datum and should return an [
 
 #### `renderer.raster.cellSide(sideLength)`
 
-The size (in pixels) of the side of each raster pixel. Raster pixels are all squares, and all have the same side length. sszvis.map.utils.pixelsFromDistance is a good function to use for calculating this pixel length, given a distance in meters and a projection function.
+The size (in pixels) of the side of each raster pixel. Raster pixels are all squares, and all have the same side length. sszvis.pixelsFromGeoDistance is a good function to use for calculating this pixel length, given a distance in meters and a projection function.
 
 #### `renderer.raster.opacity(opacityValue)`
 
 The opacity of the entire layer. The default is 1. Use a lower value to slightly reveal the layers underneath.
 
-## sszvis.map.renderer.geojson
+## sszvis.mapRendererGeoJson
 
 ### Data Structure
 
@@ -84,7 +84,7 @@ The thickness of the strokes of the shapes. Can be a number or a function return
 
 Whether or not to transition the fill color of the geojson when it changes. Default true.
 
-## sszvis.map.renderer.image
+## sszvis.mapRendererImage
 
 ### Data Structure
 
