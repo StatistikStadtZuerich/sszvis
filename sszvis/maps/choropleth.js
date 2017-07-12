@@ -84,10 +84,11 @@ export default function() {
     .prop('keyName').keyName(GEO_KEY_DEFAULT)
     .prop('withLake').withLake(true)
     .prop('anchoredShape')
-    .prop('kreise')
-    .prop('kreiseMesh')
-    .prop('lake')
-    .prop('lakeBounds')
+    .prop('features')
+    .prop('borders')
+    .prop('lakeFeatures')
+    .prop('lakeBorders')
+    .prop('lakeFadeOut').lakeFadeOut(false)
     .delegate('defined', baseRenderer)
     .delegate('fill', baseRenderer)
     .delegate('transitionColor', baseRenderer)
@@ -101,30 +102,31 @@ export default function() {
       var props = selection.props();
 
       // create a map path generator function
-      var mapPath = swissMapPath(props.width, props.height, props.kreise, 'zurichStadtKreise');
+      var mapPath = swissMapPath(props.width, props.height, props.features, 'zurichStadtfeatures');
 
-      var mergedData = prepareMergedGeoData(data, props.kreise, props.keyName);
+      var mergedData = prepareMergedGeoData(data, props.features, props.keyName);
 
       // Base shape
       baseRenderer
-        .geoJson(props.kreise)
+        .geoJson(props.features)
         .mergedData(mergedData)
         .mapPath(mapPath);
 
       // Border mesh
       meshRenderer
-        .geoJson(props.kreiseMesh)
+        .geoJson(props.borders)
         .mapPath(mapPath);
 
       // Lake Zurich shape
       lakeRenderer
-        .lakeFeature(props.lake)
-        .lakeBounds(props.lakeBounds)
-        .mapPath(mapPath);
+        .lakeFeature(props.lakeFeatures)
+        .lakeBounds(props.lakeBorders)
+        .mapPath(mapPath)
+        .fadeOut(props.lakeFadeOut);
 
       // Highlight mesh
       highlightRenderer
-        .geoJson(props.kreise)
+        .geoJson(props.features)
         .keyName(props.keyName)
         .mapPath(mapPath);
 

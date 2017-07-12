@@ -8,11 +8,9 @@
 </head>
 <body style="margin:0;padding:0;">
 <link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
-<script src="../../vendor/topojson/topojson.js"></script>
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="../../sszvis.js"></script>
-<!-- load the map module -->
-<script src="../../map-modules/sszvis-map-zurich-agglomeration-2012.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -56,7 +54,8 @@
    /* Application state
       ----------------------------------------------- */
    var state = {
-     data: [],
+     data: null,
+     mapData: null,
      selection: [],
      valueDomain: [0, 0],
      binEdges: []
@@ -84,6 +83,16 @@
 
        render(state);
      },
+
+    prepareMapData: function(topo) {
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects.agglomeration_2012),
+        borders: topojson.mesh(topo, topo.objects.agglomeration_2012),
+        lakeFeatures: topojson.feature(topo, topo.objects.lakezurich_lakegreifen),
+        lakeBounds: topojson.mesh(topo, topo.objects.lakezurich_lakegreifen),
+      }
+      render(state);
+    },
 
      // manage which datum is selected. These data are highlighted by the map.
      selectHovered: function(d) {
@@ -119,10 +128,25 @@
        actions.prepareState(data);
     });
 
+  d3.json('../../dist/zurich-agglomeration-2012.json')
+  .get(function(error, data) {
+    if (error) {
+      sszvis.loadError(error);
+      return;
+    }
+    actions.prepareMapData(data);
+  });
+
+
 
   /* Render
   ----------------------------------------------- */
   function render(state) {
+    if (state.data === null || state.mapData === null) {
+      // loading ...
+      return true;
+    }
+
     var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
@@ -150,12 +174,16 @@
 
     // Components
 
-    var mapMaker = sszvis.map.zurichAgglomeration2012()
+    var choroplethMap = sszvis.choropleth()
+      .features(state.mapData.features)
+      .borders(state.mapData.borders)
+      .lakeFeatures(state.mapData.lakeFeatures)
+      // .lakeBounds(state.mapData.lakeBounds)
       .highlight(state.selection)
       // gets the fill color and darken it
       .highlightStroke(sszvis.compose(sszvis.muchDarker, colorScale, vAcc))
-      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
-      .highlightStrokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width) + 1)
+      .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
+      .highlightStrokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width) + 1)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.compose(colorScale, vAcc));
@@ -197,7 +225,7 @@
 
     chartLayer
       .attr('transform', sszvis.translateString(bounds.padding.left, bounds.padding.top))
-      .call(mapMaker);
+      .call(choroplethMap);
 
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);

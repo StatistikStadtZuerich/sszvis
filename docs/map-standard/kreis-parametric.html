@@ -8,11 +8,10 @@
 </head>
 <body style="margin:0;padding:0;">
 <link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
-<script src="../../vendor/topojson/topojson.js"></script>
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="../../sszvis.js"></script>
 <!-- load the map module -->
-<script src="../../dist/sszvis-map-zurich-stadtkreise.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -29,6 +28,7 @@
   /* Configuration
   ----------------------------------------------- */
   var config = {
+    topoJsonPath: '../../dist/zurich-stadtkreise-topo.json',
     // The path to the CSV file containing the data for this chart
     dataPath: 'data/M_kreis.csv',
     // The title and description of this chart for visually impaired users
@@ -78,7 +78,8 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: [],
+    data: null,
+    mapData: null,
     selection: [],
     valueDomain: [0, 0]
   };
@@ -94,13 +95,29 @@
       render(state);
     },
 
+    prepareMapData: function(topo) {
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects.stadtkreis),
+        borders: topojson.mesh(topo, topo.objects.stadtkreis),
+        lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
+        lakeBorders: topojson.mesh(topo, topo.objects.stadtkreis_lakebounds),
+      }
+      render(state);
+    },
+
     // manage which datum is selected. These data are highlighted by the map.
     selectHovered: function(d) {
+      if (state.selection[0] === d.datum) {
+        return;
+      }
       state.selection = [d.datum];
       render(state);
     },
 
     deselectHovered: function() {
+      if (state.selection.length === 0) {
+        return;
+      }
       state.selection = [];
       render(state);
     },
@@ -127,11 +144,25 @@
       actions.prepareState(data);
     });
 
+  d3.json(config.topoJsonPath)
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareMapData(data);
+    });
 
   /* Render
   ----------------------------------------------- */
   function render(state) {
-    console.time('render')
+    if (state.data === null || state.mapData === null) {
+      // loading ...
+      return true;
+    }
+
+
+
     var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
@@ -156,7 +187,13 @@
 
     // Components
 
-    var mapMaker = sszvis.zurichStadtKreise()
+    console.log(state.mapData)
+
+    var choroplethMap = sszvis.choropleth()
+      .features(state.mapData.features)
+      .borders(state.mapData.borders)
+      .lakeFeatures(state.mapData.lakeFeatures)
+      .lakeBorders(state.mapData.lakeBorders)
       .highlight(state.selection)
       // gets the fill color and darken it
       .highlightStroke(sszvis.compose(sszvis.muchDarker, colorScale, vAcc))
@@ -188,22 +225,18 @@
       .width(props.legendWidth)
       .labelFormat(config.labelFormat);
 
-
     // Rendering
 
     chartLayer
       .attr('transform', sszvis.translateString(bounds.padding.left, bounds.padding.top))
-      .call(mapMaker);
-
+      .call(choroplethMap);
     if (!config.fallback) {
     chartLayer.selectAll('[data-tooltip-anchor]')
       .call(tooltip);
     }
-
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 60))
       .call(legend);
-
 
     // Interaction
 
@@ -219,7 +252,6 @@
     }
 
     sszvis.viewport.on('resize', actions.resize);
-    console.timeEnd('render')
   }
 
   function isSelected(d) {

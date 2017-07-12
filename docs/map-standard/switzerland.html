@@ -8,11 +8,9 @@
 </head>
 <body style="margin:0;padding:0;">
 <link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
-<script src="../../vendor/topojson/topojson.js"></script>
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="../../sszvis.js"></script>
-<!-- load the map module -->
-<script src="../../map-modules/sszvis-map-switzerland.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -57,7 +55,8 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: [],
+    data: null,
+    mapData: null,
     valueDomain: [0, 0]
   };
 
@@ -69,6 +68,14 @@
       state.data = data;
       state.valueDomain = [0, d3.max(state.data, vAcc)];
 
+      render(state);
+    },
+
+    prepareMapData: function(topo) {
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects.cantons),
+        featuresMesh: topojson.mesh(topo, topo.objects.cantons),
+      }
       render(state);
     },
 
@@ -93,10 +100,24 @@
       actions.prepareState(data);
     });
 
+  d3.json('../../dist/switzerland.json')
+  .get(function(error, data) {
+    if (error) {
+      sszvis.loadError(error);
+      return;
+    }
+    actions.prepareMapData(data);
+  });
+
 
   /* Render
   ----------------------------------------------- */
   function render(state) {
+    if (state.data === null || state.mapData === null) {
+      // loading ...
+      return true;
+    }
+
     var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
@@ -118,7 +139,11 @@
 
     // Components
 
-    var mapMaker = sszvis.map.switzerland()
+    var mapMaker = sszvis.choropleth()
+      .features(state.mapData.features)
+      .featuresMesh(state.mapData.featuresMesh)
+      // .lake(state.mapData.lake)
+      // .lakeBounds(state.mapData.lakeBounds)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.compose(colorScale, vAcc))

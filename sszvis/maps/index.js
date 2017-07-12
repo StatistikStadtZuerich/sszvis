@@ -1,1 +1,1 @@
-export {default as zurichStadtKreise} from './zurichStadtKreise';
+export {default as choropleth} from './choropleth';
