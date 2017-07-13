@@ -154,13 +154,13 @@ export default function() {
 
       selection.selectAll('[data-event-target]')
         .on('mouseover', function(d) {
-          event.over(d.datum);
+          event.call('over', this, d.datum);
         })
         .on('mouseout', function(d) {
-          event.out(d.datum);
+          event.call('out', this, d.datum);
         })
         .on('click', function(d) {
-          event.click(d.datum);
+          event.call('click', this, d.datum);
         });
     });
 
