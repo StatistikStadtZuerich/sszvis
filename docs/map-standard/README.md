@@ -1,29 +1,53 @@
-# Maps
+# Choropleth Maps
 
-> Maps show the geospatial distribution of quantities. When map entities are shaded in proportion to a color value, this is called a "choropleth".
+> Choropleth maps show the geospatial distribution of quantities, shaded in proportion to a color value.
 
-## sszvis.map
-
-Available map generators:
-
-* `sszvis.map.zurichStadtKreise()`
-* `sszvis.map.zurichStatistischeQuartiere()`
-* `sszvis.map.zurichWahlKreise()`
-* `sszvis.map.zurichStatistischeZonen()`
-* `sszvis.map.zurichAgglomeration2012()`
-* `sszvis.map.switzerland()`
+## sszvis.choropleth()
 
 ### Data structure
 
 This chart requires data which can be matched with map entities.
 
+### Preparing geodata
+
+The choropleth map component can be used with arbitrary GeoJSON features. For rendering a map correctly, provide `features` (distinct shapes which can be colored individually), and `borders` (a line mesh which will be overlaid on top of the features). Optionally, you can also provide `lakeFeatures` and `lakeBorders`
+
+Typically, you'll load a file in topojson format and use topojson-client to convert it to GeoJSON features.
+
+For example, you might load a file using `d3.json()` and then extract the features you want:
+
+```code
+lang: js
+---
+d3.json('stadt-zurich.json').get(function(error, topo) {
+    actions.setMapData({
+        features: topojson.feature(topo, topo.objects.wahlkreise),
+        borders: topojson.mesh(topo, topo.objects.wahlkreise),
+        lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
+        lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
+    });
+})
+```
+
 ### Configuration
 
 Maps use d3's excellent geographic projection support to render GeoJSON entities. Data values are then merged with map entities for display. The entities have id values, and the data values should share them. It's possible to configure which property of the data is used for this matching.
 
-#### `map.type(typeString)`
+#### `map.features(geoJsonFeatures)`
 
-The type of the chart. This must be specified and must be one of the following options: "zurich-stadtkreise", "zurich-statistischeQuartiere", "zurich-wahlkreise", "switzerland-cantons".
+A GeoJSON feature collection, created with `topojson.feature()`. For example districts.
+
+#### `map.borders(geoJsonFeatures)`
+
+A GeoJSON line string, created with `topojson.mesh()`. For example district borders.
+
+#### `map.lakeFeatures(geoJsonFeatures)` (optional)
+
+A GeoJSON object, created either with `topojson.feature()` or `topojson.mesh()`. For example lake outlines.
+
+#### `map.lakeBorders(geoJsonFeatures)` (optional)
+
+A GeoJSON line string, created with `topojson.mesh()`. For example district borders which fall within the lake. Will be rendered as a dashed line.
 
 #### `map.keyName([keyString])`
 
@@ -78,9 +102,6 @@ A map of Zürich's Stadtkreise.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js",
-        "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-zurich-stadtkreise.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -99,12 +120,10 @@ A map of Zürich's Wahlkreise.
             "template": "docs/template.html"
         },
         "data.csv": "docs/map-standard/data/M_wahlkreis_fake.csv",
+        "stadt-zurich.json": "dist/topo/stadt-zurich.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js",
-        "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-zurich-wahlkreise.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -123,12 +142,10 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
             "template": "docs/template.html"
         },
         "data.csv": "docs/map-standard/data/S_quartiere.csv",
+        "stadt-zurich.json": "dist/topo/stadt-zurich.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js",
-        "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -147,12 +164,10 @@ A map of the Statistische Quartiere of Zürich, demonstrating the coordination o
             "template": "docs/template.html"
         },
         "data.csv": "docs/map-standard/data/CML_quartier_years.csv",
+        "stadt-zurich.json": "dist/topo/stadt-zurich.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js",
-        "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-zurich-statistischequartiere.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -171,12 +186,10 @@ A map of the "statistical zones" of Zürich
             "template": "docs/template.html"
         },
         "data.csv": "docs/map-standard/data/M_statzone_fake.csv",
+        "stadt-zurich.json": "dist/topo/stadt-zurich.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js",
-        "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -195,12 +208,10 @@ A map of Zürich's agglomeration.
             "template": "docs/template.html"
         },
         "data.csv": "docs/map-standard/data/agglomeration_2012.csv",
+        "agglomeration-zurich.json": "dist/topo/agglomeration-zurich.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js",
-        "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-zurich-agglomeration-2012.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -219,12 +230,10 @@ A map of Switzerland.
             "template": "docs/template.html"
         },
         "data.csv": "docs/map-standard/data/M_swiss_fake.csv",
+        "switzerland.json": "dist/topo/switzerland.json",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "docs/fallback.png",
-        "d3.js": "vendor/d3/d3.min.js",
-        "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-switzerland.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }

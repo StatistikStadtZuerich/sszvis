@@ -86,8 +86,8 @@
 
     prepareMapData: function(topo) {
       state.mapData = {
-        features: topojson.feature(topo, topo.objects.agglomeration_2012),
-        borders: topojson.mesh(topo, topo.objects.agglomeration_2012),
+        features: topojson.feature(topo, topo.objects.agglomeration),
+        borders: topojson.mesh(topo, topo.objects.agglomeration),
         lakeFeatures: topojson.feature(topo, topo.objects.lakezurich_lakegreifen),
         lakeBounds: topojson.mesh(topo, topo.objects.lakezurich_lakegreifen),
       }
@@ -128,7 +128,7 @@
        actions.prepareState(data);
     });
 
-  d3.json('../../dist/zurich-agglomeration-2012.json')
+  d3.json('../../dist/topo/agglomeration-zurich.json')
   .get(function(error, data) {
     if (error) {
       sszvis.loadError(error);

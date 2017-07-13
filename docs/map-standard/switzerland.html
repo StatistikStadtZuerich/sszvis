@@ -74,7 +74,7 @@
     prepareMapData: function(topo) {
       state.mapData = {
         features: topojson.feature(topo, topo.objects.cantons),
-        featuresMesh: topojson.mesh(topo, topo.objects.cantons),
+        borders: topojson.mesh(topo, topo.objects.cantons),
       }
       render(state);
     },
@@ -100,7 +100,7 @@
       actions.prepareState(data);
     });
 
-  d3.json('../../dist/switzerland.json')
+  d3.json('../../dist/topo/switzerland.json')
   .get(function(error, data) {
     if (error) {
       sszvis.loadError(error);
@@ -139,11 +139,9 @@
 
     // Components
 
-    var mapMaker = sszvis.choropleth()
+    var choroplethMap = sszvis.choropleth()
       .features(state.mapData.features)
-      .featuresMesh(state.mapData.featuresMesh)
-      // .lake(state.mapData.lake)
-      // .lakeBounds(state.mapData.lakeBounds)
+      .borders(state.mapData.borders)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(sszvis.compose(colorScale, vAcc))
@@ -159,7 +157,7 @@
 
     chartLayer
       .attr('transform', sszvis.translateString(bounds.padding.left, bounds.padding.top))
-      .call(mapMaker);
+      .call(choroplethMap);
 
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.translateString(bounds.width/2 - props.legendWidth/2, bounds.innerHeight + 25))

@@ -11,7 +11,6 @@
 <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
 <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="../../sszvis.js"></script>
-<!-- load the map module -->
 
 <div id="sszvis-chart"></div>
 
@@ -28,7 +27,6 @@
   /* Configuration
   ----------------------------------------------- */
   var config = {
-    topoJsonPath: '../../dist/zurich-stadtkreise-topo.json',
     // The path to the CSV file containing the data for this chart
     dataPath: 'data/M_kreis.csv',
     // The title and description of this chart for visually impaired users
@@ -97,9 +95,9 @@
 
     prepareMapData: function(topo) {
       state.mapData = {
-        features: topojson.feature(topo, topo.objects.stadtkreis),
-        borders: topojson.mesh(topo, topo.objects.stadtkreis),
-        lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
+        features: topojson.feature(topo, topo.objects.stadtkreise),
+        borders: topojson.mesh(topo, topo.objects.stadtkreise),
+        lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
         lakeBorders: topojson.mesh(topo, topo.objects.stadtkreis_lakebounds),
       }
       render(state);
@@ -144,7 +142,7 @@
       actions.prepareState(data);
     });
 
-  d3.json(config.topoJsonPath)
+  d3.json('../../dist/topo/stadt-zurich.json')
     .get(function(error, data) {
       if (error) {
         sszvis.loadError(error);
@@ -160,8 +158,6 @@
       // loading ...
       return true;
     }
-
-
 
     var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
@@ -186,8 +182,6 @@
 
 
     // Components
-
-    console.log(state.mapData)
 
     var choroplethMap = sszvis.choropleth()
       .features(state.mapData.features)
