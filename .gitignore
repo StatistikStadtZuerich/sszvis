@@ -3,7 +3,6 @@
 .projectile
 .sass-cache
 node_modules
-scripts
 
 dist/
 
