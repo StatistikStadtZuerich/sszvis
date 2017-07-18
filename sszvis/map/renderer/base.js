@@ -49,7 +49,7 @@ export default function() {
 
       // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
       function getMapFill(d) {
-        return fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
+        return props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
       }
 
       var mapAreas = selection.selectAll('.sszvis-map__area')

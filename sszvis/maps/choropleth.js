@@ -97,6 +97,7 @@ export default function() {
     .delegate('highlight', highlightRenderer)
     .delegate('highlightStroke', highlightRenderer)
     .delegate('highlightStrokeWidth', highlightRenderer)
+    .delegate('lakePathColor', lakeRenderer)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();

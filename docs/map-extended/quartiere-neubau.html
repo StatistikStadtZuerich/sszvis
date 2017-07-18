@@ -8,13 +8,9 @@
 </head>
 <body style="margin:0;padding:0;">
 <link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
-<script src="../../vendor/topojson/topojson.js"></script>
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="../../sszvis.js"></script>
-<!-- load the map module -->
-<script src="../../map-modules/sszvis-map-zurich-statistischequartiere.js"></script>
-<script src="../../map-modules/sszvis-map-zurich-neubausiedlungen.js"></script>
-
 <div id="sszvis-chart"></div>
 
 <script data-catalog-project-expose="script.js">
@@ -55,7 +51,9 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: {},
+    data: null,
+    mapData: null,
+    additionalMapData: null,
     selection: [],
     yearRange: [0, 0]
   };
@@ -68,6 +66,23 @@
       state.data = data;
       state.yearRange = d3.extent(data, yearAcc);
 
+      render(state);
+    },
+
+    prepareMapData: function(topo) {
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects.statistische_quartiere),
+        borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
+        lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
+        lakeBorders: topojson.mesh(topo, topo.objects.statistische_quartiere_lakebounds),
+      }
+      render(state);
+    },
+
+    prepareAdditionalMapData: function(geojson) {
+      state.additionalMapData = {
+        features: geojson,
+      }
       render(state);
     },
 
@@ -106,9 +121,33 @@
       actions.prepareData(data);
     });
 
+  d3.json('../../dist/topo/stadt-zurich.json')
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareMapData(data);
+    });
+  
+  d3.json('data/neubausiedlungen.json')
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareAdditionalMapData(data);
+    });
+
+
   /* Render
   ----------------------------------------------- */
   function render(state) {
+    if (state.data === null || state.mapData === null || state.additionalMapData === null) {
+      // loading ...
+      return true;
+    }
+
     var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
@@ -131,19 +170,24 @@
 
     // Components
 
-    var mapMaker = sszvis.map.zurichStatistischeQuartiereBaseMap()
+    var mapMaker = sszvis.choropleth()
+      .features(state.mapData.features)
+      .borders(state.mapData.borders)
+      .lakeFeatures(state.mapData.lakeFeatures)
+      .lakeBorders(state.mapData.lakeBorders)
+      .lakePathColor('#7C7C7C')
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
+      .fill('none')
       .borderColor('#7C7C7C');
 
-    var mapPathGen = d3.geoPath()
-      .projection(sszvis.zurichStatistischeQuartiereProjection(bounds.innerWidth, bounds.innerHeight));
+    var mapPath = sszvis.swissMapPath(bounds.innerWidth, bounds.innerHeight, state.mapData.features, 'zurichStadtfeatures');
 
     var newBuildings = sszvis.mapRendererGeoJson()
       .dataKeyName('id')
       .geoJsonKeyName('OBJECTID')
-      .geoJson(sszvis.map.data.neubausiedlungen)
-      .mapPath(mapPathGen)
+      .geoJson(state.additionalMapData.features)
+      .mapPath(mapPath)
       .defined(sszvis.compose(sszvis.defined, idAcc))
       .fill(sszvis.compose(colorScale, yearAcc))
       .stroke(sszvis.compose(colorScale, yearAcc))
