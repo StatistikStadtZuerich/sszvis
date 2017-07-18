@@ -119,11 +119,12 @@ export var GEO_KEY_DEFAULT = 'geoId';
 export var prepareMergedGeoData = function(dataset, geoJson, keyName) {
   keyName || (keyName = GEO_KEY_DEFAULT);
 
+
   // group the input data by map entity id
-  var groupedInputData = dataset.reduce(function(m, v) {
+  var groupedInputData = Array.isArray(dataset) ? dataset.reduce(function(m, v) {
     m[v[keyName]] = v;
     return m;
-  }, {});
+  }, {}) : {} ;
 
   // merge the map features and the input data into new objects that include both
   var mergedData = geoJson.features.map(function(feature) {
