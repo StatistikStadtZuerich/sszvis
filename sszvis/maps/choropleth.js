@@ -130,15 +130,6 @@ export default function() {
         .keyName(props.keyName)
         .mapPath(mapPath);
 
-      if (props.anchoredShape) {
-        props.anchoredShape
-          .mergedData(mergedData)
-          .mapPath(mapPath);
-
-        selection.call(props.anchoredShape);
-      }
-
-
       // Rendering
 
       selection.call(baseRenderer).call(meshRenderer);
@@ -148,6 +139,14 @@ export default function() {
       }
 
       selection.call(highlightRenderer);
+
+      if (props.anchoredShape) {
+        props.anchoredShape
+          .mergedData(mergedData)
+          .mapPath(mapPath);
+
+        selection.call(props.anchoredShape);
+      }
 
 
       // Event Binding

@@ -8,12 +8,10 @@
 </head>
 <body style="margin:0;padding:0;">
 <link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
-<script src="../../vendor/topojson/topojson.js"></script>
+<link href='../../sszvis.css' rel='stylesheet' />
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="../../sszvis.js"></script>
-<!-- load the map module -->
-<script src="../../map-modules/sszvis-map-zurich-statistischezonen.js"></script>
-
 <div id="sszvis-chart"></div>
 
 <script data-catalog-project-expose="script.js">
@@ -80,7 +78,8 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: [],
+    data: null,
+    mapData: null,
     filteredData: [],
     selection: [],
     currentFilter: 'Weiblich 1993',
@@ -95,6 +94,14 @@
       state.birthsRange = [0, d3.max(state.data, birthsAcc)];
 
       actions.setFilter(state.currentFilter);
+    },
+
+    prepareMapData: function(topo) {
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects.statistische_zonen),
+        borders: topojson.mesh(topo, topo.objects.statistische_zonen),
+      }
+      render(state);
     },
 
     setFilter: function(filterValue) {
@@ -144,9 +151,23 @@
       actions.prepareData(data);
     });
 
+  d3.json('../../dist/topo/stadt-zurich.json')
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareMapData(data);
+    });
+
   /* Render
   ----------------------------------------------- */
   function render(state) {
+    if (state.data === null || state.mapData === null) {
+      // loading ...
+      return true;
+    }
+
     var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
@@ -177,17 +198,19 @@
 
     // Components
 
-    var anchoredShape = sszvis.map.anchoredCircles()
+    var anchoredShape = sszvis.mapRendererAnchoredCircles()
       .fill('rgb(81, 130, 179)')
       .radius(function(d) { return !sszvis.defined(d) ? 0 : radiusScale(birthsAcc(d)); })
-      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width));
+      .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
-    var mapMaker = sszvis.map.zurichStatistischeZonen()
+    var choroplethMap = sszvis.choropleth()
+      .features(state.mapData.features)
+      .borders(state.mapData.borders)
       .keyName('id')
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
       .fill(function(d) { return isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0) })
-      .strokeWidth(sszvis.map.utils.widthAdaptiveMapPathStroke(bounds.width))
+      .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
       .transitionColor(false)
       .anchoredShape(anchoredShape);
 
@@ -216,7 +239,7 @@
 
     // Rendering
 
-    chartLayer.call(mapMaker);
+    chartLayer.call(choroplethMap);
 
     chartLayer.selectGroup('radiusLegend')
       .attr('transform', sszvis.translateString(props.legendX, bounds.innerHeight - 65))
@@ -234,7 +257,7 @@
     // Interaction
 
     var interactionLayer = sszvis.panning()
-      .elementSelector('.sszvis-map__area, .sszvis-anchored-circle')
+      .elementSelector('.sszvis-map__area--entering, .sszvis-anchored-circle--entering')
       .on('start', actions.selectHovered)
       .on('pan', actions.selectHovered)
       .on('end', actions.deselectHovered);

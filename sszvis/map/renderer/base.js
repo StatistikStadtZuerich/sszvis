@@ -59,8 +59,12 @@ export default function() {
       var newMapAreas = mapAreas.enter()
         .append('path')
         .classed('sszvis-map__area', true)
+        .classed('sszvis-map__area--entering', true)
         .attr('data-event-target', '')
         .attr('fill', getMapFill);
+
+      mapAreas
+        .classed('sszvis-map__area--entering', false)
 
       mapAreas.exit().remove();
 
