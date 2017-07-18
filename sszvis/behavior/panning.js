@@ -57,13 +57,13 @@ export default function() {
       elements
         .attr('data-sszvis-behavior-pannable', '')
         .classed('sszvis-interactive', true)
-        .on('mouseover', function() {
+        .on('mouseenter', function() {
           event.apply('start', this, arguments);
         })
         .on('mousemove', function() {
           event.apply('pan', this, arguments);
         })
-        .on('mouseout', function() {
+        .on('mouseleave', function() {
           event.apply('end', this, arguments);
         })
         .on('touchstart', function() {
