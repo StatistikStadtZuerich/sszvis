@@ -34,7 +34,7 @@ geo2topo -q 1e3 -n \
 		ndjson-cat geodata/statistische_zonen.json \
 		| ndjson-split 'd.features' \
 		| ndjson-map 'd.id = d.properties.Zonennummer, d' \
-		| ndjson-reduce 'p[d.id] = d, p' '{}' | ndjson-split 'Object.values(d)' \ # De-duplicate features; they appear twice in the source GeoJSON file
+		| ndjson-reduce 'p[d.id] = d, p' '{}' | ndjson-split 'Object.values(d)' \
 		) \
   statistische_quartiere=<(\
 		ndjson-join --left 'd.id' 'd.Quartiernummer' \
