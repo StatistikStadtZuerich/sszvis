@@ -181,7 +181,7 @@
 
   function monthName(month) {
     var date = new Date(null, month - 1);
-    return d3.time.format('%b')(date);
+    return d3.timeFormat('%b')(date);
   }
 
 

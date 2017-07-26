@@ -113,8 +113,6 @@
       .paddingOuter(0.30)
       .rangeRound([0, bounds.innerWidth]);
 
-    console.log(xScale.bandwidth());
-
     var yScale = d3.scaleLinear()
       .domain([0, d3.max(state.data, yAcc)])
       .range([bounds.innerHeight, 0]);
@@ -164,8 +162,6 @@
 
 
     // Rendering
-
-    console.log(chartLayer.selectGroup('bars'));
 
     chartLayer.selectGroup('bars')
       .call(barLayout);
