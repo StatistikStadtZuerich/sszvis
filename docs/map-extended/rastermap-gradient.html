@@ -8,12 +8,9 @@
 </head>
 <body style="margin:0;padding:0;">
 <link href='../../sszvis.css' rel='stylesheet' />
-<script src="../../vendor/d3/d3.min.js"></script>
-<script src="../../vendor/topojson/topojson.js"></script>
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="../../sszvis.js"></script>
-<!-- load the map module -->
-<script src="../../map-modules/sszvis-map-zurich-stadtkreise.js"></script>
-<script src="../../map-modules/sszvis-map-zurich-topolayer.js"></script>
 
 <div id="sszvis-chart"></div>
 
@@ -88,7 +85,8 @@
   /* Application state
   ----------------------------------------------- */
   var state = {
-    data: {},
+    data: null,
+    mapData: null,
     valueDomain: [0, 0]
   };
 
@@ -100,6 +98,16 @@
       state.data = data;
       state.valueDomain = d3.extent(data, valAcc);
 
+      render(state);
+    },
+
+    prepareMapData: function(topo) {
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects.stadtkreise),
+        borders: topojson.mesh(topo, topo.objects.stadtkreise),
+        lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
+        lakeBorders: topojson.mesh(topo, topo.objects.stadtkreis_lakebounds),
+      }
       render(state);
     },
 
@@ -125,10 +133,24 @@
       actions.prepareData(data);
     });
 
+  d3.json('../../dist/topo/stadt-zurich.json')
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareMapData(data);
+    });
+
 
   /* Render
   ----------------------------------------------- */
   function render(state) {
+    if (state.data === null || state.mapData === null) {
+      // loading ...
+      return true;
+    }
+
     var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
     var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
 
@@ -164,12 +186,20 @@
 
     // Components
 
-    var mapMaker = sszvis.map.zurichStadtKreiseBaseMap()
+    var choroplethMap = sszvis.choropleth()
+      .features(state.mapData.features)
+      .borders(state.mapData.borders)
+      .lakeFeatures(state.mapData.lakeFeatures)
+      .lakeBorders(state.mapData.lakeBorders)
+      .lakeFadeOut(true)
       .width(bounds.innerWidth)
       .height(bounds.innerHeight)
-      .borderColor('#545454');
+      .fill('none')
+      .borderColor('#545454')
+      .lakePathColor('#545454');
 
-    var projection = sszvis.zurichStadtKreiseProjection(bounds.innerWidth, bounds.innerHeight);
+    var mapPath = sszvis.swissMapPath(bounds.innerWidth, bounds.innerHeight, state.mapData.features, 'zurichStadtfeatures');
+    var projection = mapPath.projection();
 
     function roundPow10(n, pow10) {
       var divisor = Math.pow(10, pow10);
@@ -199,7 +229,7 @@
 
     var topoLayer = sszvis.mapRendererImage()
       .projection(projection)
-      .src(sszvis.map.data.stadtZurichTopoLayer)
+      .src('data/topo_layer_280915.png')
       // Expects longitude, latitude
       .geoBounds(layerBounds)
       .opacity(0.4);
@@ -244,7 +274,7 @@
 
     htmlLayer.call(rasterLayer);
 
-    chartLayer.call(mapMaker);
+    chartLayer.call(choroplethMap);
 
     chartLayer.selectGroup('legend')
       .attr('transform', sszvis.translateString((bounds.innerWidth - props.legendWidth) / 2, bounds.innerHeight + bounds.padding.bottom - 40))

@@ -155,8 +155,6 @@
     var topoLayer = sszvis.mapRendererImage()
       .projection(projection)
       .src('data/topo_layer_280915-test-clipped.png')
-      // This map data module contains the same data as if you had done:
-      // .src('data/topo_layer_280915-test-clipped.png')
       // Expects longitude, latitude
       .geoBounds(layerBounds)
       .opacity(0.80);
