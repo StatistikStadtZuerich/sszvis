@@ -21,8 +21,7 @@
   "scripts": {
     "lint": "eslint sszvis",
     "test": "wdio config/wdio.conf.js",
-    "build:sszvis": "rollup --config config/rollup/sszvis.js",
-    "build:map": "rollup --config config/rollup/sszvis-map-zurich-stadtkreise.js",
+    "build:sszvis": "rollup --config config/rollup.config.js",
     "dist": "npm run build:sszvis",
     "prepublishOnly": "npm run dist",
     "start": "catalog start -p 8000",
