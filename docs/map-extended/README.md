@@ -12,31 +12,31 @@ An array of data objects, where each object represents a single square "pixel" i
 
 ### Configuration
 
-#### `renderer.raster.debug(isDebug)`
+#### `mapRendererRaster.debug(isDebug)`
 
 Pass true to this option to enable "debug" mode. This draws a large red rectangle over the entire canvas. Use this for gauging alignment of the raster layer with other map layers.
 
-#### `renderer.raster.width(width)`
+#### `mapRendererRaster.width(width)`
 
 Use this to set the width of the canvas to be used
 
-#### `renderer.raster.height(height)`
+#### `mapRendererRaster.height(height)`
 
 Use this to set the height of the canvas to be used
 
-#### `renderer.raster.fill(fillFunc)`
+#### `mapRendererRaster.fill(fillFunc)`
 
 A fill function for each raster pixel. Gets passed the data value for that pixel, and should return a color.
 
-#### `renderer.raster.position(positionFunc)`
+#### `mapRendererRaster.position(positionFunc)`
 
 The position for each raster pixel. Gets passed the datum and should return an [x, y] position. This function usually involves a map projection.
 
-#### `renderer.raster.cellSide(sideLength)`
+#### `mapRendererRaster.cellSide(sideLength)`
 
 The size (in pixels) of the side of each raster pixel. Raster pixels are all squares, and all have the same side length. sszvis.pixelsFromGeoDistance is a good function to use for calculating this pixel length, given a distance in meters and a projection function.
 
-#### `renderer.raster.opacity(opacityValue)`
+#### `mapRendererRaster.opacity(opacityValue)`
 
 The opacity of the entire layer. The default is 1. Use a lower value to slightly reveal the layers underneath.
 
@@ -48,39 +48,39 @@ Takes the same data as the map module components. That is, an array of data obje
 
 ### Configuration
 
-#### `renderer.geojson.dataKeyName`
+#### `mapRendererGeoJson.dataKeyName`
 
 The keyname in the data which will be used to match data entities with geographic entities. Default 'geoId'.
 
-#### `renderer.geojson.geoJsonKeyName`
+#### `mapRendererGeoJson.geoJsonKeyName`
 
 The keyname in the GeoJson (should be in the `properties` object of each feature in the GeoJson) which will be used to match map entities with data entities. Default 'id'.
 
-#### `renderer.geojson.geoJson`
+#### `mapRendererGeoJson.geoJson`
 
 The GeoJson object which should be rendered. Needs to have a 'features' property that is an array of features to render. And each feature should have a `properties` object which contains the id to match with a data element.
 
-#### `renderer.geojson.mapPath`
+#### `mapRendererGeoJson.mapPath`
 
 A path generator for drawing the GeoJson as SVG Path elements.
 
-#### `renderer.geojson.defined`
+#### `mapRendererGeoJson.defined`
 
 A function which, when given a data value, returns whether or not data in that value is defined.
 
-#### `renderer.geojson.fill`
+#### `mapRendererGeoJson.fill`
 
 A function that returns a string, or a string, for the fill color of the GeoJson entities. Default black.
 
-#### `renderer.geojson.stroke`
+#### `mapRendererGeoJson.stroke`
 
 The stroke color of the entities. Can be a string or a function returning a string. Default black.
 
-#### `renderer.geojson.strokeWidth`
+#### `mapRendererGeoJson.strokeWidth`
 
 The thickness of the strokes of the shapes. Can be a number or a function returning a number. Default 1.25.
 
-#### `renderer.geojson.transitionColor`
+#### `mapRendererGeoJson.transitionColor`
 
 Whether or not to transition the fill color of the geojson when it changes. Default true.
 
@@ -92,15 +92,15 @@ This layer doesn't require any data. It renders the image provided by the .src p
 
 ### Configuration
 
-#### `renderer.raster.projection`
+#### `mapRendererImage.projection`
 
 The map projection function used to position the image in pixels. Uses the upper left and lower right corners of the image as geographical place markers to align with other map layers.
 
-#### `renderer.raster.src`
+#### `mapRendererImage.src`
 
 The source of the image you want to use. This should be ither a URL for an image hosted on the same server that hosts the page, or a base64-encoded dataURL. For example, the zurich topolayer map module.
 
-#### `renderer.raster.geoBounds`
+#### `mapRendererImage.geoBounds`
 
 This should be a 2D array containing the upper-left (north-west) and lower-right (south-east) coordinates of the corresponding corners of the image. The structure expected is:
 
@@ -108,7 +108,7 @@ This should be a 2D array containing the upper-left (north-west) and lower-right
 
 This is consistent with the way D3 handles similar geographic data. These coordinates are used to represent the edge of the image being used, and to align the image with other map layers (using the projection function). Note: it is possible that even with precise corner coordinates, some mismatch may still occur. This will happen if the image itself is generated using a different type of map projection than the one used by the projection function. SSZVIS uses a Mercator projection by default, but others from d3.geo can be used if desired.
 
-#### `renderer.raster.opacity`
+#### `mapRendererImage.opacity`
 
 The opacity of the resulting image layer. This will be applied to the entire image, and is sometimes useful when layering.
 

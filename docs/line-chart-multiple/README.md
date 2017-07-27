@@ -10,7 +10,7 @@ This chart requires at least two variables that can be plotted on the y-axis and
 
 ### Configuration
 
-The multiple line chart uses the same components as the [single line chart](/#/line-chart-single) and thus has the same configuration options.
+The multiple line chart uses the same components as the [single line chart](line-chart-single) and thus has the same configuration options.
 
 ### Chart
 

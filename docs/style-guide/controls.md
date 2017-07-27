@@ -54,19 +54,19 @@ A callback/event handler function to call when the user clicks on a value. Note 
 This control is part of the `optionSelectable` class of controls and can be used interchangeably with other controls of this class (sszvis.buttonGroup).
 ```
 
-#### `select.values`
+#### `selectMenu.values`
 
 an array of values which are the options available in the control.
 
-#### `select.current`
+#### `selectMenu.current`
 
 the currently selected value of the select control. Should be one of the options passed to .values()
 
-#### `select.[width]`
+#### `selectMenu.[width]`
 
 The total width of the select control. If text labels exceed this width they will be trimmed to fit using an ellipsis mark. (default: 300px)
 
-#### `select.change`
+#### `selectMenu.change`
 
 A callback/event handler function to call when the user clicks on a value. Note that clicking on a value does not necessarily change any state unless this callback function does something.
 

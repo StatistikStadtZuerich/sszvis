@@ -8,16 +8,16 @@ Often, the scales they represent are continuous linear transformations, but not 
 
 Axis labels can be formatted very flexibly. A combination of `ticks`/`tickValues` and `tickFormat` is needed. The former to define how many and which ticks should be displayed, the latter to define what should be displayed. The documentation can be found here:
 
-* https://github.com/mbostock/d3/wiki/SVG-Axes#ticks
-* https://github.com/mbostock/d3/wiki/SVG-Axes#tickValues
-* https://github.com/mbostock/d3/wiki/SVG-Axes#tickFormat
+* https://github.com/d3/d3-axis/blob/master/README.md#axis_ticks
+* https://github.com/d3/d3-axis/blob/master/README.md#axis_tickValues
+* https://github.com/d3/d3-axis/blob/master/README.md#axis_tickFormat
 
 There are also corresponding functions for date/time scales:
 
-* https://github.com/mbostock/d3/wiki/Time-Scales#tickFormat
-* https://github.com/mbostock/d3/wiki/Time-Scales#ticks
+* https://github.com/d3/d3-scale/blob/master/README.md#time_ticks
+* https://github.com/d3/d3-scale/blob/master/README.md#time_tickFormat
 
-Custom time formats can be defined using [d3.time.format.multi](http://bl.ocks.org/mbostock/4149176)
+Custom time formats can be defined using [d3.timeFormat](https://github.com/d3/d3-time-format/blob/master/README.md#d3-time-format)
 
 ## X-axis
 

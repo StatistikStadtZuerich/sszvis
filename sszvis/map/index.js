@@ -1,6 +1,6 @@
 export * from './mapUtils.js';
 export * from './projections.js';
-export {default as mapRendererAnchoredCircles} from './renderer/anchoredCircles.js';
+export {default as mapRendererBubble} from './renderer/bubble.js';
 export {default as mapRendererBase} from './renderer/base.js';
 export {default as mapRendererGeoJson} from './renderer/geojson.js';
 export {default as mapRendererHighlight} from './renderer/highlight.js';

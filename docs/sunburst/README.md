@@ -10,23 +10,23 @@ That function can then be used to compute an array of data values, where each da
 
 ### Configuration
 
-#### `sankey.angleScale`
+#### `sunburst.angleScale`
 
 Scale function for the angle of the segments of the sunburst chart. Has a sensible default.
 
-#### `sankey.radiusScale`
+#### `sunburst.radiusScale`
 
 Scale function for the radius of segments. Can be configured using values returned from sszvis.sunburstLayout. See the examples for how.
 
-#### `sankey.centerRadius`
+#### `sunburst.centerRadius`
 
 The radius of the center of the chart. Can be configured with sszvis.sunburstLayout.
 
-#### `sankey.fill`
+#### `sunburst.fill`
 
 Function that returns the fill color for the segments in the center of the chart.
 
-#### `sankey.stroke`
+#### `sunburst.stroke`
 
 The stroke color of the segments. Defaults to white.
 

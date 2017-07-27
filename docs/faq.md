@@ -112,7 +112,7 @@ Furthermore, [BrowserSync](http://www.browsersync.io/) is useful for testing acr
 
 ### Updating
 
-The code currently depends on d3.js version 3.4.11 and topojson 1.6.18. You should be able to update both libraries without problems unless there are major API changes. No changes have been made to their source files.
+The code currently depends on d3.js version 4.x and topojson 3.x. You should be able to update both libraries without problems unless there are major API changes. No changes have been made to their source files.
 
 ### Strict Mode
 
@@ -130,8 +130,7 @@ var MyClass = function() {};    // CamelCased class names
 var myVariable = 3 * x;         // lowerCamelCased variable names
 var __privateVariable__ = 3;
 
-sszvis.myNamespace.myModule();  // Namespaces
-sszvis.stackedBarChart();       // d3 components
+sszvis.stackedBarHorizontal();       // d3 components
 
 var a = 3; // One var statement per variable unless another
 var b = 4; // notation is much clearer in the given context

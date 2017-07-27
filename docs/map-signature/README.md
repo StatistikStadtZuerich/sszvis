@@ -4,7 +4,7 @@
 
 The "bubble map" concept is a map with sized circle data overlays for each map entity. The map shapes should be rendered with the standard map class for the type you want, and then the circles overhead are rendered as an "anchored shape".
 
-## sszvis.map.anchoredCircles
+## sszvis.mapRendererBubble
 
 This is an "anchored shape" used to render circles above map entities.
 
@@ -16,19 +16,19 @@ Expects an array of data which can be matched to map entities, much like the bas
 
 Configure this component, and a base map component, and pass this component as the .anchoredShape property of the base map component.
 
-#### `sszvis.map.anchoredCircles.radius()`
+#### `mapRendererBubble.radius()`
 
 The radius of the circles. Can be a function which accepts a datum and returns a radius value.
 
-#### `sszvis.map.anchoredCircles.fill()`
+#### `mapRendererBubble.fill()`
 
 The fill color of the circles. Can be a function which accepts a datum and returns a color.
 
-#### `sszvis.map.anchoredCircles.strokeColor()`
+#### `mapRendererBubble.strokeColor()`
 
 The stroke color of the circles. Can be a function which accepts a datum and returns a color.
 
-#### `sszvis.map.anchoredCircles.transition()`
+#### `mapRendererBubble.transition()`
 
 Whether or not to transition the sizes of the circles when data changes. Default true.
 

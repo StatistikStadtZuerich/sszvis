@@ -71,8 +71,8 @@ const pages = [
     path: 'map',
     title: 'Maps',
     pages: [
-      {path: 'map-standard', title: 'Standard Shapes', src: 'docs/map-standard/README.md'},
-      {path: 'map-baselayer', title: 'Map Base Layers', src: 'docs/map-baselayer/README.md'},
+      {path: 'map-standard', title: 'Choropleth Maps', src: 'docs/map-standard/README.md'},
+      // {path: 'map-baselayer', title: 'Map Base Layers', src: 'docs/map-baselayer/README.md'},
       {path: 'map-extended', title: 'Extended Maps', src: 'docs/map-extended/README.md'},
       {path: 'map-signature', title: 'Signature Maps', src: 'docs/map-signature/README.md'}
     ]

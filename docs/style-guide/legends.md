@@ -7,47 +7,47 @@ Legends, like axes, are used to display information about a scale. Typically, th
 
 ### sszvis.legendColorOrdinal
 
-#### `ordinalColorScale.scale`
+#### `legendColorOrdinal.scale`
 
 An ordinal scale which will be transformed into the legend.
 
-#### `ordinalColorScale.[rowHeight]`
+#### `legendColorOrdinal.[rowHeight]`
 
 The height of the rows of the legend.
 
-#### `ordinalColorScale.[columnWidth]`
+#### `legendColorOrdinal.[columnWidth]`
 
 The width of the columns of the legend.
 
-#### `ordinalColorScale.[rows]`
+#### `legendColorOrdinal.[rows]`
 
 The target number of rows for the legend.
 
-#### `ordinalColorScale.[columns]`
+#### `legendColorOrdinal.[columns]`
 
 The target number of columns for the legend.
 
-#### `ordinalColorScale.orientation`
+#### `legendColorOrdinal.orientation`
 
 The orientation (layout order) of the legend. should be either "horizontal" or "vertical".No default.
 
-#### `ordinalColorScale.[reverse]`
+#### `legendColorOrdinal.[reverse]`
 
 Whether to reverse the order that categories appear in the legend. Default false
 
-#### `ordinalColorScale.[rightAlign]`
+#### `legendColorOrdinal.[rightAlign]`
 
 Whether to right-align the legend. Default false.
 
-#### `ordinalColorScale.[horizontalFloat]`
+#### `legendColorOrdinal.[horizontalFloat]`
 
 A true value changes the legend layout to the horizontal float version. Default false.
 
-#### `ordinalColorScale.[floatPadding]`
+#### `legendColorOrdinal.[floatPadding]`
 
 The amount of padding between elements in the horizontal float layout. Default 10px
 
-#### `ordinalColorScale.[floatWidth]`
+#### `legendColorOrdinal.[floatWidth]`
 
 The maximum width of the horizontal float layout. Default 600px
 
@@ -116,27 +116,27 @@ The maximum width of the horizontal float layout. Default 600px
 
 ### sszvis.legendColorLinear
 
-#### `linearColorScale.scale`
+#### `legendColorLinear.scale`
 
 The scale to use to generate the legend
 
-#### `linearColorScale.[displayValues]`
+#### `legendColorLinear.[displayValues]`
 
 A list of specific values to display. If not specified, defaults to using scale.ticks
 
-#### `linearColorScale.[width]`
+#### `legendColorLinear.[width]`
 
 The pixel width of the legend (default 200px)
 
-#### `linearColorScale.[segments]`
+#### `legendColorLinear.[segments]`
 
 The number of segments to aim for. Note, this is only used if displayValues isn't specified, and then it is passed as the argument to scale.ticks for finding the ticks. (default 8)
 
-#### `linearColorScale.[labelText]`
+#### `legendColorLinear.[labelText]`
 
 Text or a text-returning function to use as the titles for the legend endpoints. If not supplied, defaults to using the first and last tick values.
 
-#### `linearColorScale.[labelFormat]`
+#### `legendColorLinear.[labelFormat]`
 
 An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
 
@@ -165,23 +165,23 @@ An optional formatter function for the end labels. Usually should be sszvis.form
 
 ### sszvis.legendColorBinned
 
-#### `binnedColorScale.scale`
+#### `legendColorBinned.scale`
 
 A scale to use to generate the color values
 
-#### `binnedColorScale.[displayValues]`
+#### `legendColorBinned.[displayValues]`
 
 An array of values which should be displayed. Usually these should be the bin edges
 
-#### `binnedColorScale.[endpoints]`
+#### `legendColorBinned.[endpoints]`
 
 The endpoints of the scale (note that these are not necessarily the first and last bin edges). These will become labels at either end of the legend.
 
-#### `binnedColorScale.[width]`
+#### `legendColorBinned.[width]`
 
 The pixel width of the legend. Default 200
 
-#### `binnedColorScale.[labelFormat]`
+#### `legendColorBinned.[labelFormat]`
 
 A formatter function for the labels of the displayValues.
 
@@ -210,23 +210,23 @@ A formatter function for the labels of the displayValues.
 
 ### sszvis.legendRadius
 
-#### `radius.scale`
+#### `legendRadius.scale`
 
 A scale to use to generate the radius sizes
 
-#### `radius.[fill]`
+#### `legendRadius.[fill]`
 
 A function or string that gives a fill color for the demonstration circles (default white)
 
-#### `radius.[stroke]`
+#### `legendRadius.[stroke]`
 
 A function or string that gives a stroke color for the demonstration circles (default black)
 
-#### `radius.[strokeWidth]`
+#### `legendRadius.[strokeWidth]`
 
 A number or function that gives a stroke width for the demonstration circles (default 1.25)
 
-#### `radius.[labelFormat]`
+#### `legendRadius.[labelFormat]`
 
 Formatter function for the labels
 

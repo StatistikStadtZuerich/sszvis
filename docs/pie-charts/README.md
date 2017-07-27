@@ -12,7 +12,7 @@ The chart requires one numeric data field and one categorical data field. The nu
 
 ### Configuration
 
-Pie charts use [d3.svg.arc](https://github.com/mbostock/d3/wiki/SVG-Shapes#arc) internally and work similarly.
+Pie charts use [d3.arc](https://github.com/d3/d3-shape/blob/master/README.md#arcs) internally and work similarly.
 
 #### `pie.radius()`
 
@@ -85,27 +85,27 @@ This component takes an array of data objects, each of which represents a single
 
 ### Configuration
 
-#### `multiples.width()`
+#### `layoutSmallMultiples.width()`
 
 The total width of all groups
 
-#### `multiples.height()`
+#### `layoutSmallMultiples.height()`
 
 The total height of all groups
 
-#### `multiples.paddingX()`
+#### `layoutSmallMultiples.paddingX()`
 
 The pixel padding to place between columns of groups
 
-#### `multiples.paddingY()`
+#### `layoutSmallMultiples.paddingY()`
 
 The pixel padding to place between rows of groups
 
-#### `multiples.rows()`
+#### `layoutSmallMultiples.rows()`
 
 The number of rows of groups to create
 
-#### `multiples.cols()`
+#### `layoutSmallMultiples.cols()`
 
 The number of columns of groups to create
 

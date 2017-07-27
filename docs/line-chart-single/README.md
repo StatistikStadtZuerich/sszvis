@@ -10,7 +10,7 @@ This chart requires two variables that can be put in relation to each other.
 
 ### Configuration
 
-Line charts use [d3.svg.line](https://github.com/mbostock/d3/wiki/SVG-Shapes#line) internally and work similarly.
+Line charts use [d3.line](https://github.com/d3/d3-shape/blob/master/README.md#lines) internally and work similarly.
 
 #### `line.x([x])`
 

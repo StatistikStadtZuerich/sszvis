@@ -13,7 +13,7 @@ These are the default text colors used throughout the UI. They are hard-coded in
 </script>
 ```
 
-### `color.lightGry()`
+### `sszvis.scaleLightGry()`
 
 A light grey scale is included for use in cases where a data background should be shaded out.
 
@@ -25,7 +25,7 @@ A light grey scale is included for use in cases where a data background should b
 </script>
 ```
 
-### `color.paleGry()`
+### `sszvis.scalePaleGry()`
 
 A pale grey shade which is used for elements which should be in the background, but shouldn't completely fade out. Currently used as the color of the links in the sankey diagram.
 
@@ -37,7 +37,7 @@ A pale grey shade which is used for elements which should be in the background, 
 </script>
 ```
 
-### `color.gry()`
+### `sszvis.scaleGry()`
 
 A grey scale is included for use in cases where a data value should be shaded out. Currently, it is used for the color of inactive lines in the coordinated map and line chart example. At the moment, it has only one value.
 
@@ -49,9 +49,9 @@ A grey scale is included for use in cases where a data value should be shaded ou
 </script>
 ```
 
-### `color.dimGry()`
+### `sszvis.scaleDimGry()`
 
-A dim grey shade used for highlighting elements which are normally grey (`color.gry()`). Currently, it is used as the highlight color in the "bubble map".
+A dim grey shade used for highlighting elements which are normally grey (`sszvis.scaleGry()`). Currently, it is used as the highlight color in the "bubble map".
 
 ```html|plain,run-script
 <div id='dimGreyScale' class='scale-container'></div>
@@ -61,7 +61,7 @@ A dim grey shade used for highlighting elements which are normally grey (`color.
 </script>
 ```
 
-### `color.medGry()`
+### `sszvis.scaleMedGry()`
 
 The medium grey color, as a standalone value.
 
@@ -73,7 +73,7 @@ The medium grey color, as a standalone value.
 </script>
 ```
 
-### `color.deepGry()`
+### `sszvis.scaleDeepGry()`
 
 The deep grey color, as a standalone value.
 
@@ -90,7 +90,7 @@ The deep grey color, as a standalone value.
 
 Qualitative scales are used for data that has distinct categories. They distinguish categories based on color contrast. They should never be used to compare values, use sequential or divergent scales in this case.
 
-#### `color.qual12()`
+#### `sszvis.scaleQual12()`
 
 ```html|plain,run-script
 <div id='scaleQual' class='scale-container'></div>
@@ -101,7 +101,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 ```
 
 
-#### `color.qual6()`
+#### `sszvis.scaleQual6()`
 
 ```html|plain,run-script
 <div id='scaleQual6' class='scale-container'></div>
@@ -111,7 +111,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 </script>
 ```
 
-#### `color.qual6a()`
+#### `sszvis.scaleQual6a()`
 
 ```html|plain,run-script
 <div id='scaleQual6a' class='scale-container'></div>
@@ -121,7 +121,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 </script>
 ```
 
-#### `color.qual6b()`
+#### `sszvis.scaleQual6b()`
 
 ```html|plain,run-script
 <div id='scaleQual6b' class='scale-container'></div>
@@ -158,7 +158,7 @@ Qualitative scales can be reversed with the `scale.reverse()` instance method. T
 
 Sequential sales are used to compare values. These scales are designed to have the same brightness for the same input value.
 
-#### `color.seqBlu()`
+#### `sszvis.scaleSeqBlu()`
 
 ```html|plain,run-script
 <div id='scale1' class='scale-container'></div>
@@ -168,7 +168,7 @@ Sequential sales are used to compare values. These scales are designed to have t
 </script>
 ```
 
-#### `color.seqRed()`
+#### `sszvis.scaleSeqRed()`
 
 ```html|plain,run-script
 <div id='scale2' class='scale-container'></div>
@@ -178,7 +178,7 @@ Sequential sales are used to compare values. These scales are designed to have t
 </script>
 ```
 
-#### `color.seqGrn()`
+#### `sszvis.scaleSeqGrn()`
 
 ```html|plain,run-script
 <div id='scale3' class='scale-container'></div>
@@ -188,7 +188,7 @@ Sequential sales are used to compare values. These scales are designed to have t
 </script>
 ```
 
-#### `color.seqBrn()`
+#### `sszvis.scaleSeqBrn()`
 
 ```html|plain,run-script
 <div id='scale4' class='scale-container'></div>
@@ -214,7 +214,7 @@ Divergent sales are used to compare data that has two extremes. These scales are
 
 They come in two color variations: the valued (red-blue) variation is used for data that has negative-positive characteristics, the neutral (brown-green) variation is used in cases where no valuation is wanted.
 
-#### `color.divVal()`
+#### `sszvis.scaleDivVal()`
 
 ```html|plain,run-script
 <div id='scale5' class='scale-container'></div>
@@ -224,7 +224,7 @@ They come in two color variations: the valued (red-blue) variation is used for d
 </script>
 ```
 
-#### `color.divNtr()`
+#### `sszvis.scaleDivNtr()`
 
 ```html|plain,run-script
 <div id='scale7' class='scale-container'></div>
@@ -236,7 +236,7 @@ They come in two color variations: the valued (red-blue) variation is used for d
 
 A grey midpoint can be used in situations where the contour of a data mark must be visible on a white background.
 
-#### `color.divValGry()`
+#### `sszvis.scaleDivValGry()`
 
 ```html|plain,run-script
 <div id='scale6' class='scale-container'></div>
@@ -246,7 +246,7 @@ A grey midpoint can be used in situations where the contour of a data mark must 
 </script>
 ```
 
-#### `color.divNtrGry()`
+#### `sszvis.scaleDivNtrGry()`
 
 ```html|plain,run-script
 <div id='scale8' class='scale-container'></div>

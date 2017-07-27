@@ -9,27 +9,27 @@ Annotations are used to highlight certain sections of a chart. They are added as
 
 All properties of the data circle can be specified as either a constant or a function of data.
 
-#### `circle.x`
+#### `annotationCircle.x`
 
 The x-position of the center of the data area.
 
-#### `circle.y`
+#### `annotationCircle.y`
 
 The y-position of the center of the data area.
 
-#### `circle.r`
+#### `annotationCircle.r`
 
 The radius of the data area.
 
-#### `circle.dx`
+#### `annotationCircle.dx`
 
 The x-offset of the data area caption.
 
-#### `circle.dy`
+#### `annotationCircle.dy`
 
 The y-offset of the data area caption.
 
-#### `circle.caption`
+#### `annotationCircle.caption`
 
 The caption for the data area. (default position is the center of the circle).
 
@@ -60,31 +60,31 @@ The caption for the data area. (default position is the center of the circle).
 
 All properties of the annotation rectangle can be specified as either a constant or a function of data.
 
-#### `rectangle.x`
+#### `annotationRectangle.x`
 
 The x-position of the upper left corner of the data area.
 
-#### `rectangle.y`
+#### `annotationRectangle.y`
 
 The y-position of the upper left corner of the data area.
 
-#### `rectangle.width`
+#### `annotationRectangle.width`
 
 The width of the data area.
 
-#### `rectangle.height`
+#### `annotationRectangle.height`
 
 The height of the data area.
 
-#### `rectangle.dx`
+#### `annotationRectangle.dx`
 
 The x-offset of the data area caption.
 
-#### `rectangle.dy`
+#### `annotationRectangle.dy`
 
 The y-offset of the data area caption.
 
-#### `rectangle.caption`
+#### `annotationRectangle.caption`
 
 The caption for the data area. (default position is the center of the rectangle)
 
@@ -113,39 +113,39 @@ The caption for the data area. (default position is the center of the rectangle)
 
 ### sszvis.annotationLine
 
-#### `line.x1`
+#### `annotationLine.x1`
 
 The x-value, in data units, of the first reference line point.
 
-#### `line.x2`
+#### `annotationLine.x2`
 
 The x-value, in data units, of the second reference line point.
 
-#### `line.y1`
+#### `annotationLine.y1`
 
 The y-value, in data units, of the first reference line point.
 
-#### `line.y2`
+#### `annotationLine.y2`
 
 The y-value, in data units, of the second reference line point.
 
-#### `line.xScale`
+#### `annotationLine.xScale`
 
 The x-scale of the chart. Used to transform the given x- values into chart coordinates.
 
-#### `line.yScale`
+#### `annotationLine.yScale`
 
 The y-scale of the chart. Used to transform the given y- values into chart coordinates.
 
-#### `line.[dx]`
+#### `annotationLine.[dx]`
 
 The x-offset of the caption
 
-#### `line.[dy]`
+#### `annotationLine.[dy]`
 
 The y-offset of the caption
 
-#### `line.[caption]`
+#### `annotationLine.[caption]`
 
 A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
 
@@ -176,31 +176,31 @@ The ruler depicts information at a certain x value
 
 ### sszvis.annotationRuler
 
-#### `ruler.top`
+#### `annotationRuler.top`
 
 A number which is the y-position of the top of the ruler line
 
-#### `ruler.bottom`
+#### `annotationRuler.bottom`
 
 A number which is the y-position of the bottom of the ruler line
 
-#### `ruler.x`
+#### `annotationRuler.x`
 
 A number or function returning a number for the x-position of the ruler line.
 
-#### `ruler.y`
+#### `annotationRuler.y`
 
 A function for determining the y-position of the ruler dots. Should take a data value as an argument and return a y-position.
 
-#### `ruler.[label]`
+#### `annotationRuler.[label]`
 
 A function for determining the labels of the ruler dots. Should take a data value as argument and return a label.
 
-#### `ruler.color`
+#### `annotationRuler.color`
 
 A string or function to specify the color of the ruler dots.
 
-#### `ruler.[flip]`
+#### `annotationRuler.[flip]`
 
 A boolean or function which returns a boolean that specifies whether the labels on the ruler dots should be flipped. (they default to the right side)
 
@@ -229,53 +229,53 @@ A boolean or function which returns a boolean that specifies whether the labels 
 
 ### sszvis.annotationRangeRuler
 
-The rangeRuler is a ruler which depicts ranges. It also shows a label for each range section, and a total value of all ranges.
+The annotationRangeRuler is a ruler which depicts ranges. It also shows a label for each range section, and a total value of all ranges.
 
-#### `rangeRuler.x`
+#### `annotationRangeRuler.x`
 
 A function for the x-position of the ruler.
 
-#### `rangeRuler.y0`
+#### `annotationRangeRuler.y0`
 
 A function for the y-position of the lower dot. Called for each datum.
 
-#### `rangeRuler.y1`
+#### `annotationRangeRuler.y1`
 
 A function for the y-position of the upper dot. Called for each datum.
 
-#### `rangeRuler.top`
+#### `annotationRangeRuler.top`
 
 A number for the y-position of the top of the ruler
 
-#### `rangeRuler.bottom`
+#### `annotationRangeRuler.bottom`
 
 A number for the y-position of the bottom of the ruler
 
-#### `rangeRuler.[label]`
+#### `annotationRangeRuler.[label]`
 
 A function which generates labels for each range.
 
-#### `rangeRuler.[total]`
+#### `annotationRangeRuler.[total]`
 
 A number to display as the total of the range ruler (at the top)
 
-#### `rangeRuler.[flip]`
+#### `annotationRangeRuler.[flip]`
 
 Determines whether the rangeRuler labels should be flipped (they default to the right side)
 
 ### sszvis.annotationRangeFlag
 
-The rangeFlag creates a pair of dots which identify a specific vertical range of data, and a tooltipAnchor between them. Used here in the stacked area chart, but could also be used in other chart types that have several data series sharing the same vertical space, for example a multi-line chart.
+The annotationRangeFlag creates a pair of dots which identify a specific vertical range of data, and a tooltipAnchor between them. Used here in the stacked area chart, but could also be used in other chart types that have several data series sharing the same vertical space, for example a multi-line chart.
 
-#### `rangeFlag.x`
+#### `annotationRangeFlag.x`
 
 A value for the x-value of the range flag
 
-#### `rangeFlag.y0`
+#### `annotationRangeFlag.y0`
 
 A value for the y-value of the lower range flag dot
 
-#### `rangeFlag.y1`
+#### `annotationRangeFlag.y1`
 
 A value for the y-value of the upper range flag dot
 
