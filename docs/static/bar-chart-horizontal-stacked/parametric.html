@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stacked Horizontal Bar Chart</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href="/sszvis.css" rel="stylesheet" />
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="/sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
+    return;
+  }
+
+
+ /* Globals
+ ------------------------------------------------*/
+ var DEFAULT_TITLE = 'Diagrammtitel';
+ var DEFAULT_DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+ var DEFAULT_PATH = '';
+ var DEFAULT_DATE_COLUMN = 'Datum';
+ var DEFAULT_CATEGORY_COLUMN = 'Kategorie'
+ var DEFAULT_VALUE_COLUMN = 'Wert';
+ var DEFAULT_RULER_LABEL = '';
+ var DEFAULT_Y_LABEL = '';
+ var DEFAULT_X_LABEL = '';
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  //configuration object
+  var config = {
+    dataPath: 'data/SHB_basic_percent.csv',//'data/horizontal_stacked_test.csv',
+    title: 'Title', //optional
+    description: 'Description', //optional
+    valueColumn: 'BIP', //optional
+    categoryColumn: 'Branche',
+    categoryColumnY: 'Gebiet',
+    xLabel: 'Prozent',
+    ticks: 4
+  };
+  var MAX_WIDTH = 800;
+  var queryProps = sszvis.responsiveProps()
+    .prop('targetNumColumns', {
+      palm: 1,
+      _: 2
+    })
+    .prop('bottomPadding', {
+      palm: 320,
+      _: 190
+    });
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.prop('value');
+  var yAcc = sszvis.prop('area');
+  var cAcc = sszvis.prop('sector');
+  var dataAcc = sszvis.prop('data');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    areas: [],
+    categories: [],
+    stackedData: [],
+    maxStacked: 0,
+    selection: []
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      //state.areas = state.data.map(yAcc);
+      state.areas = sszvis.set(state.data, yAcc);
+      state.categories = sszvis.set(state.data, cAcc);
+
+      state.stackedData = sszvis.stackedBarHorizontalData(yAcc, cAcc, xAcc)(data);
+      state.maxStacked = state.stackedData.maxValue;
+
+      render(state);
+    },
+
+    showTooltip: function(datum) {
+      state.selection = [datum];
+      render(state);
+    },
+
+    hideTooltip: function() {
+      state.selection = [];
+      render(state);
+    },
+
+    resize: function() { render(state); }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv((config.dataPath || DEFAULT_PATH))
+    .row(function(d) {
+      return {
+        sector: d[config.categoryColumn],
+        area: d[config.categoryColumnY],
+        value: sszvis.parseNumber(d[config.valueColumn])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
+    //the height and the bottom padding need to be calculated
+    var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.areas.length);
+    var paddingTop = 14;
+    var bounds = sszvis.bounds({ height: paddingTop + chartDimensions.totalHeight + props.bottomPadding, top: paddingTop, bottom: props.bottomPadding }, '#sszvis-chart');
+    var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
+
+
+    // Scales
+
+    var xScale = d3.scaleLinear()
+      .domain([0, state.maxStacked])
+      .range([0, chartWidth]);
+
+    var yScale = d3.scaleBand()
+      .domain(state.areas)
+      .padding(chartDimensions.padRatio)
+      .paddingOuter(chartDimensions.outerRatio)
+      .range([0, chartDimensions.totalHeight]);
+
+    //switch between qual6 and qual12 depending on number of categories
+    var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
+
+      cScale.domain(state.categories);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: (config.title || DEFAULT_TITLE),
+        description: (config.description || DEFAULT_DESCRIPTION )
+      })
+      .datum(state.stackedData);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
+      .datum(state.selection);
+
+
+    // Components
+
+    var horizontalBars = sszvis.stackedBarHorizontal()
+      .xScale(xScale)
+      .height(chartDimensions.barHeight)
+      .yScale(yScale)
+      .fill(sszvis.compose(cScale, cAcc, dataAcc));
+
+    var xAxis = sszvis.axisX()
+      .scale(xScale)
+      .orient('bottom')
+      .title((config.xLabel || ''))
+      .alignOuterLabels(true);
+
+      if(config.ticks){
+        xAxis.ticks(config.ticks);
+      }
+
+    var yAxis = sszvis.axisY.ordinal()
+      .scale(yScale)
+      .orient('right');
+
+    var colorLegend = sszvis.legendColorOrdinal()
+      .scale(cScale)
+      .orientation('horizontal')
+      .rows(state.categories.length / props.targetNumColumns)
+      .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 260))
+      .orientation('vertical');
+
+    var tooltipHeader = sszvis.modularTextHTML()
+      .bold(cAcc);
+
+    var tooltipText = sszvis.modularTextHTML()
+      .plain(xAcc);
+
+    var tooltip = sszvis.tooltip()
+      .renderInto(tooltipLayer)
+      .orientation(sszvis.fitTooltip('bottom', bounds))
+      .header(tooltipHeader)
+      .body(tooltipText)
+      .visible(isSelected);
+
+
+    // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
+
+    var bars = chartLayer.selectGroup('barchart')
+      .call(horizontalBars);
+
+    bars.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.translateString(0, chartDimensions.totalHeight))
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .attr('transform', sszvis.translateString(0, chartDimensions.axisOffset))
+      .call(yAxis);
+
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', sszvis.translateString(0, chartDimensions.totalHeight + 60))
+      .call(colorLegend);
+
+
+    // Interaction
+
+    var interactionLayer = sszvis.panning()
+      .elementSelector('.sszvis-bar')
+      .on('start', actions.showTooltip)
+      .on('pan', actions.showTooltip)
+      .on('end', actions.hideTooltip);
+
+    bars.call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function isSelected(d) {
+    return sszvis.contains(state.selection, d);
+  }
+
+
+}(d3, sszvis));
+</script>
+</body>
+</html>

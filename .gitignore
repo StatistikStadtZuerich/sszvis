@@ -4,9 +4,15 @@
 .sass-cache
 node_modules
 
-dist/
-
 screenshots/taken/
 screenshots/diff/
 
 /WDIO.*
+
+build
+
+/public/topo
+/public/sszvis.js
+
+/docs/static/topo
+/docs/static/sszvis.js

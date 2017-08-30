@@ -4,9 +4,10 @@ export default {
   entry: join(__dirname, "..", "src", "index.js"),
   targets: [
     {
-      dest: join(__dirname, "..", "dist", ".js"),
+      dest: join(__dirname, "..", "docs", "static", "sszvis.js"),
       format: "umd",
-      moduleName: "sszvis"
+      moduleName: "sszvis",
+      moduleId: "sszvis"
     }
   ],
   external: ["d3", "topojson"],

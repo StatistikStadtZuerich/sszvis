@@ -18,8 +18,8 @@ if [ ! -f geodata/statistische_zonen.json ]; then
 	curl https://data.stadt-zuerich.ch/dataset/be458d0f-65b2-44f3-8406-e6e5941f3f85/resource/256e764e-3185-43e7-87c8-ded1f95bd4ff/download/statistischezonen.json -o geodata/statistische_zonen.json
 fi
 
-rm -rf dist/topo
-mkdir -p dist/topo
+rm -rf docs/static/topo
+mkdir -p docs/static/topo
 
 geo2topo -q 1e3 -n \
   stadtkreise=<(\
@@ -58,7 +58,7 @@ geo2topo -q 1e3 -n \
 		ndjson-cat geodata/lakebounds/statistische_quartiere_lakebounds.geojson \
 		| ndjson-split 'd.features') \
   | toposimplify -f -s 2e-10 \
-	> dist/topo/stadt-zurich.json
+	> docs/static/topo/stadt-zurich.json
 
 geo2topo -q 1e3 -n \
   agglomeration=<(\
@@ -75,7 +75,7 @@ geo2topo -q 1e3 -n \
 		| ndjson-split 'd.features' \
 		| ndjson-map 'd.id = d.properties.Bezeichnung, d') \
   | toposimplify -f -s 8e-10 \
-	> dist/topo/agglomeration-zurich.json
+	> docs/static/topo/agglomeration-zurich.json
 
 # Already a topojson file
-cp -f geodata/ch_cantons.json dist/topo/switzerland.json
+cp -f geodata/ch_cantons.json docs/static/topo/switzerland.json

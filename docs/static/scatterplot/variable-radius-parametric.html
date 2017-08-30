@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scatterplot</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href="/sszvis.css" rel="stylesheet" />
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="/sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+var config = {
+    // The path to the CSV file containing the data for this chart
+    dataPath: 'data/VRS_basic_linear.csv',
+    // The title and description of this chart for visually impaired users
+    title: '',
+    description: '',
+    // Data column to use for the x-axis
+    xColumn: 'NeubauAbs (x-Achse)',
+    // Data column to use for the y-axis
+    yColumn: 'LeerZunRel (y-Achse) ',
+    // Data column to use for the bubble size
+    rColumn: 'Best13Radius (bubble)',
+    // Data column to use for category or name
+    cColumn: 'QuName',
+    // The labels for the x and y-axis and for the bubble value. Required as they are also the labels in the tooltip
+    xAxisLabel: 'NeubauAbs',
+    yAxisLabel: 'LeerZunRel',
+    rLabel: 'Radius',
+    // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
+    xTicks: null,
+    yTicks: null,
+    // Specifies the number and value of the legend ticks. Replace null with [], as in: [1000, 3000, 5000])
+    legendTicks: null,
+    // Padding between legend and x-axis in pixels. The recommended default is 60px.
+    legendPadding: 60,
+    // View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
+    fallback: false
+  }
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.prop('xPosition');
+  var yAcc = sszvis.prop('yPosition');
+  var rAcc = sszvis.prop('radius');
+  var cAcc = sszvis.prop('label');
+
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    highlightData: [],
+    xExtent: [0, 0],
+    yExtent: [0, 0],
+    rExtent: [0, 0]
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+
+      // for the voronoi component to work, the data must first be filtered such that no two vertices
+      // fall at exactly the same point.
+      state.voronoiFiltered = sszvis.derivedSet(state.data, function(d) {
+        return xAcc(d) + '__' + yAcc(d);
+      });
+
+      state.xExtent = d3.extent(state.data, xAcc);
+      state.yExtent = d3.extent(state.data, yAcc);
+      var radiusExtent = d3.extent(state.data, rAcc);
+      state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
+
+      render(state);
+    },
+
+    setHighlight: function(d) {
+      state.highlightData = [d];
+      render(state);
+    },
+
+    resetHighlight: function() {
+      state.highlightData = [];
+      render(state);
+    },
+
+    resize: function() { render(state); }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv(config.dataPath)
+    .row(function(d) {
+      return {
+        xPosition: sszvis.parseNumber(d[config.xColumn]),
+        yPosition: sszvis.parseNumber(d[config.yColumn]),
+        radius: sszvis.parseNumber(d[config.rColumn]),
+        label: d[config.cColumn]
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ top: 20, bottom: 110 }, '#sszvis-chart');
+
+
+    // Scales
+
+    var xScale = d3.scaleLinear()
+      .domain(state.xExtent)
+      .range([0, bounds.innerWidth]);
+
+    var xValue = sszvis.compose(xScale, xAcc);
+
+    var yScale = d3.scaleLinear()
+      .domain(state.yExtent)
+      .range([bounds.innerHeight, 0]);
+
+    var yValue = sszvis.compose(yScale, yAcc);
+
+    var rScale = d3.scaleLinear()
+      .domain(state.rExtent)
+      .range([1, 20]);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: config.title,
+        description: config.description
+      })
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
+      .datum(state.highlightData);
+
+
+    // Components
+
+    var dots = sszvis.dot()
+      .x(xValue)
+      .y(yValue)
+      .radius(sszvis.compose(rScale, rAcc))
+      .fill(sszvis.scaleQual12())
+      // use white outlines in scatterplots to assist in identifying distinct circles
+      .stroke('#FFFFFF');
+
+    var xAxis = sszvis.axisX()
+      .scale(xScale)
+      .orient('bottom')
+      .contour(true)
+      .ticks (config.xTicks)
+      .tickFormat(function(d) {
+        return d < 1 ? d.toPrecision(1) : d;
+      })
+      .title(config.xAxisLabel);
+
+
+    var yAxis = sszvis.axisY()
+      .scale(yScale)
+      .orient('right')
+      .showZeroY(true)
+      .contour(true)
+      .title(config.yAxisLabel);
+
+    var radiusLegend = sszvis.legendRadius()
+      .scale(rScale)
+      .tickValues(config.legendTicks)
+      .tickFormat(function(d) {
+        return Math.round(d * 100) / 100;
+      });
+
+    var tooltip = sszvis.tooltip()
+      .renderInto(tooltipLayer)
+      .header(cAcc)
+      .body(function(d) {
+        return [
+          [config.xAxisLabel, sszvis.formatNumber(xAcc(d))],
+          [config.yAxisLabel, sszvis.formatNumber(yAcc(d))],
+          [config.rLabel, sszvis.formatNumber(rAcc(d))],
+        ];
+      })
+      .visible(function(d) { return sszvis.contains(state.highlightData, d); })
+      .orientation(function(d) {
+        return xValue(d.datum) <= bounds.innerWidth / 2 ? 'left' : 'right';
+      });
+
+
+    // Rendering
+
+    if (config.fallback) {
+      var longTicks = sszvis.axisY()
+        .ticks(config.yTicks)
+        .scale(yScale)
+        .orient('right')
+        .showZeroY(true)
+        .contour(true)
+        .title(config.yAxisLabel)
+        .tickLength(bounds.innerWidth)
+
+      chartLayer.selectGroup('longTicks')
+        .call(longTicks)
+        .call(removeOverlappingYTickLabels(bounds.innerHeight));
+    }
+
+    chartLayer.selectGroup('dots')
+      .call(dots);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('radiusLegend')
+      .attr('transform', sszvis.translateString(1, bounds.innerHeight + config.legendPadding))
+      .call(radiusLegend);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis)
+      .call(removeOverlappingYTickLabels(bounds.innerHeight));
+
+    sszvis.viewport.on('resize', actions.resize);
+
+
+    // Interaction
+    if (!config.fallback) {
+      var mouseOverlay = sszvis.voronoi()
+        .x(xValue)
+        .y(yValue)
+        .bounds([[0, 0], [bounds.innerWidth, bounds.innerHeight]])
+        .on('over', actions.setHighlight)
+        .on('out', actions.resetHighlight);
+
+      chartLayer.selectGroup('voronoiMouse')
+        .datum(state.voronoiFiltered)
+        .call(mouseOverlay)
+    };
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+
+  function removeOverlappingYTickLabels(maxBottom) {
+    return function(g) {
+      g.selectAll('text').each(function() {
+        var bottom = this.getBoundingClientRect().bottom;
+        if (bottom >= maxBottom) d3.select(this.parentNode).style('display', 'none');
+      });
+    }
+  }
+
+
+}(d3, sszvis));
+</script>
+</body>
+</html>
