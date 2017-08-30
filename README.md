@@ -16,31 +16,14 @@ We use IxT's styleguide generator, Catalog, in development to show off charts in
 
 ## Installation
 
-If you want to use the build system we have put in place, make sure you have the following software installed.
-
-To build:
-
-* [GNU Make](https://www.gnu.org/software/make/manual/make.html)
-
-To build and run a development server:
-
-* [fswatch](http://emcrisostomo.github.io/fswatch/)
-* [browser-sync](http://www.browsersync.io/)
-
-To build maps:
-
-* [topojson](https://github.com/mbostock/topojson)
+    npm install
 
 ## Development
 
 Build the project with
 
-    make build
+    npm run build
 
 Start a development server on http://localhost:8000 to automatically rebuild and push changes to the browser:
 
-    make server
-
-Update the maps with
-
-    make maps
+    npm start
