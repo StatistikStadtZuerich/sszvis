@@ -1,6 +1,6 @@
 {
   "name": "sszvis",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "license": "MIT",
   "devDependencies": {
     "babel-eslint": "^7.2.3",
@@ -24,7 +24,7 @@
     "build": "npm run build-lib && npm run build-topo && npm run build-docs",
     "build-lib": "rollup --config config/rollup.config.js",
     "build-topo": "scripts/topo.sh",
-    "build-docs": "catalog build docs --public-path=./ -o=build",
+    "build-docs": "catalog build docs --public-url=./ -o=build",
     "prepublishOnly": "npm run build",
     "start": "catalog start docs -p 8000",
     "deploy": "npm run build && rsync -avz ./build/ --exclude=.DS_Store --exclude=.htaccess interact@interactivethings.com:/home/interact/www/clients.interactivethings.com/ssz/visualization-library-2/"
