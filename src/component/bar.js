@@ -44,7 +44,7 @@
 import {select} from 'd3';
 
 import * as fn from '../fn.js';
-import { transition } from '../transition.js';
+import { defaultTransition } from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
 
@@ -75,21 +75,22 @@ export default function() {
 
       var bars = selection.selectAll('.sszvis-bar')
         .data(data);
-
-      var newBars = bars.enter()
-        .append('rect')
-        .classed('sszvis-bar', true);
-      bars = bars.merge(newBars);
-
+        
       bars.exit().remove();
 
-      bars
+      bars.enter()
+        .append('rect')
+        .classed('sszvis-bar', true)
+        .attr('x', xAcc)
+        .attr('y', yAcc)
+        .attr('width', wAcc)
+        .attr('height', hAcc)
+      .merge(bars)
         .attr('fill', props.fill)
         .attr('stroke', props.stroke);
 
       if (props.transition) {
-        bars = bars.transition()
-          .call(transition);
+        bars = bars.transition(defaultTransition());
       }
 
       bars

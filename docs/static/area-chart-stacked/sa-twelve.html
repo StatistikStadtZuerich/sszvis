@@ -393,8 +393,7 @@
 
     chartLayer.selectGroup('yAxis')
       .call(yAxis)
-      .transition()
-      .call(sszvis.transition)
+      .transition(sszvis.defaultTransition())
       .style('opacity', Number(!state.isMultiples));
 
     chartLayer.selectGroup('colorLegend')

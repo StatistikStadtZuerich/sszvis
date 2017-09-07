@@ -22,7 +22,7 @@
 import {select, arc, interpolate} from 'd3';
 
 import * as fn from '../fn.js';
-import { transition } from '../transition.js';
+import { defaultTransition } from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
 
@@ -83,8 +83,7 @@ export default function() {
       segments = segments.merge(newSegments);
 
       segments
-        .transition()
-        .call(transition)
+        .transition(defaultTransition())
         .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
         .attrTween('d', function(d) {
           var angle0Interp = interpolate(d.a0, d._a0);

@@ -10,24 +10,24 @@
  * too slow.
  */
 
-import {easePolyOut} from 'd3';
+import {transition as d3Transition, easePolyOut} from 'd3';
 
 var defaultEase = easePolyOut;
 
-export var transition = function(transition) {
-  transition
+export var defaultTransition = function() {
+  return d3Transition()
     .ease(defaultEase)
     .duration(300);
 };
 
-export var fastTransition = function(transition) {
-  transition
+export var fastTransition = function() {
+  return d3Transition()
     .ease(defaultEase)
     .duration(50);
 };
 
-export var slowTransition = function(transition) {
-  transition
+export var slowTransition = function() {
+  return d3Transition()
     .ease(defaultEase)
     .duration(500);
 };

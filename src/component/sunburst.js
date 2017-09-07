@@ -31,7 +31,7 @@
 import {select, scaleLinear, hsl, arc, interpolate} from 'd3';
 
 import * as logger from '../logger.js';
-import { transition } from '../transition.js';
+import { defaultTransition } from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
 
@@ -110,8 +110,7 @@ export default function() {
         .attr('stroke', props.stroke)
         .attr('fill', getColorRecursive);
 
-      arcs.transition()
-        .call(transition)
+      arcs.transition(defaultTransition())
         .attrTween('d', function(d) {
           var x0Interp = interpolate(d.x0, d._x0);
           var x1Interp = interpolate(d.x1, d._x1);

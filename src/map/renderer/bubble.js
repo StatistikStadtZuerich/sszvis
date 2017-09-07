@@ -18,7 +18,7 @@
 import {select, dispatch} from 'd3';
 
 import * as fn from '../../fn.js';
-import { transition } from '../../transition.js';
+import { defaultTransition } from '../../transition.js';
 import { getGeoJsonCenter } from '../mapUtils.js';
 import translateString from '../../svgUtils/translateString.js';
 import { component } from '../../d3-component.js';
@@ -76,13 +76,12 @@ export default function() {
         .classed('sszvis-anchored-circle--entering', false);
 
       if (props.transition) {
-        anchoredCircles.exit().transition()
-          .call(transition)
+        var t = defaultTransition();
+        anchoredCircles.exit().transition(t)
           .attr('r', 0)
           .remove();
 
-        anchoredCircles.transition()
-          .call(transition)
+        anchoredCircles.transition(t)
           .attr('r', radiusAcc);
       } else {
         anchoredCircles.exit().remove();

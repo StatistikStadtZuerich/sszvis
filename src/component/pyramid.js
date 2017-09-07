@@ -31,7 +31,7 @@
 import {select, line as d3Line} from 'd3';
 
 import * as fn from '../fn.js';
-import { transition } from '../transition.js';
+import { defaultTransition } from '../transition.js';
 import bar from './bar.js';
 import { component } from '../d3-component.js';
 
@@ -134,8 +134,7 @@ function lineComponent() {
 
       line
         .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
-        .transition()
-        .call(transition)
+        .transition(defaultTransition())
         .attr('d', lineGen);
 
 

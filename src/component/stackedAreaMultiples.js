@@ -29,7 +29,7 @@
 import {select, area} from 'd3';
 
 import * as fn from '../fn.js';
-import { transition } from '../transition.js';
+import { defaultTransition } from '../transition.js';
 import { component } from '../d3-component.js';
 
 export default function() {
@@ -66,8 +66,7 @@ export default function() {
       paths = newPaths.merge(paths);
 
       if (props.transition) {
-        paths = paths.transition()
-          .call(transition);
+        paths = paths.transition(defaultTransition());
       }
 
       paths

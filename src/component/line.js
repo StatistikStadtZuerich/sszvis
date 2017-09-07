@@ -37,7 +37,7 @@
 import {select, line as d3Line} from 'd3';
 
 import * as fn from '../fn.js';
-import { transition } from '../transition.js';
+import { defaultTransition } from '../transition.js';
 import { component } from '../d3-component.js';
 
 export default function() {
@@ -80,8 +80,7 @@ export default function() {
       path.order();
 
       if (props.transition) {
-        path = path.transition()
-          .call(transition);
+        path = path.transition(defaultTransition());
       }
 
       path

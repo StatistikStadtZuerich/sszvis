@@ -30,7 +30,7 @@
 
 import {select, area} from 'd3';
 
-import { transition } from '../transition.js';
+import { defaultTransition } from '../transition.js';
 import { component } from '../d3-component.js';
 
 export default function() {
@@ -63,8 +63,7 @@ export default function() {
       paths = paths.merge(newPaths);
 
       if (props.transition) {
-        paths = paths.transition()
-          .call(transition);
+        paths = paths.transition(defaultTransition());
       }
 
       paths
