@@ -86,9 +86,7 @@ This example shows how a button group can be used interchangeably with a select.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        ,
-        "topojson.js": "vendor/topojson/topojson.js",
-        "map.js": "map-modules/sszvis-map-zurich-statistischezonen.js"
+        "topojson.js": "vendor/topojson/topojson.js"
     },
     "sourceView": ["index.html", "data.csv"]
 }
