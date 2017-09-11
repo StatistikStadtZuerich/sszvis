@@ -55,6 +55,10 @@ export default (rawBody) => {
   for (let target in ref) {
     if (target) {
       let source = ref[target];
+      if (!source) {
+        // Sometimes a `"null": null` file can sneak into the config
+        continue;
+      }
       let file = typeof source === 'string' ? {
         source: source
       } : source;
