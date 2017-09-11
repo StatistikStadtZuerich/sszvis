@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Catalog, ContentLoader} from 'catalog';
+import {Catalog, pageLoader} from 'catalog';
 import ProjectSpecimen from './ProjectSpecimen/Project';
 
-const staticMarkdown = src => ContentLoader(`${process.env.PUBLIC_URL}/${src}`);
+const staticMarkdown = src => pageLoader(`${process.env.PUBLIC_URL}/${src}`);
 const staticFile = src => `${process.env.PUBLIC_URL}/${src}`
 
 const pages = [
