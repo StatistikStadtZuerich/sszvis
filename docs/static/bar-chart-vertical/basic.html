@@ -103,7 +103,7 @@
     // Scales
 
     var xScale = d3.scaleBand()
-      .padding(chartDimensions.padRatio)
+      .paddingInner(chartDimensions.padRatio)
       .paddingOuter(props.barPadding)
       .range([0, chartDimensions.totalWidth])
       .domain(state.categories);
@@ -136,7 +136,7 @@
     var barGen = sszvis.bar()
       .x(sszvis.compose(xScale, xAcc))
       .y(sszvis.compose(yPosScale, yAcc))
-      .width(chartDimensions.barWidth)
+      .width(xScale.bandwidth())
       .height(sszvis.compose(heightScale, yAcc))
       .fill(function(d) {
         return isSelected(d) ? cScaleDark(d): cScale(d);
