@@ -1,7 +1,7 @@
 {
   "name": "sszvis",
-  "version": "2.0.0",
-  "license": "MIT",
+  "version": "2.0.0-rc.1",
+  "license": "BSD-3-Clause",
   "dependencies": {
     "d3": "^4.9.1"
   },
@@ -16,7 +16,8 @@
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "recursive-readdir-sync": "^1.0.6",
-    "rollup": "^0.41.6",
+    "rollup": "^0.49.3",
+    "rollup-plugin-uglify": "^2.0.1",
     "rollup-watch": "^4.0.0",
     "topojson-client": "^3.0.0",
     "topojson-server": "^3.0.0",
@@ -26,15 +27,22 @@
     "wdio-visual-regression-service": "^0.8.0",
     "webdriverio": "^4.8.0"
   },
+  "files": [
+    "src",
+    "build"
+  ],
+  "main": "build/sszvis.js",
+  "module": "src/index.js",
+  "unpkg": "build/sszvis.js",
+  "jsdelivr": "build/sszvis.js",
   "scripts": {
     "lint": "eslint src",
     "test": "wdio config/wdio.conf.js",
-    "build": "npm run build-lib && npm run build-topo && npm run build-docs",
+    "build": "npm run lint && npm run build-lib && npm run build-topo && npm run build-docs",
     "build-lib": "rollup --config config/rollup.config.js",
     "build-topo": "scripts/topo.sh",
-    "build-docs": "catalog build docs --public-url=./",
+    "build-docs": "catalog build docs -o build --public-url=./",
     "prepublishOnly": "npm run build",
-    "start": "catalog start docs -p 8000",
-    "deploy": "npm run build && rsync -avz ./docs/build/ --exclude=.DS_Store --exclude=.htaccess interact@interactivethings.com:/home/interact/www/clients.interactivethings.com/ssz/visualization-library-2/"
+    "start": "catalog start docs -p 8000"
   }
 }

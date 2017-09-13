@@ -9,8 +9,8 @@ import {timeFormatLocale, formatLocale} from 'd3';
 import * as fn from './fn.js';
 import { locale } from './locale.js';
 
-const timeFormat = timeFormatLocale(locale).format;
-const format = formatLocale(locale).format;
+var timeFormat = timeFormatLocale(locale).format;
+var format = formatLocale(locale).format;
 
 /**
  * Format a number as an age

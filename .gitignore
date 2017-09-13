@@ -16,4 +16,5 @@ build
 
 /docs/static/topo
 /docs/static/sszvis.js
+/docs/static/sszvis.*.js
 /docs/build
