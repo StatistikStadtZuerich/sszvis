@@ -94,7 +94,7 @@ function arrEach(arr, func) {
 }
 
 export function cascade() {
-  var cascade = {},
+  var _cascade = {},
       keys = [],
       sorts = [],
       valuesSort;
@@ -111,8 +111,8 @@ export function cascade() {
 
     if (key.type === 'obj') {
       var obj = {};
-      groupEach(grouped, function(value, key) {
-        obj[key] = make(value, depth);
+      groupEach(grouped, function(value, k) {
+        obj[k] = make(value, depth);
       });
       return obj;
     } else if (key.type === 'arr') {
@@ -131,31 +131,31 @@ export function cascade() {
     }
   }
 
-  cascade.apply = function(data) {
+  _cascade.apply = function(data) {
     return make(data, 0);
   };
 
-  cascade.objectBy = function(d) {
+  _cascade.objectBy = function(d) {
     keys.push({
       type: 'obj',
       func: d
     });
-    return cascade;
+    return _cascade;
   };
 
-  cascade.arrayBy = function(d, sorter) {
+  _cascade.arrayBy = function(d, sorter) {
     keys.push({
       type: 'arr',
       func: d
     });
     if (sorter) sorts[keys.length - 1] = sorter;
-    return cascade;
+    return _cascade;
   };
 
-  cascade.sort = function(d) {
+  _cascade.sort = function(d) {
     valuesSort = d;
-    return cascade;
+    return _cascade;
   };
 
-  return cascade;
+  return _cascade;
 };

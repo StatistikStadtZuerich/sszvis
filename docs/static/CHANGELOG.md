@@ -191,12 +191,6 @@ Hard-coded map modules have been removed in favor of [loading geodata from GeoJS
 - `sszvis.map.utils.prepareMergedData` ⟼ **`sszvis.prepareMergedGeoData`**
 - `sszvis.map.utils.getGeoJsonCenter` ⟼ **`sszvis.getGeoJsonCenter`**
 - `sszvis.map.utils.widthAdaptiveMapPathStroke` ⟼ **`sszvis.widthAdaptiveMapPathStroke`**
-- `sszvis.map.projection.zurichStadtKreise` ⟼ **`sszvis.zurichStadtKreiseProjection`**
-- `sszvis.map.projection.zurichStatistischeQuartiere` ⟼ **`sszvis.zurichStatistischeQuartiereProjection`**
-- `sszvis.map.projection.zurichWahlKreise` ⟼ **`sszvis.zurichWahlKreiseProjection`**
-- `sszvis.map.projection.zurichStatistischeZonen` ⟼ **`sszvis.zurichStatistischeZonenProjection`**
-- `sszvis.map.projection.zurichAgglomeration2012` ⟼ **`sszvis.zurichAgglomeration2012Projection`**
-- `sszvis.map.projection.switzerland` ⟼ **`sszvis.switzerlandProjection`**
 - `sszvis.map.renderer.anchoredCircles` ⟼ **`sszvis.mapRendererBubble`**
 - `sszvis.map.renderer.base` ⟼ **`sszvis.mapRendererBase`**
 - `sszvis.map.renderer.geojson` ⟼ **`sszvis.mapRendererGeoJson`**
@@ -205,3 +199,14 @@ Hard-coded map modules have been removed in favor of [loading geodata from GeoJS
 - `sszvis.map.renderer.mesh` ⟼ **`sszvis.mapRendererMesh`**
 - `sszvis.map.renderer.patternedlakeoverlay` ⟼ **`sszvis.mapRendererPatternedLakeOverlay`**
 - `sszvis.map.renderer.raster` ⟼ **`sszvis.mapRendererRaster`**
+
+## Map projections
+
+These were related to the map modules and aren't needed anymore.
+
+- `sszvis.map.projection.zurichStadtKreise` ⟼ **removed**
+- `sszvis.map.projection.zurichStatistischeQuartiere` ⟼ **removed**
+- `sszvis.map.projection.zurichWahlKreise` ⟼ **removed**
+- `sszvis.map.projection.zurichStatistischeZonen` ⟼ **removed**
+- `sszvis.map.projection.zurichAgglomeration2012` ⟼ **removed**
+- `sszvis.map.projection.switzerland` ⟼ **removed**

@@ -76,7 +76,7 @@ export function responsiveProps() {
    * @returns {Object.<string, any>} A map of all properties for the currently selected
    *          breakpoint as defined by the parameter `arg1`
    */
-  function responsiveProps(measurement) {
+  function _responsiveProps(measurement) {
     if (!fn.isObject(measurement) || !isBounds(measurement)) {
       logger.warn('Could not determine the current breakpoint, returning the default props');
       // We choose the _ option for all configured props as a default.
@@ -146,9 +146,9 @@ export function responsiveProps() {
    *
    * @return {responsiveProps}
    */
-  responsiveProps.prop = function(propName, propSpec) {
+  _responsiveProps.prop = function(propName, propSpec) {
     propsConfig[propName] = functorizeValues(propSpec);
-    return responsiveProps;
+    return _responsiveProps;
   };
 
   /**
@@ -185,15 +185,15 @@ export function responsiveProps() {
    *   { name: 'large', width: 700 }
    * ])
    */
-  responsiveProps.breakpoints = function(bps) {
+  _responsiveProps.breakpoints = function(bps) {
     if (arguments.length === 0) {
       return breakpointSpec;
     }
     breakpointSpec = breakpointCreateSpec(bps);
-    return responsiveProps;
+    return _responsiveProps;
   };
 
-  return responsiveProps;
+  return _responsiveProps;
 };
 
 

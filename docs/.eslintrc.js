@@ -1,11 +1,4 @@
-const mainConfig = require('../.eslintrc');
-
-module.exports = Object.assign({}, mainConfig, {
-  parser: "babel-eslint",
-  parserOptions: {
-    sourceType: "module",
-    ecmaFeatures: {
-      jsx: true
-    }
-  },
-});
+module.exports = {
+  extends: ["../.eslintrc.js", "plugin:react/recommended"],
+  plugins: ["react"]
+};

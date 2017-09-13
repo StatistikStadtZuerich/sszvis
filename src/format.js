@@ -26,13 +26,13 @@ export var formatAge = function(d) {
  */
 export var formatAxisTimeFormat = function(d) {
   var xs = [
-    ['.%L', function(d) { return d.getMilliseconds(); }],
-    [':%S', function(d) { return d.getSeconds(); }],
-    ['%H:%M', function(d) { return d.getMinutes(); }],
-    ['%H Uhr', function(d) { return d.getHours(); }],
-    ['%a., %d.', function(d) { return d.getDay() && d.getDate() != 1; }],
-    ['%e. %b', function(d) { return d.getDate() != 1; }],
-    ['%B', function(d) { return d.getMonth(); }],
+    ['.%L', function(date) { return date.getMilliseconds(); }],
+    [':%S', function(date) { return date.getSeconds(); }],
+    ['%H:%M', function(date) { return date.getMinutes(); }],
+    ['%H Uhr', function(date) { return date.getHours(); }],
+    ['%a., %d.', function(date) { return date.getDay() && date.getDate() != 1; }],
+    ['%e. %b', function(date) { return date.getDate() != 1; }],
+    ['%B', function(date) { return date.getMonth(); }],
     ['%Y', function() { return true; }]
   ];
 
@@ -149,14 +149,14 @@ export var formatPreciseNumber = function(p, d) {
   // This curries the function
   if (arguments.length > 1) return formatPreciseNumber(p)(d);
 
-  return function formatPreciseNumber(d) {
-    var dAbs = Math.abs(d);
+  return function(x) {
+    var dAbs = Math.abs(x);
     if (dAbs >= 100 && dAbs < 1e4) {
       // No thousands separator
-      return format('.' + p + 'f')(d);
+      return format('.' + p + 'f')(x);
     } else {
       // Use the thousands separator
-      return format(',.' + p + 'f')(d);
+      return format(',.' + p + 'f')(x);
     }
   };
 };

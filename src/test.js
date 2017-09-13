@@ -47,7 +47,7 @@ export var runTests = function() {
 };
 
 // Tests for format functions
-function runFormatTests(assert) {
+function runFormatTests(assert) { // eslint-disable-line no-shadow
   /* sszvis.format.number */
   var nfmt = format.number;
   var precNfmt = format.preciseNumber;
@@ -102,7 +102,7 @@ function runFormatTests(assert) {
 
 
 // FIXME: more tests
-function runBreakpointTests(assert) {
+function runBreakpointTests(assert) { // eslint-disable-line no-shadow
   var accName = fn.prop('name');
 
   // sszvis.breakpoint([...])
@@ -125,7 +125,7 @@ function runBreakpointTests(assert) {
 
 
 
-  var bps = breakpointSpec([
+  var bps = breakpoint.breakpointCreateSpec([
     {name: 's', width: 10},
     {name: 'l', width: 20}
   ]);
@@ -144,7 +144,7 @@ function runBreakpointTests(assert) {
 }
 
 
-function runPropsQueryTests(assert) {
+function runPropsQueryTests(assert) { // eslint-disable-line no-shadow
   var pqT1 = responsiveProps()
     .prop('test', {
       small: 2,

@@ -4,7 +4,7 @@
  * @module sszvis/fn
  */
 
-import {select, map} from 'd3';
+import {select, map, selection} from 'd3';
 
 /**
  * fn.identity
@@ -40,7 +40,7 @@ export var isString = function(val) {
  * @return {Boolean}        Whether the value is a d3.selection
  */
 export var isSelection = function(val) {
-  return val instanceof d3.selection;
+  return val instanceof selection;
 };
 
 /**
