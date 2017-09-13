@@ -12,7 +12,8 @@ const pages = [
     title: 'Introduction',
     pages: [
       {path: '/', title: 'Overview', content: staticMarkdown('intro.md')},
-      {path: 'faq', title: 'FAQ', content: staticMarkdown('faq.md')}
+      {path: 'faq', title: 'FAQ', content: staticMarkdown('faq.md')},
+      {path: 'changelog', title: 'Change Log', content: staticMarkdown('CHANGELOG.md')}
     ]
   },
   {
@@ -97,7 +98,7 @@ const pages = [
 
 ReactDOM.render(
   <Catalog 
-    title='Statistik Stadt Zürich'
+    title='SSZ Visualization Library'
     specimens={{
       project: ProjectSpecimen({
         sizes: [
@@ -111,7 +112,7 @@ ReactDOM.render(
       background: '#fdfdfd',
       brandColor: '#0070bc',
       linkColor: '#CC6171',
-      msRatio: 1.1,
+      // msRatio: 1.1,
       pageHeadingBackground: '#f5f5f5',
       pageHeadingTextColor: '#0070bc',
       sidebarColorHeading: '#0070bc',
