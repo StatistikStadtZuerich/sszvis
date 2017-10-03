@@ -1,0 +1,4 @@
+# Netlify custom headers
+
+/stadt-zurich.json
+  Access-Control-Allow-Origin: *
