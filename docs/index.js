@@ -8,13 +8,9 @@ const staticFile = src => `${process.env.PUBLIC_URL}/${src}`
 
 const pages = [
   {
-    path: 'intro-group',
+    path: '/',
     title: 'Introduction',
-    pages: [
-      {path: '/', title: 'Overview', content: staticMarkdown('intro.md')},
-      {path: 'faq', title: 'FAQ', content: staticMarkdown('faq.md')},
-      {path: 'changelog', title: 'Change Log', content: staticMarkdown('CHANGELOG.md')}
-    ]
+    content: staticMarkdown('intro.md')
   },
   {
     path: 'style-guide',
@@ -93,7 +89,10 @@ const pages = [
       {path: 'sunburst', title: 'Sunburst', content: staticMarkdown('sunburst/README.md')},
       {path: 'sankey', title: 'Sankey Diagram (Parallel Sets)', content: staticMarkdown('sankey/README.md')}
     ]
-  }
+  },
+  {path: 'faq', title: 'FAQ', content: staticMarkdown('faq.md')},
+  {path: 'changelog', title: 'Change Log', content: staticMarkdown('CHANGELOG.md')}
+
 ];
 
 ReactDOM.render(

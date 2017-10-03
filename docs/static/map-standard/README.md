@@ -29,6 +29,33 @@ d3.json('stadt-zurich.json').get(function(error, topo) {
 })
 ```
 
+### Pre-built TopoJSON files
+
+sszvis provides pre-built TopoJSON files which combine the most commonly used geometries used.
+
+
+#### `topo/stadt-zurich.json`
+
+- `stadtkreise`
+- `wahlkreise`
+- `statistische_zonen`
+- `statistische_quartiere`
+- `lakezurich`
+- `wahlkreis_lakebounds`
+- `stadtkreis_lakebounds`
+- `statistische_quartiere_lakebounds`
+
+#### `topo/agglomeration-zurich.json`
+
+- `agglomeration`
+- `lakezurich_lakegreifen`
+
+#### `topo/switzerland.json`
+
+- `cantons`
+
+
+
 ### Configuration
 
 Maps use d3's excellent geographic projection support to render GeoJSON entities. Data values are then merged with map entities for display. The entities have id values, and the data values should share them. It's possible to configure which property of the data is used for this matching.
