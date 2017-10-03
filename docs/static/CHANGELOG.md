@@ -4,6 +4,8 @@
 
 The sszvis API has changed significantly from version 1.x to 2.0. This was done to a) align more closely with practices in the d3 ecosystem and to be able to leverage ES modules better (by not exporting whole namespaces but each function separately).
 
+sszvis now depends on d3 v4. See [d3 v4's change log](https://github.com/d3/d3/blob/master/CHANGES.md#changes-in-d3-40) for details on d3's API changes.
+
 ### Internals
 
 - `sszvis_namespace` ⟼ **replaced by ES modules**
