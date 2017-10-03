@@ -1,29 +1,44 @@
 # Statistik Stadt Zürich Visualization Library
 
-Most users will use the ready-to-use code in `sszvis.js` and `sszvis.css` in the root of this project to get started. If you want to contribute to this library, however, read on.
+sszvis can be installed from npm or embedded in a script tag. Please refer to the [interactive documentation](https://statistikstadtzuerich.github.io/sszvis/) for instructions.
 
 ## Documentation
 
-To read the documentation with all examples, open `index.html` in a browser. You can also read the documentation directly in `docs`. All source code in `sszvis` is documented, too, if you need to know the details.
-
-## Dependencies
-
-This library doesn't have any outside dependencies and doesn't require any special tooling to build. The major build step necessary is to concatenate all Javascript files in `sszvis` into a single file.
-
-To simplify development, we use GNU Make and some helpful libraries on Mac OS X. If you need to develop on another system, check the `Makefile` for the list of files that need to be concatenated.
-
-We use IxT's styleguide generator, Catalog, in development to show off charts in progress. Catalog, and a special project plugin for SSZVIS, are included as dependencies in the vender folder. As of this writing (9/8/16), the current version of Catalog used is 2.4.0, and the current version of the ProjectSpecimen Catalog plugin is 1.1.0
-
-## Installation
-
-    npm install
+The documentation is written in Markdown and bundled with [Catalog](https://www.catalog.style/). You can also [docs](docs).
 
 ## Development
 
-Build the project with
+This library is bundled using [Rollup](https://rollupjs.org/). To start developing, install dependencies using npm first.
 
-    npm run build
+```sh
+# Install dependencies first
+npm install
 
-Start a development server on http://localhost:8000 to automatically rebuild and push changes to the browser:
+# Start library build in watch mode
+npm run build -- --watch
 
-    npm start
+# Start Catalog documentation server
+npm start
+```
+
+### Building
+
+sszvis builds are automated. You don't have to run build tasks for publishing but you may need them for developing the library:
+
+```sh
+# Build everything necessary for publishing
+npm run build
+
+# Build the library
+npm run build-lib
+
+# Build topojson files
+npm run build-topo
+
+# Build documentation
+npm run build-docs
+```
+
+## License
+
+sszvis is published under the BSD-3-Clause license.
