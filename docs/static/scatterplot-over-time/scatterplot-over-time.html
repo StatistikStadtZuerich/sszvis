@@ -121,7 +121,7 @@
       });
 
       if (splitData.currentAndPastData.length !== state.voronoiPoints.length) {
-        sszvis.logger.warn((splitData.currentAndPastData.length - state.voronoiPoints.length) + ' data points were filtered out of the voronoi points because the voronoi interaction layer requires that no two input vertices lie at the same point.');
+        console.warn((splitData.currentAndPastData.length - state.voronoiPoints.length) + ' data points were filtered out of the voronoi points because the voronoi interaction layer requires that no two input vertices lie at the same point.');
       }
 
       render(state);

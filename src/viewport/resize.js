@@ -70,7 +70,9 @@ var callbacks = {
   resize: []
 };
 
-select(window).on('resize', throttle(500, function() { trigger('resize'); }));
+if (typeof window !== 'undefined') {
+  select(window).on('resize', throttle(500, function() { trigger('resize'); }));
+}
 
 var on = function(name, cb) {
   if (!callbacks[name]) { callbacks[name] = []; }

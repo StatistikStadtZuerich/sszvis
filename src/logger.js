@@ -43,12 +43,6 @@
  *                             of execution.
  */
 
-window.console || (window.console = {});
-
-// Polyfill for console logging
-console.log || (console.log = function() { /* IE8 users get no error messages */ });
-console.warn || (console.warn = function() { console.log.apply(console, arguments); });
-console.error || (console.error = function() { console.log.apply(console, arguments); });
 
 export var log = logger('log');
 export var warn = logger('warn');
@@ -58,8 +52,8 @@ export var error = logger('error');
 ----------------------------------------------- */
 function logger(type) {
   return function() {
-    if (window.console && window.console[type]) {
-      slice(arguments).forEach(function(msg) { window.console[type](msg); });
+    if (console && console[type]) {
+      slice(arguments).forEach(function(msg) { console[type](msg); });
     }
   };
 }

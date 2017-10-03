@@ -13,6 +13,9 @@
  */
 
 (function() {
+if (typeof window === 'undefined') {
+  return;
+}
 var serializeXML = function(node, output) {
   var nodeType = node.nodeType;
   if (nodeType == 3) { // TEXT nodes.

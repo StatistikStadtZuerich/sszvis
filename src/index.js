@@ -51,7 +51,6 @@ export * from './scale.js';
 export * from './locale.js';
 
 export * from './breakpoint.js';
-export * from './logger.js';
 export * from './patterns.js';
 export * from './map/index.js';
 export * from './viewport/resize.js';

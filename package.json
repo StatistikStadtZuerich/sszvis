@@ -33,6 +33,7 @@
   ],
   "main": "build/sszvis.js",
   "module": "src/index.js",
+  "jsnext:main": "src/index.js",
   "unpkg": "build/sszvis.js",
   "jsdelivr": "build/sszvis.js",
   "scripts": {
