@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scatterplot</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href="/sszvis.css" rel="stylesheet" />
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="/sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.prop('neubauabs');
+  var yAcc = sszvis.prop('leerzunrel');
+  var rAcc = sszvis.prop('best13radius');
+  var cAcc = sszvis.prop('quname');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    highlightData: [],
+    xExtent: [0, 0],
+    yExtent: [0, 0],
+    rExtent: [0, 0]
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+
+      // for the voronoi component to work, the data must first be filtered such that no two vertices
+      // fall at exactly the same point.
+      state.voronoiFiltered = sszvis.derivedSet(state.data, function(d) {
+        return xAcc(d) + '__' + yAcc(d);
+      });
+
+      state.xExtent = [0.1, d3.max(state.data, xAcc)]; // a log scale can't include zero
+      state.yExtent = d3.extent(state.data, yAcc);
+      var radiusExtent = d3.extent(state.data, rAcc);
+      state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
+
+      render(state);
+    },
+
+    setHighlight: function(d) {
+      state.highlightData = [d];
+      render(state);
+    },
+
+    resetHighlight: function() {
+      state.highlightData = [];
+      render(state);
+    },
+
+    resize: function() { render(state); }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/VRS_basic.csv')
+    .row(function(d) {
+      return {
+        neubauabs: sszvis.parseNumber(d['NeubauAbs (x-Achse)']),
+        leerzunrel: sszvis.parseNumber(d['LeerZunRel (y-Achse) ']),
+        best13radius: sszvis.parseNumber(d['Best13Radius (bubble)']),
+        quname: d['QuName']
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var bounds = sszvis.bounds({ top: 20, bottom: 110 }, '#sszvis-chart');
+
+
+    // Scales
+
+    var xScale = d3.scaleLog()
+      .domain(state.xExtent)
+      .range([0, bounds.innerWidth]);
+
+    var xValue = sszvis.compose(function(v) {
+        return v <= 0.1 ? 0 : xScale(v);
+      }, xAcc);
+
+    var yScale = d3.scaleLinear()
+      .domain(state.yExtent)
+      .range([bounds.innerHeight, 0]);
+
+    var yValue = sszvis.compose(yScale, yAcc);
+
+    var rScale = d3.scaleLinear()
+      .domain(state.rExtent)
+      .range([1, 20]);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
+      .datum(state.highlightData);
+
+
+    // Components
+
+    var dots = sszvis.dot()
+      .x(xValue)
+      .y(yValue)
+      .radius(sszvis.compose(rScale, rAcc))
+      .fill(sszvis.scaleQual12())
+      // use white outlines in scatterplots to assist in identifying distinct circles
+      .stroke('#FFFFFF');
+
+    // the built-in .ticks() function for d3.scale.log() produces far too many ticks
+    var xTicks = [0.1, 0.5, 1, 5, 10, 50, 100];
+
+    var xAxis = sszvis.axisX()
+      .scale(xScale)
+      .tickValues(xTicks)
+      .orient('bottom')
+      .tickFormat(function(d) {
+        return d < 1 ? d.toPrecision(1) : d;
+      })
+      .title('Logarithmische Skala');
+
+    var yAxis = sszvis.axisY()
+      .scale(yScale)
+      .orient('right')
+      .showZeroY(true)
+      .contour(true);
+
+    var annotation = sszvis.annotationRectangle()
+      .x(xScale(8))
+      .y(0)
+      .width(bounds.innerWidth - xScale(15))
+      .height(bounds.innerHeight);
+
+    var radiusLegend = sszvis.legendRadius()
+      .scale(rScale)
+      .tickFormat(function(d) {
+        return Math.round(d * 100) / 100;
+      });
+
+    var tooltip = sszvis.tooltip()
+      .renderInto(tooltipLayer)
+      .header(function(d) { return cAcc(d); })
+      .visible(function(d) { return sszvis.contains(state.highlightData, d); })
+      .orientation(function(d) {
+        return xValue(d.datum) <= bounds.innerWidth / 2 ? 'left' : 'right';
+      });
+
+
+    // Rendering
+
+    chartLayer.selectGroup('dataArea')
+      .datum([1])
+      .call(annotation);
+
+    chartLayer.selectGroup('dots')
+      .call(dots);
+
+    chartLayer.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('radiusLegend')
+      .attr('transform', sszvis.translateString(1, bounds.innerHeight + 65))
+      .call(radiusLegend);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis);
+
+
+    // Interaction
+
+    var mouseOverlay = sszvis.voronoi()
+      .x(xValue)
+      .y(yValue)
+      .bounds([[0, 0], [bounds.innerWidth, bounds.innerHeight]])
+      .on('over', actions.setHighlight)
+      .on('out', actions.resetHighlight);
+
+    chartLayer.selectGroup('voronoiMouse')
+      .datum(state.voronoiFiltered)
+      .call(mouseOverlay);
+
+    sszvis.viewport.on('resize', actions.resize);
+  }
+
+}(d3, sszvis));
+</script>
+</body>
+</html>

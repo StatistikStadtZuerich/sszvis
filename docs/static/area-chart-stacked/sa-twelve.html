@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Area Chart</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href="/sszvis.css" rel="stylesheet" />
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="/sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var MAX_CONTROL_WIDTH = 300;
+  var queryProps = sszvis.responsiveProps()
+    .prop('numLegendColumns', {
+      palm: 1,
+      _: 2
+    })
+    .prop('bottomPadding', {
+      palm: 310,
+      _: 190
+    })
+   .prop('controlWidth', {
+     _: function(width) {
+       return Math.min(width, MAX_CONTROL_WIDTH);
+       return Math.max(420, Math.min(MAX_CONTROL_WIDTH, width / 2));
+     }
+   });
+
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.prop('year');
+  var yAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('category');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    timeExtent: [0, 0],
+    stackedData: [],
+    maxStacked: 0,
+    categories: [],
+    highlightData: [],
+    highlightDate: 0,
+    totalHighlightValue: 0,
+    isMultiples: false
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      // timeExtent is used for the x-axis
+      state.timeExtent = d3.extent(state.data, xAcc);
+
+      // unique categories - for the color scale
+      state.categories = sszvis.set(state.data, cAcc);
+
+      // create the stacked data layers, and transform them into "layer objects", with a "category" property
+      // for determining the correct color.
+      var stackLayout = d3.stack().keys(state.categories.slice().reverse());
+      state.stackedData = stackLayout(sszvis.cascade()
+        .arrayBy(xAcc)
+        .objectBy(cAcc)
+        .apply(state.data)
+        .map(function(d) {
+          var r = { year: d[Object.keys(d)[0]][0].year };
+          state.categories.forEach(function(k) {
+            r[k] = yAcc(d[k][0]);
+          });
+          return r;
+        }));
+
+      state.stackedData.forEach(function(stack, i) {
+        stack.forEach(function(d) {
+          d.key = state.categories.slice().reverse()[i];
+        });
+      });
+
+      // get the values to configure the stack and multiples component y-scales
+      var dateValues = sszvis.cascade()
+        .objectBy(sszvis.compose(String, xAcc))
+        .apply(state.data);
+
+      // the maximum individual category value - used for the multiples y-scale
+      state.maxValue = d3.max(state.data, yAcc);
+
+      // the maximum stack sum - used for the stacked y-scale
+      state.maxStacked = d3.max(d3.values(dateValues), function(s) {
+        return d3.sum(s, yAcc);
+      });
+
+      // unique dates - for the ruler interaction
+      state.dates = sszvis.set(state.data, xAcc);
+
+      actions.resetDate();
+    },
+
+    toggleMultiples: function(g) {
+      // toggles multiples view on and off
+      state.isMultiples = g === 'Separiert';
+      render(state);
+    },
+
+    changeDate: function(xValue, yValue) {
+      // called during interaction, this function computes the nearest year,
+      // and it figures out which layer of the stack the mouse is hovering over, if any.
+      // It also computes a set of values to be highlighted by the range ruler component.
+
+      // find the closest year (x-value) to the mouse position
+      var closest = findClosest(state.dates, xValue);
+      // map across the stacks, pulling out the values for the current x-position
+      // these will be highlighted by the rangeRuler
+      state.highlightData = state.stackedData.map(function(stack) {
+        var datum = stack.filter(function(d) { return xAcc(d.data).toString() === closest.toString(); })[0];
+        var r = { data: datum.data, index: stack.index, key: stack.key };
+        r[0] = datum[0];
+        r[1] = datum[1];
+        return r;
+      });
+      // set the highlighted date
+      state.highlightDate = closest
+      // sum the total value for the rangeRuler
+      state.totalHighlightValue = state.highlightData.reduce(function(m, v) {
+        return state.categories.reduce(function(m, category) {
+          return v.data[category] + m;
+        }, m);
+      }, 0) / state.categories.length;
+      // keep track of the y-value (used later)
+      state.mouseYValue = yValue;
+
+      render(state);
+    },
+
+    resetDate: function() {
+      // resets the date to the last date in the dataset
+      var mostRecent = d3.max(state.data, xAcc);
+      actions.changeDate(mostRecent);
+    },
+
+    resize: function() { render(state); }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/SA_12Kategories_yearly.csv')
+    .row(function(d) {
+      return {
+        category: d['Branche'],
+        year: sszvis.parseYear(d['Jahr']),
+        value: sszvis.parseNumber(d['Wert'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds({ top: 80, bottom: props.bottomPadding }, '#sszvis-chart');
+    // this layout function computes values, including an array of baseline y-positions, for the
+    // area multiples component. The most important is the array of y-baselines, which are used
+    // for the yPositionMultiples scale
+    var multiplesLayout = sszvis.layoutStackedAreaMultiples(bounds.innerHeight, state.stackedData.length, 0.1);
+
+
+    // Scales
+
+    // the x scale. Same for joined and separated views
+    var xScale = d3.scaleTime()
+      .domain(state.timeExtent)
+      .range([0, bounds.innerWidth]);
+
+    // the y scale for the joined view
+    var yScale = d3.scaleLinear()
+      .domain([0, state.maxStacked])
+      .range([bounds.innerHeight, 0]);
+
+    // the y scale which is used for each of the separated instances
+    // when separated, each shape is shown with the same y- and x-scales, so that the
+    // relatives sizes and dimensions are comparable.
+    var yScaleMultiples = d3.scaleLinear()
+      .domain([0, state.maxValue])
+      .range([0, multiplesLayout.bandHeight]);
+
+    // this scale determines the y-position of the baseline of each separated area shape
+    var yPositionMultiples = d3.scaleOrdinal()
+      .domain(state.categories)
+      .range(multiplesLayout.range);
+
+    // the color scale for the layers, based on the category values
+    var cScale = sszvis.scaleQual12()
+      .domain(state.categories);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.stackedData);
+
+    // used for rendering the tooltip and the button group
+    var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
+
+
+    // Components
+
+    // the stacked area component (for the joined view)
+    var stackedArea = sszvis.stackedArea()
+      // Because both this and the multiples component render using the
+      // same pre-existing elements, a key function is important to ensure
+      // that the data is bound in the correct way.
+      .key(sszvis.prop('key'))
+      .x(sszvis.compose(xScale, xAcc, function(d) { return d.data; }))
+      .y0(sszvis.compose(yScale, function(d) { return d[0]; }))
+      .y1(sszvis.compose(yScale, function(d) { return d[1]; }))
+      .fill(sszvis.compose(cScale, function(d) { return d.key }));
+
+    // the area multiples component (for the separated view)
+    var stackedAreaMultiples = sszvis.stackedAreaMultiples()
+      // a key function must be passed here as well
+      .key(sszvis.prop('key'))
+      .x(sszvis.compose(xScale, xAcc, function(d) { return d.data; }))
+      .y0(sszvis.compose(yPositionMultiples, function(d) { return d.key }))
+      .y1(function(d) {
+        return yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key]);
+      })
+      .fill(sszvis.compose(cScale, function(d) { return d.key }));
+
+    // here we compute the pixel position of the "top", which is needed by the rangeRuler.
+    // The "top" is different depending on which view we're in, so we need two different options
+    // based on whether it's the multiples view or not.
+    var topValue;
+    if (state.isMultiples) {
+      // the top of the first area instance, at the current value
+      var first = sszvis.first(state.highlightData);
+      topValue = yPositionMultiples(cAcc(first)) - yScaleMultiples(yAcc(first));
+    } else {
+      // the top of the stack, at the current value (a.k.a. the y-position of the "total" value)
+      topValue = yScale(state.totalHighlightValue);
+    }
+
+    // the range ruler - has different display positions for the individual dots and the
+    // value labels depending on if this is the separated or the joined view.
+    var rangeRuler = sszvis.annotationRangeRuler()
+      .top(topValue)
+      .bottom(bounds.innerHeight)
+      // the x-scale is the same
+      .x(xScale(state.highlightDate))
+      .y0(function(d) {
+        // two different y-baseline scales
+        if (state.isMultiples) {
+          return yPositionMultiples(d.key);
+        } else {
+          return yScale(d[0]);
+        }
+      })
+      .y1(function(d) {
+        // two different y-top scales
+        if (state.isMultiples) {
+          return yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key]);
+        } else {
+          return yScale(d[1]);
+        }
+      })
+      // the label for the individual values (displayed as small numbers places between y0 and y1)
+      .label(function(d) {
+        return d.data[d.key];
+      })
+      // the total value
+      .total(state.totalHighlightValue)
+      // whether or not to flip the side on which the values are displayed
+      .flip(function(d) {
+        return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
+      });
+
+    // modular text for the flag tooltip
+    var tooltipText = sszvis.modularTextHTML()
+      .bold(sszvis.compose(sszvis.formatNumber, function(d) { return d.data[d.key]; }))
+      .plain(function(d) { return d.key });
+
+    // attached to the rangeFlag tooltip anchor, this tooltip displays
+    // the current value of the shape the mouse is currently hovered over
+    var rangeTooltip = sszvis.tooltip()
+        .header(tooltipText)
+        .orientation(function(d) {
+          // uses the same flip logic as the rangeRuler
+          return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? 'right' : 'left';
+        })
+        .renderInto(htmlLayer)
+        .visible(true);
+
+    // The rangeFlag highlights two points, the top and bottom of a certain area segment, and also
+    // creates a tooltip anchor between these points, to which we can bind rangeTooltip.
+    var rangeFlag = sszvis.annotationRangeFlag()
+      // same x-position as the other highlight components
+      .x(xScale(state.highlightDate))
+      // two y-baseline scales, like the rangeRuler
+      .y0(function(d) {
+        if (state.isMultiples) {
+          return yPositionMultiples(d.key);
+        } else {
+          return yScale(d[0]);
+        }
+      })
+      // two y-top scales, like the rangeRuler
+      .y1(function(d) {
+        if (state.isMultiples) {
+          return yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key]);
+        } else {
+          return yScale(d[1]);
+        }
+      });
+
+    // a nice set of ticks, which includes the current highlight date
+    var xAxisTicks = xScale.ticks(5)
+      .concat(state.highlightDate);
+
+    // set up the x- and y-axes. This should be familiar if you're familiar with the
+    // interactive simple single line chart example.
+    var xAxis = sszvis.axisX.time()
+      .scale(xScale)
+      .orient('bottom')
+      .tickValues(xAxisTicks)
+      .highlightTick(function(d) {
+        return sszvis.stringEqual(d, state.highlightDate);
+      });
+
+    var yAxis = sszvis.axisY()
+      .scale(yScale)
+      .orient('right');
+
+    // set up the color legend. Should also already be familiar
+    var colorLegend = sszvis.legendColorOrdinal()
+      .scale(cScale)
+      // Sets a maximum width for the columns - otherwise it gets out of hand on some sizes
+      .columnWidth(Math.min(bounds.innerWidth / 2, 260))
+      .rows(cScale.domain().length / props.numLegendColumns)
+      .orientation('vertical');
+
+    // set up the button group control for choosing between joined and separated views
+    var options = ['Summiert', 'Separiert'];
+    var buttonGroup = sszvis.buttonGroup()
+      .values(options)
+      .current(options[Number(state.isMultiples)])
+      .change(actions.toggleMultiples)
+      .width(props.controlWidth);
+
+
+    // Rendering
+
+    // choose different main chart components based on isMultiples state.
+    chartLayer.selectGroup('areachart')
+      .call(state.isMultiples ? stackedAreaMultiples : stackedArea);
+
+    // render the axes, legends, controls, and ruler
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .call(yAxis)
+      .transition(sszvis.defaultTransition())
+      .style('opacity', Number(!state.isMultiples));
+
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
+      .call(colorLegend);
+
+    htmlLayer.selectDiv('controls')
+      .style('left', (bounds.innerWidth - buttonGroup.width()) / 2 + 'px')
+      .style('top', (20 - bounds.padding.top) + 'px')
+      .call(buttonGroup);
+
+    chartLayer.selectGroup('highlight')
+      .datum(state.highlightData)
+      .call(rangeRuler);
+
+    // this function uses the mouse y-position to figure out which shape the mouse must be hovering over
+    // it's a straightforward collision detection which tests each bit of highlighted data for a collision
+    // with the current mouse y-position
+    var flagGroup = chartLayer.selectGroup('flag')
+      .datum(state.highlightData.filter(function(v) {
+        // because the y-baselines are different based on the view, this function
+        // behaves differently depending on the view state.
+        if (state.isMultiples) {
+          var scaledMouseY = yScale(state.mouseYValue),
+              y0 = yPositionMultiples(v.key),
+              dy = yScaleMultiples(v.data[v.key]);
+          return y0 > scaledMouseY && y0 - dy < scaledMouseY;
+        } else {
+          return v[0] < state.mouseYValue && v[1] > state.mouseYValue;
+        }
+      }))
+      .call(rangeFlag);
+
+    // attach the range tooltip to the rangeFlag tooltip anchor
+    flagGroup.selectAll('[data-tooltip-anchor]').call(rangeTooltip);
+
+
+    // Mouse Interaction
+
+    var interactionLayer = sszvis.move()
+      .xScale(xScale)
+      .yScale(yScale)
+      // these functions control the placement of the range flag and the choice of highlight data
+      .on('move', actions.changeDate)
+      .on('end', actions.resetDate);
+
+    chartLayer.selectGroup('interaction')
+      .call(interactionLayer);
+
+    sszvis.viewport.on('resize', actions.resize);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  // finds the nearest value to 'datum' within 'data'
+  function findClosest(data, datum) {
+    var i = d3.bisectLeft(data, datum, 1);
+    var d0 = data[i - 1];
+    var d1 = data[i] || d0;
+    return datum - d0 > d1 - datum ? d1 : d0;
+  }
+
+
+}(d3, sszvis));
+</script>
+</body>
+</html>
