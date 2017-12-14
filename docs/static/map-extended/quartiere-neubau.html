@@ -121,7 +121,7 @@
       actions.prepareData(data);
     });
 
-  d3.json('/topo/stadt-zurich.json')
+  d3.json('../topo/stadt-zurich.json')
     .get(function(error, data) {
       if (error) {
         sszvis.loadError(error);

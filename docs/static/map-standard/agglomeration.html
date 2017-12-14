@@ -128,7 +128,7 @@
        actions.prepareState(data);
     });
 
-  d3.json('/topo/agglomeration-zurich.json')
+  d3.json('../topo/agglomeration-zurich.json')
   .get(function(error, data) {
     if (error) {
       sszvis.loadError(error);
