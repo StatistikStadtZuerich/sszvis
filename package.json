@@ -44,7 +44,7 @@
     "build": "npm run build-lib && npm run build-topo && npm run build-docs",
     "build-lib": "rollup --config config/rollup.config.js",
     "build-topo": "scripts/topo.sh",
-    "build-docs": "catalog build docs -o build --public-url=/sszvis/",
+    "build-docs": "catalog build docs -o build --public-url=./",
     "prepublishOnly": "npm run test && npm run build",
     "start": "catalog start docs -p 8000"
   }
