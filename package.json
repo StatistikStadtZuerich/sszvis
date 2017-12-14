@@ -39,12 +39,13 @@
   "jsdelivr": "build/sszvis.js",
   "scripts": {
     "lint": "eslint src",
-    "test": "wdio config/wdio.conf.js",
-    "build": "npm run lint && npm run build-lib && npm run build-topo && npm run build-docs",
+    "test": "npm run lint",
+    "visual-regression-test": "wdio config/wdio.conf.js",
+    "build": "npm run build-lib && npm run build-topo && npm run build-docs",
     "build-lib": "rollup --config config/rollup.config.js",
     "build-topo": "scripts/topo.sh",
     "build-docs": "catalog build docs -o build --public-url=./",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run test && npm run build",
     "start": "catalog start docs -p 8000"
   }
 }
