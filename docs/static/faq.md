@@ -188,6 +188,6 @@ There are  define/require globals on the Stadt Zürich website (introduced by [A
 ```
 
 ### Transitions
-Whenever there are issues with transitions, such as area charts not transitioning smoothly between two set of value. It could be caused by a key function specified in .data(). If the keys for some reason change in the data, than data mapping does not work properly and ti breaks the animation. 
+Whenever there are issues with transitions, such as area charts not transitioning smoothly between two set of value. It could be caused by a key function specified in .data(). If the keys for some reason change in the data, than data mapping does not work properly and it breaks the animation.
 
 see test/transitions_stacked.html
