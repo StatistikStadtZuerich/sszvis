@@ -174,7 +174,7 @@ xAcc(parsedData);
 
 ### Script loading issues
 
-There are  define/require globals on the Stadt Zürich website (introduced by [ArcGIS](https://developers.arcgis.com/javascript/). These globals confuse scripts that are written with a [UMD declaration](https://github.com/umdjs/umd), because these scripts then won't expose their code to the browser as globals. This needs to be discussed with the SSZ IT department. One possible (hackish and untested) solution could be:
+There are define/require globals on the Stadt Zürich website (introduced by [ArcGIS](https://developers.arcgis.com/javascript/). These globals confuse scripts that are written with a [UMD declaration](https://github.com/umdjs/umd), because these scripts then won't expose their code to the browser as globals. This needs to be discussed with the SSZ IT department. One possible (hackish and untested) solution could be:
 
 ```code
 &lt;script&gt;
