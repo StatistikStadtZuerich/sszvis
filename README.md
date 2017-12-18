@@ -41,4 +41,8 @@ npm run build-docs
 
 ## License
 
-sszvis is published under the BSD-3-Clause license.
+sszvis is published under the BSD-3-Clause license. sszvis can freely be used but no support will be provided by Statistik Stadt Zürich.
+
+## Contact
+
+E-Mail: [statistik@zuerich.ch](mailto:statistik@zuerich.ch)
