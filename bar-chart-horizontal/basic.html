@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Horizontal Bar Chart</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href="../sszvis.css" rel="stylesheet" />
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var MAX_WIDTH = 800;
+  var queryProps = sszvis.responsiveProps()
+    .prop('ticks', {
+      palm: 4,
+      _: 10
+    });
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var xAcc = sszvis.prop('value');
+  var cAcc = sszvis.prop('category');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    categories: []
+  };
+
+  var actions = {
+    resize: function() { render(state); }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv('data/SHB_13Categories_longNames.csv')
+    .row(function(d) {
+      return {
+        category: d['Sektor'],
+        value: sszvis.parseNumber(d['Zupendler'])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        return sszvis.loadError(error);
+      }
+
+      state.data = data;
+      state.categories = sszvis.set(state.data, cAcc);
+
+      render(state);
+
+      sszvis.viewport.on('resize', actions.resize);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
+    var bounds = sszvis.bounds({ height: 30 + chartDimensions.totalHeight + 40, top: 30, bottom: 40 }, '#sszvis-chart');
+    var props = queryProps(bounds);
+    var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
+
+
+    // Scales
+
+    var widthScale = d3.scaleLinear()
+      .range([0, chartWidth])
+      .domain([0, d3.max(state.data, xAcc)]);
+
+    var yScale = d3.scaleBand()
+      .padding(chartDimensions.padRatio)
+      .paddingOuter(chartDimensions.outerRatio)
+      .rangeRound([0, chartDimensions.totalHeight])
+      .domain(state.categories);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      })
+      .datum(state.data);
+
+
+    // Components
+
+    var barGen = sszvis.bar()
+      .x(0)
+      .y(sszvis.compose(yScale, cAcc))
+      .width(sszvis.compose(widthScale, xAcc))
+      .height(chartDimensions.barHeight)
+      .fill(sszvis.scaleQual12());
+
+    var xAxis = sszvis.axisX()
+      .scale(widthScale)
+      .orient('bottom')
+      .alignOuterLabels(true)
+      .ticks(props.ticks)
+      .title('Erwerbstätige');
+
+    var yAxis = sszvis.axisY.ordinal()
+      .scale(yScale)
+      .orient('right');
+
+
+    // Rendering
+
+    chartLayer
+      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartWidth/2, bounds.padding.top));
+
+    chartLayer.selectGroup('bars')
+      .call(barGen);
+
+    chartLayer.selectGroup('xAxis')
+      .attr('transform', sszvis.translateString(0, chartDimensions.totalHeight))
+      .call(xAxis);
+
+    chartLayer.selectGroup('yAxis')
+      .attr('transform', sszvis.translateString(0, chartDimensions.axisOffset))
+      .call(yAxis);
+  }
+
+}(d3, sszvis));
+</script>
+</body>
+</html>

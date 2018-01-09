@@ -1,0 +1,676 @@
+/**
+ * General rules
+ *
+*/
+.sszvis-outer-container {
+  clear: both;
+  position: relative;
+}
+
+.sszvis-svg-layer {
+  position: relative;
+}
+
+.sszvis-html-layer {
+  position: absolute;
+}
+
+.sszvis-fallback-image {
+  display: block;
+  margin: 0 auto;
+  max-width: 516px;
+  width: 100%;
+}
+
+/**
+ * Specify that objects are interactive
+ */
+.sszvis-interactive {
+  cursor: default;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-touch-callout: none;
+}
+
+.sszvis-interactive.sszvis-interactive--draggable {
+  cursor: pointer; /* fallback if grab cursor is unsupported */
+  cursor: grab;
+  cursor: -moz-grab;
+  cursor: -webkit-grab;
+}
+
+.sszvis-interactive.sszvis-interactive--draggable:active {
+  cursor: grabbing;
+  cursor: -moz-grabbing;
+  cursor: -webkit-grabbing;
+}
+
+
+/**
+ * Axis component based on the d3.axis interface
+ * Changed color to match stzh website (original #B8B8B8)
+ * @module sszvis/axis
+ */
+.sszvis-axis text {
+  fill: #767676;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: normal;
+}
+
+/*
+* changed stroke to match sthz grey
+*/
+.sszvis-axis path,
+.sszvis-axis line {
+  fill: none;
+  stroke: #B8B8B8;
+  shape-rendering: crispEdges;
+}
+
+/* States */
+.sszvis-axis .tick text.active {
+  fill: #545454;
+}
+
+.sszvis-axis .tick text.hidden {
+  display: none;
+}
+
+.sszvis-axis .tick line.hidden {
+  display: none;
+}
+
+/* Modifiers */
+
+.sszvis-axis.sszvis-axis--top path {
+  display: none;
+}
+
+.sszvis-axis.sszvis-axis--vertical path {
+  display: none;
+}
+
+.sszvis-axis.sszvis-axis--slider path {
+  stroke: none;
+}
+
+.sszvis-axis__label-contour {
+  fill: #FFFFFF;
+  opacity: 0.8;
+  stroke: #FFFFFF;
+  stroke-width: 3;
+}
+
+/**
+ * Bar component
+ *
+ * @module sszvis/component/bar
+ */
+.sszvis-bar {
+
+}
+
+/**
+ * Grouped bar component
+ *
+ * @module sszvis/component/groupedBars
+ */
+.sszvis-bar--missing {
+  stroke: #A4A4A4;
+}
+
+/**
+ * Line component
+ *
+ * @module sszvis/component/line
+ */
+.sszvis-line {
+  fill: none;
+  stroke-width: 1.1;
+}
+
+/**
+ * Population pyramid with reference line component
+ *
+ * @module sszvis/component/pyramid
+ */
+.sszvis-pyramid__referenceline {
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+
+/**
+ * Sankey component
+ *
+ * @module sszvis/component/sankey
+ */
+.sszvis-sankey-label {
+  alignment-baseline: central; /* Maybe at least one of these will work? */
+  dominant-baseline: central;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: normal;
+}
+
+.sszvis-sankey-strong-label {
+  fill: #545454;
+}
+
+.sszvis-sankey-weak-label {
+  fill: #767676;
+}
+
+.sszvis-sankey-column-label {
+  text-anchor: middle;
+}
+
+.sszvis-sankey-column-label-tick {
+  stroke: #B8B8B8;
+}
+
+.sszvis-sankey-link-source-label {
+  text-anchor: start;
+}
+
+.sszvis-sankey-link-target-label {
+  text-anchor: end;
+}
+
+/**
+ * Map component
+ *
+ * @module sszvis/map/renderer/base
+ * @module sszvis/map/renderer/highlight
+ * @module sszvis/map/renderer/mesh
+ * @module sszvis/map/renderer/patternedlakeoverlay
+ */
+.sszvis-map__area {
+  stroke: none;
+}
+
+.sszvis-map__border {
+  fill: none;
+  pointer-events: none;
+  stroke-linejoin: round;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.sszvis-map__highlight {
+  fill: none;
+  pointer-events: none;
+  stroke-linejoin: round;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.sszvis-map__lakezurich {
+  pointer-events: none;
+  stroke: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.sszvis-map__lakepath {
+  fill: none;
+  pointer-events: none;
+  stroke: #d3d3d3;
+  stroke-width: 1.25;
+  stroke-dasharray: 3 3;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.sszvis-map__geojsonelement {
+  pointer-events: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.sszvis-map__image {
+  display: block;
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.sszvis-map__rasterimage {
+  display: block;
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+/**
+ * Button group control
+ *
+ * @module sszvis/control/buttonGrup
+ */
+.sszvis-control-buttonGroup {
+  display: inline-block;
+  position: absolute;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.sszvis-control-buttonGroup__item {
+  background-color: #FFFFFF;
+  border: 1px solid #767676;
+  border-left: none;
+  box-sizing: border-box;
+  color: #767676;
+  cursor: pointer;
+  display: table-cell;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  line-height: normal;
+  padding: 9px 12px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/**
+* uses same background color as "Zurücksetzen" form button on stzh Website
+*/
+.sszvis-control-buttonGroup__item.selected {
+  background-color: #767676;
+  color: #FFFFFF;
+}
+
+.sszvis-control-buttonGroup__item:first-child {
+  border-left: 1px solid #767676;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.sszvis-control-buttonGroup__item:last-child {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+/**
+ * Select control
+ *
+ * @module sszvis/control/select
+ */
+.sszvis-control-select {
+  border: 1px solid #767676;
+  border-radius: 3px;
+  background-color: #FFFFFF;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABQElEQVR4nO3TzW2DUBDEcZdACSnBpe1lVhzdCSXZnaQE55JJSOJgMO9rH/OTOK70/iNxOomIiIiIiMi3cRzfar8hlc0tAM4A3gFMeZ5UDoDps+W86sDMBgBXd7+7+z3yCACmWcfVzIbFg9/xkUeYx68a4b/4iCM8in86wlJ8pBGW4ucj/Dhy98uzowgjrImffZevQzMb3P0WeYSN8bc/v0HkEXbHU8QRksVTpBGSx1OEEbLFU8sjZI+nFkcoFk8tjVA8nloYoVo81RyhejzVGKGZeCo5QnPxVGKEZuMp5wjNx1OOEcLEU8oRwsVTihHCxtOeEcLH0ysjdBNPW0foKp4yjBAnnhKOEC+eEowQN552jBA/nl4YoZ942jBCf/G0YoR+42lhhP7j6cEIx4mn2QjHiyczGw4bLyIiIiIiUtMHjJmBk7uXEiAAAAAASUVORK5CYII=');
+  background-position: 96% 51%;
+  background-repeat: no-repeat;
+  background-size: 12px 12px;
+  box-sizing: border-box;
+  cursor: pointer;
+  height: 34px;
+  overflow: hidden;
+}
+
+.sszvis-control-select__element {
+  background: transparent;
+  border: 1px solid #FFFFFF;
+  color: #767676;
+  font-family: Arial, sans-serif;
+  font-size: 16px; /* Minimum of 16px to prevent iOS to zoom page */
+  height: 34px;
+  outline: 0;
+}
+
+/* Hide focus ring on Firefox */
+.sszvis-control-select__element:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #000;
+}
+
+.sszvis-control-select__metrics {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  height: auto;
+  position: absolute;
+  visibility: hidden;
+  width: auto;
+  white-space: nowrap;
+}
+
+/**
+ * Slider control
+ *
+ * @module sszvis/control/slider
+ */
+.sszvis-control-slider__backgroundgroup {
+
+}
+
+.sszvis-control-slider__handle {
+  cursor: pointer;
+}
+
+.sszvis-control-slider--label {
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+.sszvis-control-slider__handlebox {
+  fill: #fff;
+  stroke: #545454;
+}
+
+.sszvis-control-slider__handleline {
+  stroke: #545454;
+}
+
+/**
+ * Handle Ruler control
+ *
+ * @module sszvis/control/handleRuler
+ */
+
+.sszvis-handleRuler__handle {
+  fill: #FFFFFF;
+  stroke: #808184;
+}
+
+.sszvis-handleRuler__handle-mark {
+  stroke: #A6A8AB;
+}
+
+/**
+ * Vertical Ruler annotation
+ *
+ * @module sszvis/annotation/ruler
+ */
+.sszvis-ruler__rule {
+  shape-rendering: crispEdges;
+  stroke: #CCCCCC;
+}
+
+.sszvis-ruler__dot {
+  stroke: #FFFFFF;
+  stroke-width: 1.5;
+}
+
+.sszvis-ruler__label,
+.sszvis-ruler__label-outline {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+}
+
+.sszvis-ruler__label {
+  fill: #545454;
+}
+
+.sszvis-ruler__label-outline {
+  stroke: #FFFFFF;
+  stroke-width: 3;
+}
+
+/**
+ * rangeFlag annotation
+ *
+ * @module sszvis/annotation/rangeFlag
+ */
+.sszvis-rangeFlag__mark {
+  fill: #EFEFEF;
+  stroke: #7C7C7C;
+  stroke-width: 1.5;
+}
+
+/**
+ * rangeRuler annotation
+ *
+ * @module sszvis/annotation/rangeRuler
+ */
+.sszvis-rangeRuler__rule {
+  opacity: 0.25;
+  shape-rendering: crispEdges;
+  stroke: #000000;
+}
+
+.sszvis-rangeRuler__p1,
+.sszvis-rangeRuler__p2 {
+  fill: #000000;
+  opacity: 0.25;
+}
+
+.sszvis-rangeRuler__label, .sszvis-rangeRuler__total {
+  font-size: 10px;
+  fill: #545454;
+  font-family: Arial, sans-serif;
+  font-style: normal;
+}
+
+/**
+ * Tooltip annotation
+ *
+ * @module sszvis/annotation/tooltip
+ */
+.sszvis-tooltip {
+  min-width: 60px;
+  position: absolute;
+}
+
+.sszvis-tooltip__background {
+  position: absolute;
+}
+
+.sszvis-tooltip__background path {
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+.sszvis-tooltip__background.sszvis-tooltip__background--fallback path {
+  stroke: #ddd;
+  stroke-width: 1;
+}
+
+.sszvis-tooltip__content {
+  font-family: Arial;
+  padding: 10px 10px 7px 10px;
+  position: relative;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.sszvis-tooltip__content strong {
+  font-weight: bold;
+}
+
+.sszvis-tooltip__content em {
+  font-weight: bold;
+}
+
+.sszvis-tooltip__header {
+  color: #545454;
+  font-size: 12px;
+  line-height: 1.3333;
+  vertical-align: middle;
+}
+
+.sszvis-tooltip__body {
+  color: #7C7C7C;
+  font-size: 11px;
+  line-height: 1.4545;
+  vertical-align: middle;
+}
+
+.sszvis-tooltip--small .sszvis-tooltip__content {
+  padding: 6px 10px 4px 10px;
+  text-align: center;
+}
+
+.sszvis-tooltip__body__table,
+.sszvis-tooltip__body__table td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: top;
+}
+
+.sszvis-tooltip__body__table {
+  border: none !important; /* We need to override the parent website's selector */
+  border-collapse: collapse;
+  border-spacing: 0;
+  min-width: 120px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.sszvis-tooltip__body__table tr {
+  border-top: 1px solid #E5E6E7;
+}
+
+.sszvis-tooltip__body__table td {
+  border: none !important;  /* We need to override the parent website's selector */
+  padding: 7px 0.5em 7px 0 !important;  /* We need to override the parent website's selector */
+  text-align: left;
+  vertical-align: top;
+}
+
+.sszvis-tooltip__body__table tr:last-child td {
+  padding-bottom: 3px;
+}
+
+.sszvis-tooltip__body__table td:last-child {
+  color: #545454;
+  font-weight: bold;
+  padding-right: 0;
+  text-align: right;
+}
+
+/**
+ * Tooltip anchor
+ *
+ * @module sszvis/annotation/tooltipAnchor
+ */
+.sszvis-tooltipAnchor {
+  pointer-events: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+
+/**
+ * Reference line component
+ *
+ * @module sszvis/annotation/line
+ */
+.sszvis-referenceline {
+  stroke-width: 1.5;
+  stroke: #aaa;
+  stroke-dasharray: 3 3;
+}
+
+.sszvis-referenceline__caption {
+  fill: #7C7C7C;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-anchor: middle;
+  /*
+   * This forces rotated text to render smoothly for WebKit/Blink browsers.
+   */
+  -webkit-backface-visibility: hidden;
+}
+
+/**
+ * Circle data area component
+ *
+ * @module sszvis/annotation/circle
+ */
+.sszvis-dataareacircle__caption {
+  fill: #7C7C7C;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+/**
+ * Rectangle data area component
+ *
+ * @module sszvis/annotation/rectangle
+ */
+.sszvis-dataarearectangle__caption {
+  fill: #7C7C7C;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+/**
+ * Legend components
+ *
+ * @module sszvis/legend/ordinalColorScale
+ * @module sszvis/legend/linearColorScale
+ * @module sszvis/legend/binnedColorScale
+ * @module sszvis/legend/radius
+ */
+.sszvis-legend__label {
+  fill: #767676;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+  text-anchor: start;
+}
+
+.sszvis-legend__label--small {
+  fill: #767676;
+  font-size: 10px;
+}
+
+.sszvis-legend__axislabel {
+  fill: #767676;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: normal;
+}
+
+.sszvis-legend__crispmark {
+  shape-rendering: crispEdges;
+}
+
+.sszvis-legend__greyline {
+  fill: none;
+  stroke: #B8B8B8;
+  stroke-width: 1.1;
+}
+
+.sszvis-legend__dashedline {
+  stroke: #CCCCCC;
+  stroke-dasharray: 2 3;
+  stroke-width: 1;
+}

@@ -1,0 +1,4 @@
+# Netlify custom headers
+
+/topo/stadt-zurich.json
+  Access-Control-Allow-Origin: *

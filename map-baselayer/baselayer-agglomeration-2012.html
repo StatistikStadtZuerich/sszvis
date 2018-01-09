@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Map</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href="../sszvis.css" rel="stylesheet" />
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
+<script src="../sszvis.js"></script>
+<!-- load the map module -->
+<script src="../../map-modules/sszvis-map-zurich-agglomeration-2012.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, topojson, sszvis) {
+  'use strict';
+
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var TITLE = 'Diagrammtitel';
+  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+  var queryProps = sszvis.responsiveProps()
+    .prop('bounds', {
+      _: function(width) {
+        var innerHeight = sszvis.aspectRatioPortrait(width);
+        return {
+          top: 10,
+          bottom: 64,
+          height: 10 + innerHeight + 64
+        }
+      }
+    });
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {};
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    resize: function() { render(state); }
+  }
+
+
+  /* Initialize
+  ----------------------------------------------- */
+  // Because no data needs to be loaded, here we just render the Application
+  render(state);
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.bounds, '#sszvis-chart');
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: TITLE,
+        description: DESCRIPTION
+      });
+
+
+    // Components
+
+    var mapMaker = sszvis.map.zurichAgglomeration2012BaseMap()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .borderColor('black');
+
+
+    // Rendering
+
+    chartLayer.call(mapMaker);
+
+    sszvis.viewport.on('resize', actions.resize);
+  }
+
+}(d3, topojson, sszvis));
+</script>
+</body>
+</html>

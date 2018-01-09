@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pie Chart</title>
+</head>
+<body style="margin:0;padding:0;">
+<link href="../sszvis.css" rel="stylesheet" />
+<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="../sszvis.js"></script>
+
+<div id="sszvis-chart"></div>
+
+<script data-catalog-project-expose="script.js">
+(function(d3, sszvis) {
+  'use strict';
+
+  if (sszvis.fallbackUnsupported()) {
+    sszvis.fallbackRender('#sszvis-chart');
+    return;
+  }
+
+
+  /* Configuration
+  ----------------------------------------------- */
+  var config = {
+    // The path to the CSV file containing the data for this chart
+    dataPath: 'data/P_7Categories.csv',
+    // The title and description of this chart for visually impaired users
+    title: '',
+    description: '',
+    // Data column to use for the categories
+    cColumn: 'Kategorie',
+    // Data column to use for the values
+    vColumn: 'Schweiz Import',
+    //View of the chart when interactivity is not available. Does not render mouse interaction when true
+    fallback: false
+  };
+
+   var PIE_DIAMETER = 260;
+   var LEGEND_TOP_PADDING = 40;
+   var LEGEND_LEFT_PADDING = 25;
+   var LEGEND_HEIGHT = 245;
+   var LEGEND_WIDTH = 196;
+
+   var queryProps = sszvis.responsiveProps()
+     .prop('layout', {
+       palm: function(width) {
+         var sidePadding = Math.max((width - PIE_DIAMETER) / 2, 10);
+         var diameter = (width - 2 * sidePadding);
+         var legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
+         return {
+           bounds: {
+             top: 20,
+             bottom: legendHeight,
+             left: sidePadding,
+             right: sidePadding,
+             height: 20 + diameter + legendHeight
+           },
+           pieRadius: diameter / 2,
+           piePosition: {
+             top: 0,
+             left: sidePadding
+           },
+           legendPosition: {
+             top: diameter + LEGEND_TOP_PADDING,
+             left: 0
+           }
+         }
+       },
+       _: function(width) {
+         return {
+           bounds: {
+             top: 20,
+             bottom: 20,
+             left: 20,
+             right: LEGEND_WIDTH,
+             height: 20 + 20 + PIE_DIAMETER
+           },
+           pieRadius: PIE_DIAMETER / 2,
+           piePosition: {
+             top: 0,
+             left: width/2 - (PIE_DIAMETER + LEGEND_LEFT_PADDING + LEGEND_WIDTH)/2
+           },
+           legendPosition: {
+             top: PIE_DIAMETER/2 - LEGEND_HEIGHT/2,
+             left: PIE_DIAMETER + LEGEND_LEFT_PADDING
+           }
+         }
+       }
+     });
+
+
+
+  /* Shortcuts
+  ----------------------------------------------- */
+  var cAcc = sszvis.prop('category');
+  var vAcc = sszvis.prop('value');
+
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: [],
+    totalValue: 0,
+    categories: [],
+    selection: []
+  };
+
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareState: function(data) {
+      state.data = data;
+      state.totalValue = d3.sum(state.data, vAcc);
+      state.categories = sszvis.set(state.data, cAcc);
+      render(state);
+    },
+
+    showTooltip: function(datum) {
+      state.selection = [datum];
+      render(state);
+    },
+
+    hideTooltip: function() {
+      state.selection = [];
+      render(state);
+    },
+
+    resize: function() { render(state); }
+  };
+
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv(config.dataPath)
+    .row(function(d) {
+      return {
+        category: d[config.cColumn],
+        value: sszvis.parseNumber(d[config.vColumn])
+      };
+    })
+    .get(function(error, data) {
+      if (error) {
+        sszvis.loadError(error);
+        return;
+      }
+      actions.prepareState(data);
+    });
+
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
+    var bounds = sszvis.bounds(props.layout.bounds, '#sszvis-chart');
+
+
+    // Scales
+
+    var aScale = d3.scaleLinear()
+      .domain([0, state.totalValue])
+      .range([0, 2 * Math.PI]);
+
+    //choose color scale depending on number of categories
+    var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
+    cScale.domain(state.categories);
+
+
+    // Layers
+
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+        title: config.title,
+        description: config.description,
+      })
+      .datum(state.data);
+
+    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
+      .datum(state.selection);
+
+
+    // Components
+
+    chartLayer
+      .attr('transform', sszvis.translateString(props.layout.piePosition.left, props.layout.piePosition.top));
+
+    var pieMaker = sszvis.pie()
+      .radius(props.layout.pieRadius)
+      .angle(sszvis.compose(aScale, vAcc))
+      .fill(sszvis.compose(cScale, cAcc));
+
+    var colorLegend = sszvis.legendColorOrdinal()
+      .scale(cScale)
+      .rows(state.categories.length)
+      .orientation('vertical');
+
+    var headerText = sszvis.modularTextHTML()
+      .bold(sszvis.compose(sszvis.formatFractionPercent, function(d) { return vAcc(d) / state.totalValue; }));
+
+    var tooltip = sszvis.tooltip()
+      .renderInto(tooltipLayer)
+      .header(headerText)
+      .visible(isSelected);
+
+
+    // Rendering
+
+    var pie = chartLayer.selectGroup('piechart')
+      .call(pieMaker);
+
+    pie.selectAll('[data-tooltip-anchor]')
+      .call(tooltip);
+
+    chartLayer.selectGroup('colorLegend')
+      .attr('transform', function() {
+        return sszvis.translateString(props.layout.legendPosition.left, props.layout.legendPosition.top);
+      })
+      .call(colorLegend);
+
+
+    // Interaction
+    if (!config.fallback) {
+      var interactionLayer = sszvis.panning()
+        .elementSelector('.sszvis-path')
+        .on('start', actions.showTooltip)
+        .on('pan', actions.showTooltip)
+        .on('end', actions.hideTooltip);
+
+      pie.call(interactionLayer);
+    };
+
+    sszvis.viewport.on('resize', actions.resize);
+  }
+
+
+  /* Helper functions
+  ----------------------------------------------- */
+  function isSelected(d) {
+    return sszvis.contains(state.selection, d);
+  }
+
+
+}(d3, sszvis));
+</script>
+</body>
+</html>
