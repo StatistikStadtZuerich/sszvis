@@ -22,6 +22,7 @@
  *
  * @property {function} x                An accessor function for getting the x-value of the line
  * @property {function} y                An accessor function for getting the y-value of the line
+ * @property {function} [defined]        The key function to be used for the data join
  * @property {function} [key]            The key function to be used for the data join
  * @property {function} [valuesAccessor] An accessor function for getting the data points array of the line
  * @property {string, function} [stroke] Either a string specifying the stroke color of the line or lines,
@@ -47,6 +48,7 @@ export default function() {
     .prop('y')
     .prop('stroke')
     .prop('strokeWidth')
+    .prop('defined')
     .prop('key').key(function(d, i){ return i; })
     .prop('valuesAccessor').valuesAccessor(fn.identity)
     .prop('transition').transition(true)
@@ -58,7 +60,7 @@ export default function() {
       // Layouts
 
       var line = d3Line()
-        .defined(fn.compose(fn.not(isNaN), props.y))
+        .defined(props.defined !== undefined ? props.defined : fn.compose(fn.not(isNaN), props.y))
         .x(props.x)
         .y(props.y);
 

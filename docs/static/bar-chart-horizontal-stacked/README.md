@@ -26,10 +26,6 @@ Specifies an *x*-scale for the stack layout. This scale is used to position the 
 
 Specifies a width for the bars in the stack layout. This value is not used in the horizontal orientation. (xScale is used instead).
 
-#### `stackedBarHorizontal.yAccessor(yAcc)`
-
-The y-accessor. The return values of this function are used to group elements together as stacks.
-
 #### `stackedBarHorizontal.yScale(yScale)`
 
 A y-scale. After the stack is computed, the y-scale is used to position each stack.
@@ -45,11 +41,6 @@ Specify a fill value for the rectangles (default black).
 #### `stackedBarHorizontal.stroke([stroke])`
 
 Specify a stroke value for the stack rectangles (default none).
-
-#### `stackedBarHorizontal.orientation(orientation)`
-
-Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart. Used internally to configure the verticalBar and the horizontalBar. Should probably never be changed.
-
 
 ### Chart
 

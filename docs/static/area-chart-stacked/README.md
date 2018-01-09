@@ -16,9 +16,17 @@ The stackedArea component uses a [d3 stack layout](https://github.com/d3/d3-shap
 
 Accessor function to read *x*-values from the data. Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
 
-#### `stackedArea.yAccessor(yAcc)`
+#### `stackedArea.y0(y0)`
 
-Accessor function to read raw *y*-values from the data. Should return a value which is in data-units, not screen pixels. The results of this function are used to compute the stack, and they are then passed into the yScale before display.
+Accessor function to read *y0*-values from the data (lower bound of stacked value). Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
+
+#### `stackedArea.y1(y1)`
+
+Accessor function to read *y1*-values from the data (upper bound of stacked value). Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
+
+#### `stackedArea.defined([predicate])`
+
+Accessor function to specify which data points are defined (default: `stackedArea.y0` and `stackedArea.y1` are not `NaN`).
 
 #### `stackedArea.yScale(yScale)`
 
@@ -35,15 +43,6 @@ Accessor function for the area stroke. Passed a layer object.
 #### `stackedArea.key([keyFunction])`
 
 Specify a key function for use in the data join. The value returned by the key should be unique among stacks. This option is particularly important when creating a chart which transitions between stacked and separated views.
-
-#### `stackedArea.valuesAccessor([values])`
-
-Specify an accessor for the values of the layer objects. The default treats the layer object as an array of values. Use this if your layer objects are something like:
-
-```code
-{ name: "Name", values: [ ... Array of data values ... ] }
-```
-
 
 ### Chart
 
@@ -92,6 +91,10 @@ Accessor function for the area fill. Passed a layer object.
 #### `stackedAreaMultiples.stroke([stroke])`
 
 Accessor function for the area stroke. Passed a layer object.
+
+#### `stackedAreaMultiples.defined([predicate])`
+
+Accessor function to specify which data points are defined (default: `stackedAreaMultiples.y0` and `stackedAreaMultiples.y1` are not `NaN`).
 
 #### `stackedAreaMultiples.key([keyFunction])`
 

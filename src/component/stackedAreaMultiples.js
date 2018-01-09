@@ -39,6 +39,7 @@ export default function() {
     .prop('y1')
     .prop('fill')
     .prop('stroke')
+    .prop('defined')
     .prop('key').key(function(d, i){ return i; })
     .prop('valuesAccessor').valuesAccessor(fn.identity)
     .prop('transition').transition(true)
@@ -49,7 +50,12 @@ export default function() {
       //sszsch why reverse?
       data = data.slice().reverse();
 
+      var defaultDefined = function() {
+        return fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1);
+      }
+
       var areaGen = area()
+        .defined(props.defined !== undefined ? props.defined : defaultDefined)
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);

@@ -20,6 +20,10 @@ Accessor function to read *x*-values from the data.
 
 Accessor function to read *y*-values from the data.
 
+#### `line.defined([predicate])`
+
+Accessor function to specify which data points are defined (default: `line.y` is not `NaN`).
+
 #### `line.stroke([stroke])`
 
 String or function to set the stroke color (default: black)

@@ -14,10 +14,6 @@ Because it uses a d3.stack layout under the hood, this component will assign two
 
 The stackedBarVertical component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/d3/d3-shape/blob/master/README.md#stacks). The stack is constructed vertically, using the *x*-value of each data element to form groups, and then calculating, for each element, the cumulative *y*-values underneath it in the stack.
 
-#### `stackedBarVertical.xAccessor(xAcc)`
-
-Specifies an *x*-accessor for the stack layout. The result of this function is used to group elements into stacks.
-
 #### `stackedBarVertical.xScale(xScale)`
 
 Specifies an *x*-scale for the stack layout. This scale is used to position stacks based on the result of the *x*-accessor.
@@ -25,10 +21,6 @@ Specifies an *x*-scale for the stack layout. This scale is used to position stac
 #### `stackedBarVertical.width(width)`
 
 Specifies a width for the bars in the stack layout. In the vertical orientation, this determines how wide each stack is.
-
-#### `stackedBarVertical.yAccessor(yAcc)`
-
-The y-accessor. The values returned by this function are used to construct the stack. The return value must be a number.
 
 #### `stackedBarVertical.yScale(yScale)`
 
@@ -45,10 +37,6 @@ Specify a fill value for the rectangles (default black).
 #### `stackedBarVertical.stroke([stroke])`
 
 Specify a stroke value for the stack rectangles (default none).
-
-#### `stackedBarVertical.orientation(orientation)`
-
-Specifies the orientation ("vertical" or "horizontal") of the stacked bar chart. Used internally to configure the verticalBar and the horizontalBar. Should probably never be changed.
 
 ### Chart
 
