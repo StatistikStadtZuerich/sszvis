@@ -35,11 +35,13 @@ export default function() {
 
       var wrapperEl = selection.selectAll('.sszvis-control-optionSelectable')
         .data(['sszvis-control-select'], function(d){return d;});
-      wrapperEl.enter()
+      var newWrapperEl = wrapperEl.enter()
         .append('div')
         .classed('sszvis-control-optionSelectable', true)
         .classed('sszvis-control-select', true);
       wrapperEl.exit().remove();
+
+      wrapperEl = wrapperEl.merge(newWrapperEl);
 
       wrapperEl
         .style('width', props.width + 'px');
@@ -50,7 +52,7 @@ export default function() {
       var selectEl = wrapperEl.selectAll('.sszvis-control-select__element')
         .data([1]);
 
-      selectEl.enter()
+      var newSelectEl = selectEl.enter()
         .append('select')
         .classed('sszvis-control-select__element', true)
         .on('change', function() {
@@ -63,18 +65,20 @@ export default function() {
           setTimeout(function(){ window.focus(); }, 0);
         });
 
+      selectEl = selectEl.merge(newSelectEl);
+
       selectEl
         .style('width', (props.width + 30) + 'px');
 
       var optionEls = selectEl.selectAll('option')
         .data(props.values);
 
-      optionEls.enter()
+      var newOptionEls = optionEls.enter()
         .append('option');
 
       optionEls.exit().remove();
 
-      optionEls
+      optionEls.merge(newOptionEls)
         .attr('selected', function(d) { return d === props.current ? 'selected' : null; })
         .attr('value', function(d, i){ return i; })
         .text(function(d) {
