@@ -61,6 +61,20 @@ geo2topo -q 1e3 -n \
 	> docs/static/topo/stadt-zurich.json
 
 geo2topo -q 1e3 -n \
+	historische_kreise_doerfer_1933=<(\
+		ndjson-cat geodata/historische_kreise_doerfer_1933.json \
+		| ndjson-split 'd.features' \
+		| ndjson-map 'd.id = d.properties.cdhist1933, d.properties = {name: d.properties.hist1933}, d') \
+  lakezurich=<(\
+		ndjson-cat geodata/lakezurich.geojson \
+		| ndjson-split 'd.features') \
+  stadtkreis_lakebounds=<(\
+		ndjson-cat geodata/lakebounds/stadtkreis_lakebounds.geojson \
+		| ndjson-split 'd.features') \
+  | toposimplify -f -s 2e-10 \
+	> docs/static/topo/stadt-zurich-hist.json
+
+geo2topo -q 1e3 -n \
   agglomeration=<(\
 		ndjson-join --left 'd.id' 'd.Gde_Nr' \
 			<(\
