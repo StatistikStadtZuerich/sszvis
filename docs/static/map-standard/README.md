@@ -68,6 +68,10 @@ A GeoJSON feature collection, created with `topojson.feature()`. For example dis
 
 A GeoJSON line string, created with `topojson.mesh()`. For example district borders.
 
+#### `map.withLake([boolean])` (optional)
+
+Should the lake be shown (default: true);
+
 #### `map.lakeFeatures(geoJsonFeatures)` (optional)
 
 A GeoJSON object, created either with `topojson.feature()` or `topojson.mesh()`. For example lake outlines.
@@ -75,6 +79,14 @@ A GeoJSON object, created either with `topojson.feature()` or `topojson.mesh()`.
 #### `map.lakeBorders(geoJsonFeatures)` (optional)
 
 A GeoJSON line string, created with `topojson.mesh()`. For example district borders which fall within the lake. Will be rendered as a dashed line.
+
+#### `map.lakeFadeOut([boolean])` (optional)
+
+Should the lake shape fade out (default: false).
+
+#### `map.lakePathColor([String])` (optional)
+
+Color of the lake outline.
 
 #### `map.keyName([keyString])`
 
@@ -108,10 +120,17 @@ A string or function for the fill of the map entities.
 
 A string for the border color of the map entities.
 
+#### `map.strokeWidth([strokeWidth])`
+
+Border stroke width.
+
 #### `map.on(String, function)`
 
 This component has an event handler interface for binding events to the map entities. The available events are 'over', 'out', and 'click'. These are triggered on map elements when the user mouses over or taps, mouses out, or taps or clicks, respectively.
 
+#### `map.anchoredShape([mapRenderer])`
+
+Use a symbol renderer for each shape. For example the [Bubble map renderer](/map-signature#bubble-map)
 
 ## Zürich: Kreise
 
