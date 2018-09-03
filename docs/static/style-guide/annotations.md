@@ -200,6 +200,10 @@ A function for determining the labels of the ruler dots. Should take a data valu
 
 A string or function to specify the color of the ruler dots.
 
+#### `annotationRuler.r`
+
+A number or function to specify the radius of the ruler dots.
+
 #### `annotationRuler.[flip]`
 
 A boolean or function which returns a boolean that specifies whether the labels on the ruler dots should be flipped. (they default to the right side)

@@ -15,6 +15,7 @@
  * @property {function} label             A function for determining the labels of the ruler dots. Should take a
  *                                        data value as argument and return a label.
  * @property {string, function} color     A string or function to specify the color of the ruler dots.
+ * @property {number, function} r         A number or function to specify the radius of the ruler dots. Default 3.5
  * @property {function} flip              A boolean or function which returns a boolean that specifies
  *                                        whether the labels on the ruler dots should be flipped. (they default to the right side)
  * @property {function} labelId           An id accessor function for the labels. This is used to match label data to svg elements,
@@ -46,6 +47,7 @@ export default function() {
     .prop('y', fn.functor)
     .prop('label').label(fn.functor(''))
     .prop('color')
+    .prop('r').r(3.5)    
     .prop('flip', fn.functor).flip(false)
     .prop('labelId', fn.functor)
     .prop('reduceOverlap').reduceOverlap(false)
@@ -85,7 +87,7 @@ export default function() {
       dot
         .attr('cx', fn.compose(halfPixel, props.x))
         .attr('cy', fn.compose(halfPixel, props.y))
-        .attr('r', 3.5)
+        .attr('r', props.r)
         .attr('fill', props.color);
 
 
