@@ -24,6 +24,10 @@ Accessor function to read *y*-values from the data.
 
 Accessor function to specify which data points are defined (default: `line.y` is not `NaN`).
 
+#### `line.curve([curve])`
+
+Sets the [curve factory](https://github.com/d3/d3-shape/blob/master/README.md#curves) (default: `d3.curveLinear`).
+
 #### `line.stroke([stroke])`
 
 String or function to set the stroke color (default: black)

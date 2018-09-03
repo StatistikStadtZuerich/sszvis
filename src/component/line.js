@@ -22,7 +22,8 @@
  *
  * @property {function} x                An accessor function for getting the x-value of the line
  * @property {function} y                An accessor function for getting the y-value of the line
- * @property {function} [defined]        The key function to be used for the data join
+ * @property {function} [defined]        An Accessor function to specify which data points are defined.
+ * @property {function} [curve]          Sets the curve factory. Default is d3.curveLinear
  * @property {function} [key]            The key function to be used for the data join
  * @property {function} [valuesAccessor] An accessor function for getting the data points array of the line
  * @property {string, function} [stroke] Either a string specifying the stroke color of the line or lines,
@@ -35,7 +36,7 @@
  * @return {sszvis.component}
  */
 
-import {select, line as d3Line} from 'd3';
+import {select, line as d3Line, curveLinear} from 'd3';
 
 import * as fn from '../fn.js';
 import { defaultTransition } from '../transition.js';
@@ -49,6 +50,7 @@ export default function() {
     .prop('stroke')
     .prop('strokeWidth')
     .prop('defined')
+    .prop('curve').curve(curveLinear)
     .prop('key').key(function(d, i){ return i; })
     .prop('valuesAccessor').valuesAccessor(fn.identity)
     .prop('transition').transition(true)
@@ -60,6 +62,7 @@ export default function() {
       // Layouts
 
       var line = d3Line()
+        .curve(props.curve)	  
         .defined(props.defined !== undefined ? props.defined : fn.compose(fn.not(isNaN), props.y))
         .x(props.x)
         .y(props.y);

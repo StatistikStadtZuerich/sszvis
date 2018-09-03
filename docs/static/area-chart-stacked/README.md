@@ -28,6 +28,10 @@ Accessor function to read *y1*-values from the data (upper bound of stacked valu
 
 Accessor function to specify which data points are defined (default: `stackedArea.y0` and `stackedArea.y1` are not `NaN`).
 
+#### `stackedArea.curve([curve])`
+
+Sets the [curve factory](https://github.com/d3/d3-shape/blob/master/README.md#curves) (default: `d3.curveLinear`).
+
 #### `stackedArea.yScale(yScale)`
 
 A y-scale for determining the vertical position of data quantities. Used to compute the bottom and top lines of the stack.
@@ -95,6 +99,10 @@ Accessor function for the area stroke. Passed a layer object.
 #### `stackedAreaMultiples.defined([predicate])`
 
 Accessor function to specify which data points are defined (default: `stackedAreaMultiples.y0` and `stackedAreaMultiples.y1` are not `NaN`).
+
+#### `stackedAreaMultiples.curve([curve])`
+
+Sets the [curve factory](https://github.com/d3/d3-shape/blob/master/README.md#curves) (default: `d3.curveLinear`).
 
 #### `stackedAreaMultiples.key([keyFunction])`
 
