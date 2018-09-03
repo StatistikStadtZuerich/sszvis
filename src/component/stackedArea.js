@@ -18,6 +18,8 @@
  *                                             bottom and top lines of the stack.
  * @property {string, function} fill           String or accessor function for the area fill. Passed a layer object.
  * @property {string, function} stroke         String or accessor function for the area stroke. Passed a layer object.
+ * @property {function} [defined]              An Accessor function to specify which data points are defined.
+ * @property {function} [curve]                Sets the curve factory. Default is d3.curveLinear
  * @property {function} key                    Specify a key function for use in the data join. The value returned by the key should be unique
  *                                             among stacks. This option is particularly important when creating a chart which transitions
  *                                             between stacked and separated views.
@@ -28,7 +30,7 @@
  * @return {sszvis.component}
  */
 
-import {select, area} from 'd3';
+import {select, area, curveLinear} from 'd3';
 
 import * as fn from '../fn.js';
 import { defaultTransition } from '../transition.js';
@@ -42,6 +44,7 @@ export default function() {
     .prop('fill')
     .prop('stroke')
     .prop('defined')
+    .prop('curve').curve(curveLinear)
     .prop('key').key(function(d, i){ return i; })
     .prop('transition').transition(true)
     .render(function(data) {
@@ -54,6 +57,7 @@ export default function() {
   
       var areaGen = area()
         .defined(props.defined !== undefined ? props.defined : defaultDefined)
+        .curve(props.curve)
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);
