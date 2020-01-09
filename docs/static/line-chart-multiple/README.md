@@ -100,7 +100,13 @@ Using a config object to define chart.
 
 ## Demonstrating the label adjustment code
 
-Note the use of `.labelId` and `.reduceOverlap(true)` on the ruler component. In order to change the default value and let the labels overlap, set the reduceOverlap to false. This can be done by adding this snippet to the ruler component:
+Note the use of `.reduceOverlap(false)` on the ruler component. In order to change the default value and let the labels overlap, set the `.reduceOverlap()` to false. This can be done by adding this snippet to the ruler component:
+
+```code
+.reduceOverlap(false);
+```
+
+If this method causes any problems, the `.labelId()` can also be set before the `.reduceOverlap()`.
 
 ```code
 .labelId(cAcc)
