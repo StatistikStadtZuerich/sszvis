@@ -50,7 +50,7 @@ export default function() {
     .flip(false)
     .prop("labelId", fn.functor)
     .prop("reduceOverlap")
-    .reduceOverlap(false)
+    .reduceOverlap(true)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
