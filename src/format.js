@@ -116,17 +116,12 @@ export var formatNone = function() {
  * See also: many test cases for this function in sszvis.test
  *
  * @param  {number} d   Number
- * @param  {number} [p] Decimal precision
+ * @param  {number} [precision] Decimal precision
  * @return {string}     Fully formatted number
  */
-export var formatNumber = function(d) {
+export var formatNumber = function(d, precision) {
   var p;
   var dAbs = Math.abs(d);
-  // decLen is the number of decimal places in the number
-  // 0.0002 -> 4
-  // 0.0000 -> 0 (Javascript's number implementation chops off trailing zeroes)
-  // 123456.1 -> 1
-  // 123456.00001 -> 5
   var decLen = decimalPlaces(d);
 
   // NaN      -> '–'
@@ -146,10 +141,12 @@ export var formatNumber = function(d) {
   // 2350     -> "2350"
   // 2350.29  -> "2350.3"
   else if (dAbs >= 100) {
-    p = decLen === 0 ? 0 : 1;
+    p = precision != null ? precision : decLen === 0 ? 0 : 1;
     // Where there are decimals, round to 1 position
     // To display more precision, use the preciseNumber function.
-    return format("." + p + "f")(d);
+    return precision != null
+      ? format("." + p + "f")(d)
+      : stripTrailingZeroes(format("." + p + "f")(d));
   }
 
   // 41       -> "41"
@@ -157,10 +154,12 @@ export var formatNumber = function(d) {
   // 1.329    -> "1.33"
   // 0.00034  -> "0.00034"
   else if (dAbs > 0) {
-    p = Math.min(2, decLen);
+    p = precision != null ? precision : Math.min(2, decLen);
     // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
     // but not more. To display more precision, use the preciseNumber function.
-    return format("." + p + "f")(d);
+    return precision != null
+      ? format("." + p + "f")(d)
+      : stripTrailingZeroes(format("." + p + "f")(d));
   }
 
   // If abs(num) is not > 0, num is 0
@@ -231,6 +230,16 @@ export var formatText = function(d) {
 
 /* Helper functions
 ----------------------------------------------- */
+
+// decLen is the number of decimal places in the number
+// 0.0002 -> 4
+// 0.0000 -> 0 (Javascript's number implementation chops off trailing zeroes)
+// 123456.1 -> 1
+// 123456.00001 -> 5
 function decimalPlaces(num) {
   return (String(Math.abs(num)).split(".")[1] || "").length;
+}
+
+function stripTrailingZeroes(str) {
+  return str.replace(/(\.[0-9]*[1-9])0+$|\.0*$/, "$1");
 }
