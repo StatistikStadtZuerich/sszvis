@@ -4,10 +4,9 @@
  * @module sszvis/format
  */
 
-import {timeFormatLocale, formatLocale} from 'd3';
-
-import * as fn from './fn.js';
-import { locale } from './locale.js';
+import { formatLocale, timeFormatLocale } from "d3";
+import * as fn from "./fn.js";
+import { locale } from "./locale.js";
 
 var timeFormat = timeFormatLocale(locale).format;
 var format = formatLocale(locale).format;
@@ -26,14 +25,54 @@ export var formatAge = function(d) {
  */
 export var formatAxisTimeFormat = function(d) {
   var xs = [
-    ['.%L', function(date) { return date.getMilliseconds(); }],
-    [':%S', function(date) { return date.getSeconds(); }],
-    ['%H:%M', function(date) { return date.getMinutes(); }],
-    ['%H Uhr', function(date) { return date.getHours(); }],
-    ['%a., %d.', function(date) { return date.getDay() && date.getDate() != 1; }],
-    ['%e. %b', function(date) { return date.getDate() != 1; }],
-    ['%B', function(date) { return date.getMonth(); }],
-    ['%Y', function() { return true; }]
+    [
+      ".%L",
+      function(date) {
+        return date.getMilliseconds();
+      }
+    ],
+    [
+      ":%S",
+      function(date) {
+        return date.getSeconds();
+      }
+    ],
+    [
+      "%H:%M",
+      function(date) {
+        return date.getMinutes();
+      }
+    ],
+    [
+      "%H Uhr",
+      function(date) {
+        return date.getHours();
+      }
+    ],
+    [
+      "%a., %d.",
+      function(date) {
+        return date.getDay() && date.getDate() != 1;
+      }
+    ],
+    [
+      "%e. %b",
+      function(date) {
+        return date.getDate() != 1;
+      }
+    ],
+    [
+      "%B",
+      function(date) {
+        return date.getMonth();
+      }
+    ],
+    [
+      "%Y",
+      function() {
+        return true;
+      }
+    ]
   ];
 
   for (var i = 0; i < xs.length; ++i) {
@@ -48,19 +87,19 @@ export var formatAxisTimeFormat = function(d) {
  */
 export var formatMonth = fn.compose(function(m) {
   return m.toUpperCase();
-}, timeFormat('%b'));
+}, timeFormat("%b"));
 
 /**
  * A year formatter for date objects. Gives the date's year.
  */
-export var formatYear = timeFormat('%Y')
+export var formatYear = timeFormat("%Y");
 
 /**
  * Formatter for no label
  * @return {string} the empty string
  */
 export var formatNone = function() {
-  return '';
+  return "";
 };
 
 /**
@@ -93,7 +132,7 @@ export var formatNumber = function(d) {
   // NaN      -> '–'
   if (isNaN(d)) {
     // This is an mdash
-    return '–';
+    return "–";
   }
 
   // 10250    -> "10 250"
@@ -101,7 +140,7 @@ export var formatNumber = function(d) {
   else if (dAbs >= 1e4) {
     // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
     // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
-    return format(',.0f')(d);
+    return format(",.0f")(d);
   }
 
   // 2350     -> "2350"
@@ -110,7 +149,7 @@ export var formatNumber = function(d) {
     p = decLen === 0 ? 0 : 1;
     // Where there are decimals, round to 1 position
     // To display more precision, use the preciseNumber function.
-    return format('.'+ p +'f')(d);
+    return format("." + p + "f")(d);
   }
 
   // 41       -> "41"
@@ -121,13 +160,13 @@ export var formatNumber = function(d) {
     p = Math.min(2, decLen);
     // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
     // but not more. To display more precision, use the preciseNumber function.
-    return format('.' + p + 'f')(d);
+    return format("." + p + "f")(d);
   }
 
   // If abs(num) is not > 0, num is 0
   // 0       -> "0"
   else {
-    return format('.0f')(0);
+    return format(".0f")(0);
   }
 };
 
@@ -153,10 +192,10 @@ export var formatPreciseNumber = function(p, d) {
     var dAbs = Math.abs(x);
     if (dAbs >= 100 && dAbs < 1e4) {
       // No thousands separator
-      return format('.' + p + 'f')(x);
+      return format("." + p + "f")(x);
     } else {
       // Use the thousands separator
-      return format(',.' + p + 'f')(x);
+      return format(",." + p + "f")(x);
     }
   };
 };
@@ -168,7 +207,7 @@ export var formatPreciseNumber = function(p, d) {
  */
 export var formatPercent = function(d) {
   // Uses unix thin space
-  return formatNumber(d) + ' %';
+  return formatNumber(d) + " %";
 };
 
 /**
@@ -178,7 +217,7 @@ export var formatPercent = function(d) {
  */
 export var formatFractionPercent = function(d) {
   // Uses unix thin space
-  return formatNumber(d * 100) + ' %';
+  return formatNumber(d * 100) + " %";
 };
 
 /**
@@ -190,11 +229,8 @@ export var formatText = function(d) {
   return String(d);
 };
 
-
-
-
 /* Helper functions
 ----------------------------------------------- */
 function decimalPlaces(num) {
-  return (String(Math.abs(num)).split('.')[1] || '').length;
+  return (String(Math.abs(num)).split(".")[1] || "").length;
 }
