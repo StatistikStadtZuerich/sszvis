@@ -30,106 +30,113 @@
  * @return {sszvis.component}
  */
 
-import {select, ascending} from 'd3';
+import { select, ascending } from "d3";
 
-import * as fn from '../fn.js';
-import { halfPixel } from '../svgUtils/crisp.js';
-import translateString from '../svgUtils/translateString.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { halfPixel } from "../svgUtils/crisp.js";
+import translateString from "../svgUtils/translateString.js";
+import { component } from "../d3-component.js";
 
 export default function() {
-
   return component()
-    .prop('top')
-    .prop('bottom')
-    .prop('x', fn.functor)
-    .prop('y', fn.functor)
-    .prop('label').label(fn.functor(''))
-    .prop('color')
-    .prop('flip', fn.functor).flip(false)
-    .prop('labelId', fn.functor)
-    .prop('reduceOverlap').reduceOverlap(false)
+    .prop("top")
+    .prop("bottom")
+    .prop("x", fn.functor)
+    .prop("y", fn.functor)
+    .prop("label")
+    .label(fn.functor(""))
+    .prop("color")
+    .prop("flip", fn.functor)
+    .flip(false)
+    .prop("labelId", fn.functor)
+    .prop("reduceOverlap")
+    .reduceOverlap(false)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
-      var labelId = props.labelId || function(d) { return props.x(d) + '_' + props.y(d) };
+      var labelId =
+        props.labelId ||
+        function(d) {
+          return props.x(d) + "_" + props.y(d);
+        };
 
-      var ruler = selection.selectAll('.sszvis-ruler__rule')
+      var ruler = selection
+        .selectAll(".sszvis-ruler__rule")
         .data(data, labelId);
 
-      var newRuler = ruler.enter()
-        .append('line')
-        .classed('sszvis-ruler__rule', true);
+      var newRuler = ruler
+        .enter()
+        .append("line")
+        .classed("sszvis-ruler__rule", true);
 
       ruler.exit().remove();
       ruler = ruler.merge(newRuler);
 
       ruler
-        .attr('x1', fn.compose(halfPixel, props.x))
-        .attr('y1', props.y)
-        .attr('x2', fn.compose(halfPixel, props.x))
-        .attr('y2', props.bottom);
+        .attr("x1", fn.compose(halfPixel, props.x))
+        .attr("y1", props.y)
+        .attr("x2", fn.compose(halfPixel, props.x))
+        .attr("y2", props.bottom);
 
+      var dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
 
-      var dot = selection.selectAll('.sszvis-ruler__dot')
-        .data(data, labelId);
-
-      var newDot = dot.enter()
-        .append('circle')
-        .classed('sszvis-ruler__dot', true);
+      var newDot = dot
+        .enter()
+        .append("circle")
+        .classed("sszvis-ruler__dot", true);
 
       dot.exit().remove();
       dot = dot.merge(newDot);
 
       dot
-        .attr('cx', fn.compose(halfPixel, props.x))
-        .attr('cy', fn.compose(halfPixel, props.y))
-        .attr('r', 3.5)
-        .attr('fill', props.color);
+        .attr("cx", fn.compose(halfPixel, props.x))
+        .attr("cy", fn.compose(halfPixel, props.y))
+        .attr("r", 3.5)
+        .attr("fill", props.color);
 
-
-      var labelOutline = selection.selectAll('.sszvis-ruler__label-outline')
+      var labelOutline = selection
+        .selectAll(".sszvis-ruler__label-outline")
         .data(data, labelId);
 
-      var newLabelOutline = labelOutline.enter()
-        .append('text')
-        .classed('sszvis-ruler__label-outline', true);
+      var newLabelOutline = labelOutline
+        .enter()
+        .append("text")
+        .classed("sszvis-ruler__label-outline", true);
 
       labelOutline.exit().remove();
       labelOutline = labelOutline.merge(newLabelOutline);
 
-
-      var label = selection.selectAll('.sszvis-ruler__label')
+      var label = selection
+        .selectAll(".sszvis-ruler__label")
         .data(data, labelId);
 
-      var newLabel = label.enter()
-        .append('text')
-        .classed('sszvis-ruler__label', true);
+      var newLabel = label
+        .enter()
+        .append("text")
+        .classed("sszvis-ruler__label", true);
 
       label.exit().remove();
       label = label.merge(newLabel);
-
 
       // Update both label and labelOutline selections
 
       var crispX = fn.compose(halfPixel, props.x);
       var crispY = fn.compose(halfPixel, props.y);
 
-      var textSelection = selection.selectAll('.sszvis-ruler__label, .sszvis-ruler__label-outline')
-        .attr('transform', function(d) {
+      var textSelection = selection
+        .selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline")
+        .attr("transform", function(d) {
           var x = crispX(d);
           var y = crispY(d);
 
           var dx = props.flip(d) ? -10 : 10;
-          var dy = (y < props.top + dy) ? 2 * dy
-                 : (y > props.bottom - dy) ? 0
-                 : 5;
+          var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
 
           return translateString(x + dx, y + dy);
         })
-        .style('text-anchor', function(d) {
-          return props.flip(d) ? 'end' : 'start';
+        .style("text-anchor", function(d) {
+          return props.flip(d) ? "end" : "start";
         })
         .html(props.label);
 
@@ -141,7 +148,7 @@ export default function() {
         var labelBoundsIndex = {};
 
         // Reset vertical shift (set by previous renders)
-        textSelection.attr('y', '');
+        textSelection.attr("y", "");
 
         // Create bounds objects
         label.each(function(d) {
@@ -186,12 +193,10 @@ export default function() {
         }
 
         // Shift vertically to remove overlap
-        textSelection.attr('y', function(d) {
+        textSelection.attr("y", function(d) {
           var textLabel = labelBoundsIndex[labelId(d)];
           return textLabel.dy;
         });
-
       }
-
     });
-};
+}
