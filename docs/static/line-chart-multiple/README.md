@@ -14,7 +14,7 @@ The multiple line chart uses the same components as the [single line chart](line
 
 ### Chart
 
-``` project
+```project
 {
     "name": "line-chart-multiple-two-cat",
     "files": {
@@ -26,7 +26,7 @@ The multiple line chart uses the same components as the [single line chart](line
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -36,7 +36,7 @@ The multiple line chart uses the same components as the [single line chart](line
 
 Observations for the same variable across many years.
 
-``` project
+```project
 {
     "name": "line-chart-multiple-eight-cat",
     "files": {
@@ -48,7 +48,7 @@ Observations for the same variable across many years.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -58,7 +58,7 @@ Observations for the same variable across many years.
 
 Comparison of two datasets with huge differences in values over the same time period by using two y-axes instead of just one.
 
-``` project
+```project
 {
     "name": "line-chart-multiple-two-axis",
     "files": {
@@ -70,7 +70,7 @@ Comparison of two datasets with huge differences in values over the same time pe
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -78,9 +78,9 @@ Comparison of two datasets with huge differences in values over the same time pe
 
 ## Parametric Chart
 
-Using a config object to define chart. 
+Using a config object to define chart.
 
-``` project
+```project
 {
     "name": "line-chart-multiple-parametric",
     "files": {
@@ -92,7 +92,7 @@ Using a config object to define chart.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -100,7 +100,14 @@ Using a config object to define chart.
 
 ## Demonstrating the label adjustment code
 
-Note the use of `.labelId` and `.reduceOverlap(true)` on the ruler component.
+Note the use of `.labelId` and `.reduceOverlap(true)` on the ruler component. In order to change the default value and let the labels overlap, set the reduceOverlap to false. This can be done by adding this snippet to the ruler component:
+
+```code
+.labelId(cAcc)
+.reduceOverlap(false);
+```
+
+Notice the effect in the following example:
 
 ```project
 {
@@ -114,10 +121,8 @@ Note the use of `.labelId` and `.reduceOverlap(true)` on the ruler component.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
-
