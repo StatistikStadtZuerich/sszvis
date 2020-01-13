@@ -106,13 +106,6 @@ Note the use of `.reduceOverlap(false)` on the ruler component. In order to chan
 .reduceOverlap(false);
 ```
 
-If this method causes any problems, the `.labelId()` can also be set before the `.reduceOverlap()`.
-
-```code
-.labelId(cAcc)
-.reduceOverlap(false);
-```
-
 Notice the effect in the following example:
 
 ```project
