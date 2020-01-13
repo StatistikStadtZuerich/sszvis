@@ -13,18 +13,18 @@
 
     <div id="sszvis-chart"></div>
 
-    <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
-        "use strict";
+    <script>
+      var arbeitsloseParams = {
+        data: "data/arbeitslose.csv",
+        fallback: "",
+        fallback_alt: "af",
+        id: "#sszvis-chart"
+      };
+    </script>
 
-        var arbeitsloseParams = {
-          data: "data/arbeitslose.csv",
-          title: "sdf",
-          description: "af",
-          fallback: "",
-          fallback_alt: "af",
-          id: "#sszvis-chart"
-        };
+    <script data-catalog-project-expose="script.js">
+      (function(d3, sszvis, config) {
+        "use strict";
 
         /* Configuration
   ----------------------------------------------- */
@@ -33,8 +33,6 @@
         // if variable is missing.
         var config = {
           dataPath: arbeitsloseParams.data, //optional
-          title: arbeitsloseParams.title, //optional
-          description: arbeitsloseParams.description, //optional
           dateColumn: "Datum",
           valueColumn: "Arbeitslosenquote",
           categoryColumn: "Kategorie",
@@ -175,11 +173,7 @@
 
           // Layers
           var chartLayer = sszvis
-            .createSvgLayer(config.targetElement, bounds, {
-              // CONFIG
-              title: config.title || "",
-              description: config.description || ""
-            })
+            .createSvgLayer(config.targetElement, bounds)
             .datum(state.lineData);
 
           // Components
@@ -324,7 +318,7 @@
             String(d)
           );
         }
-      })(d3, sszvis);
+      })(d3, sszvis, arbeitsloseParams);
     </script>
   </body>
 </html>
