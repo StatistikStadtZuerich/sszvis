@@ -15,7 +15,7 @@
 
     <script>
       var EXTERNAL_CONFIG = {
-        data: "data/ML_2Categories_Quarterly.csv", //optional
+        data: "data/ML_2Categories_Quarterly.csv",
         id: "#sszvis-chart",
         fallback: false //optional, creates long ticks when true
       };
@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id);
           return;
         }
 
@@ -136,7 +136,7 @@
   ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 30, bottom: 90 }, "#sszvis-chart");
+          var bounds = sszvis.bounds({ top: 30, bottom: 90 }, config.id);
 
           // Scales
           var xScale = d3
@@ -159,7 +159,7 @@
 
           // Layers
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
+            .createSvgLayer(config.id, bounds)
             .datum(state.lineData);
 
           // Components
