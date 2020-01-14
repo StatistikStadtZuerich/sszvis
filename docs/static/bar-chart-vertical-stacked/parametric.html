@@ -13,8 +13,16 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/StVB_7Categories_yearly.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function(d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -22,34 +30,9 @@
           return;
         }
 
-        /* Globals
- ------------------------------------------------*/
-        var DEFAULT_TITLE = "Diagrammtitel";
-        var DEFAULT_DESCRIPTION =
-          "Kurze Beschreibung des Inhalts dieses Diagramms";
-        var DEFAULT_PATH = "";
-        var DEFAULT_DATE_COLUMN = "Datum";
-        var DEFAULT_CATEGORY_COLUMN = "Kategorie";
-        var DEFAULT_VALUE_COLUMN = "Wert";
-        var DEFAULT_RULER_LABEL = "";
-        var DEFAULT_Y_LABEL = "";
-        var DEFAULT_X_LABEL = "";
-        var MAX_WIDTH = 800;
-
         /* Configuration
   ----------------------------------------------- */
-        //configuration object
-        var config = {
-          dataPath: "data/StVB_7Categories_yearly.csv",
-          title: "Title", //optional
-          description: "Description", //optional
-          valueColumn: "Anzahl", //optional
-          categoryColumn: "Berufsfeld",
-          yearColumn: "Jahr",
-          yLabel: "Beschäftigte", //optional
-          xLabel: "",
-          ticks: 5
-        };
+
         var queryProps = sszvis
           .responsiveProps()
           .prop("targetNumColumns", {
@@ -63,6 +46,15 @@
           .prop("barPadding", {
             palm: 0.7,
             _: 0.34
+          })
+          .prop("xLabel", {
+            _: ""
+          })
+          .prop("yLabel", {
+            _: "Beschäftigte"
+          })
+          .prop("ticks", {
+            _: 5
           });
 
         /* Shortcuts
@@ -118,14 +110,12 @@
 
         /* Data initialization
   ----------------------------------------------- */
-        d3.csv(config.dataPath || DEFAULT_PATH)
+        d3.csv(config.data || "")
           .row(function(d) {
             return {
-              year: d[config.yearColumn || DEFAULT_DATE_COLUMN],
-              category: d[config.categoryColumn || DEFAULT_CATEGORY_COLUMN],
-              value: sszvis.parseNumber(
-                d[config.valueColumn || DEFAULT_VALUE_COLUMN]
-              )
+              year: d["Jahr"],
+              category: d["Berufsfeld"],
+              value: sszvis.parseNumber(d["Anzahl"])
             };
           })
           .get(function(error, data) {
@@ -145,7 +135,7 @@
             "#sszvis-chart"
           );
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
-            Math.min(MAX_WIDTH, bounds.innerWidth),
+            Math.min(800, bounds.innerWidth),
             state.categories.length
           );
 
@@ -174,10 +164,7 @@
           // Layers
 
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: config.title || DEFAULT_TITLE,
-              description: config.description || DEFAULT_DESCRIPTION
-            })
+            .createSvgLayer("#sszvis-chart", bounds)
             .datum(state.stackedData);
 
           var tooltipLayer = sszvis
@@ -200,13 +187,13 @@
             .ordinal()
             .scale(xScale)
             .orient("bottom")
-            .title(config.xLabel || "");
+            .title(props.xLabel);
 
           var yAxis = sszvis
             .axisY()
             .scale(yScale)
             .orient("right")
-            .title(config.yLabel || "")
+            .title(props.yLabel)
             .dyTitle(-20);
 
           var colorLegend = sszvis
@@ -286,7 +273,7 @@
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }
-      })(d3, sszvis);
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>
