@@ -50,8 +50,16 @@
             _: 5
           });
 
-        /* Shortcuts
+        /* Domain
   ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            date: sszvis.parseDate(d["Datum"]),
+            value: sszvis.parseNumber(d["Anzahl"]),
+            category: d["Kategorie"]
+          };
+        }
+
         var xAcc = sszvis.prop("date");
         var yAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("category");
@@ -115,14 +123,7 @@
         /* Data initialization
   ----------------------------------------------- */
         d3.csv(config.data)
-          .row(function(d) {
-            return {
-              // CONFIG
-              date: sszvis.parseDate(d["Datum"]),
-              value: sszvis.parseNumber(d["Anzahl"]),
-              category: d["Kategorie"]
-            };
-          })
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               sszvis.loadError(error);
