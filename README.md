@@ -15,7 +15,7 @@ This library is bundled using [Rollup](https://rollupjs.org/). To start developi
 npm install
 
 # Start library build in watch mode
-npm run build -- --watch
+npm run watch
 
 # Start Catalog documentation server
 npm start

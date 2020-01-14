@@ -60,6 +60,7 @@
     "build-topo": "scripts/topo.sh",
     "build-docs": "catalog build docs -o build --public-url=./",
     "prepublishOnly": "npm run test && npm run build",
-    "start": "catalog start docs -p 8000"
+    "start": "catalog start docs -p 8000",
+    "watch": "npm run build-lib -- --watch"
   }
 }
