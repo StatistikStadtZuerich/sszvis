@@ -13,6 +13,14 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/SHB_13Categories_longNames.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
       (function(d3, sszvis, config) {
         "use strict";
@@ -22,32 +30,14 @@
           return;
         }
 
-        /* Globals
- ------------------------------------------------*/
-        var DEFAULT_TITLE = "Diagrammtitel";
-        var DEFAULT_DESCRIPTION =
-          "Kurze Beschreibung des Inhalts dieses Diagramms";
-        var DEFAULT_PATH = "";
-        var DEFAULT_DATE_COLUMN = "Datum";
-        var DEFAULT_CATEGORY_COLUMN = "Kategorie";
-        var DEFAULT_VALUE_COLUMN = "Wert";
-        var DEFAULT_RULER_LABEL = "";
-        var DEFAULT_Y_LABEL = "";
-        var DEFAULT_X_LABEL = "";
-
-        /* Configuration
-  ----------------------------------------------- */
-        //configuration object
-        var config = {
-          dataPath: "data/SHB_13Categories_longNames.csv",
-          title: "Title", //optional
-          description: "Description", //optional
-          valueColumn: "Zupendler", //optional
-          categoryColumn: "Sektor",
-          yLabel: "Beschäftigte", //optional
-          ticks: 5
-        };
-        var MAX_WIDTH = 800;
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("yLabel", {
+            _: "Beschäftigte"
+          })
+          .prop("ticks", {
+            _: 5
+          });
 
         /* Shortcuts
   ----------------------------------------------- */
@@ -89,13 +79,11 @@
 
         /* Data initialization
   ----------------------------------------------- */
-        d3.csv(config.dataPath || DEFAULT_PATH)
+        d3.csv(config.data)
           .row(function(d) {
             return {
-              category: d[config.categoryColumn || DEFAULT_CATEGORY_COLUMN],
-              value: sszvis.parseNumber(
-                d[config.valueColumn || DEFAULT_VALUE_COLUMN]
-              )
+              category: d["Sektor"],
+              value: sszvis.parseNumber(d["Zupendler"])
             };
           })
           .get(function(error, data) {
@@ -109,6 +97,7 @@
         /* Render
   ----------------------------------------------- */
         function render(state) {
+          var props = queryProps(sszvis.measureDimensions(config.id));
           var chartDimensions = sszvis.dimensionsHorizontalBarChart(
             state.categories.length
           );
@@ -120,7 +109,7 @@
             },
             "#sszvis-chart"
           );
-          var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
+          var chartWidth = Math.min(bounds.innerWidth, 800);
 
           // Scales
 
@@ -138,10 +127,7 @@
 
           // Layers
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: config.title || DEFAULT_TITLE,
-              description: config.description || DEFAULT_DESCRIPTION
-            })
+            .createSvgLayer("#sszvis-chart", bounds)
             .datum(state.data);
 
           var controlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds);
@@ -166,10 +152,10 @@
             .orient("bottom")
             .alignOuterLabels(true)
             // .ticks(10)
-            .title(config.yLabel || "");
+            .title(props.yLabel || "");
 
-          if (config.ticks) {
-            xAxis.ticks(config.ticks);
+          if (props.ticks) {
+            xAxis.ticks(props.ticks);
           }
 
           var yAxis = sszvis.axisY
