@@ -171,8 +171,8 @@
 
           // Add the highlighted data as additional ticks to the xScale
           // CONFIG use config.ticks if defined in config object
-          var xTickValues = config.ticks
-            ? xScale.ticks(config.ticks)
+          var xTickValues = props.ticks
+            ? xScale.ticks(props.ticks)
             : xScale.ticks();
           xTickValues = xTickValues.concat(state.selection.map(xAcc));
           xTickValues = xTickValues.filter(function(v, i) {
@@ -187,7 +187,7 @@
             .alignOuterLabels(true)
             .highlightTick(isSelected)
             // CONFIG
-            .title(config.xLabel || "");
+            .title(props.xLabel || "");
 
           var yAxis = sszvis
             .axisY()
@@ -197,7 +197,7 @@
             // CONFIG
             .tickLength(config.fallback ? bounds.innerWidth : null)
             // CONFIG
-            .title(config.yLabel || "")
+            .title(props.yLabel || "")
             .dyTitle(-20);
 
           // CONFIG use a second x-Axis with only tick labels.
