@@ -13,8 +13,16 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/SHB_basic_percent.csv",
+        id: "#sszvis-chart",
+        fallback: false //optional, creates long ticks when true
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function(d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -22,33 +30,10 @@
           return;
         }
 
-        /* Globals
- ------------------------------------------------*/
-        var DEFAULT_TITLE = "Diagrammtitel";
-        var DEFAULT_DESCRIPTION =
-          "Kurze Beschreibung des Inhalts dieses Diagramms";
-        var DEFAULT_PATH = "";
-        var DEFAULT_DATE_COLUMN = "Datum";
-        var DEFAULT_CATEGORY_COLUMN = "Kategorie";
-        var DEFAULT_VALUE_COLUMN = "Wert";
-        var DEFAULT_RULER_LABEL = "";
-        var DEFAULT_Y_LABEL = "";
-        var DEFAULT_X_LABEL = "";
-
         /* Configuration
   ----------------------------------------------- */
         //configuration object
-        var config = {
-          dataPath: "data/SHB_basic_percent.csv", //'data/horizontal_stacked_test.csv',
-          title: "Title", //optional
-          description: "Description", //optional
-          valueColumn: "BIP", //optional
-          categoryColumn: "Branche",
-          categoryColumnY: "Gebiet",
-          xLabel: "Prozent",
-          ticks: 4
-        };
-        var MAX_WIDTH = 800;
+
         var queryProps = sszvis
           .responsiveProps()
           .prop("targetNumColumns", {
@@ -58,6 +43,12 @@
           .prop("bottomPadding", {
             palm: 320,
             _: 190
+          })
+          .prop("xLabel", {
+            _: "Prozent"
+          })
+          .prop("ticks", {
+            _: 4
           });
 
         /* Shortcuts
@@ -114,12 +105,12 @@
 
         /* Data initialization
   ----------------------------------------------- */
-        d3.csv(config.dataPath || DEFAULT_PATH)
+        d3.csv(config.data || "")
           .row(function(d) {
             return {
-              sector: d[config.categoryColumn],
-              area: d[config.categoryColumnY],
-              value: sszvis.parseNumber(d[config.valueColumn])
+              sector: d["Branche"],
+              area: d["Gebiet"],
+              value: sszvis.parseNumber(d["BIP"])
             };
           })
           .get(function(error, data) {
@@ -148,7 +139,7 @@
             },
             "#sszvis-chart"
           );
-          var chartWidth = Math.min(bounds.innerWidth, MAX_WIDTH);
+          var chartWidth = Math.min(bounds.innerWidth, 800);
 
           // Scales
 
@@ -175,10 +166,7 @@
           // Layers
 
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: config.title || DEFAULT_TITLE,
-              description: config.description || DEFAULT_DESCRIPTION
-            })
+            .createSvgLayer("#sszvis-chart", bounds)
             .datum(state.stackedData);
 
           var tooltipLayer = sszvis
@@ -198,11 +186,11 @@
             .axisX()
             .scale(xScale)
             .orient("bottom")
-            .title(config.xLabel || "")
+            .title(props.xLabel || "")
             .alignOuterLabels(true);
 
-          if (config.ticks) {
-            xAxis.ticks(config.ticks);
+          if (props.ticks) {
+            xAxis.ticks(props.ticks);
           }
 
           var yAxis = sszvis.axisY
@@ -289,7 +277,7 @@
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }
-      })(d3, sszvis);
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>
