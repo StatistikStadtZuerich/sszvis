@@ -13,8 +13,16 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/test_param_2.csv",
+        id: "#sszvis-chart",
+        textWrap: false
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function(d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -22,34 +30,16 @@
           return;
         }
 
-        /* Globals
- ------------------------------------------------*/
-        var DEFAULT_TITLE = "Diagrammtitel";
-        var DEFAULT_DESCRIPTION =
-          "Kurze Beschreibung des Inhalts dieses Diagramms";
-        var DEFAULT_PATH = "";
-        var DEFAULT_DATE_COLUMN = "Datum";
-        var DEFAULT_CATEGORY_COLUMN = "Kategorie";
-        var DEFAULT_VALUE_COLUMN = "Wert";
-        var DEFAULT_RULER_LABEL = "";
-        var DEFAULT_Y_LABEL = "";
-        var DEFAULT_X_LABEL = "";
-
         /* Configuration
   ----------------------------------------------- */
-        //configuration object
-        var config = {
-          dataPath: "data/test_param_2.csv",
-          title: "Title", //optional
-          description: "Description", //optional
-          valueColumn: "Wert", //optional
-          categoryColumn: "Stadt",
-          yLabel: "Beschäftigte", //optional
-          textWrap: false
-        };
+
         var MAX_WIDTH = 800;
+
         var queryProps = sszvis
           .responsiveProps()
+          .prop("yLabel", {
+            _: "Beschäftigte"
+          })
           .prop("barPadding", {
             palm: 0.5,
             _: 0.3
@@ -103,13 +93,11 @@
 
         /* Data initialization
   ----------------------------------------------- */
-        d3.csv(config.dataPath || DEFAULT_PATH)
+        d3.csv(config.data || "")
           .row(function(d) {
             return {
-              category: d[config.categoryColumn || DEFAULT_CATEGORY_COLUMN],
-              value: sszvis.parseNumber(
-                d[config.valueColumn || DEFAULT_VALUE_COLUMN]
-              )
+              category: d["Stadt"],
+              value: sszvis.parseNumber(d["Wert"])
             };
           })
           .get(function(error, data) {
@@ -158,10 +146,7 @@
 
           // Layers
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: config.title || DEFAULT_TITLE,
-              description: config.description || DEFAULT_DESCRIPTION
-            })
+            .createSvgLayer("#sszvis-chart", bounds)
             .datum(state.data);
 
           var tooltipLayer = sszvis
@@ -194,7 +179,7 @@
             .axisY()
             .scale(yPosScale)
             .tickFormat(yAxisLabel)
-            .title(config.yLabel || DEFAULT_Y_LABEL)
+            .title(props.yLabel || "")
             .dyTitle(-20)
             .orient("right");
 
@@ -255,7 +240,7 @@
         function labelWrapWidth(range) {
           return (d3.max(range) - d3.min(range)) / range.length;
         }
-      })(d3, sszvis);
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>
