@@ -39,8 +39,10 @@
             _: "y-Achse"
           })
           .prop("rulerLabel", {
-            _: function(d) {
-              return sszvis.formatNumber(d.value);
+            _: function() {
+              return function(d) {
+                return sszvis.formatNumber(yAcc(d));
+              };
             }
           })
           .prop("ticks", {
