@@ -211,9 +211,13 @@
             )
             .orientation("vertical");
 
-          var tooltipHeader = sszvis.modularTextHTML().bold(cAcc);
+          var tooltipHeader = sszvis
+            .modularTextHTML()
+            .bold(sszvis.compose(cAcc, dataAcc));
 
-          var tooltipText = sszvis.modularTextHTML().plain(xAcc);
+          var tooltipText = sszvis
+            .modularTextHTML()
+            .plain(sszvis.compose(sszvis.formatPercent, xAcc, dataAcc));
 
           var tooltip = sszvis
             .tooltip()
