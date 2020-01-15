@@ -1,32 +1,30 @@
 import { formatNumber, formatPreciseNumber } from "../src/format.js";
 
+const EN_DASH = "–";
+const THINSP = " ";
+
 describe("Special cases", () => {
-  test("NaN is mdash –", () => expect(formatNumber(NaN)).toBe("–")); // Note: this uses an mdash
-  test("0, without precision", () => expect(formatNumber(0)).toBe("0"));
-  test("0, with precision", () => expect(formatPreciseNumber(3, 0)).toBe("0.000"));
-  test("test that currying works, 0", () => expect(formatPreciseNumber(3)(0)).toBe("0.000"));
-  test("test that currying works, 123.456789", () =>
-    expect(formatPreciseNumber(3)(123.123456)).toBe("123.123"));
-  test("(negative number) abs 0 - 1, leading zeroes, all digits cut off", () =>
-    expect(formatPreciseNumber(3, -0.000124)).toBe("0.000"));
-  test("raw numbers with explicit zero decimals lose those decimals because of Javascript", () =>
-    expect(formatNumber(42.0)).toBe("42"));
-  test("to add zeroes to a raw number with explicit zero decimals, pass a precision value", () =>
-    expect(formatPreciseNumber(3, 42.0)).toBe("42.000"));
+  test("undefined displays as an en-dash (–)", () => expect(formatNumber(undefined)).toBe(EN_DASH));
+  test("null displays as an en-dash (–)", () => expect(formatNumber(null)).toBe(EN_DASH));
+  test("NaN displays as an en-dash (–)", () => expect(formatNumber(NaN)).toBe(EN_DASH));
+
+  test("0, formatNumber", () => expect(formatNumber(0)).toBe("0"));
+  test("0, formatPreciseNumber", () => expect(formatPreciseNumber(3, 0)).toBe("0.000"));
+
+  test("Currying", () => expect(formatPreciseNumber(3)(0)).toBe("0.000"));
 });
 
 describe("Numbers > 10000", () => {
-  // Note: tests for numbers > 10000 expect a 'narrow space' as the thousands separator
   test("abs >10000, uses a thin space thousands separator", () =>
-    expect(formatNumber(10250)).toBe("10 250"));
+    expect(formatNumber(10250)).toBe(`10${THINSP}250`));
   test("abs >10000, with decimal precision supplied", () =>
-    expect(formatPreciseNumber(5, 10250)).toBe("10 250.00000"));
+    expect(formatPreciseNumber(5, 10250)).toBe(`10${THINSP}250.00000`));
   test("abs >10000, with precision and decimals", () =>
-    expect(formatPreciseNumber(2, 10250.12345)).toBe("10 250.12"));
+    expect(formatPreciseNumber(2, 10250.12345)).toBe(`10${THINSP}250.12`));
   test("abs >10000, with precision, decimals, and needing to be rounded", () =>
-    expect(formatPreciseNumber(3, 10250.16855)).toBe("10 250.169"));
+    expect(formatPreciseNumber(3, 10250.16855)).toBe(`10${THINSP}250.169`));
   test("(negative number) abs >10000, with precision, decimals, and needing to be rounded", () =>
-    expect(formatPreciseNumber(3, -10250.16855)).toBe("-10 250.169"));
+    expect(formatPreciseNumber(3, -10250.16855)).toBe(`-10${THINSP}250.169`));
 });
 
 describe("Numbers 100–10000", () => {

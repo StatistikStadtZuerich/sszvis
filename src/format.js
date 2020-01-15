@@ -124,10 +124,8 @@ export var formatNumber = function(d, precision) {
   var dAbs = Math.abs(d);
   var decLen = decimalPlaces(d);
 
-  // NaN      -> '–'
-  if (isNaN(d)) {
-    // This is an mdash
-    return "–";
+  if (d == null || isNaN(d)) {
+    return "–"; // This is an en-dash
   }
 
   // 10250    -> "10 250"
