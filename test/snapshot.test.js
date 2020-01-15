@@ -7,7 +7,7 @@ const files = glob.sync("../docs/static/[^_]*/*.html", { cwd: __dirname });
 test.each(files.map(filepathToUrl))("%s", async url => {
   try {
     await page.goto(url, { waitUntil: "networkidle2" });
-    await page.waitFor(100);
+    await page.waitFor(200);
     const image = await page.screenshot();
     expect(image).toMatchImageSnapshot();
   } catch (e) {
