@@ -1,50 +1,18 @@
-import {select, dispatch} from 'd3';
-
-import {component} from '../d3-component.js';
-import {swissMapPath, mapRendererBase, mapRendererMesh, mapRendererPatternedLakeOverlay, mapRendererHighlight, prepareMergedGeoData, GEO_KEY_DEFAULT} from '../map/index.js';
-
-/**
- * zurichStadtKreise Base Map Component
- */
-
-// export var zurichStadtKreiseBaseMap = function() {
-//   var meshLayer = mapRendererMesh()
-//     .geoJson(props.kreiseMesh);
-
-//   var lake = mapRendererPatternedLakeOverlay()
-//     .lakeFeature(zurichStadtKreiseMapData.lakeFeature())
-//     .lakeBounds(zurichStadtKreiseMapData.lakeBounds());
-
-//   var mapComponent = component()
-//     .prop('width')
-//     .prop('height')
-//     .prop('borderColor').borderColor('black')
-//     .delegate('strokeWidth', meshLayer)
-//     .render(function() {
-//       var selection = select(this);
-//       var props = selection.props();
-
-//       var mapPath = swissMapPath(props.width, props.height, zurichStadtKreiseMapData.featureData());
-
-//       meshLayer
-//         .mapPath(mapPath)
-//         .borderColor(props.borderColor);
-
-//       lake
-//         .mapPath(mapPath)
-//         .lakePathColor(props.borderColor);
-
-//       selection
-//         .call(meshLayer)
-//         .call(lake);
-//     });
-
-//   return mapComponent;
-// };
+import { dispatch, select } from "d3";
+import { component } from "../d3-component.js";
+import {
+  GEO_KEY_DEFAULT,
+  mapRendererBase,
+  mapRendererHighlight,
+  mapRendererMesh,
+  mapRendererPatternedLakeOverlay,
+  prepareMergedGeoData,
+  swissMapPath
+} from "../map/index.js";
 
 /**
  * zurichStadtKreise Map Component
- * 
+ *
  * To use this component, pass data in the usual manner. Each data object is expected to have a value which
  * will be used to match that object with a particular map entity. The possible id values depend on the map type.
  * They are covered in more detail in the file sszvis/map/map-ids.txt. Which data key is used to fetch this value is configurable.
@@ -71,39 +39,42 @@ import {swissMapPath, mapRendererBase, mapRendererMesh, mapRendererPatternedLake
  */
 
 export default function() {
-  var event = dispatch('over', 'out', 'click');
+  var event = dispatch("over", "out", "click");
 
-  var baseRenderer = mapRendererBase()
-  var meshRenderer = mapRendererMesh()
-  var lakeRenderer = mapRendererPatternedLakeOverlay()
-  var highlightRenderer = mapRendererHighlight()
+  var baseRenderer = mapRendererBase();
+  var meshRenderer = mapRendererMesh();
+  var lakeRenderer = mapRendererPatternedLakeOverlay();
+  var highlightRenderer = mapRendererHighlight();
 
   var mapComponent = component()
-    .prop('width')
-    .prop('height')
-    .prop('keyName').keyName(GEO_KEY_DEFAULT)
-    .prop('withLake').withLake(true)
-    .prop('anchoredShape')
-    .prop('features')
-    .prop('borders')
-    .prop('lakeFeatures')
-    .prop('lakeBorders')
-    .prop('lakeFadeOut').lakeFadeOut(false)
-    .delegate('defined', baseRenderer)
-    .delegate('fill', baseRenderer)
-    .delegate('transitionColor', baseRenderer)
-    .delegate('borderColor', meshRenderer)
-    .delegate('strokeWidth', meshRenderer)
-    .delegate('highlight', highlightRenderer)
-    .delegate('highlightStroke', highlightRenderer)
-    .delegate('highlightStrokeWidth', highlightRenderer)
-    .delegate('lakePathColor', lakeRenderer)
+    .prop("width")
+    .prop("height")
+    .prop("keyName")
+    .keyName(GEO_KEY_DEFAULT)
+    .prop("withLake")
+    .withLake(true)
+    .prop("anchoredShape")
+    .prop("features")
+    .prop("borders")
+    .prop("lakeFeatures")
+    .prop("lakeBorders")
+    .prop("lakeFadeOut")
+    .lakeFadeOut(false)
+    .delegate("defined", baseRenderer)
+    .delegate("fill", baseRenderer)
+    .delegate("transitionColor", baseRenderer)
+    .delegate("borderColor", meshRenderer)
+    .delegate("strokeWidth", meshRenderer)
+    .delegate("highlight", highlightRenderer)
+    .delegate("highlightStroke", highlightRenderer)
+    .delegate("highlightStrokeWidth", highlightRenderer)
+    .delegate("lakePathColor", lakeRenderer)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
       // create a map path generator function
-      var mapPath = swissMapPath(props.width, props.height, props.features, 'zurichStadtfeatures');
+      var mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
 
       var mergedData = prepareMergedGeoData(data, props.features, props.keyName);
 
@@ -114,9 +85,7 @@ export default function() {
         .mapPath(mapPath);
 
       // Border mesh
-      meshRenderer
-        .geoJson(props.borders)
-        .mapPath(mapPath);
+      meshRenderer.geoJson(props.borders).mapPath(mapPath);
 
       // Lake Zurich shape
       lakeRenderer
@@ -142,25 +111,23 @@ export default function() {
       selection.call(highlightRenderer);
 
       if (props.anchoredShape) {
-        props.anchoredShape
-          .mergedData(mergedData)
-          .mapPath(mapPath);
+        props.anchoredShape.mergedData(mergedData).mapPath(mapPath);
 
         selection.call(props.anchoredShape);
       }
 
-
       // Event Binding
 
-      selection.selectAll('[data-event-target]')
-        .on('mouseover', function(d) {
-          event.call('over', this, d.datum);
+      selection
+        .selectAll("[data-event-target]")
+        .on("mouseover", function(d) {
+          event.call("over", this, d.datum);
         })
-        .on('mouseout', function(d) {
-          event.call('out', this, d.datum);
+        .on("mouseout", function(d) {
+          event.call("out", this, d.datum);
         })
-        .on('click', function(d) {
-          event.call('click', this, d.datum);
+        .on("click", function(d) {
+          event.call("click", this, d.datum);
         });
     });
 
@@ -170,4 +137,4 @@ export default function() {
   };
 
   return mapComponent;
-};
+}
