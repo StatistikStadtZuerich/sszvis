@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id);
           return;
         }
 
@@ -53,6 +53,15 @@
 
         /* Shortcuts
   ----------------------------------------------- */
+
+        function parseRow(d) {
+          return {
+            sector: d["Branche"],
+            area: d["Gebiet"],
+            value: sszvis.parseNumber(d["BIP"])
+          };
+        }
+
         var xAcc = sszvis.prop("value");
         var yAcc = sszvis.prop("area");
         var cAcc = sszvis.prop("sector");
@@ -105,14 +114,8 @@
 
         /* Data initialization
   ----------------------------------------------- */
-        d3.csv(config.data || "")
-          .row(function(d) {
-            return {
-              sector: d["Branche"],
-              area: d["Gebiet"],
-              value: sszvis.parseNumber(d["BIP"])
-            };
-          })
+        d3.csv(config.data)
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               sszvis.loadError(error);
@@ -124,7 +127,7 @@
         /* Render
   ----------------------------------------------- */
         function render(state) {
-          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+          var props = queryProps(sszvis.measureDimensions(config.id));
           //the height and the bottom padding need to be calculated
           var chartDimensions = sszvis.dimensionsHorizontalBarChart(
             state.areas.length
@@ -137,7 +140,7 @@
               top: paddingTop,
               bottom: props.bottomPadding
             },
-            "#sszvis-chart"
+            config.id
           );
           var chartWidth = Math.min(bounds.innerWidth, 800);
 
@@ -166,11 +169,11 @@
           // Layers
 
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
+            .createSvgLayer(config.id, bounds)
             .datum(state.stackedData);
 
           var tooltipLayer = sszvis
-            .createHtmlLayer("#sszvis-chart", bounds)
+            .createHtmlLayer(config.id, bounds)
             .datum(state.selection);
 
           // Components

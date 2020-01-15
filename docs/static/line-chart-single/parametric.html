@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id);
           return;
         }
 
@@ -122,7 +122,7 @@
   ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 30, bottom: 40 }, "#sszvis-chart");
+          var bounds = sszvis.bounds({ top: 30, bottom: 40 }, config.id);
 
           // Scales
           var xScale = d3
@@ -144,7 +144,7 @@
             .range([bounds.innerHeight, 0]);
 
           // Layers
-          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds);
 
           // Components
           var line = sszvis

@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id);
           return;
         }
 
@@ -41,6 +41,13 @@
 
         /* Shortcuts
   ----------------------------------------------- */
+
+        function parseRow(d) {
+          return {
+            category: d["Sektor"],
+            value: sszvis.parseNumber(d["Zupendler"])
+          };
+        }
         var xAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("category");
 
@@ -80,12 +87,7 @@
         /* Data initialization
   ----------------------------------------------- */
         d3.csv(config.data)
-          .row(function(d) {
-            return {
-              category: d["Sektor"],
-              value: sszvis.parseNumber(d["Zupendler"])
-            };
-          })
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               return sszvis.loadError(error);
@@ -107,7 +109,7 @@
               top: 30,
               bottom: 40
             },
-            "#sszvis-chart"
+            config.id
           );
           var chartWidth = Math.min(bounds.innerWidth, 800);
 
@@ -127,13 +129,13 @@
 
           // Layers
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
+            .createSvgLayer(config.id, bounds)
             .datum(state.data);
 
-          var controlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds);
+          var controlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
           var tooltipLayer = sszvis
-            .createHtmlLayer("#sszvis-chart", bounds)
+            .createHtmlLayer(config.id, bounds)
             .datum(state.selected);
 
           // Components

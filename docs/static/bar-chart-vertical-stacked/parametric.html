@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id);
           return;
         }
 
@@ -59,6 +59,14 @@
 
         /* Shortcuts
   ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            year: d["Jahr"],
+            category: d["Berufsfeld"],
+            value: sszvis.parseNumber(d["Anzahl"])
+          };
+        }
+
         var xAcc = sszvis.prop("year");
         var yAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("category");
@@ -110,14 +118,8 @@
 
         /* Data initialization
   ----------------------------------------------- */
-        d3.csv(config.data || "")
-          .row(function(d) {
-            return {
-              year: d["Jahr"],
-              category: d["Berufsfeld"],
-              value: sszvis.parseNumber(d["Anzahl"])
-            };
-          })
+        d3.csv(config.data)
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               sszvis.loadError(error);
@@ -129,10 +131,10 @@
         /* Render
   ----------------------------------------------- */
         function render(state) {
-          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+          var props = queryProps(sszvis.measureDimensions(config.id));
           var bounds = sszvis.bounds(
             { top: 30, bottom: props.bottomPadding },
-            "#sszvis-chart"
+            config.id
           );
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             Math.min(800, bounds.innerWidth),
@@ -164,11 +166,11 @@
           // Layers
 
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
+            .createSvgLayer(config.id, bounds)
             .datum(state.stackedData);
 
           var tooltipLayer = sszvis
-            .createHtmlLayer("#sszvis-chart", bounds)
+            .createHtmlLayer(config.id, bounds)
             .datum(state.selection);
 
           // Components
