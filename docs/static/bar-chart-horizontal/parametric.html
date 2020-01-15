@@ -30,6 +30,9 @@
           return;
         }
 
+        /* Configuration
+  ----------------------------------------------- */
+
         var queryProps = sszvis
           .responsiveProps()
           .prop("yLabel", {
@@ -38,9 +41,6 @@
           .prop("ticks", {
             _: 5
           });
-
-        /* Shortcuts
-  ----------------------------------------------- */
 
         function parseRow(d) {
           return {

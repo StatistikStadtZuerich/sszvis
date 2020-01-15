@@ -30,6 +30,9 @@
           return;
         }
 
+        /* Configuration
+  ----------------------------------------------- */
+
         var queryProps = sszvis
           .responsiveProps()
           .prop("xLabel", {
@@ -49,12 +52,8 @@
             _: 5
           });
 
-        /* Shortcuts
-  ----------------------------------------------- */
         function parseRow(d) {
           return {
-            //probably need to distinguish time or discreet values here...
-            //although for a line chart it is rarely not time on x-axis.
             date: sszvis.parseDate(d["Datum"]),
             value: sszvis.parseNumber(d["Wert"])
           };

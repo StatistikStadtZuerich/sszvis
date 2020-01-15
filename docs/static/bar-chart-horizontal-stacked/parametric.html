@@ -17,7 +17,7 @@
       var EXTERNAL_CONFIG = {
         data: "data/SHB_basic_percent.csv",
         id: "#sszvis-chart",
-        fallback: false //optional, creates long ticks when true
+        fallback: "fallback.png"
       };
     </script>
 
@@ -31,8 +31,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
-        //configuration object
+        ----------------------------------------------- */
 
         var queryProps = sszvis
           .responsiveProps()
@@ -51,9 +50,6 @@
             _: 4
           });
 
-        /* Shortcuts
-  ----------------------------------------------- */
-
         function parseRow(d) {
           return {
             sector: d["Branche"],
@@ -68,7 +64,7 @@
         var dataAcc = sszvis.prop("data");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           areas: [],

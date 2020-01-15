@@ -15,9 +15,9 @@
 
     <script>
       var EXTERNAL_CONFIG = {
-        data: "data/P_7Categories.csv", //optional
+        data: "data/P_7Categories.csv",
         id: "#sszvis-chart",
-        fallback: false //optional, creates long ticks when true
+        fallback: "fallback.png"
       };
     </script>
 
@@ -86,9 +86,6 @@
             };
           }
         });
-
-        /* Domain
-  ----------------------------------------------- */
 
         function parseRow(d) {
           return {

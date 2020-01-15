@@ -17,7 +17,7 @@
       var EXTERNAL_CONFIG = {
         data: "data/ML_2Categories_Quarterly.csv",
         id: "#sszvis-chart",
-        fallback: false //optional, creates long ticks when true
+        fallback: "fallback.png"
       };
     </script>
 
@@ -30,6 +30,8 @@
           return;
         }
 
+        /* Configuration
+  ----------------------------------------------- */
         var queryProps = sszvis
           .responsiveProps()
           .prop("xLabel", {
@@ -50,8 +52,6 @@
             _: 5
           });
 
-        /* Domain
-  ----------------------------------------------- */
         function parseRow(d) {
           return {
             date: sszvis.parseDate(d["Datum"]),

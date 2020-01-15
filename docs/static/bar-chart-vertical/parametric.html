@@ -17,7 +17,8 @@
       var EXTERNAL_CONFIG = {
         data: "data/test_param_2.csv",
         id: "#sszvis-chart",
-        textWrap: false
+        textWrap: false,
+        fallback: "fallback.png"
       };
     </script>
 
@@ -32,8 +33,6 @@
 
         /* Configuration
   ----------------------------------------------- */
-
-        var MAX_WIDTH = 800;
 
         var queryProps = sszvis
           .responsiveProps()
@@ -52,9 +51,6 @@
             palm: 100,
             _: 60
           });
-
-        /* Shortcuts
-  ----------------------------------------------- */
 
         function parseRow(d) {
           return {
@@ -119,7 +115,7 @@
             config.id
           );
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
-            Math.min(MAX_WIDTH, bounds.innerWidth),
+            Math.min(800, bounds.innerWidth),
             state.categories.length
           );
 
