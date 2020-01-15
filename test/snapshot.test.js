@@ -10,6 +10,16 @@ test.each(files.map(filepathToUrl))("%s", async url => {
     await page.waitFor(200);
     const image = await page.screenshot();
     expect(image).toMatchImageSnapshot();
+
+    const buttons = await page.$$(".sszvis-control-buttonGroup__item:not(.selected)");
+
+    for (const button of buttons) {
+      await button.click();
+      await page.waitFor(200);
+
+      const stateImage = await page.screenshot();
+      expect(stateImage).toMatchImageSnapshot();
+    }
   } catch (e) {
     expect(e).toBeNull();
   }
