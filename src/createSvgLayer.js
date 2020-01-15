@@ -29,12 +29,24 @@ export function createSvgLayer(selector, bounds, metadata) {
 
   var key = metadata.key || "default";
   var elementDataKey = "data-sszvis-svg-" + key;
+  var title = metadata.title || "";
+  var description = metadata.description || "";
 
   var root = fn.isSelection(selector) ? selector : select(selector);
   var svg = root.selectAll("svg[" + elementDataKey + "]").data([0]);
   var svgEnter = svg.enter().append("svg");
 
   svgEnter
+    .classed("sszvis-svg-layer", true)
+    .attr(elementDataKey, "")
+    .attr("role", "img")
+    .attr("aria-label", title + " – " + description);
+
+  svgEnter.append("title").text(title);
+
+  svgEnter
+    .append("desc")
+    .text(description)
     .classed("sszvis-svg-layer", true)
     .attr(elementDataKey, "")
     .attr("role", "img");
