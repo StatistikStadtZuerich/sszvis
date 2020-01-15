@@ -4,12 +4,8 @@
 .sass-cache
 node_modules
 
-screenshots/taken/
-screenshots/diff/
-
-/WDIO.*
-
 build
+__diff_output__
 
 /public/topo
 /public/sszvis.js

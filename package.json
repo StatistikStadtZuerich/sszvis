@@ -20,6 +20,7 @@
     "@babel/core": "^7.8.3",
     "@babel/preset-env": "^7.8.3",
     "@babel/standalone": "^7.8.3",
+    "acorn": "^7.1.0",
     "babel-jest": "^24.9.0",
     "catalog": "3.6.0",
     "d3": "^4.12.0",
@@ -54,18 +55,17 @@
   "unpkg": "build/sszvis.js",
   "jsdelivr": "build/sszvis.js",
   "scripts": {
-    "lint": "eslint src",
-    "test": "npm run lint",
-    "visual-regression-test": "jest",
-    "build": "npm run build-lib && npm run build-topo && npm run build-docs",
-    "build-lib": "rollup --config config/rollup.config.js",
-    "build-topo": "scripts/topo.sh",
-    "build-docs": "catalog build docs -o build --public-url=./",
-    "prepublishOnly": "npm run test && npm run build",
     "start": "catalog start docs -p 8000",
-    "watch": "npm run build-lib -- --watch"
-  },
-  "dependencies": {
-    "acorn": "^7.1.0"
+    "build": "npm run build:lib && npm run build:topo && npm run build:docs",
+    "build:lib": "rollup -c",
+    "build:topo": "scripts/topo.sh",
+    "build:docs": "catalog build docs -o build --public-url=./",
+    "build:watch": "npm run build:lib -- --watch",
+    "test": "npm run test:lint && npm run test:lint && npm run test:unit && npm run test:snapshot",
+    "test:lint": "eslint src",
+    "test:unit": "jest --testPathIgnorePatterns snapshot.test.js",
+    "test:snapshot": "jest --testPathPattern snapshot.test.js",
+    "test:watch": "jest --watch",
+    "prepublishOnly": "npm run test && npm run build"
   }
 }

@@ -1,5 +1,5 @@
 module.exports = {
   preset: "jest-puppeteer",
   roots: ["test"],
-  setupFilesAfterEnv: ["<rootDir>/test/setup.js"]
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"]
 };
