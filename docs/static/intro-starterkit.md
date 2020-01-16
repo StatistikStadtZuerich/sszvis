@@ -7,9 +7,11 @@
 
 ## Composition of examples
 
-To get a better understanding of the structure in the code examples, here's an overview of the config objects.
+To get a better understanding of the structure in the code examples, here's an examplary overview of the basic code samples.
 
 ### EXTERNAL_CONFIG
+
+The `EXTERNAL_CONFFIG` is an example of an object storing information which is being provided from an external service, such as a CMS.
 
 ```code|lang-html
     <script>
@@ -23,7 +25,9 @@ To get a better understanding of the structure in the code examples, here's an o
 
 ### responsiveProps()
 
-The responsiveProps ...
+The ResponsiveProps module provides a declarative way to configure properties which need to change based on some breakpoints. SSZVIS comes with a default set of breakpoints (see sszvis.breakpoint), but you can also define your own breakpoints.
+
+The properties you configure must include an '\_' option, which is used when no breakpoints match. It represents the 'default' case and will also be returned when the responsiveProps function is invoked with an invalid argument. If you configure special breakpoints, they should be passed in as an array, sorted in testing order, of objects with a 'name' property, and one or both of 'width' and 'screenHeight' properties. This will generate breakpoints which can be applied internally.
 
 ```code|lang-javascript
 var queryProps = sszvis
@@ -53,6 +57,8 @@ var queryProps = sszvis
 
 ### parseRow
 
+The parseRow function works as a direct gate to provide the names for the individual labels.
+
 ```code|lang-javascript
 function parseRow(d) {
           return {
@@ -65,7 +71,7 @@ function parseRow(d) {
 
 ### Accessors
 
-xAcc is short for xAccessor. These variables allow us to be mapped to the ... and to access the data points.
+xAcc is short for xAccessor. These variables allow us to access the data points because they are being mapped to ... .
 
 ```code|lang-javascript
     var xAcc = sszvis.prop("year");
