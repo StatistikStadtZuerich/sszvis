@@ -1,6 +1,12 @@
 # Change Log
 
-## Changes from 1.x to 2.0
+## [In progress]
+
+- Change `formatNumber` to remove insignificant trailing zeros
+
+## 2.0 (Dec 2017)
+
+### Changes from 1.x to 2.0
 
 The sszvis API has changed significantly from version 1.x to 2.0. This was done to a) align more closely with practices in the d3 ecosystem and to be able to leverage ES modules better (by not exporting whole namespaces but each function separately).
 

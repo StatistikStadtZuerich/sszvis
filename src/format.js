@@ -111,23 +111,19 @@ export var formatNone = function() {
  * - Decimal places only for significant decimals
  * - No decimal places for numbers >= 10000
  * - One decimal place for numbers >= 100
- * - 1 or 2 significant decimal places for other numbers
+ * - Up to 2 significant decimal places for smaller numbers
  *
- * See also: many test cases for this function in sszvis.test
+ * See also: many test cases for this function in format.test.js
  *
  * @param  {number} d   Number
- * @param  {number} [precision] Decimal precision
  * @return {string}     Fully formatted number
  */
-export var formatNumber = function(d, precision) {
+export var formatNumber = function(d) {
   var p;
   var dAbs = Math.abs(d);
-  var decLen = decimalPlaces(d);
 
-  // NaN      -> '–'
-  if (isNaN(d)) {
-    // This is an mdash
-    return "–";
+  if (d == null || isNaN(d)) {
+    return "–"; // This is an en-dash
   }
 
   // 10250    -> "10 250"
@@ -141,25 +137,20 @@ export var formatNumber = function(d, precision) {
   // 2350     -> "2350"
   // 2350.29  -> "2350.3"
   else if (dAbs >= 100) {
-    p = precision != null ? precision : decLen === 0 ? 0 : 1;
+    p = Math.min(1, decimalPlaces(d));
     // Where there are decimals, round to 1 position
     // To display more precision, use the preciseNumber function.
-    return precision != null
-      ? format("." + p + "f")(d)
-      : stripTrailingZeroes(format("." + p + "f")(d));
+    return stripTrailingZeroes(format("." + p + "f")(d));
   }
 
   // 41       -> "41"
+  // 41.1     -> "41.1"
   // 41.329   -> "41.33"
-  // 1.329    -> "1.33"
-  // 0.00034  -> "0.00034"
   else if (dAbs > 0) {
-    p = precision != null ? precision : Math.min(2, decLen);
+    p = Math.min(2, decimalPlaces(d));
     // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
     // but not more. To display more precision, use the preciseNumber function.
-    return precision != null
-      ? format("." + p + "f")(d)
-      : stripTrailingZeroes(format("." + p + "f")(d));
+    return stripTrailingZeroes(format("." + p + "f")(d));
   }
 
   // If abs(num) is not > 0, num is 0

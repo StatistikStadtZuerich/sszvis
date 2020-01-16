@@ -1,19 +1,19 @@
-import React from "react";
-import PropTypes from "prop-types";
-import * as R from "ramda";
-import JSZip from "jszip";
-import Radium from "radium";
 import { Specimen } from "catalog";
-// Polyfill for DOMParser.parseFromString support
-import "./utils/DOMParser";
-
-import fileUtils from "./utils/fileUtils";
-import saveAs from "./utils/FileSaver";
+import JSZip from "jszip";
+import PropTypes from "prop-types";
+import Radium from "radium";
+import * as R from "ramda";
+import React from "react";
 import bodyToProps from "./bodyToProps";
-import { text } from "./utils/typography";
-
 import normalizeReferences from "./normalizeReferences";
 import TabbedSourceView from "./TabbedSourceView";
+// Polyfill for DOMParser.parseFromString support
+import "./utils/DOMParser";
+import saveAs from "./utils/FileSaver";
+import fileUtils from "./utils/fileUtils";
+import { text } from "./utils/typography";
+
+
 
 function getStyle(theme) {
   return {
@@ -104,7 +104,7 @@ export default function ProjectConfigurator(opts) {
             <a
               key={"responsive-testbed"}
               style={styles.link}
-              href={"/tools/content_testbed.html?file=" + index.source}
+              href={"/_tools/content_testbed.html?file=" + index.source}
             >
               Open in responsive testbed
             </a>
