@@ -3,95 +3,62 @@ import { formatNumber, formatPreciseNumber } from "../src/format.js";
 const EN_DASH = "–";
 const THINSP = " ";
 
-describe("Special cases", () => {
-  test("undefined displays as an en-dash (–)", () => expect(formatNumber(undefined)).toBe(EN_DASH));
-  test("null displays as an en-dash (–)", () => expect(formatNumber(null)).toBe(EN_DASH));
-  test("NaN displays as an en-dash (–)", () => expect(formatNumber(NaN)).toBe(EN_DASH));
+describe("formatNumber", () => {
+  testMatrix("Non-numbers", formatNumber, [
+    [undefined, EN_DASH],
+    [null, EN_DASH],
+    [NaN, EN_DASH]
+  ]);
 
-  test("0, formatNumber", () => expect(formatNumber(0)).toBe("0"));
-  test("0, formatPreciseNumber", () => expect(formatPreciseNumber(3, 0)).toBe("0.000"));
+  testMatrix("Basics", formatNumber, [
+    [1, "1"],
+    [0, "0"],
+    [-0, "0"],
+    [-1, "-1"]
+  ]);
 
-  test("Currying", () => expect(formatPreciseNumber(3)(0)).toBe("0.000"));
+  testMatrix("Range 0–1", formatNumber, [
+    [0.1, "0.1"],
+    [0.12, "0.12"],
+    [0.001, "0"],
+    [0.005, "0.01"]
+  ]);
+
+  testMatrix("Range 1–99", formatNumber, [
+    [42.1, "42.1"],
+    [42.001, "42"],
+    [42.005, "42.01"]
+  ]);
+
+  testMatrix("Range 100–9999", formatNumber, [
+    [1234, "1234"],
+    [1234.09, "1234.1"],
+    [1234.04, "1234"]
+  ]);
+
+  testMatrix("Range >10000", formatNumber, [
+    [10250, `10${THINSP}250`],
+    [10250.1, `10${THINSP}250`],
+    [10250.91, `10${THINSP}251`]
+  ]);
 });
 
-describe("Numbers > 10000", () => {
-  test("abs >10000, uses a thin space thousands separator", () =>
-    expect(formatNumber(10250)).toBe(`10${THINSP}250`));
-  test("abs >10000, with decimal precision supplied", () =>
-    expect(formatPreciseNumber(5, 10250)).toBe(`10${THINSP}250.00000`));
-  test("abs >10000, with precision and decimals", () =>
-    expect(formatPreciseNumber(2, 10250.12345)).toBe(`10${THINSP}250.12`));
-  test("abs >10000, with precision, decimals, and needing to be rounded", () =>
-    expect(formatPreciseNumber(3, 10250.16855)).toBe(`10${THINSP}250.169`));
-  test("(negative number) abs >10000, with precision, decimals, and needing to be rounded", () =>
-    expect(formatPreciseNumber(3, -10250.16855)).toBe(`-10${THINSP}250.169`));
+describe("formatPreciseNumber", () => {
+  testMatrix("With three decimal places", formatPreciseNumber(3), [
+    [0, "0.000"],
+    [0.0001, "0.000"],
+    [0.0005, "0.001"],
+    [10250, `10${THINSP}250.000`],
+    [10250.1234, `10${THINSP}250.123`]
+  ]);
 });
 
-describe("Numbers 100–10000", () => {
-  test("abs 100 - 10000, has no separator", () => expect(formatNumber(6578)).toBe("6578"));
-  test("abs 100 - 10000, with decimal but no precision rounds to 1 point", () =>
-    expect(formatNumber(1234.5678)).toBe("1234.6"));
-  test("abs 100 - 10000, with precision", () =>
-    expect(formatPreciseNumber(2, 1234)).toBe("1234.00"));
-  test("abs 100 - 10000, with precision and decimals", () =>
-    expect(formatPreciseNumber(3, 1234.12345678)).toBe("1234.123"));
-  test("abs 100 - 10000, with precision, decimals, and rounding", () =>
-    expect(formatPreciseNumber(3, 1234.9876543)).toBe("1234.988"));
-  test("(negative number) abs 100 - 10000, with precision, decimals, and rounding", () =>
-    expect(formatPreciseNumber(3, -1234.9876543)).toBe("-1234.988"));
-});
+// -----------------------------------------------------------------------------
 
-describe("Numbers 0–100", () => {
-  test("abs 0 - 100, no decimals, no precision", () => expect(formatNumber(42)).toBe("42"));
-  test("(negative number) abs 0 - 100, no decimals, no precision", () =>
-    expect(formatNumber(-42)).toBe("-42"));
-  test("abs 0 - 100, 1 decimal, no precision, rounds to 1", () =>
-    expect(formatNumber(42.2)).toBe("42.2"));
-  test("abs 0 - 100, 2 decimals, no precision, rounds to 2", () =>
-    expect(formatNumber(42.45)).toBe("42.45"));
-  test("(negative number) abs 0 - 100, >2 decimals, no precision, rounds to 2", () =>
-    expect(formatNumber(-42.1234)).toBe("-42.12"));
-  test("abs 0 - 100, no decimals, with precision", () =>
-    expect(formatPreciseNumber(3, 42)).toBe("42.000"));
-  test("abs 0 - 100, 1 decimals, with precision", () =>
-    expect(formatPreciseNumber(3, 42.2)).toBe("42.200"));
-  test("abs 0 - 100, 2 decimals, with precision", () =>
-    expect(formatPreciseNumber(3, 42.26)).toBe("42.260"));
-  test("abs 0 - 100, >2 decimals, with precision", () =>
-    expect(formatPreciseNumber(4, 42.987654)).toBe("42.9877"));
-  test("abs 0 - 100, leading zeroes, with precision", () =>
-    expect(formatPreciseNumber(4, 20.000042)).toBe("20.0000"));
-  test("abs 0 - 100, leading zeroes, precision causes rounding", () =>
-    expect(formatPreciseNumber(4, 20.000088)).toBe("20.0001"));
-});
-
-describe("Numbers 0–1", () => {
-  test("abs 0 - 1, 1 decimal, no precision, rounds to 1", () =>
-    expect(formatNumber(0.1)).toBe("0.1"));
-  test("abs 0 - 1, 2 decimals, no precision, rounds to 2", () =>
-    expect(formatNumber(0.12)).toBe("0.12"));
-  test("abs 0 - 1, >2 decimals, no precision, rounds to 2", () =>
-    expect(formatNumber(0.8765)).toBe("0.88"));
-  test("abs 0 - 1, >2 decimals, remove insignificant zeros", () =>
-    expect(formatNumber(0.001)).toBe("0"));
-  test("abs 0 - 1, >2 decimals, remove insignificant zeros", () =>
-    expect(formatNumber(0.005)).toBe("0.01"));
-  test("(negative number) abs 0 - 1, >2 decimals, no precision, rounds to 2", () =>
-    expect(formatNumber(-0.8765)).toBe("-0.88"));
-  test("abs 0 - 1, 1 decimal, with precision", () =>
-    expect(formatPreciseNumber(2, 0.2)).toBe("0.20"));
-  test("abs 0 - 1, 2 decimals, with precision", () =>
-    expect(formatPreciseNumber(3, 0.34)).toBe("0.340"));
-  test("abs 0 - 1, >2 decimals, with 2 precision", () =>
-    expect(formatPreciseNumber(2, 0.98765432)).toBe("0.99"));
-  test("abs 0 - 1, >2 decimals, with 4 precision", () =>
-    expect(formatPreciseNumber(4, 0.98765432)).toBe("0.9877"));
-  test("abs 0 - 1, >2 decimals, with 6 precision", () =>
-    expect(formatPreciseNumber(6, 0.98765432)).toBe("0.987654"));
-  test("(negative number) abs 0 - 1, >2 decimals, with 6 precision", () =>
-    expect(formatPreciseNumber(6, -0.98765432)).toBe("-0.987654"));
-  test("abs 0 - 1, leading zeroes", () =>
-    expect(formatPreciseNumber(6, -0.000124)).toBe("-0.000124"));
-  test("abs 0 - 1, leading zeroes, all digits cut off", () =>
-    expect(formatPreciseNumber(3, 0.00000556)).toBe("0.000"));
-});
+function testMatrix(label, format, matrix) {
+  describe(label, () => {
+    test.each(matrix)('%s -> "%s"', (input, output) => {
+      expect(format(input)).toBe(output);
+    });
+  });
+}
