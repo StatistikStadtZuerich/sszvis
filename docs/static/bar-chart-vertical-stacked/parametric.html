@@ -31,7 +31,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         var queryProps = sszvis
           .responsiveProps()
@@ -71,7 +71,7 @@
         var dataAcc = sszvis.prop("data");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           years: [],
@@ -82,18 +82,14 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
             state.years = sszvis.set(state.data, xAcc);
             state.categories = sszvis.set(state.data, cAcc);
 
-            state.stackedData = sszvis.stackedBarVerticalData(
-              xAcc,
-              cAcc,
-              yAcc
-            )(data);
+            state.stackedData = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc)(data);
             state.maxStacked = state.stackedData.maxValue;
 
             render(state);
@@ -115,7 +111,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -127,13 +123,10 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds(
-            { top: 30, bottom: props.bottomPadding },
-            config.id
-          );
+          var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, config.id);
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             Math.min(800, bounds.innerWidth),
             state.categories.length
@@ -154,22 +147,15 @@
             .range([bounds.innerHeight, 0]);
 
           //use qual6 color scale if few categories, its more clear and looks better.
-          var cScale =
-            state.categories.length > 6
-              ? sszvis.scaleQual12()
-              : sszvis.scaleQual6();
+          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
 
           cScale.domain(state.categories);
 
           // Layers
 
-          var chartLayer = sszvis
-            .createSvgLayer(config.id, bounds)
-            .datum(state.stackedData);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedData);
 
-          var tooltipLayer = sszvis
-            .createHtmlLayer(config.id, bounds)
-            .datum(state.selection);
+          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
           // Components
 
@@ -200,15 +186,11 @@
             .legendColorOrdinal()
             .scale(cScale)
             .rows(state.categories.length / props.targetNumColumns)
-            .columnWidth(
-              Math.min(bounds.innerWidth / props.targetNumColumns, 320)
-            )
+            .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 320))
             .columns(props.targetNumColumns)
             .orientation("horizontal");
 
-          var tooltipHeader = sszvis
-            .modularTextHTML()
-            .bold(sszvis.compose(cAcc, dataAcc));
+          var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(cAcc, dataAcc));
 
           var tooltipText = sszvis
             .modularTextHTML()
@@ -249,10 +231,7 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr(
-              "transform",
-              sszvis.translateString(0, bounds.innerHeight + 60)
-            )
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
             .call(colorLegend);
 
           // Interaction
@@ -269,7 +248,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }

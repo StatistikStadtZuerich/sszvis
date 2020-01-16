@@ -31,7 +31,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         var queryProps = sszvis
           .responsiveProps()
@@ -62,7 +62,7 @@
         var yAcc = sszvis.prop("value");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           years: [0, 0],
@@ -72,7 +72,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -83,8 +83,7 @@
           },
 
           changeDate: function(inputDate) {
-            var date = closestDatum(state.data, sszvis.prop("date"), inputDate)
-              .date;
+            var date = closestDatum(state.data, sszvis.prop("date"), inputDate).date;
             if (state.currentDate === date) return;
 
             state.currentDate = date;
@@ -106,7 +105,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -118,7 +117,7 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           var bounds = sszvis.bounds({ top: 30, bottom: 40 }, config.id);
@@ -186,18 +185,13 @@
 
           // Rendering
 
-          var lineChart = chartLayer
-            .selectGroup("lineChart")
-            .datum(state.lineData);
+          var lineChart = chartLayer.selectGroup("lineChart").datum(state.lineData);
 
           lineChart.selectGroup("line").call(line);
 
           lineChart
             .selectGroup("xAxis")
-            .attr(
-              "transform",
-              sszvis.translateString(0, bounds.innerHeight + bottomPadding)
-            )
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + bottomPadding))
             .call(xAxis);
 
           lineChart.selectGroup("yAxis").call(yAxis);
@@ -222,7 +216,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function closestDatum(data, accessor, datum) {
           var i = d3.bisector(accessor).left(data, datum, 1);
           var d0 = data[i - 1];
@@ -231,10 +225,7 @@
         }
 
         function isSelected(d) {
-          return sszvis.contains(
-            state.selection.map(xAcc).map(String),
-            String(d)
-          );
+          return sszvis.contains(state.selection.map(xAcc).map(String), String(d));
         }
 
         function isStartOfYear(d) {

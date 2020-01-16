@@ -32,8 +32,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
-
+        ----------------------------------------------- */
         var queryProps = sszvis
           .responsiveProps()
           .prop("yLabel", {
@@ -62,7 +61,7 @@
         var yAcc = sszvis.prop("value");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           categories: [],
@@ -70,7 +69,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -95,7 +94,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -107,13 +106,10 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds(
-            { top: 30, bottom: props.bottomPadding },
-            config.id
-          );
+          var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, config.id);
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             Math.min(800, bounds.innerWidth),
             state.categories.length
@@ -143,13 +139,9 @@
           var cScaleDark = cScale.darker();
 
           // Layers
-          var chartLayer = sszvis
-            .createSvgLayer(config.id, bounds)
-            .datum(state.data);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-          var tooltipLayer = sszvis
-            .createHtmlLayer(config.id, bounds)
-            .datum(state.selection);
+          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
           // Components
           var barGen = sszvis
