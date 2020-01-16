@@ -11,7 +11,7 @@ To get a better understanding of the structure in the code examples, here's an e
 
 ### EXTERNAL_CONFIG
 
-The `EXTERNAL_CONFFIG` is an example of an object storing information which is being provided from an external service, such as a CMS.
+A set of resources have to be provided from an external service, such as a CMS. The `EXTERNAL_CONFFIG` is the object storing the connection to this information.
 
 ```code|lang-html
     <script>
@@ -57,7 +57,7 @@ var queryProps = sszvis
 
 ### parseRow
 
-The parseRow function works as a direct gate to provide the names for the individual labels.
+The `parseRow` function works as a direct gate to provide the names for the individual labels.
 
 ```code|lang-javascript
 function parseRow(d) {
@@ -71,7 +71,7 @@ function parseRow(d) {
 
 ### Accessors
 
-xAcc is short for xAccessor. These variables allow us to access the data points because they are being mapped to ... .
+xAcc is short for xAccessor. These variables allow us to access the data points because they are being mapped to the columns in the dataset .
 
 ```code|lang-javascript
     var xAcc = sszvis.prop("year");
