@@ -17,6 +17,11 @@ const pages = [
     title: "Guide",
     pages: [
       {
+        path: "accessibility",
+        title: "Accessibility",
+        content: staticMarkdown("style-guide/accessibility.md")
+      },
+      {
         path: "annotations",
         title: "Annotations",
         content: staticMarkdown("style-guide/annotations.md")
@@ -59,11 +64,6 @@ const pages = [
         content: staticMarkdown("style-guide/tooltips.md"),
         styles: [staticFile("style-guide/tooltips.css")],
         scripts: [staticFile("style-guide/tooltips.js")]
-      },
-      {
-        path: "accessibility",
-        title: "Accessibility",
-        content: staticMarkdown("style-guide/accessibility.md")
       }
     ]
   },
