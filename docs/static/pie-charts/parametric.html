@@ -13,30 +13,25 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/P_7Categories.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function(d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id);
           return;
         }
 
         /* Configuration
   ----------------------------------------------- */
-        var config = {
-          // The path to the CSV file containing the data for this chart
-          dataPath: "data/P_7Categories.csv",
-          // The title and description of this chart for visually impaired users
-          title: "",
-          description: "",
-          // Data column to use for the categories
-          cColumn: "Kategorie",
-          // Data column to use for the values
-          vColumn: "Schweiz Import",
-          //View of the chart when interactivity is not available. Does not render mouse interaction when true
-          fallback: false
-        };
 
         var PIE_DIAMETER = 260;
         var LEGEND_TOP_PADDING = 40;
@@ -92,8 +87,14 @@
           }
         });
 
-        /* Shortcuts
-  ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            // Data column to use for the categories
+            category: d["Kategorie"],
+            // Data column to use for the values
+            value: sszvis.parseNumber(d["Schweiz Import"])
+          };
+        }
         var cAcc = sszvis.prop("category");
         var vAcc = sszvis.prop("value");
 
@@ -133,13 +134,8 @@
 
         /* Data initialization
   ----------------------------------------------- */
-        d3.csv(config.dataPath)
-          .row(function(d) {
-            return {
-              category: d[config.cColumn],
-              value: sszvis.parseNumber(d[config.vColumn])
-            };
-          })
+        d3.csv(config.data)
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               sszvis.loadError(error);
@@ -151,8 +147,8 @@
         /* Render
   ----------------------------------------------- */
         function render(state) {
-          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-          var bounds = sszvis.bounds(props.layout.bounds, "#sszvis-chart");
+          var props = queryProps(sszvis.measureDimensions(config.id));
+          var bounds = sszvis.bounds(props.layout.bounds, config.id);
 
           // Scales
 
@@ -171,14 +167,11 @@
           // Layers
 
           var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: config.title,
-              description: config.description
-            })
+            .createSvgLayer(config.id, bounds)
             .datum(state.data);
 
           var tooltipLayer = sszvis
-            .createHtmlLayer("#sszvis-chart", bounds)
+            .createHtmlLayer(config.id, bounds)
             .datum(state.selection);
 
           // Components
@@ -251,7 +244,7 @@
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }
-      })(d3, sszvis);
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>

@@ -1,265 +1,266 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stacked Bar Chart</title>
-</head>
-<body style="margin:0;padding:0;">
-<link href="../sszvis.css" rel="stylesheet" />
-<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
-<script src="../sszvis.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stacked Bar Chart</title>
+  </head>
+  <body style="margin:0;padding:0;">
+    <link href="../sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="../sszvis.js"></script>
 
-<div id="sszvis-chart"></div>
+    <div id="sszvis-chart"></div>
 
-<script data-catalog-project-expose="script.js">
-(function(d3, sszvis) {
-  'use strict';
-
-  if (sszvis.fallbackUnsupported()) {
-    sszvis.fallbackRender('#sszvis-chart');
-    return;
-  }
-
-
- /* Globals
- ------------------------------------------------*/
- var DEFAULT_TITLE = 'Diagrammtitel';
- var DEFAULT_DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
- var DEFAULT_PATH = '';
- var DEFAULT_DATE_COLUMN = 'Datum';
- var DEFAULT_CATEGORY_COLUMN = 'Kategorie'
- var DEFAULT_VALUE_COLUMN = 'Wert';
- var DEFAULT_RULER_LABEL = '';
- var DEFAULT_Y_LABEL = '';
- var DEFAULT_X_LABEL = '';
- var MAX_WIDTH = 800;
-
-
-  /* Configuration
-  ----------------------------------------------- */
-  //configuration object
-  var config = {
-    dataPath: 'data/StVB_7Categories_yearly.csv',
-    title: 'Title', //optional
-    description: 'Description', //optional
-    valueColumn: 'Anzahl', //optional
-    categoryColumn: 'Berufsfeld',
-    yearColumn: 'Jahr',
-    yLabel: 'Beschäftigte', //optional
-    xLabel: '',
-    ticks: 5
-  };
-  var queryProps = sszvis.responsiveProps()
-    .prop('targetNumColumns', {
-      palm: 1,
-      _: 2
-    })
-    .prop('bottomPadding', {
-      palm: 230,
-      _: 150
-    })
-    .prop('barPadding', {
-      palm: 0.7,
-      _: 0.34
-    });
-
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.prop('year');
-  var yAcc = sszvis.prop('value');
-  var cAcc = sszvis.prop('category');
-  var dataAcc = sszvis.prop('data');
-
-
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    years: [],
-    categories: [],
-    stackedData: [],
-    maxStacked: 0,
-    selection: []
-  };
-
-
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.years = sszvis.set(state.data, xAcc);
-      state.categories = sszvis.set(state.data, cAcc);
-
-      state.stackedData = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc)(data);
-      state.maxStacked = state.stackedData.maxValue;
-
-      render(state);
-    },
-
-    showTooltip: function(datum) {
-      state.selection = [datum];
-      render(state);
-    },
-
-    hideTooltip: function() {
-      state.selection = [];
-      render(state);
-    },
-
-    resize: function() { render(state); }
-  };
-
-
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv((config.dataPath || DEFAULT_PATH))
-    .row(function(d) {
-      return {
-        year: d[(config.yearColumn || DEFAULT_DATE_COLUMN)],
-        category: d[(config.categoryColumn || DEFAULT_CATEGORY_COLUMN)],
-        value: sszvis.parseNumber(d[(config.valueColumn || DEFAULT_VALUE_COLUMN)])
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/StVB_7Categories_yearly.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png",
+        title: "Beschäftigte nach Berufsfeld und Jahr",
+        description:
+          "Die Anzahl der Beschäftigten nahm seit 1980 um 40% zu und liegt heute bei ca. 180000 Beschäftigten."
       };
-    })
-    .get(function(error, data) {
-      if (error) {
-        sszvis.loadError(error);
-        return;
-      }
-      actions.prepareState(data);
-    });
+    </script>
 
+    <script data-catalog-project-expose="script.js">
+      (function(d3, sszvis, config) {
+        "use strict";
 
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
-    var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
-    var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, '#sszvis-chart');
-    var chartDimensions = sszvis.dimensionsVerticalBarChart(Math.min(MAX_WIDTH, bounds.innerWidth), state.categories.length);
+        if (sszvis.fallbackUnsupported()) {
+          sszvis.fallbackRender(config.id);
+          return;
+        }
 
+        /* Configuration
+        ----------------------------------------------- */
 
-    // Scales
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("targetNumColumns", {
+            palm: 1,
+            _: 2
+          })
+          .prop("bottomPadding", {
+            palm: 230,
+            _: 150
+          })
+          .prop("barPadding", {
+            palm: 0.7,
+            _: 0.34
+          })
+          .prop("xLabel", {
+            _: ""
+          })
+          .prop("yLabel", {
+            _: "Beschäftigte"
+          })
+          .prop("ticks", {
+            _: 5
+          });
 
-    var xScale = d3.scaleBand()
-      .domain(state.years)
-      .padding(chartDimensions.padRatio)
-      .paddingOuter(props.barPadding)
-      .range([0, chartDimensions.totalWidth]);
+        function parseRow(d) {
+          return {
+            year: d["Jahr"],
+            category: d["Berufsfeld"],
+            value: sszvis.parseNumber(d["Anzahl"])
+          };
+        }
 
-    var yScale = d3.scaleLinear()
-      .domain([0, state.maxStacked])
-      .range([bounds.innerHeight, 0]);
+        var xAcc = sszvis.prop("year");
+        var yAcc = sszvis.prop("value");
+        var cAcc = sszvis.prop("category");
+        var dataAcc = sszvis.prop("data");
 
-    //use qual6 color scale if few categories, its more clear and looks better.
-    var cScale = (state.categories.length > 6) ? sszvis.scaleQual12() : sszvis.scaleQual6();
+        /* Application state
+        ----------------------------------------------- */
+        var state = {
+          data: [],
+          years: [],
+          categories: [],
+          stackedData: [],
+          maxStacked: 0,
+          selection: []
+        };
 
-    cScale.domain(state.categories);
+        /* State transitions
+        ----------------------------------------------- */
+        var actions = {
+          prepareState: function(data) {
+            state.data = data;
+            state.years = sszvis.set(state.data, xAcc);
+            state.categories = sszvis.set(state.data, cAcc);
 
+            state.stackedData = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc)(data);
+            state.maxStacked = state.stackedData.maxValue;
 
+            render(state);
+          },
 
-    // Layers
+          showTooltip: function(datum) {
+            state.selection = [datum];
+            render(state);
+          },
 
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: (config.title || DEFAULT_TITLE),
-        description: (config.description || DEFAULT_DESCRIPTION)
-      })
-      .datum(state.stackedData);
+          hideTooltip: function() {
+            state.selection = [];
+            render(state);
+          },
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
-      .datum(state.selection);
+          resize: function() {
+            render(state);
+          }
+        };
 
+        /* Data initialization
+        ----------------------------------------------- */
+        d3.csv(config.data)
+          .row(parseRow)
+          .get(function(error, data) {
+            if (error) {
+              sszvis.loadError(error);
+              return;
+            }
+            actions.prepareState(data);
+          });
 
-    // Components
+        /* Render
+        ----------------------------------------------- */
+        function render(state) {
+          var props = queryProps(sszvis.measureDimensions(config.id));
+          var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, config.id);
+          var chartDimensions = sszvis.dimensionsVerticalBarChart(
+            Math.min(800, bounds.innerWidth),
+            state.categories.length
+          );
 
-    var stackedBars = sszvis.stackedBarVertical()
-      .xScale(xScale)
-      .width(xScale.bandwidth())
-      .yScale(yScale)
-      .fill(function(d) {
-        var color = cScale(cAcc(dataAcc(d)));
-        return isSelected(d) ? sszvis.slightlyDarker(color) : color;
-      });
+          // Scales
 
-    var xAxis = sszvis.axisX.ordinal()
-      .scale(xScale)
-      .orient('bottom')
-      .title((config.xLabel || ''));
+          var xScale = d3
+            .scaleBand()
+            .domain(state.years)
+            .padding(chartDimensions.padRatio)
+            .paddingOuter(props.barPadding)
+            .range([0, chartDimensions.totalWidth]);
 
-    var yAxis = sszvis.axisY()
-      .scale(yScale)
-      .orient('right')
-      .title((config.yLabel || ''))
-      .dyTitle(-20);
+          var yScale = d3
+            .scaleLinear()
+            .domain([0, state.maxStacked])
+            .range([bounds.innerHeight, 0]);
 
-    var colorLegend = sszvis.legendColorOrdinal()
-      .scale(cScale)
-      .rows(state.categories.length / props.targetNumColumns)
-      .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 320))
-      .columns(props.targetNumColumns)
-      .orientation('horizontal');
+          //use qual6 color scale if few categories, its more clear and looks better.
+          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
 
-    var tooltipHeader = sszvis.modularTextHTML()
-      .bold(sszvis.compose(cAcc, dataAcc));
+          cScale.domain(state.categories);
 
-    var tooltipText = sszvis.modularTextHTML()
-      .plain(sszvis.compose(sszvis.formatNumber, yAcc, dataAcc));
-      //.plain('Angestellte');
+          // Layers
 
-    var tooltip = sszvis.tooltip()
-      .renderInto(tooltipLayer)
-      .orientation(sszvis.fitTooltip('bottom', bounds))
-      .header(tooltipHeader)
-      .body(tooltipText)
-      .visible(isSelected);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: config.title,
+              description: config.description
+            })
+            .datum(state.stackedData);
 
+          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
-    // Rendering
+          // Components
 
-    chartLayer
-      .attr('transform', sszvis.translateString(bounds.innerWidth/2 - chartDimensions.totalWidth/2, bounds.padding.top));
+          var stackedBars = sszvis
+            .stackedBarVertical()
+            .xScale(xScale)
+            .width(xScale.bandwidth())
+            .yScale(yScale)
+            .fill(function(d) {
+              var color = cScale(cAcc(dataAcc(d)));
+              return isSelected(d) ? sszvis.slightlyDarker(color) : color;
+            });
 
-    var bars = chartLayer.selectGroup('barchart')
-      .call(stackedBars);
+          var xAxis = sszvis.axisX
+            .ordinal()
+            .scale(xScale)
+            .orient("bottom")
+            .title(props.xLabel);
 
-    bars.selectAll('[data-tooltip-anchor]')
-      .call(tooltip);
+          var yAxis = sszvis
+            .axisY()
+            .scale(yScale)
+            .orient("right")
+            .title(props.yLabel)
+            .dyTitle(-20);
 
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
-      .call(xAxis);
+          var colorLegend = sszvis
+            .legendColorOrdinal()
+            .scale(cScale)
+            .rows(state.categories.length / props.targetNumColumns)
+            .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 320))
+            .columns(props.targetNumColumns)
+            .orientation("horizontal");
 
-    chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.translateString(0, 0))
-      .call(yAxis);
+          var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(cAcc, dataAcc));
 
-    chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
-      .call(colorLegend);
+          var tooltipText = sszvis
+            .modularTextHTML()
+            .plain(sszvis.compose(sszvis.formatNumber, yAcc, dataAcc));
+          //.plain('Angestellte');
 
+          var tooltip = sszvis
+            .tooltip()
+            .renderInto(tooltipLayer)
+            .orientation(sszvis.fitTooltip("bottom", bounds))
+            .header(tooltipHeader)
+            .body(tooltipText)
+            .visible(isSelected);
 
-    // Interaction
-    var interactionLayer = sszvis.panning()
-      .elementSelector('.sszvis-bar')
-      .on('start', actions.showTooltip)
-      .on('pan', actions.showTooltip)
-      .on('end', actions.hideTooltip);
+          // Rendering
 
-    bars.call(interactionLayer);
+          chartLayer.attr(
+            "transform",
+            sszvis.translateString(
+              bounds.innerWidth / 2 - chartDimensions.totalWidth / 2,
+              bounds.padding.top
+            )
+          );
 
-    sszvis.viewport.on('resize', actions.resize);
-  }
+          var bars = chartLayer.selectGroup("barchart").call(stackedBars);
 
+          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
 
-  /* Helper functions
-  ----------------------------------------------- */
-  function isSelected(d) {
-    return sszvis.contains(state.selection, d);
-  }
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+            .call(xAxis);
 
+          chartLayer
+            .selectGroup("yAxis")
+            .attr("transform", sszvis.translateString(0, 0))
+            .call(yAxis);
 
-}(d3, sszvis));
-</script>
-</body>
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
+            .call(colorLegend);
+
+          // Interaction
+          var interactionLayer = sszvis
+            .panning()
+            .elementSelector(".sszvis-bar")
+            .on("start", actions.showTooltip)
+            .on("pan", actions.showTooltip)
+            .on("end", actions.hideTooltip);
+
+          bars.call(interactionLayer);
+
+          sszvis.viewport.on("resize", actions.resize);
+        }
+
+        /* Helper functions
+        ----------------------------------------------- */
+        function isSelected(d) {
+          return sszvis.contains(state.selection, d);
+        }
+      })(d3, sszvis, EXTERNAL_CONFIG);
+    </script>
+  </body>
 </html>

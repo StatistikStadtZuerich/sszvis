@@ -3,20 +3,13 @@
  *
  * @module sszvis/responsiveProps
  *
- * The ResponsiveProps module provides a declarative way to configure properties or options
- * which need to change based on some breakpoints. SSZVIS comes with a default
- * set of breakpoints (see sszvis.breakpoint), but you can also define your own breakpoints.
+ *
  *
  * The module should be configured with any number of different properties that change
  * based on breakpoints, plus (optional) breakpoint configuration, and then called
  * as a function. You must pass in an object with 'width' and 'screenHeight' properties.
  * This is the kind of thing which is returned from sszvis.bounds and fn.measureDimensions.
  *
- * The properties you configure must include an '_' option, which is used when no breakpoints match.
- * It represents the 'default' case and will also be returned when the responsiveProps function is
- * invoked with an invalid argument. If you configure special breakpoints, they should be passed in as
- * an array, sorted in testing order, of objects with a 'name' property, and one or both of 'width' and
- * 'screenHeight' properties. This will generate breakpoints which can be applied internally.
  *
  * The return value of the function call is an object which has properties corresponding to
  * the properties you configured before. The property values are decided based on testing the breakpoints
@@ -56,9 +49,14 @@
  * @returns {responsiveProps}
  */
 
-import * as fn from './fn.js';
-import * as logger from './logger.js';
-import {breakpointDefaultSpec, breakpointMatch, breakpointCreateSpec, breakpointFindByName} from './breakpoint.js';
+import * as fn from "./fn.js";
+import * as logger from "./logger.js";
+import {
+  breakpointDefaultSpec,
+  breakpointMatch,
+  breakpointCreateSpec,
+  breakpointFindByName
+} from "./breakpoint.js";
 
 /* Exported module
 ----------------------------------------------- */
@@ -78,7 +76,9 @@ export function responsiveProps() {
    */
   function _responsiveProps(measurement) {
     if (!fn.isObject(measurement) || !isBounds(measurement)) {
-      logger.warn('Could not determine the current breakpoint, returning the default props');
+      logger.warn(
+        "Could not determine the current breakpoint, returning the default props"
+      );
       // We choose the _ option for all configured props as a default.
       return Object.keys(propsConfig).reduce(function(memo, val, key) {
         memo[key] = val._;
@@ -93,13 +93,20 @@ export function responsiveProps() {
       var propSpec = propsConfig[propKey];
 
       if (!validatePropSpec(propSpec, breakpointSpec)) {
-        logger.warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
+        logger.warn(
+          'responsiveProps was given an invalid propSpec for property: "' +
+            propKey +
+            '". The spec: ',
+          propSpec
+        );
         return memo;
       }
 
       // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
       // This function should always at least find '_' at the end of the array.
-      var matchedBreakpoint = fn.find(function(bp) { return fn.defined(propSpec[bp.name]); }, matchingBreakpoints);
+      var matchedBreakpoint = fn.find(function(bp) {
+        return fn.defined(propSpec[bp.name]);
+      }, matchingBreakpoints);
       // the value in the query object for that property equals the propSpec value as a functor,
       // invoked if necessary with the current width. Providing the width allows aspect ratio
       // calculations based on element width.
@@ -194,13 +201,17 @@ export function responsiveProps() {
   };
 
   return _responsiveProps;
-};
-
+}
 
 // Helpers
 
 function isBounds(arg1) {
-  return fn.defined(arg1) && fn.defined(arg1.width) && fn.defined(arg1.screenWidth) && fn.defined(arg1.screenHeight);
+  return (
+    fn.defined(arg1) &&
+    fn.defined(arg1.width) &&
+    fn.defined(arg1.screenWidth) &&
+    fn.defined(arg1.screenHeight)
+  );
 }
 
 /**
@@ -219,13 +230,18 @@ function validatePropSpec(propSpec, breakpointSpec) {
   // Ensure that the propSpec contains a '_' value.
   // This is used as the default value when the test width
   // is larger than any breakpoint.
-  if (!fn.defined(propSpec._)) { return false; }
+  if (!fn.defined(propSpec._)) {
+    return false;
+  }
 
   // Validate the properties of the propSpec:
   // each should be a valid breakpoint name, and its value should be defined
   for (var breakpointName in propSpec) {
     if (propSpec.hasOwnProperty(breakpointName)) {
-      if (breakpointName !== '_' && !fn.defined(breakpointFindByName(breakpointSpec, breakpointName))) {
+      if (
+        breakpointName !== "_" &&
+        !fn.defined(breakpointFindByName(breakpointSpec, breakpointName))
+      ) {
         return false;
       }
     }

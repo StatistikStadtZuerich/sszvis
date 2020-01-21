@@ -13,47 +13,59 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/ML_2Categories_Quarterly.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function(d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id);
           return;
         }
 
-        /* Globals
- ------------------------------------------------*/
-        // CONFIG
-        // some default values for the chart configuration
-        // I tried to make these as few as possible. i.e. if
-
         /* Configuration
-  ----------------------------------------------- */
-        // CONFIG
-        // if a variable is optional, the code needs to work with default values
-        // if variable is missing.
-        var config = {
-          dataPath: "data/ML_2Categories_Quarterly.csv", //optional
-          title: "Diagrammtitel", //optional
-          description: "Kurze Beschreibung des Inhalts dieses Diagramms", //optional
-          dateColumn: "Datum",
-          valueColumn: "Anzahl",
-          categoryColumn: "Kategorie",
-          yLabel: "",
-          xLabel: "",
-          ticks: 5,
-          fallback: false //optional, creates long ticks when true
-        };
+        ----------------------------------------------- */
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("xLabel", {
+            _: ""
+          })
+          .prop("yLabel", {
+            _: ""
+          })
+          .prop("rulerLabel", {
+            _: function() {
+              return sszvis
+                .modularTextSVG()
+                .bold(sszvis.compose(sszvis.formatNumber, yAcc))
+                .plain(cAcc);
+            }
+          })
+          .prop("ticks", {
+            _: 5
+          });
 
-        /* Shortcuts
-  ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            date: sszvis.parseDate(d["Datum"]),
+            value: sszvis.parseNumber(d["Anzahl"]),
+            category: d["Kategorie"]
+          };
+        }
+
         var xAcc = sszvis.prop("date");
         var yAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("category");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           lineData: [],
@@ -64,7 +76,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -90,9 +102,7 @@
               }, linePoints);
             });
             // Make sure that the selection has a value to display
-            state.selection = closestData.filter(
-              sszvis.compose(sszvis.not(isNaN), yAcc)
-            );
+            state.selection = closestData.filter(sszvis.compose(sszvis.not(isNaN), yAcc));
 
             render(state);
           },
@@ -109,16 +119,9 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
-        d3.csv(config.dataPath)
-          .row(function(d) {
-            return {
-              // CONFIG
-              date: sszvis.parseDate(d[config.dateColumn]),
-              value: sszvis.parseNumber(d[config.valueColumn]),
-              category: d[config.categoryColumn]
-            };
-          })
+        ----------------------------------------------- */
+        d3.csv(config.data)
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               sszvis.loadError(error);
@@ -128,9 +131,10 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
-          var bounds = sszvis.bounds({ top: 30, bottom: 90 }, "#sszvis-chart");
+          var props = queryProps(sszvis.measureDimensions(config.id));
+          var bounds = sszvis.bounds({ top: 30, bottom: 90 }, config.id);
 
           // Scales
           var xScale = d3
@@ -145,20 +149,11 @@
 
           // CONFIG
           //choose color scale depending on number of categories
-          var cScale =
-            state.categories.length > 6
-              ? sszvis.scaleQual12()
-              : sszvis.scaleQual6();
+          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
           cScale.domain(state.categories);
 
           // Layers
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              // CONFIG
-              title: config.title || "",
-              description: config.description || ""
-            })
-            .datum(state.lineData);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);
 
           // Components
           var line = sszvis
@@ -170,9 +165,7 @@
 
           // Add the highlighted data as additional ticks to the xScale
           // CONFIG use config.ticks if defined in config object
-          var xTickValues = config.ticks
-            ? xScale.ticks(config.ticks)
-            : xScale.ticks();
+          var xTickValues = props.ticks ? xScale.ticks(props.ticks) : xScale.ticks();
           xTickValues = xTickValues.concat(state.selection.map(xAcc));
           xTickValues = xTickValues.filter(function(v, i) {
             return xTickValues.map(String).indexOf(String(v)) === i;
@@ -186,7 +179,7 @@
             .alignOuterLabels(true)
             .highlightTick(isSelected)
             // CONFIG
-            .title(config.xLabel || "");
+            .title(props.xLabel || "");
 
           var yAxis = sszvis
             .axisY()
@@ -196,7 +189,7 @@
             // CONFIG
             .tickLength(config.fallback ? bounds.innerWidth : null)
             // CONFIG
-            .title(config.yLabel || "")
+            .title(props.yLabel || "")
             .dyTitle(-20);
 
           // CONFIG use a second x-Axis with only tick labels.
@@ -208,19 +201,13 @@
             .orient("right")
             .contour(true);
 
-          var rulerLabel = sszvis
-            .modularTextSVG()
-            .bold(sszvis.compose(sszvis.formatNumber, yAcc))
-            // CONFIG use category name as ruler label
-            .plain(cAcc);
-
           var highlightLayer = sszvis
             .annotationRuler()
             .top(0)
             .bottom(bounds.innerHeight)
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
-            .label(rulerLabel)
+            .label(props.rulerLabel)
             .flip(function(d) {
               return xScale(xAcc(d)) >= bounds.innerWidth / 2;
             })
@@ -252,10 +239,7 @@
           chartLayer
             .selectGroup("cScale")
             // the color legend should always be positioned 60px below the bottom axis
-            .attr(
-              "transform",
-              sszvis.translateString(1, bounds.innerHeight + 60)
-            )
+            .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
             .call(cLegend);
 
           chartLayer
@@ -277,7 +261,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         function closestDatum(data, accessor, datum) {
           var i = d3.bisector(accessor).left(data, datum, 1);
@@ -287,12 +271,9 @@
         }
 
         function isSelected(d) {
-          return sszvis.contains(
-            state.selection.map(xAcc).map(String),
-            String(d)
-          );
+          return sszvis.contains(state.selection.map(xAcc).map(String), String(d));
         }
-      })(d3, sszvis);
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>

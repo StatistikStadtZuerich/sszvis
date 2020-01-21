@@ -19,7 +19,7 @@ The multiple line chart uses the same components as the [single line chart](line
     "name": "line-chart-multiple-two-cat",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/two-cat.html",
+            "source": "line-chart-multiple/parametric.html",
             "template": "template.html"
         },
         "data.csv": "line-chart-multiple/data/ML_2Categories_Quarterly.csv",
@@ -41,7 +41,7 @@ Observations for the same variable across many years.
     "name": "line-chart-multiple-eight-cat",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/eight-cat.html",
+            "source": "line-chart-multiple/parametric.html",
             "template": "template.html"
         },
         "data.csv": "line-chart-multiple/data/ML_months_8Categories_superposition_missing.csv",
