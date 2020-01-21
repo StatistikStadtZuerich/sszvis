@@ -71,14 +71,14 @@ For each chart the following can always be configured:
 }
 ```
 
-## Bar Chart Vertical (Stacked) – Parametric Configuration
+## Bar Chart Vertical (Stacked) – Basic Configuration
 
 ```project
 {
     "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical-stacked/parametric.html",
+            "source": "bar-chart-vertical-stacked/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",

@@ -49,7 +49,7 @@
     "/bar-chart-horizontal/parametric.html",
     "/bar-chart-horizontal/percent.html",
     "/bar-chart-vertical-stacked/eight-cat.html",
-    "/bar-chart-vertical-stacked/parametric.html",
+    "/bar-chart-vertical-stacked/basic.html",
     "/bar-chart-vertical-stacked/two-cat.html",
     "/bar-chart-vertical/basic.html",
     "/bar-chart-vertical/long-names.html",
