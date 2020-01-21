@@ -59,6 +59,11 @@ const pages = [
         content: staticMarkdown("style-guide/legends.md")
       },
       {
+        path: "number-formats",
+        title: "Formatting",
+        content: staticMarkdown("style-guide/number-formats.md")
+      },
+      {
         path: "tooltips",
         title: "Tooltips",
         content: staticMarkdown("style-guide/tooltips.md"),
@@ -159,7 +164,7 @@ const pages = [
   },
   {
     path: "various",
-    title: "Various",
+    title: "Various Charts",
     pages: [
       {
         path: "heat-table",
