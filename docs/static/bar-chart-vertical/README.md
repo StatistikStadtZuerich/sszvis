@@ -14,19 +14,19 @@ The bar component generates SVG rect elements from arrays of data objects.
 
 #### `bar.x(x)`
 
-Specifies the *x*-values of the rectangles. Can be a value or a function.
+Specifies the _x_-values of the rectangles. Can be a value or a function.
 
 #### `bar.y(y)`
 
-Specifies the *y*-values of the rectangles. Can be a value or a function.
+Specifies the _y_-values of the rectangles. Can be a value or a function.
 
 #### `bar.width(width)`
 
-Specifies the *width*-values of the rectangles. Can be a value or a function.
+Specifies the _width_-values of the rectangles. Can be a value or a function.
 
 #### `bar.height(height)`
 
-Specifies the *height*-values of the rectangles. Can be a value or a function.
+Specifies the _height_-values of the rectangles. Can be a value or a function.
 
 #### `bar.fill([fill])`
 
@@ -50,7 +50,7 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -60,9 +60,9 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
 
 This example shows several edge cases and specialties:
 
-* Long axis labels can be word-wrapped by configuring the axis component
-* Long axis ticks can be toggled as guide lines to aid chart reading, which can be useful to see when looking at static charts
-* Missing data renders a tooltip stating that there is no data. This uses `sszvis.move` to provide hover functionality in the absence of a bar.
+- Long axis labels can be word-wrapped by configuring the axis component
+- Long axis ticks can be toggled as guide lines to aid chart reading, which can be useful to see when looking at static charts
+- Missing data renders a tooltip stating that there is no data. This uses `sszvis.move` to provide hover functionality in the absence of a bar.
 
 ```project
 {
@@ -76,7 +76,7 @@ This example shows several edge cases and specialties:
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -84,7 +84,7 @@ This example shows several edge cases and specialties:
 
 ## Many Years
 
-In some cases, many values in a category should be shown. In this example, a linear scale is used in place of a categorical one. This simplifies the construction of the *x*-axis.
+In some cases, many values in a category should be shown. In this example, a linear scale is used in place of a categorical one. This simplifies the construction of the _x_-axis.
 
 ```project
 {
@@ -98,7 +98,7 @@ In some cases, many values in a category should be shown. In this example, a lin
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
