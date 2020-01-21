@@ -17,7 +17,9 @@
       var EXTERNAL_CONFIG = {
         data: "data/StVB_7Categories_yearly.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
+        title: "Hello",
+        description: "there"
       };
     </script>
 
@@ -153,7 +155,12 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedData);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds, {
+              title: config.title,
+              description: config.description
+            })
+            .datum(state.stackedData);
 
           var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 

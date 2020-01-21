@@ -20,13 +20,13 @@ This results in a chart with a label on hover:
 
 ```project
 {
-    "name": "population-pyramid-reference",
+    "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "population-pyramid/pyramid-reference.html",
+            "source": "bar-chart-vertical-stacked/parametric.html",
             "template": "template.html"
         },
-        "data.csv": "population-pyramid/data/BP_reference.csv",
+        "data.csv": "bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
@@ -37,3 +37,5 @@ This results in a chart with a label on hover:
 ```
 
 --> Do we have to put the title and description into the EXTERNAL Config? Because the other examples are not using this, right? So just in the normal config object?
+
+-> yes we should put it in the EXTERNAL Config. We will update all examples anyway.
