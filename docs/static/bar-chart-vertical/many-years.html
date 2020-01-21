@@ -155,12 +155,12 @@
               return isSelected(d) ? cScaleDark(d) : cScale(d);
             });
 
-          var xAxis = sszvis
-            .axisX()
+          var xAxis = sszvis.axisX
+            .ordinal()
             .scale(xScale)
             .orient("bottom")
             .alignOuterLabels(true)
-            .tickValues(d3.range(state.yearRange[0], state.yearRange[1], 20));
+            .ticks(5);
 
           var yAxis = sszvis
             .axisY()
