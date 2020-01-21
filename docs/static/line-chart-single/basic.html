@@ -31,26 +31,11 @@
         }
 
         /* Configuration
-        ----------------------------------------------- */
+  ----------------------------------------------- */
 
-        var queryProps = sszvis
-          .responsiveProps()
-          .prop("xLabel", {
-            _: "x-Achse"
-          })
-          .prop("yLabel", {
-            _: "y-Achse"
-          })
-          .prop("rulerLabel", {
-            _: function() {
-              return function(d) {
-                return sszvis.formatNumber(yAcc(d));
-              };
-            }
-          })
-          .prop("ticks", {
-            _: 5
-          });
+        var queryProps = sszvis.responsiveProps().prop("ticks", {
+          _: 4
+        });
 
         function parseRow(d) {
           return {
@@ -58,11 +43,12 @@
             value: sszvis.parseNumber(d["Wert"])
           };
         }
+
         var xAcc = sszvis.prop("date");
         var yAcc = sszvis.prop("value");
 
         /* Application state
-        ----------------------------------------------- */
+  ----------------------------------------------- */
         var state = {
           data: [],
           years: [0, 0],
@@ -72,7 +58,7 @@
         };
 
         /* State transitions
-        ----------------------------------------------- */
+  ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -105,7 +91,7 @@
         };
 
         /* Data initialization
-        ----------------------------------------------- */
+  ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -120,68 +106,61 @@
         ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 30, bottom: 40 }, config.id);
+          var bounds = sszvis.bounds({ top: 3, bottom: 25 }, config.id);
 
           // Scales
+
           var xScale = d3
             .scaleTime()
             .domain(state.years)
             .range([0, bounds.innerWidth]);
 
-          //if smallest y value is great than 0, then minY is 0, otherwise (when there are negatives) its
-          //the smallest value
-          var minY = d3.min([d3.min(state.data, yAcc), 0]);
-          var maxY = d3.max(state.data, yAcc);
-          // Add a bit of additional bottom padding to prevent the y-axis value from
-          // touching the x-axis if we are having negative y values
-          var bottomPadding = minY < 0 ? 15 : 0;
-
           var yScale = d3
             .scaleLinear()
-            .domain([minY, maxY])
+            .domain([0, d3.max(state.data, yAcc)])
             .range([bounds.innerHeight, 0]);
 
           // Layers
+
           var chartLayer = sszvis.createSvgLayer(config.id, bounds);
 
           // Components
+
           var line = sszvis
             .line()
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
-            .stroke(sszvis.scaleQual6());
+            .stroke(sszvis.scaleQual12());
 
-          var xTickValues = xScale.ticks(props.ticks);
-          xTickValues = xTickValues.concat(state.selection.map(xAcc));
+          var xTickValues = xScale.ticks(props.ticks).concat(state.selection.map(xAcc));
 
           var xAxis = sszvis.axisX
             .time()
             .scale(xScale)
             .orient("bottom")
             .tickValues(xTickValues)
-            .highlightTick(isSelected)
-            .title(props.xLabel);
+            .tickFormat(quarterTickLabel)
+            .highlightTick(isSelected);
 
           var yAxis = sszvis
             .axisY()
             .scale(yScale)
             .orient("right")
-            .title(props.yLabel)
-            .dyTitle(-20)
-            .contour(true)
-            .showZeroY(minY < 0);
+            .contour(true);
 
           var ruler = sszvis
             .annotationRuler()
             .top(0)
-            .bottom(bounds.innerHeight + bottomPadding)
+            .bottom(bounds.innerHeight)
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
-            .label(props.rulerLabel)
+            .label(function(d) {
+              return sszvis.formatNumber(d.value) + " Anteile";
+            })
             .flip(function(d) {
               return xScale(xAcc(d)) >= bounds.innerWidth / 2;
             })
-            .color(sszvis.scaleQual6());
+            .color(sszvis.scaleQual12());
 
           // Rendering
 
@@ -191,7 +170,7 @@
 
           lineChart
             .selectGroup("xAxis")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + bottomPadding))
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
             .call(xAxis);
 
           lineChart.selectGroup("yAxis").call(yAxis);
@@ -216,7 +195,7 @@
         }
 
         /* Helper functions
-        ----------------------------------------------- */
+  ----------------------------------------------- */
         function closestDatum(data, accessor, datum) {
           var i = d3.bisector(accessor).left(data, datum, 1);
           var d0 = data[i - 1];
@@ -230,6 +209,32 @@
 
         function isStartOfYear(d) {
           return d.getMonth() === 0;
+        }
+
+        function quarterTickLabel(d) {
+          return isStartOfYear(d) && !isSelected(d) ? d.getFullYear(d) : quarterName(d);
+        }
+
+        function quarterName(d) {
+          var month = d.getMonth();
+          switch (month) {
+            case 0:
+            case 1:
+            case 2:
+              return "Q1";
+            case 3:
+            case 4:
+            case 5:
+              return "Q2";
+            case 6:
+            case 7:
+            case 8:
+              return "Q3";
+            case 9:
+            case 10:
+            case 11:
+              return "Q4";
+          }
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>

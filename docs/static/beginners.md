@@ -2,7 +2,7 @@
 
 > These charts are fully parametrized for simple usage. They are all generated based on a config object that stands at the beginning of the code.
 
-## General Parametric Configuration
+## General Basic Configuration
 
 For each chart the following can always be configured:
 
@@ -11,7 +11,7 @@ For each chart the following can always be configured:
 - `description` – Short description of this chart for visually impaired users (optional)
 - `fallback` – View of the chart when interactivity is not desired. Creates horizontal lines for the y-ticks and/or does not render mouse interaction when true
 
-## Line chart – Parametric Configuration
+## Line chart – Basic Configuration
 
 ```project
 {
@@ -31,7 +31,7 @@ For each chart the following can always be configured:
 }
 ```
 
-## Multiple line chart – Parametric Configuration
+## Multiple line chart – Basic Configuration
 
 ```project
 {
@@ -51,7 +51,7 @@ For each chart the following can always be configured:
 }
 ```
 
-## Bar Chart Vertical – Parametric Configuration
+## Bar Chart Vertical – Basic Configuration
 
 ```project
 {
@@ -91,7 +91,7 @@ For each chart the following can always be configured:
 }
 ```
 
-## Bar Chart Horizontal – Parametric Configuration
+## Bar Chart Horizontal – Basic Configuration
 
 ```project
 {
@@ -111,7 +111,7 @@ For each chart the following can always be configured:
 }
 ```
 
-## Bar Chart Horizontal (Stacked) – Parametric Configuration
+## Bar Chart Horizontal (Stacked) – Basic Configuration
 
 ```project
 {
@@ -131,7 +131,7 @@ For each chart the following can always be configured:
 }
 ```
 
-## Grouped Bar Chart – Parametric Configuration
+## Grouped Bar Chart – Basic Configuration
 
 Configuration:
 
@@ -161,7 +161,7 @@ Configuration:
 }
 ```
 
-## Area Chart – Parametric Configuration
+## Area Chart – Basic Configuration
 
 Configuration:
 
@@ -191,7 +191,7 @@ Configuration:
 }
 ```
 
-## Map Zürich Kreise – Parametric Configuration
+## Map Zürich Kreise – Basic Configuration
 
 Configuration:
 
@@ -220,7 +220,7 @@ Configuration:
 }
 ```
 
-## Map Zürich: Quartiere – Parametric Configuration
+## Map Zürich: Quartiere – Basic Configuration
 
 A map of the Statistische Quartiere of Zürich, demonstrating use of a button group control for data subset selection.
 
@@ -249,7 +249,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 }
 ```
 
-## Heat Table – Parametric Configuration
+## Heat Table – Basic Configuration
 
 Configuration
 
@@ -280,7 +280,7 @@ Configuration
 }
 ```
 
-## Pie Chart – Parametric Configuration
+## Pie Chart – Basic Configuration
 
 Configuration:
 
@@ -305,7 +305,7 @@ Configuration:
 }
 ```
 
-## Population Pyramid – Parametric Configuration
+## Population Pyramid – Basic Configuration
 
 Configuration:
 
@@ -339,7 +339,7 @@ Configuration:
 }
 ```
 
-## Scatterplot – Parametric Configuration
+## Scatterplot – Basic Configuration
 
 - `xColumn` – Data column to use for the x-axis (required)
 - `yColumn` – Data column to use for the y-axis (required)
@@ -368,7 +368,7 @@ Configuration:
 }
 ```
 
-## Variable Radius Scatterplot – Parametric Configuration
+## Variable Radius Scatterplot – Basic Configuration
 
 Configurations
 
