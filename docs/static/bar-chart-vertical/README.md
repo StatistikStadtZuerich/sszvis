@@ -36,27 +36,7 @@ Specifies the fill-value of the rectangles. Can be a value or a function (defaul
 
 Specifies the stroke-value of the rectangles. Can be a value or a function (default: black).
 
-### Chart
-
-```project
-{
-    "name": "bar-chart-vertical-basic",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-vertical/basic.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-vertical/data/SiVB_fourCities.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
-## Specialties
+## Chart
 
 This example shows several edge cases and specialties:
 
@@ -66,10 +46,10 @@ This example shows several edge cases and specialties:
 
 ```project
 {
-    "name": "bar-chart-vertical-long-names",
+    "name": "bar-chart-vertical-basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical/long-names.html",
+            "source": "bar-chart-vertical/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical/data/SiVB_longNames.csv",

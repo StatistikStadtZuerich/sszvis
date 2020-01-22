@@ -55,13 +55,13 @@ For each chart the following can always be configured:
 
 ```project
 {
-    "name": "bar-chart-vertical-parametric",
+    "name": "bar-chart-vertical-basic",
     "files": {
         "index.html": {
             "source": "bar-chart-vertical/basic.html",
             "template": "template.html"
         },
-        "data.csv": "bar-chart-vertical/data/SiVB_fourCities.csv",
+        "data.csv": "bar-chart-vertical/data/SiVB_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",

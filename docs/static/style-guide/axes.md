@@ -201,10 +201,10 @@ Sometimes, the axis labels are long enough that they will overlap their neighbor
 
 ```project
 {
-    "name": "bar-chart-vertical-long-names",
+    "name": "bar-chart-vertical-basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical/long-names.html",
+            "source": "bar-chart-vertical/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical/data/SiVB_longNames.csv",
