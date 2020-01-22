@@ -72,7 +72,7 @@ This x-axis displays ordinal categories
     "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical-stacked/eight-cat.html",
+            "source": "bar-chart-vertical-stacked/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
@@ -157,10 +157,10 @@ By default, sszvis y-axes don't show a label at 0. Since values go negative in t
 
 ```project
 {
-    "name": "bar-chart-grouped_gb-two-small",
+    "name": "bar-chart-grouped_basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-grouped/gb-two-small.html",
+            "source": "bar-chart-grouped/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-grouped/data/GB_2Categories_smallVals.csv",
@@ -271,13 +271,13 @@ Contours are used to make labels stand out, especially when they are positioned 
 
 ```project
 {
-    "name": "line-chart-single-percentage-negatives-y-axis",
+    "name": "line-chart-multiple-eight-cat",
     "files": {
         "index.html": {
-            "source": "line-chart-single/percentage-negatives-y-axis.html",
+            "source": "line-chart-multiple/eight-cat.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-single/data/SL_Percentage_negativesYAxis.csv",
+        "data.csv": "line-chart-multiple/data/ML_months_8Categories_superposition_missing.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",

@@ -176,10 +176,10 @@ Configuration:
 
 ```project
 {
-    "name": "area-chart-stacked-two",
+    "name": "area-chart-stacked-basic",
     "files": {
         "index.html": {
-            "source": "area-chart-stacked/parametric.html",
+            "source": "area-chart-stacked/basic.html",
             "template": "template.html"
         },
         "data.csv": "area-chart-stacked/data/SA_2Categories_yearly.csv",

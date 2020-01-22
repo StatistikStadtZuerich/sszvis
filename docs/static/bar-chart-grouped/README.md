@@ -66,26 +66,6 @@ A predicate function which can be used to determine whether a bar has a defined 
 }
 ```
 
-## With negative and missing values
-
-```project
-{
-    "name": "bar-chart-grouped_gb-two-small",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-grouped/gb-two-small.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-grouped/data/GB_2Categories_smallVals.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
 ## With many values, some negative
 
 ```project
