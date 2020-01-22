@@ -282,17 +282,12 @@ Configuration
 
 ## Pie Chart – Basic Configuration
 
-Configuration:
-
-- `cColumn` – Data column to use for the category (required)
-- `vColumn` – Data column to use for the values of the categories (required)
-
 ```project
 {
-    "name": "pie-chart-twelve-cat",
+    "name": "pie-chart-basic",
     "files": {
         "index.html": {
-            "source": "pie-charts/parametric.html",
+            "source": "pie-charts/basic.html",
             "template": "template.html"
         },
         "data.csv": "pie-charts/data/P_7Categories.csv",
