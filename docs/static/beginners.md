@@ -35,10 +35,10 @@ For each chart the following can always be configured:
 
 ```project
 {
-    "name": "line-chart-multiple-two-cat",
+    "name": "line-chart-basic",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/parametric.html",
+            "source": "line-chart-multiple/basic.html",
             "template": "template.html"
         },
         "data.csv": "line-chart-multiple/data/ML_2Categories_Quarterly.csv",
@@ -95,7 +95,7 @@ For each chart the following can always be configured:
 
 ```project
 {
-    "name": "bar-chart-horizontal-parametric",
+    "name": "bar-chart-horizontal-basic",
     "files": {
         "index.html": {
             "source": "bar-chart-horizontal/basic.html",
@@ -115,7 +115,7 @@ For each chart the following can always be configured:
 
 ```project
 {
-    "name": "bar-chart-horizontal-stacked-parametric",
+    "name": "bar-chart-horizontal-stacked-basic",
     "files": {
         "index.html": {
             "source": "bar-chart-horizontal-stacked/basic.html",
