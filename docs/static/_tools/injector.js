@@ -34,9 +34,7 @@
     "map-modules/sszvis-map-zurich-wahlkreise.js"
   ];
   var allChartsList = [
-    "/area-chart-stacked/parametric.html",
-    "/area-chart-stacked/sa-three.html",
-    "/area-chart-stacked/sa-twelve.html",
+    "/area-chart-stacked/basic.html",
     "/area-chart-stacked/sa-two.html",
     "/bar-chart-grouped/basic.html",
     "/bar-chart-grouped/gb-two-small.html",
@@ -86,10 +84,8 @@
     "/map-standard/switzerland.html",
     "/map-standard/quartiere.html",
     "/map-standard/wahlkreis.html",
-    "/pie-charts/four-cat.html",
     "/pie-charts/multiples.html",
-    "/pie-charts/parametric.html",
-    "/pie-charts/twelve-cat.html",
+    "/pie-charts/basic.html",
     "/population-pyramid/parametric.html",
     "/population-pyramid/pyramid-basic.html",
     "/population-pyramid/pyramid-reference.html",

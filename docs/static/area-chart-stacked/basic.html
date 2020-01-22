@@ -23,7 +23,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var config = {
           // The path to the CSV file containing the data for this chart
           dataPath: "data/SA_2Categories_yearly.csv",
@@ -45,18 +45,14 @@
           fallback: false
         };
 
-        // This example works in much the same way as the twelve-category stacked area chart.
-        // Much of the code is similar, if not the same. For a detailed description of the
-        // process of rendering this type of chart, see the twelve-category example, sa-twelve.html
-
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var xAcc = sszvis.prop("year");
         var yAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("category");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           timeExtent: [0, 0],
@@ -71,16 +67,14 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
             state.timeExtent = d3.extent(state.data, xAcc);
             state.categories = sszvis.set(state.data, cAcc);
 
-            var stackLayout = d3
-              .stack()
-              .keys(state.categories.slice().reverse());
+            var stackLayout = d3.stack().keys(state.categories.slice().reverse());
             state.stackedData = stackLayout(
               sszvis
                 .cascade()
@@ -157,7 +151,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.dataPath)
           .row(function(d) {
             return {
@@ -175,13 +169,10 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           // the color scale for the layers, based on the number of categories
-          var cScale =
-            state.categories.length > 6
-              ? sszvis.scaleQual12()
-              : sszvis.scaleQual6();
+          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
           cScale.domain(state.categories);
 
           var colorLegend = flexibleLegend(cScale, state.categories.length);
@@ -189,9 +180,7 @@
           var bounds = sszvis.bounds(
             {
               top: 20,
-              bottom:
-                config.legendPadding +
-                legendHeight(colorLegend, state.categories.length)
+              bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
             },
             "#sszvis-chart"
           );
@@ -210,9 +199,7 @@
 
           // Layers
 
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
-            .datum(state.stackedData);
+          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.stackedData);
 
           var htmlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds);
 
@@ -279,9 +266,7 @@
             .tooltip()
             .header(tooltipText)
             .orientation(function(d) {
-              return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth
-                ? "right"
-                : "left";
+              return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? "right" : "left";
             })
             .renderInto(htmlLayer)
             .visible(true);
@@ -296,9 +281,7 @@
               return yScale(d[1]);
             });
 
-          var xAxisTicks = xScale
-            .ticks(config.xTicks)
-            .concat(state.highlightDate);
+          var xAxisTicks = xScale.ticks(config.xTicks).concat(state.highlightDate);
 
           var xAxis = sszvis.axisX
             .time()
@@ -337,13 +320,7 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr(
-              "transform",
-              sszvis.translateString(
-                0,
-                bounds.innerHeight + config.legendPadding
-              )
-            )
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + config.legendPadding))
             .call(colorLegend);
 
           if (!config.fallback) {
@@ -380,7 +357,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function findClosest(data, datum) {
           var i = d3.bisectLeft(data, datum, 1);
           var d0 = data[i - 1];
