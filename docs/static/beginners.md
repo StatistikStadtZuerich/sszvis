@@ -145,10 +145,10 @@ Configuration:
 
 ```project
 {
-    "name": "bar-chart-grouped_gb-two-small",
+    "name": "bar-chart-basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-grouped/parametric.html",
+            "source": "bar-chart-grouped/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-grouped/data/GB_2Categories_smallVals.csv",
