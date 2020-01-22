@@ -116,7 +116,7 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
     "name": "population-pyramid-basic",
     "files": {
         "index.html": {
-            "source": "population-pyramid/pyramid-basic.html",
+            "source": "population-pyramid/basic.html",
             "template": "template.html"
         },
         "data.csv": "population-pyramid/data/BP_basic.csv",

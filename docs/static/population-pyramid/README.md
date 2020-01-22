@@ -44,22 +44,21 @@ Supply an accessor function for reference data for the left side. If this option
 
 Supply an accessor function for reference data for the right side. If this option is specified, the pyramid will show a reference line.
 
-
 ### Chart
 
 ```project
 {
-    "name": "population-pyramid-basic",
+    "name": "population-basic",
     "files": {
         "index.html": {
-            "source": "population-pyramid/pyramid-basic.html",
+            "source": "population-pyramid/basic.html",
             "template": "template.html"
         },
         "data.csv": "population-pyramid/data/BP_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -89,7 +88,7 @@ The configuration options are the same as for the standard pyramid component, in
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -111,7 +110,7 @@ Reference lines can be shown to compare another set of data with the data displa
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
