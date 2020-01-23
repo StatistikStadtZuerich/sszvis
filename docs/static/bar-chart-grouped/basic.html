@@ -17,15 +17,7 @@
       var EXTERNAL_CONFIG = {
         data: "data/GB_2Categories_smallVals.csv",
         id: "#sszvis-chart",
-        fallback: false,
-        // The label for the y-axis. Set to empty ('') to hide the label
-        yAxisLabel: "",
-        // Number of ticks on the y-axis. Replace null with a cardinal number to specify the number of ticks
-        yTicks: null,
-        // The orientation of the x-Axis Labels. Takes null, 'diagonal' and 'vertical'
-        textDirection: "diagonal",
-        // Padding between legend and x-axis in pixels. The recommended default is 60px or 120px depending on the orientation of the x-Axis Labels.
-        legendPadding: 120
+        fallback: "fallback.png"
       };
     </script>
 
@@ -40,6 +32,21 @@
 
         /* Configuration
   ----------------------------------------------- */
+
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("yTicks", {
+            _: null
+          })
+          .prop("yAxisLabel", {
+            _: ""
+          })
+          .prop("textDirection", {
+            _: "diagonal"
+          })
+          .prop("legendPadding", {
+            _: 120
+          });
 
         function parseRow(d) {
           return {
@@ -123,12 +130,14 @@
           var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
           cScale.domain(state.categories);
 
+          var props = queryProps(sszvis.measureDimensions(config.id));
+
           var colorLegend = flexibleLegend(cScale, state.categories.length);
 
           var bounds = sszvis.bounds(
             {
               top: 25,
-              bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
+              bottom: props.legendPadding + legendHeight(colorLegend, state.categories.length)
             },
             config.id
           );
@@ -179,11 +188,11 @@
             .ordinal()
             .scale(xScale)
             .orient("bottom")
-            .slant(config.textDirection)
+            .slant(props.textDirection)
             .highlightTick(function(d) {
               return sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d);
             });
-          if (!config.textDirection) {
+          if (!props.textDirection) {
             xAxis.textWrap(labelWrapWidth(xScale.range()));
           }
 
@@ -192,9 +201,8 @@
             .scale(yScale)
             .showZeroY(isTwoSidedDomain(state.valueExtent))
             .orient("right")
-            .ticks(config.yTicks)
-            .tickLength(config.fallback ? bounds.innerWidth : null)
-            .title(config.yAxisLabel);
+            .ticks(props.yTicks)
+            .title(props.yAxisLabel);
 
           var tooltip = sszvis
             .tooltip()
@@ -236,22 +244,20 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + config.legendPadding))
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + props.legendPadding))
             .call(colorLegend);
 
           sszvis.viewport.on("resize", actions.resize);
 
           // Interaction
-          if (!config.fallback) {
-            var interactionLayer = sszvis
-              .move()
-              .xScale(xScale)
-              .yScale(yScale)
-              .on("move", actions.showTooltip)
-              .on("end", actions.hideTooltip);
+          var interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yScale)
+            .on("move", actions.showTooltip)
+            .on("end", actions.hideTooltip);
 
-            chartLayer.selectGroup("interactionLayer").call(interactionLayer);
-          }
+          chartLayer.selectGroup("interactionLayer").call(interactionLayer);
         }
 
         /* Helper functions
