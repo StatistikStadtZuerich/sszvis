@@ -147,7 +147,6 @@
             .domain([0, state.maxY])
             .range([bounds.innerHeight, 0]);
 
-          // CONFIG
           //choose color scale depending on number of categories
           var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
           cScale.domain(state.categories);
@@ -164,7 +163,6 @@
             .stroke(sszvis.compose(cScale, cAcc, sszvis.first));
 
           // Add the highlighted data as additional ticks to the xScale
-          // CONFIG use config.ticks if defined in config object
           var xTickValues = props.ticks ? xScale.ticks(props.ticks) : xScale.ticks();
           xTickValues = xTickValues.concat(state.selection.map(xAcc));
           xTickValues = xTickValues.filter(function(v, i) {
@@ -190,7 +188,6 @@
 
           // CONFIG use a second x-Axis with only tick labels.
           // Necessary in order to prevent horizontal lines to be drawn above data lines
-          // if config.fallback == true
           var yAxis2 = sszvis
             .axisY()
             .scale(yScale)
@@ -221,15 +218,8 @@
             .attr("transform", sszvis.translateString(0, bounds.innerHeight))
             .call(xAxis);
 
-          // CONFIG draw yAxis with long horizontal ticks (if config.fallback == true)
-          // before the data lines
           chartLayer.selectGroup("yAxis").call(yAxis);
-
-          // CONFIG draw data lines above long horizonzal ticks (if config.fallback == true)
           chartLayer.selectGroup("line").call(line);
-
-          // CONFIG draw tick labels with contours once again so that they are above the data lines
-          //(if config.fallback == true) Maybe there is an easier solution to this issue
           chartLayer.selectGroup("yAxis2").call(yAxis2);
 
           chartLayer
