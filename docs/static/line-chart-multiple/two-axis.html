@@ -23,7 +23,8 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         var TITLE = "Diagrammtitel";
         var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
         var queryProps = sszvis.responsiveProps().prop("yAxis2Label", {
@@ -32,7 +33,8 @@
         });
 
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         var xAcc = sszvis.prop("date");
         var yAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("region");
@@ -45,7 +47,8 @@
         var datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
 
         /* Application State
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         var state = {
           data: [],
           lineData: [],
@@ -58,7 +61,8 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -71,19 +75,12 @@
             // Compute two different maximum y values - one for each axis.
             // Multiply axis1maxY by a small number to ensure that the data for
             // category 1 doesn't overlap with category 2 data
-            state.axis1maxY =
-              d3.max(state.data.filter(sszvis.not(datumIsOnAxis2)), yAcc) * 1.2;
+            state.axis1maxY = d3.max(state.data.filter(sszvis.not(datumIsOnAxis2)), yAcc) * 1.2;
             state.axis2maxY = d3.max(state.data.filter(datumIsOnAxis2), yAcc);
 
             // Two different sets of categories for two color scales
-            state.categories1 = sszvis.set(
-              state.data.filter(sszvis.not(datumIsOnAxis2)),
-              cAcc
-            );
-            state.categories2 = sszvis.set(
-              state.data.filter(datumIsOnAxis2),
-              cAcc
-            );
+            state.categories1 = sszvis.set(state.data.filter(sszvis.not(datumIsOnAxis2)), cAcc);
+            state.categories2 = sszvis.set(state.data.filter(datumIsOnAxis2), cAcc);
 
             render(state);
           },
@@ -95,9 +92,7 @@
                 return sszvis.stringEqual(xAcc(d), closestDate);
               }, linePoints);
             });
-            state.selection = closestData.filter(
-              sszvis.compose(sszvis.not(isNaN), yAcc)
-            );
+            state.selection = closestData.filter(sszvis.compose(sszvis.not(isNaN), yAcc));
 
             render(state);
           },
@@ -113,7 +108,8 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         d3.csv("data/S_2yAxis.csv")
           .row(function(d) {
             return {
@@ -131,7 +127,8 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         function render(state) {
           var bounds = sszvis.bounds({ top: 30, bottom: 130 }, "#sszvis-chart");
           var props = queryProps(bounds);
@@ -258,18 +255,12 @@
 
           chartLayer
             .selectGroup("cScale1")
-            .attr(
-              "transform",
-              sszvis.translateString(1, bounds.innerHeight + 60)
-            )
+            .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
             .call(cLegend1);
 
           chartLayer
             .selectGroup("cScale2")
-            .attr(
-              "transform",
-              sszvis.translateString(bounds.innerWidth, bounds.innerHeight + 60)
-            )
+            .attr("transform", sszvis.translateString(bounds.innerWidth, bounds.innerHeight + 60))
             .call(cLegend2);
 
           chartLayer
@@ -292,7 +283,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         function closestDatum(data, accessor, datum) {
           var i = d3.bisector(accessor).left(data, datum, 1);
@@ -302,10 +293,7 @@
         }
 
         function isSelected(d) {
-          return sszvis.contains(
-            state.selection.map(xAcc).map(String),
-            String(d)
-          );
+          return sszvis.contains(state.selection.map(xAcc).map(String), String(d));
         }
       })(d3, sszvis);
     </script>

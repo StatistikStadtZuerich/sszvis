@@ -28,7 +28,7 @@ This results in a chart with a label on hover:
     "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical-stacked/parametric.html",
+            "source": "bar-chart-vertical-stacked/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv.csv",

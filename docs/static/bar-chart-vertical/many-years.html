@@ -1,229 +1,226 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Vertical Bar Chart</title>
-</head>
-<body style="margin:0;padding:0;">
-<link href="../sszvis.css" rel="stylesheet" />
-<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
-<script src="../sszvis.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vertical Bar Chart</title>
+  </head>
+  <body style="margin:0;padding:0;">
+    <link href="../sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="../sszvis.js"></script>
 
-<div id="sszvis-chart"></div>
+    <div id="sszvis-chart"></div>
 
-<script data-catalog-project-expose="script.js">
-(function(d3, sszvis) {
-  'use strict';
-
-  if (sszvis.fallbackUnsupported()) {
-    sszvis.fallbackRender('#sszvis-chart');
-    return;
-  }
-
-
-  /* Configuration
-  ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
-  // Because there are so many bars, this represents a special case
-  // in this example, because the x-axis values are sequential,
-  // the x-axis is implemented using a linear time scale,
-  // instead of the usual ordinal scale.
-  // It should be noted that in situations with this much time-series data,
-  // a line chart is almost always the optimal display strategy.
-  var BAR_WIDTH = 3;
-  var queryProps = sszvis.responsiveProps()
-    .prop('barPadding', {
-      palm: 0.2,
-      _: 0.1
-    });
-
-
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.prop('year');
-  var yAcc = sszvis.prop('value');
-
-
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    yearRange: [],
-    selection: []
-  };
-
-
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.yearRange = d3.extent(state.data, xAcc);
-      render(state);
-    },
-
-    changeDate: function(selectedDate) {
-      var selectedYear = Math.round(selectedDate);
-      state.selection = state.data.filter(function(v) {
-        return xAcc(v) === selectedYear;
-      });
-      render(state);
-    },
-
-    resetDate: function() {
-      state.selection = [];
-      render(state);
-    },
-
-    resize: function() { render(state); }
-  };
-
-
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/SiVB_yearly_many.csv')
-    .row(function(d) {
-      return {
-        year: sszvis.parseNumber(d['Jahr']),
-        value: sszvis.parseNumber(d['Hotelübernachtungen'])
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/SiVB_yearly_many.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
       };
-    })
-    .get(function(error, data) {
-      if (error) {
-        sszvis.loadError(error);
-        return;
-      }
-      actions.prepareState(data);
-    });
+    </script>
 
+    <script data-catalog-project-expose="script.js">
+      (function(d3, sszvis, config) {
+        "use strict";
 
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
+        if (sszvis.fallbackUnsupported()) {
+          sszvis.fallbackRender(config.id, { src: config.fallback });
+          return;
+        }
 
-    var bounds = sszvis.bounds({ top: 3, bottom: 25 }, '#sszvis-chart');
-    var props = queryProps(bounds);
+        /* Configuration
+        ----------------------------------------------- */
 
+        // Because there are so many bars, this represents a special case
+        // in this example, because the x-axis values are sequential,
+        // the x-axis is implemented using a linear time scale,
+        // instead of the usual ordinal scale.
+        // It should be noted that in situations with this much time-series data,
+        // a line chart is almost always the optimal display strategy.
+        var BAR_WIDTH = 3;
+        var queryProps = sszvis.responsiveProps().prop("barPadding", {
+          palm: 0.2,
+          _: 0.1
+        });
 
-    // Scales
+        function parseRow(d) {
+          return {
+            year: sszvis.parseNumber(d["Jahr"]),
+            value: sszvis.parseNumber(d["Hotelübernachtungen"])
+          };
+        }
 
-    var xScale = d3.scaleBand()
-      .domain(sszvis.set(state.data, xAcc))
-      .padding(0.4)
-      .paddingOuter(props.barPadding)
-      .rangeRound([0, bounds.innerWidth]);
+        var xAcc = sszvis.prop("year");
+        var yAcc = sszvis.prop("value");
 
-    var heightScale = d3.scaleLinear()
-      .domain([0, d3.max(state.data, yAcc)])
-      .range([0, bounds.innerHeight]);
+        /* Application state
+        ----------------------------------------------- */
+        var state = {
+          data: [],
+          yearRange: [],
+          selection: []
+        };
 
-    var yPosScale = heightScale
-      .copy()
-      .range(heightScale.range().slice().reverse());
+        /* State transitions
+        ----------------------------------------------- */
+        var actions = {
+          prepareState: function(data) {
+            state.data = data;
+            state.yearRange = d3.extent(state.data, xAcc);
+            render(state);
+          },
 
-    var xValue = sszvis.compose(xScale, xAcc);
-    // rounding the y-values and the height prevents the bars from jumping around
-    var yValue = sszvis.compose(Math.round, yPosScale, yAcc);
-    var hValue = sszvis.compose(Math.round, heightScale, yAcc)
+          changeDate: function(selectedDate) {
+            var selectedYear = Math.round(selectedDate);
+            state.selection = state.data.filter(function(v) {
+              return xAcc(v) === selectedYear;
+            });
+            render(state);
+          },
 
-    var cScale = sszvis.scaleQual12();
-    var cScaleDark = cScale.darker();
+          resetDate: function() {
+            state.selection = [];
+            render(state);
+          },
 
+          resize: function() {
+            render(state);
+          }
+        };
 
-    // Layers
+        /* Data initialization
+        ----------------------------------------------- */
+        d3.csv(config.data)
+          .row(parseRow)
+          .get(function(error, data) {
+            if (error) {
+              sszvis.loadError(error);
+              return;
+            }
+            actions.prepareState(data);
+          });
 
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
-      })
-      .datum(state.data);
+        /* Render
+        ----------------------------------------------- */
+        function render(state) {
+          var bounds = sszvis.bounds({ top: 3, bottom: 25 }, config.id);
+          var props = queryProps(bounds);
 
-    var tooltipLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds)
-      .datum(state.selection);
+          // Scales
 
+          var xScale = d3
+            .scaleBand()
+            .domain(sszvis.set(state.data, xAcc))
+            .padding(0.4)
+            .paddingOuter(props.barPadding)
+            .rangeRound([0, bounds.innerWidth]);
 
-    // Components
+          var heightScale = d3
+            .scaleLinear()
+            .domain([0, d3.max(state.data, yAcc)])
+            .range([0, bounds.innerHeight]);
 
-    var barGen = sszvis.bar()
-      .x(xValue)
-      .y(yValue)
-      .width(xScale.bandwidth())
-      .height(hValue)
-      .fill(function(d) {
-        return isSelected(d) ? cScaleDark(d): cScale(d);
-      });
+          var yPosScale = heightScale.copy().range(
+            heightScale
+              .range()
+              .slice()
+              .reverse()
+          );
 
-    var xAxis = sszvis.axisX()
-      .scale(xScale)
-      .orient('bottom')
-      .alignOuterLabels(true)
-      .tickValues(d3.range(state.yearRange[0], state.yearRange[1], 20));
+          var xValue = sszvis.compose(xScale, xAcc);
+          // rounding the y-values and the height prevents the bars from jumping around
+          var yValue = sszvis.compose(Math.round, yPosScale, yAcc);
+          var hValue = sszvis.compose(Math.round, heightScale, yAcc);
 
-    var yAxis = sszvis.axisY()
-      .scale(yPosScale)
-      .orient('right');
+          var cScale = sszvis.scaleQual12();
+          var cScaleDark = cScale.darker();
 
-    var tooltipTitle = sszvis.modularTextHTML()
-      .bold(yAcc)
-      .plain('Hotelübernachtungen');
+          // Layers
 
-    var tooltip = sszvis.tooltip()
-      .orientation(sszvis.fitTooltip('bottom', bounds))
-      .renderInto(tooltipLayer)
-      .header(tooltipTitle)
-      .body(function(d) {
-        return 'Im Jahr ' + xAcc(d);
-      })
-      .visible(isSelected);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
+          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
-    // Rendering
+          // Components
 
-    var bars = chartLayer.selectGroup('bars')
-      .call(barGen);
+          var barGen = sszvis
+            .bar()
+            .x(xValue)
+            .y(yValue)
+            .width(xScale.bandwidth())
+            .height(hValue)
+            .fill(function(d) {
+              return isSelected(d) ? cScaleDark(d) : cScale(d);
+            });
 
-    bars.selectAll('[data-tooltip-anchor]')
-      .call(tooltip);
+          var xAxis = sszvis
+            .axisX()
+            .scale(xScale)
+            .orient("bottom")
+            .alignOuterLabels(true)
+            .tickValues(d3.range(state.yearRange[0], state.yearRange[1], 20));
 
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
-      .call(xAxis);
+          var yAxis = sszvis
+            .axisY()
+            .scale(yPosScale)
+            .orient("right");
 
-    chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.translateString(0, 0))
-      .call(yAxis);
+          var tooltipTitle = sszvis
+            .modularTextHTML()
+            .bold(yAcc)
+            .plain("Hotelübernachtungen");
 
+          var tooltip = sszvis
+            .tooltip()
+            .orientation(sszvis.fitTooltip("bottom", bounds))
+            .renderInto(tooltipLayer)
+            .header(tooltipTitle)
+            .body(function(d) {
+              return "Im Jahr " + xAcc(d);
+            })
+            .visible(isSelected);
 
-    // Interaction
+          // Rendering
 
-    var interactionLayer = sszvis.move()
-      .padding({
-        right: BAR_WIDTH
-      })
-      .xScale(xScale)
-      .yScale(yPosScale)
-      .on('move', actions.changeDate)
-      .on('end', actions.resetDate);
+          var bars = chartLayer.selectGroup("bars").call(barGen);
 
-    chartLayer.selectGroup('interaction')
-      .call(interactionLayer);
+          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
 
-    sszvis.viewport.on('resize', actions.resize);
-  }
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+            .call(xAxis);
 
+          chartLayer
+            .selectGroup("yAxis")
+            .attr("transform", sszvis.translateString(0, 0))
+            .call(yAxis);
 
-  /* Helper functions
-  ----------------------------------------------- */
-  function isSelected(d) {
-    return sszvis.contains(state.selection, d);
-  }
+          // Interaction
 
+          var interactionLayer = sszvis
+            .move()
+            .padding({
+              right: BAR_WIDTH
+            })
+            .xScale(xScale)
+            .yScale(yPosScale)
+            .on("move", actions.changeDate)
+            .on("end", actions.resetDate);
 
-}(d3, sszvis));
-</script>
-</body>
+          chartLayer.selectGroup("interaction").call(interactionLayer);
+
+          sszvis.viewport.on("resize", actions.resize);
+        }
+
+        /* Helper functions
+        ----------------------------------------------- */
+        function isSelected(d) {
+          return sszvis.contains(state.selection, d);
+        }
+      })(d3, sszvis, EXTERNAL_CONFIG);
+    </script>
+  </body>
 </html>

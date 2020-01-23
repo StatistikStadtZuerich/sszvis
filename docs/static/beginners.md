@@ -2,7 +2,7 @@
 
 > These charts are fully parametrized for simple usage. They are all generated based on a config object that stands at the beginning of the code.
 
-## General Parametric Configuration
+## General Basic Configuration
 
 For each chart the following can always be configured:
 
@@ -11,7 +11,7 @@ For each chart the following can always be configured:
 - `description` – Short description of this chart for visually impaired users (optional)
 - `fallback` – View of the chart when interactivity is not desired. Creates horizontal lines for the y-ticks and/or does not render mouse interaction when true
 
-## Line chart – Parametric Configuration
+## Line chart – Basic Configuration
 
 ```project
 {
@@ -31,14 +31,14 @@ For each chart the following can always be configured:
 }
 ```
 
-## Multiple line chart – Parametric Configuration
+## Multiple line chart – Basic Configuration
 
 ```project
 {
-    "name": "line-chart-multiple-two-cat",
+    "name": "line-chart-basic",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/parametric.html",
+            "source": "line-chart-multiple/basic.html",
             "template": "template.html"
         },
         "data.csv": "line-chart-multiple/data/ML_2Categories_Quarterly.csv",
@@ -51,17 +51,17 @@ For each chart the following can always be configured:
 }
 ```
 
-## Bar Chart Vertical – Parametric Configuration
+## Bar Chart Vertical – Basic Configuration
 
 ```project
 {
-    "name": "bar-chart-vertical-parametric",
+    "name": "bar-chart-vertical-basic",
     "files": {
         "index.html": {
             "source": "bar-chart-vertical/basic.html",
             "template": "template.html"
         },
-        "data.csv": "bar-chart-vertical/data/SiVB_fourCities.csv",
+        "data.csv": "bar-chart-vertical/data/SiVB_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
@@ -71,14 +71,14 @@ For each chart the following can always be configured:
 }
 ```
 
-## Bar Chart Vertical (Stacked) – Parametric Configuration
+## Bar Chart Vertical (Stacked) – Basic Configuration
 
 ```project
 {
     "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical-stacked/parametric.html",
+            "source": "bar-chart-vertical-stacked/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
@@ -91,11 +91,11 @@ For each chart the following can always be configured:
 }
 ```
 
-## Bar Chart Horizontal – Parametric Configuration
+## Bar Chart Horizontal – Basic Configuration
 
 ```project
 {
-    "name": "bar-chart-horizontal-parametric",
+    "name": "bar-chart-horizontal-basic",
     "files": {
         "index.html": {
             "source": "bar-chart-horizontal/basic.html",
@@ -111,11 +111,11 @@ For each chart the following can always be configured:
 }
 ```
 
-## Bar Chart Horizontal (Stacked) – Parametric Configuration
+## Bar Chart Horizontal (Stacked) – Basic Configuration
 
 ```project
 {
-    "name": "bar-chart-horizontal-stacked-parametric",
+    "name": "bar-chart-horizontal-stacked-basic",
     "files": {
         "index.html": {
             "source": "bar-chart-horizontal-stacked/basic.html",
@@ -131,7 +131,7 @@ For each chart the following can always be configured:
 }
 ```
 
-## Grouped Bar Chart – Parametric Configuration
+## Grouped Bar Chart – Basic Configuration
 
 Configuration:
 
@@ -145,10 +145,10 @@ Configuration:
 
 ```project
 {
-    "name": "bar-chart-grouped_gb-two-small",
+    "name": "bar-chart-basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-grouped/parametric.html",
+            "source": "bar-chart-grouped/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-grouped/data/GB_2Categories_smallVals.csv",
@@ -161,7 +161,7 @@ Configuration:
 }
 ```
 
-## Area Chart – Parametric Configuration
+## Area Chart – Basic Configuration
 
 Configuration:
 
@@ -176,10 +176,10 @@ Configuration:
 
 ```project
 {
-    "name": "area-chart-stacked-two",
+    "name": "area-chart-stacked-basic",
     "files": {
         "index.html": {
-            "source": "area-chart-stacked/parametric.html",
+            "source": "area-chart-stacked/basic.html",
             "template": "template.html"
         },
         "data.csv": "area-chart-stacked/data/SA_2Categories_yearly.csv",
@@ -191,7 +191,7 @@ Configuration:
 }
 ```
 
-## Map Zürich Kreise – Parametric Configuration
+## Map Zürich Kreise – Basic Configuration
 
 Configuration:
 
@@ -220,7 +220,7 @@ Configuration:
 }
 ```
 
-## Map Zürich: Quartiere – Parametric Configuration
+## Map Zürich: Quartiere – Basic Configuration
 
 A map of the Statistische Quartiere of Zürich, demonstrating use of a button group control for data subset selection.
 
@@ -249,7 +249,7 @@ A map of the Statistische Quartiere of Zürich, demonstrating use of a button gr
 }
 ```
 
-## Heat Table – Parametric Configuration
+## Heat Table – Basic Configuration
 
 Configuration
 
@@ -280,19 +280,14 @@ Configuration
 }
 ```
 
-## Pie Chart – Parametric Configuration
-
-Configuration:
-
-- `cColumn` – Data column to use for the category (required)
-- `vColumn` – Data column to use for the values of the categories (required)
+## Pie Chart – Basic Configuration
 
 ```project
 {
-    "name": "pie-chart-twelve-cat",
+    "name": "pie-chart-basic",
     "files": {
         "index.html": {
-            "source": "pie-charts/parametric.html",
+            "source": "pie-charts/basic.html",
             "template": "template.html"
         },
         "data.csv": "pie-charts/data/P_7Categories.csv",
@@ -305,28 +300,14 @@ Configuration:
 }
 ```
 
-## Population Pyramid – Parametric Configuration
-
-Configuration:
-
-- `ageColumn` – Data column to use for the x-axis (required)
-- `valueColumn` – Data column to use for the y-axis (required)
-- `categoryColumn` – Data column to use for the categories (required)
-- `leftCategory` – The category to use for the left side of the chart (required)
-- `rightCategory` – The category to use for the right side of the chart (required)
-- `groupSize` – The number of age categories to group into one bar (required)
-- `xAxisLabel` – Label for the x-axis (optional)
-- `yAxisLabel` – Label for the y-axis, shows in tooltip (required)
-- `xTicks` – Number of ticks on the xAxis (optional)
-- `yTicks` – Number of ticks on the yAxis (optional)
-- `legendPadding` – Padding between legend and x-axis in pixels (required)
+## Population Pyramid – Basic Configuration
 
 ```project
 {
     "name": "population-pyramid-basic",
     "files": {
         "index.html": {
-            "source": "population-pyramid/parametric.html",
+            "source": "population-pyramid/basic.html",
             "template": "template.html"
         },
         "data.csv": "population-pyramid/data/BP_basic.csv",
@@ -339,7 +320,7 @@ Configuration:
 }
 ```
 
-## Scatterplot – Parametric Configuration
+## Scatterplot – Basic Configuration
 
 - `xColumn` – Data column to use for the x-axis (required)
 - `yColumn` – Data column to use for the y-axis (required)
@@ -368,7 +349,7 @@ Configuration:
 }
 ```
 
-## Variable Radius Scatterplot – Parametric Configuration
+## Variable Radius Scatterplot – Basic Configuration
 
 Configurations
 

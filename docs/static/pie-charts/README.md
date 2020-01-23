@@ -30,50 +30,27 @@ String or function to set the fill color (default: black)
 
 String or function to set the stroke color (default: none)
 
-### Chart
+## Chart
 
-A basic pie chart example, with tooltip interaction.
-
-```project
-{
-    "name": "pie-chart-four-cat",
-    "files": {
-        "index.html": {
-            "source": "pie-charts/four-cat.html",
-            "template": "template.html"
-        },
-        "data.csv": "pie-charts/data/P_subcategories.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
-## Usage example: Many-category pie chart
-
-Shows the creation of a pie chart with many categories
+A basic pie chart example, with tooltip interaction. Shows the creation of a pie chart with many categories.
 
 ```project
 {
-    "name": "pie-chart-twelve-cat",
+    "name": "pie-chart-basic",
     "files": {
         "index.html": {
-            "source": "pie-charts/twelve-cat.html",
+            "source": "pie-charts/basic.html",
             "template": "template.html"
         },
         "data.csv": "pie-charts/data/P_7Categories.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
 
 ## sszvis.layoutSmallMultiples
 
@@ -126,7 +103,7 @@ Shows the use of the multiples component to render several pie charts, each one 
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }

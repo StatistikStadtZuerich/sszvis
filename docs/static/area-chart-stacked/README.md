@@ -14,15 +14,15 @@ The stackedArea component uses a [d3 stack layout](https://github.com/d3/d3-shap
 
 #### `stackedArea.x(x)`
 
-Accessor function to read *x*-values from the data. Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
+Accessor function to read _x_-values from the data. Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
 
 #### `stackedArea.y0(y0)`
 
-Accessor function to read *y0*-values from the data (lower bound of stacked value). Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
+Accessor function to read _y0_-values from the data (lower bound of stacked value). Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
 
 #### `stackedArea.y1(y1)`
 
-Accessor function to read *y1*-values from the data (upper bound of stacked value). Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
+Accessor function to read _y1_-values from the data (upper bound of stacked value). Should return a value in screen pixels. Used to figure out which values share a vertical position in the stack.
 
 #### `stackedArea.defined([predicate])`
 
@@ -48,17 +48,17 @@ Specify a key function for use in the data join. The value returned by the key s
 
 ```project
 {
-    "name": "area-chart-stacked-three",
+    "name": "area-chart-basic",
     "files": {
         "index.html": {
-            "source": "area-chart-stacked/sa-three.html",
+            "source": "area-chart-stacked/basic.html",
             "template": "template.html"
         },
-        "data.csv": "area-chart-stacked/data/SA_3Categories_yearly_zeroes.csv",
+        "data.csv": "area-chart-stacked/data/SA_2Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -74,15 +74,15 @@ This component, like stackedArea, requires an array of layer objects, where each
 
 #### `stackedAreaMultiples.x(x)`
 
-Accessor function for the *x*-values. Passed a data object and should return a value in screen pixels.
+Accessor function for the _x_-values. Passed a data object and should return a value in screen pixels.
 
 #### `stackedAreaMultiples.y0(y0)`
 
-Accessor function for the *y0*-value (the baseline of the area). Passed a data object and should return a value in screen pixels.
+Accessor function for the _y0_-value (the baseline of the area). Passed a data object and should return a value in screen pixels.
 
 #### `stackedAreaMultiples.y1(y1]`
 
-Accessor function for the *y1*-value (the top line of the area). Passed a data object and should return a value in screen pixels.
+Accessor function for the _y1_-value (the top line of the area). Passed a data object and should return a value in screen pixels.
 
 #### `stackedAreaMultiples.fill([fill])`
 
@@ -108,7 +108,6 @@ Specify an accessor for the values of the layer objects. The default treats the 
 { name: "Name", values: [ ... Array of data values ... ] }
 ```
 
-
 ### Chart
 
 ```project
@@ -123,27 +122,7 @@ Specify an accessor for the values of the layer objects. The default treats the 
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
 
-## Many separable stacks
-
-```project
-{
-    "name": "area-chart-stacked-twelve",
-    "files": {
-        "index.html": {
-            "source": "area-chart-stacked/sa-twelve.html",
-            "template": "template.html"
-        },
-        "data.csv": "area-chart-stacked/data/SA_12Kategories_yearly.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
     },
     "sourceView": ["index.html", "data.csv"]
 }

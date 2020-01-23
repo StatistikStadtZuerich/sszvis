@@ -10,7 +10,6 @@ This chart requires a set of subsets, where each subset is a group of data objec
 
 ### Configuration
 
-
 #### `groupedBars.groupScale(scale)`
 
 This should be a scale function for determining the correct group offset of a member of a group. This function is passed the group member, and should return a value for the group offset which is the same for all members of the group. The within-group offset (which is different for each member) is then added to this group offset in order to position the bars individually within the group. So, for instance, if the groups are based on the "city" property, the groupScale should return the same value for all data objects with "city = Zurich".
@@ -47,7 +46,6 @@ The stroke color for each bar (default: none)
 
 A predicate function which can be used to determine whether a bar has a defined value. (default: true). Any bar for which this function returns false, meaning that it has an undefined (missing) value, will be displayed as a faint "x" in the grouped bar chart. This is in order to distinguish bars with missing values from bars with very small values, which would display as a very thin rectangle.
 
-
 ### Chart
 
 ```project
@@ -62,67 +60,7 @@ A predicate function which can be used to determine whether a bar has a defined 
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
 
-## With negative and missing values
-
-```project
-{
-    "name": "bar-chart-grouped_gb-two-small",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-grouped/gb-two-small.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-grouped/data/GB_2Categories_smallVals.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
-## With many values, some negative
-
-```project
-{
-    "name": "bar-chart-grouped_gb-two-yearly-long",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-grouped/gb-two-yearly-long.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-grouped/data/GB_2Categories_yearly_long.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
-## Parametric 
-
-```project
-{
-    "name": "bar-chart-parametric",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-grouped/parametric.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-grouped/data/GB_3Categories_yearly_negatives.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
     },
     "sourceView": ["index.html", "data.csv"]
 }

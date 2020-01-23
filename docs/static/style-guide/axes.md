@@ -1,5 +1,3 @@
-# Axis
-
 > Axes are a visual representation of position and extent scales. They are used to display how numerical quantities are transformed into physical positions and sizes inside the chart.
 
 Often, the scales they represent are continuous linear transformations, but not always. Ordinal scales, where different categorical values are mapped to different positions, as well as logarithmic, quadratic, and exponential scales can also be displayed using axes. Usually, axes are positioned parallel to the visual dimension into which they transform data, hence the prominence of "x" and "y" axes. This is almost always the most readable and recognizable orientation.
@@ -8,16 +6,34 @@ Often, the scales they represent are continuous linear transformations, but not 
 
 Axis labels can be formatted very flexibly. A combination of `ticks`/`tickValues` and `tickFormat` is needed. The former to define how many and which ticks should be displayed, the latter to define what should be displayed. The documentation can be found here:
 
-* https://github.com/d3/d3-axis/blob/master/README.md#axis_ticks
-* https://github.com/d3/d3-axis/blob/master/README.md#axis_tickValues
-* https://github.com/d3/d3-axis/blob/master/README.md#axis_tickFormat
+- https://github.com/d3/d3-axis/blob/master/README.md#axis_ticks
+- https://github.com/d3/d3-axis/blob/master/README.md#axis_tickValues
+- https://github.com/d3/d3-axis/blob/master/README.md#axis_tickFormat
 
 There are also corresponding functions for date/time scales:
 
-* https://github.com/d3/d3-scale/blob/master/README.md#time_ticks
-* https://github.com/d3/d3-scale/blob/master/README.md#time_tickFormat
+- https://github.com/d3/d3-scale/blob/master/README.md#time_ticks
+- https://github.com/d3/d3-scale/blob/master/README.md#time_tickFormat
 
 Custom time formats can be defined using [d3.timeFormat](https://github.com/d3/d3-time-format/blob/master/README.md#d3-time-format)
+
+## Axis properties
+
+This is a selection of commonly used properties, more can be found in the [source code](https://github.com/StatistikStadtZuerich/sszvis/blob/master/src/axis.js).
+
+#### `axis.tickLength([x])`
+
+Set the length of the x- or y-axis ticks. While not usually applied because the charts can be explored interactively, it can be useful to display long ticks for print.
+
+1. Set the `tickLength` property to a number
+
+```
+var yAxis = sszvis
+  .axisY()
+  .scale(yPosScale)
+  .orient("right")
+  .tickLength(bounds.innerWidth); // <- Set to a number
+```
 
 ## X-axis
 
@@ -35,7 +51,7 @@ The x-axis covers the x-dimension, both placement and width
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -57,7 +73,7 @@ This x-axis displays time values
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -72,14 +88,14 @@ This x-axis displays ordinal categories
     "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical-stacked/eight-cat.html",
+            "source": "bar-chart-vertical-stacked/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical-stacked/data/StVB_7Categories_yearly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -89,7 +105,7 @@ This x-axis displays ordinal categories
 
 The x-axis title is centered because there are two y-axes. In addition, the ticks displayed on the bottom are customized, rather than using the default d3.scale.ticks. This is done to ensure that whichever value the user is hovering over is also displayed as a highlighted tick in the axis.
 
-``` project
+```project
 {
     "name": "line-chart-multiple-two-axis",
     "files": {
@@ -101,7 +117,7 @@ The x-axis title is centered because there are two y-axes. In addition, the tick
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -116,36 +132,14 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
     "name": "population-pyramid-basic",
     "files": {
         "index.html": {
-            "source": "population-pyramid/pyramid-basic.html",
+            "source": "population-pyramid/basic.html",
             "template": "template.html"
         },
         "data.csv": "population-pyramid/data/BP_basic.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
 
-## Y-axis (Custom Tick Formatting)
-
-The y-axis convers the y-dimension, both placement and height. Note also that sszvis.formatPercent has been used to format the y-axis tick labels.
-
-```project
-{
-    "name": "bar-chart-vertical-basic",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-vertical/basic.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-vertical/data/SiVB_fourCities.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -157,17 +151,17 @@ By default, sszvis y-axes don't show a label at 0. Since values go negative in t
 
 ```project
 {
-    "name": "bar-chart-grouped_gb-two-small",
+    "name": "bar-chart-grouped_basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-grouped/gb-two-small.html",
+            "source": "bar-chart-grouped/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-grouped/data/GB_2Categories_smallVals.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -189,7 +183,7 @@ This y-axis shows ordinal categories
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -201,17 +195,17 @@ Sometimes, the axis labels are long enough that they will overlap their neighbor
 
 ```project
 {
-    "name": "bar-chart-vertical-long-names",
+    "name": "bar-chart-vertical-basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical/long-names.html",
+            "source": "bar-chart-vertical/basic.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical/data/SiVB_longNames.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -233,7 +227,7 @@ This x-axis (with a 'top' orientation) has a diagonal slant
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -259,7 +253,7 @@ This x-axis has a diagonal slant. Here are the guidelines for changing the slant
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -271,39 +265,17 @@ Contours are used to make labels stand out, especially when they are positioned 
 
 ```project
 {
-    "name": "line-chart-single-percentage-negatives-y-axis",
+    "name": "line-chart-multiple-eight-cat",
     "files": {
         "index.html": {
-            "source": "line-chart-single/percentage-negatives-y-axis.html",
+            "source": "line-chart-multiple/eight-cat.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-single/data/SL_Percentage_negativesYAxis.csv",
+        "data.csv": "line-chart-multiple/data/ML_months_8Categories_superposition_missing.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
 
-## Long Ticks (With Formatted Tick Labels)
-
-This x-axis displays the use of the tickLength property to create ticks which extend across the entire chart. This approach adds visual clutter to the chart, but it can be useful to facilitate chart reading. Note also that sszvis.formatPercent has been used to format the x-axis tick labels.
-
-```project
-{
-    "name": "bar-chart-horizontal-percent",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-horizontal/percent.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-horizontal/data/SHB_basic_percent.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
     },
     "sourceView": ["index.html", "data.csv"]
 }

@@ -61,10 +61,10 @@
     "build:topo": "scripts/topo.sh",
     "build:docs": "catalog build docs -o build --public-url=./",
     "build:watch": "npm run build:lib -- --watch",
-    "test": "npm run test:lint && npm run test:lint && npm run test:unit && npm run test:snapshot",
+    "test": "npm run test:lint && npm run test:unit && npm run test:snapshot",
     "test:lint": "eslint src",
     "test:unit": "jest --testPathIgnorePatterns snapshot.test.js",
-    "test:snapshot": "jest --testPathPattern snapshot.test.js",
+    "test:snapshot": "rm -rf test/__image_snapshots__/__diff_output__ && jest --testPathPattern snapshot.test.js",
     "test:watch": "jest --watch",
     "prepublishOnly": "npm run test && npm run build"
   }

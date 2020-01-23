@@ -2,7 +2,6 @@
 
 Annotations are used to highlight certain sections of a chart. They are added as an additional layer above or below the chart contents themselves. Annotations in sszvis are themselves examples of the reusable chart pattern, so as with chart components and tooltips, data must be bound to the annotation layer before rendering the annotation into it.
 
-
 ## Data Circle
 
 ### sszvis.annotationCircle
@@ -47,12 +46,11 @@ The caption for the data area. (default position is the center of the circle).
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
 
 ## Data Area
 
@@ -102,12 +100,11 @@ The caption for the data area. (default position is the center of the rectangle)
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
 
 ## Reference Line
 
@@ -163,12 +160,11 @@ A reference line caption. (default position is centered at the midpoint of the l
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
 
 ## Ruler
 
@@ -203,27 +199,6 @@ A string or function to specify the color of the ruler dots.
 #### `annotationRuler.[flip]`
 
 A boolean or function which returns a boolean that specifies whether the labels on the ruler dots should be flipped. (they default to the right side)
-
-### Example
-
-``` project
-{
-    "name": "line-chart-multiple-two-cat",
-    "files": {
-        "index.html": {
-            "source": "line-chart-multiple/two-cat.html",
-            "template": "template.html"
-        },
-        "data.csv": "line-chart-multiple/data/ML_2Categories_Quarterly.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
 
 ## Range Ruler / Range Flag
 
@@ -293,8 +268,33 @@ A value for the y-value of the upper range flag dot
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
+```
+
+## Demonstrating the label adjustment code
+
+Note the use of `.reduceOverlap(false)` on the ruler component. In order to change the default value and let the labels overlap, set the `.reduceOverlap()` to false. This can be done by adding this snippet to the ruler component:
+
+```code
+.reduceOverlap(false);
+```
+
+For example:
+
+```code
+var highlightLayer = sszvis
+    .annotationRuler()
+    .top(0)
+    .bottom(bounds.innerHeight)
+    .x(sszvis.compose(xScale, xAcc))
+    .y(sszvis.compose(yScale, yAcc))
+    .label(rulerLabel)
+    .flip(function(d) {
+       return xScale(xAcc(d)) >= bounds.innerWidth / 2;
+    })
+    .color(sszvis.compose(cScale, cAcc))
+    .reduceOverlap(false);
 ```

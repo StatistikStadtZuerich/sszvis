@@ -15,9 +15,8 @@
 
     <script>
       var EXTERNAL_CONFIG = {
-        data: "data/test_param_2.csv",
+        data: "data/SiVB_longNames.csv",
         id: "#sszvis-chart",
-        textWrap: false,
         fallback: "fallback.png"
       };
     </script>
@@ -27,34 +26,33 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id);
+          sszvis.fallbackRender(config.id, { src: config.fallback });
           return;
         }
 
         /* Configuration
         ----------------------------------------------- */
+
+        var MAX_WIDTH = 800;
         var queryProps = sszvis
           .responsiveProps()
-          .prop("yLabel", {
-            _: "Beschäftigte"
-          })
           .prop("barPadding", {
-            palm: 0.5,
-            _: 0.3
+            palm: 0.4,
+            _: 0.2
+          })
+          .prop("bottomPadding", {
+            palm: 140,
+            _: 60
           })
           .prop("slant", {
             palm: "vertical",
             _: "horizontal"
-          })
-          .prop("bottomPadding", {
-            palm: 100,
-            _: 60
           });
 
         function parseRow(d) {
           return {
-            category: d["Stadt"],
-            value: sszvis.parseNumber(d["Wert"])
+            category: d["Sektor"],
+            value: sszvis.parseNumber(d["Anzahl"])
           };
         }
         var xAcc = sszvis.prop("category");
@@ -73,13 +71,14 @@
         var actions = {
           prepareState: function(data) {
             state.data = data;
-            state.maxValue = d3.max(state.data, yAcc);
             state.categories = state.data.map(xAcc);
             render(state);
           },
 
-          showTooltip: function(datum) {
-            state.selection = [datum];
+          showTooltip: function(category) {
+            state.selection = state.data.filter(function(d) {
+              return xAcc(d) === category;
+            });
             render(state);
           },
 
@@ -109,13 +108,14 @@
         ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, config.id);
+          var bounds = sszvis.bounds({ top: 3, bottom: props.bottomPadding }, config.id);
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
-            Math.min(800, bounds.innerWidth),
+            Math.min(MAX_WIDTH, bounds.innerWidth),
             state.categories.length
           );
 
           // Scales
+
           var xScale = d3
             .scaleBand()
             .domain(state.categories)
@@ -125,8 +125,8 @@
 
           var heightScale = d3
             .scaleLinear()
-            .range([0, bounds.innerHeight])
-            .domain([0, state.maxValue]);
+            .domain([0, d3.max(state.data, yAcc)])
+            .range([0, bounds.innerHeight]);
 
           var yPosScale = heightScale.copy().range(
             heightScale
@@ -139,16 +139,21 @@
           var cScaleDark = cScale.darker();
 
           // Layers
+
           var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
           var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
           // Components
+
           var barGen = sszvis
             .bar()
             .x(sszvis.compose(xScale, xAcc))
-            .y(sszvis.compose(yPosScale, yAcc))
-            .width(chartDimensions.barWidth)
+            .y(sszvis.compose(nanFallback(yPosScale.range()[0]), yPosScale, yAcc))
+            // Because we use sszvis.move in this example, we need to make
+            // sure that bars have the exact same size as the scale's rangeBand. This
+            // will result in slightly narrower bars than the default.
+            .width(xScale.bandwidth())
             .height(sszvis.compose(heightScale, yAcc))
             .centerTooltip(true)
             .fill(function(d) {
@@ -161,26 +166,28 @@
             .orient("bottom")
             .slant(props.slant);
 
-          if (config.textWrap) {
-            xAxis.textWrap(labelWrapWidth(xScale.range()));
+          if (props.slant === "horizontal") {
+            xAxis.textWrap(xScale.step());
           }
 
           var yAxis = sszvis
             .axisY()
             .scale(yPosScale)
-            .tickFormat(yAxisLabel)
-            .title(props.yLabel || "")
-            .dyTitle(-20)
             .orient("right");
 
-          var tooltipTitle = sszvis.modularTextHTML().bold(xAcc);
+          var tooltipHeader = sszvis
+            .modularTextHTML()
+            .bold(function(d) {
+              var value = yAcc(d);
+              return isNaN(value) ? "keine" : sszvis.formatNumber(value);
+            })
+            .plain("Beschäftigte");
 
           var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
             .orientation(sszvis.fitTooltip("bottom", bounds))
-            .header(tooltipTitle)
-            .body(yAcc)
+            .header(tooltipHeader)
             .visible(isSelected);
 
           // Rendering
@@ -193,10 +200,6 @@
             )
           );
 
-          var bars = chartLayer.selectGroup("bars").call(barGen);
-
-          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
-
           chartLayer
             .selectGroup("xAxis")
             .attr("transform", sszvis.translateString(0, bounds.innerHeight))
@@ -204,31 +207,40 @@
 
           chartLayer.selectGroup("yAxis").call(yAxis);
 
+          var bars = chartLayer.selectGroup("bars").call(barGen);
+
+          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+
           // Interaction
+
+          // Use the move behavior to provide tooltips in the absence of a bar, i.e.
+          // when we have missing data.
           var interactionLayer = sszvis
-            .panning()
-            .elementSelector(".sszvis-bar")
-            .on("start", actions.showTooltip)
-            .on("pan", actions.showTooltip)
+            .move()
+            .xScale(xScale)
+            .yScale(yPosScale)
+            .on("move", actions.showTooltip)
             .on("end", actions.hideTooltip);
 
-          bars.call(interactionLayer);
+          chartLayer.selectGroup("interaction").call(interactionLayer);
 
           sszvis.viewport.on("resize", actions.resize);
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }
 
-        function yAxisLabel(d) {
-          return d === 0 ? null : d;
-        }
-
         function labelWrapWidth(range) {
           return (d3.max(range) - d3.min(range)) / range.length;
+        }
+
+        function nanFallback(fallbackValue) {
+          return function(d) {
+            return isNaN(d) ? fallbackValue : d;
+          };
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
