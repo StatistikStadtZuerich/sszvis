@@ -1,6 +1,4 @@
-# Accessibility
-
-For accessibility purposes, a label has to be defined. A label will automatically be shown if a title and a description are provided. If a title and description are not already provided by an external source, they can be set in the config object.
+> For accessibility purposes, a label has to be defined. A label will automatically be shown if a title and a description are provided. If a title and description are not already provided by an external source, they can be set in the config object.
 
 ### Usage
 
@@ -15,13 +13,13 @@ See this snippet as an example of a config extended with a title and description
         data: "data/SHB_basic_percent.csv",
         id: "#sszvis-chart",
         fallback: "fallback.png",
-         title: "Beschäftigte nach Berufsfeld und Jahr",
+        title: "Beschäftigte nach Berufsfeld und Jahr",
         description: "Die Anzahl der Beschäftigten nahm seit 1980 um 40% zu und liegt heute bei ca. 180000 Beschäftigten."
       };
     </script>
 ```
 
-This results in a chart with a label on hover:
+The added title and description will create a label on hover:
 
 ```project
 {
