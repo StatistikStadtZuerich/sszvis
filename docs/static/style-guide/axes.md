@@ -1,5 +1,3 @@
-# Axis
-
 > Axes are a visual representation of position and extent scales. They are used to display how numerical quantities are transformed into physical positions and sizes inside the chart.
 
 Often, the scales they represent are continuous linear transformations, but not always. Ordinal scales, where different categorical values are mapped to different positions, as well as logarithmic, quadratic, and exponential scales can also be displayed using axes. Usually, axes are positioned parallel to the visual dimension into which they transform data, hence the prominence of "x" and "y" axes. This is almost always the most readable and recognizable orientation.
@@ -18,6 +16,24 @@ There are also corresponding functions for date/time scales:
 - https://github.com/d3/d3-scale/blob/master/README.md#time_tickFormat
 
 Custom time formats can be defined using [d3.timeFormat](https://github.com/d3/d3-time-format/blob/master/README.md#d3-time-format)
+
+## Axis properties
+
+This is a selection of commonly used properties, more can be found in the [source code](https://github.com/StatistikStadtZuerich/sszvis/blob/master/src/axis.js).
+
+#### `axis.tickLength([x])`
+
+Set the length of the x- or y-axis ticks. While not usually applied because the charts can be explored interactively, it can be useful to display long ticks for print.
+
+1. Set the `tickLength` property to a number
+
+```
+var yAxis = sszvis
+  .axisY()
+  .scale(yPosScale)
+  .orient("right")
+  .tickLength(bounds.innerWidth); // <- Set to a number
+```
 
 ## X-axis
 
@@ -120,28 +136,6 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
             "template": "template.html"
         },
         "data.csv": "population-pyramid/data/BP_basic.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
-## Y-axis (Custom Tick Formatting)
-
-The y-axis convers the y-dimension, both placement and height. Note also that sszvis.formatPercent has been used to format the y-axis tick labels.
-
-```project
-{
-    "name": "bar-chart-vertical-basic",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-vertical/basic.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-vertical/data/SiVB_fourCities.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
