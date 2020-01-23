@@ -112,9 +112,6 @@ rows:
   - Function: formatYear
     Example: sszvis.formatYear(new Date())
     Result: "2020"
-  - Function:
-    Example: sszvis.formatYear(new Date())
-    Result: "2020"
 ```
 
 #### `sszvis.formatMonth(x)`
@@ -124,9 +121,6 @@ A date object will be formatted as a month. It will return a capitalized three-l
 ```table
 rows:
   - Function: formatMonth
-    Example: sszvis.formatMonth(new Date())
-    Result: "JAN"
-  - Function:
     Example: sszvis.formatMonth(new Date())
     Result: "JAN"
 ```
