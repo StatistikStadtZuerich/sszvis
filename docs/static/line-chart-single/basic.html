@@ -74,12 +74,12 @@
           },
 
           changeDate: function(inputDate) {
-            var date = closestDatum(state.data, sszvis.prop("date"), inputDate).date;
+            var date = xAcc(closestDatum(state.data, sszvis.prop("date"), inputDate));
             if (state.currentDate === date) return;
 
             state.currentDate = date;
             state.selection = state.data.filter(function(d) {
-              return d.date === state.currentDate && !isNaN(d.value);
+              return xAcc(d) === state.currentDate && !isNaN(yAcc(d));
             });
 
             render(state);
@@ -162,7 +162,7 @@
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
             .label(function(d) {
-              return sszvis.formatNumber(d.value) + " Anteile";
+              return sszvis.formatNumber(yAcc(d)) + " Anteile";
             })
             .flip(function(d) {
               return xScale(xAcc(d)) >= bounds.innerWidth / 2;
