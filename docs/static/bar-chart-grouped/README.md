@@ -65,23 +65,3 @@ A predicate function which can be used to determine whether a bar has a defined 
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
-## With many values, some negative
-
-```project
-{
-    "name": "bar-chart-grouped_gb-two-yearly-long",
-    "files": {
-        "index.html": {
-            "source": "bar-chart-grouped/gb-two-yearly-long.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-grouped/data/GB_2Categories_yearly_long.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
