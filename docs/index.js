@@ -59,9 +59,9 @@ const pages = [
         content: staticMarkdown("style-guide/legends.md")
       },
       {
-        path: "number-formats",
+        path: "formats",
         title: "Formatting",
-        content: staticMarkdown("style-guide/number-formats.md")
+        content: staticMarkdown("style-guide/formats.md")
       },
       {
         path: "tooltips",
