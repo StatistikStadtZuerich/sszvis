@@ -33,9 +33,14 @@
         /* Configuration
   ----------------------------------------------- */
 
-        var queryProps = sszvis.responsiveProps().prop("ticks", {
-          _: 4
-        });
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("ticks", {
+            _: 4
+          })
+          .prop("yAxisLabel", {
+            _: "Wert"
+          });
 
         function parseRow(d) {
           return {
@@ -106,7 +111,7 @@
         ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 3, bottom: 25 }, config.id);
+          var bounds = sszvis.bounds({ top: 30, bottom: 25 }, config.id);
 
           // Scales
 
@@ -146,6 +151,8 @@
             .axisY()
             .scale(yScale)
             .orient("right")
+            .title(props.yAxisLabel)
+            .dyTitle(-20)
             .contour(true);
 
           var ruler = sszvis

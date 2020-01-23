@@ -33,7 +33,6 @@
         /* Configuration
         ----------------------------------------------- */
 
-        var SHOW_YAXIS_TICKS = true;
         var MAX_WIDTH = 800;
         var queryProps = sszvis
           .responsiveProps()
@@ -174,7 +173,6 @@
           var yAxis = sszvis
             .axisY()
             .scale(yPosScale)
-            .tickLength(SHOW_YAXIS_TICKS ? Math.min(MAX_WIDTH, bounds.innerWidth) : null)
             .orient("right");
 
           var tooltipHeader = sszvis
