@@ -1,25 +1,47 @@
-> For accessibility purposes, a label has to be defined. A label will automatically be shown if a title and a description are provided. If a title and description are not already provided by an external source, they can be set in the config object.
+> To make a chart accessible to people who can't read it visually, a fallback text should be provided to explain the contents and purpose of the visualization.
 
 ### Usage
 
+To add accessibility hints, you need to provide a title and a description to the SVG element. This can be done by configuring `sszvis.createSvgLayer`:
+
+```
+var chart = sszvis.createSvgLayer('#sszvis-chart', bounds, {
+  title: "Hours of sunshine",
+  description: "This chart shows the amount of hours of sunshine throughout a typical year."
+});
+```
+
 - The `title` will be rendered as a native tooltip, showing the title of this chart.
-- The `description` will only be used by Screenreaders. The text provided for the description should be a meaningful message of this chart.
+- The `description` will only be used by screenreaders. The text provided for the description should be a meaningful message of this chart.
 
-See this snippet as an example of a config extended with a title and description:
+### Using an external config
+
+Typically, the title and description are provided through an external source like a CMS. The following code snippet shows how an external config can be connected to the chart config.
 
 ```
- <script>
-      var EXTERNAL_CONFIG = {
-        data: "data/SHB_basic_percent.csv",
-        id: "#sszvis-chart",
-        fallback: "fallback.png",
-        title: "Beschäftigte nach Berufsfeld und Jahr",
-        description: "Die Anzahl der Beschäftigten nahm seit 1980 um 40% zu und liegt heute bei ca. 180000 Beschäftigten."
-      };
-    </script>
+<script>
+  var EXTERNAL_CONFIG = {
+    data: "data/SHB_basic_percent.csv",
+    id: "#sszvis-chart",
+    fallback: "fallback.png",
+    title: "Beschäftigte nach Berufsfeld und Jahr",
+    description: "Die Anzahl der Beschäftigten nahm seit 1980 um 40% zu und liegt heute bei ca. 180000 Beschäftigten."
+  };
+
+  (function(d3, sszvis, config) {
+    "use strict";
+
+    function render(state) {
+      var chart = sszvis.createSvgLayer('#sszvis-chart', outerBounds, {
+        title: config.title,
+        description: config.description
+      });
+    }
+  })(d3, sszvis, EXTERNAL_CONFIG);
+</script>
 ```
 
-The added title and description will create a label on hover:
+The following shows an example with accessible descriptions built-in. While this is meant to be consumed by screenreaders, some browsers will show a small tooltip on hover if the mouse is kept still.
 
 ```project
 {
