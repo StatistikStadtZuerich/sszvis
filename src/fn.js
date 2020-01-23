@@ -421,6 +421,48 @@ export var measureDimensions = function(arg) {
 };
 
 /**
+ * fn.measureText
+ *
+ * Calculates the width of a string given a font size and a font face. It might
+ * be more convenient to use a preset based on this function that has the font
+ * size and family already set.
+ *
+ * @param {number} fontSize The font size in pixels
+ * @param {string} fontFace The font face ("Arial", "Helvetica", etc.)
+ * @param {string} text The text to measure
+ * @returns {number} The width of the text
+ *
+ * @example
+ * var helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
+ **/
+export var measureText = (function() {
+  var canvas = document.createElement("canvas");
+  var context = canvas.getContext("2d");
+  var cache = {};
+
+  return function(fontSize, fontFace, text) {
+    var key = [fontSize, fontFace, text].join("-");
+    context.font = fontSize + "px " + fontFace;
+    return cache[key] || (cache[key] = context.measureText(text).width);
+  };
+})();
+
+/**
+ * fn.measureAxisLabel
+ *
+ * A preset to measure the widths of axis labels.
+ *
+ * @param {string} text The text to measure
+ * @returns {number} The width of the text
+ *
+ * @example
+ * var labelWidth = sszvis.measureAxisLabel("Hello!")
+ */
+export var measureAxisLabel = function(text) {
+  return measureText(10, "Arial, sans-serif", text);
+};
+
+/**
  * fn.not
  *
  * Takes as argument a function f and returns a new function
