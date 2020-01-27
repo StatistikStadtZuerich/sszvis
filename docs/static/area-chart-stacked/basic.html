@@ -82,7 +82,7 @@
                 .objectBy(cAcc)
                 .apply(state.data)
                 .map(function(d) {
-                  var r = { year: d[Object.keys(d)[0]][0].year };
+                  var r = { year: xAcc(d[Object.keys(d)[0]][0]) };
                   state.categories.forEach(function(k) {
                     r[k] = yAcc(d[k][0]);
                   });

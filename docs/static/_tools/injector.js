@@ -38,7 +38,6 @@
     "/area-chart-stacked/sa-two.html",
     "/bar-chart-grouped/basic.html",
     "/bar-chart-grouped/gb-two-small.html",
-    "/bar-chart-grouped/gb-two-yearly-long.html",
     "/bar-chart-grouped/parametric.html",
     "/bar-chart-horizontal-stacked/basic.html",
     "/bar-chart-horizontal-stacked/parametric.html",

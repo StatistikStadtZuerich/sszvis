@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id);
+          sszvis.fallbackRender(config.id, { src: config.fallback });
           return;
         }
 
@@ -149,8 +149,7 @@
             .scale(widthScale)
             .orient("bottom")
             .alignOuterLabels(true)
-            // .ticks(10)
-            .title(props.yLabel || "");
+            .title(props.yLabel);
 
           if (props.ticks) {
             xAxis.ticks(props.ticks);

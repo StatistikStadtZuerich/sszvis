@@ -1,6 +1,6 @@
+import { Catalog, pageLoader } from "catalog";
 import React from "react";
 import ReactDOM from "react-dom";
-import { Catalog, pageLoader } from "catalog";
 import ProjectSpecimen from "./ProjectSpecimen/Project";
 
 const staticMarkdown = src => pageLoader(`${process.env.PUBLIC_URL}/${src}`);
@@ -52,6 +52,11 @@ const pages = [
         path: "controls",
         title: "Controls",
         content: staticMarkdown("style-guide/controls.md")
+      },
+      {
+        path: "formats",
+        title: "Formatting",
+        content: staticMarkdown("style-guide/formats.md")
       },
       {
         path: "legends",

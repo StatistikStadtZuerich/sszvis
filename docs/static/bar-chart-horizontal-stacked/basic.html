@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id);
+          sszvis.fallbackRender(config.id, { src: config.fallback });
           return;
         }
 
@@ -65,6 +65,7 @@
 
         /* Application state
         ----------------------------------------------- */
+
         var state = {
           data: [],
           areas: [],
@@ -76,10 +77,10 @@
 
         /* State transitions
         ----------------------------------------------- */
+
         var actions = {
           prepareState: function(data) {
             state.data = data;
-            //state.areas = state.data.map(yAcc);
             state.areas = sszvis.set(state.data, yAcc);
             state.categories = sszvis.set(state.data, cAcc);
 
@@ -106,6 +107,7 @@
 
         /* Data initialization
         ----------------------------------------------- */
+
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -118,6 +120,7 @@
 
         /* Render
         ----------------------------------------------- */
+
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           //the height and the bottom padding need to be calculated
@@ -171,7 +174,7 @@
             .axisX()
             .scale(xScale)
             .orient("bottom")
-            .title(props.xLabel || "")
+            .title(props.xLabel)
             .alignOuterLabels(true);
 
           if (props.ticks) {
@@ -247,6 +250,7 @@
 
         /* Helper functions
         ----------------------------------------------- */
+
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }

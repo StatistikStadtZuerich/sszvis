@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id);
+          sszvis.fallbackRender(config.id, { src: config.fallback });
           return;
         }
 
@@ -64,6 +64,7 @@
 
         /* Application state
         ----------------------------------------------- */
+
         var state = {
           data: [],
           ages: [],
@@ -76,7 +77,8 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -182,7 +184,8 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -194,7 +197,8 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         function render(state) {
           var pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
           var pyramidDimensions = sszvis.layoutPopulationPyramid(pyramidWidth, state.ages.length);
@@ -349,7 +353,8 @@
         }
 
         /* Helper Functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
+
         function isWithinBarContour(binnedData, xCenter, xRelToPx, lengthScale) {
           return function(xRel, age) {
             var ageBin = findNearestAgeRange(age, state.ageLookupIndex);

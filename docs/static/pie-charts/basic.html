@@ -26,12 +26,12 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id);
+          sszvis.fallbackRender(config.id, { src: config.fallback });
           return;
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         var PIE_DIAMETER = 260;
         var LEGEND_TOP_PADDING = 40;
@@ -97,7 +97,7 @@
         var cAcc = sszvis.prop("category");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           totalValue: 0,
@@ -106,7 +106,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -131,7 +131,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv("data/P_7Categories.csv")
           .row(parseRow)
           .get(function(error, data) {
@@ -143,7 +143,7 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           var bounds = sszvis.bounds(props.layout.bounds, config.id);
@@ -226,7 +226,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }
