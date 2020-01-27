@@ -1,4 +1,4 @@
-> This library provides various functions for formatting the data in the preferred style.
+> > This library provides functions for formatting data following the SSZVIS style guide.
 
 ## Formatting Functions
 
@@ -18,7 +18,7 @@ rows:
 
 #### `sszvis.formatNumber(x)`
 
-A number greater than 9'999 will have a thousands separator space.
+A number greater than 9'999 will have a thousands separator space. Also, numbers will be shortened if they have insignificant decimals.
 
 ```table
 rows:
@@ -28,6 +28,12 @@ rows:
   - Function:
     Example: sszvis.formatNumber(5000)
     Result: "5000"
+  - Function:
+    Example: sszvis.formatNumber(42.1)
+    Result: "42.1"
+  - Function:
+    Example: sszvis.formatNumber(42.001)
+    Result: "42"
 ```
 
 #### `sszvis.formatPreciseNumber(p, d)`
@@ -37,7 +43,7 @@ rows:
 
 A number will be formatted to a particular precision. It is a function that accepts numbers and returns formatted values. This function is "curried", meaning that it is a function with multiple arguments, but when you call it with less than the full number of arguments, it returns a function that takes less arguments and has the arguments you did provide "pre-filled" as parameters.
 
-Note that preciseNumber(2, 14.1234) is equivalent to preciseNumber(2)(14.1234)
+Note that `preciseNumber(2, 14.1234)` is equivalent to `preciseNumber(2)(14.1234)`.
 
 ```table
 rows:
@@ -57,7 +63,7 @@ rows:
 
 #### `sszvis.formatPercent(x)`
 
-A number will be transformed into a percent format. Formats percentages on the range 0 - 100.
+A number will be transformed into a percent format. Formats percentages on the range 0–100.
 
 ```table
 rows:
@@ -74,7 +80,7 @@ rows:
 
 #### `sszvis.formatFractionPercent(x)`
 
-A number will be transformed into a percent format. Format percentages on the range 0 - 1.
+A number will be transformed into a percent format. Format percentages on the range 0-1.
 
 ```table
 rows:
