@@ -48,15 +48,15 @@
 
         function parseRow(d) {
           return {
-            month: parseInt(d["Monat"], 10),
+            category: null,
             value: sszvis.parseNumber(d["Wert"]) / 100,
-            year: d["Jahr"]
+            xValue: d["Jahr"]
           };
         }
 
-        var xAcc = sszvis.prop("month");
+        var xAcc = sszvis.prop("xValue");
         var yAcc = sszvis.prop("value");
-        var cAcc = sszvis.prop("year");
+        var cAcc = sszvis.prop("category");
 
         /* Application State
         ----------------------------------------------- */
@@ -64,9 +64,9 @@
         var state = {
           data: [],
           lineData: [],
-          months: [],
-          maxY: 0,
-          categories: []
+          xValues: [],
+          categories: [],
+          maxY: 0
         };
 
         /* State transitions
@@ -75,9 +75,9 @@
         var actions = {
           prepareState: function(data) {
             state.data = data;
-            state.months = sszvis.set(state.data, xAcc);
-            state.maxY = 1;
+            state.xValues = sszvis.set(state.data, xAcc);
             state.categories = sszvis.set(state.data, cAcc);
+            state.maxY = 1;
             state.lineData = sszvis
               .cascade()
               .arrayBy(cAcc, d3.ascending)
@@ -115,7 +115,7 @@
 
           var xScale = d3
             .scalePoint()
-            .domain(state.months)
+            .domain(state.xValues)
             .range([0, bounds.innerWidth])
             .padding(0);
 
@@ -143,7 +143,9 @@
             .ordinal()
             .scale(xScale)
             .orient("bottom")
-            .tickFormat(monthName)
+            .tickFormat(function(d) {
+              return d === 0 ? null : sszvis.formatText(d);
+            })
             .alignOuterLabels(true);
 
           var yAxis = sszvis
@@ -175,10 +177,12 @@
 
           chartLayer.selectGroup("yAxis").call(yAxis);
 
-          chartLayer
-            .selectGroup("cScale")
-            .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
-            .call(cLegend);
+          if (showLegend(state.categories)) {
+            chartLayer
+              .selectGroup("cLegend")
+              .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
+              .call(cLegend);
+          }
 
           sszvis.viewport.on("resize", actions.resize);
         }
@@ -186,9 +190,8 @@
         /* Helper functions
         ----------------------------------------------- */
 
-        function monthName(month) {
-          var date = new Date(null, month - 1);
-          return d3.timeFormat("%b")(date);
+        function showLegend(categories) {
+          return categories != null && categories[0] != null && categories[0] !== "";
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
