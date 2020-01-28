@@ -29,10 +29,18 @@ The multiple line chart uses the same components as the [single line chart](line
 
     },
     "sourceView": ["index.html", "data.csv"]
-}
+}k
 ```
 
 ## Usage example: Ordinal Scale
+
+To use an ordinal scale with a line chart, set `ordinal()`:
+
+```
+var xAxis = sszvis.axisX
+  .ordinal()
+  .scale(xScale)
+```
 
 ```project
 {

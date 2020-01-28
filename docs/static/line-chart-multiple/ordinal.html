@@ -58,14 +58,14 @@
 
         function parseRow(d) {
           return {
-            category: null,
-            value: sszvis.parseNumber(d["Wert"]),
-            xValue: d["Jahr"]
+            xValue: d["Jahr"],
+            yValue: sszvis.parseNumber(d["Wert"]),
+            category: null
           };
         }
 
         var xAcc = sszvis.prop("xValue");
-        var yAcc = sszvis.prop("value");
+        var yAcc = sszvis.prop("yValue");
         var cAcc = sszvis.prop("category");
 
         /* Application State
