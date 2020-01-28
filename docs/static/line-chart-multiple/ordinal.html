@@ -35,6 +35,16 @@
 
         var queryProps = sszvis
           .responsiveProps()
+          .prop("rulerLabel", {
+            _: function() {
+              return sszvis
+                .modularTextSVG()
+                .plain(sszvis.compose(sszvis.formatFractionPercent, yAcc))
+                .plain(function(d) {
+                  return cAcc(d) != null ? cAcc(d) : "";
+                });
+            }
+          })
           .prop("legendRows", {
             palm: 4,
             lap: 3,
@@ -49,7 +59,7 @@
         function parseRow(d) {
           return {
             category: null,
-            value: sszvis.parseNumber(d["Wert"]) / 100,
+            value: sszvis.parseNumber(d["Wert"]),
             xValue: d["Jahr"]
           };
         }
@@ -165,11 +175,6 @@
 
           var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);
 
-          chartLayer
-            .selectGroup("highlight")
-            .datum(state.selection)
-            .call(highlightLayer);
-
           // Components
 
           var line = sszvis
@@ -224,6 +229,11 @@
               .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
               .call(cLegend);
           }
+
+          chartLayer
+            .selectGroup("highlight")
+            .datum(state.selection)
+            .call(highlightLayer);
 
           // Interaction
 
