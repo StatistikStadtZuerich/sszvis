@@ -186,14 +186,6 @@
             .title(props.yLabel)
             .dyTitle(-20);
 
-          // CONFIG use a second x-Axis with only tick labels.
-          // Necessary in order to prevent horizontal lines to be drawn above data lines
-          var yAxis2 = sszvis
-            .axisY()
-            .scale(yScale)
-            .orient("right")
-            .contour(true);
-
           var highlightLayer = sszvis
             .annotationRuler()
             .top(0)
@@ -220,13 +212,14 @@
 
           chartLayer.selectGroup("yAxis").call(yAxis);
           chartLayer.selectGroup("line").call(line);
-          chartLayer.selectGroup("yAxis2").call(yAxis2);
 
-          chartLayer
-            .selectGroup("cScale")
-            // the color legend should always be positioned 60px below the bottom axis
-            .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
-            .call(cLegend);
+          if (showLegend(state.categories)) {
+            chartLayer
+              .selectGroup("cLegend")
+              // the color legend should always be positioned 60px below the bottom axis
+              .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
+              .call(cLegend);
+          }
 
           chartLayer
             .selectGroup("highlight")
@@ -248,6 +241,10 @@
 
         /* Helper functions
         ----------------------------------------------- */
+
+        function showLegend(categories) {
+          return categories != null && categories[0] != null && categories[0] !== "";
+        }
 
         function closestDatum(data, accessor, datum) {
           var i = d3.bisector(accessor).left(data, datum, 1);
