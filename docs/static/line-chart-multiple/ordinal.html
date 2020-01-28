@@ -15,7 +15,7 @@
 
     <script>
       var EXTERNAL_CONFIG = {
-        data: "data/ML_months_8Categories_superposition_missing.csv",
+        data: "data/ML_school_years.csv",
         id: "#sszvis-chart",
         fallback: "fallback.png"
       };
@@ -35,6 +35,16 @@
 
         var queryProps = sszvis
           .responsiveProps()
+          .prop("rulerLabel", {
+            _: function() {
+              return sszvis
+                .modularTextSVG()
+                .plain(sszvis.compose(sszvis.formatFractionPercent, yAcc))
+                .plain(function(d) {
+                  return cAcc(d) != null ? cAcc(d) : "";
+                });
+            }
+          })
           .prop("legendRows", {
             palm: 4,
             lap: 3,
@@ -48,15 +58,15 @@
 
         function parseRow(d) {
           return {
-            month: parseInt(d["Monat"], 10),
-            value: sszvis.parseNumber(d["Wert"]) / 100,
-            year: d["Jahr"]
+            xValue: d["Jahr"],
+            yValue: sszvis.parseNumber(d["Wert"]),
+            category: null
           };
         }
 
-        var xAcc = sszvis.prop("month");
-        var yAcc = sszvis.prop("value");
-        var cAcc = sszvis.prop("year");
+        var xAcc = sszvis.prop("xValue");
+        var yAcc = sszvis.prop("yValue");
+        var cAcc = sszvis.prop("category");
 
         /* Application State
         ----------------------------------------------- */
@@ -64,9 +74,10 @@
         var state = {
           data: [],
           lineData: [],
-          months: [],
-          maxY: 0,
-          categories: []
+          xValues: [],
+          categories: [],
+          selection: [],
+          maxY: 0
         };
 
         /* State transitions
@@ -75,15 +86,37 @@
         var actions = {
           prepareState: function(data) {
             state.data = data;
-            state.months = sszvis.set(state.data, xAcc);
-            state.maxY = 1;
+            state.xValues = sszvis.set(state.data, xAcc);
             state.categories = sszvis.set(state.data, cAcc);
+            state.maxY = 1;
             state.lineData = sszvis
               .cascade()
               .arrayBy(cAcc, d3.ascending)
               .apply(state.data);
 
             render(state);
+          },
+
+          changeDate: function(inputDate) {
+            // Find the date of the datum closest to the input date
+            var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
+            // Find all data that have the same date as the closest datum
+            var closestData = state.lineData.map(function(linePoints) {
+              // For each line pick the first datum that matches
+              return sszvis.find(function(d) {
+                return xAcc(d).toString() === closestDate.toString();
+              }, linePoints);
+            });
+            // Make sure that the selection has a value to display
+            state.selection = closestData.filter(sszvis.compose(sszvis.not(isNaN), yAcc));
+
+            render(state);
+          },
+
+          resetDate: function() {
+            // Find the most recent date in the data and set it as the selected date
+            var mostRecentDate = d3.max(state.data, xAcc);
+            actions.changeDate(mostRecentDate);
           },
 
           resize: function() {
@@ -115,7 +148,7 @@
 
           var xScale = d3
             .scalePoint()
-            .domain(state.months)
+            .domain(state.xValues)
             .range([0, bounds.innerWidth])
             .padding(0);
 
@@ -127,6 +160,18 @@
           var cScale = sszvis.scaleQual12().domain(state.categories);
 
           // Layers
+
+          var highlightLayer = sszvis
+            .annotationRuler()
+            .top(0)
+            .bottom(bounds.innerHeight)
+            .x(sszvis.compose(xScale, xAcc))
+            .y(sszvis.compose(yScale, yAcc))
+            .label(props.rulerLabel)
+            .flip(function(d) {
+              return xScale(xAcc(d)) >= bounds.innerWidth / 2;
+            })
+            .color(sszvis.compose(cScale, cAcc));
 
           var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);
 
@@ -143,7 +188,10 @@
             .ordinal()
             .scale(xScale)
             .orient("bottom")
-            .tickFormat(monthName)
+            .tickFormat(function(d) {
+              return d === 0 ? null : sszvis.formatText(d);
+            })
+            .highlightTick(isSelected)
             .alignOuterLabels(true);
 
           var yAxis = sszvis
@@ -175,10 +223,28 @@
 
           chartLayer.selectGroup("yAxis").call(yAxis);
 
+          if (showLegend(state.categories)) {
+            chartLayer
+              .selectGroup("cLegend")
+              .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
+              .call(cLegend);
+          }
+
           chartLayer
-            .selectGroup("cScale")
-            .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
-            .call(cLegend);
+            .selectGroup("highlight")
+            .datum(state.selection)
+            .call(highlightLayer);
+
+          // Interaction
+
+          var interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yScale)
+            .on("move", actions.changeDate)
+            .on("end", actions.resetDate);
+
+          chartLayer.selectGroup("interaction").call(interactionLayer);
 
           sszvis.viewport.on("resize", actions.resize);
         }
@@ -186,9 +252,27 @@
         /* Helper functions
         ----------------------------------------------- */
 
-        function monthName(month) {
-          var date = new Date(null, month - 1);
-          return d3.timeFormat("%b")(date);
+        function showLegend(categories) {
+          return categories != null && categories[0] != null && categories[0] !== "";
+        }
+
+        function closestDatum(data, accessor, datum) {
+          if (typeof datum === "number") {
+            var i = d3.bisector(accessor).left(data, datum, 1);
+            var d0 = data[i - 1];
+            var d1 = data[i] || d0;
+            return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+          } else {
+            return (
+              sszvis.find(function(d) {
+                return xAcc(d) === datum;
+              }, data) || data[0]
+            );
+          }
+        }
+
+        function isSelected(d) {
+          return sszvis.contains(state.selection.map(xAcc).map(String), String(d));
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>

@@ -3,6 +3,7 @@
 ## [In progress]
 
 - Change `formatNumber` to remove insignificant trailing zeros
+- Change `sszvis.move` to also invert pointScales
 
 ## 2.0 (Dec 2017)
 

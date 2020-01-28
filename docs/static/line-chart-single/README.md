@@ -53,25 +53,3 @@ Shows the numeric values at the current mouse position. The x-axis shows the cur
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
-## Usage example: Annotations
-
-Shows an annotation at a given position or data point. The time axis shows days with a short date.
-
-```project
-{
-    "name": "line-chart-single-annotated",
-    "files": {
-        "index.html": {
-            "source": "line-chart-single/annotated.html",
-            "template": "template.html"
-        },
-        "data.csv": "line-chart-single/data/SL_daily.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```

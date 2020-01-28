@@ -45,29 +45,33 @@
  * @return {sszvis.component}
  */
 
-import {select, dispatch, ascending, mouse, touches, event as d3Event} from 'd3';
+import { select, dispatch, ascending, mouse, touches, event as d3Event } from "d3";
 
-import * as fn from '../fn.js';
-import { range } from '../scale.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { range } from "../scale.js";
+import { component } from "../d3-component.js";
 
 export default function() {
-  var event = dispatch('start', 'move', 'drag', 'end');
+  var event = dispatch("start", "move", "drag", "end");
 
   var moveComponent = component()
-    .prop('debug')
-    .prop('xScale')
-    .prop('yScale')
-    .prop('draggable')
-    .prop('cancelScrolling', fn.functor).cancelScrolling(false)
-    .prop('fireOnPanOnly', fn.functor).fireOnPanOnly(false)
-    .prop('padding', function(p) {
+    .prop("debug")
+    .prop("xScale")
+    .prop("yScale")
+    .prop("draggable")
+    .prop("cancelScrolling", fn.functor)
+    .cancelScrolling(false)
+    .prop("fireOnPanOnly", fn.functor)
+    .fireOnPanOnly(false)
+    .prop("padding", function(p) {
       var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
-      for (var prop in p) { defaults[prop] = p[prop]; }
+      for (var prop in p) {
+        defaults[prop] = p[prop];
+      }
       return defaults;
-    }).padding({})
+    })
+    .padding({})
     .render(function() {
-
       var selection = select(this);
       var props = selection.props();
 
@@ -79,29 +83,29 @@ export default function() {
       yExtent[0] -= props.padding.top;
       yExtent[1] += props.padding.bottom;
 
-      var layer = selection.selectAll('[data-sszvis-behavior-move]')
-        .data([0]);
+      var layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]);
 
-      var newLayer = layer.enter()
-        .append('rect')
-        .attr('data-sszvis-behavior-move', '')
-        .attr('class', 'sszvis-interactive');
+      var newLayer = layer
+        .enter()
+        .append("rect")
+        .attr("data-sszvis-behavior-move", "")
+        .attr("class", "sszvis-interactive");
       layer = layer.merge(newLayer);
 
       if (props.draggable) {
-        layer.classed('sszvis-interactive--draggable', true);
+        layer.classed("sszvis-interactive--draggable", true);
       }
 
       layer
-        .attr('x', xExtent[0])
-        .attr('y', yExtent[0])
-        .attr('width',  xExtent[1] - xExtent[0])
-        .attr('height', yExtent[1] - yExtent[0])
-        .attr('fill', 'transparent')
-        .on('mouseover', function() {
-          event.apply('start', this, arguments);
+        .attr("x", xExtent[0])
+        .attr("y", yExtent[0])
+        .attr("width", xExtent[1] - xExtent[0])
+        .attr("height", yExtent[1] - yExtent[0])
+        .attr("fill", "transparent")
+        .on("mouseover", function() {
+          event.apply("start", this, arguments);
         })
-        .on('mousedown', function() {
+        .on("mousedown", function() {
           var target = this;
           var doc = select(document);
           var win = select(window);
@@ -111,7 +115,7 @@ export default function() {
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
             d3Event.preventDefault();
-            event.apply('drag', this, [x, y]);
+            event.apply("drag", this, [x, y]);
           };
 
           var startDragging = function() {
@@ -121,37 +125,37 @@ export default function() {
 
           var stopDragging = function() {
             target.__dragging__ = false;
-            win.on('mouseup.sszvis-behavior-move', null);
-            win.on('mousemove.sszvis-behavior-move', null);
-            doc.on('mouseout.sszvis-behavior-move', null);
-            event.apply('end', this, arguments);
+            win.on("mouseup.sszvis-behavior-move", null);
+            win.on("mousemove.sszvis-behavior-move", null);
+            doc.on("mouseout.sszvis-behavior-move", null);
+            event.apply("end", this, arguments);
           };
 
-          win.on('mousemove.sszvis-behavior-move', drag);
-          win.on('mouseup.sszvis-behavior-move', stopDragging);
-          doc.on('mouseout.sszvis-behavior-move', function() {
+          win.on("mousemove.sszvis-behavior-move", drag);
+          win.on("mouseup.sszvis-behavior-move", stopDragging);
+          doc.on("mouseout.sszvis-behavior-move", function() {
             var from = d3Event.relatedTarget || d3Event.toElement;
-            if (!from || from.nodeName === 'HTML') {
+            if (!from || from.nodeName === "HTML") {
               stopDragging();
             }
           });
 
           startDragging();
         })
-        .on('mousemove', function() {
+        .on("mousemove", function() {
           var target = this;
           var xy = mouse(this);
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
 
           if (!target.__dragging__) {
-            event.apply('move', this, [x, y]);
+            event.apply("move", this, [x, y]);
           }
         })
-        .on('mouseout', function() {
-          event.apply('end', this, []);
+        .on("mouseout", function() {
+          event.apply("end", this, []);
         })
-        .on('touchstart', function() {
+        .on("touchstart", function() {
           var xy = fn.first(touches(this));
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
@@ -175,9 +179,9 @@ export default function() {
           // pass fireOnPanOnly = true, which flips this switch and relies on
           // cancelScrolling to determine whether to fire the events.
           if (!props.fireOnPanOnly() || cancelScrolling) {
-            event.apply('start', this, [x, y]);
-            event.apply('drag', this, [x, y]);
-            event.apply('move', this, [x, y]);
+            event.apply("start", this, [x, y]);
+            event.apply("drag", this, [x, y]);
+            event.apply("move", this, [x, y]);
 
             var pan = function() {
               var panXY = fn.first(touches(this));
@@ -192,28 +196,28 @@ export default function() {
 
               // See comment above about the same if condition.
               if (!props.fireOnPanOnly() || panCancelScrolling) {
-                event.apply('drag', this, [panX, panY]);
-                event.apply('move', this, [panX, panY]);
+                event.apply("drag", this, [panX, panY]);
+                event.apply("move", this, [panX, panY]);
               } else {
-                event.apply('end', this, []);
+                event.apply("end", this, []);
               }
             };
 
             var end = function() {
-              event.apply('end', this, []);
+              event.apply("end", this, []);
               select(this)
-                .on('touchmove', null)
-                .on('touchend', null);
+                .on("touchmove", null)
+                .on("touchend", null);
             };
 
             select(this)
-              .on('touchmove', pan)
-              .on('touchend', end);
+              .on("touchmove", pan)
+              .on("touchend", end);
           }
         });
 
       if (props.debug) {
-        layer.attr('fill', 'rgba(255,0,0,0.2)');
+        layer.attr("fill", "rgba(255,0,0,0.2)");
       }
     });
 
@@ -223,45 +227,88 @@ export default function() {
   };
 
   return moveComponent;
-};
+}
 
 function scaleInvert(scale, px) {
-  if (scale.invert) {
-    // Linear scale
-    return scale.invert(px);
-  } else {
-    // Ordinal scale
-    var step = scale.step();
-    var paddingOuter = scale.paddingOuter() * step;
-    var paddingInner = scale.paddingInner() * step;
-    var bandWidth = scale.bandwidth();
-    var scaleRange = scale.range();
-    var domain = scale.domain();
-
-    if (domain.length === 1) {
-      if (scaleRange[0] <= px && scaleRange[1] >= px) {
-        return domain[0];
-      }
-      return null;
+  var scaleType = scale.invert ? "Linear" : scale.paddingInner ? "Band" : "Point";
+  switch (scaleType) {
+    case "Linear": {
+      return scale.invert(px);
     }
+    case "Band":
+      return invertBandScale(scale, px);
+    case "Point":
+      return invertPointScale(scale, px);
+    default: {
+      throw new Error("Unknown scale type, could not invert");
+    }
+  }
+}
 
-    var ranges = domain.map(function(d, i) {
-      if (i === 0) {
-        return [scaleRange[0], scaleRange[0] + paddingOuter + bandWidth + paddingInner / 2];
-      } else if (i === domain.length - 1) {
-        return [scaleRange[1] - (paddingOuter + bandWidth + paddingInner / 2), scaleRange[1]];
-      } else {
-        return [
-          scaleRange[0] + paddingOuter + i * step - paddingInner / 2,
-          scaleRange[0] + paddingOuter + (i + 1) * step - paddingInner / 2,
-        ];
-      }
-    });
-    for (var i = 0, l = ranges.length; i < l; i++) {
-      if (ranges[i][0] < px && px <= ranges[i][1]) {
-        return domain[i];
-      }
+function invertBandScale(scale, px) {
+  var step = scale.step();
+  var paddingOuter = scale.paddingOuter() * step;
+  var paddingInner = scale.paddingInner() * step;
+  var bandWidth = scale.bandwidth();
+  var scaleRange = scale.range();
+  var domain = scale.domain();
+
+  if (domain.length === 1) {
+    if (scaleRange[0] <= px && scaleRange[1] >= px) {
+      return domain[0];
     }
     return null;
   }
+
+  var ranges = domain.map(function(d, i) {
+    if (i === 0) {
+      return [scaleRange[0], scaleRange[0] + paddingOuter + bandWidth + paddingInner / 2];
+    } else if (i === domain.length - 1) {
+      return [scaleRange[1] - (paddingOuter + bandWidth + paddingInner / 2), scaleRange[1]];
+    } else {
+      return [
+        scaleRange[0] + paddingOuter + i * step - paddingInner / 2,
+        scaleRange[0] + paddingOuter + (i + 1) * step - paddingInner / 2
+      ];
+    }
+  });
+  for (var i = 0, l = ranges.length; i < l; i++) {
+    if (ranges[i][0] < px && px <= ranges[i][1]) {
+      return domain[i];
+    }
+  }
+  return null;
+}
+
+function invertPointScale(scale, px) {
+  var step = scale.step();
+  var paddingOuter = scale.padding() * step;
+  var scaleRange = scale.range();
+  var domain = scale.domain();
+
+  if (domain.length === 1) {
+    if (scaleRange[0] <= px && scaleRange[1] >= px) {
+      return domain[0];
+    }
+    return null;
+  }
+
+  var ranges = domain.map(function(d, i) {
+    if (i === 0) {
+      return [scaleRange[0], scaleRange[0] + paddingOuter + step / 2];
+    } else if (i === domain.length - 1) {
+      return [scaleRange[1] - (paddingOuter + step / 2), scaleRange[1]];
+    } else {
+      return [
+        scaleRange[0] + paddingOuter + i * step - step / 2,
+        scaleRange[0] + paddingOuter + i * step + step / 2
+      ];
+    }
+  });
+  for (var i = 0, l = ranges.length; i < l; i++) {
+    if (ranges[i][0] < px && px <= ranges[i][1]) {
+      return domain[i];
+    }
+  }
+  return null;
 }

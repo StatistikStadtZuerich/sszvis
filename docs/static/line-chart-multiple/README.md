@@ -29,22 +29,28 @@ The multiple line chart uses the same components as the [single line chart](line
 
     },
     "sourceView": ["index.html", "data.csv"]
-}
+}k
 ```
 
-## Usage example: Many years
+## Usage example: Ordinal Scale
 
-Observations for the same variable across many years.
+To use an ordinal scale with a line chart, set `ordinal()`:
+
+```
+var xAxis = sszvis.axisX
+  .ordinal()
+  .scale(xScale)
+```
 
 ```project
 {
-    "name": "line-chart-multiple-eight-cat",
+    "name": "line-chart-ordinal",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/eight-cat.html",
+            "source": "line-chart-multiple/ordinal.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-multiple/data/ML_months_8Categories_superposition_missing.csv",
+        "data.csv": "line-chart-multiple/data/ML_school_years.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
