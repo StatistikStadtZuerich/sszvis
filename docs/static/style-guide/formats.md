@@ -1,20 +1,6 @@
-> > This library provides functions for formatting data following the SSZVIS style guide.
+> This library provides functions for formatting data following the SSZVIS style guide.
 
 ## Formatting Functions
-
-#### `sszvis.formatText(x)`
-
-Any given data is returned as a string and will be formatted as Text.
-
-```table
-rows:
-  - Function: formatText
-    Example: sszvis.formatText(16000)
-    Result: "'16000'"
-  - Function:
-    Example: sszvis.formatText("Jahr")
-    Result: "'Jahr'"
-```
 
 #### `sszvis.formatNumber(x)`
 
@@ -43,8 +29,6 @@ rows:
 
 A number will be formatted to a particular precision. It is a function that accepts numbers and returns formatted values. This function is "curried", meaning that it is a function with multiple arguments, but when you call it with less than the full number of arguments, it returns a function that takes less arguments and has the arguments you did provide "pre-filled" as parameters.
 
-Note that `preciseNumber(2, 14.1234)` is equivalent to `preciseNumber(2)(14.1234)`.
-
 ```table
 rows:
   - Function: formatPreciseNumber
@@ -52,9 +36,6 @@ rows:
     Result: 14.12
   - Function:
     Example: sszvis.formatPreciseNumber(3, 14.1234)
-    Result: 14.123
-  - Function:
-    Example: sszvis.formatPreciseNumber(3)(14.1234)
     Result: 14.123
   - Function:
     Example: sszvis.formatPreciseNumber(0, 14.1234)
@@ -80,7 +61,7 @@ rows:
 
 #### `sszvis.formatFractionPercent(x)`
 
-A number will be transformed into a percent format. Format percentages on the range 0-1.
+A number will be transformed into a percent format. Format percentages on the range 0–1.
 
 ```table
 rows:
@@ -93,6 +74,20 @@ rows:
   - Function:
     Example: sszvis.formatFractionPercent(0.245875)
     Result: "24.59 %"
+```
+
+#### `sszvis.formatText(x)`
+
+Any given data is returned as a string and will be formatted as Text.
+
+```table
+rows:
+  - Function: formatText
+    Example: sszvis.formatText(16000)
+    Result: "'16000'"
+  - Function:
+    Example: sszvis.formatText("Jahr")
+    Result: "'Jahr'"
 ```
 
 #### `sszvis.formatAge(x)`
@@ -131,17 +126,6 @@ rows:
     Result: "JAN"
 ```
 
-#### `sszvis.formatAxisTimeFormat(x)`
-
-A multi time formatter used by the axis class.
-
-```table
-rows:
-  - Function: formatAxisTimeFormat
-    Example: sszvis.formatAxisTimeFormat(new Date())
-    Result: ".345"
-```
-
 #### `sszvis.formatNone()`
 
 This is a Formatter for no label, only returning an empty string.
@@ -151,7 +135,7 @@ rows:
   - Function: formatNone
     Example: sszvis.formatNone("500 People participated.")
     Result: ""
-  - Function:
+  - Function:p
     Example: sszvis.formatNone(500343)
     Result: ""
 ```
