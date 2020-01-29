@@ -15,10 +15,10 @@ For each chart the following can always be configured:
 
 ```project
 {
-    "name": "line-chart-single-automatic",
+    "name": "line-chart-single-basic",
     "files": {
         "index.html": {
-            "source": "line-chart-single/basic.html",
+            "source": "line-chart/basic-single.html",
             "template": "template.html"
         },
         "data.csv": "line-chart-single/data/SL_quarterly.csv",
@@ -38,10 +38,10 @@ For each chart the following can always be configured:
     "name": "line-chart-basic",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/basic.html",
+            "source": "line-chart/basic.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-multiple/data/ML_2Categories_Quarterly.csv",
+        "data.csv": "line-chart/data/ML_2Categories_Quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",

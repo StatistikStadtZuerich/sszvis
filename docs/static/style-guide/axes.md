@@ -66,7 +66,7 @@ This x-axis displays time values
     "name": "line-chart-single-basic",
     "files": {
         "index.html": {
-            "source": "line-chart-single/basic.html",
+            "source": "line-chart/basic-single.html",
             "template": "template.html"
         },
         "data.csv": "line-chart-single/data/SL_quarterly.csv",
@@ -107,13 +107,13 @@ The x-axis title is centered because there are two y-axes. In addition, the tick
 
 ```project
 {
-    "name": "line-chart-multiple-two-axis",
+    "name": "line-chart-two-axis",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/two-axis.html",
+            "source": "line-chart/two-axis.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-multiple/data/S_2yAxis.csv",
+        "data.csv": "line-chart/data/S_2yAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
@@ -265,13 +265,13 @@ Contours are used to make labels stand out, especially when they are positioned 
 
 ```project
 {
-    "name": "line-chart-multiple-eight-cat",
+    "name": "line-chart-ordinal",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/eight-cat.html",
+            "source": "line-chart/ordinal.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-multiple/data/ML_months_8Categories_superposition_missing.csv",
+        "data.csv": "line-chart/data/ML_school_years.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",

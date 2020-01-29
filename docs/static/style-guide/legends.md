@@ -2,7 +2,6 @@
 
 Legends, like axes, are used to display information about a scale. Typically, the term "legend" covers any kind of non-axis graphical hint about a chart's scale and visual encodings.
 
-
 ## Ordinal Color Scale Legend
 
 ### sszvis.legendColorOrdinal
@@ -53,19 +52,19 @@ The maximum width of the horizontal float layout. Default 600px
 
 ### Two legends, including one right-aligned
 
-``` project
+```project
 {
-    "name": "line-chart-multiple-two-axis",
+    "name": "line-chart-two-axis",
     "files": {
         "index.html": {
-            "source": "line-chart-multiple/two-axis.html",
+            "source": "line-chart/two-axis.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-multiple/data/S_2yAxis.csv",
+        "data.csv": "line-chart/data/S_2yAxis.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -85,7 +84,7 @@ The maximum width of the horizontal float layout. Default 600px
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -105,12 +104,11 @@ The maximum width of the horizontal float layout. Default 600px
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
 
 ## Linear Color Scale Legend
 
@@ -155,12 +153,11 @@ An optional formatter function for the end labels. Usually should be sszvis.form
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
         "switzerland.json": "/topo/switzerland.json",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
 
 ## Binned Color Scale Legend
 
@@ -200,12 +197,11 @@ A formatter function for the labels of the displayValues.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
 
 ## Variable Radius Legend
 
@@ -245,7 +241,7 @@ Formatter function for the labels
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }

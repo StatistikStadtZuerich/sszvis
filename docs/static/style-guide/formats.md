@@ -135,7 +135,7 @@ rows:
   - Function: formatNone
     Example: sszvis.formatNone("500 People participated.")
     Result: ""
-  - Function:p
+  - Function:
     Example: sszvis.formatNone(500343)
     Result: ""
 ```
