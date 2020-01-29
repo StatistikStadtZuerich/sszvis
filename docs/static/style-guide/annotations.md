@@ -238,6 +238,14 @@ A number to display as the total of the range ruler (at the top)
 
 Determines whether the rangeRuler labels should be flipped (they default to the right side)
 
+#### `annotationRangeRuler.[reduceOverlap]`
+
+Determines whether overlapping labels should be avoided by moving them apart vertically (default).
+
+If set to `false`, labels are allowed to overlap. This can be be useful in charts with a lot of
+labels where moving them apart would move them outside the chart. In this case, it would be better
+to only show one label instead of all, though.
+
 ### sszvis.annotationRangeFlag
 
 The annotationRangeFlag creates a pair of dots which identify a specific vertical range of data, and a tooltipAnchor between them. Used here in the stacked area chart, but could also be used in other chart types that have several data series sharing the same vertical space, for example a multi-line chart.
@@ -272,29 +280,4 @@ A value for the y-value of the upper range flag dot
     },
     "sourceView": ["index.html", "data.csv"]
 }
-```
-
-## Demonstrating the label adjustment code
-
-Note the use of `.reduceOverlap(false)` on the ruler component. In order to change the default value and let the labels overlap, set the `.reduceOverlap()` to false. This can be done by adding this snippet to the ruler component:
-
-```code
-.reduceOverlap(false);
-```
-
-For example:
-
-```code
-var highlightLayer = sszvis
-    .annotationRuler()
-    .top(0)
-    .bottom(bounds.innerHeight)
-    .x(sszvis.compose(xScale, xAcc))
-    .y(sszvis.compose(yScale, yAcc))
-    .label(rulerLabel)
-    .flip(function(d) {
-       return xScale(xAcc(d)) >= bounds.innerWidth / 2;
-    })
-    .color(sszvis.compose(cScale, cAcc))
-    .reduceOverlap(false);
 ```
