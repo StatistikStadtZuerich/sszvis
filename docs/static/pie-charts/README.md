@@ -1,5 +1,3 @@
-# Pie Chart
-
 > Pie Charts are suited to show how much individual quantities contribute to a total value.
 
 Because the wedge angles are offset in different ways, it is difficult to compare values for the same quantity across different pie charts. In these circumstances, a stacked chart is often a suitable alternative.

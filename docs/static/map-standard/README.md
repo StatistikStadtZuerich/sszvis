@@ -1,5 +1,3 @@
-# Choropleth Maps
-
 > Choropleth maps show the geospatial distribution of quantities, shaded in proportion to a color value.
 
 ## sszvis.choropleth()
@@ -33,7 +31,6 @@ d3.json('stadt-zurich.json').get(function(error, topo) {
 
 sszvis provides pre-built TopoJSON files which combine the most commonly used geometries used.
 
-
 #### `topo/stadt-zurich.json`
 
 - `stadtkreise`
@@ -53,8 +50,6 @@ sszvis provides pre-built TopoJSON files which combine the most commonly used ge
 #### `topo/switzerland.json`
 
 - `cantons`
-
-
 
 ### Configuration
 

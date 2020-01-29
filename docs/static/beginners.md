@@ -1,5 +1,3 @@
-# Charts for beginners
-
 > These charts are fully parametrized for simple usage. They are all generated based on a config object that stands at the beginning of the code.
 
 ## General Basic Configuration

@@ -1,6 +1,4 @@
-# Legends
-
-Legends, like axes, are used to display information about a scale. Typically, the term "legend" covers any kind of non-axis graphical hint about a chart's scale and visual encodings.
+> Legends, like axes, are used to display information about a scale. Typically, the term "legend" covers any kind of non-axis graphical hint about a chart's scale and visual encodings.
 
 ## Ordinal Color Scale Legend
 

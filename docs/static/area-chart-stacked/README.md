@@ -1,5 +1,3 @@
-# Stacked Area Chart
-
 > Stacked area charts are useful for showing how component parts contribute to a total quantity, while also showing how those components and the total quantity change across change in another dimension, usually time.
 
 ## sszvis.stackedArea
