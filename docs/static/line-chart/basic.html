@@ -45,7 +45,9 @@
               return sszvis
                 .modularTextSVG()
                 .bold(sszvis.compose(sszvis.formatNumber, yAcc))
-                .plain(cAcc);
+                .plain(function(d) {
+                  return cAcc(d) != null ? cAcc(d) : "";
+                });
             }
           })
           .prop("ticks", {
@@ -69,10 +71,10 @@
         var state = {
           data: [],
           lineData: [],
-          dates: [],
+          xValues: [],
+          categories: [],
           selection: [],
-          maxY: 0,
-          categories: []
+          maxY: 0
         };
 
         /* State transitions
@@ -84,7 +86,7 @@
               .cascade()
               .arrayBy(cAcc, d3.ascending)
               .apply(state.data);
-            state.dates = d3.extent(state.data, xAcc);
+            state.xValues = d3.extent(state.data, xAcc);
             state.maxY = d3.max(state.data, yAcc);
             state.categories = sszvis.set(state.data, cAcc);
 
@@ -139,7 +141,7 @@
           // Scales
           var xScale = d3
             .scaleTime()
-            .domain(state.dates)
+            .domain(state.xValues)
             .range([0, bounds.innerWidth]);
 
           var yScale = d3

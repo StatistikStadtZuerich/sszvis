@@ -60,6 +60,18 @@ var xAxis = sszvis.axisX
   .scale(xScale)
 ```
 
+To create a single line chart as in the example below, set the third variable to null.
+
+```
+function parseRow(d) {
+    return {
+        xValue: d["Jahr"],
+        yValue: sszvis.parseNumber(d["Wert"]),
+        category: null // third variable is set to null
+        };
+    }
+```
+
 ```project
 {
     "name": "line-chart-ordinal",
