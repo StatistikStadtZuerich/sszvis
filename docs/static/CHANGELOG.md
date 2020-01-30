@@ -4,6 +4,7 @@
 - Change `sszvis.move` to also invert pointScales
 - Added new function `measureText` to calculate the width of a string
 - Added new function `measureAxisLabel` as a preset of `measureText`
+- Added new function `measureLegendLabel` as a preset of `measureText`
 
 ## 2.0 (Dec 2017)
 

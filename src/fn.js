@@ -463,6 +463,21 @@ export var measureAxisLabel = function(text) {
 };
 
 /**
+ * fn.measureLegendLabel
+ *
+ * A preset to measure the widths of legend labels.
+ *
+ * @param {string} text The text to measure
+ * @returns {number} The width of the text
+ *
+ * @example
+ * var labelWidth = sszvis.measureLegendLabel("Hello!")
+ */
+export var measureLegendLabel = function(text) {
+  return measureText(12, "Arial, sans-serif", text);
+};
+
+/**
  * fn.not
  *
  * Takes as argument a function f and returns a new function
