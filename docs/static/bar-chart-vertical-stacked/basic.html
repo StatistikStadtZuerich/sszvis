@@ -147,7 +147,12 @@
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
-          var xLabelPadding = xLabelHeight(props.xSlant, state.years.map(props.xLabelFormat)) + 20;
+          var xLabelPadding = xLabelHeight(props.xSlant, state.years.map(props.xLabelFormat));
+
+          var xLabelPadding2 =
+            props.xSlant === "horizontal"
+              ? 30
+              : d3.max(state.years.map(props.xLabelFormat), sszvis.measureAxisLabel) + 20;
 
           var legendBounds = sszvisNew.legendBounds(
             {
@@ -308,7 +313,7 @@
         }
 
         function xLabelHeight(slant, labels) {
-          return slant === "horizontal" ? 30 : d3.max(labels, sszvis.measureAxisLabel) + 20;
+          return slant === "horizontal" ? 30 : d3.max(labels, sszvis.measureAxisLabel) + 30;
         }
 
         var sszvisNew = {

@@ -5,6 +5,7 @@
 - Added new function `measureText` to calculate the width of a string
 - Added new function `measureAxisLabel` as a preset of `measureText`
 - Added new function `measureLegendLabel` as a preset of `measureText`
+- Created new module `sszvis/measure` with utilities to measure elements
 
 ## 2.0 (Dec 2017)
 

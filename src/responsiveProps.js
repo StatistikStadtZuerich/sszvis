@@ -8,7 +8,7 @@
  * The module should be configured with any number of different properties that change
  * based on breakpoints, plus (optional) breakpoint configuration, and then called
  * as a function. You must pass in an object with 'width' and 'screenHeight' properties.
- * This is the kind of thing which is returned from sszvis.bounds and fn.measureDimensions.
+ * This is the kind of thing which is returned from sszvis.bounds and sszvis.measureDimensions.
  *
  *
  * The return value of the function call is an object which has properties corresponding to
@@ -40,23 +40,23 @@
  *     _: 16
  *   });
  *
- * var props = queryProps(fn.measureDimensions('#sszvis-chart'));
+ * var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
  * --- OR ---
- * var props = queryProps(fn.bounds({ ... }, '#sszvis-chart'));
+ * var props = queryProps(sszvis.bounds({ ... }, '#sszvis-chart'));
  *
  * ... use props.axisOrientation, props.height, and props.numAxisTicks ...
  *
  * @returns {responsiveProps}
  */
 
+import {
+  breakpointCreateSpec,
+  breakpointDefaultSpec,
+  breakpointFindByName,
+  breakpointMatch
+} from "./breakpoint.js";
 import * as fn from "./fn.js";
 import * as logger from "./logger.js";
-import {
-  breakpointDefaultSpec,
-  breakpointMatch,
-  breakpointCreateSpec,
-  breakpointFindByName
-} from "./breakpoint.js";
 
 /* Exported module
 ----------------------------------------------- */
@@ -69,16 +69,14 @@ export function responsiveProps() {
    *
    * @param   {{width: number, screenHeight: number}} arg1 Accepts a 'measurements' object with a
    *          'width' property and a 'screenHeight' property. This makes it possible to pass
-   *          in a sszvis.bounds object or the result of fn.measureDimensions.
+   *          in a sszvis.bounds object or the result of sszvis.measureDimensions.
    *
    * @returns {Object.<string, any>} A map of all properties for the currently selected
    *          breakpoint as defined by the parameter `arg1`
    */
   function _responsiveProps(measurement) {
     if (!fn.isObject(measurement) || !isBounds(measurement)) {
-      logger.warn(
-        "Could not determine the current breakpoint, returning the default props"
-      );
+      logger.warn("Could not determine the current breakpoint, returning the default props");
       // We choose the _ option for all configured props as a default.
       return Object.keys(propsConfig).reduce(function(memo, val, key) {
         memo[key] = val._;

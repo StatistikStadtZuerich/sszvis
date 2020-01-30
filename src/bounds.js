@@ -34,15 +34,16 @@
  *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
 
-import {select} from 'd3';
-
-import * as fn from './fn.js';
-import { aspectRatioAuto } from './aspectRatio.js';
+import { select } from "d3";
+import { aspectRatioAuto } from "./aspectRatio.js";
+import * as fn from "./fn.js";
+import { measureDimensions } from "./measure.js";
 
 var DEFAULT_WIDTH = 516;
 
 export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
-  var _bounds = null, selection = null;
+  var _bounds = null,
+    selection = null;
   if (arguments.length === 0) {
     _bounds = {};
   } else if (arguments.length === 1) {
@@ -66,31 +67,29 @@ export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
 
   // All padding sides have default values
   var padding = {
-    top:    either(_bounds.top, 0),
-    right:  either(_bounds.right, 1),
+    top: either(_bounds.top, 0),
+    right: either(_bounds.right, 1),
     bottom: either(_bounds.bottom, 0),
-    left:   either(_bounds.left, 1)
+    left: either(_bounds.left, 1)
   };
 
   // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
-  var dimensions = fn.defined(selection) ? fn.measureDimensions(selection) : {width: DEFAULT_WIDTH};
+  var dimensions = fn.defined(selection) ? measureDimensions(selection) : { width: DEFAULT_WIDTH };
 
-  var width   = either( _bounds.width,
-                        dimensions.width );
+  var width = either(_bounds.width, dimensions.width);
   var innerHeight = aspectRatioAuto(dimensions);
-  var height  = either( _bounds.height,
-                        innerHeight + padding.top + padding.bottom );
+  var height = either(_bounds.height, innerHeight + padding.top + padding.bottom);
 
   return {
-    innerHeight: height - padding.top  - padding.bottom,
-    innerWidth:  width  - padding.left - padding.right,
-    padding:     padding,
-    height:      height,
-    width:       width,
+    innerHeight: height - padding.top - padding.bottom,
+    innerWidth: width - padding.left - padding.right,
+    padding: padding,
+    height: height,
+    width: width,
     screenWidth: dimensions.screenWidth,
     screenHeight: dimensions.screenHeight
   };
-};
+}
 
 export { DEFAULT_WIDTH };
 
@@ -102,9 +101,8 @@ export { DEFAULT_WIDTH };
 //             This property is preserved for compatibility reasons.
 export var RATIO = 16 / 9;
 
-
 /* Helper functions
 ----------------------------------------------- */
 function either(val, fallback) {
-  return (typeof val === 'undefined') ? fallback : val;
+  return typeof val === "undefined" ? fallback : val;
 }
