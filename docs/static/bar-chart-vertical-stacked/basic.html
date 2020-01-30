@@ -39,7 +39,7 @@
 
         var queryProps = sszvis
           .responsiveProps()
-          .prop("targetNumColumns", {
+          .prop("columnCount", {
             _: null
           })
           .prop("leftPadding", {
@@ -148,7 +148,14 @@
           var props = queryProps(sszvis.measureDimensions(config.id));
 
           var xLabelPadding = xLabelHeight(props.xSlant, state.years.map(props.xLabelFormat)) + 20;
-          var legendProps = legendHeight(config.id, state.categories, props.targetNumColumns);
+
+          var legendBounds = sszvisNew.legendBounds(
+            {
+              labels: state.categories,
+              columnCount: props.columnCount
+            },
+            config.id
+          );
 
           var bounds = sszvis.bounds(
             {
@@ -156,7 +163,7 @@
               bottom:
                 props.bottomPadding != null
                   ? props.bottomPadding
-                  : xLabelPadding + legendProps.height,
+                  : xLabelPadding + legendBounds.height,
               left:
                 props.leftPadding != null
                   ? props.leftPadding
@@ -231,8 +238,8 @@
           var colorLegend = sszvis
             .legendColorOrdinal()
             .scale(cScale)
-            .rows(legendProps.rows)
-            .columnWidth(legendProps.colWidth)
+            .rows(legendBounds.rows)
+            .columnWidth(legendBounds.columnWidth)
             .orientation("vertical");
 
           var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(cAcc, dataAcc));
@@ -301,35 +308,34 @@
         }
 
         function xLabelHeight(slant, labels) {
-          return slant === "horizontal"
-            ? 30
-            : d3.max(labels, function(label) {
-                return sszvis.measureAxisLabel(label) + 20;
-              });
+          return slant === "horizontal" ? 30 : d3.max(labels, sszvis.measureAxisLabel) + 20;
         }
 
-        function numCols(totalWidth, colWidth, num) {
-          return num <= 1
-            ? 1
-            : colWidth <= totalWidth / num
-            ? num
-            : numCols(totalWidth, colWidth, num - 1);
-        }
+        var sszvisNew = {
+          legendBounds: (function() {
+            function numCols(totalWidth, columnWidth, num) {
+              return num <= 1
+                ? 1
+                : columnWidth <= totalWidth / num
+                ? num
+                : numCols(totalWidth, columnWidth, num - 1);
+            }
 
-        function legendHeight(container, labels, targetNumColumns) {
-          var availableWidth = sszvis.measureDimensions(container).width;
-          var maxLabelWidth = d3.max(labels, function(label) {
-            return sszvis.measureLegendLabel(label) + 40;
-          });
-          var cols = numCols(availableWidth, maxLabelWidth, targetNumColumns || 3);
-          var rows = Math.ceil(labels.length / cols);
-          return {
-            cols,
-            rows,
-            height: rows * 21,
-            colWidth: maxLabelWidth
-          };
-        }
+            return function({ labels, columnCount }, container) {
+              var width = sszvis.measureDimensions(container).width;
+              var maxLabelWidth = d3.max(labels, sszvis.measureLegendLabel) + 40;
+              var columns = numCols(width, maxLabelWidth, columnCount || 3);
+              var rows = Math.ceil(labels.length / columns);
+              return {
+                columns,
+                rows,
+                height: rows * 21,
+                width,
+                columnWidth: maxLabelWidth
+              };
+            };
+          })()
+        };
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
