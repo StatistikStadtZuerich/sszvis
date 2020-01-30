@@ -57,6 +57,14 @@
           .prop("yLabel", {
             _: "Beschäftigte"
           })
+          .prop("yLabelFormat", {
+            _: function() {
+              return sszvis.formatNumber;
+            }
+          })
+          .prop("yLabelPadding", {
+            _: null // Padding is determined automatically when set to null
+          })
           .prop("ticks", {
             _: 5
           });
@@ -130,7 +138,18 @@
         ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 30, bottom: props.bottomPadding }, config.id);
+          var bounds = sszvis.bounds(
+            {
+              top: 30,
+              bottom: props.bottomPadding,
+              left:
+                props.yLabelPadding != null
+                  ? props.yLabelPadding
+                  : sszvis.measureAxisLabel(props.yLabelFormat(state.maxStacked))
+            },
+            config.id
+          );
+
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             Math.min(800, bounds.innerWidth),
             state.categories.length
@@ -189,6 +208,7 @@
             .scale(yScale)
             .orient("right")
             .title(props.yLabel)
+            .tickFormat(props.yLabelFormat)
             .dyTitle(-20);
 
           var colorLegend = sszvis
@@ -224,11 +244,14 @@
             )
           );
 
-          var bars = chartLayer.selectGroup("barchart").call(stackedBars);
+          var bars = chartLayer
+            .selectGroup("barchart")
+            .attr("transform", sszvis.translateString(bounds.padding.left, 0))
+            .call(stackedBars);
 
           bars.selectAll("[data-tooltip-anchor]").call(tooltip);
 
-          chartLayer
+          bars
             .selectGroup("xAxis")
             .attr("transform", sszvis.translateString(0, bounds.innerHeight))
             .call(xAxis);
