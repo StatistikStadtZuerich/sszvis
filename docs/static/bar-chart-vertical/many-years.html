@@ -33,17 +33,20 @@
         /* Configuration
         ----------------------------------------------- */
 
-        // Because there are so many bars, this represents a special case
-        // in this example, because the x-axis values are sequential,
-        // the x-axis is implemented using a linear time scale,
-        // instead of the usual ordinal scale.
-        // It should be noted that in situations with this much time-series data,
-        // a line chart is almost always the optimal display strategy.
-        var BAR_WIDTH = 3;
-        var queryProps = sszvis.responsiveProps().prop("barPadding", {
-          palm: 0.2,
-          _: 0.1
-        });
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("barPadding", {
+            palm: 0.2,
+            _: 0.1
+          })
+          .prop("leftPadding", {
+            _: null
+          })
+          .prop("yLabelFormat", {
+            _: function() {
+              return sszvis.formatNumber;
+            }
+          });
 
         function parseRow(d) {
           return {
@@ -59,6 +62,7 @@
         ----------------------------------------------- */
         var state = {
           data: [],
+          categories: [],
           yearRange: [],
           selection: []
         };
@@ -68,6 +72,7 @@
         var actions = {
           prepareState: function(data) {
             state.data = data;
+            state.categories = sszvis.set(state.data, xAcc);
             state.yearRange = d3.extent(state.data, xAcc);
             render(state);
           },
@@ -105,21 +110,37 @@
         /* Render
         ----------------------------------------------- */
         function render(state) {
-          var bounds = sszvis.bounds({ top: 3, bottom: 25 }, config.id);
-          var props = queryProps(bounds);
+          var props = queryProps(sszvis.measureDimensions(config.id));
+          var yMax = d3.max(state.data, yAcc);
+          var bounds = sszvis.bounds(
+            {
+              top: 3,
+              bottom: 25,
+              left:
+                props.leftPadding != null
+                  ? props.leftPadding
+                  : sszvis.measureAxisLabel(props.yLabelFormat(yMax)) + 10
+            },
+            config.id
+          );
+
+          var chartDimensions = sszvis.dimensionsVerticalBarChart(
+            bounds.innerWidth,
+            state.categories.length
+          );
 
           // Scales
 
           var xScale = d3
             .scaleBand()
-            .domain(sszvis.set(state.data, xAcc))
-            .padding(0.4)
+            .domain(state.categories)
+            .padding(chartDimensions.padRatio)
             .paddingOuter(props.barPadding)
-            .rangeRound([0, bounds.innerWidth]);
+            .range([0, chartDimensions.totalWidth]);
 
           var heightScale = d3
             .scaleLinear()
-            .domain([0, d3.max(state.data, yAcc)])
+            .domain([0, yMax])
             .range([0, bounds.innerHeight]);
 
           var yPosScale = heightScale.copy().range(
@@ -184,33 +205,38 @@
 
           // Rendering
 
-          var bars = chartLayer.selectGroup("bars").call(barGen);
+          chartLayer.attr(
+            "transform",
+            sszvis.translateString(
+              bounds.innerWidth / 2 - chartDimensions.totalWidth / 2,
+              bounds.padding.top
+            )
+          );
+
+          var bars = chartLayer
+            .selectGroup("bars")
+            .attr("transform", sszvis.translateString(bounds.padding.left, 0))
+            .call(barGen);
 
           bars.selectAll("[data-tooltip-anchor]").call(tooltip);
 
-          chartLayer
+          bars
             .selectGroup("xAxis")
             .attr("transform", sszvis.translateString(0, bounds.innerHeight))
             .call(xAxis);
 
-          chartLayer
-            .selectGroup("yAxis")
-            .attr("transform", sszvis.translateString(0, 0))
-            .call(yAxis);
+          chartLayer.selectGroup("yAxis").call(yAxis);
 
           // Interaction
 
           var interactionLayer = sszvis
             .move()
-            .padding({
-              right: BAR_WIDTH
-            })
             .xScale(xScale)
             .yScale(yPosScale)
             .on("move", actions.changeDate)
             .on("end", actions.resetDate);
 
-          chartLayer.selectGroup("interaction").call(interactionLayer);
+          bars.selectGroup("interaction").call(interactionLayer);
 
           sszvis.viewport.on("resize", actions.resize);
         }
