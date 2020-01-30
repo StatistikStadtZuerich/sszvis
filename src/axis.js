@@ -544,6 +544,7 @@ var slantLabel = {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
+        .attr("dy", "0.71em")
         .attr("transform", null);
     },
     vertical: function(selection) {
@@ -566,6 +567,7 @@ var slantLabel = {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
+        .attr("dy", "0.71em")
         .attr("transform", null);
     },
     vertical: function(selection) {
