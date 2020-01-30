@@ -53,16 +53,15 @@
  * @return {sszvis.component}
  */
 
-import {select, axisBottom, axisTop, axisLeft, axisRight, extent} from 'd3';
-
-import * as fn from './fn.js';
-import { halfPixel, transformTranslateSubpixelShift } from './svgUtils/crisp.js';
-import translateString from './svgUtils/translateString.js';
-import textWrap from './svgUtils/textWrap.js';
-import { formatNumber, formatAxisTimeFormat, formatText } from './format.js';
-import { range } from './scale.js';
-import * as logger from './logger.js';
-import { component } from './d3-component.js';
+import { axisBottom, axisLeft, axisRight, axisTop, extent, select } from "d3";
+import { component } from "./d3-component.js";
+import * as fn from "./fn.js";
+import { formatAxisTimeFormat, formatNumber, formatText } from "./format.js";
+import * as logger from "./logger.js";
+import { range } from "./scale.js";
+import { halfPixel, transformTranslateSubpixelShift } from "./svgUtils/crisp.js";
+import textWrap from "./svgUtils/textWrap.js";
+import translateString from "./svgUtils/translateString.js";
 
 var TICK_PROXIMITY_THRESHOLD = 8;
 var TICK_END_THRESHOLD = 12;
@@ -73,55 +72,74 @@ var axis = function() {
   // axisDelegate.orient = function() { return 'bottom'; };
 
   var axisComponent = component()
-    .prop('scale')
-    .prop('orient')
-    .prop('ticks')
-    .prop('tickValues')
-    .prop('tickSize')
-    .prop('tickSizeInner')
-    .prop('tickSizeOuter')
-    .prop('tickPadding')
-    .prop('tickFormat')
+    .prop("scale")
+    .prop("orient")
+    .prop("ticks")
+    .prop("tickValues")
+    .prop("tickSize")
+    .prop("tickSizeInner")
+    .prop("tickSizeOuter")
+    .prop("tickPadding")
+    .prop("tickFormat")
 
-    .prop('_scale')
+    .prop("_scale")
 
-    .prop('orient').orient('bottom')
-    .prop('alignOuterLabels').alignOuterLabels(false)
-    .prop('contour')
-    .prop('hideBorderTickThreshold').hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
-    .prop('hideLabelThreshold').hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD)
-    .prop('highlightTick', fn.functor)
-    .prop('showZeroY').showZeroY(false)
-    .prop('slant')
-    .prop('textWrap')
-    .prop('tickLength')
-    .prop('title')
-    .prop('titleAnchor') // start, end, or middle
-    .prop('titleCenter') // a boolean value - whether to center the title
-    .prop('dxTitle') // a numeric value for the left offset of the title
-    .prop('dyTitle') // a numeric value for the top offset of the title
-    .prop('titleVertical')
-    .prop('vertical').vertical(false)
+    .prop("orient")
+    .orient("bottom")
+    .prop("alignOuterLabels")
+    .alignOuterLabels(false)
+    .prop("contour")
+    .prop("hideBorderTickThreshold")
+    .hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
+    .prop("hideLabelThreshold")
+    .hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD)
+    .prop("highlightTick", fn.functor)
+    .prop("showZeroY")
+    .showZeroY(false)
+    .prop("slant")
+    .prop("textWrap")
+    .prop("tickLength")
+    .prop("title")
+    .prop("titleAnchor") // start, end, or middle
+    .prop("titleCenter") // a boolean value - whether to center the title
+    .prop("dxTitle") // a numeric value for the left offset of the title
+    .prop("dyTitle") // a numeric value for the top offset of the title
+    .prop("titleVertical")
+    .prop("vertical")
+    .vertical(false)
     //this property is typically used for the x-axis, but not for the y axis
     //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels
-    .prop('yOffset').yOffset(0)
+    .prop("yOffset")
+    .yOffset(0)
     .render(function() {
       var selection = select(this);
       var props = selection.props();
 
-      var isBottom = !props.vertical && props.orient === 'bottom';
+      var isBottom = !props.vertical && props.orient === "bottom";
 
       var axisDelegate = (function() {
         switch (props.orient) {
-        case 'bottom': return axisBottom();
-        case 'top': return axisTop();
-        case 'left': return axisLeft();
-        case 'right': return axisRight();
+          case "bottom":
+            return axisBottom();
+          case "top":
+            return axisTop();
+          case "left":
+            return axisLeft();
+          case "right":
+            return axisRight();
         }
       })();
 
-      ['scale', 'ticks', 'tickValues', 'tickSizeInner',
-       'tickSizeOuter', 'tickPadding', 'tickFormat', 'tickSize'].forEach(function(prop) {
+      [
+        "scale",
+        "ticks",
+        "tickValues",
+        "tickSizeInner",
+        "tickSizeOuter",
+        "tickPadding",
+        "tickFormat",
+        "tickSize"
+      ].forEach(function(prop) {
         if (props[prop] !== undefined) {
           if (axisDelegate[prop] === undefined) {
             throw new Error('axis: "' + prop + '" not available');
@@ -134,19 +152,20 @@ var axis = function() {
         axisDelegate.scale(props._scale);
       }
 
-      var group = selection.selectGroup('sszvis-axis')
-        .classed('sszvis-axis', true)
-        .classed('sszvis-axis--top', !props.vertical && props.orient === 'top')
-        .classed('sszvis-axis--bottom', isBottom)
-        .classed('sszvis-axis--vertical', props.vertical)
-        .attr('transform', translateString(0, props.yOffset))
+      var group = selection
+        .selectGroup("sszvis-axis")
+        .classed("sszvis-axis", true)
+        .classed("sszvis-axis--top", !props.vertical && props.orient === "top")
+        .classed("sszvis-axis--bottom", isBottom)
+        .classed("sszvis-axis--vertical", props.vertical)
+        .attr("transform", translateString(0, props.yOffset))
         .call(axisDelegate);
 
       group
         .attr("fill", null)
         .attr("font-size", null)
-        .attr("font-family", null)
-        // .attr("text-anchor", null);
+        .attr("font-family", null);
+      // .attr("text-anchor", null);
 
       var axisScale = axisDelegate.scale();
 
@@ -154,8 +173,8 @@ var axis = function() {
       // Note: Invariant: This is only valid so long as new .tick groups or tick label texts
       // are not being added after these selections are constructed. If that changes, these
       // selections need to be re-constructed.
-      var tickGroups = group.selectAll('g.tick');
-      var tickTexts = tickGroups.selectAll('text');
+      var tickGroups = group.selectAll("g.tick");
+      var tickTexts = tickGroups.selectAll("text");
 
       // To prevent anti-aliasing on elements that need to be rendered crisply
       // we need to position them on a half-pixel grid: 0.5, 1.5, 2.5, etc.
@@ -163,85 +182,78 @@ var axis = function() {
       // leads to weird type rendering artefacts in some browsers. That's
       // why we reach into the group and translate lines onto the half-pixel
       // grid by taking the translation of the group into account.
-      tickGroups
-        .each(function() {
-          var subpixelShift = transformTranslateSubpixelShift(this.getAttribute('transform'));
-          var dx = halfPixel(0) - subpixelShift[0];
-          var dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
-          select(this).select('line')
-            .attr('transform', translateString(dx, dy));
-        });
+      tickGroups.each(function() {
+        var subpixelShift = transformTranslateSubpixelShift(this.getAttribute("transform"));
+        var dx = halfPixel(0) - subpixelShift[0];
+        var dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
+        select(this)
+          .select("line")
+          .attr("transform", translateString(dx, dy));
+      });
 
       tickTexts.each(function() {
-        if (props.orient === 'top' || props.orient === 'bottom') {
-          select(this).attr('dx', "-0.5");
+        if (props.orient === "top" || props.orient === "bottom") {
+          select(this).attr("dx", "-0.5");
         }
-        if (props.orient === 'left' || props.orient === 'right') {
-          select(this).attr('y', "-0.5");
+        if (props.orient === "left" || props.orient === "right") {
+          select(this).attr("y", "-0.5");
         }
       });
 
       // Place axis line on a half-pixel grid to prevent anti-aliasing
-      group.selectAll('path.domain')
-        // .attr('transform', translateString(halfPixel(0), halfPixel(0)));
-
+      group.selectAll("path.domain");
+      // .attr('transform', translateString(halfPixel(0), halfPixel(0)));
 
       // hide ticks which are too close to one endpoint
       var rangeExtent = range(axisScale);
-      tickGroups.selectAll('line')
-        .each(function(d) {
-          var pos = axisScale(d),
-              d3this = select(this);
-          d3this
-            .classed('hidden', !d3this.classed('sszvis-axis__longtick') && (absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold));
-        });
+      tickGroups.selectAll("line").each(function(d) {
+        var pos = axisScale(d),
+          d3this = select(this);
+        d3this.classed(
+          "hidden",
+          !d3this.classed("sszvis-axis__longtick") &&
+            (absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold ||
+              absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold)
+        );
+      });
 
       if (fn.defined(props.tickLength)) {
         var domainExtent = extent(axisScale.domain());
-        var ticks = tickGroups
-          .filter(function(d) {
-            return !fn.stringEqual(d, domainExtent[0]) && !fn.stringEqual(d, domainExtent[1]);
-          });
+        var ticks = tickGroups.filter(function(d) {
+          return !fn.stringEqual(d, domainExtent[0]) && !fn.stringEqual(d, domainExtent[1]);
+        });
         var orientation = props.orient;
 
         var longLinePadding = 2;
-        if (orientation === 'left' || orientation === 'right') {
-          ticks.selectAll('text').each(function() {
+        if (orientation === "left" || orientation === "right") {
+          ticks.selectAll("text").each(function() {
             longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
           });
           longLinePadding += 2; // a lil' extra on the end
         }
 
-        var lines = ticks.selectAll('line.sszvis-axis__longtick')
-          .data([0]);
+        var lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]);
 
         if (props.tickLength > longLinePadding) {
-          var newLines = lines.enter().append('line')
-            .classed('sszvis-axis__longtick', true);
+          var newLines = lines
+            .enter()
+            .append("line")
+            .classed("sszvis-axis__longtick", true);
 
           lines = lines.merge(newLines);
 
-          if (orientation === 'top') {
-            lines
-              .attr('y1', longLinePadding)
-              .attr('y2', props.tickLength);
-          } else if (orientation === 'bottom') {
-            lines
-              .attr('y1', -longLinePadding)
-              .attr('y2', -props.tickLength);
-          } else if (orientation === 'left') {
-            lines
-              .attr('x1', -longLinePadding)
-              .attr('x2', -props.tickLength);
-          } else if (orientation === 'right') {
-            lines
-              .attr('x1', longLinePadding)
-              .attr('x2', props.tickLength);
+          if (orientation === "top") {
+            lines.attr("y1", longLinePadding).attr("y2", props.tickLength);
+          } else if (orientation === "bottom") {
+            lines.attr("y1", -longLinePadding).attr("y2", -props.tickLength);
+          } else if (orientation === "left") {
+            lines.attr("x1", -longLinePadding).attr("x2", -props.tickLength);
+          } else if (orientation === "right") {
+            lines.attr("x1", longLinePadding).attr("x2", props.tickLength);
           }
         } else {
           lines.remove();
         }
-
       }
 
       if (props.alignOuterLabels) {
@@ -249,26 +261,23 @@ var axis = function() {
         var min = alignmentBounds[0];
         var max = alignmentBounds[1];
 
-        tickTexts
-          .style('text-anchor', function(d) {
-            var value = axisScale(d);
-            if (absDistance(value, min) < TICK_END_THRESHOLD) {
-              return 'start';
-            } else if (absDistance(value, max) < TICK_END_THRESHOLD) {
-              return 'end';
-            }
-            return 'middle';
-          });
+        tickTexts.style("text-anchor", function(d) {
+          var value = axisScale(d);
+          if (absDistance(value, min) < TICK_END_THRESHOLD) {
+            return "start";
+          } else if (absDistance(value, max) < TICK_END_THRESHOLD) {
+            return "end";
+          }
+          return "middle";
+        });
       }
 
       if (fn.defined(props.textWrap)) {
-        tickTexts
-          .call(textWrap, props.textWrap);
+        tickTexts.call(textWrap, props.textWrap);
       }
 
       if (props.slant) {
-        tickTexts
-          .call(slantLabel[props.orient][props.slant]);
+        tickTexts.call(slantLabel[props.orient][props.slant]);
       }
 
       // Highlight axis labels that return true for props.highlightTick.
@@ -276,109 +285,135 @@ var axis = function() {
         var activeBounds = [];
         var passiveBounds = [];
 
-        tickTexts
-          .classed('hidden', false)
-          .classed('active', props.highlightTick);
+        tickTexts.classed("hidden", false).classed("active", props.highlightTick);
 
         // Hide axis labels that overlap with highlighted labels unless
         // the labels are slanted (in which case the bounding boxes overlap)
         if (props.hideLabelThreshold > 0 && !props.slant) {
-          tickTexts
-            .each(function(d) {
-              // although getBoundingClientRect returns coordinates relative to the window, not the document,
-              // this should still work, since all tick bounds are affected equally by scroll position changes.
-              var bcr = this.getBoundingClientRect();
-              var b = {
-                node: this,
-                bounds: {
-                  top: bcr.top,
-                  right: bcr.right,
-                  bottom: bcr.bottom,
-                  left: bcr.left
-                }
-              };
-              if (props.highlightTick(d)) {
-                b.bounds.left -= props.hideLabelThreshold;
-                b.bounds.right += props.hideLabelThreshold;
-                activeBounds.push(b);
-              } else {
-                passiveBounds.push(b);
+          tickTexts.each(function(d) {
+            // although getBoundingClientRect returns coordinates relative to the window, not the document,
+            // this should still work, since all tick bounds are affected equally by scroll position changes.
+            var bcr = this.getBoundingClientRect();
+            var b = {
+              node: this,
+              bounds: {
+                top: bcr.top,
+                right: bcr.right,
+                bottom: bcr.bottom,
+                left: bcr.left
               }
-            });
+            };
+            if (props.highlightTick(d)) {
+              b.bounds.left -= props.hideLabelThreshold;
+              b.bounds.right += props.hideLabelThreshold;
+              activeBounds.push(b);
+            } else {
+              passiveBounds.push(b);
+            }
+          });
 
           activeBounds.forEach(function(active) {
             passiveBounds.forEach(function(passive) {
-              select(passive.node).classed('hidden', boundsOverlap(passive.bounds, active.bounds));
+              select(passive.node).classed("hidden", boundsOverlap(passive.bounds, active.bounds));
             });
           });
         }
       }
 
       if (props.title) {
-        var title = group.selectAll('.sszvis-axis__title')
-          .data([props.title]);
+        var title = group.selectAll(".sszvis-axis__title").data([props.title]);
 
-        var newTitle = title.enter()
-          .append('text')
-          .classed('sszvis-axis__title', true);
+        var newTitle = title
+          .enter()
+          .append("text")
+          .classed("sszvis-axis__title", true);
 
         title.exit().remove();
 
-        title.merge(newTitle)
+        title
+          .merge(newTitle)
           .text(function(d) {
             return d;
           })
-          .attr('transform', function() {
+          .attr("transform", function() {
             var orient = props.orient,
               axisScaleExtent = range(axisScale),
               titleProps;
 
             if (props.titleCenter) {
               titleProps = {
-                left: orient === 'left' || orient === 'right' ? 0 : orient === 'top' || orient === 'bottom' ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : 0,
-                top: orient === 'left' || orient === 'right' ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : orient === 'top' ? 0 : orient === 'bottom' ? 32 : 0
+                left:
+                  orient === "left" || orient === "right"
+                    ? 0
+                    : orient === "top" || orient === "bottom"
+                    ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
+                    : 0,
+                top:
+                  orient === "left" || orient === "right"
+                    ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
+                    : orient === "top"
+                    ? 0
+                    : orient === "bottom"
+                    ? 32
+                    : 0
               };
             } else {
               titleProps = {
-                left: orient === 'left' || orient === 'right' || orient === 'top' ? 0 : orient === 'bottom' ? axisScaleExtent[1] : 0,
-                top: orient === 'left' || orient === 'right' || orient === 'top' ? 0 : orient === 'bottom' ? 32 : 0
+                left:
+                  orient === "left" || orient === "right" || orient === "top"
+                    ? 0
+                    : orient === "bottom"
+                    ? axisScaleExtent[1]
+                    : 0,
+                top:
+                  orient === "left" || orient === "right" || orient === "top"
+                    ? 0
+                    : orient === "bottom"
+                    ? 32
+                    : 0
               };
             }
 
             titleProps.vertical = !!props.titleVertical;
             titleProps.left += props.dxTitle || 0;
             titleProps.top += props.dyTitle || 0;
-            return 'translate(' + (titleProps.left) + ', ' + (titleProps.top) + ') rotate(' + (titleProps.vertical ? '-90' : '0') + ')';
+            return (
+              "translate(" +
+              titleProps.left +
+              ", " +
+              titleProps.top +
+              ") rotate(" +
+              (titleProps.vertical ? "-90" : "0") +
+              ")"
+            );
           })
-          .style('text-anchor', function() {
+          .style("text-anchor", function() {
             var orient = props.orient;
-            if (typeof props.titleAnchor !== 'undefined') {
+            if (typeof props.titleAnchor !== "undefined") {
               return props.titleAnchor;
-            } else if (orient === 'left') {
-              return 'end';
-            } else if (orient === 'right') {
-              return 'start';
-            } else if (orient === 'top' || orient === 'bottom') {
-              return 'end';
+            } else if (orient === "left") {
+              return "end";
+            } else if (orient === "right") {
+              return "start";
+            } else if (orient === "top" || orient === "bottom") {
+              return "end";
             }
           });
       }
-
 
       /**
        * Add a background to axis labels to make them more readable on
        * colored backgrounds
        */
       if (props.contour && props.slant) {
-        logger.warn('Can\'t apply contour to slanted labels');
+        logger.warn("Can't apply contour to slanted labels");
       } else if (props.contour) {
         tickGroups.each(function() {
           var g = select(this);
-          var textNode = g.select('text').node();
-          var textContour = g.select('.sszvis-axis__label-contour');
+          var textNode = g.select("text").node();
+          var textContour = g.select(".sszvis-axis__label-contour");
           if (textContour.empty()) {
-            textContour = select(textNode.cloneNode())
-              .classed('sszvis-axis__label-contour', true);
+            textContour = select(textNode.cloneNode()).classed("sszvis-axis__label-contour", true);
             this.insertBefore(textContour.node(), textNode);
           }
           textContour.text(textNode.textContent);
@@ -398,12 +433,12 @@ var setOrdinalTicks = function(count) {
     step = Math.round(domain.length / count);
 
   // include the first value
-  if (typeof domain[0] !== 'undefined') values.push(domain[0]);
+  if (typeof domain[0] !== "undefined") values.push(domain[0]);
   for (var i = step, l = domain.length; i < l - 1; i += step) {
-    if (typeof domain[i] !== 'undefined') values.push(domain[i]);
+    if (typeof domain[i] !== "undefined") values.push(domain[i]);
   }
   // include the last value
-  if (typeof domain[domain.length - 1] !== 'undefined') values.push(domain[domain.length - 1]);
+  if (typeof domain[domain.length - 1] !== "undefined") values.push(domain[domain.length - 1]);
 
   this.tickValues(values);
 
@@ -427,25 +462,27 @@ axisX.time = function() {
 };
 
 axisX.ordinal = function() {
-  return axisX()
-    // extend this class a little with a custom implementation of 'ticks'
-    // that allows you to set a custom number of ticks,
-    // including the first and last value in the ordinal scale
-    .prop('ticks', setOrdinalTicks)
-    .tickFormat(formatText);
+  return (
+    axisX()
+      // extend this class a little with a custom implementation of 'ticks'
+      // that allows you to set a custom number of ticks,
+      // including the first and last value in the ordinal scale
+      .prop("ticks", setOrdinalTicks)
+      .tickFormat(formatText)
+  );
 };
 
 // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
 axisX.pyramid = function() {
   return axisX()
     .ticks(10)
-    .prop('scale', function(s) {
+    .prop("scale", function(s) {
       var extended = s.copy(),
         extendedDomain = extended.domain(),
         extendedRange = extended.range();
 
       extended
-      // the domain is mirrored - ±domain[1]
+        // the domain is mirrored - ±domain[1]
         .domain([-extendedDomain[1], extendedDomain[1]])
         // the range is mirrored – ±range[1]
         .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
@@ -477,10 +514,12 @@ axisY.time = function() {
 };
 
 axisY.ordinal = function() {
-  return axisY()
-    // add custom 'ticks' function
-    .prop('ticks', setOrdinalTicks)
-    .tickFormat(formatText);
+  return (
+    axisY()
+      // add custom 'ticks' function
+      .prop("ticks", setOrdinalTicks)
+      .tickFormat(formatText)
+  );
 };
 
 /* Helper functions
@@ -491,49 +530,57 @@ function absDistance(a, b) {
 }
 
 function boundsOverlap(boundsA, boundsB) {
-  return !(boundsB.left > boundsA.right ||
+  return !(
+    boundsB.left > boundsA.right ||
     boundsB.right < boundsA.left ||
     boundsB.top > boundsA.bottom ||
-    boundsB.bottom < boundsA.top);
+    boundsB.bottom < boundsA.top
+  );
 }
 
 var slantLabel = {
   top: {
     horizontal: function(selection) {
-      selection.style('text-anchor', 'middle')
-        .attr('dx', "-0.5")
-        .attr('transform', null);
+      selection
+        .style("text-anchor", "middle")
+        .attr("dx", "-0.5")
+        .attr("transform", null);
     },
     vertical: function(selection) {
-      selection.style('text-anchor', 'start')
-        .attr('dx', '0em')
-        .attr('dy', '0.35em') // vertically-center
-        .attr('transform', 'rotate(-90)');
+      selection
+        .style("text-anchor", "start")
+        .attr("dx", "0em")
+        .attr("dy", "0.35em") // vertically-center
+        .attr("transform", "rotate(-90)");
     },
     diagonal: function(selection) {
-      selection.style('text-anchor', 'start')
-        .attr('dx', '0.1em')
-        .attr('dy', '0.1em')
-        .attr('transform', 'translate(-0.5) rotate(-45)');
+      selection
+        .style("text-anchor", "start")
+        .attr("dx", "0.1em")
+        .attr("dy", "0.1em")
+        .attr("transform", "translate(-0.5) rotate(-45)");
     }
   },
   bottom: {
     horizontal: function(selection) {
-      selection.style('text-anchor', 'middle')
-        .attr('dx', "-0.5")
-        .attr('transform', null);
+      selection
+        .style("text-anchor", "middle")
+        .attr("dx", "-0.5")
+        .attr("transform", null);
     },
     vertical: function(selection) {
-      selection.style('text-anchor', 'end')
-        .attr('dx', '-1em')
-        .attr('dy', '-0.75em')
-        .attr('transform', 'rotate(-90)');
+      selection
+        .style("text-anchor", "end")
+        .attr("dx", "-1em")
+        .attr("dy", "-0.75em")
+        .attr("transform", "rotate(-90)");
     },
     diagonal: function(selection) {
-      selection.style('text-anchor', 'end')
-        .attr('dx', '-0.8em')
-        .attr('dy', '0em')
-        .attr('transform', 'rotate(-45)');
+      selection
+        .style("text-anchor", "end")
+        .attr("dx", "-0.8em")
+        .attr("dy", "0em")
+        .attr("transform", "rotate(-45)");
     }
   }
 };
