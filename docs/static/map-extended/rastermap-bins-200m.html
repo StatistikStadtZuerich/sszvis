@@ -26,8 +26,7 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+   
   var DEFAULT_KEY = 'Kinder';
   var KEY_OPTIONS = ['Kinder', 'Random'];
   var MAX_LEGEND_WIDTH = 320;
@@ -182,10 +181,7 @@
       .datum(state.data);
 
     // Create an SVG layer. This will contain the city outline
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
-      });
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds  );
 
 
     // Components

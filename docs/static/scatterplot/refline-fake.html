@@ -1,181 +1,180 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Scatterplot</title>
-</head>
-<body style="margin:0;padding:0;">
-<link href="../sszvis.css" rel="stylesheet" />
-<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
-<script src="../sszvis.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scatterplot</title>
+  </head>
+  <body style="margin:0;padding:0;">
+    <link href="../sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="../sszvis.js"></script>
 
-<div id="sszvis-chart"></div>
+    <div id="sszvis-chart"></div>
 
-<script data-catalog-project-expose="script.js">
-(function(d3, sszvis) {
-  'use strict';
-
-  if (sszvis.fallbackUnsupported()) {
-    sszvis.fallbackRender('#sszvis-chart');
-    return;
-  }
-
-
-  /* Configuration
-  ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-
-
-  /* Shortcuts
-  ----------------------------------------------- */
-  var xAcc = sszvis.prop('percent');
-  var yAcc = sszvis.prop('value');
-  var cAcc = sszvis.prop('city');
-
-
-  /* Application state
-  ----------------------------------------------- */
-  var state = {
-    data: [],
-    xExtent: [0, 1], // 0% - > 100%
-    yExtent: [],
-    cities: []
-  };
-
-
-  /* State transitions
-  ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.yExtent = [0, d3.max(state.data, yAcc)];
-      state.cities = sszvis.set(state.data, cAcc);
-
-      render(state);
-    },
-
-    resize: function() { render(state); }
-  };
-
-
-  /* Data initialization
-  ----------------------------------------------- */
-  d3.csv('data/SS_refline_fake.csv')
-    .row(function(d) {
-      return {
-        city: d['Stadt'],
-        percent: sszvis.parseNumber(d['Prozent']),
-        value: sszvis.parseNumber(d['Wert'])
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/SS_refline_fake.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
       };
-    })
-    .get(function(error, data) {
-      if (error) {
-        sszvis.loadError(error);
-        return;
-      }
-      actions.prepareState(data);
-    });
+    </script>
 
+    <script data-catalog-project-expose="script.js">
+      (function(d3, sszvis, config) {
+        "use strict";
 
-  /* Render
-  ----------------------------------------------- */
-  function render(state) {
-    var bounds = sszvis.bounds({ top: 20, bottom: 84 }, '#sszvis-chart');
+        if (sszvis.fallbackUnsupported()) {
+          sszvis.fallbackRender(config.id);
+          return;
+        }
 
+        /* Configuration
+        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            city: d["Stadt"],
+            percent: sszvis.parseNumber(d["Prozent"]),
+            value: sszvis.parseNumber(d["Wert"])
+          };
+        }
 
-    // Scales
+        var xAcc = sszvis.prop("percent");
+        var yAcc = sszvis.prop("value");
+        var cAcc = sszvis.prop("city");
 
-    var xScale = d3.scaleLinear()
-      .domain(state.xExtent)
-      .range([0, bounds.innerWidth]);
+        /* Application state
+        ----------------------------------------------- */
+        var state = {
+          data: [],
+          xExtent: [0, 1], // 0% - > 100%
+          yExtent: [],
+          cities: []
+        };
 
-    var yScale = d3.scaleLinear()
-      .domain(state.yExtent)
-      .range([bounds.innerHeight, 0]);
+        /* State transitions
+        ----------------------------------------------- */
+        var actions = {
+          prepareState: function(data) {
+            state.data = data;
+            state.yExtent = [0, d3.max(state.data, yAcc)];
+            state.cities = sszvis.set(state.data, cAcc);
 
-    var cScale = sszvis.scaleQual6()
-      .domain(state.cities);
+            render(state);
+          },
 
+          resize: function() {
+            render(state);
+          }
+        };
 
-    // Layers
+        /* Data initialization
+        ----------------------------------------------- */
+        d3.csv(config.data)
+          .row(parseRow)
+          .get(function(error, data) {
+            if (error) {
+              sszvis.loadError(error);
+              return;
+            }
+            actions.prepareState(data);
+          });
 
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
-      })
-      .datum(state.data);
+        /* Render
+        ----------------------------------------------- */
+        function render(state) {
+          var bounds = sszvis.bounds({ top: 20, bottom: 84 }, config.id);
 
+          // Scales
 
-    // Components
+          var xScale = d3
+            .scaleLinear()
+            .domain(state.xExtent)
+            .range([0, bounds.innerWidth]);
 
-    var dots = sszvis.dot()
-      .x(sszvis.compose(xScale, xAcc))
-      .y(sszvis.compose(yScale, yAcc))
-      .radius(4)
-      .fill(sszvis.compose(cScale, cAcc))
-      // use white outlines in scatterplots to assist in identifying distinct circles
-      .stroke('#FFFFFF');
+          var yScale = d3
+            .scaleLinear()
+            .domain(state.yExtent)
+            .range([bounds.innerHeight, 0]);
 
-    var referenceLine = sszvis.annotationLine()
-      .x1(0.0) // 0%
-      .y1(40)
-      .x2(1.0) // 100%
-      .y2(120)
-      .xScale(xScale)
-      .yScale(yScale)
-      // Position the label so it doesn't overlap with the data points
-      .dx(28)
-      .dy(-5)
-      .caption('Reference Line');
+          var cScale = sszvis.scaleQual6().domain(state.cities);
 
-    var xAxis = sszvis.axisX()
-      .scale(xScale)
-      .ticks(4)
-      .tickFormat(sszvis.formatFractionPercent)
-      .orient('bottom')
-      .alignOuterLabels(true);
+          // Layers
 
-    var yAxis = sszvis.axisY()
-      .scale(yScale)
-      .ticks(6)
-      .orient('right')
-      .contour(true);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-    var cLegend = sszvis.legendColorOrdinal()
-      .scale(cScale)
-      .horizontalFloat(true);
+          // Components
 
+          var dots = sszvis
+            .dot()
+            .x(sszvis.compose(xScale, xAcc))
+            .y(sszvis.compose(yScale, yAcc))
+            .radius(4)
+            .fill(sszvis.compose(cScale, cAcc))
+            // use white outlines in scatterplots to assist in identifying distinct circles
+            .stroke("#FFFFFF");
 
-    // Rendering
+          var referenceLine = sszvis
+            .annotationLine()
+            .x1(0.0) // 0%
+            .y1(40)
+            .x2(1.0) // 100%
+            .y2(120)
+            .xScale(xScale)
+            .yScale(yScale)
+            // Position the label so it doesn't overlap with the data points
+            .dx(28)
+            .dy(-5)
+            .caption("Reference Line");
 
-    // We place the reference line below the points whenever we can. If it isn't
-    // possible to place the label in a way that is readable, the reference line
-    // needs to be placed above the data points to make it readable.
-    chartLayer.selectGroup('referenceLine')
-      .datum([1])
-      .call(referenceLine);
+          var xAxis = sszvis
+            .axisX()
+            .scale(xScale)
+            .ticks(4)
+            .tickFormat(sszvis.formatFractionPercent)
+            .orient("bottom")
+            .alignOuterLabels(true);
 
-    chartLayer.selectGroup('dots')
-      .call(dots);
+          var yAxis = sszvis
+            .axisY()
+            .scale(yScale)
+            .ticks(6)
+            .orient("right")
+            .contour(true);
 
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.translateString(0, bounds.innerHeight))
-      .call(xAxis);
+          var cLegend = sszvis
+            .legendColorOrdinal()
+            .scale(cScale)
+            .horizontalFloat(true);
 
-    chartLayer.selectGroup('yAxis')
-      .call(yAxis);
+          // Rendering
 
-    chartLayer.selectGroup('cScale')
-      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
-      .call(cLegend);
+          // We place the reference line below the points whenever we can. If it isn't
+          // possible to place the label in a way that is readable, the reference line
+          // needs to be placed above the data points to make it readable.
+          chartLayer
+            .selectGroup("referenceLine")
+            .datum([1])
+            .call(referenceLine);
 
-    sszvis.viewport.on('resize', actions.resize);
-  }
+          chartLayer.selectGroup("dots").call(dots);
 
-}(d3, sszvis));
-</script>
-</body>
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+            .call(xAxis);
+
+          chartLayer.selectGroup("yAxis").call(yAxis);
+
+          chartLayer
+            .selectGroup("cScale")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
+            .call(cLegend);
+
+          sszvis.viewport.on("resize", actions.resize);
+        }
+      })(d3, sszvis, EXTERNAL_CONFIG);
+    </script>
+  </body>
 </html>

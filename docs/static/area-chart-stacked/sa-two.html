@@ -24,8 +24,6 @@
 
         /* Configuration
   ----------------------------------------------- */
-        var TITLE = "Diagrammtitel";
-        var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
         var MAX_BUTTON_WIDTH = 300;
         var queryProps = sszvis.responsiveProps().prop("controlWidth", {
           _: function(width) {
@@ -194,12 +192,7 @@
 
           // Layers
 
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: TITLE,
-              description: DESCRIPTION
-            })
-            .datum(state.stackedData);
+          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.stackedData);
 
           var htmlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds);
 

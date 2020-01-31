@@ -13,32 +13,46 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/StVB_2Categories_yearly.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function(d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id);
           return;
         }
 
         /* Configuration
-  ----------------------------------------------- */
-        var TITLE = "Diagrammtitel";
-        var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
+        ----------------------------------------------- */
         var queryProps = sszvis.responsiveProps().prop("barPadding", {
           _: 0.8
         });
 
+        function parseRow(d) {
+          return {
+            year: d["Jahr"],
+            region: d["Region"],
+            value: sszvis.parseNumber(d["Wert"])
+          };
+        }
+
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var xAcc = sszvis.prop("year");
         var yAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("region");
         var dataAcc = sszvis.prop("data");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           years: [],
@@ -48,7 +62,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           resize: function() {
             render(state);
@@ -56,15 +70,9 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
-        d3.csv("data/StVB_2Categories_yearly.csv")
-          .row(function(d) {
-            return {
-              year: d["Jahr"],
-              region: d["Region"],
-              value: sszvis.parseNumber(d["Wert"])
-            };
-          })
+        ----------------------------------------------- */
+        d3.csv(config.data)
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               return sszvis.loadError(error);
@@ -81,9 +89,9 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
-          var bounds = sszvis.bounds({ top: 30, bottom: 110 }, "#sszvis-chart");
+          var bounds = sszvis.bounds({ top: 30, bottom: 110 }, config.id);
           var props = queryProps(bounds);
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             bounds.innerWidth,
@@ -108,12 +116,7 @@
 
           // Layers
 
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: TITLE,
-              description: DESCRIPTION
-            })
-            .datum(state.stackedData);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedData);
 
           // Components
 
@@ -172,11 +175,11 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function yAxisLabel(d) {
           return d === 0 ? null : sszvis.formatFractionPercent(d);
         }
-      })(d3, sszvis);
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>

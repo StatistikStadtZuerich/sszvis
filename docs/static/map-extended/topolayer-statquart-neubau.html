@@ -188,12 +188,7 @@
             key: "topolayer"
           });
 
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: TITLE,
-              description: DESCRIPTION
-            })
-            .datum(state.data);
+          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
 
           var tooltipLayer = sszvis
             .createHtmlLayer("#sszvis-chart", bounds, {

@@ -26,8 +26,7 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+   
   var queryProps = sszvis.responsiveProps()
     .prop('bounds', {
       _: function(width) {
@@ -122,10 +121,7 @@
     // It's important that this html layer comes first, so that it lies under the svg
     var htmlLayer = sszvis.createHtmlLayer('#sszvis-chart', bounds);
 
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
-      });
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds  );
 
 
     // Components
