@@ -1,5 +1,3 @@
-# Change Log
-
 ## [In progress]
 
 - Change `formatNumber` to remove insignificant trailing zeros

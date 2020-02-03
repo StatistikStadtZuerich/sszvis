@@ -1,5 +1,3 @@
-# Stacked Bar Chart - Horizontal
-
 ## sszvis.stackedBarHorizontal
 
 ### Data structure

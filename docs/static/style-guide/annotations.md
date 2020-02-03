@@ -1,6 +1,4 @@
-# Annotations
-
-Annotations are used to highlight certain sections of a chart. They are added as an additional layer above or below the chart contents themselves. Annotations in sszvis are themselves examples of the reusable chart pattern, so as with chart components and tooltips, data must be bound to the annotation layer before rendering the annotation into it.
+> Annotations are used to highlight certain sections of a chart. They are added as an additional layer above or below the chart contents themselves. Annotations in sszvis are themselves examples of the reusable chart pattern, so as with chart components and tooltips, data must be bound to the annotation layer before rendering the annotation into it.
 
 ## Data Circle
 
@@ -36,13 +34,13 @@ The caption for the data area. (default position is the center of the circle).
 
 ```project
 {
-    "name": "line-chart-single-annotated",
+    "name": "line-chart-annotated",
     "files": {
         "index.html": {
-            "source": "line-chart-single/annotated.html",
+            "source": "line-chart/annotated.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-single/data/SL_daily.csv",
+        "data.csv": "line-chart/data/SL_daily.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
@@ -199,6 +197,28 @@ A string or function to specify the color of the ruler dots.
 #### `annotationRuler.[flip]`
 
 A boolean or function which returns a boolean that specifies whether the labels on the ruler dots should be flipped. (they default to the right side)
+
+### Chart
+
+Shows the numeric values at the current mouse position. The x-axis shows the current quarter (Q1–Q4). Demonstrates the usage of the `annotationRuler()`.
+
+```project
+{
+    "name": "line-chart-basic",
+    "files": {
+        "index.html": {
+            "source": "line-chart/basic-single.html",
+            "template": "template.html"
+        },
+        "data.csv": "line-chart/data/SL_quarterly.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "fallback.png",
+
+    },
+    "sourceView": ["index.html", "data.csv"]
+}
+```
 
 ## Range Ruler / Range Flag
 

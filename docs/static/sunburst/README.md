@@ -1,5 +1,3 @@
-# Sunburst Diagram
-
 ## sszvis.sunburst
 
 ### Data Structure
