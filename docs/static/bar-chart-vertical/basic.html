@@ -52,11 +52,11 @@
         function parseRow(d) {
           return {
             category: d["Sektor"],
-            value: sszvis.parseNumber(d["Anzahl"])
+            yValue: sszvis.parseNumber(d["Anzahl"])
           };
         }
         var xAcc = sszvis.prop("category");
-        var yAcc = sszvis.prop("value");
+        var yAcc = sszvis.prop("yValue");
 
         /* Application state
         ----------------------------------------------- */
@@ -178,8 +178,8 @@
           var tooltipHeader = sszvis
             .modularTextHTML()
             .bold(function(d) {
-              var value = yAcc(d);
-              return isNaN(value) ? "keine" : sszvis.formatNumber(value);
+              var yValue = yAcc(d);
+              return isNaN(yValue) ? "keine" : sszvis.formatNumber(yValue);
             })
             .plain("Beschäftigte");
 
@@ -237,9 +237,9 @@
           return (d3.max(range) - d3.min(range)) / range.length;
         }
 
-        function nanFallback(fallbackValue) {
+        function nanFallback(fallbackyValue) {
           return function(d) {
-            return isNaN(d) ? fallbackValue : d;
+            return isNaN(d) ? fallbackyValue : d;
           };
         }
       })(d3, sszvis, EXTERNAL_CONFIG);

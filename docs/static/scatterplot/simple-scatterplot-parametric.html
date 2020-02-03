@@ -119,10 +119,7 @@
   ----------------------------------------------- */
         function render(state) {
           //choose color scale depending on number of categories
-          var cScale =
-            state.cExtent.length > 6
-              ? sszvis.scaleQual12()
-              : sszvis.scaleQual6();
+          var cScale = state.cExtent.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
           cScale.domain(state.cExtent);
 
           var colorLegend = flexibleLegend(cScale, state.categories.length);
@@ -130,9 +127,7 @@
           var bounds = sszvis.bounds(
             {
               top: 20,
-              bottom:
-                config.legendPadding +
-                legendHeight(colorLegend, state.categories.length)
+              bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
             },
             "#sszvis-chart"
           );
@@ -154,9 +149,7 @@
           var yValue = sszvis.compose(yScale, yAcc);
 
           // Layers
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
-            .datum(state.data);
+          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
 
           var tooltipLayer = sszvis
             .createHtmlLayer("#sszvis-chart", bounds)
@@ -204,9 +197,7 @@
               return sszvis.contains(state.highlightData, d);
             })
             .orientation(function(d) {
-              return xValue(d.datum) <= bounds.innerWidth / 2
-                ? "left"
-                : "right";
+              return xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right";
             });
 
           // Rendering
@@ -242,13 +233,7 @@
 
           chartLayer
             .selectGroup("cScale")
-            .attr(
-              "transform",
-              sszvis.translateString(
-                0,
-                bounds.innerHeight + config.legendPadding
-              )
-            )
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + config.legendPadding))
             .call(colorLegend);
 
           chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
@@ -295,8 +280,7 @@
           return function(g) {
             g.selectAll("text").each(function() {
               var bottom = this.getBoundingClientRect().bottom;
-              if (bottom >= maxBottom)
-                d3.select(this.parentNode).style("display", "none");
+              if (bottom >= maxBottom) d3.select(this.parentNode).style("display", "none");
             });
           };
         }

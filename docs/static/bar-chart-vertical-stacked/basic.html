@@ -63,14 +63,14 @@
 
         function parseRow(d) {
           return {
-            year: d["Jahr"],
+            xValue: d["Jahr"],
             category: d["Berufsfeld"],
-            value: sszvis.parseNumber(d["Anzahl"])
+            yValue: sszvis.parseNumber(d["Anzahl"])
           };
         }
 
-        var xAcc = sszvis.prop("year");
-        var yAcc = sszvis.prop("value");
+        var xAcc = sszvis.prop("xValue");
+        var yAcc = sszvis.prop("yValue");
         var cAcc = sszvis.prop("category");
         var dataAcc = sszvis.prop("data");
 

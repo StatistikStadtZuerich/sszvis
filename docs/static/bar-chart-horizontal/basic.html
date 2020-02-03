@@ -45,10 +45,10 @@
         function parseRow(d) {
           return {
             category: d["Sektor"],
-            value: sszvis.parseNumber(d["Zupendler"])
+            xValue: sszvis.parseNumber(d["Zupendler"])
           };
         }
-        var xAcc = sszvis.prop("value");
+        var xAcc = sszvis.prop("xValue");
         var cAcc = sszvis.prop("category");
 
         /* Application state
