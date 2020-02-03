@@ -1,5 +1,3 @@
-# Signature Maps
-
 ## Bubble Map
 
 The "bubble map" concept is a map with sized circle data overlays for each map entity. The map shapes should be rendered with the standard map class for the type you want, and then the circles overhead are rendered as an "anchored shape".
@@ -8,7 +6,7 @@ The "bubble map" concept is a map with sized circle data overlays for each map e
 
 This is an "anchored shape" used to render circles above map entities.
 
-### Data Structures 
+### Data Structures
 
 Expects an array of data which can be matched to map entities, much like the base map components.
 

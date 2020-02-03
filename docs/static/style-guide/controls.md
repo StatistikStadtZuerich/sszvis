@@ -1,6 +1,4 @@
-# Controls
-
-Controls can be used to provide a graphical tool for interacting with a chart's state settings.
+> Controls can be used to provide a graphical tool for interacting with a chart's state settings.
 
 ## Button Group Control
 
@@ -40,7 +38,7 @@ A callback/event handler function to call when the user clicks on a value. Note 
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -138,7 +136,7 @@ A callback function called whenever user interaction attempts to change the slid
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -190,7 +188,7 @@ A boolean or boolean function which determines whether the ruler should be flipp
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }

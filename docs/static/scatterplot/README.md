@@ -1,5 +1,3 @@
-# Scatterplot
-
 > Scatterplots are used to display relationships between two numeric values of a dataset. They are useful for displaying correlations and trends which appear when you organize the dimensions next to each other.
 
 ## sszvis.dot
@@ -46,7 +44,7 @@ To clip the contents of the chart to chart boundaries (useful for scatterplots w
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -68,7 +66,7 @@ Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
@@ -88,7 +86,7 @@ Scatterplot with variable radius and [Voronoi cell](http://bl.ocks.org/mbostock/
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }

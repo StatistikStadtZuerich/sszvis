@@ -1,5 +1,3 @@
-# Bar Chart - Simple Horizontal Bar Chart
-
 > Bar charts are suited to comparing numeric values for different categories. The categories can be ordered or unordered, numeric or non-numeric.
 
 ## sszvis.bar

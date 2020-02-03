@@ -1,5 +1,3 @@
-# Behavior
-
 > SSZVIS supports many different types of interaction behavior. Some of those can be defined directly by selecting DOM elements and attaching event handlers, and others are more complicated, requiring special components to manage them. At the time of writing, there are three such special behavior components, `sszvis.move`, `sszvis.panning`, and `sszvis.voronoi`. Generally speaking, examples using each of these behavior types are sprinkled throughout the documentation for this library. If you are building a certain chart type that consistently uses a given behavior component in the examples, it is recommended that you follow that lead in your own case. However, some chart types, notably bar charts, are suitable to several different types of behavior, the optimal choice depending on the nature of the chart and even on the nature of the data. Collected here are potentially useful notes about choosing the right behavior component for your chart. In all cases, you can refer to the source code for the individual behaviors, and to the examples which use them, for more information on how to choose the right one for your chart.
 
 ## Move behavior

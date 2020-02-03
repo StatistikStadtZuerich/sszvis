@@ -64,11 +64,6 @@ const pages = [
         content: staticMarkdown("style-guide/legends.md")
       },
       {
-        path: "formats",
-        title: "Formatting",
-        content: staticMarkdown("style-guide/formats.md")
-      },
-      {
         path: "tooltips",
         title: "Tooltips",
         content: staticMarkdown("style-guide/tooltips.md"),
@@ -96,18 +91,7 @@ const pages = [
   {
     path: "line-charts",
     title: "Line charts",
-    pages: [
-      {
-        path: "line-chart-single",
-        title: "Single",
-        content: staticMarkdown("line-chart-single/README.md")
-      },
-      {
-        path: "line-chart-multiple",
-        title: "Multiple",
-        content: staticMarkdown("line-chart-multiple/README.md")
-      }
-    ]
+    content: staticMarkdown("line-chart/README.md")
   },
   {
     path: "bar-charts",

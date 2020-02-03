@@ -1,5 +1,3 @@
-# Population Pyramid
-
 > The population pyramid is used to show how a measurement varies across ages, or ranges of ages, within a population.
 
 The most common example is to show the number of people in the population for each age. In addition, population pyramids are mirrored, with a left and right side. The sides contrast differences across a binary variable, usually gender. More generally, the mirrored bar charts form could be used to display any contrast across a binary variable, with any type of variable mapped to the vertical dimension, but it is almost always used for population display, and it should be explicitly noted where that is not the case. As you will see from the examples, it is also possible to display bins computed from the population based on age range.

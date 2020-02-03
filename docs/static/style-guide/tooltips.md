@@ -1,6 +1,4 @@
-# Tooltips
-
-Tooltips are used to highlight particular data values or chart points of interest. They can also be used to facilitate chart reading by allowing the user to focus on a particular visual object and retrieve more information about it.
+> Tooltips are used to highlight particular data values or chart points of interest. They can also be used to facilitate chart reading by allowing the user to focus on a particular visual object and retrieve more information about it.
 
 ## Tooltip Class
 
@@ -40,363 +38,384 @@ A number for the y-offset of the tooltip.
 
 A function or number which determines the opacity of the tooltip. Default is 1.
 
-
 ## Mini
 
 This is the most basic tooltip form. Only the `.header` accessor function is used. You could also use only `.body`. This tooltip uses a modular text instance which accesses and formats data values, then renders them as bold html text.
 
 ```html|plain,run-script
-<div id='miniBottom' class='tooltip-container'></div>
+<div id="miniBottom" class="tooltip-container"></div>
 <script>
-var id = 'miniBottom';
+  var id = "miniBottom";
 
-var data = [{
-    value: 34
-}];
+  var data = [
+    {
+      value: 34
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 70,
     height: 41
-};
+  };
 
-var position = [ 35, 41 ];
+  var position = [35, 41];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('bottom')
-    .header(sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value'))));
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("bottom")
+    .header(
+      sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop("value")))
+    );
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='miniTop' class='tooltip-container'></div>
+<div id="miniTop" class="tooltip-container"></div>
 <script>
-var id = 'miniTop';
+  var id = "miniTop";
 
-var data = [{
-    value: 34
-}];
+  var data = [
+    {
+      value: 34
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 70,
     height: 41
-};
+  };
 
-var position = [ 35, 0 ];
+  var position = [35, 0];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('top')
-    .header(sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value'))));
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("top")
+    .header(
+      sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop("value")))
+    );
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='miniLeft' class='tooltip-container'></div>
+<div id="miniLeft" class="tooltip-container"></div>
 <script>
-var id = 'miniLeft';
+  var id = "miniLeft";
 
-var data = [{
-    value: 34
-}];
+  var data = [
+    {
+      value: 34
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 76,
     height: 35
-};
+  };
 
-var position = [ 0, 17 ];
+  var position = [0, 17];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('left')
-    .header(sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value'))));
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("left")
+    .header(
+      sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop("value")))
+    );
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='miniRight' class='tooltip-container'></div>
+<div id="miniRight" class="tooltip-container"></div>
 <script>
-var id = 'miniRight';
+  var id = "miniRight";
 
-var data = [{
-    value: 34
-}];
+  var data = [
+    {
+      value: 34
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 76,
     height: 35
-};
+  };
 
-var position = [ 76, 17 ];
+  var position = [76, 17];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('right')
-    .header(sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value'))));
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("right")
+    .header(
+      sszvis.modularTextHTML().bold(sszvis.compose(sszvis.formatPercent, sszvis.prop("value")))
+    );
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 ```
-
 
 ## Medium
 
 This example demonstrates use of both the `.header` and `.body` accessor functions. A bold section in the header modular text is used to highlight the data value.
 
 ```html|plain,run-script
-<div id='medBot' class='tooltip-container'></div>
+<div id="medBot" class="tooltip-container"></div>
 <script>
-var id = 'medBot';
+  var id = "medBot";
 
-var data = [{
-    value: 67
-}];
+  var data = [
+    {
+      value: 67
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 113,
     height: 63
-};
+  };
 
-var position = [ 55, 63 ];
+  var position = [55, 63];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('bottom')
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("bottom")
     .header(
-        sszvis.modularTextHTML()
-            .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value')))
-            .plain('Anteile')
+      sszvis
+        .modularTextHTML()
+        .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop("value")))
+        .plain("Anteile")
     )
-    .body('im Kanton Zurich');
+    .body("im Kanton Zurich");
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='medTop' class='tooltip-container'></div>
+<div id="medTop" class="tooltip-container"></div>
 <script>
-var id = 'medTop';
+  var id = "medTop";
 
-var data = [{
-    value: 67
-}];
+  var data = [
+    {
+      value: 67
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 113,
     height: 63
-};
+  };
 
-var position = [ 55, 0 ];
+  var position = [55, 0];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('top')
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("top")
     .header(
-        sszvis.modularTextHTML()
-            .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value')))
-            .plain('Anteile')
+      sszvis
+        .modularTextHTML()
+        .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop("value")))
+        .plain("Anteile")
     )
-    .body('im Kanton Zurich');
+    .body("im Kanton Zurich");
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='medLeft' class='tooltip-container'></div>
+<div id="medLeft" class="tooltip-container"></div>
 <script>
-var id = 'medLeft';
+  var id = "medLeft";
 
-var data = [{
-    value: 67
-}];
+  var data = [
+    {
+      value: 67
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 119,
     height: 57
-};
+  };
 
-var position = [ 0, 28 ];
+  var position = [0, 28];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('left')
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("left")
     .header(
-        sszvis.modularTextHTML()
-            .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value')))
-            .plain('Anteile')
+      sszvis
+        .modularTextHTML()
+        .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop("value")))
+        .plain("Anteile")
     )
-    .body('im Kanton Zurich');
+    .body("im Kanton Zurich");
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='medRight' class='tooltip-container'></div>
+<div id="medRight" class="tooltip-container"></div>
 <script>
-var id = 'medRight';
+  var id = "medRight";
 
-var data = [{
-    value: 67
-}];
+  var data = [
+    {
+      value: 67
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 119,
     height: 57
-};
+  };
 
-var position = [ 119, 28 ];
+  var position = [119, 28];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('right')
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("right")
     .header(
-        sszvis.modularTextHTML()
-            .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop('value')))
-            .plain('Anteile')
+      sszvis
+        .modularTextHTML()
+        .bold(sszvis.compose(sszvis.formatPercent, sszvis.prop("value")))
+        .plain("Anteile")
     )
-    .body('im Kanton Zurich');
+    .body("im Kanton Zurich");
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 ```
-
 
 ## Maxi
 
 For tabular-format tooltips, the `.body` accessor function should return an array of arrays. Each sub-array becomes a row in the tooltip table. This format is useful for displaying multiple data values. The elements of the sub array are placed into the resulting table row in order.
 
 ```html|plain,run-script
-<div id='maxBot' class='tooltip-container'></div>
+<div id="maxBot" class="tooltip-container"></div>
 <script>
-var id = 'maxBot';
+  var id = "maxBot";
 
-var data = [{
-    value: [
-        ['Frauen', sszvis.formatPercent(49)],
-        ['Männer', sszvis.formatPercent(51)]
-    ]
-}];
+  var data = [
+    {
+      value: [
+        ["Frauen", sszvis.formatPercent(49)],
+        ["Männer", sszvis.formatPercent(51)]
+      ]
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 150,
     height: 110
-};
+  };
 
-var position = [ 75, 110 ];
+  var position = [75, 110];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('bottom')
-    .header(
-        sszvis.modularTextHTML()
-            .plain('Titel')
-    )
-    .body(sszvis.prop('value'));
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("bottom")
+    .header(sszvis.modularTextHTML().plain("Titel"))
+    .body(sszvis.prop("value"));
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='maxTop' class='tooltip-container'></div>
+<div id="maxTop" class="tooltip-container"></div>
 <script>
-var id = 'maxTop';
+  var id = "maxTop";
 
-var data = [{
-    value: [
-        ['Frauen', sszvis.formatPercent(49)],
-        ['Männer', sszvis.formatPercent(51)]
-    ]
-}];
+  var data = [
+    {
+      value: [
+        ["Frauen", sszvis.formatPercent(49)],
+        ["Männer", sszvis.formatPercent(51)]
+      ]
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 150,
     height: 110
-};
+  };
 
-var position = [ 75, 0 ];
+  var position = [75, 0];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('top')
-    .header(
-        sszvis.modularTextHTML()
-            .plain('Titel')
-    )
-    .body(sszvis.prop('value'));
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("top")
+    .header(sszvis.modularTextHTML().plain("Titel"))
+    .body(sszvis.prop("value"));
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='maxLeft' class='tooltip-container'></div>
+<div id="maxLeft" class="tooltip-container"></div>
 <script>
-var id = 'maxLeft';
+  var id = "maxLeft";
 
-var data = [{
-    value: [
-        ['Frauen', sszvis.formatPercent(49)],
-        ['Männer', sszvis.formatPercent(51)]
-    ]
-}];
+  var data = [
+    {
+      value: [
+        ["Frauen", sszvis.formatPercent(49)],
+        ["Männer", sszvis.formatPercent(51)]
+      ]
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 156,
     height: 104
-};
+  };
 
-var position = [ 0, 52 ];
+  var position = [0, 52];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('left')
-    .header(
-        sszvis.modularTextHTML()
-            .plain('Titel')
-    )
-    .body(sszvis.prop('value'));
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("left")
+    .header(sszvis.modularTextHTML().plain("Titel"))
+    .body(sszvis.prop("value"));
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 
-<div id='maxRight' class='tooltip-container'></div>
+<div id="maxRight" class="tooltip-container"></div>
 <script>
-var id = 'maxRight';
+  var id = "maxRight";
 
-var data = [{
-    value: [
-        ['Frauen', sszvis.formatPercent(49)],
-        ['Männer', sszvis.formatPercent(51)]
-    ]
-}];
+  var data = [
+    {
+      value: [
+        ["Frauen", sszvis.formatPercent(49)],
+        ["Männer", sszvis.formatPercent(51)]
+      ]
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 156,
     height: 104
-};
+  };
 
-var position = [ 156, 52 ];
+  var position = [156, 52];
 
-var tooltip = getTooltipComponent(id, data)
-    .orientation('right')
-    .header(
-        sszvis.modularTextHTML()
-            .plain('Titel')
-    )
-    .body(sszvis.prop('value'));
+  var tooltip = getTooltipComponent(id, data)
+    .orientation("right")
+    .header(sszvis.modularTextHTML().plain("Titel"))
+    .body(sszvis.prop("value"));
 
-renderTooltip(id, dimensions, data, position, tooltip);
+  renderTooltip(id, dimensions, data, position, tooltip);
 </script>
 ```
-
 
 ## Tooltip Anchors
 
 Tooltip anchors provide a useful abstraction for positioning tooltips. They are not necessary for creating and positioning tooltips, but they are used by the sszvis components for this purpose. The tooltipAnchor class is configured with a position function, which tells each instance of the configured anchor where to place itself. The tooltips bound to these anchors will be positioned at that location. For help while developing, the `.debug` option can be set to true in order to reveal the position of the anchor, as seen in the example below.
 
 ```html|plain,run-script
-<div id='tooltipAnchor' class='tooltip-container'></div>
+<div id="tooltipAnchor" class="tooltip-container"></div>
 <script>
-var id = 'tooltipAnchor';
+  var id = "tooltipAnchor";
 
-var data = [{
-    value: 20
-}];
+  var data = [
+    {
+      value: 20
+    }
+  ];
 
-var dimensions = {
+  var dimensions = {
     width: 100,
     height: 60
-};
+  };
 
-var position = [ 50, 50 ];
+  var position = [50, 50];
 
-var tooltip = getTooltipComponent(id, data)
-    .body('caption');
+  var tooltip = getTooltipComponent(id, data).body("caption");
 
-renderTooltip(id, dimensions, data, position, tooltip, true);
+  renderTooltip(id, dimensions, data, position, tooltip, true);
 </script>
 ```
