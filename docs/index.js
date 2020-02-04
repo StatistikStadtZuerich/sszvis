@@ -90,17 +90,6 @@ const pages = [
     ]
   },
   {
-    path: "starter",
-    title: "Starter charts",
-    pages: [
-      {
-        path: "examples",
-        title: "Examples",
-        content: staticMarkdown("beginners.md")
-      }
-    ]
-  },
-  {
     path: "area-chart-stacked",
     title: "+ Area chart",
     content: staticMarkdown("area-chart-stacked/README.md")

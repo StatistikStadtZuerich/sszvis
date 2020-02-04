@@ -33,29 +33,46 @@
         /* Configuration
         ----------------------------------------------- */
 
-        var queryProps = sszvis.responsiveProps().prop("xAxisSlant", {
-          palm: "vertical",
-          _: "diagonal"
-        });
-
         function parseRow(d) {
           return {
-            kreis: d["KName"],
-            agegroup: d["Altersgruppe"],
+            xPosition: d["KName"],
+            yPosition: d["Altersgruppe"],
             value: sszvis.parseNumber(d["Anzahl"])
           };
         }
 
-        var xAcc = sszvis.prop("kreis");
-        var yAcc = sszvis.prop("agegroup");
-        var cAcc = sszvis.prop("value");
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("xAxisSlant", {
+            palm: "vertical",
+            _: "diagonal"
+          })
+          .prop("xAxisLabel", {
+            _: "Kreis"
+          })
+          .prop("yAxisLabel", {
+            _: "Altersgruppe"
+          })
+          .prop("valueLabel", {
+            _: "Einwohner"
+          })
+          .prop("tSourceAxis", {
+            _: "x"
+          })
+          .prop("tTitleAdd", {
+            _: ""
+          });
+
+        var xAcc = sszvis.prop("xPosition");
+        var yAcc = sszvis.prop("yPosition");
+        var vAcc = sszvis.prop("value");
 
         /* Application state
         ----------------------------------------------- */
         var state = {
           data: [],
-          agesList: [],
-          kreisList: [],
+          yList: [],
+          xList: [],
           valueDomain: [0, 0],
           selection: []
         };
@@ -65,9 +82,9 @@
         var actions = {
           prepareState: function(data) {
             state.data = data;
-            state.agesList = sszvis.set(state.data, yAcc).sort(sortInt);
-            state.kreisList = sszvis.set(state.data, xAcc).sort(sortKreisInt);
-            state.valueDomain = d3.extent(state.data, cAcc);
+            state.yList = sszvis.set(state.data, yAcc).sort(sortInt);
+            state.xList = sszvis.set(state.data, xAcc).sort(sortKreisInt);
+            state.valueDomain = d3.extent(state.data, vAcc);
 
             render(state);
           },
@@ -104,20 +121,25 @@
         function render(state) {
           var containerWidth = sszvis.measureDimensions(config.id).width;
           var squarePadding = 2;
-          // When you write your own code, these values should be big enough to fit all axis labels
-          // And the legend below the chart
-          var tablePadding = { top: 60, right: 0, left: 66, bottom: 40 };
+          var tablePadding = {
+            top: 60,
+            right: 0,
+            bottom: 40,
+            left: 66
+          };
           // heatTableDimensions calculates a set of useful properties for configuring the heat table.
           // give it the targeted width (final width will not necessarily match this), the padding between squares, and the number of squares
           // in each dimension (x, then y)
           var tableDimensions = sszvis.dimensionsHeatTable(
             containerWidth,
             squarePadding,
-            state.kreisList.length,
-            state.agesList.length,
+            state.xList.length,
+            state.yList.length,
             tablePadding
           );
 
+          // construct the bounds as usual, but add the left and right padding to the width, and the top and bottom padding to the height
+          // This is because, when bounds are being constructed, the padding is subtracted from width and height to provide innerWidth and innerHeight, but we want these values to represent the table's dimensions
           var bounds = sszvis.bounds(
             {
               height: tablePadding.top + tableDimensions.height + tablePadding.bottom,
@@ -129,7 +151,7 @@
             config.id
           );
 
-          var props = queryProps(bounds);
+          var props = queryProps(sszvis.measureDimensions(config.id));
 
           // Scales
 
@@ -138,14 +160,14 @@
             .padding(tableDimensions.padRatio)
             .paddingOuter(0)
             .rangeRound([0, tableDimensions.width])
-            .domain(state.kreisList);
+            .domain(state.xList);
 
           var yScale = d3
             .scaleBand()
             .padding(tableDimensions.padRatio)
             .paddingOuter(0)
             .rangeRound([0, tableDimensions.height])
-            .domain(state.agesList);
+            .domain(state.yList);
 
           var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
@@ -157,7 +179,7 @@
               : v === 0
               ? sszvis.scaleLightGry()(v)
               : colorScale(v);
-          }, cAcc);
+          }, vAcc);
 
           // Layers
 
@@ -180,7 +202,7 @@
             .height(tableDimensions.side)
             .fill(cValue)
             .stroke(function(d) {
-              return !isNaN(cAcc(d)) && sszvis.contains(state.selection, d)
+              return !isNaN(vAcc(d)) && sszvis.contains(state.selection, d)
                 ? sszvis.slightlyDarker(cValue(d))
                 : "none";
             });
@@ -192,7 +214,7 @@
             .slant(props.xAxisSlant)
             .tickSize(0, 0)
             .tickPadding(0)
-            .title("Kreis")
+            .title(props.xAxisLabel)
             .titleAnchor("middle")
             .titleCenter(true)
             .dyTitle(-40)
@@ -206,7 +228,7 @@
             .ordinal()
             .scale(yScale)
             .orient("left")
-            .title("Altersgruppe")
+            .title(props.yAxisLabel)
             .titleVertical(true)
             .titleAnchor("middle")
             .titleCenter(true)
@@ -230,13 +252,27 @@
           var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
-            .header(xAcc)
+            .header(function(d) {
+              if (props.tSourceAxis === "y") {
+                return yAcc(d) + " " + props.tTitleAdd;
+              } else {
+                return xAcc(d) + " " + props.tTitleAdd;
+              }
+            })
             .body(function(d) {
-              var v = cAcc(d);
-              return [
-                ["Altersgruppe", yAcc(d)],
-                ["Einwohner", isNaN(v) ? "–" : sszvis.formatNumber(v)]
-              ];
+              var v = vAcc(d);
+              var y = yAcc(d);
+              if (props.tSourceAxis === "y") {
+                return [
+                  [props.xAxisLabel, xAcc(d)],
+                  [props.valueLabel, isNaN(v) ? "–" : sszvis.formatNumber(v)]
+                ];
+              } else {
+                return [
+                  [props.yAxisLabel, yAcc(d)],
+                  [props.valueLabel, isNaN(v) ? "–" : sszvis.formatNumber(v)]
+                ];
+              }
             })
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .visible(isSelected);
