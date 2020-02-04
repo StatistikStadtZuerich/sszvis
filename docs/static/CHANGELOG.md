@@ -8,6 +8,7 @@
 - Created new module `sszvis/measure` with utilities to measure elements
 - Added new function `legendBounds` to compute rows, columns, and widths for color legends
 - Fixed cut-off of color legend circle
+- Removed distinction between single- and multi-line chart
 
 ## 2.0 (Dec 2017)
 

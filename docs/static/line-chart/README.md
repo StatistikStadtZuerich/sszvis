@@ -34,6 +34,24 @@ String or function to set the stroke thickness (default: 1)
 
 ```project
 {
+    "name": "line-chart-single-basic",
+    "files": {
+        "index.html": {
+            "source": "line-chart/basic-single.html",
+            "template": "template.html"
+        },
+        "data.csv": "line-chart-single/data/SL_quarterly.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "fallback.png",
+
+    },
+    "sourceView": ["index.html", "data.csv"]
+}
+```
+
+```project
+{
     "name": "line-chart-basic",
     "files": {
         "index.html": {
