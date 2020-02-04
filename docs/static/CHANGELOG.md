@@ -7,6 +7,7 @@
 - Added new function `measureLegendLabel` as a preset of `measureText`
 - Created new module `sszvis/measure` with utilities to measure elements
 - Added new function `legendBounds` to compute rows, columns, and widths for color legends
+- Fixed cut-off of color legend circle
 
 ## 2.0 (Dec 2017)
 

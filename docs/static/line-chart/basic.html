@@ -219,7 +219,7 @@
             chartLayer
               .selectGroup("cLegend")
               // the color legend should always be positioned 60px below the bottom axis
-              .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
+              .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
               .call(cLegend);
           }
 

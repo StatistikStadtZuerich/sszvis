@@ -160,7 +160,7 @@ export default function() {
 
       marks
         .merge(newMarks)
-        .attr("cx", props.rightAlign ? -5 : 5)
+        .attr("cx", props.rightAlign ? -6 : 6)
         .attr("cy", halfPixel(props.rowHeight / 2))
         .attr("r", 5)
         .attr("fill", function(d) {
