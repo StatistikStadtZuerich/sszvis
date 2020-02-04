@@ -17,6 +17,8 @@ import { isSelection, isString } from "./fn";
  * @returns { columns: number, rows: number, height: number, width: number, columnWidth: number }
  */
 export var legendBounds = (function() {
+  var DEFAULT_COLUMN_COUNT = 2;
+
   function numCols(totalWidth, columnWidth, num) {
     return num <= 1
       ? 1
@@ -28,7 +30,9 @@ export var legendBounds = (function() {
   return function(options, container) {
     var width = measureDimensions(container).width;
     var maxLabelWidth = d3.max(options.labels, measureLegendLabel) + 40;
-    var columns = numCols(width, maxLabelWidth, options.columnCount || 3);
+    // Use a single column for fewer than five items
+    var columnCount = options.labels.length < 5 ? 1 : options.columnCount || DEFAULT_COLUMN_COUNT;
+    var columns = numCols(width, maxLabelWidth, columnCount);
     var rows = Math.ceil(options.labels.length / columns);
     return {
       columns: columns,
