@@ -63,13 +63,13 @@ This x-axis displays time values
 
 ```project
 {
-    "name": "line-chart-single-basic",
+    "name": "line-chart-basic",
     "files": {
         "index.html": {
-            "source": "line-chart/basic-single.html",
+            "source": "line-chart/basic.html",
             "template": "template.html"
         },
-        "data.csv": "line-chart-single/data/SL_quarterly.csv",
+        "data.csv": "line-chart/data/ML_2Categories_Quarterly.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",

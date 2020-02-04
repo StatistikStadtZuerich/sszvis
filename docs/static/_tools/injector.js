@@ -55,7 +55,6 @@
     "/line-chart/parametric.html",
     "/line-chart/two-axis.html",
     "/line-chart/annotated.html",
-    "/line-chart/basic-single.html",
     "/map-extended/quartiere-neubau.html",
     "/map-extended/rastermap-bins-100m.html",
     "/map-extended/rastermap-bins-200m.html",
