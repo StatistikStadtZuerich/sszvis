@@ -243,13 +243,13 @@ This x-axis has a diagonal slant. Here are the guidelines for changing the slant
 
 ```project
 {
-    "name": "bar-chart-vertical-stacked",
+    "name": "bar-chart-grouped_basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical-stacked/two-cat.html",
+            "source": "bar-chart-grouped/basic.html",
             "template": "template.html"
         },
-        "data.csv": "bar-chart-vertical-stacked/data/StVB_2Categories_yearly.csv",
+        "data.csv": "bar-chart-grouped/data/GB_3Categories_yearly_negatives.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",

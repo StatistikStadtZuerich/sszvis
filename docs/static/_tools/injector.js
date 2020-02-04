@@ -46,7 +46,6 @@
     "/bar-chart-horizontal/basic.html",
     "/bar-chart-vertical-stacked/eight-cat.html",
     "/bar-chart-vertical-stacked/basic.html",
-    "/bar-chart-vertical-stacked/two-cat.html",
     "/bar-chart-vertical/basic.html",
     "/bar-chart-vertical/many-years.html",
     "/heat-table/ht-binned-linear.html",
