@@ -18,6 +18,7 @@
         data: "data/StVB_7Categories_yearly.csv",
         id: "#sszvis-chart",
         fallback: "fallback.png",
+        // This chart has the title and description as an example for the Accessibility guide
         title: "Beschäftigte nach Berufsfeld und Jahr",
         description:
           "Die Anzahl der Beschäftigten nahm seit 1980 um 40% zu und liegt heute bei ca. 180000 Beschäftigten."
@@ -62,14 +63,14 @@
 
         function parseRow(d) {
           return {
-            year: d["Jahr"],
+            xValue: d["Jahr"],
             category: d["Berufsfeld"],
-            value: sszvis.parseNumber(d["Anzahl"])
+            yValue: sszvis.parseNumber(d["Anzahl"])
           };
         }
 
-        var xAcc = sszvis.prop("year");
-        var yAcc = sszvis.prop("value");
+        var xAcc = sszvis.prop("xValue");
+        var yAcc = sszvis.prop("yValue");
         var cAcc = sszvis.prop("category");
         var dataAcc = sszvis.prop("data");
 

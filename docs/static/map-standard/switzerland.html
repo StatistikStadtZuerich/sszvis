@@ -26,8 +26,7 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
+   
   var MAX_LEGEND_WIDTH = 320;
   var queryProps = sszvis.responsiveProps()
     .prop('bounds', {
@@ -130,10 +129,7 @@
 
     // Layers
 
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
-      })
+    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds)
       .datum(state.data);
 
 

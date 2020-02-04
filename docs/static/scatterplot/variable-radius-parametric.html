@@ -23,7 +23,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var config = {
           // The path to the CSV file containing the data for this chart
           dataPath: "data/VRS_basic_linear.csv",
@@ -51,14 +51,14 @@
         };
 
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var xAcc = sszvis.prop("xPosition");
         var yAcc = sszvis.prop("yPosition");
         var rAcc = sszvis.prop("radius");
         var cAcc = sszvis.prop("label");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           highlightData: [],
@@ -68,7 +68,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -82,10 +82,7 @@
             state.xExtent = d3.extent(state.data, xAcc);
             state.yExtent = d3.extent(state.data, yAcc);
             var radiusExtent = d3.extent(state.data, rAcc);
-            state.rExtent = [
-              Math.floor(radiusExtent[0]),
-              Math.ceil(radiusExtent[1])
-            ];
+            state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
 
             render(state);
           },
@@ -106,7 +103,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.dataPath)
           .row(function(d) {
             return {
@@ -125,7 +122,7 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           var bounds = sszvis.bounds({ top: 20, bottom: 110 }, "#sszvis-chart");
 
@@ -152,9 +149,7 @@
 
           // Layers
 
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
-            .datum(state.data);
+          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
 
           var tooltipLayer = sszvis
             .createHtmlLayer("#sszvis-chart", bounds)
@@ -213,9 +208,7 @@
               return sszvis.contains(state.highlightData, d);
             })
             .orientation(function(d) {
-              return xValue(d.datum) <= bounds.innerWidth / 2
-                ? "left"
-                : "right";
+              return xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right";
             });
 
           // Rendering
@@ -243,13 +236,7 @@
 
           chartLayer
             .selectGroup("radiusLegend")
-            .attr(
-              "transform",
-              sszvis.translateString(
-                1,
-                bounds.innerHeight + config.legendPadding
-              )
-            )
+            .attr("transform", sszvis.translateString(1, bounds.innerHeight + config.legendPadding))
             .call(radiusLegend);
 
           chartLayer
@@ -285,14 +272,13 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         function removeOverlappingYTickLabels(maxBottom) {
           return function(g) {
             g.selectAll("text").each(function() {
               var bottom = this.getBoundingClientRect().bottom;
-              if (bottom >= maxBottom)
-                d3.select(this.parentNode).style("display", "none");
+              if (bottom >= maxBottom) d3.select(this.parentNode).style("display", "none");
             });
           };
         }

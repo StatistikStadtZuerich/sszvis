@@ -155,12 +155,7 @@
 
           // Layers
 
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds, {
-              title: TITLE,
-              description: DESCRIPTION
-            })
-            .datum(state.lineData);
+          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.lineData);
 
           // Components
 

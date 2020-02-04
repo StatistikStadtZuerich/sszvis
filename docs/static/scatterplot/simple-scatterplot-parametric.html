@@ -23,7 +23,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var config = {
           // The path to the CSV file containing the data for this chart
           dataPath: "data/SS_refline_fake.csv",
@@ -46,13 +46,13 @@
         };
 
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var xAcc = sszvis.prop("xPosition");
         var yAcc = sszvis.prop("yPosition");
         var cAcc = sszvis.prop("category");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           highlightData: [],
@@ -62,7 +62,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -98,7 +98,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.dataPath)
           .row(function(d) {
             return {
@@ -116,13 +116,10 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           //choose color scale depending on number of categories
-          var cScale =
-            state.cExtent.length > 6
-              ? sszvis.scaleQual12()
-              : sszvis.scaleQual6();
+          var cScale = state.cExtent.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
           cScale.domain(state.cExtent);
 
           var colorLegend = flexibleLegend(cScale, state.categories.length);
@@ -130,9 +127,7 @@
           var bounds = sszvis.bounds(
             {
               top: 20,
-              bottom:
-                config.legendPadding +
-                legendHeight(colorLegend, state.categories.length)
+              bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
             },
             "#sszvis-chart"
           );
@@ -154,9 +149,7 @@
           var yValue = sszvis.compose(yScale, yAcc);
 
           // Layers
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
-            .datum(state.data);
+          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
 
           var tooltipLayer = sszvis
             .createHtmlLayer("#sszvis-chart", bounds)
@@ -204,9 +197,7 @@
               return sszvis.contains(state.highlightData, d);
             })
             .orientation(function(d) {
-              return xValue(d.datum) <= bounds.innerWidth / 2
-                ? "left"
-                : "right";
+              return xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right";
             });
 
           // Rendering
@@ -242,13 +233,7 @@
 
           chartLayer
             .selectGroup("cScale")
-            .attr(
-              "transform",
-              sszvis.translateString(
-                0,
-                bounds.innerHeight + config.legendPadding
-              )
-            )
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + config.legendPadding))
             .call(colorLegend);
 
           chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
@@ -276,7 +261,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function flexibleLegend(scale, numEntries) {
           var legend = sszvis.legendColorOrdinal().scale(scale);
           if (numEntries <= 4) {
@@ -295,8 +280,7 @@
           return function(g) {
             g.selectAll("text").each(function() {
               var bottom = this.getBoundingClientRect().bottom;
-              if (bottom >= maxBottom)
-                d3.select(this.parentNode).style("display", "none");
+              if (bottom >= maxBottom) d3.select(this.parentNode).style("display", "none");
             });
           };
         }

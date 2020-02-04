@@ -13,8 +13,16 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/SA_2Categories_yearly.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function(d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -24,31 +32,35 @@
 
         /* Configuration
         ----------------------------------------------- */
-        var config = {
-          // The path to the CSV file containing the data for this chart
-          dataPath: "data/SA_2Categories_yearly.csv",
-          // Data column to use for the x-axis
-          xColumn: "Jahr",
-          // Data column to use for the y-axis
-          yColumn: "Anzahl",
-          // Data column to use for the values
-          cColumn: "Nationalität",
-          // The labels for the x and y-axis. Set to empty ('') to hide the label
-          yAxisLabel: "",
-          xAxisLabel: "",
-          // Number of ticks on the x- and y-axis. Replace null with a cardinal number to specify the number of ticks
-          xTicks: null,
-          yTicks: null,
-          // Padding between legend and x-axis in pixels. The recommended default is 60px.
-          legendPadding: 60,
-          //View of the chart when interactivity is not available. Creates vertical lines for the x-ticks and does not render mouse interaction when true
-          fallback: false
-        };
 
-        /* Shortcuts
-        ----------------------------------------------- */
-        var xAcc = sszvis.prop("year");
-        var yAcc = sszvis.prop("value");
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("yTicks", {
+            _: null
+          })
+          .prop("xTicks", {
+            _: null
+          })
+          .prop("yAxisLabel", {
+            _: ""
+          })
+          .prop("xAxisLabel", {
+            _: ""
+          })
+          .prop("legendPadding", {
+            _: 60
+          });
+
+        function parseRow(d) {
+          return {
+            category: d["Nationalität"],
+            xValue: sszvis.parseYear(d["Jahr"]),
+            yValue: sszvis.parseNumber(d["Anzahl"])
+          };
+        }
+
+        var xAcc = sszvis.prop("xValue");
+        var yAcc = sszvis.prop("yValue");
         var cAcc = sszvis.prop("category");
 
         /* Application state
@@ -82,7 +94,7 @@
                 .objectBy(cAcc)
                 .apply(state.data)
                 .map(function(d) {
-                  var r = { year: xAcc(d[Object.keys(d)[0]][0]) };
+                  var r = { xValue: xAcc(d[Object.keys(d)[0]][0]) };
                   state.categories.forEach(function(k) {
                     r[k] = yAcc(d[k][0]);
                   });
@@ -152,14 +164,8 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.dataPath)
-          .row(function(d) {
-            return {
-              category: d[config.cColumn],
-              year: sszvis.parseYear(d[config.xColumn]),
-              value: sszvis.parseNumber(d[config.yColumn])
-            };
-          })
+        d3.csv(config.data)
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               sszvis.loadError(error);
@@ -175,12 +181,14 @@
           var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
           cScale.domain(state.categories);
 
+          var props = queryProps(sszvis.measureDimensions(config.id));
+
           var colorLegend = flexibleLegend(cScale, state.categories.length);
 
           var bounds = sszvis.bounds(
             {
               top: 20,
-              bottom: config.legendPadding + legendHeight(colorLegend, state.categories.length)
+              bottom: props.legendPadding + legendHeight(colorLegend, state.categories.length)
             },
             "#sszvis-chart"
           );
@@ -281,26 +289,25 @@
               return yScale(d[1]);
             });
 
-          var xAxisTicks = xScale.ticks(config.xTicks).concat(state.highlightDate);
+          var xAxisTicks = xScale.ticks(props.xTicks).concat(state.highlightDate);
 
           var xAxis = sszvis.axisX
             .time()
             .scale(xScale)
             .orient("bottom")
             .tickValues(xAxisTicks)
-            .title(config.xAxisLabel)
+            .title(props.xAxisLabel)
             .highlightTick(function(d) {
               return sszvis.stringEqual(d, state.highlightDate);
             });
 
-          var yAxisTicks = yScale.ticks(config.yTicks);
+          var yAxisTicks = yScale.ticks(props.yTicks);
 
           var yAxis = sszvis
             .axisY()
             .scale(yScale)
             .orient("right")
-            .title(config.yAxisLabel)
-            .tickLength(config.fallback ? bounds.innerWidth : null)
+            .title(props.yAxisLabel)
             .tickValues(yAxisTicks);
 
           // Rendering
@@ -320,15 +327,13 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + config.legendPadding))
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + props.legendPadding))
             .call(colorLegend);
 
-          if (!config.fallback) {
-            chartLayer
-              .selectGroup("highlight")
-              .datum(state.highlightData)
-              .call(rangeRuler);
-          }
+          chartLayer
+            .selectGroup("highlight")
+            .datum(state.highlightData)
+            .call(rangeRuler);
 
           var flagGroup = chartLayer
             .selectGroup("flag")
@@ -344,16 +349,14 @@
           sszvis.viewport.on("resize", actions.resize);
 
           // Interaction
-          if (!config.fallback) {
-            var interactionLayer = sszvis
-              .move()
-              .xScale(xScale)
-              .yScale(yScale)
-              .on("move", actions.changeDate)
-              .on("end", actions.resetDate);
+          var interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yScale)
+            .on("move", actions.changeDate)
+            .on("end", actions.resetDate);
 
-            chartLayer.selectGroup("interaction").call(interactionLayer);
-          }
+          chartLayer.selectGroup("interaction").call(interactionLayer);
         }
 
         /* Helper functions
@@ -378,7 +381,7 @@
         function legendHeight(legend, numEntries) {
           return legend.rowHeight() * Math.ceil(numEntries / 2);
         }
-      })(d3, sszvis);
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>
