@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id);
+          sszvis.fallbackRender(config.id, { src: config.fallback });
           return;
         }
 
@@ -176,8 +176,6 @@
             });
             // a list of categories (for the color scale)
             state.categories = sszvis.set(state.data, cAcc);
-
-            console.log(state.pieGroups);
 
             render(state);
           },

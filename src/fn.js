@@ -4,7 +4,7 @@
  * @module sszvis/fn
  */
 
-import {select, map, selection} from 'd3';
+import { map, selection } from "d3";
 
 /**
  * fn.identity
@@ -28,7 +28,7 @@ export var identity = function(value) {
  * @return {Boolean}      Whether the value is a string
  */
 export var isString = function(val) {
-  return Object.prototype.toString.call(val) === '[object String]';
+  return Object.prototype.toString.call(val) === "[object String]";
 };
 
 /**
@@ -57,18 +57,52 @@ export var isSelection = function(val) {
  */
 export var arity = function(n, fn) {
   switch (n) {
-    case 0: return function() {return fn.call(this);};
-    case 1: return function(a0) {return fn.call(this, a0);};
-    case 2: return function(a0, a1) {return fn.call(this, a0, a1);};
-    case 3: return function(a0, a1, a2) {return fn.call(this, a0, a1, a2);};
-    case 4: return function(a0, a1, a2, a3) {return fn.call(this, a0, a1, a2, a3);};
-    case 5: return function(a0, a1, a2, a3, a4) {return fn.call(this, a0, a1, a2, a3, a4);};
-    case 6: return function(a0, a1, a2, a3, a4, a5) {return fn.call(this, a0, a1, a2, a3, a4, a5);};
-    case 7: return function(a0, a1, a2, a3, a4, a5, a6) {return fn.call(this, a0, a1, a2, a3, a4, a5, a6);};
-    case 8: return function(a0, a1, a2, a3, a4, a5, a6, a7) {return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);};
-    case 9: return function(a0, a1, a2, a3, a4, a5, a6, a7, a8) {return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);};
-    case 10: return function(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);};
-    default: return fn;
+    case 0:
+      return function() {
+        return fn.call(this);
+      };
+    case 1:
+      return function(a0) {
+        return fn.call(this, a0);
+      };
+    case 2:
+      return function(a0, a1) {
+        return fn.call(this, a0, a1);
+      };
+    case 3:
+      return function(a0, a1, a2) {
+        return fn.call(this, a0, a1, a2);
+      };
+    case 4:
+      return function(a0, a1, a2, a3) {
+        return fn.call(this, a0, a1, a2, a3);
+      };
+    case 5:
+      return function(a0, a1, a2, a3, a4) {
+        return fn.call(this, a0, a1, a2, a3, a4);
+      };
+    case 6:
+      return function(a0, a1, a2, a3, a4, a5) {
+        return fn.call(this, a0, a1, a2, a3, a4, a5);
+      };
+    case 7:
+      return function(a0, a1, a2, a3, a4, a5, a6) {
+        return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
+      };
+    case 8:
+      return function(a0, a1, a2, a3, a4, a5, a6, a7) {
+        return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
+      };
+    case 9:
+      return function(a0, a1, a2, a3, a4, a5, a6, a7, a8) {
+        return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
+      };
+    case 10:
+      return function(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+        return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+      };
+    default:
+      return fn;
   }
 };
 
@@ -90,7 +124,7 @@ export var arity = function(n, fn) {
  */
 export var compose = function() {
   var fns = arguments,
-      start = arguments.length - 1;
+    start = arguments.length - 1;
   return function() {
     var i = start;
     var result = fns[i].apply(this, arguments);
@@ -121,7 +155,7 @@ export var contains = function(list, d) {
  * @return {Boolean}     true if the value is defined, false if the value is undefined
  */
 export var defined = function(val) {
-  return (typeof val !== 'undefined') && val != null;
+  return typeof val !== "undefined" && val != null;
 };
 
 /**
@@ -141,7 +175,10 @@ export var defined = function(val) {
  */
 export var derivedSet = function(arr, acc) {
   acc || (acc = identity);
-  var seen = [], sValue, cValue, result = [];
+  var seen = [],
+    sValue,
+    cValue,
+    result = [];
   for (var i = 0, l = arr.length; i < l; ++i) {
     sValue = arr[i];
     cValue = acc(sValue, i, arr);
@@ -230,7 +267,9 @@ export var first = function(arr) {
  * @param  {Array}        The Array to flatten
  * @return {Array}        A flattened Array
  */
-export var flatten = function(arr) { return Array.prototype.concat.apply([], arr); };
+export var flatten = function(arr) {
+  return Array.prototype.concat.apply([], arr);
+};
 
 /**
  * fn.firstTouch
@@ -275,7 +314,9 @@ export var firstTouch = function(event) {
  */
 export var hashableSet = function(arr, acc) {
   acc || (acc = identity);
-  var seen = {}, value, result = [];
+  var seen = {},
+    value,
+    result = [];
   for (var i = 0, l = arr.length; i < l; ++i) {
     value = acc(arr[i], i, arr);
     if (!seen[value]) {
@@ -295,7 +336,7 @@ export var hashableSet = function(arr, acc) {
  * @return {Boolean} true if the value is a function, false otherwise
  */
 export var isFunction = function(val) {
-  return typeof val == 'function';
+  return typeof val == "function";
 };
 
 /**
@@ -307,7 +348,7 @@ export var isFunction = function(val) {
  * @return {Boolean}     true if the value is null, false if the value is not null
  */
 export var isNull = function(val) {
-    return val === null;
+  return val === null;
 };
 
 /**
@@ -319,7 +360,7 @@ export var isNull = function(val) {
  * @return {Boolean}    Whether the value is a number
  */
 export var isNumber = function(val) {
-    return Object.prototype.toString.call(val) === '[object Number]';
+  return Object.prototype.toString.call(val) === "[object Number]";
 };
 
 /**
@@ -332,9 +373,8 @@ export var isNumber = function(val) {
  * @return {Boolean}       Whether the value is an object
  */
 export var isObject = function(val) {
-    return Object(val) === val;
+  return Object(val) === val;
 };
-
 
 /**
  * fn.last
@@ -348,38 +388,6 @@ export var last = function(arr) {
   return arr[arr.length - 1];
 };
 
-    /**
- * fn.measureDimensions
- *
- * Calculates the width of the first DOM element defined by a CSS selector string,
- * a DOM element reference, or a d3 selection. If the DOM element can't be
- * measured `undefined` is returned for the width. Returns also measurements of
- * the screen, which are used by some responsive components.
- *
- * @param  {string|DOMElement|d3.selection} el The element to measure
- *
- * @return {Object} The measurement of the width of the element, plus dimensions of the screen
- *                  The returned object contains:
- *                      width: {number|undefined} The width of the element
- *                      screenWidth: {number} The innerWidth of the screen
- *                      screenHeight: {number} The innerHeight of the screen
- */
-export var measureDimensions = function(arg) {
-  var node;
-  if (isString(arg)) {
-    node = select(arg).node();
-  } else if (isSelection(arg)) {
-    node = arg.node();
-  } else {
-    node = arg;
-  }
-  return {
-    width: node ? node.getBoundingClientRect().width : undefined,
-    screenWidth: window.innerWidth,
-    screenHeight: window.innerHeight
-  };
-};
-
 /**
  * fn.not
  *
@@ -390,8 +398,10 @@ export var measureDimensions = function(arg) {
  * @param  {Function} f the argument function
  * @return {Function}   a new function which returns the boolean opposite of the argument function
  */
-export var not = function (f) {
-  return function(){ return !f.apply(this, arguments); };
+export var not = function(f) {
+  return function() {
+    return !f.apply(this, arguments);
+  };
 };
 
 /**
@@ -427,10 +437,10 @@ export var prop = function(key) {
  * @return {Function}           A property-accessor function
  */
 export var propOr = function(key, defaultVal) {
-    return function(object) {
-        var value = object !== undefined ? object[key] : undefined;
-        return value !== undefined ? value : defaultVal;
-    };
+  return function(object) {
+    var value = object !== undefined ? object[key] : undefined;
+    return value !== undefined ? value : defaultVal;
+  };
 };
 
 /**
@@ -495,16 +505,18 @@ export var stringEqual = function(a, b) {
   return a.toString() === b.toString();
 };
 
-
 /**
  * fn.functor
  *
  * Same as fn.functor in d3v3
  */
 export var functor = function(v) {
-  return typeof v === "function" ? v : function() { return v; };
+  return typeof v === "function"
+    ? v
+    : function() {
+        return v;
+      };
 };
-
 
 /**
  * fn.memoize
@@ -513,13 +525,13 @@ export var functor = function(v) {
  * See https://lodash.com/docs/4.17.4#memoize
  */
 export var memoize = function(func, resolver) {
-  if (typeof func != 'function' || (resolver != null && typeof resolver != 'function')) {
-    throw new TypeError('Expected a function');
+  if (typeof func != "function" || (resolver != null && typeof resolver != "function")) {
+    throw new TypeError("Expected a function");
   }
   var memoized = function() {
     var args = arguments,
-        key = resolver ? resolver.apply(this, args) : args[0],
-        cache = memoized.cache;
+      key = resolver ? resolver.apply(this, args) : args[0],
+      cache = memoized.cache;
 
     if (cache.has(key)) {
       return cache.get(key);
@@ -530,4 +542,4 @@ export var memoize = function(func, resolver) {
   };
   memoized.cache = map();
   return memoized;
-}
+};

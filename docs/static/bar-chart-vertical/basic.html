@@ -44,9 +44,17 @@
             palm: 140,
             _: 60
           })
+          .prop("leftPadding", {
+            _: null
+          })
           .prop("slant", {
             palm: "vertical",
             _: "horizontal"
+          })
+          .prop("yLabelFormat", {
+            _: function() {
+              return sszvis.formatNumber;
+            }
           });
 
         function parseRow(d) {
@@ -107,8 +115,20 @@
         /* Render
         ----------------------------------------------- */
         function render(state) {
+          var yMax = d3.max(state.data, yAcc);
+
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 3, bottom: props.bottomPadding }, config.id);
+          var bounds = sszvis.bounds(
+            {
+              top: 3,
+              bottom: props.bottomPadding,
+              left:
+                props.leftPadding != null
+                  ? props.leftPadding
+                  : sszvis.measureAxisLabel(props.yLabelFormat(yMax))
+            },
+            config.id
+          );
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             Math.min(MAX_WIDTH, bounds.innerWidth),
             state.categories.length
@@ -125,7 +145,7 @@
 
           var heightScale = d3
             .scaleLinear()
-            .domain([0, d3.max(state.data, yAcc)])
+            .domain([0, yMax])
             .range([0, bounds.innerHeight]);
 
           var yPosScale = heightScale.copy().range(
@@ -200,16 +220,19 @@
             )
           );
 
-          chartLayer
+          var bars = chartLayer
+            .selectGroup("bars")
+            .attr("transform", sszvis.translateString(bounds.padding.left, 0))
+            .call(barGen);
+
+          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+          bars
             .selectGroup("xAxis")
             .attr("transform", sszvis.translateString(0, bounds.innerHeight))
             .call(xAxis);
 
           chartLayer.selectGroup("yAxis").call(yAxis);
-
-          var bars = chartLayer.selectGroup("bars").call(barGen);
-
-          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
 
           // Interaction
 
@@ -222,7 +245,7 @@
             .on("move", actions.showTooltip)
             .on("end", actions.hideTooltip);
 
-          chartLayer.selectGroup("interaction").call(interactionLayer);
+          bars.selectGroup("interaction").call(interactionLayer);
 
           sszvis.viewport.on("resize", actions.resize);
         }

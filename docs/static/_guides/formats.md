@@ -170,13 +170,13 @@ In this example, all Numbers in the y-Axis have been transformed into a percent 
 
 ```project
 {
-    "name": "bar-chart-vertical-stacked",
+    "name": "line-chart-ordinal",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical-stacked/two-cat.html",
+            "source": "line-chart/ordinal.html",
             "template": "template.html"
         },
-        "data.csv": "bar-chart-vertical-stacked/data/StVB_2Categories_yearly.csv",
+        "data.csv": "line-chart/data/ML_school_years.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",

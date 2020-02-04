@@ -6,7 +6,7 @@ The new website for the city of Zürich uses the following breakpoints. For this
 
 ```image|plain
 {
-    "src": "/style-guide/breakpoints/progression.png"
+    "src": "/_guides/breakpoints/progression.png"
 }
 ```
 
@@ -16,6 +16,6 @@ We decided on the following aspect ratios based on the container sizes available
 
 ```image|plain
 {
-    "src": "/style-guide/breakpoints/aspect-ratios.png"
+    "src": "/_guides/breakpoints/aspect-ratios.png"
 }
 ```

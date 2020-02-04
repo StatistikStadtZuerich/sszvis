@@ -43,28 +43,6 @@ Specify a stroke value for the stack rectangles (default none).
     "name": "bar-chart-vertical-stacked",
     "files": {
         "index.html": {
-            "source": "bar-chart-vertical-stacked/two-cat.html",
-            "template": "template.html"
-        },
-        "data.csv": "bar-chart-vertical-stacked/data/StVB_2Categories_yearly.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
-## Many Categories
-
-Eight layers of values, with tooltips.
-
-```project
-{
-    "name": "bar-chart-vertical-stacked",
-    "files": {
-        "index.html": {
             "source": "bar-chart-vertical-stacked/basic.html",
             "template": "template.html"
         },

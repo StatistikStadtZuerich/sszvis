@@ -18,7 +18,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender("#sszvis-chart", { src: config.fallback });
           return;
         }
 
@@ -250,7 +250,7 @@
 
           chartLayer
             .selectGroup("cScale1")
-            .attr("transform", sszvis.translateString(1, bounds.innerHeight + 60))
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
             .call(cLegend1);
 
           chartLayer

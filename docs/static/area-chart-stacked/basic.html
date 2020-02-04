@@ -26,7 +26,7 @@
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
+          sszvis.fallbackRender(config.id, { src: config.fallback });
           return;
         }
 

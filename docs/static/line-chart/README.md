@@ -50,7 +50,19 @@ String or function to set the stroke thickness (default: 1)
 }
 ```
 
-## Usage example: Ordinal Scale
+## Usage example: Single line, ordinal scale
+
+To create a single line chart as in the example below, set the `category` variable to null.
+
+```
+function parseRow(d) {
+  return {
+    xValue: d["Jahr"],
+    yValue: sszvis.parseNumber(d["Wert"]),
+    category: null // Set this to null
+  };
+}
+```
 
 To use an ordinal scale with a line chart, set `ordinal()`.
 
@@ -58,18 +70,6 @@ To use an ordinal scale with a line chart, set `ordinal()`.
 var xAxis = sszvis.axisX
   .ordinal()
   .scale(xScale)
-```
-
-To create a single line chart as in the example below, set the third variable to null.
-
-```
-function parseRow(d) {
-    return {
-        xValue: d["Jahr"],
-        yValue: sszvis.parseNumber(d["Wert"]),
-        category: null // third variable is set to null
-        };
-    }
 ```
 
 ```project

@@ -10,92 +10,93 @@ const pages = [
   {
     path: "/",
     title: "Introduction",
-    content: staticMarkdown("intro.md")
+    pages: [
+      {
+        path: "/",
+        title: "Installation",
+        content: staticMarkdown("intro.md")
+      },
+      {
+        path: "getting-started",
+        title: "Getting started",
+        content: staticMarkdown("_guides/getting-started.md")
+      },
+      { path: "faq", title: "FAQ", content: staticMarkdown("faq.md") },
+      {
+        path: "changelog",
+        title: "Changelog",
+        content: staticMarkdown("CHANGELOG.md")
+      }
+    ]
   },
   {
-    path: "guide",
-    title: "Guide",
+    path: "guides",
+    title: "Guides",
     pages: [
       {
         path: "accessibility",
         title: "Accessibility",
-        content: staticMarkdown("style-guide/accessibility.md")
+        content: staticMarkdown("_guides/accessibility.md")
       },
       {
         path: "annotations",
         title: "Annotations",
-        content: staticMarkdown("style-guide/annotations.md")
+        content: staticMarkdown("_guides/annotations.md")
       },
       {
         path: "axes",
         title: "Axes",
-        content: staticMarkdown("style-guide/axes.md")
+        content: staticMarkdown("_guides/axes.md")
       },
       {
         path: "behaviors",
         title: "Behaviors",
-        content: staticMarkdown("style-guide/behavior.md")
+        content: staticMarkdown("_guides/behavior.md")
       },
       {
         path: "breakpoints",
         title: "Breakpoints",
-        content: staticMarkdown("style-guide/breakpoints.md")
+        content: staticMarkdown("_guides/breakpoints.md")
       },
       {
         path: "colors",
         title: "Colors",
-        content: staticMarkdown("style-guide/colors.md"),
-        styles: [staticFile("style-guide/colors.css")],
-        scripts: [staticFile("style-guide/colors.js")]
+        content: staticMarkdown("_guides/colors.md"),
+        styles: [staticFile("_guides/colors.css")],
+        scripts: [staticFile("_guides/colors.js")]
       },
       {
         path: "controls",
         title: "Controls",
-        content: staticMarkdown("style-guide/controls.md")
+        content: staticMarkdown("_guides/controls.md")
       },
       {
         path: "formats",
         title: "Formatting",
-        content: staticMarkdown("style-guide/formats.md")
+        content: staticMarkdown("_guides/formats.md")
       },
       {
         path: "legends",
         title: "Legends",
-        content: staticMarkdown("style-guide/legends.md")
+        content: staticMarkdown("_guides/legends.md")
       },
       {
         path: "tooltips",
         title: "Tooltips",
-        content: staticMarkdown("style-guide/tooltips.md"),
-        styles: [staticFile("style-guide/tooltips.css")],
-        scripts: [staticFile("style-guide/tooltips.js")]
+        content: staticMarkdown("_guides/tooltips.md"),
+        styles: [staticFile("_guides/tooltips.css")],
+        scripts: [staticFile("_guides/tooltips.js")]
       }
     ]
   },
   {
-    path: "starter",
-    title: "Starter charts",
-    pages: [
-      {
-        path: "intro",
-        title: "Intro",
-        content: staticMarkdown("intro-starterkit.md")
-      },
-      {
-        path: "examples",
-        title: "Examples",
-        content: staticMarkdown("beginners.md")
-      }
-    ]
-  },
-  {
-    path: "line-charts",
-    title: "Line charts",
-    content: staticMarkdown("line-chart/README.md")
+    path: "area-chart-stacked",
+    title: "+ Area chart",
+    content: staticMarkdown("area-chart-stacked/README.md")
   },
   {
     path: "bar-charts",
-    title: "Bar charts",
+    title: "+ Bar chart",
     pages: [
       {
         path: "bar-chart-vertical",
@@ -125,13 +126,18 @@ const pages = [
     ]
   },
   {
-    path: "area-chart-stacked",
-    title: "Area charts",
-    content: staticMarkdown("area-chart-stacked/README.md")
+    path: "line-charts",
+    title: "+ Line chart",
+    content: staticMarkdown("line-chart/README.md")
+  },
+  {
+    path: "heat-table",
+    title: "+ Heat table",
+    content: staticMarkdown("heat-table/README.md")
   },
   {
     path: "map",
-    title: "Maps",
+    title: "+ Maps",
     pages: [
       {
         path: "map-standard",
@@ -152,24 +158,24 @@ const pages = [
     ]
   },
   {
-    path: "various",
-    title: "Various Charts",
+    path: "pie-charts",
+    title: "+ Pie chart",
+    content: staticMarkdown("pie-charts/README.md")
+  },
+  {
+    path: "population-pyramid",
+    title: "+ Population pyramid",
+    content: staticMarkdown("population-pyramid/README.md")
+  },
+  {
+    path: "sankey",
+    title: "+ Sankey diagram",
+    content: staticMarkdown("sankey/README.md")
+  },
+  {
+    path: "scatterplot",
+    title: "+ Scatterplot",
     pages: [
-      {
-        path: "heat-table",
-        title: "Heat table",
-        content: staticMarkdown("heat-table/README.md")
-      },
-      {
-        path: "pie-charts",
-        title: "Pie chart",
-        content: staticMarkdown("pie-charts/README.md")
-      },
-      {
-        path: "population-pyramid",
-        title: "Population pyramid",
-        content: staticMarkdown("population-pyramid/README.md")
-      },
       {
         path: "scatterplot",
         title: "Scatterplot",
@@ -179,24 +185,13 @@ const pages = [
         path: "scatterplot-over-time",
         title: "Scatterplot Over Time",
         content: staticMarkdown("scatterplot-over-time/README.md")
-      },
-      {
-        path: "sunburst",
-        title: "Sunburst",
-        content: staticMarkdown("sunburst/README.md")
-      },
-      {
-        path: "sankey",
-        title: "Sankey Diagram (Parallel Sets)",
-        content: staticMarkdown("sankey/README.md")
       }
     ]
   },
-  { path: "faq", title: "FAQ", content: staticMarkdown("faq.md") },
   {
-    path: "changelog",
-    title: "Change Log",
-    content: staticMarkdown("CHANGELOG.md")
+    path: "sunburst",
+    title: "+ Sunburst",
+    content: staticMarkdown("sunburst/README.md")
   }
 ];
 
