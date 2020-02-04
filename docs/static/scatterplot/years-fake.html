@@ -35,15 +35,15 @@
 
         function parseRow(d) {
           return {
-            xvalue: sszvis.parseNumber(d["XValue"]),
-            yvalue: sszvis.parseNumber(d["YValue"]),
+            xValue: sszvis.parseNumber(d["XValue"]),
+            yValue: sszvis.parseNumber(d["YValue"]),
             city: d["City"],
             location: d["Location"],
             quarter: sszvis.parseDate(d["Quarter"])
           };
         }
-        var xAcc = sszvis.prop("xvalue");
-        var yAcc = sszvis.prop("yvalue");
+        var xAcc = sszvis.prop("xValue");
+        var yAcc = sszvis.prop("yValue");
         var cAcc = sszvis.prop("city");
         var qAcc = sszvis.prop("quarter");
 
