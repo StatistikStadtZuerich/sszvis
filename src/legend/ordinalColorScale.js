@@ -87,27 +87,35 @@
  * |fooBaz    barFoo |
  */
 
-
-import {select} from 'd3';
-
-import { halfPixel } from '../svgUtils/crisp.js';
-import translateString from '../svgUtils/translateString.js';
-import { component } from '../d3-component.js';
+import { select } from "d3";
+import { component } from "../d3-component.js";
+import { halfPixel } from "../svgUtils/crisp.js";
+import translateString from "../svgUtils/translateString.js";
 
 export default function() {
   return component()
-    .prop('scale')
-    .prop('rowHeight').rowHeight(21)
-    .prop('columnWidth').columnWidth(200)
-    .prop('rows').rows(3)
-    .prop('columns').columns(3)
-    .prop('verticallyCentered').verticallyCentered(false)
-    .prop('orientation')
-    .prop('reverse').reverse(false)
-    .prop('rightAlign').rightAlign(false)
-    .prop('horizontalFloat').horizontalFloat(false)
-    .prop('floatPadding').floatPadding(20)
-    .prop('floatWidth').floatWidth(600)
+    .prop("scale")
+    .prop("rowHeight")
+    .rowHeight(21)
+    .prop("columnWidth")
+    .columnWidth(200)
+    .prop("rows")
+    .rows(3)
+    .prop("columns")
+    .columns(3)
+    .prop("verticallyCentered")
+    .verticallyCentered(false)
+    .prop("orientation")
+    .prop("reverse")
+    .reverse(false)
+    .prop("rightAlign")
+    .rightAlign(false)
+    .prop("horizontalFloat")
+    .horizontalFloat(false)
+    .prop("floatPadding")
+    .floatPadding(20)
+    .prop("floatWidth")
+    .floatWidth(600)
     .render(function() {
       var selection = select(this);
       var props = selection.props();
@@ -119,67 +127,88 @@ export default function() {
       }
 
       var rows, cols;
-      if (props.orientation === 'horizontal') {
+      if (props.orientation === "horizontal") {
         cols = Math.ceil(props.columns);
         rows = Math.ceil(domain.length / cols);
-      } else if (props.orientation === 'vertical') {
+      } else if (props.orientation === "vertical") {
         rows = Math.ceil(props.rows);
         cols = Math.ceil(domain.length / rows);
       }
 
-      var groups = selection.selectAll('.sszvis-legend--entry')
-        .data(domain);
+      var groups = selection.selectAll(".sszvis-legend--entry").data(domain);
 
-      var newGroups = groups.enter()
-        .append('g')
-        .classed('sszvis-legend--entry', true);
+      var newGroups = groups
+        .enter()
+        .append("g")
+        .classed("sszvis-legend--entry", true);
 
       groups.exit().remove();
 
-      var marks = groups.merge(newGroups).selectAll('.sszvis-legend__mark')
-        .data(function(d) { return [d]; });
+      var marks = groups
+        .merge(newGroups)
+        .selectAll(".sszvis-legend__mark")
+        .data(function(d) {
+          return [d];
+        });
 
-      var newMarks = marks.enter()
-        .append('circle')
-        .classed('sszvis-legend__mark', true);
+      var newMarks = marks
+        .enter()
+        .append("circle")
+        .classed("sszvis-legend__mark", true);
 
       marks.exit().remove();
 
-      marks.merge(newMarks)
-        .attr('cx', props.rightAlign ? -5 : 5)
-        .attr('cy', halfPixel(props.rowHeight / 2))
-        .attr('r', 5)
-        .attr('fill', function(d) { return props.scale(d); })
-        .attr('stroke', function(d) { return props.scale(d); })
-        .attr('stroke-width', 1);
+      marks
+        .merge(newMarks)
+        .attr("cx", props.rightAlign ? -5 : 5)
+        .attr("cy", halfPixel(props.rowHeight / 2))
+        .attr("r", 5)
+        .attr("fill", function(d) {
+          return props.scale(d);
+        })
+        .attr("stroke", function(d) {
+          return props.scale(d);
+        })
+        .attr("stroke-width", 1);
 
-      var labels = groups.merge(newGroups).selectAll('.sszvis-legend__label')
-        .data(function(d) { return [d]; });
+      var labels = groups
+        .merge(newGroups)
+        .selectAll(".sszvis-legend__label")
+        .data(function(d) {
+          return [d];
+        });
 
-      var newLabels = labels.enter()
-        .append('text')
-        .classed('sszvis-legend__label', true);
+      var newLabels = labels
+        .enter()
+        .append("text")
+        .classed("sszvis-legend__label", true);
 
       labels.exit().remove();
 
-      labels.merge(newLabels)
-        .text(function(d) { return d; })
-        .attr('dy', '0.35em') // vertically-center
-        .style('text-anchor', function() { return props.rightAlign ? 'end' : 'start'; })
-        .attr('transform', function() {
+      labels
+        .merge(newLabels)
+        .text(function(d) {
+          return d;
+        })
+        .attr("dy", "0.35em") // vertically-center
+        .style("text-anchor", function() {
+          return props.rightAlign ? "end" : "start";
+        })
+        .attr("transform", function() {
           var x = props.rightAlign ? -18 : 18;
           var y = halfPixel(props.rowHeight / 2);
           return translateString(x, y);
         });
 
-      var verticalOffset = '';
+      var verticalOffset = "";
       if (props.verticallyCentered) {
-        verticalOffset = 'translate(0,' + String(-(domain.length * props.rowHeight / 2)) + ') ';
+        verticalOffset = "translate(0," + String(-((domain.length * props.rowHeight) / 2)) + ") ";
       }
 
       if (props.horizontalFloat) {
-        var rowPosition = 0, horizontalPosition = 0;
-        groups.merge(newGroups).attr('transform', function() {
+        var rowPosition = 0,
+          horizontalPosition = 0;
+        groups.merge(newGroups).attr("transform", function() {
           // not affected by scroll position
           var width = this.getBoundingClientRect().width;
           if (horizontalPosition + width > props.floatWidth) {
@@ -191,14 +220,27 @@ export default function() {
           return verticalOffset + translate;
         });
       } else {
-        groups.merge(newGroups).attr('transform', function(d, i) {
-          if (props.orientation === 'horizontal') {
-            return verticalOffset + 'translate(' + ((i % cols) * props.columnWidth) + ',' + (Math.floor(i / cols) * props.rowHeight) + ')';
-          } else if (props.orientation === 'vertical') {
-            return verticalOffset + 'translate(' + (Math.floor(i / rows) * props.columnWidth) + ',' + ((i % rows) * props.rowHeight) + ')';
+        groups.merge(newGroups).attr("transform", function(d, i) {
+          if (props.orientation === "horizontal") {
+            return (
+              verticalOffset +
+              "translate(" +
+              (i % cols) * props.columnWidth +
+              "," +
+              Math.floor(i / cols) * props.rowHeight +
+              ")"
+            );
+          } else if (props.orientation === "vertical") {
+            return (
+              verticalOffset +
+              "translate(" +
+              Math.floor(i / rows) * props.columnWidth +
+              "," +
+              (i % rows) * props.rowHeight +
+              ")"
+            );
           }
         });
       }
-
     });
-};
+}
