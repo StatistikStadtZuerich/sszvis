@@ -31,7 +31,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         var queryProps = sszvis
           .responsiveProps()
@@ -60,7 +60,7 @@
         var branchAcc = sszvis.prop("branch");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           linesData: [],
@@ -75,7 +75,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -168,7 +168,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -180,7 +180,7 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           var bounds = sszvis.bounds(

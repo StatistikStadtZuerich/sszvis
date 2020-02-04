@@ -23,7 +23,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var config = {
           // The path to the CSV file containing the data for this chart
           dataPath: "data/SS_refline_fake.csv",
@@ -46,13 +46,13 @@
         };
 
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var xAcc = sszvis.prop("xPosition");
         var yAcc = sszvis.prop("yPosition");
         var cAcc = sszvis.prop("category");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           highlightData: [],
@@ -62,7 +62,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -98,7 +98,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.dataPath)
           .row(function(d) {
             return {
@@ -116,7 +116,7 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           //choose color scale depending on number of categories
           var cScale = state.cExtent.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
@@ -261,7 +261,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function flexibleLegend(scale, numEntries) {
           var legend = sszvis.legendColorOrdinal().scale(scale);
           if (numEntries <= 4) {

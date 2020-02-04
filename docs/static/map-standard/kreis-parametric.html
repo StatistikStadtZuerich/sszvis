@@ -18,10 +18,7 @@
       var EXTERNAL_CONFIG = {
         data: "data/M_kreis.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png",
-        // Formatting function to use for the legend label. Defaults to number, but
-        // can be changed to "sszvis.formatPercent" to render values from 0–100 as 0–100%
-        labelFormat: sszvis.formatNumber
+        fallback: "fallback.png"
       };
     </script>
 
@@ -35,7 +32,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var MAX_LEGEND_WIDTH = 320;
         var queryProps = sszvis
           .responsiveProps()
@@ -53,6 +50,11 @@
             _: function(width) {
               return Math.min(width / 2, MAX_LEGEND_WIDTH);
             }
+          })
+          .prop("labelFormat", {
+            _: function() {
+              return sszvis.formatNumber;
+            }
           });
 
         function parseRow(d) {
@@ -67,7 +69,7 @@
         var mDatumAcc = sszvis.prop("datum");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: null,
           mapData: null,
@@ -76,7 +78,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -118,7 +120,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -138,7 +140,7 @@
         });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           if (state.data === null || state.mapData === null) {
             // loading ...
@@ -197,7 +199,7 @@
             .legendColorLinear()
             .scale(colorScale)
             .width(props.legendWidth)
-            .labelFormat(config.labelFormat);
+            .labelFormat(props.labelFormat);
 
           // Rendering
 

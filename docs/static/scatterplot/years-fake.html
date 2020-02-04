@@ -31,7 +31,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         function parseRow(d) {
           return {
@@ -48,7 +48,7 @@
         var qAcc = sszvis.prop("quarter");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           xExtent: [0, 0],
@@ -60,7 +60,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -85,7 +85,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -97,7 +97,7 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           var bounds = sszvis.bounds({ top: 20, bottom: 150 }, config.id);
 
@@ -195,7 +195,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function closestDatum(data, accessor, datum) {
           var i = d3.bisector(accessor).left(data, datum, 1);
           var d0 = data[i - 1];

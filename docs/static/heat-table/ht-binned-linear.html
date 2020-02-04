@@ -31,17 +31,16 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         // these are the internal edges of the bins used for the color scale
         // IMPORTANT: because of the way d3.scale.threshold works,
         // do not specify fixed upper and lower bounds
         // anything less than or equal to the first element in BIN_EDGES will be grouped in the first bin,
         // and anything greater than or equal to the last element will be grouped in the last bin
         var BIN_EDGES = d3.range(100, 1000, 100);
-        var MAX_LEGEND_WIDTH = 260;
         var queryProps = sszvis.responsiveProps().prop("legendWidth", {
           _: function(width) {
-            return Math.min(width * 0.8, MAX_LEGEND_WIDTH);
+            return Math.min(width * 0.8, 260);
           }
         });
 
@@ -58,7 +57,7 @@
         var cAcc = sszvis.prop("value");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           g1List: [],
@@ -68,7 +67,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -95,7 +94,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -107,7 +106,7 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           var containerWidth = sszvis.measureDimensions(config.id).width;
           var squarePadding = 2;
@@ -297,7 +296,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }

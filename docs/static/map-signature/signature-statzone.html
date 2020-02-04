@@ -23,9 +23,8 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
-        var MAX_LEGEND_WIDTH = sszvis.aspectRatioSquare.MAX_HEIGHT;
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
@@ -58,12 +57,12 @@
           })
           .prop("controlWidth", {
             _: function(width) {
-              return Math.min(width, MAX_LEGEND_WIDTH);
+              return Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT);
             }
           });
 
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var datumAcc = sszvis.prop("datum");
         var idAcc = sszvis.propOr("id", null);
         var yearAcc = sszvis.prop("year");
@@ -72,7 +71,7 @@
         var zoneNameAcc = sszvis.propOr("zonename", "--");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: null,
           mapData: null,
@@ -82,7 +81,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareData: function(data) {
             state.data = data;
@@ -128,7 +127,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv("data/births_year_statisticalZones.csv")
           .row(function(d) {
             return {
@@ -156,7 +155,7 @@
         });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           if (state.data === null || state.mapData === null) {
             // loading ...

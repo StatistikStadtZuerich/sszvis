@@ -24,7 +24,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         // Only select an entity if the distance to an input value is lower than
         // this threshold.
@@ -53,7 +53,7 @@
           });
 
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var vAcc = sszvis.prop("value");
         var yearAcc = sszvis.prop("year");
         var geoIdAcc = sszvis.prop("geoId");
@@ -61,7 +61,7 @@
         var mDatumAcc = sszvis.prop("datum");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: null,
           mapData: null,
@@ -78,7 +78,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -233,7 +233,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv("data/CML_quartier_years.csv")
           .row(function(d) {
             return {
@@ -260,7 +260,7 @@
         });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           if (state.data === null || state.mapData === null) {
             // loading ...
@@ -517,7 +517,7 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         // given a dataset, an accessor, and a value, find the closest datum in the dataset to that value
         function closestDatum(data, accessor, value) {
           var i = d3.bisector(accessor).left(data, value, 1);

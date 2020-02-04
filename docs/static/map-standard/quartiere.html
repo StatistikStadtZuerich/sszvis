@@ -24,7 +24,7 @@
         }
 
         /* Configuration
-  ----------------------------------------------- */
+        ----------------------------------------------- */
 
         var INITIAL_YEAR = "2012";
         var MAX_LEGEND_WIDTH = 320;
@@ -52,14 +52,14 @@
           });
 
         /* Shortcuts
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var vAcc = sszvis.prop("value");
         var yAcc = sszvis.prop("year");
         var qnameAcc = sszvis.prop("quartername");
         var mDatumAcc = sszvis.prop("datum");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: null,
           mapData: null,
@@ -71,7 +71,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -117,7 +117,7 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         d3.csv("data/S_quartiere.csv")
           .row(function(d) {
             return {
@@ -144,7 +144,7 @@
         });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
           if (state.data === null || state.mapData === null) {
             // loading ...

@@ -289,7 +289,7 @@
               return yScale(d[1]);
             });
 
-          var xAxisTicks = xScale.ticks(null).concat(state.highlightDate);
+          var xAxisTicks = xScale.ticks(props.xTicks).concat(state.highlightDate);
 
           var xAxis = sszvis.axisX
             .time()
@@ -301,14 +301,13 @@
               return sszvis.stringEqual(d, state.highlightDate);
             });
 
-          var yAxisTicks = yScale.ticks(null);
+          var yAxisTicks = yScale.ticks(props.yTicks);
 
           var yAxis = sszvis
             .axisY()
             .scale(yScale)
             .orient("right")
             .title(props.yAxisLabel)
-            .tickLength(null)
             .tickValues(yAxisTicks);
 
           // Rendering
