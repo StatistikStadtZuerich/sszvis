@@ -1,3 +1,4 @@
+/* global __globalRerenderAll__ */
 // This script is a nasty piece of business, but it's a one-line include
 // into any file which will inject our charts onto their page,
 // wherever you want them. It's gnarly code tho ¯\_(ツ)_/¯
@@ -159,7 +160,7 @@
 
   function objForEach(obj, fn) {
     for (var prop in obj) {
-      if (obj.hasOwnProperty(prop)) {
+      if ({}.hasOwnProperty.call(obj, prop)) {
         fn(obj[prop], prop, obj);
       }
     }

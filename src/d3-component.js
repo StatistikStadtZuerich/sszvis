@@ -163,7 +163,7 @@ function slice(array) {
 function clone(obj) {
   var copy = {};
   for (var attr in obj) {
-    if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+    if ({}.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
   }
   return copy;
 }
