@@ -15,7 +15,10 @@ var LABEL_PADDING = 40;
  * Generate a color scale and a legend for the given labels. Compute how much
  * padding labels plus legend needs for use with `sszvis.bounds()`
  */
-export function colorLegendLayout({ axisLabels, legendLabels, slant }, container) {
+export function colorLegendLayout(
+  { legendLabels, axisLabels = [], slant = "horizontal" },
+  container
+) {
   const containerWidth = measureDimensions(container).width;
   const layout = colorLegendDimensions(legendLabels, containerWidth);
   const scale =
@@ -37,6 +40,7 @@ export function colorLegendLayout({ axisLabels, legendLabels, slant }, container
     axisLabelPadding,
     legendPadding,
     bottomPadding: axisLabelPadding + legendPadding,
+    legendWidth: layout.legendWidth,
     legend,
     scale
   };
@@ -62,6 +66,7 @@ export function colorLegendDimensions(labels, containerWidth) {
     columns,
     rows: isHorizontal ? 1 : Math.ceil(labelCount / columns),
     columnWidth: columns === 1 ? null : maxLabelWidth,
+    legendWidth: columns * maxLabelWidth,
     horizontalFloat: isHorizontal,
     orientation: isHorizontal ? null : "vertical"
   };
