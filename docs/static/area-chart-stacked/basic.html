@@ -35,20 +35,22 @@
 
         var queryProps = sszvis
           .responsiveProps()
-          .prop("yTicks", {
-            _: null
+          .prop("xAxisLabel", {
+            _: ""
           })
           .prop("xTicks", {
             _: null
           })
+          .prop("xLabelFormat", {
+            _: function() {
+              return sszvis.formatYear;
+            }
+          })
           .prop("yAxisLabel", {
             _: ""
           })
-          .prop("xAxisLabel", {
-            _: ""
-          })
-          .prop("legendPadding", {
-            _: 60
+          .prop("yTicks", {
+            _: null
           });
 
         function parseRow(d) {
@@ -177,20 +179,25 @@
         /* Render
         ----------------------------------------------- */
         function render(state) {
-          // the color scale for the layers, based on the number of categories
-          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
-          cScale.domain(state.categories);
-
           var props = queryProps(sszvis.measureDimensions(config.id));
 
-          var colorLegend = flexibleLegend(cScale, state.categories.length);
+          var legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.timeExtent.map(props.xLabelFormat),
+              legendLabels: state.categories
+            },
+            config.id
+          );
+
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           var bounds = sszvis.bounds(
             {
               top: 20,
-              bottom: props.legendPadding + legendHeight(colorLegend, state.categories.length)
+              bottom: legendLayout.bottomPadding
             },
-            "#sszvis-chart"
+            config.id
           );
 
           // Scales
@@ -207,9 +214,9 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.stackedData);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedData);
 
-          var htmlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds);
+          var htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
           // Components
 
@@ -296,10 +303,12 @@
             .scale(xScale)
             .orient("bottom")
             .tickValues(xAxisTicks)
+            .tickFormat(props.xLabelFormat)
             .title(props.xAxisLabel)
             .highlightTick(function(d) {
               return sszvis.stringEqual(d, state.highlightDate);
-            });
+            })
+            .alignOuterLabels(true);
 
           var yAxisTicks = yScale.ticks(props.yTicks);
 
@@ -327,7 +336,10 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + props.legendPadding))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+            )
             .call(colorLegend);
 
           chartLayer
@@ -366,20 +378,6 @@
           var d0 = data[i - 1];
           var d1 = data[i] || d0;
           return datum - d0 > d1 - datum ? d1 : d0;
-        }
-
-        function flexibleLegend(scale, numEntries) {
-          var legend = sszvis.legendColorOrdinal().scale(scale);
-          if (numEntries <= 4) {
-            legend.horizontalFloat(true);
-          } else {
-            legend.rows(Math.ceil(numEntries / 2)).orientation("vertical");
-          }
-          return legend;
-        }
-
-        function legendHeight(legend, numEntries) {
-          return legend.rowHeight() * Math.ceil(numEntries / 2);
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
