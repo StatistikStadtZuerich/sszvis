@@ -37,6 +37,11 @@
           .prop("xLabel", {
             _: ""
           })
+          .prop("xLabelFormat", {
+            _: function() {
+              return sszvis.formatYear;
+            }
+          })
           .prop("yLabel", {
             _: ""
           })
@@ -136,7 +141,19 @@
         ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 30, bottom: 90 }, config.id);
+
+          var legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.xValues.map(props.xLabelFormat),
+              legendLabels: state.categories
+            },
+            config.id
+          );
+
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
+
+          var bounds = sszvis.bounds({ top: 30, bottom: legendLayout.bottomPadding }, config.id);
 
           // Scales
           var xScale = d3
@@ -148,10 +165,6 @@
             .scaleLinear()
             .domain([0, state.maxY])
             .range([bounds.innerHeight, 0]);
-
-          //choose color scale depending on number of categories
-          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
-          cScale.domain(state.categories);
 
           // Layers
           var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);
@@ -176,6 +189,7 @@
             .scale(xScale)
             .orient("bottom")
             .tickValues(xTickValues)
+            .tickFormat(props.xLabelFormat)
             .alignOuterLabels(true)
             .highlightTick(isSelected)
             .title(props.xLabel);
@@ -200,11 +214,6 @@
             })
             .color(sszvis.compose(cScale, cAcc));
 
-          var cLegend = sszvis
-            .legendColorOrdinal()
-            .scale(cScale)
-            .horizontalFloat(true);
-
           // Rendering
 
           chartLayer
@@ -217,10 +226,12 @@
 
           if (showLegend(state.categories)) {
             chartLayer
-              .selectGroup("cLegend")
-              // the color legend should always be positioned 60px below the bottom axis
-              .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
-              .call(cLegend);
+              .selectGroup("colorLegend")
+              .attr(
+                "transform",
+                sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+              )
+              .call(colorLegend);
           }
 
           chartLayer
