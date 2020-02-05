@@ -50,10 +50,12 @@
             lap: 3,
             _: 2
           })
-          .prop("bottomPadding", {
-            palm: 150,
-            lap: 130,
-            _: 110
+          .prop("xLabelFormat", {
+            _: function() {
+              return function(d) {
+                return d === 0 ? null : sszvis.formatText(d);
+              };
+            }
           });
 
         function parseRow(d) {
@@ -142,7 +144,19 @@
 
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var bounds = sszvis.bounds({ top: 10, bottom: props.bottomPadding }, config.id);
+
+          var legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.xValues.map(props.xLabelFormat),
+              legendLabels: state.categories
+            },
+            config.id
+          );
+
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
+
+          var bounds = sszvis.bounds({ top: 10, bottom: legendLayout.bottomPadding }, config.id);
 
           // Scales
 
@@ -156,8 +170,6 @@
             .scaleLinear()
             .domain([0, state.maxY])
             .range([bounds.innerHeight, 0]);
-
-          var cScale = sszvis.scaleQual12().domain(state.categories);
 
           // Layers
 
@@ -188,9 +200,7 @@
             .ordinal()
             .scale(xScale)
             .orient("bottom")
-            .tickFormat(function(d) {
-              return d === 0 ? null : sszvis.formatText(d);
-            })
+            .tickFormat(props.xLabelFormat)
             .highlightTick(isSelected)
             .alignOuterLabels(true);
 
@@ -202,15 +212,6 @@
               return d === 0 ? null : sszvis.formatFractionPercent(d);
             })
             .contour(true);
-
-          var cLegend = sszvis
-            .legendColorOrdinal()
-            .scale(cScale)
-            .columnWidth(
-              Math.min(bounds.innerWidth / (cScale.domain().length / props.legendRows), 200)
-            )
-            .orientation("vertical")
-            .rows(props.legendRows);
 
           // Rendering
 
@@ -225,9 +226,12 @@
 
           if (showLegend(state.categories)) {
             chartLayer
-              .selectGroup("cLegend")
-              .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
-              .call(cLegend);
+              .selectGroup("colorLegend")
+              .attr(
+                "transform",
+                sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+              )
+              .call(colorLegend);
           }
 
           chartLayer
