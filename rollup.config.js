@@ -1,6 +1,7 @@
 import { join } from "path";
 import { uglify } from "rollup-plugin-uglify";
 import { version } from "./package.json";
+import babel from "rollup-plugin-babel";
 
 const banner = `/*! sszvis v${version}, Copyright 2014-present Statistik Stadt Zürich */`;
 
@@ -12,7 +13,11 @@ const globals = {
 const createConfig = ({ input, output, plugins }) => ({
   input,
   output,
-  plugins,
+  plugins: [
+    babel({
+      exclude: "node_modules/**"
+    })
+  ].concat(plugins),
   external: ["d3", "topojson"]
 });
 
