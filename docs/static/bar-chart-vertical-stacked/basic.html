@@ -147,28 +147,23 @@
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
-          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
-          cScale.domain(state.categories);
-
-          var xLabelPadding = xLabelHeight(props.xSlant, state.years.map(props.xLabelFormat));
-
-          var legendBounds = sszvis.legendColorOrdinalLayout(
+          var legendLayout = sszvis.colorLegendLayout(
             {
-              scale: cScale,
-              columnCount: props.columnCount
+              axisLabels: state.years.map(props.xLabelFormat),
+              legendLabels: state.categories,
+              slant: props.xSlant
             },
             config.id
           );
 
-          var colorLegend = legendBounds.legend;
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           var bounds = sszvis.bounds(
             {
               top: 30,
               bottom:
-                props.bottomPadding != null
-                  ? props.bottomPadding
-                  : xLabelPadding + legendBounds.height,
+                props.bottomPadding != null ? props.bottomPadding : legendLayout.bottomPadding,
               left:
                 props.leftPadding != null
                   ? props.leftPadding
@@ -278,7 +273,10 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + xLabelPadding))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+            )
             .call(colorLegend);
 
           // Interaction
@@ -298,10 +296,6 @@
         ----------------------------------------------- */
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
-        }
-
-        function xLabelHeight(slant, labels) {
-          return slant === "horizontal" ? 60 : 40 + d3.max(labels, sszvis.measureAxisLabel);
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
