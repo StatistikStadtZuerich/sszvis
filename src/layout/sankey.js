@@ -5,14 +5,16 @@
  * and layout required by the sankey component.
  */
 
-import {ascending, descending, map, sum, min, max} from 'd3';
+import { ascending, descending, map, sum, min, max } from "d3";
 
-import * as fn from '../fn.js';
-import * as logger from '../logger.js';
+import * as fn from "../fn.js";
+import * as logger from "../logger.js";
 
 var newLinkId = (function() {
   var id = 0;
-  return function() { return ++id; };
+  return function() {
+    return ++id;
+  };
 })();
 
 /**
@@ -51,9 +53,13 @@ export var prepareData = function() {
   var mColumnIds = [];
 
   // Helper functions
-  var valueAcc = fn.prop('value');
-  var byAscendingValue = function(a, b) { return ascending(valueAcc(a), valueAcc(b)); };
-  var byDescendingValue = function(a, b) { return descending(valueAcc(a), valueAcc(b)); };
+  var valueAcc = fn.prop("value");
+  var byAscendingValue = function(a, b) {
+    return ascending(valueAcc(a), valueAcc(b));
+  };
+  var byDescendingValue = function(a, b) {
+    return descending(valueAcc(a), valueAcc(b));
+  };
 
   var valueSortFunc = byDescendingValue;
 
@@ -61,7 +67,11 @@ export var prepareData = function() {
     var columnIndex = mColumnIds.reduce(function(index, columnIdsList, colIndex) {
       columnIdsList.forEach(function(id) {
         if (index.has(id)) {
-          logger.warn('Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:', id, 'The existing value will be overwritten');
+          logger.warn(
+            "Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:",
+            id,
+            "The existing value will be overwritten"
+          );
         }
 
         var item = {
@@ -83,18 +93,18 @@ export var prepareData = function() {
     var listOfLinks = inputData.map(function(datum) {
       var srcId = mGetSource(datum);
       var tgtId = mGetTarget(datum);
-      var value = + mGetValue(datum) || 0; // Cast this to number
+      var value = +mGetValue(datum) || 0; // Cast this to number
 
       var srcNode = columnIndex.get(srcId);
       var tgtNode = columnIndex.get(tgtId);
 
       if (!srcNode) {
-        logger.warn('Found invalid source column id:', srcId);
+        logger.warn("Found invalid source column id:", srcId);
         return null;
       }
 
       if (!tgtNode) {
-        logger.warn('Found invalid target column id:', tgtId);
+        logger.warn("Found invalid target column id:", tgtId);
         return null;
       }
 
@@ -130,7 +140,9 @@ export var prepareData = function() {
     }, fn.filledArray(mColumnIds.length, 0));
 
     // An array with the number of nodes in each column
-    var columnLengths = mColumnIds.map(function(colIds) { return colIds.length; });
+    var columnLengths = mColumnIds.map(function(colIds) {
+      return colIds.length;
+    });
 
     // Sort the column nodes
     // (note, this sorts all nodes for all columns in the same array)
@@ -145,19 +157,19 @@ export var prepareData = function() {
     // Here, columnData[0] is an array adding up value totals
     // and columnData[1] is an array adding up the number of nodes in each column
     // Both are used to assign cumulative properties to the nodes of each column
-    listOfNodes.reduce(function(columnData, node) {
-      // Assigns valueOffset and nodeIndex
-      node.valueOffset = columnData[0][node.columnIndex];
-      node.nodeIndex = columnData[1][node.columnIndex];
+    listOfNodes.reduce(
+      function(columnData, node) {
+        // Assigns valueOffset and nodeIndex
+        node.valueOffset = columnData[0][node.columnIndex];
+        node.nodeIndex = columnData[1][node.columnIndex];
 
-      columnData[0][node.columnIndex] += node.value;
-      columnData[1][node.columnIndex] += 1;
+        columnData[0][node.columnIndex] += node.value;
+        columnData[1][node.columnIndex] += 1;
 
-      return columnData;
-    }, [
-      fn.filledArray(mColumnIds.length, 0),
-      fn.filledArray(mColumnIds.length, 0)
-    ]);
+        return columnData;
+      },
+      [fn.filledArray(mColumnIds.length, 0), fn.filledArray(mColumnIds.length, 0)]
+    );
 
     // Once the order of nodes is calculated, we need to sort the links going into the
     // nodes and the links coming out of the nodes according to the ordering of the nodes
@@ -192,19 +204,39 @@ export var prepareData = function() {
     };
   };
 
-  main.apply = function(data) { return main(data); };
+  main.apply = function(data) {
+    return main(data);
+  };
 
-  main.source = function(func) { mGetSource = func; return main; };
+  main.source = function(func) {
+    mGetSource = func;
+    return main;
+  };
 
-  main.target = function(func) { mGetTarget = func; return main; };
+  main.target = function(func) {
+    mGetTarget = func;
+    return main;
+  };
 
-  main.value = function(func) { mGetValue = func; return main; };
+  main.value = function(func) {
+    mGetValue = func;
+    return main;
+  };
 
-  main.descendingSort = function() { valueSortFunc = byDescendingValue; return main; };
+  main.descendingSort = function() {
+    valueSortFunc = byDescendingValue;
+    return main;
+  };
 
-  main.ascendingSort = function() { valueSortFunc = byAscendingValue; return main; };
+  main.ascendingSort = function() {
+    valueSortFunc = byAscendingValue;
+    return main;
+  };
 
-  main.idLists = function(idLists) { mColumnIds = idLists; return main; };
+  main.idLists = function(idLists) {
+    mColumnIds = idLists;
+    return main;
+  };
 
   return main;
 };
@@ -254,7 +286,10 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
   var pixPerUnit = min(
     columnLengths.map(function(colLength, colIndex) {
       // The non-padding pixels must have at least minDisplayPixels
-      var nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - ((colLength - 1) * computedPixPadding));
+      var nonPaddingPixels = Math.max(
+        minDisplayPixels,
+        columnHeight - (colLength - 1) * computedPixPadding
+      );
       return nonPaddingPixels / columnTotals[colIndex];
     })
   );
@@ -268,9 +303,13 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
   var maxTotal = max(columnTotals);
 
   // Compute y-padding required to vertically center each column (in pixels)
-  var paddedHeights = columnLengths.map(function(colLength, colIndex) { return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding; });
+  var paddedHeights = columnLengths.map(function(colLength, colIndex) {
+    return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding;
+  });
   var maxPaddedHeight = max(paddedHeights);
-  var columnPaddings = columnLengths.map(function(colLength, colIndex) { return (maxPaddedHeight - paddedHeights[colIndex]) / 2; });
+  var columnPaddings = columnLengths.map(function(colLength, colIndex) {
+    return (maxPaddedHeight - paddedHeights[colIndex]) / 2;
+  });
 
   // The domain of the size scale
   var valueDomain = [0, maxTotal];

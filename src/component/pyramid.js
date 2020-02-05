@@ -28,40 +28,42 @@
  * @return {sszvis.component}
  */
 
-import {select, line as d3Line} from 'd3';
+import { select, line as d3Line } from "d3";
 
-import * as fn from '../fn.js';
-import { defaultTransition } from '../transition.js';
-import bar from './bar.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { defaultTransition } from "../transition.js";
+import bar from "./bar.js";
+import { component } from "../d3-component.js";
 
 /* Constants
 ----------------------------------------------- */
 var SPINE_PADDING = 0.5;
 
-
 /* Module
 ----------------------------------------------- */
 export default function() {
   return component()
-    .prop('barHeight', fn.functor)
-    .prop('barWidth', fn.functor)
-    .prop('barPosition', fn.functor)
-    .prop('barFill', fn.functor).barFill('#000')
-    .prop('tooltipAnchor').tooltipAnchor([0.5, 0.5])
-    .prop('leftAccessor')
-    .prop('rightAccessor')
-    .prop('leftRefAccessor')
-    .prop('rightRefAccessor')
+    .prop("barHeight", fn.functor)
+    .prop("barWidth", fn.functor)
+    .prop("barPosition", fn.functor)
+    .prop("barFill", fn.functor)
+    .barFill("#000")
+    .prop("tooltipAnchor")
+    .tooltipAnchor([0.5, 0.5])
+    .prop("leftAccessor")
+    .prop("rightAccessor")
+    .prop("leftRefAccessor")
+    .prop("rightRefAccessor")
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
-
       // Components
 
       var leftBar = bar()
-        .x(function(d){ return -SPINE_PADDING - props.barWidth(d); })
+        .x(function(d) {
+          return -SPINE_PADDING - props.barWidth(d);
+        })
         .y(props.barPosition)
         .height(props.barHeight)
         .width(props.barWidth)
@@ -85,34 +87,36 @@ export default function() {
         .barPosition(props.barPosition)
         .barWidth(props.barWidth);
 
-
       // Rendering
 
-      selection.selectGroup('left')
+      selection
+        .selectGroup("left")
         .datum(props.leftAccessor(data))
         .call(leftBar);
 
-      selection.selectGroup('right')
+      selection
+        .selectGroup("right")
         .datum(props.rightAccessor(data))
         .call(rightBar);
 
-      selection.selectGroup('leftReference')
+      selection
+        .selectGroup("leftReference")
         .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
         .call(leftLine);
 
-      selection.selectGroup('rightReference')
+      selection
+        .selectGroup("rightReference")
         .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
         .call(rightLine);
-
     });
-};
-
+}
 
 function lineComponent() {
   return component()
-    .prop('barPosition')
-    .prop('barWidth')
-    .prop('mirror').mirror(false)
+    .prop("barPosition")
+    .prop("barWidth")
+    .prop("mirror")
+    .mirror(false)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -121,22 +125,20 @@ function lineComponent() {
         .x(props.barWidth)
         .y(props.barPosition);
 
-      var line = selection.selectAll('.sszvis-pyramid__referenceline')
-        .data(data);
+      var line = selection.selectAll(".sszvis-pyramid__referenceline").data(data);
 
       line.exit().remove();
 
-      var newLine = line.enter()
-        .append('path')
-        .attr('class', 'sszvis-pyramid__referenceline');
+      var newLine = line
+        .enter()
+        .append("path")
+        .attr("class", "sszvis-pyramid__referenceline");
 
       line = line.merge(newLine);
 
       line
-        .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
+        .attr("transform", props.mirror ? "scale(-1, 1)" : "")
         .transition(defaultTransition())
-        .attr('d', lineGen);
-
-
+        .attr("d", lineGen);
     });
 }

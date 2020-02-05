@@ -28,7 +28,7 @@
  * @return {Object}
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
 // throttles a function to the trailing edge. Copied mostly verbatim from underscore.js
 function throttle(wait, func) {
@@ -70,25 +70,44 @@ var callbacks = {
   resize: []
 };
 
-if (typeof window !== 'undefined') {
-  select(window).on('resize', throttle(500, function() { trigger('resize'); }));
+if (typeof window !== "undefined") {
+  select(window).on(
+    "resize",
+    throttle(500, function() {
+      trigger("resize");
+    })
+  );
 }
 
 var on = function(name, cb) {
-  if (!callbacks[name]) { callbacks[name] = []; }
-  callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; }).concat(cb);
+  if (!callbacks[name]) {
+    callbacks[name] = [];
+  }
+  callbacks[name] = callbacks[name]
+    .filter(function(fn) {
+      return fn !== cb;
+    })
+    .concat(cb);
   return this;
 };
 
 var off = function(name, cb) {
-  if (!callbacks[name]) { return this; }
-  callbacks[name] = callbacks[name].filter(function(fn) { return fn !== cb; });
+  if (!callbacks[name]) {
+    return this;
+  }
+  callbacks[name] = callbacks[name].filter(function(fn) {
+    return fn !== cb;
+  });
   return this;
 };
 
 var trigger = function(name) {
   var evtArgs = Array.prototype.slice.call(arguments, 1);
-  if (callbacks[name]) { callbacks[name].forEach(function(fn) { fn.apply(null, evtArgs); }); }
+  if (callbacks[name]) {
+    callbacks[name].forEach(function(fn) {
+      fn.apply(null, evtArgs);
+    });
+  }
   return this;
 };
 

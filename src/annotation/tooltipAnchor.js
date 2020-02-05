@@ -40,76 +40,68 @@
  * @return {sszvis.component}
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import translateString from '../svgUtils/translateString.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import translateString from "../svgUtils/translateString.js";
+import { component } from "../d3-component.js";
 
 export default function() {
-
   return component()
-    .prop('position').position(fn.functor([0, 0]))
-    .prop('debug')
+    .prop("position")
+    .position(fn.functor([0, 0]))
+    .prop("debug")
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
-      var anchor = selection.selectAll('[data-tooltip-anchor]')
-        .data(data);
-
+      var anchor = selection.selectAll("[data-tooltip-anchor]").data(data);
 
       // Enter
 
-      var newAnchor = anchor.enter()
-        .append('rect')
-        .attr('height', 1)
-        .attr('width', 1)
-        .attr('fill', 'none')
-        .attr('stroke', 'none')
-        .attr('visibility', 'none')
-        .attr('data-tooltip-anchor', '');
-
+      var newAnchor = anchor
+        .enter()
+        .append("rect")
+        .attr("height", 1)
+        .attr("width", 1)
+        .attr("fill", "none")
+        .attr("stroke", "none")
+        .attr("visibility", "none")
+        .attr("data-tooltip-anchor", "");
 
       // Exit
 
       anchor.exit().remove();
       anchor = anchor.merge(newAnchor);
 
-
       // Update
 
-      anchor
-        .attr('transform', fn.compose(vectorToTranslateString, props.position));
-
+      anchor.attr("transform", fn.compose(vectorToTranslateString, props.position));
 
       // Visible anchor if debug is true
       if (props.debug) {
-        var referencePoint = selection.selectAll('[data-tooltip-anchor-debug]')
-          .data(data);
+        var referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data);
 
-        var newReferencePoint = referencePoint.enter()
-          .append('circle')
-          .attr('data-tooltip-anchor-debug', '');
+        var newReferencePoint = referencePoint
+          .enter()
+          .append("circle")
+          .attr("data-tooltip-anchor-debug", "");
 
         referencePoint.exit().remove();
         referencePoint = referencePoint.merge(newReferencePoint);
 
         referencePoint
-          .attr('r', 2)
-          .attr('fill', '#fff')
-          .attr('stroke', '#f00')
-          .attr('stroke-width', 1.5)
-          .attr('transform', fn.compose(vectorToTranslateString, props.position));
+          .attr("r", 2)
+          .attr("fill", "#fff")
+          .attr("stroke", "#f00")
+          .attr("stroke-width", 1.5)
+          .attr("transform", fn.compose(vectorToTranslateString, props.position));
       }
-
     });
-
 
   /* Helper functions
   ----------------------------------------------- */
   function vectorToTranslateString(vec) {
     return translateString.apply(null, vec);
   }
-
-};
+}

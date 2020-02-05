@@ -27,9 +27,9 @@
 export default function(height, num, pct) {
   pct || (pct = 0.1);
   var step = height / (num - pct),
-      bandHeight = step * (1 - pct),
-      level = bandHeight, // count from the top, and start at the bottom of the first band
-      range = [];
+    bandHeight = step * (1 - pct),
+    level = bandHeight, // count from the top, and start at the bottom of the first band
+    range = [];
   while (level - height < 1) {
     range.push(level);
     level += step;
@@ -39,4 +39,4 @@ export default function(height, num, pct) {
     bandHeight: bandHeight,
     padHeight: step * pct
   };
-};
+}

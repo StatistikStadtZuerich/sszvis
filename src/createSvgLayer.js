@@ -69,10 +69,7 @@ export function createSvgLayer(selector, bounds, metadata) {
 
   viewport
     .merge(viewportEnter)
-    .attr(
-      "transform",
-      "translate(" + bounds.padding.left + "," + bounds.padding.top + ")"
-    );
+    .attr("transform", "translate(" + bounds.padding.left + "," + bounds.padding.top + ")");
 
   return viewport.merge(viewportEnter);
 }

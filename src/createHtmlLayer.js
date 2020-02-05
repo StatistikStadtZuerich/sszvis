@@ -41,33 +41,35 @@
  * @returns {d3.selection}
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from './fn.js';
-import { bounds as mkBounds } from './bounds.js';
+import * as fn from "./fn.js";
+import { bounds as mkBounds } from "./bounds.js";
 
 export function createHtmlLayer(selector, bounds, metadata) {
   bounds || (bounds = mkBounds());
   metadata || (metadata = {});
 
-  var key = metadata.key || 'default';
+  var key = metadata.key || "default";
 
-  var elementDataKey = 'data-sszvis-html-' + key;
+  var elementDataKey = "data-sszvis-html-" + key;
 
   var root = fn.isSelection(selector) ? selector : select(selector);
-  root.classed('sszvis-outer-container', true);
+  root.classed("sszvis-outer-container", true);
 
-  var layer = root.selectAll('[data-sszvis-html-layer][' + elementDataKey + ']').data([0]);
-  var newLayer = layer.enter().append('div')
-    .classed('sszvis-html-layer', true)
-    .attr('data-sszvis-html-layer', '')
-    .attr(elementDataKey, '');
+  var layer = root.selectAll("[data-sszvis-html-layer][" + elementDataKey + "]").data([0]);
+  var newLayer = layer
+    .enter()
+    .append("div")
+    .classed("sszvis-html-layer", true)
+    .attr("data-sszvis-html-layer", "")
+    .attr(elementDataKey, "");
 
   layer = layer.merge(newLayer);
   layer
-    .style('position', 'absolute')
-    .style('left', bounds.padding.left + 'px')
-    .style('top', bounds.padding.top + 'px');
+    .style("position", "absolute")
+    .style("left", bounds.padding.left + "px")
+    .style("top", bounds.padding.top + "px");
 
   return layer;
-};
+}

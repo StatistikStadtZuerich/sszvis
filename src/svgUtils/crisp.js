@@ -18,8 +18,7 @@
  * @module sszvis/svgUtils/crisp
  */
 
-
-import * as fn from '../fn.js';
+import * as fn from "../fn.js";
 
 /**
  * crisp.halfPixel
@@ -49,13 +48,18 @@ export var halfPixel = function(pos) {
  */
 export var roundTransformString = function(transformStr) {
   var roundNumber = fn.compose(Math.floor, Number);
-  return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function(_, left, vecStr, right) {
+  return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function(
+    _,
+    left,
+    vecStr,
+    right
+  ) {
     var roundVec = vecStr
-      .replace(',', ' ')
-      .replace(/\s+/, ' ')
-      .split(' ')
+      .replace(",", " ")
+      .replace(/\s+/, " ")
+      .split(" ")
       .map(roundNumber)
-      .join(',');
+      .join(",");
     return left + roundVec + right;
   });
 };
@@ -74,9 +78,9 @@ export var transformTranslateSubpixelShift = function(transformStr) {
   var roundNumber = fn.compose(Math.floor, Number);
   var m = transformStr.match(/(translate\()\s*([0-9.,\- ]+)\s*(\))/i);
   var vec = m[2]
-    .replace(',', ' ')
-    .replace(/\s+/, ' ')
-    .split(' ')
+    .replace(",", " ")
+    .replace(/\s+/, " ")
+    .split(" ")
     .map(Number);
 
   if (vec.length === 1) vec.push([0]);

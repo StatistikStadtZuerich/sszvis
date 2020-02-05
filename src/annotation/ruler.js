@@ -61,9 +61,7 @@ export default function() {
           return props.x(d) + "_" + props.y(d);
         };
 
-      var ruler = selection
-        .selectAll(".sszvis-ruler__rule")
-        .data(data, labelId);
+      var ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
 
       var newRuler = ruler
         .enter()
@@ -95,9 +93,7 @@ export default function() {
         .attr("r", 3.5)
         .attr("fill", props.color);
 
-      var labelOutline = selection
-        .selectAll(".sszvis-ruler__label-outline")
-        .data(data, labelId);
+      var labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId);
 
       var newLabelOutline = labelOutline
         .enter()
@@ -107,9 +103,7 @@ export default function() {
       labelOutline.exit().remove();
       labelOutline = labelOutline.merge(newLabelOutline);
 
-      var label = selection
-        .selectAll(".sszvis-ruler__label")
-        .data(data, labelId);
+      var label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
 
       var newLabel = label
         .enter()

@@ -1,1 +1,1 @@
-export {default as choropleth} from './choropleth';
+export { default as choropleth } from "./choropleth";

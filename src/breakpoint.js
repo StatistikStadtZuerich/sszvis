@@ -36,7 +36,7 @@
  * }
  */
 
-import * as fn from './fn.js';
+import * as fn from "./fn.js";
 
 /**
  * breakpoint.find
@@ -54,7 +54,6 @@ export function breakpointFind(breakpoints, partialMeasurement) {
   }, breakpoints);
 }
 
-
 /**
  * breakpoint.findByName
  *
@@ -67,10 +66,11 @@ export function breakpointFind(breakpoints, partialMeasurement) {
  *          breakpoint for the given name exists, that breakpoint is returned
  */
 export function breakpointFindByName(breakpoints, name) {
-  var eqName = function(bp) { return bp.name === name; };
+  var eqName = function(bp) {
+    return bp.name === name;
+  };
   return fn.find(eqName, breakpoints);
 }
-
 
 /**
  * breakpoint.test
@@ -86,7 +86,6 @@ export function breakpointTest(breakpoint, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
   return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
 }
-
 
 /**
  * breakpoint.match
@@ -105,7 +104,6 @@ export function breakpointMatch(breakpoints, partialMeasurement) {
   });
 }
 
-
 /**
  * breakpoint.createSpec
  *
@@ -117,11 +115,8 @@ export function breakpointMatch(breakpoints, partialMeasurement) {
  * @returns {Array<Breakpoint>}
  */
 export function breakpointCreateSpec(spec) {
-  return spec
-    .map(parseBreakpoint)
-    .concat(parseBreakpoint({name: '_'}));
+  return spec.map(parseBreakpoint).concat(parseBreakpoint({ name: "_" }));
 }
-
 
 /**
  * breakpoint.defaultSpec
@@ -131,17 +126,17 @@ export function breakpointCreateSpec(spec) {
  */
 export var breakpointDefaultSpec = (function() {
   var DEFAULT_SPEC = breakpointCreateSpec([
-    { name: 'palm', width: 540 },
-    { name: 'lap',  width: 749 }
+    { name: "palm", width: 540 },
+    { name: "lap", width: 749 }
   ]);
-  return function() { return DEFAULT_SPEC; };
-}());
-
+  return function() {
+    return DEFAULT_SPEC;
+  };
+})();
 
 // Default tests
-export var breakpointPalm = makeTest('palm');
-export var breakpointLap = makeTest('lap')
-
+export var breakpointPalm = makeTest("palm");
+export var breakpointLap = makeTest("lap");
 
 // Helpers
 
@@ -164,14 +159,13 @@ export var breakpointLap = makeTest('lap')
  * @returns Measurement
  */
 function parseMeasurement(partialMeasurement) {
-  var widthOrInf = fn.propOr('width', Infinity);
-  var screenHeightOrInf = fn.propOr('screenHeight', Infinity);
+  var widthOrInf = fn.propOr("width", Infinity);
+  var screenHeightOrInf = fn.propOr("screenHeight", Infinity);
   return {
     width: widthOrInf(partialMeasurement),
     screenHeight: screenHeightOrInf(partialMeasurement)
   };
 }
-
 
 /**
  * Breakpoint
@@ -202,14 +196,13 @@ function parseBreakpoint(bp) {
   if (fn.defined(bp.measurement)) {
     measurement = parseMeasurement(bp.measurement);
   } else {
-    measurement = parseMeasurement({width: bp.width, screenHeight: bp.screenHeight});
+    measurement = parseMeasurement({ width: bp.width, screenHeight: bp.screenHeight });
   }
   return {
     name: bp.name,
     measurement: measurement
   };
 }
-
 
 /**
  * Create a partially applied test function

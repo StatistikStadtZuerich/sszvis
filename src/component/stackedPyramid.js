@@ -28,20 +28,20 @@
  * @return {sszvis.component}
  */
 
-import {select, stack as d3Stack, max, line as d3Line} from 'd3';
+import { select, stack as d3Stack, max, line as d3Line } from "d3";
 
-import * as fn from '../fn.js';
-import { cascade } from '../cascade.js';
-import { defaultTransition } from '../transition.js';
-import bar from './bar.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { cascade } from "../cascade.js";
+import { defaultTransition } from "../transition.js";
+import bar from "./bar.js";
+import { component } from "../d3-component.js";
 
 /* Constants
 ----------------------------------------------- */
 var SPINE_PADDING = 0.5;
 
-var dataAcc = fn.prop('data');
-var rowAcc = fn.prop('row');
+var dataAcc = fn.prop("data");
+var rowAcc = fn.prop("row");
 
 /**
  * This function prepares the data for the stackedPyramid component
@@ -69,7 +69,9 @@ export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
 
         var stacks = d3Stack()
           .keys(keys)
-          .value(function(x, key) { return valueAcc(x[key][0]); })(rows);
+          .value(function(x, key) {
+            return valueAcc(x[key][0]);
+          })(rows);
 
         stacks.forEach(function(stack, i) {
           stack.forEach(function(d, row) {
@@ -89,7 +91,9 @@ export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
     // the horizontal scale.
     sides.maxValue = max(sides, function(side) {
       return max(side, function(rows) {
-        return max(rows, function(row) { return row[1]; });
+        return max(rows, function(row) {
+          return row[1];
+        });
       });
     });
 
@@ -101,15 +105,17 @@ export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
 ----------------------------------------------- */
 export function stackedPyramid() {
   return component()
-    .prop('barHeight', fn.functor)
-    .prop('barWidth', fn.functor)
-    .prop('barPosition', fn.functor)
-    .prop('barFill', fn.functor).barFill('#000')
-    .prop('tooltipAnchor').tooltipAnchor([0.5, 0.5])
-    .prop('leftAccessor')
-    .prop('rightAccessor')
-    .prop('leftRefAccessor')
-    .prop('rightRefAccessor')
+    .prop("barHeight", fn.functor)
+    .prop("barWidth", fn.functor)
+    .prop("barPosition", fn.functor)
+    .prop("barFill", fn.functor)
+    .barFill("#000")
+    .prop("tooltipAnchor")
+    .tooltipAnchor([0.5, 0.5])
+    .prop("leftAccessor")
+    .prop("rightAccessor")
+    .prop("leftRefAccessor")
+    .prop("rightRefAccessor")
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -117,26 +123,32 @@ export function stackedPyramid() {
       // Components
 
       var leftBar = bar()
-        .x(function(d){ return -SPINE_PADDING - props.barWidth(d[1]); })
+        .x(function(d) {
+          return -SPINE_PADDING - props.barWidth(d[1]);
+        })
         .y(fn.compose(props.barPosition, rowAcc))
         .height(props.barHeight)
-        .width(function(d){ return props.barWidth(d[1]) - props.barWidth(d[0]); })
+        .width(function(d) {
+          return props.barWidth(d[1]) - props.barWidth(d[0]);
+        })
         .fill(fn.compose(props.barFill, dataAcc))
         .tooltipAnchor(props.tooltipAnchor);
 
       var rightBar = bar()
-        .x(function(d){ return SPINE_PADDING + props.barWidth(d[0]); })
+        .x(function(d) {
+          return SPINE_PADDING + props.barWidth(d[0]);
+        })
         .y(fn.compose(props.barPosition, rowAcc))
         .height(props.barHeight)
-        .width(function(d){ return props.barWidth(d[1]) - props.barWidth(d[0]); })
+        .width(function(d) {
+          return props.barWidth(d[1]) - props.barWidth(d[0]);
+        })
         .fill(fn.compose(props.barFill, dataAcc))
         .tooltipAnchor(props.tooltipAnchor);
 
-      var leftStack = stackComponent()
-        .stackElement(leftBar);
+      var leftStack = stackComponent().stackElement(leftBar);
 
-      var rightStack = stackComponent()
-        .stackElement(rightBar);
+      var rightStack = stackComponent().stackElement(rightBar);
 
       var leftLine = lineComponent()
         .barPosition(props.barPosition)
@@ -147,42 +159,43 @@ export function stackedPyramid() {
         .barPosition(props.barPosition)
         .barWidth(props.barWidth);
 
-
       // Rendering
 
-      selection.selectGroup('leftStack')
+      selection
+        .selectGroup("leftStack")
         .datum(props.leftAccessor(data))
         .call(leftStack);
 
-      selection.selectGroup('rightStack')
+      selection
+        .selectGroup("rightStack")
         .datum(props.rightAccessor(data))
         .call(rightStack);
 
-      selection.selectGroup('leftReference')
+      selection
+        .selectGroup("leftReference")
         .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
         .call(leftLine);
 
-      selection.selectGroup('rightReference')
+      selection
+        .selectGroup("rightReference")
         .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
         .call(rightLine);
-
     });
-};
-
+}
 
 function stackComponent() {
   return component()
-    .prop('stackElement')
+    .prop("stackElement")
     .renderSelection(function(selection) {
       var datum = selection.datum();
       var props = selection.props();
 
-      var stack = selection.selectAll('[data-sszvis-stack]')
-        .data(datum);
+      var stack = selection.selectAll("[data-sszvis-stack]").data(datum);
 
-      var newStack = stack.enter()
-        .append('g')
-        .attr('data-sszvis-stack', '');
+      var newStack = stack
+        .enter()
+        .append("g")
+        .attr("data-sszvis-stack", "");
 
       stack.exit().remove();
 
@@ -196,12 +209,12 @@ function stackComponent() {
     });
 }
 
-
 function lineComponent() {
   return component()
-    .prop('barPosition')
-    .prop('barWidth')
-    .prop('mirror').mirror(false)
+    .prop("barPosition")
+    .prop("barWidth")
+    .prop("mirror")
+    .mirror(false)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -210,24 +223,24 @@ function lineComponent() {
         .x(props.barWidth)
         .y(props.barPosition);
 
-      var line = selection.selectAll('.sszvis-path')
-        .data(data);
+      var line = selection.selectAll(".sszvis-path").data(data);
 
       line.exit().remove();
 
-      var newLine = line.enter()
-        .append('path')
-        .attr('class', 'sszvis-path')
-        .attr('fill', 'none')
-        .attr('stroke', '#aaa')
-        .attr('stroke-width', 2)
-        .attr('stroke-dasharray', '3 3');
+      var newLine = line
+        .enter()
+        .append("path")
+        .attr("class", "sszvis-path")
+        .attr("fill", "none")
+        .attr("stroke", "#aaa")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "3 3");
 
       line = line.merge(newLine);
 
       line
-        .attr('transform', props.mirror ? 'scale(-1, 1)' : '')
+        .attr("transform", props.mirror ? "scale(-1, 1)" : "")
         .transition(defaultTransition())
-        .attr('d', lineGen);
+        .attr("d", lineGen);
     });
 }

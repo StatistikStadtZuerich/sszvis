@@ -4,9 +4,9 @@
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
 
-import {nest, hierarchy, partition, min, max} from 'd3';
+import { nest, hierarchy, partition, min, max } from "d3";
 
-import * as fn from '../fn.js';
+import * as fn from "../fn.js";
 
 /**
  * sszvis.layout.sunburst.prepareData
@@ -41,14 +41,18 @@ export var prepareData = function() {
   // However, input data order preservation is not guaranteed, because of an implementation
   // detail of d3.partition, probably having to do with the way that each browser can
   // implement its own key ordering for javascript objects.
-  var sortFn = function() { return 0; };
+  var sortFn = function() {
+    return 0;
+  };
 
   function main(data) {
     nester.rollup(fn.first);
 
-    var root = hierarchy({ isSunburstRoot: true, values: nester.entries(data) }, fn.prop('values'))
+    var root = hierarchy({ isSunburstRoot: true, values: nester.entries(data) }, fn.prop("values"))
       .sort(sortFn)
-      .sum(function(x) { return x.value ? valueAcc(x.value) : 0; });
+      .sum(function(x) {
+        return x.value ? valueAcc(x.value) : 0;
+      });
 
     partition()(root);
 
@@ -57,10 +61,14 @@ export var prepareData = function() {
     }
 
     // Remove the root element from the data (but it still exists in memory so long as the data is alive)
-    return flatten(root).filter(function(d) { return !d.data.isSunburstRoot; });
-  };
+    return flatten(root).filter(function(d) {
+      return !d.data.isSunburstRoot;
+    });
+  }
 
-  main.calculate = function(data) { return main(data); };
+  main.calculate = function(data) {
+    return main(data);
+  };
 
   main.layer = function(keyFunc) {
     nester.key(keyFunc);
@@ -122,7 +130,11 @@ export var computeLayout = function(numLayers, chartWidth) {
  */
 export var getRadiusExtent = function(formattedData) {
   return [
-    min(formattedData, function(d) { return d.y0; }),
-    max(formattedData, function(d) { return d.y1; })
+    min(formattedData, function(d) {
+      return d.y0;
+    }),
+    max(formattedData, function(d) {
+      return d.y1;
+    })
   ];
 };

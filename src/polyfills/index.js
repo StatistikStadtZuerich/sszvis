@@ -1,1 +1,1 @@
-import './innersvg.js';
+import "./innersvg.js";

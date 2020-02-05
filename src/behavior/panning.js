@@ -37,17 +37,17 @@
  * @return {d3.component}
  */
 
-import {select, dispatch, event as d3Event} from 'd3';
+import { select, dispatch, event as d3Event } from "d3";
 
-import * as fn from '../fn.js';
-import { datumFromPanEvent } from './util.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { datumFromPanEvent } from "./util.js";
+import { component } from "../d3-component.js";
 
 export default function() {
-  var event = dispatch('start', 'pan', 'end');
+  var event = dispatch("start", "pan", "end");
 
   var panningComponent = component()
-    .prop('elementSelector')
+    .prop("elementSelector")
     .render(function() {
       var selection = select(this);
       var props = selection.props();
@@ -55,32 +55,32 @@ export default function() {
       var elements = selection.selectAll(props.elementSelector);
 
       elements
-        .attr('data-sszvis-behavior-pannable', '')
-        .classed('sszvis-interactive', true)
-        .on('mouseenter', function() {
-          event.apply('start', this, arguments);
+        .attr("data-sszvis-behavior-pannable", "")
+        .classed("sszvis-interactive", true)
+        .on("mouseenter", function() {
+          event.apply("start", this, arguments);
         })
-        .on('mousemove', function() {
-          event.apply('pan', this, arguments);
+        .on("mousemove", function() {
+          event.apply("pan", this, arguments);
         })
-        .on('mouseleave', function() {
-          event.apply('end', this, arguments);
+        .on("mouseleave", function() {
+          event.apply("end", this, arguments);
         })
-        .on('touchstart', function() {
+        .on("touchstart", function() {
           d3Event.preventDefault();
-          event.apply('start', this, arguments);
+          event.apply("start", this, arguments);
         })
-        .on('touchmove', function() {
+        .on("touchmove", function() {
           d3Event.preventDefault();
           var datum = datumFromPanEvent(fn.firstTouch(d3Event));
           if (datum !== null) {
-            event.apply('pan', this, arguments);
+            event.apply("pan", this, arguments);
           } else {
-            event.apply('end', this, arguments);
+            event.apply("end", this, arguments);
           }
         })
-        .on('touchend', function() {
-          event.apply('end', this, arguments);
+        .on("touchend", function() {
+          event.apply("end", this, arguments);
         });
     });
 
@@ -90,4 +90,4 @@ export default function() {
   };
 
   return panningComponent;
-};
+}

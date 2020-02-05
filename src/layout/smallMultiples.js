@@ -51,17 +51,17 @@
  * @return {sszvis.component}
  */
 
-import {select} from 'd3';
-import { component } from '../d3-component.js';
+import { select } from "d3";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('width')
-    .prop('height')
-    .prop('paddingX')
-    .prop('paddingY')
-    .prop('rows')
-    .prop('cols')
+    .prop("width")
+    .prop("height")
+    .prop("paddingX")
+    .prop("paddingY")
+    .prop("rows")
+    .prop("cols")
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -72,25 +72,25 @@ export default function() {
       var horizontalCenter = unitWidth / 2;
       var verticalCenter = unitHeight / 2;
 
-      var multiples = selection.selectAll('g.sszvis-multiple')
-        .data(data);
+      var multiples = selection.selectAll("g.sszvis-multiple").data(data);
 
-      var newMultiples = multiples.enter()
-        .append('g')
-        .classed('sszvis-g sszvis-multiple', true);
+      var newMultiples = multiples
+        .enter()
+        .append("g")
+        .classed("sszvis-g sszvis-multiple", true);
 
       multiples.exit().remove();
 
       multiples = multiples.merge(newMultiples);
 
-      var subGroups = multiples.selectAll('g.sszvis-multiple-chart')
-        .data(function(d) {
-          return [d.values];
-        });
+      var subGroups = multiples.selectAll("g.sszvis-multiple-chart").data(function(d) {
+        return [d.values];
+      });
 
-      var newSubGroups = subGroups.enter()
-        .append('g')
-        .classed('sszvis-multiple-chart', true);
+      var newSubGroups = subGroups
+        .enter()
+        .append("g")
+        .classed("sszvis-multiple-chart", true);
 
       subGroups.exit().remove();
 
@@ -106,9 +106,8 @@ export default function() {
           d.cy = verticalCenter;
           return d;
         })
-        .attr('transform', function(d) {
-          return 'translate(' + (d.gx) + ',' + (d.gy) + ')';
+        .attr("transform", function(d) {
+          return "translate(" + d.gx + "," + d.gy + ")";
         });
-
     });
-};
+}

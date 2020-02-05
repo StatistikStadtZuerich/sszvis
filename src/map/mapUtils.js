@@ -4,15 +4,15 @@
  * @module sszvis/map/utils
  */
 
-import {geoMercator, geoPath, geoCentroid} from 'd3';
-import {memoize} from '../fn.js';
+import { geoMercator, geoPath, geoCentroid } from "d3";
+import { memoize } from "../fn.js";
 
-export var STADT_KREISE_KEY = 'zurichStadtKreise';
-export var STATISTISCHE_QUARTIERE_KEY = 'zurichStatistischeQuartiere';
-export var STATISTISCHE_ZONEN_KEY = 'zurichStatistischeZonen';
-export var WAHL_KREISE_KEY = 'zurichWahlKreise';
-export var AGGLOMERATION_2012_KEY = 'zurichAgglomeration2012';
-export var SWITZERLAND_KEY = 'switzerland';
+export var STADT_KREISE_KEY = "zurichStadtKreise";
+export var STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
+export var STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
+export var WAHL_KREISE_KEY = "zurichWahlKreise";
+export var AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
+export var SWITZERLAND_KEY = "switzerland";
 
 /**
  * swissMapProjection
@@ -28,17 +28,15 @@ export var SWITZERLAND_KEY = 'switzerland';
  * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
  * @return {Function}                               The projection function.
  */
-export var swissMapProjection = 
-memoize(
+export var swissMapProjection = memoize(
   function(width, height, featureCollection) {
-    var mercatorProjection = geoMercator()
-      .fitSize([width, height], featureCollection)
+    var mercatorProjection = geoMercator().fitSize([width, height], featureCollection);
 
     return mercatorProjection;
   },
   // Memoize resolver
   function(width, height, _, featureBoundsCacheKey) {
-    return '' + width + ',' + height + ',' + featureBoundsCacheKey;
+    return "" + width + "," + height + "," + featureBoundsCacheKey;
   }
 );
 
@@ -59,8 +57,9 @@ memoize(
  *                                            a map projection optimal for Swiss areas.
  */
 export var swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
-  var mercatorPath = geoPath()
-    .projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
+  var mercatorPath = geoPath().projection(
+    swissMapProjection(width, height, featureCollection, featureBoundsCacheKey)
+  );
   return mercatorPath;
 };
 
@@ -83,10 +82,13 @@ export var pixelsFromGeoDistance = function(projection, centerPoint, meterDistan
   var APPROX_EARTH_RADIUS = 6367475;
   var APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
   // Compute the size of the angle made by the meter distance
-  var degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360;
+  var degrees = (meterDistance / APPROX_EARTH_CIRCUMFERENCE) * 360;
   // Construct a square, centered at centerPoint, with sides that span that number of degrees
   var halfDegrees = degrees / 2;
-  var bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
+  var bounds = [
+    [centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees],
+    [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]
+  ];
 
   // Project those bounds to pixel coordinates using the provided map projection
   var projBounds = bounds.map(projection);
@@ -100,7 +102,7 @@ export var pixelsFromGeoDistance = function(projection, centerPoint, meterDistan
   return averageSideSize;
 };
 
-export var GEO_KEY_DEFAULT = 'geoId';
+export var GEO_KEY_DEFAULT = "geoId";
 
 /**
  * prepareMergedData
@@ -119,12 +121,13 @@ export var GEO_KEY_DEFAULT = 'geoId';
 export var prepareMergedGeoData = function(dataset, geoJson, keyName) {
   keyName || (keyName = GEO_KEY_DEFAULT);
 
-
   // group the input data by map entity id
-  var groupedInputData = Array.isArray(dataset) ? dataset.reduce(function(m, v) {
-    m[v[keyName]] = v;
-    return m;
-  }, {}) : {} ;
+  var groupedInputData = Array.isArray(dataset)
+    ? dataset.reduce(function(m, v) {
+        m[v[keyName]] = v;
+        return m;
+      }, {})
+    : {};
 
   // merge the map features and the input data into new objects that include both
   var mergedData = geoJson.features.map(function(feature) {
@@ -156,7 +159,7 @@ export var getGeoJsonCenter = function(geoJson) {
   if (!geoJson.properties.cachedCenter) {
     var setCenter = geoJson.properties.center;
     if (setCenter) {
-      geoJson.properties.cachedCenter = setCenter.split(',').map(parseFloat);
+      geoJson.properties.cachedCenter = setCenter.split(",").map(parseFloat);
     } else {
       geoJson.properties.cachedCenter = geoCentroid(geoJson);
     }

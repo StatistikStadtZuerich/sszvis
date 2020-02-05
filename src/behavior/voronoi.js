@@ -41,27 +41,27 @@
  *
  */
 
-import {select, dispatch, event as d3Event, voronoi as d3Voronoi} from 'd3';
+import { select, dispatch, event as d3Event, voronoi as d3Voronoi } from "d3";
 
-import * as fn from '../fn.js';
-import * as logger from '../logger.js';
-import { elementFromEvent, datumFromPannableElement } from './util.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import * as logger from "../logger.js";
+import { elementFromEvent, datumFromPannableElement } from "./util.js";
+import { component } from "../d3-component.js";
 
 export default function() {
-  var event = dispatch('over', 'out');
+  var event = dispatch("over", "out");
 
   var voronoiComponent = component()
-    .prop('x')
-    .prop('y')
-    .prop('bounds')
-    .prop('debug')
+    .prop("x")
+    .prop("y")
+    .prop("bounds")
+    .prop("debug")
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
       if (!props.bounds) {
-        logger.error('behavior.voronoi - requires bounds');
+        logger.error("behavior.voronoi - requires bounds");
         return false;
       }
 
@@ -70,43 +70,62 @@ export default function() {
         .y(props.y)
         .extent(props.bounds);
 
-      var polys = selection.selectAll('[data-sszvis-behavior-voronoi]')
+      var polys = selection
+        .selectAll("[data-sszvis-behavior-voronoi]")
         .data(voronoi.polygons(data));
 
-      var newPolys = polys.enter()
-        .append('path')
-        .attr('data-sszvis-behavior-voronoi', '')
-        .attr('data-sszvis-behavior-pannable', '')
-        .attr('class', 'sszvis-interactive');
+      var newPolys = polys
+        .enter()
+        .append("path")
+        .attr("data-sszvis-behavior-voronoi", "")
+        .attr("data-sszvis-behavior-pannable", "")
+        .attr("class", "sszvis-interactive");
 
       polys.exit().remove();
       polys = polys.merge(newPolys);
 
       polys
-        .attr('d', function(d) { return 'M' + d.join('L') + 'Z'; })
-        .attr('fill', 'transparent')
-        .on('mouseover', function(datum) {
+        .attr("d", function(d) {
+          return "M" + d.join("L") + "Z";
+        })
+        .attr("fill", "transparent")
+        .on("mouseover", function(datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          if (eventNearPoint(d3Event, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
-            event.apply('over', this, [datum.data]);
+          if (
+            eventNearPoint(d3Event, [
+              cbox.left + props.x(datum.data),
+              cbox.top + props.y(datum.data)
+            ])
+          ) {
+            event.apply("over", this, [datum.data]);
           }
         })
-        .on('mousemove', function(datum) {
+        .on("mousemove", function(datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          if (eventNearPoint(d3Event, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
-            event.apply('over', this, [datum.data]);
+          if (
+            eventNearPoint(d3Event, [
+              cbox.left + props.x(datum.data),
+              cbox.top + props.y(datum.data)
+            ])
+          ) {
+            event.apply("over", this, [datum.data]);
           } else {
-            event.apply('out', this, []);
+            event.apply("out", this, []);
           }
         })
-        .on('mouseout', function() {
-          event.apply('out', this, []);
+        .on("mouseout", function() {
+          event.apply("out", this, []);
         })
-        .on('touchstart', function(datum) {
+        .on("touchstart", function(datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          if (eventNearPoint(fn.firstTouch(d3Event), [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
+          if (
+            eventNearPoint(fn.firstTouch(d3Event), [
+              cbox.left + props.x(datum.data),
+              cbox.top + props.y(datum.data)
+            ])
+          ) {
             d3Event.preventDefault();
-            event.apply('over', this, [datum.data]);
+            event.apply("over", this, [datum.data]);
 
             // Attach these handlers only if the initial touch is within the max distance from the voronoi center
             // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
@@ -118,37 +137,44 @@ export default function() {
               var panDatum = datumFromPannableElement(element);
               if (panDatum !== null) {
                 var panCbox = element.parentNode.getBoundingClientRect();
-                if (eventNearPoint(touchEvent, [panCbox.left + props.x(panDatum.data), panCbox.top + props.y(panDatum.data)])) {
+                if (
+                  eventNearPoint(touchEvent, [
+                    panCbox.left + props.x(panDatum.data),
+                    panCbox.top + props.y(panDatum.data)
+                  ])
+                ) {
                   // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
                   // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
                   // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
                   // we want to avoid.
-                  if (d3Event.cancelable) { d3Event.preventDefault(); }
-                  event.apply('over', this, [panDatum.data]);
+                  if (d3Event.cancelable) {
+                    d3Event.preventDefault();
+                  }
+                  event.apply("over", this, [panDatum.data]);
                 } else {
-                  event.apply('out', this, []);
+                  event.apply("out", this, []);
                 }
               } else {
-                event.apply('out', this, []);
+                event.apply("out", this, []);
               }
             };
 
             var end = function() {
-              event.apply('out', this, []);
+              event.apply("out", this, []);
               select(this)
-                .on('touchmove', null)
-                .on('touchend', null);
+                .on("touchmove", null)
+                .on("touchend", null);
             };
 
             select(this)
-              .on('touchmove', pan)
-              .on('touchend', end);
+              .on("touchmove", pan)
+              .on("touchend", end);
           }
         });
 
-        if (props.debug) {
-          polys.attr('stroke', '#f00');
-        }
+      if (props.debug) {
+        polys.attr("stroke", "#f00");
+      }
     });
 
   voronoiComponent.on = function() {
@@ -157,7 +183,7 @@ export default function() {
   };
 
   return voronoiComponent;
-};
+}
 
 // Perform distance calculations in units squared to avoid a costly Math.sqrt
 var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
@@ -165,5 +191,5 @@ var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
 function eventNearPoint(event, point) {
   var dx = event.clientX - point[0];
   var dy = event.clientY - point[1];
-  return (dx * dx + dy * dy) < MAX_INTERACTION_RADIUS_SQUARED;
+  return dx * dx + dy * dy < MAX_INTERACTION_RADIUS_SQUARED;
 }

@@ -18,74 +18,84 @@
  * @return {sszvis.component}
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('values')
-    .prop('current')
-    .prop('width').width(300)
-    .prop('change').change(fn.identity)
+    .prop("values")
+    .prop("current")
+    .prop("width")
+    .width(300)
+    .prop("change")
+    .change(fn.identity)
     .render(function() {
       var selection = select(this);
       var props = selection.props();
 
-      var wrapperEl = selection.selectAll('.sszvis-control-optionSelectable')
-        .data(['sszvis-control-select'], function(d){return d;});
-      var newWrapperEl = wrapperEl.enter()
-        .append('div')
-        .classed('sszvis-control-optionSelectable', true)
-        .classed('sszvis-control-select', true);
+      var wrapperEl = selection
+        .selectAll(".sszvis-control-optionSelectable")
+        .data(["sszvis-control-select"], function(d) {
+          return d;
+        });
+      var newWrapperEl = wrapperEl
+        .enter()
+        .append("div")
+        .classed("sszvis-control-optionSelectable", true)
+        .classed("sszvis-control-select", true);
       wrapperEl.exit().remove();
 
       wrapperEl = wrapperEl.merge(newWrapperEl);
 
-      wrapperEl
-        .style('width', props.width + 'px');
+      wrapperEl.style("width", props.width + "px");
 
-      var metricsEl = wrapperEl.selectDiv('selectMetrics')
-        .classed('sszvis-control-select__metrics', true);
+      var metricsEl = wrapperEl
+        .selectDiv("selectMetrics")
+        .classed("sszvis-control-select__metrics", true);
 
-      var selectEl = wrapperEl.selectAll('.sszvis-control-select__element')
-        .data([1]);
+      var selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]);
 
-      var newSelectEl = selectEl.enter()
-        .append('select')
-        .classed('sszvis-control-select__element', true)
-        .on('change', function() {
+      var newSelectEl = selectEl
+        .enter()
+        .append("select")
+        .classed("sszvis-control-select__element", true)
+        .on("change", function() {
           // We store the index in the select's value instead of the datum
           // because an option's value can only hold strings.
-          var i = select(this).property('value');
+          var i = select(this).property("value");
           props.change(props.values[i]);
           // Prevent highlights on the select element after users have selected
           // an option by moving away from it.
-          setTimeout(function(){ window.focus(); }, 0);
+          setTimeout(function() {
+            window.focus();
+          }, 0);
         });
 
       selectEl = selectEl.merge(newSelectEl);
 
-      selectEl
-        .style('width', (props.width + 30) + 'px');
+      selectEl.style("width", props.width + 30 + "px");
 
-      var optionEls = selectEl.selectAll('option')
-        .data(props.values);
+      var optionEls = selectEl.selectAll("option").data(props.values);
 
-      var newOptionEls = optionEls.enter()
-        .append('option');
+      var newOptionEls = optionEls.enter().append("option");
 
       optionEls.exit().remove();
 
-      optionEls.merge(newOptionEls)
-        .attr('selected', function(d) { return d === props.current ? 'selected' : null; })
-        .attr('value', function(d, i){ return i; })
+      optionEls
+        .merge(newOptionEls)
+        .attr("selected", function(d) {
+          return d === props.current ? "selected" : null;
+        })
+        .attr("value", function(d, i) {
+          return i;
+        })
         .text(function(d) {
           return truncateToWidth(metricsEl, props.width - 40, d);
         });
     });
-};
+}
 
 function truncateToWidth(metricsEl, maxWidth, originalString) {
   var MAX_RECURSION = 1000;
@@ -93,7 +103,7 @@ function truncateToWidth(metricsEl, maxWidth, originalString) {
     metricsEl.text(str);
     var textWidth = Math.ceil(metricsEl.node().clientWidth);
     if (i < MAX_RECURSION && textWidth > maxWidth) {
-      return fitText(str.slice(0, str.length - 2) + '…', i + 1);
+      return fitText(str.slice(0, str.length - 2) + "…", i + 1);
     } else {
       return str;
     }
