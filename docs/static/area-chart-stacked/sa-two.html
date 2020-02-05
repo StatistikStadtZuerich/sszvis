@@ -13,33 +13,51 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/SA_2Categories_yearly.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png"
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function(d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart", { src: config.fallback });
+          sszvis.fallbackRender(config.id, { src: config.fallback });
           return;
         }
 
         /* Configuration
-  ----------------------------------------------- */
-        var MAX_BUTTON_WIDTH = 300;
-        var queryProps = sszvis.responsiveProps().prop("controlWidth", {
-          _: function(width) {
-            return Math.min(width, MAX_BUTTON_WIDTH);
-            return Math.max(420, Math.min(MAX_BUTTON_WIDTH, width / 2));
-          }
-        });
+        ----------------------------------------------- */
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("controlWidth", {
+            _: function(width) {
+              return Math.min(width, 300);
+            }
+          })
+          .prop("xLabelFormat", {
+            _: function() {
+              return sszvis.formatYear;
+            }
+          });
 
-        /* Shortcuts
-  ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            category: d["Nationalität"],
+            year: sszvis.parseYear(d["Jahr"]),
+            value: sszvis.parseNumber(d["Anzahl"])
+          };
+        }
         var xAcc = sszvis.prop("year");
         var yAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("category");
 
         /* Application state
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var state = {
           data: [],
           timeExtent: [0, 0],
@@ -54,7 +72,7 @@
         };
 
         /* State transitions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         var actions = {
           prepareState: function(data) {
             state.data = data;
@@ -138,15 +156,9 @@
         };
 
         /* Data initialization
-  ----------------------------------------------- */
-        d3.csv("data/SA_2Categories_yearly.csv")
-          .row(function(d) {
-            return {
-              category: d["Nationalität"],
-              year: sszvis.parseYear(d["Jahr"]),
-              value: sszvis.parseNumber(d["Anzahl"])
-            };
-          })
+        ----------------------------------------------- */
+        d3.csv(config.data)
+          .row(parseRow)
           .get(function(error, data) {
             if (error) {
               sszvis.loadError(error);
@@ -156,10 +168,24 @@
           });
 
         /* Render
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function render(state) {
-          var bounds = sszvis.bounds({ top: 70, bottom: 104 }, "#sszvis-chart");
-          var props = queryProps(bounds);
+          var props = queryProps(sszvis.measureDimensions(config.id));
+
+          var legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.timeExtent.map(props.xLabelFormat),
+              legendLabels: state.categories,
+              slant: props.xSlant
+            },
+            config.id
+          );
+
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
+
+          var bounds = sszvis.bounds({ top: 70, bottom: legendLayout.bottomPadding }, config.id);
+
           var multiplesLayout = sszvis.layoutStackedAreaMultiples(
             bounds.innerHeight,
             state.stackedData.length,
@@ -188,13 +214,11 @@
             .domain(state.categories)
             .range(multiplesLayout.range);
 
-          var cScale = sszvis.scaleQual12().domain(state.categories);
-
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.stackedData);
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedData);
 
-          var htmlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds);
+          var htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
           // Components
 
@@ -324,6 +348,7 @@
             .scale(xScale)
             .orient("bottom")
             .tickValues(xAxisTicks)
+            .tickFormat(props.xLabelFormat)
             .highlightTick(function(d) {
               return sszvis.stringEqual(d, state.highlightDate);
             });
@@ -332,11 +357,6 @@
             .axisY()
             .scale(yScale)
             .orient("right");
-
-          var colorLegend = sszvis
-            .legendColorOrdinal()
-            .scale(cScale)
-            .orientation("vertical");
 
           var options = ["Summiert", "Separiert"];
           var buttonGroup = sszvis
@@ -365,7 +385,10 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+            )
             .call(colorLegend);
 
           htmlLayer
@@ -412,14 +435,14 @@
         }
 
         /* Helper functions
-  ----------------------------------------------- */
+        ----------------------------------------------- */
         function findClosest(data, datum) {
           var i = d3.bisectLeft(data, datum, 1);
           var d0 = data[i - 1];
           var d1 = data[i] || d0;
           return datum - d0 > d1 - datum ? d1 : d0;
         }
-      })(d3, sszvis);
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>
