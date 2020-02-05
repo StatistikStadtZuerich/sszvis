@@ -92,11 +92,13 @@ import { component } from "../d3-component.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 
-export default function() {
+export var DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
+
+export function legendColorOrdinal() {
   return component()
     .prop("scale")
     .prop("rowHeight")
-    .rowHeight(21)
+    .rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT)
     .prop("columnWidth")
     .columnWidth(200)
     .prop("rows")

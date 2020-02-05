@@ -6,7 +6,7 @@
 - Added new function `measureAxisLabel` as a preset of `measureText`
 - Added new function `measureLegendLabel` as a preset of `measureText`
 - Created new module `sszvis/measure` with utilities to measure elements
-- Added new function `legendBounds` to compute rows, columns, and widths for color legends
+- Added new layout helper `legendColorOrdinalLayout`
 - Fixed cut-off of color legend circle
 - Removed distinction between single- and multi-line chart
 

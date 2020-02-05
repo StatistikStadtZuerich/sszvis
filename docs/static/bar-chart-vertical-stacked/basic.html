@@ -147,15 +147,20 @@
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
+          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
+          cScale.domain(state.categories);
+
           var xLabelPadding = xLabelHeight(props.xSlant, state.years.map(props.xLabelFormat));
 
-          var legendBounds = sszvis.legendBounds(
+          var legendBounds = sszvis.legendColorOrdinalLayout(
             {
-              labels: state.categories,
+              scale: cScale,
               columnCount: props.columnCount
             },
             config.id
           );
+
+          var colorLegend = legendBounds.legend;
 
           var bounds = sszvis.bounds(
             {
@@ -190,11 +195,6 @@
             .scaleLinear()
             .domain([0, state.maxStacked])
             .range([bounds.innerHeight, 0]);
-
-          //use qual6 color scale if few categories, its more clear and looks better.
-          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
-
-          cScale.domain(state.categories);
 
           // Layers
 
@@ -234,13 +234,6 @@
             .title(props.yLabel)
             .tickFormat(props.yLabelFormat)
             .dyTitle(-20);
-
-          var colorLegend = sszvis
-            .legendColorOrdinal()
-            .scale(cScale)
-            .rows(legendBounds.rows)
-            .columnWidth(legendBounds.columnWidth)
-            .orientation("vertical");
 
           var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(cAcc, dataAcc));
 
