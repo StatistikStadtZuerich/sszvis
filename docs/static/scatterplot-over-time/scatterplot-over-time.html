@@ -32,18 +32,12 @@
 
         /* Configuration
         ----------------------------------------------- */
-
-        var queryProps = sszvis
-          .responsiveProps()
-          .breakpoints([{ name: "small", width: 510 }])
-          .prop("numLegendRows", {
-            small: 7,
-            _: 4
-          })
-          .prop("bottomPadding", {
-            small: 400,
-            _: 200
-          });
+        var SLIDER_CONTROL_HEIGHT = 60;
+        var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
+          _: function() {
+            return sszvis.formatNumber;
+          }
+        });
 
         function parseRow(d) {
           return {
@@ -183,8 +177,25 @@
         ----------------------------------------------- */
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
+
+          var legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.xExtent.map(props.xLabelFormat),
+              legendLabels: state.branches
+            },
+            config.id
+          );
+
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
+
           var bounds = sszvis.bounds(
-            { top: 10, right: 5, bottom: props.bottomPadding, left: 5 },
+            {
+              top: 10,
+              right: 5,
+              bottom: SLIDER_CONTROL_HEIGHT + legendLayout.bottomPadding,
+              left: 5
+            },
             config.id
           );
 
@@ -199,8 +210,6 @@
             .scaleLinear()
             .domain(state.yExtent)
             .range([bounds.innerHeight, 0]);
-
-          var cScale = sszvis.scaleQual12().domain(state.branches);
 
           var tScale = d3
             .scaleTime()
@@ -277,7 +286,7 @@
             .axisX()
             .scale(xScale)
             .ticks(4)
-            .tickFormat(sszvis.formatNumber)
+            .tickFormat(props.xLabelFormat)
             .orient("bottom")
             .alignOuterLabels(true);
 
@@ -295,13 +304,6 @@
           var numColumns = Math.ceil(cScale.domain().length / props.numLegendRows);
           var columnWidth = Math.min(Math.max(bounds.innerWidth / numColumns, 260), 350);
           var legendWidth = columnWidth * numColumns;
-
-          var cLegend = sszvis
-            .legendColorOrdinal()
-            .scale(cScale)
-            .orientation("vertical")
-            .rows(props.numLegendRows)
-            .columnWidth(columnWidth);
 
           var tooltip = sszvis
             .tooltip()
@@ -365,9 +367,15 @@
             .call(slider);
 
           chartLayer
-            .selectGroup("cScale")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 122))
-            .call(cLegend);
+            .selectGroup("colorLegend")
+            .attr(
+              "transform",
+              sszvis.translateString(
+                0,
+                bounds.innerHeight + SLIDER_CONTROL_HEIGHT + legendLayout.axisLabelPadding
+              )
+            )
+            .call(colorLegend);
 
           sszvis.viewport.on("resize", actions.resize);
         }

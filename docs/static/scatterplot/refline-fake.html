@@ -56,9 +56,6 @@
           })
           .prop("yTicks", {
             _: 4
-          })
-          .prop("legendPadding", {
-            _: 60
           });
 
         function parseRow(d) {
@@ -136,16 +133,21 @@
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
-          //choose color scale depending on number of categories
-          var cScale = state.cExtent.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
-          cScale.domain(state.cExtent);
+          var legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.cExtent.map(props.xFormat),
+              legendLabels: state.categories
+            },
+            config.id
+          );
 
-          var colorLegend = flexibleLegend(cScale, state.categories.length);
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           var bounds = sszvis.bounds(
             {
               top: 20,
-              bottom: props.legendPadding + legendHeight(colorLegend, state.categories.length)
+              bottom: legendLayout.bottomPadding
             },
             config.id
           );
@@ -234,7 +236,10 @@
 
           chartLayer
             .selectGroup("cScale")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + props.legendPadding))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+            )
             .call(colorLegend);
 
           chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
@@ -261,20 +266,6 @@
 
         /* Helper functions
         ----------------------------------------------- */
-        function flexibleLegend(scale, numEntries) {
-          var legend = sszvis.legendColorOrdinal().scale(scale);
-          if (numEntries <= 4) {
-            legend.horizontalFloat(true);
-          } else {
-            legend.rows(Math.ceil(numEntries / 2)).orientation("vertical");
-          }
-          return legend;
-        }
-
-        function legendHeight(legend, numEntries) {
-          return legend.rowHeight() * Math.ceil(numEntries / 2);
-        }
-
         function removeOverlappingYTickLabels(maxBottom) {
           return function(g) {
             g.selectAll("text").each(function() {

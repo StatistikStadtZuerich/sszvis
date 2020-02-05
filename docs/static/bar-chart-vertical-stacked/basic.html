@@ -147,23 +147,23 @@
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
-          var xLabelPadding = xLabelHeight(props.xSlant, state.years.map(props.xLabelFormat));
-
-          var legendBounds = sszvis.legendBounds(
+          var legendLayout = sszvis.colorLegendLayout(
             {
-              labels: state.categories,
-              columnCount: props.columnCount
+              axisLabels: state.years.map(props.xLabelFormat),
+              legendLabels: state.categories,
+              slant: props.xSlant
             },
             config.id
           );
+
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           var bounds = sszvis.bounds(
             {
               top: 30,
               bottom:
-                props.bottomPadding != null
-                  ? props.bottomPadding
-                  : xLabelPadding + legendBounds.height,
+                props.bottomPadding != null ? props.bottomPadding : legendLayout.bottomPadding,
               left:
                 props.leftPadding != null
                   ? props.leftPadding
@@ -190,11 +190,6 @@
             .scaleLinear()
             .domain([0, state.maxStacked])
             .range([bounds.innerHeight, 0]);
-
-          //use qual6 color scale if few categories, its more clear and looks better.
-          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
-
-          cScale.domain(state.categories);
 
           // Layers
 
@@ -234,13 +229,6 @@
             .title(props.yLabel)
             .tickFormat(props.yLabelFormat)
             .dyTitle(-20);
-
-          var colorLegend = sszvis
-            .legendColorOrdinal()
-            .scale(cScale)
-            .rows(legendBounds.rows)
-            .columnWidth(legendBounds.columnWidth)
-            .orientation("vertical");
 
           var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(cAcc, dataAcc));
 
@@ -285,7 +273,10 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + xLabelPadding))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+            )
             .call(colorLegend);
 
           // Interaction
@@ -305,10 +296,6 @@
         ----------------------------------------------- */
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
-        }
-
-        function xLabelHeight(slant, labels) {
-          return slant === "horizontal" ? 60 : 40 + d3.max(labels, sszvis.measureAxisLabel);
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>

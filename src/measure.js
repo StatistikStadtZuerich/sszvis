@@ -7,44 +7,6 @@ import * as d3 from "d3";
 import { isSelection, isString } from "./fn";
 
 /**
- * legendBounds
- *
- * Compute the width, height, and column count of a legend based on the labels
- * that should fit in it.
- *
- * @param {options} { labels: Array<string>, columnCount: number | null }
- * @param  {string|DOMElement|d3.selection} el The element to measure
- * @returns { columns: number, rows: number, height: number, width: number, columnWidth: number }
- */
-export var legendBounds = (function() {
-  var DEFAULT_COLUMN_COUNT = 2;
-
-  function numCols(totalWidth, columnWidth, num) {
-    return num <= 1
-      ? 1
-      : columnWidth <= totalWidth / num
-      ? num
-      : numCols(totalWidth, columnWidth, num - 1);
-  }
-
-  return function(options, container) {
-    var width = measureDimensions(container).width;
-    var maxLabelWidth = d3.max(options.labels, measureLegendLabel) + 40;
-    // Use a single column for fewer than five items
-    var columnCount = options.labels.length < 5 ? 1 : options.columnCount || DEFAULT_COLUMN_COUNT;
-    var columns = numCols(width, maxLabelWidth, columnCount);
-    var rows = Math.ceil(options.labels.length / columns);
-    return {
-      columns: columns,
-      rows: rows,
-      height: rows * 21,
-      width: width,
-      columnWidth: maxLabelWidth
-    };
-  };
-})();
-
-/**
  * measureDimensions
  *
  * Calculates the width of the first DOM element defined by a CSS selector string,

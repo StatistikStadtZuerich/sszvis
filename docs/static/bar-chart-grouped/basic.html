@@ -35,6 +35,11 @@
 
         var queryProps = sszvis
           .responsiveProps()
+          .prop("xLabelFormat", {
+            _: function() {
+              return sszvis.formatText;
+            }
+          })
           .prop("yTicks", {
             _: null
           })
@@ -43,9 +48,6 @@
           })
           .prop("textDirection", {
             _: "diagonal"
-          })
-          .prop("legendPadding", {
-            _: 120
           });
 
         function parseRow(d) {
@@ -127,18 +129,24 @@
         ----------------------------------------------- */
 
         function render(state) {
-          // the color scale for the layers, based on the number of categories
-          var cScale = state.categories.length > 6 ? sszvis.scaleQual12() : sszvis.scaleQual6();
-          cScale.domain(state.categories);
-
           var props = queryProps(sszvis.measureDimensions(config.id));
 
-          var colorLegend = flexibleLegend(cScale, state.categories.length);
+          var legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.regions.map(props.xLabelFormat),
+              legendLabels: state.categories,
+              slant: props.textDirection
+            },
+            config.id
+          );
+
+          var cScale = legendLayout.scale;
+          var colorLegend = legendLayout.legend;
 
           var bounds = sszvis.bounds(
             {
               top: 25,
-              bottom: props.legendPadding + legendHeight(colorLegend, state.categories.length)
+              bottom: legendLayout.bottomPadding
             },
             config.id
           );
@@ -190,6 +198,7 @@
             .scale(xScale)
             .orient("bottom")
             .slant(props.textDirection)
+            .tickFormat(props.xLabelFormat)
             .highlightTick(function(d) {
               return sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d);
             });
@@ -245,7 +254,10 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + props.legendPadding))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+            )
             .call(colorLegend);
 
           sszvis.viewport.on("resize", actions.resize);
@@ -283,20 +295,6 @@
 
         function labelWrapWidth(range) {
           return (d3.max(range) - d3.min(range)) / range.length;
-        }
-
-        function flexibleLegend(scale, numEntries) {
-          var legend = sszvis.legendColorOrdinal().scale(scale);
-          if (numEntries <= 4) {
-            legend.horizontalFloat(true);
-          } else {
-            legend.rows(Math.ceil(numEntries / 2)).orientation("vertical");
-          }
-          return legend;
-        }
-
-        function legendHeight(legend, numEntries) {
-          return legend.rowHeight() * Math.ceil(numEntries / 2);
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
