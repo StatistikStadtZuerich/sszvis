@@ -5,7 +5,9 @@ import glob from "glob";
 const RENDER_DELAY = 200;
 const SNAPSHOT_OPTS = {
   failureThreshold: 10,
-  failureThresholdType: "pixel"
+  failureThresholdType: "pixel",
+  customSnapshotIdentifier: ({ currentTestName, counter }) =>
+    `${urlToIdentifier(currentTestName)}-${counter}`
 };
 
 const files = glob.sync("../docs/static/[^_]*/*.html", { cwd: __dirname });
@@ -35,4 +37,11 @@ test.each(files.map(filepathToUrl))("%s", async url => {
 
 function filepathToUrl(path) {
   return path.replace(/(.*\/docs\/static)/, "http://localhost:8000");
+}
+
+function urlToIdentifier(url) {
+  return url
+    .replace("http://localhost:8000/", "")
+    .replace(".html", "")
+    .replace("/", "--");
 }
