@@ -1,15 +1,17 @@
-## [In progress]
+## 2.1.0 (Feb 2020)
 
-- Change `formatNumber` to remove insignificant trailing zeros
-- Change `sszvis.move` to also invert pointScales
-- Added new function `foldPattern`
-- Added new function `measureText` to calculate the width of a string
-- Added new function `measureAxisLabel` as a preset of `measureText`
-- Added new function `measureLegendLabel` as a preset of `measureText`
-- Created new module `sszvis/measure` with utilities to measure elements
+- Changed `formatNumber` to remove insignificant trailing zeros
+- Changed `sszvis.move` to also invert point scales
+- Added new module `sszvis/measure` with utilities to measure elements
+  - Added new function `measureText` to calculate the width of a string
+  - Added new function `measureAxisLabel` as a preset of `measureText`
+  - Added new function `measureLegendLabel` as a preset of `measureText`
 - Added new layout `colorLegendLayout` to compute color legend sizes automatically
+- Added new helper function `foldPattern`
 - Fixed cut-off of color legend circle
-- Removed distinction between single- and multi-line chart
+- Simplified documentation and removed redundant examples
+  - Generalized some chart examples to include more defaults
+  - Removed distinction between single- and multi-line chart
 
 ## 2.0 (Dec 2017)
 
