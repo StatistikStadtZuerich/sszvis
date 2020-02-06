@@ -17,7 +17,8 @@
       var EXTERNAL_CONFIG = {
         data: "data/ML_2Categories_Quarterly.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
+        scaleType: "time" // 'time' | 'ordinal'
       };
     </script>
 
@@ -32,28 +33,49 @@
 
         /* Configuration
         ----------------------------------------------- */
+
+        function yLabelFormat(d) {
+          return d === 0 ? null : sszvis.formatNumber(d);
+        }
+
         var queryProps = sszvis
           .responsiveProps()
-          .prop("xLabel", {
-            _: ""
-          })
-          .prop("xLabelFormat", {
-            _: function() {
-              return sszvis.formatYear;
-            }
-          })
-          .prop("yLabel", {
-            _: ""
-          })
           .prop("rulerLabel", {
             _: function() {
               return sszvis
                 .modularTextSVG()
-                .bold(sszvis.compose(sszvis.formatNumber, yAcc))
+                .bold(sszvis.compose(yLabelFormat, yAcc))
                 .plain(function(d) {
                   return cAcc(d) != null ? cAcc(d) : "";
                 });
             }
+          })
+          .prop("xLabelFormat", {
+            _: function() {
+              return function(d) {
+                return d === 0
+                  ? null
+                  : sszvis.foldPattern(config.scaleType, {
+                      time: function() {
+                        return sszvis.formatYear(d);
+                      },
+                      ordinal: function() {
+                        return sszvis.formatText(d);
+                      }
+                    });
+              };
+            }
+          })
+          .prop("yLabelFormat", {
+            _: function() {
+              return yLabelFormat;
+            }
+          })
+          .prop("xLabel", {
+            _: ""
+          })
+          .prop("yLabel", {
+            _: ""
           })
           .prop("ticks", {
             _: 5
@@ -71,8 +93,9 @@
         var yAcc = sszvis.prop("yValue");
         var cAcc = sszvis.prop("category");
 
-        /* Application state
+        /* Application State
         ----------------------------------------------- */
+
         var state = {
           data: [],
           lineData: [],
@@ -84,16 +107,24 @@
 
         /* State transitions
         ----------------------------------------------- */
+
         var actions = {
           prepareState: function(data) {
             state.data = data;
+            state.xValues = sszvis.foldPattern(config.scaleType, {
+              time: function() {
+                return d3.extent(state.data, xAcc);
+              },
+              ordinal: function() {
+                return sszvis.set(state.data, xAcc);
+              }
+            });
+            state.categories = sszvis.set(state.data, cAcc);
+            state.maxY = d3.max(state.data, yAcc);
             state.lineData = sszvis
               .cascade()
               .arrayBy(cAcc, d3.ascending)
               .apply(state.data);
-            state.xValues = d3.extent(state.data, xAcc);
-            state.maxY = d3.max(state.data, yAcc);
-            state.categories = sszvis.set(state.data, cAcc);
 
             actions.resetDate();
           },
@@ -127,6 +158,7 @@
 
         /* Data initialization
         ----------------------------------------------- */
+
         d3.csv(config.data)
           .row(parseRow)
           .get(function(error, data) {
@@ -139,6 +171,7 @@
 
         /* Render
         ----------------------------------------------- */
+
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
@@ -153,13 +186,26 @@
           var cScale = legendLayout.scale;
           var colorLegend = legendLayout.legend;
 
-          var bounds = sszvis.bounds({ top: 30, bottom: legendLayout.bottomPadding }, config.id);
+          var bounds = sszvis.bounds(
+            {
+              top: typeof props.yLabel === "string" && props.yLabel.length > 0 ? 30 : 10,
+              bottom: legendLayout.bottomPadding
+            },
+            config.id
+          );
 
           // Scales
-          var xScale = d3
-            .scaleTime()
-            .domain(state.xValues)
-            .range([0, bounds.innerWidth]);
+
+          var xScale = sszvis.foldPattern(config.scaleType, {
+            time: function() {
+              return d3.scaleTime();
+            },
+            ordinal: function() {
+              return d3.scalePoint().padding(0);
+            }
+          });
+
+          xScale.domain(state.xValues).range([0, bounds.innerWidth]);
 
           var yScale = d3
             .scaleLinear()
@@ -167,40 +213,6 @@
             .range([bounds.innerHeight, 0]);
 
           // Layers
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);
-
-          // Components
-          var line = sszvis
-            .line()
-            .x(sszvis.compose(xScale, xAcc))
-            .y(sszvis.compose(yScale, yAcc))
-            // Access the first data point of the line to decide on the stroke color
-            .stroke(sszvis.compose(cScale, cAcc, sszvis.first));
-
-          // Add the highlighted data as additional ticks to the xScale
-          var xTickValues = props.ticks ? xScale.ticks(props.ticks) : xScale.ticks();
-          xTickValues = xTickValues.concat(state.selection.map(xAcc));
-          xTickValues = xTickValues.filter(function(v, i) {
-            return xTickValues.map(String).indexOf(String(v)) === i;
-          });
-
-          var xAxis = sszvis.axisX
-            .time()
-            .scale(xScale)
-            .orient("bottom")
-            .tickValues(xTickValues)
-            .tickFormat(props.xLabelFormat)
-            .alignOuterLabels(true)
-            .highlightTick(isSelected)
-            .title(props.xLabel);
-
-          var yAxis = sszvis
-            .axisY()
-            .scale(yScale)
-            .orient("right")
-            .contour(true)
-            .title(props.yLabel)
-            .dyTitle(-20);
 
           var highlightLayer = sszvis
             .annotationRuler()
@@ -214,7 +226,52 @@
             })
             .color(sszvis.compose(cScale, cAcc));
 
+          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);
+
+          // Components
+
+          var line = sszvis
+            .line()
+            .x(sszvis.compose(xScale, xAcc))
+            .y(sszvis.compose(yScale, yAcc))
+            // Access the first data point of the line to decide on the stroke color
+            .stroke(sszvis.compose(cScale, cAcc, sszvis.first));
+
+          var xAxis = sszvis.foldPattern(config.scaleType, {
+            time: function() {
+              // Add the highlighted data as additional ticks to the xScale
+              var xTickValues = props.ticks ? xScale.ticks(props.ticks) : xScale.ticks();
+              xTickValues = xTickValues.concat(state.selection.map(xAcc));
+              xTickValues = xTickValues.filter(function(v, i) {
+                return xTickValues.map(String).indexOf(String(v)) === i;
+              });
+              return sszvis.axisX.time().tickValues(xTickValues);
+            },
+            ordinal: function() {
+              return sszvis.axisX.ordinal();
+            }
+          });
+
+          xAxis
+            .title(props.xLabel)
+            .scale(xScale)
+            .orient("bottom")
+            .tickFormat(props.xLabelFormat)
+            .highlightTick(isSelected)
+            .alignOuterLabels(true);
+
+          var yAxis = sszvis
+            .axisY()
+            .scale(yScale)
+            .orient("right")
+            .tickFormat(props.yLabelFormat)
+            .contour(true)
+            .title(props.yLabel)
+            .dyTitle(-20);
+
           // Rendering
+
+          chartLayer.selectGroup("line").call(line);
 
           chartLayer
             .selectGroup("xAxis")
@@ -222,7 +279,6 @@
             .call(xAxis);
 
           chartLayer.selectGroup("yAxis").call(yAxis);
-          chartLayer.selectGroup("line").call(line);
 
           if (showLegend(state.categories)) {
             chartLayer
@@ -240,6 +296,7 @@
             .call(highlightLayer);
 
           // Interaction
+
           var interactionLayer = sszvis
             .move()
             .xScale(xScale)
@@ -260,10 +317,21 @@
         }
 
         function closestDatum(data, accessor, datum) {
-          var i = d3.bisector(accessor).left(data, datum, 1);
-          var d0 = data[i - 1];
-          var d1 = data[i] || d0;
-          return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+          return sszvis.foldPattern(config.scaleType, {
+            time: function() {
+              var i = d3.bisector(accessor).left(data, datum, 1);
+              var d0 = data[i - 1];
+              var d1 = data[i] || d0;
+              return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+            },
+            ordinal: function() {
+              return (
+                sszvis.find(function(d) {
+                  return xAcc(d) === datum;
+                }, data) || data[0]
+              );
+            }
+          });
         }
 
         function isSelected(d) {
