@@ -18,57 +18,56 @@
  * @returns {sszvis.component} a circular data area component
  */
 
-import { select } from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
-import { dataAreaPattern } from '../patterns.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
+import { dataAreaPattern } from "../patterns.js";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('x', fn.functor)
-    .prop('y', fn.functor)
-    .prop('r', fn.functor)
-    .prop('dx', fn.functor)
-    .prop('dy', fn.functor)
-    .prop('caption', fn.functor)
+    .prop("x", fn.functor)
+    .prop("y", fn.functor)
+    .prop("r", fn.functor)
+    .prop("dx", fn.functor)
+    .prop("dy", fn.functor)
+    .prop("caption", fn.functor)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
-      ensureDefsElement(selection, 'pattern', 'data-area-pattern')
-        .call(dataAreaPattern);
+      ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
 
-      var dataArea = selection.selectAll('.sszvis-dataareacircle')
-        .data(data);
+      var dataArea = selection.selectAll(".sszvis-dataareacircle").data(data);
 
-      var newDataArea = dataArea.enter()
-        .append('circle')
-        .classed('sszvis-dataareacircle', true);
+      var newDataArea = dataArea
+        .enter()
+        .append("circle")
+        .classed("sszvis-dataareacircle", true);
       dataArea = dataArea.merge(newDataArea);
 
       dataArea
-        .attr('cx', props.x)
-        .attr('cy', props.y)
-        .attr('r', props.r)
-        .attr('fill', 'url(#data-area-pattern)');
+        .attr("cx", props.x)
+        .attr("cy", props.y)
+        .attr("r", props.r)
+        .attr("fill", "url(#data-area-pattern)");
 
       if (props.caption) {
-        var dataCaptions = selection.selectAll('.sszvis-dataareacircle__caption')
-          .data(data);
+        var dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data);
 
-        var newDataCaptions = dataCaptions.enter()
-          .append('text')
-          .classed('sszvis-dataareacircle__caption', true);
+        var newDataCaptions = dataCaptions
+          .enter()
+          .append("text")
+          .classed("sszvis-dataareacircle__caption", true);
         dataCaptions = dataCaptions.merge(newDataCaptions);
 
         dataCaptions
-          .attr('x', props.x)
-          .attr('y', props.y)
-          .attr('dx', props.dx)
-          .attr('dy', props.dy)
+          .attr("x", props.x)
+          .attr("y", props.y)
+          .attr("dx", props.dx)
+          .attr("dy", props.dy)
           .text(props.caption);
       }
     });
-};
+}

@@ -1,6 +1,21 @@
-# Change Log
+## 2.1.0 (Feb 2020)
 
-## Changes from 1.x to 2.0
+- Changed `formatNumber` to remove insignificant trailing zeros
+- Changed `sszvis.move` to also invert point scales
+- Added new module `sszvis/measure` with utilities to measure elements
+  - Added new function `measureText` to calculate the width of a string
+  - Added new function `measureAxisLabel` as a preset of `measureText`
+  - Added new function `measureLegendLabel` as a preset of `measureText`
+- Added new layout `colorLegendLayout` to compute color legend sizes automatically
+- Added new helper function `foldPattern`
+- Fixed cut-off of color legend circle
+- Simplified documentation and removed redundant examples
+  - Generalized some chart examples to include more defaults
+  - Removed distinction between single- and multi-line chart
+
+## 2.0 (Dec 2017)
+
+### Changes from 1.x to 2.0
 
 The sszvis API has changed significantly from version 1.x to 2.0. This was done to a) align more closely with practices in the d3 ecosystem and to be able to leverage ES modules better (by not exporting whole namespaces but each function separately).
 

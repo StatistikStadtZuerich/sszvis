@@ -17,21 +17,21 @@
  *                                            is a function which takes a data value and returns the angle in radians.
  *
  * @return {sszvis.component}
-*/
+ */
 
-import {select, arc, interpolate} from 'd3';
+import { select, arc, interpolate } from "d3";
 
-import * as fn from '../fn.js';
-import { defaultTransition } from '../transition.js';
-import tooltipAnchor from '../annotation/tooltipAnchor.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { defaultTransition } from "../transition.js";
+import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('radius')
-    .prop('fill')
-    .prop('stroke')
-    .prop('angle', fn.functor)
+    .prop("radius")
+    .prop("fill")
+    .prop("stroke")
+    .prop("angle", fn.functor)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -57,10 +57,15 @@ export default function() {
       var arcGen = arc()
         .innerRadius(4)
         .outerRadius(props.radius)
-        .startAngle(function(d) { return d.a0; })
-        .endAngle(function(d) { return d.a1; });
+        .startAngle(function(d) {
+          return d.a0;
+        })
+        .endAngle(function(d) {
+          return d.a1;
+        });
 
-      var segments = selection.selectAll('.sszvis-path')
+      var segments = selection
+        .selectAll(".sszvis-path")
         .each(function(d, i) {
           // This matches the data values iteratively in the same way d3 will when it does the data join.
           // This is kind of a hack, but it's the only way to get any existing angle values from the already-bound data
@@ -71,12 +76,13 @@ export default function() {
         })
         .data(data);
 
-      var newSegments = segments.enter()
-        .append('path')
-        .classed('sszvis-path', true)
-        .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
-        .attr('fill', props.fill)
-        .attr('stroke', props.stroke);
+      var newSegments = segments
+        .enter()
+        .append("path")
+        .classed("sszvis-path", true)
+        .attr("transform", "translate(" + props.radius + "," + props.radius + ")")
+        .attr("fill", props.fill)
+        .attr("stroke", props.stroke);
 
       segments.exit().remove();
 
@@ -84,8 +90,8 @@ export default function() {
 
       segments
         .transition(defaultTransition())
-        .attr('transform', 'translate(' + (props.radius) + ',' + (props.radius) + ')')
-        .attrTween('d', function(d) {
+        .attr("transform", "translate(" + props.radius + "," + props.radius + ")")
+        .attrTween("d", function(d) {
           var angle0Interp = interpolate(d.a0, d._a0);
           var angle1Interp = interpolate(d.a1, d._a1);
           return function(t) {
@@ -94,21 +100,17 @@ export default function() {
             return arcGen(d);
           };
         })
-        .attr('fill', props.fill)
-        .attr('stroke', props.stroke);
+        .attr("fill", props.fill)
+        .attr("stroke", props.stroke);
 
-      var ta = tooltipAnchor()
-        .position(function(d) {
-          // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
-          // makes the same correction to svg.arc() angles :o
-          var a = d.a0 + (Math.abs(d.a1 - d.a0) / 2) - Math.PI/2;
-          var r = props.radius * 2/3;
-          return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
-        });
+      var ta = tooltipAnchor().position(function(d) {
+        // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
+        // makes the same correction to svg.arc() angles :o
+        var a = d.a0 + Math.abs(d.a1 - d.a0) / 2 - Math.PI / 2;
+        var r = (props.radius * 2) / 3;
+        return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
+      });
 
-      selection
-        .datum(data)
-        .call(ta);
-
+      selection.datum(data).call(ta);
     });
-};
+}

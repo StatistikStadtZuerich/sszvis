@@ -4,10 +4,9 @@
  * @module sszvis/format
  */
 
-import {timeFormatLocale, formatLocale} from 'd3';
-
-import * as fn from './fn.js';
-import { locale } from './locale.js';
+import { formatLocale, timeFormatLocale } from "d3";
+import * as fn from "./fn.js";
+import { locale } from "./locale.js";
 
 var timeFormat = timeFormatLocale(locale).format;
 var format = formatLocale(locale).format;
@@ -26,14 +25,54 @@ export var formatAge = function(d) {
  */
 export var formatAxisTimeFormat = function(d) {
   var xs = [
-    ['.%L', function(date) { return date.getMilliseconds(); }],
-    [':%S', function(date) { return date.getSeconds(); }],
-    ['%H:%M', function(date) { return date.getMinutes(); }],
-    ['%H Uhr', function(date) { return date.getHours(); }],
-    ['%a., %d.', function(date) { return date.getDay() && date.getDate() != 1; }],
-    ['%e. %b', function(date) { return date.getDate() != 1; }],
-    ['%B', function(date) { return date.getMonth(); }],
-    ['%Y', function() { return true; }]
+    [
+      ".%L",
+      function(date) {
+        return date.getMilliseconds();
+      }
+    ],
+    [
+      ":%S",
+      function(date) {
+        return date.getSeconds();
+      }
+    ],
+    [
+      "%H:%M",
+      function(date) {
+        return date.getMinutes();
+      }
+    ],
+    [
+      "%H Uhr",
+      function(date) {
+        return date.getHours();
+      }
+    ],
+    [
+      "%a., %d.",
+      function(date) {
+        return date.getDay() && date.getDate() != 1;
+      }
+    ],
+    [
+      "%e. %b",
+      function(date) {
+        return date.getDate() != 1;
+      }
+    ],
+    [
+      "%B",
+      function(date) {
+        return date.getMonth();
+      }
+    ],
+    [
+      "%Y",
+      function() {
+        return true;
+      }
+    ]
   ];
 
   for (var i = 0; i < xs.length; ++i) {
@@ -48,19 +87,19 @@ export var formatAxisTimeFormat = function(d) {
  */
 export var formatMonth = fn.compose(function(m) {
   return m.toUpperCase();
-}, timeFormat('%b'));
+}, timeFormat("%b"));
 
 /**
  * A year formatter for date objects. Gives the date's year.
  */
-export var formatYear = timeFormat('%Y')
+export var formatYear = timeFormat("%Y");
 
 /**
  * Formatter for no label
  * @return {string} the empty string
  */
 export var formatNone = function() {
-  return '';
+  return "";
 };
 
 /**
@@ -72,28 +111,19 @@ export var formatNone = function() {
  * - Decimal places only for significant decimals
  * - No decimal places for numbers >= 10000
  * - One decimal place for numbers >= 100
- * - 1 or 2 significant decimal places for other numbers
+ * - Up to 2 significant decimal places for smaller numbers
  *
- * See also: many test cases for this function in sszvis.test
+ * See also: many test cases for this function in format.test.js
  *
  * @param  {number} d   Number
- * @param  {number} [p] Decimal precision
  * @return {string}     Fully formatted number
  */
 export var formatNumber = function(d) {
   var p;
   var dAbs = Math.abs(d);
-  // decLen is the number of decimal places in the number
-  // 0.0002 -> 4
-  // 0.0000 -> 0 (Javascript's number implementation chops off trailing zeroes)
-  // 123456.1 -> 1
-  // 123456.00001 -> 5
-  var decLen = decimalPlaces(d);
 
-  // NaN      -> '–'
-  if (isNaN(d)) {
-    // This is an mdash
-    return '–';
+  if (d == null || isNaN(d)) {
+    return "–"; // This is an en-dash
   }
 
   // 10250    -> "10 250"
@@ -101,33 +131,32 @@ export var formatNumber = function(d) {
   else if (dAbs >= 1e4) {
     // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
     // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
-    return format(',.0f')(d);
+    return format(",.0f")(d);
   }
 
   // 2350     -> "2350"
   // 2350.29  -> "2350.3"
   else if (dAbs >= 100) {
-    p = decLen === 0 ? 0 : 1;
+    p = Math.min(1, decimalPlaces(d));
     // Where there are decimals, round to 1 position
     // To display more precision, use the preciseNumber function.
-    return format('.'+ p +'f')(d);
+    return stripTrailingZeroes(format("." + p + "f")(d));
   }
 
   // 41       -> "41"
+  // 41.1     -> "41.1"
   // 41.329   -> "41.33"
-  // 1.329    -> "1.33"
-  // 0.00034  -> "0.00034"
   else if (dAbs > 0) {
-    p = Math.min(2, decLen);
+    p = Math.min(2, decimalPlaces(d));
     // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
     // but not more. To display more precision, use the preciseNumber function.
-    return format('.' + p + 'f')(d);
+    return stripTrailingZeroes(format("." + p + "f")(d));
   }
 
   // If abs(num) is not > 0, num is 0
   // 0       -> "0"
   else {
-    return format('.0f')(0);
+    return format(".0f")(0);
   }
 };
 
@@ -153,10 +182,10 @@ export var formatPreciseNumber = function(p, d) {
     var dAbs = Math.abs(x);
     if (dAbs >= 100 && dAbs < 1e4) {
       // No thousands separator
-      return format('.' + p + 'f')(x);
+      return format("." + p + "f")(x);
     } else {
       // Use the thousands separator
-      return format(',.' + p + 'f')(x);
+      return format(",." + p + "f")(x);
     }
   };
 };
@@ -168,7 +197,7 @@ export var formatPreciseNumber = function(p, d) {
  */
 export var formatPercent = function(d) {
   // Uses unix thin space
-  return formatNumber(d) + ' %';
+  return formatNumber(d) + " %";
 };
 
 /**
@@ -178,7 +207,7 @@ export var formatPercent = function(d) {
  */
 export var formatFractionPercent = function(d) {
   // Uses unix thin space
-  return formatNumber(d * 100) + ' %';
+  return formatNumber(d * 100) + " %";
 };
 
 /**
@@ -190,11 +219,18 @@ export var formatText = function(d) {
   return String(d);
 };
 
-
-
-
 /* Helper functions
 ----------------------------------------------- */
+
+// decLen is the number of decimal places in the number
+// 0.0002 -> 4
+// 0.0000 -> 0 (Javascript's number implementation chops off trailing zeroes)
+// 123456.1 -> 1
+// 123456.00001 -> 5
 function decimalPlaces(num) {
-  return (String(Math.abs(num)).split('.')[1] || '').length;
+  return (String(Math.abs(num)).split(".")[1] || "").length;
+}
+
+function stripTrailingZeroes(str) {
+  return str.replace(/(\.[0-9]*[1-9])0+$|\.0*$/, "$1");
 }

@@ -19,69 +19,68 @@
  * @returns {sszvis.component} a rectangular data area component
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
-import { dataAreaPattern } from '../patterns.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
+import { dataAreaPattern } from "../patterns.js";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('x', fn.functor)
-    .prop('y', fn.functor)
-    .prop('width', fn.functor)
-    .prop('height', fn.functor)
-    .prop('dx', fn.functor)
-    .prop('dy', fn.functor)
-    .prop('caption', fn.functor)
+    .prop("x", fn.functor)
+    .prop("y", fn.functor)
+    .prop("width", fn.functor)
+    .prop("height", fn.functor)
+    .prop("dx", fn.functor)
+    .prop("dy", fn.functor)
+    .prop("caption", fn.functor)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
-      ensureDefsElement(selection, 'pattern', 'data-area-pattern')
-        .call(dataAreaPattern);
+      ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
 
-      var dataArea = selection.selectAll('.sszvis-dataarearectangle')
-        .data(data);
+      var dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data);
 
       // FIXME: no exit?
 
-      var newDataArea = dataArea.enter()
-        .append('rect')
-        .classed('sszvis-dataarearectangle', true);
+      var newDataArea = dataArea
+        .enter()
+        .append("rect")
+        .classed("sszvis-dataarearectangle", true);
 
       dataArea = dataArea.merge(newDataArea);
 
       dataArea
-        .attr('x', props.x)
-        .attr('y', props.y)
-        .attr('width', props.width)
-        .attr('height', props.height)
-        .attr('fill', 'url(#data-area-pattern)');
+        .attr("x", props.x)
+        .attr("y", props.y)
+        .attr("width", props.width)
+        .attr("height", props.height)
+        .attr("fill", "url(#data-area-pattern)");
 
       if (props.caption) {
-        var dataCaptions = selection.selectAll('.sszvis-dataarearectangle__caption')
-          .data(data);
+        var dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data);
 
         // FIXME: no exit?
 
-        var newDataCaptions = dataCaptions.enter()
-          .append('text')
-          .classed('sszvis-dataarearectangle__caption', true);
+        var newDataCaptions = dataCaptions
+          .enter()
+          .append("text")
+          .classed("sszvis-dataarearectangle__caption", true);
 
         dataCaptions = dataCaptions.merge(newDataCaptions);
 
         dataCaptions
-          .attr('x', function(d, i) {
+          .attr("x", function(d, i) {
             return props.x(d, i) + props.width(d, i) / 2;
           })
-          .attr('y', function(d, i) {
+          .attr("y", function(d, i) {
             return props.y(d, i) + props.height(d, i) / 2;
           })
-          .attr('dx', props.dx)
-          .attr('dy', props.dy)
+          .attr("dx", props.dx)
+          .attr("dy", props.dy)
           .text(props.caption);
       }
     });
-};
+}

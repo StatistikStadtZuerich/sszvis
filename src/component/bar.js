@@ -41,12 +41,12 @@
  * @return {sszvis.component}
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import { defaultTransition } from '../transition.js';
-import tooltipAnchor from '../annotation/tooltipAnchor.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { defaultTransition } from "../transition.js";
+import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { component } from "../d3-component.js";
 
 // replaces NaN values with 0
 function handleMissingVal(v) {
@@ -55,15 +55,16 @@ function handleMissingVal(v) {
 
 export default function() {
   return component()
-    .prop('x', fn.functor)
-    .prop('y', fn.functor)
-    .prop('width', fn.functor)
-    .prop('height', fn.functor)
-    .prop('fill', fn.functor)
-    .prop('stroke', fn.functor)
-    .prop('centerTooltip')
-    .prop('tooltipAnchor')
-    .prop('transition').transition(true)
+    .prop("x", fn.functor)
+    .prop("y", fn.functor)
+    .prop("width", fn.functor)
+    .prop("height", fn.functor)
+    .prop("fill", fn.functor)
+    .prop("stroke", fn.functor)
+    .prop("centerTooltip")
+    .prop("tooltipAnchor")
+    .prop("transition")
+    .transition(true)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -73,31 +74,31 @@ export default function() {
       var wAcc = fn.compose(handleMissingVal, props.width);
       var hAcc = fn.compose(handleMissingVal, props.height);
 
-      var bars = selection.selectAll('.sszvis-bar')
-        .data(data);
-        
+      var bars = selection.selectAll(".sszvis-bar").data(data);
+
       bars.exit().remove();
 
-      bars.enter()
-        .append('rect')
-        .classed('sszvis-bar', true)
-        .attr('x', xAcc)
-        .attr('y', yAcc)
-        .attr('width', wAcc)
-        .attr('height', hAcc)
-      .merge(bars)
-        .attr('fill', props.fill)
-        .attr('stroke', props.stroke);
+      bars
+        .enter()
+        .append("rect")
+        .classed("sszvis-bar", true)
+        .attr("x", xAcc)
+        .attr("y", yAcc)
+        .attr("width", wAcc)
+        .attr("height", hAcc)
+        .merge(bars)
+        .attr("fill", props.fill)
+        .attr("stroke", props.stroke);
 
       if (props.transition) {
         bars = bars.transition(defaultTransition());
       }
 
       bars
-        .attr('x', xAcc)
-        .attr('y', yAcc)
-        .attr('width', wAcc)
-        .attr('height', hAcc);
+        .attr("x", xAcc)
+        .attr("y", yAcc)
+        .attr("width", wAcc)
+        .attr("height", hAcc);
 
       // Tooltip anchors
       var tooltipPosition;
@@ -116,10 +117,8 @@ export default function() {
         };
       }
 
-      var ta = tooltipAnchor()
-        .position(tooltipPosition);
+      var ta = tooltipAnchor().position(tooltipPosition);
 
       selection.call(ta);
-
     });
-};
+}

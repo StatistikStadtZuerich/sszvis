@@ -43,17 +43,18 @@
  *                             of execution.
  */
 
-
-export var log = logger('log');
-export var warn = logger('warn');
-export var error = logger('error');
+export var log = logger("log");
+export var warn = logger("warn");
+export var error = logger("error");
 
 /* Helper functions
 ----------------------------------------------- */
 function logger(type) {
   return function() {
     if (console && console[type]) {
-      slice(arguments).forEach(function(msg) { console[type](msg); });
+      slice(arguments).forEach(function(msg) {
+        console[type](msg);
+      });
     }
   };
 }

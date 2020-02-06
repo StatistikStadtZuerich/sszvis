@@ -1,29 +1,29 @@
-import R from 'ramda';
+import * as R from "ramda";
 
-const INDEX = 'index.html';
+const INDEX = "index.html";
 
 const DEFAULTS = {
-  name: 'project',
+  name: "project",
   files: {},
-  scrolling: 'no',
+  scrolling: "no",
   size: null
 };
 
 function parseSize(size) {
   if (size) {
-    let {width, height} = size;
-    if (typeof height === 'number') {
-      height = height + 'px';
+    let { width, height } = size;
+    if (typeof height === "number") {
+      height = height + "px";
     }
-    if (typeof width === 'number') {
-      width = width + 'px';
+    if (typeof width === "number") {
+      width = width + "px";
     }
-    return {width: width, height: height};
+    return { width: width, height: height };
   }
   return null;
 }
 
-export default (rawBody) => {
+export default rawBody => {
   let config = R.merge(DEFAULTS, rawBody);
 
   let index = null;
@@ -35,21 +35,25 @@ export default (rawBody) => {
   }
   if (config[INDEX]) {
     if (index) {
-      console.warn('Index document was already defined and will be overwritten'); // eslint-disable-line
+      console.warn(
+        "Index document was already defined and will be overwritten"
+      ); // eslint-disable-line
     }
     index = config[INDEX];
     delete config[INDEX];
   }
   if (config.files[INDEX]) {
     if (index) {
-      console.warn('Index document was already defined and will be overwritten'); // eslint-disable-line
+      console.warn(
+        "Index document was already defined and will be overwritten"
+      ); // eslint-disable-line
     }
     index = config.files[INDEX];
   }
   if (!index) {
     throw new Error('"index.html" must be defined');
   }
-  config = R.assocPath(['files', INDEX], index, config);
+  config = R.assocPath(["files", INDEX], index, config);
   let files = [];
   let ref = config.files;
   for (let target in ref) {
@@ -59,9 +63,12 @@ export default (rawBody) => {
         // Sometimes a `"null": null` file can sneak into the config
         continue;
       }
-      let file = typeof source === 'string' ? {
-        source: source
-      } : source;
+      let file =
+        typeof source === "string"
+          ? {
+              source: source
+            }
+          : source;
       if (!file.target) {
         file.target = target;
       }

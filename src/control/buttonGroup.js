@@ -18,51 +18,60 @@
  * @return {sszvis.component}
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('values')
-    .prop('current')
-    .prop('width').width(300)
-    .prop('change').change(fn.identity)
+    .prop("values")
+    .prop("current")
+    .prop("width")
+    .width(300)
+    .prop("change")
+    .change(fn.identity)
     .render(function() {
       var selection = select(this);
       var props = selection.props();
 
       var buttonWidth = props.width / props.values.length;
 
-      var container = selection.selectAll('.sszvis-control-optionSelectable')
-        .data(['sszvis-control-buttonGroup'], function(d){return d;});
-      var newContainer = container.enter()
-        .append('div')
-        .classed('sszvis-control-optionSelectable', true)
-        .classed('sszvis-control-buttonGroup', true);
+      var container = selection
+        .selectAll(".sszvis-control-optionSelectable")
+        .data(["sszvis-control-buttonGroup"], function(d) {
+          return d;
+        });
+      var newContainer = container
+        .enter()
+        .append("div")
+        .classed("sszvis-control-optionSelectable", true)
+        .classed("sszvis-control-buttonGroup", true);
       container.exit().remove();
 
       container = container.merge(newContainer);
 
-      container
-        .style('width', props.width + 'px');
+      container.style("width", props.width + "px");
 
-      var buttons = container.selectAll('.sszvis-control-buttonGroup__item')
-        .data(props.values);
+      var buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values);
 
-      var newButtons = buttons.enter()
-        .append('div')
-        .classed('sszvis-control-buttonGroup__item', true);
+      var newButtons = buttons
+        .enter()
+        .append("div")
+        .classed("sszvis-control-buttonGroup__item", true);
 
       buttons.exit().remove();
 
       buttons = buttons.merge(newButtons);
 
       buttons
-        .style('width', buttonWidth + 'px')
-        .classed('selected', function(d) { return d === props.current; })
-        .text(function(d) { return d; })
-        .on('click', props.change);
+        .style("width", buttonWidth + "px")
+        .classed("selected", function(d) {
+          return d === props.current;
+        })
+        .text(function(d) {
+          return d;
+        })
+        .on("click", props.change);
     });
-};
+}

@@ -22,10 +22,10 @@
  * @returns {sszvis.component} a linear data area component (reference line)
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { component } from "../d3-component.js";
 
 // reference line specified in the form y = mx + b
 // user supplies m and b
@@ -33,15 +33,17 @@ import { component } from '../d3-component.js';
 
 export default function() {
   return component()
-    .prop('x1')
-    .prop('x2')
-    .prop('y1')
-    .prop('y2')
-    .prop('xScale')
-    .prop('yScale')
-    .prop('dx', fn.functor).dx(0)
-    .prop('dy', fn.functor).dy(0)
-    .prop('caption', fn.functor)
+    .prop("x1")
+    .prop("x2")
+    .prop("y1")
+    .prop("y2")
+    .prop("xScale")
+    .prop("yScale")
+    .prop("dx", fn.functor)
+    .dx(0)
+    .prop("dy", fn.functor)
+    .dy(0)
+    .prop("caption", fn.functor)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -51,45 +53,45 @@ export default function() {
       var x2 = props.xScale(props.x2);
       var y2 = props.yScale(props.y2);
 
-      var line = selection.selectAll('.sszvis-referenceline')
-        .data(data);
+      var line = selection.selectAll(".sszvis-referenceline").data(data);
 
       line.exit().remove();
 
-      var newLine = line.enter()
-        .append('line')
-        .classed('sszvis-referenceline', true);
+      var newLine = line
+        .enter()
+        .append("line")
+        .classed("sszvis-referenceline", true);
 
-      line = line.merge(newLine)
+      line = line.merge(newLine);
 
       line
-        .attr('x1', x1)
-        .attr('y1', y1)
-        .attr('x2', x2)
-        .attr('y2', y2);
+        .attr("x1", x1)
+        .attr("y1", y1)
+        .attr("x2", x2)
+        .attr("y2", y2);
 
       if (props.caption) {
-        var caption = selection.selectAll('.sszvis-referenceline__caption')
-          .data([0]);
+        var caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
 
         caption.exit().remove();
 
-        var newCaption = caption.enter()
-          .append('text')
-          .classed('sszvis-referenceline__caption', true);
+        var newCaption = caption
+          .enter()
+          .append("text")
+          .classed("sszvis-referenceline__caption", true);
 
-        caption = caption.merge(newCaption)
+        caption = caption.merge(newCaption);
 
         caption
-          .attr('transform', function() {
+          .attr("transform", function() {
             var vx = x2 - x1;
             var vy = y2 - y1;
-            var angle = Math.atan2(vy, vx) * 180 / Math.PI;
-            return 'translate(' + ((x1 + x2) / 2) + ',' + ((y1 + y2) / 2) + ') rotate(' + (angle) + ')';
+            var angle = (Math.atan2(vy, vx) * 180) / Math.PI;
+            return "translate(" + (x1 + x2) / 2 + "," + (y1 + y2) / 2 + ") rotate(" + angle + ")";
           })
-          .attr('dx', props.dx)
-          .attr('dy', props.dy)
+          .attr("dx", props.dx)
+          .attr("dy", props.dy)
           .text(props.caption);
       }
     });
-};
+}

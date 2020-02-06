@@ -60,49 +60,81 @@
  * @return {sszvis.component}
  */
 
-import {select, interpolateNumber} from 'd3';
+import { select, interpolateNumber } from "d3";
 
-import * as fn from '../fn.js';
-import tooltipAnchor from '../annotation/tooltipAnchor.js';
-import { halfPixel } from '../svgUtils/crisp.js';
-import translateString from '../svgUtils/translateString.js';
-import bar from './bar.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { halfPixel } from "../svgUtils/crisp.js";
+import translateString from "../svgUtils/translateString.js";
+import bar from "./bar.js";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('sizeScale')
-    .prop('columnPosition')
-    .prop('nodeThickness')
-    .prop('nodePadding')
-    .prop('columnPadding', fn.functor)
-    .prop('columnLabel', fn.functor).columnLabel('')
-    .prop('columnLabelOffset', fn.functor).columnLabelOffset(0)
-    .prop('linkCurvature').linkCurvature(0.5)
-    .prop('nodeColor', fn.functor)
-    .prop('linkColor', fn.functor)
-    .prop('linkSort', fn.functor).linkSort(function(a, b) { return a.value - b.value; }) // Default sorts in descending order of value
-    .prop('labelSide', fn.functor).labelSide('left')
-    .prop('labelSideSwitch')
-    .prop('labelOpacity', fn.functor).labelOpacity(1)
-    .prop('labelHitBoxSize').labelHitBoxSize(0)
-    .prop('nameLabel').nameLabel(fn.identity)
-    .prop('linkSourceLabels').linkSourceLabels([])
-    .prop('linkTargetLabels').linkTargetLabels([])
-    .prop('linkLabel', fn.functor)
+    .prop("sizeScale")
+    .prop("columnPosition")
+    .prop("nodeThickness")
+    .prop("nodePadding")
+    .prop("columnPadding", fn.functor)
+    .prop("columnLabel", fn.functor)
+    .columnLabel("")
+    .prop("columnLabelOffset", fn.functor)
+    .columnLabelOffset(0)
+    .prop("linkCurvature")
+    .linkCurvature(0.5)
+    .prop("nodeColor", fn.functor)
+    .prop("linkColor", fn.functor)
+    .prop("linkSort", fn.functor)
+    .linkSort(function(a, b) {
+      return a.value - b.value;
+    }) // Default sorts in descending order of value
+    .prop("labelSide", fn.functor)
+    .labelSide("left")
+    .prop("labelSideSwitch")
+    .prop("labelOpacity", fn.functor)
+    .labelOpacity(1)
+    .prop("labelHitBoxSize")
+    .labelHitBoxSize(0)
+    .prop("nameLabel")
+    .nameLabel(fn.identity)
+    .prop("linkSourceLabels")
+    .linkSourceLabels([])
+    .prop("linkTargetLabels")
+    .linkTargetLabels([])
+    .prop("linkLabel", fn.functor)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
-      var idAcc = fn.prop('id');
+      var idAcc = fn.prop("id");
 
-      var getNodePosition = function(node) { return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + (props.nodePadding * node.nodeIndex)); };
-      var xPosition = function(node) { return props.columnPosition(node.columnIndex); };
-      var yPosition = function(node) { return getNodePosition(node); };
-      var xExtent = function() { return Math.max(props.nodeThickness, 1); };
-      var yExtent = function(node) { return Math.ceil(Math.max(props.sizeScale(node.value), 1)); };
-      var linkPathString = function(x0, x1, x2, x3, y0, y1) { return 'M' + x0 + ',' + y0 + 'C' + x1 + ',' + y0 + ' ' + x2 + ',' + y1 + ' ' + x3 + ',' + y1; };
-      var linkBounds = function(x0, x1, y0, y1) { return [x0, x1, y0, y1]; };
+      var getNodePosition = function(node) {
+        return Math.floor(
+          props.columnPadding(node.columnIndex) +
+            props.sizeScale(node.valueOffset) +
+            props.nodePadding * node.nodeIndex
+        );
+      };
+      var xPosition = function(node) {
+        return props.columnPosition(node.columnIndex);
+      };
+      var yPosition = function(node) {
+        return getNodePosition(node);
+      };
+      var xExtent = function() {
+        return Math.max(props.nodeThickness, 1);
+      };
+      var yExtent = function(node) {
+        return Math.ceil(Math.max(props.sizeScale(node.value), 1));
+      };
+      var linkPathString = function(x0, x1, x2, x3, y0, y1) {
+        return (
+          "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1
+        );
+      };
+      var linkBounds = function(x0, x1, y0, y1) {
+        return [x0, x1, y0, y1];
+      };
       var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
       // Draw the nodes
@@ -113,74 +145,98 @@ export default function() {
         .height(yExtent)
         .fill(props.nodeColor);
 
-      var barGroup = selection.selectGroup('nodes')
-        .datum(data.nodes);
+      var barGroup = selection.selectGroup("nodes").datum(data.nodes);
 
       barGroup.call(barGen);
 
-      var barTooltipAnchor = tooltipAnchor()
-        .position(function(node) {
-          return [xPosition(node) + xExtent(node) / 2, yPosition(node) + yExtent(node) / 2];
-        });
+      var barTooltipAnchor = tooltipAnchor().position(function(node) {
+        return [xPosition(node) + xExtent(node) / 2, yPosition(node) + yExtent(node) / 2];
+      });
 
       barGroup.call(barTooltipAnchor);
 
       // Draw the column labels
-      var columnLabelX = function(colIndex) { return props.columnPosition(colIndex) + props.nodeThickness / 2; };
+      var columnLabelX = function(colIndex) {
+        return props.columnPosition(colIndex) + props.nodeThickness / 2;
+      };
       var columnLabelY = -24;
 
       var columnLabels = barGroup
-        .selectAll('.sszvis-sankey-column-label')
+        .selectAll(".sszvis-sankey-column-label")
         // One number for each column
         .data(data.columnLengths);
 
-      var newColumnLabels = columnLabels.enter()
-        .append('text')
-        .attr('class', 'sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label');
+      var newColumnLabels = columnLabels
+        .enter()
+        .append("text")
+        .attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
 
       columnLabels = columnLabels.merge(newColumnLabels);
 
       columnLabels.exit().remove();
 
       columnLabels
-        .attr('transform', function(d, i) { return translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY); })
-        .text(function(d, i) { return props.columnLabel(i); });
+        .attr("transform", function(d, i) {
+          return translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY);
+        })
+        .text(function(d, i) {
+          return props.columnLabel(i);
+        });
 
       var columnLabelTicks = barGroup
-        .selectAll('.sszvis-sankey-column-label-tick')
+        .selectAll(".sszvis-sankey-column-label-tick")
         .data(data.columnLengths);
 
-      var newColumnLabelTicks = columnLabelTicks.enter()
-        .append('line')
-        .attr('class', 'sszvis-sankey-column-label-tick');
+      var newColumnLabelTicks = columnLabelTicks
+        .enter()
+        .append("line")
+        .attr("class", "sszvis-sankey-column-label-tick");
 
       columnLabelTicks = columnLabelTicks.merge(newColumnLabelTicks);
 
       columnLabelTicks.exit().remove();
 
       columnLabelTicks
-        .attr('x1', function(d, i) { return halfPixel(columnLabelX(i)); })
-        .attr('x2', function(d, i) { return halfPixel(columnLabelX(i)); })
-        .attr('y1', halfPixel(columnLabelY + 8))
-        .attr('y2', halfPixel(columnLabelY + 12));
+        .attr("x1", function(d, i) {
+          return halfPixel(columnLabelX(i));
+        })
+        .attr("x2", function(d, i) {
+          return halfPixel(columnLabelX(i));
+        })
+        .attr("y1", halfPixel(columnLabelY + 8))
+        .attr("y2", halfPixel(columnLabelY + 12));
 
       // Draw the links
       var linkPoints = function(link) {
-        var curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
-            curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
-            startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + (props.sizeScale(link.value) / 2),
-            endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + (props.sizeScale(link.value) / 2);
+        var curveStart =
+            props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
+          curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
+          startLevel =
+            getNodePosition(link.src) +
+            props.sizeScale(link.srcOffset) +
+            props.sizeScale(link.value) / 2,
+          endLevel =
+            getNodePosition(link.tgt) +
+            props.sizeScale(link.tgtOffset) +
+            props.sizeScale(link.value) / 2;
 
         return [curveStart, curveEnd, startLevel, endLevel];
       };
 
       var linkPath = function(link) {
         var points = linkPoints(link),
-            curveInterp = interpolateNumber(points[0], points[1]),
-            curveControlPtA = curveInterp(props.linkCurvature),
-            curveControlPtB = curveInterp(1 - props.linkCurvature);
+          curveInterp = interpolateNumber(points[0], points[1]),
+          curveControlPtA = curveInterp(props.linkCurvature),
+          curveControlPtB = curveInterp(1 - props.linkCurvature);
 
-        return linkPathString(points[0], curveControlPtA, curveControlPtB, points[1], points[2], points[3]);
+        return linkPathString(
+          points[0],
+          curveControlPtA,
+          curveControlPtB,
+          points[1],
+          points[2],
+          points[3]
+        );
       };
 
       var linkBoundingBox = function(link) {
@@ -189,55 +245,60 @@ export default function() {
         return linkBounds(points[0], points[1], points[2], points[3]);
       };
 
-      var linkThickness = function(link) { return Math.max(props.sizeScale(link.value), 1); };
+      var linkThickness = function(link) {
+        return Math.max(props.sizeScale(link.value), 1);
+      };
 
       // Render the links
-      var linksGroup = selection.selectGroup('links');
+      var linksGroup = selection.selectGroup("links");
 
-      var linksElems = linksGroup.selectAll('.sszvis-link')
-        .data(data.links, idAcc);
+      var linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
 
-      var newLinksElems = linksElems.enter()
-        .append('path')
-        .attr('class', 'sszvis-link');
+      var newLinksElems = linksElems
+        .enter()
+        .append("path")
+        .attr("class", "sszvis-link");
       linksElems = linksElems.merge(newLinksElems);
 
       linksElems.exit().remove();
 
       linksElems
-        .attr('fill', 'none')
-        .attr('d', linkPath)
-        .attr('stroke-width', linkThickness)
-        .attr('stroke', props.linkColor)
+        .attr("fill", "none")
+        .attr("d", linkPath)
+        .attr("stroke-width", linkThickness)
+        .attr("stroke", props.linkColor)
         .sort(props.linkSort);
 
       linksGroup.datum(data.links);
 
-      var linkTooltipAnchor = tooltipAnchor()
-        .position(function(link) {
-          var bbox = linkBoundingBox(link);
-          return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
-        });
+      var linkTooltipAnchor = tooltipAnchor().position(function(link) {
+        var bbox = linkBoundingBox(link);
+        return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
+      });
 
       linksGroup.call(linkTooltipAnchor);
 
       // Render the link labels
-      var linkLabelsGroup = selection.selectGroup('linklabels');
+      var linkLabelsGroup = selection.selectGroup("linklabels");
 
       // If no props.linkSourceLabels are provided, most of this rendering is no-op
       var linkSourceLabels = linkLabelsGroup
-        .selectAll('.sszvis-sankey-link-source-label')
+        .selectAll(".sszvis-sankey-link-source-label")
         .data(props.linkSourceLabels);
 
-      var newLinkSourceLabels = linkSourceLabels.enter()
-        .append('text')
-        .attr('class', 'sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label');
+      var newLinkSourceLabels = linkSourceLabels
+        .enter()
+        .append("text")
+        .attr(
+          "class",
+          "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label"
+        );
       linkSourceLabels = linkSourceLabels.merge(newLinkSourceLabels);
 
       linkSourceLabels.exit().remove();
 
       linkSourceLabels
-        .attr('transform', function(link) {
+        .attr("transform", function(link) {
           var bbox = linkBoundingBox(link);
           return translateString(bbox[0] + 6, bbox[2]);
         })
@@ -245,18 +306,22 @@ export default function() {
 
       // If no props.linkTargetLabels are provided, most of this rendering is no-op
       var linkTargetLabels = linkLabelsGroup
-        .selectAll('.sszvis-sankey-link-target-label')
+        .selectAll(".sszvis-sankey-link-target-label")
         .data(props.linkTargetLabels);
 
-      var newLinkTargetLabels = linkTargetLabels.enter()
-        .append('text')
-        .attr('class', 'sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label');
+      var newLinkTargetLabels = linkTargetLabels
+        .enter()
+        .append("text")
+        .attr(
+          "class",
+          "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label"
+        );
       linkTargetLabels = linkTargetLabels.merge(newLinkTargetLabels);
 
       linkTargetLabels.exit().remove();
 
       linkTargetLabels
-        .attr('transform', function(link) {
+        .attr("transform", function(link) {
           var bbox = linkBoundingBox(link);
           return translateString(bbox[1] - 6, bbox[3]);
         })
@@ -266,50 +331,65 @@ export default function() {
       var getLabelSide = function(colIndex) {
         var side = props.labelSide(colIndex);
         if (props.labelSideSwitch) {
-          side = side === 'left' ? 'right' : 'left';
+          side = side === "left" ? "right" : "left";
         }
         return side;
-      }
+      };
 
-      var nodeLabelsGroup = selection.selectGroup('nodelabels');
+      var nodeLabelsGroup = selection.selectGroup("nodelabels");
 
-      var barLabels = nodeLabelsGroup
-        .selectAll('.sszvis-sankey-node-label')
-        .data(data.nodes);
+      var barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes);
 
-      var newBarLabels = barLabels.enter()
-        .append('text')
-        .attr('class', 'sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label');
+      var newBarLabels = barLabels
+        .enter()
+        .append("text")
+        .attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
       barLabels = barLabels.merge(newBarLabels);
 
       barLabels.exit().remove();
 
       barLabels
-        .text(function(node) { return props.nameLabel(node.id); })
-        .attr('text-align', 'middle')
-        .attr('text-anchor', function(node) { return getLabelSide(node.columnIndex) === 'left' ? 'end' : 'start'; })
-        .attr('x', function(node) { return getLabelSide(node.columnIndex) === 'left' ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6; })
-        .attr('y', function(node) { return yPosition(node) + yExtent(node) / 2; })
-        .style('opacity', props.labelOpacity)
+        .text(function(node) {
+          return props.nameLabel(node.id);
+        })
+        .attr("text-align", "middle")
+        .attr("text-anchor", function(node) {
+          return getLabelSide(node.columnIndex) === "left" ? "end" : "start";
+        })
+        .attr("x", function(node) {
+          return getLabelSide(node.columnIndex) === "left"
+            ? xPosition(node) - 6
+            : xPosition(node) + props.nodeThickness + 6;
+        })
+        .attr("y", function(node) {
+          return yPosition(node) + yExtent(node) / 2;
+        })
+        .style("opacity", props.labelOpacity);
 
-      var barLabelHitBoxes = nodeLabelsGroup
-        .selectAll('.sszvis-sankey-hitbox')
-        .data(data.nodes);
+      var barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes);
 
-      var newBarLabelHitBoxes = barLabelHitBoxes.enter()
-        .append('rect')
-        .attr('class', 'sszvis-sankey-hitbox');
+      var newBarLabelHitBoxes = barLabelHitBoxes
+        .enter()
+        .append("rect")
+        .attr("class", "sszvis-sankey-hitbox");
       barLabelHitBoxes = barLabelHitBoxes.merge(newBarLabelHitBoxes);
 
       barLabelHitBoxes.exit().remove();
 
       barLabelHitBoxes
-        .attr('fill', 'transparent')
-        .attr('x', function(node) { return xPosition(node) + (getLabelSide(node.columnIndex) === 'left' ? -props.labelHitBoxSize : 0); })
-        .attr('y', function(node) { return yPosition(node) - (props.nodePadding / 2); })
-        .attr('width', props.labelHitBoxSize + props.nodeThickness)
-        .attr('height', function(node) { return yExtent(node) + props.nodePadding; });
-
-
+        .attr("fill", "transparent")
+        .attr("x", function(node) {
+          return (
+            xPosition(node) +
+            (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)
+          );
+        })
+        .attr("y", function(node) {
+          return yPosition(node) - props.nodePadding / 2;
+        })
+        .attr("width", props.labelHitBoxSize + props.nodeThickness)
+        .attr("height", function(node) {
+          return yExtent(node) + props.nodePadding;
+        });
     });
-};
+}

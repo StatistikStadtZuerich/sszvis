@@ -1,5 +1,3 @@
-# Sankey Diagram (Parallel Sets)
-
 ## sszvis.sankey
 
 ### Data structure
@@ -76,7 +74,6 @@ Works the same as linkSourceLabels, but used for labels on the 'target' end of t
 
 A string or function returning a string to use for the label of each link.
 
-
 ## Sankey Diagram - Two Columns
 
 ```project
@@ -91,12 +88,11 @@ A string or function returning a string to use for the label of each link.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }
 ```
-
 
 ## Sankey Diagram - Same Sets
 
@@ -112,7 +108,7 @@ A string or function returning a string to use for the label of each link.
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }

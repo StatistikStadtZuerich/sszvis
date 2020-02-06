@@ -28,22 +28,24 @@
  * @return {sszvis.component}
  */
 
-import {select, scaleLinear, hsl, arc, interpolate} from 'd3';
+import { select, scaleLinear, hsl, arc, interpolate } from "d3";
 
-import * as logger from '../logger.js';
-import { defaultTransition } from '../transition.js';
-import tooltipAnchor from '../annotation/tooltipAnchor.js';
-import { component } from '../d3-component.js';
+import * as logger from "../logger.js";
+import { defaultTransition } from "../transition.js";
+import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { component } from "../d3-component.js";
 
 var TWO_PI = 2 * Math.PI;
 
 export default function() {
   return component()
-    .prop('angleScale').angleScale(scaleLinear().range([0, 2 * Math.PI]))
-    .prop('radiusScale')
-    .prop('centerRadius')
-    .prop('fill')
-    .prop('stroke').stroke('white')
+    .prop("angleScale")
+    .angleScale(scaleLinear().range([0, 2 * Math.PI]))
+    .prop("radiusScale")
+    .prop("centerRadius")
+    .prop("fill")
+    .prop("stroke")
+    .stroke("white")
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -52,10 +54,12 @@ export default function() {
       function getColorRecursive(node) {
         // Center node (if the data were prepared using sszvis.layout.sunburst.prepareData)
         if (node.data.isSunburstRoot) {
-          return 'transparent';
+          return "transparent";
         } else if (!node.parent) {
           // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
-          logger.warn('Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData');
+          logger.warn(
+            "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData"
+          );
           return hsl(props.fill(node.data.key));
         } else if (node.parent.data.isSunburstRoot) {
           // Use the color scale
@@ -68,10 +72,18 @@ export default function() {
         }
       }
 
-      var startAngle = function(d) { return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0))); };
-      var endAngle = function(d) { return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1))); };
-      var innerRadius = function(d) { return props.centerRadius + Math.max(0, props.radiusScale(d.y0)); };
-      var outerRadius = function(d) { return props.centerRadius + Math.max(0, props.radiusScale(d.y1)); };
+      var startAngle = function(d) {
+        return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
+      };
+      var endAngle = function(d) {
+        return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
+      };
+      var innerRadius = function(d) {
+        return props.centerRadius + Math.max(0, props.radiusScale(d.y0));
+      };
+      var outerRadius = function(d) {
+        return props.centerRadius + Math.max(0, props.radiusScale(d.y1));
+      };
 
       var arcGen = arc()
         .startAngle(startAngle)
@@ -86,7 +98,8 @@ export default function() {
         d._x1 = d.x1;
       });
 
-      var arcs = selection.selectAll('.sszvis-sunburst-arc')
+      var arcs = selection
+        .selectAll(".sszvis-sunburst-arc")
         .each(function(d, i) {
           if (data[i]) {
             // x and dx are the current/transitioning values
@@ -98,39 +111,36 @@ export default function() {
         })
         .data(data);
 
-      var newArcs = arcs.enter()
-        .append('path')
-        .attr('class', 'sszvis-sunburst-arc')
+      var newArcs = arcs
+        .enter()
+        .append("path")
+        .attr("class", "sszvis-sunburst-arc");
 
       arcs.exit().remove();
 
       arcs = arcs.merge(newArcs);
 
-      arcs
-        .attr('stroke', props.stroke)
-        .attr('fill', getColorRecursive);
+      arcs.attr("stroke", props.stroke).attr("fill", getColorRecursive);
 
-      arcs.transition(defaultTransition())
-        .attrTween('d', function(d) {
-          var x0Interp = interpolate(d.x0, d._x0);
-          var x1Interp = interpolate(d.x1, d._x1);
-          return function(t) {
-            d.x0 = x0Interp(t);
-            d.x1 = x1Interp(t);
-            return arcGen(d);
-          }
-        });
+      arcs.transition(defaultTransition()).attrTween("d", function(d) {
+        var x0Interp = interpolate(d.x0, d._x0);
+        var x1Interp = interpolate(d.x1, d._x1);
+        return function(t) {
+          d.x0 = x0Interp(t);
+          d.x1 = x1Interp(t);
+          return arcGen(d);
+        };
+      });
 
       // Add tooltip anchors
-      var arcTooltipAnchor = tooltipAnchor()
-        .position(function(d) {
-          var startA = startAngle(d);
-          var endA = endAngle(d);
-          var a = startA + (Math.abs(endA - startA) / 2) - Math.PI / 2;
-          var r = (innerRadius(d) + outerRadius(d)) / 2;
-          return [Math.cos(a) * r, Math.sin(a) * r];
-        });
+      var arcTooltipAnchor = tooltipAnchor().position(function(d) {
+        var startA = startAngle(d);
+        var endA = endAngle(d);
+        var a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
+        var r = (innerRadius(d) + outerRadius(d)) / 2;
+        return [Math.cos(a) * r, Math.sin(a) * r];
+      });
 
       selection.call(arcTooltipAnchor);
     });
-};
+}

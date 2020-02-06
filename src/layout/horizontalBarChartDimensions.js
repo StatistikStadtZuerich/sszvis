@@ -27,14 +27,14 @@
 
 export default function(numBars) {
   var DEFAULT_HEIGHT = 24, // the default bar height
-      MIN_PADDING = 20, // the minimum padding size
-      barHeight = DEFAULT_HEIGHT, // the bar height
-      numPads = numBars - 1,
-      padding = MIN_PADDING,
-      // compute other information
-      padRatio = 1 - (barHeight / (barHeight + padding)),
-      computedBarSpace = barHeight * numBars + padding * numPads,
-      outerRatio = 0; // no outer padding
+    MIN_PADDING = 20, // the minimum padding size
+    barHeight = DEFAULT_HEIGHT, // the bar height
+    numPads = numBars - 1,
+    padding = MIN_PADDING,
+    // compute other information
+    padRatio = 1 - barHeight / (barHeight + padding),
+    computedBarSpace = barHeight * numBars + padding * numPads,
+    outerRatio = 0; // no outer padding
 
   return {
     barHeight: barHeight,
@@ -43,6 +43,6 @@ export default function(numBars) {
     outerRatio: outerRatio,
     axisOffset: -(barHeight / 2) - 10,
     barGroupHeight: computedBarSpace,
-    totalHeight: computedBarSpace + (outerRatio * (barHeight + padding) * 2)
+    totalHeight: computedBarSpace + outerRatio * (barHeight + padding) * 2
   };
-};
+}

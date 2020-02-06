@@ -1,97 +1,121 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import R from 'ramda';
-import JSZip from 'jszip';
-import Radium from 'radium';
-import {Specimen} from 'catalog';
+import { Specimen } from "catalog";
+import JSZip from "jszip";
+import PropTypes from "prop-types";
+import Radium from "radium";
+import * as R from "ramda";
+import React from "react";
+import bodyToProps from "./bodyToProps";
+import normalizeReferences from "./normalizeReferences";
+import TabbedSourceView from "./TabbedSourceView";
 // Polyfill for DOMParser.parseFromString support
-import './utils/DOMParser';
+import "./utils/DOMParser";
+import saveAs from "./utils/FileSaver";
+import fileUtils from "./utils/fileUtils";
+import { text } from "./utils/typography";
 
-import fileUtils from './utils/fileUtils';
-import saveAs from './utils/FileSaver';
-import bodyToProps from './bodyToProps';
-import {text} from './utils/typography';
-
-import normalizeReferences from './normalizeReferences';
-import TabbedSourceView from './TabbedSourceView';
 
 
 function getStyle(theme) {
   return {
     container: {
-      marginTop: '15px',
-      marginBottom: '30px',
-      overflow: 'auto',
-      flexBasis: '100%'
+      marginTop: "15px",
+      marginBottom: "30px",
+      overflow: "auto",
+      flexBasis: "100%"
     },
     frame: {
-      border: '1px solid #eee',
-      display: 'block',
-      margin: '0 0 20px 0',
-      background: '#fff'
+      border: "1px solid #eee",
+      display: "block",
+      margin: "0 0 20px 0",
+      background: "#fff"
     },
     tabBar: {
-      border: '1px solid #eee',
+      border: "1px solid #eee",
       minHeight: 38
     },
     link: {
       ...text(theme),
-      padding: '10px 20px',
+      padding: "10px 20px",
       color: theme.linkColor,
-      display: 'inline-block',
-      float: 'right',
-      textDecoration: 'none'
+      display: "inline-block",
+      float: "right",
+      textDecoration: "none"
     }
   };
 }
 
 const imagePathRe = /\.(jpe?g|gif|png)$/;
-const isImage = (path) => imagePathRe.test(path);
-
+const isImage = path => imagePathRe.test(path);
 
 export default function ProjectConfigurator(opts) {
   opts || (opts = {});
-  opts.sizes || (opts.sizes = [{width: '100%', height: '700px'}]);
+  opts.sizes || (opts.sizes = [{ width: "100%", height: "700px" }]);
 
   class Project extends React.Component {
     render() {
-      const {catalog: {theme}} = this.props;
-      let {body} = this.props;
+      const {
+        catalog: { theme }
+      } = this.props;
+      let { body } = this.props;
       const projectConfig = bodyToProps(body);
-      const {index, scrolling, files, size} = projectConfig;
+      const { index, scrolling, files, size } = projectConfig;
 
       let styles = getStyle(theme);
       let sourceFiles = this.sourceViewFiles(projectConfig);
 
       return (
-        <div className='cg-Specimen-Project' style={styles.container}>
-          { size &&
+        <div className="cg-Specimen-Project" style={styles.container}>
+          {(size && (
             <iframe
               src={index.source}
               scrolling={scrolling}
-              marginHeight='0'
-              marginWidth='0'
-              style={[{...styles.frame}, size]}
+              marginHeight="0"
+              marginWidth="0"
+              style={[{ ...styles.frame }, size]}
             />
-
-            ||
-
-            (<div style={{display: 'flex', flexFlow: 'row wrap'}}>
-              {opts.sizes.map(({width, height}, i) => (
-                <iframe key={i} src={index.source} marginHeight='0' marginWidth='0' style={{
-                  ...styles.frame,
-                  margin: '0 20px 20px 0',
-                  overflowY: 'scroll',
-                  width: width || '100%',
-                  height: height || '700px'
-                }}/>
+          )) || (
+            <div style={{ display: "flex", flexFlow: "row wrap" }}>
+              {opts.sizes.map(({ width, height }, i) => (
+                <iframe
+                  key={i}
+                  src={index.source}
+                  marginHeight="0"
+                  marginWidth="0"
+                  style={{
+                    ...styles.frame,
+                    margin: "0 20px 20px 0",
+                    overflowY: "scroll",
+                    width: width || "100%",
+                    height: height || "700px"
+                  }}
+                />
               ))}
-            </div>)
-          }
+            </div>
+          )}
           <div style={sourceFiles.length > 1 ? styles.tabBar : null}>
-            <a key={'new-window'} style={styles.link} href={index.source} target='_blank'>Open in new tab</a>
-            <a key={'responsive-testbed'} style={styles.link} href={'/tools/content_testbed.html?file=' + index.source}>Open in responsive testbed</a>
-            <a key={'download'} style={styles.link} href='#' onClick={this.download.bind(this, projectConfig)}>Download as .zip</a>
+            <a
+              key={"new-window"}
+              style={styles.link}
+              href={index.source}
+              target="_blank"
+            >
+              Open in new tab
+            </a>
+            <a
+              key={"responsive-testbed"}
+              style={styles.link}
+              href={"/_tools/content_testbed.html?file=" + index.source}
+            >
+              Open in responsive testbed
+            </a>
+            <a
+              key={"download"}
+              style={styles.link}
+              href="#"
+              onClick={this.download.bind(this, projectConfig)}
+            >
+              Download as .zip
+            </a>
             <TabbedSourceView
               rootPath={fileUtils.dirname(index.source)}
               files={files}
@@ -104,19 +128,19 @@ export default function ProjectConfigurator(opts) {
     }
 
     sourceViewFiles(projectConfig) {
-      return projectConfig.files.filter((d) => {
+      return projectConfig.files.filter(d => {
         return R.contains(d.target, R.or(projectConfig.sourceView, []));
       });
     }
 
     parseExposedFiles(source) {
-      let doc = new DOMParser().parseFromString(source, 'text/html');
+      let doc = new DOMParser().parseFromString(source, "text/html");
       let files = [];
-      let ref = doc.querySelectorAll('[data-catalog-project-expose]');
+      let ref = doc.querySelectorAll("[data-catalog-project-expose]");
       for (let i = 0, len = ref.length; i < len; i++) {
         let node = ref[i];
-        let path = node.getAttribute('data-catalog-project-expose');
-        node.removeAttribute('data-catalog-project-expose');
+        let path = node.getAttribute("data-catalog-project-expose");
+        node.removeAttribute("data-catalog-project-expose");
         files.push({
           path: path,
           content: node.innerHTML
@@ -137,7 +161,7 @@ export default function ProjectConfigurator(opts) {
       // It worked! The monkeys banged away on the keyboard and something functioning
       // came out of it! Such mess, but such works. Wow.
 
-      let files = projectConfig.files.map((file) => {
+      let files = projectConfig.files.map(file => {
         return new Promise((resolve, reject) => {
           // When dealing with an image, we need to make sure to load it as binary
           // data, not plain text. We do this by issuing a custom request with a
@@ -153,8 +177,8 @@ export default function ProjectConfigurator(opts) {
 
           if (isImage(file.source)) {
             let req = new XMLHttpRequest();
-            req.open('GET', file.source, true);
-            req.responseType = 'arraybuffer';
+            req.open("GET", file.source, true);
+            req.responseType = "arraybuffer";
             req.onload = () => {
               return resolve({
                 path: file.target,
@@ -168,80 +192,106 @@ export default function ProjectConfigurator(opts) {
           // it further before adding it to the zip file.
 
           return fetch(file.source, {
-            credentials: 'include',
+            credentials: "include",
             headers: {
-              Accept: 'text/plain,*/*'
+              Accept: "text/plain,*/*"
             }
           })
-          .then((response) => response.text())
-          .then((source) => {
-            let content = R.any((f => f.source === file.source), this.sourceViewFiles(projectConfig)) ? normalizeReferences(rootPath, projectConfig.files, source) : source;
-            if (file === projectConfig.index) {
-              virtualFiles = virtualFiles.concat(this.parseExposedFiles(content));
-              if (file.template) {
-                return fetch(file.template, {
-                  credentials: 'include',
-                  headers: {
-                    Accept: 'text/plain,*/*'
-                  }
-                })
-                .then((response) => response.text())
-                .then((template) => {
-                  // var doc, i, len, node, path, ref, template;
-                  const doc = new DOMParser().parseFromString(content, 'text/html');
-                  const ref = doc.querySelectorAll('[data-catalog-project-expose]');
-                  for (let i = 0, len = ref.length; i < len; i++) {
-                    const node = ref[i];
-                    const path = node.getAttribute('data-catalog-project-expose');
-                    node.removeAttribute('data-catalog-project-expose');
-                    node.setAttribute('src', path);
-                    node.innerHTML = '';
-                  }
-                  virtualFiles.push({
-                    path: fileUtils.filename(file.template),
-                    content: template.replace('${yield}', doc.body.innerHTML)
-                  });
-                  content = content.replace(/\s+data-catalog-project-expose=[\"\'].+?[\"\']/, '');
-                  return resolve({
-                    path: file.target,
-                    content: content
-                  });
+            .then(response => response.text())
+            .then(source => {
+              let content = R.any(
+                f => f.source === file.source,
+                this.sourceViewFiles(projectConfig)
+              )
+                ? normalizeReferences(rootPath, projectConfig.files, source)
+                : source;
+              if (file === projectConfig.index) {
+                virtualFiles = virtualFiles.concat(
+                  this.parseExposedFiles(content)
+                );
+                if (file.template) {
+                  return fetch(file.template, {
+                    credentials: "include",
+                    headers: {
+                      Accept: "text/plain,*/*"
+                    }
+                  })
+                    .then(response => response.text())
+                    .then(template => {
+                      // var doc, i, len, node, path, ref, template;
+                      const doc = new DOMParser().parseFromString(
+                        content,
+                        "text/html"
+                      );
+                      const ref = doc.querySelectorAll(
+                        "[data-catalog-project-expose]"
+                      );
+                      for (let i = 0, len = ref.length; i < len; i++) {
+                        const node = ref[i];
+                        const path = node.getAttribute(
+                          "data-catalog-project-expose"
+                        );
+                        node.removeAttribute("data-catalog-project-expose");
+                        node.setAttribute("src", path);
+                        node.innerHTML = "";
+                      }
+                      virtualFiles.push({
+                        path: fileUtils.filename(file.template),
+                        content: template.replace(
+                          "${yield}",
+                          doc.body.innerHTML
+                        )
+                      });
+                      content = content.replace(
+                        /\s+data-catalog-project-expose=[\"\'].+?[\"\']/,
+                        ""
+                      );
+                      return resolve({
+                        path: file.target,
+                        content: content
+                      });
+                    });
+                }
+                content = content.replace(
+                  /\s+data-catalog-project-expose=[\"\'].+?[\"\']/,
+                  ""
+                );
+                return resolve({
+                  path: file.target,
+                  content: content
                 });
               }
-              content = content.replace(/\s+data-catalog-project-expose=[\"\'].+?[\"\']/, '');
               return resolve({
                 path: file.target,
                 content: content
               });
-            }
-            return resolve({
-              path: file.target,
-              content: content
+            })
+            .catch(reject);
+        });
+      });
+
+      Promise.all(files)
+        .then(filesResponse => {
+          filesResponse.forEach(f => {
+            return root.file(f.path, f.content, {
+              binary: isImage(f.path)
             });
-          }).catch(reject);
-        });
-      });
-
-      Promise.all(files).then((filesResponse) =>{
-        filesResponse.forEach( (f) => {
-          return root.file(f.path, f.content, {
-            binary: isImage(f.path)
           });
-        });
-        virtualFiles.forEach( (f) => {
-          return root.file(f.path, f.content, {
-            binary: isImage(f.path)
+          virtualFiles.forEach(f => {
+            return root.file(f.path, f.content, {
+              binary: isImage(f.path)
+            });
           });
+          return zip
+            .generateAsync({
+              type: "blob"
+            })
+            .then(blob => saveAs(blob, projectConfig.name + ".zip"));
+        })
+        .catch(error => {
+          throw new Error("Preparing ZIP file failed", error);
         });
-        return zip.generateAsync({
-          type: 'blob'
-        }).then(blob => saveAs(blob, projectConfig.name + '.zip'));
-      }).catch((error) => {
-        throw new Error('Preparing ZIP file failed', error);
-      });
     }
-
-
   }
 
   Project.propTypes = {
@@ -249,5 +299,5 @@ export default function ProjectConfigurator(opts) {
     body: PropTypes.object.isRequired
   };
 
-  return Specimen((parsed) => ({body: parsed}))(Radium(Project));
+  return Specimen(parsed => ({ body: parsed }))(Radium(Project));
 }

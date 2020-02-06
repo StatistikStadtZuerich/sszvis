@@ -32,39 +32,58 @@
  * @return {function} Formatting function that accepts a datum
  */
 
-import * as fn from '../fn.js';
+import * as fn from "../fn.js";
 
 function formatHTML() {
   var styles = {
-    plain: function(d){ return d;},
-    italic: function(d){ return '<em>' + d + '</em>';},
-    bold: function(d){ return '<strong>' + d + '</strong>';}
+    plain: function(d) {
+      return d;
+    },
+    italic: function(d) {
+      return "<em>" + d + "</em>";
+    },
+    bold: function(d) {
+      return "<strong>" + d + "</strong>";
+    }
   };
 
   return function(textBody, datum) {
-    return textBody.lines().map(function(line) {
-      return line.map(function(word) {
-        return styles[word.style].call(null, word.text(datum));
-      }).join(' ');
-    }).join('<br/>');
+    return textBody
+      .lines()
+      .map(function(line) {
+        return line
+          .map(function(word) {
+            return styles[word.style].call(null, word.text(datum));
+          })
+          .join(" ");
+      })
+      .join("<br/>");
   };
 }
 
 function formatSVG() {
   var styles = {
-    plain: function(d){ return '<tspan>' + d + '</tspan>'; },
-    italic: function(d){ return '<tspan style="font-style:italic">' + d + '</tspan>'; },
-    bold: function(d){ return '<tspan style="font-weight:bold">' + d + '</tspan>'; }
+    plain: function(d) {
+      return "<tspan>" + d + "</tspan>";
+    },
+    italic: function(d) {
+      return '<tspan style="font-style:italic">' + d + "</tspan>";
+    },
+    bold: function(d) {
+      return '<tspan style="font-weight:bold">' + d + "</tspan>";
+    }
   };
 
   return function(textBody, datum) {
     return textBody.lines().reduce(function(svg, line, i) {
-      var lineSvg = line.map(function(word) {
-        return styles[word.style].call(null, word.text(datum));
-      }).join(' ');
-      var dy = (i === 0) ? 0 : '1.2em';
-      return svg + '<tspan x="0" dy="'+ dy +'">' + lineSvg + '</tspan>';
-    }, '');
+      var lineSvg = line
+        .map(function(word) {
+          return styles[word.style].call(null, word.text(datum));
+        })
+        .join(" ");
+      var dy = i === 0 ? 0 : "1.2em";
+      return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
+    }, "");
   };
 }
 
@@ -102,7 +121,7 @@ function makeTextWithFormat(format) {
       return makeText;
     };
 
-    ['bold', 'italic', 'plain'].forEach(function(style) {
+    ["bold", "italic", "plain"].forEach(function(style) {
       makeText[style] = function(text) {
         textBody.addWord(style, text);
         return makeText;

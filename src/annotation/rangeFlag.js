@@ -16,18 +16,18 @@
  * @returns {sszvis.component}
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import { halfPixel } from '../svgUtils/crisp.js';
-import tooltipAnchor from '../annotation/tooltipAnchor.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { halfPixel } from "../svgUtils/crisp.js";
+import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('x', fn.functor)
-    .prop('y0', fn.functor)
-    .prop('y1', fn.functor)
+    .prop("x", fn.functor)
+    .prop("y0", fn.functor)
+    .prop("y1", fn.functor)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
@@ -36,28 +36,30 @@ export default function() {
       var crispY0 = fn.compose(halfPixel, props.y0);
       var crispY1 = fn.compose(halfPixel, props.y1);
 
-      selection.selectAll('.sszvis-rangeFlag__mark.bottom')
+      selection
+        .selectAll(".sszvis-rangeFlag__mark.bottom")
         .data(data)
-        .call(makeFlagDot('bottom', crispX, crispY0));
+        .call(makeFlagDot("bottom", crispX, crispY0));
 
-      selection.selectAll('.sszvis-rangeFlag__mark.top')
+      selection
+        .selectAll(".sszvis-rangeFlag__mark.top")
         .data(data)
-        .call(makeFlagDot('top', crispX, crispY1));
+        .call(makeFlagDot("top", crispX, crispY1));
 
-      var ta = tooltipAnchor()
-        .position(function(d) {
-          return [crispX(d), halfPixel((props.y0(d) + props.y1(d)) / 2)];
-        });
+      var ta = tooltipAnchor().position(function(d) {
+        return [crispX(d), halfPixel((props.y0(d) + props.y1(d)) / 2)];
+      });
 
       selection.call(ta);
     });
-};
+}
 
 function makeFlagDot(classed, cx, cy) {
   return function(dot) {
-    var newDot = dot.enter()
-      .append('circle')
-      .classed('sszvis-rangeFlag__mark', true)
+    var newDot = dot
+      .enter()
+      .append("circle")
+      .classed("sszvis-rangeFlag__mark", true)
       .classed(classed, true);
 
     dot.exit().remove();
@@ -65,8 +67,8 @@ function makeFlagDot(classed, cx, cy) {
     dot = dot.merge(newDot);
 
     dot
-      .attr('r', 3.5)
-      .attr('cx', cx)
-      .attr('cy', cy);
+      .attr("r", 3.5)
+      .attr("cx", cx)
+      .attr("cy", cy);
   };
 }

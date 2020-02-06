@@ -15,7 +15,7 @@ This library is bundled using [Rollup](https://rollupjs.org/). To start developi
 npm install
 
 # Start library build in watch mode
-npm run build -- --watch
+npm run build:watch
 
 # Start Catalog documentation server
 npm start
@@ -30,13 +30,13 @@ sszvis builds are automated. You don't have to run build tasks for publishing bu
 npm run build
 
 # Build the library
-npm run build-lib
+npm run build:lib
 
 # Build topojson files
-npm run build-topo
+npm run build:topo
 
 # Build documentation
-npm run build-docs
+npm run build:docs
 ```
 
 ## License

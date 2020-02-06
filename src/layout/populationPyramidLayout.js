@@ -27,7 +27,7 @@
  *                                    }
  */
 
-import {aspectRatioPortrait} from '../aspectRatio.js';
+import { aspectRatioPortrait } from "../aspectRatio.js";
 
 export default function(spaceWidth, numBars) {
   var MAX_HEIGHT = 480; // Chart no taller than this
@@ -43,14 +43,14 @@ export default function(spaceWidth, numBars) {
   var totalHeight = numBars * roundedBarHeight + totalPadding;
 
   var barPos = totalHeight - roundedBarHeight,
-      step = roundedBarHeight + padding,
-      positions = [];
+    step = roundedBarHeight + padding,
+    positions = [];
   while (barPos >= 0) {
     positions.push(barPos);
     barPos -= step;
   }
 
-  var maxBarLength = Math.min(spaceWidth / 2, aspectRatioPortrait.MAX_HEIGHT * (4/5) / 2);
+  var maxBarLength = Math.min(spaceWidth / 2, (aspectRatioPortrait.MAX_HEIGHT * (4 / 5)) / 2);
   var chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
 
   return {
@@ -61,4 +61,4 @@ export default function(spaceWidth, numBars) {
     maxBarLength: maxBarLength,
     chartPadding: chartPadding
   };
-};
+}

@@ -13,10 +13,10 @@ Qcode,Qname,Ausländeranteil
 073,Hirslanden,0.25
 123,Hirzenbach,0.37
 012,Hochschulen,0.29
-101,Höngg,0.22
+101,Höngg,
 072,Hottingen,0.29
 042,Langstrasse,0.49
-023,Leimbach,0.24
+023,Leimbach,
 013,Lindenhof,0.26
 082,Mühlebach,0.32
 063,Oberstrass,0.29
@@ -31,5 +31,5 @@ Qcode,Qname,Ausländeranteil
 083,Weinegg,0.29
 041,Werd,0.41
 102,Wipkingen,0.34
-074,Witikon,0.23
+074,Witikon,
 021,Wollishofen,0.26

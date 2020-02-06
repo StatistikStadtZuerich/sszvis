@@ -14,10 +14,10 @@
  */
 
 export default function(defaultVal, bounds) {
-  var lo = Math.min(bounds.innerWidth * 1 / 4, 100);
-  var hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
+  var lo = Math.min((bounds.innerWidth * 1) / 4, 100);
+  var hi = Math.max((bounds.innerWidth * 3) / 4, bounds.innerWidth - 100);
   return function(d) {
     var x = d.x;
-    return x > hi ? 'right' : x < lo ? 'left' : defaultVal;
+    return x > hi ? "right" : x < lo ? "left" : defaultVal;
   };
-};
+}

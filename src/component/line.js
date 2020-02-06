@@ -35,27 +35,30 @@
  * @return {sszvis.component}
  */
 
-import {select, line as d3Line} from 'd3';
+import { select, line as d3Line } from "d3";
 
-import * as fn from '../fn.js';
-import { defaultTransition } from '../transition.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { defaultTransition } from "../transition.js";
+import { component } from "../d3-component.js";
 
 export default function() {
-
   return component()
-    .prop('x')
-    .prop('y')
-    .prop('stroke')
-    .prop('strokeWidth')
-    .prop('defined')
-    .prop('key').key(function(d, i){ return i; })
-    .prop('valuesAccessor').valuesAccessor(fn.identity)
-    .prop('transition').transition(true)
+    .prop("x")
+    .prop("y")
+    .prop("stroke")
+    .prop("strokeWidth")
+    .prop("defined")
+    .prop("key")
+    .key(function(d, i) {
+      return i;
+    })
+    .prop("valuesAccessor")
+    .valuesAccessor(fn.identity)
+    .prop("transition")
+    .transition(true)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
-
 
       // Layouts
 
@@ -64,16 +67,15 @@ export default function() {
         .x(props.x)
         .y(props.y);
 
-
       // Rendering
 
-      var path = selection.selectAll('.sszvis-line')
-        .data(data, props.key);
+      var path = selection.selectAll(".sszvis-line").data(data, props.key);
 
-      var newPath = path.enter()
-        .append('path')
-        .classed('sszvis-line', true)
-        .style('stroke', props.stroke);
+      var newPath = path
+        .enter()
+        .append("path")
+        .classed("sszvis-line", true)
+        .style("stroke", props.stroke);
 
       path = path.merge(newPath);
 
@@ -86,8 +88,8 @@ export default function() {
       }
 
       path
-        .attr('d', fn.compose(line, props.valuesAccessor))
-        .style('stroke', props.stroke)
-        .style('stroke-width', props.strokeWidth);
+        .attr("d", fn.compose(line, props.valuesAccessor))
+        .style("stroke", props.stroke)
+        .style("stroke-width", props.strokeWidth);
     });
-};
+}

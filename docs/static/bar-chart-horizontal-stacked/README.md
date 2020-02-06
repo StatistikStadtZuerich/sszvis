@@ -1,26 +1,24 @@
-# Stacked Bar Chart - Horizontal
-
 ## sszvis.stackedBarHorizontal
 
 ### Data structure
 
-This chart expects an array of arrays, where each sub array is one layer of the stack. The stacks are formed by finding elements in each layer with the same *y*-value, and computing the size of each element based on a *x*-value.
+This chart expects an array of arrays, where each sub array is one layer of the stack. The stacks are formed by finding elements in each layer with the same _y_-value, and computing the size of each element based on a _x_-value.
 
 #### Caution
 
-Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: `y0`, the baseline value for each point, and `y`, the extent of each point. This assignment will overwrite any existing properties on the data object named `y0` or `y`. These are intermediate values used to compute the bars' positioning in stack, and will be assigned even though the stack is horizontal. In the end, these values are used to calculate *x* positions and bar *widths*.
+Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: `y0`, the baseline value for each point, and `y`, the extent of each point. This assignment will overwrite any existing properties on the data object named `y0` or `y`. These are intermediate values used to compute the bars' positioning in stack, and will be assigned even though the stack is horizontal. In the end, these values are used to calculate _x_ positions and bar _widths_.
 
 ### Configuration
 
-The stackedBar.horizontal component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/d3/d3-shape/blob/master/README.md#stacks). The stack is constructed horizontally, using the *y*-value of each data element to form groups, and then calculating, for each element, the cumulative *x*-values to the left of it in the stack.
+The stackedBar.horizontal component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/d3/d3-shape/blob/master/README.md#stacks). The stack is constructed horizontally, using the _y_-value of each data element to form groups, and then calculating, for each element, the cumulative _x_-values to the left of it in the stack.
 
 #### `stackedBarHorizontal.xAccessor(xAcc)`
 
-Specifies an *x*-accessor for the stack layout. The result of this function is used to compute the horizontal extent of each element in the stack. The return value must be a number.
+Specifies an _x_-accessor for the stack layout. The result of this function is used to compute the horizontal extent of each element in the stack. The return value must be a number.
 
 #### `stackedBarHorizontal.xScale(xScale)`
 
-Specifies an *x*-scale for the stack layout. This scale is used to position the elements of each stack, both the left offset value and the width of each stack segment.
+Specifies an _x_-scale for the stack layout. This scale is used to position the elements of each stack, both the left offset value and the width of each stack segment.
 
 #### `stackedBarHorizontal.width(width)`
 
@@ -58,7 +56,7 @@ In this example, twelve distinct categories make up each stack, and the total fo
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
+
     },
     "sourceView": ["index.html", "data.csv"]
 }

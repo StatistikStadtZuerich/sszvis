@@ -6,7 +6,7 @@
  * @module sszvis/aspectRatio
  */
 
-import {breakpointFind, breakpointDefaultSpec} from './breakpoint.js';
+import { breakpointFind, breakpointDefaultSpec } from "./breakpoint.js";
 
 /**
  * aspectRatio
@@ -24,7 +24,9 @@ import {breakpointFind, breakpointDefaultSpec} from './breakpoint.js';
  */
 export function aspectRatio(x, y) {
   var ar = x / y;
-  return function(width) { return width / ar; };
+  return function(width) {
+    return width / ar;
+  };
 }
 
 /**
@@ -124,9 +126,9 @@ aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
  * @return {Number} The height which corresponds to the default aspect ratio for these measurements
  */
 var defaultAspectRatios = {
-  palm: aspectRatio4to3,   // palm-sized devices
-  lap:  aspectRatio16to10, // lap-sized devices
-  _:    aspectRatio12to5   // all other cases, including desk
+  palm: aspectRatio4to3, // palm-sized devices
+  lap: aspectRatio16to10, // lap-sized devices
+  _: aspectRatio12to5 // all other cases, including desk
 };
 
 export var aspectRatioAuto = function(measurement) {

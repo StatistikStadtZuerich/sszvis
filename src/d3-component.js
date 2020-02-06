@@ -1,4 +1,4 @@
-import { selection as d3Selection } from 'd3';
+import { selection as d3Selection } from "d3";
 
 /**
  * d3 plugin to simplify creating reusable charts. Implements
@@ -38,7 +38,9 @@ export function component() {
    */
   function sszvisComponent(selection) {
     if (selectionRenderer) {
-      selection.props = function(){ return clone(props); };
+      selection.props = function() {
+        return clone(props);
+      };
       selectionRenderer.apply(selection, slice(arguments));
     }
     selection.each(function() {
@@ -57,7 +59,9 @@ export function component() {
    */
   sszvisComponent.prop = function(prop, setter) {
     setter || (setter = identity);
-    sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
+    sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(
+      sszvisComponent
+    );
     return sszvisComponent;
   };
 
@@ -71,7 +75,7 @@ export function component() {
   sszvisComponent.delegate = function(prop, delegate) {
     sszvisComponent[prop] = function() {
       var result = delegate[prop].apply(delegate, slice(arguments));
-      return (arguments.length === 0) ? result : sszvisComponent;
+      return arguments.length === 0 ? result : sszvisComponent;
     };
     return sszvisComponent;
   };
@@ -105,7 +109,7 @@ export function component() {
   };
 
   return sszvisComponent;
-};
+}
 
 /**
  * d3.selection plugin to get the properties of a sszvis.component.
@@ -120,12 +124,12 @@ d3Selection.prototype.props = function() {
   // d3.selection.data(), but it would need some test cases,
   // so we currently simplify to the most common use-case:
   // getting props.
-  if (arguments.length) throw new Error('selection.props() does not accept any arguments');
-  if (this.size() != 1) throw new Error('only one group is supported');
-  if (this._groups[0].length != 1) throw new Error('only one node is supported');
+  if (arguments.length) throw new Error("selection.props() does not accept any arguments");
+  if (this.size() != 1) throw new Error("only one group is supported");
+  if (this._groups[0].length != 1) throw new Error("only one node is supported");
 
   var group = this._groups[0];
-  var node  = group[0];
+  var node = group[0];
   return node.__props__ || {};
 };
 
@@ -159,7 +163,7 @@ function slice(array) {
 function clone(obj) {
   var copy = {};
   for (var attr in obj) {
-    if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+    if ({}.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
   }
   return copy;
 }

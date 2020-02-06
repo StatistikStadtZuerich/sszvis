@@ -15,56 +15,56 @@
  * @return {sszvis.component}
  */
 
-import {select} from 'd3';
+import { select } from "d3";
 
-import * as fn from '../fn.js';
-import { defaultTransition } from '../transition.js';
-import tooltipAnchor from '../annotation/tooltipAnchor.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { defaultTransition } from "../transition.js";
+import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { component } from "../d3-component.js";
 
 export default function() {
   return component()
-    .prop('x', fn.functor)
-    .prop('y', fn.functor)
-    .prop('radius')
-    .prop('stroke')
-    .prop('fill')
-    .prop('transition').transition(true)
+    .prop("x", fn.functor)
+    .prop("y", fn.functor)
+    .prop("radius")
+    .prop("stroke")
+    .prop("fill")
+    .prop("transition")
+    .transition(true)
     .render(function(data) {
       var selection = select(this);
       var props = selection.props();
 
-      var dots = selection.selectAll('.sszvis-circle')
-        .data(data);
+      var dots = selection.selectAll(".sszvis-circle").data(data);
 
       dots.exit().remove();
 
-      dots.enter()
-        .append('circle')
-        .classed('sszvis-circle', true)
-        .attr('cx', props.x)
-        .attr('cy', props.y)
-        .attr('r', props.radius)
-      .merge(dots)
-        .attr('stroke', props.stroke)
-        .attr('fill', props.fill);
+      dots
+        .enter()
+        .append("circle")
+        .classed("sszvis-circle", true)
+        .attr("cx", props.x)
+        .attr("cy", props.y)
+        .attr("r", props.radius)
+        .merge(dots)
+        .attr("stroke", props.stroke)
+        .attr("fill", props.fill);
 
       if (props.transition) {
         dots = dots.transition(defaultTransition());
       }
 
       dots
-        .attr('cx', props.x)
-        .attr('cy', props.y)
-        .attr('r', props.radius);
+        .attr("cx", props.x)
+        .attr("cy", props.y)
+        .attr("r", props.radius);
 
       // Tooltip anchors
 
-      var ta = tooltipAnchor()
-        .position(function(d) {
-          return [props.x(d), props.y(d)];
-        });
+      var ta = tooltipAnchor().position(function(d) {
+        return [props.x(d), props.y(d)];
+      });
 
       selection.call(ta);
     });
-};
+}

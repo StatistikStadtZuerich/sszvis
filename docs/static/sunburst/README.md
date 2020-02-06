@@ -1,5 +1,3 @@
-# Sunburst Diagram
-
 ## sszvis.sunburst
 
 ### Data Structure
@@ -30,61 +28,21 @@ Function that returns the fill color for the segments in the center of the chart
 
 The stroke color of the segments. Defaults to white.
 
-## Chart - Two Levels
+## Chart
 
 ```project
 {
-    "name": "sunburst-2",
+    "name": "sunburst",
     "files": {
         "index.html": {
-            "source": "sunburst/sunburst-two-cat.html",
-            "template": "template.html"
-        },
-        "data.csv": "sunburst/data/sun_burst_zwei_hierarchien.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
-
-## Chart - Three Levels
-
-```project
-{
-    "name": "sunburst-3",
-    "files": {
-        "index.html": {
-            "source": "sunburst/sunburst-three-cat.html",
+            "source": "sunburst/basic.html",
             "template": "template.html"
         },
         "data.csv": "sunburst/data/sun_burst_drei_hierarchien.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
-        
-    },
-    "sourceView": ["index.html", "data.csv"]
-}
-```
 
-## Chart - Four Levels
-
-```project
-{
-    "name": "sunburst-4",
-    "files": {
-        "index.html": {
-            "source": "sunburst/sunburst-four-cat.html",
-            "template": "template.html"
-        },
-        "data.csv": "sunburst/data/sun_burst_vier_hierarchien.csv",
-        "sszvis.js": "sszvis.js",
-        "sszvis.css": "sszvis.css",
-        "fallback.png": "fallback.png",
-        
     },
     "sourceView": ["index.html", "data.csv"]
 }

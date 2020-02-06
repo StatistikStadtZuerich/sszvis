@@ -1,4 +1,4 @@
-import {selection} from 'd3';
+import { selection } from "d3";
 /**
  * d3.selection plugin to simplify creating idempotent divs that are not
  * recreated when rendered again.
@@ -9,13 +9,15 @@ import {selection} from 'd3';
  * @return {d3.selection}
  */
 selection.prototype.selectDiv = function(key) {
-  var div = this.selectAll('[data-d3-selectdiv="' + key + '"]')
-    .data(function(d) { return [d]; });
+  var div = this.selectAll('[data-d3-selectdiv="' + key + '"]').data(function(d) {
+    return [d];
+  });
 
-  var newDiv = div.enter()
-    .append('div')
-    .attr('data-d3-selectdiv', key)
-    .style('position', 'absolute');
+  var newDiv = div
+    .enter()
+    .append("div")
+    .attr("data-d3-selectdiv", key)
+    .style("position", "absolute");
 
   return div.merge(newDiv);
 };
