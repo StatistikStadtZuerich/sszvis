@@ -1,0 +1,2268 @@
+<!doctype html>
+<!--[if IE 7]>         <html lang="en" class="no-js ie7 lte-ie9 lte-ie8 lte-ie7"> <![endif]-->
+<!--[if IE 8]>         <html lang="en" class="no-js ie8 lte-ie9 lte-ie8">         <![endif]-->
+<!--[if IE 9]>         <html lang="en" class="no-js ie9 lte-ie9">                 <![endif]-->
+<!--[if gt IE 9]><!-->
+<html lang="en" class="no-js">                         <!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Stadt Zürich</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://js.arcgis.com/3.16/esri/css/esri.css" type="text/css" />
+	<link href="assets/vendors/readspeaker/ReadSpeakerClassic.css" type="text/css" rel="stylesheet"../../>
+		<link rel="stylesheet" href="assets/css/main.min.css" />
+	<link rel="stylesheet" media="print" href="assets/css/print.css" />
+
+
+	<script type="text/javascript" src="https://js.arcgis.com/3.16/"></script>
+	<script type="text/javascript">
+		window.resourceRoot = '../../';
+	</script>
+	<script src="assets/js/head.min.js"></script>
+
+
+	<!-- <script src="assets/vendors/jwplayer7/jwplayer.js" type="text/javascript"></script> -->
+	<!-- <script src="assets/vendors/jwplayer7/jwplayer.key.js" type="text/javascript"></script> -->
+
+	<!--[if lt IE 9]>
+	    <script src="assets/vendors/html5shiv.js"></script>
+	<![endif]-->
+
+</head>
+<body>
+	<main role="main" data-modal="main">
+		<div class="mod_notification" role="alert" data-notification="target"></div>
+		<a name="anchorTop"></a>
+		<div class="layout_wrapper">
+			<div class="mod_header" data-init="header">
+				<a href="../../" class="mod_logo">
+					<img src="assets/media/logo/logo_stzh_portal.svg" alt="Logo Stadt Zürich">
+				</a>	<div class="mod_skiplinks">
+					<h1>Navigation - Departement</h1>
+					<h2>Sprunglink:</h2>
+					<ul>
+						<li>
+							<a accesskey="1" href="#anchorContent">Zum Inhalt</a>
+						</li>
+						<li>
+							<a accesskey="2" href="#anchorSearch">Zur Suche</a>
+						</li>
+						<li>
+							<a accesskey="3" href="#anchorNavMain">Zur Bereichsauswahl</a>
+						</li>
+						<li>
+							<a accesskey="5" href="#anchorNavMeta">Zur Hilfsnavigation</a>
+						</li>
+						<li>
+							<a accesskey="6" href="#anchorContext">Zu den weiteren Informationen</a>
+						</li>
+					</ul>
+				</div>
+				<div class="top_actions" data-header="topactions">
+					<div class="mod_metanav" data-init="metanav" data-header="metanav">
+						<a name="anchorNavMeta"></a>
+						<h2 class="visuallyhidden">Service navigation</h2>
+						<ul>
+							<li><a href="#">Kontakt</a></li>
+							<li><a href="#">Medien</a></li>
+							<li><a href="#">Jobs</a></li>
+						</ul>
+					</div>
+					<div data-searchfield="wrapper" class="actions var_with_myaccount">
+						<div class="mod_searchfield" data-init="searchfield">
+							<form action="#" class="search_field" data-searchfield="container">
+								<input id="form_search_keywords" type="text" class="text" name="q" value="" placeholder="Suche" onkeyup="validateSearchInput(this.value, 'searchboxform_dep_submit', 'searchboxform_dep');" data-searchfield="field" autocomplete="off">
+								<input id="searchboxform_dep_submit" type="submit" class="search_button" name="search" value="Finden" data-searchfield="button">
+								<div data-searchfield="dropdown" class="search_field_dropdown">
+									<ul class="dropdown_list">
+										<li class="dropdown_list_item">
+												<div class="mod_formradio var_small var_dark " data-init="formradio">
+													<input type="radio" id="q_area_1" name="q_area" value="1"   checked >
+													<label for="q_area_1">in der ganzen Stadt</label>
+												</div>
+										</li>
+										<li class="dropdown_list_item">
+												<div class="mod_formradio var_small var_dark " data-init="formradio">
+													<input type="radio" id="q_area_2" name="q_area" value="2"   >
+													<label for="q_area_2">in diesem Departement</label>
+												</div>
+										</li>
+									</ul>
+								</div>
+							</form>
+						</div>
+							<div class="mod_myaccountaccess" data-init="myaccountaccess">
+								
+								
+								
+								
+								
+										<a href="#" class="mod_button var_secondary var_small  icon user var_label">
+												<span class="label">Mein Konto</span>
+										</a>
+								
+							</div>
+					</div>
+					<a href="#" data-header="burger" class="btn_burger">
+						<span class="text">Menu</span>
+			 			<div class="icon_burger">
+							<span class="icon_burger_bar"></span>
+							<span class="icon_burger_bar"></span>
+							<span class="icon_burger_bar"></span>
+						</div>
+					</a>
+					<div class="burger_dropdown" data-header="burger-dropdown">
+						<div class="scrolling_wrapper">
+							<div class="mod_multilevelnav" data-init="multilevelnav" data-header="multilevelnav"
+								 data-multilevelnav-url-pattern="../../tmp/navigation_mocks/mock_{id}.json"
+								 data-multilevelnav-options='{ "i18n": {"backLinkPrefix": "Zurück zu ", "openPageText": "Diese Seite öffnen"}}'>
+								<div class="mod_multilevelnav_wrapper">
+									<div class="slides_wrapper" data-multilevelnav="slides-wrapper">
+										<div class="slide var_active" data-multilevelnav="slide">
+												<ul >
+														<li class="var_back">
+															<a href="#" data-multilevelnav-back-id="2.1">Zurück zu  Prävention</a>
+														</li>
+															<li class="var_wrapping_node var_active">
+																	<div>Kriminalprävention</div>
+											
+																<ul>
+																			<li >
+																				<a href="../../someurl">Vermögensdelikte</a>
+																			</li>
+																			<li class="section var_has_subitems">
+																				<a href="#" data-multilevelnav-id="2.1.2.2">Gewaltdelikte</a>
+																			</li>
+																			<li >
+																				<a href="../../someurl">Digitale Medien</a>
+																			</li>
+																</ul>
+															</li>
+												</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="mod_topnav" data-init="topnav">
+					<ul class="no_back_link">
+								<!--Navigation root - render only subitems, don't render the abstract root-->
+										<li class="">
+											<a href="../../someurl">Über das Departement</a>
+										</li>
+										<li class="var_active var_has_subitems">
+											<a href="#" data-multilevelnav-id="2">Stadtpolizei</a>
+										</li>
+										<li class="">
+											<a href="../../someurl">Schutz & Rettung</a>
+										</li>
+										<li class="section ">
+											<a href="../../someurl">Dienstabteilung Verkehr</a>
+										</li>
+										<li class="">
+											<a href="../../someurl">Stadtrichteramt</a>
+										</li>
+					</ul>
+			</div>		</div>
+		<div class="layout_wrapper">
+			<div class="layout_columns var_aside_columns">
+				<div class="layout_column var_column_right">
+		<nav class="mod_breadcrumb" role="navigation" aria-label="You are here:" data-init="breadcrumb">
+			<ul>
+					<li class="home">
+							<a href="#">
+								 <span> 
+								Home
+								 </span> 
+							</a>
+					</li>
+					<li class="">
+							<a href="#">
+								
+								Startseite Portal der Stadt Z&uuml;rich
+								
+							</a>
+					</li>
+					<li class="">
+							<a href="#">
+								
+								Politik &amp; Recht
+								
+							</a>
+					</li>
+					<li class="">
+							<a href="#">
+								
+								Stadtrat
+								
+							</a>
+					</li>
+					<li class="">
+							<a href="#">
+								
+								Gesch&auml;fte des Stadtrats
+								
+							</a>
+					</li>
+					<li class="">
+							<a href="#">
+								
+								Stadtratsbeschl&uuml;sse
+								
+							</a>
+					</li>
+					<li class="">
+							<span>STRB Nr. 0499/2014</span>
+					</li>
+			</ul>
+		</nav>
+
+		<div class="mod_pagetitle">
+			<h1 class="page_title">Maximale Inhaltsseite</h1>
+		
+		
+		
+			<p class="lead">Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem.</p>
+		</div>
+
+		<div class="mainparsys parsys">
+			<div class="mod_table" data-init="table">
+				<h2 class="table_title">Einfache Tabelle 1</h2>
+				<div data-table="tablewrap">
+					<table class="table" data-table="table">
+						<thead>
+							<tr>
+								<th scope="col" >Spaltentitel</th>
+								<th scope="col" >Programm</th>
+								<th scope="col" >Ortschaft</th>
+								<th scope="col" >Lorem ipsum</th>
+							</tr>
+						</thead>
+						<tbody >
+							<tr>
+												<td >Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.</td>
+												<td >Bold: <b>Aliquam lorem ante</b></td>
+												<td >Inhalt lorem ipsum 1</td>
+												<td >Inhalt lorem ipsum 1</td>
+							</tr>
+							<tr>
+												<td >Inhalt lorem ipsum 2</td>
+												<td >Internal Link: <a title="Internal Link Example" href="#" class="icon intern">Maecenas</a></td>
+												<td >Inhalt lorem ipsum 2</td>
+												<td >Inhalt lorem ipsum 2</td>
+							</tr>
+							<tr>
+												<td style="text-align:center";>This text has text-align center: Inhalt lorem ipsum 3</td>
+												<td >External Link: <a title="External Link Example" href="#" class="icon extern" target="_blank">Curabgitu</a></td>
+												<td >Inhalt lorem ipsum 3</td>
+												<td >Inhalt lorem ipsum 3</td>
+							</tr>
+							<tr>
+												<td style="text-align:right";>This text has text-align right: Inhalt lorem ipsum 4</td>
+												<td >Inhalt lorem ipsum 4</td>
+												<td >Inhalt lorem ipsum 4</td>
+												<td >Inhalt lorem ipsum 4</td>
+							</tr>
+						</tbody>
+			
+					</table>
+				</div>
+			</div>
+			<div class="mod_table" data-init="table">
+				<h2 class="table_title">Tabelle 2</h2>
+				<div data-table="tablewrap">
+					<table class="table" data-table="table">
+						<thead>
+							<tr>
+								<th scope="col" >Spaltentitel</th>
+								<th scope="col" >Programm</th>
+								<th scope="col" >Ortschaft</th>
+								<th scope="col" >Lorem ipsum</th>
+							</tr>
+						</thead>
+						<tbody >
+							<tr>
+												<td >Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.</td>
+												<td >Bold: <b>Aliquam lorem ante</b></td>
+												<td >Inhalt lorem ipsum 1</td>
+												<td >Inhalt lorem ipsum 1</td>
+							</tr>
+							<tr>
+												<td >Inhalt lorem ipsum 2</td>
+												<td >Internal Link: <a title="Internal Link Example" href="#" class="icon intern">Maecenas</a></td>
+												<td >Inhalt lorem ipsum 2</td>
+												<td >Inhalt lorem ipsum 2</td>
+							</tr>
+							<tr>
+												<td style="text-align:center";>This text has text-align center: Inhalt lorem ipsum 3</td>
+												<td >External Link: <a title="External Link Example" href="#" class="icon extern" target="_blank">Curabgitu</a></td>
+												<td >Inhalt lorem ipsum 3</td>
+												<td >Inhalt lorem ipsum 3</td>
+							</tr>
+							<tr>
+												<td style="text-align:right";>This text has text-align right: Inhalt lorem ipsum 4</td>
+												<td >Inhalt lorem ipsum 4</td>
+												<td >Inhalt lorem ipsum 4</td>
+												<td >Inhalt lorem ipsum 4</td>
+							</tr>
+						</tbody>
+			
+					</table>
+				</div>
+			</div>
+			<div class="mod_newsteaser ">
+				<h2>Verkehrsmeldungen</h2>
+					<div class="teaser">
+			
+						<div class="content">
+									<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+						</div>
+					</div>
+					<div class="teaser">
+			
+						<div class="content">
+							<h4>Verkehrsbeschränkungen Geroldrampe und Hardstrasse</h4>
+							<h5>Montag 22. Februar 2016</h5>
+									<p >Von Samstag, 27. Februar 2016, bis Donnerstag, 30. November 2017, sind die Geroldrampe und die Hardstrasse teilweise für den Verkehr gesperrt.</p>
+									<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+						</div>
+					</div>
+					<div class="teaser">
+			
+						<div class="content">
+							<h4>Verkehrsbeschränkungen Soodstrasse</h4>
+							<h5>Donnerstag 8. Oktober 2015</h5>
+									<p >Vom 12. bis 14. Oktober 2015 ist die Soodstrasse teilweise für den Verkehr gesperrt.</p>
+									<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+						</div>
+					</div>
+				
+				
+				
+				
+				
+				
+			</div>
+			<div class="mod_textandimage">
+				<div class="col_left var_large ">
+							<div class="mod_imagegallery" data-init="imagegallery" data-imagegallery-options='{"gid":"3"}'>
+								<figure class="mod_image " data-imagegallery="item">
+										<a class="image" href="assets/media/imagegallery/teaser_03_2x.png" title="Das ist eine Bildlegende 1" data-size="1024x672">
+									<picture>
+										<!--[if IE 9]><video style="display: none;"><![endif]-->
+										<!--[if IE 9]></video><![endif]-->
+										<img src="assets/media/imagegallery/teaser_03_2x.png" alt="">
+									</picture>
+										<button class="lightbox_button"><span>View image</span></button>
+									</a>
+									<figcaption>
+									</figcaption>
+								</figure>
+							
+									<div class="gallery" aria-hidden="false">
+										<figure class="mod_image " data-imagegallery="item">
+												<a class="image" href="assets/media/imagegallery/teaser_01_2x.png" title="Das ist eine Bildlegende 2" data-size="814x460">
+											<picture>
+												<!--[if IE 9]><video style="display: none;"><![endif]-->
+												<!--[if IE 9]></video><![endif]-->
+												<img src="assets/media/imagegallery/teaser_01_2x.png" alt="">
+											</picture>
+												<button class="lightbox_button"><span>View image</span></button>
+											</a>
+											<figcaption>
+											</figcaption>
+										</figure>
+										<figure class="mod_image " data-imagegallery="item">
+												<a class="image" href="assets/media/imagegallery/teaser_02_2x.png" title="Das ist eine Bildlegende 3" data-size="814x460">
+											<picture>
+												<!--[if IE 9]><video style="display: none;"><![endif]-->
+												<!--[if IE 9]></video><![endif]-->
+												<img src="assets/media/imagegallery/teaser_02_2x.png" alt="">
+											</picture>
+												<button class="lightbox_button"><span>View image</span></button>
+											</a>
+											<figcaption>
+											</figcaption>
+										</figure>
+									</div>
+							</div>
+				</div>
+					<div class="col_right">
+							<div class="mod_styledtext">
+								Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. <a href="#">Curabgitur</a> ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. <a href="#">Maecenas</a> tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel.
+							</div>
+					</div>
+			</div>
+			<div class="mod_textandimage">
+				<div class="col_left var_large ">
+							<div class="mod_imagegallery" data-init="imagegallery" data-imagegallery-options='{"gid":"4"}'>
+								<figure class="mod_image " data-imagegallery="item">
+										<a class="image" href="assets/media/imagegallery/teaser_02_2x.png" title="Das ist eine Bildlegende 1" data-size="814x460">
+									<picture>
+										<!--[if IE 9]><video style="display: none;"><![endif]-->
+										<!--[if IE 9]></video><![endif]-->
+										<img src="assets/media/imagegallery/teaser_02_2x.png" alt="">
+									</picture>
+										<button class="lightbox_button"><span>View image</span></button>
+									</a>
+									<figcaption>
+									</figcaption>
+								</figure>
+							
+							</div>
+				</div>
+					<div class="col_right">
+							<div class="mod_styledtext">
+								Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. <a href="#">Curabgitur</a> ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. <a href="#">Maecenas</a> tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel.
+							</div>
+					</div>
+			</div>
+			<div class="mod_contact">
+				<h3 class="content-header">Kontakt</h3>
+					<address class="address">
+						<h4>Organisation und Informatik</h4>
+						<p>
+							<div>Musterstrasse 1</div>
+							<div>8000 Zürich</div>
+						  <div class="mod_styledtext">Telefon <a href="tel:+41444129111">+41 44 412 91 11</a></div>
+						</p>
+					</address>
+			
+						<div class="mod_linklistitem">
+							<a href="#" class="linklistitem var_icon_arrow_right">
+								<span>Website</span>
+								<span class="icon icon_arrow_right">
+								</span>
+							</a>
+						</div>
+					<div class="mod_accordion" data-init="accordion" >
+						<div class="var_small">
+							<a href="#" class="trigger " data-accordion="trigger">
+								<span class="trigger_title">Kontaktformular</span>
+								<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+							</a>
+							<div class="content is_hidden" data-accordion="content">
+									<div class="mod_form">
+						<form method="GET" action="#" enctype="multipart/form-data">
+								<div class="form_section var_two_columns var_spacing_bottom">
+											<div class="mod_formtextinput  readonly" data-init="formtextinput">
+													<input
+														type="text"
+														name=""
+														id=""
+														value="Organisation und Informatik"
+														
+														 readonly
+														
+														
+														
+														
+														
+													/>
+													<label for="">An</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name=""
+														id=""
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="">Betreff*</label>
+											</div>
+											<div class="mod_formtextinput var_full_width" data-init="formtextinput">
+													<textarea name="" id="" value=""  ></textarea>
+													<label for="">Nachricht*</label>
+											</div>
+								</div>
+								<div class="form_section ">
+											<div class="mod_formradio var_horizontal " data-init="formradio">
+												<input type="radio" id="r1" name="r1" value=""   >
+												<label for="r1">Herr</label>
+											</div>
+											<div class="mod_formradio var_horizontal " data-init="formradio">
+												<input type="radio" id="r2" name="r1" value=""   >
+												<label for="r2">Frau</label>
+											</div>
+								</div>
+								<div class="form_section var_two_columns">
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f1"
+														id="f1"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f1">Vorname</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f2"
+														id="f2"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f2">Nachname*</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f3"
+														id="f3"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f3">Firma/Organisation</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f4"
+														id="f4"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f4">Strasse / Nr.</label>
+											</div>
+											<div class="mod_formtextinput var_small" data-init="formtextinput">
+													<input
+														type="text"
+														name="f5"
+														id="f5"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f5">PLZ</label>
+											</div>
+											<div class="mod_formtextinput var_large" data-init="formtextinput">
+													<input
+														type="text"
+														name="f6"
+														id="f6"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f6">Ort</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f7"
+														id="f7"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f7">E-Mail*</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f8"
+														id="f8"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f8">Telefon</label>
+											</div>
+											<div class="mod_formcheckbox var_full_width " data-init="formcheckbox">
+												<input type="checkbox" id="c1" name="c1" value=""  >
+												<label for="c1">Ich möchte eine unverschlüsselte Kopie dieser Nachricht erhalten.</label>
+											</div>
+											<div class="mod_formsaptcha">
+												<p class="description" id="description">Um Spam-Nachrichten zu verhindern,<br> beantworten Sie bitte die folgende Frage:</p>
+												<div class="saptcha_box">
+													<p class="question" id="question">Welches ist die niedrigste Zahl:</p>
+													<span class="question_details" id="question_details">3, 6, oder 9</span>
+													<div class="mod_formtextinput " data-init="formtextinput">
+															<input
+																type="text"
+																name="saptcha"
+																id="f1"
+																value=""
+																
+																
+																
+																 maxlength="1" 
+																
+																
+																 aria-describedby="description question question_details"
+															/>
+															<label for="f1">Antwort*</label>
+													</div>
+													<input type="hidden" name="timestamp_answer_saptcha" value="eccbc87e4b5ce2fe28308fd9f2a7baf3"../../>
+												</div>
+											</div>
+								</div>
+					
+							<div class="form_actions">
+									
+									
+												<input type="button" class="mod_button var_secondary" value="Zurücksetzen">
+									
+									
+									
+									
+									
+									
+									
+									
+											<input type="submit" class="mod_button " value="Senden">
+									
+									
+							</div>
+					
+								<div class="mod_messages">
+									<p class="text">Diese Nachricht wird verschlüsselt an die Stadtverwaltung Zürich übertragen</p>
+								</div>
+					
+						</form>
+					</div>
+					
+							</div>
+						</div>
+					</div>
+			
+			
+					<div class="map_large_viewport" data-init="contact" >
+						<div id="contactModal_2088768601" data-contact="map" class="map_wrapper">
+							<div id="mapDiv_ZPL_2088768601" class="mainMap" data-center="679823.0,247955.0" data-zoom="7" data-layers="">
+								<div id="BasemapToggle_2088768601"></div>
+							</div>
+							<a data-contact="print" class="icon print" href="#"><span>Print</span></a>
+						</div>
+					</div>
+					<div class="map_small_viewport">
+						<div class="mod_modal" data-init="modal">
+						
+							
+							
+										<button type="button" class="mod_button var_full_width  var_label"data-modal="open">
+												<span class="label">Stadtplan 3D öffnen</span>
+										</button>
+							
+							
+							
+							
+						
+							<div class="dialog" aria-hidden="true" data-modal="dialog">
+								<div class="dialog_overlay" tabindex="-1">
+									<div style="display: inline-block; height: 100%; vertical-align: middle;"></div>
+									<div class="dialog_content_wrapper">
+										<div class="dialog_content" aria-labelledby="dialogTitle" aria-describedby="dialogDescription" role="dialog">
+											<div role="document">
+													<div class="section_heading">
+							<h2>Map</h2>
+						</div>
+						<div class="mod_contact" data-init="contact" data-contact-options='{
+						    "mobile": "mobile"
+						}' >
+							<div id="mobileContactModal_2088768602" data-contact="map" class="map_wrapper">
+								<div id="mobileMapDiv_ZPL_2088768602" class="mainMap" data-center="679823.0,247955.0" data-zoom="7" data-layers="">
+									<div id="mobileBasemapToggle_2088768602"></div>
+								</div>
+							</div>
+						</div>
+						<div class="layout_columns">
+							<div class="layout_column">
+								
+								
+											<button type="button" class="mod_button var_full_width  var_label"data-modal="close">
+													<span class="label">Close</span>
+											</button>
+								
+								
+								
+								
+							</div>
+						</div>
+						
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+			
+					<address class="address">
+						<h4>Weitere Kontakte</h4>
+						<p>
+							<div>Musterstrasse 1</div>
+							<div>8000 Zürich</div>
+						</p>
+					</address>
+			
+						<div class="mod_linklistitem">
+							<a href="#" class="linklistitem var_icon_arrow_right">
+								<span>Fahrplan nach Zürich, Siemens</span>
+								<span class="icon icon_arrow_right">
+								</span>
+							</a>
+						</div></div>
+		</div>
+
+		<div class="contenttabparsys parsys">
+			<div class="mod_contenttabs" data-init="contenttabs">
+			    <ul data-contenttabs="nav">
+			      <li><a href="#tab-1" class="is_active">Reiter 1</a></li>
+			      <li><a href="#tab-2">Reiter 2</a></li>
+			      <li><a href="#tab-3">Reiter 3</a></li>
+			    </ul>
+				<div id="tab-1" class="tab">
+					<div class="mod_textandimage">
+						<div class="col_left">
+							<figure class="mod_image " >
+								<picture>
+									<!--[if IE 9]><video style="display: none;"><![endif]-->
+									<!--[if IE 9]></video><![endif]-->
+									<img src="assets/media/imagegallery/teaser_03.png" alt="">
+								</picture>
+								<figcaption>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="col_right">
+							<div class="mod_styledtext">
+								<p>Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. <a href="#">Curabgitur</a> ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. <a href="#">Maecenas</a> tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="tab-2" class="tab">
+					<div class="mod_textandimage">
+						<div class="col_left">
+							<figure class="mod_image " >
+								<picture>
+									<!--[if IE 9]><video style="display: none;"><![endif]-->
+									<!--[if IE 9]></video><![endif]-->
+									<img src="assets/media/imagegallery/teaser_01.png" alt="">
+								</picture>
+								<figcaption>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="col_right">
+							<div class="mod_styledtext">
+								<p>Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. <a href="#">Curabgitur</a> ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. <a href="#">Maecenas</a> tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel.<br><br><strong>Untertitel</strong><br>Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. <a href="#">Curabgitur</a> ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. <a href="#">Maecenas</a> tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="tab-3" class="tab">
+					<div class="mod_textandimage">
+						<div class="col_left">
+							<figure class="mod_image " >
+								<picture>
+									<!--[if IE 9]><video style="display: none;"><![endif]-->
+									<!--[if IE 9]></video><![endif]-->
+									<img src="assets/media/imagegallery/teaser_02.png" alt="">
+								</picture>
+								<figcaption>
+								</figcaption>
+							</figure>
+						</div>
+						<div class="col_right">
+							<div class="mod_styledtext">
+								<p>Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. <a href="#">Curabgitur</a> ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. <a href="#">Maecenas</a> tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="mod_textandimage">
+				<div class="col_left  ">
+							<figure class="mod_image " >
+								<picture>
+									<!--[if IE 9]><video style="display: none;"><![endif]-->
+									<!--[if IE 9]></video><![endif]-->
+									<img src="assets/media/imagegallery/teaser_03.png" alt="">
+								</picture>
+								<figcaption>
+								</figcaption>
+							</figure>
+				</div>
+					<div class="col_right">
+							<div class="mod_styledtext">
+								Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel.
+							</div>
+					</div>
+			</div>
+			<div class="mod_contact">
+				<h3 class="content-header">Kontakt</h3>
+					<address class="address">
+						<h4>Organisation und Informatik</h4>
+						<p>
+							<div>Musterstrasse 1</div>
+							<div>8000 Zürich</div>
+						  <div class="mod_styledtext"> <a href="tel:">Telefon +41 44 412 91 11</a></div>
+						</p>
+					</address>
+			
+			
+					<div class="mod_accordion" data-init="accordion" >
+						<div class="var_small">
+							<a href="#" class="trigger " data-accordion="trigger">
+								<span class="trigger_title">Kontaktformular</span>
+								<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+							</a>
+							<div class="content is_hidden" data-accordion="content">
+									<div class="mod_form">
+						<form method="GET" action="#" enctype="multipart/form-data">
+								<div class="form_section var_two_columns var_spacing_bottom">
+											<div class="mod_formtextinput  readonly" data-init="formtextinput">
+													<input
+														type="text"
+														name=""
+														id=""
+														value="Organisation und Informatik"
+														
+														 readonly
+														
+														
+														
+														
+														
+													/>
+													<label for="">An</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name=""
+														id=""
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="">Betreff*</label>
+											</div>
+											<div class="mod_formtextinput var_full_width" data-init="formtextinput">
+													<textarea name="" id="" value=""  ></textarea>
+													<label for="">Nachricht*</label>
+											</div>
+								</div>
+								<div class="form_section ">
+											<div class="mod_formradio var_horizontal " data-init="formradio">
+												<input type="radio" id="r1" name="r1" value=""   >
+												<label for="r1">Herr</label>
+											</div>
+											<div class="mod_formradio var_horizontal " data-init="formradio">
+												<input type="radio" id="r2" name="r1" value=""   >
+												<label for="r2">Frau</label>
+											</div>
+								</div>
+								<div class="form_section var_two_columns">
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f1"
+														id="f1"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f1">Vorname</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f2"
+														id="f2"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f2">Nachname*</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f3"
+														id="f3"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f3">Firma/Organisation</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f4"
+														id="f4"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f4">Strasse / Nr.</label>
+											</div>
+											<div class="mod_formtextinput var_small" data-init="formtextinput">
+													<input
+														type="text"
+														name="f5"
+														id="f5"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f5">PLZ</label>
+											</div>
+											<div class="mod_formtextinput var_large" data-init="formtextinput">
+													<input
+														type="text"
+														name="f6"
+														id="f6"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f6">Ort</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f7"
+														id="f7"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f7">E-Mail*</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f8"
+														id="f8"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f8">Telefon</label>
+											</div>
+											<div class="mod_formcheckbox var_full_width " data-init="formcheckbox">
+												<input type="checkbox" id="c1" name="c1" value=""  >
+												<label for="c1">Ich möchte eine unverschlüsselte Kopie dieser Nachricht erhalten.</label>
+											</div>
+											<div class="mod_formsaptcha">
+												<p class="description" id="description">Um Spam-Nachrichten zu verhindern,<br> beantworten Sie bitte die folgende Frage:</p>
+												<div class="saptcha_box">
+													<p class="question" id="question">Welches ist die niedrigste Zahl:</p>
+													<span class="question_details" id="question_details">3, 6, oder 9</span>
+													<div class="mod_formtextinput " data-init="formtextinput">
+															<input
+																type="text"
+																name="saptcha"
+																id="f1"
+																value=""
+																
+																
+																
+																 maxlength="1" 
+																
+																
+																 aria-describedby="description question question_details"
+															/>
+															<label for="f1">Antwort*</label>
+													</div>
+													<input type="hidden" name="timestamp_answer_saptcha" value="eccbc87e4b5ce2fe28308fd9f2a7baf3"../../>
+												</div>
+											</div>
+								</div>
+					
+							<div class="form_actions">
+									
+									
+												<input type="button" class="mod_button var_secondary" value="Zurücksetzen">
+									
+									
+									
+									
+									
+									
+									
+									
+											<input type="submit" class="mod_button " value="Senden">
+									
+									
+							</div>
+					
+								<div class="mod_messages">
+									<p class="text">Diese Nachricht wird verschlüsselt an die Stadtverwaltung Zürich übertragen</p>
+								</div>
+					
+						</form>
+					</div>
+					
+							</div>
+						</div>
+					</div>
+			
+			
+					<div class="map_large_viewport" data-init="contact" >
+						<div id="contactModal_2088768602" data-contact="map" class="map_wrapper">
+							<div id="mapDiv_ZPL_2088768602" class="mainMap" data-center="679823.0,247955.0" data-zoom="7" data-layers="">
+								<div id="BasemapToggle_2088768602"></div>
+							</div>
+							<a data-contact="print" class="icon print" href="#"><span>Print</span></a>
+						</div>
+					</div>
+					<div class="map_small_viewport">
+						<div class="mod_modal" data-init="modal">
+						
+							
+							
+										<button type="button" class="mod_button var_full_width  var_label"data-modal="open">
+												<span class="label">Stadtplan 3D öffnen</span>
+										</button>
+							
+							
+							
+							
+						
+							<div class="dialog" aria-hidden="true" data-modal="dialog">
+								<div class="dialog_overlay" tabindex="-1">
+									<div style="display: inline-block; height: 100%; vertical-align: middle;"></div>
+									<div class="dialog_content_wrapper">
+										<div class="dialog_content" aria-labelledby="dialogTitle" aria-describedby="dialogDescription" role="dialog">
+											<div role="document">
+													<div class="section_heading">
+							<h2>Map</h2>
+						</div>
+						<div class="mod_contact" data-init="contact" data-contact-options='{
+						    "mobile": "mobile"
+						}' >
+							<div id="mobileContactModal_2088768602" data-contact="map" class="map_wrapper">
+								<div id="mobileMapDiv_ZPL_2088768602" class="mainMap" data-center="679823.0,247955.0" data-zoom="7" data-layers="">
+									<div id="mobileBasemapToggle_2088768602"></div>
+								</div>
+							</div>
+						</div>
+						<div class="layout_columns">
+							<div class="layout_column">
+								
+								
+											<button type="button" class="mod_button var_full_width  var_label"data-modal="close">
+													<span class="label">Close</span>
+											</button>
+								
+								
+								
+								
+							</div>
+						</div>
+						
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+			
+					<address class="address">
+						<h4>Weitere Kontakte</h4>
+						<p>
+							<div>Musterstrasse 1</div>
+							<div>8000 Zürich</div>
+						</p>
+					</address>
+			
+			</div>
+		</div>
+
+		<div class="contextparsys parsys">
+			<div class="mod_contact">
+				<h3 class="content-header">Kontakt</h3>
+					<address class="address">
+						<h4>Organisation und Informatik</h4>
+						<p>
+							<div>Musterstrasse 1</div>
+							<div>8000 Zürich</div>
+						  <div class="mod_styledtext"> <a href="tel:">Telefon +41 44 412 91 11</a></div>
+						</p>
+					</address>
+			
+			
+					<div class="mod_accordion" data-init="accordion" >
+						<div class="var_small">
+							<a href="#" class="trigger " data-accordion="trigger">
+								<span class="trigger_title">Kontaktformular</span>
+								<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+							</a>
+							<div class="content is_hidden" data-accordion="content">
+									<div class="mod_form">
+						<form method="GET" action="#" enctype="multipart/form-data">
+								<div class="form_section var_two_columns var_spacing_bottom">
+											<div class="mod_formtextinput  readonly" data-init="formtextinput">
+													<input
+														type="text"
+														name=""
+														id=""
+														value="Organisation und Informatik"
+														
+														 readonly
+														
+														
+														
+														
+														
+													/>
+													<label for="">An</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name=""
+														id=""
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="">Betreff*</label>
+											</div>
+											<div class="mod_formtextinput var_full_width" data-init="formtextinput">
+													<textarea name="" id="" value=""  ></textarea>
+													<label for="">Nachricht*</label>
+											</div>
+								</div>
+								<div class="form_section ">
+											<div class="mod_formradio var_horizontal " data-init="formradio">
+												<input type="radio" id="r1" name="r1" value=""   >
+												<label for="r1">Herr</label>
+											</div>
+											<div class="mod_formradio var_horizontal " data-init="formradio">
+												<input type="radio" id="r2" name="r1" value=""   >
+												<label for="r2">Frau</label>
+											</div>
+								</div>
+								<div class="form_section var_two_columns">
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f1"
+														id="f1"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f1">Vorname</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f2"
+														id="f2"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f2">Nachname*</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f3"
+														id="f3"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f3">Firma/Organisation</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f4"
+														id="f4"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f4">Strasse / Nr.</label>
+											</div>
+											<div class="mod_formtextinput var_small" data-init="formtextinput">
+													<input
+														type="text"
+														name="f5"
+														id="f5"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f5">PLZ</label>
+											</div>
+											<div class="mod_formtextinput var_large" data-init="formtextinput">
+													<input
+														type="text"
+														name="f6"
+														id="f6"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f6">Ort</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f7"
+														id="f7"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f7">E-Mail*</label>
+											</div>
+											<div class="mod_formtextinput " data-init="formtextinput">
+													<input
+														type="text"
+														name="f8"
+														id="f8"
+														value=""
+														
+														
+														
+														
+														
+														
+														
+													/>
+													<label for="f8">Telefon</label>
+											</div>
+											<div class="mod_formcheckbox var_full_width " data-init="formcheckbox">
+												<input type="checkbox" id="c1" name="c1" value=""  >
+												<label for="c1">Ich möchte eine unverschlüsselte Kopie dieser Nachricht erhalten.</label>
+											</div>
+											<div class="mod_formsaptcha">
+												<p class="description" id="description">Um Spam-Nachrichten zu verhindern,<br> beantworten Sie bitte die folgende Frage:</p>
+												<div class="saptcha_box">
+													<p class="question" id="question">Welches ist die niedrigste Zahl:</p>
+													<span class="question_details" id="question_details">3, 6, oder 9</span>
+													<div class="mod_formtextinput " data-init="formtextinput">
+															<input
+																type="text"
+																name="saptcha"
+																id="f1"
+																value=""
+																
+																
+																
+																 maxlength="1" 
+																
+																
+																 aria-describedby="description question question_details"
+															/>
+															<label for="f1">Antwort*</label>
+													</div>
+													<input type="hidden" name="timestamp_answer_saptcha" value="eccbc87e4b5ce2fe28308fd9f2a7baf3"../../>
+												</div>
+											</div>
+								</div>
+					
+							<div class="form_actions">
+									
+									
+												<input type="button" class="mod_button var_secondary" value="Zurücksetzen">
+									
+									
+									
+									
+									
+									
+									
+									
+											<input type="submit" class="mod_button " value="Senden">
+									
+									
+							</div>
+					
+								<div class="mod_messages">
+									<p class="text">Diese Nachricht wird verschlüsselt an die Stadtverwaltung Zürich übertragen</p>
+								</div>
+					
+						</form>
+					</div>
+					
+							</div>
+						</div>
+					</div>
+			
+			
+			
+					<address class="address">
+						<h4>Weitere Kontakte</h4>
+						<p>
+							<div>Musterstrasse 1</div>
+							<div>8000 Zürich</div>
+						</p>
+					</address>
+			
+			</div>
+
+			<div class="layout_partial">
+				<div class="layout_columns var_twothird_columns">
+					<div class="layout_column">
+						<div class="mod_linklist">
+							<h3>Neu Zürich (Linkliste)</h3>
+							<ul class="linklist">
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<a href="#" class="linklistitem var_icon_arrow_right">
+												<span>Anmeldung</span>
+												<span class="icon icon_arrow_right">
+												</span>
+											</a>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<a href="#" class="linklistitem var_icon_arrow_right">
+												<span>Umzug</span>
+												<span class="icon icon_arrow_right">
+												</span>
+											</a>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<a href="#" class="linklistitem var_icon_external_links">
+												<span>Facebook</span>
+												<span class="icon icon_external_links">
+												</span>
+											</a>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<a href="#" class="linklistitem var_icon_arrow_right">
+												<span>Wohnen</span>
+												<span class="icon icon_arrow_right">
+												</span>
+											</a>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<div class="mod_downloadlink" data-init="downloadlink">
+												<a href="#" class="downloadlink icon_document" target="_blank" title="Gesuchformular unter 10&#x27;000 Fr">
+													Gesuchformular unter 10'000 Fr
+													<span> (Docx, 613 KB)</span>
+												</a>
+												<a href="#" class="mod_linkicon icon_speaker" title="Dokument vorlesen">
+													Dokument vorlesen
+												</a>
+												<a href="#" class="mod_linkicon icon_download" target="_blank" title="Dokument herunterladen">
+													Dokument herunterladen
+												</a>
+											</div>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<div class="mod_downloadlink" data-init="downloadlink">
+												<a href="#" class="downloadlink icon_document" target="_blank" title="Das Stadtinterne Einspracheverfahren, Januar 2007">
+													Das Stadtinterne Einspracheverfahren, Januar 2007
+													<span> (PDF, 613 KB)</span>
+												</a>
+												<a href="#" class="mod_linkicon icon_download" target="_blank" title="Dokument herunterladen">
+													Dokument herunterladen
+												</a>
+											</div>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<a href="#" class="linklistitem var_icon_arrow_right">
+												<span>Leben im Quartier</span>
+												<span class="icon icon_arrow_right">
+												</span>
+											</a>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<a href="#" class="linklistitem var_icon_external_links">
+												<span>Lorem ipsum</span>
+												<span class="icon icon_external_links">
+												</span>
+											</a>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<a href="#" class="linklistitem var_icon_arrow_right">
+												<span>Arbeit und Existenzsicherung</span>
+												<span class="icon icon_arrow_right">
+												</span>
+											</a>
+										</div>			</li>
+									<li class="linklist_item">
+										<div class="mod_linklistitem">
+											<a href="#" class="linklistitem var_icon_arrow_right">
+												<span>Verkehr und Mobilität</span>
+												<span class="icon icon_arrow_right">
+												</span>
+											</a>
+										</div>			</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="layout_partial">
+				<div class="layout_columns var_twothird_columns">
+					<div class="layout_column">
+						<div class="mod_downloadlinklist">
+							<h3>Downloads</h3>
+							<p>In Zürich eine Wohnung lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.</p>
+								<div class="mod_downloadlink" data-init="downloadlink">
+									<a href="#" class="downloadlink icon_document" target="_blank" title="Gesuchformular unter 10&#x27;000 Fr">
+										Gesuchformular unter 10'000 Fr
+										<span> (Docx, 613 KB)</span>
+									</a>
+									<a href="#" class="mod_linkicon icon_speaker" title="Dokument vorlesen">
+										Dokument vorlesen
+									</a>
+									<a href="#" class="mod_linkicon icon_download" target="_blank" title="Dokument herunterladen">
+										Dokument herunterladen
+									</a>
+								</div>
+								<div class="mod_downloadlink" data-init="downloadlink">
+									<a href="#" class="downloadlink icon_document" target="_blank" title="Das Stadtinterne Einspracheverfahren, Januar 2007">
+										Das Stadtinterne Einspracheverfahren, Januar 2007
+										<span> (PDF, 613 KB)</span>
+									</a>
+									<a href="#" class="mod_linkicon icon_speaker" title="Dokument vorlesen">
+										Dokument vorlesen
+									</a>
+									<a href="#" class="mod_linkicon icon_download" target="_blank" title="Dokument herunterladen">
+										Dokument herunterladen
+									</a>
+								</div>
+								<div class="mod_downloadlink" data-init="downloadlink">
+									<a href="#" class="downloadlink icon_document" target="_blank" title="Das Stadtinterne Einspracheverfahren, Januar 2007">
+										Das Stadtinterne Einspracheverfahren, Januar 2007
+										<span> (PDF, 613 KB)</span>
+									</a>
+									<a href="#" class="mod_linkicon icon_download" target="_blank" title="Dokument herunterladen">
+										Dokument herunterladen
+									</a>
+								</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="layout_partial">
+				<div class="layout_columns var_three_columns">
+					<div class="layout_column">
+						<div class="mod_contextbox">
+							<h2>Aktuell</h2>
+								<figure class="mod_image " >
+									<picture>
+										<!--[if IE 9]><video style="display: none;"><![endif]-->
+										<!--[if IE 9]></video><![endif]-->
+										<img src="assets/media/imagegallery/teaser_03.png" alt="">
+									</picture>
+									<figcaption>
+									</figcaption>
+								</figure>
+							<div class="parsys paragraphs">
+								<div class="mod_styledtext section">
+									<h3>Text Titel</h3><p><p>Dies ist ein Text für die 'Aktuell' Kontextbox.&nbsp;Sie enthält:</p><ul><li>ein Bild</li><li>eine Linkliste</li><li>einen Download</li><li>einen Teaser (Medienmitteilungen)</li><li>einen Feedreader&nbsp;&nbsp;</li></ul></p>
+								</div>
+								<h4>Linkliste</h4>
+								<div class="parsys paragraphs">
+									<div class="mod_linklist">
+										<ul class="linklist">
+												<li class="linklist_item">
+													<div class="mod_linklistitem">
+														<a href="#" class="linklistitem var_icon_arrow_right">
+															<span>Interner Link</span>
+															<span class="icon icon_arrow_right">
+															</span>
+														</a>
+													</div>			</li>
+												<li class="linklist_item">
+													<div class="mod_linklistitem">
+														<a href="#" class="linklistitem var_icon_external_links">
+															<span>Externer Link</span>
+															<span class="icon icon_external_links">
+															</span>
+														</a>
+													</div>			</li>
+										</ul>
+									</div>
+								</div>
+								<h4>Downloads</h4>
+								<div class="parsys paragraphs">
+									<div class="mod_linklist">
+										<ul class="linklist">
+												<li class="linklist_item">
+													<div class="mod_linklistitem">
+														<div class="mod_downloadlink" data-init="downloadlink">
+															<a href="#" class="downloadlink icon_document" target="_blank" title="Das Stadtinterne Einspracheverfahren, Januar 2007">
+																Das Stadtinterne Einspracheverfahren, Januar 2007
+																<span> (PDF, 613 KB)</span>
+															</a>
+														</div>
+													</div>			</li>
+										</ul>
+									</div>
+								</div>
+								<h4>Medienmitteilungen</h4>
+								<div class="mod_linklistitem">
+									<a href="#" class="linklistitem var_icon_arrow_right">
+										<span>Interner Link</span>
+										<span class="icon icon_arrow_right">
+										</span>
+									</a>
+								</div>		<div class="mod_newsteaser ">
+									<h2>Feedreader</h2>
+										<div class="teaser">
+								
+											<div class="content">
+														<p >Dies ist ein Feedreader in einer Kontextbox</p>
+														<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+											</div>
+										</div>
+										<div class="teaser">
+								
+											<div class="content">
+												<h4>Schweizer für Erfinderpreis nominiert: Meister der Miniaturisierung</h4>
+														<p >Andreas Manz ist der Erfinder der Mikrolabors auf Chips, die weltweit in der Medizin und der Gentechnologie zum Einsatz kommen. Nun ist er einer von drei Kandidaten für den Europäischen Erfinderpreis.</p>
+														<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+											</div>
+										</div>
+										<div class="teaser">
+								
+											<div class="content">
+												<h4>Unwetter Zürich: Birmensdorf bleibt eine Woche ohne Festnetz</h4>
+														<p >Das Gewitter von Sonntagnacht hat Birmensdorf von der Umwelt abgeschnitten - zumindest, was die Kommunikation anbelangt. Mittlerweile funktioniert das Handy-Netz wieder.</p>
+														<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+											</div>
+										</div>
+									
+									
+									
+									
+									
+									
+								</div>
+							</div>
+							<div class="mod_styledtext links">
+								<a href="#" class="more internal_link">Mehr zum Thema</a>
+							</div>
+						</div>
+					</div>
+					<div class="layout_column">
+						<div class="mod_contextbox">
+							<h2>Aktuell</h2>
+							<div class="parsys paragraphs">
+								<div class="mod_styledtext section">
+									<h3>Text Titel</h3><p><p>Dies ist ein Text für die 'Aktuell' Kontextbox.&nbsp;Sie enthält:</p><ul><li>ein Bild</li><li>eine Linkliste</li><li>einen Download</li><li>einen Teaser (Medienmitteilungen)</li><li>einen Feedreader&nbsp;&nbsp;</li></ul></p>
+								</div>
+								<h4>Linkliste</h4>
+								<div class="parsys paragraphs">
+									<div class="mod_linklist">
+										<ul class="linklist">
+												<li class="linklist_item">
+													<div class="mod_linklistitem">
+														<a href="#" class="linklistitem var_icon_arrow_right">
+															<span>Interner Link</span>
+															<span class="icon icon_arrow_right">
+															</span>
+														</a>
+													</div>			</li>
+												<li class="linklist_item">
+													<div class="mod_linklistitem">
+														<a href="#" class="linklistitem var_icon_external_links">
+															<span>Externer Link</span>
+															<span class="icon icon_external_links">
+															</span>
+														</a>
+													</div>			</li>
+										</ul>
+									</div>
+								</div>
+								<h4>Downloads</h4>
+								<div class="parsys paragraphs">
+									<div class="mod_linklist">
+										<ul class="linklist">
+												<li class="linklist_item">
+													<div class="mod_linklistitem">
+														<div class="mod_downloadlink" data-init="downloadlink">
+															<a href="#" class="downloadlink icon_document" target="_blank" title="Das Stadtinterne Einspracheverfahren, Januar 2007">
+																Das Stadtinterne Einspracheverfahren, Januar 2007
+																<span> (PDF, 613 KB)</span>
+															</a>
+														</div>
+													</div>			</li>
+										</ul>
+									</div>
+								</div>
+								<div class="mod_newsteaser ">
+									<h2>Feedreader</h2>
+										<div class="teaser">
+								
+											<div class="content">
+														<p >Dies ist ein Feedreader in einer Kontextbox</p>
+														<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+											</div>
+										</div>
+										<div class="teaser">
+								
+											<div class="content">
+												<h4>Schweizer für Erfinderpreis nominiert: Meister der Miniaturisierung</h4>
+														<p >Andreas Manz ist der Erfinder der Mikrolabors auf Chips, die weltweit in der Medizin und der Gentechnologie zum Einsatz kommen. Nun ist er einer von drei Kandidaten für den Europäischen Erfinderpreis.</p>
+														<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+											</div>
+										</div>
+										<div class="teaser">
+								
+											<div class="content">
+												<h4>Unwetter Zürich: Birmensdorf bleibt eine Woche ohne Festnetz</h4>
+														<p >Das Gewitter von Sonntagnacht hat Birmensdorf von der Umwelt abgeschnitten - zumindest, was die Kommunikation anbelangt. Mittlerweile funktioniert das Handy-Netz wieder.</p>
+														<a href="#" class="icon-arrow"><span class="visuallyhidden">Go to the aricle</span></a>
+											</div>
+										</div>
+									
+									
+									
+									
+									
+									
+								</div>
+							</div>
+							<div class="mod_styledtext links">
+								<a href="#" class="more internal_link">Mehr zum Thema</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="mod_sharebuttons" data-init="sharebuttons" data-sharebuttons-options='{"demoNumbers":true}'>
+			<div class="share-inner-wrapper">
+				<div
+					class="share-buttons"
+					data-backend-url="https://heiseonline.github.io/shariff/"
+					data-sharebuttons="social"
+					data-url="https://heiseonline.github.io/shariff/"
+					data-services="[&quot;twitter&quot;,&quot;googleplus&quot;,&quot;facebook&quot;]"></div>
+		
+			</div>
+		</div>
+				</div>
+				<div class="layout_column var_column_left">
+		<div class="mod_leftnav" data-modules="leftnav">
+				<ul >
+						<li class="var_back">
+							<a href="#" data-multilevelnav-back-id="2.1"> Prävention</a>
+						</li>
+							<li class="var_wrapping_node var_active">
+									<a href="">Kriminalprävention</a>
+			
+								<ul>
+											<li >
+												<a href="../../someurl">Vermögensdelikte</a>
+											</li>
+											<li class="section var_has_subitems">
+												<a href="../../someurl" data-multilevelnav-id="2.1.2.2">Gewaltdelikte</a>
+											</li>
+											<li >
+												<a href="../../someurl">Digitale Medien</a>
+											</li>
+								</ul>
+							</li>
+				</ul>
+		</div>
+		<div class="coverage coveragenavigation">
+			<div class="mod_accordion" data-init="accordion" >
+					<a href="#" class="trigger " data-accordion="trigger">
+						<span class="trigger_title">Themen von A-Z</span>
+						<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+					</a>
+					<div class="content is_hidden" data-accordion="content">
+							<div class="mod_atoz var_small">
+				<ul class="atoz">
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">A</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">B</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">C</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">D</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">E</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">F</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">G</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">H</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">I</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">J</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">K</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">L</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">M</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">N</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">O</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">P</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">Q</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">R</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">S</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">T</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">U</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">V</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">W</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">X</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">Y</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_large">Z</span>
+						</a>
+					</li>
+					<li class="atoz_character">
+						<a href="#" class="atoz_character_link">
+							<span class="atoz_character_txt var_small">0-9</span>
+						</a>
+					</li>
+			
+				</ul>
+			</div>
+			
+					</div>
+			</div>
+			<div class="mod_accordion" data-init="accordion" >
+					<a href="#" class="trigger " data-accordion="trigger">
+						<span class="trigger_title">Organisationen der Stadt</span>
+						<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+					</a>
+					<div class="content is_hidden" data-accordion="content">
+							<div class="mod_linklist">
+				<ul class="linklist">
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_arrow_right">
+									<span>Präsidialdepartement</span>
+									<span class="icon icon_arrow_right">
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_arrow_right">
+									<span>Finanzdepartement</span>
+									<span class="icon icon_arrow_right">
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_arrow_right">
+									<span>Polizeidepartement</span>
+									<span class="icon icon_arrow_right">
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_arrow_right">
+									<span>Sozialdepartement</span>
+									<span class="icon icon_arrow_right">
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_arrow_right">
+									<span>Hochbaudepartement</span>
+									<span class="icon icon_arrow_right">
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_arrow_right">
+									<span>Schul- und Sportdepartement </span>
+									<span class="icon icon_arrow_right">
+									</span>
+								</a>
+							</div>			</li>
+				</ul>
+				
+				
+							<input type="button" class="mod_button var_full_width" value="Weitere Departemente">
+				
+				
+				
+				
+			</div>
+			
+					</div>
+			</div>
+			<div class="mod_accordion" data-init="accordion" >
+					<a href="#" class="trigger " data-accordion="trigger">
+						<span class="trigger_title">Notrufnummern</span>
+						<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+					</a>
+					<div class="content is_hidden" data-accordion="content">
+							<div class="mod_linklist">
+				<ul class="linklist">
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_phone">
+									<span>Polizei</span>
+									<span class="icon icon_phone">
+											<span class="phone_number">117</span>
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_phone">
+									<span>Feuerwehr</span>
+									<span class="icon icon_phone">
+											<span class="phone_number">118</span>
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_phone">
+									<span>Toxikologisches Institut Vergiftungsnotfälle</span>
+									<span class="icon icon_phone">
+											<span class="phone_number">145</span>
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_phone">
+									<span>Rettungsdienst</span>
+									<span class="icon icon_phone">
+											<span class="phone_number">144</span>
+									</span>
+								</a>
+							</div>			</li>
+						<li class="linklist_item">
+							<div class="mod_linklistitem">
+								<a href="#" class="linklistitem var_icon_phone">
+									<span>Rega</span>
+									<span class="icon icon_phone">
+											<span class="phone_number">1414</span>
+									</span>
+								</a>
+							</div>			</li>
+				</ul>
+				
+				
+							<input type="button" class="mod_button var_full_width" value="Weitere Departemente">
+				
+				
+				
+				
+			</div>
+			
+					</div>
+			</div>
+		</div>
+				</div>
+			</div>
+		</div>
+		<div class="mod_footernavigation" data-init="footernavigation">
+			<div class="layout_wrapper">
+				<div class="navigation_wrapper layout_columns var_four_columns">
+							<div class="mod_accordion" data-init="accordion" >
+									<a href="#" class="trigger " data-accordion="trigger">
+										<span class="trigger_title">Departmente</span>
+										<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+									</a>
+									<div class="content is_hidden" data-accordion="content">
+											<ul class="mod_footernavigationlinklist">
+									<li><a href="#">Präsidialdepartement</a></li>
+									<li><a href="#">Finanzdepartement</a></li>
+									<li><a href="#">Polizeidepartement</a></li>
+									<li><a href="#">Gesundheits- und Umweltdepartement</a></li>
+									<li><a href="#">Tiefbau- und Entsorgungsdepartement Lorem ipsum dolor sit amet, consectetuer</a></li>
+									<li><a href="#">Hochbaudepartement</a></li>
+									<li><a href="#">Departement der Industriellen Betriebe</a></li>
+									<li><a href="#">Weitere Organisationen</a></li>
+							</ul>
+							
+									</div>
+							</div>
+							<div class="mod_accordion" data-init="accordion" >
+									<a href="#" class="trigger " data-accordion="trigger">
+										<span class="trigger_title">Quicklinks</span>
+										<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+									</a>
+									<div class="content is_hidden" data-accordion="content">
+											<ul class="mod_footernavigationlinklist">
+									<li><a href="#">Stadtrat</a></li>
+									<li><a href="#">Gemeinderat</a></li>
+									<li><a href="#">Ombudstelle</a></li>
+									<li><a href="#">Sozialbehörde</a></li>
+									<li><a href="#">Einbürgerung</a></li>
+									<li><a href="#">Unentgeltliche Rechtsauskunft</a></li>
+									<li><a href="#">Geschichte der Stadt</a></li>
+									<li><a href="#">Bildung &amp; Wissen</a></li>
+							</ul>
+							
+									</div>
+							</div>
+							<div class="mod_accordion" data-init="accordion" >
+									<a href="#" class="trigger " data-accordion="trigger">
+										<span class="trigger_title">Kontakte</span>
+										<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+									</a>
+									<div class="content is_hidden" data-accordion="content">
+											<div class="mod_footernavigationcontact styled_content">
+								<div class="mod_contact">
+									
+										<address class="address">
+											<h4>Organisation und Informatik</h4>
+											<p>
+												<div>Musterstrasse 1</div>
+												<div>8000 Zürich</div>
+											  <div class="mod_styledtext">Telefon <a href="tel:+41444129111">+41 44 412 91 11</a></div>
+											</p>
+										</address>
+								
+											<div class="mod_linklistitem">
+												<a href="#" class="linklistitem var_icon_arrow_right">
+													<span>Website</span>
+													<span class="icon icon_arrow_right">
+													</span>
+												</a>
+											</div>
+								
+								
+								
+										<address class="address">
+											<h4>Weitere Kontakte</h4>
+											<p>
+												<div>Musterstrasse 1</div>
+												<div>8000 Zürich</div>
+											</p>
+										</address>
+								
+											<div class="mod_linklistitem">
+												<a href="#" class="linklistitem var_icon_arrow_right">
+													<span>Fahrplan nach Zürich, Siemens</span>
+													<span class="icon icon_arrow_right">
+													</span>
+												</a>
+											</div></div>
+							</div>
+							
+									</div>
+							</div>
+							<div class="mod_accordion" data-init="accordion" >
+									<a href="#" class="trigger " data-accordion="trigger">
+										<span class="trigger_title">Newsletter abonnieren</span>
+										<span class="trigger_icon is_collapsed" data-accordion="triggerIcon"></span>
+									</a>
+									<div class="content is_hidden" data-accordion="content">
+											<div class="mod_footernavigationnewsletter styled_content">
+								<p>Hier können Sie sich für unseren Newsletter registieren. Cras condimentum a ante a aliquet. Mauris fringilla aliquet sollicitudin.</p>
+								<div class="actions">
+									
+									
+									
+									
+									
+											<a href="" class="mod_button   var_label">
+													<span class="label">Newsletter bestellen</span>
+											</a>
+									
+								</div>
+							</div>
+							
+									</div>
+							</div>
+				</div>
+			</div>
+		</div>
+		<div class="layout_wrapper">
+			<footer role="contentinfo" class="mod_footer" data-init="sharebuttons">
+				<div class="social_media">
+					<span>Stadt Zurich auf Social Media</span>
+					<div class="social_links">
+						<ul>
+							<li><a href="https://www.stadt-zuerich.ch/socialmedia" title="Twitter" class="twitter"><span>Twitter</span></a></li>
+							<li><a href="https://www.stadt-zuerich.ch/socialmedia" title="Facebook" class="facebook"><span>Facebook</span></a></li>
+							<li><a href="https://www.stadt-zuerich.ch/socialmedia" title="Google+" class="google-plus"><span>Google+</span></a></li>
+						</ul>
+					</div>
+				</div>
+				<div class="links_wrapper">
+					<div class="links">
+						<span>© 2015 Stadt Zürich</span>
+						<a href="#">Rechtliche Hinweise</a>
+						<a href="#">Impressum</a>
+						<a href="#">Barrierefreiheit</a>
+					</div>
+					<div class="mod_langnav" data-init="langnav">
+						<h2 class="visuallyhidden">Language selection</h2>
+						<a href="#" data-langnav="current" class="current">Deutsch</a>
+						<ul class="choice">
+							<li>
+								<a href="../../fr">Französich</a>
+							</li>
+							<li>
+								<a href="../../it">Italienisch</a>
+							</li>
+							<li>
+								<a href="../../en">Englisch</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</footer>
+		</div>
+
+		<script src="assets/js/main.min.js"></script>
+
+
+		<script src="assets/vendors/readspeaker/ReadSpeaker.js?pids=embhl" type="text/javascript"></script>
+		<script src="assets/vendors/readspeaker/ReadSpeakerClassic.js" type="text/javascript"></script>
+	</main>
+	<div data-modal="dialogWrapper"></div>
+  <script src="injector.js" id="sszvis-injector" data-component=".layout_column.var_column_right > .mainparsys > .mod_table > div" data-basepath="../"></script>
+</body>
+</html>
