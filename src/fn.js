@@ -294,6 +294,28 @@ export var firstTouch = function(event) {
 };
 
 /**
+ * fn.foldPattern
+ *
+ * Used to lazily fold a sum type into a value.
+ *
+ * @param {string} key The key to use when folding
+ * @param {object} pattern An object providing functions for each key
+ *
+ * @example
+ * sszvis.foldPattern('formalGreeting', {
+ *   formalGreeting: function() { return "Pleased to meet you."},
+ *   informalGreeting: function() { return "How ya’ doin!" }
+ * })
+ */
+export var foldPattern = function(key, pattern) {
+  var result = pattern[key];
+  if (typeof result === "function") {
+    return result();
+  }
+  throw new Error("[foldPattern] No definition provided for key: " + key);
+};
+
+/**
  * fn.hashableSet
  *
  * takes an array of elements and returns the unique elements of that array, optionally

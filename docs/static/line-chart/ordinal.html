@@ -55,7 +55,7 @@
               return function(d) {
                 return d === 0
                   ? null
-                  : foldPattern(config.scaleType, {
+                  : sszvis.foldPattern(config.scaleType, {
                       time: function() {
                         return sszvis.formatYear(d);
                       },
@@ -111,7 +111,7 @@
         var actions = {
           prepareState: function(data) {
             state.data = data;
-            state.xValues = foldPattern(config.scaleType, {
+            state.xValues = sszvis.foldPattern(config.scaleType, {
               time: function() {
                 return d3.extent(state.data, xAcc);
               },
@@ -196,7 +196,7 @@
 
           // Scales
 
-          var xScale = foldPattern(config.scaleType, {
+          var xScale = sszvis.foldPattern(config.scaleType, {
             time: function() {
               return d3.scaleTime();
             },
@@ -237,7 +237,7 @@
             // Access the first data point of the line to decide on the stroke color
             .stroke(sszvis.compose(cScale, cAcc, sszvis.first));
 
-          var xAxis = foldPattern(config.scaleType, {
+          var xAxis = sszvis.foldPattern(config.scaleType, {
             time: function() {
               // Add the highlighted data as additional ticks to the xScale
               var xTickValues = props.ticks ? xScale.ticks(props.ticks) : xScale.ticks();
@@ -312,21 +312,12 @@
         /* Helper functions
         ----------------------------------------------- */
 
-        // FIXME
-        function foldPattern(current, pattern) {
-          var result = pattern[current];
-          if (result == null) {
-            throw new Error("No definition provided for pattern: " + current);
-          }
-          return result();
-        }
-
         function showLegend(categories) {
           return categories != null && categories[0] != null && categories[0] !== "";
         }
 
         function closestDatum(data, accessor, datum) {
-          return foldPattern(config.scaleType, {
+          return sszvis.foldPattern(config.scaleType, {
             time: function() {
               var i = d3.bisector(accessor).left(data, datum, 1);
               var d0 = data[i - 1];

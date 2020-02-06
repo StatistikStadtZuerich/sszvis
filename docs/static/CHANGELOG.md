@@ -2,6 +2,7 @@
 
 - Change `formatNumber` to remove insignificant trailing zeros
 - Change `sszvis.move` to also invert pointScales
+- Added new function `foldPattern`
 - Added new function `measureText` to calculate the width of a string
 - Added new function `measureAxisLabel` as a preset of `measureText`
 - Added new function `measureLegendLabel` as a preset of `measureText`
