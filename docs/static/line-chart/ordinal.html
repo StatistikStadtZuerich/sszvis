@@ -7,9 +7,9 @@
     <title>Multiple Line Chart</title>
   </head>
   <body style="margin:0;padding:0;">
-    <link href="/sszvis.css" rel="stylesheet" />
+    <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
-    <script src="/sszvis.js"></script>
+    <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -17,7 +17,8 @@
       var EXTERNAL_CONFIG = {
         data: "data/ML_school_years.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
+        scaleType: "ordinal" // 'time' | 'ordinal'
       };
     </script>
 
@@ -33,29 +34,51 @@
         /* Configuration
         ----------------------------------------------- */
 
+        function yLabelFormat(d) {
+          return d === 0 ? null : sszvis.formatFractionPercent(d);
+        }
+
         var queryProps = sszvis
           .responsiveProps()
           .prop("rulerLabel", {
             _: function() {
               return sszvis
                 .modularTextSVG()
-                .plain(sszvis.compose(sszvis.formatFractionPercent, yAcc))
+                .bold(sszvis.compose(yLabelFormat, yAcc))
                 .plain(function(d) {
                   return cAcc(d) != null ? cAcc(d) : "";
                 });
             }
           })
-          .prop("legendRows", {
-            palm: 4,
-            lap: 3,
-            _: 2
-          })
           .prop("xLabelFormat", {
             _: function() {
               return function(d) {
-                return d === 0 ? null : sszvis.formatText(d);
+                return d === 0
+                  ? null
+                  : foldPattern(config.scaleType, {
+                      time: function() {
+                        return sszvis.formatYear(d);
+                      },
+                      ordinal: function() {
+                        return sszvis.formatText(d);
+                      }
+                    });
               };
             }
+          })
+          .prop("yLabelFormat", {
+            _: function() {
+              return yLabelFormat;
+            }
+          })
+          .prop("xLabel", {
+            _: ""
+          })
+          .prop("yLabel", {
+            _: ""
+          })
+          .prop("ticks", {
+            _: 5
           });
 
         function parseRow(d) {
@@ -88,15 +111,22 @@
         var actions = {
           prepareState: function(data) {
             state.data = data;
-            state.xValues = sszvis.set(state.data, xAcc);
+            state.xValues = foldPattern(config.scaleType, {
+              time: function() {
+                return d3.extent(state.data, xAcc);
+              },
+              ordinal: function() {
+                return sszvis.set(state.data, xAcc);
+              }
+            });
             state.categories = sszvis.set(state.data, cAcc);
-            state.maxY = 1;
+            state.maxY = d3.max(state.data, yAcc);
             state.lineData = sszvis
               .cascade()
               .arrayBy(cAcc, d3.ascending)
               .apply(state.data);
 
-            render(state);
+            actions.resetDate();
           },
 
           changeDate: function(inputDate) {
@@ -156,15 +186,26 @@
           var cScale = legendLayout.scale;
           var colorLegend = legendLayout.legend;
 
-          var bounds = sszvis.bounds({ top: 10, bottom: legendLayout.bottomPadding }, config.id);
+          var bounds = sszvis.bounds(
+            {
+              top: typeof props.yLabel === "string" && props.yLabel.length > 0 ? 30 : 10,
+              bottom: legendLayout.bottomPadding
+            },
+            config.id
+          );
 
           // Scales
 
-          var xScale = d3
-            .scalePoint()
-            .domain(state.xValues)
-            .range([0, bounds.innerWidth])
-            .padding(0);
+          var xScale = foldPattern(config.scaleType, {
+            time: function() {
+              return d3.scaleTime();
+            },
+            ordinal: function() {
+              return d3.scalePoint().padding(0);
+            }
+          });
+
+          xScale.domain(state.xValues).range([0, bounds.innerWidth]);
 
           var yScale = d3
             .scaleLinear()
@@ -196,8 +237,23 @@
             // Access the first data point of the line to decide on the stroke color
             .stroke(sszvis.compose(cScale, cAcc, sszvis.first));
 
-          var xAxis = sszvis.axisX
-            .ordinal()
+          var xAxis = foldPattern(config.scaleType, {
+            time: function() {
+              // Add the highlighted data as additional ticks to the xScale
+              var xTickValues = props.ticks ? xScale.ticks(props.ticks) : xScale.ticks();
+              xTickValues = xTickValues.concat(state.selection.map(xAcc));
+              xTickValues = xTickValues.filter(function(v, i) {
+                return xTickValues.map(String).indexOf(String(v)) === i;
+              });
+              return sszvis.axisX.time().tickValues(xTickValues);
+            },
+            ordinal: function() {
+              return sszvis.axisX.ordinal();
+            }
+          });
+
+          xAxis
+            .title(props.xLabel)
             .scale(xScale)
             .orient("bottom")
             .tickFormat(props.xLabelFormat)
@@ -208,10 +264,10 @@
             .axisY()
             .scale(yScale)
             .orient("right")
-            .tickFormat(function(d) {
-              return d === 0 ? null : sszvis.formatFractionPercent(d);
-            })
-            .contour(true);
+            .tickFormat(props.yLabelFormat)
+            .contour(true)
+            .title(props.yLabel)
+            .dyTitle(-20);
 
           // Rendering
 
@@ -256,23 +312,35 @@
         /* Helper functions
         ----------------------------------------------- */
 
+        // FIXME
+        function foldPattern(current, pattern) {
+          var result = pattern[current];
+          if (result == null) {
+            throw new Error("No definition provided for pattern: " + current);
+          }
+          return result();
+        }
+
         function showLegend(categories) {
           return categories != null && categories[0] != null && categories[0] !== "";
         }
 
         function closestDatum(data, accessor, datum) {
-          if (typeof datum === "number") {
-            var i = d3.bisector(accessor).left(data, datum, 1);
-            var d0 = data[i - 1];
-            var d1 = data[i] || d0;
-            return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
-          } else {
-            return (
-              sszvis.find(function(d) {
-                return xAcc(d) === datum;
-              }, data) || data[0]
-            );
-          }
+          return foldPattern(config.scaleType, {
+            time: function() {
+              var i = d3.bisector(accessor).left(data, datum, 1);
+              var d0 = data[i - 1];
+              var d1 = data[i] || d0;
+              return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+            },
+            ordinal: function() {
+              return (
+                sszvis.find(function(d) {
+                  return xAcc(d) === datum;
+                }, data) || data[0]
+              );
+            }
+          });
         }
 
         function isSelected(d) {
