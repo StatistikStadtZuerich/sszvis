@@ -19,7 +19,7 @@ const pages = [
       {
         path: "getting-started",
         title: "Getting started",
-        content: staticMarkdown("_guides/getting-started.md")
+        content: staticMarkdown("guides/getting-started.md")
       },
       { path: "faq", title: "FAQ", content: staticMarkdown("faq.md") },
       {
@@ -36,56 +36,56 @@ const pages = [
       {
         path: "accessibility",
         title: "Accessibility",
-        content: staticMarkdown("_guides/accessibility.md")
+        content: staticMarkdown("guides/accessibility.md")
       },
       {
         path: "annotations",
         title: "Annotations",
-        content: staticMarkdown("_guides/annotations.md")
+        content: staticMarkdown("guides/annotations.md")
       },
       {
         path: "axes",
         title: "Axes",
-        content: staticMarkdown("_guides/axes.md")
+        content: staticMarkdown("guides/axes.md")
       },
       {
         path: "behaviors",
         title: "Behaviors",
-        content: staticMarkdown("_guides/behavior.md")
+        content: staticMarkdown("guides/behavior.md")
       },
       {
         path: "breakpoints",
         title: "Breakpoints",
-        content: staticMarkdown("_guides/breakpoints.md")
+        content: staticMarkdown("guides/breakpoints.md")
       },
       {
         path: "colors",
         title: "Colors",
-        content: staticMarkdown("_guides/colors.md"),
-        styles: [staticFile("_guides/colors.css")],
-        scripts: [staticFile("_guides/colors.js")]
+        content: staticMarkdown("guides/colors.md"),
+        styles: [staticFile("guides/colors.css")],
+        scripts: [staticFile("guides/colors.js")]
       },
       {
         path: "controls",
         title: "Controls",
-        content: staticMarkdown("_guides/controls.md")
+        content: staticMarkdown("guides/controls.md")
       },
       {
         path: "formats",
         title: "Formatting",
-        content: staticMarkdown("_guides/formats.md")
+        content: staticMarkdown("guides/formats.md")
       },
       {
         path: "legends",
         title: "Legends",
-        content: staticMarkdown("_guides/legends.md")
+        content: staticMarkdown("guides/legends.md")
       },
       {
         path: "tooltips",
         title: "Tooltips",
-        content: staticMarkdown("_guides/tooltips.md"),
-        styles: [staticFile("_guides/tooltips.css")],
-        scripts: [staticFile("_guides/tooltips.js")]
+        content: staticMarkdown("guides/tooltips.md"),
+        styles: [staticFile("guides/tooltips.css")],
+        scripts: [staticFile("guides/tooltips.js")]
       }
     ]
   },

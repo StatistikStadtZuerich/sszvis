@@ -15,6 +15,9 @@ jobs:
         run: npm install
       - name: Build
         run: npm run build
+      # To preserve folders with underscores, we need to add a ".nojekyll" file
+      - name: Disable Jekyll
+        run: touch build/.nojekyll
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
