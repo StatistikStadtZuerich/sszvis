@@ -67,6 +67,6 @@
     "test:unit": "jest --testPathIgnorePatterns snapshot.test.js",
     "test:snapshot": "rm -rf test/__image_snapshots__/__diff_output__ && jest --testPathPattern snapshot.test.js",
     "test:watch": "jest --watch",
-    "prepublishOnly": "npm run test && npm run build"
+    "prepublishOnly": "npm run build"
   }
 }
