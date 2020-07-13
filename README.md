@@ -39,6 +39,19 @@ npm run build:topo
 npm run build:docs
 ```
 
+### Testing
+
+```sh
+# Start the server from which the screenshots should be taken
+npm start
+
+# Run all tests
+npm test
+
+# Or run individual tests
+npm run test:snapshot
+```
+
 ## License
 
 sszvis is published under the BSD-3-Clause license. sszvis can freely be used but no support will be provided by Statistik Stadt Zürich.
