@@ -13,7 +13,7 @@ Or embed it directly on any website:
 ```code|lang-html
 <link href="https://unpkg.com/sszvis@2/build/sszvis.css" rel="stylesheet" />
 
-<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+<script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
 <script src="https://unpkg.com/sszvis@2/build/sszvis.min.js"></script>
 ```
 
