@@ -225,7 +225,7 @@
             .geoJsonKeyName("OBJECTID")
             .geoJson(state.additionalMapData.features)
             .mapPath(mapPath)
-            .defined(sszvis.compose(sszvis.defined, idAcc))
+            .defined(sszvis.compose(sszvis.defined, yearAcc))
             .fill(sszvis.compose(colorScale, yearAcc))
             .stroke(sszvis.compose(colorScale, yearAcc))
             .strokeWidth(1.25)

@@ -155,7 +155,7 @@ export var contains = function(list, d) {
  * @return {Boolean}     true if the value is defined, false if the value is undefined
  */
 export var defined = function(val) {
-  return typeof val !== "undefined" && val != null;
+  return typeof val !== "undefined" && val != null && !Number.isNaN(val);
 };
 
 /**
@@ -382,7 +382,7 @@ export var isNull = function(val) {
  * @return {Boolean}    Whether the value is a number
  */
 export var isNumber = function(val) {
-  return Object.prototype.toString.call(val) === "[object Number]";
+  return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
 };
 
 /**
