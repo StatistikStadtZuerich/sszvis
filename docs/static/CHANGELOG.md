@@ -1,3 +1,44 @@
+## 2.2.0 (Jul 2020)
+
+- Upgraded d3 to version 5.0
+- Added a basic (i.e. incomplete) shim for `d3-request` using the new `d3-fetch` API
+- Changed `sszvis.defined` to return false for `NaN` values
+- Changed `sszvis.isNumber` to return false for `NaN` values
+- Fixed "Extended Maps" examples that previously showed invalid data
+
+### Upgrade from 2.0 to 2.2.0
+
+The upgrade to d3 v5 is mostly backwards compatible (see [d3 v5's change log](https://github.com/d3/d3/blob/master/CHANGES.md#changes-in-d3-50)), but existing code should be updated to use the [d3-fetch](https://github.com/d3/d3-fetch) API instead of the old [d3-request](https://github.com/d3/d3-request) API.
+
+If code relied on the old behaviour of `sszvis.defined` or `sszvis.isNumber` that considered `NaN` as a number (which for most purposes of creating visualizations is not useful), existing code might break and must be fixed.
+
+```code
+function parseRow(x) {
+  return { year: parseInt(x.Jahr, 10) };
+}
+
+// This d3 v4 code snippet should be updated to ...
+d3.csv("http://example.com")
+  .row(parseRow)
+  .get(function(error, data) {
+    if (error) {
+      sszvis.loadError(error);
+      return;
+    }
+    actions.prepareState(data);
+  });
+
+// ... this d3 v5 code snippet
+d3.csv("http://example.com", parseRow)
+  .then(actions.prepareState)
+  .catch(sszvis.loadError);
+
+// The same is true for d3.json
+d3.json("http://example.com", parseRow)
+  .then(actions.prepareState)
+  .catch(sszvis.loadError);
+```
+
 ## 2.1.0 (Feb 2020)
 
 - Changed `formatNumber` to remove insignificant trailing zeros
@@ -15,7 +56,7 @@
 
 ## 2.0 (Dec 2017)
 
-### Changes from 1.x to 2.0
+### Upgrade from 1.x to 2.0
 
 The sszvis API has changed significantly from version 1.x to 2.0. This was done to a) align more closely with practices in the d3 ecosystem and to be able to leverage ES modules better (by not exporting whole namespaces but each function separately).
 
