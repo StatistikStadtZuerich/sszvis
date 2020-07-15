@@ -100,15 +100,7 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

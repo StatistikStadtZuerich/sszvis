@@ -27,8 +27,13 @@
 
         var HIGHLIGHTED_DATES = [new Date(2013, 10, 10)];
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            date: sszvis.parseDate(d["Datum"]),
+            value: sszvis.parseNumber(d["Regen"]),
+          };
+        }
+
         var xAcc = sszvis.prop("date");
         var yAcc = sszvis.prop("value");
 
@@ -62,20 +67,7 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/SL_daily.csv")
-          .row(function (d) {
-            return {
-              date: sszvis.parseDate(d["Datum"]),
-              value: sszvis.parseNumber(d["Regen"]),
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv("data/SL_daily.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

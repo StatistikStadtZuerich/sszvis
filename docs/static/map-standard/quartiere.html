@@ -120,23 +120,9 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

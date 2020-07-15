@@ -44,8 +44,13 @@
             },
           });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            geoId: sszvis.parseNumber(d["KantonNr"]),
+            value: sszvis.parseNumber(d["Wert"]),
+          };
+        }
+
         var vAcc = sszvis.prop("value");
 
         /* Application state
@@ -81,28 +86,11 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/M_swiss_fake.csv")
-          .row(function (d) {
-            return {
-              geoId: sszvis.parseNumber(d["KantonNr"]),
-              value: sszvis.parseNumber(d["Wert"]),
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv("data/M_swiss_fake.csv", parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        d3.json("../topo/switzerland.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/switzerland.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

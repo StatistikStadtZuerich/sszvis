@@ -43,12 +43,7 @@ The following provides a brief overview of a typical code example in this reposi
         };
 
         // 7. Fetch CSV from a server and start the application
-        d3.csv("path/to/data.csv")
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) return;
-            actions.prepareState(data);
-          });
+        d3.csv("path/to/data.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError)
 
         // 8. The render function is called on every state change
         function render(state) { }

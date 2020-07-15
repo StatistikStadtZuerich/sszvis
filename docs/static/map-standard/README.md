@@ -17,14 +17,14 @@ For example, you might load a file using `d3.json()` and then extract the featur
 ```code
 lang: js
 ---
-d3.json('stadt-zurich.json').get(function(error, topo) {
-    actions.setMapData({
-        features: topojson.feature(topo, topo.objects.wahlkreise),
-        borders: topojson.mesh(topo, topo.objects.wahlkreise),
-        lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
-        lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
-    });
-})
+d3.json('stadt-zurich.json').then(function(topo) {
+  actions.setMapData({
+    features: topojson.feature(topo, topo.objects.wahlkreise),
+    borders: topojson.mesh(topo, topo.objects.wahlkreise),
+    lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
+    lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
+  });
+}).catch(sszvis.loadError);
 ```
 
 ### Pre-built TopoJSON files

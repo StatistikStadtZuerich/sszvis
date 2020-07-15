@@ -90,13 +90,7 @@
         /* Initialization
         ----------------------------------------------- */
 
-        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

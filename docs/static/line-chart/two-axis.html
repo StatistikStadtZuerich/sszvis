@@ -32,8 +32,13 @@
           _: "Anzahl Arbeitslose (schweizweit)",
         });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            date: sszvis.parseDate(d["Jahr"]),
+            region: d["Region"],
+            value: sszvis.parseNumber(d["Schweiz"]),
+          };
+        }
 
         var xAcc = sszvis.prop("date");
         var yAcc = sszvis.prop("value");
@@ -107,21 +112,7 @@
         /* Data initialization
         ----------------------------------------------- */
 
-        d3.csv("data/S_2yAxis.csv")
-          .row(function (d) {
-            return {
-              date: sszvis.parseDate(d["Jahr"]),
-              region: d["Region"],
-              value: sszvis.parseNumber(d["Schweiz"]),
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv("data/S_2yAxis.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

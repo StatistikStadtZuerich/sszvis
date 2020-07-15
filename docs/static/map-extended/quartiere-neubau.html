@@ -36,8 +36,17 @@
           },
         });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          var parsedYear = sszvis.parseNumber(d["bezugsjahr"]);
+          parsedYear = parsedYear === 0 ? NaN : parsedYear;
+          return {
+            id: sszvis.parseNumber(d["id"]),
+            name: d["name"],
+            ownership: d["traegerschaft"],
+            year: parsedYear,
+          };
+        }
+
         var idAcc = sszvis.prop("id");
         var datumAcc = sszvis.prop("datum");
         var nameAcc = sszvis.prop("name");
@@ -97,40 +106,15 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/gemeinnuetzige.csv")
-          .row(function (d) {
-            var parsedYear = sszvis.parseNumber(d["bezugsjahr"]);
-            parsedYear = parsedYear === 0 ? NaN : parsedYear;
-            return {
-              id: sszvis.parseNumber(d["id"]),
-              name: d["name"],
-              ownership: d["traegerschaft"],
-              year: parsedYear,
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareData(data);
-          });
+        d3.csv("data/gemeinnuetzige.csv", parseRow)
+          .then(actions.prepareData)
+          .catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
-        d3.json("data/neubausiedlungen.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareAdditionalMapData(data);
-        });
+        d3.json("data/neubausiedlungen.json")
+          .then(actions.prepareAdditionalMapData)
+          .catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

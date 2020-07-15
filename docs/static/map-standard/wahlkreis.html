@@ -45,8 +45,14 @@
             },
           });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            name: d["ID"],
+            // magic number 20 here is based on the range of the fake data. It transforms the values into percentages
+            value: sszvis.parseNumber(d["Value"]) / 20,
+          };
+        }
+
         var vAcc = sszvis.prop("value");
         var nameAcc = sszvis.prop("name");
         var mDatumAcc = sszvis.prop("datum");
@@ -96,29 +102,11 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/M_wahlkreis_fake.csv")
-          .row(function (d) {
-            return {
-              name: d["ID"],
-              // magic number 20 here is based on the range of the fake data. It transforms the values into percentages
-              value: sszvis.parseNumber(d["Value"]) / 20,
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv("data/M_wahlkreis_fake.csv", parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

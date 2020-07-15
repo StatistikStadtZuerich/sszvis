@@ -37,8 +37,15 @@
 
         var INITIAL_YEAR = "2012";
 
-        /* Shortcuts
-  ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            quarternum: sszvis.parseNumber(d["Qcode"]),
+            quartername: d["Qname"],
+            value: sszvis.parseNumber(d["Ausländeranteil"]),
+            year: d["Jahr"],
+          };
+        }
+
         var vAcc = sszvis.prop("value");
         var yAcc = sszvis.prop("year");
         var qnameAcc = sszvis.prop("quartername");
@@ -79,22 +86,7 @@
 
         /* Data initialization
   ----------------------------------------------- */
-        d3.csv("data/S_quartiere.csv")
-          .row(function (d) {
-            return {
-              quarternum: sszvis.parseNumber(d["Qcode"]),
-              quartername: d["Qname"],
-              value: sszvis.parseNumber(d["Ausländeranteil"]),
-              year: d["Jahr"],
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv("data/S_quartiere.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
   ----------------------------------------------- */

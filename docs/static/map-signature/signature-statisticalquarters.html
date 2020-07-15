@@ -49,8 +49,14 @@
             },
           });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            id: sszvis.parseNumber(d["zoneid"]),
+            value: sszvis.parseNumber(d["value"]),
+            zonename: d["zonename"],
+          };
+        }
+
         var datumAcc = sszvis.prop("datum");
         var idAcc = sszvis.propOr("id", null);
         var valueAcc = sszvis.propOr("value", 0);
@@ -100,29 +106,11 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/fake_statistical_quarters.csv")
-          .row(function (d) {
-            return {
-              id: sszvis.parseNumber(d["zoneid"]),
-              value: sszvis.parseNumber(d["value"]),
-              zonename: d["zonename"],
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareData(data);
-          });
+        d3.csv("data/fake_statistical_quarters.csv", parseRow)
+          .then(actions.prepareData)
+          .catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

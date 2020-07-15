@@ -48,6 +48,7 @@
             xValue: sszvis.parseNumber(d["Zupendler"]),
           };
         }
+
         var xAcc = sszvis.prop("xValue");
         var cAcc = sszvis.prop("category");
 
@@ -67,6 +68,7 @@
           prepareState: function (data) {
             state.data = data;
             state.categories = sszvis.set(state.data, cAcc);
+            render(state);
           },
 
           showTooltip: function (_, category) {
@@ -88,15 +90,7 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function (error, data) {
-            if (error) {
-              return sszvis.loadError(error);
-            }
-            actions.prepareState(data);
-            render(state);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

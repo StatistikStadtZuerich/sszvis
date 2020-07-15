@@ -73,8 +73,14 @@
             },
           });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            xpos: sszvis.parseNumber(d["xkoord"]),
+            ypos: sszvis.parseNumber(d["ykoord"]),
+            val: sszvis.parseNumber(d["kinder"]),
+          };
+        }
+
         var xAcc = sszvis.prop("xpos");
         var yAcc = sszvis.prop("ypos");
         var valAcc = sszvis.prop("val");
@@ -114,29 +120,9 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/kinder.csv")
-          .row(function (d) {
-            return {
-              xpos: sszvis.parseNumber(d["xkoord"]),
-              ypos: sszvis.parseNumber(d["ykoord"]),
-              val: sszvis.parseNumber(d["kinder"]),
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareData(data);
-          });
+        d3.csv("data/kinder.csv", parseRow).then(actions.prepareData).catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

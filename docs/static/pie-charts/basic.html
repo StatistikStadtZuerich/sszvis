@@ -132,15 +132,9 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/P_7Categories.csv")
-          .row(parseRow)
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv("data/P_7Categories.csv", parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

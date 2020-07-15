@@ -37,8 +37,15 @@
           },
         });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            geoId: sszvis.parseNumber(d["Nr"]),
+            name: d["Gemeinde"],
+            category: d["Klasse"],
+            value: sszvis.parseNumber(d["Wert"]),
+          };
+        }
+
         var cAcc = sszvis.prop("category");
         var vAcc = sszvis.prop("value");
         var nameAcc = sszvis.prop("name");
@@ -107,30 +114,13 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/agglomeration_2012.csv")
-          .row(function (d) {
-            return {
-              geoId: sszvis.parseNumber(d["Nr"]),
-              name: d["Gemeinde"],
-              category: d["Klasse"],
-              value: sszvis.parseNumber(d["Wert"]),
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv("data/agglomeration_2012.csv", parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        d3.json("../topo/agglomeration-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/agglomeration-zurich.json")
+          .then(actions.prepareMapData)
+          .catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

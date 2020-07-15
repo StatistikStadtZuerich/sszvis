@@ -52,8 +52,15 @@
             },
           });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            geoId: sszvis.parseNumber(d["QNr"]),
+            year: sszvis.parseYear(d["Jahr"]),
+            value: sszvis.parseNumber(d["Anzahl"]),
+            name: d["Qname"],
+          };
+        }
+
         var vAcc = sszvis.prop("value");
         var yearAcc = sszvis.prop("year");
         var geoIdAcc = sszvis.prop("geoId");
@@ -234,30 +241,11 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/CML_quartier_years.csv")
-          .row(function (d) {
-            return {
-              geoId: sszvis.parseNumber(d["QNr"]),
-              year: sszvis.parseYear(d["Jahr"]),
-              value: sszvis.parseNumber(d["Anzahl"]),
-              name: d["Qname"],
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv("data/CML_quartier_years.csv", parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */

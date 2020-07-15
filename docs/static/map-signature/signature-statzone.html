@@ -61,8 +61,16 @@
             },
           });
 
-        /* Shortcuts
-        ----------------------------------------------- */
+        function parseRow(d) {
+          return {
+            id: sszvis.parseNumber(d["statistischeZoneId"]),
+            year: sszvis.parseNumber(d["Jahr"]),
+            gender: d["Geschlecht"],
+            births: sszvis.parseNumber(d["Geburten"]),
+            zonename: d["statistischeZoneName"],
+          };
+        }
+
         var datumAcc = sszvis.prop("datum");
         var idAcc = sszvis.propOr("id", null);
         var yearAcc = sszvis.prop("year");
@@ -128,31 +136,11 @@
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv("data/births_year_statisticalZones.csv")
-          .row(function (d) {
-            return {
-              id: sszvis.parseNumber(d["statistischeZoneId"]),
-              year: sszvis.parseNumber(d["Jahr"]),
-              gender: d["Geschlecht"],
-              births: sszvis.parseNumber(d["Geburten"]),
-              zonename: d["statistischeZoneName"],
-            };
-          })
-          .get(function (error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareData(data);
-          });
+        d3.csv("data/births_year_statisticalZones.csv", parseRow)
+          .then(actions.prepareData)
+          .catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
