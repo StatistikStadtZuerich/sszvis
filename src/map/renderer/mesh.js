@@ -16,35 +16,33 @@
  * @return {sszvis.component}
  */
 
-import {select} from 'd3';
-import { component } from '../../d3-component.js';
+import { select } from "d3";
+import { component } from "../../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
-    .prop('geoJson')
-    .prop('mapPath')
-    .prop('borderColor').borderColor('white') // A function or string for the color of all borders. Note: all borders have the same color
-    .prop('strokeWidth').strokeWidth(1.25)
-    .render(function() {
+    .prop("geoJson")
+    .prop("mapPath")
+    .prop("borderColor")
+    .borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
+    .prop("strokeWidth")
+    .strokeWidth(1.25)
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
       // add the map borders. These are rendered as one single path element
-      var meshLine = selection
-        .selectAll('.sszvis-map__border')
-        .data([props.geoJson]);
+      var meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]);
 
-      var newMeshLine = meshLine.enter()
-        .append('path')
-        .classed('sszvis-map__border', true);
+      var newMeshLine = meshLine.enter().append("path").classed("sszvis-map__border", true);
 
       meshLine.exit().remove();
 
       meshLine = meshLine.merge(newMeshLine);
 
       meshLine
-        .attr('d', props.mapPath)
-        .style('stroke', props.borderColor)
-        .style('stroke-width', props.strokeWidth);
+        .attr("d", props.mapPath)
+        .style("stroke", props.borderColor)
+        .style("stroke-width", props.strokeWidth);
     });
-};
+}

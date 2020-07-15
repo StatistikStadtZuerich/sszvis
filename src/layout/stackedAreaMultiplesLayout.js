@@ -24,7 +24,7 @@
  *                              }
  */
 
-export default function(height, num, pct) {
+export default function (height, num, pct) {
   pct || (pct = 0.1);
   var step = height / (num - pct),
     bandHeight = step * (1 - pct),
@@ -37,6 +37,6 @@ export default function(height, num, pct) {
   return {
     range: range,
     bandHeight: bandHeight,
-    padHeight: step * pct
+    padHeight: step * pct,
   };
 }

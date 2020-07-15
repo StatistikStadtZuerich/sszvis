@@ -8,8 +8,8 @@ import { selection } from "d3";
  * @param {String} key - the name of the group
  * @return {d3.selection}
  */
-selection.prototype.selectDiv = function(key) {
-  var div = this.selectAll('[data-d3-selectdiv="' + key + '"]').data(function(d) {
+selection.prototype.selectDiv = function (key) {
+  var div = this.selectAll('[data-d3-selectdiv="' + key + '"]').data(function (d) {
     return [d];
   });
 

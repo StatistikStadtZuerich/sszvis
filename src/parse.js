@@ -15,7 +15,7 @@ var timeParse = timeFormatLocale(locale).parse;
  * @return {Date}
  */
 var dateParser = timeParse("%d.%m.%Y");
-export var parseDate = function(d) {
+export var parseDate = function (d) {
   return dateParser(d);
 };
 
@@ -25,7 +25,7 @@ export var parseDate = function(d) {
  * @return {Date}       A javascript date object for the first time in the given year
  */
 var yearParser = timeParse("%Y");
-export var parseYear = function(d) {
+export var parseYear = function (d) {
   return yearParser(d);
 };
 
@@ -34,6 +34,6 @@ export var parseYear = function(d) {
  * @param  {String} d A value that could be a number
  * @return {Number}   If d is not a number, NaN is returned
  */
-export var parseNumber = function(d) {
+export var parseNumber = function (d) {
   return d.trim() === "" ? NaN : +d;
 };

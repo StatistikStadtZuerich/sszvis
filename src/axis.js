@@ -67,7 +67,7 @@ var TICK_PROXIMITY_THRESHOLD = 8;
 var TICK_END_THRESHOLD = 12;
 var LABEL_PROXIMITY_THRESHOLD = 10;
 
-var axis = function() {
+var axis = function () {
   // var axisDelegate = d3.axisBottom();
   // axisDelegate.orient = function() { return 'bottom'; };
 
@@ -111,13 +111,13 @@ var axis = function() {
     //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels
     .prop("yOffset")
     .yOffset(0)
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
       var isBottom = !props.vertical && props.orient === "bottom";
 
-      var axisDelegate = (function() {
+      var axisDelegate = (function () {
         switch (props.orient) {
           case "bottom":
             return axisBottom();
@@ -138,8 +138,8 @@ var axis = function() {
         "tickSizeOuter",
         "tickPadding",
         "tickFormat",
-        "tickSize"
-      ].forEach(function(prop) {
+        "tickSize",
+      ].forEach(function (prop) {
         if (props[prop] !== undefined) {
           if (axisDelegate[prop] === undefined) {
             throw new Error('axis: "' + prop + '" not available');
@@ -161,10 +161,7 @@ var axis = function() {
         .attr("transform", translateString(0, props.yOffset))
         .call(axisDelegate);
 
-      group
-        .attr("fill", null)
-        .attr("font-size", null)
-        .attr("font-family", null);
+      group.attr("fill", null).attr("font-size", null).attr("font-family", null);
       // .attr("text-anchor", null);
 
       var axisScale = axisDelegate.scale();
@@ -182,16 +179,14 @@ var axis = function() {
       // leads to weird type rendering artefacts in some browsers. That's
       // why we reach into the group and translate lines onto the half-pixel
       // grid by taking the translation of the group into account.
-      tickGroups.each(function() {
+      tickGroups.each(function () {
         var subpixelShift = transformTranslateSubpixelShift(this.getAttribute("transform"));
         var dx = halfPixel(0) - subpixelShift[0];
         var dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
-        select(this)
-          .select("line")
-          .attr("transform", translateString(dx, dy));
+        select(this).select("line").attr("transform", translateString(dx, dy));
       });
 
-      tickTexts.each(function() {
+      tickTexts.each(function () {
         if (props.orient === "top" || props.orient === "bottom") {
           select(this).attr("dx", "-0.5");
         }
@@ -206,7 +201,7 @@ var axis = function() {
 
       // hide ticks which are too close to one endpoint
       var rangeExtent = range(axisScale);
-      tickGroups.selectAll("line").each(function(d) {
+      tickGroups.selectAll("line").each(function (d) {
         var pos = axisScale(d),
           d3this = select(this);
         d3this.classed(
@@ -219,14 +214,14 @@ var axis = function() {
 
       if (fn.defined(props.tickLength)) {
         var domainExtent = extent(axisScale.domain());
-        var ticks = tickGroups.filter(function(d) {
+        var ticks = tickGroups.filter(function (d) {
           return !fn.stringEqual(d, domainExtent[0]) && !fn.stringEqual(d, domainExtent[1]);
         });
         var orientation = props.orient;
 
         var longLinePadding = 2;
         if (orientation === "left" || orientation === "right") {
-          ticks.selectAll("text").each(function() {
+          ticks.selectAll("text").each(function () {
             longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
           });
           longLinePadding += 2; // a lil' extra on the end
@@ -235,10 +230,7 @@ var axis = function() {
         var lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]);
 
         if (props.tickLength > longLinePadding) {
-          var newLines = lines
-            .enter()
-            .append("line")
-            .classed("sszvis-axis__longtick", true);
+          var newLines = lines.enter().append("line").classed("sszvis-axis__longtick", true);
 
           lines = lines.merge(newLines);
 
@@ -261,7 +253,7 @@ var axis = function() {
         var min = alignmentBounds[0];
         var max = alignmentBounds[1];
 
-        tickTexts.style("text-anchor", function(d) {
+        tickTexts.style("text-anchor", function (d) {
           var value = axisScale(d);
           if (absDistance(value, min) < TICK_END_THRESHOLD) {
             return "start";
@@ -290,7 +282,7 @@ var axis = function() {
         // Hide axis labels that overlap with highlighted labels unless
         // the labels are slanted (in which case the bounding boxes overlap)
         if (props.hideLabelThreshold > 0 && !props.slant) {
-          tickTexts.each(function(d) {
+          tickTexts.each(function (d) {
             // although getBoundingClientRect returns coordinates relative to the window, not the document,
             // this should still work, since all tick bounds are affected equally by scroll position changes.
             var bcr = this.getBoundingClientRect();
@@ -300,8 +292,8 @@ var axis = function() {
                 top: bcr.top,
                 right: bcr.right,
                 bottom: bcr.bottom,
-                left: bcr.left
-              }
+                left: bcr.left,
+              },
             };
             if (props.highlightTick(d)) {
               b.bounds.left -= props.hideLabelThreshold;
@@ -312,8 +304,8 @@ var axis = function() {
             }
           });
 
-          activeBounds.forEach(function(active) {
-            passiveBounds.forEach(function(passive) {
+          activeBounds.forEach(function (active) {
+            passiveBounds.forEach(function (passive) {
               select(passive.node).classed("hidden", boundsOverlap(passive.bounds, active.bounds));
             });
           });
@@ -323,19 +315,16 @@ var axis = function() {
       if (props.title) {
         var title = group.selectAll(".sszvis-axis__title").data([props.title]);
 
-        var newTitle = title
-          .enter()
-          .append("text")
-          .classed("sszvis-axis__title", true);
+        var newTitle = title.enter().append("text").classed("sszvis-axis__title", true);
 
         title.exit().remove();
 
         title
           .merge(newTitle)
-          .text(function(d) {
+          .text(function (d) {
             return d;
           })
-          .attr("transform", function() {
+          .attr("transform", function () {
             var orient = props.orient,
               axisScaleExtent = range(axisScale),
               titleProps;
@@ -355,7 +344,7 @@ var axis = function() {
                     ? 0
                     : orient === "bottom"
                     ? 32
-                    : 0
+                    : 0,
               };
             } else {
               titleProps = {
@@ -370,7 +359,7 @@ var axis = function() {
                     ? 0
                     : orient === "bottom"
                     ? 32
-                    : 0
+                    : 0,
               };
             }
 
@@ -387,7 +376,7 @@ var axis = function() {
               ")"
             );
           })
-          .style("text-anchor", function() {
+          .style("text-anchor", function () {
             var orient = props.orient;
             if (typeof props.titleAnchor !== "undefined") {
               return props.titleAnchor;
@@ -408,7 +397,7 @@ var axis = function() {
       if (props.contour && props.slant) {
         logger.warn("Can't apply contour to slanted labels");
       } else if (props.contour) {
-        tickGroups.each(function() {
+        tickGroups.each(function () {
           var g = select(this);
           var textNode = g.select("text").node();
           var textContour = g.select(".sszvis-axis__label-contour");
@@ -426,7 +415,7 @@ var axis = function() {
   return axisComponent;
 };
 
-var setOrdinalTicks = function(count) {
+var setOrdinalTicks = function (count) {
   // in this function, the 'this' context should be an sszvis.axis
   var domain = this.scale().domain(),
     values = [],
@@ -445,7 +434,7 @@ var setOrdinalTicks = function(count) {
   return count;
 };
 
-export var axisX = function() {
+export var axisX = function () {
   return axis()
     .yOffset(2) //gap between chart and x-axis
     .ticks(3)
@@ -455,13 +444,11 @@ export var axisX = function() {
     .tickFormat(fn.arity(1, formatNumber));
 };
 
-axisX.time = function() {
-  return axisX()
-    .tickFormat(formatAxisTimeFormat)
-    .alignOuterLabels(true);
+axisX.time = function () {
+  return axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
 };
 
-axisX.ordinal = function() {
+axisX.ordinal = function () {
   return (
     axisX()
       // extend this class a little with a custom implementation of 'ticks'
@@ -473,10 +460,10 @@ axisX.ordinal = function() {
 };
 
 // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
-axisX.pyramid = function() {
+axisX.pyramid = function () {
   return axisX()
     .ticks(10)
-    .prop("scale", function(s) {
+    .prop("scale", function (s) {
       var extended = s.copy(),
         extendedDomain = extended.domain(),
         extendedRange = extended.range();
@@ -490,30 +477,30 @@ axisX.pyramid = function() {
       this._scale(extended);
       return extended;
     })
-    .tickFormat(function(v) {
+    .tickFormat(function (v) {
       // this tick format means that the axis appears to be divergent around 0
       // when in fact it is -domain[1] -> +domain[1]
       return formatNumber(Math.abs(v));
     });
 };
 
-export var axisY = function() {
+export var axisY = function () {
   var newAxis = axis()
     .ticks(6)
     .tickSize(0, 0)
     .tickPadding(0)
-    .tickFormat(function(d) {
+    .tickFormat(function (d) {
       return 0 === d && !newAxis.showZeroY() ? null : formatNumber(d);
     })
     .vertical(true);
   return newAxis;
 };
 
-axisY.time = function() {
+axisY.time = function () {
   return axisY().tickFormat(formatAxisTimeFormat);
 };
 
-axisY.ordinal = function() {
+axisY.ordinal = function () {
   return (
     axisY()
       // add custom 'ticks' function
@@ -540,49 +527,49 @@ function boundsOverlap(boundsA, boundsB) {
 
 var slantLabel = {
   top: {
-    horizontal: function(selection) {
+    horizontal: function (selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
         .attr("dy", "0.71em")
         .attr("transform", null);
     },
-    vertical: function(selection) {
+    vertical: function (selection) {
       selection
         .style("text-anchor", "start")
         .attr("dx", "0em")
         .attr("dy", "0.35em") // vertically-center
         .attr("transform", "rotate(-90)");
     },
-    diagonal: function(selection) {
+    diagonal: function (selection) {
       selection
         .style("text-anchor", "start")
         .attr("dx", "0.1em")
         .attr("dy", "0.1em")
         .attr("transform", "translate(-0.5) rotate(-45)");
-    }
+    },
   },
   bottom: {
-    horizontal: function(selection) {
+    horizontal: function (selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
         .attr("dy", "0.71em")
         .attr("transform", null);
     },
-    vertical: function(selection) {
+    vertical: function (selection) {
       selection
         .style("text-anchor", "end")
         .attr("dx", "-1em")
         .attr("dy", "-0.75em")
         .attr("transform", "rotate(-90)");
     },
-    diagonal: function(selection) {
+    diagonal: function (selection) {
       selection
         .style("text-anchor", "end")
         .attr("dx", "-0.8em")
         .attr("dy", "0em")
         .attr("transform", "rotate(-45)");
-    }
-  }
+    },
+  },
 };

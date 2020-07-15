@@ -53,7 +53,7 @@ function handleMissingVal(v) {
   return isNaN(v) ? 0 : v;
 }
 
-export default function() {
+export default function () {
   return component()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
@@ -65,7 +65,7 @@ export default function() {
     .prop("tooltipAnchor")
     .prop("transition")
     .transition(true)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -94,25 +94,21 @@ export default function() {
         bars = bars.transition(defaultTransition());
       }
 
-      bars
-        .attr("x", xAcc)
-        .attr("y", yAcc)
-        .attr("width", wAcc)
-        .attr("height", hAcc);
+      bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
 
       // Tooltip anchors
       var tooltipPosition;
       if (props.centerTooltip) {
-        tooltipPosition = function(d) {
+        tooltipPosition = function (d) {
           return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
         };
       } else if (props.tooltipAnchor) {
         var uv = props.tooltipAnchor.map(parseFloat);
-        tooltipPosition = function(d) {
+        tooltipPosition = function (d) {
           return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
         };
       } else {
-        tooltipPosition = function(d) {
+        tooltipPosition = function (d) {
           return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
         };
       }

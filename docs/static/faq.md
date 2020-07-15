@@ -67,16 +67,15 @@ To create an example like a force directed graph (http://bl.ocks.org/mbostock/40
 
 The places to look for information about creating new maps are:
 
-* sszvis/map/updating.txt
-* map-modules/sszvis-map-<name>.js
-* Makefile (at the bottom)
+- sszvis/map/updating.txt
+- map-modules/sszvis-map-<name>.js
+- Makefile (at the bottom)
 
-### sszvis/layout/*
+### sszvis/layout/\*
 
 There are two ways to layout complex charts: a) make the calculation part of the chart's code b) create a layout function that can be used outside the chart. To stay consistent with the philosophy of this project, we chose solution b). We created several layout functions that return config objects for the charts you want to create. This is necessary for laying out bar charts, for example.
 
 These layouts are not to be confused with d3 layouts, which are used to layout elements of a chart, e.g. in a force-directed layout. The d3 layouts modify your data with properties that can then be used. The sszvis layouts just return config objects that can or can not be used to configure a chart.
-
 
 ## Development
 
@@ -188,6 +187,7 @@ There are define/require globals on the Stadt Zürich website (introduced by [Ar
 ```
 
 ### Transitions
+
 Whenever there are issues with transitions, such as area charts not transitioning smoothly between two set of value. It could be caused by a key function specified in .data(). If the keys for some reason change in the data, than data mapping does not work properly and it breaks the animation.
 
 see test/transitions_stacked.html

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scatterplot</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/SS_years_fake.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -34,9 +34,9 @@
         ----------------------------------------------- */
         var SLIDER_CONTROL_HEIGHT = 60;
         var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-          _: function() {
+          _: function () {
             return sszvis.formatNumber;
-          }
+          },
         });
 
         function parseRow(d) {
@@ -45,7 +45,7 @@
             yValue: sszvis.parseNumber(d["YValue"]),
             city: d["City"],
             location: d["Location"],
-            quarter: sszvis.parseDate(d["Quarter"])
+            quarter: sszvis.parseDate(d["Quarter"]),
           };
         }
         var xAcc = sszvis.prop("xValue");
@@ -62,13 +62,13 @@
           tExtent: [0, 0],
           cities: [],
           quarters: [],
-          activeQuarter: new Date()
+          activeQuarter: new Date(),
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.xExtent = d3.extent(state.data, xAcc);
             state.yMax = d3.max(state.data, yAcc);
@@ -79,22 +79,22 @@
             actions.setQuarter(d3.max(state.quarters));
           },
 
-          setQuarter: function(inputQ) {
+          setQuarter: function (inputQ) {
             state.activeQuarter = closestDatum(state.quarters, sszvis.identity, inputQ);
 
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -110,7 +110,7 @@
           var legendLayout = sszvis.colorLegendLayout(
             {
               axisLabels: state.xExtent.map(props.xLabelFormat),
-              legendLabels: state.cities
+              legendLabels: state.cities,
             },
             config.id
           );
@@ -125,25 +125,16 @@
 
           // Scales
 
-          var xScale = d3
-            .scaleLinear()
-            .domain(state.xExtent)
-            .range([0, bounds.innerWidth]);
+          var xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
 
-          var yScale = d3
-            .scaleLinear()
-            .domain([0, state.yMax])
-            .range([bounds.innerHeight, 0]);
+          var yScale = d3.scaleLinear().domain([0, state.yMax]).range([bounds.innerHeight, 0]);
 
-          var tScale = d3
-            .scaleTime()
-            .domain(state.tExtent)
-            .range([0, bounds.innerWidth]);
+          var tScale = d3.scaleTime().domain(state.tExtent).range([0, bounds.innerWidth]);
 
           // Layers
 
           var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(
-            state.data.filter(function(d) {
+            state.data.filter(function (d) {
               return sszvis.stringEqual(qAcc(d), state.activeQuarter);
             })
           );
@@ -166,7 +157,7 @@
             .minorTicks(state.quarters)
             // Be aware that this uses fn.derivedSet instead of fn.set
             .majorTicks(
-              sszvis.derivedSet(state.quarters, function(d) {
+              sszvis.derivedSet(state.quarters, function (d) {
                 return d.getYear();
               })
             )
@@ -174,17 +165,9 @@
             .label(sszvis.formatMonth)
             .onchange(actions.setQuarter);
 
-          var xAxis = sszvis
-            .axisX()
-            .scale(xScale)
-            .tickFormat(props.xLabelFormat)
-            .orient("bottom");
+          var xAxis = sszvis.axisX().scale(xScale).tickFormat(props.xLabelFormat).orient("bottom");
 
-          var yAxis = sszvis
-            .axisY()
-            .scale(yScale)
-            .orient("right")
-            .contour(true);
+          var yAxis = sszvis.axisY().scale(yScale).orient("right").contour(true);
 
           // Rendering
 

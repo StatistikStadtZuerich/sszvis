@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sunburst</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/sun_burst_drei_hierarchien.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -38,7 +38,7 @@
             continent: d["kontinent"],
             region: d["region"],
             country: d["land"],
-            number: sszvis.parseNumber(d["anzahl"])
+            number: sszvis.parseNumber(d["anzahl"]),
           };
         }
 
@@ -52,24 +52,24 @@
         var state = {
           data: [],
           radiusExtent: [0, 0],
-          selection: []
+          selection: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             var continentsList = [
               "Europa",
               "Asien",
               "Amerika",
               "Afrika",
               "Ozeanien",
-              "Unzuteilbar"
+              "Unzuteilbar",
             ];
 
             // Sort the input data according to the desired order of the continents first, then by descending order of size
-            data.sort(function(a, b) {
+            data.sort(function (a, b) {
               var indexDiff = d3.ascending(
                 continentsList.indexOf(continentAcc(a)),
                 continentsList.indexOf(continentAcc(b))
@@ -93,28 +93,28 @@
             render(state);
           },
 
-          onSliceOver: function(d) {
+          onSliceOver: function (d) {
             state.selection = [d];
 
             render(state);
           },
 
-          onSliceOut: function() {
+          onSliceOut: function () {
             state.selection = [];
 
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -127,7 +127,7 @@
         function render(state) {
           var legendLayout = sszvis.colorLegendLayout(
             {
-              legendLabels: state.continents
+              legendLabels: state.continents,
             },
             config.id
           );
@@ -167,7 +167,7 @@
             .radiusScale(radiusScale)
             .centerRadius(burstLayout.centerRadius);
 
-          var tooltipText = sszvis.modularTextHTML().bold(function(d) {
+          var tooltipText = sszvis.modularTextHTML().bold(function (d) {
             return d.data.key;
           });
 
@@ -177,7 +177,7 @@
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .visible(isSelected)
             .header(tooltipText)
-            .body(function(d) {
+            .body(function (d) {
               return sszvis.formatNumber(d.value);
             });
 

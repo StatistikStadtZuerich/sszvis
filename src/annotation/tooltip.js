@@ -51,7 +51,7 @@ var BLUR_PADDING = 5;
 
 /* Exported module
 ----------------------------------------------- */
-export default function() {
+export default function () {
   var renderer = tooltipRenderer();
 
   return component()
@@ -64,19 +64,19 @@ export default function() {
     .prop("renderInto")
     .prop("visible", fn.functor)
     .visible(false)
-    .renderSelection(function(selection) {
+    .renderSelection(function (selection) {
       var props = selection.props();
       var intoBCR = props.renderInto.node().getBoundingClientRect();
 
       var tooltipData = [];
-      selection.each(function(d) {
+      selection.each(function (d) {
         if (props.visible(d)) {
           var thisBCR = this.getBoundingClientRect();
           var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
           tooltipData.push({
             datum: d,
             x: pos[0],
-            y: pos[1]
+            y: pos[1],
           });
         }
       });
@@ -89,7 +89,7 @@ export default function() {
  * Tooltip renderer
  * @private
  */
-var tooltipRenderer = function() {
+var tooltipRenderer = function () {
   return component()
     .prop("header")
     .prop("body")
@@ -101,7 +101,7 @@ var tooltipRenderer = function() {
     .dy(1)
     .prop("opacity", fn.functor)
     .opacity(1)
-    .renderSelection(function(selection) {
+    .renderSelection(function (selection) {
       var tooltipData = selection.datum();
       var props = selection.props();
 
@@ -124,16 +124,16 @@ var tooltipRenderer = function() {
       tooltip
         .style("pointer-events", "none")
         .style("opacity", props.opacity)
-        .style("padding-top", function(d) {
+        .style("padding-top", function (d) {
           return props.orientation(d) === "top" ? TIP_SIZE + "px" : null;
         })
-        .style("padding-right", function(d) {
+        .style("padding-right", function (d) {
           return props.orientation(d) === "right" ? TIP_SIZE + "px" : null;
         })
-        .style("padding-bottom", function(d) {
+        .style("padding-bottom", function (d) {
           return props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null;
         })
-        .style("padding-left", function(d) {
+        .style("padding-left", function (d) {
           return props.orientation(d) === "left" ? TIP_SIZE + "px" : null;
         })
         .classed("sszvis-tooltip", true);
@@ -154,10 +154,7 @@ var tooltipRenderer = function() {
           .attr("id", "sszvisTooltipShadowFilter")
           .attr("height", "150%");
 
-        filter
-          .append("feGaussianBlur")
-          .attr("in", "SourceAlpha")
-          .attr("stdDeviation", 2);
+        filter.append("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
 
         filter
           .append("feComponentTransfer")
@@ -194,7 +191,7 @@ var tooltipRenderer = function() {
       tooltip
         .select(".sszvis-tooltip__body")
         .datum(fn.prop("datum"))
-        .html(function(d) {
+        .html(function (d) {
           var body = props.body ? fn.functor(props.body)(d) : "";
           return Array.isArray(body) ? formatTable(body) : body;
         });
@@ -202,7 +199,7 @@ var tooltipRenderer = function() {
       selection
         .selectAll(".sszvis-tooltip")
         .classed("sszvis-tooltip--small", isSmall)
-        .each(function(d) {
+        .each(function (d) {
           var tip = select(this);
           // only using dimensions.width and dimensions.height here. Not affected by scroll position
           var dimensions = tip.node().getBoundingClientRect();
@@ -262,11 +259,11 @@ var tooltipRenderer = function() {
  */
 function formatTable(rows) {
   var tableBody = rows
-    .map(function(row) {
+    .map(function (row) {
       return (
         "<tr>" +
         row
-          .map(function(cell) {
+          .map(function (cell) {
             return "<td>" + cell + "</td>";
           })
           .join("") +
@@ -357,9 +354,9 @@ function tooltipBackgroundGenerator(a, b, orientation, radius) {
     // Bottom side
     side(x(b), y(b), x(b) - radius, y(b), x(a) + radius, y(b), orientation === "bottom"),
     // Left side
-    side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, orientation === "left")
+    side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, orientation === "left"),
   ]
-    .map(function(d) {
+    .map(function (d) {
       return d.join(" ");
     })
     .join(" ");

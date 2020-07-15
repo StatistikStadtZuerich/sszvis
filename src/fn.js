@@ -15,7 +15,7 @@ import { map, selection } from "d3";
  * @param  {*} value any value
  * @return {*}       returns its argument
  */
-export var identity = function(value) {
+export var identity = function (value) {
   return value;
 };
 
@@ -27,7 +27,7 @@ export var identity = function(value) {
  * @param  {*}  val       The value to check
  * @return {Boolean}      Whether the value is a string
  */
-export var isString = function(val) {
+export var isString = function (val) {
   return Object.prototype.toString.call(val) === "[object String]";
 };
 
@@ -39,7 +39,7 @@ export var isString = function(val) {
  * @param  {*}  val         The value to check
  * @return {Boolean}        Whether the value is a d3.selection
  */
-export var isSelection = function(val) {
+export var isSelection = function (val) {
   return val instanceof selection;
 };
 
@@ -55,50 +55,50 @@ export var isSelection = function(val) {
  * @return {Function} A new function wrapping `fn`. The new function is
  * guaranteed to be of arity `n`.
  */
-export var arity = function(n, fn) {
+export var arity = function (n, fn) {
   switch (n) {
     case 0:
-      return function() {
+      return function () {
         return fn.call(this);
       };
     case 1:
-      return function(a0) {
+      return function (a0) {
         return fn.call(this, a0);
       };
     case 2:
-      return function(a0, a1) {
+      return function (a0, a1) {
         return fn.call(this, a0, a1);
       };
     case 3:
-      return function(a0, a1, a2) {
+      return function (a0, a1, a2) {
         return fn.call(this, a0, a1, a2);
       };
     case 4:
-      return function(a0, a1, a2, a3) {
+      return function (a0, a1, a2, a3) {
         return fn.call(this, a0, a1, a2, a3);
       };
     case 5:
-      return function(a0, a1, a2, a3, a4) {
+      return function (a0, a1, a2, a3, a4) {
         return fn.call(this, a0, a1, a2, a3, a4);
       };
     case 6:
-      return function(a0, a1, a2, a3, a4, a5) {
+      return function (a0, a1, a2, a3, a4, a5) {
         return fn.call(this, a0, a1, a2, a3, a4, a5);
       };
     case 7:
-      return function(a0, a1, a2, a3, a4, a5, a6) {
+      return function (a0, a1, a2, a3, a4, a5, a6) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
       };
     case 8:
-      return function(a0, a1, a2, a3, a4, a5, a6, a7) {
+      return function (a0, a1, a2, a3, a4, a5, a6, a7) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
       };
     case 9:
-      return function(a0, a1, a2, a3, a4, a5, a6, a7, a8) {
+      return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
       };
     case 10:
-      return function(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+      return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
       };
     default:
@@ -122,10 +122,10 @@ export var arity = function(n, fn) {
  * @param {Function...} ... Accepts any number of functions as arguments
  * @return {Function} returns a function which is the composition of the passed functions
  */
-export var compose = function() {
+export var compose = function () {
   var fns = arguments,
     start = arguments.length - 1;
-  return function() {
+  return function () {
     var i = start;
     var result = fns[i].apply(this, arguments);
     while (i--) result = fns[i].call(this, result);
@@ -142,7 +142,7 @@ export var compose = function() {
  * @param  {any}   d    Item that might be in list
  * @return {boolean}
  */
-export var contains = function(list, d) {
+export var contains = function (list, d) {
   return list.indexOf(d) >= 0;
 };
 
@@ -154,7 +154,7 @@ export var contains = function(list, d) {
  * @param  {*} val the value to check
  * @return {Boolean}     true if the value is defined, false if the value is undefined
  */
-export var defined = function(val) {
+export var defined = function (val) {
   return typeof val !== "undefined" && val != null && !Number.isNaN(val);
 };
 
@@ -173,7 +173,7 @@ export var defined = function(val) {
  * @param  {function} acc     An accessor function which calculates the set determiner.
  * @return {array}            An array of objects from the input array.
  */
-export var derivedSet = function(arr, acc) {
+export var derivedSet = function (arr, acc) {
   acc || (acc = identity);
   var seen = [],
     sValue,
@@ -200,7 +200,7 @@ export var derivedSet = function(arr, acc) {
  * @param  {Array} arr              The array to test
  * @return {Boolean}                Whether every element in the array passes the test
  */
-export var every = function(predicate, arr) {
+export var every = function (predicate, arr) {
   for (var i = 0; i < arr.length; i++) {
     if (!predicate(arr[i])) {
       return false;
@@ -218,7 +218,7 @@ export var every = function(predicate, arr) {
  * @param  {Any} val        The value with which to fill the array
  * @return {Array}          An array of length len filled with val
  */
-export var filledArray = function(len, val) {
+export var filledArray = function (len, val) {
   var arr = new Array(len);
   for (var i = 0; i < len; ++i) {
     arr[i] = val;
@@ -236,7 +236,7 @@ export var filledArray = function(len, val) {
  *
  * @returns {arrayElement|undefined}
  */
-export var find = function(predicate, arr) {
+export var find = function (predicate, arr) {
   for (var i = 0; i < arr.length; i++) {
     if (predicate(arr[i])) {
       return arr[i];
@@ -253,7 +253,7 @@ export var find = function(predicate, arr) {
  * @param  {Array} arr an array
  * @return {*}     the first value in the array
  */
-export var first = function(arr) {
+export var first = function (arr) {
   return arr[0];
 };
 
@@ -267,7 +267,7 @@ export var first = function(arr) {
  * @param  {Array}        The Array to flatten
  * @return {Array}        A flattened Array
  */
-export var flatten = function(arr) {
+export var flatten = function (arr) {
   return Array.prototype.concat.apply([], arr);
 };
 
@@ -284,7 +284,7 @@ export var flatten = function(arr) {
  * @return {Touch|null}         The first Touch object from the TouchEvent's lists
  *                              of touches.
  */
-export var firstTouch = function(event) {
+export var firstTouch = function (event) {
   if (event.touches && event.touches.length) {
     return event.touches[0];
   } else if (event.changedTouches && event.changedTouches.length) {
@@ -307,7 +307,7 @@ export var firstTouch = function(event) {
  *   informalGreeting: function() { return "How ya’ doin!" }
  * })
  */
-export var foldPattern = function(key, pattern) {
+export var foldPattern = function (key, pattern) {
   var result = pattern[key];
   if (typeof result === "function") {
     return result();
@@ -334,7 +334,7 @@ export var foldPattern = function(key, pattern) {
  * the element's index in the input array, and the input array itself.
  * @return {Array} an Array of unique elements
  */
-export var hashableSet = function(arr, acc) {
+export var hashableSet = function (arr, acc) {
   acc || (acc = identity);
   var seen = {},
     value,
@@ -357,7 +357,7 @@ export var hashableSet = function(arr, acc) {
  * @param {*} val the value to check
  * @return {Boolean} true if the value is a function, false otherwise
  */
-export var isFunction = function(val) {
+export var isFunction = function (val) {
   return typeof val == "function";
 };
 
@@ -369,7 +369,7 @@ export var isFunction = function(val) {
  * @param {*} val the value to check
  * @return {Boolean}     true if the value is null, false if the value is not null
  */
-export var isNull = function(val) {
+export var isNull = function (val) {
   return val === null;
 };
 
@@ -381,7 +381,7 @@ export var isNull = function(val) {
  * @param  {*}  val     The value to check
  * @return {Boolean}    Whether the value is a number
  */
-export var isNumber = function(val) {
+export var isNumber = function (val) {
   return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
 };
 
@@ -394,7 +394,7 @@ export var isNumber = function(val) {
  * @param  {*}  value      The value to test
  * @return {Boolean}       Whether the value is an object
  */
-export var isObject = function(val) {
+export var isObject = function (val) {
   return Object(val) === val;
 };
 
@@ -406,7 +406,7 @@ export var isObject = function(val) {
  * @param  {Array} arr an array
  * @return {*}     the last value in the array
  */
-export var last = function(arr) {
+export var last = function (arr) {
   return arr[arr.length - 1];
 };
 
@@ -420,8 +420,8 @@ export var last = function(arr) {
  * @param  {Function} f the argument function
  * @return {Function}   a new function which returns the boolean opposite of the argument function
  */
-export var not = function(f) {
-  return function() {
+export var not = function (f) {
+  return function () {
     return !f.apply(this, arguments);
   };
 };
@@ -438,8 +438,8 @@ export var not = function(f) {
  * @return {Function}     A property-accessor function
  *
  */
-export var prop = function(key) {
-  return function(object) {
+export var prop = function (key) {
+  return function (object) {
     return object[key];
   };
 };
@@ -458,8 +458,8 @@ export var prop = function(key) {
  * @param  {any} defaultVal     the default value to return when either the object or the requested property are undefined
  * @return {Function}           A property-accessor function
  */
-export var propOr = function(key, defaultVal) {
-  return function(object) {
+export var propOr = function (key, defaultVal) {
+  return function (object) {
     var value = object !== undefined ? object[key] : undefined;
     return value !== undefined ? value : defaultVal;
   };
@@ -485,9 +485,9 @@ export var propOr = function(key, defaultVal) {
  * the element's index in the input array, and the input array itself.
  * @return {Array} an Array of unique elements
  */
-export var set = function(arr, acc) {
+export var set = function (arr, acc) {
   acc || (acc = identity);
-  return arr.reduce(function(m, value, i) {
+  return arr.reduce(function (m, value, i) {
     var computed = acc(value, i, arr);
     return m.indexOf(computed) < 0 ? m.concat(computed) : m;
   }, []);
@@ -503,7 +503,7 @@ export var set = function(arr, acc) {
  * @param  {Array} arr              The array to test
  * @return {Boolean}                Whether some element in the array passes the test
  */
-export var some = function(predicate, arr) {
+export var some = function (predicate, arr) {
   for (var i = 0; i < arr.length; i++) {
     if (predicate(arr[i])) {
       return true;
@@ -523,7 +523,7 @@ export var some = function(predicate, arr) {
  * @param  {any} b        the second value
  * @return {boolean}      Whether the provided values are equal when converted to strings.
  */
-export var stringEqual = function(a, b) {
+export var stringEqual = function (a, b) {
   return a.toString() === b.toString();
 };
 
@@ -532,10 +532,10 @@ export var stringEqual = function(a, b) {
  *
  * Same as fn.functor in d3v3
  */
-export var functor = function(v) {
+export var functor = function (v) {
   return typeof v === "function"
     ? v
-    : function() {
+    : function () {
         return v;
       };
 };
@@ -546,11 +546,11 @@ export var functor = function(v) {
  * Adapted from lodash's memoize() but using d3.map() as cache
  * See https://lodash.com/docs/4.17.4#memoize
  */
-export var memoize = function(func, resolver) {
+export var memoize = function (func, resolver) {
   if (typeof func != "function" || (resolver != null && typeof resolver != "function")) {
     throw new TypeError("Expected a function");
   }
-  var memoized = function() {
+  var memoized = function () {
     var args = arguments,
       key = resolver ? resolver.apply(this, args) : args[0],
       cache = memoized.cache;

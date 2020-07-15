@@ -50,7 +50,7 @@ var LIGHTNESS_STEP = 0.6;
 /* Scales
 ----------------------------------------------- */
 function qualColorScale(colors) {
-  return function() {
+  return function () {
     var scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateOrdinalScale(scale);
   };
@@ -68,7 +68,7 @@ export var scaleQual12 = qualColorScale([
   "#E67D73",
   "#F2CEC2",
   "#CC6788",
-  "#E6B7C7"
+  "#E6B7C7",
 ]);
 export var scaleQual6 = qualColorScale([
   "#5182B3",
@@ -76,7 +76,7 @@ export var scaleQual6 = qualColorScale([
   "#94BF69",
   "#E6CF73",
   "#E67D73",
-  "#CC6788"
+  "#CC6788",
 ]);
 export var scaleQual6a = qualColorScale([
   "#5182B3",
@@ -84,7 +84,7 @@ export var scaleQual6a = qualColorScale([
   "#60BF97",
   "#B8E6D2",
   "#94BF69",
-  "#CFE6B8"
+  "#CFE6B8",
 ]);
 export var scaleQual6b = qualColorScale([
   "#E6CF73",
@@ -92,11 +92,11 @@ export var scaleQual6b = qualColorScale([
   "#E67D73",
   "#F2CEC2",
   "#CC6788",
-  "#E6B7C7"
+  "#E6B7C7",
 ]);
 
 function seqColorScale(colors) {
-  return function() {
+  return function () {
     var scale = scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
@@ -108,7 +108,7 @@ export var scaleSeqGrn = seqColorScale(["#D2DFDE", "#4A807C", "#2C3C3F"]);
 export var scaleSeqBrn = seqColorScale(["#E9DFD6", "#A67D5A", "#4C3735"]);
 
 function divColorScale(colors) {
-  return function() {
+  return function () {
     var scale = scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
@@ -120,7 +120,7 @@ export var scaleDivNtr = divColorScale(["#A67D5A", "#FFFFFF", "#4A807C"]);
 export var scaleDivNtrGry = divColorScale(["#A67D5A", "#F3F3F3", "#4A807C"]);
 
 function greyColorScale(colors) {
-  return function() {
+  return function () {
     var scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
@@ -133,15 +133,15 @@ export var scaleDimGry = greyColorScale(["#B8B8B8"]);
 export var scaleMedGry = greyColorScale(["#7C7C7C"]);
 export var scaleDeepGry = greyColorScale(["#545454"]);
 
-export var slightlyDarker = function(c) {
+export var slightlyDarker = function (c) {
   return hsl(c).darker(0.4);
 };
 
-export var muchDarker = function(c) {
+export var muchDarker = function (c) {
   return hsl(c).darker(0.7);
 };
 
-export var withAlpha = function(c, a) {
+export var withAlpha = function (c, a) {
   var rgbColor = rgb(c);
   return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
 };
@@ -149,17 +149,17 @@ export var withAlpha = function(c, a) {
 /* Scale extensions
 ----------------------------------------------- */
 function decorateOrdinalScale(scale) {
-  scale.darker = function() {
+  scale.darker = function () {
     return decorateOrdinalScale(
       scale.copy().range(scale.range().map(func("darker", LIGHTNESS_STEP)))
     );
   };
-  scale.brighter = function() {
+  scale.brighter = function () {
     return decorateOrdinalScale(
       scale.copy().range(scale.range().map(func("brighter", LIGHTNESS_STEP)))
     );
   };
-  scale.reverse = function() {
+  scale.reverse = function () {
     return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
   };
   return scale;
@@ -167,7 +167,7 @@ function decorateOrdinalScale(scale) {
 
 function decorateLinearScale(scale) {
   scale = interpolatedColorScale(scale);
-  scale.reverse = function() {
+  scale.reverse = function () {
     return decorateLinearScale(scale.copy().range(scale.range().reverse()));
   };
   return scale;
@@ -175,7 +175,7 @@ function decorateLinearScale(scale) {
 
 function interpolatedColorScale(scale) {
   var nativeDomain = scale.domain;
-  scale.domain = function(dom) {
+  scale.domain = function (dom) {
     if (arguments.length === 1) {
       var threeDomain = [dom[0], mean(dom), dom[1]];
       return nativeDomain.call(this, threeDomain);
@@ -194,7 +194,7 @@ function convertLab(d) {
 
 function func(fName) {
   var args = Array.prototype.slice.call(arguments, 1);
-  return function(d) {
+  return function (d) {
     return d[fName].apply(d, args);
   };
 }

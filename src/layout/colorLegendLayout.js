@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import { scaleQual12, scaleQual6 } from "../color";
 import {
   DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT,
-  legendColorOrdinal
+  legendColorOrdinal,
 } from "../legend/ordinalColorScale";
 import { measureAxisLabel, measureDimensions, measureLegendLabel } from "../measure";
 
@@ -42,7 +42,7 @@ export function colorLegendLayout(
     bottomPadding: axisLabelPadding + legendPadding,
     legendWidth: layout.legendWidth,
     legend,
-    scale
+    scale,
   };
 }
 
@@ -68,7 +68,7 @@ export function colorLegendDimensions(labels, containerWidth) {
     columnWidth: columns === 1 ? null : maxLabelWidth,
     legendWidth: columns * maxLabelWidth,
     horizontalFloat: isHorizontal,
-    orientation: isHorizontal ? null : "vertical"
+    orientation: isHorizontal ? null : "vertical",
   };
 }
 

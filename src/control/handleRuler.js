@@ -26,7 +26,7 @@ import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
@@ -37,7 +37,7 @@ export default function() {
     .prop("color")
     .prop("flip", fn.functor)
     .flip(false)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -55,10 +55,7 @@ export default function() {
 
       var group = selection.selectAll(".sszvis-handleRuler__group").data([0]);
 
-      var entering = group
-        .enter()
-        .append("g")
-        .classed("sszvis-handleRuler__group", true);
+      var entering = group.enter().append("g").classed("sszvis-handleRuler__group", true);
 
       group.exit().remove();
 
@@ -79,7 +76,7 @@ export default function() {
 
       group
         .selectAll(".sszvis-handleRuler__handle")
-        .attr("x", function(d) {
+        .attr("x", function (d) {
           return crispX(d) - handleWidth / 2;
         })
         .attr("y", halfPixel(handleTop))
@@ -97,20 +94,13 @@ export default function() {
 
       var dots = group.selectAll(".sszvis-ruler__dot").data(data);
 
-      var newDots = dots
-        .enter()
-        .append("circle")
-        .classed("sszvis-ruler__dot", true);
+      var newDots = dots.enter().append("circle").classed("sszvis-ruler__dot", true);
 
       dots.exit().remove();
 
       dots = dots.merge(newDots);
 
-      dots
-        .attr("cx", crispX)
-        .attr("cy", crispY)
-        .attr("r", 3.5)
-        .attr("fill", props.color);
+      dots.attr("cx", crispX).attr("cy", crispY).attr("r", 3.5).attr("fill", props.color);
 
       var labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data);
 
@@ -125,10 +115,7 @@ export default function() {
 
       var label = selection.selectAll(".sszvis-ruler__label").data(data);
 
-      var newLabel = label
-        .enter()
-        .append("text")
-        .classed("sszvis-ruler__label", true);
+      var newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
 
       label.exit().remove();
 
@@ -138,7 +125,7 @@ export default function() {
 
       selection
         .selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline")
-        .attr("transform", function(d) {
+        .attr("transform", function (d) {
           var x = fn.compose(halfPixel, props.x)(d);
           var y = fn.compose(halfPixel, props.y)(d);
 
@@ -147,7 +134,7 @@ export default function() {
 
           return translateString(x + dx, y + dy);
         })
-        .style("text-anchor", function(d) {
+        .style("text-anchor", function (d) {
           return props.flip(d) ? "end" : "start";
         })
         .html(props.label);

@@ -25,7 +25,7 @@
  *                                 }
  */
 
-export default function(numBars) {
+export default function (numBars) {
   var DEFAULT_HEIGHT = 24, // the default bar height
     MIN_PADDING = 20, // the minimum padding size
     barHeight = DEFAULT_HEIGHT, // the bar height
@@ -43,6 +43,6 @@ export default function(numBars) {
     outerRatio: outerRatio,
     axisOffset: -(barHeight / 2) - 10,
     barGroupHeight: computedBarSpace,
-    totalHeight: computedBarSpace + outerRatio * (barHeight + padding) * 2
+    totalHeight: computedBarSpace + outerRatio * (barHeight + padding) * 2,
   };
 }

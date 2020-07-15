@@ -112,7 +112,7 @@ export function cascade() {
 
     if (key.type === "obj") {
       var obj = {};
-      groupEach(grouped, function(value, k) {
+      groupEach(grouped, function (value, k) {
         obj[k] = make(value, depth);
       });
       return obj;
@@ -120,11 +120,11 @@ export function cascade() {
       var arr = [];
       if (sorter) {
         var groupKeys = Object.keys(grouped).sort(sorter);
-        arrEach(groupKeys, function(k) {
+        arrEach(groupKeys, function (k) {
           arr.push(make(grouped[k], depth));
         });
       } else {
-        groupEach(grouped, function(value) {
+        groupEach(grouped, function (value) {
           arr.push(make(value, depth));
         });
       }
@@ -132,28 +132,28 @@ export function cascade() {
     }
   }
 
-  _cascade.apply = function(data) {
+  _cascade.apply = function (data) {
     return make(data, 0);
   };
 
-  _cascade.objectBy = function(d) {
+  _cascade.objectBy = function (d) {
     keys.push({
       type: "obj",
-      func: d
+      func: d,
     });
     return _cascade;
   };
 
-  _cascade.arrayBy = function(d, sorter) {
+  _cascade.arrayBy = function (d, sorter) {
     keys.push({
       type: "arr",
-      func: d
+      func: d,
     });
     if (sorter) sorts[keys.length - 1] = sorter;
     return _cascade;
   };
 
-  _cascade.sort = function(d) {
+  _cascade.sort = function (d) {
     valuesSort = d;
     return _cascade;
   };

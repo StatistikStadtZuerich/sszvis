@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Multiple Line Chart</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -14,7 +14,7 @@
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function (d3, sszvis) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -29,7 +29,7 @@
         var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
         var queryProps = sszvis.responsiveProps().prop("yAxis2Label", {
           palm: "(schweizweit)",
-          _: "Anzahl Arbeitslose (schweizweit)"
+          _: "Anzahl Arbeitslose (schweizweit)",
         });
 
         /* Shortcuts
@@ -41,7 +41,7 @@
 
         // a few helpers to distinguish between data that belongs on axis1 (left) and axis2 (right)
         var axis2 = ["Schweiz"]; // the values for "Region" that go in axis2
-        var valueIsOnAxis2 = function(d) {
+        var valueIsOnAxis2 = function (d) {
           return sszvis.contains(axis2, d);
         };
         var datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
@@ -57,20 +57,17 @@
           axis1maxY: 0,
           axis2maxY: 0,
           categories1: [],
-          categories2: []
+          categories2: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
 
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.dates = d3.extent(state.data, xAcc);
-            state.lineData = sszvis
-              .cascade()
-              .arrayBy(cAcc, d3.ascending)
-              .apply(state.data);
+            state.lineData = sszvis.cascade().arrayBy(cAcc, d3.ascending).apply(state.data);
 
             // Compute two different maximum y values - one for each axis.
             // Multiply axis1maxY by a small number to ensure that the data for
@@ -85,10 +82,10 @@
             render(state);
           },
 
-          changeDate: function(inputDate) {
+          changeDate: function (inputDate) {
             var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
-            var closestData = state.lineData.map(function(linePoints) {
-              return sszvis.find(function(d) {
+            var closestData = state.lineData.map(function (linePoints) {
+              return sszvis.find(function (d) {
                 return sszvis.stringEqual(xAcc(d), closestDate);
               }, linePoints);
             });
@@ -97,28 +94,28 @@
             render(state);
           },
 
-          resetDate: function() {
+          resetDate: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
 
         d3.csv("data/S_2yAxis.csv")
-          .row(function(d) {
+          .row(function (d) {
             return {
               date: sszvis.parseDate(d["Jahr"]),
               region: d["Region"],
-              value: sszvis.parseNumber(d["Schweiz"])
+              value: sszvis.parseNumber(d["Schweiz"]),
             };
           })
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -135,10 +132,7 @@
 
           // Scales
 
-          var xScale = d3
-            .scaleTime()
-            .domain(state.dates)
-            .range([0, bounds.innerWidth]);
+          var xScale = d3.scaleTime().domain(state.dates).range([0, bounds.innerWidth]);
 
           var yScale1 = d3
             .scaleLinear()
@@ -162,11 +156,11 @@
           var line = sszvis
             .line()
             .x(sszvis.compose(xScale, xAcc))
-            .y(function(d) {
+            .y(function (d) {
               return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
             })
             // Access the first data point of the line to decide on the stroke color
-            .stroke(function(lineData) {
+            .stroke(function (lineData) {
               var d = sszvis.first(lineData);
               return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
             });
@@ -182,13 +176,13 @@
             .bottom(bounds.innerHeight)
             .label(rulerLabel)
             .x(sszvis.compose(xScale, xAcc))
-            .y(function(d) {
+            .y(function (d) {
               return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
             })
-            .flip(function(d) {
+            .flip(function (d) {
               return xScale(xAcc(d)) >= bounds.innerWidth / 2;
             })
-            .color(function(d) {
+            .color(function (d) {
               return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
             });
 
@@ -221,10 +215,7 @@
             .title(props.yAxis2Label)
             .dyTitle(-20);
 
-          var cLegend1 = sszvis
-            .legendColorOrdinal()
-            .scale(cScale1)
-            .orientation("vertical");
+          var cLegend1 = sszvis.legendColorOrdinal().scale(cScale1).orientation("vertical");
 
           var cLegend2 = sszvis
             .legendColorOrdinal()
@@ -258,10 +249,7 @@
             .attr("transform", sszvis.translateString(bounds.innerWidth, bounds.innerHeight + 60))
             .call(cLegend2);
 
-          chartLayer
-            .selectGroup("rulerLayer")
-            .datum(state.selection)
-            .call(ruler);
+          chartLayer.selectGroup("rulerLayer").datum(state.selection).call(ruler);
 
           // Interaction
 

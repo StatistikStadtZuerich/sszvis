@@ -46,12 +46,12 @@ import * as fn from "../fn.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("position")
     .position(fn.functor([0, 0]))
     .prop("debug")
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 

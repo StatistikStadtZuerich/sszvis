@@ -42,28 +42,28 @@ d3.json = mkShim(d3.json);
 
 function mkShim(request) {
   function mkGet(...args) {
-    return function(cb) {
+    return function (cb) {
       request(...args)
-        .then(function(data) {
+        .then(function (data) {
           cb(undefined, data);
         })
         .catch(cb);
     };
   }
 
-  return function(url, parseNew) {
+  return function (url, parseNew) {
     return {
       // This is the "new" d3-fetch way of loading data that uses a Promise
-      then: function(cb) {
+      then: function (cb) {
         return request(url, parseNew).then(cb);
       },
       // This is the "old" d3-request way of loading data using an XMLHttpRequest
       get: mkGet(url),
-      row: function(parseRow) {
+      row: function (parseRow) {
         return {
-          get: mkGet(url, parseRow)
+          get: mkGet(url, parseRow),
         };
-      }
+      },
     };
   };
 }

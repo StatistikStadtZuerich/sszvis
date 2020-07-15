@@ -29,13 +29,13 @@ export var SWITZERLAND_KEY = "switzerland";
  * @return {Function}                               The projection function.
  */
 export var swissMapProjection = memoize(
-  function(width, height, featureCollection) {
+  function (width, height, featureCollection) {
     var mercatorProjection = geoMercator().fitSize([width, height], featureCollection);
 
     return mercatorProjection;
   },
   // Memoize resolver
-  function(width, height, _, featureBoundsCacheKey) {
+  function (width, height, _, featureBoundsCacheKey) {
     return "" + width + "," + height + "," + featureBoundsCacheKey;
   }
 );
@@ -56,7 +56,7 @@ export var swissMapProjection = memoize(
  *                                            and returns an svg path string which represents that geojson, projected using
  *                                            a map projection optimal for Swiss areas.
  */
-export var swissMapPath = function(width, height, featureCollection, featureBoundsCacheKey) {
+export var swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
   var mercatorPath = geoPath().projection(
     swissMapProjection(width, height, featureCollection, featureBoundsCacheKey)
   );
@@ -76,7 +76,7 @@ export var swissMapPath = function(width, height, featureCollection, featureBoun
  *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
  * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
  */
-export var pixelsFromGeoDistance = function(projection, centerPoint, meterDistance) {
+export var pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
   // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
   var APPROX_EARTH_RADIUS = 6367475;
@@ -87,7 +87,7 @@ export var pixelsFromGeoDistance = function(projection, centerPoint, meterDistan
   var halfDegrees = degrees / 2;
   var bounds = [
     [centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees],
-    [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]
+    [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees],
   ];
 
   // Project those bounds to pixel coordinates using the provided map projection
@@ -118,22 +118,22 @@ export var GEO_KEY_DEFAULT = "geoId";
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
-export var prepareMergedGeoData = function(dataset, geoJson, keyName) {
+export var prepareMergedGeoData = function (dataset, geoJson, keyName) {
   keyName || (keyName = GEO_KEY_DEFAULT);
 
   // group the input data by map entity id
   var groupedInputData = Array.isArray(dataset)
-    ? dataset.reduce(function(m, v) {
+    ? dataset.reduce(function (m, v) {
         m[v[keyName]] = v;
         return m;
       }, {})
     : {};
 
   // merge the map features and the input data into new objects that include both
-  var mergedData = geoJson.features.map(function(feature) {
+  var mergedData = geoJson.features.map(function (feature) {
     return {
       geoJson: feature,
-      datum: groupedInputData[feature.id]
+      datum: groupedInputData[feature.id],
     };
   });
 
@@ -155,7 +155,7 @@ export var prepareMergedGeoData = function(dataset, geoJson, keyName) {
  * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
  *                                          (or user-specified center) of the object.
  */
-export var getGeoJsonCenter = function(geoJson) {
+export var getGeoJsonCenter = function (geoJson) {
   if (!geoJson.properties.cachedCenter) {
     var setCenter = geoJson.properties.center;
     if (setCenter) {
@@ -177,6 +177,6 @@ export var getGeoJsonCenter = function(geoJson) {
  * @param  {number} width    The width of the container holding the map.
  * @return {number}          The stroke width that the map elements should have.
  */
-export var widthAdaptiveMapPathStroke = function(width) {
+export var widthAdaptiveMapPathStroke = function (width) {
   return Math.min(Math.max(0.8, width / 400), 1.1);
 };

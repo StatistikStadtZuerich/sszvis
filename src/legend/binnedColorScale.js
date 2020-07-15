@@ -22,7 +22,7 @@ import * as logger from "../logger.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("scale")
     .prop("displayValues")
@@ -31,7 +31,7 @@ export default function() {
     .width(200)
     .prop("labelFormat")
     .labelFormat(fn.identity)
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
@@ -45,20 +45,18 @@ export default function() {
       var circleRad = segHeight / 2;
       var innerRange = [0, props.width - 2 * circleRad];
 
-      var barWidth = scaleLinear()
-        .domain(props.endpoints)
-        .range(innerRange);
+      var barWidth = scaleLinear().domain(props.endpoints).range(innerRange);
       var sum = 0;
       var rectData = [];
       var pPrev = props.endpoints[0];
-      props.displayValues.forEach(function(p) {
+      props.displayValues.forEach(function (p) {
         var w = barWidth(p) - sum;
         var offset = sum % 1;
         rectData.push({
           x: Math.floor(circleRad + sum),
           w: w + offset,
           c: props.scale(pPrev),
-          p: p
+          p: p,
         });
         sum += w;
         pPrev = p;
@@ -68,15 +66,12 @@ export default function() {
       rectData.push({
         x: Math.floor(circleRad + sum),
         w: innerRange[1] - sum,
-        c: props.scale(pPrev)
+        c: props.scale(pPrev),
       });
 
       var circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints);
 
-      var newCircles = circles
-        .enter()
-        .append("circle")
-        .classed("sszvis-legend__circle", true);
+      var newCircles = circles.enter().append("circle").classed("sszvis-legend__circle", true);
       circles = circles.merge(newCircles);
 
       circles.exit().remove();
@@ -84,31 +79,28 @@ export default function() {
       circles
         .attr("r", circleRad)
         .attr("cy", circleRad)
-        .attr("cx", function(d, i) {
+        .attr("cx", function (d, i) {
           return i === 0 ? circleRad : props.width - circleRad;
         })
         .attr("fill", props.scale);
 
       var segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData);
 
-      var newSegments = segments
-        .enter()
-        .append("rect")
-        .classed("sszvis-legend__crispmark", true);
+      var newSegments = segments.enter().append("rect").classed("sszvis-legend__crispmark", true);
       segments = segments.merge(newSegments);
 
       segments.exit().remove();
 
       segments
-        .attr("x", function(d) {
+        .attr("x", function (d) {
           return d.x;
         })
         .attr("y", 0)
-        .attr("width", function(d) {
+        .attr("width", function (d) {
           return d.w;
         })
         .attr("height", segHeight)
-        .attr("fill", function(d) {
+        .attr("fill", function (d) {
           return d.c;
         });
 
@@ -116,19 +108,16 @@ export default function() {
 
       var lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData);
 
-      var newLines = lines
-        .enter()
-        .append("line")
-        .classed("sszvis-legend__crispmark", true);
+      var newLines = lines.enter().append("line").classed("sszvis-legend__crispmark", true);
       lines.merge(newLines);
 
       lines.exit().remove();
 
       lines
-        .attr("x1", function(d) {
+        .attr("x1", function (d) {
           return halfPixel(d.x + d.w);
         })
-        .attr("x2", function(d) {
+        .attr("x2", function (d) {
           return halfPixel(d.x + d.w);
         })
         .attr("y1", segHeight + 1)
@@ -137,20 +126,17 @@ export default function() {
 
       var labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData);
 
-      var newLabels = labels
-        .enter()
-        .append("text")
-        .classed("sszvis-legend__axislabel", true);
+      var newLabels = labels.enter().append("text").classed("sszvis-legend__axislabel", true);
       labels = labels.merge(newLabels);
 
       labels.exit().remove();
 
       labels
         .style("text-anchor", "middle")
-        .attr("transform", function(d) {
+        .attr("transform", function (d) {
           return "translate(" + (d.x + d.w) + "," + (segHeight + 20) + ")";
         })
-        .text(function(d) {
+        .text(function (d) {
           return props.labelFormat(d.p);
         });
     });

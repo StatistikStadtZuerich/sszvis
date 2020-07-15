@@ -8,6 +8,6 @@ export { default as layoutStackedAreaMultiples } from "./stackedAreaMultiplesLay
 export {
   computeLayout as sunburstLayout,
   getRadiusExtent as sunburstGetRadiusExtent,
-  prepareData as sunburstPrepareData
+  prepareData as sunburstPrepareData,
 } from "./sunburst.js";
 export { default as dimensionsVerticalBarChart } from "./verticalBarChartDimensions.js";

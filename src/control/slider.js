@@ -36,7 +36,7 @@ function contains(x, a) {
   return a.indexOf(x) >= 0;
 }
 
-export default function() {
+export default function () {
   return component()
     .prop("scale")
     .prop("value")
@@ -49,7 +49,7 @@ export default function() {
     .tickLabels(fn.identity)
     .prop("label", fn.functor)
     .label(fn.identity)
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
@@ -70,10 +70,7 @@ export default function() {
 
       // the mostly unchanging bits
       var bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]);
-      var newBg = bg
-        .enter()
-        .append("g")
-        .classed("sszvis-control-slider__backgroundgroup", true);
+      var newBg = bg.enter().append("g").classed("sszvis-control-slider__backgroundgroup", true);
       bg = bg.merge(newBg);
       bg.exit().remove();
 
@@ -85,7 +82,7 @@ export default function() {
         .tickSize(majorTickSize)
         .tickPadding(6)
         .tickValues(fn.set([].concat(props.majorTicks, props.minorTicks)))
-        .tickFormat(function(d) {
+        .tickFormat(function (d) {
           return contains(d, props.majorTicks) ? props.tickLabels(d) : "";
         });
 
@@ -102,16 +99,16 @@ export default function() {
       // adjust visual aspects of the axis to fit the design
       axisSelection
         .selectAll(".tick line")
-        .filter(function(d) {
+        .filter(function (d) {
           return !contains(d, props.majorTicks);
         })
         .attr("y2", 4);
 
-      var majorAxisText = axisSelection.selectAll(".tick text").filter(function(d) {
+      var majorAxisText = axisSelection.selectAll(".tick text").filter(function (d) {
         return contains(d, props.majorTicks);
       });
       var numTicks = majorAxisText.size();
-      majorAxisText.style("text-anchor", function(d, i) {
+      majorAxisText.style("text-anchor", function (d, i) {
         return i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle";
       });
 
@@ -175,7 +172,7 @@ export default function() {
         .classed("sszvis-control-slider__handle", true);
       handle = handle.merge(handleEntering);
 
-      handle.attr("transform", function(d) {
+      handle.attr("transform", function (d) {
         return translateString(halfPixel(alteredScale(d)), 0.5);
       });
 
@@ -183,18 +180,18 @@ export default function() {
 
       handle
         .selectAll(".sszvis-control-slider--label")
-        .data(function(d) {
+        .data(function (d) {
           return [d];
         })
         .text(props.label)
-        .style("text-anchor", function(d) {
+        .style("text-anchor", function (d) {
           return fn.stringEqual(d, scaleDomain[0])
             ? "start"
             : fn.stringEqual(d, scaleDomain[1])
             ? "end"
             : "middle";
         })
-        .attr("dx", function(d) {
+        .attr("dx", function (d) {
           return fn.stringEqual(d, scaleDomain[0])
             ? -(handleWidth / 2)
             : fn.stringEqual(d, scaleDomain[1])

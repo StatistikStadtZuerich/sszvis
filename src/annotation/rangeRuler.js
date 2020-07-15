@@ -28,7 +28,7 @@ import { halfPixel } from "../svgUtils/crisp.js";
 import { formatNumber } from "../format.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("x", fn.functor)
     .prop("y0", fn.functor)
@@ -40,14 +40,14 @@ export default function() {
     .prop("total")
     .prop("flip", fn.functor)
     .flip(false)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
       var crispX = fn.compose(halfPixel, props.x);
       var crispY0 = fn.compose(halfPixel, props.y0);
       var crispY1 = fn.compose(halfPixel, props.y1);
-      var middleY = function(d) {
+      var middleY = function (d) {
         return halfPixel((props.y0(d) + props.y1(d)) / 2);
       };
 
@@ -55,27 +55,17 @@ export default function() {
 
       var line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]);
 
-      var newLine = line
-        .enter()
-        .append("line")
-        .classed("sszvis-rangeRuler__rule", true);
+      var newLine = line.enter().append("line").classed("sszvis-rangeRuler__rule", true);
 
       line.exit().remove();
 
       line = line.merge(newLine);
 
-      line
-        .attr("x1", crispX)
-        .attr("y1", props.top)
-        .attr("x2", crispX)
-        .attr("y2", props.bottom);
+      line.attr("x1", crispX).attr("y1", props.top).attr("x2", crispX).attr("y2", props.bottom);
 
       var marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data);
 
-      var enteringMarks = marks
-        .enter()
-        .append("g")
-        .classed("sszvis-rangeRuler--mark", true);
+      var enteringMarks = marks.enter().append("g").classed("sszvis-rangeRuler--mark", true);
 
       marks.exit().remove();
 
@@ -87,7 +77,7 @@ export default function() {
 
       marks
         .selectAll(".sszvis-rangeRuler__p1")
-        .data(function(d) {
+        .data(function (d) {
           return [d];
         })
         .attr("cx", crispX)
@@ -96,7 +86,7 @@ export default function() {
 
       marks
         .selectAll(".sszvis-rangeRuler__p2")
-        .data(function(d) {
+        .data(function (d) {
           return [d];
         })
         .attr("cx", crispX)
@@ -105,38 +95,35 @@ export default function() {
 
       marks
         .selectAll(".sszvis-rangeRuler__label")
-        .data(function(d) {
+        .data(function (d) {
           return [d];
         })
-        .attr("x", function(d) {
+        .attr("x", function (d) {
           var offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
         })
         .attr("y", middleY)
         .attr("dy", "0.35em") // vertically-center
-        .style("text-anchor", function(d) {
+        .style("text-anchor", function (d) {
           return props.flip(d) ? "end" : "start";
         })
         .text(fn.compose(formatNumber, props.label));
 
       var total = selection.selectAll(".sszvis-rangeRuler__total").data([fn.last(data)]);
 
-      var newTotal = total
-        .enter()
-        .append("text")
-        .classed("sszvis-rangeRuler__total", true);
+      var newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
 
       total.exit().remove();
 
       total = total.merge(newTotal);
 
       total
-        .attr("x", function(d) {
+        .attr("x", function (d) {
           var offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
         })
         .attr("y", props.top - 10)
-        .style("text-anchor", function(d) {
+        .style("text-anchor", function (d) {
           return props.flip(d) ? "end" : "start";
         })
         .text("Total " + formatNumber(props.total));

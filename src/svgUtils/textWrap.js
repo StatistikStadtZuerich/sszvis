@@ -22,14 +22,14 @@
 
 import { select } from "d3";
 
-export default function(selection, width, paddingRightLeft, paddingTopBottom) {
+export default function (selection, width, paddingRightLeft, paddingTopBottom) {
   paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
   paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
   var maxWidth = width; //I store the tooltip max width
   width = width - paddingRightLeft * 2; //Take the padding into account
 
   var arrLineCreatedCount = [];
-  selection.each(function() {
+  selection.each(function () {
     var text = select(this);
     var words = text
       .text()

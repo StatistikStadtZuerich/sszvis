@@ -43,12 +43,12 @@ import * as fn from "../fn.js";
 import { datumFromPanEvent } from "./util.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   var event = dispatch("start", "pan", "end");
 
   var panningComponent = component()
     .prop("elementSelector")
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
@@ -57,20 +57,20 @@ export default function() {
       elements
         .attr("data-sszvis-behavior-pannable", "")
         .classed("sszvis-interactive", true)
-        .on("mouseenter", function() {
+        .on("mouseenter", function () {
           event.apply("start", this, arguments);
         })
-        .on("mousemove", function() {
+        .on("mousemove", function () {
           event.apply("pan", this, arguments);
         })
-        .on("mouseleave", function() {
+        .on("mouseleave", function () {
           event.apply("end", this, arguments);
         })
-        .on("touchstart", function() {
+        .on("touchstart", function () {
           d3Event.preventDefault();
           event.apply("start", this, arguments);
         })
-        .on("touchmove", function() {
+        .on("touchmove", function () {
           d3Event.preventDefault();
           var datum = datumFromPanEvent(fn.firstTouch(d3Event));
           if (datum !== null) {
@@ -79,12 +79,12 @@ export default function() {
             event.apply("end", this, arguments);
           }
         })
-        .on("touchend", function() {
+        .on("touchend", function () {
           event.apply("end", this, arguments);
         });
     });
 
-  panningComponent.on = function() {
+  panningComponent.on = function () {
     var value = event.on.apply(event, arguments);
     return value === event ? panningComponent : value;
   };

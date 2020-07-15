@@ -9,15 +9,12 @@ import { selection } from "d3";
  * @param  {String} key The name of the group
  * @return {d3.selection}
  */
-selection.prototype.selectGroup = function(key) {
-  var group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data(function(d) {
+selection.prototype.selectGroup = function (key) {
+  var group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data(function (d) {
     return [d];
   });
 
-  var newGroup = group
-    .enter()
-    .append("g")
-    .attr("data-d3-selectgroup", key);
+  var newGroup = group.enter().append("g").attr("data-d3-selectgroup", key);
 
   return group.merge(newGroup);
 };

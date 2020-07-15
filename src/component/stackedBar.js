@@ -43,28 +43,25 @@ var fst = fn.prop("0");
 var snd = fn.prop("1");
 
 function stackedBarData(order) {
-  return function(_stackAcc, seriesAcc, valueAcc) {
-    return function(data) {
-      var rows = cascade()
-        .arrayBy(_stackAcc)
-        .objectBy(seriesAcc)
-        .apply(data);
+  return function (_stackAcc, seriesAcc, valueAcc) {
+    return function (data) {
+      var rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
       // Collect all keys ()
-      var keys = rows.reduce(function(a, row) {
+      var keys = rows.reduce(function (a, row) {
         return fn.set(a.concat(Object.keys(row)));
       }, []);
 
       var stacks = d3Stack()
         .keys(keys)
-        .value(function(x, key) {
+        .value(function (x, key) {
           return valueAcc(x[key][0]);
         })
         .order(order)(rows);
 
       // Simplify the 'data' property.
-      stacks.forEach(function(stack) {
-        stack.forEach(function(d) {
+      stacks.forEach(function (stack) {
+        stack.forEach(function (d) {
           d.series = stack.key;
           d.data = d.data[stack.key][0];
           d.stack = _stackAcc(d.data);
@@ -73,8 +70,8 @@ function stackedBarData(order) {
 
       stacks.keys = keys;
 
-      stacks.maxValue = max(stacks, function(stack) {
-        return max(stack, function(d) {
+      stacks.maxValue = max(stacks, function (stack) {
+        return max(stack, function (d) {
           return d[1];
         });
       });
@@ -95,7 +92,7 @@ function stackedBar(config) {
     .prop("height", fn.functor)
     .prop("fill")
     .prop("stroke")
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -109,10 +106,7 @@ function stackedBar(config) {
 
       var groups = selection.selectAll(".sszvis-stack").data(data);
 
-      var newGroups = groups
-        .enter()
-        .append("g")
-        .classed("sszvis-stack", true);
+      var newGroups = groups.enter().append("g").classed("sszvis-stack", true);
 
       groups.exit().remove();
 
@@ -123,41 +117,41 @@ function stackedBar(config) {
 }
 
 var horizontalStackedBarConfig = {
-  x: function(props) {
+  x: function (props) {
     return fn.compose(props.xScale, fst);
   },
-  y: function(props) {
+  y: function (props) {
     return fn.compose(props.yScale, stackAcc);
   },
-  width: function(props) {
-    return function(d) {
+  width: function (props) {
+    return function (d) {
       return props.xScale(d[1]) - props.xScale(d[0]);
     };
   },
-  height: function(props) {
+  height: function (props) {
     return props.height;
-  }
+  },
 };
-export var stackedBarHorizontal = function() {
+export var stackedBarHorizontal = function () {
   return stackedBar(horizontalStackedBarConfig);
 };
 
 var verticalStackedBarConfig = {
-  x: function(props) {
+  x: function (props) {
     return fn.compose(props.xScale, stackAcc);
   },
-  y: function(props) {
+  y: function (props) {
     return fn.compose(props.yScale, snd);
   },
-  width: function(props) {
+  width: function (props) {
     return props.width;
   },
-  height: function(props) {
-    return function(d) {
+  height: function (props) {
+    return function (d) {
       return props.yScale(d[0]) - props.yScale(d[1]);
     };
-  }
+  },
 };
-export var stackedBarVertical = function() {
+export var stackedBarVertical = function () {
   return stackedBar(verticalStackedBarConfig);
 };

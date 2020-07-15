@@ -37,7 +37,7 @@ import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("top")
     .prop("bottom")
@@ -51,22 +51,19 @@ export default function() {
     .prop("labelId", fn.functor)
     .prop("reduceOverlap")
     .reduceOverlap(true)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
       var labelId =
         props.labelId ||
-        function(d) {
+        function (d) {
           return props.x(d) + "_" + props.y(d);
         };
 
       var ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
 
-      var newRuler = ruler
-        .enter()
-        .append("line")
-        .classed("sszvis-ruler__rule", true);
+      var newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
 
       ruler.exit().remove();
       ruler = ruler.merge(newRuler);
@@ -79,10 +76,7 @@ export default function() {
 
       var dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
 
-      var newDot = dot
-        .enter()
-        .append("circle")
-        .classed("sszvis-ruler__dot", true);
+      var newDot = dot.enter().append("circle").classed("sszvis-ruler__dot", true);
 
       dot.exit().remove();
       dot = dot.merge(newDot);
@@ -105,10 +99,7 @@ export default function() {
 
       var label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
 
-      var newLabel = label
-        .enter()
-        .append("text")
-        .classed("sszvis-ruler__label", true);
+      var newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
 
       label.exit().remove();
       label = label.merge(newLabel);
@@ -120,7 +111,7 @@ export default function() {
 
       var textSelection = selection
         .selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline")
-        .attr("transform", function(d) {
+        .attr("transform", function (d) {
           var x = crispX(d);
           var y = crispY(d);
 
@@ -129,7 +120,7 @@ export default function() {
 
           return translateString(x + dx, y + dy);
         })
-        .style("text-anchor", function(d) {
+        .style("text-anchor", function (d) {
           return props.flip(d) ? "end" : "start";
         })
         .html(props.label);
@@ -145,12 +136,12 @@ export default function() {
         textSelection.attr("y", "");
 
         // Create bounds objects
-        label.each(function(d) {
+        label.each(function (d) {
           var bounds = this.getBoundingClientRect();
           var item = {
             top: bounds.top,
             bottom: bounds.bottom,
-            dy: 0
+            dy: 0,
           };
           labelBounds.push(item);
           labelBoundsIndex[labelId(d)] = item;
@@ -158,7 +149,7 @@ export default function() {
 
         // Sort array in place by vertical position
         // (only supports labels of same height)
-        labelBounds.sort(function(a, b) {
+        labelBounds.sort(function (a, b) {
           return ascending(a.top, b.top);
         });
 
@@ -170,8 +161,8 @@ export default function() {
         // the 10th iteration, meaning that only 9 iterations are executed.
         while (ITERATIONS--) {
           // Calculate overlap and correct position
-          labelBounds.forEach(function(firstLabel, index) {
-            labelBounds.slice(index + 1).forEach(function(secondLabel) {
+          labelBounds.forEach(function (firstLabel, index) {
+            labelBounds.slice(index + 1).forEach(function (secondLabel) {
               var overlap = firstLabel.bottom - secondLabel.top;
               if (overlap >= THRESHOLD) {
                 var offset = overlap / 2;
@@ -187,7 +178,7 @@ export default function() {
         }
 
         // Shift vertically to remove overlap
-        textSelection.attr("y", function(d) {
+        textSelection.attr("y", function (d) {
           var textLabel = labelBoundsIndex[labelId(d)];
           return textLabel.dy;
         });

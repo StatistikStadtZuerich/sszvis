@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Line Chart</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -14,7 +14,7 @@
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis) {
+      (function (d3, sszvis) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -38,38 +38,38 @@
           data: [],
           dates: [0, 0],
           lineData: [],
-          annotatedData: []
+          annotatedData: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.dates = d3.extent(state.data, xAcc);
             state.lineData = [state.data];
-            state.annotatedData = state.data.filter(function(d) {
+            state.annotatedData = state.data.filter(function (d) {
               return sszvis.contains(HIGHLIGHTED_DATES.map(String), String(xAcc(d)));
             });
 
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv("data/SL_daily.csv")
-          .row(function(d) {
+          .row(function (d) {
             return {
               date: sszvis.parseDate(d["Datum"]),
-              value: sszvis.parseNumber(d["Regen"])
+              value: sszvis.parseNumber(d["Regen"]),
             };
           })
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -84,10 +84,7 @@
 
           // Scales
 
-          var xScale = d3
-            .scaleTime()
-            .domain(state.dates)
-            .range([0, bounds.innerWidth]);
+          var xScale = d3.scaleTime().domain(state.dates).range([0, bounds.innerWidth]);
 
           var yScale = d3
             .scaleLinear()
@@ -105,11 +102,7 @@
             .y(sszvis.compose(yScale, yAcc))
             .stroke(sszvis.scaleQual12());
 
-          var xAxis = sszvis.axisX
-            .time()
-            .scale(xScale)
-            .orient("bottom")
-            .title("Datum");
+          var xAxis = sszvis.axisX.time().scale(xScale).orient("bottom").title("Datum");
 
           var yAxis = sszvis
             .axisY()
@@ -125,16 +118,13 @@
             .y(sszvis.compose(yScale, yAcc))
             .r(20)
             .dy(-30)
-            .caption(function(d) {
+            .caption(function (d) {
               return "Referenzwert A (" + yAcc(d) + ")";
             });
 
           // Rendering
 
-          chartLayer
-            .selectGroup("annotation")
-            .datum(state.annotatedData)
-            .call(annotation);
+          chartLayer.selectGroup("annotation").datum(state.annotatedData).call(annotation);
 
           chartLayer.selectGroup("line").call(line);
 

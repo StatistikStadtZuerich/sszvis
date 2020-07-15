@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scatterplot</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/scatterplot_over_time.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -34,9 +34,9 @@
         ----------------------------------------------- */
         var SLIDER_CONTROL_HEIGHT = 60;
         var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-          _: function() {
+          _: function () {
             return sszvis.formatNumber;
-          }
+          },
         });
 
         function parseRow(d) {
@@ -44,7 +44,7 @@
             year: sszvis.parseNumber(d["jahr"]),
             branch: d["brance"],
             count: sszvis.parseNumber(d["beschaeftige"]),
-            percent: sszvis.parseNumber(d["frauenanteil"])
+            percent: sszvis.parseNumber(d["frauenanteil"]),
           };
         }
 
@@ -65,13 +65,13 @@
           years: [],
           branches: [],
           activeYear: null,
-          selection: []
+          selection: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.xExtent = [0, d3.max(state.data, xAcc)];
             state.yExtent = [0, d3.max(state.data, yAcc)];
@@ -82,7 +82,7 @@
             state.linesData = sszvis
               .cascade()
               .arrayBy(branchAcc, d3.ascending)
-              .sort(function(a, b) {
+              .sort(function (a, b) {
                 return d3.ascending(yearAcc(a), yearAcc(b));
               })
               .apply(state.data);
@@ -90,23 +90,23 @@
             actions.setYear(d3.max(state.years));
           },
 
-          setYear: function(inputYear) {
+          setYear: function (inputYear) {
             state.activeYear = closestDatum(state.years, sszvis.identity, inputYear);
 
-            state.currentLinesData = state.linesData.map(function(line) {
-              return line.filter(function(d) {
+            state.currentLinesData = state.linesData.map(function (line) {
+              return line.filter(function (d) {
                 return yearAcc(d) <= state.activeYear;
               });
             });
 
-            state.futureLinesData = state.linesData.map(function(line) {
-              return line.filter(function(d) {
+            state.futureLinesData = state.linesData.map(function (line) {
+              return line.filter(function (d) {
                 return yearAcc(d) >= state.activeYear;
               });
             });
 
             var splitData = state.data.reduce(
-              function(memo, datum) {
+              function (memo, datum) {
                 var year = yearAcc(datum);
 
                 // We only render dots for the current year's data
@@ -122,14 +122,14 @@
               },
               {
                 currentData: [],
-                currentAndPastData: []
+                currentAndPastData: [],
               }
             );
 
             state.currentData = splitData.currentData;
 
             // For the voronoi component, it is essential that no two input vertices lie at the same point
-            state.voronoiPoints = sszvis.derivedSet(splitData.currentAndPastData, function(d) {
+            state.voronoiPoints = sszvis.derivedSet(splitData.currentAndPastData, function (d) {
               return xAcc(d) + "__" + yAcc(d);
             });
 
@@ -144,28 +144,28 @@
             render(state);
           },
 
-          selectPoint: function(d) {
+          selectPoint: function (d) {
             state.selection = [d];
 
             render(state);
           },
 
-          deselectPoint: function() {
+          deselectPoint: function () {
             state.selection = [];
 
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -181,7 +181,7 @@
           var legendLayout = sszvis.colorLegendLayout(
             {
               axisLabels: state.xExtent.map(props.xLabelFormat),
-              legendLabels: state.branches
+              legendLabels: state.branches,
             },
             config.id
           );
@@ -194,27 +194,18 @@
               top: 10,
               right: 5,
               bottom: SLIDER_CONTROL_HEIGHT + legendLayout.bottomPadding,
-              left: 5
+              left: 5,
             },
             config.id
           );
 
           // Scales
 
-          var xScale = d3
-            .scaleLinear()
-            .domain(state.xExtent)
-            .range([0, bounds.innerWidth]);
+          var xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
 
-          var yScale = d3
-            .scaleLinear()
-            .domain(state.yExtent)
-            .range([bounds.innerHeight, 0]);
+          var yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
 
-          var tScale = d3
-            .scaleTime()
-            .domain(state.tExtent)
-            .range([0, bounds.innerWidth]);
+          var tScale = d3.scaleTime().domain(state.tExtent).range([0, bounds.innerWidth]);
 
           // Layers
 
@@ -254,7 +245,7 @@
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
             // These dots are slightly smaller (radius 3) than the visible dots for the current time period (radius 4)
-            .radius(function(d) {
+            .radius(function (d) {
               return isSelected(d) ? 3 : 0;
             })
             .fill(sszvis.compose(cScale, branchAcc))
@@ -268,7 +259,7 @@
             .y(sszvis.compose(yScale, yAcc))
             .bounds([
               [-bounds.padding.left, -bounds.padding.top],
-              [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20]
+              [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20],
             ])
             .on("over", actions.selectPoint)
             .on("out", actions.deselectPoint);
@@ -295,7 +286,7 @@
             .scale(yScale)
             .ticks(6)
             .orient("right")
-            .tickFormat(function(d) {
+            .tickFormat(function (d) {
               // Have to implement our own hiding for zero, because showZeroY is implemented through tickFormat
               return d === 0 ? null : sszvis.formatPercent(d);
             })
@@ -311,21 +302,18 @@
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .visible(isSelected)
             .header(sszvis.modularTextHTML().bold(branchAcc))
-            .body(function(d) {
+            .body(function (d) {
               return [
                 ["Jahr", sszvis.formatText(yearAcc(d))],
                 ["Beschäftige", sszvis.formatNumber(xAcc(d))],
-                ["Frauenanteil", sszvis.formatPercent(yAcc(d))]
+                ["Frauenanteil", sszvis.formatPercent(yAcc(d))],
               ];
             });
 
           // Rendering
 
           // lines and futureLines have different data from the dots layer, rendering lines as arrays of data values
-          chartLayer
-            .selectGroup("lines")
-            .datum(state.currentLinesData)
-            .call(lines);
+          chartLayer.selectGroup("lines").datum(state.currentLinesData).call(lines);
 
           chartLayer
             .selectGroup("futureLines")
@@ -344,10 +332,7 @@
             .call(tooltip);
 
           // the visible dots are just the ones for the current 'activeYear'
-          chartLayer
-            .selectGroup("visibleDots")
-            .datum(state.currentData)
-            .call(visibleDots);
+          chartLayer.selectGroup("visibleDots").datum(state.currentData).call(visibleDots);
 
           chartLayer
             .selectGroup("voronoiInteraction")

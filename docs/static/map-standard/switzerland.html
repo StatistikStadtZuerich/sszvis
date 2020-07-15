@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Map</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -15,7 +15,7 @@
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, topojson, sszvis) {
+      (function (d3, topojson, sszvis) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -30,18 +30,18 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function(width) {
+            _: function (width) {
               var innerHeight = Math.min(sszvis.aspectRatio4to3(width), 400);
               return {
                 bottom: 40,
-                height: innerHeight + 40
+                height: innerHeight + 40,
               };
-            }
+            },
           })
           .prop("legendWidth", {
-            _: function(width) {
+            _: function (width) {
               return Math.min(width / 2, MAX_LEGEND_WIDTH);
-            }
+            },
           });
 
         /* Shortcuts
@@ -53,42 +53,42 @@
         var state = {
           data: null,
           mapData: null,
-          valueDomain: [0, 0]
+          valueDomain: [0, 0],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
 
             render(state);
           },
 
-          prepareMapData: function(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.cantons),
-              borders: topojson.mesh(topo, topo.objects.cantons)
+              borders: topojson.mesh(topo, topo.objects.cantons),
             };
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv("data/M_swiss_fake.csv")
-          .row(function(d) {
+          .row(function (d) {
             return {
               geoId: sszvis.parseNumber(d["KantonNr"]),
-              value: sszvis.parseNumber(d["Wert"])
+              value: sszvis.parseNumber(d["Wert"]),
             };
           })
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -96,7 +96,7 @@
             actions.prepareState(data);
           });
 
-        d3.json("../topo/switzerland.json").get(function(error, data) {
+        d3.json("../topo/switzerland.json").get(function (error, data) {
           if (error) {
             sszvis.loadError(error);
             return;

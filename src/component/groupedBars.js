@@ -52,7 +52,7 @@ import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("groupScale")
     .prop("groupSize")
@@ -65,7 +65,7 @@ export default function() {
     .prop("stroke")
     .prop("defined", fn.functor)
     .defined(true)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -77,27 +77,21 @@ export default function() {
 
       var groups = selection.selectAll("g.sszvis-bargroup").data(data);
 
-      var newGroups = groups
-        .enter()
-        .append("g")
-        .classed("sszvis-bargroup", true);
+      var newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
 
       groups.exit().remove();
       groups = groups.merge(newGroups);
 
-      var barUnits = groups.selectAll("g.sszvis-barunit").data(function(d) {
+      var barUnits = groups.selectAll("g.sszvis-barunit").data(function (d) {
         return d;
       });
 
-      var newBarUnits = barUnits
-        .enter()
-        .append("g")
-        .classed("sszvis-barunit", true);
+      var newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
 
       barUnits.exit().remove();
       barUnits = barUnits.merge(newBarUnits);
 
-      barUnits.each(function(d, i) {
+      barUnits.each(function (d, i) {
         // necessary for the within-group scale
         d.__sszvisGroupedBarIndex__ = i;
       });
@@ -108,7 +102,7 @@ export default function() {
       unitsWithValue.selectAll("*").remove();
 
       //sszsch: fix: reset previously assigned translations
-      unitsWithValue.attr("transform", function() {
+      unitsWithValue.attr("transform", function () {
         return translateString(0, 0);
       });
 
@@ -116,7 +110,7 @@ export default function() {
         .append("rect")
         .classed("sszvis-bar", true)
         .attr("fill", props.fill)
-        .attr("x", function(d) {
+        .attr("x", function (d) {
           // first term is the x-position of the group, the second term is the x-position of the bar within the group
           return props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__);
         })
@@ -128,7 +122,7 @@ export default function() {
 
       unitsWithoutValue.selectAll("*").remove();
 
-      unitsWithoutValue.attr("transform", function(d, i) {
+      unitsWithoutValue.attr("transform", function (d, i) {
         return translateString(
           props.groupScale(d) +
             inGroupScale(d.__sszvisGroupedBarIndex__) +
@@ -153,10 +147,10 @@ export default function() {
         .attr("x2", -4)
         .attr("y2", 4);
 
-      var ta = tooltipAnchor().position(function(group) {
+      var ta = tooltipAnchor().position(function (group) {
         var xTotal = 0;
         var tallest = Infinity;
-        group.forEach(function(d, i) {
+        group.forEach(function (d, i) {
           xTotal +=
             props.groupScale(d) +
             inGroupScale(d.__sszvisGroupedBarIndex__) +

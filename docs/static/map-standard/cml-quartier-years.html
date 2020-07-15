@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Map</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -15,7 +15,7 @@
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, topojson, sszvis) {
+      (function (d3, topojson, sszvis) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -32,24 +32,24 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("mapInnerHeight", {
-            _: sszvis.aspectRatioSquare
+            _: sszvis.aspectRatioSquare,
           })
           .prop("mapBottomPadding", {
             palm: 60,
-            _: 90
+            _: 90,
           })
           .prop("lineChartInnerHeight", {
             palm: 80,
-            _: 100
+            _: 100,
           })
           .prop("lineChartPadding", {
             palm: 12,
-            lap: function(w) {
+            lap: function (w) {
               return w / 10;
             },
-            _: function(w) {
+            _: function (w) {
               return w / 5;
-            }
+            },
           });
 
         /* Shortcuts
@@ -74,13 +74,13 @@
           lineBaseColor: sszvis.scaleGry()(0),
           lineHighlightColor: sszvis.scaleQual12()(0),
           mapHighlightData: [],
-          lineHighlightData: []
+          lineHighlightData: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
             state.yearDomain = d3.extent(state.data, yearAcc);
@@ -89,28 +89,28 @@
             var cascadedData = sszvis
               .cascade()
               .arrayBy(geoIdAcc)
-              .sort(function(a, b) {
+              .sort(function (a, b) {
                 return d3.ascending(yearAcc(a), yearAcc(b));
               })
               .apply(state.data);
 
             // transform the data into line objects, one for each line
-            state.lineData = cascadedData.map(function(lineData) {
+            state.lineData = cascadedData.map(function (lineData) {
               return {
                 geoId: geoIdAcc(sszvis.first(lineData)),
-                values: lineData
+                values: lineData,
               };
             });
 
             // calculate a line which represents the average values in the dataset
-            var averageLineValues = cascadedData.reduce(function(m, lineData) {
-              lineData.forEach(function(datum, index) {
+            var averageLineValues = cascadedData.reduce(function (m, lineData) {
+              lineData.forEach(function (datum, index) {
                 if (!m[index]) {
                   m[index] = {
                     // isAverageValue is used by the handleRuler component to determine the correct tooltip
                     isAverageValue: true,
                     year: datum.year,
-                    value: 0
+                    value: 0,
                   };
                 }
                 m[index].value += Math.round(datum.value / cascadedData.length);
@@ -120,7 +120,7 @@
             state.averageLine = {
               // the average line can be identified because it has a null geoId
               geoId: null,
-              values: averageLineValues
+              values: averageLineValues,
             };
             // add the average line to the lineData
             state.lineData.push(state.averageLine);
@@ -128,23 +128,23 @@
             actions.resetYear();
           },
 
-          prepareMapData: function(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.statistische_quartiere),
               borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
               lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
-              lakeBorders: topojson.mesh(topo, topo.objects.statistische_quartiere_lakebounds)
+              lakeBorders: topojson.mesh(topo, topo.objects.statistische_quartiere_lakebounds),
             };
             render(state);
           },
 
-          changeEntityNearDate: function(inputValue, inputDate) {
+          changeEntityNearDate: function (inputValue, inputDate) {
             // find the closest year to the mouse
             var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
 
             // within the closest year's data values, find the one closest to the mouse position
             var entitiesForYear = state.data
-              .filter(function(d) {
+              .filter(function (d) {
                 return sszvis.stringEqual(closestYear, yearAcc(d));
               })
               // entries have to be sorted so that d3.bisector will work on it.
@@ -163,7 +163,7 @@
               // select the entity's sibling from the currently selected year instead
               // of from what's near the mouse in order to highlight the correct
               // entity on the ruler
-              state.highlightEntity = sszvis.find(function(d) {
+              state.highlightEntity = sszvis.find(function (d) {
                 return geoIdAcc(d) === geoIdAcc(closestEntity);
               }, state.currentMapData);
 
@@ -171,7 +171,7 @@
             }
           },
 
-          changeYear: function(inputDate) {
+          changeYear: function (inputDate) {
             // find the closest year to the mouse
             var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
 
@@ -179,7 +179,7 @@
             if (state.currentYear !== closestYear) {
               state.currentYear = closestYear;
               state.currentMapData = state.data
-                .filter(function(v) {
+                .filter(function (v) {
                   return yearAcc(v).getFullYear() === state.currentYear.getFullYear();
                 })
                 // currentMapData has to be sorted so that d3.bisector will work on it.
@@ -195,55 +195,55 @@
           },
 
           // resets the active year
-          resetYear: function() {
+          resetYear: function () {
             var mostRecentDate = d3.max(state.yearDomain);
             actions.changeYear(mostRecentDate);
           },
 
           // called when moving over map entities with the mouse. Highlights certain entities
-          changeMapEntity: function(d) {
+          changeMapEntity: function (d) {
             state.highlightEntity = d;
 
             actions.setHighlights();
           },
 
           // reset the highlighted map entity
-          resetMapEntity: function() {
+          resetMapEntity: function () {
             state.highlightEntity = null;
 
             actions.setHighlights();
           },
 
-          setHighlights: function() {
+          setHighlights: function () {
             // highlightData passed to the map is slightly different from the data passed to the line chart.
             // When no entity is highlighted, the map shows nothing special, but the line chart shows the average line.
             state.mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
             state.lineHighlightData = state.highlightEntity
               ? [state.highlightEntity]
-              : state.averageLine.values.filter(function(averageObj) {
+              : state.averageLine.values.filter(function (averageObj) {
                   return yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear();
                 });
 
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv("data/CML_quartier_years.csv")
-          .row(function(d) {
+          .row(function (d) {
             return {
               geoId: sszvis.parseNumber(d["QNr"]),
               year: sszvis.parseYear(d["Jahr"]),
               value: sszvis.parseNumber(d["Anzahl"]),
-              name: d["Qname"]
+              name: d["Qname"],
             };
           })
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -251,7 +251,7 @@
             actions.prepareState(data);
           });
 
-        d3.json("../topo/stadt-zurich.json").get(function(error, data) {
+        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
           if (error) {
             sszvis.loadError(error);
             return;
@@ -274,7 +274,7 @@
             {
               height: props.mapInnerHeight + 30 + props.mapBottomPadding,
               top: 30,
-              bottom: props.mapBottomPadding
+              bottom: props.mapBottomPadding,
             },
             "#sszvis-chart"
           );
@@ -286,14 +286,14 @@
               top: props.mapBottomPadding / 2,
               bottom: 20,
               left: props.lineChartPadding,
-              right: props.lineChartPadding
+              right: props.lineChartPadding,
             },
             "#sszvis-chart"
           );
 
           var outerBounds = sszvis.bounds(
             {
-              height: mapBounds.height + lineChartBounds.height
+              height: mapBounds.height + lineChartBounds.height,
             },
             "#sszvis-chart"
           );
@@ -352,7 +352,7 @@
             .valuesAccessor(sszvis.prop("values"))
             .x(sszvis.compose(xScale, yearAcc))
             .y(sszvis.compose(yScale, vAcc))
-            .stroke(function(lineData) {
+            .stroke(function (lineData) {
               // this function determines whether the line is the highlighted line or not
               var isBlue;
               if (!state.highlightEntity) {
@@ -372,17 +372,12 @@
             .tickValues(xTickValues)
             .highlightTick(tickIsSelected);
 
-          var lineYAxis = sszvis
-            .axisY()
-            .scale(yScale)
-            .ticks(3)
-            .orient("right")
-            .contour(true);
+          var lineYAxis = sszvis.axisY().scale(yScale).ticks(3).orient("right").contour(true);
 
           var rulerLabel = sszvis
             .modularTextSVG()
             .bold(sszvis.compose(sszvis.formatNumber, vAcc))
-            .plain(function(d) {
+            .plain(function (d) {
               return d.isAverageValue ? "Durchschnitt" : d.name;
             });
 
@@ -393,7 +388,7 @@
             .y(sszvis.compose(yScale, vAcc))
             .top(0)
             .bottom(lineChartBounds.innerHeight)
-            .flip(function(d) {
+            .flip(function (d) {
               return xScale(yearAcc(d)) >= lineChartBounds.innerWidth / 2;
             })
             .color(sszvis.scaleQual12())
@@ -408,10 +403,10 @@
             .renderInto(tooltipLayer)
             .orientation(sszvis.fitTooltip("bottom", outerBounds))
             .header(tooltipHeader)
-            .body(function(d) {
+            .body(function (d) {
               return [
                 ["Jahr", sszvis.formatYear(yearAcc(mDatumAcc(d)))],
-                ["Einwohner", sszvis.formatNumber(vAcc(mDatumAcc(d)))]
+                ["Einwohner", sszvis.formatNumber(vAcc(mDatumAcc(d)))],
               ];
             })
             .visible(entityIsSelected);
@@ -444,7 +439,7 @@
             .call(lineMaker);
 
           // this sorts the highlighted line to the front of all lines
-          lineChart.selectAll(".sszvis-line").sort(function(a, b) {
+          lineChart.selectAll(".sszvis-line").sort(function (a, b) {
             var highlightId = state.highlightEntity ? state.highlightEntity.geoId : null;
             return a.geoId === highlightId ? 1 : b.geoId === highlightId ? -1 : 0;
           });
@@ -482,13 +477,13 @@
           var interactionLayer = sszvis
             .panning()
             .elementSelector(".sszvis-map__area")
-            .on("start", function(d) {
+            .on("start", function (d) {
               actions.changeMapEntity(d.datum);
             })
-            .on("pan", function(d) {
+            .on("pan", function (d) {
               actions.changeMapEntity(d.datum);
             })
-            .on("end", function() {
+            .on("end", function () {
               actions.resetMapEntity();
             });
 
@@ -506,7 +501,7 @@
             .draggable(true)
             .cancelScrolling(true)
             .on("drag", actions.changeYear)
-            .on("move", function(date, entity) {
+            .on("move", function (date, entity) {
               actions.changeEntityNearDate(entity, date);
             })
             .on("end", actions.resetMapEntity);
@@ -527,13 +522,13 @@
         }
 
         function findEntityWithGeoId(geoId, data) {
-          return sszvis.find(function(d) {
+          return sszvis.find(function (d) {
             return geoIdAcc(d) === geoId;
           }, data);
         }
 
         function sortWithAcc(acc) {
-          return function(a, b) {
+          return function (a, b) {
             return d3.ascending(acc(a), acc(b));
           };
         }

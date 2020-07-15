@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Map</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -18,12 +18,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/M_quartiere.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, topojson, sszvis, config) {
+      (function (d3, topojson, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -37,37 +37,37 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function(width) {
+            _: function (width) {
               var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 30,
                 bottom: 90,
-                height: 30 + innerHeight + 90
+                height: 30 + innerHeight + 90,
               };
-            }
+            },
           })
           .prop("legendWidth", {
-            _: function(width) {
+            _: function (width) {
               return Math.min(width / 2, 320);
-            }
+            },
           })
           // Formatting function to use for the legend label. In this example, it defaults
           // to "sszvis.formatPercent" to render values from 0–100 as 0–100%, for other
           // values "sszvis.formatNumber" is maybe more appropriate
           .prop("labelFormat", {
-            _: function() {
+            _: function () {
               return sszvis.formatFractionPercent;
-            }
+            },
           })
           .prop("tooltipUnit", {
-            _: "Ausländeranteil"
+            _: "Ausländeranteil",
           });
 
         function parseRow(d) {
           return {
             quarternum: sszvis.parseNumber(d["Qcode"]),
             quartername: d["Qname"],
-            value: sszvis.parseNumber(d["Ausländeranteil"])
+            value: sszvis.parseNumber(d["Ausländeranteil"]),
           };
         }
         var vAcc = sszvis.prop("value");
@@ -80,49 +80,49 @@
           data: null,
           mapData: null,
           valueDomain: [0, 0],
-          selection: []
+          selection: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
 
             render(state);
           },
 
-          prepareMapData: function(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.statistische_quartiere),
               borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
               lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
-              lakeBorders: topojson.mesh(topo, topo.objects.statistische_quartiere_lakebounds)
+              lakeBorders: topojson.mesh(topo, topo.objects.statistische_quartiere_lakebounds),
             };
             render(state);
           },
 
-          selectHovered: function(d) {
+          selectHovered: function (d) {
             state.selection = [d.datum];
             render(state);
           },
 
-          deselectHovered: function() {
+          deselectHovered: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -130,7 +130,7 @@
             actions.prepareState(data);
           });
 
-        d3.json("../topo/stadt-zurich.json").get(function(error, data) {
+        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
           if (error) {
             sszvis.loadError(error);
             return;
@@ -171,14 +171,14 @@
             .lakeBorders(state.mapData.lakeBorders)
             .keyName("quarternum")
             .highlight(state.selection)
-            .highlightStroke(function(d) {
+            .highlightStroke(function (d) {
               // checks for undefined values and makes those white
               var v = vAcc(d);
               return isNaN(v) ? "white" : sszvis.muchDarker(colorScale(vAcc(d)));
             })
             .width(bounds.innerWidth)
             .height(bounds.innerHeight)
-            .defined(function(d) {
+            .defined(function (d) {
               // some of the values are empty in the .csv file. When parsed as a number,
               // undefined or empty string values become NaN
               return !isNaN(vAcc(d));
@@ -193,7 +193,7 @@
             .modularTextHTML()
             .plain(
               sszvis.compose(
-                function(v) {
+                function (v) {
                   return isNaN(v) ? "keine Daten" : sszvis.formatFractionPercent(v);
                 },
                 vAcc,
@@ -202,7 +202,7 @@
             )
             .plain(
               sszvis.compose(
-                function(v) {
+                function (v) {
                   return isNaN(v) ? null : props.tooltipUnit;
                 },
                 vAcc,

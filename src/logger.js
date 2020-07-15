@@ -50,9 +50,9 @@ export var error = logger("error");
 /* Helper functions
 ----------------------------------------------- */
 function logger(type) {
-  return function() {
+  return function () {
     if (console && console[type]) {
-      slice(arguments).forEach(function(msg) {
+      slice(arguments).forEach(function (msg) {
         console[type](msg);
       });
     }

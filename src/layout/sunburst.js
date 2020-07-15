@@ -33,7 +33,7 @@ import * as fn from "../fn.js";
  *
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
-export var prepareData = function() {
+export var prepareData = function () {
   var nester = nest();
   var valueAcc = fn.identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
@@ -41,7 +41,7 @@ export var prepareData = function() {
   // However, input data order preservation is not guaranteed, because of an implementation
   // detail of d3.partition, probably having to do with the way that each browser can
   // implement its own key ordering for javascript objects.
-  var sortFn = function() {
+  var sortFn = function () {
     return 0;
   };
 
@@ -50,7 +50,7 @@ export var prepareData = function() {
 
     var root = hierarchy({ isSunburstRoot: true, values: nester.entries(data) }, fn.prop("values"))
       .sort(sortFn)
-      .sum(function(x) {
+      .sum(function (x) {
         return x.value ? valueAcc(x.value) : 0;
       });
 
@@ -61,26 +61,26 @@ export var prepareData = function() {
     }
 
     // Remove the root element from the data (but it still exists in memory so long as the data is alive)
-    return flatten(root).filter(function(d) {
+    return flatten(root).filter(function (d) {
       return !d.data.isSunburstRoot;
     });
   }
 
-  main.calculate = function(data) {
+  main.calculate = function (data) {
     return main(data);
   };
 
-  main.layer = function(keyFunc) {
+  main.layer = function (keyFunc) {
     nester.key(keyFunc);
     return main;
   };
 
-  main.value = function(accfn) {
+  main.value = function (accfn) {
     valueAcc = accfn;
     return main;
   };
 
-  main.sort = function(sortFunc) {
+  main.sort = function (sortFunc) {
     sortFn = sortFunc;
     return main;
   };
@@ -106,7 +106,7 @@ var MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  */
-export var computeLayout = function(numLayers, chartWidth) {
+export var computeLayout = function (numLayers, chartWidth) {
   // Diameter of the center circle is one-third the width
   var halfWidth = chartWidth / 2;
   var centerRadius = halfWidth / 3;
@@ -115,7 +115,7 @@ export var computeLayout = function(numLayers, chartWidth) {
   return {
     centerRadius: centerRadius,
     numLayers: numLayers,
-    ringWidth: ringWidth
+    ringWidth: ringWidth,
   };
 };
 
@@ -128,13 +128,13 @@ export var computeLayout = function(numLayers, chartWidth) {
  *                                    function which abstracts away the way d3 stores positions within the partition layout used
  *                                    by the sunburst chart.
  */
-export var getRadiusExtent = function(formattedData) {
+export var getRadiusExtent = function (formattedData) {
   return [
-    min(formattedData, function(d) {
+    min(formattedData, function (d) {
       return d.y0;
     }),
-    max(formattedData, function(d) {
+    max(formattedData, function (d) {
       return d.y1;
-    })
+    }),
   ];
 };

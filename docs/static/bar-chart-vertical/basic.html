@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Vertical Bar Chart</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/SiVB_longNames.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -38,29 +38,29 @@
           .responsiveProps()
           .prop("barPadding", {
             palm: 0.4,
-            _: 0.2
+            _: 0.2,
           })
           .prop("bottomPadding", {
             palm: 140,
-            _: 60
+            _: 60,
           })
           .prop("leftPadding", {
-            _: null
+            _: null,
           })
           .prop("slant", {
             palm: "vertical",
-            _: "horizontal"
+            _: "horizontal",
           })
           .prop("yLabelFormat", {
-            _: function() {
+            _: function () {
               return sszvis.formatNumber;
-            }
+            },
           });
 
         function parseRow(d) {
           return {
             category: d["Sektor"],
-            yValue: sszvis.parseNumber(d["Anzahl"])
+            yValue: sszvis.parseNumber(d["Anzahl"]),
           };
         }
         var xAcc = sszvis.prop("category");
@@ -71,40 +71,40 @@
         var state = {
           data: [],
           categories: [],
-          selection: []
+          selection: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.categories = state.data.map(xAcc);
             render(state);
           },
 
-          showTooltip: function(category) {
-            state.selection = state.data.filter(function(d) {
+          showTooltip: function (category) {
+            state.selection = state.data.filter(function (d) {
               return xAcc(d) === category;
             });
             render(state);
           },
 
-          hideTooltip: function() {
+          hideTooltip: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -125,7 +125,7 @@
               left:
                 props.leftPadding != null
                   ? props.leftPadding
-                  : sszvis.measureAxisLabel(props.yLabelFormat(yMax))
+                  : sszvis.measureAxisLabel(props.yLabelFormat(yMax)),
             },
             config.id
           );
@@ -143,17 +143,9 @@
             .paddingOuter(props.barPadding)
             .range([0, chartDimensions.totalWidth]);
 
-          var heightScale = d3
-            .scaleLinear()
-            .domain([0, yMax])
-            .range([0, bounds.innerHeight]);
+          var heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
 
-          var yPosScale = heightScale.copy().range(
-            heightScale
-              .range()
-              .slice()
-              .reverse()
-          );
+          var yPosScale = heightScale.copy().range(heightScale.range().slice().reverse());
 
           var cScale = sszvis.scaleQual12();
           var cScaleDark = cScale.darker();
@@ -176,28 +168,21 @@
             .width(xScale.bandwidth())
             .height(sszvis.compose(heightScale, yAcc))
             .centerTooltip(true)
-            .fill(function(d) {
+            .fill(function (d) {
               return isSelected(d) ? cScaleDark(d) : cScale(d);
             });
 
-          var xAxis = sszvis.axisX
-            .ordinal()
-            .scale(xScale)
-            .orient("bottom")
-            .slant(props.slant);
+          var xAxis = sszvis.axisX.ordinal().scale(xScale).orient("bottom").slant(props.slant);
 
           if (props.slant === "horizontal") {
             xAxis.textWrap(xScale.step());
           }
 
-          var yAxis = sszvis
-            .axisY()
-            .scale(yPosScale)
-            .orient("right");
+          var yAxis = sszvis.axisY().scale(yPosScale).orient("right");
 
           var tooltipHeader = sszvis
             .modularTextHTML()
-            .bold(function(d) {
+            .bold(function (d) {
               var yValue = yAcc(d);
               return isNaN(yValue) ? "keine" : sszvis.formatNumber(yValue);
             })
@@ -261,7 +246,7 @@
         }
 
         function nanFallback(fallbackyValue) {
-          return function(d) {
+          return function (d) {
             return isNaN(d) ? fallbackyValue : d;
           };
         }

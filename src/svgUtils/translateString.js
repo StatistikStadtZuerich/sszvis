@@ -11,6 +11,6 @@
  * @return {string}       The translate string
  */
 
-export default function(x, y) {
+export default function (x, y) {
   return "translate(" + x + "," + y + ")";
 }

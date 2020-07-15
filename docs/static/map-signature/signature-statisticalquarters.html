@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Map</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -15,7 +15,7 @@
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, topojson, sszvis) {
+      (function (d3, topojson, sszvis) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -29,24 +29,24 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function(width) {
+            _: function (width) {
               var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 30,
                 bottom: 30,
-                height: 30 + innerHeight + 30
+                height: 30 + innerHeight + 30,
               };
-            }
+            },
           })
           .prop("legendX", {
-            _: function(width) {
+            _: function (width) {
               return Math.max(width / 2 - 205, 5);
-            }
+            },
           })
           .prop("radiusMax", {
-            _: function(width) {
+            _: function (width) {
               return Math.min(14, Math.max(width / 28, 10));
-            }
+            },
           });
 
         /* Shortcuts
@@ -61,54 +61,54 @@
         var state = {
           data: null,
           mapData: null,
-          selection: []
+          selection: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareData: function(data) {
+          prepareData: function (data) {
             state.data = data;
             state.valueRange = [0, d3.max(state.data, valueAcc)];
 
             render(state);
           },
 
-          prepareMapData: function(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.statistische_quartiere),
               borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
               lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
-              lakeBorders: topojson.mesh(topo, topo.objects.statistische_quartiere_lakebounds)
+              lakeBorders: topojson.mesh(topo, topo.objects.statistische_quartiere_lakebounds),
             };
             render(state);
           },
-          selectHovered: function(d) {
+          selectHovered: function (d) {
             state.selection = [d.datum];
             render(state);
           },
 
-          deselectHovered: function() {
+          deselectHovered: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv("data/fake_statistical_quarters.csv")
-          .row(function(d) {
+          .row(function (d) {
             return {
               id: sszvis.parseNumber(d["zoneid"]),
               value: sszvis.parseNumber(d["value"]),
-              zonename: d["zonename"]
+              zonename: d["zonename"],
             };
           })
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -116,7 +116,7 @@
             actions.prepareData(data);
           });
 
-        d3.json("../topo/stadt-zurich.json").get(function(error, data) {
+        d3.json("../topo/stadt-zurich.json").get(function (error, data) {
           if (error) {
             sszvis.loadError(error);
             return;
@@ -143,10 +143,7 @@
           // This scale takes the square root of the input and uses that to scale the radius. When the
           // result is used as the radius of a circle, the area of the circle will be linearly
           // proportional to the input quantity.
-          var radiusScale = d3
-            .scaleSqrt()
-            .domain(state.valueRange)
-            .range([0, props.radiusMax]);
+          var radiusScale = d3.scaleSqrt().domain(state.valueRange).range([0, props.radiusMax]);
 
           // Layers
 
@@ -159,7 +156,7 @@
           var bubbleMap = sszvis
             .mapRendererBubble()
             .fill("rgb(81, 130, 179)")
-            .radius(function(d) {
+            .radius(function (d) {
               return !sszvis.defined(d) ? 0 : radiusScale(valueAcc(d));
             })
             .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
@@ -173,7 +170,7 @@
             .keyName("id")
             .width(bounds.innerWidth)
             .height(bounds.innerHeight)
-            .fill(function(d) {
+            .fill(function (d) {
               return isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0);
             })
             .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))

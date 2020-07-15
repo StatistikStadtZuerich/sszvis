@@ -12,21 +12,16 @@
  * I haven't decided on the best name for this property - thus the duplication.
  */
 
-(function() {
+(function () {
   if (typeof window === "undefined") {
     return;
   }
-  var serializeXML = function(node, output) {
+  var serializeXML = function (node, output) {
     var nodeType = node.nodeType;
     if (nodeType == 3) {
       // TEXT nodes.
       // Replace special XML characters with their entities.
-      output.push(
-        node.textContent
-          .replace(/&/, "&amp;")
-          .replace(/</, "&lt;")
-          .replace(">", "&gt;")
-      );
+      output.push(node.textContent.replace(/&/, "&amp;").replace(/</, "&lt;").replace(">", "&gt;"));
     } else if (nodeType == 1) {
       // ELEMENT nodes.
       // Serialize Element nodes.
@@ -60,7 +55,7 @@
   };
   // The innerHTML DOM property for SVGElement.
   Object.defineProperty(SVGElement.prototype, "innerHTML", {
-    get: function() {
+    get: function () {
       var output = [];
       var childNode = this.firstChild;
       while (childNode) {
@@ -69,7 +64,7 @@
       }
       return output.join("");
     },
-    set: function(markupText) {
+    set: function (markupText) {
       // Wipe out the current contents of the element.
       while (this.firstChild) {
         this.removeChild(this.firstChild);
@@ -92,16 +87,16 @@
       } catch (e) {
         throw new Error("Error parsing XML string");
       }
-    }
+    },
   });
 
   // The innerSVG DOM property for SVGElement.
   Object.defineProperty(SVGElement.prototype, "innerSVG", {
-    get: function() {
+    get: function () {
       return this.innerHTML;
     },
-    set: function(markupText) {
+    set: function (markupText) {
       this.innerHTML = markupText;
-    }
+    },
   });
 })();

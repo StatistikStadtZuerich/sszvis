@@ -23,7 +23,7 @@ import { select } from "d3";
 import * as fn from "../fn.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("values")
     .prop("current")
@@ -31,13 +31,13 @@ export default function() {
     .width(300)
     .prop("change")
     .change(fn.identity)
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
       var wrapperEl = selection
         .selectAll(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-select"], function(d) {
+        .data(["sszvis-control-select"], function (d) {
           return d;
         });
       var newWrapperEl = wrapperEl
@@ -61,14 +61,14 @@ export default function() {
         .enter()
         .append("select")
         .classed("sszvis-control-select__element", true)
-        .on("change", function() {
+        .on("change", function () {
           // We store the index in the select's value instead of the datum
           // because an option's value can only hold strings.
           var i = select(this).property("value");
           props.change(props.values[i]);
           // Prevent highlights on the select element after users have selected
           // an option by moving away from it.
-          setTimeout(function() {
+          setTimeout(function () {
             window.focus();
           }, 0);
         });
@@ -85,13 +85,13 @@ export default function() {
 
       optionEls
         .merge(newOptionEls)
-        .attr("selected", function(d) {
+        .attr("selected", function (d) {
           return d === props.current ? "selected" : null;
         })
-        .attr("value", function(d, i) {
+        .attr("value", function (d, i) {
           return i;
         })
-        .text(function(d) {
+        .text(function (d) {
           return truncateToWidth(metricsEl, props.width - 40, d);
         });
     });
@@ -99,7 +99,7 @@ export default function() {
 
 function truncateToWidth(metricsEl, maxWidth, originalString) {
   var MAX_RECURSION = 1000;
-  var fitText = function(str, i) {
+  var fitText = function (str, i) {
     metricsEl.text(str);
     var textWidth = Math.ceil(metricsEl.node().clientWidth);
     if (i < MAX_RECURSION && textWidth > maxWidth) {

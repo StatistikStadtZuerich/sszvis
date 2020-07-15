@@ -13,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Map</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -24,7 +24,7 @@
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, topojson, sszvis) {
+      (function (d3, topojson, sszvis) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -52,43 +52,43 @@
           years: [],
           currentYear: null,
           currentMapData: [],
-          selection: []
+          selection: [],
         };
 
         /* State transitions
   ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
             state.years = sszvis.set(state.data, yAcc).sort(d3.ascending);
 
             state.currentYear = INITIAL_YEAR;
             // filter the data to match the selected year
-            state.currentMapData = state.data.filter(function(v) {
+            state.currentMapData = state.data.filter(function (v) {
               return yAcc(v) === state.currentYear;
             });
 
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
   ----------------------------------------------- */
         d3.csv("data/S_quartiere.csv")
-          .row(function(d) {
+          .row(function (d) {
             return {
               quarternum: sszvis.parseNumber(d["Qcode"]),
               quartername: d["Qname"],
               value: sszvis.parseNumber(d["Ausländeranteil"]),
-              year: d["Jahr"]
+              year: d["Jahr"],
             };
           })
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -129,7 +129,7 @@
             .strokeWidth(1)
             .width(totalDistance - horizontalPadding * 2)
             .height(totalDistance - verticalPadding * 2)
-            .defined(function(d) {
+            .defined(function (d) {
               // some of the values are empty in the .csv file. When parsed as a number,
               // undefined or empty string values become NaN
               return !isNaN(vAcc(d));

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scatterplot</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/SS_refline_fake.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -36,33 +36,33 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("xFormat", {
-            _: function() {
+            _: function () {
               return sszvis.formatFractionPercent;
-            }
+            },
           })
           .prop("yFormat", {
-            _: function() {
+            _: function () {
               return sszvis.formatNumber;
-            }
+            },
           })
           .prop("xAxisLabel", {
-            _: "Prozent"
+            _: "Prozent",
           })
           .prop("yAxisLabel", {
-            _: "Wert"
+            _: "Wert",
           })
           .prop("xTicks", {
-            _: null
+            _: null,
           })
           .prop("yTicks", {
-            _: 4
+            _: 4,
           });
 
         function parseRow(d) {
           return {
             xPosition: sszvis.parseNumber(d["Prozent"]),
             yPosition: sszvis.parseNumber(d["Wert"]),
-            category: d["Stadt"]
+            category: d["Stadt"],
           };
         }
 
@@ -77,18 +77,18 @@
           highlightData: [],
           xExtent: [0, 1], // 0% - > 100%
           yExtent: [],
-          cExtent: []
+          cExtent: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
 
             // for the voronoi component to work, the data must first be filtered such that no two vertices
             // fall at exactly the same point.
-            state.voronoiFiltered = sszvis.derivedSet(state.data, function(d) {
+            state.voronoiFiltered = sszvis.derivedSet(state.data, function (d) {
               return xAcc(d) + "__" + yAcc(d);
             });
 
@@ -101,26 +101,26 @@
             render(state);
           },
 
-          setHighlight: function(d) {
+          setHighlight: function (d) {
             state.highlightData = [d];
             render(state);
           },
 
-          resetHighlight: function() {
+          resetHighlight: function () {
             state.highlightData = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -136,7 +136,7 @@
           var legendLayout = sszvis.colorLegendLayout(
             {
               axisLabels: state.cExtent.map(props.xFormat),
-              legendLabels: state.categories
+              legendLabels: state.categories,
             },
             config.id
           );
@@ -147,24 +147,18 @@
           var bounds = sszvis.bounds(
             {
               top: 20,
-              bottom: legendLayout.bottomPadding
+              bottom: legendLayout.bottomPadding,
             },
             config.id
           );
 
           // Scales
 
-          var xScale = d3
-            .scaleLinear()
-            .domain(state.xExtent)
-            .range([0, bounds.innerWidth]);
+          var xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
 
           var xValue = sszvis.compose(xScale, xAcc);
 
-          var yScale = d3
-            .scaleLinear()
-            .domain(state.yExtent)
-            .range([bounds.innerHeight, 0]);
+          var yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
 
           var yValue = sszvis.compose(yScale, yAcc);
 
@@ -207,16 +201,16 @@
             .tooltip()
             .renderInto(tooltipLayer)
             .header(cAcc)
-            .body(function(d) {
+            .body(function (d) {
               return [
                 [props.xAxisLabel, props.xFormat(xAcc(d))],
-                [props.yAxisLabel, props.yFormat(yAcc(d))]
+                [props.yAxisLabel, props.yFormat(yAcc(d))],
               ];
             })
-            .visible(function(d) {
+            .visible(function (d) {
               return sszvis.contains(state.highlightData, d);
             })
-            .orientation(function(d) {
+            .orientation(function (d) {
               return xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right";
             });
 
@@ -253,22 +247,19 @@
             .y(yValue)
             .bounds([
               [0, 0],
-              [bounds.innerWidth, bounds.innerHeight]
+              [bounds.innerWidth, bounds.innerHeight],
             ])
             .on("over", actions.setHighlight)
             .on("out", actions.resetHighlight);
 
-          chartLayer
-            .selectGroup("voronoiMouse")
-            .datum(state.voronoiFiltered)
-            .call(mouseOverlay);
+          chartLayer.selectGroup("voronoiMouse").datum(state.voronoiFiltered).call(mouseOverlay);
         }
 
         /* Helper functions
         ----------------------------------------------- */
         function removeOverlappingYTickLabels(maxBottom) {
-          return function(g) {
-            g.selectAll("text").each(function() {
+          return function (g) {
+            g.selectAll("text").each(function () {
               var bottom = this.getBoundingClientRect().bottom;
               if (bottom >= maxBottom) d3.select(this.parentNode).style("display", "none");
             });

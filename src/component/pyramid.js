@@ -41,7 +41,7 @@ var SPINE_PADDING = 0.5;
 
 /* Module
 ----------------------------------------------- */
-export default function() {
+export default function () {
   return component()
     .prop("barHeight", fn.functor)
     .prop("barWidth", fn.functor)
@@ -54,14 +54,14 @@ export default function() {
     .prop("rightAccessor")
     .prop("leftRefAccessor")
     .prop("rightRefAccessor")
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
       // Components
 
       var leftBar = bar()
-        .x(function(d) {
+        .x(function (d) {
           return -SPINE_PADDING - props.barWidth(d);
         })
         .y(props.barPosition)
@@ -83,21 +83,13 @@ export default function() {
         .barWidth(props.barWidth)
         .mirror(true);
 
-      var rightLine = lineComponent()
-        .barPosition(props.barPosition)
-        .barWidth(props.barWidth);
+      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
 
       // Rendering
 
-      selection
-        .selectGroup("left")
-        .datum(props.leftAccessor(data))
-        .call(leftBar);
+      selection.selectGroup("left").datum(props.leftAccessor(data)).call(leftBar);
 
-      selection
-        .selectGroup("right")
-        .datum(props.rightAccessor(data))
-        .call(rightBar);
+      selection.selectGroup("right").datum(props.rightAccessor(data)).call(rightBar);
 
       selection
         .selectGroup("leftReference")
@@ -117,22 +109,17 @@ function lineComponent() {
     .prop("barWidth")
     .prop("mirror")
     .mirror(false)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
-      var lineGen = d3Line()
-        .x(props.barWidth)
-        .y(props.barPosition);
+      var lineGen = d3Line().x(props.barWidth).y(props.barPosition);
 
       var line = selection.selectAll(".sszvis-pyramid__referenceline").data(data);
 
       line.exit().remove();
 
-      var newLine = line
-        .enter()
-        .append("path")
-        .attr("class", "sszvis-pyramid__referenceline");
+      var newLine = line.enter().append("path").attr("class", "sszvis-pyramid__referenceline");
 
       line = line.merge(newLine);
 

@@ -22,7 +22,7 @@ import { defaultTransition } from "../transition.js";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
@@ -31,7 +31,7 @@ export default function() {
     .prop("fill")
     .prop("transition")
     .transition(true)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -54,14 +54,11 @@ export default function() {
         dots = dots.transition(defaultTransition());
       }
 
-      dots
-        .attr("cx", props.x)
-        .attr("cy", props.y)
-        .attr("r", props.radius);
+      dots.attr("cx", props.x).attr("cy", props.y).attr("r", props.radius);
 
       // Tooltip anchors
 
-      var ta = tooltipAnchor().position(function(d) {
+      var ta = tooltipAnchor().position(function (d) {
         return [props.x(d), props.y(d)];
       });
 

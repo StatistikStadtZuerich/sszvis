@@ -24,7 +24,7 @@ import { breakpointFind, breakpointDefaultSpec } from "./breakpoint.js";
  */
 export function aspectRatio(x, y) {
   var ar = x / y;
-  return function(width) {
+  return function (width) {
     return width / ar;
   };
 }
@@ -61,7 +61,7 @@ export var aspectRatio16to10 = aspectRatio(16, 10);
  * @returns {Number} height
  */
 var AR12TO5_MAX_HEIGHT = 500;
-export var aspectRatio12to5 = function(width) {
+export var aspectRatio12to5 = function (width) {
   return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
 };
 aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
@@ -83,7 +83,7 @@ aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
  * @returns {Number} height
  */
 var SQUARE_MAX_HEIGHT = 420;
-export var aspectRatioSquare = function(width) {
+export var aspectRatioSquare = function (width) {
   return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
 };
 aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
@@ -105,7 +105,7 @@ aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
  * @returns {Number} height
  */
 var PORTRAIT_MAX_HEIGHT = 600;
-export var aspectRatioPortrait = function(width) {
+export var aspectRatioPortrait = function (width) {
   return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
 };
 aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
@@ -128,10 +128,10 @@ aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
 var defaultAspectRatios = {
   palm: aspectRatio4to3, // palm-sized devices
   lap: aspectRatio16to10, // lap-sized devices
-  _: aspectRatio12to5 // all other cases, including desk
+  _: aspectRatio12to5, // all other cases, including desk
 };
 
-export var aspectRatioAuto = function(measurement) {
+export var aspectRatioAuto = function (measurement) {
   var bp = breakpointFind(breakpointDefaultSpec(), measurement);
   var ar = defaultAspectRatios[bp.name];
   return ar(measurement.width);

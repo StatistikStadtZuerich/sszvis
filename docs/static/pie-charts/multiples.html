@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pie Chart Multiples</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/P_multiples.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -42,14 +42,14 @@
           .prop("rowsCols", {
             palm: [5, 1],
             lap: [3, 2],
-            _: [2, 3]
+            _: [2, 3],
           })
           .prop("colorLegendColumns", {
             palm: 1,
-            _: 2
+            _: 2,
           })
           .prop("bounds", {
-            palm: function(w) {
+            palm: function (w) {
               var legendHeight = 182;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -57,10 +57,10 @@
                 right: 10,
                 bottom: bottomPadding,
                 left: 10,
-                height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding
+                height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding,
               };
             },
-            lap: function(w) {
+            lap: function (w) {
               var legendHeight = 98;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -68,10 +68,10 @@
                 right: 20,
                 bottom: bottomPadding,
                 left: 20,
-                height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding
+                height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding,
               };
             },
-            _: function(w) {
+            _: function (w) {
               var legendHeight = 98;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -79,54 +79,54 @@
                 right: 20,
                 bottom: bottomPadding,
                 left: 20,
-                height: 20 + 2 * PIE_DIAMETER + 3 * 30 + bottomPadding
+                height: 20 + 2 * PIE_DIAMETER + 3 * 30 + bottomPadding,
               };
-            }
+            },
           })
           .prop("legendPosition", {
-            palm: function(w) {
-              return function(g) {
+            palm: function (w) {
+              return function (g) {
                 return {
                   top: LEGEND_PADDING,
-                  left: (w - 2 * 10) / 2 - PIE_DIAMETER / 2
+                  left: (w - 2 * 10) / 2 - PIE_DIAMETER / 2,
                 };
               };
             },
-            lap: function(w) {
-              return function(bounds, g) {
+            lap: function (w) {
+              return function (bounds, g) {
                 var left = bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
                 return {
                   top: LEGEND_PADDING,
-                  left: left
+                  left: left,
                 };
               };
             },
-            _: function(w) {
-              return function(g) {
+            _: function (w) {
+              return function (g) {
                 var colWidth = Math.min(w, MAX_WIDTH) / 2;
                 return {
                   top: LEGEND_PADDING,
-                  left: (w - 2 * 10) / 2 - colWidth
+                  left: (w - 2 * 10) / 2 - colWidth,
                 };
               };
-            }
+            },
           })
           .prop("tooltipVisibility", {
-            palm: function() {
-              return function() {
+            palm: function () {
+              return function () {
                 return false;
               };
             },
-            _: function() {
+            _: function () {
               return isSelected;
-            }
+            },
           });
 
         function parseRow(d) {
           return {
             group: d["Gruppe"],
             category: d["Kategorie"],
-            value: sszvis.parseNumber(d["Anzahl"])
+            value: sszvis.parseNumber(d["Anzahl"]),
           };
         }
 
@@ -144,17 +144,17 @@
           categories: [],
           hoveredDatum: {},
           selection: [],
-          selectedCategories: []
+          selectedCategories: [],
         };
 
         /* State transitions
   ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             // groups the data into arrays by their 'group' value
             var grouped = sszvis
               .cascade()
-              .arrayBy(gAcc, function(g1, g2) {
+              .arrayBy(gAcc, function (g1, g2) {
                 return state.groups.indexOf(g1) - state.groups.indexOf(g2);
               })
               .apply(data);
@@ -163,15 +163,15 @@
             // a list of groups
             state.groups = sszvis.set(state.data, gAcc);
             // an index of the total values of the groups. Used for calculating the slice size of each component of the pie chart
-            state.totalValues = grouped.reduce(function(memo, group, i) {
+            state.totalValues = grouped.reduce(function (memo, group, i) {
               memo[state.groups[i]] = d3.sum(group, vAcc);
               return memo;
             }, {});
             // map the groups into data objects, with a group name and a set of values
-            state.pieGroups = grouped.map(function(g, i) {
+            state.pieGroups = grouped.map(function (g, i) {
               return {
                 group: state.groups[i],
-                values: g
+                values: g,
               };
             });
             // a list of categories (for the color scale)
@@ -180,32 +180,32 @@
             render(state);
           },
 
-          showTooltip: function(datum) {
+          showTooltip: function (datum) {
             state.hoveredDatum = datum;
-            state.selection = state.data.filter(function(d) {
+            state.selection = state.data.filter(function (d) {
               return datum.category === d.category;
             });
             state.selectedCategories = state.selection.map(cAcc);
             render(state);
           },
 
-          hideTooltip: function() {
+          hideTooltip: function () {
             state.hoveredDatum = {};
             state.selection = [];
             state.selectedCategories = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
   ----------------------------------------------- */
         d3.csv(config.data)
           .row(parseRow)
-          .get(function(error, data) {
+          .get(function (error, data) {
             if (error) {
               sszvis.loadError(error);
               return;
@@ -262,7 +262,7 @@
             .tooltip()
             .renderInto(tooltipLayer)
             .header(cAcc)
-            .body(function(d) {
+            .body(function (d) {
               return "Anzahl: " + d.value;
             })
             .opacity(tooltipOpacity)
@@ -279,7 +279,7 @@
             .call(multiplesMaker);
 
           // grab all of the prepared groups, and render a pie chart into each of them
-          pieCharts.selectAll(".sszvis-multiple").each(function(d) {
+          pieCharts.selectAll(".sszvis-multiple").each(function (d) {
             // inside this closure, create a copy of the angle scale
             // which is relative to the group total calculated earlier
             var groupScale = aScale.copy().domain([0, state.totalValues[d.group]]);
