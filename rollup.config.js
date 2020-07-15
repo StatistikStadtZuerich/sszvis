@@ -1,7 +1,7 @@
 import { join } from "path";
-import { uglify } from "rollup-plugin-uglify";
-import { version } from "./package.json";
 import babel from "rollup-plugin-babel";
+import { terser } from "rollup-plugin-terser";
+import { version } from "./package.json";
 
 const banner = `/*! sszvis v${version}, Copyright 2014-present Statistik Stadt Zürich */`;
 
@@ -46,7 +46,7 @@ export default [
       }
     ],
     plugins: [
-      uglify({
+      terser({
         output: {
           comments: /^!/
         }
