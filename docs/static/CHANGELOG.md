@@ -2,15 +2,27 @@
 
 - Upgraded d3 to version 5.0
 - Added a basic (i.e. incomplete) shim for `d3-request` using the new `d3-fetch` API
+  - Refactored all examples to use `d3-fetch`
+  - Added Polyfills for browsers that don't support Promises and `fetch()`
 - Changed `sszvis.defined` to return false for `NaN` values
 - Changed `sszvis.isNumber` to return false for `NaN` values
 - Fixed "Extended Maps" examples that previously showed invalid data
 
+### Breaking changes
+
+- Due to the use of more modern features, IE9 and below are no longer supported
+- If code relied on the old behaviour of `sszvis.defined` or `sszvis.isNumber` that considered `NaN` as a number (which for most purposes of creating visualizations is not useful), existing code might break and must be fixed.
+
+### Docs
+
+- Upgraded all NPM dependencies to their most recent versions
+- Formatted all examples with Prettier 2.0
+- Removed dependency on Ramda and Radium
+- Removed responsive content testbed as it was no longer in use
+
 ### Upgrade from 2.0 to 2.2.0
 
 The upgrade to d3 v5 is mostly backwards compatible (see [d3 v5's change log](https://github.com/d3/d3/blob/master/CHANGES.md#changes-in-d3-50)), but existing code should be updated to use the [d3-fetch](https://github.com/d3/d3-fetch) API instead of the old [d3-request](https://github.com/d3/d3-request) API.
-
-If code relied on the old behaviour of `sszvis.defined` or `sszvis.isNumber` that considered `NaN` as a number (which for most purposes of creating visualizations is not useful), existing code might break and must be fixed.
 
 ```code
 function parseRow(x) {
