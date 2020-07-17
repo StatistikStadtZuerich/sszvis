@@ -1,12 +1,10 @@
-import * as R from "ramda";
-
 const INDEX = "index.html";
 
 const DEFAULTS = {
   name: "project",
   files: {},
   scrolling: "no",
-  size: null
+  size: null,
 };
 
 function parseSize(size) {
@@ -23,8 +21,8 @@ function parseSize(size) {
   return null;
 }
 
-export default rawBody => {
-  let config = R.merge(DEFAULTS, rawBody);
+export default (rawBody) => {
+  let config = Object.assign({}, DEFAULTS, rawBody);
 
   let index = null;
 
@@ -35,25 +33,24 @@ export default rawBody => {
   }
   if (config[INDEX]) {
     if (index) {
-      console.warn(
-        "Index document was already defined and will be overwritten"
-      ); // eslint-disable-line
+      console.warn("Index document was already defined and will be overwritten"); // eslint-disable-line
     }
     index = config[INDEX];
     delete config[INDEX];
   }
   if (config.files[INDEX]) {
     if (index) {
-      console.warn(
-        "Index document was already defined and will be overwritten"
-      ); // eslint-disable-line
+      console.warn("Index document was already defined and will be overwritten"); // eslint-disable-line
     }
     index = config.files[INDEX];
   }
   if (!index) {
     throw new Error('"index.html" must be defined');
   }
-  config = R.assocPath(["files", INDEX], index, config);
+
+  config = Object.assign({}, config);
+  config.files[INDEX] = index;
+
   let files = [];
   let ref = config.files;
   for (let target in ref) {
@@ -66,7 +63,7 @@ export default rawBody => {
       let file =
         typeof source === "string"
           ? {
-              source: source
+              source: source,
             }
           : source;
       if (!file.target) {
