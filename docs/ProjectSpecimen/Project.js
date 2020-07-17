@@ -1,7 +1,6 @@
 import { Specimen } from "catalog";
 import JSZip from "jszip";
 import PropTypes from "prop-types";
-import Radium from "radium";
 import React from "react";
 import bodyToProps from "./bodyToProps";
 import normalizeReferences from "./normalizeReferences";
@@ -277,5 +276,5 @@ export default function ProjectConfigurator(opts) {
     body: PropTypes.object.isRequired,
   };
 
-  return Specimen((parsed) => ({ body: parsed }))(Radium(Project));
+  return Specimen((parsed) => ({ body: parsed }))(Project);
 }
