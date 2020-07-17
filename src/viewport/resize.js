@@ -29,37 +29,7 @@
  */
 
 import { select } from "d3";
-
-// throttles a function to the trailing edge. Copied mostly verbatim from underscore.js
-function throttle(wait, func) {
-  var context, args, result;
-  var timeout = null;
-  var previous = 0;
-  var lastCall = function () {
-    previous = 0;
-    result = func.apply(context, args);
-    timeout = context = args = null;
-  };
-  return function () {
-    var now = Date.now();
-    if (!previous) previous = now; // Sets up so that the function isn't called immediately
-    var remaining = wait - (now - previous);
-    context = this;
-    args = arguments;
-    if (remaining <= 0 || remaining > wait) {
-      if (timeout) {
-        clearTimeout(timeout);
-        timeout = null;
-      }
-      previous = now;
-      result = func.apply(context, args);
-      if (!timeout) context = args = null;
-    } else if (!timeout) {
-      timeout = setTimeout(lastCall, remaining);
-    }
-    return result;
-  };
-}
+import throttle from "nano-throttle";
 
 // This rather strange set of functions is designed to support the API:
 // sszvis.viewport.on('resize', callback);
@@ -73,9 +43,9 @@ var callbacks = {
 if (typeof window !== "undefined") {
   select(window).on(
     "resize",
-    throttle(500, function () {
+    throttle(function () {
       trigger("resize");
-    })
+    }, 500)
   );
 }
 
