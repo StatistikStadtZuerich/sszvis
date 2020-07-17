@@ -93,13 +93,6 @@ export default function ProjectConfigurator(opts) {
               Open in new tab
             </a>
             <a
-              key={"responsive-testbed"}
-              style={styles.link}
-              href={"/_tools/content_testbed.html?file=" + index.source}
-            >
-              Open in responsive testbed
-            </a>
-            <a
               key={"download"}
               style={styles.link}
               href="#"
