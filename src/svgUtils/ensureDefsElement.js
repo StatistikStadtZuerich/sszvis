@@ -12,15 +12,12 @@
  * @param {string}       elementId  The ID to assign to the created element
  */
 
-export default function(selection, type, elementId) {
+export default function (selection, type, elementId) {
   var element = ensureDefsSelection(selection)
     .selectAll(type + "#" + elementId)
     .data([0]);
 
-  var newElement = element
-    .enter()
-    .append(type)
-    .attr("id", elementId);
+  var newElement = element.enter().append(type).attr("id", elementId);
 
   return element.merge(newElement);
 }

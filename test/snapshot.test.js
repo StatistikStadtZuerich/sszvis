@@ -7,12 +7,12 @@ const SNAPSHOT_OPTS = {
   failureThreshold: 10,
   failureThresholdType: "pixel",
   customSnapshotIdentifier: ({ currentTestName, counter }) =>
-    `${urlToIdentifier(currentTestName)}-${counter}`
+    `${urlToIdentifier(currentTestName)}-${counter}`,
 };
 
 const files = glob.sync("../docs/static/[^_]*/*.html", { cwd: __dirname });
 
-test.each(files.map(filepathToUrl))("%s", async url => {
+test.each(files.map(filepathToUrl))("%s", async (url) => {
   try {
     await page.goto(url, { waitUntil: "networkidle2" });
     await page.waitFor(RENDER_DELAY);
@@ -40,8 +40,5 @@ function filepathToUrl(path) {
 }
 
 function urlToIdentifier(url) {
-  return url
-    .replace("http://localhost:8000/", "")
-    .replace(".html", "")
-    .replace("/", "--");
+  return url.replace("http://localhost:8000/", "").replace(".html", "").replace("/", "--");
 }

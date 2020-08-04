@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Stacked Horizontal Bar Chart</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/SHB_basic_percent.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -37,31 +37,31 @@
           .responsiveProps()
           .prop("targetNumColumns", {
             palm: 1,
-            _: 2
+            _: 2,
           })
           .prop("bottomPadding", {
-            _: null
+            _: null,
           })
           .prop("xLabel", {
-            _: "Prozent"
+            _: "Prozent",
           })
           .prop("xLabelFormat", {
-            _: function() {
+            _: function () {
               return sszvis.formatText;
-            }
+            },
           })
           .prop("xSlant", {
-            _: null
+            _: null,
           })
           .prop("ticks", {
-            _: 4
+            _: 4,
           });
 
         function parseRow(d) {
           return {
             category: d["Branche"],
             yValue: d["Gebiet"],
-            xValue: sszvis.parseNumber(d["BIP"])
+            xValue: sszvis.parseNumber(d["BIP"]),
           };
         }
 
@@ -79,14 +79,14 @@
           categories: [],
           stackedData: [],
           maxStacked: 0,
-          selection: []
+          selection: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
 
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.yValues = sszvis.set(state.data, yAcc);
             state.categories = sszvis.set(state.data, cAcc);
@@ -97,33 +97,25 @@
             render(state);
           },
 
-          showTooltip: function(datum) {
+          showTooltip: function (datum) {
             state.selection = [datum];
             render(state);
           },
 
-          hideTooltip: function() {
+          hideTooltip: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
 
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
@@ -135,7 +127,7 @@
             {
               axisLabels: props.xLabelFormat(state.maxStacked),
               legendLabels: state.categories,
-              slant: props.xSlant
+              slant: props.xSlant,
             },
             config.id
           );
@@ -152,7 +144,7 @@
             {
               height: paddingTop + chartDimensions.totalHeight + bottomPadding,
               top: paddingTop,
-              bottom: bottomPadding
+              bottom: bottomPadding,
             },
             config.id
           );
@@ -160,10 +152,7 @@
 
           // Scales
 
-          var xScale = d3
-            .scaleLinear()
-            .domain([0, state.maxStacked])
-            .range([0, chartWidth]);
+          var xScale = d3.scaleLinear().domain([0, state.maxStacked]).range([0, chartWidth]);
 
           var yScale = d3
             .scaleBand()
@@ -200,10 +189,7 @@
             xAxis.ticks(props.ticks);
           }
 
-          var yAxis = sszvis.axisY
-            .ordinal()
-            .scale(yScale)
-            .orient("right");
+          var yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
 
           var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(cAcc, dataAcc));
 

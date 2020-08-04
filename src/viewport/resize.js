@@ -29,37 +29,7 @@
  */
 
 import { select } from "d3";
-
-// throttles a function to the trailing edge. Copied mostly verbatim from underscore.js
-function throttle(wait, func) {
-  var context, args, result;
-  var timeout = null;
-  var previous = 0;
-  var lastCall = function() {
-    previous = 0;
-    result = func.apply(context, args);
-    timeout = context = args = null;
-  };
-  return function() {
-    var now = Date.now();
-    if (!previous) previous = now; // Sets up so that the function isn't called immediately
-    var remaining = wait - (now - previous);
-    context = this;
-    args = arguments;
-    if (remaining <= 0 || remaining > wait) {
-      if (timeout) {
-        clearTimeout(timeout);
-        timeout = null;
-      }
-      previous = now;
-      result = func.apply(context, args);
-      if (!timeout) context = args = null;
-    } else if (!timeout) {
-      timeout = setTimeout(lastCall, remaining);
-    }
-    return result;
-  };
-}
+import throttle from "nano-throttle";
 
 // This rather strange set of functions is designed to support the API:
 // sszvis.viewport.on('resize', callback);
@@ -67,44 +37,44 @@ function throttle(wait, func) {
 // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
 // object would not allow.
 var callbacks = {
-  resize: []
+  resize: [],
 };
 
 if (typeof window !== "undefined") {
   select(window).on(
     "resize",
-    throttle(500, function() {
+    throttle(function () {
       trigger("resize");
-    })
+    }, 500)
   );
 }
 
-var on = function(name, cb) {
+var on = function (name, cb) {
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
   callbacks[name] = callbacks[name]
-    .filter(function(fn) {
+    .filter(function (fn) {
       return fn !== cb;
     })
     .concat(cb);
   return this;
 };
 
-var off = function(name, cb) {
+var off = function (name, cb) {
   if (!callbacks[name]) {
     return this;
   }
-  callbacks[name] = callbacks[name].filter(function(fn) {
+  callbacks[name] = callbacks[name].filter(function (fn) {
     return fn !== cb;
   });
   return this;
 };
 
-var trigger = function(name) {
+var trigger = function (name) {
   var evtArgs = Array.prototype.slice.call(arguments, 1);
   if (callbacks[name]) {
-    callbacks[name].forEach(function(fn) {
+    callbacks[name].forEach(function (fn) {
       fn.apply(null, evtArgs);
     });
   }
@@ -114,5 +84,5 @@ var trigger = function(name) {
 export var viewport = {
   on: on,
   off: off,
-  trigger: trigger
+  trigger: trigger,
 };

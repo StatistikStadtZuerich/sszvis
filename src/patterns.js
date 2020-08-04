@@ -19,7 +19,7 @@
 
 import { scaleLightGry } from "./color.js";
 
-export var heatTableMissingValuePattern = function(selection) {
+export var heatTableMissingValuePattern = function (selection) {
   var rectFill = scaleLightGry(),
     crossStroke = "#A4A4A4",
     crossStrokeWidth = 0.035,
@@ -61,7 +61,7 @@ export var heatTableMissingValuePattern = function(selection) {
     .attr("stroke", crossStroke);
 };
 
-export var mapMissingValuePattern = function(selection) {
+export var mapMissingValuePattern = function (selection) {
   var pWidth = 14,
     pHeight = 14,
     fillColor = "#FAFAFA",
@@ -116,7 +116,7 @@ export var mapMissingValuePattern = function(selection) {
     .attr("stroke", lineStroke);
 };
 
-export var mapLakePattern = function(selection) {
+export var mapLakePattern = function (selection) {
   var pWidth = 6;
   var pHeight = 6;
   var offset = 0.5;
@@ -156,7 +156,7 @@ export var mapLakePattern = function(selection) {
     .attr("stroke-linecap", "square");
 };
 
-export var mapLakeFadeGradient = function(selection) {
+export var mapLakeFadeGradient = function (selection) {
   selection
     .attr("x1", 0)
     .attr("y1", 0)
@@ -164,20 +164,12 @@ export var mapLakeFadeGradient = function(selection) {
     .attr("y2", 1)
     .attr("id", "lake-fade-gradient");
 
-  selection
-    .append("stop")
-    .attr("offset", 0.74)
-    .attr("stop-color", "white")
-    .attr("stop-opacity", 1);
+  selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
 
-  selection
-    .append("stop")
-    .attr("offset", 0.97)
-    .attr("stop-color", "white")
-    .attr("stop-opacity", 0);
+  selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
 };
 
-export var mapLakeGradientMask = function(selection) {
+export var mapLakeGradientMask = function (selection) {
   selection.attr("maskContentUnits", "objectBoundingBox");
 
   selection
@@ -187,7 +179,7 @@ export var mapLakeGradientMask = function(selection) {
     .attr("height", 1);
 };
 
-export var dataAreaPattern = function(selection) {
+export var dataAreaPattern = function (selection) {
   var pWidth = 6;
   var pHeight = 6;
   var offset = 0.5;

@@ -38,12 +38,12 @@ export function component() {
    */
   function sszvisComponent(selection) {
     if (selectionRenderer) {
-      selection.props = function() {
+      selection.props = function () {
         return clone(props);
       };
       selectionRenderer.apply(selection, slice(arguments));
     }
-    selection.each(function() {
+    selection.each(function () {
       this.__props__ = clone(props);
       renderer.apply(this, slice(arguments));
     });
@@ -57,7 +57,7 @@ export function component() {
    *         sszvis.component. Sets the returned value to the given property
    * @return {sszvis.component}
    */
-  sszvisComponent.prop = function(prop, setter) {
+  sszvisComponent.prop = function (prop, setter) {
     setter || (setter = identity);
     sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(
       sszvisComponent
@@ -72,8 +72,8 @@ export function component() {
    * @param  {Object} delegate The target having getter and setter methods for prop
    * @return {sszvis.component}
    */
-  sszvisComponent.delegate = function(prop, delegate) {
-    sszvisComponent[prop] = function() {
+  sszvisComponent.delegate = function (prop, delegate) {
+    sszvisComponent[prop] = function () {
       var result = delegate[prop].apply(delegate, slice(arguments));
       return arguments.length === 0 ? result : sszvisComponent;
     };
@@ -89,7 +89,7 @@ export function component() {
    * @param  {Function} callback
    * @return {[sszvis.component]}
    */
-  sszvisComponent.renderSelection = function(callback) {
+  sszvisComponent.renderSelection = function (callback) {
     selectionRenderer = callback;
     return sszvisComponent;
   };
@@ -103,7 +103,7 @@ export function component() {
    * @param  {Function} callback
    * @return {sszvis.component}
    */
-  sszvisComponent.render = function(callback) {
+  sszvisComponent.render = function (callback) {
     renderer = callback;
     return sszvisComponent;
   };
@@ -119,7 +119,7 @@ export function component() {
  *
  * @return {Object} An object of properties for the given component
  */
-d3Selection.prototype.props = function() {
+d3Selection.prototype.props = function () {
   // It would be possible to make this work exactly like
   // d3.selection.data(), but it would need some test cases,
   // so we currently simplify to the most common use-case:
@@ -144,7 +144,7 @@ d3Selection.prototype.props = function() {
  */
 function accessor(props, prop, setter) {
   setter || (setter = identity);
-  return function() {
+  return function () {
     if (!arguments.length) return props[prop];
 
     props[prop] = setter.apply(null, slice(arguments));

@@ -21,7 +21,7 @@
  *                                }
  */
 
-export default function(width, numBars) {
+export default function (width, numBars) {
   var MAX_BAR_WIDTH = 48, // the maximum width of a bar
     MIN_PADDING = 2, // the minimum padding value
     MAX_PADDING = 100, // the maximum padding value
@@ -56,6 +56,6 @@ export default function(width, numBars) {
     padRatio: padRatio,
     outerRatio: outerRatio,
     barGroupWidth: computedBarSpace,
-    totalWidth: width
+    totalWidth: width,
   };
 }

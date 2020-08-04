@@ -13,10 +13,10 @@
  * @returns {Function}                  A function for calculating the orientation of the tooltips.
  */
 
-export default function(defaultVal, bounds) {
+export default function (defaultVal, bounds) {
   var lo = Math.min((bounds.innerWidth * 1) / 4, 100);
   var hi = Math.max((bounds.innerWidth * 3) / 4, bounds.innerWidth - 100);
-  return function(d) {
+  return function (d) {
     var x = d.x;
     return x > hi ? "right" : x < lo ? "left" : defaultVal;
   };

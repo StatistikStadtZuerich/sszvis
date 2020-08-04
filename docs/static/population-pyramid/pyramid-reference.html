@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Population Pyramid</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/BP_reference.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -38,7 +38,7 @@
             age: sszvis.parseNumber(d["Alter"]),
             gender: d["Geschlecht"],
             group: d["Ausbildung"],
-            value: sszvis.parseNumber(d["Anzahl"])
+            value: sszvis.parseNumber(d["Anzahl"]),
           };
         }
 
@@ -58,41 +58,29 @@
           ages: d3.range(0, 101), // [0 ... 100]
           groups: [],
           maxValue: 0,
-          populations: {}
+          populations: {},
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.groups = sszvis.set(state.data, gAcc);
             state.maxValue = d3.max(state.data, vAcc);
-            state.populations = sszvis
-              .cascade()
-              .objectBy(refAcc)
-              .objectBy(gAcc)
-              .apply(state.data);
+            state.populations = sszvis.cascade().objectBy(refAcc).objectBy(gAcc).apply(state.data);
 
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
@@ -106,7 +94,7 @@
               top: chartPadding.top,
               bottom: chartPadding.bottom,
               left: pyramidDimensions.chartPadding,
-              right: pyramidDimensions.chartPadding
+              right: pyramidDimensions.chartPadding,
             },
             config.id
           );
@@ -155,17 +143,14 @@
             .ordinal()
             .scale(positionScale)
             .orient("right")
-            .tickFormat(function(d) {
+            .tickFormat(function (d) {
               return d === 0 ? "" : sszvis.formatAge(d);
             })
             .ticks(5)
             .title("Alter in Jahren")
             .dyTitle(-18);
 
-          var colorLegend = sszvis
-            .legendColorOrdinal()
-            .scale(colorScale)
-            .horizontalFloat(true);
+          var colorLegend = sszvis.legendColorOrdinal().scale(colorScale).horizontalFloat(true);
 
           // Rendering
 

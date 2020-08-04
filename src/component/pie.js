@@ -26,18 +26,18 @@ import { defaultTransition } from "../transition.js";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("radius")
     .prop("fill")
     .prop("stroke")
     .prop("angle", fn.functor)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
       var angle = 0;
-      data.forEach(function(value) {
+      data.forEach(function (value) {
         // In order for an angle transition to work correctly in d3, the transition must be done in data space.
         // The computed arc path itself cannot be interpolated without error.
         // see http://bl.ocks.org/mbostock/5100636 for a straightforward example.
@@ -57,16 +57,16 @@ export default function() {
       var arcGen = arc()
         .innerRadius(4)
         .outerRadius(props.radius)
-        .startAngle(function(d) {
+        .startAngle(function (d) {
           return d.a0;
         })
-        .endAngle(function(d) {
+        .endAngle(function (d) {
           return d.a1;
         });
 
       var segments = selection
         .selectAll(".sszvis-path")
-        .each(function(d, i) {
+        .each(function (d, i) {
           // This matches the data values iteratively in the same way d3 will when it does the data join.
           // This is kind of a hack, but it's the only way to get any existing angle values from the already-bound data
           if (data[i]) {
@@ -91,10 +91,10 @@ export default function() {
       segments
         .transition(defaultTransition())
         .attr("transform", "translate(" + props.radius + "," + props.radius + ")")
-        .attrTween("d", function(d) {
+        .attrTween("d", function (d) {
           var angle0Interp = interpolate(d.a0, d._a0);
           var angle1Interp = interpolate(d.a1, d._a1);
-          return function(t) {
+          return function (t) {
             d.a0 = angle0Interp(t);
             d.a1 = angle1Interp(t);
             return arcGen(d);
@@ -103,7 +103,7 @@ export default function() {
         .attr("fill", props.fill)
         .attr("stroke", props.stroke);
 
-      var ta = tooltipAnchor().position(function(d) {
+      var ta = tooltipAnchor().position(function (d) {
         // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
         // makes the same correction to svg.arc() angles :o
         var a = d.a0 + Math.abs(d.a1 - d.a0) / 2 - Math.PI / 2;

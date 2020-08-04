@@ -21,7 +21,7 @@ export var locale = {
     "September",
     "Oktober",
     "November",
-    "Dezember"
+    "Dezember",
   ],
-  shortMonths: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
+  shortMonths: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
 };

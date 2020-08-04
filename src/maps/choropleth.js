@@ -7,7 +7,7 @@ import {
   mapRendererMesh,
   mapRendererPatternedLakeOverlay,
   prepareMergedGeoData,
-  swissMapPath
+  swissMapPath,
 } from "../map/index.js";
 
 /**
@@ -38,7 +38,7 @@ import {
  * @return {d3.component}
  */
 
-export default function() {
+export default function () {
   var event = dispatch("over", "out", "click");
 
   var baseRenderer = mapRendererBase();
@@ -69,7 +69,7 @@ export default function() {
     .delegate("highlightStroke", highlightRenderer)
     .delegate("highlightStrokeWidth", highlightRenderer)
     .delegate("lakePathColor", lakeRenderer)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -79,10 +79,7 @@ export default function() {
       var mergedData = prepareMergedGeoData(data, props.features, props.keyName);
 
       // Base shape
-      baseRenderer
-        .geoJson(props.features)
-        .mergedData(mergedData)
-        .mapPath(mapPath);
+      baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath);
 
       // Border mesh
       meshRenderer.geoJson(props.borders).mapPath(mapPath);
@@ -95,10 +92,7 @@ export default function() {
         .fadeOut(props.lakeFadeOut);
 
       // Highlight mesh
-      highlightRenderer
-        .geoJson(props.features)
-        .keyName(props.keyName)
-        .mapPath(mapPath);
+      highlightRenderer.geoJson(props.features).keyName(props.keyName).mapPath(mapPath);
 
       // Rendering
 
@@ -120,18 +114,18 @@ export default function() {
 
       selection
         .selectAll("[data-event-target]")
-        .on("mouseover", function(d) {
+        .on("mouseover", function (d) {
           event.call("over", this, d.datum);
         })
-        .on("mouseout", function(d) {
+        .on("mouseout", function (d) {
           event.call("out", this, d.datum);
         })
-        .on("click", function(d) {
+        .on("click", function (d) {
           event.call("click", this, d.datum);
         });
     });
 
-  mapComponent.on = function() {
+  mapComponent.on = function () {
     var value = event.on.apply(event, arguments);
     return value === event ? mapComponent : value;
   };

@@ -10,9 +10,9 @@ import { ascending, descending, map, sum, min, max } from "d3";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 
-var newLinkId = (function() {
+var newLinkId = (function () {
   var id = 0;
-  return function() {
+  return function () {
     return ++id;
   };
 })();
@@ -46,7 +46,7 @@ var newLinkId = (function() {
  *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  */
-export var prepareData = function() {
+export var prepareData = function () {
   var mGetSource = fn.identity;
   var mGetTarget = fn.identity;
   var mGetValue = fn.identity;
@@ -54,18 +54,18 @@ export var prepareData = function() {
 
   // Helper functions
   var valueAcc = fn.prop("value");
-  var byAscendingValue = function(a, b) {
+  var byAscendingValue = function (a, b) {
     return ascending(valueAcc(a), valueAcc(b));
   };
-  var byDescendingValue = function(a, b) {
+  var byDescendingValue = function (a, b) {
     return descending(valueAcc(a), valueAcc(b));
   };
 
   var valueSortFunc = byDescendingValue;
 
-  var main = function(inputData) {
-    var columnIndex = mColumnIds.reduce(function(index, columnIdsList, colIndex) {
-      columnIdsList.forEach(function(id) {
+  var main = function (inputData) {
+    var columnIndex = mColumnIds.reduce(function (index, columnIdsList, colIndex) {
+      columnIdsList.forEach(function (id) {
         if (index.has(id)) {
           logger.warn(
             "Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:",
@@ -81,7 +81,7 @@ export var prepareData = function() {
           value: 0,
           valueOffset: 0,
           linksFrom: [],
-          linksTo: []
+          linksTo: [],
         };
 
         index.set(id, item);
@@ -90,7 +90,7 @@ export var prepareData = function() {
       return index;
     }, map());
 
-    var listOfLinks = inputData.map(function(datum) {
+    var listOfLinks = inputData.map(function (datum) {
       var srcId = mGetSource(datum);
       var tgtId = mGetTarget(datum);
       var value = +mGetValue(datum) || 0; // Cast this to number
@@ -114,7 +114,7 @@ export var prepareData = function() {
         src: srcNode,
         srcOffset: 0,
         tgt: tgtNode,
-        tgtOffset: 0
+        tgtOffset: 0,
       };
 
       srcNode.linksFrom.push(item);
@@ -127,7 +127,7 @@ export var prepareData = function() {
     var listOfNodes = columnIndex.values();
 
     // Calculate an array of total values for each column
-    var columnTotals = listOfNodes.reduce(function(totals, node) {
+    var columnTotals = listOfNodes.reduce(function (totals, node) {
       var fromTotal = sum(node.linksFrom, valueAcc);
       var toTotal = sum(node.linksTo, valueAcc);
 
@@ -140,7 +140,7 @@ export var prepareData = function() {
     }, fn.filledArray(mColumnIds.length, 0));
 
     // An array with the number of nodes in each column
-    var columnLengths = mColumnIds.map(function(colIds) {
+    var columnLengths = mColumnIds.map(function (colIds) {
       return colIds.length;
     });
 
@@ -158,7 +158,7 @@ export var prepareData = function() {
     // and columnData[1] is an array adding up the number of nodes in each column
     // Both are used to assign cumulative properties to the nodes of each column
     listOfNodes.reduce(
-      function(columnData, node) {
+      function (columnData, node) {
         // Assigns valueOffset and nodeIndex
         node.valueOffset = columnData[0][node.columnIndex];
         node.nodeIndex = columnData[1][node.columnIndex];
@@ -175,22 +175,22 @@ export var prepareData = function() {
     // nodes and the links coming out of the nodes according to the ordering of the nodes
     // they come from or go to. This creates a visually appealing layout which minimizes
     // the number of link crossings
-    listOfNodes.forEach(function(node) {
-      node.linksFrom.sort(function(linkA, linkB) {
+    listOfNodes.forEach(function (node) {
+      node.linksFrom.sort(function (linkA, linkB) {
         return linkA.tgt.nodeIndex - linkB.tgt.nodeIndex;
       });
 
-      node.linksTo.sort(function(linkA, linkB) {
+      node.linksTo.sort(function (linkA, linkB) {
         return linkA.src.nodeIndex - linkB.src.nodeIndex;
       });
 
       // Stack the links vertically within the node according to their order
-      node.linksFrom.reduce(function(sumValue, link) {
+      node.linksFrom.reduce(function (sumValue, link) {
         link.srcOffset = sumValue;
         return sumValue + valueAcc(link);
       }, 0);
 
-      node.linksTo.reduce(function(sumValue, link) {
+      node.linksTo.reduce(function (sumValue, link) {
         link.tgtOffset = sumValue;
         return sumValue + valueAcc(link);
       }, 0);
@@ -200,40 +200,40 @@ export var prepareData = function() {
       nodes: listOfNodes,
       links: listOfLinks,
       columnTotals: columnTotals,
-      columnLengths: columnLengths
+      columnLengths: columnLengths,
     };
   };
 
-  main.apply = function(data) {
+  main.apply = function (data) {
     return main(data);
   };
 
-  main.source = function(func) {
+  main.source = function (func) {
     mGetSource = func;
     return main;
   };
 
-  main.target = function(func) {
+  main.target = function (func) {
     mGetTarget = func;
     return main;
   };
 
-  main.value = function(func) {
+  main.value = function (func) {
     mGetValue = func;
     return main;
   };
 
-  main.descendingSort = function() {
+  main.descendingSort = function () {
     valueSortFunc = byDescendingValue;
     return main;
   };
 
-  main.ascendingSort = function() {
+  main.ascendingSort = function () {
     valueSortFunc = byAscendingValue;
     return main;
   };
 
-  main.idLists = function(idLists) {
+  main.idLists = function (idLists) {
     mColumnIds = idLists;
     return main;
   };
@@ -263,7 +263,7 @@ export var prepareData = function() {
  *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  */
-export var computeLayout = function(columnLengths, columnTotals, columnHeight, columnWidth) {
+export var computeLayout = function (columnLengths, columnTotals, columnHeight, columnWidth) {
   // Calculate appropriate scale and padding values (in pixels)
   var padSpaceRatio = 0.15;
   var padMin = 12;
@@ -272,7 +272,7 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
 
   // Compute the padding value (in pixels) for each column, then take the minimum value
   var computedPixPadding = min(
-    columnLengths.map(function(colLength) {
+    columnLengths.map(function (colLength) {
       // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
       var colPadding = (columnHeight * padSpaceRatio) / (colLength - 1);
       // Limit by minimum and maximum pixel padding values
@@ -284,7 +284,7 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
   // This is the number of remaining pixels available to display the column's total units,
   // after padding pixels have been subtracted. Then take the minimum value of that.
   var pixPerUnit = min(
-    columnLengths.map(function(colLength, colIndex) {
+    columnLengths.map(function (colLength, colIndex) {
       // The non-padding pixels must have at least minDisplayPixels
       var nonPaddingPixels = Math.max(
         minDisplayPixels,
@@ -303,11 +303,11 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
   var maxTotal = max(columnTotals);
 
   // Compute y-padding required to vertically center each column (in pixels)
-  var paddedHeights = columnLengths.map(function(colLength, colIndex) {
+  var paddedHeights = columnLengths.map(function (colLength, colIndex) {
     return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding;
   });
   var maxPaddedHeight = max(paddedHeights);
-  var columnPaddings = columnLengths.map(function(colLength, colIndex) {
+  var columnPaddings = columnLengths.map(function (colLength, colIndex) {
     return (maxPaddedHeight - paddedHeights[colIndex]) / 2;
   });
 
@@ -331,6 +331,6 @@ export var computeLayout = function(columnLengths, columnTotals, columnHeight, c
     valueRange: valueRange,
     nodeThickness: nodeThickness,
     columnDomain: columnDomain,
-    columnRange: columnRange
+    columnRange: columnRange,
   };
 };

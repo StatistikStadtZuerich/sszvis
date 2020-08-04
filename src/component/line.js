@@ -41,7 +41,7 @@ import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("x")
     .prop("y")
@@ -49,14 +49,14 @@ export default function() {
     .prop("strokeWidth")
     .prop("defined")
     .prop("key")
-    .key(function(d, i) {
+    .key(function (d, i) {
       return i;
     })
     .prop("valuesAccessor")
     .valuesAccessor(fn.identity)
     .prop("transition")
     .transition(true)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 

@@ -29,7 +29,7 @@ import * as fn from "../fn.js";
  * @param  {number} pos A pixel position
  * @return {number}     A pixel position snapped to the pixel grid
  */
-export var halfPixel = function(pos) {
+export var halfPixel = function (pos) {
   return Math.floor(pos) + 0.5;
 };
 
@@ -46,9 +46,9 @@ export var halfPixel = function(pos) {
  * @param  {string} transformStr A valid SVG transform string
  * @return {string}              An SVG transform string with rounded values
  */
-export var roundTransformString = function(transformStr) {
+export var roundTransformString = function (transformStr) {
   var roundNumber = fn.compose(Math.floor, Number);
-  return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function(
+  return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function (
     _,
     left,
     vecStr,
@@ -74,14 +74,10 @@ export var roundTransformString = function(transformStr) {
  * @param  {string} transformStr A valid SVG transform string
  * @return {vecor}               Two-element array ([dx, dy])
  */
-export var transformTranslateSubpixelShift = function(transformStr) {
+export var transformTranslateSubpixelShift = function (transformStr) {
   var roundNumber = fn.compose(Math.floor, Number);
   var m = transformStr.match(/(translate\()\s*([0-9.,\- ]+)\s*(\))/i);
-  var vec = m[2]
-    .replace(",", " ")
-    .replace(/\s+/, " ")
-    .split(" ")
-    .map(Number);
+  var vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
 
   if (vec.length === 1) vec.push([0]);
 

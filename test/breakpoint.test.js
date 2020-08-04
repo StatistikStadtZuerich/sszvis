@@ -4,12 +4,12 @@ describe("queryProps", () => {
   const queryProps = responsiveProps()
     .breakpoints([
       { name: "small", width: 10 },
-      { name: "medium", width: 20 }
+      { name: "medium", width: 20 },
     ])
     .prop("example", {
       small: "A",
       medium: "B",
-      _: "C"
+      _: "C",
     });
 
   test.each([
@@ -17,7 +17,7 @@ describe("queryProps", () => {
     [10, "A"],
     [11, "B"],
     [20, "B"],
-    [21, "C"]
+    [21, "C"],
   ])("%s -> %s", (width, output) => {
     expect(queryProps(mkDimensions(width)).example).toBe(output);
   });

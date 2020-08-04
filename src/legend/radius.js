@@ -20,13 +20,13 @@ import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("scale")
     .prop("tickFormat")
     .tickFormat(fn.identity)
     .prop("tickValues")
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
@@ -34,16 +34,13 @@ export default function() {
       var tickValues = props.tickValues || [
         domain[1],
         props.scale.invert(mean(props.scale.range())),
-        domain[0]
+        domain[0],
       ];
       var maxRadius = range(props.scale)[1];
 
       var group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]);
 
-      var newGroup = group
-        .enter()
-        .append("g")
-        .attr("class", "sszvis-legend__elementgroup");
+      var newGroup = group.enter().append("g").attr("class", "sszvis-legend__elementgroup");
 
       // FIXME: No exit?
 
@@ -53,10 +50,7 @@ export default function() {
 
       var circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues);
 
-      var newCircles = circles
-        .enter()
-        .append("circle")
-        .classed("sszvis-legend__greyline", true);
+      var newCircles = circles.enter().append("circle").classed("sszvis-legend__greyline", true);
 
       circles.exit().remove();
 
@@ -70,17 +64,11 @@ export default function() {
         return maxRadius - 2 * props.scale(d);
       }
 
-      circles
-        .attr("r", props.scale)
-        .attr("stroke-width", 1)
-        .attr("cy", getCircleCenter);
+      circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
 
       var lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues);
 
-      var newLines = lines
-        .enter()
-        .append("line")
-        .classed("sszvis-legend__dashedline", true);
+      var newLines = lines.enter().append("line").classed("sszvis-legend__dashedline", true);
 
       lines.exit().remove();
 

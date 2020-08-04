@@ -25,7 +25,7 @@
  *                          }
  */
 
-export default function(spaceWidth, squarePadding, numX, numY, chartPadding) {
+export default function (spaceWidth, squarePadding, numX, numY, chartPadding) {
   chartPadding || (chartPadding = {});
   chartPadding.top || (chartPadding.top = 0);
   chartPadding.right || (chartPadding.right = 0);
@@ -46,6 +46,6 @@ export default function(spaceWidth, squarePadding, numX, numY, chartPadding) {
     padRatio: padRatio,
     width: tableWidth,
     height: tableHeight,
-    centeredOffset: Math.max((availableChartWidth - tableWidth) / 2, 0)
+    centeredOffset: Math.max((availableChartWidth - tableWidth) / 2, 0),
   };
 }

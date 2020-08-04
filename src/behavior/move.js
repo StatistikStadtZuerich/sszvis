@@ -51,7 +51,7 @@ import * as fn from "../fn.js";
 import { range } from "../scale.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   var event = dispatch("start", "move", "drag", "end");
 
   var moveComponent = component()
@@ -63,7 +63,7 @@ export default function() {
     .cancelScrolling(false)
     .prop("fireOnPanOnly", fn.functor)
     .fireOnPanOnly(false)
-    .prop("padding", function(p) {
+    .prop("padding", function (p) {
       var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
       for (var prop in p) {
         defaults[prop] = p[prop];
@@ -71,7 +71,7 @@ export default function() {
       return defaults;
     })
     .padding({})
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
@@ -102,15 +102,15 @@ export default function() {
         .attr("width", xExtent[1] - xExtent[0])
         .attr("height", yExtent[1] - yExtent[0])
         .attr("fill", "transparent")
-        .on("mouseover", function() {
+        .on("mouseover", function () {
           event.apply("start", this, arguments);
         })
-        .on("mousedown", function() {
+        .on("mousedown", function () {
           var target = this;
           var doc = select(document);
           var win = select(window);
 
-          var drag = function() {
+          var drag = function () {
             var xy = mouse(target);
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
@@ -118,12 +118,12 @@ export default function() {
             event.apply("drag", this, [x, y]);
           };
 
-          var startDragging = function() {
+          var startDragging = function () {
             target.__dragging__ = true;
             drag();
           };
 
-          var stopDragging = function() {
+          var stopDragging = function () {
             target.__dragging__ = false;
             win.on("mouseup.sszvis-behavior-move", null);
             win.on("mousemove.sszvis-behavior-move", null);
@@ -133,7 +133,7 @@ export default function() {
 
           win.on("mousemove.sszvis-behavior-move", drag);
           win.on("mouseup.sszvis-behavior-move", stopDragging);
-          doc.on("mouseout.sszvis-behavior-move", function() {
+          doc.on("mouseout.sszvis-behavior-move", function () {
             var from = d3Event.relatedTarget || d3Event.toElement;
             if (!from || from.nodeName === "HTML") {
               stopDragging();
@@ -142,7 +142,7 @@ export default function() {
 
           startDragging();
         })
-        .on("mousemove", function() {
+        .on("mousemove", function () {
           var target = this;
           var xy = mouse(this);
           var x = scaleInvert(props.xScale, xy[0]);
@@ -152,10 +152,10 @@ export default function() {
             event.apply("move", this, [x, y]);
           }
         })
-        .on("mouseout", function() {
+        .on("mouseout", function () {
           event.apply("end", this, []);
         })
-        .on("touchstart", function() {
+        .on("touchstart", function () {
           var xy = fn.first(touches(this));
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
@@ -183,7 +183,7 @@ export default function() {
             event.apply("drag", this, [x, y]);
             event.apply("move", this, [x, y]);
 
-            var pan = function() {
+            var pan = function () {
               var panXY = fn.first(touches(this));
               var panX = scaleInvert(props.xScale, panXY[0]);
               var panY = scaleInvert(props.yScale, panXY[1]);
@@ -203,16 +203,12 @@ export default function() {
               }
             };
 
-            var end = function() {
+            var end = function () {
               event.apply("end", this, []);
-              select(this)
-                .on("touchmove", null)
-                .on("touchend", null);
+              select(this).on("touchmove", null).on("touchend", null);
             };
 
-            select(this)
-              .on("touchmove", pan)
-              .on("touchend", end);
+            select(this).on("touchmove", pan).on("touchend", end);
           }
         });
 
@@ -221,7 +217,7 @@ export default function() {
       }
     });
 
-  moveComponent.on = function() {
+  moveComponent.on = function () {
     var value = event.on.apply(event, arguments);
     return value === event ? moveComponent : value;
   };
@@ -260,7 +256,7 @@ function invertBandScale(scale, px) {
     return null;
   }
 
-  var ranges = domain.map(function(d, i) {
+  var ranges = domain.map(function (d, i) {
     if (i === 0) {
       return [scaleRange[0], scaleRange[0] + paddingOuter + bandWidth + paddingInner / 2];
     } else if (i === domain.length - 1) {
@@ -268,7 +264,7 @@ function invertBandScale(scale, px) {
     } else {
       return [
         scaleRange[0] + paddingOuter + i * step - paddingInner / 2,
-        scaleRange[0] + paddingOuter + (i + 1) * step - paddingInner / 2
+        scaleRange[0] + paddingOuter + (i + 1) * step - paddingInner / 2,
       ];
     }
   });
@@ -293,7 +289,7 @@ function invertPointScale(scale, px) {
     return null;
   }
 
-  var ranges = domain.map(function(d, i) {
+  var ranges = domain.map(function (d, i) {
     if (i === 0) {
       return [scaleRange[0], scaleRange[0] + paddingOuter + step / 2];
     } else if (i === domain.length - 1) {
@@ -301,7 +297,7 @@ function invertPointScale(scale, px) {
     } else {
       return [
         scaleRange[0] + paddingOuter + i * step - step / 2,
-        scaleRange[0] + paddingOuter + i * step + step / 2
+        scaleRange[0] + paddingOuter + i * step + step / 2,
       ];
     }
   });

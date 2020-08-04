@@ -29,7 +29,7 @@
 
 import { aspectRatioPortrait } from "../aspectRatio.js";
 
-export default function(spaceWidth, numBars) {
+export default function (spaceWidth, numBars) {
   var MAX_HEIGHT = 480; // Chart no taller than this
   var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
   var defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
@@ -59,6 +59,6 @@ export default function(spaceWidth, numBars) {
     totalHeight: totalHeight,
     positions: positions,
     maxBarLength: maxBarLength,
-    chartPadding: chartPadding
+    chartPadding: chartPadding,
   };
 }

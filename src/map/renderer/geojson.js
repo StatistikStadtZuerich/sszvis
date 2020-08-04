@@ -21,36 +21,42 @@
  * @return {sszvis.component}
  */
 
-import {select, dispatch, geoCentroid} from 'd3';
+import { select, dispatch, geoCentroid } from "d3";
 
-import * as fn from '../../fn.js';
-import tooltipAnchor from '../../annotation/tooltipAnchor.js';
-import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
-import { mapMissingValuePattern } from '../../patterns.js';
-import { slowTransition } from '../../transition.js';
-import { GEO_KEY_DEFAULT } from '../mapUtils.js';
-import { component } from '../../d3-component.js';
+import * as fn from "../../fn.js";
+import tooltipAnchor from "../../annotation/tooltipAnchor.js";
+import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
+import { mapMissingValuePattern } from "../../patterns.js";
+import { slowTransition } from "../../transition.js";
+import { GEO_KEY_DEFAULT } from "../mapUtils.js";
+import { component } from "../../d3-component.js";
 
-export default function() {
-  var event = dispatch('over', 'out', 'click');
+export default function () {
+  var event = dispatch("over", "out", "click");
 
   var geojsonComponent = component()
-    .prop('dataKeyName').dataKeyName(GEO_KEY_DEFAULT)
-    .prop('geoJsonKeyName').geoJsonKeyName('id')
-    .prop('geoJson')
-    .prop('mapPath')
-    .prop('defined', fn.functor).defined(true)
-    .prop('fill', fn.functor).fill('black')
-    .prop('stroke', fn.functor).stroke('black')
-    .prop('strokeWidth', fn.functor).strokeWidth(1.25)
-    .prop('transitionColor').transitionColor(true)
-    .render(function(data) {
+    .prop("dataKeyName")
+    .dataKeyName(GEO_KEY_DEFAULT)
+    .prop("geoJsonKeyName")
+    .geoJsonKeyName("id")
+    .prop("geoJson")
+    .prop("mapPath")
+    .prop("defined", fn.functor)
+    .defined(true)
+    .prop("fill", fn.functor)
+    .fill("black")
+    .prop("stroke", fn.functor)
+    .stroke("black")
+    .prop("strokeWidth", fn.functor)
+    .strokeWidth(1.25)
+    .prop("transitionColor")
+    .transitionColor(true)
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
       // render the missing value pattern
-      ensureDefsElement(selection, 'pattern', 'missing-pattern')
-        .call(mapMissingValuePattern);
+      ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
 
       // getDataKeyName will be called on data values. It should return a map entity id.
       // getMapKeyName will be called on the 'properties' of each map feature. It should
@@ -59,94 +65,93 @@ export default function() {
       var getDataKeyName = fn.prop(props.dataKeyName);
       var getMapKeyName = fn.prop(props.geoJsonKeyName);
 
-      var groupedInputData = data.reduce(function(m, v) {
+      var groupedInputData = data.reduce(function (m, v) {
         m[getDataKeyName(v)] = v;
         return m;
       });
 
-      var mergedData = props.geoJson.features.map(function(feature) {
+      var mergedData = props.geoJson.features.map(function (feature) {
         return {
           geoJson: feature,
-          datum: groupedInputData[getMapKeyName(feature.properties)]
+          datum: groupedInputData[getMapKeyName(feature.properties)],
         };
       });
 
       function getMapFill(d) {
-        return fn.defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : 'url(#missing-pattern)';
+        return fn.defined(d.datum) && props.defined(d.datum)
+          ? props.fill(d.datum)
+          : "url(#missing-pattern)";
       }
 
       function getMapStroke(d) {
-        return fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : '';
+        return fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
       }
 
-      var geoElements = selection.selectAll('.sszvis-map__geojsonelement')
-        .data(mergedData);
+      var geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData);
 
-      var newGeoElements = geoElements.enter()
-        .append('path')
-        .classed('sszvis-map__geojsonelement', true)
-        .attr('data-event-target', '')
-        .attr('fill', getMapFill);
+      var newGeoElements = geoElements
+        .enter()
+        .append("path")
+        .classed("sszvis-map__geojsonelement", true)
+        .attr("data-event-target", "")
+        .attr("fill", getMapFill);
 
       geoElements.exit().remove();
 
       geoElements = geoElements.merge(newGeoElements);
 
-      selection.selectAll('.sszvis-map__geojsonelement--undefined')
-        .attr('fill', getMapFill);
+      selection.selectAll(".sszvis-map__geojsonelement--undefined").attr("fill", getMapFill);
 
       geoElements
-        .classed('sszvis-map__geojsonelement--undefined', function(d) { return !fn.defined(d.datum) || !props.defined(d.datum); })
-        .attr('d', function(d) { return props.mapPath(d.geoJson); });
+        .classed("sszvis-map__geojsonelement--undefined", function (d) {
+          return !fn.defined(d.datum) || !props.defined(d.datum);
+        })
+        .attr("d", function (d) {
+          return props.mapPath(d.geoJson);
+        });
 
       if (props.transitionColor) {
-        geoElements
-          .transition()
-          .call(slowTransition)
-          .attr('fill', getMapFill);
+        geoElements.transition().call(slowTransition).attr("fill", getMapFill);
       } else {
-        geoElements.attr('fill', getMapFill);
+        geoElements.attr("fill", getMapFill);
       }
 
-      geoElements
-        .attr('stroke', getMapStroke)
-        .attr('stroke-width', props.strokeWidth);
+      geoElements.attr("stroke", getMapStroke).attr("stroke-width", props.strokeWidth);
 
-      selection.selectAll('[data-event-target]')
-        .on('mouseover', function(d) {
+      selection
+        .selectAll("[data-event-target]")
+        .on("mouseover", function (d) {
           event.over(d.datum);
         })
-        .on('mouseout', function(d) {
+        .on("mouseout", function (d) {
           event.out(d.datum);
         })
-        .on('click', function(d) {
+        .on("click", function (d) {
           event.click(d.datum);
         });
 
       // the tooltip anchor generator
-      var ta = tooltipAnchor()
-        .position(function(d) {
-          d.geoJson.properties || (d.geoJson.properties = {});
+      var ta = tooltipAnchor().position(function (d) {
+        d.geoJson.properties || (d.geoJson.properties = {});
 
-          var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
-          if (!sphericalCentroid) {
-            d.geoJson.properties.sphericalCentroid = sphericalCentroid = geoCentroid(d.geoJson);
-          }
+        var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
+        if (!sphericalCentroid) {
+          d.geoJson.properties.sphericalCentroid = sphericalCentroid = geoCentroid(d.geoJson);
+        }
 
-          return props.mapPath.projection()(sphericalCentroid);
-        });
+        return props.mapPath.projection()(sphericalCentroid);
+      });
 
-      var tooltipGroup = selection.selectGroup('tooltipAnchors')
-        .datum(mergedData);
+      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
 
       // attach tooltip anchors
       tooltipGroup.call(ta);
     });
 
-  geojsonComponent.on = function() {
+  geojsonComponent.on = function () {
     var value = event.on.apply(event, arguments);
     return value === event ? geojsonComponent : value;
   };
 
   return geojsonComponent;
-};
+}

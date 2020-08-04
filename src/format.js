@@ -16,63 +16,63 @@ var format = formatLocale(locale).format;
  * @param  {number} d
  * @return {string}
  */
-export var formatAge = function(d) {
+export var formatAge = function (d) {
   return String(Math.round(d));
 };
 
 /**
  * A multi time formatter used by the axis class
  */
-export var formatAxisTimeFormat = function(d) {
+export var formatAxisTimeFormat = function (d) {
   var xs = [
     [
       ".%L",
-      function(date) {
+      function (date) {
         return date.getMilliseconds();
-      }
+      },
     ],
     [
       ":%S",
-      function(date) {
+      function (date) {
         return date.getSeconds();
-      }
+      },
     ],
     [
       "%H:%M",
-      function(date) {
+      function (date) {
         return date.getMinutes();
-      }
+      },
     ],
     [
       "%H Uhr",
-      function(date) {
+      function (date) {
         return date.getHours();
-      }
+      },
     ],
     [
       "%a., %d.",
-      function(date) {
+      function (date) {
         return date.getDay() && date.getDate() != 1;
-      }
+      },
     ],
     [
       "%e. %b",
-      function(date) {
+      function (date) {
         return date.getDate() != 1;
-      }
+      },
     ],
     [
       "%B",
-      function(date) {
+      function (date) {
         return date.getMonth();
-      }
+      },
     ],
     [
       "%Y",
-      function() {
+      function () {
         return true;
-      }
-    ]
+      },
+    ],
   ];
 
   for (var i = 0; i < xs.length; ++i) {
@@ -85,7 +85,7 @@ export var formatAxisTimeFormat = function(d) {
 /**
  * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
  */
-export var formatMonth = fn.compose(function(m) {
+export var formatMonth = fn.compose(function (m) {
   return m.toUpperCase();
 }, timeFormat("%b"));
 
@@ -98,7 +98,7 @@ export var formatYear = timeFormat("%Y");
  * Formatter for no label
  * @return {string} the empty string
  */
-export var formatNone = function() {
+export var formatNone = function () {
   return "";
 };
 
@@ -118,7 +118,7 @@ export var formatNone = function() {
  * @param  {number} d   Number
  * @return {string}     Fully formatted number
  */
-export var formatNumber = function(d) {
+export var formatNumber = function (d) {
   var p;
   var dAbs = Math.abs(d);
 
@@ -174,11 +174,11 @@ export var formatNumber = function(d) {
  * @param  {Number} d           The number to be formatted
  * @return {String}             The formatted number
  */
-export var formatPreciseNumber = function(p, d) {
+export var formatPreciseNumber = function (p, d) {
   // This curries the function
   if (arguments.length > 1) return formatPreciseNumber(p)(d);
 
-  return function(x) {
+  return function (x) {
     var dAbs = Math.abs(x);
     if (dAbs >= 100 && dAbs < 1e4) {
       // No thousands separator
@@ -195,7 +195,7 @@ export var formatPreciseNumber = function(p, d) {
  * @param  {number} d    A value to format, between 0 and 100
  * @return {string}      The formatted value
  */
-export var formatPercent = function(d) {
+export var formatPercent = function (d) {
   // Uses unix thin space
   return formatNumber(d) + " %";
 };
@@ -205,7 +205,7 @@ export var formatPercent = function(d) {
  * @param  {number} d    A value to format, between 0 and 1
  * @return {string}      The formatted value
  */
-export var formatFractionPercent = function(d) {
+export var formatFractionPercent = function (d) {
   // Uses unix thin space
   return formatNumber(d * 100) + " %";
 };
@@ -215,7 +215,7 @@ export var formatFractionPercent = function(d) {
  * @param  {number} d
  * @return {string} Fully formatted text
  */
-export var formatText = function(d) {
+export var formatText = function (d) {
   return String(d);
 };
 

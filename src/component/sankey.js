@@ -69,7 +69,7 @@ import translateString from "../svgUtils/translateString.js";
 import bar from "./bar.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("sizeScale")
     .prop("columnPosition")
@@ -85,7 +85,7 @@ export default function() {
     .prop("nodeColor", fn.functor)
     .prop("linkColor", fn.functor)
     .prop("linkSort", fn.functor)
-    .linkSort(function(a, b) {
+    .linkSort(function (a, b) {
       return a.value - b.value;
     }) // Default sorts in descending order of value
     .prop("labelSide", fn.functor)
@@ -102,37 +102,37 @@ export default function() {
     .prop("linkTargetLabels")
     .linkTargetLabels([])
     .prop("linkLabel", fn.functor)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
       var idAcc = fn.prop("id");
 
-      var getNodePosition = function(node) {
+      var getNodePosition = function (node) {
         return Math.floor(
           props.columnPadding(node.columnIndex) +
             props.sizeScale(node.valueOffset) +
             props.nodePadding * node.nodeIndex
         );
       };
-      var xPosition = function(node) {
+      var xPosition = function (node) {
         return props.columnPosition(node.columnIndex);
       };
-      var yPosition = function(node) {
+      var yPosition = function (node) {
         return getNodePosition(node);
       };
-      var xExtent = function() {
+      var xExtent = function () {
         return Math.max(props.nodeThickness, 1);
       };
-      var yExtent = function(node) {
+      var yExtent = function (node) {
         return Math.ceil(Math.max(props.sizeScale(node.value), 1));
       };
-      var linkPathString = function(x0, x1, x2, x3, y0, y1) {
+      var linkPathString = function (x0, x1, x2, x3, y0, y1) {
         return (
           "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1
         );
       };
-      var linkBounds = function(x0, x1, y0, y1) {
+      var linkBounds = function (x0, x1, y0, y1) {
         return [x0, x1, y0, y1];
       };
       var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
@@ -149,14 +149,14 @@ export default function() {
 
       barGroup.call(barGen);
 
-      var barTooltipAnchor = tooltipAnchor().position(function(node) {
+      var barTooltipAnchor = tooltipAnchor().position(function (node) {
         return [xPosition(node) + xExtent(node) / 2, yPosition(node) + yExtent(node) / 2];
       });
 
       barGroup.call(barTooltipAnchor);
 
       // Draw the column labels
-      var columnLabelX = function(colIndex) {
+      var columnLabelX = function (colIndex) {
         return props.columnPosition(colIndex) + props.nodeThickness / 2;
       };
       var columnLabelY = -24;
@@ -176,10 +176,10 @@ export default function() {
       columnLabels.exit().remove();
 
       columnLabels
-        .attr("transform", function(d, i) {
+        .attr("transform", function (d, i) {
           return translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY);
         })
-        .text(function(d, i) {
+        .text(function (d, i) {
           return props.columnLabel(i);
         });
 
@@ -197,17 +197,17 @@ export default function() {
       columnLabelTicks.exit().remove();
 
       columnLabelTicks
-        .attr("x1", function(d, i) {
+        .attr("x1", function (d, i) {
           return halfPixel(columnLabelX(i));
         })
-        .attr("x2", function(d, i) {
+        .attr("x2", function (d, i) {
           return halfPixel(columnLabelX(i));
         })
         .attr("y1", halfPixel(columnLabelY + 8))
         .attr("y2", halfPixel(columnLabelY + 12));
 
       // Draw the links
-      var linkPoints = function(link) {
+      var linkPoints = function (link) {
         var curveStart =
             props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
           curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
@@ -223,7 +223,7 @@ export default function() {
         return [curveStart, curveEnd, startLevel, endLevel];
       };
 
-      var linkPath = function(link) {
+      var linkPath = function (link) {
         var points = linkPoints(link),
           curveInterp = interpolateNumber(points[0], points[1]),
           curveControlPtA = curveInterp(props.linkCurvature),
@@ -239,13 +239,13 @@ export default function() {
         );
       };
 
-      var linkBoundingBox = function(link) {
+      var linkBoundingBox = function (link) {
         var points = linkPoints(link);
 
         return linkBounds(points[0], points[1], points[2], points[3]);
       };
 
-      var linkThickness = function(link) {
+      var linkThickness = function (link) {
         return Math.max(props.sizeScale(link.value), 1);
       };
 
@@ -254,10 +254,7 @@ export default function() {
 
       var linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
 
-      var newLinksElems = linksElems
-        .enter()
-        .append("path")
-        .attr("class", "sszvis-link");
+      var newLinksElems = linksElems.enter().append("path").attr("class", "sszvis-link");
       linksElems = linksElems.merge(newLinksElems);
 
       linksElems.exit().remove();
@@ -271,7 +268,7 @@ export default function() {
 
       linksGroup.datum(data.links);
 
-      var linkTooltipAnchor = tooltipAnchor().position(function(link) {
+      var linkTooltipAnchor = tooltipAnchor().position(function (link) {
         var bbox = linkBoundingBox(link);
         return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
       });
@@ -298,7 +295,7 @@ export default function() {
       linkSourceLabels.exit().remove();
 
       linkSourceLabels
-        .attr("transform", function(link) {
+        .attr("transform", function (link) {
           var bbox = linkBoundingBox(link);
           return translateString(bbox[0] + 6, bbox[2]);
         })
@@ -321,14 +318,14 @@ export default function() {
       linkTargetLabels.exit().remove();
 
       linkTargetLabels
-        .attr("transform", function(link) {
+        .attr("transform", function (link) {
           var bbox = linkBoundingBox(link);
           return translateString(bbox[1] - 6, bbox[3]);
         })
         .text(props.linkLabel);
 
       // Render the node labels and their hit boxes
-      var getLabelSide = function(colIndex) {
+      var getLabelSide = function (colIndex) {
         var side = props.labelSide(colIndex);
         if (props.labelSideSwitch) {
           side = side === "left" ? "right" : "left";
@@ -349,19 +346,19 @@ export default function() {
       barLabels.exit().remove();
 
       barLabels
-        .text(function(node) {
+        .text(function (node) {
           return props.nameLabel(node.id);
         })
         .attr("text-align", "middle")
-        .attr("text-anchor", function(node) {
+        .attr("text-anchor", function (node) {
           return getLabelSide(node.columnIndex) === "left" ? "end" : "start";
         })
-        .attr("x", function(node) {
+        .attr("x", function (node) {
           return getLabelSide(node.columnIndex) === "left"
             ? xPosition(node) - 6
             : xPosition(node) + props.nodeThickness + 6;
         })
-        .attr("y", function(node) {
+        .attr("y", function (node) {
           return yPosition(node) + yExtent(node) / 2;
         })
         .style("opacity", props.labelOpacity);
@@ -378,17 +375,17 @@ export default function() {
 
       barLabelHitBoxes
         .attr("fill", "transparent")
-        .attr("x", function(node) {
+        .attr("x", function (node) {
           return (
             xPosition(node) +
             (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)
           );
         })
-        .attr("y", function(node) {
+        .attr("y", function (node) {
           return yPosition(node) - props.nodePadding / 2;
         })
         .attr("width", props.labelHitBoxSize + props.nodeThickness)
-        .attr("height", function(node) {
+        .attr("height", function (node) {
           return yExtent(node) + props.nodePadding;
         });
     });

@@ -31,7 +31,7 @@ import { component } from "../d3-component.js";
 // user supplies m and b
 // default line is y = x
 
-export default function() {
+export default function () {
   return component()
     .prop("x1")
     .prop("x2")
@@ -44,7 +44,7 @@ export default function() {
     .prop("dy", fn.functor)
     .dy(0)
     .prop("caption", fn.functor)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -57,18 +57,11 @@ export default function() {
 
       line.exit().remove();
 
-      var newLine = line
-        .enter()
-        .append("line")
-        .classed("sszvis-referenceline", true);
+      var newLine = line.enter().append("line").classed("sszvis-referenceline", true);
 
       line = line.merge(newLine);
 
-      line
-        .attr("x1", x1)
-        .attr("y1", y1)
-        .attr("x2", x2)
-        .attr("y2", y2);
+      line.attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
 
       if (props.caption) {
         var caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
@@ -83,7 +76,7 @@ export default function() {
         caption = caption.merge(newCaption);
 
         caption
-          .attr("transform", function() {
+          .attr("transform", function () {
             var vx = x2 - x1;
             var vy = y2 - y1;
             var angle = (Math.atan2(vy, vx) * 180) / Math.PI;

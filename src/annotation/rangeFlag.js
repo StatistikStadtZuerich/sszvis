@@ -23,12 +23,12 @@ import { halfPixel } from "../svgUtils/crisp.js";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("x", fn.functor)
     .prop("y0", fn.functor)
     .prop("y1", fn.functor)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -46,7 +46,7 @@ export default function() {
         .data(data)
         .call(makeFlagDot("top", crispX, crispY1));
 
-      var ta = tooltipAnchor().position(function(d) {
+      var ta = tooltipAnchor().position(function (d) {
         return [crispX(d), halfPixel((props.y0(d) + props.y1(d)) / 2)];
       });
 
@@ -55,7 +55,7 @@ export default function() {
 }
 
 function makeFlagDot(classed, cx, cy) {
-  return function(dot) {
+  return function (dot) {
     var newDot = dot
       .enter()
       .append("circle")
@@ -66,9 +66,6 @@ function makeFlagDot(classed, cx, cy) {
 
     dot = dot.merge(newDot);
 
-    dot
-      .attr("r", 3.5)
-      .attr("cx", cx)
-      .attr("cy", cy);
+    dot.attr("r", 3.5).attr("cx", cx).attr("cy", cy);
   };
 }

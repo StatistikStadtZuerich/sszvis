@@ -23,7 +23,7 @@ import { select } from "d3";
 import * as fn from "../fn.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("values")
     .prop("current")
@@ -31,7 +31,7 @@ export default function() {
     .width(300)
     .prop("change")
     .change(fn.identity)
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
@@ -39,7 +39,7 @@ export default function() {
 
       var container = selection
         .selectAll(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-buttonGroup"], function(d) {
+        .data(["sszvis-control-buttonGroup"], function (d) {
           return d;
         });
       var newContainer = container
@@ -66,10 +66,10 @@ export default function() {
 
       buttons
         .style("width", buttonWidth + "px")
-        .classed("selected", function(d) {
+        .classed("selected", function (d) {
           return d === props.current;
         })
-        .text(function(d) {
+        .text(function (d) {
           return d;
         })
         .on("click", props.change);

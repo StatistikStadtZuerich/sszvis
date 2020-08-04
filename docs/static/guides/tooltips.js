@@ -1,29 +1,21 @@
-(function(global) {
-'use strict';
+(function (global) {
+  "use strict";
 
-global.getTooltipComponent = function(containerId, data) {
-  var tooltipLayer = sszvis.createHtmlLayer('#' + containerId)
-    .datum(data);
+  global.getTooltipComponent = function (containerId, data) {
+    var tooltipLayer = sszvis.createHtmlLayer("#" + containerId).datum(data);
 
-  return sszvis.tooltip()
-    .renderInto(tooltipLayer)
-    .visible(true);
-};
+    return sszvis.tooltip().renderInto(tooltipLayer).visible(true);
+  };
 
-global.renderTooltip = function(containerId, size, data, position, tooltip, debug) {
-  var container = sszvis.createSvgLayer('#' + containerId, sszvis.bounds(size), {})
-    .datum(data);
+  global.renderTooltip = function (containerId, size, data, position, tooltip, debug) {
+    var container = sszvis.createSvgLayer("#" + containerId, sszvis.bounds(size), {}).datum(data);
 
-  var tooltipAnchor = sszvis.tooltipAnchor()
-    .debug(!!debug)
-    .position(sszvis.functor(position));
+    var tooltipAnchor = sszvis.tooltipAnchor().debug(!!debug).position(sszvis.functor(position));
 
-  container.call(tooltipAnchor);
+    container.call(tooltipAnchor);
 
-  container.selectAll('[data-tooltip-anchor]')
-    .call(tooltip);
+    container.selectAll("[data-tooltip-anchor]").call(tooltip);
 
-  return container;
-};
-
-}(this));
+    return container;
+  };
+})(this);

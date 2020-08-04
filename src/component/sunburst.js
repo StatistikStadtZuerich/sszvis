@@ -37,7 +37,7 @@ import { component } from "../d3-component.js";
 
 var TWO_PI = 2 * Math.PI;
 
-export default function() {
+export default function () {
   return component()
     .prop("angleScale")
     .angleScale(scaleLinear().range([0, 2 * Math.PI]))
@@ -46,7 +46,7 @@ export default function() {
     .prop("fill")
     .prop("stroke")
     .stroke("white")
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -72,16 +72,16 @@ export default function() {
         }
       }
 
-      var startAngle = function(d) {
+      var startAngle = function (d) {
         return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
       };
-      var endAngle = function(d) {
+      var endAngle = function (d) {
         return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
       };
-      var innerRadius = function(d) {
+      var innerRadius = function (d) {
         return props.centerRadius + Math.max(0, props.radiusScale(d.y0));
       };
-      var outerRadius = function(d) {
+      var outerRadius = function (d) {
         return props.centerRadius + Math.max(0, props.radiusScale(d.y1));
       };
 
@@ -91,7 +91,7 @@ export default function() {
         .innerRadius(innerRadius)
         .outerRadius(outerRadius);
 
-      data.forEach(function(d) {
+      data.forEach(function (d) {
         // _x and _dx are the destination values for the transition.
         // We set these to the computed x and dx.
         d._x0 = d.x0;
@@ -100,7 +100,7 @@ export default function() {
 
       var arcs = selection
         .selectAll(".sszvis-sunburst-arc")
-        .each(function(d, i) {
+        .each(function (d, i) {
           if (data[i]) {
             // x and dx are the current/transitioning values
             // We set these here, in case any datums already exist which have values set
@@ -111,10 +111,7 @@ export default function() {
         })
         .data(data);
 
-      var newArcs = arcs
-        .enter()
-        .append("path")
-        .attr("class", "sszvis-sunburst-arc");
+      var newArcs = arcs.enter().append("path").attr("class", "sszvis-sunburst-arc");
 
       arcs.exit().remove();
 
@@ -122,10 +119,10 @@ export default function() {
 
       arcs.attr("stroke", props.stroke).attr("fill", getColorRecursive);
 
-      arcs.transition(defaultTransition()).attrTween("d", function(d) {
+      arcs.transition(defaultTransition()).attrTween("d", function (d) {
         var x0Interp = interpolate(d.x0, d._x0);
         var x1Interp = interpolate(d.x1, d._x1);
-        return function(t) {
+        return function (t) {
           d.x0 = x0Interp(t);
           d.x1 = x1Interp(t);
           return arcGen(d);
@@ -133,7 +130,7 @@ export default function() {
       });
 
       // Add tooltip anchors
-      var arcTooltipAnchor = tooltipAnchor().position(function(d) {
+      var arcTooltipAnchor = tooltipAnchor().position(function (d) {
         var startA = startAngle(d);
         var endA = endAngle(d);
         var a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;

@@ -36,23 +36,23 @@ import * as fn from "../fn.js";
 
 function formatHTML() {
   var styles = {
-    plain: function(d) {
+    plain: function (d) {
       return d;
     },
-    italic: function(d) {
+    italic: function (d) {
       return "<em>" + d + "</em>";
     },
-    bold: function(d) {
+    bold: function (d) {
       return "<strong>" + d + "</strong>";
-    }
+    },
   };
 
-  return function(textBody, datum) {
+  return function (textBody, datum) {
     return textBody
       .lines()
-      .map(function(line) {
+      .map(function (line) {
         return line
-          .map(function(word) {
+          .map(function (word) {
             return styles[word.style].call(null, word.text(datum));
           })
           .join(" ");
@@ -63,21 +63,21 @@ function formatHTML() {
 
 function formatSVG() {
   var styles = {
-    plain: function(d) {
+    plain: function (d) {
       return "<tspan>" + d + "</tspan>";
     },
-    italic: function(d) {
+    italic: function (d) {
       return '<tspan style="font-style:italic">' + d + "</tspan>";
     },
-    bold: function(d) {
+    bold: function (d) {
       return '<tspan style="font-weight:bold">' + d + "</tspan>";
-    }
+    },
   };
 
-  return function(textBody, datum) {
-    return textBody.lines().reduce(function(svg, line, i) {
+  return function (textBody, datum) {
+    return textBody.lines().reduce(function (svg, line, i) {
       var lineSvg = line
-        .map(function(word) {
+        .map(function (word) {
           return styles[word.style].call(null, word.text(datum));
         })
         .join(" ");
@@ -91,38 +91,38 @@ function structuredText() {
   var lines = [[]];
 
   return {
-    addLine: function() {
+    addLine: function () {
       lines.push([]);
     },
 
-    addWord: function(style, text) {
+    addWord: function (style, text) {
       fn.last(lines).push({
         text: fn.functor(text),
-        style: style
+        style: style,
       });
     },
 
-    lines: function() {
+    lines: function () {
       return lines;
-    }
+    },
   };
 }
 
 function makeTextWithFormat(format) {
-  return function() {
+  return function () {
     var textBody = structuredText();
 
     function makeText(d) {
       return format(textBody, d);
     }
 
-    makeText.newline = function() {
+    makeText.newline = function () {
       textBody.addLine();
       return makeText;
     };
 
-    ["bold", "italic", "plain"].forEach(function(style) {
-      makeText[style] = function(text) {
+    ["bold", "italic", "plain"].forEach(function (style) {
+      makeText[style] = function (text) {
         textBody.addWord(style, text);
         return makeText;
       };

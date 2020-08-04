@@ -31,7 +31,7 @@ import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("x")
     .prop("y0")
@@ -40,21 +40,21 @@ export default function() {
     .prop("stroke")
     .prop("defined")
     .prop("key")
-    .key(function(d, i) {
+    .key(function (d, i) {
       return i;
     })
     .prop("valuesAccessor")
     .valuesAccessor(fn.identity)
     .prop("transition")
     .transition(true)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
       //sszsch why reverse?
       data = data.slice().reverse();
 
-      var defaultDefined = function() {
+      var defaultDefined = function () {
         return fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1);
       };
 
@@ -66,10 +66,7 @@ export default function() {
 
       var paths = selection.selectAll("path.sszvis-path").data(data, props.key);
 
-      var newPaths = paths
-        .enter()
-        .append("path")
-        .classed("sszvis-path", true);
+      var newPaths = paths.enter().append("path").classed("sszvis-path", true);
 
       paths.exit().remove();
 

@@ -25,7 +25,7 @@ import ensureDefsElement from "../svgUtils/ensureDefsElement.js";
 import { dataAreaPattern } from "../patterns.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
@@ -33,7 +33,7 @@ export default function() {
     .prop("dx", fn.functor)
     .prop("dy", fn.functor)
     .prop("caption", fn.functor)
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -41,10 +41,7 @@ export default function() {
 
       var dataArea = selection.selectAll(".sszvis-dataareacircle").data(data);
 
-      var newDataArea = dataArea
-        .enter()
-        .append("circle")
-        .classed("sszvis-dataareacircle", true);
+      var newDataArea = dataArea.enter().append("circle").classed("sszvis-dataareacircle", true);
       dataArea = dataArea.merge(newDataArea);
 
       dataArea

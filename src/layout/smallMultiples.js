@@ -54,7 +54,7 @@
 import { select } from "d3";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("width")
     .prop("height")
@@ -62,7 +62,7 @@ export default function() {
     .prop("paddingY")
     .prop("rows")
     .prop("cols")
-    .render(function(data) {
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -74,30 +74,24 @@ export default function() {
 
       var multiples = selection.selectAll("g.sszvis-multiple").data(data);
 
-      var newMultiples = multiples
-        .enter()
-        .append("g")
-        .classed("sszvis-g sszvis-multiple", true);
+      var newMultiples = multiples.enter().append("g").classed("sszvis-g sszvis-multiple", true);
 
       multiples.exit().remove();
 
       multiples = multiples.merge(newMultiples);
 
-      var subGroups = multiples.selectAll("g.sszvis-multiple-chart").data(function(d) {
+      var subGroups = multiples.selectAll("g.sszvis-multiple-chart").data(function (d) {
         return [d.values];
       });
 
-      var newSubGroups = subGroups
-        .enter()
-        .append("g")
-        .classed("sszvis-multiple-chart", true);
+      var newSubGroups = subGroups.enter().append("g").classed("sszvis-multiple-chart", true);
 
       subGroups.exit().remove();
 
       subGroups = subGroups.merge(newSubGroups);
 
       multiples
-        .datum(function(d, i) {
+        .datum(function (d, i) {
           d.gx = (i % props.cols) * (unitWidth + props.paddingX);
           d.gw = unitWidth;
           d.cx = horizontalCenter;
@@ -106,7 +100,7 @@ export default function() {
           d.cy = verticalCenter;
           return d;
         })
-        .attr("transform", function(d) {
+        .attr("transform", function (d) {
           return "translate(" + d.gx + "," + d.gy + ")";
         });
     });

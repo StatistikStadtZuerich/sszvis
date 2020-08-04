@@ -118,7 +118,7 @@ export function legendColorOrdinal() {
     .floatPadding(20)
     .prop("floatWidth")
     .floatWidth(600)
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
@@ -139,24 +139,18 @@ export function legendColorOrdinal() {
 
       var groups = selection.selectAll(".sszvis-legend--entry").data(domain);
 
-      var newGroups = groups
-        .enter()
-        .append("g")
-        .classed("sszvis-legend--entry", true);
+      var newGroups = groups.enter().append("g").classed("sszvis-legend--entry", true);
 
       groups.exit().remove();
 
       var marks = groups
         .merge(newGroups)
         .selectAll(".sszvis-legend__mark")
-        .data(function(d) {
+        .data(function (d) {
           return [d];
         });
 
-      var newMarks = marks
-        .enter()
-        .append("circle")
-        .classed("sszvis-legend__mark", true);
+      var newMarks = marks.enter().append("circle").classed("sszvis-legend__mark", true);
 
       marks.exit().remove();
 
@@ -165,10 +159,10 @@ export function legendColorOrdinal() {
         .attr("cx", props.rightAlign ? -6 : 6)
         .attr("cy", halfPixel(props.rowHeight / 2))
         .attr("r", 5)
-        .attr("fill", function(d) {
+        .attr("fill", function (d) {
           return props.scale(d);
         })
-        .attr("stroke", function(d) {
+        .attr("stroke", function (d) {
           return props.scale(d);
         })
         .attr("stroke-width", 1);
@@ -176,27 +170,24 @@ export function legendColorOrdinal() {
       var labels = groups
         .merge(newGroups)
         .selectAll(".sszvis-legend__label")
-        .data(function(d) {
+        .data(function (d) {
           return [d];
         });
 
-      var newLabels = labels
-        .enter()
-        .append("text")
-        .classed("sszvis-legend__label", true);
+      var newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
 
       labels.exit().remove();
 
       labels
         .merge(newLabels)
-        .text(function(d) {
+        .text(function (d) {
           return d;
         })
         .attr("dy", "0.35em") // vertically-center
-        .style("text-anchor", function() {
+        .style("text-anchor", function () {
           return props.rightAlign ? "end" : "start";
         })
-        .attr("transform", function() {
+        .attr("transform", function () {
           var x = props.rightAlign ? -18 : 18;
           var y = halfPixel(props.rowHeight / 2);
           return translateString(x, y);
@@ -210,7 +201,7 @@ export function legendColorOrdinal() {
       if (props.horizontalFloat) {
         var rowPosition = 0,
           horizontalPosition = 0;
-        groups.merge(newGroups).attr("transform", function() {
+        groups.merge(newGroups).attr("transform", function () {
           // not affected by scroll position
           var width = this.getBoundingClientRect().width;
           if (horizontalPosition + width > props.floatWidth) {
@@ -222,7 +213,7 @@ export function legendColorOrdinal() {
           return verticalOffset + translate;
         });
       } else {
-        groups.merge(newGroups).attr("transform", function(d, i) {
+        groups.merge(newGroups).attr("transform", function (d, i) {
           if (props.orientation === "horizontal") {
             return (
               verticalOffset +

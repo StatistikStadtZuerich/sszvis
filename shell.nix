@@ -1,6 +1,6 @@
 let
-  pkgs = import (fetchTarball http://nixos.org/channels/nixpkgs-19.09-darwin/nixexprs.tar.xz) {};
-  nodejs = pkgs.nodejs-10_x;
+  pkgs = import (fetchTarball http://nixos.org/channels/nixpkgs-20.03-darwin/nixexprs.tar.xz) {};
+  nodejs = pkgs.nodejs-12_x;
 
 in pkgs.mkShell rec {
   buildInputs = [

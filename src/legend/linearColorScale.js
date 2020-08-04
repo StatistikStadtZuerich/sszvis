@@ -21,7 +21,7 @@ import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
     .prop("scale")
     .prop("displayValues")
@@ -33,7 +33,7 @@ export default function() {
     .prop("labelText")
     .prop("labelFormat")
     .labelFormat(fn.identity)
-    .render(function() {
+    .render(function () {
       var selection = select(this);
       var props = selection.props();
 
@@ -56,23 +56,20 @@ export default function() {
 
       var segments = selection.selectAll("rect.sszvis-legend__mark").data(values);
 
-      var newSegments = segments
-        .enter()
-        .append("rect")
-        .classed("sszvis-legend__mark", true);
+      var newSegments = segments.enter().append("rect").classed("sszvis-legend__mark", true);
 
       segments.exit().remove();
 
       segments = segments.merge(newSegments);
 
       segments
-        .attr("x", function(d, i) {
+        .attr("x", function (d, i) {
           return i * segWidth - 1;
         }) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("y", 0)
         .attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("height", segHeight)
-        .attr("fill", function(d) {
+        .attr("fill", function (d) {
           return props.scale(d);
         });
 
@@ -82,31 +79,25 @@ export default function() {
       // rounded end caps for the segments
       var endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd);
 
-      var newEndCaps = endCaps
-        .enter()
-        .append("circle")
-        .attr("class", "ssvis-legend--mark");
+      var newEndCaps = endCaps.enter().append("circle").attr("class", "ssvis-legend--mark");
 
       endCaps.exit().remove();
 
       endCaps = endCaps.merge(newEndCaps);
 
       endCaps
-        .attr("cx", function(d, i) {
+        .attr("cx", function (d, i) {
           return i * props.width;
         })
         .attr("cy", segHeight / 2)
         .attr("r", segHeight / 2)
-        .attr("fill", function(d) {
+        .attr("fill", function (d) {
           return props.scale(d);
         });
 
       var labels = selection.selectAll(".sszvis-legend__label").data(labelText);
 
-      var newLabels = labels
-        .enter()
-        .append("text")
-        .classed("sszvis-legend__label", true);
+      var newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
 
       labels.exit().remove();
 
@@ -115,11 +106,11 @@ export default function() {
       var labelPadding = 16;
 
       labels
-        .style("text-anchor", function(d, i) {
+        .style("text-anchor", function (d, i) {
           return i === 0 ? "end" : "start";
         })
         .attr("dy", "0.35em") // vertically-center
-        .attr("transform", function(d, i) {
+        .attr("transform", function (d, i) {
           return (
             "translate(" +
             (i * props.width + (i === 0 ? -1 : 1) * labelPadding) +
@@ -128,7 +119,7 @@ export default function() {
             ")"
           );
         })
-        .text(function(d, i) {
+        .text(function (d, i) {
           var formatted = props.labelFormat(d, i);
           return formatted;
         });

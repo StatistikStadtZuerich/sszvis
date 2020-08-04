@@ -49,7 +49,7 @@ import * as fn from "./fn.js";
  */
 export function breakpointFind(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
-  return fn.find(function(bp) {
+  return fn.find(function (bp) {
     return breakpointTest(bp, measurement);
   }, breakpoints);
 }
@@ -66,7 +66,7 @@ export function breakpointFind(breakpoints, partialMeasurement) {
  *          breakpoint for the given name exists, that breakpoint is returned
  */
 export function breakpointFindByName(breakpoints, name) {
-  var eqName = function(bp) {
+  var eqName = function (bp) {
     return bp.name === name;
   };
   return fn.find(eqName, breakpoints);
@@ -99,7 +99,7 @@ export function breakpointTest(breakpoint, partialMeasurement) {
  */
 export function breakpointMatch(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
-  return breakpoints.filter(function(bp) {
+  return breakpoints.filter(function (bp) {
     return breakpointTest(bp, measurement);
   });
 }
@@ -124,12 +124,12 @@ export function breakpointCreateSpec(spec) {
  * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
  *          default breakpoint spec.
  */
-export var breakpointDefaultSpec = (function() {
+export var breakpointDefaultSpec = (function () {
   var DEFAULT_SPEC = breakpointCreateSpec([
     { name: "palm", width: 540 },
-    { name: "lap", width: 749 }
+    { name: "lap", width: 749 },
   ]);
-  return function() {
+  return function () {
     return DEFAULT_SPEC;
   };
 })();
@@ -163,7 +163,7 @@ function parseMeasurement(partialMeasurement) {
   var screenHeightOrInf = fn.propOr("screenHeight", Infinity);
   return {
     width: widthOrInf(partialMeasurement),
-    screenHeight: screenHeightOrInf(partialMeasurement)
+    screenHeight: screenHeightOrInf(partialMeasurement),
   };
 }
 
@@ -200,7 +200,7 @@ function parseBreakpoint(bp) {
   }
   return {
     name: bp.name,
-    measurement: measurement
+    measurement: measurement,
   };
 }
 
@@ -208,7 +208,7 @@ function parseBreakpoint(bp) {
  * Create a partially applied test function
  */
 function makeTest(name) {
-  return function(measurement) {
+  return function (measurement) {
     return breakpointTest(breakpointFindByName(breakpointDefaultSpec(), name), measurement);
   };
 }

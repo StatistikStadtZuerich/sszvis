@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Scatterplot</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/VRS_basic.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -36,25 +36,25 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("xAxisLabel", {
-            _: "NeubauAbs"
+            _: "NeubauAbs",
           })
           .prop("yAxisLabel", {
-            _: "LeerZunRel"
+            _: "LeerZunRel",
           })
           .prop("rLabel", {
-            _: "Radius"
+            _: "Radius",
           })
           .prop("xTicks", {
-            _: null
+            _: null,
           })
           .prop("yTicks", {
-            _: null
+            _: null,
           })
           .prop("legendTicks", {
-            _: null
+            _: null,
           })
           .prop("legendPadding", {
-            _: 60
+            _: 60,
           });
 
         /* Shortcuts
@@ -64,7 +64,7 @@
             xPosition: sszvis.parseNumber(d["NeubauAbs (x-Achse)"]),
             yPosition: sszvis.parseNumber(d["LeerZunRel (y-Achse) "]),
             radius: sszvis.parseNumber(d["Best13Radius (bubble)"]),
-            label: d["QuName"]
+            label: d["QuName"],
           };
         }
 
@@ -80,18 +80,18 @@
           highlightData: [],
           xExtent: [0, 0],
           yExtent: [0, 0],
-          rExtent: [0, 0]
+          rExtent: [0, 0],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
 
             // for the voronoi component to work, the data must first be filtered such that no two vertices
             // fall at exactly the same point.
-            state.voronoiFiltered = sszvis.derivedSet(state.data, function(d) {
+            state.voronoiFiltered = sszvis.derivedSet(state.data, function (d) {
               return xAcc(d) + "__" + yAcc(d);
             });
 
@@ -103,32 +103,24 @@
             render(state);
           },
 
-          setHighlight: function(d) {
+          setHighlight: function (d) {
             state.highlightData = [d];
             render(state);
           },
 
-          resetHighlight: function() {
+          resetHighlight: function () {
             state.highlightData = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
@@ -138,24 +130,15 @@
 
           // Scales
 
-          var xScale = d3
-            .scaleLinear()
-            .domain(state.xExtent)
-            .range([0, bounds.innerWidth]);
+          var xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
 
           var xValue = sszvis.compose(xScale, xAcc);
 
-          var yScale = d3
-            .scaleLinear()
-            .domain(state.yExtent)
-            .range([bounds.innerHeight, 0]);
+          var yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
 
           var yValue = sszvis.compose(yScale, yAcc);
 
-          var rScale = d3
-            .scaleLinear()
-            .domain(state.rExtent)
-            .range([1, 20]);
+          var rScale = d3.scaleLinear().domain(state.rExtent).range([1, 20]);
 
           // Layers
 
@@ -180,7 +163,7 @@
             .orient("bottom")
             .contour(true)
             .ticks(props.xTicks)
-            .tickFormat(function(d) {
+            .tickFormat(function (d) {
               return d < 1 ? d.toPrecision(1) : d;
             })
             .title(props.xAxisLabel);
@@ -198,7 +181,7 @@
             .legendRadius()
             .scale(rScale)
             .tickValues(props.legendTicks)
-            .tickFormat(function(d) {
+            .tickFormat(function (d) {
               return Math.round(d * 100) / 100;
             });
 
@@ -206,17 +189,17 @@
             .tooltip()
             .renderInto(tooltipLayer)
             .header(cAcc)
-            .body(function(d) {
+            .body(function (d) {
               return [
                 [props.xAxisLabel, sszvis.formatNumber(xAcc(d))],
                 [props.yAxisLabel, sszvis.formatNumber(yAcc(d))],
-                [props.rLabel, sszvis.formatNumber(rAcc(d))]
+                [props.rLabel, sszvis.formatNumber(rAcc(d))],
               ];
             })
-            .visible(function(d) {
+            .visible(function (d) {
               return sszvis.contains(state.highlightData, d);
             })
-            .orientation(function(d) {
+            .orientation(function (d) {
               return xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right";
             });
 
@@ -250,23 +233,20 @@
             .y(yValue)
             .bounds([
               [0, 0],
-              [bounds.innerWidth, bounds.innerHeight]
+              [bounds.innerWidth, bounds.innerHeight],
             ])
             .on("over", actions.setHighlight)
             .on("out", actions.resetHighlight);
 
-          chartLayer
-            .selectGroup("voronoiMouse")
-            .datum(state.voronoiFiltered)
-            .call(mouseOverlay);
+          chartLayer.selectGroup("voronoiMouse").datum(state.voronoiFiltered).call(mouseOverlay);
         }
 
         /* Helper functions
         ----------------------------------------------- */
 
         function removeOverlappingYTickLabels(maxBottom) {
-          return function(g) {
-            g.selectAll("text").each(function() {
+          return function (g) {
+            g.selectAll("text").each(function () {
               var bottom = this.getBoundingClientRect().bottom;
               if (bottom >= maxBottom) d3.select(this.parentNode).style("display", "none");
             });

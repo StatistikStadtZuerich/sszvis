@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Horizontal Bar Chart</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/SHB_13Categories.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -34,17 +34,17 @@
         ----------------------------------------------- */
         var MAX_CONTROL_WIDTH = 300;
         var queryProps = sszvis.responsiveProps().prop("controlWidth", {
-          _: function(width) {
+          _: function (width) {
             return Math.min(width, MAX_CONTROL_WIDTH);
             return Math.max(420, Math.min(MAX_CONTROL_WIDTH, width / 2));
-          }
+          },
         });
 
         function parseRow(d) {
           return {
             category: d["Sektor"],
             value: sszvis.parseNumber(d["Zupendler"]),
-            year: sszvis.parseNumber(d["Jahr"])
+            year: sszvis.parseNumber(d["Jahr"]),
           };
         }
 
@@ -60,55 +60,47 @@
           years: [],
           selectedYear: null,
           selectedData: [],
-          selected: []
+          selected: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.categories = sszvis.set(state.data, yAcc);
             state.years = sszvis.set(state.data, jAcc);
             actions.selectYear(d3.max(state.years));
           },
 
-          selectYear: function(year) {
+          selectYear: function (year) {
             state.selectedYear = year;
-            state.selectedData = state.data.filter(function(d) {
+            state.selectedData = state.data.filter(function (d) {
               return jAcc(d) === year;
             });
             render(state);
           },
 
-          showTooltip: function(_, category) {
-            state.selected = state.data.filter(function(d) {
+          showTooltip: function (_, category) {
+            state.selected = state.data.filter(function (d) {
               return yAcc(d) === category;
             });
             render(state);
           },
 
-          hideTooltip: function() {
+          hideTooltip: function () {
             state.selected = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
@@ -155,21 +147,17 @@
             .width(sszvis.compose(widthScale, xAcc))
             .height(chartDimensions.barHeight)
             .centerTooltip(true)
-            .fill(function(d) {
+            .fill(function (d) {
               return isSelected(d) ? cScaleDark(d) : cScale(d);
             });
 
-          var xAxis = sszvis
-            .axisX()
-            .scale(widthScale)
-            .orient("bottom")
-            .alignOuterLabels(true);
+          var xAxis = sszvis.axisX().scale(widthScale).orient("bottom").alignOuterLabels(true);
 
           var yAxis = sszvis.axisY
             .ordinal()
             .scale(yScale)
             .orient("right")
-            .highlightTick(function(d) {
+            .highlightTick(function (d) {
               return sszvis.contains(state.selected.map(sszvis.compose(String, yAcc)), String(d));
             });
 
@@ -181,7 +169,7 @@
             .change(actions.selectYear);
 
           var tooltipHeader = sszvis.modularTextHTML().bold(
-            sszvis.compose(function(d) {
+            sszvis.compose(function (d) {
               return isNaN(d) ? "k. A." : sszvis.formatNumber(d);
             }, xAcc)
           );
@@ -239,7 +227,7 @@
         }
 
         function isWithinBarContour(xValue, category) {
-          var barDatum = sszvis.find(function(d) {
+          var barDatum = sszvis.find(function (d) {
             return jAcc(d) === state.selectedYear && yAcc(d) === category;
           }, state.data);
           return sszvis.util.testBarThreshold(xValue, barDatum, xAcc, 2000);

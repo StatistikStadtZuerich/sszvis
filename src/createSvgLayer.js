@@ -51,21 +51,15 @@ export function createSvgLayer(selector, bounds, metadata) {
     .attr(elementDataKey, "")
     .attr("role", "img");
 
-  svg
-    .merge(svgEnter)
-    .attr("height", bounds.height)
-    .attr("width", bounds.width);
+  svg.merge(svgEnter).attr("height", bounds.height).attr("width", bounds.width);
 
   var viewport = svg
     .merge(svgEnter)
     .selectAll("[data-sszvis-svg-layer]")
-    .data(function() {
+    .data(function () {
       return [0];
     });
-  var viewportEnter = viewport
-    .enter()
-    .append("g")
-    .attr("data-sszvis-svg-layer", "");
+  var viewportEnter = viewport.enter().append("g").attr("data-sszvis-svg-layer", "");
 
   viewport
     .merge(viewportEnter)

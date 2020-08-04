@@ -14,20 +14,14 @@ import { transition as d3Transition, easePolyOut } from "d3";
 
 var defaultEase = easePolyOut;
 
-export var defaultTransition = function() {
-  return d3Transition()
-    .ease(defaultEase)
-    .duration(300);
+export var defaultTransition = function () {
+  return d3Transition().ease(defaultEase).duration(300);
 };
 
-export var fastTransition = function() {
-  return d3Transition()
-    .ease(defaultEase)
-    .duration(50);
+export var fastTransition = function () {
+  return d3Transition().ease(defaultEase).duration(50);
 };
 
-export var slowTransition = function() {
-  return d3Transition()
-    .ease(defaultEase)
-    .duration(500);
+export var slowTransition = function () {
+  return d3Transition().ease(defaultEase).duration(500);
 };

@@ -61,14 +61,14 @@ import { select } from "d3";
 
 import * as fn from "../fn.js";
 
-export var elementFromEvent = function(evt) {
+export var elementFromEvent = function (evt) {
   if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
   return null;
 };
 
-export var datumFromPannableElement = function(element) {
+export var datumFromPannableElement = function (element) {
   if (!fn.isNull(element)) {
     var selection = select(element);
     if (!fn.isNull(selection.attr("data-sszvis-behavior-pannable"))) {
@@ -81,11 +81,11 @@ export var datumFromPannableElement = function(element) {
   return null;
 };
 
-export var datumFromPanEvent = function(evt) {
+export var datumFromPanEvent = function (evt) {
   return datumFromPannableElement(elementFromEvent(evt));
 };
 
-export var testBarThreshold = function(cursorValue, datum, accessor, threshold) {
+export var testBarThreshold = function (cursorValue, datum, accessor, threshold) {
   if (!fn.defined(datum)) {
     return false;
   }

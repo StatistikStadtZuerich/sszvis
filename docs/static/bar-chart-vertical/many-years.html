@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Vertical Bar Chart</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/SiVB_yearly_many.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -37,21 +37,21 @@
           .responsiveProps()
           .prop("barPadding", {
             palm: 0.2,
-            _: 0.1
+            _: 0.1,
           })
           .prop("leftPadding", {
-            _: null
+            _: null,
           })
           .prop("yLabelFormat", {
-            _: function() {
+            _: function () {
               return sszvis.formatNumber;
-            }
+            },
           });
 
         function parseRow(d) {
           return {
             year: sszvis.parseNumber(d["Jahr"]),
-            value: sszvis.parseNumber(d["Hotelübernachtungen"])
+            value: sszvis.parseNumber(d["Hotelübernachtungen"]),
           };
         }
 
@@ -64,48 +64,40 @@
           data: [],
           categories: [],
           yearRange: [],
-          selection: []
+          selection: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.categories = sszvis.set(state.data, xAcc);
             state.yearRange = d3.extent(state.data, xAcc);
             render(state);
           },
 
-          changeDate: function(selectedDate) {
+          changeDate: function (selectedDate) {
             var selectedYear = Math.round(selectedDate);
-            state.selection = state.data.filter(function(v) {
+            state.selection = state.data.filter(function (v) {
               return xAcc(v) === selectedYear;
             });
             render(state);
           },
 
-          resetDate: function() {
+          resetDate: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
@@ -119,7 +111,7 @@
               left:
                 props.leftPadding != null
                   ? props.leftPadding
-                  : sszvis.measureAxisLabel(props.yLabelFormat(yMax)) + 10
+                  : sszvis.measureAxisLabel(props.yLabelFormat(yMax)) + 10,
             },
             config.id
           );
@@ -138,17 +130,9 @@
             .paddingOuter(props.barPadding)
             .range([0, chartDimensions.totalWidth]);
 
-          var heightScale = d3
-            .scaleLinear()
-            .domain([0, yMax])
-            .range([0, bounds.innerHeight]);
+          var heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
 
-          var yPosScale = heightScale.copy().range(
-            heightScale
-              .range()
-              .slice()
-              .reverse()
-          );
+          var yPosScale = heightScale.copy().range(heightScale.range().slice().reverse());
 
           var xValue = sszvis.compose(xScale, xAcc);
           // rounding the y-values and the height prevents the bars from jumping around
@@ -172,7 +156,7 @@
             .y(yValue)
             .width(xScale.bandwidth())
             .height(hValue)
-            .fill(function(d) {
+            .fill(function (d) {
               return isSelected(d) ? cScaleDark(d) : cScale(d);
             });
 
@@ -183,22 +167,16 @@
             .alignOuterLabels(true)
             .ticks(5);
 
-          var yAxis = sszvis
-            .axisY()
-            .scale(yPosScale)
-            .orient("right");
+          var yAxis = sszvis.axisY().scale(yPosScale).orient("right");
 
-          var tooltipTitle = sszvis
-            .modularTextHTML()
-            .bold(yAcc)
-            .plain("Hotelübernachtungen");
+          var tooltipTitle = sszvis.modularTextHTML().bold(yAcc).plain("Hotelübernachtungen");
 
           var tooltip = sszvis
             .tooltip()
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .renderInto(tooltipLayer)
             .header(tooltipTitle)
-            .body(function(d) {
+            .body(function (d) {
               return "Im Jahr " + xAcc(d);
             })
             .visible(isSelected);

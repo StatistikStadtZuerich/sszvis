@@ -70,7 +70,7 @@ export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     top: either(_bounds.top, 0),
     right: either(_bounds.right, 1),
     bottom: either(_bounds.bottom, 0),
-    left: either(_bounds.left, 1)
+    left: either(_bounds.left, 1),
   };
 
   // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
@@ -87,7 +87,7 @@ export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     height: height,
     width: width,
     screenWidth: dimensions.screenWidth,
-    screenHeight: dimensions.screenHeight
+    screenHeight: dimensions.screenHeight,
   };
 }
 

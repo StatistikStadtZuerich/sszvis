@@ -22,7 +22,7 @@ import { isSelection, isString } from "./fn";
  *                      screenWidth: {number} The innerWidth of the screen
  *                      screenHeight: {number} The innerHeight of the screen
  */
-export var measureDimensions = function(arg) {
+export var measureDimensions = function (arg) {
   var node;
   if (isString(arg)) {
     node = d3.select(arg).node();
@@ -34,7 +34,7 @@ export var measureDimensions = function(arg) {
   return {
     width: node ? node.getBoundingClientRect().width : undefined,
     screenWidth: window.innerWidth,
-    screenHeight: window.innerHeight
+    screenHeight: window.innerHeight,
   };
 };
 
@@ -53,12 +53,12 @@ export var measureDimensions = function(arg) {
  * @example
  * var helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
  **/
-export var measureText = (function() {
+export var measureText = (function () {
   var canvas = document.createElement("canvas");
   var context = canvas.getContext("2d");
   var cache = {};
 
-  return function(fontSize, fontFace, text) {
+  return function (fontSize, fontFace, text) {
     var key = [fontSize, fontFace, text].join("-");
     context.font = fontSize + "px " + fontFace;
     return cache[key] || (cache[key] = context.measureText(text).width);
@@ -76,7 +76,7 @@ export var measureText = (function() {
  * @example
  * var labelWidth = sszvis.measureAxisLabel("Hello!")
  */
-export var measureAxisLabel = function(text) {
+export var measureAxisLabel = function (text) {
   return measureText(10, "Arial, sans-serif", text);
 };
 
@@ -91,6 +91,6 @@ export var measureAxisLabel = function(text) {
  * @example
  * var labelWidth = sszvis.measureLegendLabel("Hello!")
  */
-export var measureLegendLabel = function(text) {
+export var measureLegendLabel = function (text) {
   return measureText(12, "Arial, sans-serif", text);
 };
