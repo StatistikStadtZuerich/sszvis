@@ -26,6 +26,7 @@ import "./d3-selectgroup.js";
 ////////////////////////////////////////////////////////////////////////////////
 
 export * from "./annotation/index.js";
+export * from "./app.js";
 export * from "./aspectRatio.js";
 export * from "./axis.js";
 export * from "./behavior/index.js";
