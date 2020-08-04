@@ -6,16 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Map</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, topojson, sszvis) {
+      (function (d3, topojson, sszvis) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -27,7 +27,7 @@
         ----------------------------------------------- */
 
         var queryProps = sszvis.responsiveProps().prop("bounds", {
-          _: function(width) {
+          _: function (width) {
             // The calculation of the rastermap bounds is a bit more complex due to the fact
             // that we have to deal with a raster image in the background that has a bigger
             // size than the vector map.
@@ -41,7 +41,7 @@
               top: Math.min(36 * scale, 36),
               right: 49 * scale,
               bottom: Math.min(31 * scale, 31),
-              left: 42 * scale
+              left: 42 * scale,
             };
 
             var innerWidth = width - padding.left - padding.right;
@@ -60,43 +60,37 @@
               bottom: padding.bottom,
               left: padding.left,
               right: padding.right,
-              height: padding.top + innerHeight + padding.bottom
+              height: padding.top + innerHeight + padding.bottom,
             };
-          }
+          },
         });
 
         /* Application state
         ----------------------------------------------- */
         var state = {
-          mapData: null
+          mapData: null,
         };
 
         var actions = {
-          resize: function() {
+          resize: function () {
             render(state);
           },
 
-          prepareMapData: function(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.stadtkreise),
               borders: topojson.mesh(topo, topo.objects.stadtkreise),
               lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
-              lakeBorders: topojson.mesh(topo, topo.objects.stadtkreis_lakebounds)
+              lakeBorders: topojson.mesh(topo, topo.objects.stadtkreis_lakebounds),
             };
             render(state);
-          }
+          },
         };
 
         /* Initialization
         ----------------------------------------------- */
 
-        d3.json("../topo/stadt-zurich.json").get(function(error, data) {
-          if (error) {
-            sszvis.loadError(error);
-            return;
-          }
-          actions.prepareMapData(data);
-        });
+        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
@@ -147,7 +141,7 @@
 
           var layerBounds = [
             [8.431443 + geoOffset, 47.448978 + geoOffset],
-            [8.647471 + geoOffset, 47.309726 + geoOffset]
+            [8.647471 + geoOffset, 47.309726 + geoOffset],
           ];
 
           // This example uses the map data modules containing base64-encoded clipped data

@@ -12,7 +12,7 @@ The following provides a brief overview of a typical code example in this reposi
 <html>
   <head>
     <link href="https://unpkg.com/sszvis@2/build/sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/sszvis@2/build/sszvis.min.js"></script>
   </head>
   <body style="margin:0;padding:0;">
@@ -43,12 +43,7 @@ The following provides a brief overview of a typical code example in this reposi
         };
 
         // 7. Fetch CSV from a server and start the application
-        d3.csv("path/to/data.csv")
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) return;
-            actions.prepareState(data);
-          });
+        d3.csv("path/to/data.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError)
 
         // 8. The render function is called on every state change
         function render(state) { }

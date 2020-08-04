@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Grouped Bar Chart – Two Small</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/GB_2Categories_smallVals.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -36,25 +36,25 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("xLabelFormat", {
-            _: function() {
+            _: function () {
               return sszvis.formatText;
-            }
+            },
           })
           .prop("yTicks", {
-            _: null
+            _: null,
           })
           .prop("yAxisLabel", {
-            _: ""
+            _: "",
           })
           .prop("textDirection", {
-            _: "diagonal"
+            _: "diagonal",
           });
 
         function parseRow(d) {
           return {
             xValue: d["Region"],
             category: d["Kategorie"],
-            yValue: sszvis.parseNumber(d["Wert"])
+            yValue: sszvis.parseNumber(d["Wert"]),
           };
         }
 
@@ -73,57 +73,46 @@
           groups: [],
           groupedData: [],
           longestGroup: 0,
-          selection: []
+          selection: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
 
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.regions = sszvis.set(state.data, xAcc);
             state.valueExtent = zeroBasedAxisDomain(d3.extent(state.data, yAcc));
             state.groups = sszvis.set(state.data, cAcc);
-            state.groupedData = sszvis
-              .cascade()
-              .arrayBy(xAcc)
-              .apply(state.data);
+            state.groupedData = sszvis.cascade().arrayBy(xAcc).apply(state.data);
             state.longestGroup = d3.max(state.groupedData, sszvis.prop("length"));
             state.categories = sszvis.set(state.data, cAcc);
 
             render(state);
           },
 
-          showTooltip: function(x, y) {
-            state.selection = state.groupedData.filter(function(d) {
+          showTooltip: function (x, y) {
+            state.selection = state.groupedData.filter(function (d) {
               return sszvis.contains(d.map(xAcc), x);
             });
             render(state);
           },
 
-          hideTooltip: function(x, y) {
+          hideTooltip: function (x, y) {
             state.selection = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
 
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) {
-              sszvis.loadError(error);
-              return;
-            }
-            actions.prepareState(data);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
@@ -135,7 +124,7 @@
             {
               axisLabels: state.regions.map(props.xLabelFormat),
               legendLabels: state.categories,
-              slant: props.textDirection
+              slant: props.textDirection,
             },
             config.id
           );
@@ -146,7 +135,7 @@
           var bounds = sszvis.bounds(
             {
               top: 25,
-              bottom: legendLayout.bottomPadding
+              bottom: legendLayout.bottomPadding,
             },
             config.id
           );
@@ -161,16 +150,13 @@
             .paddingOuter(0.8)
             .rangeRound([0, chartWidth]);
 
-          var yScale = d3
-            .scaleLinear()
-            .domain(state.valueExtent)
-            .range([bounds.innerHeight, 0]);
+          var yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
 
-          var yPosScale = function(v) {
+          var yPosScale = function (v) {
             return isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
           };
 
-          var hScale = function(v) {
+          var hScale = function (v) {
             // the size of the bar is distance from the y-position of the value to the y-position of 0
             return Math.abs(yScale(v) - yScale(0));
           };
@@ -199,7 +185,7 @@
             .orient("bottom")
             .slant(props.textDirection)
             .tickFormat(props.xLabelFormat)
-            .highlightTick(function(d) {
+            .highlightTick(function (d) {
               return sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d);
             });
           if (!props.textDirection) {
@@ -219,18 +205,18 @@
             .renderInto(tooltipLayer)
             .orientation(sszvis.fitTooltip("bottom", bounds))
             .header(
-              sszvis.modularTextHTML().plain(function(d) {
+              sszvis.modularTextHTML().plain(function (d) {
                 return xAcc(sszvis.first(d));
               })
             )
-            .body(function(d) {
+            .body(function (d) {
               // generates a row from each data element
-              return d.map(function(item) {
+              return d.map(function (item) {
                 var v = yAcc(item);
                 return [cAcc(item), isNaN(v) ? "–" : v];
               });
             })
-            .visible(function(d) {
+            .visible(function (d) {
               return state.selection.indexOf(d) >= 0;
             });
 

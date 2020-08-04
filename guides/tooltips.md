@@ -49,13 +49,13 @@ This is the most basic tooltip form. Only the `.header` accessor function is use
 
   var data = [
     {
-      value: 34
-    }
+      value: 34,
+    },
   ];
 
   var dimensions = {
     width: 70,
-    height: 41
+    height: 41,
   };
 
   var position = [35, 41];
@@ -75,13 +75,13 @@ This is the most basic tooltip form. Only the `.header` accessor function is use
 
   var data = [
     {
-      value: 34
-    }
+      value: 34,
+    },
   ];
 
   var dimensions = {
     width: 70,
-    height: 41
+    height: 41,
   };
 
   var position = [35, 0];
@@ -101,13 +101,13 @@ This is the most basic tooltip form. Only the `.header` accessor function is use
 
   var data = [
     {
-      value: 34
-    }
+      value: 34,
+    },
   ];
 
   var dimensions = {
     width: 76,
-    height: 35
+    height: 35,
   };
 
   var position = [0, 17];
@@ -127,13 +127,13 @@ This is the most basic tooltip form. Only the `.header` accessor function is use
 
   var data = [
     {
-      value: 34
-    }
+      value: 34,
+    },
   ];
 
   var dimensions = {
     width: 76,
-    height: 35
+    height: 35,
   };
 
   var position = [76, 17];
@@ -159,13 +159,13 @@ This example demonstrates use of both the `.header` and `.body` accessor functio
 
   var data = [
     {
-      value: 67
-    }
+      value: 67,
+    },
   ];
 
   var dimensions = {
     width: 113,
-    height: 63
+    height: 63,
   };
 
   var position = [55, 63];
@@ -189,13 +189,13 @@ This example demonstrates use of both the `.header` and `.body` accessor functio
 
   var data = [
     {
-      value: 67
-    }
+      value: 67,
+    },
   ];
 
   var dimensions = {
     width: 113,
-    height: 63
+    height: 63,
   };
 
   var position = [55, 0];
@@ -219,13 +219,13 @@ This example demonstrates use of both the `.header` and `.body` accessor functio
 
   var data = [
     {
-      value: 67
-    }
+      value: 67,
+    },
   ];
 
   var dimensions = {
     width: 119,
-    height: 57
+    height: 57,
   };
 
   var position = [0, 28];
@@ -249,13 +249,13 @@ This example demonstrates use of both the `.header` and `.body` accessor functio
 
   var data = [
     {
-      value: 67
-    }
+      value: 67,
+    },
   ];
 
   var dimensions = {
     width: 119,
-    height: 57
+    height: 57,
   };
 
   var position = [119, 28];
@@ -287,14 +287,14 @@ For tabular-format tooltips, the `.body` accessor function should return an arra
     {
       value: [
         ["Frauen", sszvis.formatPercent(49)],
-        ["Männer", sszvis.formatPercent(51)]
-      ]
-    }
+        ["Männer", sszvis.formatPercent(51)],
+      ],
+    },
   ];
 
   var dimensions = {
     width: 150,
-    height: 110
+    height: 110,
   };
 
   var position = [75, 110];
@@ -315,14 +315,14 @@ For tabular-format tooltips, the `.body` accessor function should return an arra
     {
       value: [
         ["Frauen", sszvis.formatPercent(49)],
-        ["Männer", sszvis.formatPercent(51)]
-      ]
-    }
+        ["Männer", sszvis.formatPercent(51)],
+      ],
+    },
   ];
 
   var dimensions = {
     width: 150,
-    height: 110
+    height: 110,
   };
 
   var position = [75, 0];
@@ -343,14 +343,14 @@ For tabular-format tooltips, the `.body` accessor function should return an arra
     {
       value: [
         ["Frauen", sszvis.formatPercent(49)],
-        ["Männer", sszvis.formatPercent(51)]
-      ]
-    }
+        ["Männer", sszvis.formatPercent(51)],
+      ],
+    },
   ];
 
   var dimensions = {
     width: 156,
-    height: 104
+    height: 104,
   };
 
   var position = [0, 52];
@@ -371,14 +371,14 @@ For tabular-format tooltips, the `.body` accessor function should return an arra
     {
       value: [
         ["Frauen", sszvis.formatPercent(49)],
-        ["Männer", sszvis.formatPercent(51)]
-      ]
-    }
+        ["Männer", sszvis.formatPercent(51)],
+      ],
+    },
   ];
 
   var dimensions = {
     width: 156,
-    height: 104
+    height: 104,
   };
 
   var position = [156, 52];
@@ -403,13 +403,13 @@ Tooltip anchors provide a useful abstraction for positioning tooltips. They are 
 
   var data = [
     {
-      value: 20
-    }
+      value: 20,
+    },
   ];
 
   var dimensions = {
     width: 100,
-    height: 60
+    height: 60,
   };
 
   var position = [50, 50];

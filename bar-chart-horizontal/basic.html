@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Horizontal Bar Chart</title>
   </head>
-  <body style="margin:0;padding:0;">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -17,12 +17,12 @@
       var EXTERNAL_CONFIG = {
         data: "data/SHB_13Categories_longNames.csv",
         id: "#sszvis-chart",
-        fallback: "fallback.png"
+        fallback: "fallback.png",
       };
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) {
+      (function (d3, sszvis, config) {
         "use strict";
 
         if (sszvis.fallbackUnsupported()) {
@@ -36,18 +36,19 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("yLabel", {
-            _: "Beschäftigte"
+            _: "Beschäftigte",
           })
           .prop("ticks", {
-            _: 5
+            _: 5,
           });
 
         function parseRow(d) {
           return {
             category: d["Sektor"],
-            xValue: sszvis.parseNumber(d["Zupendler"])
+            xValue: sszvis.parseNumber(d["Zupendler"]),
           };
         }
+
         var xAcc = sszvis.prop("xValue");
         var cAcc = sszvis.prop("category");
 
@@ -57,46 +58,39 @@
         var state = {
           data: [],
           categories: [],
-          selected: []
+          selected: [],
         };
 
         /* State transitions
         ----------------------------------------------- */
 
         var actions = {
-          prepareState: function(data) {
+          prepareState: function (data) {
             state.data = data;
             state.categories = sszvis.set(state.data, cAcc);
+            render(state);
           },
 
-          showTooltip: function(_, category) {
-            state.selected = state.data.filter(function(d) {
+          showTooltip: function (_, category) {
+            state.selected = state.data.filter(function (d) {
               return cAcc(d) === category;
             });
             render(state);
           },
 
-          hideTooltip: function() {
+          hideTooltip: function () {
             state.selected = [];
             render(state);
           },
 
-          resize: function() {
+          resize: function () {
             render(state);
-          }
+          },
         };
 
         /* Data initialization
         ----------------------------------------------- */
-        d3.csv(config.data)
-          .row(parseRow)
-          .get(function(error, data) {
-            if (error) {
-              return sszvis.loadError(error);
-            }
-            actions.prepareState(data);
-            render(state);
-          });
+        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
         /* Render
         ----------------------------------------------- */
@@ -107,7 +101,7 @@
             {
               height: 30 + chartDimensions.totalHeight + 40,
               top: 30,
-              bottom: 40
+              bottom: 40,
             },
             config.id
           );
@@ -155,13 +149,10 @@
             xAxis.ticks(props.ticks);
           }
 
-          var yAxis = sszvis.axisY
-            .ordinal()
-            .scale(yScale)
-            .orient("right");
+          var yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
 
           var tooltipHeader = sszvis.modularTextHTML().bold(
-            sszvis.compose(function(d) {
+            sszvis.compose(function (d) {
               return isNaN(d) ? "k. A." : sszvis.formatNumber(d);
             }, xAcc)
           );
@@ -212,7 +203,7 @@
         }
 
         function isWithinBarContour(xValue, category) {
-          var barDatum = sszvis.find(function(d) {
+          var barDatum = sszvis.find(function (d) {
             return cAcc(d) === category;
           }, state.data);
           return sszvis.util.testBarThreshold(xValue, barDatum, xAcc, 1000);
