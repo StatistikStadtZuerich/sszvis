@@ -1,0 +1,10 @@
+---
+title: Line Chart Basic
+permalink: "{{ page.filePathStem }}.html"
+config:
+  data: "data/ML_2Categories_Quarterly.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+  scaleType: "time"
+---
+{% printFileContents "line-chart.js" %}

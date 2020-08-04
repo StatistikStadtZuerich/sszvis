@@ -14,3 +14,6 @@ __diff_output__
 /docs/static/sszvis.js
 /docs/static/sszvis.*.js
 /docs/build
+
+# Temporary
+/docs/static.preview

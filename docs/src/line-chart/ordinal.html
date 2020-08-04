@@ -1,0 +1,10 @@
+---
+title: Line Chart Ordinal
+permalink: "{{ page.filePathStem }}.html"
+config:
+  data: "data/ML_school_years.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+  scaleType: "ordinal"
+---
+{% printFileContents "line-chart.js" %}
