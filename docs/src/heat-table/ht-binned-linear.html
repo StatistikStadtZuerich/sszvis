@@ -1,0 +1,39 @@
+---
+title: Heat Table | Binned
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/HT_binned_linear.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "ht-binned-linear.js" %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Heat Table – Binned</title>
+  </head>
+  <body style="margin: 0; padding: 0;">
+    <link href="../sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
+    <script src="../sszvis.js"></script>
+
+    <div id="sszvis-chart"></div>
+
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/HT_binned_linear.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png",
+      };
+    </script>
+
+    <script data-catalog-project-expose="script.js">
+      ()(d3, sszvis, EXTERNAL_CONFIG);
+    </script>
+  </body>
+</html>
