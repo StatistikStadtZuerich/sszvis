@@ -1,0 +1,240 @@
+module.exports = function (d3, topojson, sszvis) {
+
+  /* Configuration
+  ----------------------------------------------- */
+
+  var DEFAULT_KEY = "Kinder";
+  var KEY_OPTIONS = ["Kinder", "Random"];
+  var MAX_LEGEND_WIDTH = 320;
+  var queryProps = sszvis
+    .responsiveProps()
+    .prop("bounds", {
+      _: function (width) {
+        // The calculation of the rastermap bounds is a bit more complex due to the fact
+        // that we have to deal with a raster image in the background that has a bigger
+        // size than the vector map.
+        //
+        // At the maximum map size (420x420px) the raster image overlaps the image by
+        // the magic padding numbers below. At smaller sizes, we apply a scale factor
+        // to calculate the respective paddings.
+        var scale = width / (sszvis.aspectRatioSquare.MAX_HEIGHT + 49 + 42);
+
+        var padding = {
+          top: Math.min(36 * scale, 36),
+          right: 49 * scale,
+          bottom: 60 + Math.min(31 * scale, 31),
+          left: 42 * scale,
+        };
+
+        var innerWidth = width - padding.left - padding.right;
+        var innerHeight = sszvis.aspectRatioSquare(innerWidth);
+
+        // We always want a 1:1 ratio, so we restrict the innerWidth to the max height
+        // by increasing the horizontal padding.
+        if (innerHeight < innerWidth) {
+          var excessPadding = innerWidth - innerHeight;
+          padding.right = padding.right + excessPadding / 2;
+          padding.left = padding.left + excessPadding / 2;
+        }
+
+        return {
+          top: padding.top,
+          bottom: padding.bottom,
+          left: padding.left,
+          right: padding.right,
+          height: padding.top + innerHeight + padding.bottom,
+        };
+      },
+    })
+    .prop("legendWidth", {
+      _: function (width) {
+        return Math.min(width / 2, MAX_LEGEND_WIDTH);
+      },
+    });
+
+  function parseRow(d) {
+    return {
+      xpos: sszvis.parseNumber(d["xkoord"]),
+      ypos: sszvis.parseNumber(d["ykoord"]),
+      kinder: sszvis.parseNumber(d["kinder"]),
+    };
+  }
+
+  var xAcc = sszvis.prop("xpos");
+  var yAcc = sszvis.prop("ypos");
+  var kinderAcc = sszvis.prop("kinder");
+
+  /* Application state
+  ----------------------------------------------- */
+  var state = {
+    data: null,
+    mapData: null,
+    valueDomain: [0, 0],
+  };
+
+  /* State transitions
+  ----------------------------------------------- */
+  var actions = {
+    prepareData: function (data) {
+      state.data = data;
+      state.valueDomain = d3.extent(data, kinderAcc);
+
+      render(state);
+    },
+
+    prepareMapData: function (topo) {
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects.stadtkreise),
+        borders: topojson.mesh(topo, topo.objects.stadtkreise),
+        lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
+        lakeBorders: topojson.mesh(topo, topo.objects.stadtkreis_lakebounds),
+      };
+      render(state);
+    },
+
+    resize: function () {
+      render(state);
+    },
+  };
+
+  /* Data initialization
+  ----------------------------------------------- */
+  d3.csv("data/kinder100.csv", parseRow).then(actions.prepareData).catch(sszvis.loadError);
+
+  d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+
+  /* Render
+  ----------------------------------------------- */
+  function render(state) {
+    if (state.data === null || state.mapData === null) {
+      // loading ...
+      return true;
+    }
+
+    var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+    var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+
+    // Scales
+
+    // Use the binned scale heat table example as a reference for a more in-depth description of setting
+    // up a binned color scale. For detailed comments on creating the bin scales, see rastermap-bins.html
+
+    var numBins = 5;
+    var binStep =
+      Math.ceil(((state.valueDomain[1] - state.valueDomain[0]) / numBins) * 100) / 100;
+    var binEdges = d3.range(
+      state.valueDomain[0] + binStep,
+      state.valueDomain[0] + binStep * numBins,
+      binStep
+    );
+    var interpolateColor = sszvis
+      .scaleDivValGry()
+      .reverse()
+      .domain([0, numBins - 1]);
+    var binColors = d3.range(0, numBins).map(interpolateColor);
+
+    var colorScale = d3.scaleThreshold().domain(binEdges).range(binColors);
+
+    // Layers
+
+    // Create an HTML layer that lives at the bottom. This will contain
+    // the topographic image and the canvas raster layer
+    var htmlUnderLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.data);
+
+    // Create an SVG layer. This will contain the city outline
+    var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds);
+
+    // Components
+
+    var choroplethMap = sszvis
+      .choropleth()
+      .features(state.mapData.features)
+      .borders(state.mapData.borders)
+      .lakeFeatures(state.mapData.lakeFeatures)
+      .lakeBorders(state.mapData.lakeBorders)
+      .lakeFadeOut(true)
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .fill("none")
+      .borderColor("#fff");
+
+    var mapPath = sszvis.swissMapPath(
+      bounds.innerWidth,
+      bounds.innerHeight,
+      state.mapData.features,
+      "zurichStadtfeatures"
+    );
+    var projection = mapPath.projection();
+
+    function roundPow10(n, pow10) {
+      var divisor = Math.pow(10, pow10);
+      return Math.round(n * divisor) / divisor;
+    }
+
+    // Offset is applied for better alignment with the map data
+    var geoOffset = -0.0011;
+
+    function getRoundVal(val) {
+      return [roundPow10(xAcc(val) + geoOffset, 5), roundPow10(yAcc(val) + geoOffset, 5)];
+    }
+
+    var layerBounds = [
+      [8.431443 + geoOffset, 47.448978 + geoOffset],
+      [8.647471 + geoOffset, 47.309726 + geoOffset],
+    ];
+    var pixelSide = sszvis.pixelsFromGeoDistance(
+      projection,
+      [
+        (layerBounds[0][0] + layerBounds[1][0]) / 2,
+        (layerBounds[0][1] + layerBounds[1][1]) / 2,
+      ],
+      100
+    );
+
+    var rasterLayer = sszvis
+      .mapRendererRaster()
+      .width(bounds.innerWidth)
+      .height(bounds.innerHeight)
+      .position(sszvis.compose(projection, getRoundVal))
+      .cellSide(pixelSide)
+      .fill(sszvis.compose(colorScale, kinderAcc))
+      .opacity(0.6);
+
+    var topoLayer = sszvis
+      .mapRendererImage()
+      .projection(projection)
+      .src("data/topo_layer_280915.png")
+      // Expects longitude, latitude
+      .geoBounds(layerBounds)
+      .opacity(0.4);
+
+    var legend = sszvis
+      .legendColorBinned()
+      .scale(colorScale)
+      .displayValues(binEdges)
+      .endpoints(state.valueDomain)
+      .width(props.legendWidth)
+      .labelFormat(sszvis.formatNumber);
+
+    // Rendering
+
+    htmlUnderLayer.call(topoLayer);
+
+    htmlUnderLayer.call(rasterLayer);
+
+    chartLayer.selectGroup("outline").call(choroplethMap);
+
+    chartLayer
+      .selectGroup("legend")
+      .attr(
+        "transform",
+        sszvis.translateString(
+          (bounds.innerWidth - props.legendWidth) / 2,
+          bounds.innerHeight + bounds.padding.bottom - 40
+        )
+      )
+      .call(legend);
+
+    sszvis.viewport.on("resize", actions.resize);
+  }
+}
