@@ -1,5 +1,5 @@
-import React from "react";
 import PropTypes from "prop-types";
+import React from "react";
 import normalizeReferences from "./normalizeReferences";
 import { text } from "./utils/typography";
 
@@ -16,11 +16,11 @@ function getStyle(theme) {
       textAlign: "center",
       minWidth: 120,
       padding: 10,
-      borderRight: "1px solid transparent"
+      borderRight: "1px solid transparent",
     },
     active: {
       background: "white",
-      borderRight: "1px solid #eee"
+      borderRight: "1px solid #eee",
     },
     source: {
       ...text(theme, -0.5),
@@ -38,8 +38,8 @@ function getStyle(theme) {
       padding: 20,
       height: "50vh",
       width: "100%",
-      boxSizing: "border-box"
-    }
+      boxSizing: "border-box",
+    },
   };
 }
 
@@ -48,7 +48,7 @@ class TabbedSourceView extends React.Component {
     super();
     this.state = {
       tab: null,
-      sourceCode: null
+      sourceCode: null,
     };
   }
 
@@ -69,8 +69,7 @@ class TabbedSourceView extends React.Component {
     let fileTabs =
       sourceFiles.length > 1
         ? sourceFiles.map((file, i) => {
-            let activeTab =
-              i === parseInt(this.state.tab, 10) ? styles.active : {};
+            let activeTab = i === parseInt(this.state.tab, 10) ? styles.active : {};
             return (
               <div
                 onClick={this.selectTab.bind(this, this)}
@@ -104,7 +103,7 @@ class TabbedSourceView extends React.Component {
     let nextTab = evt.currentTarget.getAttribute("data-tab-id");
     _context.setState({
       sourceCode: null,
-      tab: nextTab === this.state.tab ? null : nextTab
+      tab: nextTab === this.state.tab ? null : nextTab,
     });
   }
   loadSourceCode() {
@@ -115,21 +114,17 @@ class TabbedSourceView extends React.Component {
     let file = sourceFiles[this.state.tab];
 
     fetch(file.source, { credentials: "include" })
-      .then(response => response.text())
-      .then(text => {
+      .then((response) => response.text())
+      .then((text) => {
         const sourceCode = this.parseSourceCode(text);
         this.setState({
-          sourceCode: normalizeReferences(
-            this.props.rootPath,
-            this.props.files,
-            sourceCode
-          )
+          sourceCode: normalizeReferences(this.props.rootPath, this.props.files, sourceCode),
         });
       })
-      .catch(error => {
+      .catch((error) => {
         this.setState({
           error: error,
-          sourceCode: null
+          sourceCode: null,
         });
       });
   }
@@ -138,7 +133,7 @@ class TabbedSourceView extends React.Component {
     if (template) {
       let doc = new DOMParser().parseFromString(source, "text/html");
       let ref = doc.querySelectorAll("[data-catalog-project-expose]");
-      ref.map(item => {
+      ref.map((item) => {
         item.removeAttribute("data-catalog-project-expose");
       });
       template.replace("${yield}", doc.body.innerHTML);
@@ -150,7 +145,7 @@ class TabbedSourceView extends React.Component {
 
 TabbedSourceView.propTypes = {
   sourceFiles: PropTypes.array.isRequired,
-  theme: PropTypes.object.isRequired
+  theme: PropTypes.object.isRequired,
 };
 
 export default TabbedSourceView;
