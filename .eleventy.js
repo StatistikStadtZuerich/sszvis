@@ -1,4 +1,5 @@
 const PATH = require("path");
+const prettier = require("prettier");
 
 module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("docs/src/_headers");
@@ -19,6 +20,10 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addShortcode("printFileContents", function (relativePath) {
     const path = PATH.join(__dirname, PATH.dirname(this.page.inputPath), relativePath);
     return require(path).toString();
+  });
+
+  eleventyConfig.addTransform("prettify", function (content, outputPath) {
+    return outputPath.endsWith(".html") ? prettier.format(content, { parser: "html" }) : content;
   });
 
   return {
