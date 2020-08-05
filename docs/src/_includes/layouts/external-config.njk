@@ -18,7 +18,7 @@ title: sszvis
     <div id="sszvis-chart"></div>
     
     <script>
-      var EXTERNAL_CONFIG = {% if config %}{{config | dump | safe}}{% else%}{}{% endif %}
+      var EXTERNAL_CONFIG = {{config | dump | safe}}
     </script>
 
     <script data-catalog-project-expose="script.js">
