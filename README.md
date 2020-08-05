@@ -14,7 +14,10 @@ This library is bundled using [Rollup](https://rollupjs.org/). To start developi
 # Install dependencies first
 npm install
 
-# Start library build in watch mode
+# Build the library
+npm run build
+
+# Start library build in watch mode (this only rebuilds library scripts, not things like topojson)
 npm run build:watch
 
 # Start Catalog documentation server

@@ -6,14 +6,3 @@ node_modules
 
 build
 __diff_output__
-
-/public/topo
-/public/sszvis.js
-
-/docs/static/topo
-/docs/static/sszvis.js
-/docs/static/sszvis.*.js
-/docs/build
-
-# Temporary
-/docs/static.preview

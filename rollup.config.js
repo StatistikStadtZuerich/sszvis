@@ -33,7 +33,7 @@ export default [
     input: join(__dirname, "src", "index.js"),
     output: [
       {
-        file: join(__dirname, "docs", "static.preview", "sszvis.js"),
+        file: join(__dirname, "build", "sszvis.js"),
         format: "umd",
         banner,
         globals,
@@ -45,7 +45,7 @@ export default [
     input: join(__dirname, "src", "index.js"),
     output: [
       {
-        file: join(__dirname, "docs", "static.preview", "sszvis.min.js"),
+        file: join(__dirname, "build", "sszvis.min.js"),
         format: "umd",
         banner,
         globals,

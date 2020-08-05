@@ -2,6 +2,7 @@ const PATH = require("path");
 
 module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("docs/src/_headers");
+  eleventyConfig.addPassthroughCopy("docs/src/index.html");
   eleventyConfig.addPassthroughCopy("docs/src/template.html");
   eleventyConfig.addPassthroughCopy("docs/src/**/*.css");
   eleventyConfig.addPassthroughCopy("docs/src/**/*.csv");
@@ -23,7 +24,7 @@ module.exports = function (eleventyConfig) {
   return {
     dir: {
       input: "docs/src",
-      output: "docs/static.preview",
+      output: "build",
     },
     htmlTemplateEngine: "njk",
     templateFormats: ["html", "njk"],
