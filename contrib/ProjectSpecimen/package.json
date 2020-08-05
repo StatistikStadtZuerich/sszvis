@@ -1,0 +1,20 @@
+{
+  "name": "catalog-project-specimen",
+  "version": "1.0.0",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "babel-loader": "^8.1.0",
+    "jszip": "^3.5.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
+  },
+  "scripts": {
+    "start": "npm install && webpack --watch",
+    "build": "npm install && webpack"
+  }
+}
