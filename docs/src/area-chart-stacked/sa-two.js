@@ -1,10 +1,4 @@
 module.exports = function (d3, sszvis, config) {
-  "use strict";
-
-  if (sszvis.fallbackUnsupported()) {
-    sszvis.fallbackRender(config.id, { src: config.fallback });
-    return;
-  }
 
   /* Configuration
   ----------------------------------------------- */
