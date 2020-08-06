@@ -1,0 +1,175 @@
+kontinent,region,land,anzahl
+Afrika,Nordafrika,Algerien,242
+Afrika,Nordafrika,Libyen,48
+Afrika,Nordafrika,Marokko,338
+Afrika,Nordafrika,Mauretanien,1
+Afrika,Nordafrika,Sudan,49
+Afrika,Nordafrika,Tunesien,339
+Afrika,Nordafrika,Ägypten,195
+Afrika,Ostafrika,Eritrea,1286
+Afrika,Ostafrika,Kenia,96
+Afrika,Ostafrika,Seychellen,2
+Afrika,Ostafrika,Somalia,920
+Afrika,Ostafrika,Tansania,18
+Afrika,Ostafrika,Äthiopien,180
+Afrika,Südafrika,Lesotho,1
+Afrika,Südafrika,Sambia,2
+Afrika,Südafrika,Simbabwe,15
+Afrika,Südafrika,Südafrika,119
+Afrika,Südostafrika,Komoren,5
+Afrika,Südostafrika,Madagaskar,4
+Afrika,Südostafrika,Malawi,1
+Afrika,Südostafrika,Mauritius,6
+Afrika,Südostafrika,Mosambik,4
+Afrika,Südwestafrika,Angola,220
+Afrika,Südwestafrika,Namibia,5
+Afrika,Westafrika,Benin,1
+Afrika,Westafrika,Burkina Faso,5
+Afrika,Westafrika,Côte d'Ivoire,87
+Afrika,Westafrika,Gabun,1
+Afrika,Westafrika,Gambia,82
+Afrika,Westafrika,Ghana,251
+Afrika,Westafrika,Guinea,34
+Afrika,Westafrika,Guinea-Bissau,3
+Afrika,Westafrika,Kamerun,174
+Afrika,Westafrika,Kap Verde,3
+Afrika,Westafrika,Kongo (Brazzaville),76
+Afrika,Westafrika,Liberia,19
+Afrika,Westafrika,Mali,11
+Afrika,Westafrika,Niger,2
+Afrika,Westafrika,Nigeria,217
+Afrika,Westafrika,Senegal,63
+Afrika,Westafrika,Sierra Leone,13
+Afrika,Westafrika,Togo,41
+Afrika,Zentralafrika,Burundi,2
+Afrika,Zentralafrika,Kongo (Kinshasa),161
+Afrika,Zentralafrika,Ruanda,10
+Afrika,Zentralafrika,Tschad,3
+Afrika,Zentralafrika,Uganda,17
+Afrika,Zentralafrika,Zentralafrikanische Republik,4
+Amerika,Karibik,Antigua und Barbuda,1
+Amerika,Karibik,Bahamas,2
+Amerika,Karibik,Barbados,3
+Amerika,Karibik,Dominica,1
+Amerika,Karibik,Dominikanische Republik,794
+Amerika,Karibik,Grenada,2
+Amerika,Karibik,Haiti,28
+Amerika,Karibik,Jamaika,75
+Amerika,Karibik,Kuba,170
+Amerika,Karibik,St. Kitts und Nevis,3
+Amerika,Karibik,St. Lucia,2
+Amerika,Karibik,Trinidad und Tobago,9
+Amerika,Mittleres Südamerika,Bolivien,82
+Amerika,Mittleres Südamerika,Brasilien,1432
+Amerika,Mittleres Südamerika,Ecuador,91
+Amerika,Mittleres Südamerika,Paraguay,30
+Amerika,Mittleres Südamerika,Peru,284
+Amerika,Nordamerika,Kanada,478
+Amerika,Nordamerika,USA,2157
+Amerika,Nördliches Südamerika,Guayana,1
+Amerika,Nördliches Südamerika,Kolumbien,330
+Amerika,Nördliches Südamerika,Venezuela,101
+Amerika,Südliches Südamerika,Argentinien,182
+Amerika,Südliches Südamerika,Chile,275
+Amerika,Südliches Südamerika,Uruguay,21
+Amerika,Zentralamerika,Costa Rica,32
+Amerika,Zentralamerika,El Salvador,8
+Amerika,Zentralamerika,Guatemala,14
+Amerika,Zentralamerika,Honduras,12
+Amerika,Zentralamerika,Mexiko,292
+Amerika,Zentralamerika,Nicaragua,11
+Amerika,Zentralamerika,Panama,6
+Asien,Nördliches Asien,Mongolei,60
+Asien,Ostasien,China,1654
+Asien,Ostasien,Chinesisches Taipei,98
+Asien,Ostasien,Japan,543
+Asien,Ostasien,Nordkorea,4
+Asien,Ostasien,Südkorea,198
+Asien,Südasien,Afghanistan,397
+Asien,Südasien,Bangladesch,669
+Asien,Südasien,Bhutan,1
+Asien,Südasien,Indien,2530
+Asien,Südasien,Malediven,2
+Asien,Südasien,Nepal,40
+Asien,Südasien,Pakistan,450
+Asien,Südasien,Sri Lanka,1528
+Asien,Südostasien,Brunei Darussalam,1
+Asien,Südostasien,Indonesien,156
+Asien,Südostasien,Kambodscha,31
+Asien,Südostasien,Laos,10
+Asien,Südostasien,Malaysia,147
+Asien,Südostasien,Myanmar,7
+Asien,Südostasien,Philippinen,432
+Asien,Südostasien,Singapur,75
+Asien,Südostasien,Thailand,826
+Asien,Südostasien,Vietnam,195
+Asien,Südwestasien,Armenien,58
+Asien,Südwestasien,Aserbaidschan,40
+Asien,Südwestasien,Georgien,32
+Asien,Westasien,Bahrain,2
+Asien,Westasien,Irak,565
+Asien,Westasien,Iran,425
+Asien,Westasien,Israel,284
+Asien,Westasien,Jemen,17
+Asien,Westasien,Jordanien,37
+Asien,Westasien,Katar,11
+Asien,Westasien,Kuwait,4
+Asien,Westasien,Libanon,254
+Asien,Westasien,Saudi-Arabien,16
+Asien,Westasien,Syrien,323
+Asien,Westasien,Vereinigte Arabische Emirate,4
+Asien,Zentralasien,Kasachstan,39
+Asien,Zentralasien,Kirgisistan,30
+Asien,Zentralasien,Tadschikistan,3
+Asien,Zentralasien,Turkmenistan,3
+Asien,Zentralasien,Usbekistan,25
+Europa,Nordeuropa,Dänemark,409
+Europa,Nordeuropa,Finnland,421
+Europa,Nordeuropa,Island,49
+Europa,Nordeuropa,Norwegen,186
+Europa,Nordeuropa,Schweden,999
+Europa,Osteuropa,Belarus,104
+Europa,Osteuropa,Estland,108
+Europa,Osteuropa,Lettland,183
+Europa,Osteuropa,Litauen,188
+Europa,Osteuropa,Moldova,43
+Europa,Osteuropa,Russland,1045
+Europa,Osteuropa,Ukraine,448
+Europa,Südeuropa,Griechenland,2106
+Europa,Südeuropa,Italien,14032
+Europa,Südeuropa,Malta,13
+Europa,Südeuropa,Türkei,3636
+Europa,Südeuropa,Zypern,49
+Europa,Südosteuropa,Albanien,55
+Europa,Südosteuropa,Bosnien und Herzegowina,1157
+Europa,Südosteuropa,Bulgarien,489
+Europa,Südosteuropa,Kosovo,2600
+Europa,Südosteuropa,Kroatien,1601
+Europa,Südosteuropa,Mazedonien,1888
+Europa,Südosteuropa,Montenegro,190
+Europa,Südosteuropa,Rumänien,819
+Europa,Südosteuropa,Serbien,4038
+Europa,Südosteuropa,Slowenien,298
+Europa,Südwesteuropa,Andorra,1
+Europa,Südwesteuropa,Portugal,8559
+Europa,Südwesteuropa,Spanien,5968
+Europa,Westeuropa,Belgien,484
+Europa,Westeuropa,Frankreich,3757
+Europa,Westeuropa,Grossbritannien,3389
+Europa,Westeuropa,Irland,462
+Europa,Westeuropa,Luxemburg,357
+Europa,Westeuropa,Niederlande,1548
+Europa,Zentraleuropa,Deutschland,32830
+Europa,Zentraleuropa,Liechtenstein,375
+Europa,Zentraleuropa,Polen,1662
+Europa,Zentraleuropa,Schweiz,275649
+Europa,Zentraleuropa,Slowakei,1025
+Europa,Zentraleuropa,Tschechische Republik,576
+Europa,Zentraleuropa,Ungarn,1398
+Europa,Zentraleuropa,Österreich,4580
+Ozeanien,Mittleres Ozeanien,Fidschi,2
+Ozeanien,Mittleres Ozeanien,Tonga,0
+Ozeanien,Südliches Ozeanien,Australien,301
+Ozeanien,Südliches Ozeanien,Neuseeland,88
+Unzuteilbar,Unzuteilbar,Staat unbekannt,68
+Unzuteilbar,Unzuteilbar,Staatenlos,19
