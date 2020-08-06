@@ -1,0 +1,10 @@
+---
+title: Sankey Diagram | Same Sets
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/sankey_same_sets_fake.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "sankey-same-sets.js" %}

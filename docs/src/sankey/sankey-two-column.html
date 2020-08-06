@@ -1,0 +1,10 @@
+---
+title: Sankey Diagram | Parallel Sets
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/zuzug.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "sankey-two-column.js" %}
