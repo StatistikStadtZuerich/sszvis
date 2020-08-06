@@ -1,4 +1,5 @@
 const PATH = require("path");
+const babel = require("@babel/core");
 const prettier = require("prettier");
 
 module.exports = function (eleventyConfig) {
@@ -20,7 +21,8 @@ module.exports = function (eleventyConfig) {
    */
   eleventyConfig.addShortcode("printFileContents", function (relativePath) {
     const path = PATH.join(__dirname, PATH.dirname(this.page.inputPath), relativePath);
-    return require(path).toString();
+    const { code } = babel.transformFileSync(path);
+    return code;
   });
 
   eleventyConfig.addTransform("prettify", function (content, outputPath) {
