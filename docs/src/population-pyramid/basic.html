@@ -1,0 +1,10 @@
+---
+title: Population Pyramid
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/BP_basic.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "basic.js" %}
