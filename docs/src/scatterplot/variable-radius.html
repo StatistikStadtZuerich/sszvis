@@ -1,0 +1,10 @@
+---
+title: Scatterplot
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/VRS_basic.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "variable-radius.js" %}
