@@ -2,14 +2,14 @@ const PATH = require("path");
 const prettier = require("prettier");
 
 module.exports = function (eleventyConfig) {
-  eleventyConfig.addPassthroughCopy("docs/src/_headers");
-  eleventyConfig.addPassthroughCopy("docs/src/index.html");
-  eleventyConfig.addPassthroughCopy("docs/src/template.html");
-  eleventyConfig.addPassthroughCopy("docs/src/**/*.css");
-  eleventyConfig.addPassthroughCopy("docs/src/**/*.csv");
-  eleventyConfig.addPassthroughCopy("docs/src/**/*.json");
-  eleventyConfig.addPassthroughCopy("docs/src/**/*.md");
-  eleventyConfig.addPassthroughCopy("docs/src/**/*.png");
+  eleventyConfig.addPassthroughCopy("docs/_headers");
+  eleventyConfig.addPassthroughCopy("docs/index.html");
+  eleventyConfig.addPassthroughCopy("docs/template.html");
+  eleventyConfig.addPassthroughCopy("docs/**/*.css");
+  eleventyConfig.addPassthroughCopy("docs/**/*.csv");
+  eleventyConfig.addPassthroughCopy("docs/**/*.json");
+  eleventyConfig.addPassthroughCopy("docs/**/*.md");
+  eleventyConfig.addPassthroughCopy("docs/**/*.png");
 
   /**
    * printFileContents
@@ -29,7 +29,7 @@ module.exports = function (eleventyConfig) {
 
   return {
     dir: {
-      input: "docs/src",
+      input: "docs",
       output: "build",
     },
     htmlTemplateEngine: "njk",

@@ -10,7 +10,7 @@ const SNAPSHOT_OPTS = {
     `${urlToIdentifier(currentTestName)}-${counter}`,
 };
 
-const files = glob.sync("../docs/static/[^_]*/*.html", { cwd: __dirname });
+const files = glob.sync("../build/[^_]*/*.html", { cwd: __dirname });
 
 test.each(files.map(filepathToUrl))("%s", async (url) => {
   try {
@@ -36,7 +36,7 @@ test.each(files.map(filepathToUrl))("%s", async (url) => {
 // -----------------------------------------------------------------------------
 
 function filepathToUrl(path) {
-  return path.replace(/(.*\/docs\/static)/, "http://localhost:8000");
+  return path.replace(/(.*\/build)/, "http://localhost:8000");
 }
 
 function urlToIdentifier(url) {
