@@ -20,6 +20,7 @@ const createConfig = ({ input, output, plugins }) => ({
   },
   plugins: [
     babel({
+      babelHelpers: "bundled",
       exclude: "node_modules/**",
     }),
     nodeResolve(),
