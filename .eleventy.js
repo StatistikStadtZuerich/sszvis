@@ -23,9 +23,13 @@ module.exports = function (eleventyConfig) {
    */
   eleventyConfig.addShortcode("printFileContents", function (relativePath) {
     const path = PATH.join(__dirname, PATH.dirname(this.page.inputPath), relativePath);
-    // Concat shortcode + filecode before transform
     const { code } = babel.transformFileSync(path, {
-      plugins: [BabelPluginRemoveGlobalHints],
+      sourceType: "script",
+      generatorOpts: {
+        compact: false,
+        retainLines: true,
+        shouldPrintComment: (val) => !/^\s*global\s/.test(val),
+      },
     });
     return code;
   });
@@ -40,34 +44,6 @@ module.exports = function (eleventyConfig) {
       output: "build",
     },
     htmlTemplateEngine: "njk",
-    templateFormats: ["html", "njk"],
+    templateFormats: ["html", "njk", "11ty.js"],
   };
 };
-
-// -----------------------------------------------------------------------------
-// Babel Plugin
-
-function BabelPluginRemoveGlobalHints() {
-  return {
-    visitor: {
-      Program(path) {
-        path.traverse({
-          enter(path) {
-            removeCommentMatchingRegexp(path.node, /^\s*global\s/);
-          },
-        });
-      },
-    },
-  };
-}
-
-// -----------------------------------------------------------------------------
-// Helpers
-
-function removeCommentMatchingRegexp(node, regexp) {
-  COMMENT_KEYS.forEach((key) => {
-    if (Array.isArray(node[key])) {
-      node[key] = node[key].filter((x) => !(x.type === "CommentBlock" && regexp.test(x.value)));
-    }
-  });
-}
