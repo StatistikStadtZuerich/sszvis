@@ -1,7 +1,7 @@
 /* global d3, topojson, sszvis */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var queryProps = sszvis.responsiveProps().prop("bounds", {
   _: function (width) {
@@ -30,8 +30,8 @@ var mDatumAcc = sszvis.prop("datum");
 var catName = sszvis.prop("name");
 var catValue = sszvis.prop("value");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: null,
   mapData: null,
@@ -40,8 +40,8 @@ var state = {
   binEdges: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -89,14 +89,14 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv("data/agglomeration_2012.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
 d3.json("../topo/agglomeration-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   if (state.data === null || state.mapData === null) {
     // loading ...

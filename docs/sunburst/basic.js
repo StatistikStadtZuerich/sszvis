@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 function parseRow(d) {
   return {
@@ -17,16 +17,16 @@ var regionAcc = sszvis.prop("region");
 var countryAcc = sszvis.prop("country");
 var numAcc = sszvis.prop("number");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   radiusExtent: [0, 0],
   selection: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     var continentsList = ["Europa", "Asien", "Amerika", "Afrika", "Ozeanien", "Unzuteilbar"];
@@ -73,12 +73,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var legendLayout = sszvis.colorLegendLayout(
     {

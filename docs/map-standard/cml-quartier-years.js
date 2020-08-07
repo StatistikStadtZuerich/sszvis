@@ -1,7 +1,7 @@
 /* global d3, topojson, sszvis */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 // Only select an entity if the distance to an input value is lower than
 // this threshold.
@@ -44,8 +44,8 @@ var geoIdAcc = sszvis.prop("geoId");
 var nameAcc = sszvis.prop("name");
 var mDatumAcc = sszvis.prop("datum");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: null,
   mapData: null,
@@ -61,8 +61,8 @@ var state = {
   lineHighlightData: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -216,14 +216,14 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv("data/CML_quartier_years.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
 d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   if (state.data === null || state.mapData === null) {
     // loading ...
@@ -465,8 +465,8 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 }
 
-/* Helper functions
-  ----------------------------------------------- */
+// Helper functions
+// -----------------------------------------------
 // given a dataset, an accessor, and a value, find the closest datum in the dataset to that value
 function closestDatum(data, accessor, value) {
   var i = d3.bisector(accessor).left(data, value, 1);

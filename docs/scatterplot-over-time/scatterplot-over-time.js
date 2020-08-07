@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 var SLIDER_CONTROL_HEIGHT = 60;
 var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
   _: function () {
@@ -23,8 +23,8 @@ var yAcc = sszvis.prop("percent");
 var yearAcc = sszvis.prop("year");
 var branchAcc = sszvis.prop("branch");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   linesData: [],
@@ -38,8 +38,8 @@ var state = {
   selection: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -131,12 +131,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var props = queryProps(sszvis.measureDimensions(config.id));
 

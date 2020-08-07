@@ -1,7 +1,7 @@
 /* global d3, sszvis */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var TITLE = "Diagrammtitel";
 var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
@@ -29,8 +29,8 @@ var valueIsOnAxis2 = function (d) {
 };
 var datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
 
-/* Application State
-  ----------------------------------------------- */
+// Application State
+// -----------------------------------------------
 
 var state = {
   data: [],
@@ -43,8 +43,8 @@ var state = {
   categories2: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 
 var actions = {
   prepareState: function (data) {
@@ -87,13 +87,13 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 
 d3.csv("data/S_2yAxis.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 
 function render(state) {
   var bounds = sszvis.bounds({ top: 30, bottom: 130 }, "#sszvis-chart");
@@ -228,8 +228,8 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 }
 
-/* Helper functions
-  ----------------------------------------------- */
+// Helper functions
+// -----------------------------------------------
 
 function closestDatum(data, accessor, datum) {
   var i = d3.bisector(accessor).left(data, datum, 1);

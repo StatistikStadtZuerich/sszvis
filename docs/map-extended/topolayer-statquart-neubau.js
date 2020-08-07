@@ -1,7 +1,7 @@
 /* global d3, topojson, sszvis */
 
-/* Configuration
------------------------------------------------ */
+// Configuration
+// -----------------------------------------------
 var TITLE = "Diagrammtitel";
 var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
 var queryProps = sszvis.responsiveProps().prop("bounds", {
@@ -59,8 +59,8 @@ var datumAcc = sszvis.prop("datum");
 var nameAcc = sszvis.prop("name");
 var yearAcc = sszvis.prop("year");
 
-/* Application state
------------------------------------------------ */
+// Application state
+// -----------------------------------------------
 var state = {
   data: null,
   mapData: null,
@@ -69,8 +69,8 @@ var state = {
   yearRange: [0, 0],
 };
 
-/* State transitions
------------------------------------------------ */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareData: function (data) {
     state.data = data;
@@ -111,16 +111,16 @@ var actions = {
   },
 };
 
-/* Data initialization
------------------------------------------------ */
+// Data initialization
+// -----------------------------------------------
 d3.csv("data/gemeinnuetzige.csv", parseRow).then(actions.prepareData).catch(sszvis.loadError);
 
 d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 d3.json("data/gemeinnuetzige.json").then(actions.prepareAdditionalMapData).catch(sszvis.loadError);
 
-/* Render
------------------------------------------------ */
+// Render
+// -----------------------------------------------
 function render(state) {
   if (state.data === null || state.mapData === null || state.additionalMapData === null) {
     // loading ...

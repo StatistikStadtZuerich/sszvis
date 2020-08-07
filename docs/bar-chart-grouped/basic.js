@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var queryProps = sszvis
   .responsiveProps()
@@ -32,8 +32,8 @@ var xAcc = sszvis.prop("xValue");
 var yAcc = sszvis.prop("yValue");
 var cAcc = sszvis.prop("category");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 
 var state = {
   data: [],
@@ -46,8 +46,8 @@ var state = {
   selection: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 
 var actions = {
   prepareState: function (data) {
@@ -79,13 +79,13 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 
 function render(state) {
   var props = queryProps(sszvis.measureDimensions(config.id));
@@ -229,8 +229,8 @@ function render(state) {
   chartLayer.selectGroup("interactionLayer").call(interactionLayer);
 }
 
-/* Helper functions
-  ----------------------------------------------- */
+// Helper functions
+// -----------------------------------------------
 
 function isTwoSidedDomain(extent) {
   return d3.min(extent) !== 0;

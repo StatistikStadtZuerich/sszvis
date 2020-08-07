@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 function parseRow(d) {
   return {
@@ -21,8 +21,8 @@ var menAcc = sszvis.prop("Männer");
 var collegeAcc = sszvis.prop("Hochschulabschluss");
 var otherAcc = sszvis.prop("Andere");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   ages: d3.range(0, 101), // [0 ... 100]
@@ -31,8 +31,8 @@ var state = {
   populations: {},
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -48,12 +48,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
   var pyramidDimensions = sszvis.layoutPopulationPyramid(pyramidWidth, state.ages.length);

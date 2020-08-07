@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 var SLIDER_CONTROL_HEIGHT = 60;
 var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
   _: function () {
@@ -23,8 +23,8 @@ var yAcc = sszvis.prop("yValue");
 var cAcc = sszvis.prop("city");
 var qAcc = sszvis.prop("quarter");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   xExtent: [0, 0],
@@ -35,8 +35,8 @@ var state = {
   activeQuarter: new Date(),
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -60,12 +60,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var props = queryProps(sszvis.measureDimensions(config.id));
 
@@ -161,8 +161,8 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 }
 
-/* Helper functions
-  ----------------------------------------------- */
+// Helper functions
+// -----------------------------------------------
 function closestDatum(data, accessor, datum) {
   var i = d3.bisector(accessor).left(data, datum, 1);
   var d0 = data[i - 1];

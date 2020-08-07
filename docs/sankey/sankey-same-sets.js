@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var MIN_CHART_HEIGHT = 650;
 var queryProps = sszvis
@@ -47,8 +47,8 @@ var sourceAcc = sszvis.prop("source");
 var targetAcc = sszvis.prop("target");
 var valueAcc = sszvis.prop("value");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   hoveredNode: {},
@@ -57,8 +57,8 @@ var state = {
   linkTargetLabels: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     var leftColIds = sszvis.set(data, sourceAcc);
@@ -116,12 +116,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var props = queryProps(sszvis.measureDimensions(config.id));
   var bounds = sszvis.bounds(props.bounds, config.id);

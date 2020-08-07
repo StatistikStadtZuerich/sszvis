@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var queryProps = sszvis
   .responsiveProps()
@@ -22,8 +22,8 @@ function parseRow(d) {
 var xAcc = sszvis.prop("xValue");
 var cAcc = sszvis.prop("category");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 
 var state = {
   data: [],
@@ -31,8 +31,8 @@ var state = {
   selected: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 
 var actions = {
   prepareState: function (data) {
@@ -58,12 +58,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var props = queryProps(sszvis.measureDimensions(config.id));
   var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);

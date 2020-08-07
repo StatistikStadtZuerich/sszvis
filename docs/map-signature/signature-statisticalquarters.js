@@ -1,7 +1,7 @@
 /* global d3, topojson, sszvis */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var queryProps = sszvis
   .responsiveProps()
@@ -39,16 +39,16 @@ var idAcc = sszvis.propOr("id", null);
 var valueAcc = sszvis.propOr("value", 0);
 var zoneNameAcc = sszvis.propOr("zonename", "--");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: null,
   mapData: null,
   selection: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareData: function (data) {
     state.data = data;
@@ -81,16 +81,16 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv("data/fake_statistical_quarters.csv", parseRow)
   .then(actions.prepareData)
   .catch(sszvis.loadError);
 
 d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   if (state.data === null || state.mapData === null) {
     // loading ...

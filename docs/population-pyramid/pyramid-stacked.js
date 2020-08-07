@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var queryProps = sszvis
   .responsiveProps()
@@ -30,8 +30,8 @@ var stackAcc = sszvis.prop("group");
 var womenAcc = sszvis.prop("0");
 var menAcc = sszvis.prop("1");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   ages: d3.range(0, 101), // [0 ... 100]
@@ -40,8 +40,8 @@ var state = {
   maxStackedValue: 0,
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -59,12 +59,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var chartDimensions = sszvis.measureDimensions(config.id);
 
@@ -161,8 +161,8 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 }
 
-/* Helper functions
-  ----------------------------------------------- */
+// Helper functions
+// -----------------------------------------------
 function groupAndStackAcc(d) {
   return gAcc(d) + " (" + stackAcc(d) + ")";
 }

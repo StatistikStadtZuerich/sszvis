@@ -1,7 +1,7 @@
 /* global d3, topojson, sszvis */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var MAX_LEGEND_WIDTH = 320;
 var queryProps = sszvis
@@ -34,8 +34,8 @@ var vAcc = sszvis.prop("value");
 var nameAcc = sszvis.prop("name");
 var mDatumAcc = sszvis.prop("datum");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: null,
   mapData: null,
@@ -43,8 +43,8 @@ var state = {
   valueDomain: [0, 1],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -77,14 +77,14 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv("data/M_wahlkreis_fake.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
 d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   if (state.data === null || state.mapData === null) {
     // loading ...

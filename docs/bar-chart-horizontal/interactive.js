@@ -1,12 +1,11 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 var MAX_CONTROL_WIDTH = 300;
 var queryProps = sszvis.responsiveProps().prop("controlWidth", {
   _: function (width) {
     return Math.min(width, MAX_CONTROL_WIDTH);
-    return Math.max(420, Math.min(MAX_CONTROL_WIDTH, width / 2));
   },
 });
 
@@ -22,8 +21,8 @@ var xAcc = sszvis.prop("value");
 var yAcc = sszvis.prop("category");
 var jAcc = sszvis.prop("year");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   categories: [],
@@ -33,8 +32,8 @@ var state = {
   selected: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -68,12 +67,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
   var bounds = sszvis.bounds(

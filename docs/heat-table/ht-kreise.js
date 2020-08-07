@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 function parseRow(d) {
   return {
@@ -37,8 +37,8 @@ var xAcc = sszvis.prop("xPosition");
 var yAcc = sszvis.prop("yPosition");
 var vAcc = sszvis.prop("value");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   yList: [],
@@ -47,8 +47,8 @@ var state = {
   selection: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -74,12 +74,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var containerWidth = sszvis.measureDimensions(config.id).width;
   var squarePadding = 2;
@@ -283,8 +283,8 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 }
 
-/* Helper functions
-  ----------------------------------------------- */
+// Helper functions
+// -----------------------------------------------
 function isSelected(d) {
   return sszvis.contains(state.selection, d);
 }

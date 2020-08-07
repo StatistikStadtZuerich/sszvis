@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var queryProps = sszvis
   .responsiveProps()
@@ -32,8 +32,8 @@ var aAcc = sszvis.prop("age");
 var womenAcc = sszvis.prop("Frauen");
 var menAcc = sszvis.prop("Männer");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 
 var state = {
   data: [],
@@ -46,8 +46,8 @@ var state = {
   selectedAge: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 
 var actions = {
   prepareState: function (data) {
@@ -149,13 +149,13 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 
 function render(state) {
   var pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
@@ -295,8 +295,8 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 }
 
-/* Helper Functions
-  ----------------------------------------------- */
+// Helper Functions
+// -----------------------------------------------
 
 function isWithinBarContour(binnedData, xCenter, xRelToPx, lengthScale) {
   return function (xRel, age) {

@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 // these are the internal edges of the bins used for the color scale
 // IMPORTANT: because of the way d3.scale.threshold works,
 // do not specify fixed upper and lower bounds
@@ -26,8 +26,8 @@ var xAcc = sszvis.prop("g1");
 var yAcc = sszvis.prop("g2");
 var cAcc = sszvis.prop("value");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   g1List: [],
@@ -36,8 +36,8 @@ var state = {
   selection: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -63,12 +63,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var containerWidth = sszvis.measureDimensions(config.id).width;
   var squarePadding = 2;
@@ -252,8 +252,8 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 }
 
-/* Helper functions
-  ----------------------------------------------- */
+// Helper functions
+// -----------------------------------------------
 function isSelected(d) {
   return sszvis.contains(state.selection, d);
 }

@@ -1,7 +1,7 @@
 /* global d3, sszvis, config */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var queryProps = sszvis
   .responsiveProps()
@@ -27,8 +27,8 @@ var queryProps = sszvis
     _: 60,
   });
 
-/* Shortcuts
-  ----------------------------------------------- */
+// Shortcuts
+// -----------------------------------------------
 function parseRow(d) {
   return {
     xPosition: sszvis.parseNumber(d["NeubauAbs (x-Achse)"]),
@@ -43,8 +43,8 @@ var yAcc = sszvis.prop("yPosition");
 var rAcc = sszvis.prop("radius");
 var cAcc = sszvis.prop("label");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   highlightData: [],
@@ -53,8 +53,8 @@ var state = {
   rExtent: [0, 0],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -88,12 +88,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var props = queryProps(sszvis.measureDimensions(config.id));
   var bounds = sszvis.bounds({ top: 20, bottom: 110 }, config.id);
@@ -211,8 +211,8 @@ function render(state) {
   chartLayer.selectGroup("voronoiMouse").datum(state.voronoiFiltered).call(mouseOverlay);
 }
 
-/* Helper functions
-  ----------------------------------------------- */
+// Helper functions
+// -----------------------------------------------
 
 function removeOverlappingYTickLabels(maxBottom) {
   return function (g) {

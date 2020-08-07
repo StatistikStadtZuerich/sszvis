@@ -1,7 +1,7 @@
 /* global d3, sszvis */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var HIGHLIGHTED_DATES = [new Date(2013, 10, 10)];
 
@@ -15,8 +15,8 @@ function parseRow(d) {
 var xAcc = sszvis.prop("date");
 var yAcc = sszvis.prop("value");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: [],
   dates: [0, 0],
@@ -24,8 +24,8 @@ var state = {
   annotatedData: [],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareState: function (data) {
     state.data = data;
@@ -43,12 +43,12 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv("data/SL_daily.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   var bounds = sszvis.bounds({ top: 30, bottom: 45 }, "#sszvis-chart");
 

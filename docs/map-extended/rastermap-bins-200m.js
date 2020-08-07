@@ -1,7 +1,7 @@
 /* global d3, topojson, sszvis */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var DEFAULT_KEY = "Kinder";
 var KEY_OPTIONS = ["Kinder", "Random"];
@@ -64,16 +64,16 @@ var xAcc = sszvis.prop("xpos");
 var yAcc = sszvis.prop("ypos");
 var kinderAcc = sszvis.prop("kinder");
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   data: null,
   mapData: null,
   valueDomain: [0, 0],
 };
 
-/* State transitions
-  ----------------------------------------------- */
+// State transitions
+// -----------------------------------------------
 var actions = {
   prepareData: function (data) {
     state.data = data;
@@ -97,14 +97,14 @@ var actions = {
   },
 };
 
-/* Data initialization
-  ----------------------------------------------- */
+// Data initialization
+// -----------------------------------------------
 d3.csv("data/kinder200.csv", parseRow).then(actions.prepareData).catch(sszvis.loadError);
 
 d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   if (state.data === null || state.mapData === null) {
     // loading ...

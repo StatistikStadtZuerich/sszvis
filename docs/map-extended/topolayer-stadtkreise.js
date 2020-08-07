@@ -1,7 +1,7 @@
 /* global d3, topojson, sszvis */
 
-/* Configuration
-  ----------------------------------------------- */
+// Configuration
+// -----------------------------------------------
 
 var queryProps = sszvis.responsiveProps().prop("bounds", {
   _: function (width) {
@@ -42,8 +42,8 @@ var queryProps = sszvis.responsiveProps().prop("bounds", {
   },
 });
 
-/* Application state
-  ----------------------------------------------- */
+// Application state
+// -----------------------------------------------
 var state = {
   mapData: null,
 };
@@ -64,13 +64,13 @@ var actions = {
   },
 };
 
-/* Initialization
-  ----------------------------------------------- */
+// Initialization
+// -----------------------------------------------
 
 d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
-/* Render
-  ----------------------------------------------- */
+// Render
+// -----------------------------------------------
 function render(state) {
   if (state.mapData === null) {
     // loading ...
