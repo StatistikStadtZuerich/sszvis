@@ -18,7 +18,7 @@ title: sszvis
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      ({{ content | safe }})(d3, sszvis);
+      (function(d3, sszvis) { {{ content | safe }} })(d3, sszvis);
     </script>
   </body>
 </html>

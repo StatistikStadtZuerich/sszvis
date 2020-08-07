@@ -23,7 +23,7 @@ title: sszvis
     </script>
 
     <script data-catalog-project-expose="script.js">
-      ({{ content | safe }})(d3, topojson, sszvis, EXTERNAL_CONFIG);
+      (function(d3, topojson, sszvis, config) { {{ content | safe }} })(d3, topojson, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>
