@@ -48,15 +48,17 @@ sszvis.app({
         const data = result[0];
         const topo = result[1];
         return {
-          data: data,
-          mapData: {
-            features: topojson.feature(topo, topo.objects.wahlkreise),
-            borders: topojson.mesh(topo, topo.objects.wahlkreise),
-            lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
-            lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
+          state: {
+            data: data,
+            mapData: {
+              features: topojson.feature(topo, topo.objects.wahlkreise),
+              borders: topojson.mesh(topo, topo.objects.wahlkreise),
+              lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
+              lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
+            },
+            selection: [],
+            valueDomain: [0, 1],
           },
-          selection: [],
-          valueDomain: [0, 1],
         };
       }
     );
@@ -67,12 +69,12 @@ sszvis.app({
   actions: {
     selectHovered: function (state, d) {
       state.selection = [d.datum];
-      return state;
+      return { state };
     },
 
     deselectHovered: function (state) {
       state.selection = [];
-      return state;
+      return { state };
     },
   },
 

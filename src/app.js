@@ -37,15 +37,37 @@
  * @module sszvis/app
  */
 
-import throttle from "nano-throttle";
 import { fallbackRender } from "./fallback";
 import { viewport } from "./viewport/resize";
 
+function abort(message) {
+  throw new Error(`[sszvis.app] ${message}`);
+}
+
+function assert(condition, message) {
+  condition || abort(message);
+}
+
+function isObject(x) {
+  return !!x && x.constructor === Object;
+}
+
 const enqueue = typeof requestAnimationFrame !== "undefined" ? requestAnimationFrame : setTimeout;
 
-export const app = ({ init, render, actions, fallback }) => {
+export const app = ({ init, render, actions = {}, fallback }) => {
+  assert(typeof render === "function", 'A "render" function must be provided.');
+  assert(
+    isObject(actions),
+    '"actions" must be an object with action names as keys and functions as values.'
+  );
+
   let doing;
   let state;
+
+  const update = () => {
+    render(state, actionFns);
+    doing = false;
+  };
 
   const setState = (newState) => {
     // Because we mutate the state throughout, this assignment has no effect and the purity
@@ -55,21 +77,25 @@ export const app = ({ init, render, actions, fallback }) => {
 
     // If the newState is the same as old state, this would have not to run. But we have no way
     // of knowing at the moment, so we run it anyway.
-    if (render && !doing) enqueue(update, (doing = true));
+    if (!doing) enqueue(update, (doing = true));
   };
 
-  const dispatch = (action, props) =>
-    typeof action === "string"
-      ? dispatch(actions[action](state, props))
-      : typeof action === "function"
-      ? dispatch(action(state, props))
-      : Array.isArray(action)
-      ? typeof action[0] === "string"
-        ? dispatch(action[0], action[1])
-        : action
-            .slice(1)
-            .map((fx) => fx && fx !== true && fx[0](dispatch, fx[1]), setState(action[0]))
-      : setState(action);
+  const dispatch = (action, props) => {
+    if (typeof action === "string") {
+      assert(
+        typeof actions[action] === "function",
+        `[sszvis.app] Action "${action}" is not a function.`
+      );
+      dispatch(actions[action](state, props));
+    } else if (typeof action === "function") {
+      action(dispatch);
+    } else if (action.state != null) {
+      setState(action.state);
+      if (action.effect != null) dispatch(action.effect, props);
+    } else {
+      abort(`Could not dispatch action "${action}"`);
+    }
+  };
 
   const actionFns = Object.keys(actions).reduce((acc, key) => {
     acc[key] = (args) => {
@@ -78,26 +104,16 @@ export const app = ({ init, render, actions, fallback }) => {
     return acc;
   }, {});
 
-  const update = throttle(() => {
-    render(state, actionFns);
-    doing = false;
-  }, 1000 / 60);
-
   init()
     .then(dispatch)
     .then(function () {
       viewport.on("resize", () => !doing && enqueue(update, (doing = true)));
     })
     .catch(function (err) {
-      console.error(err);
+      abort(err);
       fallback && fallbackRender(fallback.element, { src: fallback.src });
     });
 };
-
-/**
- * Effect Creators
- */
-app.effect = (action, props) => [(d, p) => d(action, p), props];
 
 /*!
  * hyperapp license
