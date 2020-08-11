@@ -1,0 +1,10 @@
+---
+title: Heat Table | Kreise
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/HT_kreise.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "ht-kreise.js" %}

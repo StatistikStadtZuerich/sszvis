@@ -20,6 +20,7 @@ const createConfig = ({ input, output, plugins }) => ({
   },
   plugins: [
     babel({
+      babelHelpers: "bundled",
       exclude: "node_modules/**",
     }),
     nodeResolve(),
@@ -33,7 +34,7 @@ export default [
     input: join(__dirname, "src", "index.js"),
     output: [
       {
-        file: join(__dirname, "docs", "static", "sszvis.js"),
+        file: join(__dirname, "build", "sszvis.js"),
         format: "umd",
         banner,
         globals,
@@ -45,7 +46,7 @@ export default [
     input: join(__dirname, "src", "index.js"),
     output: [
       {
-        file: join(__dirname, "docs", "static", "sszvis.min.js"),
+        file: join(__dirname, "build", "sszvis.min.js"),
         format: "umd",
         banner,
         globals,

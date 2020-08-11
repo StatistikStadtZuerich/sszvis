@@ -1,0 +1,10 @@
+---
+title: Heat Table | Binned
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/HT_binned_linear.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "ht-binned-linear.js" %}

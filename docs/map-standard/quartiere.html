@@ -1,0 +1,10 @@
+---
+title: Map | Quartier
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/map-external-config
+config:
+  data: "data/M_quartiere.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "quartiere.js" %}

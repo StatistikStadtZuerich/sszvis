@@ -1,0 +1,10 @@
+---
+title: Scatterplot
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/scatterplot_over_time.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "scatterplot-over-time.js" %}

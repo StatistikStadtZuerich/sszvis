@@ -1,0 +1,10 @@
+---
+title: Heat Table | Wer mit wem?
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/HT_wermitwem.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "ht-wermitwem.js" %}

@@ -1,0 +1,10 @@
+---
+title: Vertical Bar Chart | Many Years
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/SiVB_yearly_many.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "many-years.js" %}

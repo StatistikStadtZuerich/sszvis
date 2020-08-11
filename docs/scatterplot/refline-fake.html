@@ -1,0 +1,10 @@
+---
+title: Scatterplot
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/SS_refline_fake.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+{% printFileContents "refline-fake.js" %}
