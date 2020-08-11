@@ -1,7 +1,6 @@
 const FS = require("fs");
 const PATH = require("path");
 const babel = require("@babel/core");
-const { COMMENT_KEYS } = require("@babel/types");
 const prettier = require("prettier");
 
 module.exports = function (eleventyConfig) {
@@ -13,6 +12,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("docs/**/*.json");
   eleventyConfig.addPassthroughCopy("docs/**/*.md");
   eleventyConfig.addPassthroughCopy("docs/**/*.png");
+
+  eleventyConfig.addWatchTarget("docs/**/*.js");
 
   /**
    * printFileContents
