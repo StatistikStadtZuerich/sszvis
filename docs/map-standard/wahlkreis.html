@@ -1,6 +1,10 @@
 ---
 title: Map Standard | Wahlkreis
 permalink: "{{ page.filePathStem }}.html"
-layout: layouts/map-basic
+layout: layouts/map-external-config
+config:
+  data: "data/M_wahlkreis_fake.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
 ---
 {% printFileContents "wahlkreis.js" %}
