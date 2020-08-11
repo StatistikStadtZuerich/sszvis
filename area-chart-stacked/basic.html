@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Area Chart</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Area Chart Stacked | Basic</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var queryProps = sszvis
           .responsiveProps()
@@ -42,7 +36,7 @@
             _: null,
           })
           .prop("xLabelFormat", {
-            _: function () {
+            _: function _() {
               return sszvis.formatYear;
             },
           })
@@ -65,8 +59,8 @@
         var yAcc = sszvis.prop("yValue");
         var cAcc = sszvis.prop("category");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           timeExtent: [0, 0],
@@ -80,15 +74,17 @@
           mouseYValue: 0,
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.timeExtent = d3.extent(state.data, xAcc);
             state.categories = sszvis.set(state.data, cAcc);
 
-            var stackLayout = d3.stack().keys(state.categories.slice().reverse());
+            var stackLayout = d3
+              .stack()
+              .keys(state.categories.slice().reverse());
             state.stackedData = stackLayout(
               sszvis
                 .cascade()
@@ -126,12 +122,12 @@
             actions.resetDate();
           },
 
-          toggleMultiples: function (g) {
+          toggleMultiples: function toggleMultiples(g) {
             state.isMultiples = g === "Separiert";
             render(state);
           },
 
-          changeDate: function (xValue, yValue) {
+          changeDate: function changeDate(xValue, yValue) {
             var closest = findClosest(state.dates, xValue);
             state.highlightDate = closest;
             state.highlightData = state.stackedData.map(function (stack) {
@@ -154,22 +150,24 @@
             render(state);
           },
 
-          resetDate: function () {
+          resetDate: function resetDate() {
             var mostRecent = d3.max(state.data, xAcc);
             actions.changeDate(mostRecent, 0);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
@@ -178,6 +176,7 @@
               axisLabels: state.timeExtent.map(props.xLabelFormat),
               legendLabels: state.categories,
             },
+
             config.id
           );
 
@@ -189,12 +188,16 @@
               top: 20,
               bottom: legendLayout.bottomPadding,
             },
+
             config.id
           );
 
           // Scales
 
-          var xScale = d3.scaleTime().domain(state.timeExtent).range([0, bounds.innerWidth]);
+          var xScale = d3
+            .scaleTime()
+            .domain(state.timeExtent)
+            .range([0, bounds.innerWidth]);
 
           var yScale = d3
             .scaleLinear()
@@ -203,7 +206,9 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedData);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.stackedData);
 
           var htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
@@ -270,7 +275,9 @@
             .tooltip()
             .header(tooltipText)
             .orientation(function (d) {
-              return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? "right" : "left";
+              return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth
+                ? "right"
+                : "left";
             })
             .renderInto(htmlLayer)
             .visible(true);
@@ -285,7 +292,9 @@
               return yScale(d[1]);
             });
 
-          var xAxisTicks = xScale.ticks(props.xTicks).concat(state.highlightDate);
+          var xAxisTicks = xScale
+            .ticks(props.xTicks)
+            .concat(state.highlightDate);
 
           var xAxis = sszvis.axisX
             .time()
@@ -327,11 +336,17 @@
             .selectGroup("colorLegend")
             .attr(
               "transform",
-              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+              sszvis.translateString(
+                0,
+                bounds.innerHeight + legendLayout.axisLabelPadding
+              )
             )
             .call(colorLegend);
 
-          chartLayer.selectGroup("highlight").datum(state.highlightData).call(rangeRuler);
+          chartLayer
+            .selectGroup("highlight")
+            .datum(state.highlightData)
+            .call(rangeRuler);
 
           var flagGroup = chartLayer
             .selectGroup("flag")
@@ -357,8 +372,8 @@
           chartLayer.selectGroup("interaction").call(interactionLayer);
         }
 
-        /* Helper functions
-        ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
         function findClosest(data, datum) {
           var i = d3.bisectLeft(data, datum, 1);
           var d0 = data[i - 1];

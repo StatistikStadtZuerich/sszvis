@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pie Chart Multiples</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Pie Chart | Multiples</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-  ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var PIE_DIAMETER = 204;
         var LEGEND_PADDING = 40;
@@ -49,7 +43,7 @@
             _: 2,
           })
           .prop("bounds", {
-            palm: function (w) {
+            palm: function palm(w) {
               var legendHeight = 182;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -60,7 +54,7 @@
                 height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding,
               };
             },
-            lap: function (w) {
+            lap: function lap(w) {
               var legendHeight = 98;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -71,7 +65,7 @@
                 height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding,
               };
             },
-            _: function (w) {
+            _: function _(w) {
               var legendHeight = 98;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -84,7 +78,7 @@
             },
           })
           .prop("legendPosition", {
-            palm: function (w) {
+            palm: function palm(w) {
               return function (g) {
                 return {
                   top: LEGEND_PADDING,
@@ -92,16 +86,17 @@
                 };
               };
             },
-            lap: function (w) {
+            lap: function lap(w) {
               return function (bounds, g) {
-                var left = bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
+                var left =
+                  bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
                 return {
                   top: LEGEND_PADDING,
                   left: left,
                 };
               };
             },
-            _: function (w) {
+            _: function _(w) {
               return function (g) {
                 var colWidth = Math.min(w, MAX_WIDTH) / 2;
                 return {
@@ -112,12 +107,12 @@
             },
           })
           .prop("tooltipVisibility", {
-            palm: function () {
+            palm: function palm() {
               return function () {
                 return false;
               };
             },
-            _: function () {
+            _: function _() {
               return isSelected;
             },
           });
@@ -134,8 +129,8 @@
         var vAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("category");
 
-        /* Application state
-  ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           groups: [],
@@ -147,10 +142,10 @@
           selectedCategories: [],
         };
 
-        /* State transitions
-  ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             // groups the data into arrays by their 'group' value
             var grouped = sszvis
               .cascade()
@@ -180,7 +175,7 @@
             render(state);
           },
 
-          showTooltip: function (datum) {
+          showTooltip: function showTooltip(datum) {
             state.hoveredDatum = datum;
             state.selection = state.data.filter(function (d) {
               return datum.category === d.category;
@@ -189,24 +184,26 @@
             render(state);
           },
 
-          hideTooltip: function () {
+          hideTooltip: function hideTooltip() {
             state.hoveredDatum = {};
             state.selection = [];
             state.selectedCategories = [];
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-  ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-  ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           var bounds = sszvis.bounds(props.bounds, config.id);
@@ -221,7 +218,9 @@
 
           // Layers
 
-          var chart = sszvis.createSvgLayer(config.id, bounds).datum(state.pieGroups);
+          var chart = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.pieGroups);
 
           var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds);
 
@@ -266,7 +265,10 @@
             .selectGroup("piecharts")
             .attr(
               "transform",
-              sszvis.translateString(bounds.innerWidth / 2 - multiplesMaker.width() / 2, 0)
+              sszvis.translateString(
+                bounds.innerWidth / 2 - multiplesMaker.width() / 2,
+                0
+              )
             )
             .call(multiplesMaker);
 
@@ -274,7 +276,9 @@
           pieCharts.selectAll(".sszvis-multiple").each(function (d) {
             // inside this closure, create a copy of the angle scale
             // which is relative to the group total calculated earlier
-            var groupScale = aScale.copy().domain([0, state.totalValues[d.group]]);
+            var groupScale = aScale
+              .copy()
+              .domain([0, state.totalValues[d.group]]);
 
             var pieR = pieRadius(d.gw, d.gh);
 
@@ -284,7 +288,10 @@
             // render the pie chart inside this group
             d3.select(this)
               .selectAll(".sszvis-multiple-chart")
-              .attr("transform", sszvis.translateString(d.cx - pieR, d.cy - pieR))
+              .attr(
+                "transform",
+                sszvis.translateString(d.cx - pieR, d.cy - pieR)
+              )
               .call(pieMaker);
           });
 
@@ -296,7 +303,10 @@
             .selectGroup("colorLegend")
             .attr(
               "transform",
-              sszvis.translateString(legendPosition.left, bounds.innerHeight + legendPosition.top)
+              sszvis.translateString(
+                legendPosition.left,
+                bounds.innerHeight + legendPosition.top
+              )
             )
             .call(colorLegend);
 
@@ -314,8 +324,8 @@
           sszvis.viewport.on("resize", actions.resize);
         }
 
-        /* Helper functions
-  ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
         function isSelected(d) {
           return sszvis.contains(state.selectedCategories, d.category);
         }

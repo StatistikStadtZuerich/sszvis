@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sankey Diagram (Parallel Sets)</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Sankey Diagram | Same Sets</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,36 +24,35 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var MIN_CHART_HEIGHT = 650;
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            palm: function (w) {
+            palm: function palm(w) {
               return {
                 top: 40,
                 left: 0,
                 bottom: 20,
                 right: 0,
-                height: Math.max(sszvis.aspectRatio4to3(w), MIN_CHART_HEIGHT + 40 + 20),
+                height: Math.max(
+                  sszvis.aspectRatio4to3(w),
+                  MIN_CHART_HEIGHT + 40 + 20
+                ),
               };
             },
-            _: function (w) {
+            _: function _(w) {
               return {
                 top: 40,
                 left: w / 4,
                 bottom: 20,
                 right: w / 4,
-                height: Math.max(sszvis.aspectRatio4to3(w), MIN_CHART_HEIGHT + 40 + 20),
+                height: Math.max(
+                  sszvis.aspectRatio4to3(w),
+                  MIN_CHART_HEIGHT + 40 + 20
+                ),
               };
             },
           })
@@ -77,8 +77,8 @@
         var targetAcc = sszvis.prop("target");
         var valueAcc = sszvis.prop("value");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           hoveredNode: {},
@@ -87,10 +87,10 @@
           linkTargetLabels: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             var leftColIds = sszvis.set(data, sourceAcc);
             var rightColIds = sszvis.set(data, targetAcc);
 
@@ -107,7 +107,7 @@
             render(state);
           },
 
-          onNodeOver: function (d) {
+          onNodeOver: function onNodeOver(d) {
             state.hoveredNode = d;
             state.linkSourceLabels = d.linksTo;
             state.linkTargetLabels = d.linksFrom;
@@ -117,7 +117,7 @@
             render(state);
           },
 
-          onNodeOut: function () {
+          onNodeOut: function onNodeOut() {
             state.hoveredNode = null;
             state.linkSourceLabels = [];
             state.linkTargetLabels = [];
@@ -127,31 +127,33 @@
             render(state);
           },
 
-          onLinkOver: function (d) {
+          onLinkOver: function onLinkOver(d) {
             state.hoveredLink = d;
             state.hoveredNode = null;
 
             render(state);
           },
 
-          onLinkOut: function () {
+          onLinkOut: function onLinkOut() {
             state.hoveredLink = {};
             state.hoveredNode = null;
 
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           var bounds = sszvis.bounds(props.bounds, config.id);
@@ -196,7 +198,10 @@
 
           // Components
 
-          var formatValue = sszvis.compose(sszvis.formatPreciseNumber(0), valueAcc);
+          var formatValue = sszvis.compose(
+            sszvis.formatPreciseNumber(0),
+            valueAcc
+          );
 
           var sankeyGen = sszvis
             .sankey()
@@ -222,17 +227,25 @@
               return linkIsSelected(d) ? highlightLinkBlue : linkGrey;
             })
             .linkSort(function (a, b) {
-              return linkIsSelected(a) ? 1 : linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b);
+              return linkIsSelected(a)
+                ? 1
+                : linkIsSelected(b)
+                ? -1
+                : valueAcc(a) - valueAcc(b);
             })
             .linkSourceLabels(state.linkSourceLabels)
             .linkTargetLabels(state.linkTargetLabels)
             .linkLabel(formatValue)
             .labelSideSwitch(props.labelSide === "inside")
             .labelSide(function (columnIndex) {
-              return columnPosition(columnIndex) > bounds.innerWidth / 2 ? "right" : "left";
+              return columnPosition(columnIndex) > bounds.innerWidth / 2
+                ? "right"
+                : "left";
             })
             .labelOpacity(function (d) {
-              return props.labelSide === "inside" && state.hoveredNode !== null ? 0 : 1;
+              return props.labelSide === "inside" && state.hoveredNode !== null
+                ? 0
+                : 1;
             })
             .labelHitBoxSize(props.hitboxSize)
             .nameLabel(function (id) {
@@ -289,7 +302,9 @@
         }
 
         function linkIsSelected(d) {
-          return linkIsHovered(d) || nodeIsHovered(d.src) || nodeIsHovered(d.tgt);
+          return (
+            linkIsHovered(d) || nodeIsHovered(d.src) || nodeIsHovered(d.tgt)
+          );
         }
 
         function nodeIsHovered(d) {

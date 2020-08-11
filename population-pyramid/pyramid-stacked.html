@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Population Pyramid</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Population Pyramid | Stacked</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var queryProps = sszvis
           .responsiveProps()
@@ -60,8 +54,8 @@
         var womenAcc = sszvis.prop("0");
         var menAcc = sszvis.prop("1");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           ages: d3.range(0, 101), // [0 ... 100]
@@ -70,31 +64,38 @@
           maxStackedValue: 0,
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.groups = sszvis.set(state.data, groupAndStackAcc);
 
-            state.stackedPyramidData = sszvis.stackedPyramidData(gAcc, aAcc, stackAcc, vAcc)(data);
+            state.stackedPyramidData = sszvis.stackedPyramidData(
+              gAcc,
+              aAcc,
+              stackAcc,
+              vAcc
+            )(data);
 
             state.maxStackedValue = state.stackedPyramidData.maxValue;
 
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var chartDimensions = sszvis.measureDimensions(config.id);
 
@@ -108,12 +109,16 @@
 
           var bounds = sszvis.bounds(
             {
-              height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom,
+              height:
+                chartPadding.top +
+                pyramidDimensions.totalHeight +
+                chartPadding.bottom,
               top: chartPadding.top,
               bottom: chartPadding.bottom,
               left: pyramidDimensions.chartPadding,
               right: pyramidDimensions.chartPadding,
             },
+
             config.id
           );
 
@@ -133,7 +138,9 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedPyramidData);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.stackedPyramidData);
 
           // Components
 
@@ -181,7 +188,10 @@
 
           chartLayer
             .selectGroup("xAxis")
-            .attr("transform", sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight))
+            .attr(
+              "transform",
+              sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight)
+            )
             .call(xAxis);
 
           chartLayer
@@ -191,14 +201,17 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + 60)
+            )
             .call(colorLegend);
 
           sszvis.viewport.on("resize", actions.resize);
         }
 
-        /* Helper functions
-        ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
         function groupAndStackAcc(d) {
           return gAcc(d) + " (" + stackAcc(d) + ")";
         }

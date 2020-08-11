@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sunburst</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Scatterplot</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         function parseRow(d) {
           return {
@@ -47,18 +41,18 @@
         var countryAcc = sszvis.prop("country");
         var numAcc = sszvis.prop("number");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           radiusExtent: [0, 0],
           selection: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             var continentsList = [
               "Europa",
               "Asien",
@@ -74,6 +68,7 @@
                 continentsList.indexOf(continentAcc(a)),
                 continentsList.indexOf(continentAcc(b))
               );
+
               if (indexDiff !== 0) return indexDiff;
               return d3.descending(numAcc(a), numAcc(b));
             });
@@ -93,34 +88,37 @@
             render(state);
           },
 
-          onSliceOver: function (d) {
+          onSliceOver: function onSliceOver(d) {
             state.selection = [d];
 
             render(state);
           },
 
-          onSliceOut: function () {
+          onSliceOut: function onSliceOut() {
             state.selection = [];
 
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var legendLayout = sszvis.colorLegendLayout(
             {
               legendLabels: state.continents,
             },
+
             config.id
           );
 
@@ -128,7 +126,12 @@
           var colorLegend = legendLayout.legend;
 
           var bounds = sszvis.bounds(
-            { top: 20, right: 20, bottom: legendLayout.bottomPadding, left: 20 },
+            {
+              top: 20,
+              right: 20,
+              bottom: legendLayout.bottomPadding,
+              left: 20,
+            },
             config.id
           );
 
@@ -146,7 +149,9 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.data);
 
           var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds);
 
@@ -179,7 +184,10 @@
             .selectGroup("sunburst")
             .attr(
               "transform",
-              sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2)
+              sszvis.translateString(
+                bounds.innerWidth / 2,
+                bounds.innerHeight / 2
+              )
             )
             .call(sunburstMaker);
 

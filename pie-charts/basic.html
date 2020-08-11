@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Pie Chart</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Pie Chart | Basic</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var PIE_DIAMETER = 260;
         var LEGEND_TOP_PADDING = 40;
@@ -39,7 +33,7 @@
         var LEGEND_HEIGHT = 145;
         var LEGEND_WIDTH = 102;
         var queryProps = sszvis.responsiveProps().prop("layout", {
-          palm: function (width) {
+          palm: function palm(width) {
             var sidePadding = Math.max((width - PIE_DIAMETER) / 2, 10);
             var diameter = width - 2 * sidePadding;
             var legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
@@ -51,18 +45,20 @@
                 right: sidePadding,
                 height: 20 + diameter + legendHeight,
               },
+
               pieRadius: diameter / 2,
               piePosition: {
                 top: 0,
                 left: sidePadding,
               },
+
               legendPosition: {
                 top: diameter + LEGEND_TOP_PADDING,
                 left: 0,
               },
             };
           },
-          _: function (width) {
+          _: function _(width) {
             return {
               bounds: {
                 top: 20,
@@ -71,11 +67,15 @@
                 right: LEGEND_WIDTH,
                 height: 20 + 20 + PIE_DIAMETER,
               },
+
               pieRadius: PIE_DIAMETER / 2,
               piePosition: {
                 top: 0,
-                left: width / 2 - (PIE_DIAMETER + LEGEND_LEFT_PADDING + LEGEND_WIDTH) / 2,
+                left:
+                  width / 2 -
+                  (PIE_DIAMETER + LEGEND_LEFT_PADDING + LEGEND_WIDTH) / 2,
               },
+
               legendPosition: {
                 top: PIE_DIAMETER / 2 - LEGEND_HEIGHT / 2,
                 left: PIE_DIAMETER + LEGEND_LEFT_PADDING,
@@ -96,8 +96,8 @@
         var vAcc = sszvis.prop("value");
         var cAcc = sszvis.prop("category");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           totalValue: 0,
@@ -105,39 +105,39 @@
           selection: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.totalValue = d3.sum(state.data, vAcc);
             state.categories = sszvis.set(state.data, cAcc);
             render(state);
           },
 
-          showTooltip: function (datum) {
+          showTooltip: function showTooltip(datum) {
             state.selection = [datum];
             render(state);
           },
 
-          hideTooltip: function () {
+          hideTooltip: function hideTooltip() {
             state.selection = [];
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
+        // Data initialization
+        // -----------------------------------------------
         d3.csv("data/P_7Categories.csv", parseRow)
           .then(actions.prepareState)
           .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           var bounds = sszvis.bounds(props.layout.bounds, config.id);
@@ -153,9 +153,13 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.data);
 
-          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+          var tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selection);
 
           // Components
 
@@ -187,7 +191,10 @@
 
           chartLayer.attr(
             "transform",
-            sszvis.translateString(props.layout.piePosition.left, props.layout.piePosition.top)
+            sszvis.translateString(
+              props.layout.piePosition.left,
+              props.layout.piePosition.top
+            )
           );
 
           var pie = chartLayer.selectGroup("piechart").call(pieMaker);
@@ -219,8 +226,8 @@
           sszvis.viewport.on("resize", actions.resize);
         }
 
-        /* Helper functions
-        ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }

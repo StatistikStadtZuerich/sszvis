@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Grouped Bar Chart – Two Small</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Grouped Bar Chart | Two Small</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,20 +24,13 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var queryProps = sszvis
           .responsiveProps()
           .prop("xLabelFormat", {
-            _: function () {
+            _: function _() {
               return sszvis.formatText;
             },
           })
@@ -62,8 +56,8 @@
         var yAcc = sszvis.prop("yValue");
         var cAcc = sszvis.prop("category");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
 
         var state = {
           data: [],
@@ -76,46 +70,56 @@
           selection: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
 
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.regions = sszvis.set(state.data, xAcc);
-            state.valueExtent = zeroBasedAxisDomain(d3.extent(state.data, yAcc));
+            state.valueExtent = zeroBasedAxisDomain(
+              d3.extent(state.data, yAcc)
+            );
             state.groups = sszvis.set(state.data, cAcc);
-            state.groupedData = sszvis.cascade().arrayBy(xAcc).apply(state.data);
-            state.longestGroup = d3.max(state.groupedData, sszvis.prop("length"));
+            state.groupedData = sszvis
+              .cascade()
+              .arrayBy(xAcc)
+              .apply(state.data);
+            state.longestGroup = d3.max(
+              state.groupedData,
+              sszvis.prop("length")
+            );
             state.categories = sszvis.set(state.data, cAcc);
 
             render(state);
           },
 
-          showTooltip: function (x, y) {
+          showTooltip: function showTooltip(x, y) {
             state.selection = state.groupedData.filter(function (d) {
               return sszvis.contains(d.map(xAcc), x);
             });
             render(state);
           },
 
-          hideTooltip: function (x, y) {
+          hideTooltip: function hideTooltip(x, y) {
             state.selection = [];
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
+        // Data initialization
+        // -----------------------------------------------
 
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
 
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
@@ -126,6 +130,7 @@
               legendLabels: state.categories,
               slant: props.textDirection,
             },
+
             config.id
           );
 
@@ -137,6 +142,7 @@
               top: 25,
               bottom: legendLayout.bottomPadding,
             },
+
             config.id
           );
 
@@ -150,22 +156,29 @@
             .paddingOuter(0.8)
             .rangeRound([0, chartWidth]);
 
-          var yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
+          var yScale = d3
+            .scaleLinear()
+            .domain(state.valueExtent)
+            .range([bounds.innerHeight, 0]);
 
-          var yPosScale = function (v) {
+          var yPosScale = function yPosScale(v) {
             return isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
           };
 
-          var hScale = function (v) {
+          var hScale = function hScale(v) {
             // the size of the bar is distance from the y-position of the value to the y-position of 0
             return Math.abs(yScale(v) - yScale(0));
           };
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.groupedData);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.groupedData);
 
-          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+          var tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selection);
 
           // Components
 
@@ -186,7 +199,10 @@
             .slant(props.textDirection)
             .tickFormat(props.xLabelFormat)
             .highlightTick(function (d) {
-              return sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d);
+              return sszvis.contains(
+                state.selection.map(sszvis.compose(xAcc, sszvis.first)),
+                d
+              );
             });
           if (!props.textDirection) {
             xAxis.textWrap(labelWrapWidth(xScale.range()));
@@ -224,7 +240,10 @@
 
           chartLayer.attr(
             "transform",
-            sszvis.translateString(bounds.innerWidth / 2 - chartWidth / 2, bounds.padding.top)
+            sszvis.translateString(
+              bounds.innerWidth / 2 - chartWidth / 2,
+              bounds.padding.top
+            )
           );
 
           chartLayer
@@ -242,7 +261,10 @@
             .selectGroup("colorLegend")
             .attr(
               "transform",
-              sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+              sszvis.translateString(
+                0,
+                bounds.innerHeight + legendLayout.axisLabelPadding
+              )
             )
             .call(colorLegend);
 
@@ -259,8 +281,8 @@
           chartLayer.selectGroup("interactionLayer").call(interactionLayer);
         }
 
-        /* Helper functions
-        ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
 
         function isTwoSidedDomain(extent) {
           return d3.min(extent) !== 0;

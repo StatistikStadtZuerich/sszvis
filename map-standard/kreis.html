@@ -4,13 +4,14 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Map</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Map | Kreis</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -24,19 +25,12 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, topojson, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function (width) {
+            _: function _(width) {
               var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 30,
@@ -46,12 +40,12 @@
             },
           })
           .prop("legendWidth", {
-            _: function (width) {
+            _: function _(width) {
               return Math.min(width / 2, 320);
             },
           })
           .prop("labelFormat", {
-            _: function () {
+            _: function _() {
               return sszvis.formatNumber;
             },
           })
@@ -70,8 +64,8 @@
         var nameAcc = sszvis.prop("name");
         var mDatumAcc = sszvis.prop("datum");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: null,
           mapData: null,
@@ -79,28 +73,32 @@
           valueDomain: [0, 0],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
 
             render(state);
           },
 
-          prepareMapData: function (topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.stadtkreise),
               borders: topojson.mesh(topo, topo.objects.stadtkreise),
               lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
-              lakeBorders: topojson.mesh(topo, topo.objects.stadtkreis_lakebounds),
+              lakeBorders: topojson.mesh(
+                topo,
+                topo.objects.stadtkreis_lakebounds
+              ),
             };
+
             render(state);
           },
 
           // manage which datum is selected. These data are highlighted by the map.
-          selectHovered: function (d) {
+          selectHovered: function selectHovered(d) {
             if (state.selection[0] === d.datum) {
               return;
             }
@@ -108,7 +106,7 @@
             render(state);
           },
 
-          deselectHovered: function () {
+          deselectHovered: function deselectHovered() {
             if (state.selection.length === 0) {
               return;
             }
@@ -116,19 +114,23 @@
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+        d3.json("../topo/stadt-zurich.json")
+          .then(actions.prepareMapData)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           if (state.data === null || state.mapData === null) {
             // loading ...
@@ -144,9 +146,13 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.data);
 
-          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+          var tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selection);
 
           // Components
 
@@ -158,12 +164,16 @@
             .lakeBorders(state.mapData.lakeBorders)
             .highlight(state.selection)
             // gets the fill color and darken it
-            .highlightStroke(sszvis.compose(sszvis.muchDarker, colorScale, vAcc))
+            .highlightStroke(
+              sszvis.compose(sszvis.muchDarker, colorScale, vAcc)
+            )
             .width(bounds.innerWidth)
             .height(bounds.innerHeight)
             .fill(sszvis.compose(colorScale, vAcc));
 
-          var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(nameAcc, mDatumAcc));
+          var tooltipHeader = sszvis
+            .modularTextHTML()
+            .bold(sszvis.compose(nameAcc, mDatumAcc));
 
           var tooltipBody = sszvis
             .modularTextHTML()
@@ -192,7 +202,10 @@
           // Rendering
 
           chartLayer
-            .attr("transform", sszvis.translateString(bounds.padding.left, bounds.padding.top))
+            .attr(
+              "transform",
+              sszvis.translateString(bounds.padding.left, bounds.padding.top)
+            )
             .call(choroplethMap);
 
           chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);

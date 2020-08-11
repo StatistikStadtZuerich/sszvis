@@ -4,27 +4,21 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Map</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Map | CML Quartier</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
       (function (d3, topojson, sszvis) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart", { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         // Only select an entity if the distance to an input value is lower than
         // this threshold.
@@ -44,10 +38,10 @@
           })
           .prop("lineChartPadding", {
             palm: 12,
-            lap: function (w) {
+            lap: function lap(w) {
               return w / 10;
             },
-            _: function (w) {
+            _: function _(w) {
               return w / 5;
             },
           });
@@ -67,8 +61,8 @@
         var nameAcc = sszvis.prop("name");
         var mDatumAcc = sszvis.prop("datum");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: null,
           mapData: null,
@@ -84,10 +78,10 @@
           lineHighlightData: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
             state.yearDomain = d3.extent(state.data, yearAcc);
@@ -129,25 +123,38 @@
               geoId: null,
               values: averageLineValues,
             };
+
             // add the average line to the lineData
             state.lineData.push(state.averageLine);
 
             actions.resetYear();
           },
 
-          prepareMapData: function (topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
-              features: topojson.feature(topo, topo.objects.statistische_quartiere),
+              features: topojson.feature(
+                topo,
+                topo.objects.statistische_quartiere
+              ),
               borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
               lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
-              lakeBorders: topojson.mesh(topo, topo.objects.statistische_quartiere_lakebounds),
+              lakeBorders: topojson.mesh(
+                topo,
+                topo.objects.statistische_quartiere_lakebounds
+              ),
             };
+
             render(state);
           },
 
-          changeEntityNearDate: function (inputValue, inputDate) {
+          changeEntityNearDate: function changeEntityNearDate(
+            inputValue,
+            inputDate
+          ) {
             // find the closest year to the mouse
-            var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
+            var closestYear = yearAcc(
+              closestDatum(state.data, yearAcc, inputDate)
+            );
 
             // within the closest year's data values, find the one closest to the mouse position
             var entitiesForYear = state.data
@@ -159,13 +166,16 @@
 
             // Find the closest entity to the mouse
             var closestEntity =
-              inputValue === null ? null : closestDatum(entitiesForYear, vAcc, inputValue);
+              inputValue === null
+                ? null
+                : closestDatum(entitiesForYear, vAcc, inputValue);
 
             // Only re-render when the entity has changed
             // Only highlight the entity if it is close enough to the inputValue
             if (
               state.highlightEntity !== closestEntity &&
-              Math.abs(inputValue - vAcc(closestEntity)) < VALUE_PROXIMITY_THRESHOLD
+              Math.abs(inputValue - vAcc(closestEntity)) <
+                VALUE_PROXIMITY_THRESHOLD
             ) {
               // select the entity's sibling from the currently selected year instead
               // of from what's near the mouse in order to highlight the correct
@@ -178,16 +188,20 @@
             }
           },
 
-          changeYear: function (inputDate) {
+          changeYear: function changeYear(inputDate) {
             // find the closest year to the mouse
-            var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
+            var closestYear = yearAcc(
+              closestDatum(state.data, yearAcc, inputDate)
+            );
 
             // this is an optimization to ensure that the chart is only re-rendered when underlying state has changed
             if (state.currentYear !== closestYear) {
               state.currentYear = closestYear;
               state.currentMapData = state.data
                 .filter(function (v) {
-                  return yearAcc(v).getFullYear() === state.currentYear.getFullYear();
+                  return (
+                    yearAcc(v).getFullYear() === state.currentYear.getFullYear()
+                  );
                 })
                 // currentMapData has to be sorted so that d3.bisector will work on it.
                 .sort(sortWithAcc(vAcc));
@@ -202,53 +216,60 @@
           },
 
           // resets the active year
-          resetYear: function () {
+          resetYear: function resetYear() {
             var mostRecentDate = d3.max(state.yearDomain);
             actions.changeYear(mostRecentDate);
           },
 
           // called when moving over map entities with the mouse. Highlights certain entities
-          changeMapEntity: function (d) {
+          changeMapEntity: function changeMapEntity(d) {
             state.highlightEntity = d;
 
             actions.setHighlights();
           },
 
           // reset the highlighted map entity
-          resetMapEntity: function () {
+          resetMapEntity: function resetMapEntity() {
             state.highlightEntity = null;
 
             actions.setHighlights();
           },
 
-          setHighlights: function () {
+          setHighlights: function setHighlights() {
             // highlightData passed to the map is slightly different from the data passed to the line chart.
             // When no entity is highlighted, the map shows nothing special, but the line chart shows the average line.
-            state.mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
+            state.mapHighlightData = state.highlightEntity
+              ? [state.highlightEntity]
+              : [];
             state.lineHighlightData = state.highlightEntity
               ? [state.highlightEntity]
               : state.averageLine.values.filter(function (averageObj) {
-                  return yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear();
+                  return (
+                    yearAcc(averageObj).getFullYear() ===
+                    state.currentYear.getFullYear()
+                  );
                 });
 
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
+        // Data initialization
+        // -----------------------------------------------
         d3.csv("data/CML_quartier_years.csv", parseRow)
           .then(actions.prepareState)
           .catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+        d3.json("../topo/stadt-zurich.json")
+          .then(actions.prepareMapData)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           if (state.data === null || state.mapData === null) {
             // loading ...
@@ -264,18 +285,21 @@
               top: 30,
               bottom: props.mapBottomPadding,
             },
+
             "#sszvis-chart"
           );
 
           // bounds for the line chart section
           var lineChartBounds = sszvis.bounds(
             {
-              height: props.lineChartInnerHeight + props.mapBottomPadding / 2 + 20,
+              height:
+                props.lineChartInnerHeight + props.mapBottomPadding / 2 + 20,
               top: props.mapBottomPadding / 2,
               bottom: 20,
               left: props.lineChartPadding,
               right: props.lineChartPadding,
             },
+
             "#sszvis-chart"
           );
 
@@ -283,6 +307,7 @@
             {
               height: mapBounds.height + lineChartBounds.height,
             },
+
             "#sszvis-chart"
           );
 
@@ -310,7 +335,9 @@
 
           var lineChart = chart.selectGroup("line").datum(state.lineData);
 
-          var highlightLayer = chart.selectGroup("highlight").datum(state.lineHighlightData);
+          var highlightLayer = chart
+            .selectGroup("highlight")
+            .datum(state.lineHighlightData);
 
           var tooltipLayer = sszvis
             .createHtmlLayer("#sszvis-chart", outerBounds)
@@ -360,7 +387,12 @@
             .tickValues(xTickValues)
             .highlightTick(tickIsSelected);
 
-          var lineYAxis = sszvis.axisY().scale(yScale).ticks(3).orient("right").contour(true);
+          var lineYAxis = sszvis
+            .axisY()
+            .scale(yScale)
+            .ticks(3)
+            .orient("right")
+            .contour(true);
 
           var rulerLabel = sszvis
             .modularTextSVG()
@@ -384,7 +416,9 @@
 
           // see the comment by the tooltip in docs/map-standard/kreis.html for more information
           // about accesing data properties of map entities.
-          var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(nameAcc, mDatumAcc));
+          var tooltipHeader = sszvis
+            .modularTextHTML()
+            .bold(sszvis.compose(nameAcc, mDatumAcc));
 
           var tooltip = sszvis
             .tooltip()
@@ -410,7 +444,10 @@
           map
             .attr(
               "transform",
-              sszvis.translateString(mapBounds.padding.left, mapBounds.padding.top)
+              sszvis.translateString(
+                mapBounds.padding.left,
+                mapBounds.padding.top
+              )
             )
             .call(choroplethMap);
 
@@ -428,13 +465,22 @@
 
           // this sorts the highlighted line to the front of all lines
           lineChart.selectAll(".sszvis-line").sort(function (a, b) {
-            var highlightId = state.highlightEntity ? state.highlightEntity.geoId : null;
-            return a.geoId === highlightId ? 1 : b.geoId === highlightId ? -1 : 0;
+            var highlightId = state.highlightEntity
+              ? state.highlightEntity.geoId
+              : null;
+            return a.geoId === highlightId
+              ? 1
+              : b.geoId === highlightId
+              ? -1
+              : 0;
           });
 
           lineChart
             .selectGroup("xAxis")
-            .attr("transform", sszvis.translateString(0, lineChartBounds.innerHeight))
+            .attr(
+              "transform",
+              sszvis.translateString(0, lineChartBounds.innerHeight)
+            )
             .call(lineXAxis);
 
           lineChart.selectGroup("yAxis").call(lineYAxis);
@@ -455,7 +501,9 @@
               "transform",
               sszvis.translateString(
                 lineChartBounds.padding.left + lineChartBounds.innerWidth / 4,
-                mapBounds.padding.top + mapBounds.innerHeight + (props.mapBottomPadding * 2) / 3
+                mapBounds.padding.top +
+                  mapBounds.innerHeight +
+                  (props.mapBottomPadding * 2) / 3
               )
             )
             .call(legend);
@@ -477,7 +525,9 @@
 
           map.call(interactionLayer);
 
-          choroplethMap.on("over", actions.changeMapEntity).on("out", actions.resetMapEntity);
+          choroplethMap
+            .on("over", actions.changeMapEntity)
+            .on("out", actions.resetMapEntity);
 
           // add the hover behavior for the line chart, including top padding so that
           // the area around the slide bar handle is responsive to mouse events.
@@ -499,8 +549,8 @@
           sszvis.viewport.on("resize", actions.resize);
         }
 
-        /* Helper functions
-        ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
         // given a dataset, an accessor, and a value, find the closest datum in the dataset to that value
         function closestDatum(data, accessor, value) {
           var i = d3.bisector(accessor).left(data, value, 1);

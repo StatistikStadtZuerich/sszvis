@@ -4,33 +4,27 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Map</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Map | Schweiz</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
       (function (d3, topojson, sszvis) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart");
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var MAX_LEGEND_WIDTH = 320;
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function (width) {
+            _: function _(width) {
               var innerHeight = Math.min(sszvis.aspectRatio4to3(width), 400);
               return {
                 bottom: 40,
@@ -39,7 +33,7 @@
             },
           })
           .prop("legendWidth", {
-            _: function (width) {
+            _: function _(width) {
               return Math.min(width / 2, MAX_LEGEND_WIDTH);
             },
           });
@@ -53,47 +47,50 @@
 
         var vAcc = sszvis.prop("value");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: null,
           mapData: null,
           valueDomain: [0, 0],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
 
             render(state);
           },
 
-          prepareMapData: function (topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.cantons),
               borders: topojson.mesh(topo, topo.objects.cantons),
             };
+
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
+        // Data initialization
+        // -----------------------------------------------
         d3.csv("data/M_swiss_fake.csv", parseRow)
           .then(actions.prepareState)
           .catch(sszvis.loadError);
 
-        d3.json("../topo/switzerland.json").then(actions.prepareMapData).catch(sszvis.loadError);
+        d3.json("../topo/switzerland.json")
+          .then(actions.prepareMapData)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           if (state.data === null || state.mapData === null) {
             // loading ...
@@ -109,7 +106,9 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
+          var chartLayer = sszvis
+            .createSvgLayer("#sszvis-chart", bounds)
+            .datum(state.data);
 
           // Components
 
@@ -131,7 +130,10 @@
           // Rendering
 
           chartLayer
-            .attr("transform", sszvis.translateString(bounds.padding.left, bounds.padding.top))
+            .attr(
+              "transform",
+              sszvis.translateString(bounds.padding.left, bounds.padding.top)
+            )
             .call(choroplethMap);
 
           chartLayer

@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Horizontal Bar Chart</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var queryProps = sszvis
           .responsiveProps()
@@ -52,8 +46,8 @@
         var xAcc = sszvis.prop("xValue");
         var cAcc = sszvis.prop("category");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
 
         var state = {
           data: [],
@@ -61,50 +55,56 @@
           selected: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
 
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.categories = sszvis.set(state.data, cAcc);
             render(state);
           },
 
-          showTooltip: function (_, category) {
+          showTooltip: function showTooltip(_, category) {
             state.selected = state.data.filter(function (d) {
               return cAcc(d) === category;
             });
             render(state);
           },
 
-          hideTooltip: function () {
+          hideTooltip: function hideTooltip() {
             state.selected = [];
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
-          var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
+          var chartDimensions = sszvis.dimensionsHorizontalBarChart(
+            state.categories.length
+          );
           var bounds = sszvis.bounds(
             {
               height: 30 + chartDimensions.totalHeight + 40,
               top: 30,
               bottom: 40,
             },
+
             config.id
           );
+
           var chartWidth = Math.min(bounds.innerWidth, 800);
 
           // Scales
@@ -122,11 +122,15 @@
             .domain(state.categories);
 
           // Layers
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.data);
 
           var controlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
-          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selected);
+          var tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selected);
 
           // Components
           var barGen = sszvis
@@ -168,19 +172,28 @@
 
           chartLayer.attr(
             "transform",
-            sszvis.translateString(bounds.innerWidth / 2 - chartWidth / 2, bounds.padding.top)
+            sszvis.translateString(
+              bounds.innerWidth / 2 - chartWidth / 2,
+              bounds.padding.top
+            )
           );
 
           var bars = chartLayer.selectGroup("bars").call(barGen);
 
           chartLayer
             .selectGroup("xAxis")
-            .attr("transform", sszvis.translateString(0, chartDimensions.totalHeight))
+            .attr(
+              "transform",
+              sszvis.translateString(0, chartDimensions.totalHeight)
+            )
             .call(xAxis);
 
           chartLayer
             .selectGroup("yAxis")
-            .attr("transform", sszvis.translateString(0, chartDimensions.axisOffset))
+            .attr(
+              "transform",
+              sszvis.translateString(0, chartDimensions.axisOffset)
+            )
             .call(yAxis);
 
           bars.selectAll("[data-tooltip-anchor]").call(tooltip);

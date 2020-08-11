@@ -4,31 +4,26 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Map</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
+
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
       (function (d3, topojson, sszvis) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender("#sszvis-chart", { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function (width) {
+            _: function _(width) {
               var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 90,
@@ -38,25 +33,25 @@
             },
           })
           .prop("legendX", {
-            _: function (width) {
+            _: function _(width) {
               return Math.max(width / 2 - 205, 5);
             },
           })
           .prop("radiusMax", {
-            _: function (width) {
+            _: function _(width) {
               return Math.min(14, Math.max(width / 28, 10));
             },
           })
           .prop("control", {
-            palm: function (width) {
+            palm: function palm(width) {
               return sszvis.selectMenu;
             },
-            _: function (width) {
+            _: function _(width) {
               return sszvis.buttonGroup;
             },
           })
           .prop("controlWidth", {
-            _: function (width) {
+            _: function _(width) {
               return Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT);
             },
           });
@@ -78,8 +73,8 @@
         var birthsAcc = sszvis.propOr("births", 0);
         var zoneNameAcc = sszvis.propOr("zonename", "--");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: null,
           mapData: null,
@@ -88,25 +83,26 @@
           currentFilter: "Weiblich 1993",
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareData: function (data) {
+          prepareData: function prepareData(data) {
             state.data = data;
             state.birthsRange = [0, d3.max(state.data, birthsAcc)];
 
             actions.setFilter(state.currentFilter);
           },
 
-          prepareMapData: function (topo) {
+          prepareMapData: function prepareMapData(topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.statistische_zonen),
               borders: topojson.mesh(topo, topo.objects.statistische_zonen),
             };
+
             render(state);
           },
 
-          setFilter: function (filterValue) {
+          setFilter: function setFilter(filterValue) {
             state.currentFilter = filterValue;
             var filter = filterValue.toLowerCase().split(" ");
             var gender = filter[0];
@@ -119,31 +115,33 @@
             render(state);
           },
 
-          selectHovered: function (d) {
+          selectHovered: function selectHovered(d) {
             state.selection = [d.datum];
             render(state);
           },
 
-          deselectHovered: function () {
+          deselectHovered: function deselectHovered() {
             state.selection = [];
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
+        // Data initialization
+        // -----------------------------------------------
         d3.csv("data/births_year_statisticalZones.csv", parseRow)
           .then(actions.prepareData)
           .catch(sszvis.loadError);
 
-        d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+        d3.json("../topo/stadt-zurich.json")
+          .then(actions.prepareMapData)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           if (state.data === null || state.mapData === null) {
             // loading ...
@@ -161,7 +159,10 @@
           // This scale takes the square root of the input and uses that to scale the radius. When the
           // result is used as the radius of a circle, the area of the circle will be linearly
           // proportional to the input quantity.
-          var radiusScale = d3.scaleSqrt().domain(state.birthsRange).range([0, props.radiusMax]);
+          var radiusScale = d3
+            .scaleSqrt()
+            .domain(state.birthsRange)
+            .range([0, props.radiusMax]);
 
           // Layers
 
@@ -171,7 +172,9 @@
             })
             .datum(state.filteredData);
 
-          var tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
+          var tooltipLayer = sszvis
+            .createHtmlLayer("#sszvis-chart", bounds)
+            .datum(state.selection);
 
           // Components
 
@@ -191,7 +194,9 @@
             .width(bounds.innerWidth)
             .height(bounds.innerHeight)
             .fill(function (d) {
-              return isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0);
+              return isSelected(d)
+                ? sszvis.scaleDimGry()(0)
+                : sszvis.scaleGry()(0);
             })
             .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
             .transitionColor(false)
@@ -214,7 +219,12 @@
 
           var control = props
             .control()
-            .values(["Männlich 1993", "Weiblich 1993", "Männlich 2014", "Weiblich 2014"])
+            .values([
+              "Männlich 1993",
+              "Weiblich 1993",
+              "Männlich 2014",
+              "Weiblich 2014",
+            ])
             .current(state.currentFilter)
             .width(props.controlWidth)
             .change(actions.setFilter);
@@ -230,7 +240,10 @@
 
           chartLayer
             .selectGroup("radiusLegend")
-            .attr("transform", sszvis.translateString(props.legendX, bounds.innerHeight - 65))
+            .attr(
+              "transform",
+              sszvis.translateString(props.legendX, bounds.innerHeight - 65)
+            )
             .call(radiusLegend);
 
           chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
@@ -245,7 +258,9 @@
 
           var interactionLayer = sszvis
             .panning()
-            .elementSelector(".sszvis-map__area--entering, .sszvis-anchored-circle--entering")
+            .elementSelector(
+              ".sszvis-map__area--entering, .sszvis-anchored-circle--entering"
+            )
             .on("start", actions.selectHovered)
             .on("pan", actions.selectHovered)
             .on("end", actions.deselectHovered);

@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Heat Table – Kreise</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Heat Table | Kreise</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         function parseRow(d) {
           return {
@@ -67,8 +61,8 @@
         var yAcc = sszvis.prop("yPosition");
         var vAcc = sszvis.prop("value");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           yList: [],
@@ -77,10 +71,10 @@
           selection: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.yList = sszvis.set(state.data, yAcc).sort(sortInt);
             state.xList = sszvis.set(state.data, xAcc).sort(sortKreisInt);
@@ -89,27 +83,29 @@
             render(state);
           },
 
-          showTooltip: function (datum) {
+          showTooltip: function showTooltip(datum) {
             state.selection = [datum];
             render(state);
           },
 
-          hideTooltip: function () {
+          hideTooltip: function hideTooltip() {
             state.selection = [];
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var containerWidth = sszvis.measureDimensions(config.id).width;
           var squarePadding = 2;
@@ -119,6 +115,7 @@
             bottom: 40,
             left: 66,
           };
+
           // heatTableDimensions calculates a set of useful properties for configuring the heat table.
           // give it the targeted width (final width will not necessarily match this), the padding between squares, and the number of squares
           // in each dimension (x, then y)
@@ -134,12 +131,14 @@
           // This is because, when bounds are being constructed, the padding is subtracted from width and height to provide innerWidth and innerHeight, but we want these values to represent the table's dimensions
           var bounds = sszvis.bounds(
             {
-              height: tablePadding.top + tableDimensions.height + tablePadding.bottom,
+              height:
+                tablePadding.top + tableDimensions.height + tablePadding.bottom,
               left: tablePadding.left,
               right: tablePadding.right,
               top: tablePadding.top,
               bottom: tablePadding.bottom,
             },
+
             config.id
           );
 
@@ -175,9 +174,13 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.data);
 
-          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+          var tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selection);
 
           // Make sure that the missing value pattern is available
           sszvis
@@ -273,19 +276,28 @@
 
           var bars = chartLayer
             .selectGroup("bars")
-            .attr("transform", sszvis.translateString(tableDimensions.centeredOffset, 0))
+            .attr(
+              "transform",
+              sszvis.translateString(tableDimensions.centeredOffset, 0)
+            )
             .call(barGen);
 
           bars.selectAll("[data-tooltip-anchor]").call(tooltip);
 
           chartLayer
             .selectGroup("xAxis")
-            .attr("transform", sszvis.translateString(tableDimensions.centeredOffset, -10))
+            .attr(
+              "transform",
+              sszvis.translateString(tableDimensions.centeredOffset, -10)
+            )
             .call(xAxis);
 
           chartLayer
             .selectGroup("yAxis")
-            .attr("transform", sszvis.translateString(tableDimensions.centeredOffset - 10, 0))
+            .attr(
+              "transform",
+              sszvis.translateString(tableDimensions.centeredOffset - 10, 0)
+            )
             .call(yAxis);
 
           chartLayer
@@ -293,7 +305,8 @@
             .attr(
               "transform",
               sszvis.translateString(
-                tableDimensions.centeredOffset + (tableDimensions.width - legendWidth) / 2,
+                tableDimensions.centeredOffset +
+                  (tableDimensions.width - legendWidth) / 2,
                 bounds.innerHeight + 16
               )
             )
@@ -313,8 +326,8 @@
           sszvis.viewport.on("resize", actions.resize);
         }
 
-        /* Helper functions
-        ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }

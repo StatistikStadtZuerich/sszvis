@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Vertical Bar Chart</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Vertical Bar Chart | Many Years</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var queryProps = sszvis
           .responsiveProps()
@@ -43,7 +37,7 @@
             _: null,
           })
           .prop("yLabelFormat", {
-            _: function () {
+            _: function _() {
               return sszvis.formatNumber;
             },
           });
@@ -58,8 +52,8 @@
         var xAcc = sszvis.prop("year");
         var yAcc = sszvis.prop("value");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           categories: [],
@@ -67,17 +61,17 @@
           selection: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.categories = sszvis.set(state.data, xAcc);
             state.yearRange = d3.extent(state.data, xAcc);
             render(state);
           },
 
-          changeDate: function (selectedDate) {
+          changeDate: function changeDate(selectedDate) {
             var selectedYear = Math.round(selectedDate);
             state.selection = state.data.filter(function (v) {
               return xAcc(v) === selectedYear;
@@ -85,22 +79,24 @@
             render(state);
           },
 
-          resetDate: function () {
+          resetDate: function resetDate() {
             state.selection = [];
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           var yMax = d3.max(state.data, yAcc);
@@ -113,6 +109,7 @@
                   ? props.leftPadding
                   : sszvis.measureAxisLabel(props.yLabelFormat(yMax)) + 10,
             },
+
             config.id
           );
 
@@ -130,9 +127,14 @@
             .paddingOuter(props.barPadding)
             .range([0, chartDimensions.totalWidth]);
 
-          var heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
+          var heightScale = d3
+            .scaleLinear()
+            .domain([0, yMax])
+            .range([0, bounds.innerHeight]);
 
-          var yPosScale = heightScale.copy().range(heightScale.range().slice().reverse());
+          var yPosScale = heightScale
+            .copy()
+            .range(heightScale.range().slice().reverse());
 
           var xValue = sszvis.compose(xScale, xAcc);
           // rounding the y-values and the height prevents the bars from jumping around
@@ -144,9 +146,13 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.data);
 
-          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+          var tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selection);
 
           // Components
 
@@ -169,7 +175,10 @@
 
           var yAxis = sszvis.axisY().scale(yPosScale).orient("right");
 
-          var tooltipTitle = sszvis.modularTextHTML().bold(yAcc).plain("Hotelübernachtungen");
+          var tooltipTitle = sszvis
+            .modularTextHTML()
+            .bold(yAcc)
+            .plain("Hotelübernachtungen");
 
           var tooltip = sszvis
             .tooltip()
@@ -219,8 +228,8 @@
           sszvis.viewport.on("resize", actions.resize);
         }
 
-        /* Helper functions
-        ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
         }

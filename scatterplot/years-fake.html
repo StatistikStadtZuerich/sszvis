@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Scatterplot</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,18 +24,11 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
         var SLIDER_CONTROL_HEIGHT = 60;
         var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-          _: function () {
+          _: function _() {
             return sszvis.formatNumber;
           },
         });
@@ -53,8 +47,8 @@
         var cAcc = sszvis.prop("city");
         var qAcc = sszvis.prop("quarter");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           xExtent: [0, 0],
@@ -65,10 +59,10 @@
           activeQuarter: new Date(),
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.xExtent = d3.extent(state.data, xAcc);
             state.yMax = d3.max(state.data, yAcc);
@@ -79,23 +73,29 @@
             actions.setQuarter(d3.max(state.quarters));
           },
 
-          setQuarter: function (inputQ) {
-            state.activeQuarter = closestDatum(state.quarters, sszvis.identity, inputQ);
+          setQuarter: function setQuarter(inputQ) {
+            state.activeQuarter = closestDatum(
+              state.quarters,
+              sszvis.identity,
+              inputQ
+            );
 
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
@@ -104,6 +104,7 @@
               axisLabels: state.xExtent.map(props.xLabelFormat),
               legendLabels: state.cities,
             },
+
             config.id
           );
 
@@ -111,17 +112,29 @@
           var colorLegend = legendLayout.legend;
 
           var bounds = sszvis.bounds(
-            { top: 20, bottom: SLIDER_CONTROL_HEIGHT + legendLayout.bottomPadding },
+            {
+              top: 20,
+              bottom: SLIDER_CONTROL_HEIGHT + legendLayout.bottomPadding,
+            },
             config.id
           );
 
           // Scales
 
-          var xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
+          var xScale = d3
+            .scaleLinear()
+            .domain(state.xExtent)
+            .range([0, bounds.innerWidth]);
 
-          var yScale = d3.scaleLinear().domain([0, state.yMax]).range([bounds.innerHeight, 0]);
+          var yScale = d3
+            .scaleLinear()
+            .domain([0, state.yMax])
+            .range([bounds.innerHeight, 0]);
 
-          var tScale = d3.scaleTime().domain(state.tExtent).range([0, bounds.innerWidth]);
+          var tScale = d3
+            .scaleTime()
+            .domain(state.tExtent)
+            .range([0, bounds.innerWidth]);
 
           // Layers
 
@@ -157,9 +170,17 @@
             .label(sszvis.formatMonth)
             .onchange(actions.setQuarter);
 
-          var xAxis = sszvis.axisX().scale(xScale).tickFormat(props.xLabelFormat).orient("bottom");
+          var xAxis = sszvis
+            .axisX()
+            .scale(xScale)
+            .tickFormat(props.xLabelFormat)
+            .orient("bottom");
 
-          var yAxis = sszvis.axisY().scale(yScale).orient("right").contour(true);
+          var yAxis = sszvis
+            .axisY()
+            .scale(yScale)
+            .orient("right")
+            .contour(true);
 
           // Rendering
 
@@ -174,7 +195,10 @@
 
           chartLayer
             .selectGroup("slider")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 46))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + 46)
+            )
             .call(slider);
 
           chartLayer
@@ -183,7 +207,9 @@
               "transform",
               sszvis.translateString(
                 0,
-                bounds.innerHeight + SLIDER_CONTROL_HEIGHT + legendLayout.axisLabelPadding
+                bounds.innerHeight +
+                  SLIDER_CONTROL_HEIGHT +
+                  legendLayout.axisLabelPadding
               )
             )
             .call(colorLegend);
@@ -191,8 +217,8 @@
           sszvis.viewport.on("resize", actions.resize);
         }
 
-        /* Helper functions
-        ----------------------------------------------- */
+        // Helper functions
+        // -----------------------------------------------
         function closestDatum(data, accessor, datum) {
           var i = d3.bisector(accessor).left(data, datum, 1);
           var d0 = data[i - 1];

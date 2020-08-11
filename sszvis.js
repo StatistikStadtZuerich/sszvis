@@ -917,7 +917,7 @@
       return function (cb) {
         request.apply(void 0, args).then(function (data) {
           cb(undefined, data);
-        })["catch"](cb);
+        }).catch(cb);
       };
     }
 

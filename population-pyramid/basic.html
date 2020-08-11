@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Population Pyramid</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,15 +24,8 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
 
         var queryProps = sszvis
           .responsiveProps()
@@ -62,8 +56,8 @@
         var womenAcc = sszvis.prop("Frauen");
         var menAcc = sszvis.prop("Männer");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
 
         var state = {
           data: [],
@@ -76,11 +70,11 @@
           selectedAge: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
 
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.groups = sszvis.set(state.data, gAcc);
 
@@ -113,7 +107,8 @@
               // loop through the elements in the group five at a time
               for (var i = 0, l = sourceArr.length; i < l; i += binStep) {
                 // create a name for the age range
-                var ageListing = aAcc(sourceArr[i]) + "–" + aAcc(sourceArr[i + binStep - 1]);
+                var ageListing =
+                  aAcc(sourceArr[i]) + "–" + aAcc(sourceArr[i + binStep - 1]);
                 // add the name to the list of ages
                 ages.push(ageListing);
                 // add the binned datum (the structure mimics that of the un-binned data)
@@ -123,6 +118,7 @@
                   // here, calculate the sum value of the slice of data
                   value: d3.sum(sourceArr.slice(i, i + binStep), vAcc),
                 });
+
                 for (
                   var indexIter = i, lastIndex = i + binStep;
                   indexIter < lastIndex;
@@ -155,10 +151,13 @@
             render(state);
           },
 
-          selectBar: function (x, age) {
+          selectBar: function selectBar(x, age) {
             // use the age lookup index to figure out which age range is closest
             // to the mouse
-            var nearestAgeRange = findNearestAgeRange(age, state.ageLookupIndex);
+            var nearestAgeRange = findNearestAgeRange(
+              age,
+              state.ageLookupIndex
+            );
             // find the binned data rows with that age range
             var rows = state.binnedData.filter(function (v) {
               return aAcc(v) === nearestAgeRange;
@@ -173,38 +172,48 @@
             render(state);
           },
 
-          deselectBar: function () {
+          deselectBar: function deselectBar() {
             state.selectedAge = [];
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
+        // Data initialization
+        // -----------------------------------------------
 
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
 
         function render(state) {
           var pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
-          var pyramidDimensions = sszvis.layoutPopulationPyramid(pyramidWidth, state.ages.length);
+          var pyramidDimensions = sszvis.layoutPopulationPyramid(
+            pyramidWidth,
+            state.ages.length
+          );
           var chartPadding = { top: 25, bottom: 86 };
           var bounds = sszvis.bounds(
             {
-              height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom,
+              height:
+                chartPadding.top +
+                pyramidDimensions.totalHeight +
+                chartPadding.bottom,
               top: chartPadding.top,
               bottom: chartPadding.bottom,
               left: pyramidDimensions.chartPadding,
               right: pyramidDimensions.chartPadding,
             },
+
             config.id
           );
+
           var props = queryProps(bounds);
 
           // Scales
@@ -232,9 +241,13 @@
 
           // Layers
 
-          var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.populations);
+          var chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.populations);
 
-          var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selectedAge);
+          var tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selectedAge);
 
           // Components
 
@@ -242,7 +255,9 @@
             .pyramid()
             .barFill(function (d) {
               var c = colorScale(gAcc(d));
-              return aAcc(d) === state.selectedAge.age ? sszvis.slightlyDarker(c) : c;
+              return aAcc(d) === state.selectedAge.age
+                ? sszvis.slightlyDarker(c)
+                : c;
             })
             .barPosition(sszvis.compose(positionScale, aAcc))
             .barHeight(pyramidDimensions.barHeight)
@@ -268,7 +283,10 @@
             .title("Alter in Jahren")
             .dyTitle(-18);
 
-          var colorLegend = sszvis.legendColorOrdinal().scale(colorScale).horizontalFloat(true);
+          var colorLegend = sszvis
+            .legendColorOrdinal()
+            .scale(colorScale)
+            .horizontalFloat(true);
 
           var tooltip = sszvis
             .tooltip()
@@ -299,7 +317,10 @@
 
           chartLayer
             .selectGroup("xAxis")
-            .attr("transform", sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight))
+            .attr(
+              "transform",
+              sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight)
+            )
             .call(xAxis);
 
           chartLayer
@@ -309,22 +330,36 @@
 
           chartLayer
             .selectGroup("colorLegend")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 60))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + 60)
+            )
             .call(colorLegend);
 
           // Interaction
 
-          var mouseXScale = d3.scaleLinear().domain([0, 1]).range([0, bounds.innerWidth]);
+          var mouseXScale = d3
+            .scaleLinear()
+            .domain([0, 1])
+            .range([0, bounds.innerWidth]);
           // using a continuous linear scale for the y mouse position ensures that the tooltip doesn't flicker on and off
           // if we were to use an ordinal scale, the tooltip would disappear while the mouse is in the spaces
           // between the bars, because the ordinal scale has no value there, while a linear scale does.
-          var mouseYScale = d3.scaleLinear().domain(state.ageExtent).range([bounds.innerHeight, 0]);
+          var mouseYScale = d3
+            .scaleLinear()
+            .domain(state.ageExtent)
+            .range([bounds.innerHeight, 0]);
           var interactionLayer = sszvis
             .move()
             .xScale(mouseXScale)
             .yScale(mouseYScale)
             .cancelScrolling(
-              isWithinBarContour(state.binnedData, bounds.innerWidth / 2, mouseXScale, lengthScale)
+              isWithinBarContour(
+                state.binnedData,
+                bounds.innerWidth / 2,
+                mouseXScale,
+                lengthScale
+              )
             )
             .fireOnPanOnly(true)
             .on("move", actions.selectBar)
@@ -335,10 +370,15 @@
           sszvis.viewport.on("resize", actions.resize);
         }
 
-        /* Helper Functions
-        ----------------------------------------------- */
+        // Helper Functions
+        // -----------------------------------------------
 
-        function isWithinBarContour(binnedData, xCenter, xRelToPx, lengthScale) {
+        function isWithinBarContour(
+          binnedData,
+          xCenter,
+          xRelToPx,
+          lengthScale
+        ) {
           return function (xRel, age) {
             var ageBin = findNearestAgeRange(age, state.ageLookupIndex);
             var dataRow = binnedData.filter(function (d) {

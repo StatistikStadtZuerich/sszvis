@@ -4,12 +4,13 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Scatterplot</title>
   </head>
   <body style="margin: 0; padding: 0;">
-    <link href="../sszvis.css" rel="stylesheet" />
+    <link href="/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-    <script src="../sszvis.js"></script>
+    <script src="/sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
 
@@ -23,18 +24,11 @@
 
     <script data-catalog-project-expose="script.js">
       (function (d3, sszvis, config) {
-        "use strict";
-
-        if (sszvis.fallbackUnsupported()) {
-          sszvis.fallbackRender(config.id, { src: config.fallback });
-          return;
-        }
-
-        /* Configuration
-        ----------------------------------------------- */
+        // Configuration
+        // -----------------------------------------------
         var SLIDER_CONTROL_HEIGHT = 60;
         var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-          _: function () {
+          _: function _() {
             return sszvis.formatNumber;
           },
         });
@@ -53,8 +47,8 @@
         var yearAcc = sszvis.prop("year");
         var branchAcc = sszvis.prop("branch");
 
-        /* Application state
-        ----------------------------------------------- */
+        // Application state
+        // -----------------------------------------------
         var state = {
           data: [],
           linesData: [],
@@ -68,10 +62,10 @@
           selection: [],
         };
 
-        /* State transitions
-        ----------------------------------------------- */
+        // State transitions
+        // -----------------------------------------------
         var actions = {
-          prepareState: function (data) {
+          prepareState: function prepareState(data) {
             state.data = data;
             state.xExtent = [0, d3.max(state.data, xAcc)];
             state.yExtent = [0, d3.max(state.data, yAcc)];
@@ -90,8 +84,12 @@
             actions.setYear(d3.max(state.years));
           },
 
-          setYear: function (inputYear) {
-            state.activeYear = closestDatum(state.years, sszvis.identity, inputYear);
+          setYear: function setYear(inputYear) {
+            state.activeYear = closestDatum(
+              state.years,
+              sszvis.identity,
+              inputYear
+            );
 
             state.currentLinesData = state.linesData.map(function (line) {
               return line.filter(function (d) {
@@ -129,11 +127,16 @@
             state.currentData = splitData.currentData;
 
             // For the voronoi component, it is essential that no two input vertices lie at the same point
-            state.voronoiPoints = sszvis.derivedSet(splitData.currentAndPastData, function (d) {
-              return xAcc(d) + "__" + yAcc(d);
-            });
+            state.voronoiPoints = sszvis.derivedSet(
+              splitData.currentAndPastData,
+              function (d) {
+                return xAcc(d) + "__" + yAcc(d);
+              }
+            );
 
-            if (splitData.currentAndPastData.length !== state.voronoiPoints.length) {
+            if (
+              splitData.currentAndPastData.length !== state.voronoiPoints.length
+            ) {
               console.warn(
                 splitData.currentAndPastData.length -
                   state.voronoiPoints.length +
@@ -144,29 +147,31 @@
             render(state);
           },
 
-          selectPoint: function (d) {
+          selectPoint: function selectPoint(d) {
             state.selection = [d];
 
             render(state);
           },
 
-          deselectPoint: function () {
+          deselectPoint: function deselectPoint() {
             state.selection = [];
 
             render(state);
           },
 
-          resize: function () {
+          resize: function resize() {
             render(state);
           },
         };
 
-        /* Data initialization
-        ----------------------------------------------- */
-        d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
 
-        /* Render
-        ----------------------------------------------- */
+        // Render
+        // -----------------------------------------------
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
 
@@ -175,6 +180,7 @@
               axisLabels: state.xExtent.map(props.xLabelFormat),
               legendLabels: state.branches,
             },
+
             config.id
           );
 
@@ -188,16 +194,26 @@
               bottom: SLIDER_CONTROL_HEIGHT + legendLayout.bottomPadding,
               left: 5,
             },
+
             config.id
           );
 
           // Scales
 
-          var xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
+          var xScale = d3
+            .scaleLinear()
+            .domain(state.xExtent)
+            .range([0, bounds.innerWidth]);
 
-          var yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
+          var yScale = d3
+            .scaleLinear()
+            .domain(state.yExtent)
+            .range([bounds.innerHeight, 0]);
 
-          var tScale = d3.scaleTime().domain(state.tExtent).range([0, bounds.innerWidth]);
+          var tScale = d3
+            .scaleTime()
+            .domain(state.tExtent)
+            .range([0, bounds.innerWidth]);
 
           // Layers
 
@@ -251,7 +267,10 @@
             .y(sszvis.compose(yScale, yAcc))
             .bounds([
               [-bounds.padding.left, -bounds.padding.top],
-              [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20],
+              [
+                bounds.innerWidth + bounds.padding.right,
+                bounds.innerHeight + 20,
+              ],
             ])
             .on("over", actions.selectPoint)
             .on("out", actions.deselectPoint);
@@ -284,8 +303,13 @@
             })
             .contour(true);
 
-          var numColumns = Math.ceil(cScale.domain().length / props.numLegendRows);
-          var columnWidth = Math.min(Math.max(bounds.innerWidth / numColumns, 260), 350);
+          var numColumns = Math.ceil(
+            cScale.domain().length / props.numLegendRows
+          );
+          var columnWidth = Math.min(
+            Math.max(bounds.innerWidth / numColumns, 260),
+            350
+          );
           var legendWidth = columnWidth * numColumns;
 
           var tooltip = sszvis
@@ -305,7 +329,10 @@
           // Rendering
 
           // lines and futureLines have different data from the dots layer, rendering lines as arrays of data values
-          chartLayer.selectGroup("lines").datum(state.currentLinesData).call(lines);
+          chartLayer
+            .selectGroup("lines")
+            .datum(state.currentLinesData)
+            .call(lines);
 
           chartLayer
             .selectGroup("futureLines")
@@ -324,7 +351,10 @@
             .call(tooltip);
 
           // the visible dots are just the ones for the current 'activeYear'
-          chartLayer.selectGroup("visibleDots").datum(state.currentData).call(visibleDots);
+          chartLayer
+            .selectGroup("visibleDots")
+            .datum(state.currentData)
+            .call(visibleDots);
 
           chartLayer
             .selectGroup("voronoiInteraction")
@@ -340,7 +370,10 @@
 
           chartLayer
             .selectGroup("slider")
-            .attr("transform", sszvis.translateString(0, bounds.innerHeight + 46))
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + 46)
+            )
             .call(slider);
 
           chartLayer
@@ -349,7 +382,9 @@
               "transform",
               sszvis.translateString(
                 0,
-                bounds.innerHeight + SLIDER_CONTROL_HEIGHT + legendLayout.axisLabelPadding
+                bounds.innerHeight +
+                  SLIDER_CONTROL_HEIGHT +
+                  legendLayout.axisLabelPadding
               )
             )
             .call(colorLegend);
