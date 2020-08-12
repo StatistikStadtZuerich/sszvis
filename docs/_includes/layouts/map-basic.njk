@@ -19,7 +19,10 @@ title: sszvis
     <div id="sszvis-chart"></div>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, topojson, sszvis) { {{ content | safe }} })(d3, topojson, sszvis);
+      (function(d3, topojson, sszvis) {
+        "use strict";
+        {{ content | safe }}
+      })(d3, topojson, sszvis);
     </script>
   </body>
 </html>

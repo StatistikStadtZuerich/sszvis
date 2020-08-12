@@ -22,7 +22,10 @@ title: sszvis
     </script>
 
     <script data-catalog-project-expose="script.js">
-      (function(d3, sszvis, config) { {{ content | safe }} })(d3, sszvis, EXTERNAL_CONFIG);
+      (function(d3, sszvis, config) {
+        "use strict";
+        {{ content | safe }} 
+      })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>
