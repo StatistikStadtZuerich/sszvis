@@ -55,6 +55,15 @@ npm test
 npm run test:snapshot
 ```
 
+## Deploying
+
+Create a new version and push it, it will then be automatically deployed to NPM using GitHub Actions.
+
+```sh
+npm version minor
+git push --follow-tags
+```
+
 ## License
 
 sszvis is published under the BSD-3-Clause license. sszvis can freely be used but no support will be provided by Statistik Stadt Zürich.
