@@ -38,19 +38,15 @@ sszvis.app({
 
   // Init
   // -----------------------------------------------
-  init: function () {
+  init: function (state) {
     return d3.csv(config.data, parseRow).then(function (data) {
-      return {
-        state: {
-          data: data,
-          lineData: sszvis.cascade().arrayBy(cAcc, d3.ascending).apply(data),
-          xValues: xValues(data, xAcc),
-          categories: sszvis.set(data, cAcc),
-          maxY: d3.max(data, yAcc),
-          selection: [],
-        },
-        effect: "resetDate",
-      };
+      state.data = data;
+      state.lineData = sszvis.cascade().arrayBy(cAcc, d3.ascending).apply(data);
+      state.xValues = xValues(data, xAcc);
+      state.categories = sszvis.set(data, cAcc);
+      state.maxY = d3.max(data, yAcc);
+      state.selection = [];
+      return (dispatch) => dispatch("resetDate");
     });
   },
 
@@ -60,11 +56,8 @@ sszvis.app({
     resetDate: function (state) {
       // Find the most recent date in the data and set it as the selected date
       var mostRecentDate = d3.max(state.data, xAcc);
-      return {
-        state,
-        effect: (dispatch) => {
-          dispatch("changeDate", mostRecentDate);
-        },
+      return (dispatch) => {
+        dispatch("changeDate", mostRecentDate);
       };
     },
 
@@ -80,8 +73,6 @@ sszvis.app({
       });
       // Make sure that the selection has a value to display
       state.selection = closestData.filter(sszvis.compose(sszvis.not(isNaN), yAcc));
-
-      return { state };
     },
   },
 

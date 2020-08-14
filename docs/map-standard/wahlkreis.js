@@ -42,24 +42,20 @@ sszvis.app({
 
   // Init
   // -----------------------------------------------
-  init: function () {
+  init: function (state) {
     return Promise.all([d3.csv(config.data, parseRow), d3.json("../topo/stadt-zurich.json")]).then(
       function (result) {
         const data = result[0];
         const topo = result[1];
-        return {
-          state: {
-            data: data,
-            mapData: {
-              features: topojson.feature(topo, topo.objects.wahlkreise),
-              borders: topojson.mesh(topo, topo.objects.wahlkreise),
-              lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
-              lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
-            },
-            selection: [],
-            valueDomain: [0, 1],
-          },
+        state.data = data;
+        state.mapData = {
+          features: topojson.feature(topo, topo.objects.wahlkreise),
+          borders: topojson.mesh(topo, topo.objects.wahlkreise),
+          lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
+          lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
         };
+        state.selection = [];
+        state.valueDomain = [0, 1];
       }
     );
   },
@@ -69,23 +65,16 @@ sszvis.app({
   actions: {
     selectHovered: function (state, d) {
       state.selection = [d.datum];
-      return { state };
     },
 
     deselectHovered: function (state) {
       state.selection = [];
-      return { state };
     },
   },
 
   // Render
   // -----------------------------------------------
   render: function (state, actions) {
-    if (state.data === null || state.mapData === null) {
-      // loading ...
-      return true;
-    }
-
     var props = queryProps(sszvis.measureDimensions(config.id));
     var bounds = sszvis.bounds(props.bounds, config.id);
 
