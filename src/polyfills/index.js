@@ -6,4 +6,6 @@ import "./innersvg.js";
 import "./isnan.js";
 
 enableES5();
-setAutoFreeze(true);
+
+// d3 mutates state in many places, which is why we have to turn this off.
+setAutoFreeze(false);
