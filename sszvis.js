@@ -7,6 +7,8 @@
 
   var d3__default = 'default' in d3 ? d3['default'] : d3;
 
+  function n(n){for(var t=arguments.length,r=Array(t>1?t-1:0),e=1;e<t;e++)r[e-1]=arguments[e];throw Error("[Immer] minified error nr: "+n+(r.length?" "+r.join(","):"")+". Find the full error at: https://bit.ly/3cXEKWf")}function t(n){return !!n&&!!n[Q]}function r(n){return !!n&&(function(n){if(!n||"object"!=typeof n)return !1;var t=Object.getPrototypeOf(n);return !t||t===Object.prototype}(n)||Array.isArray(n)||!!n[L]||!!n.constructor[L]||s(n)||v(n))}function i(n,t,r){void 0===r&&(r=!1),0===o(n)?(r?Object.keys:Z)(n).forEach((function(e){r&&"symbol"==typeof e||t(e,n[e],n);})):n.forEach((function(r,e){return t(e,r,n)}));}function o(n){var t=n[Q];return t?t.i>3?t.i-4:t.i:Array.isArray(n)?1:s(n)?2:v(n)?3:0}function u(n,t){return 2===o(n)?n.has(t):Object.prototype.hasOwnProperty.call(n,t)}function a(n,t){return 2===o(n)?n.get(t):n[t]}function f(n,t,r){var e=o(n);2===e?n.set(t,r):3===e?(n.delete(t),n.add(r)):n[t]=r;}function c(n,t){return n===t?0!==n||1/n==1/t:n!=n&&t!=t}function s(n){return X&&n instanceof Map}function v(n){return q&&n instanceof Set}function p(n){return n.o||n.t}function l(n){if(Array.isArray(n))return n.slice();var t=nn(n);delete t[Q];for(var r=Z(t),e=0;e<r.length;e++){var i=r[e],o=t[i];!1===o.writable&&(o.writable=!0,o.configurable=!0),(o.get||o.set)&&(t[i]={configurable:!0,writable:!0,enumerable:o.enumerable,value:n[i]});}return Object.create(Object.getPrototypeOf(n),t)}function d(n,e){b(n)||t(n)||!r(n)||(o(n)>1&&(n.set=n.add=n.clear=n.delete=h),Object.freeze(n),e&&i(n,(function(n,t){return d(t,!0)}),!0));}function h(){n(2);}function b(n){return null==n||"object"!=typeof n||Object.isFrozen(n)}function y(t){var r=tn[t];return r||n(19,t),r}function m(n,t){tn[n]=t;}function _(){return U}function j(n,t){t&&(y("Patches"),n.u=[],n.s=[],n.v=t);}function g(n){O(n),n.p.forEach(S),n.p=null;}function O(n){n===U&&(U=n.l);}function w(n){return U={p:[],l:U,h:n,m:!0,_:0}}function S(n){var t=n[Q];0===t.i||1===t.i?t.j():t.g=!0;}function P(t,e){e._=e.p.length;var i=e.p[0],o=void 0!==t&&t!==i;return e.h.O||y("ES5").S(e,t,o),o?(i[Q].P&&(g(e),n(4)),r(t)&&(t=M(e,t),e.l||x(e,t)),e.u&&y("Patches").M(i[Q],t,e.u,e.s)):t=M(e,i,[]),g(e),e.u&&e.v(e.u,e.s),t!==H?t:void 0}function M(n,t,r){if(b(t))return t;var e=t[Q];if(!e)return i(t,(function(i,o){return A(n,e,t,i,o,r)}),!0),t;if(e.A!==n)return t;if(!e.P)return x(n,e.t,!0),e.t;if(!e.I){e.I=!0,e.A._--;var o=4===e.i||5===e.i?e.o=l(e.k):e.o;i(3===e.i?new Set(o):o,(function(t,i){return A(n,e,o,t,i,r)})),x(n,o,!1),r&&n.u&&y("Patches").R(e,r,n.u,n.s);}return e.o}function A(e,i,o,a,c,s){if(t(c)){var v=M(e,c,s&&i&&3!==i.i&&!u(i.D,a)?s.concat(a):void 0);if(f(o,a,v),!t(v))return;e.m=!1;}if(r(c)&&!b(c)){if(!e.h.N&&e._<1)return;M(e,c),i&&i.A.l||x(e,c);}}function x(n,t,r){void 0===r&&(r=!1),n.h.N&&n.m&&d(t,r);}function z(n,t){var r=n[Q];return (r?p(r):n)[t]}function I(n,t){if(t in n)for(var r=Object.getPrototypeOf(n);r;){var e=Object.getOwnPropertyDescriptor(r,t);if(e)return e;r=Object.getPrototypeOf(r);}}function E(n){n.P||(n.P=!0,n.l&&E(n.l));}function k(n){n.o||(n.o=l(n.t));}function R(n,t,r){var e=s(t)?y("MapSet").T(t,r):v(t)?y("MapSet").F(t,r):n.O?function(n,t){var r=Array.isArray(n),e={i:r?1:0,A:t?t.A:_(),P:!1,I:!1,D:{},l:t,t:n,k:null,o:null,j:null,C:!1},i=e,o=rn;r&&(i=[e],o=en);var u=Proxy.revocable(i,o),a=u.revoke,f=u.proxy;return e.k=f,e.j=a,f}(t,r):y("ES5").J(t,r);return (r?r.A:_()).p.push(e),e}function D(e){return t(e)||n(22,e),function n(t){if(!r(t))return t;var e,u=t[Q],c=o(t);if(u){if(!u.P&&(u.i<4||!y("ES5").K(u)))return u.t;u.I=!0,e=N(t,c),u.I=!1;}else e=N(t,c);return i(e,(function(t,r){u&&a(u.t,t)===r||f(e,t,n(r));})),3===c?new Set(e):e}(e)}function N(n,t){switch(t){case 2:return new Map(n);case 3:return Array.from(n)}return l(n)}function T(){function r(n,t){var r=s[n];return r?r.enumerable=t:s[n]=r={configurable:!0,enumerable:t,get:function(){var t=this[Q];return rn.get(t,n)},set:function(t){var r=this[Q];rn.set(r,n,t);}},r}function e(n){for(var t=n.length-1;t>=0;t--){var r=n[t][Q];if(!r.P)switch(r.i){case 5:a(r)&&E(r);break;case 4:o(r)&&E(r);}}}function o(n){for(var t=n.t,r=n.k,e=Z(r),i=e.length-1;i>=0;i--){var o=e[i];if(o!==Q){var a=t[o];if(void 0===a&&!u(t,o))return !0;var f=r[o],s=f&&f[Q];if(s?s.t!==a:!c(f,a))return !0}}var v=!!t[Q];return e.length!==Z(t).length+(v?0:1)}function a(n){var t=n.k;if(t.length!==n.t.length)return !0;var r=Object.getOwnPropertyDescriptor(t,t.length-1);return !(!r||r.get)}var s={};m("ES5",{J:function(n,t){var e=Array.isArray(n),i=function(n,t){if(n){for(var e=Array(t.length),i=0;i<t.length;i++)Object.defineProperty(e,""+i,r(i,!0));return e}var o=nn(t);delete o[Q];for(var u=Z(o),a=0;a<u.length;a++){var f=u[a];o[f]=r(f,n||!!o[f].enumerable);}return Object.create(Object.getPrototypeOf(t),o)}(e,n),o={i:e?5:4,A:t?t.A:_(),P:!1,I:!1,D:{},l:t,t:n,k:i,o:null,g:!1,C:!1};return Object.defineProperty(i,Q,{value:o,writable:!0}),i},S:function(n,r,o){o?t(r)&&r[Q].A===n&&e(n.p):(n.u&&function n(t){if(t&&"object"==typeof t){var r=t[Q];if(r){var e=r.t,o=r.k,f=r.D,c=r.i;if(4===c)i(o,(function(t){t!==Q&&(void 0!==e[t]||u(e,t)?f[t]||n(o[t]):(f[t]=!0,E(r)));})),i(e,(function(n){void 0!==o[n]||u(o,n)||(f[n]=!1,E(r));}));else if(5===c){if(a(r)&&(E(r),f.length=!0),o.length<e.length)for(var s=o.length;s<e.length;s++)f[s]=!1;else for(var v=e.length;v<o.length;v++)f[v]=!0;for(var p=Math.min(o.length,e.length),l=0;l<p;l++)void 0===f[l]&&n(o[l]);}}}}(n.p[0]),e(n.p));},K:function(n){return 4===n.i?o(n):a(n)}});}var G,U,W="undefined"!=typeof Symbol&&"symbol"==typeof Symbol("x"),X="undefined"!=typeof Map,q="undefined"!=typeof Set,B="undefined"!=typeof Proxy&&void 0!==Proxy.revocable&&"undefined"!=typeof Reflect,H=W?Symbol.for("immer-nothing"):((G={})["immer-nothing"]=!0,G),L=W?Symbol.for("immer-draftable"):"__$immer_draftable",Q=W?Symbol.for("immer-state"):"__$immer_state",Z="undefined"!=typeof Reflect&&Reflect.ownKeys?Reflect.ownKeys:void 0!==Object.getOwnPropertySymbols?function(n){return Object.getOwnPropertyNames(n).concat(Object.getOwnPropertySymbols(n))}:Object.getOwnPropertyNames,nn=Object.getOwnPropertyDescriptors||function(n){var t={};return Z(n).forEach((function(r){t[r]=Object.getOwnPropertyDescriptor(n,r);})),t},tn={},rn={get:function(n,t){if(t===Q)return n;var e=p(n);if(!u(e,t))return function(n,t,r){var e,i=I(t,r);return i?"value"in i?i.value:null===(e=i.get)||void 0===e?void 0:e.call(n.k):void 0}(n,e,t);var i=e[t];return n.I||!r(i)?i:i===z(n.t,t)?(k(n),n.o[t]=R(n.A.h,i,n)):i},has:function(n,t){return t in p(n)},ownKeys:function(n){return Reflect.ownKeys(p(n))},set:function(n,t,r){var e=I(p(n),t);if(null==e?void 0:e.set)return e.set.call(n.k,r),!0;if(n.D[t]=!0,!n.P){if(c(r,z(p(n),t))&&(void 0!==r||u(n.t,t)))return !0;k(n),E(n);}return n.o[t]=r,!0},deleteProperty:function(n,t){return void 0!==z(n.t,t)||t in n.t?(n.D[t]=!1,k(n),E(n)):delete n.D[t],n.o&&delete n.o[t],!0},getOwnPropertyDescriptor:function(n,t){var r=p(n),e=Reflect.getOwnPropertyDescriptor(r,t);return e?{writable:!0,configurable:1!==n.i||"length"!==t,enumerable:e.enumerable,value:r[t]}:e},defineProperty:function(){n(11);},getPrototypeOf:function(n){return Object.getPrototypeOf(n.t)},setPrototypeOf:function(){n(12);}},en={};i(rn,(function(n,t){en[n]=function(){return arguments[0]=arguments[0][0],t.apply(this,arguments)};})),en.deleteProperty=function(t,r){return rn.deleteProperty.call(this,t[0],r)},en.set=function(t,r,e){return rn.set.call(this,t[0],r,e,t[0])};var on=function(){function e(n){this.O=B,this.N="production"!=="production","boolean"==typeof(null==n?void 0:n.useProxies)&&this.setUseProxies(n.useProxies),"boolean"==typeof(null==n?void 0:n.autoFreeze)&&this.setAutoFreeze(n.autoFreeze),this.produce=this.produce.bind(this),this.produceWithPatches=this.produceWithPatches.bind(this);}var i=e.prototype;return i.produce=function(t,e,i){if("function"==typeof t&&"function"!=typeof e){var o=e;e=t;var u=this;return function(n){var t=this;void 0===n&&(n=o);for(var r=arguments.length,i=Array(r>1?r-1:0),a=1;a<r;a++)i[a-1]=arguments[a];return u.produce(n,(function(n){var r;return (r=e).call.apply(r,[t,n].concat(i))}))}}var a;if("function"!=typeof e&&n(6),void 0!==i&&"function"!=typeof i&&n(7),r(t)){var f=w(this),c=R(this,t,void 0),s=!0;try{a=e(c),s=!1;}finally{s?g(f):O(f);}return "undefined"!=typeof Promise&&a instanceof Promise?a.then((function(n){return j(f,i),P(n,f)}),(function(n){throw g(f),n})):(j(f,i),P(a,f))}if(!t||"object"!=typeof t){if((a=e(t))===H)return;return void 0===a&&(a=t),this.N&&d(a,!0),a}n(21,t);},i.produceWithPatches=function(n,t){var r,e,i=this;return "function"==typeof n?function(t){for(var r=arguments.length,e=Array(r>1?r-1:0),o=1;o<r;o++)e[o-1]=arguments[o];return i.produceWithPatches(t,(function(t){return n.apply(void 0,[t].concat(e))}))}:[this.produce(n,t,(function(n,t){r=n,e=t;})),r,e]},i.createDraft=function(e){r(e)||n(8),t(e)&&(e=D(e));var i=w(this),o=R(this,e,void 0);return o[Q].C=!0,O(i),o},i.finishDraft=function(t,r){var e=t&&t[Q];var i=e.A;return j(i,r),P(void 0,i)},i.setAutoFreeze=function(n){this.N=n;},i.setUseProxies=function(t){t&&!B&&n(20),this.O=t;},i.applyPatches=function(n,r){var e;for(e=r.length-1;e>=0;e--){var i=r[e];if(0===i.path.length&&"replace"===i.op){n=i.value;break}}var o=y("Patches").$;return t(n)?o(n,r):this.produce(n,(function(n){return o(n,r.slice(e+1))}))},e}(),un=new on,fn=un.produceWithPatches.bind(un),cn=un.setAutoFreeze.bind(un),sn=un.setUseProxies.bind(un),vn=un.applyPatches.bind(un),pn=un.createDraft.bind(un),ln=un.finishDraft.bind(un);
+
   /**
    * @this {Promise}
    */
@@ -1056,6 +1058,10 @@
   Number.isNaN = Number.isNaN || function isNaN(input) {
     return typeof input === "number" && input !== input;
   };
+
+  T(); // d3 mutates state in many places, which is why we have to turn this off.
+
+  cn(false);
 
   /**
    * d3.selection plugin to simplify creating idempotent divs that are not
@@ -3161,6 +3167,244 @@
       var x = d.x;
       return x > hi ? "right" : x < lo ? "left" : defaultVal;
     };
+  }
+
+  /**
+   * Fallback handling
+   *
+   * Defaults to rendering a fallback image with standard chart proportions.
+   *
+   * @example
+   * if (sszvis.fallback.unsupported()) {
+   *   sszvis.fallback.render('#sszvis-chart', {src: '../fallback.png', height: 300});
+   *   return;
+   * }
+   *
+   * @module sszvis/fallback
+   */
+  var fallbackUnsupported = function fallbackUnsupported() {
+    var supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
+    return !supportsSVG;
+  };
+  var fallbackCanvasUnsupported = function fallbackCanvasUnsupported() {
+    var supportsCanvas = !!document.createElement("canvas").getContext;
+    return !supportsCanvas;
+  };
+  var fallbackRender = function fallbackRender(selector, options) {
+    options || (options = {});
+    options.src || (options.src = "fallback.png");
+    var selection = isSelection(selector) ? selector : d3.select(selector);
+    selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
+  };
+
+  var nanoThrottle = function (callback, ms, trailing) {
+    var t = 0, call;
+    arguments.length < 3 && (trailing = true);
+    return function () {
+      var args = arguments;
+      var self = this;
+      call = function () {
+        callback.apply(self, args);
+        t = new Date().getTime() + ms;
+        call = null;
+        trailing && setTimeout(function () {
+          call && call();
+        }, ms);
+      };
+      if (new Date().getTime() > t) call();
+    }
+  };
+
+  /**
+   * Viewport Resize watcher
+   *
+   * The resize watcher in the sszvis.viewport module can be used for alerting user code to
+   * changes in the browser window size. This includes window resizing on desktop computers
+   * and browsers, but also orientation changes on mobile browsers. Functions which listen
+   * to the 'resize' event of the sszvis.viewport module will be fired on window resize.
+   * You can add a resize listener to your application very easily:
+   *
+   * sszvis.viewport.on('resize', listenerFunction);
+   *
+   * The listener function will be called once per resize event, but at a slight delay. This is because,
+   * while a user is resizing their browser window, many resize events can fire very quickly. This component
+   * automatically throttles the rate at which the listener function is called, since you probably don't need
+   * to respond to every single resize event. This throttling provides for a smoother user experience as they
+   * resize the browser, and increases performance across the board. The listener function will always be
+   * called after one or more window resize events, it just won't be called as often as the window fires the
+   * events.
+   *
+   * @module sszvis/viewport
+   *
+   * @function {string, function} on      the .on() function is used to listen to the resize event itself.
+   *                                      There is only one event supported by this component at the moment, so
+   *                                      the first argument to .on must be 'resize' for it to have any effect.
+   *                                      Although this is somewhat redundant, it is done to keep this component's
+   *                                      API clear and in line with other components.
+   *
+   * @return {Object}
+   */
+  // sszvis.viewport.on('resize', callback);
+  // While still enabling the user to register multiple callbacks for the 'resize'
+  // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
+  // object would not allow.
+
+  var callbacks = {
+    resize: []
+  };
+
+  if (typeof window !== "undefined") {
+    d3.select(window).on("resize", nanoThrottle(function () {
+      trigger("resize");
+    }, 500));
+  }
+
+  var on$1 = function on(name, cb) {
+    if (!callbacks[name]) {
+      callbacks[name] = [];
+    }
+
+    callbacks[name] = callbacks[name].filter(function (fn) {
+      return fn !== cb;
+    }).concat(cb);
+    return this;
+  };
+
+  var off = function off(name, cb) {
+    if (!callbacks[name]) {
+      return this;
+    }
+
+    callbacks[name] = callbacks[name].filter(function (fn) {
+      return fn !== cb;
+    });
+    return this;
+  };
+
+  var trigger = function trigger(name) {
+    var evtArgs = Array.prototype.slice.call(arguments, 1);
+
+    if (callbacks[name]) {
+      callbacks[name].forEach(function (fn) {
+        fn.apply(null, evtArgs);
+      });
+    }
+
+    return this;
+  };
+
+  var viewport = {
+    on: on$1,
+    off: off,
+    trigger: trigger
+  };
+
+  /**
+   * Application loop
+   *
+   * Creates a stateful app that can be interacted with through actions. By providing
+   * a structured approach, this allows us to optimize the render loop and clarifies
+   * the relationship between state and actions.
+   *
+   * Within an app, state can only be modified through actions. During the render phase,
+   * state is immutable and an error will be thrown if it is modified accidentally.
+   *
+   * Conceptually, an app works like this:
+   *
+   *     init
+   *       ⇣
+   *     state ⭢ render
+   *      ⮤ action ⮠
+   *
+   * The basis of an app are the following three types:
+   *
+   * Dispatch can be used to schedule an action after rendering has been completed. In the
+   * render function, dispatch is not directly accessible; instead, an actions object is
+   * provided to dispatch actions by calling them as functions.
+   * @typedef {(action: string, p?: Props) => void} Dispatch
+   *
+   * An effect can be returned from an action to schedule further actions using dispatch.
+   * @typedef {(d: Dispatch, p?: Props) => void} Effect
+   *
+   * An action receives an Immer.js Draft that can be mutated within the action. If further
+   * actions should be called after this one, an action can return an Effect.
+   * @typedef {(s: Draft, p?: Props) => Effect | void} Action
+   * @see {@link https://immerjs.github.io/immer/docs/produce/}
+   *
+   * The app can be configured with the following props:
+   *
+   * @prop {Object} props
+   * @prop {(s: Draft) => Promise<Effect | void>} props.init - Asynchronously create
+   * the initial state and optionally schedule an action
+   * @prop {(s: State, as: Record<keyof props.actions, (p?: Props) => void>)} props.render - Update
+   * the DOM from the state and optionally dispatch actions
+   * @prop {Record<string, Action>} [props.actions] - Functions to transition the
+   * application state
+   * @prop {{element: string, src: string}} [props.fallback] - Render a fallback image
+   *
+   * @module sszvis/app
+   */
+
+  var app = function app(_ref) {
+    var init = _ref.init,
+        render = _ref.render,
+        _ref$actions = _ref.actions,
+        actions = _ref$actions === void 0 ? {} : _ref$actions,
+        fallback = _ref.fallback;
+    var doing;
+    var state;
+    invariant(isFunction$1(init), 'An "init" function returning a Promise must be provided.');
+    invariant(isFunction$1(render), 'A "render" function must be provided.');
+    var actionDispatchers = Object.keys(actions).reduce(function (acc, key) {
+      acc[key] = function (args) {
+        dispatch(key, args);
+      };
+
+      return acc;
+    }, {});
+
+    function scheduleUpdate(effect) {
+      if (!doing) {
+        doing = true;
+        requestAnimationFrame(function () {
+          render(state, actionDispatchers);
+          doing = false;
+        });
+      }
+
+      if (isFunction$1(effect)) effect(dispatch);
+    }
+
+    function dispatch(action, props) {
+      invariant(actions[action] != null, "Action \"".concat(action, "\" is not defined, add it to \"actions\"."));
+      var draft = pn(state);
+      var effect = actions[action](draft, props);
+      state = ln(draft);
+      scheduleUpdate(effect);
+    }
+
+    var initialState = pn({});
+    init(initialState).then(function (effect) {
+      state = ln(initialState);
+      scheduleUpdate(effect);
+      viewport.on("resize", scheduleUpdate);
+    }).catch(function (err) {
+      invariant(false, err);
+      fallback && fallbackRender(fallback.element, {
+        src: fallback.src
+      });
+    });
+  }; // -----------------------------------------------------------------------------
+  // Helper functions
+
+  function invariant(condition, message) {
+    if (!condition) {
+      throw new Error("[sszvis.app] ".concat(message));
+    }
+  }
+
+  function isFunction$1(x) {
+    return typeof x === "function";
   }
 
   /**
@@ -6660,34 +6904,6 @@
   }
 
   /**
-   * Fallback handling
-   *
-   * Defaults to rendering a fallback image with standard chart proportions.
-   *
-   * @example
-   * if (sszvis.fallback.unsupported()) {
-   *   sszvis.fallback.render('#sszvis-chart', {src: '../fallback.png', height: 300});
-   *   return;
-   * }
-   *
-   * @module sszvis/fallback
-   */
-  var fallbackUnsupported = function fallbackUnsupported() {
-    var supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
-    return !supportsSVG;
-  };
-  var fallbackCanvasUnsupported = function fallbackCanvasUnsupported() {
-    var supportsCanvas = !!document.createElement("canvas").getContext;
-    return !supportsCanvas;
-  };
-  var fallbackRender = function fallbackRender(selector, options) {
-    options || (options = {});
-    options.src || (options.src = "fallback.png");
-    var selection = isSelection(selector) ? selector : d3.select(selector);
-    selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
-  };
-
-  /**
    * Ordinal Color Scale Legend
    *
    * This component is used for creating a legend for a categorical color scale.
@@ -9053,108 +9269,6 @@
   var modularTextHTML = makeTextWithFormat(formatHTML());
   var modularTextSVG = makeTextWithFormat(formatSVG());
 
-  var nanoThrottle = function (callback, ms, trailing) {
-    var t = 0, call;
-    arguments.length < 3 && (trailing = true);
-    return function () {
-      var args = arguments;
-      var self = this;
-      call = function () {
-        callback.apply(self, args);
-        t = new Date().getTime() + ms;
-        call = null;
-        trailing && setTimeout(function () {
-          call && call();
-        }, ms);
-      };
-      if (new Date().getTime() > t) call();
-    }
-  };
-
-  /**
-   * Viewport Resize watcher
-   *
-   * The resize watcher in the sszvis.viewport module can be used for alerting user code to
-   * changes in the browser window size. This includes window resizing on desktop computers
-   * and browsers, but also orientation changes on mobile browsers. Functions which listen
-   * to the 'resize' event of the sszvis.viewport module will be fired on window resize.
-   * You can add a resize listener to your application very easily:
-   *
-   * sszvis.viewport.on('resize', listenerFunction);
-   *
-   * The listener function will be called once per resize event, but at a slight delay. This is because,
-   * while a user is resizing their browser window, many resize events can fire very quickly. This component
-   * automatically throttles the rate at which the listener function is called, since you probably don't need
-   * to respond to every single resize event. This throttling provides for a smoother user experience as they
-   * resize the browser, and increases performance across the board. The listener function will always be
-   * called after one or more window resize events, it just won't be called as often as the window fires the
-   * events.
-   *
-   * @module sszvis/viewport
-   *
-   * @function {string, function} on      the .on() function is used to listen to the resize event itself.
-   *                                      There is only one event supported by this component at the moment, so
-   *                                      the first argument to .on must be 'resize' for it to have any effect.
-   *                                      Although this is somewhat redundant, it is done to keep this component's
-   *                                      API clear and in line with other components.
-   *
-   * @return {Object}
-   */
-  // sszvis.viewport.on('resize', callback);
-  // While still enabling the user to register multiple callbacks for the 'resize'
-  // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
-  // object would not allow.
-
-  var callbacks = {
-    resize: []
-  };
-
-  if (typeof window !== "undefined") {
-    d3.select(window).on("resize", nanoThrottle(function () {
-      trigger("resize");
-    }, 500));
-  }
-
-  var on = function on(name, cb) {
-    if (!callbacks[name]) {
-      callbacks[name] = [];
-    }
-
-    callbacks[name] = callbacks[name].filter(function (fn) {
-      return fn !== cb;
-    }).concat(cb);
-    return this;
-  };
-
-  var off = function off(name, cb) {
-    if (!callbacks[name]) {
-      return this;
-    }
-
-    callbacks[name] = callbacks[name].filter(function (fn) {
-      return fn !== cb;
-    });
-    return this;
-  };
-
-  var trigger = function trigger(name) {
-    var evtArgs = Array.prototype.slice.call(arguments, 1);
-
-    if (callbacks[name]) {
-      callbacks[name].forEach(function (fn) {
-        fn.apply(null, evtArgs);
-      });
-    }
-
-    return this;
-  };
-
-  var viewport = {
-    on: on,
-    off: off,
-    trigger: trigger
-  };
-
   exports.AGGLOMERATION_2012_KEY = AGGLOMERATION_2012_KEY;
   exports.DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
   exports.DEFAULT_WIDTH = DEFAULT_WIDTH;
@@ -9171,6 +9285,7 @@
   exports.annotationRangeRuler = rangeRuler;
   exports.annotationRectangle = rectangle;
   exports.annotationRuler = ruler;
+  exports.app = app;
   exports.arity = arity;
   exports.aspectRatio = aspectRatio;
   exports.aspectRatio12to5 = aspectRatio12to5;

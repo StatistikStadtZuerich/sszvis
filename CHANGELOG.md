@@ -1,3 +1,7 @@
+## 2.3.0 (Aug 2020)
+
+- Added `sszvis.app` as a more structured way to create sszvis apps. This helps with managing state through actions and allows us to apply some performance optimizations behind the scenes.
+
 ## 2.2.0 (Jul 2020)
 
 - Upgraded d3 to version 5.0

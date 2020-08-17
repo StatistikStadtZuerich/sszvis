@@ -15,8 +15,18 @@
 
     <div id="sszvis-chart"></div>
 
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/M_wahlkreis_fake.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png",
+      };
+    </script>
+
     <script data-catalog-project-expose="script.js">
-      (function (d3, topojson, sszvis) {
+      (function (d3, topojson, sszvis, config) {
+        "use strict";
+
         // Configuration
         // -----------------------------------------------
 
@@ -51,172 +61,157 @@
         var nameAcc = sszvis.prop("name");
         var mDatumAcc = sszvis.prop("datum");
 
-        // Application state
-        // -----------------------------------------------
-        var state = {
-          data: null,
-          mapData: null,
-          selection: [],
-          valueDomain: [0, 1],
-        };
-
-        // State transitions
-        // -----------------------------------------------
-        var actions = {
-          prepareState: function prepareState(data) {
-            state.data = data;
-
-            render(state);
+        sszvis.app({
+          fallback: {
+            element: config.id,
+            src: config.fallback,
           },
 
-          prepareMapData: function prepareMapData(topo) {
-            state.mapData = {
-              features: topojson.feature(topo, topo.objects.wahlkreise),
-              borders: topojson.mesh(topo, topo.objects.wahlkreise),
-              lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
-              lakeBorders: topojson.mesh(
-                topo,
-                topo.objects.wahlkreis_lakebounds
-              ),
-            };
+          // Init
+          // -----------------------------------------------
+          init: function init(state) {
+            return Promise.all([
+              d3.csv(config.data, parseRow),
+              d3.json("../topo/stadt-zurich.json"),
+            ]).then(function (result) {
+              var data = result[0];
+              var topo = result[1];
+              state.data = data;
+              state.mapData = {
+                features: topojson.feature(topo, topo.objects.wahlkreise),
+                borders: topojson.mesh(topo, topo.objects.wahlkreise),
+                lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
+                lakeBorders: topojson.mesh(
+                  topo,
+                  topo.objects.wahlkreis_lakebounds
+                ),
+              };
 
-            render(state);
+              state.selection = [];
+              state.valueDomain = [0, 1];
+            });
           },
 
-          selectHovered: function selectHovered(d) {
-            state.selection = [d.datum];
-            render(state);
+          // Actions
+          // -----------------------------------------------
+          actions: {
+            selectHovered: function selectHovered(state, d) {
+              state.selection = [d.datum];
+            },
+
+            deselectHovered: function deselectHovered(state) {
+              state.selection = [];
+            },
           },
 
-          deselectHovered: function deselectHovered() {
-            state.selection = [];
-            render(state);
-          },
+          // Render
+          // -----------------------------------------------
+          render: function render(state, actions) {
+            var props = queryProps(sszvis.measureDimensions(config.id));
+            var bounds = sszvis.bounds(props.bounds, config.id);
 
-          resize: function resize() {
-            render(state);
-          },
-        };
+            // Scales
 
-        // Data initialization
-        // -----------------------------------------------
-        d3.csv("data/M_wahlkreis_fake.csv", parseRow)
-          .then(actions.prepareState)
-          .catch(sszvis.loadError);
+            var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
-        d3.json("../topo/stadt-zurich.json")
-          .then(actions.prepareMapData)
-          .catch(sszvis.loadError);
+            // Layers
 
-        // Render
-        // -----------------------------------------------
-        function render(state) {
-          if (state.data === null || state.mapData === null) {
-            // loading ...
-            return true;
-          }
+            var chartLayer = sszvis
+              .createSvgLayer(config.id, bounds)
+              .datum(state.data);
 
-          var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-          var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+            var tooltipLayer = sszvis
+              .createHtmlLayer(config.id, bounds)
+              .datum(state.selection);
 
-          // Scales
+            // Components
 
-          var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
-
-          // Layers
-
-          var chartLayer = sszvis
-            .createSvgLayer("#sszvis-chart", bounds)
-            .datum(state.data);
-
-          var tooltipLayer = sszvis
-            .createHtmlLayer("#sszvis-chart", bounds)
-            .datum(state.selection);
-
-          // Components
-
-          var choroplethMap = sszvis
-            .choropleth()
-            .features(state.mapData.features)
-            .borders(state.mapData.borders)
-            .lakeFeatures(state.mapData.lakeFeatures)
-            .lakeBorders(state.mapData.lakeBorders)
-            .keyName("name")
-            .highlight(state.selection)
-            .highlightStroke(
-              sszvis.compose(sszvis.muchDarker, colorScale, vAcc)
-            )
-            .width(bounds.innerWidth)
-            .height(bounds.innerHeight)
-            .fill(sszvis.compose(colorScale, vAcc));
-
-          // see the comment by the tooltip in docs/map-standard/kreis.html for more information
-          // about accesing data properties of map entities.
-          var tooltipHeader = sszvis
-            .modularTextHTML()
-            .bold(
-              sszvis.compose(sszvis.formatFractionPercent, vAcc, mDatumAcc)
-            );
-
-          var tooltipBody = sszvis
-            .modularTextHTML()
-            .plain("Wahlkreis ")
-            .plain(sszvis.compose(nameAcc, mDatumAcc));
-
-          var tooltip = sszvis
-            .tooltip()
-            .renderInto(tooltipLayer)
-            .header(tooltipHeader)
-            .body(tooltipBody)
-            .orientation(sszvis.fitTooltip("bottom", bounds))
-            .visible(isSelected);
-
-          var legend = sszvis
-            .legendColorLinear()
-            .scale(colorScale)
-            .width(props.legendWidth)
-            .labelFormat(sszvis.formatFractionPercent);
-
-          // Rendering
-
-          chartLayer
-            .attr(
-              "transform",
-              sszvis.translateString(bounds.padding.left, bounds.padding.top)
-            )
-            .call(choroplethMap);
-
-          chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
-
-          chartLayer
-            .selectGroup("legend")
-            .attr(
-              "transform",
-              sszvis.translateString(
-                bounds.width / 2 - props.legendWidth / 2,
-                bounds.innerHeight + 60
+            var choroplethMap = sszvis
+              .choropleth()
+              .features(state.mapData.features)
+              .borders(state.mapData.borders)
+              .lakeFeatures(state.mapData.lakeFeatures)
+              .lakeBorders(state.mapData.lakeBorders)
+              .keyName("name")
+              .highlight(state.selection)
+              .highlightStroke(
+                sszvis.compose(sszvis.muchDarker, colorScale, vAcc)
               )
-            )
-            .call(legend);
+              .width(bounds.innerWidth)
+              .height(bounds.innerHeight)
+              .fill(sszvis.compose(colorScale, vAcc));
 
-          // Interaction
+            // see the comment by the tooltip in docs/map-standard/kreis.html for more information
+            // about accesing data properties of map entities.
+            var tooltipHeader = sszvis
+              .modularTextHTML()
+              .bold(
+                sszvis.compose(sszvis.formatFractionPercent, vAcc, mDatumAcc)
+              );
 
-          var interactionLayer = sszvis
-            .panning()
-            .elementSelector(".sszvis-map__area")
-            .on("start", actions.selectHovered)
-            .on("pan", actions.selectHovered)
-            .on("end", actions.deselectHovered);
+            var tooltipBody = sszvis
+              .modularTextHTML()
+              .plain("Wahlkreis ")
+              .plain(sszvis.compose(nameAcc, mDatumAcc));
 
-          chartLayer.call(interactionLayer);
+            var tooltip = sszvis
+              .tooltip()
+              .renderInto(tooltipLayer)
+              .header(tooltipHeader)
+              .body(tooltipBody)
+              .orientation(sszvis.fitTooltip("bottom", bounds))
+              .visible(isSelected(state));
 
-          sszvis.viewport.on("resize", actions.resize);
+            var legend = sszvis
+              .legendColorLinear()
+              .scale(colorScale)
+              .width(props.legendWidth)
+              .labelFormat(sszvis.formatFractionPercent);
+
+            // Rendering
+
+            chartLayer
+              .attr(
+                "transform",
+                sszvis.translateString(bounds.padding.left, bounds.padding.top)
+              )
+              .call(choroplethMap);
+
+            chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+            chartLayer
+              .selectGroup("legend")
+              .attr(
+                "transform",
+                sszvis.translateString(
+                  bounds.width / 2 - props.legendWidth / 2,
+                  bounds.innerHeight + 60
+                )
+              )
+              .call(legend);
+
+            // Interaction
+
+            var interactionLayer = sszvis
+              .panning()
+              .elementSelector(".sszvis-map__area")
+              .on("start", actions.selectHovered)
+              .on("pan", actions.selectHovered)
+              .on("end", actions.deselectHovered);
+
+            chartLayer.call(interactionLayer);
+          },
+        });
+
+        // Helpers
+        // -----------------------------------------------
+
+        function isSelected(state) {
+          return function (d) {
+            return state.selection.indexOf(d.datum) >= 0;
+          };
         }
-
-        function isSelected(d) {
-          return state.selection.indexOf(d.datum) >= 0;
-        }
-      })(d3, topojson, sszvis);
+      })(d3, topojson, sszvis, EXTERNAL_CONFIG);
     </script>
   </body>
 </html>
