@@ -129,7 +129,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 
 Qualitative scales can be brightened or darkened with the `scale.brighter()` and `scale.darker()` instance methods. These methods return new scale instances.
 
-````html|plain,run-script
+```html|plain,run-script
 <div id="scaleQualBrigther" class="scale-container"></div>
 <div id="scaleQualDefault" class="scale-container"></div>
 <div id="scaleQualDarker" class="scale-container"></div>
@@ -139,18 +139,21 @@ Qualitative scales can be brightened or darkened with the `scale.brighter()` and
   colorSwatchFromColors("scaleQualDefault", scale.range());
   colorSwatchFromColors("scaleQualDarker", scale.darker().range());
 </script>
-``` Qualitative scales can be reversed with the `scale.reverse()` instance method. This method
-returns a new scale. ```html|plain,run-script
+```
+
+Qualitative scales can be reversed with the `scale.reverse()` instance method. This method returns a new scale.
+
+```html|plain,run-script
 <div id="scaleQualReverse" class="scale-container"></div>
 <script>
   var scale = sszvis.scaleQual12().reverse();
   colorSwatchFromColors("scaleQualReverse", scale.range());
 </script>
-````
+```
 
 ## Sequential
 
-Sequential sales are used to compare values. These scales are designed to have the same brightness for the same input value.
+Sequential scales are used to compare values. These scales are designed to have the same brightness for the same input value.
 
 #### `sszvis.scaleSeqBlu()`
 
@@ -194,23 +197,30 @@ Sequential sales are used to compare values. These scales are designed to have t
 
 Sequential scales can be reversed using the `scale.reverse()` instance method. This method returns a new scale instance.
 
-````html|plain,run-script
+```html|plain,run-script
 <div id="scaleSeqBluRev" class="scale-container"></div>
 <script>
   var scale = sszvis.scaleSeqBlu();
   colorSwatchFromLinearScale("scaleSeqBluRev", scale.reverse(), 9);
 </script>
-``` ## Divergent Divergent sales are used to compare data that has two extremes. These scales are
+```
+
+## Divergent
+
+Divergent scales are used to compare data that has two extremes. These scales are
 designed to have the same brightness for the same input value. They come in two color variations:
 the valued (red-blue) variation is used for data that has negative-positive characteristics, the
-neutral (brown-green) variation is used in cases where no valuation is wanted. ####
-`sszvis.scaleDivVal()` ```html|plain,run-script
+neutral (brown-green) variation is used in cases where no valuation is wanted.
+
+#### `sszvis.scaleDivVal()`
+
+```html|plain,run-script
 <div id="scale5" class="scale-container"></div>
 <script>
   var scale = sszvis.scaleDivVal();
   colorSwatchFromLinearScale("scale5", scale, 9);
 </script>
-````
+```
 
 #### `sszvis.scaleDivNtr()`
 
