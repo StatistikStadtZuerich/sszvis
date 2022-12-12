@@ -97,21 +97,21 @@ export var scaleQual6 = qualColorScale([
 ]);
 
 export var scaleQual6a = qualColorScale([
-  "#782600",
-  "#CC4309",
-  "#FF720C",
-  "#6B8EFF",
-  "#3B51FF",
-  "#2F2ABB",
+  darkBlue,
+  mediumBlue,
+  lightBlue,
+  darkRed,
+  mediumRed,
+  lightRed,
 ]);
 
 export var scaleQual6b = qualColorScale([
-  "#A30059",
-  "#DB247D",
-  "#FF579E",
-  "#55BC5D",
-  "#1D942E",
-  "#10652A",
+  darkGreen,
+  mediumGreen,
+  lightGreen,
+  darkBrown,
+  mediumBrown,
+  lightBrown,
 ]);
 
 function seqColorScale(colors) {
