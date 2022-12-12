@@ -56,28 +56,46 @@ function qualColorScale(colors) {
   };
 }
 
+const darkBlue = "#3431DE";
+const mediumBlue = "#0A8DF6";
+const lightBlue = "#23C3F1";
+
+const darkRed = "#7B4FB7";
+const mediumRed = "#DB247D";
+const lightRed = "#FB737E";
+
+const darkGreen = "#007C78";
+const mediumGreen = "#1D942E";
+const lightGreen = "#99C32E";
+
+const darkBrown = "#9A5B01";
+const mediumBrown = "#FF720C";
+const lightBrown = "#FBB900";
+
 export var scaleQual12 = qualColorScale([
-  "#3431DE",
-  "#0A8DF6",
-  "#23C3F1",
-  "#7B4FB7",
-  "#DB247D",
-  "#FB737E",
-  "#007C78",
-  "#1D942E",
-  "#99C32E",
-  "#9A5B01",
-  "#FF720C",
-  "#FBB900",
+  darkBlue,
+  mediumBlue,
+  lightBlue,
+  darkRed,
+  mediumRed,
+  lightRed,
+  darkGreen,
+  mediumGreen,
+  lightGreen,
+  darkBrown,
+  mediumBrown,
+  lightBrown,
 ]);
+
 export var scaleQual6 = qualColorScale([
-  "#3431DE",
-  "#DB247D",
-  "#1D942E",
-  "#FBB900",
-  "#23C3F1",
-  "#FF720C",
+  darkBlue,
+  mediumRed,
+  mediumGreen,
+  lightBrown,
+  lightBlue,
+  mediumBrown,
 ]);
+
 export var scaleQual6a = qualColorScale([
   "#782600",
   "#CC4309",
@@ -86,6 +104,7 @@ export var scaleQual6a = qualColorScale([
   "#3B51FF",
   "#2F2ABB",
 ]);
+
 export var scaleQual6b = qualColorScale([
   "#A30059",
   "#DB247D",
@@ -102,10 +121,10 @@ function seqColorScale(colors) {
   };
 }
 
-export var scaleSeqBlu = seqColorScale(["#3431DE", "#0A8DF6", "#23C3F1"]);
-export var scaleSeqRed = seqColorScale(["#7B4FB7", "#DB247D", "#FB737E"]);
-export var scaleSeqGrn = seqColorScale(["#007C78", "#1D942E", "#99C32E"]);
-export var scaleSeqBrn = seqColorScale(["#9A5B01", "#FF720C", "#FBB900"]);
+export var scaleSeqBlu = seqColorScale([darkBlue, mediumBlue, lightBlue]);
+export var scaleSeqRed = seqColorScale([darkRed, mediumRed, lightRed]);
+export var scaleSeqGrn = seqColorScale([darkGreen, mediumGreen, lightGreen]);
+export var scaleSeqBrn = seqColorScale([darkBrown, mediumBrown, lightBrown]);
 
 function divColorScale(colors) {
   return function () {
