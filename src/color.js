@@ -121,10 +121,10 @@ function seqColorScale(colors) {
   };
 }
 
-export var scaleSeqBlu = seqColorScale([darkBlue, mediumBlue, lightBlue]);
-export var scaleSeqRed = seqColorScale([darkRed, mediumRed, lightRed]);
-export var scaleSeqGrn = seqColorScale([darkGreen, mediumGreen, lightGreen]);
-export var scaleSeqBrn = seqColorScale([darkBrown, mediumBrown, lightBrown]);
+export var scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
+export var scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
+export var scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
+export var scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
 
 function divColorScale(colors) {
   return function () {
@@ -133,10 +133,10 @@ function divColorScale(colors) {
   };
 }
 
-export var scaleDivVal = divColorScale(["#A30059", "#FFFFFF", "#2F2ABB"]);
-export var scaleDivValGry = divColorScale(["#A30059", "#F3F3F3", "#2F2ABB"]);
-export var scaleDivNtr = divColorScale(["#782600", "#FFFFFF", "#10652A"]);
-export var scaleDivNtrGry = divColorScale(["#782600", "#F3F3F3", "#10652A"]);
+export var scaleDivVal = divColorScale(["#782600", "#FFFFFF", "#2F2ABB"]);
+export var scaleDivValGry = divColorScale(["#782600", "#F3F3F3", "#2F2ABB"]);
+export var scaleDivNtr = divColorScale(["#A30059", "#FFFFFF", "#10652A"]);
+export var scaleDivNtrGry = divColorScale(["#A30059", "#F3F3F3", "#10652A"]);
 
 function greyColorScale(colors) {
   return function () {
