@@ -57,42 +57,42 @@ function qualColorScale(colors) {
 }
 
 export var scaleQual12 = qualColorScale([
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
+  "#3431DE",
+  "#0A8DF6",
+  "#23C3F1",
+  "#7B4FB7",
+  "#DB247D",
+  "#FB737E",
+  "#007C78",
+  "#1D942E",
+  "#99C32E",
+  "#9A5B01",
+  "#FF720C",
+  "#FBB900",
 ]);
 export var scaleQual6 = qualColorScale([
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
+  "#3431DE",
+  "#DB247D",
+  "#1D942E",
+  "#FBB900",
+  "#23C3F1",
+  "#FF720C",
 ]);
 export var scaleQual6a = qualColorScale([
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
+  "#782600",
+  "#CC4309",
+  "#FF720C",
+  "#6B8EFF",
+  "#3B51FF",
+  "#2F2ABB",
 ]);
 export var scaleQual6b = qualColorScale([
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
-  "#FF00FF",
+  "#A30059",
+  "#DB247D",
+  "#FF579E",
+  "#55BC5D",
+  "#1D942E",
+  "#10652A",
 ]);
 
 function seqColorScale(colors) {
@@ -102,10 +102,10 @@ function seqColorScale(colors) {
   };
 }
 
-export var scaleSeqBlu = seqColorScale(["#DDE9FE", "#3B76B3", "#343F4D"]);
-export var scaleSeqRed = seqColorScale(["#FEECEC", "#CC6171", "#4D353A"]);
-export var scaleSeqGrn = seqColorScale(["#D2DFDE", "#4A807C", "#2C3C3F"]);
-export var scaleSeqBrn = seqColorScale(["#E9DFD6", "#A67D5A", "#4C3735"]);
+export var scaleSeqBlu = seqColorScale(["#3431DE", "#0A8DF6", "#23C3F1"]);
+export var scaleSeqRed = seqColorScale(["#7B4FB7", "#DB247D", "#FB737E"]);
+export var scaleSeqGrn = seqColorScale(["#007C78", "#1D942E", "#99C32E"]);
+export var scaleSeqBrn = seqColorScale(["#9A5B01", "#FF720C", "#FBB900"]);
 
 function divColorScale(colors) {
   return function () {
@@ -114,10 +114,10 @@ function divColorScale(colors) {
   };
 }
 
-export var scaleDivVal = divColorScale(["#CC6171", "#FFFFFF", "#3B76B3"]);
-export var scaleDivValGry = divColorScale(["#CC6171", "#F3F3F3", "#3B76B3"]);
-export var scaleDivNtr = divColorScale(["#A67D5A", "#FFFFFF", "#4A807C"]);
-export var scaleDivNtrGry = divColorScale(["#A67D5A", "#F3F3F3", "#4A807C"]);
+export var scaleDivVal = divColorScale(["#A30059", "#FFFFFF", "#2F2ABB"]);
+export var scaleDivValGry = divColorScale(["#A30059", "#F3F3F3", "#2F2ABB"]);
+export var scaleDivNtr = divColorScale(["#782600", "#FFFFFF", "#10652A"]);
+export var scaleDivNtrGry = divColorScale(["#782600", "#F3F3F3", "#10652A"]);
 
 function greyColorScale(colors) {
   return function () {
