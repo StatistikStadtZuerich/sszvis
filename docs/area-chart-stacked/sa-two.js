@@ -329,6 +329,15 @@ function render(state) {
     .style("opacity", Number(!state.isMultiples));
 
   chartLayer
+    .selectGroup("yAxis")
+    .selectAll("text")
+    .attr("stroke-linecap", "butt")
+    .attr("stroke-linejoin", "miter")
+    .attr("stroke-opacity", 0.75)
+    .attr("stroke", "white")
+    .attr("stroke-width", 0.5);
+
+  chartLayer
     .selectGroup("colorLegend")
     .attr(
       "transform",
@@ -343,6 +352,12 @@ function render(state) {
     .call(buttonGroup);
 
   chartLayer.selectGroup("highlight").datum(state.highlightData).call(rangeRuler);
+
+  chartLayer
+    .selectGroup("highlight")
+    .selectAll("text")
+    .attr("stroke", "white")
+    .attr("stroke-width", 0.5);
 
   var flagGroup = chartLayer
     .selectGroup("flag")
