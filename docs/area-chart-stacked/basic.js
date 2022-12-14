@@ -288,15 +288,6 @@ function render(state) {
     .style("opacity", Number(!state.isMultiples));
 
   chartLayer
-    .selectGroup("yAxis")
-    .selectAll("text")
-    .attr("stroke-linecap", "butt")
-    .attr("stroke-linejoin", "miter")
-    .attr("stroke-opacity", 0.75)
-    .attr("stroke", "white")
-    .attr("stroke-width", 0.5);
-
-  chartLayer
     .selectGroup("colorLegend")
     .attr(
       "transform",

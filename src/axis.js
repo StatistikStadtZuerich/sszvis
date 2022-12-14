@@ -25,6 +25,7 @@
  *
  * @property {boolean} alignOuterLabels                 Whether or not to align the outer labels to the axis extent so that they do not fall outside the axis space.
  * @property {boolean} contour                          Specify a 'contour' background for the axis labels.
+ * @property {boolean} removeStroke                     Removes the default stroke applied to the text
  * @property {number} hideBorderTickThreshold           Specifies the pixel distance threshold for the visible tick correction. Ticks which are closer than
  *                                                      this threshold to the end of the axis (i.e. a tick which is 1 or two pixels from the end) will be
  *                                                      hidden from view. This prevents the display of a tick very close to the ending line.
@@ -89,6 +90,7 @@ var axis = function () {
     .prop("alignOuterLabels")
     .alignOuterLabels(false)
     .prop("contour")
+    .prop("removeStroke")
     .prop("hideBorderTickThreshold")
     .hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD)
     .prop("hideLabelThreshold")
@@ -406,6 +408,13 @@ var axis = function () {
             this.insertBefore(textContour.node(), textNode);
           }
           textContour.text(textNode.textContent);
+        });
+      }
+      if (!props.removeStroke) {
+        tickGroups.each(function () {
+          var g = select(this);
+          var textNode = g.select("text");
+          textNode.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
         });
       }
     });
