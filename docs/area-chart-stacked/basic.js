@@ -297,12 +297,6 @@ function render(state) {
 
   chartLayer.selectGroup("highlight").datum(state.highlightData).call(rangeRuler);
 
-  chartLayer
-    .selectGroup("highlight")
-    .selectAll("text")
-    .attr("stroke", "white")
-    .attr("stroke-width", 0.5);
-
   var flagGroup = chartLayer
     .selectGroup("flag")
     .datum(

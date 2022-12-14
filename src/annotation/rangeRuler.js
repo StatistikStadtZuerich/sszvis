@@ -36,6 +36,7 @@ export default function () {
     .prop("top")
     .prop("bottom")
     .prop("label")
+    .prop("removeStroke")
     .label(fn.functor(""))
     .prop("total")
     .prop("flip", fn.functor)
@@ -109,6 +110,10 @@ export default function () {
         })
         .text(fn.compose(formatNumber, props.label));
 
+      if (!props.removeStroke) {
+        marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
+      }
+
       var total = selection.selectAll(".sszvis-rangeRuler__total").data([fn.last(data)]);
 
       var newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
@@ -127,5 +132,9 @@ export default function () {
           return props.flip(d) ? "end" : "start";
         })
         .text("Total " + formatNumber(props.total));
+
+      if (!props.removeStroke) {
+        total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
+      }
     });
 }
