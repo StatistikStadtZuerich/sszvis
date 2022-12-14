@@ -36,6 +36,8 @@ export default function () {
       var selection = select(this);
       var props = selection.props();
 
+      var stroke = props.stroke || "#FFFFFF";
+
       var angle = 0;
       data.forEach(function (value) {
         // In order for an angle transition to work correctly in d3, the transition must be done in data space.
@@ -82,7 +84,7 @@ export default function () {
         .classed("sszvis-path", true)
         .attr("transform", "translate(" + props.radius + "," + props.radius + ")")
         .attr("fill", props.fill)
-        .attr("stroke", props.stroke);
+        .attr("stroke", stroke);
 
       segments.exit().remove();
 
@@ -101,7 +103,7 @@ export default function () {
           };
         })
         .attr("fill", props.fill)
-        .attr("stroke", props.stroke);
+        .attr("stroke", stroke);
 
       var ta = tooltipAnchor().position(function (d) {
         // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
