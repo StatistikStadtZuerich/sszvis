@@ -102,7 +102,7 @@ function stackedBar(config) {
         .width(config.width(props))
         .height(config.height(props))
         .fill(props.fill)
-        .stroke(props.stroke);
+        .stroke(props.stroke || "#FFFFFF");
 
       var groups = selection.selectAll(".sszvis-stack").data(data);
 
