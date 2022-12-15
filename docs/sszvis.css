@@ -48,6 +48,10 @@
   cursor: -webkit-grabbing;
 }
 
+:root {
+  --stzh-font: var(--stzh-font-family-regular, "Helvetica Neue", Helvetica, Arial, sans-serif);
+}
+
 /**
  * Axis component based on the d3.axis interface
  * Changed color to match stzh website (original #B8B8B8)
@@ -55,7 +59,8 @@
  */
 .sszvis-axis text {
   fill: #767676;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 10px;
   font-style: normal;
   font-weight: normal;
@@ -152,7 +157,8 @@
 .sszvis-sankey-label {
   alignment-baseline: central; /* Maybe at least one of these will work? */
   dominant-baseline: central;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 10px;
   font-style: normal;
   font-weight: normal;
@@ -285,7 +291,8 @@
   color: #767676;
   cursor: pointer;
   display: table-cell;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 12px;
   line-height: normal;
   padding: 9px 12px;
@@ -335,7 +342,8 @@
   background: transparent;
   border: 1px solid #ffffff;
   color: #767676;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 16px; /* Minimum of 16px to prevent iOS to zoom page */
   height: 34px;
   outline: 0;
@@ -348,7 +356,8 @@
 }
 
 .sszvis-control-select__metrics {
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 12px;
   height: auto;
   position: absolute;
@@ -371,7 +380,8 @@
 
 .sszvis-control-slider--label {
   fill: #545454;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 10px;
   text-anchor: middle;
 }
@@ -417,7 +427,8 @@
 
 .sszvis-ruler__label,
 .sszvis-ruler__label-outline {
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 12px;
   font-style: normal;
   font-weight: normal;
@@ -464,7 +475,8 @@
 .sszvis-rangeRuler__total {
   font-size: 10px;
   fill: #545454;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-style: normal;
 }
 
@@ -593,7 +605,8 @@
 
 .sszvis-referenceline__caption {
   fill: #7c7c7c;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 11px;
   text-anchor: middle;
   /*
@@ -609,7 +622,8 @@
  */
 .sszvis-dataareacircle__caption {
   fill: #7c7c7c;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 11px;
   text-anchor: middle;
 }
@@ -621,7 +635,8 @@
  */
 .sszvis-dataarearectangle__caption {
   fill: #7c7c7c;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 11px;
   text-anchor: middle;
 }
@@ -636,7 +651,8 @@
  */
 .sszvis-legend__label {
   fill: #767676;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 12px;
   font-style: normal;
   font-weight: normal;
@@ -650,7 +666,8 @@
 
 .sszvis-legend__axislabel {
   fill: #767676;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 10px;
   font-style: normal;
   font-weight: normal;
