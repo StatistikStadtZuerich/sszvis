@@ -13,8 +13,8 @@
     renderSwatch(containerId, colors.map(String));
   };
 
-  /* Utils
-  ----------------------------------------------- */
+  // Utils
+  // -----------------------------------------------
   function renderSwatch(containerId, colors) {
     var container = document.getElementById(containerId);
 

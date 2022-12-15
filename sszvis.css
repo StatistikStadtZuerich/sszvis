@@ -31,7 +31,7 @@
   -moz-user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   -webkit-touch-callout: none;
 }
 
@@ -48,6 +48,9 @@
   cursor: -webkit-grabbing;
 }
 
+:root {
+  --stzh-font: var(--stzh-font-family-regular, "Helvetica Neue", Helvetica, Arial, sans-serif);
+}
 
 /**
  * Axis component based on the d3.axis interface
@@ -56,7 +59,8 @@
  */
 .sszvis-axis text {
   fill: #767676;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 10px;
   font-style: normal;
   font-weight: normal;
@@ -68,7 +72,7 @@
 .sszvis-axis path,
 .sszvis-axis line {
   fill: none;
-  stroke: #B8B8B8;
+  stroke: #b8b8b8;
   shape-rendering: crispEdges;
 }
 
@@ -100,9 +104,9 @@
 }
 
 .sszvis-axis__label-contour {
-  fill: #FFFFFF;
+  fill: #ffffff;
   opacity: 0.8;
-  stroke: #FFFFFF;
+  stroke: #ffffff;
   stroke-width: 3;
 }
 
@@ -112,7 +116,6 @@
  * @module sszvis/component/bar
  */
 .sszvis-bar {
-
 }
 
 /**
@@ -121,7 +124,7 @@
  * @module sszvis/component/groupedBars
  */
 .sszvis-bar--missing {
-  stroke: #A4A4A4;
+  stroke: #a4a4a4;
 }
 
 /**
@@ -154,7 +157,8 @@
 .sszvis-sankey-label {
   alignment-baseline: central; /* Maybe at least one of these will work? */
   dominant-baseline: central;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 10px;
   font-style: normal;
   font-weight: normal;
@@ -173,7 +177,7 @@
 }
 
 .sszvis-sankey-column-label-tick {
-  stroke: #B8B8B8;
+  stroke: #b8b8b8;
 }
 
 .sszvis-sankey-link-source-label {
@@ -280,14 +284,15 @@
 }
 
 .sszvis-control-buttonGroup__item {
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   border: 1px solid #767676;
   border-left: none;
   box-sizing: border-box;
   color: #767676;
   cursor: pointer;
   display: table-cell;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 12px;
   line-height: normal;
   padding: 9px 12px;
@@ -300,7 +305,7 @@
 */
 .sszvis-control-buttonGroup__item.selected {
   background-color: #767676;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .sszvis-control-buttonGroup__item:first-child {
@@ -322,8 +327,8 @@
 .sszvis-control-select {
   border: 1px solid #767676;
   border-radius: 3px;
-  background-color: #FFFFFF;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABQElEQVR4nO3TzW2DUBDEcZdACSnBpe1lVhzdCSXZnaQE55JJSOJgMO9rH/OTOK70/iNxOomIiIiIiMi3cRzfar8hlc0tAM4A3gFMeZ5UDoDps+W86sDMBgBXd7+7+z3yCACmWcfVzIbFg9/xkUeYx68a4b/4iCM8in86wlJ8pBGW4ucj/Dhy98uzowgjrImffZevQzMb3P0WeYSN8bc/v0HkEXbHU8QRksVTpBGSx1OEEbLFU8sjZI+nFkcoFk8tjVA8nloYoVo81RyhejzVGKGZeCo5QnPxVGKEZuMp5wjNx1OOEcLEU8oRwsVTihHCxtOeEcLH0ysjdBNPW0foKp4yjBAnnhKOEC+eEowQN552jBA/nl4YoZ942jBCf/G0YoR+42lhhP7j6cEIx4mn2QjHiyczGw4bLyIiIiIiUtMHjJmBk7uXEiAAAAAASUVORK5CYII=');
+  background-color: #ffffff;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABQElEQVR4nO3TzW2DUBDEcZdACSnBpe1lVhzdCSXZnaQE55JJSOJgMO9rH/OTOK70/iNxOomIiIiIiMi3cRzfar8hlc0tAM4A3gFMeZ5UDoDps+W86sDMBgBXd7+7+z3yCACmWcfVzIbFg9/xkUeYx68a4b/4iCM8in86wlJ8pBGW4ucj/Dhy98uzowgjrImffZevQzMb3P0WeYSN8bc/v0HkEXbHU8QRksVTpBGSx1OEEbLFU8sjZI+nFkcoFk8tjVA8nloYoVo81RyhejzVGKGZeCo5QnPxVGKEZuMp5wjNx1OOEcLEU8oRwsVTihHCxtOeEcLH0ysjdBNPW0foKp4yjBAnnhKOEC+eEowQN552jBA/nl4YoZ942jBCf/G0YoR+42lhhP7j6cEIx4mn2QjHiyczGw4bLyIiIiIiUtMHjJmBk7uXEiAAAAAASUVORK5CYII=");
   background-position: 96% 51%;
   background-repeat: no-repeat;
   background-size: 12px 12px;
@@ -335,9 +340,10 @@
 
 .sszvis-control-select__element {
   background: transparent;
-  border: 1px solid #FFFFFF;
+  border: 1px solid #ffffff;
   color: #767676;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 16px; /* Minimum of 16px to prevent iOS to zoom page */
   height: 34px;
   outline: 0;
@@ -350,7 +356,8 @@
 }
 
 .sszvis-control-select__metrics {
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 12px;
   height: auto;
   position: absolute;
@@ -365,7 +372,6 @@
  * @module sszvis/control/slider
  */
 .sszvis-control-slider__backgroundgroup {
-
 }
 
 .sszvis-control-slider__handle {
@@ -374,7 +380,8 @@
 
 .sszvis-control-slider--label {
   fill: #545454;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 10px;
   text-anchor: middle;
 }
@@ -395,12 +402,12 @@
  */
 
 .sszvis-handleRuler__handle {
-  fill: #FFFFFF;
+  fill: #ffffff;
   stroke: #808184;
 }
 
 .sszvis-handleRuler__handle-mark {
-  stroke: #A6A8AB;
+  stroke: #a6a8ab;
 }
 
 /**
@@ -410,17 +417,18 @@
  */
 .sszvis-ruler__rule {
   shape-rendering: crispEdges;
-  stroke: #CCCCCC;
+  stroke: #cccccc;
 }
 
 .sszvis-ruler__dot {
-  stroke: #FFFFFF;
+  stroke: #ffffff;
   stroke-width: 1.5;
 }
 
 .sszvis-ruler__label,
 .sszvis-ruler__label-outline {
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 12px;
   font-style: normal;
   font-weight: normal;
@@ -431,7 +439,7 @@
 }
 
 .sszvis-ruler__label-outline {
-  stroke: #FFFFFF;
+  stroke: #ffffff;
   stroke-width: 3;
 }
 
@@ -441,8 +449,8 @@
  * @module sszvis/annotation/rangeFlag
  */
 .sszvis-rangeFlag__mark {
-  fill: #EFEFEF;
-  stroke: #7C7C7C;
+  fill: #efefef;
+  stroke: #7c7c7c;
   stroke-width: 1.5;
 }
 
@@ -463,10 +471,12 @@
   opacity: 0.25;
 }
 
-.sszvis-rangeRuler__label, .sszvis-rangeRuler__total {
+.sszvis-rangeRuler__label,
+.sszvis-rangeRuler__total {
   font-size: 10px;
   fill: #545454;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-style: normal;
 }
 
@@ -517,7 +527,7 @@
 }
 
 .sszvis-tooltip__body {
-  color: #7C7C7C;
+  color: #7c7c7c;
   font-size: 11px;
   line-height: 1.4545;
   vertical-align: middle;
@@ -548,12 +558,12 @@
 }
 
 .sszvis-tooltip__body__table tr {
-  border-top: 1px solid #E5E6E7;
+  border-top: 1px solid #e5e6e7;
 }
 
 .sszvis-tooltip__body__table td {
-  border: none !important;  /* We need to override the parent website's selector */
-  padding: 7px 0.5em 7px 0 !important;  /* We need to override the parent website's selector */
+  border: none !important; /* We need to override the parent website's selector */
+  padding: 7px 0.5em 7px 0 !important; /* We need to override the parent website's selector */
   text-align: left;
   vertical-align: top;
 }
@@ -582,7 +592,6 @@
   -ms-user-select: none;
 }
 
-
 /**
  * Reference line component
  *
@@ -595,8 +604,9 @@
 }
 
 .sszvis-referenceline__caption {
-  fill: #7C7C7C;
-  font-family: Arial, sans-serif;
+  fill: #7c7c7c;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 11px;
   text-anchor: middle;
   /*
@@ -611,8 +621,9 @@
  * @module sszvis/annotation/circle
  */
 .sszvis-dataareacircle__caption {
-  fill: #7C7C7C;
-  font-family: Arial, sans-serif;
+  fill: #7c7c7c;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 11px;
   text-anchor: middle;
 }
@@ -623,8 +634,9 @@
  * @module sszvis/annotation/rectangle
  */
 .sszvis-dataarearectangle__caption {
-  fill: #7C7C7C;
-  font-family: Arial, sans-serif;
+  fill: #7c7c7c;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 11px;
   text-anchor: middle;
 }
@@ -639,7 +651,8 @@
  */
 .sszvis-legend__label {
   fill: #767676;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 12px;
   font-style: normal;
   font-weight: normal;
@@ -653,7 +666,8 @@
 
 .sszvis-legend__axislabel {
   fill: #767676;
-  font-family: Arial, sans-serif;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
   font-size: 10px;
   font-style: normal;
   font-weight: normal;
@@ -665,12 +679,12 @@
 
 .sszvis-legend__greyline {
   fill: none;
-  stroke: #B8B8B8;
+  stroke: #b8b8b8;
   stroke-width: 1.1;
 }
 
 .sszvis-legend__dashedline {
-  stroke: #CCCCCC;
+  stroke: #cccccc;
   stroke-dasharray: 2 3;
   stroke-width: 1;
 }

@@ -1,7 +1,7 @@
 .scale-container {
   padding: 0;
   margin: 20px;
-  position:relative;
+  position: relative;
   width: 100%;
 }
 
@@ -20,7 +20,7 @@
 }
 
 .scale-container div span {
-  color: #7C7C7C;
+  color: #7c7c7c;
   display: none;
   font-family: Arial, sans-serif;
   font-size: 11px;
@@ -36,4 +36,3 @@
   position: absolute;
   top: 100%;
 }
-

@@ -1,4 +1,4 @@
-/*! sszvis v2.3.0, Copyright 2014-present Statistik Stadt Zürich */
+/*! sszvis v2.4.1, Copyright 2014-present Statistik Stadt Zürich */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
   typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
@@ -1785,10 +1785,22 @@
     };
   }
 
-  var scaleQual12 = qualColorScale(["#5182B3", "#B8CFE6", "#60BF97", "#B8E6D2", "#94BF69", "#CFE6B8", "#E6CF73", "#FAEBAF", "#E67D73", "#F2CEC2", "#CC6788", "#E6B7C7"]);
-  var scaleQual6 = qualColorScale(["#5182B3", "#60BF97", "#94BF69", "#E6CF73", "#E67D73", "#CC6788"]);
-  var scaleQual6a = qualColorScale(["#5182B3", "#B8CFE6", "#60BF97", "#B8E6D2", "#94BF69", "#CFE6B8"]);
-  var scaleQual6b = qualColorScale(["#E6CF73", "#FAEBAF", "#E67D73", "#F2CEC2", "#CC6788", "#E6B7C7"]);
+  var darkBlue = "#3431DE";
+  var mediumBlue = "#0A8DF6";
+  var lightBlue = "#23C3F1";
+  var darkRed = "#7B4FB7";
+  var mediumRed = "#DB247D";
+  var lightRed = "#FB737E";
+  var darkGreen = "#007C78";
+  var mediumGreen = "#1D942E";
+  var lightGreen = "#99C32E";
+  var darkBrown = "#9A5B01";
+  var mediumBrown = "#FF720C";
+  var lightBrown = "#FBB900";
+  var scaleQual12 = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed, darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
+  var scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
+  var scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
+  var scaleQual6b = qualColorScale([darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
 
   function seqColorScale(colors) {
     return function () {
@@ -1797,10 +1809,10 @@
     };
   }
 
-  var scaleSeqBlu = seqColorScale(["#DDE9FE", "#3B76B3", "#343F4D"]);
-  var scaleSeqRed = seqColorScale(["#FEECEC", "#CC6171", "#4D353A"]);
-  var scaleSeqGrn = seqColorScale(["#D2DFDE", "#4A807C", "#2C3C3F"]);
-  var scaleSeqBrn = seqColorScale(["#E9DFD6", "#A67D5A", "#4C3735"]);
+  var scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
+  var scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
+  var scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
+  var scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
 
   function divColorScale(colors) {
     return function () {
@@ -1809,10 +1821,10 @@
     };
   }
 
-  var scaleDivVal = divColorScale(["#CC6171", "#FFFFFF", "#3B76B3"]);
-  var scaleDivValGry = divColorScale(["#CC6171", "#F3F3F3", "#3B76B3"]);
-  var scaleDivNtr = divColorScale(["#A67D5A", "#FFFFFF", "#4A807C"]);
-  var scaleDivNtrGry = divColorScale(["#A67D5A", "#F3F3F3", "#4A807C"]);
+  var scaleDivVal = divColorScale(["#782600", "#FFFFFF", "#2F2ABB"]);
+  var scaleDivValGry = divColorScale(["#782600", "#F3F3F3", "#2F2ABB"]);
+  var scaleDivNtr = divColorScale(["#A30059", "#FFFFFF", "#10652A"]);
+  var scaleDivNtrGry = divColorScale(["#A30059", "#F3F3F3", "#10652A"]);
 
   function greyColorScale(colors) {
     return function () {
@@ -2661,7 +2673,7 @@
    * @return {sszvis.component}
    */
   function rangeRuler () {
-    return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("total").prop("flip", functor).flip(false).render(function (data) {
+    return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("top").prop("bottom").prop("label").prop("removeStroke").label(functor("")).prop("total").prop("flip", functor).flip(false).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
       var crispX = compose(halfPixel, props.x);
@@ -2700,6 +2712,11 @@
       .style("text-anchor", function (d) {
         return props.flip(d) ? "end" : "start";
       }).text(compose(formatNumber, props.label));
+
+      if (!props.removeStroke) {
+        marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
+      }
+
       var total = selection.selectAll(".sszvis-rangeRuler__total").data([last(data)]);
       var newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
       total.exit().remove();
@@ -2710,6 +2727,10 @@
       }).attr("y", props.top - 10).style("text-anchor", function (d) {
         return props.flip(d) ? "end" : "start";
       }).text("Total " + formatNumber(props.total));
+
+      if (!props.removeStroke) {
+        total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
+      }
     });
   }
 
@@ -4002,6 +4023,7 @@
    *
    * @property {boolean} alignOuterLabels                 Whether or not to align the outer labels to the axis extent so that they do not fall outside the axis space.
    * @property {boolean} contour                          Specify a 'contour' background for the axis labels.
+   * @property {boolean} removeStroke                     Removes the default stroke applied to the text
    * @property {number} hideBorderTickThreshold           Specifies the pixel distance threshold for the visible tick correction. Ticks which are closer than
    *                                                      this threshold to the end of the axis (i.e. a tick which is 1 or two pixels from the end) will be
    *                                                      hidden from view. This prevents the display of a tick very close to the ending line.
@@ -4036,7 +4058,7 @@
   var axis = function axis() {
     // var axisDelegate = d3.axisBottom();
     // axisDelegate.orient = function() { return 'bottom'; };
-    var axisComponent = component().prop("scale").prop("orient").prop("ticks").prop("tickValues").prop("tickSize").prop("tickSizeInner").prop("tickSizeOuter").prop("tickPadding").prop("tickFormat").prop("_scale").prop("orient").orient("bottom").prop("alignOuterLabels").alignOuterLabels(false).prop("contour").prop("hideBorderTickThreshold").hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD).prop("hideLabelThreshold").hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD).prop("highlightTick", functor).prop("showZeroY").showZeroY(false).prop("slant").prop("textWrap").prop("tickLength").prop("title").prop("titleAnchor") // start, end, or middle
+    var axisComponent = component().prop("scale").prop("orient").prop("ticks").prop("tickValues").prop("tickSize").prop("tickSizeInner").prop("tickSizeOuter").prop("tickPadding").prop("tickFormat").prop("_scale").prop("orient").orient("bottom").prop("alignOuterLabels").alignOuterLabels(false).prop("contour").prop("removeStroke").prop("hideBorderTickThreshold").hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD).prop("hideLabelThreshold").hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD).prop("highlightTick", functor).prop("showZeroY").showZeroY(false).prop("slant").prop("textWrap").prop("tickLength").prop("title").prop("titleAnchor") // start, end, or middle
     .prop("titleCenter") // a boolean value - whether to center the title
     .prop("dxTitle") // a numeric value for the left offset of the title
     .prop("dyTitle") // a numeric value for the top offset of the title
@@ -4278,6 +4300,14 @@
           }
 
           textContour.text(textNode.textContent);
+        });
+      }
+
+      if (!props.removeStroke) {
+        tickGroups.each(function () {
+          var g = d3.select(this);
+          var textNode = g.select("text");
+          textNode.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
         });
       }
     }); // axisComponent.__delegate__ = axisDelegate;
@@ -5672,6 +5702,7 @@
     return component().prop("radius").prop("fill").prop("stroke").prop("angle", functor).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
+      var stroke = props.stroke || "#FFFFFF";
       var angle = 0;
       data.forEach(function (value) {
         // In order for an angle transition to work correctly in d3, the transition must be done in data space.
@@ -5702,7 +5733,7 @@
           data[i].a1 = d.a1;
         }
       }).data(data);
-      var newSegments = segments.enter().append("path").classed("sszvis-path", true).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attr("fill", props.fill).attr("stroke", props.stroke);
+      var newSegments = segments.enter().append("path").classed("sszvis-path", true).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attr("fill", props.fill).attr("stroke", stroke);
       segments.exit().remove();
       segments = segments.merge(newSegments);
       segments.transition(defaultTransition()).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attrTween("d", function (d) {
@@ -5713,7 +5744,7 @@
           d.a1 = angle1Interp(t);
           return arcGen(d);
         };
-      }).attr("fill", props.fill).attr("stroke", props.stroke);
+      }).attr("fill", props.fill).attr("stroke", stroke);
       var ta = tooltipAnchor().position(function (d) {
         // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
         // makes the same correction to svg.arc() angles :o
@@ -6074,7 +6105,7 @@
         paths = paths.transition(defaultTransition());
       }
 
-      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke);
+      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke || "#ffffff");
     });
   }
 
@@ -6203,7 +6234,7 @@
     return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
-      var barGen = bar().x(config.x(props)).y(config.y(props)).width(config.width(props)).height(config.height(props)).fill(props.fill).stroke(props.stroke);
+      var barGen = bar().x(config.x(props)).y(config.y(props)).width(config.width(props)).height(config.height(props)).fill(props.fill).stroke(props.stroke || "#FFFFFF");
       var groups = selection.selectAll(".sszvis-stack").data(data);
       var newGroups = groups.enter().append("g").classed("sszvis-stack", true);
       groups.exit().remove();

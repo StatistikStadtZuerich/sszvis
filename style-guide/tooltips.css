@@ -1,8 +1,0 @@
-.tooltip-container {
-  position: relative;
-  margin-top: 30px;
-}
-
-.tooltip-container:first-child {
-  margin-top: 0px;
-}

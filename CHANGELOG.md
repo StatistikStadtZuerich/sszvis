@@ -1,3 +1,9 @@
+## 2.3.1 (Dec 2022)
+
+- Changed the color palette to match redesign color scheme
+- Added a default stroke to `axis` and `rangeRuler` text which can be bypassed with custom prop
+- Enforce default stroke on `pie`, `stackedBar` and `stackedArea` components to better visualise the new color scheme
+
 ## 2.3.0 (Aug 2020)
 
 - Added `sszvis.app` as a more structured way to create sszvis apps. This helps with managing state through actions and allows us to apply some performance optimizations behind the scenes.
