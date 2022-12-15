@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -15,217 +15,222 @@
     <script src="ProjectSpecimen.js"></script>
     <script src="sszvis.js"></script>
     <script>
-      Catalog.render({
-        title: 'SSZ Visualization Library',
-        specimens: {
-          project: ProjectSpecimen({
-            sizes: [
-              { width: "750px", height: "600px" },
-              { width: "541px", height: "500px" },
-              { width: "284px", height: "500px" }
-            ]
-          })
+      Catalog.render(
+        {
+          title: "SSZ Visualization Library",
+          specimens: {
+            project: ProjectSpecimen({
+              sizes: [
+                { width: "750px", height: "600px" },
+                { width: "541px", height: "500px" },
+                { width: "284px", height: "500px" },
+              ],
+            }),
+          },
+          theme: {
+            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            fontHeading: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+            background: "#fdfdfd",
+            brandColor: "#0F05A0",
+            linkColor: "#CC6171",
+            // msRatio: 1.1,
+            pageHeadingBackground: "#f5f5f5",
+            pageHeadingTextColor: "#0F05A0",
+            sidebarColorHeading: "#0F05A0",
+            sidebarColorText: "#777",
+            sidebarColorTextActive: "#0F05A0",
+          },
+          pages: [
+            {
+              path: "/",
+              title: "Introduction",
+              pages: [
+                {
+                  path: "/",
+                  title: "Installation",
+                  src: "intro.md",
+                },
+                {
+                  path: "getting-started",
+                  title: "Getting started",
+                  src: "guides/getting-started.md",
+                },
+                { path: "faq", title: "FAQ", src: "faq.md" },
+                {
+                  path: "changelog",
+                  title: "Changelog",
+                  src: "CHANGELOG.md",
+                },
+              ],
+            },
+            {
+              path: "guides",
+              title: "Guides",
+              pages: [
+                {
+                  path: "accessibility",
+                  title: "Accessibility",
+                  src: "guides/accessibility.md",
+                },
+                {
+                  path: "annotations",
+                  title: "Annotations",
+                  src: "guides/annotations.md",
+                },
+                {
+                  path: "axes",
+                  title: "Axes",
+                  src: "guides/axes.md",
+                },
+                {
+                  path: "behaviors",
+                  title: "Behaviors",
+                  src: "guides/behavior.md",
+                },
+                {
+                  path: "breakpoints",
+                  title: "Breakpoints",
+                  src: "guides/breakpoints.md",
+                },
+                {
+                  path: "colors",
+                  title: "Colors",
+                  src: "guides/colors.md",
+                  styles: ["guides/colors.css"],
+                  scripts: ["guides/colors.js"],
+                },
+                {
+                  path: "controls",
+                  title: "Controls",
+                  src: "guides/controls.md",
+                },
+                {
+                  path: "formats",
+                  title: "Formatting",
+                  src: "guides/formats.md",
+                },
+                {
+                  path: "legends",
+                  title: "Legends",
+                  src: "guides/legends.md",
+                },
+                {
+                  path: "tooltips",
+                  title: "Tooltips",
+                  src: "guides/tooltips.md",
+                  styles: ["guides/tooltips.css"],
+                  scripts: ["guides/tooltips.js"],
+                },
+              ],
+            },
+            {
+              path: "area-chart-stacked",
+              title: "+ Area chart",
+              src: "area-chart-stacked/README.md",
+            },
+            {
+              path: "bar-charts",
+              title: "+ Bar chart",
+              pages: [
+                {
+                  path: "bar-chart-vertical",
+                  title: "Vertical",
+                  src: "bar-chart-vertical/README.md",
+                },
+                {
+                  path: "bar-chart-vertical-stacked",
+                  title: "Vertical (stacked)",
+                  src: "bar-chart-vertical-stacked/README.md",
+                },
+                {
+                  path: "bar-chart-horizontal",
+                  title: "Horizontal",
+                  src: "bar-chart-horizontal/README.md",
+                },
+                {
+                  path: "bar-chart-horizontal-stacked",
+                  title: "Horizontal (stacked)",
+                  src: "bar-chart-horizontal-stacked/README.md",
+                },
+                {
+                  path: "bar-chart-grouped",
+                  title: "Grouped",
+                  src: "bar-chart-grouped/README.md",
+                },
+              ],
+            },
+            {
+              path: "line-charts",
+              title: "+ Line chart",
+              src: "line-chart/README.md",
+            },
+            {
+              path: "heat-table",
+              title: "+ Heat table",
+              src: "heat-table/README.md",
+            },
+            {
+              path: "map",
+              title: "+ Maps",
+              pages: [
+                {
+                  path: "map-standard",
+                  title: "Choropleth Maps",
+                  src: "map-standard/README.md",
+                },
+                // {path: 'map-baselayer', title: 'Map Base Layers', src: ('map-baselayer/README.md')},
+                {
+                  path: "map-extended",
+                  title: "Extended Maps",
+                  src: "map-extended/README.md",
+                },
+                {
+                  path: "map-signature",
+                  title: "Signature Maps",
+                  src: "map-signature/README.md",
+                },
+              ],
+            },
+            {
+              path: "pie-charts",
+              title: "+ Pie chart",
+              src: "pie-charts/README.md",
+            },
+            {
+              path: "population-pyramid",
+              title: "+ Population pyramid",
+              src: "population-pyramid/README.md",
+            },
+            {
+              path: "sankey",
+              title: "+ Sankey diagram",
+              src: "sankey/README.md",
+            },
+            {
+              path: "scatterplot",
+              title: "+ Scatterplot",
+              pages: [
+                {
+                  path: "scatterplot",
+                  title: "Scatterplot",
+                  src: "scatterplot/README.md",
+                },
+                {
+                  path: "scatterplot-over-time",
+                  title: "Scatterplot Over Time",
+                  src: "scatterplot-over-time/README.md",
+                },
+              ],
+            },
+            {
+              path: "sunburst",
+              title: "+ Sunburst",
+              src: "sunburst/README.md",
+            },
+          ],
         },
-        theme: {
-          background: "#fdfdfd",
-          brandColor: "#0070bc",
-          linkColor: "#CC6171",
-          // msRatio: 1.1,
-          pageHeadingBackground: "#f5f5f5",
-          pageHeadingTextColor: "#0070bc",
-          sidebarColorHeading: "#0070bc",
-          sidebarColorText: "#777",
-          sidebarColorTextActive: "#0070bc"
-        },
-        pages: [
-          {
-            path: "/",
-            title: "Introduction",
-            pages: [
-              {
-                path: "/",
-                title: "Installation",
-                src: "intro.md"
-              },
-              {
-                path: "getting-started",
-                title: "Getting started",
-                src: "guides/getting-started.md"
-              },
-              { path: "faq", title: "FAQ", src: "faq.md" },
-              {
-                path: "changelog",
-                title: "Changelog",
-                src: "CHANGELOG.md"
-              }
-            ]
-          },
-          {
-            path: "guides",
-            title: "Guides",
-            pages: [
-              {
-                path: "accessibility",
-                title: "Accessibility",
-                src: "guides/accessibility.md"
-              },
-              {
-                path: "annotations",
-                title: "Annotations",
-                src: "guides/annotations.md"
-              },
-              {
-                path: "axes",
-                title: "Axes",
-                src: "guides/axes.md"
-              },
-              {
-                path: "behaviors",
-                title: "Behaviors",
-                src: "guides/behavior.md"
-              },
-              {
-                path: "breakpoints",
-                title: "Breakpoints",
-                src: "guides/breakpoints.md"
-              },
-              {
-                path: "colors",
-                title: "Colors",
-                src: "guides/colors.md",
-                styles: ["guides/colors.css"],
-                scripts: ["guides/colors.js"]
-              },
-              {
-                path: "controls",
-                title: "Controls",
-                src: "guides/controls.md"
-              },
-              {
-                path: "formats",
-                title: "Formatting",
-                src: "guides/formats.md"
-              },
-              {
-                path: "legends",
-                title: "Legends",
-                src: "guides/legends.md"
-              },
-              {
-                path: "tooltips",
-                title: "Tooltips",
-                src: "guides/tooltips.md",
-                styles: ["guides/tooltips.css"],
-                scripts: ["guides/tooltips.js"]
-              }
-            ]
-          },
-          {
-            path: "area-chart-stacked",
-            title: "+ Area chart",
-            src: "area-chart-stacked/README.md"
-          },
-          {
-            path: "bar-charts",
-            title: "+ Bar chart",
-            pages: [
-              {
-                path: "bar-chart-vertical",
-                title: "Vertical",
-                src: "bar-chart-vertical/README.md"
-              },
-              {
-                path: "bar-chart-vertical-stacked",
-                title: "Vertical (stacked)",
-                src: "bar-chart-vertical-stacked/README.md"
-              },
-              {
-                path: "bar-chart-horizontal",
-                title: "Horizontal",
-                src: "bar-chart-horizontal/README.md"
-              },
-              {
-                path: "bar-chart-horizontal-stacked",
-                title: "Horizontal (stacked)",
-                src: "bar-chart-horizontal-stacked/README.md"
-              },
-              {
-                path: "bar-chart-grouped",
-                title: "Grouped",
-                src: "bar-chart-grouped/README.md"
-              }
-            ]
-          },
-          {
-            path: "line-charts",
-            title: "+ Line chart",
-            src: "line-chart/README.md"
-          },
-          {
-            path: "heat-table",
-            title: "+ Heat table",
-            src: "heat-table/README.md"
-          },
-          {
-            path: "map",
-            title: "+ Maps",
-            pages: [
-              {
-                path: "map-standard",
-                title: "Choropleth Maps",
-                src: "map-standard/README.md"
-              },
-              // {path: 'map-baselayer', title: 'Map Base Layers', src: ('map-baselayer/README.md')},
-              {
-                path: "map-extended",
-                title: "Extended Maps",
-                src: "map-extended/README.md"
-              },
-              {
-                path: "map-signature",
-                title: "Signature Maps",
-                src: "map-signature/README.md"
-              }
-            ]
-          },
-          {
-            path: "pie-charts",
-            title: "+ Pie chart",
-            src: "pie-charts/README.md"
-          },
-          {
-            path: "population-pyramid",
-            title: "+ Population pyramid",
-            src: "population-pyramid/README.md"
-          },
-          {
-            path: "sankey",
-            title: "+ Sankey diagram",
-            src: "sankey/README.md"
-          },
-          {
-            path: "scatterplot",
-            title: "+ Scatterplot",
-            pages: [
-              {
-                path: "scatterplot",
-                title: "Scatterplot",
-                src: "scatterplot/README.md"
-              },
-              {
-                path: "scatterplot-over-time",
-                title: "Scatterplot Over Time",
-                src: "scatterplot-over-time/README.md"
-              }
-            ]
-          },
-          {
-            path: "sunburst",
-            title: "+ Sunburst",
-            src: "sunburst/README.md"
-          }
-        ]
-      }, document.getElementById('catalog'));
+        document.getElementById("catalog")
+      );
     </script>
   </body>
 </html>
