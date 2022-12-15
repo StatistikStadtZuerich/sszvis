@@ -74,6 +74,9 @@ export default function () {
         paths = paths.transition(defaultTransition());
       }
 
-      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke);
+      paths
+        .attr("d", areaGen)
+        .attr("fill", props.fill)
+        .attr("stroke", props.stroke || "#ffffff");
     });
 }
