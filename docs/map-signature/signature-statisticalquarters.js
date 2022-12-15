@@ -120,7 +120,7 @@ function render(state) {
 
   var bubbleMap = sszvis
     .mapRendererBubble()
-    .fill("rgb(81, 130, 179)")
+    .fill(sszvis.scaleSeqBlu().reverse()(0))
     .radius(function (d) {
       return !sszvis.defined(d) ? 0 : radiusScale(valueAcc(d));
     })

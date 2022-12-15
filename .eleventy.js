@@ -12,6 +12,11 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("docs/**/*.json");
   eleventyConfig.addPassthroughCopy("docs/**/*.md");
   eleventyConfig.addPassthroughCopy("docs/**/*.png");
+  /**
+   * Not familiar with eleventy, but it seems to not rewrite the whole build folder,
+   * which lead to not having the js files in the build folder on the first build.
+   */
+  eleventyConfig.addPassthroughCopy("docs/**/*.js");
 
   eleventyConfig.addWatchTarget("docs/**/*.js");
 

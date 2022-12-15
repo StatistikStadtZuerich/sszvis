@@ -15,7 +15,7 @@ const files = glob.sync("../build/[^_]*/*.html", { cwd: __dirname });
 test.each(files.map(filepathToUrl))("%s", async (url) => {
   try {
     await page.goto(url, { waitUntil: "networkidle2" });
-    await page.waitFor(RENDER_DELAY);
+    await page.waitForTimeout(RENDER_DELAY);
     const image = await page.screenshot();
     expect(image).toMatchImageSnapshot(SNAPSHOT_OPTS);
 
@@ -23,7 +23,7 @@ test.each(files.map(filepathToUrl))("%s", async (url) => {
 
     for (const button of buttons) {
       await button.click();
-      await page.waitFor(RENDER_DELAY);
+      await page.waitForTimeout(RENDER_DELAY);
 
       const stateImage = await page.screenshot();
       expect(stateImage).toMatchImageSnapshot(SNAPSHOT_OPTS);
