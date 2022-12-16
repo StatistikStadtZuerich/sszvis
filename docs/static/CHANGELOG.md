@@ -1,6 +1,6 @@
 # Change Log
 
-## 2.0.2
+## 2.0.1-color-update (Dec 2022)
 
 - Changed the color palette to match redesign color scheme
 - Added a default stroke to `axis` and `rangeRuler` text which can be bypassed with custom prop
