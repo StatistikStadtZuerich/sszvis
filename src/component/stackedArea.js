@@ -28,42 +28,46 @@
  * @return {sszvis.component}
  */
 
-import {select, area} from 'd3';
+import { select, area } from "d3";
 
-import * as fn from '../fn.js';
-import { defaultTransition } from '../transition.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { defaultTransition } from "../transition.js";
+import { component } from "../d3-component.js";
 
-export default function() {
+export default function () {
   return component()
-    .prop('x')
-    .prop('y0')
-    .prop('y1')
-    .prop('fill')
-    .prop('stroke')
-    .prop('defined')
-    .prop('key').key(function(d, i){ return i; })
-    .prop('transition').transition(true)
-    .render(function(data) {
+    .prop("x")
+    .prop("y0")
+    .prop("y1")
+    .prop("fill")
+    .prop("stroke")
+    .prop("defined")
+    .prop("key")
+    .key(function (d, i) {
+      return i;
+    })
+    .prop("transition")
+    .transition(true)
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
-      var defaultDefined = function() {
-        return fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1);
-      }
-  
+      var defaultDefined = function () {
+        return (
+          fn.compose(fn.not(isNaN), props.y0) &&
+          fn.compose(fn.not(isNaN), props.y1)
+        );
+      };
+
       var areaGen = area()
         .defined(props.defined !== undefined ? props.defined : defaultDefined)
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);
 
-      var paths = selection.selectAll('path.sszvis-path')
-        .data(data, props.key);
+      var paths = selection.selectAll("path.sszvis-path").data(data, props.key);
 
-      var newPaths = paths.enter()
-        .append('path')
-        .classed('sszvis-path', true);
+      var newPaths = paths.enter().append("path").classed("sszvis-path", true);
 
       paths.exit().remove();
 
@@ -74,8 +78,8 @@ export default function() {
       }
 
       paths
-        .attr('d', areaGen)
-        .attr('fill', props.fill)
-        .attr('stroke', props.stroke);
+        .attr("d", areaGen)
+        .attr("fill", props.fill)
+        .attr("stroke", props.stroke || "#FFFFFF");
     });
-};
+}

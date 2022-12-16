@@ -41,7 +41,7 @@
  * @function lightGry  1-color scale for shaded backgrounds
  */
 
-import {scaleOrdinal, scaleLinear, hsl, rgb, mean, lab} from 'd3';
+import { scaleOrdinal, scaleLinear, hsl, rgb, mean, lab } from "d3";
 
 /* Constants
 ----------------------------------------------- */
@@ -50,127 +50,150 @@ var LIGHTNESS_STEP = 0.6;
 /* Scales
 ----------------------------------------------- */
 function qualColorScale(colors) {
-  return function() {
+  return function () {
     var scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateOrdinalScale(scale);
   };
 }
 
+var darkBlue = "#3431DE";
+var mediumBlue = "#0A8DF6";
+var lightBlue = "#23C3F1";
+
+var darkRed = "#7B4FB7";
+var mediumRed = "#DB247D";
+var lightRed = "#FB737E";
+
+var darkGreen = "#007C78";
+var mediumGreen = "#1D942E";
+var lightGreen = "#99C32E";
+
+var darkBrown = "#9A5B01";
+var mediumBrown = "#FF720C";
+var lightBrown = "#FBB900";
+
 export var scaleQual12 = qualColorScale([
-  '#5182B3', '#B8CFE6',
-  '#60BF97', '#B8E6D2',
-  '#94BF69', '#CFE6B8',
-  '#E6CF73', '#FAEBAF',
-  '#E67D73', '#F2CEC2',
-  '#CC6788', '#E6B7C7'
+  darkBlue,
+  mediumBlue,
+  lightBlue,
+  darkRed,
+  mediumRed,
+  lightRed,
+  darkGreen,
+  mediumGreen,
+  lightGreen,
+  darkBrown,
+  mediumBrown,
+  lightBrown,
 ]);
 export var scaleQual6 = qualColorScale([
-  '#5182B3', '#60BF97',
-  '#94BF69', '#E6CF73',
-  '#E67D73', '#CC6788'
+  darkBlue,
+  mediumRed,
+  mediumGreen,
+  lightBrown,
+  lightBlue,
+  mediumBrown,
 ]);
 export var scaleQual6a = qualColorScale([
-  '#5182B3', '#B8CFE6',
-  '#60BF97', '#B8E6D2',
-  '#94BF69', '#CFE6B8'
+  darkBlue,
+  mediumBlue,
+  lightBlue,
+  darkRed,
+  mediumRed,
+  lightRed,
 ]);
 export var scaleQual6b = qualColorScale([
-  '#E6CF73', '#FAEBAF',
-  '#E67D73', '#F2CEC2',
-  '#CC6788', '#E6B7C7'
+  darkGreen,
+  mediumGreen,
+  lightGreen,
+  darkBrown,
+  mediumBrown,
+  lightBrown,
 ]);
 
-
 function seqColorScale(colors) {
-  return function() {
-    var scale = scaleLinear().range(colors.map(convertLab));
-    return decorateLinearScale(scale);
-  }
-}
-
-export var scaleSeqBlu = seqColorScale(['#DDE9FE', '#3B76B3', '#343F4D']);
-export var scaleSeqRed = seqColorScale(['#FEECEC', '#CC6171', '#4D353A']);
-export var scaleSeqGrn = seqColorScale(['#D2DFDE', '#4A807C', '#2C3C3F']);
-export var scaleSeqBrn = seqColorScale(['#E9DFD6', '#A67D5A', '#4C3735']);
-
-
-function divColorScale(colors) {
-  return function() {
+  return function () {
     var scale = scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
 }
 
-export var scaleDivVal = divColorScale(    ['#CC6171', '#FFFFFF', '#3B76B3']);
-export var scaleDivValGry = divColorScale( ['#CC6171', '#F3F3F3', '#3B76B3']);
-export var scaleDivNtr = divColorScale(    ['#A67D5A', '#FFFFFF', '#4A807C']);
-export var scaleDivNtrGry = divColorScale( ['#A67D5A', '#F3F3F3', '#4A807C']);
+export var scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
+export var scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
+export var scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
+export var scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
 
+function divColorScale(colors) {
+  return function () {
+    var scale = scaleLinear().range(colors.map(convertLab));
+    return decorateLinearScale(scale);
+  };
+}
+
+export var scaleDivVal = divColorScale(["#782600", "#FFFFFF", "#2F2ABB"]);
+export var scaleDivValGry = divColorScale(["#782600", "#F3F3F3", "#2F2ABB"]);
+export var scaleDivNtr = divColorScale(["#A30059", "#FFFFFF", "#10652A"]);
+export var scaleDivNtrGry = divColorScale(["#A30059", "#F3F3F3", "#10652A"]);
 
 function greyColorScale(colors) {
-  return function() {
+  return function () {
     var scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
-};
+}
 
-export var scaleLightGry = greyColorScale(['#FAFAFA']);
-export var scalePaleGry = greyColorScale(['#EAEAEA']);
-export var scaleGry = greyColorScale(['#D6D6D6']);
-export var scaleDimGry = greyColorScale(['#B8B8B8']);
-export var scaleMedGry = greyColorScale(['#7C7C7C']);
-export var scaleDeepGry = greyColorScale(['#545454']);
+export var scaleLightGry = greyColorScale(["#FAFAFA"]);
+export var scalePaleGry = greyColorScale(["#EAEAEA"]);
+export var scaleGry = greyColorScale(["#D6D6D6"]);
+export var scaleDimGry = greyColorScale(["#B8B8B8"]);
+export var scaleMedGry = greyColorScale(["#7C7C7C"]);
+export var scaleDeepGry = greyColorScale(["#545454"]);
 
-
-
-export var slightlyDarker = function(c) {
+export var slightlyDarker = function (c) {
   return hsl(c).darker(0.4);
 };
 
-export var muchDarker = function(c) {
+export var muchDarker = function (c) {
   return hsl(c).darker(0.7);
 };
 
-export var withAlpha = function(c, a) {
+export var withAlpha = function (c, a) {
   var rgbColor = rgb(c);
-  return 'rgba(' + rgbColor.r + ',' + rgbColor.g + ',' + rgbColor.b + ',' + a + ')';
+  return (
+    "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")"
+  );
 };
-
 
 /* Scale extensions
 ----------------------------------------------- */
 function decorateOrdinalScale(scale) {
-  scale.darker = function(){
+  scale.darker = function () {
     return decorateOrdinalScale(
-      scale.copy().range(scale.range().map(func('darker', LIGHTNESS_STEP)))
+      scale.copy().range(scale.range().map(func("darker", LIGHTNESS_STEP)))
     );
   };
-  scale.brighter = function(){
+  scale.brighter = function () {
     return decorateOrdinalScale(
-      scale.copy().range(scale.range().map(func('brighter', LIGHTNESS_STEP)))
+      scale.copy().range(scale.range().map(func("brighter", LIGHTNESS_STEP)))
     );
   };
-  scale.reverse = function(){
-    return decorateOrdinalScale(
-      scale.copy().range(scale.range().reverse())
-    );
+  scale.reverse = function () {
+    return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
   };
   return scale;
 }
 
 function decorateLinearScale(scale) {
   scale = interpolatedColorScale(scale);
-  scale.reverse = function(){
-    return decorateLinearScale(
-      scale.copy().range(scale.range().reverse())
-    );
+  scale.reverse = function () {
+    return decorateLinearScale(scale.copy().range(scale.range().reverse()));
   };
   return scale;
 }
 
 function interpolatedColorScale(scale) {
   var nativeDomain = scale.domain;
-  scale.domain = function(dom) {
+  scale.domain = function (dom) {
     if (arguments.length === 1) {
       var threeDomain = [dom[0], mean(dom), dom[1]];
       return nativeDomain.call(this, threeDomain);
@@ -181,7 +204,6 @@ function interpolatedColorScale(scale) {
   return scale;
 }
 
-
 /* Helper functions
 ----------------------------------------------- */
 function convertLab(d) {
@@ -190,7 +212,7 @@ function convertLab(d) {
 
 function func(fName) {
   var args = Array.prototype.slice.call(arguments, 1);
-  return function(d) {
+  return function (d) {
     return d[fName].apply(d, args);
   };
 }
