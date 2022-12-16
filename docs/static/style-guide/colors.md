@@ -85,7 +85,6 @@ The deep grey color, as a standalone value.
 </script>
 ```
 
-
 ## Qualitative scales
 
 Qualitative scales are used for data that has distinct categories. They distinguish categories based on color contrast. They should never be used to compare values, use sequential or divergent scales in this case.
@@ -99,7 +98,6 @@ Qualitative scales are used for data that has distinct categories. They distingu
     colorSwatchFromColors('scaleQual', scale.range());
 </script>
 ```
-
 
 #### `sszvis.scaleQual6()`
 
@@ -142,7 +140,8 @@ Qualitative scales can be brightened or darkened with the `scale.brighter()` and
     colorSwatchFromColors('scaleQualBrigther', scale.brighter().range());
     colorSwatchFromColors('scaleQualDefault', scale.range());
     colorSwatchFromColors('scaleQualDarker', scale.darker().range());
-</script>```
+</script>
+```
 
 Qualitative scales can be reversed with the `scale.reverse()` instance method. This method returns a new scale.
 
@@ -156,7 +155,7 @@ Qualitative scales can be reversed with the `scale.reverse()` instance method. T
 
 ## Sequential
 
-Sequential sales are used to compare values. These scales are designed to have the same brightness for the same input value.
+Sequential scales are used to compare values. These scales are designed to have the same brightness for the same input value.
 
 #### `sszvis.scaleSeqBlu()`
 
@@ -205,12 +204,12 @@ Sequential scales can be reversed using the `scale.reverse()` instance method. T
 <script>
     var scale = sszvis.scaleSeqBlu();
     colorSwatchFromLinearScale('scaleSeqBluRev', scale.reverse(), 9);
-</script>```
-
+</script>
+```
 
 ## Divergent
 
-Divergent sales are used to compare data that has two extremes. These scales are designed to have the same brightness for the same input value.
+Divergent scales are used to compare data that has two extremes. These scales are designed to have the same brightness for the same input value.
 
 They come in two color variations: the valued (red-blue) variation is used for data that has negative-positive characteristics, the neutral (brown-green) variation is used in cases where no valuation is wanted.
 

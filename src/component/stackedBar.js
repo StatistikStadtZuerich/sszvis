@@ -29,41 +29,46 @@
  * @return {sszvis.component}
  */
 
-import {select, stack as d3Stack, max, stackOrderNone, stackOrderReverse} from 'd3';
+import {
+  select,
+  stack as d3Stack,
+  max,
+  stackOrderNone,
+  stackOrderReverse,
+} from "d3";
 
-import * as fn from '../fn.js';
-import { cascade } from '../cascade.js';
-import bar from './bar.js';
-import { component } from '../d3-component.js';
+import * as fn from "../fn.js";
+import { cascade } from "../cascade.js";
+import bar from "./bar.js";
+import { component } from "../d3-component.js";
 
-var stackAcc = fn.prop('stack');
+var stackAcc = fn.prop("stack");
 
 // Accessors for the first and second element of a tuple (2-element array).
-var fst = fn.prop('0');
-var snd = fn.prop('1');
+var fst = fn.prop("0");
+var snd = fn.prop("1");
 
 function stackedBarData(order) {
-  return function(_stackAcc, seriesAcc, valueAcc) {
-    return function(data) {
-      var rows = cascade()
-        .arrayBy(_stackAcc)
-        .objectBy(seriesAcc)
-        .apply(data);
+  return function (_stackAcc, seriesAcc, valueAcc) {
+    return function (data) {
+      var rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
       // Collect all keys ()
-      var keys = rows.reduce(function(a, row) {
+      var keys = rows.reduce(function (a, row) {
         return fn.set(a.concat(Object.keys(row)));
       }, []);
 
       var stacks = d3Stack()
         .keys(keys)
-        .value(function(x, key) { return valueAcc(x[key][0]); })
+        .value(function (x, key) {
+          return valueAcc(x[key][0]);
+        })
         .order(order)(rows);
 
       // Simplify the 'data' property.
-      stacks.forEach(function(stack) {
-        stack.forEach(function(d) {
-          d.series = stack.key
+      stacks.forEach(function (stack) {
+        stack.forEach(function (d) {
+          d.series = stack.key;
           d.data = d.data[stack.key][0];
           d.stack = _stackAcc(d.data);
         });
@@ -71,8 +76,10 @@ function stackedBarData(order) {
 
       stacks.keys = keys;
 
-      stacks.maxValue = max(stacks, function(stack) {
-        return max(stack, function(d) { return d[1]; });
+      stacks.maxValue = max(stacks, function (stack) {
+        return max(stack, function (d) {
+          return d[1];
+        });
       });
 
       return stacks;
@@ -85,13 +92,13 @@ export var stackedBarVerticalData = stackedBarData(stackOrderReverse);
 
 function stackedBar(config) {
   return component()
-    .prop('xScale', fn.functor)
-    .prop('width', fn.functor)
-    .prop('yScale', fn.functor)
-    .prop('height', fn.functor)
-    .prop('fill')
-    .prop('stroke')
-    .render(function(data) {
+    .prop("xScale", fn.functor)
+    .prop("width", fn.functor)
+    .prop("yScale", fn.functor)
+    .prop("height", fn.functor)
+    .prop("fill")
+    .prop("stroke")
+    .render(function (data) {
       var selection = select(this);
       var props = selection.props();
 
@@ -101,14 +108,11 @@ function stackedBar(config) {
         .width(config.width(props))
         .height(config.height(props))
         .fill(props.fill)
-        .stroke(props.stroke);
+        .stroke(props.stroke || "#FFFFFF");
 
-      var groups = selection.selectAll('.sszvis-stack')
-        .data(data);
+      var groups = selection.selectAll(".sszvis-stack").data(data);
 
-      var newGroups = groups.enter()
-        .append('g')
-        .classed('sszvis-stack', true);
+      var newGroups = groups.enter().append("g").classed("sszvis-stack", true);
 
       groups.exit().remove();
 
@@ -119,21 +123,41 @@ function stackedBar(config) {
 }
 
 var horizontalStackedBarConfig = {
-  x: function(props) { return fn.compose(props.xScale, fst); },
-  y: function(props) { return fn.compose(props.yScale, stackAcc); },
-  width: function(props) { return function(d) { return props.xScale(d[1]) - props.xScale(d[0]); }; },
-  height: function(props) { return props.height },
-}
-export var stackedBarHorizontal = function() {
+  x: function (props) {
+    return fn.compose(props.xScale, fst);
+  },
+  y: function (props) {
+    return fn.compose(props.yScale, stackAcc);
+  },
+  width: function (props) {
+    return function (d) {
+      return props.xScale(d[1]) - props.xScale(d[0]);
+    };
+  },
+  height: function (props) {
+    return props.height;
+  },
+};
+export var stackedBarHorizontal = function () {
   return stackedBar(horizontalStackedBarConfig);
 };
 
 var verticalStackedBarConfig = {
-  x: function(props) { return fn.compose(props.xScale, stackAcc); },
-  y: function(props) { return fn.compose(props.yScale, snd); },
-  width: function(props) { return props.width; },
-  height: function(props) { return function(d) { return props.yScale(d[0]) - props.yScale(d[1]); }; },
-}
-export var stackedBarVertical = function() {
+  x: function (props) {
+    return fn.compose(props.xScale, stackAcc);
+  },
+  y: function (props) {
+    return fn.compose(props.yScale, snd);
+  },
+  width: function (props) {
+    return props.width;
+  },
+  height: function (props) {
+    return function (d) {
+      return props.yScale(d[0]) - props.yScale(d[1]);
+    };
+  },
+};
+export var stackedBarVertical = function () {
   return stackedBar(verticalStackedBarConfig);
 };

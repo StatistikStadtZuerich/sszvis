@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.0.2
+
+- Changed the color palette to match redesign color scheme
+- Added a default stroke to `axis` and `rangeRuler` text which can be bypassed with custom prop
+- Enforce default stroke on `pie`, `stackedBar` and `stackedArea` components to better visualise the new color scheme
+
 ## Changes from 1.x to 2.0
 
 The sszvis API has changed significantly from version 1.x to 2.0. This was done to a) align more closely with practices in the d3 ecosystem and to be able to leverage ES modules better (by not exporting whole namespaces but each function separately).
