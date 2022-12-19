@@ -58,7 +58,8 @@
  * @module sszvis/axis
  */
 .sszvis-axis text {
-  fill: #767676;
+  color: #737373;
+  fill: #737373;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-family: var(--stzh-font);
   font-size: 10px;
