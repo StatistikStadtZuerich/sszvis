@@ -4023,7 +4023,6 @@
    *
    * @property {boolean} alignOuterLabels                 Whether or not to align the outer labels to the axis extent so that they do not fall outside the axis space.
    * @property {boolean} contour                          Specify a 'contour' background for the axis labels.
-   * @property {boolean} removeStroke                     Removes the default stroke applied to the text
    * @property {number} hideBorderTickThreshold           Specifies the pixel distance threshold for the visible tick correction. Ticks which are closer than
    *                                                      this threshold to the end of the axis (i.e. a tick which is 1 or two pixels from the end) will be
    *                                                      hidden from view. This prevents the display of a tick very close to the ending line.
@@ -4058,7 +4057,7 @@
   var axis = function axis() {
     // var axisDelegate = d3.axisBottom();
     // axisDelegate.orient = function() { return 'bottom'; };
-    var axisComponent = component().prop("scale").prop("orient").prop("ticks").prop("tickValues").prop("tickSize").prop("tickSizeInner").prop("tickSizeOuter").prop("tickPadding").prop("tickFormat").prop("_scale").prop("orient").orient("bottom").prop("alignOuterLabels").alignOuterLabels(false).prop("contour").prop("removeStroke").prop("hideBorderTickThreshold").hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD).prop("hideLabelThreshold").hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD).prop("highlightTick", functor).prop("showZeroY").showZeroY(false).prop("slant").prop("textWrap").prop("tickLength").prop("title").prop("titleAnchor") // start, end, or middle
+    var axisComponent = component().prop("scale").prop("orient").prop("ticks").prop("tickValues").prop("tickSize").prop("tickSizeInner").prop("tickSizeOuter").prop("tickPadding").prop("tickFormat").prop("_scale").prop("orient").orient("bottom").prop("alignOuterLabels").alignOuterLabels(false).prop("contour").prop("hideBorderTickThreshold").hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD).prop("hideLabelThreshold").hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD).prop("highlightTick", functor).prop("showZeroY").showZeroY(false).prop("slant").prop("textWrap").prop("tickLength").prop("title").prop("titleAnchor") // start, end, or middle
     .prop("titleCenter") // a boolean value - whether to center the title
     .prop("dxTitle") // a numeric value for the left offset of the title
     .prop("dyTitle") // a numeric value for the top offset of the title
@@ -4300,14 +4299,6 @@
           }
 
           textContour.text(textNode.textContent);
-        });
-      }
-
-      if (!props.removeStroke) {
-        tickGroups.each(function () {
-          var g = d3.select(this);
-          var textNode = g.select("text");
-          textNode.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
         });
       }
     }); // axisComponent.__delegate__ = axisDelegate;

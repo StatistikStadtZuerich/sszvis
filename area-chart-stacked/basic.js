@@ -268,6 +268,7 @@ function render(state) {
   var yAxis = sszvis
     .axisY()
     .scale(yScale)
+    .contour(true)
     .orient("right")
     .title(props.yAxisLabel)
     .tickValues(yAxisTicks);
