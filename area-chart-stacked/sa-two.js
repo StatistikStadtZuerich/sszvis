@@ -303,7 +303,7 @@ function render(state) {
       return sszvis.stringEqual(d, state.highlightDate);
     });
 
-  var yAxis = sszvis.axisY().scale(yScale).orient("right");
+  var yAxis = sszvis.axisY().scale(yScale).contour(true).orient("right");
 
   var options = ["Summiert", "Separiert"];
   var buttonGroup = sszvis
@@ -328,14 +328,7 @@ function render(state) {
     .transition(sszvis.defaultTransition())
     .style("opacity", Number(!state.isMultiples));
 
-  chartLayer
-    .selectGroup("yAxis")
-    .selectAll("text")
-    .attr("stroke-linecap", "butt")
-    .attr("stroke-linejoin", "miter")
-    .attr("stroke-opacity", 0.75)
-    .attr("stroke", "white")
-    .attr("stroke-width", 0.5);
+  chartLayer.selectGroup("yAxis").selectAll("text");
 
   chartLayer
     .selectGroup("colorLegend")
@@ -353,11 +346,7 @@ function render(state) {
 
   chartLayer.selectGroup("highlight").datum(state.highlightData).call(rangeRuler);
 
-  chartLayer
-    .selectGroup("highlight")
-    .selectAll("text")
-    .attr("stroke", "white")
-    .attr("stroke-width", 0.5);
+  chartLayer.selectGroup("highlight").selectAll("text");
 
   var flagGroup = chartLayer
     .selectGroup("flag")
