@@ -2712,6 +2712,26 @@
       .style("text-anchor", function (d) {
         return props.flip(d) ? "end" : "start";
       }).text(compose(formatNumber, props.label));
+      selection.selectAll("g.sszvis-rangeRuler--mark").each(function () {
+        var g = d3.select(this);
+        var textNode = g.select("text").node();
+        var textContour = g.select(".sszvis-rangeRuler__label-contour");
+
+        if (textContour.empty()) {
+          textContour = d3.select(textNode.cloneNode()).classed("sszvis-rangeRuler__label-contour", true).classed("sszvis-rangeRuler__label", false);
+          this.insertBefore(textContour.node(), textNode);
+        } else {
+          textContour.attr("x", function (d) {
+            var offset = props.flip(d) ? -10 : 10;
+            return crispX(d) + offset;
+          }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
+          .style("text-anchor", function (d) {
+            return props.flip(d) ? "end" : "start";
+          });
+        }
+
+        textContour.text(textNode.textContent);
+      });
 
       if (!props.removeStroke) {
         marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
@@ -2727,6 +2747,22 @@
       }).attr("y", props.top - 10).style("text-anchor", function (d) {
         return props.flip(d) ? "end" : "start";
       }).text("Total " + formatNumber(props.total));
+      var totalNode = total.node();
+      var totalContour = selection.select(".sszvis-rangeRuler__total-contour");
+
+      if (totalContour.empty()) {
+        totalContour = d3.select(totalNode.cloneNode()).classed("sszvis-rangeRuler__total-contour", true).classed("sszvis-rangeRuler__total", false);
+        this.insertBefore(totalContour.node(), totalNode);
+      } else {
+        totalContour.attr("x", function (d) {
+          var offset = props.flip(d) ? -10 : 10;
+          return crispX(d) + offset;
+        }).attr("y", props.top - 10).style("text-anchor", function (d) {
+          return props.flip(d) ? "end" : "start";
+        });
+      }
+
+      totalContour.text(totalNode.textContent);
 
       if (!props.removeStroke) {
         total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);

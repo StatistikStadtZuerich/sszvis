@@ -78,7 +78,7 @@
         var actions = {
           prepareState: function prepareState(data) {
             state.data = data;
-            state.groups = sszvis.set(state.data, gAcc);
+            state.groups = sszvis.set(state.data, gAcc).reverse();
 
             var grouper = sszvis
               .cascade()
@@ -287,6 +287,7 @@
 
           var colorLegend = sszvis
             .legendColorOrdinal()
+            .reverse(true)
             .scale(colorScale)
             .horizontalFloat(true);
 

@@ -52,7 +52,7 @@ var state = {
 var actions = {
   prepareState: function (data) {
     state.data = data;
-    state.groups = sszvis.set(state.data, gAcc);
+    state.groups = sszvis.set(state.data, gAcc).reverse();
 
     var grouper = sszvis
       .cascade()
@@ -231,7 +231,11 @@ function render(state) {
     .title("Alter in Jahren")
     .dyTitle(-18);
 
-  var colorLegend = sszvis.legendColorOrdinal().scale(colorScale).horizontalFloat(true);
+  var colorLegend = sszvis
+    .legendColorOrdinal()
+    .reverse(true)
+    .scale(colorScale)
+    .horizontalFloat(true);
 
   var tooltip = sszvis
     .tooltip()
