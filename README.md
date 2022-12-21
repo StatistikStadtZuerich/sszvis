@@ -4,7 +4,7 @@ sszvis can be installed from npm or embedded in a script tag. Please refer to th
 
 ## Documentation
 
-The documentation is written in Markdown and bundled with [Catalog](https://www.catalog.style/). You can also [docs](docs).
+The documentation is written in Markdown and bundled with [Catalog](https://www.catalog.style/).
 
 ## Development
 
