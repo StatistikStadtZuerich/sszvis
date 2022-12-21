@@ -64,7 +64,8 @@
  * @module sszvis/axis
  */
 .sszvis-axis text {
-  fill: #767676;
+  color: #737373;
+  fill: #737373;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-family: var(--stzh-font);
   font-size: 10px;
@@ -291,10 +292,10 @@
 
 .sszvis-control-buttonGroup__item {
   background-color: #ffffff;
-  border: 1px solid #767676;
+  border: 1px solid #0f05a0;
   border-left: none;
   box-sizing: border-box;
-  color: #767676;
+  color: #0f05a0;
   cursor: pointer;
   display: table-cell;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -310,19 +311,15 @@
 * uses same background color as "Zurücksetzen" form button on stzh Website
 */
 .sszvis-control-buttonGroup__item.selected {
-  background-color: #767676;
+  background-color: #0f05a0;
   color: #ffffff;
 }
 
 .sszvis-control-buttonGroup__item:first-child {
-  border-left: 1px solid #767676;
-  border-top-left-radius: 3px;
-  border-bottom-left-radius: 3px;
+  border-left: 1px solid #0f05a0;
 }
 
 .sszvis-control-buttonGroup__item:last-child {
-  border-top-right-radius: 3px;
-  border-bottom-right-radius: 3px;
 }
 
 /**
@@ -479,11 +476,25 @@
 
 .sszvis-rangeRuler__label,
 .sszvis-rangeRuler__total {
+  stroke: none;
   font-size: 10px;
-  fill: #545454;
+  fill: #737373;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-family: var(--stzh-font);
   font-style: normal;
+}
+
+.sszvis-rangeRuler__label-contour,
+.sszvis-rangeRuler__total-contour {
+  font-size: 10px;
+  fill: #737373;
+  color: #737373;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
+  font-style: normal;
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-opacity: 0.8;
 }
 
 /**
