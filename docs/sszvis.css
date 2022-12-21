@@ -470,11 +470,26 @@
 
 .sszvis-rangeRuler__label,
 .sszvis-rangeRuler__total {
+  stroke: none;
   font-size: 10px;
-  fill: #545454;
+  fill: #737373;
+  color: #737373;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-family: var(--stzh-font);
   font-style: normal;
+}
+
+.sszvis-rangeRuler__label-contour,
+.sszvis-rangeRuler__total-contour {
+  font-size: 10px;
+  fill: #737373;
+  color: #737373;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
+  font-style: normal;
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-opacity: 0.8;
 }
 
 /**
