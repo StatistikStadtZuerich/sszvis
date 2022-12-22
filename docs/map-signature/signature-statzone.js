@@ -155,7 +155,7 @@ function render(state) {
 
   var bubbleMap = sszvis
     .mapRendererBubble()
-    .fill(sszvis.scaleSeqBlu().reverse()(0))
+    .fill(sszvis.scaleQual6()(0))
     .radius(function (d) {
       return !sszvis.defined(d) ? 0 : radiusScale(birthsAcc(d));
     })
