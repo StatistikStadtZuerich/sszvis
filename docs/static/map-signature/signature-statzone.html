@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Map</title>
   </head>
-  <body style="margin: 0; padding: 0">
+  <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -198,7 +198,7 @@
 
           var bubbleMap = sszvis
             .mapRendererBubble()
-            .fill(sszvis.scaleSeqBlu().reverse()(0))
+            .fill(sszvis.scaleQual6()(0))
             .radius(function (d) {
               return !sszvis.defined(d) ? 0 : radiusScale(birthsAcc(d));
             })
