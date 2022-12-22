@@ -36,7 +36,7 @@ var state = {
 var actions = {
   prepareState: function (data) {
     state.data = data;
-    state.groups = sszvis.set(state.data, gAcc);
+    state.groups = sszvis.set(state.data, gAcc).reverse();
     state.maxValue = d3.max(state.data, vAcc);
     state.populations = sszvis.cascade().objectBy(refAcc).objectBy(gAcc).apply(state.data);
 
@@ -117,7 +117,11 @@ function render(state) {
     .title("Alter in Jahren")
     .dyTitle(-18);
 
-  var colorLegend = sszvis.legendColorOrdinal().scale(colorScale).horizontalFloat(true);
+  var colorLegend = sszvis
+    .legendColorOrdinal()
+    .scale(colorScale)
+    .reverse(true)
+    .horizontalFloat(true);
 
   // Rendering
 

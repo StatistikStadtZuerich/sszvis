@@ -216,7 +216,7 @@ designed to have the same brightness for the same input value.
 <div id="scale5" class="scale-container"></div>
 <script>
   var scale = sszvis.scaleDivVal();
-  colorSwatchFromLinearScale("scale5", scale, 9);
+  colorSwatchFromLinearScale("scale5", scale, 10);
 </script>
 ```
 
@@ -226,7 +226,7 @@ designed to have the same brightness for the same input value.
 <div id="scale7" class="scale-container"></div>
 <script>
   var scale = sszvis.scaleDivNtr();
-  colorSwatchFromLinearScale("scale7", scale, 9);
+  colorSwatchFromLinearScale("scale7", scale, 10);
 </script>
 ```
 
@@ -257,7 +257,7 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
 ```html|plain,run-script
 <div id="scaleDivValRev" class="scale-container"></div>
 <script>
-  var scale = sszvis.scaleDivVal();
+  var scale = sszvis.scaleDivValGry();
   colorSwatchFromLinearScale("scaleDivValRev", scale.reverse(), 9);
 </script>
 ```

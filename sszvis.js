@@ -1821,9 +1821,9 @@
     };
   }
 
-  var scaleDivVal = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88", "#FFFFFF", "#AECBFF", "#6B8EFF", "#3B51FF", "#2F2ABB"]);
+  var scaleDivVal = divColorScale(["#611F00", "#A13200", "#EA5D00", "#FF9A54", "#FCDDBB", "#CADEFF", "#89AFFF", "#5B6EFF", "#3431DE", "#211A8A"]);
   var scaleDivValGry = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88", "#E4E0DF", "#AECBFF", "#6B8EFF", "#3B51FF", "#2F2ABB"]);
-  var scaleDivNtr = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#FFFFFF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
+  var scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
   var scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
 
   function greyColorScale(colors) {
