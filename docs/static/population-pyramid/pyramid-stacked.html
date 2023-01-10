@@ -1,202 +1,241 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Population Pyramid</title>
-</head>
-<body style="margin:0;padding:0;">
-<link href="../sszvis.css" rel="stylesheet" />
-<script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
-<script src="../sszvis.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Population Pyramid</title>
+  </head>
+  <body style="margin: 0; padding: 0;">
+    <link href="../sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@4/build/d3.min.js"></script>
+    <script src="../sszvis.js"></script>
 
-<div id="sszvis-chart"></div>
+    <div id="sszvis-chart"></div>
 
-<script data-catalog-project-expose="script.js">
-(function(d3, sszvis) {
-  'use strict';
+    <script data-catalog-project-expose="script.js">
+      (function (d3, sszvis) {
+        "use strict";
 
-  if (sszvis.fallbackUnsupported()) {
-    sszvis.fallbackRender('#sszvis-chart');
-    return;
-  }
+        if (sszvis.fallbackUnsupported()) {
+          sszvis.fallbackRender("#sszvis-chart");
+          return;
+        }
 
-
-  /* Configuration
+        /* Configuration
   ----------------------------------------------- */
-  var TITLE = 'Diagrammtitel';
-  var DESCRIPTION = 'Kurze Beschreibung des Inhalts dieses Diagramms';
-  var queryProps = sszvis.responsiveProps()
-    .prop('bottomPadding', {
-      lap: 150,
-      _: 100
-    })
-    .prop('numLegendRows', {
-      lap: 4,
-      _: 2
-    });
+        var TITLE = "Diagrammtitel";
+        var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
+        var queryProps = sszvis
+          .responsiveProps()
+          .prop("bottomPadding", {
+            lap: 150,
+            _: 100,
+          })
+          .prop("numLegendRows", {
+            lap: 4,
+            _: 2,
+          });
 
-
-  /* Shortcuts
+        /* Shortcuts
   ----------------------------------------------- */
-  var vAcc = sszvis.prop('value');
-  var gAcc = sszvis.prop('gender');
-  var aAcc = sszvis.prop('age');
-  var stackAcc = sszvis.prop('group');
-  var womenAcc = sszvis.prop('0');
-  var menAcc = sszvis.prop('1');
+        var vAcc = sszvis.prop("value");
+        var gAcc = sszvis.prop("gender");
+        var aAcc = sszvis.prop("age");
+        var stackAcc = sszvis.prop("group");
+        var womenAcc = sszvis.prop("0");
+        var menAcc = sszvis.prop("1");
 
-
-  /* Application state
+        /* Application state
   ----------------------------------------------- */
-  var state = {
-    data: [],
-    ages: d3.range(0, 101), // [0 ... 100]
-    groups: [],
-    populations: {},
-    maxStackedValue: 0
-  };
+        var state = {
+          data: [],
+          ages: d3.range(0, 101), // [0 ... 100]
+          groups: [],
+          populations: {},
+          maxStackedValue: 0,
+        };
 
-
-  /* State transitions
+        /* State transitions
   ----------------------------------------------- */
-  var actions = {
-    prepareState: function(data) {
-      state.data = data;
-      state.groups = sszvis.set(state.data, groupAndStackAcc);
+        var actions = {
+          prepareState: function (data) {
+            state.data = data;
+            state.groups = sszvis.set(state.data, groupAndStackAcc);
 
-      state.stackedPyramidData = sszvis.stackedPyramidData(gAcc, aAcc, stackAcc, vAcc)(data);
+            state.stackedPyramidData = sszvis.stackedPyramidData(
+              gAcc,
+              aAcc,
+              stackAcc,
+              vAcc
+            )(data);
 
-      state.maxStackedValue = state.stackedPyramidData.maxValue;
+            state.maxStackedValue = state.stackedPyramidData.maxValue;
 
-      render(state);
-    },
+            render(state);
+          },
 
-    resize: function() { render(state); }
-  };
+          resize: function () {
+            render(state);
+          },
+        };
 
-
-  /* Data initialization
+        /* Data initialization
   ----------------------------------------------- */
-  d3.csv('data/BP_stacked.csv')
-    .row(function(d) {
-      return {
-        age: sszvis.parseNumber(d['Alter']),
-        gender: d['Geschlecht'],
-        group: d['Ausbildung'],
-        value: sszvis.parseNumber(d['Anzahl'])
-      };
-    })
-    .get(function(error, data) {
-      if (error) {
-        sszvis.loadError(error);
-        return;
-      }
-      actions.prepareState(data);
-    });
+        d3.csv("data/BP_stacked.csv")
+          .row(function (d) {
+            return {
+              age: sszvis.parseNumber(d["Alter"]),
+              gender: d["Geschlecht"],
+              group: d["Ausbildung"],
+              value: sszvis.parseNumber(d["Anzahl"]),
+            };
+          })
+          .get(function (error, data) {
+            if (error) {
+              sszvis.loadError(error);
+              return;
+            }
+            actions.prepareState(data);
+          });
 
-
-  /* Render
+        /* Render
   ----------------------------------------------- */
-  function render(state) {
-    var chartDimensions = sszvis.measureDimensions('#sszvis-chart');
+        function render(state) {
+          var chartDimensions = sszvis.measureDimensions("#sszvis-chart");
 
-    var props = queryProps(chartDimensions);
-    var pyramidDimensions = sszvis.layoutPopulationPyramid(chartDimensions.width - 2, state.ages.length);
+          var props = queryProps(chartDimensions);
+          var pyramidDimensions = sszvis.layoutPopulationPyramid(
+            chartDimensions.width - 2,
+            state.ages.length
+          );
 
-    var chartPadding = { top: 25, bottom: props.bottomPadding };
+          var chartPadding = { top: 25, bottom: props.bottomPadding };
 
-    var bounds = sszvis.bounds({ height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom, top: chartPadding.top, bottom: chartPadding.bottom, left: pyramidDimensions.chartPadding, right: pyramidDimensions.chartPadding }, '#sszvis-chart');
+          var bounds = sszvis.bounds(
+            {
+              height:
+                chartPadding.top +
+                pyramidDimensions.totalHeight +
+                chartPadding.bottom,
+              top: chartPadding.top,
+              bottom: chartPadding.bottom,
+              left: pyramidDimensions.chartPadding,
+              right: pyramidDimensions.chartPadding,
+            },
+            "#sszvis-chart"
+          );
 
+          // Scales
 
-    // Scales
+          var lengthScale = d3
+            .scaleLinear()
+            .domain([0, state.maxStackedValue])
+            .range([0, pyramidDimensions.maxBarLength]);
 
-    var lengthScale = d3.scaleLinear()
-      .domain([0, state.maxStackedValue])
-      .range([0, pyramidDimensions.maxBarLength]);
+          var positionScale = d3
+            .scaleOrdinal()
+            .domain(state.ages)
+            .range(pyramidDimensions.positions);
 
-    var positionScale = d3.scaleOrdinal()
-      .domain(state.ages)
-      .range(pyramidDimensions.positions);
+          var colorScale = d3
+            .scaleOrdinal()
+            .domain(state.groups)
+            /**
+             * A pointscale using a diverging color scheme would be more flexible here, but the pyramid
+             * sorting goes against the reading order. So we use a sequential color schemes and manually
+             * assign the colors to the groups.
+             */
+            .range([
+              sszvis.scaleSeqRed()(1),
+              sszvis.scaleSeqRed()(0.25),
+              sszvis.scaleSeqBlu()(1),
+              sszvis.scaleSeqBlu()(0.25),
+            ]);
 
-    var colorScale = sszvis.scaleQual12()
-      .domain(state.groups);
+          // Layers
 
+          var chartLayer = sszvis
+            .createSvgLayer("#sszvis-chart", bounds, {
+              title: TITLE,
+              description: DESCRIPTION,
+            })
+            .datum(state.stackedPyramidData);
 
-    // Layers
+          // Components
 
-    var chartLayer = sszvis.createSvgLayer('#sszvis-chart', bounds, {
-        title: TITLE,
-        description: DESCRIPTION
-      })
-      .datum(state.stackedPyramidData);
+          var pyramid = sszvis
+            .stackedPyramid()
+            .barFill(sszvis.compose(colorScale, groupAndStackAcc))
+            .barPosition(positionScale)
+            .barHeight(pyramidDimensions.barHeight)
+            .barWidth(lengthScale)
+            .leftAccessor(womenAcc)
+            .rightAccessor(menAcc);
 
+          var xAxis = sszvis.axisX
+            .pyramid()
+            .scale(lengthScale)
+            .orient("bottom")
+            .title("Anzahl")
+            .titleAnchor("middle")
+            .titleCenter(true);
 
-    // Components
+          var yAxis = sszvis.axisY
+            .ordinal()
+            .scale(positionScale)
+            .orient("right")
+            .tickFormat(function (d) {
+              return d === 0 ? "" : sszvis.formatAge(d);
+            })
+            .ticks(5)
+            .title("Alter in Jahren")
+            .dyTitle(-18);
 
-    var pyramid = sszvis.stackedPyramid()
-      .barFill(sszvis.compose(colorScale, groupAndStackAcc))
-      .barPosition(positionScale)
-      .barHeight(pyramidDimensions.barHeight)
-      .barWidth(lengthScale)
-      .leftAccessor(womenAcc)
-      .rightAccessor(menAcc);
+          var colorLegend = sszvis
+            .legendColorOrdinal()
+            .scale(colorScale)
+            .orientation("vertical")
+            .rows(props.numLegendRows)
+            .columnWidth(Math.min(bounds.innerWidth / 2, 300));
 
-    var xAxis = sszvis.axisX.pyramid()
-      .scale(lengthScale)
-      .orient('bottom')
-      .title('Anzahl')
-      .titleAnchor('middle')
-      .titleCenter(true);
+          // Rendering
 
-    var yAxis = sszvis.axisY.ordinal()
-      .scale(positionScale)
-      .orient('right')
-      .tickFormat(function(d) {
-        return (d === 0) ? '' : sszvis.formatAge(d);
-      })
-      .ticks(5)
-      .title('Alter in Jahren')
-      .dyTitle(-18);
+          chartLayer
+            .selectGroup("populationPyramid")
+            .attr("transform", sszvis.translateString(bounds.innerWidth / 2, 0))
+            .call(pyramid);
 
-    var colorLegend = sszvis.legendColorOrdinal()
-      .scale(colorScale)
-      .orientation('vertical')
-      .rows(props.numLegendRows)
-      .columnWidth(Math.min(bounds.innerWidth / 2, 300));
+          chartLayer
+            .selectGroup("xAxis")
+            .attr(
+              "transform",
+              sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight)
+            )
+            .call(xAxis);
 
+          chartLayer
+            .selectGroup("yAxis")
+            .attr("transform", sszvis.translateString(0, 0))
+            .call(yAxis);
 
-    // Rendering
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + 60)
+            )
+            .call(colorLegend);
 
-    chartLayer.selectGroup('populationPyramid')
-      .attr('transform', sszvis.translateString(bounds.innerWidth / 2, 0))
-      .call(pyramid);
+          sszvis.viewport.on("resize", actions.resize);
+        }
 
-    chartLayer.selectGroup('xAxis')
-      .attr('transform', sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight))
-      .call(xAxis);
-
-    chartLayer.selectGroup('yAxis')
-      .attr('transform', sszvis.translateString(0, 0))
-      .call(yAxis);
-
-    chartLayer.selectGroup('colorLegend')
-      .attr('transform', sszvis.translateString(0, bounds.innerHeight + 60))
-      .call(colorLegend);
-
-    sszvis.viewport.on('resize', actions.resize);
-  }
-
-
-  /* Helper functions
+        /* Helper functions
   ----------------------------------------------- */
-  function groupAndStackAcc(d) {
-    return gAcc(d) + ' (' + stackAcc(d) + ')';
-  }
-
-
-}(d3, sszvis));
-</script>
-</body>
+        function groupAndStackAcc(d) {
+          return gAcc(d) + " (" + stackAcc(d) + ")";
+        }
+      })(d3, sszvis);
+    </script>
+  </body>
 </html>
