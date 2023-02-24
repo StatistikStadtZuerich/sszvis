@@ -10,6 +10,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
+          node-version: 16
           persist-credentials: false
       - name: Install dependencies
         run: npm install
