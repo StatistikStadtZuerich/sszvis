@@ -14,7 +14,7 @@ This library is bundled using [Rollup](https://rollupjs.org/). To start developi
 # Install dependencies first
 npm install
 
-# Build the library
+# Build the library (if necessary use export `NODE_OPTIONS=--openssl-legacy-provider`)
 npm run build
 
 # Start library build in watch mode (this only rebuilds library scripts, not things like topojson)
@@ -29,7 +29,7 @@ npm start
 sszvis builds are automated. You don't have to run build tasks for publishing but you may need them for developing the library:
 
 ```sh
-# Build everything necessary for publishing
+# Build everything necessary for publishing (if necessary use export `NODE_OPTIONS=--openssl-legacy-provider`)
 npm run build
 
 # Build the library
