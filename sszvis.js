@@ -1,4 +1,4 @@
-/*! sszvis v2.6.2, Copyright 2014-present Statistik Stadt Zürich */
+/*! sszvis v2.6.3, Copyright 2014-present Statistik Stadt Zürich */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
   typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
