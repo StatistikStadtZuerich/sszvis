@@ -2696,6 +2696,7 @@
       marks = marks.merge(enteringMarks);
       enteringMarks.append("circle").classed("sszvis-rangeRuler__p1", true);
       enteringMarks.append("circle").classed("sszvis-rangeRuler__p2", true);
+      enteringMarks.append("text").classed("sszvis-rangeRuler__label-contour", true);
       enteringMarks.append("text").classed("sszvis-rangeRuler__label", true);
       marks.selectAll(".sszvis-rangeRuler__p1").data(function (d) {
         return [d];
@@ -2704,6 +2705,16 @@
         return [d];
       }).attr("cx", crispX).attr("cy", crispY1).attr("r", dotRadius);
       marks.selectAll(".sszvis-rangeRuler__label").data(function (d) {
+        return [d];
+      }).attr("x", function (d) {
+        var offset = props.flip(d) ? -10 : 10;
+        return crispX(d) + offset;
+      }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
+      .style("text-anchor", function (d) {
+        return props.flip(d) ? "end" : "start";
+      }).text(compose(formatNumber, props.label)); //make the contour behind the the label update with the label
+
+      marks.selectAll(".sszvis-rangeRuler__label-contour").data(function (d) {
         return [d];
       }).attr("x", function (d) {
         var offset = props.flip(d) ? -10 : 10;
