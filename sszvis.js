@@ -1816,8 +1816,8 @@
 
   function divColorScale(colors) {
     return function () {
-      var scale = d3.scaleQuantize().range(colors.map(convertLab));
-      return decorateOrdinalScale(scale);
+      var scale = d3.scaleLinear().range(colors.map(convertLab));
+      return decorateDivScale(scale);
     };
   }
 
@@ -1863,6 +1863,35 @@
 
     scale.reverse = function () {
       return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
+    };
+
+    return scale;
+  }
+
+  function decorateDivScale(scale) {
+    scale = interpolatedDivergentColorScale(scale);
+
+    scale.reverse = function () {
+      return decorateLinearScale(scale.copy().range(scale.range().reverse()));
+    };
+
+    return scale;
+  }
+
+  function interpolatedDivergentColorScale(scale) {
+    var nativeDomain = scale.domain;
+    if (!scale.range()) return scale;
+    var length = scale.range().length;
+
+    scale.domain = function (dom) {
+      if (!dom) return nativeDomain.call(this);
+      var xDomain = [];
+
+      for (var i = 0; i < length; i++) {
+        xDomain.push(d3.quantile(dom, i / (length - 1)));
+      }
+
+      return nativeDomain.call(this, xDomain);
     };
 
     return scale;
