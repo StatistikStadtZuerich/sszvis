@@ -1,6 +1,6 @@
 {
   "name": "sszvis",
-  "version": "2.6.4",
+  "version": "2.6.5",
   "description": "Statistik Stadt Zürich Visualization Library",
   "keywords": [
     "d3",
