@@ -308,6 +308,12 @@
   transition: all 0.3s;
 }
 
+.sszvis-control-buttonGroup__item:hover,
+.sszvis-control-buttonGroup__item.selected:hover {
+  background-color: #070250;
+  color: #fff;
+}
+
 /**
 * uses same background color as "Zurücksetzen" form button on stzh Website
 */
