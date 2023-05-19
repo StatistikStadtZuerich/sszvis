@@ -6152,7 +6152,7 @@
    * @return {sszvis.component}
    */
   function stackedArea () {
-    return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("defined").prop("key").key(function (d, i) {
+    return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key(function (d, i) {
       return i;
     }).prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
@@ -6172,7 +6172,7 @@
         paths = paths.transition(defaultTransition());
       }
 
-      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke || "#ffffff");
+      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke || "#ffffff").attr("stroke-width", props.strokeWidth || 1);
     });
   }
 
