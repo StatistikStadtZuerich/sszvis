@@ -40,6 +40,7 @@ export default function () {
     .prop("y1")
     .prop("fill")
     .prop("stroke")
+    .prop("strokeWidth")
     .prop("key")
     .key(function (d, i) {
       return i;
@@ -67,6 +68,7 @@ export default function () {
       paths
         .attr("d", areaGen)
         .attr("fill", props.fill)
-        .attr("stroke", props.stroke || "#ffffff");
+        .attr("stroke", props.stroke || "#ffffff")
+        .attr("stroke-width", props.strokeWidth || 1);
     });
 }
