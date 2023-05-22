@@ -6172,7 +6172,7 @@
         paths = paths.transition(defaultTransition());
       }
 
-      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke || "#ffffff").attr("stroke-width", props.strokeWidth || 1);
+      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke || "#ffffff").attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
     });
   }
 
@@ -6203,7 +6203,7 @@
    * @return {sszvis.component}
    */
   function stackedAreaMultiples () {
-    return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("defined").prop("key").key(function (d, i) {
+    return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key(function (d, i) {
       return i;
     }).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
@@ -6225,7 +6225,7 @@
         paths = paths.transition(defaultTransition());
       }
 
-      paths.attr("d", compose(areaGen, props.valuesAccessor)).attr("fill", props.fill).attr("stroke", props.stroke);
+      paths.attr("d", compose(areaGen, props.valuesAccessor)).attr("fill", props.fill).attr("stroke", props.stroke).attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
     });
   }
 
