@@ -79,6 +79,6 @@ export default function () {
         .attr("d", areaGen)
         .attr("fill", props.fill)
         .attr("stroke", props.stroke || "#ffffff")
-        .attr("stroke-width", props.strokeWidth || 1);
+        .attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
     });
 }
