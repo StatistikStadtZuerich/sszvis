@@ -38,6 +38,7 @@ export default function () {
     .prop("y1")
     .prop("fill")
     .prop("stroke")
+    .prop("strokeWidth")
     .prop("defined")
     .prop("key")
     .key(function (d, i) {
@@ -79,6 +80,7 @@ export default function () {
       paths
         .attr("d", fn.compose(areaGen, props.valuesAccessor))
         .attr("fill", props.fill)
-        .attr("stroke", props.stroke);
+        .attr("stroke", props.stroke)
+        .attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
     });
 }
