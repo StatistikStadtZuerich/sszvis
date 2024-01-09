@@ -47,6 +47,9 @@
     "topojson-simplify": "^3.0.1",
     "whatwg-fetch": "^3.2.0"
   },
+  "overrides": {
+    "d3-color": "https://registry.npmmirror.com/d3-color-1-fix/-/d3-color-1-fix-1.4.2.tgz"
+  },
   "files": [
     "src",
     "build"
