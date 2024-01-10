@@ -45,7 +45,7 @@
             _: 2,
           })
           .prop("bounds", {
-            palm: function palm(w) {
+            palm: function (w) {
               var legendHeight = 182;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -56,7 +56,7 @@
                 height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding,
               };
             },
-            lap: function lap(w) {
+            lap: function (w) {
               var legendHeight = 98;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -67,7 +67,7 @@
                 height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding,
               };
             },
-            _: function _(w) {
+            _: function (w) {
               var legendHeight = 98;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -80,7 +80,7 @@
             },
           })
           .prop("legendPosition", {
-            palm: function palm(w) {
+            palm: function (w) {
               return function (g) {
                 return {
                   top: LEGEND_PADDING,
@@ -88,7 +88,7 @@
                 };
               };
             },
-            lap: function lap(w) {
+            lap: function (w) {
               return function (bounds, g) {
                 var left =
                   bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
@@ -98,7 +98,7 @@
                 };
               };
             },
-            _: function _(w) {
+            _: function (w) {
               return function (g) {
                 var colWidth = Math.min(w, MAX_WIDTH) / 2;
                 return {
@@ -109,12 +109,12 @@
             },
           })
           .prop("tooltipVisibility", {
-            palm: function palm() {
+            palm: function () {
               return function () {
                 return false;
               };
             },
-            _: function _() {
+            _: function () {
               return isSelected;
             },
           });
@@ -147,7 +147,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             // groups the data into arrays by their 'group' value
             var grouped = sszvis
               .cascade()
@@ -177,7 +177,7 @@
             render(state);
           },
 
-          showTooltip: function showTooltip(datum) {
+          showTooltip: function (datum) {
             state.hoveredDatum = datum;
             state.selection = state.data.filter(function (d) {
               return datum.category === d.category;
@@ -186,14 +186,14 @@
             render(state);
           },
 
-          hideTooltip: function hideTooltip() {
+          hideTooltip: function () {
             state.hoveredDatum = {};
             state.selection = [];
             state.selectedCategories = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };

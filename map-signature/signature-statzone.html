@@ -25,7 +25,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function _(width) {
+            _: function (width) {
               var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 90,
@@ -35,25 +35,25 @@
             },
           })
           .prop("legendX", {
-            _: function _(width) {
+            _: function (width) {
               return Math.max(width / 2 - 205, 5);
             },
           })
           .prop("radiusMax", {
-            _: function _(width) {
+            _: function (width) {
               return Math.min(14, Math.max(width / 28, 10));
             },
           })
           .prop("control", {
-            palm: function palm(width) {
+            palm: function (width) {
               return sszvis.selectMenu;
             },
-            _: function _(width) {
+            _: function (width) {
               return sszvis.buttonGroup;
             },
           })
           .prop("controlWidth", {
-            _: function _(width) {
+            _: function (width) {
               return Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT);
             },
           });
@@ -88,23 +88,22 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareData: function prepareData(data) {
+          prepareData: function (data) {
             state.data = data;
             state.birthsRange = [0, d3.max(state.data, birthsAcc)];
 
             actions.setFilter(state.currentFilter);
           },
 
-          prepareMapData: function prepareMapData(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.statistische_zonen),
               borders: topojson.mesh(topo, topo.objects.statistische_zonen),
             };
-
             render(state);
           },
 
-          setFilter: function setFilter(filterValue) {
+          setFilter: function (filterValue) {
             state.currentFilter = filterValue;
             var filter = filterValue.toLowerCase().split(" ");
             var gender = filter[0];
@@ -117,17 +116,17 @@
             render(state);
           },
 
-          selectHovered: function selectHovered(d) {
+          selectHovered: function (d) {
             state.selection = [d.datum];
             render(state);
           },
 
-          deselectHovered: function deselectHovered() {
+          deselectHovered: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };

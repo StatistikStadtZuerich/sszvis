@@ -51,7 +51,7 @@
             _: "",
           })
           .prop("xLabelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatText;
             },
           })
@@ -63,7 +63,7 @@
             _: "Beschäftigte",
           })
           .prop("yLabelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatNumber;
             },
           })
@@ -98,7 +98,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.years = sszvis.set(state.data, xAcc);
             state.categories = sszvis.set(state.data, cAcc);
@@ -113,17 +113,17 @@
             render(state);
           },
 
-          showTooltip: function showTooltip(datum) {
+          showTooltip: function (datum) {
             state.selection = [datum];
             render(state);
           },
 
-          hideTooltip: function hideTooltip() {
+          hideTooltip: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -146,7 +146,6 @@
               legendLabels: state.categories,
               slant: props.xSlant,
             },
-
             config.id
           );
 
@@ -167,7 +166,6 @@
                       props.yLabelFormat(state.maxStacked)
                     ),
             },
-
             config.id
           );
 

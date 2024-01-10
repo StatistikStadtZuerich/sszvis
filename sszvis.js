@@ -7,7 +7,7 @@
 
   var d3__default = 'default' in d3 ? d3['default'] : d3;
 
-  function n(n){for(var t=arguments.length,r=Array(t>1?t-1:0),e=1;e<t;e++)r[e-1]=arguments[e];throw Error("[Immer] minified error nr: "+n+(r.length?" "+r.join(","):"")+". Find the full error at: https://bit.ly/3cXEKWf")}function t(n){return !!n&&!!n[Q]}function r(n){return !!n&&(function(n){if(!n||"object"!=typeof n)return !1;var t=Object.getPrototypeOf(n);return !t||t===Object.prototype}(n)||Array.isArray(n)||!!n[L]||!!n.constructor[L]||s(n)||v(n))}function i(n,t,r){void 0===r&&(r=!1),0===o(n)?(r?Object.keys:Z)(n).forEach((function(e){r&&"symbol"==typeof e||t(e,n[e],n);})):n.forEach((function(r,e){return t(e,r,n)}));}function o(n){var t=n[Q];return t?t.i>3?t.i-4:t.i:Array.isArray(n)?1:s(n)?2:v(n)?3:0}function u(n,t){return 2===o(n)?n.has(t):Object.prototype.hasOwnProperty.call(n,t)}function a(n,t){return 2===o(n)?n.get(t):n[t]}function f(n,t,r){var e=o(n);2===e?n.set(t,r):3===e?(n.delete(t),n.add(r)):n[t]=r;}function c(n,t){return n===t?0!==n||1/n==1/t:n!=n&&t!=t}function s(n){return X&&n instanceof Map}function v(n){return q&&n instanceof Set}function p(n){return n.o||n.t}function l(n){if(Array.isArray(n))return n.slice();var t=nn(n);delete t[Q];for(var r=Z(t),e=0;e<r.length;e++){var i=r[e],o=t[i];!1===o.writable&&(o.writable=!0,o.configurable=!0),(o.get||o.set)&&(t[i]={configurable:!0,writable:!0,enumerable:o.enumerable,value:n[i]});}return Object.create(Object.getPrototypeOf(n),t)}function d(n,e){b(n)||t(n)||!r(n)||(o(n)>1&&(n.set=n.add=n.clear=n.delete=h),Object.freeze(n),e&&i(n,(function(n,t){return d(t,!0)}),!0));}function h(){n(2);}function b(n){return null==n||"object"!=typeof n||Object.isFrozen(n)}function y(t){var r=tn[t];return r||n(19,t),r}function m(n,t){tn[n]=t;}function _(){return U}function j(n,t){t&&(y("Patches"),n.u=[],n.s=[],n.v=t);}function g(n){O(n),n.p.forEach(S),n.p=null;}function O(n){n===U&&(U=n.l);}function w(n){return U={p:[],l:U,h:n,m:!0,_:0}}function S(n){var t=n[Q];0===t.i||1===t.i?t.j():t.g=!0;}function P(t,e){e._=e.p.length;var i=e.p[0],o=void 0!==t&&t!==i;return e.h.O||y("ES5").S(e,t,o),o?(i[Q].P&&(g(e),n(4)),r(t)&&(t=M(e,t),e.l||x(e,t)),e.u&&y("Patches").M(i[Q],t,e.u,e.s)):t=M(e,i,[]),g(e),e.u&&e.v(e.u,e.s),t!==H?t:void 0}function M(n,t,r){if(b(t))return t;var e=t[Q];if(!e)return i(t,(function(i,o){return A(n,e,t,i,o,r)}),!0),t;if(e.A!==n)return t;if(!e.P)return x(n,e.t,!0),e.t;if(!e.I){e.I=!0,e.A._--;var o=4===e.i||5===e.i?e.o=l(e.k):e.o;i(3===e.i?new Set(o):o,(function(t,i){return A(n,e,o,t,i,r)})),x(n,o,!1),r&&n.u&&y("Patches").R(e,r,n.u,n.s);}return e.o}function A(e,i,o,a,c,s){if(t(c)){var v=M(e,c,s&&i&&3!==i.i&&!u(i.D,a)?s.concat(a):void 0);if(f(o,a,v),!t(v))return;e.m=!1;}if(r(c)&&!b(c)){if(!e.h.N&&e._<1)return;M(e,c),i&&i.A.l||x(e,c);}}function x(n,t,r){void 0===r&&(r=!1),n.h.N&&n.m&&d(t,r);}function z(n,t){var r=n[Q];return (r?p(r):n)[t]}function I(n,t){if(t in n)for(var r=Object.getPrototypeOf(n);r;){var e=Object.getOwnPropertyDescriptor(r,t);if(e)return e;r=Object.getPrototypeOf(r);}}function E(n){n.P||(n.P=!0,n.l&&E(n.l));}function k(n){n.o||(n.o=l(n.t));}function R(n,t,r){var e=s(t)?y("MapSet").T(t,r):v(t)?y("MapSet").F(t,r):n.O?function(n,t){var r=Array.isArray(n),e={i:r?1:0,A:t?t.A:_(),P:!1,I:!1,D:{},l:t,t:n,k:null,o:null,j:null,C:!1},i=e,o=rn;r&&(i=[e],o=en);var u=Proxy.revocable(i,o),a=u.revoke,f=u.proxy;return e.k=f,e.j=a,f}(t,r):y("ES5").J(t,r);return (r?r.A:_()).p.push(e),e}function D(e){return t(e)||n(22,e),function n(t){if(!r(t))return t;var e,u=t[Q],c=o(t);if(u){if(!u.P&&(u.i<4||!y("ES5").K(u)))return u.t;u.I=!0,e=N(t,c),u.I=!1;}else e=N(t,c);return i(e,(function(t,r){u&&a(u.t,t)===r||f(e,t,n(r));})),3===c?new Set(e):e}(e)}function N(n,t){switch(t){case 2:return new Map(n);case 3:return Array.from(n)}return l(n)}function T(){function r(n,t){var r=s[n];return r?r.enumerable=t:s[n]=r={configurable:!0,enumerable:t,get:function(){var t=this[Q];return rn.get(t,n)},set:function(t){var r=this[Q];rn.set(r,n,t);}},r}function e(n){for(var t=n.length-1;t>=0;t--){var r=n[t][Q];if(!r.P)switch(r.i){case 5:a(r)&&E(r);break;case 4:o(r)&&E(r);}}}function o(n){for(var t=n.t,r=n.k,e=Z(r),i=e.length-1;i>=0;i--){var o=e[i];if(o!==Q){var a=t[o];if(void 0===a&&!u(t,o))return !0;var f=r[o],s=f&&f[Q];if(s?s.t!==a:!c(f,a))return !0}}var v=!!t[Q];return e.length!==Z(t).length+(v?0:1)}function a(n){var t=n.k;if(t.length!==n.t.length)return !0;var r=Object.getOwnPropertyDescriptor(t,t.length-1);return !(!r||r.get)}var s={};m("ES5",{J:function(n,t){var e=Array.isArray(n),i=function(n,t){if(n){for(var e=Array(t.length),i=0;i<t.length;i++)Object.defineProperty(e,""+i,r(i,!0));return e}var o=nn(t);delete o[Q];for(var u=Z(o),a=0;a<u.length;a++){var f=u[a];o[f]=r(f,n||!!o[f].enumerable);}return Object.create(Object.getPrototypeOf(t),o)}(e,n),o={i:e?5:4,A:t?t.A:_(),P:!1,I:!1,D:{},l:t,t:n,k:i,o:null,g:!1,C:!1};return Object.defineProperty(i,Q,{value:o,writable:!0}),i},S:function(n,r,o){o?t(r)&&r[Q].A===n&&e(n.p):(n.u&&function n(t){if(t&&"object"==typeof t){var r=t[Q];if(r){var e=r.t,o=r.k,f=r.D,c=r.i;if(4===c)i(o,(function(t){t!==Q&&(void 0!==e[t]||u(e,t)?f[t]||n(o[t]):(f[t]=!0,E(r)));})),i(e,(function(n){void 0!==o[n]||u(o,n)||(f[n]=!1,E(r));}));else if(5===c){if(a(r)&&(E(r),f.length=!0),o.length<e.length)for(var s=o.length;s<e.length;s++)f[s]=!1;else for(var v=e.length;v<o.length;v++)f[v]=!0;for(var p=Math.min(o.length,e.length),l=0;l<p;l++)void 0===f[l]&&n(o[l]);}}}}(n.p[0]),e(n.p));},K:function(n){return 4===n.i?o(n):a(n)}});}var G,U,W="undefined"!=typeof Symbol&&"symbol"==typeof Symbol("x"),X="undefined"!=typeof Map,q="undefined"!=typeof Set,B="undefined"!=typeof Proxy&&void 0!==Proxy.revocable&&"undefined"!=typeof Reflect,H=W?Symbol.for("immer-nothing"):((G={})["immer-nothing"]=!0,G),L=W?Symbol.for("immer-draftable"):"__$immer_draftable",Q=W?Symbol.for("immer-state"):"__$immer_state",Z="undefined"!=typeof Reflect&&Reflect.ownKeys?Reflect.ownKeys:void 0!==Object.getOwnPropertySymbols?function(n){return Object.getOwnPropertyNames(n).concat(Object.getOwnPropertySymbols(n))}:Object.getOwnPropertyNames,nn=Object.getOwnPropertyDescriptors||function(n){var t={};return Z(n).forEach((function(r){t[r]=Object.getOwnPropertyDescriptor(n,r);})),t},tn={},rn={get:function(n,t){if(t===Q)return n;var e=p(n);if(!u(e,t))return function(n,t,r){var e,i=I(t,r);return i?"value"in i?i.value:null===(e=i.get)||void 0===e?void 0:e.call(n.k):void 0}(n,e,t);var i=e[t];return n.I||!r(i)?i:i===z(n.t,t)?(k(n),n.o[t]=R(n.A.h,i,n)):i},has:function(n,t){return t in p(n)},ownKeys:function(n){return Reflect.ownKeys(p(n))},set:function(n,t,r){var e=I(p(n),t);if(null==e?void 0:e.set)return e.set.call(n.k,r),!0;if(n.D[t]=!0,!n.P){if(c(r,z(p(n),t))&&(void 0!==r||u(n.t,t)))return !0;k(n),E(n);}return n.o[t]=r,!0},deleteProperty:function(n,t){return void 0!==z(n.t,t)||t in n.t?(n.D[t]=!1,k(n),E(n)):delete n.D[t],n.o&&delete n.o[t],!0},getOwnPropertyDescriptor:function(n,t){var r=p(n),e=Reflect.getOwnPropertyDescriptor(r,t);return e?{writable:!0,configurable:1!==n.i||"length"!==t,enumerable:e.enumerable,value:r[t]}:e},defineProperty:function(){n(11);},getPrototypeOf:function(n){return Object.getPrototypeOf(n.t)},setPrototypeOf:function(){n(12);}},en={};i(rn,(function(n,t){en[n]=function(){return arguments[0]=arguments[0][0],t.apply(this,arguments)};})),en.deleteProperty=function(t,r){return rn.deleteProperty.call(this,t[0],r)},en.set=function(t,r,e){return rn.set.call(this,t[0],r,e,t[0])};var on=function(){function e(n){this.O=B,this.N="production"!=="production","boolean"==typeof(null==n?void 0:n.useProxies)&&this.setUseProxies(n.useProxies),"boolean"==typeof(null==n?void 0:n.autoFreeze)&&this.setAutoFreeze(n.autoFreeze),this.produce=this.produce.bind(this),this.produceWithPatches=this.produceWithPatches.bind(this);}var i=e.prototype;return i.produce=function(t,e,i){if("function"==typeof t&&"function"!=typeof e){var o=e;e=t;var u=this;return function(n){var t=this;void 0===n&&(n=o);for(var r=arguments.length,i=Array(r>1?r-1:0),a=1;a<r;a++)i[a-1]=arguments[a];return u.produce(n,(function(n){var r;return (r=e).call.apply(r,[t,n].concat(i))}))}}var a;if("function"!=typeof e&&n(6),void 0!==i&&"function"!=typeof i&&n(7),r(t)){var f=w(this),c=R(this,t,void 0),s=!0;try{a=e(c),s=!1;}finally{s?g(f):O(f);}return "undefined"!=typeof Promise&&a instanceof Promise?a.then((function(n){return j(f,i),P(n,f)}),(function(n){throw g(f),n})):(j(f,i),P(a,f))}if(!t||"object"!=typeof t){if((a=e(t))===H)return;return void 0===a&&(a=t),this.N&&d(a,!0),a}n(21,t);},i.produceWithPatches=function(n,t){var r,e,i=this;return "function"==typeof n?function(t){for(var r=arguments.length,e=Array(r>1?r-1:0),o=1;o<r;o++)e[o-1]=arguments[o];return i.produceWithPatches(t,(function(t){return n.apply(void 0,[t].concat(e))}))}:[this.produce(n,t,(function(n,t){r=n,e=t;})),r,e]},i.createDraft=function(e){r(e)||n(8),t(e)&&(e=D(e));var i=w(this),o=R(this,e,void 0);return o[Q].C=!0,O(i),o},i.finishDraft=function(t,r){var e=t&&t[Q];var i=e.A;return j(i,r),P(void 0,i)},i.setAutoFreeze=function(n){this.N=n;},i.setUseProxies=function(t){t&&!B&&n(20),this.O=t;},i.applyPatches=function(n,r){var e;for(e=r.length-1;e>=0;e--){var i=r[e];if(0===i.path.length&&"replace"===i.op){n=i.value;break}}var o=y("Patches").$;return t(n)?o(n,r):this.produce(n,(function(n){return o(n,r.slice(e+1))}))},e}(),un=new on,fn=un.produceWithPatches.bind(un),cn=un.setAutoFreeze.bind(un),sn=un.setUseProxies.bind(un),vn=un.applyPatches.bind(un),pn=un.createDraft.bind(un),ln=un.finishDraft.bind(un);
+  function n(n){for(var t=arguments.length,r=Array(t>1?t-1:0),e=1;e<t;e++)r[e-1]=arguments[e];throw Error("[Immer] minified error nr: "+n+(r.length?" "+r.map((function(n){return "'"+n+"'"})).join(","):"")+". Find the full error at: https://bit.ly/3cXEKWf")}function t(n){return !!n&&!!n[Q]}function r(n){return !!n&&(function(n){if(!n||"object"!=typeof n)return !1;var t=Object.getPrototypeOf(n);return !t||t===Object.prototype}(n)||Array.isArray(n)||!!n[L]||!!n.constructor[L]||s(n)||v(n))}function i(n,t,r){void 0===r&&(r=!1),0===o(n)?(r?Object.keys:Z)(n).forEach((function(e){r&&"symbol"==typeof e||t(e,n[e],n);})):n.forEach((function(r,e){return t(e,r,n)}));}function o(n){var t=n[Q];return t?t.i>3?t.i-4:t.i:Array.isArray(n)?1:s(n)?2:v(n)?3:0}function u(n,t){return 2===o(n)?n.has(t):Object.prototype.hasOwnProperty.call(n,t)}function a(n,t){return 2===o(n)?n.get(t):n[t]}function f(n,t,r){var e=o(n);2===e?n.set(t,r):3===e?(n.delete(t),n.add(r)):n[t]=r;}function c(n,t){return n===t?0!==n||1/n==1/t:n!=n&&t!=t}function s(n){return X&&n instanceof Map}function v(n){return q&&n instanceof Set}function p(n){return n.o||n.t}function l(n){if(Array.isArray(n))return Array.prototype.slice.call(n);var t=nn(n);delete t[Q];for(var r=Z(t),e=0;e<r.length;e++){var i=r[e],o=t[i];!1===o.writable&&(o.writable=!0,o.configurable=!0),(o.get||o.set)&&(t[i]={configurable:!0,writable:!0,enumerable:o.enumerable,value:n[i]});}return Object.create(Object.getPrototypeOf(n),t)}function d(n,e){y(n)||t(n)||!r(n)||(o(n)>1&&(n.set=n.add=n.clear=n.delete=h),Object.freeze(n),e&&i(n,(function(n,t){return d(t,!0)}),!0));}function h(){n(2);}function y(n){return null==n||"object"!=typeof n||Object.isFrozen(n)}function b(t){var r=tn[t];return r||n(18,t),r}function m(n,t){tn[n]||(tn[n]=t);}function _(){return U}function j(n,t){t&&(b("Patches"),n.u=[],n.s=[],n.v=t);}function g(n){O(n),n.p.forEach(S),n.p=null;}function O(n){n===U&&(U=n.l);}function w(n){return U={p:[],l:U,h:n,m:!0,_:0}}function S(n){var t=n[Q];0===t.i||1===t.i?t.j():t.g=!0;}function P(t,e){e._=e.p.length;var i=e.p[0],o=void 0!==t&&t!==i;return e.h.O||b("ES5").S(e,t,o),o?(i[Q].P&&(g(e),n(4)),r(t)&&(t=M(e,t),e.l||x(e,t)),e.u&&b("Patches").M(i[Q],t,e.u,e.s)):t=M(e,i,[]),g(e),e.u&&e.v(e.u,e.s),t!==H?t:void 0}function M(n,t,r){if(y(t))return t;var e=t[Q];if(!e)return i(t,(function(i,o){return A(n,e,t,i,o,r)}),!0),t;if(e.A!==n)return t;if(!e.P)return x(n,e.t,!0),e.t;if(!e.I){e.I=!0,e.A._--;var o=4===e.i||5===e.i?e.o=l(e.k):e.o;i(3===e.i?new Set(o):o,(function(t,i){return A(n,e,o,t,i,r)})),x(n,o,!1),r&&n.u&&b("Patches").R(e,r,n.u,n.s);}return e.o}function A(e,i,o,a,c,s){if(t(c)){var v=M(e,c,s&&i&&3!==i.i&&!u(i.D,a)?s.concat(a):void 0);if(f(o,a,v),!t(v))return;e.m=!1;}if(r(c)&&!y(c)){if(!e.h.N&&e._<1)return;M(e,c),i&&i.A.l||x(e,c);}}function x(n,t,r){void 0===r&&(r=!1),n.h.N&&n.m&&d(t,r);}function z(n,t){var r=n[Q];return (r?p(r):n)[t]}function I(n,t){if(t in n)for(var r=Object.getPrototypeOf(n);r;){var e=Object.getOwnPropertyDescriptor(r,t);if(e)return e;r=Object.getPrototypeOf(r);}}function E(n){n.P||(n.P=!0,n.l&&E(n.l));}function k(n){n.o||(n.o=l(n.t));}function R(n,t,r){var e=s(t)?b("MapSet").T(t,r):v(t)?b("MapSet").F(t,r):n.O?function(n,t){var r=Array.isArray(n),e={i:r?1:0,A:t?t.A:_(),P:!1,I:!1,D:{},l:t,t:n,k:null,o:null,j:null,C:!1},i=e,o=rn;r&&(i=[e],o=en);var u=Proxy.revocable(i,o),a=u.revoke,f=u.proxy;return e.k=f,e.j=a,f}(t,r):b("ES5").J(t,r);return (r?r.A:_()).p.push(e),e}function D(e){return t(e)||n(22,e),function n(t){if(!r(t))return t;var e,u=t[Q],c=o(t);if(u){if(!u.P&&(u.i<4||!b("ES5").K(u)))return u.t;u.I=!0,e=N(t,c),u.I=!1;}else e=N(t,c);return i(e,(function(t,r){u&&a(u.t,t)===r||f(e,t,n(r));})),3===c?new Set(e):e}(e)}function N(n,t){switch(t){case 2:return new Map(n);case 3:return Array.from(n)}return l(n)}function T(){function r(n,t){var r=s[n];return r?r.enumerable=t:s[n]=r={configurable:!0,enumerable:t,get:function(){var t=this[Q];return rn.get(t,n)},set:function(t){var r=this[Q];rn.set(r,n,t);}},r}function e(n){for(var t=n.length-1;t>=0;t--){var r=n[t][Q];if(!r.P)switch(r.i){case 5:a(r)&&E(r);break;case 4:o(r)&&E(r);}}}function o(n){for(var t=n.t,r=n.k,e=Z(r),i=e.length-1;i>=0;i--){var o=e[i];if(o!==Q){var a=t[o];if(void 0===a&&!u(t,o))return !0;var f=r[o],s=f&&f[Q];if(s?s.t!==a:!c(f,a))return !0}}var v=!!t[Q];return e.length!==Z(t).length+(v?0:1)}function a(n){var t=n.k;if(t.length!==n.t.length)return !0;var r=Object.getOwnPropertyDescriptor(t,t.length-1);return !(!r||r.get)}var s={};m("ES5",{J:function(n,t){var e=Array.isArray(n),i=function(n,t){if(n){for(var e=Array(t.length),i=0;i<t.length;i++)Object.defineProperty(e,""+i,r(i,!0));return e}var o=nn(t);delete o[Q];for(var u=Z(o),a=0;a<u.length;a++){var f=u[a];o[f]=r(f,n||!!o[f].enumerable);}return Object.create(Object.getPrototypeOf(t),o)}(e,n),o={i:e?5:4,A:t?t.A:_(),P:!1,I:!1,D:{},l:t,t:n,k:i,o:null,g:!1,C:!1};return Object.defineProperty(i,Q,{value:o,writable:!0}),i},S:function(n,r,o){o?t(r)&&r[Q].A===n&&e(n.p):(n.u&&function n(t){if(t&&"object"==typeof t){var r=t[Q];if(r){var e=r.t,o=r.k,f=r.D,c=r.i;if(4===c)i(o,(function(t){t!==Q&&(void 0!==e[t]||u(e,t)?f[t]||n(o[t]):(f[t]=!0,E(r)));})),i(e,(function(n){void 0!==o[n]||u(o,n)||(f[n]=!1,E(r));}));else if(5===c){if(a(r)&&(E(r),f.length=!0),o.length<e.length)for(var s=o.length;s<e.length;s++)f[s]=!1;else for(var v=e.length;v<o.length;v++)f[v]=!0;for(var p=Math.min(o.length,e.length),l=0;l<p;l++)void 0===f[l]&&n(o[l]);}}}}(n.p[0]),e(n.p));},K:function(n){return 4===n.i?o(n):a(n)}});}var G,U,W="undefined"!=typeof Symbol&&"symbol"==typeof Symbol("x"),X="undefined"!=typeof Map,q="undefined"!=typeof Set,B="undefined"!=typeof Proxy&&void 0!==Proxy.revocable&&"undefined"!=typeof Reflect,H=W?Symbol.for("immer-nothing"):((G={})["immer-nothing"]=!0,G),L=W?Symbol.for("immer-draftable"):"__$immer_draftable",Q=W?Symbol.for("immer-state"):"__$immer_state",Z="undefined"!=typeof Reflect&&Reflect.ownKeys?Reflect.ownKeys:void 0!==Object.getOwnPropertySymbols?function(n){return Object.getOwnPropertyNames(n).concat(Object.getOwnPropertySymbols(n))}:Object.getOwnPropertyNames,nn=Object.getOwnPropertyDescriptors||function(n){var t={};return Z(n).forEach((function(r){t[r]=Object.getOwnPropertyDescriptor(n,r);})),t},tn={},rn={get:function(n,t){if(t===Q)return n;var e=p(n);if(!u(e,t))return function(n,t,r){var e,i=I(t,r);return i?"value"in i?i.value:null===(e=i.get)||void 0===e?void 0:e.call(n.k):void 0}(n,e,t);var i=e[t];return n.I||!r(i)?i:i===z(n.t,t)?(k(n),n.o[t]=R(n.A.h,i,n)):i},has:function(n,t){return t in p(n)},ownKeys:function(n){return Reflect.ownKeys(p(n))},set:function(n,t,r){var e=I(p(n),t);if(null==e?void 0:e.set)return e.set.call(n.k,r),!0;if(!n.P){var i=z(p(n),t),o=null==i?void 0:i[Q];if(o&&o.t===r)return n.o[t]=r,n.D[t]=!1,!0;if(c(r,i)&&(void 0!==r||u(n.t,t)))return !0;k(n),E(n);}return n.o[t]=r,n.D[t]=!0,!0},deleteProperty:function(n,t){return void 0!==z(n.t,t)||t in n.t?(n.D[t]=!1,k(n),E(n)):delete n.D[t],n.o&&delete n.o[t],!0},getOwnPropertyDescriptor:function(n,t){var r=p(n),e=Reflect.getOwnPropertyDescriptor(r,t);return e?{writable:!0,configurable:1!==n.i||"length"!==t,enumerable:e.enumerable,value:r[t]}:e},defineProperty:function(){n(11);},getPrototypeOf:function(n){return Object.getPrototypeOf(n.t)},setPrototypeOf:function(){n(12);}},en={};i(rn,(function(n,t){en[n]=function(){return arguments[0]=arguments[0][0],t.apply(this,arguments)};})),en.deleteProperty=function(t,r){return rn.deleteProperty.call(this,t[0],r)},en.set=function(t,r,e){return rn.set.call(this,t[0],r,e,t[0])};var on=function(){function e(n){this.O=B,this.N="production"!=="production","boolean"==typeof(null==n?void 0:n.useProxies)&&this.setUseProxies(n.useProxies),"boolean"==typeof(null==n?void 0:n.autoFreeze)&&this.setAutoFreeze(n.autoFreeze),this.produce=this.produce.bind(this),this.produceWithPatches=this.produceWithPatches.bind(this);}var i=e.prototype;return i.produce=function(t,e,i){if("function"==typeof t&&"function"!=typeof e){var o=e;e=t;var u=this;return function(n){var t=this;void 0===n&&(n=o);for(var r=arguments.length,i=Array(r>1?r-1:0),a=1;a<r;a++)i[a-1]=arguments[a];return u.produce(n,(function(n){var r;return (r=e).call.apply(r,[t,n].concat(i))}))}}var a;if("function"!=typeof e&&n(6),void 0!==i&&"function"!=typeof i&&n(7),r(t)){var f=w(this),c=R(this,t,void 0),s=!0;try{a=e(c),s=!1;}finally{s?g(f):O(f);}return "undefined"!=typeof Promise&&a instanceof Promise?a.then((function(n){return j(f,i),P(n,f)}),(function(n){throw g(f),n})):(j(f,i),P(a,f))}if(!t||"object"!=typeof t){if((a=e(t))===H)return;return void 0===a&&(a=t),this.N&&d(a,!0),a}n(21,t);},i.produceWithPatches=function(n,t){var r,e,i=this;return "function"==typeof n?function(t){for(var r=arguments.length,e=Array(r>1?r-1:0),o=1;o<r;o++)e[o-1]=arguments[o];return i.produceWithPatches(t,(function(t){return n.apply(void 0,[t].concat(e))}))}:[this.produce(n,t,(function(n,t){r=n,e=t;})),r,e]},i.createDraft=function(e){r(e)||n(8),t(e)&&(e=D(e));var i=w(this),o=R(this,e,void 0);return o[Q].C=!0,O(i),o},i.finishDraft=function(t,r){var e=t&&t[Q];var i=e.A;return j(i,r),P(void 0,i)},i.setAutoFreeze=function(n){this.N=n;},i.setUseProxies=function(t){t&&!B&&n(20),this.O=t;},i.applyPatches=function(n,r){var e;for(e=r.length-1;e>=0;e--){var i=r[e];if(0===i.path.length&&"replace"===i.op){n=i.value;break}}var o=b("Patches").$;return t(n)?o(n,r):this.produce(n,(function(n){return o(n,r.slice(e+1))}))},e}(),un=new on,fn=un.produceWithPatches.bind(un),cn=un.setAutoFreeze.bind(un),sn=un.setUseProxies.bind(un),vn=un.applyPatches.bind(un),pn=un.createDraft.bind(un),ln=un.finishDraft.bind(un);
 
   /**
    * @this {Promise}
@@ -908,30 +908,27 @@
    * - d3 4.0: Partially supported (only "get" and "row" methods have been implemented)
    */
   d3__default.csv = mkShim(d3__default.csv);
-  d3__default.json = mkShim(d3__default.json); // -----------------------------------------------------------------------------
+  d3__default.json = mkShim(d3__default.json);
+
+  // -----------------------------------------------------------------------------
 
   function mkShim(request) {
-    function mkGet() {
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
+    function mkGet(...args) {
       return function (cb) {
-        request.apply(void 0, args).then(function (data) {
+        request(...args).then(function (data) {
           cb(undefined, data);
         }).catch(cb);
       };
     }
-
     return function (url, parseNew) {
       return {
         // This is the "new" d3-fetch way of loading data that uses a Promise
-        then: function then(cb) {
+        then: function (cb) {
           return request(url, parseNew).then(cb);
         },
         // This is the "old" d3-request way of loading data using an XMLHttpRequest
         get: mkGet(url),
-        row: function row(parseRow) {
+        row: function (parseRow) {
           return {
             get: mkGet(url, parseRow)
           };
@@ -941,7 +938,6 @@
   }
 
   /* eslint-disable */
-
   /**
    * innerHTML property for SVGElement
    * Copyright(c) 2010, Jeff Schiller
@@ -954,14 +950,13 @@
    *
    * I haven't decided on the best name for this property - thus the duplication.
    */
+
   (function () {
     if (typeof window === "undefined") {
       return;
     }
-
-    var serializeXML = function serializeXML(node, output) {
+    var serializeXML = function (node, output) {
       var nodeType = node.nodeType;
-
       if (nodeType == 3) {
         // TEXT nodes.
         // Replace special XML characters with their entities.
@@ -970,24 +965,19 @@
         // ELEMENT nodes.
         // Serialize Element nodes.
         output.push("<", node.tagName);
-
         if (node.hasAttributes()) {
           var attrMap = node.attributes;
-
           for (var i = 0, len = attrMap.length; i < len; ++i) {
             var attrNode = attrMap.item(i);
             output.push(" ", attrNode.name, "='", attrNode.value, "'");
           }
         }
-
         if (node.hasChildNodes()) {
           output.push(">");
           var childNodes = node.childNodes;
-
           for (var i = 0, len = childNodes.length; i < len; ++i) {
             serializeXML(childNodes.item(i), output);
           }
-
           output.push("</", node.tagName, ">");
         } else {
           output.push("/>");
@@ -1001,37 +991,33 @@
         // TODO: Handle DOCUMENT nodes.
         throw "Error serializing XML. Unhandled node of type: " + nodeType;
       }
-    }; // The innerHTML DOM property for SVGElement.
-
-
+    };
+    // The innerHTML DOM property for SVGElement.
     Object.defineProperty(SVGElement.prototype, "innerHTML", {
-      get: function get() {
+      get: function () {
         var output = [];
         var childNode = this.firstChild;
-
         while (childNode) {
           serializeXML(childNode, output);
           childNode = childNode.nextSibling;
         }
-
         return output.join("");
       },
-      set: function set(markupText) {
+      set: function (markupText) {
         // Wipe out the current contents of the element.
         while (this.firstChild) {
           this.removeChild(this.firstChild);
         }
-
         try {
           // Parse the markup into valid nodes.
           var dXML = new DOMParser();
-          dXML.async = false; // Wrap the markup into a SVG node to ensure parsing works.
-
+          dXML.async = false;
+          // Wrap the markup into a SVG node to ensure parsing works.
           var sXML = "<svg xmlns='http://www.w3.org/2000/svg'>" + markupText + "</svg>";
-          var svgDocElement = dXML.parseFromString(sXML, "text/xml").documentElement; // Now take each node, import it and append to this element.
+          var svgDocElement = dXML.parseFromString(sXML, "text/xml").documentElement;
 
+          // Now take each node, import it and append to this element.
           var childNode = svgDocElement.firstChild;
-
           while (childNode) {
             this.appendChild(this.ownerDocument.importNode(childNode, true));
             childNode = childNode.nextSibling;
@@ -1040,13 +1026,14 @@
           throw new Error("Error parsing XML string");
         }
       }
-    }); // The innerSVG DOM property for SVGElement.
+    });
 
+    // The innerSVG DOM property for SVGElement.
     Object.defineProperty(SVGElement.prototype, "innerSVG", {
-      get: function get() {
+      get: function () {
         return this.innerHTML;
       },
-      set: function set(markupText) {
+      set: function (markupText) {
         this.innerHTML = markupText;
       }
     });
@@ -1055,12 +1042,14 @@
   // This is the more strict version of `isNaN`. We need to polyfill it for Internet Explorer,
   // all other browsers support this.
   // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isNaN
+
   Number.isNaN = Number.isNaN || function isNaN(input) {
     return typeof input === "number" && input !== input;
   };
 
-  T(); // d3 mutates state in many places, which is why we have to turn this off.
+  T();
 
+  // d3 mutates state in many places, which is why we have to turn this off.
   cn(false);
 
   /**
@@ -1072,7 +1061,6 @@
    * @param {String} key - the name of the group
    * @return {d3.selection}
    */
-
   d3.selection.prototype.selectDiv = function (key) {
     var div = this.selectAll('[data-d3-selectdiv="' + key + '"]').data(function (d) {
       return [d];
@@ -1090,7 +1078,6 @@
    * @param  {String} key The name of the group
    * @return {d3.selection}
    */
-
   d3.selection.prototype.selectGroup = function (key) {
     var group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data(function (d) {
       return [d];
@@ -1104,6 +1091,7 @@
    *
    * @module sszvis/fn
    */
+
   /**
    * fn.identity
    *
@@ -1113,10 +1101,10 @@
    * @param  {*} value any value
    * @return {*}       returns its argument
    */
-
-  var identity = function identity(value) {
+  var identity = function (value) {
     return value;
   };
+
   /**
    * fn.isString
    *
@@ -1125,10 +1113,10 @@
    * @param  {*}  val       The value to check
    * @return {Boolean}      Whether the value is a string
    */
-
-  var isString = function isString(val) {
+  var isString = function (val) {
     return Object.prototype.toString.call(val) === "[object String]";
   };
+
   /**
    * fn.isSelection
    *
@@ -1137,10 +1125,10 @@
    * @param  {*}  val         The value to check
    * @return {Boolean}        Whether the value is a d3.selection
    */
-
-  var isSelection = function isSelection(val) {
+  var isSelection = function (val) {
     return val instanceof d3.selection;
   };
+
   /**
    * fn.arity
    *
@@ -1153,68 +1141,57 @@
    * @return {Function} A new function wrapping `fn`. The new function is
    * guaranteed to be of arity `n`.
    */
-
-  var arity = function arity(n, fn) {
+  var arity = function (n, fn) {
     switch (n) {
       case 0:
         return function () {
           return fn.call(this);
         };
-
       case 1:
         return function (a0) {
           return fn.call(this, a0);
         };
-
       case 2:
         return function (a0, a1) {
           return fn.call(this, a0, a1);
         };
-
       case 3:
         return function (a0, a1, a2) {
           return fn.call(this, a0, a1, a2);
         };
-
       case 4:
         return function (a0, a1, a2, a3) {
           return fn.call(this, a0, a1, a2, a3);
         };
-
       case 5:
         return function (a0, a1, a2, a3, a4) {
           return fn.call(this, a0, a1, a2, a3, a4);
         };
-
       case 6:
         return function (a0, a1, a2, a3, a4, a5) {
           return fn.call(this, a0, a1, a2, a3, a4, a5);
         };
-
       case 7:
         return function (a0, a1, a2, a3, a4, a5, a6) {
           return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
         };
-
       case 8:
         return function (a0, a1, a2, a3, a4, a5, a6, a7) {
           return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
         };
-
       case 9:
         return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
           return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
         };
-
       case 10:
         return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
           return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
         };
-
       default:
         return fn;
     }
   };
+
   /**
    * fn.compose
    *
@@ -1231,21 +1208,19 @@
    * @param {Function...} ... Accepts any number of functions as arguments
    * @return {Function} returns a function which is the composition of the passed functions
    */
-
-  var compose = function compose() {
+  var compose = function () {
     var fns = arguments,
-        start = arguments.length - 1;
+      start = arguments.length - 1;
     return function () {
       var i = start;
       var result = fns[i].apply(this, arguments);
-
       while (i--) {
         result = fns[i].call(this, result);
       }
-
       return result;
     };
   };
+
   /**
    * fn.contains
    *
@@ -1255,10 +1230,10 @@
    * @param  {any}   d    Item that might be in list
    * @return {boolean}
    */
-
-  var contains = function contains(list, d) {
+  var contains = function (list, d) {
     return list.indexOf(d) >= 0;
   };
+
   /**
    * fn.defined
    *
@@ -1267,10 +1242,10 @@
    * @param  {*} val the value to check
    * @return {Boolean}     true if the value is defined, false if the value is undefined
    */
-
-  var defined = function defined(val) {
+  var defined = function (val) {
     return typeof val !== "undefined" && val != null && !Number.isNaN(val);
   };
+
   /**
    * fn.derivedSet
    *
@@ -1286,26 +1261,23 @@
    * @param  {function} acc     An accessor function which calculates the set determiner.
    * @return {array}            An array of objects from the input array.
    */
-
-  var derivedSet = function derivedSet(arr, acc) {
+  var derivedSet = function (arr, acc) {
     acc || (acc = identity);
     var seen = [],
-        sValue,
-        cValue,
-        result = [];
-
+      sValue,
+      cValue,
+      result = [];
     for (var i = 0, l = arr.length; i < l; ++i) {
       sValue = arr[i];
       cValue = acc(sValue, i, arr);
-
       if (seen.indexOf(cValue) < 0) {
         seen.push(cValue);
         result.push(sValue);
       }
     }
-
     return result;
   };
+
   /**
    * fn.every
    *
@@ -1316,16 +1288,15 @@
    * @param  {Array} arr              The array to test
    * @return {Boolean}                Whether every element in the array passes the test
    */
-
-  var every = function every(predicate, arr) {
+  var every = function (predicate, arr) {
     for (var i = 0; i < arr.length; i++) {
       if (!predicate(arr[i])) {
         return false;
       }
     }
-
     return true;
   };
+
   /**
    * fn.filledArray
    *
@@ -1335,16 +1306,14 @@
    * @param  {Any} val        The value with which to fill the array
    * @return {Array}          An array of length len filled with val
    */
-
-  var filledArray = function filledArray(len, val) {
+  var filledArray = function (len, val) {
     var arr = new Array(len);
-
     for (var i = 0; i < len; ++i) {
       arr[i] = val;
     }
-
     return arr;
   };
+
   /**
    * fn.find
    *
@@ -1355,16 +1324,15 @@
    *
    * @returns {arrayElement|undefined}
    */
-
-  var find = function find(predicate, arr) {
+  var find = function (predicate, arr) {
     for (var i = 0; i < arr.length; i++) {
       if (predicate(arr[i])) {
         return arr[i];
       }
     }
-
     return undefined;
   };
+
   /**
    * fn.first
    *
@@ -1373,10 +1341,10 @@
    * @param  {Array} arr an array
    * @return {*}     the first value in the array
    */
-
-  var first = function first(arr) {
+  var first = function (arr) {
     return arr[0];
   };
+
   /**
    * fn.flatten
    *
@@ -1387,10 +1355,10 @@
    * @param  {Array}        The Array to flatten
    * @return {Array}        A flattened Array
    */
-
-  var flatten = function flatten(arr) {
+  var flatten = function (arr) {
     return Array.prototype.concat.apply([], arr);
   };
+
   /**
    * fn.firstTouch
    *
@@ -1404,16 +1372,15 @@
    * @return {Touch|null}         The first Touch object from the TouchEvent's lists
    *                              of touches.
    */
-
-  var firstTouch = function firstTouch(event) {
+  var firstTouch = function (event) {
     if (event.touches && event.touches.length) {
       return event.touches[0];
     } else if (event.changedTouches && event.changedTouches.length) {
       return event.changedTouches[0];
     }
-
     return null;
   };
+
   /**
    * fn.foldPattern
    *
@@ -1428,16 +1395,14 @@
    *   informalGreeting: function() { return "How ya’ doin!" }
    * })
    */
-
-  var foldPattern = function foldPattern(key, pattern) {
+  var foldPattern = function (key, pattern) {
     var result = pattern[key];
-
     if (typeof result === "function") {
       return result();
     }
-
     throw new Error("[foldPattern] No definition provided for key: " + key);
   };
+
   /**
    * fn.hashableSet
    *
@@ -1457,24 +1422,21 @@
    * the element's index in the input array, and the input array itself.
    * @return {Array} an Array of unique elements
    */
-
-  var hashableSet = function hashableSet(arr, acc) {
+  var hashableSet = function (arr, acc) {
     acc || (acc = identity);
     var seen = {},
-        value,
-        result = [];
-
+      value,
+      result = [];
     for (var i = 0, l = arr.length; i < l; ++i) {
       value = acc(arr[i], i, arr);
-
       if (!seen[value]) {
         seen[value] = true;
         result.push(value);
       }
     }
-
     return result;
   };
+
   /**
    * fn.isFunction
    *
@@ -1483,10 +1445,10 @@
    * @param {*} val the value to check
    * @return {Boolean} true if the value is a function, false otherwise
    */
-
-  var isFunction = function isFunction(val) {
+  var isFunction = function (val) {
     return typeof val == "function";
   };
+
   /**
    * fn.isNull
    *
@@ -1495,10 +1457,10 @@
    * @param {*} val the value to check
    * @return {Boolean}     true if the value is null, false if the value is not null
    */
-
-  var isNull = function isNull(val) {
+  var isNull = function (val) {
     return val === null;
   };
+
   /**
    * fn.isNumber
    *
@@ -1507,10 +1469,10 @@
    * @param  {*}  val     The value to check
    * @return {Boolean}    Whether the value is a number
    */
-
-  var isNumber = function isNumber(val) {
+  var isNumber = function (val) {
     return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
   };
+
   /**
    * fn.isObject
    *
@@ -1520,10 +1482,10 @@
    * @param  {*}  value      The value to test
    * @return {Boolean}       Whether the value is an object
    */
-
-  var isObject = function isObject(val) {
+  var isObject = function (val) {
     return Object(val) === val;
   };
+
   /**
    * fn.last
    *
@@ -1532,10 +1494,10 @@
    * @param  {Array} arr an array
    * @return {*}     the last value in the array
    */
-
-  var last = function last(arr) {
+  var last = function (arr) {
     return arr[arr.length - 1];
   };
+
   /**
    * fn.not
    *
@@ -1546,12 +1508,12 @@
    * @param  {Function} f the argument function
    * @return {Function}   a new function which returns the boolean opposite of the argument function
    */
-
-  var not = function not(f) {
+  var not = function (f) {
     return function () {
       return !f.apply(this, arguments);
     };
   };
+
   /**
    * fn.prop
    *
@@ -1564,12 +1526,12 @@
    * @return {Function}     A property-accessor function
    *
    */
-
-  var prop = function prop(key) {
+  var prop = function (key) {
     return function (object) {
       return object[key];
     };
   };
+
   /**
    * fn.propOr
    *
@@ -1584,13 +1546,13 @@
    * @param  {any} defaultVal     the default value to return when either the object or the requested property are undefined
    * @return {Function}           A property-accessor function
    */
-
-  var propOr = function propOr(key, defaultVal) {
+  var propOr = function (key, defaultVal) {
     return function (object) {
       var value = object !== undefined ? object[key] : undefined;
       return value !== undefined ? value : defaultVal;
     };
   };
+
   /**
    * fn.set
    *
@@ -1611,14 +1573,14 @@
    * the element's index in the input array, and the input array itself.
    * @return {Array} an Array of unique elements
    */
-
-  var set = function set(arr, acc) {
+  var set = function (arr, acc) {
     acc || (acc = identity);
     return arr.reduce(function (m, value, i) {
       var computed = acc(value, i, arr);
       return m.indexOf(computed) < 0 ? m.concat(computed) : m;
     }, []);
   };
+
   /**
    * fn.some
    *
@@ -1629,16 +1591,15 @@
    * @param  {Array} arr              The array to test
    * @return {Boolean}                Whether some element in the array passes the test
    */
-
-  var some = function some(predicate, arr) {
+  var some = function (predicate, arr) {
     for (var i = 0; i < arr.length; i++) {
       if (predicate(arr[i])) {
         return true;
       }
     }
-
     return false;
   };
+
   /**
    * fn.stringEqual
    *
@@ -1650,47 +1611,42 @@
    * @param  {any} b        the second value
    * @return {boolean}      Whether the provided values are equal when converted to strings.
    */
-
-  var stringEqual = function stringEqual(a, b) {
+  var stringEqual = function (a, b) {
     return a.toString() === b.toString();
   };
+
   /**
    * fn.functor
    *
    * Same as fn.functor in d3v3
    */
-
-  var functor = function functor(v) {
+  var functor = function (v) {
     return typeof v === "function" ? v : function () {
       return v;
     };
   };
+
   /**
    * fn.memoize
    *
    * Adapted from lodash's memoize() but using d3.map() as cache
    * See https://lodash.com/docs/4.17.4#memoize
    */
-
-  var memoize = function memoize(func, resolver) {
+  var memoize = function (func, resolver) {
     if (typeof func != "function" || resolver != null && typeof resolver != "function") {
       throw new TypeError("Expected a function");
     }
-
-    var memoized = function memoized() {
+    var memoized = function () {
       var args = arguments,
-          key = resolver ? resolver.apply(this, args) : args[0],
-          cache = memoized.cache;
-
+        key = resolver ? resolver.apply(this, args) : args[0],
+        cache = memoized.cache;
       if (cache.has(key)) {
         return cache.get(key);
       }
-
       var result = func.apply(this, args);
       memoized.cache = cache.set(key, result) || cache;
       return result;
     };
-
     memoized.cache = d3.map();
     return memoized;
   };
@@ -1708,11 +1664,13 @@
    * @param {string}       type       Element to create
    * @param {string}       elementId  The ID to assign to the created element
    */
+
   function ensureDefsElement (selection, type, elementId) {
     var element = ensureDefsSelection(selection).selectAll(type + "#" + elementId).data([0]);
     var newElement = element.enter().append(type).attr("id", elementId);
     return element.merge(newElement);
   }
+
   /* Helper functions
   ----------------------------------------------- */
 
@@ -1722,7 +1680,6 @@
    * container will not be displayed, but can be referenced by ID in the fill property
    * of other, visible, elements.
    */
-
   function ensureDefsSelection(selection) {
     var defs = selection.selectAll("defs").data([0]);
     var newDefs = defs.enter().append("defs");
@@ -1771,20 +1728,19 @@
    * @function gry       1-color scale for shaded values
    * @function lightGry  1-color scale for shaded backgrounds
    */
+
   /* Constants
   ----------------------------------------------- */
-
   var LIGHTNESS_STEP = 0.6;
+
   /* Scales
   ----------------------------------------------- */
-
   function qualColorScale(colors) {
     return function () {
       var scale = d3.scaleOrdinal().range(colors.map(convertLab));
       return decorateOrdinalScale(scale);
     };
   }
-
   var darkBlue = "#3431DE";
   var mediumBlue = "#0A8DF6";
   var lightBlue = "#23C3F1";
@@ -1801,115 +1757,93 @@
   var scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
   var scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
   var scaleQual6b = qualColorScale([darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
-
   function seqColorScale(colors) {
     return function () {
       var scale = d3.scaleLinear().range(colors.map(convertLab));
       return decorateLinearScale(scale);
     };
   }
-
   var scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
   var scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
   var scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
   var scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
-
   function divColorScale(colors) {
     return function () {
       var scale = d3.scaleLinear().range(colors.map(convertLab));
       return decorateDivScale(scale);
     };
   }
-
   var scaleDivVal = divColorScale(["#611F00", "#A13200", "#EA5D00", "#FF9A54", "#FCDDBB", "#CADEFF", "#89AFFF", "#5B6EFF", "#3431DE", "#211A8A"]);
   var scaleDivValGry = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88", "#E4E0DF", "#AECBFF", "#6B8EFF", "#3B51FF", "#2F2ABB"]);
   var scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
   var scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
-
   function greyColorScale(colors) {
     return function () {
       var scale = d3.scaleOrdinal().range(colors.map(convertLab));
       return decorateLinearScale(scale);
     };
   }
-
   var scaleLightGry = greyColorScale(["#FAFAFA"]);
   var scalePaleGry = greyColorScale(["#EAEAEA"]);
   var scaleGry = greyColorScale(["#D6D6D6"]);
   var scaleDimGry = greyColorScale(["#B8B8B8"]);
   var scaleMedGry = greyColorScale(["#7C7C7C"]);
   var scaleDeepGry = greyColorScale(["#545454"]);
-  var slightlyDarker = function slightlyDarker(c) {
+  var slightlyDarker = function (c) {
     return d3.hsl(c).darker(0.4);
   };
-  var muchDarker = function muchDarker(c) {
+  var muchDarker = function (c) {
     return d3.hsl(c).darker(0.7);
   };
-  var withAlpha = function withAlpha(c, a) {
+  var withAlpha = function (c, a) {
     var rgbColor = d3.rgb(c);
     return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
   };
+
   /* Scale extensions
   ----------------------------------------------- */
-
   function decorateOrdinalScale(scale) {
     scale.darker = function () {
       return decorateOrdinalScale(scale.copy().range(scale.range().map(func("darker", LIGHTNESS_STEP))));
     };
-
     scale.brighter = function () {
       return decorateOrdinalScale(scale.copy().range(scale.range().map(func("brighter", LIGHTNESS_STEP))));
     };
-
     scale.reverse = function () {
       return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
     };
-
     return scale;
   }
-
   function decorateDivScale(scale) {
     scale = interpolatedDivergentColorScale(scale);
-
     scale.reverse = function () {
       return decorateLinearScale(scale.copy().range(scale.range().reverse()));
     };
-
     return scale;
   }
-
   function interpolatedDivergentColorScale(scale) {
     var nativeDomain = scale.domain;
     if (!scale.range()) return scale;
     var length = scale.range().length;
-
     scale.domain = function (dom) {
       if (!dom) return nativeDomain.call(this);
       var xDomain = [];
-
       for (var i = 0; i < length; i++) {
         xDomain.push(d3.quantile(dom, i / (length - 1)));
       }
-
       return nativeDomain.call(this, xDomain);
     };
-
     return scale;
   }
-
   function decorateLinearScale(scale) {
     scale = interpolatedColorScale(scale);
-
     scale.reverse = function () {
       return decorateLinearScale(scale.copy().range(scale.range().reverse()));
     };
-
     return scale;
   }
-
   function interpolatedColorScale(scale) {
     var nativeDomain = scale.domain;
-
     scale.domain = function (dom) {
       if (arguments.length === 1) {
         var threeDomain = [dom[0], d3.mean(dom), dom[1]];
@@ -1918,17 +1852,14 @@
         return nativeDomain.apply(this, arguments);
       }
     };
-
     return scale;
   }
+
   /* Helper functions
   ----------------------------------------------- */
-
-
   function convertLab(d) {
     return d3.lab(d);
   }
-
   function func(fName) {
     var args = Array.prototype.slice.call(arguments, 1);
     return function (d) {
@@ -1954,22 +1885,22 @@
    * @method  dataAreaPattern                 The pattern for the data area texture.
    *
    */
-  var heatTableMissingValuePattern = function heatTableMissingValuePattern(selection) {
+  var heatTableMissingValuePattern = function (selection) {
     var rectFill = scaleLightGry(),
-        crossStroke = "#A4A4A4",
-        crossStrokeWidth = 0.035,
-        cross1 = 0.35,
-        cross2 = 0.65;
+      crossStroke = "#A4A4A4",
+      crossStrokeWidth = 0.035,
+      cross1 = 0.35,
+      cross2 = 0.65;
     selection.attr("patternUnits", "objectBoundingBox").attr("patternContentUnits", "objectBoundingBox").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1);
     selection.append("rect").attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1).attr("fill", rectFill);
     selection.append("line").attr("x1", cross1).attr("y1", cross1).attr("x2", cross2).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
     selection.append("line").attr("x1", cross2).attr("y1", cross1).attr("x2", cross1).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
   };
-  var mapMissingValuePattern = function mapMissingValuePattern(selection) {
+  var mapMissingValuePattern = function (selection) {
     var pWidth = 14,
-        pHeight = 14,
-        fillColor = "#FAFAFA",
-        lineStroke = "#CCCCCC";
+      pHeight = 14,
+      fillColor = "#FAFAFA",
+      lineStroke = "#CCCCCC";
     selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
     selection.append("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", fillColor);
     selection.append("line").attr("x1", 1).attr("y1", 10).attr("x2", 5).attr("y2", 14).attr("stroke", lineStroke);
@@ -1977,7 +1908,7 @@
     selection.append("line").attr("x1", 8).attr("y1", 3).attr("x2", 12).attr("y2", 7).attr("stroke", lineStroke);
     selection.append("line").attr("x1", 12).attr("y1", 3).attr("x2", 8).attr("y2", 7).attr("stroke", lineStroke);
   };
-  var mapLakePattern = function mapLakePattern(selection) {
+  var mapLakePattern = function (selection) {
     var pWidth = 6;
     var pHeight = 6;
     var offset = 0.5;
@@ -1986,16 +1917,16 @@
     selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#ddd").attr("stroke-linecap", "square");
     selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#ddd").attr("stroke-linecap", "square");
   };
-  var mapLakeFadeGradient = function mapLakeFadeGradient(selection) {
+  var mapLakeFadeGradient = function (selection) {
     selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", "lake-fade-gradient");
     selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
     selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
   };
-  var mapLakeGradientMask = function mapLakeGradientMask(selection) {
+  var mapLakeGradientMask = function (selection) {
     selection.attr("maskContentUnits", "objectBoundingBox");
     selection.append("rect").attr("fill", "url(#lake-fade-gradient)").attr("width", 1).attr("height", 1);
   };
-  var dataAreaPattern = function dataAreaPattern(selection) {
+  var dataAreaPattern = function (selection) {
     var pWidth = 6;
     var pHeight = 6;
     var offset = 0.5;
@@ -2030,31 +1961,29 @@
    *
    * @return {sszvis.component} A d3 reusable chart
    */
-
   function component() {
     var props = {};
     var selectionRenderer = null;
     var renderer = identity$1;
+
     /**
      * Constructor
      *
      * @param  {d3.selection} selection Passed in by d3
      */
-
     function sszvisComponent(selection) {
       if (selectionRenderer) {
         selection.props = function () {
           return clone(props);
         };
-
         selectionRenderer.apply(selection, slice(arguments));
       }
-
       selection.each(function () {
         this.__props__ = clone(props);
         renderer.apply(this, slice(arguments));
       });
     }
+
     /**
      * Define a property accessor with an optional setter
      *
@@ -2063,13 +1992,12 @@
      *         sszvis.component. Sets the returned value to the given property
      * @return {sszvis.component}
      */
-
-
     sszvisComponent.prop = function (prop, setter) {
       setter || (setter = identity$1);
       sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
       return sszvisComponent;
     };
+
     /**
      * Delegate a properties' accessors to a delegate object
      *
@@ -2077,16 +2005,14 @@
      * @param  {Object} delegate The target having getter and setter methods for prop
      * @return {sszvis.component}
      */
-
-
     sszvisComponent.delegate = function (prop, delegate) {
       sszvisComponent[prop] = function () {
         var result = delegate[prop].apply(delegate, slice(arguments));
         return arguments.length === 0 ? result : sszvisComponent;
       };
-
       return sszvisComponent;
     };
+
     /**
      * Creates a render context for the given component's parent selection.
      * Use this, when you need full control over the rendering of the component
@@ -2096,12 +2022,11 @@
      * @param  {Function} callback
      * @return {[sszvis.component]}
      */
-
-
     sszvisComponent.renderSelection = function (callback) {
       selectionRenderer = callback;
       return sszvisComponent;
     };
+
     /**
      * Creates a render context for the given component. Implements the
      * d3.selection.each interface.
@@ -2111,15 +2036,13 @@
      * @param  {Function} callback
      * @return {sszvis.component}
      */
-
-
     sszvisComponent.render = function (callback) {
       renderer = callback;
       return sszvisComponent;
     };
-
     return sszvisComponent;
   }
+
   /**
    * d3.selection plugin to get the properties of a sszvis.component.
    * Works similarly to d3.selection.data, but for properties.
@@ -2128,7 +2051,6 @@
    *
    * @return {Object} An object of properties for the given component
    */
-
   d3.selection.prototype.props = function () {
     // It would be possible to make this work exactly like
     // d3.selection.data(), but it would need some test cases,
@@ -2141,6 +2063,7 @@
     var node = group[0];
     return node.__props__ || {};
   };
+
   /**
    * Creates an accessor function that either gets or sets a value, depending
    * on whether or not it is called with arguments.
@@ -2150,8 +2073,6 @@
    * @param  {Function} [setter] Transforms the data on set
    * @return {Function} The accessor function
    */
-
-
   function accessor(props, prop, setter) {
     setter || (setter = identity$1);
     return function () {
@@ -2160,22 +2081,17 @@
       return this;
     };
   }
-
   function identity$1(d) {
     return d;
   }
-
   function slice(array) {
     return Array.prototype.slice.call(array);
   }
-
   function clone(obj) {
     var copy = {};
-
     for (var attr in obj) {
       if ({}.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
     }
-
     return copy;
   }
 
@@ -2207,7 +2123,6 @@
       var newDataArea = dataArea.enter().append("circle").classed("sszvis-dataareacircle", true);
       dataArea = dataArea.merge(newDataArea);
       dataArea.attr("cx", props.x).attr("cy", props.y).attr("r", props.r).attr("fill", "url(#data-area-pattern)");
-
       if (props.caption) {
         var dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data);
         var newDataCaptions = dataCaptions.enter().append("text").classed("sszvis-dataareacircle__caption", true);
@@ -2240,6 +2155,8 @@
    * @param {string} [caption]      A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
    * @returns {sszvis.component} a linear data area component (reference line)
    */
+
+  // reference line specified in the form y = mx + b
   // user supplies m and b
   // default line is y = x
 
@@ -2256,7 +2173,6 @@
       var newLine = line.enter().append("line").classed("sszvis-referenceline", true);
       line = line.merge(newLine);
       line.attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
-
       if (props.caption) {
         var caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
         caption.exit().remove();
@@ -2291,6 +2207,7 @@
    *
    * @module sszvis/svgUtils/crisp
    */
+
   /**
    * crisp.halfPixel
    *
@@ -2300,10 +2217,10 @@
    * @param  {number} pos A pixel position
    * @return {number}     A pixel position snapped to the pixel grid
    */
-
-  var halfPixel = function halfPixel(pos) {
+  var halfPixel = function (pos) {
     return Math.floor(pos) + 0.5;
   };
+
   /**
    * crisp.roundTransformString
    *
@@ -2317,14 +2234,14 @@
    * @param  {string} transformStr A valid SVG transform string
    * @return {string}              An SVG transform string with rounded values
    */
-
-  var roundTransformString = function roundTransformString(transformStr) {
+  var roundTransformString = function (transformStr) {
     var roundNumber = compose(Math.floor, Number);
     return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function (_, left, vecStr, right) {
       var roundVec = vecStr.replace(",", " ").replace(/\s+/, " ").split(" ").map(roundNumber).join(",");
       return left + roundVec + right;
     });
   };
+
   /**
    * crisp.transformTranslateSubpixelShift
    *
@@ -2335,8 +2252,7 @@
    * @param  {string} transformStr A valid SVG transform string
    * @return {vecor}               Two-element array ([dx, dy])
    */
-
-  var transformTranslateSubpixelShift = function transformTranslateSubpixelShift(transformStr) {
+  var transformTranslateSubpixelShift = function (transformStr) {
     var roundNumber = compose(Math.floor, Number);
     var m = transformStr.match(/(translate\()\s*([0-9.,\- ]+)\s*(\))/i);
     var vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
@@ -2357,6 +2273,7 @@
    * @param  {number} y     The y-component of the transform
    * @return {string}       The translate string
    */
+
   function translateString (x, y) {
     return "translate(" + x + "," + y + ")";
   }
@@ -2406,15 +2323,22 @@
     return component().prop("position").position(functor([0, 0])).prop("debug").render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
-      var anchor = selection.selectAll("[data-tooltip-anchor]").data(data); // Enter
+      var anchor = selection.selectAll("[data-tooltip-anchor]").data(data);
 
-      var newAnchor = anchor.enter().append("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", ""); // Exit
+      // Enter
+
+      var newAnchor = anchor.enter().append("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", "");
+
+      // Exit
 
       anchor.exit().remove();
-      anchor = anchor.merge(newAnchor); // Update
+      anchor = anchor.merge(newAnchor);
 
-      anchor.attr("transform", compose(vectorToTranslateString, props.position)); // Visible anchor if debug is true
+      // Update
 
+      anchor.attr("transform", compose(vectorToTranslateString, props.position));
+
+      // Visible anchor if debug is true
       if (props.debug) {
         var referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data);
         var newReferencePoint = referencePoint.enter().append("circle").attr("data-tooltip-anchor-debug", "");
@@ -2423,9 +2347,9 @@
         referencePoint.attr("r", 2).attr("fill", "#fff").attr("stroke", "#f00").attr("stroke-width", 1.5).attr("transform", compose(vectorToTranslateString, props.position));
       }
     });
+
     /* Helper functions
     ----------------------------------------------- */
-
     function vectorToTranslateString(vec) {
       return translateString.apply(null, vec);
     }
@@ -2463,7 +2387,6 @@
       selection.call(ta);
     });
   }
-
   function makeFlagDot(classed, cx, cy) {
     return function (dot) {
       var newDot = dot.enter().append("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true);
@@ -2496,20 +2419,20 @@
    */
   var timeFormat = d3.timeFormatLocale(locale).format;
   var format = d3.formatLocale(locale).format;
+
   /**
    * Format a number as an age
    * @param  {number} d
    * @return {string}
    */
-
-  var formatAge = function formatAge(d) {
+  var formatAge = function (d) {
     return String(Math.round(d));
   };
+
   /**
    * A multi time formatter used by the axis class
    */
-
-  var formatAxisTimeFormat = function formatAxisTimeFormat(d) {
+  var formatAxisTimeFormat = function (d) {
     var xs = [[".%L", function (date) {
       return date.getMilliseconds();
     }], [":%S", function (date) {
@@ -2527,33 +2450,33 @@
     }], ["%Y", function () {
       return true;
     }]];
-
     for (var i = 0; i < xs.length; ++i) {
       if (xs[i][1](d)) {
         return timeFormat(xs[i][0])(d);
       }
     }
   };
+
   /**
    * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
    */
-
   var formatMonth = compose(function (m) {
     return m.toUpperCase();
   }, timeFormat("%b"));
+
   /**
    * A year formatter for date objects. Gives the date's year.
    */
-
   var formatYear = timeFormat("%Y");
+
   /**
    * Formatter for no label
    * @return {string} the empty string
    */
-
-  var formatNone = function formatNone() {
+  var formatNone = function () {
     return "";
   };
+
   /**
    * Format numbers according to the sszvis style guide. The most important
    * rules are:
@@ -2570,40 +2493,47 @@
    * @param  {number} d   Number
    * @return {string}     Fully formatted number
    */
-
-  var formatNumber = function formatNumber(d) {
+  var formatNumber = function (d) {
     var p;
     var dAbs = Math.abs(d);
-
     if (d == null || isNaN(d)) {
       return "–"; // This is an en-dash
-    } // 10250    -> "10 250"
+    }
+
+    // 10250    -> "10 250"
     // 10250.91 -> "10 251"
     else if (dAbs >= 1e4) {
-        // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
-        // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
-        return format(",.0f")(d);
-      } // 2350     -> "2350"
-      // 2350.29  -> "2350.3"
-      else if (dAbs >= 100) {
-          p = Math.min(1, decimalPlaces(d)); // Where there are decimals, round to 1 position
-          // To display more precision, use the preciseNumber function.
+      // Includes ',' for thousands separator. The default use of the 'narrow space' as a separator
+      // is configured in the localization file at vendor/d3-de/d3-de.js (also included with sszvis)
+      return format(",.0f")(d);
+    }
 
-          return stripTrailingZeroes(format("." + p + "f")(d));
-        } // 41       -> "41"
-        // 41.1     -> "41.1"
-        // 41.329   -> "41.33"
-        else if (dAbs > 0) {
-            p = Math.min(2, decimalPlaces(d)); // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
-            // but not more. To display more precision, use the preciseNumber function.
+    // 2350     -> "2350"
+    // 2350.29  -> "2350.3"
+    else if (dAbs >= 100) {
+      p = Math.min(1, decimalPlaces(d));
+      // Where there are decimals, round to 1 position
+      // To display more precision, use the preciseNumber function.
+      return stripTrailingZeroes(format("." + p + "f")(d));
+    }
 
-            return stripTrailingZeroes(format("." + p + "f")(d));
-          } // If abs(num) is not > 0, num is 0
-          // 0       -> "0"
-          else {
-              return format(".0f")(0);
-            }
+    // 41       -> "41"
+    // 41.1     -> "41.1"
+    // 41.329   -> "41.33"
+    else if (dAbs > 0) {
+      p = Math.min(2, decimalPlaces(d));
+      // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
+      // but not more. To display more precision, use the preciseNumber function.
+      return stripTrailingZeroes(format("." + p + "f")(d));
+    }
+
+    // If abs(num) is not > 0, num is 0
+    // 0       -> "0"
+    else {
+      return format(".0f")(0);
+    }
   };
+
   /**
    * Format numbers to a particular precision. This function is "curried", meaning that it is a function with
    * multiple arguments, but when you call it with less than the full number of arguments, it returns a function
@@ -2618,13 +2548,11 @@
    * @param  {Number} d           The number to be formatted
    * @return {String}             The formatted number
    */
-
-  var formatPreciseNumber = function formatPreciseNumber(p, d) {
+  var formatPreciseNumber = function (p, d) {
     // This curries the function
     if (arguments.length > 1) return formatPreciseNumber(p)(d);
     return function (x) {
       var dAbs = Math.abs(x);
-
       if (dAbs >= 100 && dAbs < 1e4) {
         // No thousands separator
         return format("." + p + "f")(x);
@@ -2634,47 +2562,47 @@
       }
     };
   };
+
   /**
    * Format percentages on the range 0 - 100
    * @param  {number} d    A value to format, between 0 and 100
    * @return {string}      The formatted value
    */
-
-  var formatPercent = function formatPercent(d) {
+  var formatPercent = function (d) {
     // Uses unix thin space
     return formatNumber(d) + " %";
   };
+
   /**
    * Format percentages on the range 0 - 1
    * @param  {number} d    A value to format, between 0 and 1
    * @return {string}      The formatted value
    */
-
-  var formatFractionPercent = function formatFractionPercent(d) {
+  var formatFractionPercent = function (d) {
     // Uses unix thin space
     return formatNumber(d * 100) + " %";
   };
+
   /**
    * Default formatter for text
    * @param  {number} d
    * @return {string} Fully formatted text
    */
-
-  var formatText = function formatText(d) {
+  var formatText = function (d) {
     return String(d);
   };
+
   /* Helper functions
   ----------------------------------------------- */
+
   // decLen is the number of decimal places in the number
   // 0.0002 -> 4
   // 0.0000 -> 0 (Javascript's number implementation chops off trailing zeroes)
   // 123456.1 -> 1
   // 123456.00001 -> 5
-
   function decimalPlaces(num) {
     return (String(Math.abs(num)).split(".")[1] || "").length;
   }
-
   function stripTrailingZeroes(str) {
     return str.replace(/(\.[0-9]*[1-9])0+$|\.0*$/, "$1");
   }
@@ -2708,11 +2636,9 @@
       var crispX = compose(halfPixel, props.x);
       var crispY0 = compose(halfPixel, props.y0);
       var crispY1 = compose(halfPixel, props.y1);
-
-      var middleY = function middleY(d) {
+      var middleY = function (d) {
         return halfPixel((props.y0(d) + props.y1(d)) / 2);
       };
-
       var dotRadius = 1.5;
       var line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]);
       var newLine = line.enter().append("line").classed("sszvis-rangeRuler__rule", true);
@@ -2741,8 +2667,9 @@
       }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
       .style("text-anchor", function (d) {
         return props.flip(d) ? "end" : "start";
-      }).text(compose(formatNumber, props.label)); //make the contour behind the the label update with the label
+      }).text(compose(formatNumber, props.label));
 
+      //make the contour behind the the label update with the label
       marks.selectAll(".sszvis-rangeRuler__label-contour").data(function (d) {
         return [d];
       }).attr("x", function (d) {
@@ -2756,7 +2683,6 @@
         var g = d3.select(this);
         var textNode = g.select("text").node();
         var textContour = g.select(".sszvis-rangeRuler__label-contour");
-
         if (textContour.empty()) {
           textContour = d3.select(textNode.cloneNode()).classed("sszvis-rangeRuler__label-contour", true).classed("sszvis-rangeRuler__label", false);
           this.insertBefore(textContour.node(), textNode);
@@ -2769,14 +2695,11 @@
             return props.flip(d) ? "end" : "start";
           });
         }
-
         textContour.text(textNode.textContent);
       });
-
       if (!props.removeStroke) {
         marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
-
       var total = selection.selectAll(".sszvis-rangeRuler__total").data([last(data)]);
       var newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
       total.exit().remove();
@@ -2789,7 +2712,6 @@
       }).text("Total " + formatNumber(props.total));
       var totalNode = total.node();
       var totalContour = selection.select(".sszvis-rangeRuler__total-contour");
-
       if (totalContour.empty()) {
         totalContour = d3.select(totalNode.cloneNode()).classed("sszvis-rangeRuler__total-contour", true).classed("sszvis-rangeRuler__total", false);
         this.insertBefore(totalContour.node(), totalNode);
@@ -2801,9 +2723,7 @@
           return props.flip(d) ? "end" : "start";
         });
       }
-
       totalContour.text(totalNode.textContent);
-
       if (!props.removeStroke) {
         total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
@@ -2835,14 +2755,17 @@
       var selection = d3.select(this);
       var props = selection.props();
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
-      var dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data); // FIXME: no exit?
+      var dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data);
+
+      // FIXME: no exit?
 
       var newDataArea = dataArea.enter().append("rect").classed("sszvis-dataarearectangle", true);
       dataArea = dataArea.merge(newDataArea);
       dataArea.attr("x", props.x).attr("y", props.y).attr("width", props.width).attr("height", props.height).attr("fill", "url(#data-area-pattern)");
-
       if (props.caption) {
-        var dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data); // FIXME: no exit?
+        var dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data);
+
+        // FIXME: no exit?
 
         var newDataCaptions = dataCaptions.enter().append("text").classed("sszvis-dataarearectangle__caption", true);
         dataCaptions = dataCaptions.merge(newDataCaptions);
@@ -2890,11 +2813,9 @@
     return component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
-
       var labelId = props.labelId || function (d) {
         return props.x(d) + "_" + props.y(d);
       };
-
       var ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
       var newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
       ruler.exit().remove();
@@ -2912,7 +2833,9 @@
       var label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
       var newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
       label.exit().remove();
-      label = label.merge(newLabel); // Update both label and labelOutline selections
+      label = label.merge(newLabel);
+
+      // Update both label and labelOutline selections
 
       var crispX = compose(halfPixel, props.x);
       var crispY = compose(halfPixel, props.y);
@@ -2925,16 +2848,17 @@
       }).style("text-anchor", function (d) {
         return props.flip(d) ? "end" : "start";
       }).html(props.label);
-
       if (props.reduceOverlap) {
         var THRESHOLD = 2;
         var ITERATIONS = 10;
-        var labelBounds = []; // Optimization for the lookup later
+        var labelBounds = [];
+        // Optimization for the lookup later
+        var labelBoundsIndex = {};
 
-        var labelBoundsIndex = {}; // Reset vertical shift (set by previous renders)
+        // Reset vertical shift (set by previous renders)
+        textSelection.attr("y", "");
 
-        textSelection.attr("y", ""); // Create bounds objects
-
+        // Create bounds objects
         label.each(function (d) {
           var bounds = this.getBoundingClientRect();
           var item = {
@@ -2944,24 +2868,25 @@
           };
           labelBounds.push(item);
           labelBoundsIndex[labelId(d)] = item;
-        }); // Sort array in place by vertical position
-        // (only supports labels of same height)
+        });
 
+        // Sort array in place by vertical position
+        // (only supports labels of same height)
         labelBounds.sort(function (a, b) {
           return d3.ascending(a.top, b.top);
-        }); // Using postfix decrement means the expression evaluates to the value of the variable
+        });
+
+        // Using postfix decrement means the expression evaluates to the value of the variable
         // before the decrement takes place. In the case of 10 iterations, this means that the
         // variable gets to 0 after the truthiness of the 10th iteration is tested, and the
         // expression is false at the beginning of the 11th, so 10 iterations are executed.
         // If you use prefix decrement (--ITERATIONS), the variable gets to 0 at the beginning of
         // the 10th iteration, meaning that only 9 iterations are executed.
-
         while (ITERATIONS--) {
           // Calculate overlap and correct position
           labelBounds.forEach(function (firstLabel, index) {
             labelBounds.slice(index + 1).forEach(function (secondLabel) {
               var overlap = firstLabel.bottom - secondLabel.top;
-
               if (overlap >= THRESHOLD) {
                 var offset = overlap / 2;
                 firstLabel.bottom -= offset;
@@ -2973,9 +2898,9 @@
               }
             });
           });
-        } // Shift vertically to remove overlap
+        }
 
-
+        // Shift vertically to remove overlap
         textSelection.attr("y", function (d) {
           var textLabel = labelBoundsIndex[labelId(d)];
           return textLabel.dy;
@@ -3022,16 +2947,16 @@
    * @return {sszvis.component}
    *
    */
+
   /* Configuration
   ----------------------------------------------- */
-
   var SMALL_CORNER_RADIUS = 3;
   var LARGE_CORNER_RADIUS = 4;
   var TIP_SIZE = 6;
   var BLUR_PADDING = 5;
+
   /* Exported module
   ----------------------------------------------- */
-
   function tooltip () {
     var renderer = tooltipRenderer();
     return component().delegate("header", renderer).delegate("body", renderer).delegate("orientation", renderer).delegate("dx", renderer).delegate("dy", renderer).delegate("opacity", renderer).prop("renderInto").prop("visible", functor).visible(false).renderSelection(function (selection) {
@@ -3052,20 +2977,24 @@
       props.renderInto.datum(tooltipData).call(renderer);
     });
   }
+
   /**
    * Tooltip renderer
    * @private
    */
-
-  var tooltipRenderer = function tooltipRenderer() {
+  var tooltipRenderer = function () {
     return component().prop("header").prop("body").prop("orientation", functor).orientation("bottom").prop("dx", functor).dx(1).prop("dy", functor).dy(1).prop("opacity", functor).opacity(1).renderSelection(function (selection) {
       var tooltipData = selection.datum();
       var props = selection.props();
       var isDef = defined;
-      var isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body); // Select tooltip elements
+      var isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body);
+
+      // Select tooltip elements
 
       var tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData);
-      tooltip.exit().remove(); // Enter: tooltip
+      tooltip.exit().remove();
+
+      // Enter: tooltip
 
       var enterTooltip = tooltip.enter().append("div");
       tooltip = tooltip.merge(enterTooltip);
@@ -3077,29 +3006,32 @@
         return props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null;
       }).style("padding-left", function (d) {
         return props.orientation(d) === "left" ? TIP_SIZE + "px" : null;
-      }).classed("sszvis-tooltip", true); // Enter: tooltip background
+      }).classed("sszvis-tooltip", true);
+
+      // Enter: tooltip background
 
       var enterBackground = enterTooltip.append("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
       var enterBackgroundPath = enterBackground.append("path");
-
       if (supportsSVGFilters()) {
         var filter = enterBackground.append("filter").attr("id", "sszvisTooltipShadowFilter").attr("height", "150%");
         filter.append("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
         filter.append("feComponentTransfer").append("feFuncA").attr("type", "linear").attr("slope", 0.2);
         var merge = filter.append("feMerge");
         merge.append("feMergeNode"); // Contains the blurred image
-
         merge.append("feMergeNode") // Contains the element that the filter is applied to
         .attr("in", "SourceGraphic");
         enterBackgroundPath.attr("filter", "url(#sszvisTooltipShadowFilter)");
       } else {
         enterBackground.classed("sszvis-tooltip__background--fallback", true);
-      } // Enter: tooltip content
+      }
 
+      // Enter: tooltip content
 
       var enterContent = enterTooltip.append("div").classed("sszvis-tooltip__content", true);
       enterContent.append("div").classed("sszvis-tooltip__header", true);
-      enterContent.append("div").classed("sszvis-tooltip__body", true); // Update: content
+      enterContent.append("div").classed("sszvis-tooltip__body", true);
+
+      // Update: content
 
       tooltip.select(".sszvis-tooltip__header").datum(prop("datum")).html(props.header || functor(""));
       tooltip.select(".sszvis-tooltip__body").datum(prop("datum")).html(function (d) {
@@ -3107,29 +3039,29 @@
         return Array.isArray(body) ? formatTable(body) : body;
       });
       selection.selectAll(".sszvis-tooltip").classed("sszvis-tooltip--small", isSmall).each(function (d) {
-        var tip = d3.select(this); // only using dimensions.width and dimensions.height here. Not affected by scroll position
-
+        var tip = d3.select(this);
+        // only using dimensions.width and dimensions.height here. Not affected by scroll position
         var dimensions = tip.node().getBoundingClientRect();
-        var orientation = props.orientation.apply(this, arguments); // Position tooltip element
+        var orientation = props.orientation.apply(this, arguments);
+
+        // Position tooltip element
 
         switch (orientation) {
           case "top":
             tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y + props.dy(d) + "px");
             break;
-
           case "bottom":
             tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y - props.dy(d) - dimensions.height + "px");
             break;
-
           case "left":
             tip.style("left", d.x + props.dx(d) + "px").style("top", d.y - dimensions.height / 2 + "px");
             break;
-
           case "right":
             tip.style("left", d.x - props.dx(d) - dimensions.width + "px").style("top", d.y - dimensions.height / 2 + "px");
             break;
-        } // Position background element
+        }
 
+        // Position background element
 
         var bgHeight = dimensions.height + 2 * BLUR_PADDING;
         var bgWidth = dimensions.width + 2 * BLUR_PADDING;
@@ -3137,11 +3069,10 @@
       });
     });
   };
+
   /**
    * formatTable
    */
-
-
   function formatTable(rows) {
     var tableBody = rows.map(function (row) {
       return "<tr>" + row.map(function (cell) {
@@ -3150,6 +3081,7 @@
     }).join("");
     return '<table class="sszvis-tooltip__body__table">' + tableBody + "</table>";
   }
+
   /**
    * Tooltip background generator
    *
@@ -3168,41 +3100,32 @@
    *
    * @return {Path}               SVG path description
    */
-
-
   function tooltipBackgroundGenerator(a, b, orientation, radius) {
     switch (orientation) {
       case "top":
         a[1] = a[1] + TIP_SIZE;
         break;
-
       case "bottom":
         b[1] = b[1] - TIP_SIZE;
         break;
-
       case "left":
         a[0] = a[0] + TIP_SIZE;
         break;
-
       case "right":
         b[0] = b[0] - TIP_SIZE;
         break;
     }
-
     function x(d) {
       return d[0];
     }
-
     function y(d) {
       return d[1];
     }
-
     function side(cx, cy, x0, y0, x1, y1, showTip) {
       var mx = x0 + (x1 - x0) / 2;
       var my = y0 + (y1 - y0) / 2;
       var corner = ["Q", cx, cy, x0, y0];
       var tip = [];
-
       if (showTip && y0 === y1) {
         if (x0 < x1) {
           // Top
@@ -3220,25 +3143,27 @@
           tip = ["L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE];
         }
       }
-
       var end = ["L", x1, y1];
       return [].concat(corner, tip, end);
     }
-
-    return [// Start
-    ["M", x(a), y(a) + radius], // Top side
-    side(x(a), y(a), x(a) + radius, y(a), x(b) - radius, y(a), orientation === "top"), // Right side
-    side(x(b), y(a), x(b), y(a) + radius, x(b), y(b) - radius, orientation === "right"), // Bottom side
-    side(x(b), y(b), x(b) - radius, y(b), x(a) + radius, y(b), orientation === "bottom"), // Left side
+    return [
+    // Start
+    ["M", x(a), y(a) + radius],
+    // Top side
+    side(x(a), y(a), x(a) + radius, y(a), x(b) - radius, y(a), orientation === "top"),
+    // Right side
+    side(x(b), y(a), x(b), y(a) + radius, x(b), y(b) - radius, orientation === "right"),
+    // Bottom side
+    side(x(b), y(b), x(b) - radius, y(b), x(a) + radius, y(b), orientation === "bottom"),
+    // Left side
     side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, orientation === "left")].map(function (d) {
       return d.join(" ");
     }).join(" ");
   }
+
   /**
    * Detect whether the current browser supports SVG filters
    */
-
-
   function supportsSVGFilters() {
     return window["SVGFEColorMatrixElement"] !== undefined && SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE == 2;
   }
@@ -3257,6 +3182,7 @@
    *
    * @returns {Function}                  A function for calculating the orientation of the tooltips.
    */
+
   function fitTooltip (defaultVal, bounds) {
     var lo = Math.min(bounds.innerWidth * 1 / 4, 100);
     var hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
@@ -3279,15 +3205,15 @@
    *
    * @module sszvis/fallback
    */
-  var fallbackUnsupported = function fallbackUnsupported() {
+  var fallbackUnsupported = function () {
     var supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
     return !supportsSVG;
   };
-  var fallbackCanvasUnsupported = function fallbackCanvasUnsupported() {
+  var fallbackCanvasUnsupported = function () {
     var supportsCanvas = !!document.createElement("canvas").getContext;
     return !supportsCanvas;
   };
-  var fallbackRender = function fallbackRender(selector, options) {
+  var fallbackRender = function (selector, options) {
     options || (options = {});
     options.src || (options.src = "fallback.png");
     var selection = isSelection(selector) ? selector : d3.select(selector);
@@ -3341,55 +3267,47 @@
    *
    * @return {Object}
    */
+
+  // This rather strange set of functions is designed to support the API:
   // sszvis.viewport.on('resize', callback);
   // While still enabling the user to register multiple callbacks for the 'resize'
   // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
   // object would not allow.
-
   var callbacks = {
     resize: []
   };
-
   if (typeof window !== "undefined") {
     d3.select(window).on("resize", nanoThrottle(function () {
       trigger("resize");
     }, 500));
   }
-
-  var on$1 = function on(name, cb) {
+  var on$1 = function (name, cb) {
     if (!callbacks[name]) {
       callbacks[name] = [];
     }
-
     callbacks[name] = callbacks[name].filter(function (fn) {
       return fn !== cb;
     }).concat(cb);
     return this;
   };
-
-  var off = function off(name, cb) {
+  var off = function (name, cb) {
     if (!callbacks[name]) {
       return this;
     }
-
     callbacks[name] = callbacks[name].filter(function (fn) {
       return fn !== cb;
     });
     return this;
   };
-
-  var trigger = function trigger(name) {
+  var trigger = function (name) {
     var evtArgs = Array.prototype.slice.call(arguments, 1);
-
     if (callbacks[name]) {
       callbacks[name].forEach(function (fn) {
         fn.apply(null, evtArgs);
       });
     }
-
     return this;
   };
-
   var viewport = {
     on: on$1,
     off: off,
@@ -3441,37 +3359,32 @@
    *
    * @module sszvis/app
    */
-
-  var app = function app(_ref) {
-    var init = _ref.init,
-        render = _ref.render,
-        _ref$actions = _ref.actions,
-        actions = _ref$actions === void 0 ? {} : _ref$actions,
-        fallback = _ref.fallback;
+  var app = ({
+    init,
+    render,
+    actions = {},
+    fallback
+  }) => {
     var doing;
     var state;
     invariant(isFunction$1(init), 'An "init" function returning a Promise must be provided.');
     invariant(isFunction$1(render), 'A "render" function must be provided.');
-    var actionDispatchers = Object.keys(actions).reduce(function (acc, key) {
-      acc[key] = function (args) {
+    var actionDispatchers = Object.keys(actions).reduce((acc, key) => {
+      acc[key] = args => {
         dispatch(key, args);
       };
-
       return acc;
     }, {});
-
     function scheduleUpdate(effect) {
       if (!doing) {
         doing = true;
-        requestAnimationFrame(function () {
+        requestAnimationFrame(() => {
           render(state, actionDispatchers);
           doing = false;
         });
       }
-
       if (isFunction$1(effect)) effect(dispatch);
     }
-
     function dispatch(action, props) {
       invariant(actions[action] != null, "Action \"".concat(action, "\" is not defined, add it to \"actions\"."));
       var draft = pn(state);
@@ -3479,19 +3392,20 @@
       state = ln(draft);
       scheduleUpdate(effect);
     }
-
     var initialState = pn({});
-    init(initialState).then(function (effect) {
+    init(initialState).then(effect => {
       state = ln(initialState);
       scheduleUpdate(effect);
       viewport.on("resize", scheduleUpdate);
-    }).catch(function (err) {
+    }).catch(err => {
       invariant(false, err);
       fallback && fallbackRender(fallback.element, {
         src: fallback.src
       });
     });
-  }; // -----------------------------------------------------------------------------
+  };
+
+  // -----------------------------------------------------------------------------
   // Helper functions
 
   function invariant(condition, message) {
@@ -3499,7 +3413,6 @@
       throw new Error("[sszvis.app] ".concat(message));
     }
   }
-
   function isFunction$1(x) {
     return typeof x === "function";
   }
@@ -3541,6 +3454,7 @@
    *   measurement: Measurement
    * }
    */
+
   /**
    * breakpoint.find
    *
@@ -3550,13 +3464,13 @@
    * @param {Measurement} partialMeasurement A partial measurement to match to the spec
    * @returns {Breakpoint}
    */
-
   function breakpointFind(breakpoints, partialMeasurement) {
     var measurement = parseMeasurement(partialMeasurement);
     return find(function (bp) {
       return breakpointTest(bp, measurement);
     }, breakpoints);
   }
+
   /**
    * breakpoint.findByName
    *
@@ -3568,14 +3482,13 @@
    * @returns {Breakpoint?} If no breakpoint matches, undefined is returned. If a
    *          breakpoint for the given name exists, that breakpoint is returned
    */
-
   function breakpointFindByName(breakpoints, name) {
-    var eqName = function eqName(bp) {
+    var eqName = function (bp) {
       return bp.name === name;
     };
-
     return find(eqName, breakpoints);
   }
+
   /**
    * breakpoint.test
    *
@@ -3585,12 +3498,12 @@
    * @param {Measurement} partialMeasurement A partial measurement to match to the breakpoint
    * @returns {boolean}
    */
-
   function breakpointTest(breakpoint, partialMeasurement) {
     var bpm = breakpoint.measurement;
     var measurement = parseMeasurement(partialMeasurement);
     return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
   }
+
   /**
    * breakpoint.match
    *
@@ -3601,13 +3514,13 @@
    * @param {Measurement} partialMeasurement A partial measurement to match to the spec
    * @returns {Array<Breakpoint>}
    */
-
   function breakpointMatch(breakpoints, partialMeasurement) {
     var measurement = parseMeasurement(partialMeasurement);
     return breakpoints.filter(function (bp) {
       return breakpointTest(bp, measurement);
     });
   }
+
   /**
    * breakpoint.createSpec
    *
@@ -3618,19 +3531,18 @@
    *        so it's possible to only provide partial breakpoint definitions.
    * @returns {Array<Breakpoint>}
    */
-
   function breakpointCreateSpec(spec) {
     return spec.map(parseBreakpoint).concat(parseBreakpoint({
       name: "_"
     }));
   }
+
   /**
    * breakpoint.defaultSpec
    *
    * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
    *          default breakpoint spec.
    */
-
   var breakpointDefaultSpec = function () {
     var DEFAULT_SPEC = breakpointCreateSpec([{
       name: "palm",
@@ -3642,10 +3554,13 @@
     return function () {
       return DEFAULT_SPEC;
     };
-  }(); // Default tests
+  }();
 
+  // Default tests
   var breakpointPalm = makeTest("palm");
-  var breakpointLap = makeTest("lap"); // Helpers
+  var breakpointLap = makeTest("lap");
+
+  // Helpers
 
   /**
    * Measurement
@@ -3665,7 +3580,6 @@
    * @param {{width?: number, screenHeight?: number}} partialMeasurement
    * @returns Measurement
    */
-
   function parseMeasurement(partialMeasurement) {
     var widthOrInf = propOr("width", Infinity);
     var screenHeightOrInf = propOr("screenHeight", Infinity);
@@ -3674,6 +3588,7 @@
       screenHeight: screenHeightOrInf(partialMeasurement)
     };
   }
+
   /**
    * Breakpoint
    *
@@ -3698,11 +3613,8 @@
    * @param {{name: string, width?: number, screenHeight?: number, measurement?: Measurement}} bp
    * @returns Breakpoint
    */
-
-
   function parseBreakpoint(bp) {
     var measurement;
-
     if (defined(bp.measurement)) {
       measurement = parseMeasurement(bp.measurement);
     } else {
@@ -3711,17 +3623,15 @@
         screenHeight: bp.screenHeight
       });
     }
-
     return {
       name: bp.name,
       measurement: measurement
     };
   }
+
   /**
    * Create a partially applied test function
    */
-
-
   function makeTest(name) {
     return function (measurement) {
       return breakpointTest(breakpointFindByName(breakpointDefaultSpec(), name), measurement);
@@ -3735,6 +3645,7 @@
    *
    * @module sszvis/aspectRatio
    */
+
   /**
    * aspectRatio
    *
@@ -3749,13 +3660,13 @@
    *                    and returns the corresponding height based on the
    *                    aspect ratio defined by x:y.
    */
-
   function aspectRatio(x, y) {
     var ar = x / y;
     return function (width) {
       return width / ar;
     };
   }
+
   /**
    * aspectRatio4to3
    *
@@ -3765,8 +3676,8 @@
    * @param {Number} width
    * @returns {Number} height
    */
-
   var aspectRatio4to3 = aspectRatio(4, 3);
+
   /**
    * aspectRatio16to10
    *
@@ -3776,8 +3687,8 @@
    * @param {Number} width
    * @returns {Number} height
    */
-
   var aspectRatio16to10 = aspectRatio(16, 10);
+
   /**
    * aspectRatio12to5
    *
@@ -3787,12 +3698,12 @@
    * @param {Number} width
    * @returns {Number} height
    */
-
   var AR12TO5_MAX_HEIGHT = 500;
-  var aspectRatio12to5 = function aspectRatio12to5(width) {
+  var aspectRatio12to5 = function (width) {
     return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
   };
   aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
+
   /**
    * aspectRatioSquare
    *
@@ -3809,12 +3720,12 @@
    * @param {Number} width
    * @returns {Number} height
    */
-
   var SQUARE_MAX_HEIGHT = 420;
-  var aspectRatioSquare = function aspectRatioSquare(width) {
+  var aspectRatioSquare = function (width) {
     return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
   };
   aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
+
   /**
    * aspectRatioPortrait
    *
@@ -3831,12 +3742,12 @@
    * @param {Number} width
    * @returns {Number} height
    */
-
   var PORTRAIT_MAX_HEIGHT = 600;
-  var aspectRatioPortrait = function aspectRatioPortrait(width) {
+  var aspectRatioPortrait = function (width) {
     return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
   };
   aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
+
   /**
    * aspectRatioAuto
    *
@@ -3852,16 +3763,14 @@
    *
    * @return {Number} The height which corresponds to the default aspect ratio for these measurements
    */
-
   var defaultAspectRatios = {
     palm: aspectRatio4to3,
     // palm-sized devices
     lap: aspectRatio16to10,
     // lap-sized devices
     _: aspectRatio12to5 // all other cases, including desk
-
   };
-  var aspectRatioAuto = function aspectRatioAuto(measurement) {
+  var aspectRatioAuto = function (measurement) {
     var bp = breakpointFind(breakpointDefaultSpec(), measurement);
     var ar = defaultAspectRatios[bp.name];
     return ar(measurement.width);
@@ -3913,9 +3822,9 @@
    */
   var warn = logger("warn");
   var error = logger("error");
+
   /* Helper functions
   ----------------------------------------------- */
-
   function logger(type) {
     return function () {
       if (console && console[type]) {
@@ -3925,7 +3834,6 @@
       }
     };
   }
-
   function slice$1(array) {
     return Array.prototype.slice.call(array);
   }
@@ -3945,10 +3853,11 @@
    * @return {array}          The extent of the scale's range. Useful for determining how far
    *                          a scale stretches in its output dimension.
    */
-  var range = function range(scale) {
+  var range = function (scale) {
     // borrowed from d3 source - svg.axis
     return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
   };
+
   /**
    * Helper function
    * Extent
@@ -3958,11 +3867,10 @@
    * @param  {array} domain     an array, sorted in either ascending or descending order
    * @return {array}            the extent of the array, with the smaller term first.
    */
-
   function extent(domain) {
     // borrowed from d3 source - svg.axis
     var start = domain[0],
-        stop = domain[domain.length - 1];
+      stop = domain[domain.length - 1];
     return start < stop ? [start, stop] : [stop, start];
   }
 
@@ -3989,46 +3897,37 @@
    */
   function textWrap (selection, width, paddingRightLeft, paddingTopBottom) {
     paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
-
     paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
-
     var maxWidth = width; //I store the tooltip max width
-
     width = width - paddingRightLeft * 2; //Take the padding into account
 
     var arrLineCreatedCount = [];
     selection.each(function () {
       var text = d3.select(this);
       var words = text.text().split(/[ \f\n\r\t\v]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
-
       var word;
       var line = [];
       var lineNumber = 0;
       var lineHeight = 1.1; //Em
-
       var x;
       var y = text.attr("y");
       var dy = parseFloat(text.attr("dy"));
       var createdLineCount = 1; //Total line created count
-
       var textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
+
       //Clean the data in case <text> does not define those values
-
       if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
+
       //Offset the text position based on the text-anchor
-
       var wrapTickLabels = d3.select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
-
       if (wrapTickLabels) {
         switch (textAlign) {
           case "start":
             x = -width / 2;
             break;
-
           case "middle":
             x = 0;
             break;
-
           case "end":
             x = width / 2;
             break;
@@ -4039,25 +3938,20 @@
           case "start":
             x = paddingRightLeft;
             break;
-
           case "middle":
             x = maxWidth / 2;
             break;
-
           case "end":
             x = maxWidth - paddingRightLeft;
             break;
         }
       }
-
       y = +(null === y ? paddingTopBottom : y);
       var tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
-
       while (words.length > 0) {
         word = words.pop();
         line.push(word);
         tspan.text(line.join(" "));
-
         if (tspan.node().getComputedTextLength() > width && line.length > 1) {
           line.pop();
           tspan.text(line.join(" "));
@@ -4066,7 +3960,6 @@
           ++createdLineCount;
         }
       }
-
       arrLineCreatedCount.push(createdLineCount); //Store the line count in the array
     });
     return arrLineCreatedCount;
@@ -4129,67 +4022,63 @@
   var TICK_PROXIMITY_THRESHOLD = 8;
   var TICK_END_THRESHOLD = 12;
   var LABEL_PROXIMITY_THRESHOLD = 10;
-
-  var axis = function axis() {
+  var axis = function () {
     // var axisDelegate = d3.axisBottom();
     // axisDelegate.orient = function() { return 'bottom'; };
+
     var axisComponent = component().prop("scale").prop("orient").prop("ticks").prop("tickValues").prop("tickSize").prop("tickSizeInner").prop("tickSizeOuter").prop("tickPadding").prop("tickFormat").prop("_scale").prop("orient").orient("bottom").prop("alignOuterLabels").alignOuterLabels(false).prop("contour").prop("hideBorderTickThreshold").hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD).prop("hideLabelThreshold").hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD).prop("highlightTick", functor).prop("showZeroY").showZeroY(false).prop("slant").prop("textWrap").prop("tickLength").prop("title").prop("titleAnchor") // start, end, or middle
     .prop("titleCenter") // a boolean value - whether to center the title
     .prop("dxTitle") // a numeric value for the left offset of the title
     .prop("dyTitle") // a numeric value for the top offset of the title
-    .prop("titleVertical").prop("vertical").vertical(false) //this property is typically used for the x-axis, but not for the y axis
+    .prop("titleVertical").prop("vertical").vertical(false)
+    //this property is typically used for the x-axis, but not for the y axis
     //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels
     .prop("yOffset").yOffset(0).render(function () {
       var selection = d3.select(this);
       var props = selection.props();
       var isBottom = !props.vertical && props.orient === "bottom";
-
       var axisDelegate = function () {
         switch (props.orient) {
           case "bottom":
             return d3.axisBottom();
-
           case "top":
             return d3.axisTop();
-
           case "left":
             return d3.axisLeft();
-
           case "right":
             return d3.axisRight();
         }
       }();
-
       ["scale", "ticks", "tickValues", "tickSizeInner", "tickSizeOuter", "tickPadding", "tickFormat", "tickSize"].forEach(function (prop) {
         if (props[prop] !== undefined) {
           if (axisDelegate[prop] === undefined) {
             throw new Error('axis: "' + prop + '" not available');
           }
-
           axisDelegate[prop](props[prop]);
         }
       });
-
       if (props._scale) {
         axisDelegate.scale(props._scale);
       }
-
       var group = selection.selectGroup("sszvis-axis").classed("sszvis-axis", true).classed("sszvis-axis--top", !props.vertical && props.orient === "top").classed("sszvis-axis--bottom", isBottom).classed("sszvis-axis--vertical", props.vertical).attr("transform", translateString(0, props.yOffset)).call(axisDelegate);
-      group.attr("fill", null).attr("font-size", null).attr("font-family", null); // .attr("text-anchor", null);
+      group.attr("fill", null).attr("font-size", null).attr("font-family", null);
+      // .attr("text-anchor", null);
 
-      var axisScale = axisDelegate.scale(); // Create selections here which will be used later for many custom configurations
+      var axisScale = axisDelegate.scale();
+
+      // Create selections here which will be used later for many custom configurations
       // Note: Invariant: This is only valid so long as new .tick groups or tick label texts
       // are not being added after these selections are constructed. If that changes, these
       // selections need to be re-constructed.
-
       var tickGroups = group.selectAll("g.tick");
-      var tickTexts = tickGroups.selectAll("text"); // To prevent anti-aliasing on elements that need to be rendered crisply
+      var tickTexts = tickGroups.selectAll("text");
+
+      // To prevent anti-aliasing on elements that need to be rendered crisply
       // we need to position them on a half-pixel grid: 0.5, 1.5, 2.5, etc.
       // We can't translate the whole .tick group, however, because this
       // leads to weird type rendering artefacts in some browsers. That's
       // why we reach into the group and translate lines onto the half-pixel
       // grid by taking the translation of the group into account.
-
       tickGroups.each(function () {
         var subpixelShift = transformTranslateSubpixelShift(this.getAttribute("transform"));
         var dx = halfPixel(0) - subpixelShift[0];
@@ -4200,22 +4089,22 @@
         if (props.orient === "top" || props.orient === "bottom") {
           d3.select(this).attr("dx", "-0.5");
         }
-
         if (props.orient === "left" || props.orient === "right") {
           d3.select(this).attr("y", "-0.5");
         }
-      }); // Place axis line on a half-pixel grid to prevent anti-aliasing
+      });
 
-      group.selectAll("path.domain"); // .attr('transform', translateString(halfPixel(0), halfPixel(0)));
+      // Place axis line on a half-pixel grid to prevent anti-aliasing
+      group.selectAll("path.domain");
+      // .attr('transform', translateString(halfPixel(0), halfPixel(0)));
+
       // hide ticks which are too close to one endpoint
-
       var rangeExtent = range(axisScale);
       tickGroups.selectAll("line").each(function (d) {
         var pos = axisScale(d),
-            d3this = d3.select(this);
+          d3this = d3.select(this);
         d3this.classed("hidden", !d3this.classed("sszvis-axis__longtick") && (absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold));
       });
-
       if (defined(props.tickLength)) {
         var domainExtent = d3.extent(axisScale.domain());
         var ticks = tickGroups.filter(function (d) {
@@ -4223,20 +4112,16 @@
         });
         var orientation = props.orient;
         var longLinePadding = 2;
-
         if (orientation === "left" || orientation === "right") {
           ticks.selectAll("text").each(function () {
             longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
           });
           longLinePadding += 2; // a lil' extra on the end
         }
-
         var lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]);
-
         if (props.tickLength > longLinePadding) {
           var newLines = lines.enter().append("line").classed("sszvis-axis__longtick", true);
           lines = lines.merge(newLines);
-
           if (orientation === "top") {
             lines.attr("y1", longLinePadding).attr("y2", props.tickLength);
           } else if (orientation === "bottom") {
@@ -4250,39 +4135,35 @@
           lines.remove();
         }
       }
-
       if (props.alignOuterLabels) {
         var alignmentBounds = range(axisScale);
         var min = alignmentBounds[0];
         var max = alignmentBounds[1];
         tickTexts.style("text-anchor", function (d) {
           var value = axisScale(d);
-
           if (absDistance(value, min) < TICK_END_THRESHOLD) {
             return "start";
           } else if (absDistance(value, max) < TICK_END_THRESHOLD) {
             return "end";
           }
-
           return "middle";
         });
       }
-
       if (defined(props.textWrap)) {
         tickTexts.call(textWrap, props.textWrap);
       }
-
       if (props.slant) {
         tickTexts.call(slantLabel[props.orient][props.slant]);
-      } // Highlight axis labels that return true for props.highlightTick.
+      }
 
-
+      // Highlight axis labels that return true for props.highlightTick.
       if (props.highlightTick) {
         var activeBounds = [];
         var passiveBounds = [];
-        tickTexts.classed("hidden", false).classed("active", props.highlightTick); // Hide axis labels that overlap with highlighted labels unless
-        // the labels are slanted (in which case the bounding boxes overlap)
+        tickTexts.classed("hidden", false).classed("active", props.highlightTick);
 
+        // Hide axis labels that overlap with highlighted labels unless
+        // the labels are slanted (in which case the bounding boxes overlap)
         if (props.hideLabelThreshold > 0 && !props.slant) {
           tickTexts.each(function (d) {
             // although getBoundingClientRect returns coordinates relative to the window, not the document,
@@ -4297,7 +4178,6 @@
                 left: bcr.left
               }
             };
-
             if (props.highlightTick(d)) {
               b.bounds.left -= props.hideLabelThreshold;
               b.bounds.right += props.hideLabelThreshold;
@@ -4313,7 +4193,6 @@
           });
         }
       }
-
       if (props.title) {
         var title = group.selectAll(".sszvis-axis__title").data([props.title]);
         var newTitle = title.enter().append("text").classed("sszvis-axis__title", true);
@@ -4322,9 +4201,8 @@
           return d;
         }).attr("transform", function () {
           var orient = props.orient,
-              axisScaleExtent = range(axisScale),
-              titleProps;
-
+            axisScaleExtent = range(axisScale),
+            titleProps;
           if (props.titleCenter) {
             titleProps = {
               left: orient === "left" || orient === "right" ? 0 : orient === "top" || orient === "bottom" ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : 0,
@@ -4336,14 +4214,12 @@
               top: orient === "left" || orient === "right" || orient === "top" ? 0 : orient === "bottom" ? 32 : 0
             };
           }
-
           titleProps.vertical = !!props.titleVertical;
           titleProps.left += props.dxTitle || 0;
           titleProps.top += props.dyTitle || 0;
           return "translate(" + titleProps.left + ", " + titleProps.top + ") rotate(" + (titleProps.vertical ? "-90" : "0") + ")";
         }).style("text-anchor", function () {
           var orient = props.orient;
-
           if (typeof props.titleAnchor !== "undefined") {
             return props.titleAnchor;
           } else if (orient === "left") {
@@ -4355,12 +4231,11 @@
           }
         });
       }
+
       /**
        * Add a background to axis labels to make them more readable on
        * colored backgrounds
        */
-
-
       if (props.contour && props.slant) {
         warn("Can't apply contour to slanted labels");
       } else if (props.contour) {
@@ -4368,66 +4243,62 @@
           var g = d3.select(this);
           var textNode = g.select("text").node();
           var textContour = g.select(".sszvis-axis__label-contour");
-
           if (textContour.empty()) {
             textContour = d3.select(textNode.cloneNode()).classed("sszvis-axis__label-contour", true);
             this.insertBefore(textContour.node(), textNode);
           }
-
           textContour.text(textNode.textContent);
         });
       }
-    }); // axisComponent.__delegate__ = axisDelegate;
+    });
+
+    // axisComponent.__delegate__ = axisDelegate;
 
     return axisComponent;
   };
-
-  var setOrdinalTicks = function setOrdinalTicks(count) {
+  var setOrdinalTicks = function (count) {
     // in this function, the 'this' context should be an sszvis.axis
     var domain = this.scale().domain(),
-        values = [],
-        step = Math.round(domain.length / count); // include the first value
+      values = [],
+      step = Math.round(domain.length / count);
 
+    // include the first value
     if (typeof domain[0] !== "undefined") values.push(domain[0]);
-
     for (var i = step, l = domain.length; i < l - 1; i += step) {
       if (typeof domain[i] !== "undefined") values.push(domain[i]);
-    } // include the last value
-
-
+    }
+    // include the last value
     if (typeof domain[domain.length - 1] !== "undefined") values.push(domain[domain.length - 1]);
     this.tickValues(values);
     return count;
   };
-
-  var axisX = function axisX() {
+  var axisX = function () {
     return axis().yOffset(2) //gap between chart and x-axis
     .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
   };
-
   axisX.time = function () {
     return axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
   };
-
   axisX.ordinal = function () {
-    return axisX() // extend this class a little with a custom implementation of 'ticks'
+    return axisX()
+    // extend this class a little with a custom implementation of 'ticks'
     // that allows you to set a custom number of ticks,
     // including the first and last value in the ordinal scale
     .prop("ticks", setOrdinalTicks).tickFormat(formatText);
-  }; // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
+  };
 
-
+  // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
   axisX.pyramid = function () {
     return axisX().ticks(10).prop("scale", function (s) {
       var extended = s.copy(),
-          extendedDomain = extended.domain(),
-          extendedRange = extended.range();
-      extended // the domain is mirrored - ±domain[1]
-      .domain([-extendedDomain[1], extendedDomain[1]]) // the range is mirrored – ±range[1]
+        extendedDomain = extended.domain(),
+        extendedRange = extended.range();
+      extended
+      // the domain is mirrored - ±domain[1]
+      .domain([-extendedDomain[1], extendedDomain[1]])
+      // the range is mirrored – ±range[1]
       .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
-
       this._scale(extended);
-
       return extended;
     }).tickFormat(function (v) {
       // this tick format means that the axis appears to be divergent around 0
@@ -4435,55 +4306,51 @@
       return formatNumber(Math.abs(v));
     });
   };
-
-  var axisY = function axisY() {
+  var axisY = function () {
     var newAxis = axis().ticks(6).tickSize(0, 0).tickPadding(0).tickFormat(function (d) {
       return 0 === d && !newAxis.showZeroY() ? null : formatNumber(d);
     }).vertical(true);
     return newAxis;
   };
-
   axisY.time = function () {
     return axisY().tickFormat(formatAxisTimeFormat);
   };
-
   axisY.ordinal = function () {
-    return axisY() // add custom 'ticks' function
+    return axisY()
+    // add custom 'ticks' function
     .prop("ticks", setOrdinalTicks).tickFormat(formatText);
   };
+
   /* Helper functions
   ----------------------------------------------- */
-
 
   function absDistance(a, b) {
     return Math.abs(a - b);
   }
-
   function boundsOverlap(boundsA, boundsB) {
     return !(boundsB.left > boundsA.right || boundsB.right < boundsA.left || boundsB.top > boundsA.bottom || boundsB.bottom < boundsA.top);
   }
-
   var slantLabel = {
     top: {
-      horizontal: function horizontal(selection) {
+      horizontal: function (selection) {
         selection.style("text-anchor", "middle").attr("dx", "-0.5").attr("dy", "0.71em").attr("transform", null);
       },
-      vertical: function vertical(selection) {
+      vertical: function (selection) {
         selection.style("text-anchor", "start").attr("dx", "0em").attr("dy", "0.35em") // vertically-center
         .attr("transform", "rotate(-90)");
       },
-      diagonal: function diagonal(selection) {
+      diagonal: function (selection) {
         selection.style("text-anchor", "start").attr("dx", "0.1em").attr("dy", "0.1em").attr("transform", "translate(-0.5) rotate(-45)");
       }
     },
     bottom: {
-      horizontal: function horizontal(selection) {
+      horizontal: function (selection) {
         selection.style("text-anchor", "middle").attr("dx", "-0.5").attr("dy", "0.71em").attr("transform", null);
       },
-      vertical: function vertical(selection) {
+      vertical: function (selection) {
         selection.style("text-anchor", "end").attr("dx", "-1em").attr("dy", "-0.75em").attr("transform", "rotate(-90)");
       },
-      diagonal: function diagonal(selection) {
+      diagonal: function (selection) {
         selection.style("text-anchor", "end").attr("dx", "-0.8em").attr("dy", "0em").attr("transform", "rotate(-45)");
       }
     }
@@ -4544,11 +4411,9 @@
         bottom: 0,
         right: 0
       };
-
       for (var prop in p) {
         defaults[prop] = p[prop];
       }
-
       return defaults;
     }).padding({}).render(function () {
       var selection = d3.select(this);
@@ -4562,44 +4427,37 @@
       var layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]);
       var newLayer = layer.enter().append("rect").attr("data-sszvis-behavior-move", "").attr("class", "sszvis-interactive");
       layer = layer.merge(newLayer);
-
       if (props.draggable) {
         layer.classed("sszvis-interactive--draggable", true);
       }
-
       layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function () {
         event.apply("start", this, arguments);
       }).on("mousedown", function () {
         var target = this;
         var doc = d3.select(document);
         var win = d3.select(window);
-
-        var drag = function drag() {
+        var drag = function () {
           var xy = d3.mouse(target);
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
           d3.event.preventDefault();
           event.apply("drag", this, [x, y]);
         };
-
-        var startDragging = function startDragging() {
+        var startDragging = function () {
           target.__dragging__ = true;
           drag();
         };
-
-        var stopDragging = function stopDragging() {
+        var stopDragging = function () {
           target.__dragging__ = false;
           win.on("mouseup.sszvis-behavior-move", null);
           win.on("mousemove.sszvis-behavior-move", null);
           doc.on("mouseout.sszvis-behavior-move", null);
           event.apply("end", this, arguments);
         };
-
         win.on("mousemove.sszvis-behavior-move", drag);
         win.on("mouseup.sszvis-behavior-move", stopDragging);
         doc.on("mouseout.sszvis-behavior-move", function () {
           var from = d3.event.relatedTarget || d3.event.toElement;
-
           if (!from || from.nodeName === "HTML") {
             stopDragging();
           }
@@ -4610,7 +4468,6 @@
         var xy = d3.mouse(this);
         var x = scaleInvert(props.xScale, xy[0]);
         var y = scaleInvert(props.yScale, xy[1]);
-
         if (!target.__dragging__) {
           event.apply("move", this, [x, y]);
         }
@@ -4621,10 +4478,11 @@
         var x = scaleInvert(props.xScale, xy[0]);
         var y = scaleInvert(props.yScale, xy[1]);
         var cancelScrolling = props.cancelScrolling(x, y);
-
         if (cancelScrolling) {
           d3.event.preventDefault();
-        } // if fireOnPanOnly => cancelScrolling must be true
+        }
+
+        // if fireOnPanOnly => cancelScrolling must be true
         // if !fireOnPanOnly => always fire events
         // This is in place because this behavior needs to only fire
         // events on a successful "pan" action in the bar charts, i.e.
@@ -4636,24 +4494,20 @@
         // cancel scrolling, i.e. what constitutes a "pan" event, and also
         // pass fireOnPanOnly = true, which flips this switch and relies on
         // cancelScrolling to determine whether to fire the events.
-
-
         if (!props.fireOnPanOnly() || cancelScrolling) {
           event.apply("start", this, [x, y]);
           event.apply("drag", this, [x, y]);
           event.apply("move", this, [x, y]);
-
-          var pan = function pan() {
+          var pan = function () {
             var panXY = first(d3.touches(this));
             var panX = scaleInvert(props.xScale, panXY[0]);
             var panY = scaleInvert(props.yScale, panXY[1]);
             var panCancelScrolling = props.cancelScrolling(panX, panY);
-
             if (panCancelScrolling) {
               d3.event.preventDefault();
-            } // See comment above about the same if condition.
+            }
 
-
+            // See comment above about the same if condition.
             if (!props.fireOnPanOnly() || panCancelScrolling) {
               event.apply("drag", this, [panX, panY]);
               event.apply("move", this, [panX, panY]);
@@ -4661,51 +4515,40 @@
               event.apply("end", this, []);
             }
           };
-
-          var end = function end() {
+          var end = function () {
             event.apply("end", this, []);
             d3.select(this).on("touchmove", null).on("touchend", null);
           };
-
           d3.select(this).on("touchmove", pan).on("touchend", end);
         }
       });
-
       if (props.debug) {
         layer.attr("fill", "rgba(255,0,0,0.2)");
       }
     });
-
     moveComponent.on = function () {
       var value = event.on.apply(event, arguments);
       return value === event ? moveComponent : value;
     };
-
     return moveComponent;
   }
-
   function scaleInvert(scale, px) {
     var scaleType = scale.invert ? "Linear" : scale.paddingInner ? "Band" : "Point";
-
     switch (scaleType) {
       case "Linear":
         {
           return scale.invert(px);
         }
-
       case "Band":
         return invertBandScale(scale, px);
-
       case "Point":
         return invertPointScale(scale, px);
-
       default:
         {
           throw new Error("Unknown scale type, could not invert");
         }
     }
   }
-
   function invertBandScale(scale, px) {
     var step = scale.step();
     var paddingOuter = scale.paddingOuter() * step;
@@ -4713,15 +4556,12 @@
     var bandWidth = scale.bandwidth();
     var scaleRange = scale.range();
     var domain = scale.domain();
-
     if (domain.length === 1) {
       if (scaleRange[0] <= px && scaleRange[1] >= px) {
         return domain[0];
       }
-
       return null;
     }
-
     var ranges = domain.map(function (d, i) {
       if (i === 0) {
         return [scaleRange[0], scaleRange[0] + paddingOuter + bandWidth + paddingInner / 2];
@@ -4731,30 +4571,24 @@
         return [scaleRange[0] + paddingOuter + i * step - paddingInner / 2, scaleRange[0] + paddingOuter + (i + 1) * step - paddingInner / 2];
       }
     });
-
     for (var i = 0, l = ranges.length; i < l; i++) {
       if (ranges[i][0] < px && px <= ranges[i][1]) {
         return domain[i];
       }
     }
-
     return null;
   }
-
   function invertPointScale(scale, px) {
     var step = scale.step();
     var paddingOuter = scale.padding() * step;
     var scaleRange = scale.range();
     var domain = scale.domain();
-
     if (domain.length === 1) {
       if (scaleRange[0] <= px && scaleRange[1] >= px) {
         return domain[0];
       }
-
       return null;
     }
-
     var ranges = domain.map(function (d, i) {
       if (i === 0) {
         return [scaleRange[0], scaleRange[0] + paddingOuter + step / 2];
@@ -4764,13 +4598,11 @@
         return [scaleRange[0] + paddingOuter + i * step - step / 2, scaleRange[0] + paddingOuter + i * step + step / 2];
       }
     });
-
     for (var i = 0, l = ranges.length; i < l; i++) {
       if (ranges[i][0] < px && px <= ranges[i][1]) {
         return domain[i];
       }
     }
-
     return null;
   }
 
@@ -4832,29 +4664,25 @@
    *                                                                                      number in the data's domain, and will be compared against both
    *                                                                                      cursorValue and the value accessed from the datum.
    */
-  var elementFromEvent = function elementFromEvent(evt) {
+  var elementFromEvent = function (evt) {
     if (!isNull(evt) && defined(evt)) {
       return document.elementFromPoint(evt.clientX, evt.clientY);
     }
-
     return null;
   };
-  var datumFromPannableElement = function datumFromPannableElement(element) {
+  var datumFromPannableElement = function (element) {
     if (!isNull(element)) {
       var selection = d3.select(element);
-
       if (!isNull(selection.attr("data-sszvis-behavior-pannable"))) {
         var datum = selection.datum();
-
         if (defined(datum)) {
           return datum;
         }
       }
     }
-
     return null;
   };
-  var datumFromPanEvent = function datumFromPanEvent(evt) {
+  var datumFromPanEvent = function (evt) {
     return datumFromPannableElement(elementFromEvent(evt));
   };
 
@@ -4914,7 +4742,6 @@
       }).on("touchmove", function () {
         d3.event.preventDefault();
         var datum = datumFromPanEvent(firstTouch(d3.event));
-
         if (datum !== null) {
           event.apply("pan", this, arguments);
         } else {
@@ -4924,12 +4751,10 @@
         event.apply("end", this, arguments);
       });
     });
-
     panningComponent.on = function () {
       var value = event.on.apply(event, arguments);
       return value === event ? panningComponent : value;
     };
-
     return panningComponent;
   }
 
@@ -4980,12 +4805,10 @@
     var voronoiComponent = component().prop("x").prop("y").prop("bounds").prop("debug").render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
-
       if (!props.bounds) {
         error("behavior.voronoi - requires bounds");
         return false;
       }
-
       var voronoi = d3.voronoi().x(props.x).y(props.y).extent(props.bounds);
       var polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.polygons(data));
       var newPolys = polys.enter().append("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
@@ -4995,13 +4818,11 @@
         return "M" + d.join("L") + "Z";
       }).attr("fill", "transparent").on("mouseover", function (datum) {
         var cbox = this.parentNode.getBoundingClientRect();
-
         if (eventNearPoint(d3.event, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
           event.apply("over", this, [datum.data]);
         }
       }).on("mousemove", function (datum) {
         var cbox = this.parentNode.getBoundingClientRect();
-
         if (eventNearPoint(d3.event, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
           event.apply("over", this, [datum.data]);
         } else {
@@ -5011,22 +4832,20 @@
         event.apply("out", this, []);
       }).on("touchstart", function (datum) {
         var cbox = this.parentNode.getBoundingClientRect();
-
         if (eventNearPoint(firstTouch(d3.event), [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])) {
           d3.event.preventDefault();
-          event.apply("over", this, [datum.data]); // Attach these handlers only if the initial touch is within the max distance from the voronoi center
+          event.apply("over", this, [datum.data]);
+
+          // Attach these handlers only if the initial touch is within the max distance from the voronoi center
           // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
           // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
           // when users are performing touches that cause scrolling, we want to avoid firing the events.
-
-          var pan = function pan() {
+          var pan = function () {
             var touchEvent = firstTouch(d3.event);
             var element = elementFromEvent(touchEvent);
             var panDatum = datumFromPannableElement(element);
-
             if (panDatum !== null) {
               var panCbox = element.parentNode.getBoundingClientRect();
-
               if (eventNearPoint(touchEvent, [panCbox.left + props.x(panDatum.data), panCbox.top + props.y(panDatum.data)])) {
                 // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
                 // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
@@ -5035,7 +4854,6 @@
                 if (d3.event.cancelable) {
                   d3.event.preventDefault();
                 }
-
                 event.apply("over", this, [panDatum.data]);
               } else {
                 event.apply("out", this, []);
@@ -5044,31 +4862,26 @@
               event.apply("out", this, []);
             }
           };
-
-          var end = function end() {
+          var end = function () {
             event.apply("out", this, []);
             d3.select(this).on("touchmove", null).on("touchend", null);
           };
-
           d3.select(this).on("touchmove", pan).on("touchend", end);
         }
       });
-
       if (props.debug) {
         polys.attr("stroke", "#f00");
       }
     });
-
     voronoiComponent.on = function () {
       var value = event.on.apply(event, arguments);
       return value === event ? voronoiComponent : value;
     };
-
     return voronoiComponent;
-  } // Perform distance calculations in units squared to avoid a costly Math.sqrt
+  }
 
+  // Perform distance calculations in units squared to avoid a costly Math.sqrt
   var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
-
   function eventNearPoint(event, point) {
     var dx = event.clientX - point[0];
     var dy = event.clientY - point[1];
@@ -5080,6 +4893,7 @@
    *
    * @module sszvis/measure
    */
+
   /**
    * measureDimensions
    *
@@ -5096,10 +4910,8 @@
    *                      screenWidth: {number} The innerWidth of the screen
    *                      screenHeight: {number} The innerHeight of the screen
    */
-
-  var measureDimensions = function measureDimensions(arg) {
+  var measureDimensions = function (arg) {
     var node;
-
     if (isString(arg)) {
       node = d3.select(arg).node();
     } else if (isSelection(arg)) {
@@ -5107,13 +4919,13 @@
     } else {
       node = arg;
     }
-
     return {
       width: node ? node.getBoundingClientRect().width : undefined,
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight
     };
   };
+
   /**
    * measureText
    *
@@ -5129,7 +4941,6 @@
    * @example
    * var helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
    **/
-
   var measureText = function () {
     var canvas = document.createElement("canvas");
     var context = canvas.getContext("2d");
@@ -5140,6 +4951,7 @@
       return cache[key] || (cache[key] = context.measureText(text).width);
     };
   }();
+
   /**
    * measureAxisLabel
    *
@@ -5151,10 +4963,10 @@
    * @example
    * var labelWidth = sszvis.measureAxisLabel("Hello!")
    */
-
-  var measureAxisLabel = function measureAxisLabel(text) {
+  var measureAxisLabel = function (text) {
     return measureText(10, "Arial, sans-serif", text);
   };
+
   /**
    * measureLegendLabel
    *
@@ -5166,8 +4978,7 @@
    * @example
    * var labelWidth = sszvis.measureLegendLabel("Hello!")
    */
-
-  var measureLegendLabel = function measureLegendLabel(text) {
+  var measureLegendLabel = function (text) {
     return measureText(12, "Arial, sans-serif", text);
   };
 
@@ -5207,14 +5018,9 @@
    *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
    */
   var DEFAULT_WIDTH = 516;
-  function bounds(arg1
-  /* bounds or selection */
-  , arg2
-  /* [selection] */
-  ) {
+  function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     var _bounds = null,
-        selection = null;
-
+      selection = null;
     if (arguments.length === 0) {
       _bounds = {};
     } else if (arguments.length === 1) {
@@ -5229,22 +5035,22 @@
       }
     } else {
       _bounds = arg1;
-
       if (isSelection(arg2)) {
         selection = arg2;
       } else {
         selection = d3.select(arg2);
       }
-    } // All padding sides have default values
+    }
 
-
+    // All padding sides have default values
     var padding = {
       top: either(_bounds.top, 0),
       right: either(_bounds.right, 1),
       bottom: either(_bounds.bottom, 0),
       left: either(_bounds.left, 1)
-    }; // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
+    };
 
+    // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
     var dimensions = defined(selection) ? measureDimensions(selection) : {
       width: DEFAULT_WIDTH
     };
@@ -5261,16 +5067,17 @@
       screenHeight: dimensions.screenHeight
     };
   }
+
+  // This is the default aspect ratio. It is defined as: width / innerHeight
   // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
   // To calculate the default innerHeight, do width / ASPECT_RATIO
   // @deprecated Since the responsive revisions, the default aspect ratio has changed,
   //             so that it is now responsive to the container width.
   //             This property is preserved for compatibility reasons.
-
   var RATIO = 16 / 9;
+
   /* Helper functions
   ----------------------------------------------- */
-
   function either(val, fallback) {
     return typeof val === "undefined" ? fallback : val;
   }
@@ -5347,47 +5154,40 @@
    *
    * @returns                 An instance of sszvis.cascade
    */
+
   function groupBy(data, keyFunc) {
     var group = {},
-        key;
-
+      key;
     for (var i = 0, l = data.length, value; i < l; ++i) {
       value = data[i];
       key = keyFunc(value);
       group[key] ? group[key].push(value) : group[key] = [value];
     }
-
     return group;
   }
-
   function groupEach(data, func) {
     for (var prop in data) {
       func(data[prop], prop);
     }
   }
-
   function arrEach(arr, func) {
     for (var i = 0, l = arr.length; i < l; ++i) {
       func(arr[i], i);
     }
   }
-
   function cascade() {
     var _cascade = {},
-        keys = [],
-        sorts = [],
-        valuesSort;
-
+      keys = [],
+      sorts = [],
+      valuesSort;
     function make(data, depth) {
       if (depth >= keys.length) {
         if (valuesSort) data.sort(valuesSort);
         return data;
       }
-
       var sorter = sorts[depth];
       var key = keys[depth++];
       var grouped = groupBy(data, key.func);
-
       if (key.type === "obj") {
         var obj = {};
         groupEach(grouped, function (value, k) {
@@ -5396,7 +5196,6 @@
         return obj;
       } else if (key.type === "arr") {
         var arr = [];
-
         if (sorter) {
           var groupKeys = Object.keys(grouped).sort(sorter);
           arrEach(groupKeys, function (k) {
@@ -5407,15 +5206,12 @@
             arr.push(make(value, depth));
           });
         }
-
         return arr;
       }
     }
-
     _cascade.apply = function (data) {
       return make(data, 0);
     };
-
     _cascade.objectBy = function (d) {
       keys.push({
         type: "obj",
@@ -5423,7 +5219,6 @@
       });
       return _cascade;
     };
-
     _cascade.arrayBy = function (d, sorter) {
       keys.push({
         type: "arr",
@@ -5432,12 +5227,10 @@
       if (sorter) sorts[keys.length - 1] = sorter;
       return _cascade;
     };
-
     _cascade.sort = function (d) {
       valuesSort = d;
       return _cascade;
     };
-
     return _cascade;
   }
 
@@ -5453,13 +5246,13 @@
    * too slow.
    */
   var defaultEase = d3.easePolyOut;
-  var defaultTransition = function defaultTransition() {
+  var defaultTransition = function () {
     return d3.transition().ease(defaultEase).duration(300);
   };
-  var fastTransition = function fastTransition() {
+  var fastTransition = function () {
     return d3.transition().ease(defaultEase).duration(50);
   };
-  var slowTransition = function slowTransition() {
+  var slowTransition = function () {
     return d3.transition().ease(defaultEase).duration(500);
   };
 
@@ -5506,10 +5299,10 @@
    * @return {sszvis.component}
    */
 
+  // replaces NaN values with 0
   function handleMissingVal(v) {
     return isNaN(v) ? 0 : v;
   }
-
   function bar () {
     return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
@@ -5521,31 +5314,27 @@
       var bars = selection.selectAll(".sszvis-bar").data(data);
       bars.exit().remove();
       bars.enter().append("rect").classed("sszvis-bar", true).attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc).merge(bars).attr("fill", props.fill).attr("stroke", props.stroke);
-
       if (props.transition) {
         bars = bars.transition(defaultTransition());
       }
+      bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
 
-      bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc); // Tooltip anchors
-
+      // Tooltip anchors
       var tooltipPosition;
-
       if (props.centerTooltip) {
-        tooltipPosition = function tooltipPosition(d) {
+        tooltipPosition = function (d) {
           return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
         };
       } else if (props.tooltipAnchor) {
         var uv = props.tooltipAnchor.map(parseFloat);
-
-        tooltipPosition = function tooltipPosition(d) {
+        tooltipPosition = function (d) {
           return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
         };
       } else {
-        tooltipPosition = function tooltipPosition(d) {
+        tooltipPosition = function (d) {
           return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
         };
       }
-
       var ta = tooltipAnchor().position(tooltipPosition);
       selection.call(ta);
     });
@@ -5574,12 +5363,12 @@
       var dots = selection.selectAll(".sszvis-circle").data(data);
       dots.exit().remove();
       dots.enter().append("circle").classed("sszvis-circle", true).attr("cx", props.x).attr("cy", props.y).attr("r", props.radius).merge(dots).attr("stroke", props.stroke).attr("fill", props.fill);
-
       if (props.transition) {
         dots = dots.transition(defaultTransition());
       }
+      dots.attr("cx", props.x).attr("cy", props.y).attr("r", props.radius);
 
-      dots.attr("cx", props.x).attr("cy", props.y).attr("r", props.radius); // Tooltip anchors
+      // Tooltip anchors
 
       var ta = tooltipAnchor().position(function (d) {
         return [props.x(d), props.y(d)];
@@ -5653,10 +5442,12 @@
         // necessary for the within-group scale
         d.__sszvisGroupedBarIndex__ = i;
       });
-      var unitsWithValue = barUnits.filter(props.defined); // clear the units before rendering
+      var unitsWithValue = barUnits.filter(props.defined);
 
-      unitsWithValue.selectAll("*").remove(); //sszsch: fix: reset previously assigned translations
+      // clear the units before rendering
+      unitsWithValue.selectAll("*").remove();
 
+      //sszsch: fix: reset previously assigned translations
       unitsWithValue.attr("transform", function () {
         return translateString(0, 0);
       });
@@ -5675,8 +5466,8 @@
         var xTotal = 0;
         var tallest = Infinity;
         group.forEach(function (d, i) {
-          xTotal += props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.bandwidth() / 2; // smaller y is higher
-
+          xTotal += props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.bandwidth() / 2;
+          // smaller y is higher
           tallest = Math.min(tallest, props.y(d, i));
         });
         var xAverage = xTotal / group.length;
@@ -5727,20 +5518,22 @@
       return i;
     }).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
-      var props = selection.props(); // Layouts
+      var props = selection.props();
 
-      var line = d3.line().defined(props.defined !== undefined ? props.defined : compose(not(isNaN), props.y)).x(props.x).y(props.y); // Rendering
+      // Layouts
+
+      var line = d3.line().defined(props.defined !== undefined ? props.defined : compose(not(isNaN), props.y)).x(props.x).y(props.y);
+
+      // Rendering
 
       var path = selection.selectAll(".sszvis-line").data(data, props.key);
       var newPath = path.enter().append("path").classed("sszvis-line", true).style("stroke", props.stroke);
       path = path.merge(newPath);
       path.exit().remove();
       path.order();
-
       if (props.transition) {
         path = path.transition(defaultTransition());
       }
-
       path.attr("d", compose(line, props.valuesAccessor)).style("stroke", props.stroke).style("stroke-width", props.strokeWidth);
     });
   }
@@ -5779,12 +5572,12 @@
         // since old and new data values could be on different objects, and they need to be merged.
         // In the code that follows, value._a0 and value._a1 are the destination angles for the transition.
         // value.a0 and value.a1 are the current values in the transition (either the initial value, some intermediate value, or the final angle value).
-        value._a0 = angle; // These a0 and a1 values may be overwritten later if there is already data bound at this data index. (see the .each function further down).
-
+        value._a0 = angle;
+        // These a0 and a1 values may be overwritten later if there is already data bound at this data index. (see the .each function further down).
         if (isNaN(value.a0)) value.a0 = angle;
         angle += props.angle(value);
-        value._a1 = angle; // data values which don't already have angles set start out at the complete value.
-
+        value._a1 = angle;
+        // data values which don't already have angles set start out at the complete value.
         if (isNaN(value.a1)) value.a1 = angle;
       });
       var arcGen = d3.arc().innerRadius(4).outerRadius(props.radius).startAngle(function (d) {
@@ -5852,24 +5645,28 @@
    *
    * @return {sszvis.component}
    */
+
   /* Constants
   ----------------------------------------------- */
-
   var SPINE_PADDING = 0.5;
+
   /* Module
   ----------------------------------------------- */
-
   function pyramid () {
     return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
       var selection = d3.select(this);
-      var props = selection.props(); // Components
+      var props = selection.props();
+
+      // Components
 
       var leftBar = bar().x(function (d) {
         return -SPINE_PADDING - props.barWidth(d);
       }).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
       var rightBar = bar().x(SPINE_PADDING).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
       var leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
-      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth); // Rendering
+      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+
+      // Rendering
 
       selection.selectGroup("left").datum(props.leftAccessor(data)).call(leftBar);
       selection.selectGroup("right").datum(props.rightAccessor(data)).call(rightBar);
@@ -5877,7 +5674,6 @@
       selection.selectGroup("rightReference").datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : []).call(rightLine);
     });
   }
-
   function lineComponent() {
     return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
       var selection = d3.select(this);
@@ -5960,52 +5756,45 @@
       var selection = d3.select(this);
       var props = selection.props();
       var idAcc = prop("id");
-
-      var getNodePosition = function getNodePosition(node) {
+      var getNodePosition = function (node) {
         return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
       };
-
-      var xPosition = function xPosition(node) {
+      var xPosition = function (node) {
         return props.columnPosition(node.columnIndex);
       };
-
-      var yPosition = function yPosition(node) {
+      var yPosition = function (node) {
         return getNodePosition(node);
       };
-
-      var xExtent = function xExtent() {
+      var xExtent = function () {
         return Math.max(props.nodeThickness, 1);
       };
-
-      var yExtent = function yExtent(node) {
+      var yExtent = function (node) {
         return Math.ceil(Math.max(props.sizeScale(node.value), 1));
       };
-
-      var linkPathString = function linkPathString(x0, x1, x2, x3, y0, y1) {
+      var linkPathString = function (x0, x1, x2, x3, y0, y1) {
         return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
       };
-
-      var linkBounds = function linkBounds(x0, x1, y0, y1) {
+      var linkBounds = function (x0, x1, y0, y1) {
         return [x0, x1, y0, y1];
       };
-
       var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
-      // Draw the nodes
 
+      // Draw the nodes
       var barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor);
       var barGroup = selection.selectGroup("nodes").datum(data.nodes);
       barGroup.call(barGen);
       var barTooltipAnchor = tooltipAnchor().position(function (node) {
         return [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2];
       });
-      barGroup.call(barTooltipAnchor); // Draw the column labels
+      barGroup.call(barTooltipAnchor);
 
-      var columnLabelX = function columnLabelX(colIndex) {
+      // Draw the column labels
+      var columnLabelX = function (colIndex) {
         return props.columnPosition(colIndex) + props.nodeThickness / 2;
       };
-
       var columnLabelY = -24;
-      var columnLabels = barGroup.selectAll(".sszvis-sankey-column-label") // One number for each column
+      var columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
+      // One number for each column
       .data(data.columnLengths);
       var newColumnLabels = columnLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
       columnLabels = columnLabels.merge(newColumnLabels);
@@ -6023,34 +5812,32 @@
         return halfPixel(columnLabelX(i));
       }).attr("x2", function (d, i) {
         return halfPixel(columnLabelX(i));
-      }).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12)); // Draw the links
+      }).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
 
-      var linkPoints = function linkPoints(link) {
+      // Draw the links
+      var linkPoints = function (link) {
         var curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
-            curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
-            startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + props.sizeScale(link.value) / 2,
-            endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + props.sizeScale(link.value) / 2;
+          curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
+          startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + props.sizeScale(link.value) / 2,
+          endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + props.sizeScale(link.value) / 2;
         return [curveStart, curveEnd, startLevel, endLevel];
       };
-
-      var linkPath = function linkPath(link) {
+      var linkPath = function (link) {
         var points = linkPoints(link),
-            curveInterp = d3.interpolateNumber(points[0], points[1]),
-            curveControlPtA = curveInterp(props.linkCurvature),
-            curveControlPtB = curveInterp(1 - props.linkCurvature);
+          curveInterp = d3.interpolateNumber(points[0], points[1]),
+          curveControlPtA = curveInterp(props.linkCurvature),
+          curveControlPtB = curveInterp(1 - props.linkCurvature);
         return linkPathString(points[0], curveControlPtA, curveControlPtB, points[1], points[2], points[3]);
       };
-
-      var linkBoundingBox = function linkBoundingBox(link) {
+      var linkBoundingBox = function (link) {
         var points = linkPoints(link);
         return linkBounds(points[0], points[1], points[2], points[3]);
       };
-
-      var linkThickness = function linkThickness(link) {
+      var linkThickness = function (link) {
         return Math.max(props.sizeScale(link.value), 1);
-      }; // Render the links
+      };
 
-
+      // Render the links
       var linksGroup = selection.selectGroup("links");
       var linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
       var newLinksElems = linksElems.enter().append("path").attr("class", "sszvis-link");
@@ -6062,10 +5849,12 @@
         var bbox = linkBoundingBox(link);
         return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
       });
-      linksGroup.call(linkTooltipAnchor); // Render the link labels
+      linksGroup.call(linkTooltipAnchor);
 
-      var linkLabelsGroup = selection.selectGroup("linklabels"); // If no props.linkSourceLabels are provided, most of this rendering is no-op
+      // Render the link labels
+      var linkLabelsGroup = selection.selectGroup("linklabels");
 
+      // If no props.linkSourceLabels are provided, most of this rendering is no-op
       var linkSourceLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-source-label").data(props.linkSourceLabels);
       var newLinkSourceLabels = linkSourceLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label");
       linkSourceLabels = linkSourceLabels.merge(newLinkSourceLabels);
@@ -6073,8 +5862,9 @@
       linkSourceLabels.attr("transform", function (link) {
         var bbox = linkBoundingBox(link);
         return translateString(bbox[0] + 6, bbox[2]);
-      }).text(props.linkLabel); // If no props.linkTargetLabels are provided, most of this rendering is no-op
+      }).text(props.linkLabel);
 
+      // If no props.linkTargetLabels are provided, most of this rendering is no-op
       var linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels);
       var newLinkTargetLabels = linkTargetLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
       linkTargetLabels = linkTargetLabels.merge(newLinkTargetLabels);
@@ -6082,18 +5872,16 @@
       linkTargetLabels.attr("transform", function (link) {
         var bbox = linkBoundingBox(link);
         return translateString(bbox[1] - 6, bbox[3]);
-      }).text(props.linkLabel); // Render the node labels and their hit boxes
+      }).text(props.linkLabel);
 
-      var getLabelSide = function getLabelSide(colIndex) {
+      // Render the node labels and their hit boxes
+      var getLabelSide = function (colIndex) {
         var side = props.labelSide(colIndex);
-
         if (props.labelSideSwitch) {
           side = side === "left" ? "right" : "left";
         }
-
         return side;
       };
-
       var nodeLabelsGroup = selection.selectGroup("nodelabels");
       var barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes);
       var newBarLabels = barLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
@@ -6157,21 +5945,17 @@
     }).prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
-
-      var defaultDefined = function defaultDefined() {
+      var defaultDefined = function () {
         return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
       };
-
       var areaGen = d3.area().defined(props.defined !== undefined ? props.defined : defaultDefined).x(props.x).y0(props.y0).y1(props.y1);
       var paths = selection.selectAll("path.sszvis-path").data(data, props.key);
       var newPaths = paths.enter().append("path").classed("sszvis-path", true);
       paths.exit().remove();
       paths = paths.merge(newPaths);
-
       if (props.transition) {
         paths = paths.transition(defaultTransition());
       }
-
       paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke || "#ffffff").attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
     });
   }
@@ -6207,24 +5991,21 @@
       return i;
     }).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
-      var props = selection.props(); //sszsch why reverse?
+      var props = selection.props();
 
+      //sszsch why reverse?
       data = data.slice().reverse();
-
-      var defaultDefined = function defaultDefined() {
+      var defaultDefined = function () {
         return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
       };
-
       var areaGen = d3.area().defined(props.defined !== undefined ? props.defined : defaultDefined).x(props.x).y0(props.y0).y1(props.y1);
       var paths = selection.selectAll("path.sszvis-path").data(data, props.key);
       var newPaths = paths.enter().append("path").classed("sszvis-path", true);
       paths.exit().remove();
       paths = newPaths.merge(paths);
-
       if (props.transition) {
         paths = paths.transition(defaultTransition());
       }
-
       paths.attr("d", compose(areaGen, props.valuesAccessor)).attr("fill", props.fill).attr("stroke", props.stroke).attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
     });
   }
@@ -6259,23 +6040,25 @@
    *
    * @return {sszvis.component}
    */
-  var stackAcc = prop("stack"); // Accessors for the first and second element of a tuple (2-element array).
+  var stackAcc = prop("stack");
 
+  // Accessors for the first and second element of a tuple (2-element array).
   var fst = prop("0");
   var snd = prop("1");
-
   function stackedBarData(order) {
     return function (_stackAcc, seriesAcc, valueAcc) {
       return function (data) {
-        var rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data); // Collect all keys ()
+        var rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
+        // Collect all keys ()
         var keys = rows.reduce(function (a, row) {
           return set(a.concat(Object.keys(row)));
         }, []);
         var stacks = d3.stack().keys(keys).value(function (x, key) {
           return valueAcc(x[key][0]);
-        }).order(order)(rows); // Simplify the 'data' property.
+        }).order(order)(rows);
 
+        // Simplify the 'data' property.
         stacks.forEach(function (stack) {
           stack.forEach(function (d) {
             d.series = stack.key;
@@ -6293,10 +6076,8 @@
       };
     };
   }
-
   var stackedBarHorizontalData = stackedBarData(d3.stackOrderNone);
   var stackedBarVerticalData = stackedBarData(d3.stackOrderReverse);
-
   function stackedBar(config) {
     return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").render(function (data) {
       var selection = d3.select(this);
@@ -6309,43 +6090,42 @@
       groups.call(barGen);
     });
   }
-
   var horizontalStackedBarConfig = {
-    x: function x(props) {
+    x: function (props) {
       return compose(props.xScale, fst);
     },
-    y: function y(props) {
+    y: function (props) {
       return compose(props.yScale, stackAcc);
     },
-    width: function width(props) {
+    width: function (props) {
       return function (d) {
         return props.xScale(d[1]) - props.xScale(d[0]);
       };
     },
-    height: function height(props) {
+    height: function (props) {
       return props.height;
     }
   };
-  var stackedBarHorizontal = function stackedBarHorizontal() {
+  var stackedBarHorizontal = function () {
     return stackedBar(horizontalStackedBarConfig);
   };
   var verticalStackedBarConfig = {
-    x: function x(props) {
+    x: function (props) {
       return compose(props.xScale, stackAcc);
     },
-    y: function y(props) {
+    y: function (props) {
       return compose(props.yScale, snd);
     },
-    width: function width(props) {
+    width: function (props) {
       return props.width;
     },
-    height: function height(props) {
+    height: function (props) {
       return function (d) {
         return props.yScale(d[0]) - props.yScale(d[1]);
       };
     }
   };
-  var stackedBarVertical = function stackedBarVertical() {
+  var stackedBarVertical = function () {
     return stackedBar(verticalStackedBarConfig);
   };
 
@@ -6378,12 +6158,13 @@
    *
    * @return {sszvis.component}
    */
+
   /* Constants
   ----------------------------------------------- */
-
   var SPINE_PADDING$1 = 0.5;
   var dataAcc = prop("data");
   var rowAcc = prop("row");
+
   /**
    * This function prepares the data for the stackedPyramid component
    *
@@ -6397,7 +6178,6 @@
    * The combination of each distinct (side,row,series) triplet MUST appear only once
    * in the data. This function makes no effort to normalize the data if that's not the case.
    */
-
   function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
     return function (data) {
       var sides = cascade().arrayBy(sideAcc).arrayBy(_rowAcc).objectBy(seriesAcc).apply(data).map(function (rows) {
@@ -6417,9 +6197,10 @@
           });
         });
         return stacks;
-      }); // Compute the max value, for convenience. This value is needed to construct
-      // the horizontal scale.
+      });
 
+      // Compute the max value, for convenience. This value is needed to construct
+      // the horizontal scale.
       sides.maxValue = d3.max(sides, function (side) {
         return d3.max(side, function (rows) {
           return d3.max(rows, function (row) {
@@ -6430,13 +6211,15 @@
       return sides;
     };
   }
+
   /* Module
   ----------------------------------------------- */
-
   function stackedPyramid() {
     return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
       var selection = d3.select(this);
-      var props = selection.props(); // Components
+      var props = selection.props();
+
+      // Components
 
       var leftBar = bar().x(function (d) {
         return -SPINE_PADDING$1 - props.barWidth(d[1]);
@@ -6451,7 +6234,9 @@
       var leftStack = stackComponent().stackElement(leftBar);
       var rightStack = stackComponent().stackElement(rightBar);
       var leftLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
-      var rightLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth); // Rendering
+      var rightLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth);
+
+      // Rendering
 
       selection.selectGroup("leftStack").datum(props.leftAccessor(data)).call(leftStack);
       selection.selectGroup("rightStack").datum(props.rightAccessor(data)).call(rightStack);
@@ -6459,7 +6244,6 @@
       selection.selectGroup("rightReference").datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : []).call(rightLine);
     });
   }
-
   function stackComponent() {
     return component().prop("stackElement").renderSelection(function (selection) {
       var datum = selection.datum();
@@ -6473,7 +6257,6 @@
       });
     });
   }
-
   function lineComponent$1() {
     return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
       var selection = d3.select(this);
@@ -6520,8 +6303,9 @@
   function sunburst () {
     return component().prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (data) {
       var selection = d3.select(this);
-      var props = selection.props(); // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
+      var props = selection.props();
 
+      // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
       function getColorRecursive(node) {
         // Center node (if the data were prepared using sszvis.layout.sunburst.prepareData)
         if (node.data.isSunburstRoot) {
@@ -6540,23 +6324,18 @@
           return pColor;
         }
       }
-
-      var startAngle = function startAngle(d) {
+      var startAngle = function (d) {
         return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
       };
-
-      var endAngle = function endAngle(d) {
+      var endAngle = function (d) {
         return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
       };
-
-      var innerRadius = function innerRadius(d) {
+      var innerRadius = function (d) {
         return props.centerRadius + Math.max(0, props.radiusScale(d.y0));
       };
-
-      var outerRadius = function outerRadius(d) {
+      var outerRadius = function (d) {
         return props.centerRadius + Math.max(0, props.radiusScale(d.y1));
       };
-
       var arcGen = d3.arc().startAngle(startAngle).endAngle(endAngle).innerRadius(innerRadius).outerRadius(outerRadius);
       data.forEach(function (d) {
         // _x and _dx are the destination values for the transition.
@@ -6569,7 +6348,8 @@
           // x and dx are the current/transitioning values
           // We set these here, in case any datums already exist which have values set
           data[i].x0 = d.x0;
-          data[i].x1 = d.x1; // The transition tweens from x and dx to _x and _dx
+          data[i].x1 = d.x1;
+          // The transition tweens from x and dx to _x and _dx
         }
       }).data(data);
       var newArcs = arcs.enter().append("path").attr("class", "sszvis-sunburst-arc");
@@ -6584,8 +6364,9 @@
           d.x1 = x1Interp(t);
           return arcGen(d);
         };
-      }); // Add tooltip anchors
+      });
 
+      // Add tooltip anchors
       var arcTooltipAnchor = tooltipAnchor().position(function (d) {
         var startA = startAngle(d);
         var endA = endAngle(d);
@@ -6663,11 +6444,12 @@
   function handleRuler () {
     return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
       var selection = d3.select(this);
-      var props = selection.props(); // Elements need to be placed on half-pixels in order to be rendered
+      var props = selection.props();
+
+      // Elements need to be placed on half-pixels in order to be rendered
       // crisply across browsers. That's why we create this position accessor
       // here that takes a datum as input, reads out its value (props.x) and
       // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
-
       var crispX = compose(halfPixel, props.x);
       var crispY = compose(halfPixel, props.y);
       var bottom = props.bottom - 4;
@@ -6698,7 +6480,9 @@
       var label = selection.selectAll(".sszvis-ruler__label").data(data);
       var newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
       label.exit().remove();
-      label = label.merge(newLabel); // Update both labelOutline and labelOutline selections
+      label = label.merge(newLabel);
+
+      // Update both labelOutline and labelOutline selections
 
       selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", function (d) {
         var x = compose(halfPixel, props.x)(d);
@@ -6748,9 +6532,9 @@
         // We store the index in the select's value instead of the datum
         // because an option's value can only hold strings.
         var i = d3.select(this).property("value");
-        props.change(props.values[i]); // Prevent highlights on the select element after users have selected
+        props.change(props.values[i]);
+        // Prevent highlights on the select element after users have selected
         // an option by moving away from it.
-
         setTimeout(function () {
           window.focus();
         }, 0);
@@ -6769,21 +6553,17 @@
       });
     });
   }
-
   function truncateToWidth(metricsEl, maxWidth, originalString) {
     var MAX_RECURSION = 1000;
-
-    var fitText = function fitText(str, i) {
+    var fitText = function (str, i) {
       metricsEl.text(str);
       var textWidth = Math.ceil(metricsEl.node().clientWidth);
-
       if (i < MAX_RECURSION && textWidth > maxWidth) {
         return fitText(str.slice(0, str.length - 2) + "…", i + 1);
       } else {
         return str;
       }
     };
-
     return fitText(originalString, 0);
   }
 
@@ -6810,47 +6590,42 @@
    *
    * @returns {sszvis.component}
    */
-
   function contains$1(x, a) {
     return a.indexOf(x) >= 0;
   }
-
   function slider () {
     return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).tickLabels(identity).prop("label", functor).label(identity).render(function () {
       var selection = d3.select(this);
       var props = selection.props();
       var axisOffset = 28; // vertical offset for the axis
-
       var majorTickSize = 12;
       var backgroundOffset = halfPixel(18); // vertical offset for the middle of the background
-
       var handleWidth = 10; // the width of the handle
-
       var handleHeight = 23; // the height of the handle
-
       var bgWidth = 6; // the width of the background
-
       var lineEndOffset = bgWidth / 2; // the amount by which to offset the ends of the background line
-
       var handleSideOffset = handleWidth / 2 + 0.5; // the amount by which to offset the position of the handle
 
       var scaleDomain = props.scale.domain();
       var scaleRange = range(props.scale);
-      var alteredScale = props.scale.copy().range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]); // the mostly unchanging bits
+      var alteredScale = props.scale.copy().range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
 
+      // the mostly unchanging bits
       var bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]);
       var newBg = bg.enter().append("g").classed("sszvis-control-slider__backgroundgroup", true);
       bg = bg.merge(newBg);
-      bg.exit().remove(); // create the axis
+      bg.exit().remove();
 
+      // create the axis
       var axis = axisX().scale(alteredScale).orient("bottom").hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set([].concat(props.majorTicks, props.minorTicks))).tickFormat(function (d) {
         return contains$1(d, props.majorTicks) ? props.tickLabels(d) : "";
       });
       var axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]);
       var newAxisSelection = axisSelection.enter().append("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
       axisSelection = axisSelection.merge(newAxisSelection);
-      axisSelection.attr("transform", translateString(0, axisOffset)).call(axis); // adjust visual aspects of the axis to fit the design
+      axisSelection.attr("transform", translateString(0, axisOffset)).call(axis);
 
+      // adjust visual aspects of the axis to fit the design
       axisSelection.selectAll(".tick line").filter(function (d) {
         return !contains$1(d, props.majorTicks);
       }).attr("y2", 4);
@@ -6860,8 +6635,9 @@
       var numTicks = majorAxisText.size();
       majorAxisText.style("text-anchor", function (d, i) {
         return i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle";
-      }); // create the slider background
+      });
 
+      // create the slider background
       var backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]);
       var newBackgroundSelection = backgroundSelection.enter().append("g").classed("sszvis-slider__background", true);
       backgroundSelection = backgroundSelection.merge(newBackgroundSelection);
@@ -6877,8 +6653,9 @@
       var shadow = backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]);
       var newShadow = shadow.enter().append("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", bgWidth - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round");
       shadow = shadow.merge(newShadow);
-      shadow.attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", compose(Math.floor, alteredScale)); // draw the handle and the label
+      shadow.attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", compose(Math.floor, alteredScale));
 
+      // draw the handle and the label
       var handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]);
       handle.exit().remove();
       var handleEntering = handle.enter().append("g").classed("sszvis-control-slider__handle", true);
@@ -6898,7 +6675,8 @@
       var handleLineDimension = handleHeight / 2 - 4; // the amount by which to offset the small handle line within the handle
 
       handleEntering.append("line").classed("sszvis-control-slider__handleline", true).attr("y1", backgroundOffset - handleLineDimension).attr("y2", backgroundOffset + handleLineDimension);
-      var sliderInteraction = move().xScale(props.scale) // range goes from the text top (text is 11px tall) to the bottom of the axis
+      var sliderInteraction = move().xScale(props.scale)
+      // range goes from the text top (text is 11px tall) to the bottom of the axis
       .yScale(d3.scaleLinear().range([-11, axisOffset + majorTickSize])).draggable(true).on("drag", props.onchange);
       selection.selectGroup("sliderInteraction").classed("sszvis-control-slider--interactionLayer", true).attr("transform", translateString(0, 4)).call(sliderInteraction);
     });
@@ -7095,13 +6873,10 @@
       var selection = d3.select(this);
       var props = selection.props();
       var domain = props.scale.domain();
-
       if (props.reverse) {
         domain = domain.slice().reverse();
       }
-
       var rows, cols;
-
       if (props.orientation === "horizontal") {
         cols = Math.ceil(props.columns);
         rows = Math.ceil(domain.length / cols);
@@ -7109,7 +6884,6 @@
         rows = Math.ceil(props.rows);
         cols = Math.ceil(domain.length / rows);
       }
-
       var groups = selection.selectAll(".sszvis-legend--entry").data(domain);
       var newGroups = groups.enter().append("g").classed("sszvis-legend--entry", true);
       groups.exit().remove();
@@ -7139,23 +6913,19 @@
         return translateString(x, y);
       });
       var verticalOffset = "";
-
       if (props.verticallyCentered) {
         verticalOffset = "translate(0," + String(-(domain.length * props.rowHeight / 2)) + ") ";
       }
-
       if (props.horizontalFloat) {
         var rowPosition = 0,
-            horizontalPosition = 0;
+          horizontalPosition = 0;
         groups.merge(newGroups).attr("transform", function () {
           // not affected by scroll position
           var width = this.getBoundingClientRect().width;
-
           if (horizontalPosition + width > props.floatWidth) {
             rowPosition += props.rowHeight;
             horizontalPosition = 0;
           }
-
           var translate = translateString(horizontalPosition, rowPosition);
           horizontalPosition += width + props.floatPadding;
           return verticalOffset + translate;
@@ -7174,19 +6944,18 @@
 
   var DEFAULT_COLUMN_COUNT = 2;
   var LABEL_PADDING = 40;
+
   /**
    * colorLegendLayout
    *
    * Generate a color scale and a legend for the given labels. Compute how much
    * padding labels plus legend needs for use with `sszvis.bounds()`
    */
-
-  function colorLegendLayout(_ref, container) {
-    var legendLabels = _ref.legendLabels,
-        _ref$axisLabels = _ref.axisLabels,
-        axisLabels = _ref$axisLabels === void 0 ? [] : _ref$axisLabels,
-        _ref$slant = _ref.slant,
-        slant = _ref$slant === void 0 ? "horizontal" : _ref$slant;
+  function colorLegendLayout({
+    legendLabels,
+    axisLabels = [],
+    slant = "horizontal"
+  }, container) {
     var containerWidth = measureDimensions(container).width;
     var layout = colorLegendDimensions(legendLabels, containerWidth);
     var scale = legendLabels.length > 6 ? scaleQual12().domain(legendLabels) : scaleQual6().domain(legendLabels);
@@ -7194,56 +6963,56 @@
     var axisLabelPadding = axisLabelHeight(slant, axisLabels);
     var legendPadding = layout.rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
     return {
-      axisLabelPadding: axisLabelPadding,
-      legendPadding: legendPadding,
+      axisLabelPadding,
+      legendPadding,
       bottomPadding: axisLabelPadding + legendPadding,
       legendWidth: layout.legendWidth,
-      legend: legend,
-      scale: scale
+      legend,
+      scale
     };
   }
+
   /**
    * colorLegendDimensions
    *
    * Compute all the dimensions necessary to generate an ordinal color legend.
    */
-
   function colorLegendDimensions(labels, containerWidth) {
     var labelCount = labels.length;
     var maxLabelWidth = d3.max(labels, labelWidth);
-    var totalLabelsWidth = d3.sum(labels, labelWidth); // Use a single column for four or fewer items
+    var totalLabelsWidth = d3.sum(labels, labelWidth);
 
-    var columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT); // Use a horizontal layout if all labels fit on one line
+    // Use a single column for four or fewer items
+    var columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
 
+    // Use a horizontal layout if all labels fit on one line
     var isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;
     return {
-      columns: columns,
+      columns,
       rows: isHorizontal ? 1 : Math.ceil(labelCount / columns),
       columnWidth: columns === 1 ? null : maxLabelWidth,
       legendWidth: columns * maxLabelWidth,
       horizontalFloat: isHorizontal,
       orientation: isHorizontal ? null : "vertical"
     };
-  } // -----------------------------------------------------------------------------
+  }
+
+  // -----------------------------------------------------------------------------
   // Helpers
 
   function axisLabelHeight(slant, labels) {
     switch (slant) {
       case "vertical":
         return 40 + d3.max(labels, measureAxisLabel);
-
       case "diagonal":
         return 40 + Math.sqrt(2 * Math.pow(d3.max(labels, measureAxisLabel) / 2, 2));
-
       default:
         return 60;
     }
   }
-
   function labelWidth(label) {
     return measureLegendLabel(label) + LABEL_PADDING;
   }
-
   function numCols(totalWidth, columnWidth, num) {
     return num <= 1 ? 1 : columnWidth <= totalWidth / num ? num : numCols(totalWidth, columnWidth, num - 1);
   }
@@ -7274,22 +7043,23 @@
    *                              centeredOffset: the left offset required to center the table horizontally within its container
    *                          }
    */
+
   function heatTableDimensions (spaceWidth, squarePadding, numX, numY, chartPadding) {
     chartPadding || (chartPadding = {});
     chartPadding.top || (chartPadding.top = 0);
     chartPadding.right || (chartPadding.right = 0);
     chartPadding.bottom || (chartPadding.bottom = 0);
-    chartPadding.left || (chartPadding.left = 0); // this includes the default side length for the heat table
+    chartPadding.left || (chartPadding.left = 0);
 
+    // this includes the default side length for the heat table
     var DEFAULT_SIDE = 30,
-        availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
-        side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
-        paddedSide = side + squarePadding,
-        padRatio = 1 - side / paddedSide,
-        tableWidth = numX * paddedSide - squarePadding,
-        // subtract the squarePadding at the end
-    tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
-
+      availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
+      side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
+      paddedSide = side + squarePadding,
+      padRatio = 1 - side / paddedSide,
+      tableWidth = numX * paddedSide - squarePadding,
+      // subtract the squarePadding at the end
+      tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
     return {
       side: side,
       paddedSide: paddedSide,
@@ -7326,19 +7096,20 @@
    *                                               to translate scales below the bars.
    *                                 }
    */
+
   function horizontalBarChartDimensions (numBars) {
     var DEFAULT_HEIGHT = 24,
-        // the default bar height
-    MIN_PADDING = 20,
-        // the minimum padding size
-    barHeight = DEFAULT_HEIGHT,
-        // the bar height
-    numPads = numBars - 1,
-        padding = MIN_PADDING,
-        // compute other information
-    padRatio = 1 - barHeight / (barHeight + padding),
-        computedBarSpace = barHeight * numBars + padding * numPads,
-        outerRatio = 0; // no outer padding
+      // the default bar height
+      MIN_PADDING = 20,
+      // the minimum padding size
+      barHeight = DEFAULT_HEIGHT,
+      // the bar height
+      numPads = numBars - 1,
+      padding = MIN_PADDING,
+      // compute other information
+      padRatio = 1 - barHeight / (barHeight + padding),
+      computedBarSpace = barHeight * numBars + padding * numPads,
+      outerRatio = 0; // no outer padding
 
     return {
       barHeight: barHeight,
@@ -7381,9 +7152,7 @@
    */
   function populationPyramidLayout (spaceWidth, numBars) {
     var MAX_HEIGHT = 480; // Chart no taller than this
-
     var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
-
     var defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
     var padding = 1;
     var numPads = numBars - 1;
@@ -7392,14 +7161,12 @@
     roundedBarHeight = Math.max(roundedBarHeight, MIN_BAR_HEIGHT);
     var totalHeight = numBars * roundedBarHeight + totalPadding;
     var barPos = totalHeight - roundedBarHeight,
-        step = roundedBarHeight + padding,
-        positions = [];
-
+      step = roundedBarHeight + padding,
+      positions = [];
     while (barPos >= 0) {
       positions.push(barPos);
       barPos -= step;
     }
-
     var maxBarLength = Math.min(spaceWidth / 2, aspectRatioPortrait.MAX_HEIGHT * (4 / 5) / 2);
     var chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
     return {
@@ -7418,13 +7185,13 @@
    * A module of helper functions for computing the data structure
    * and layout required by the sankey component.
    */
-
   var newLinkId = function () {
     var id = 0;
     return function () {
       return ++id;
     };
   }();
+
   /**
    * sszvis.layout.sankey.prepareData
    *
@@ -7454,33 +7221,27 @@
    *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
    *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
    */
-
-
-  var prepareData = function prepareData() {
+  var prepareData = function () {
     var mGetSource = identity;
     var mGetTarget = identity;
     var mGetValue = identity;
-    var mColumnIds = []; // Helper functions
+    var mColumnIds = [];
 
+    // Helper functions
     var valueAcc = prop("value");
-
-    var byAscendingValue = function byAscendingValue(a, b) {
+    var byAscendingValue = function (a, b) {
       return d3.ascending(valueAcc(a), valueAcc(b));
     };
-
-    var byDescendingValue = function byDescendingValue(a, b) {
+    var byDescendingValue = function (a, b) {
       return d3.descending(valueAcc(a), valueAcc(b));
     };
-
     var valueSortFunc = byDescendingValue;
-
-    var main = function main(inputData) {
+    var main = function (inputData) {
       var columnIndex = mColumnIds.reduce(function (index, columnIdsList, colIndex) {
         columnIdsList.forEach(function (id) {
           if (index.has(id)) {
             warn("Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:", id, "The existing value will be overwritten");
           }
-
           var item = {
             id: id,
             columnIndex: colIndex,
@@ -7503,17 +7264,14 @@
 
         var srcNode = columnIndex.get(srcId);
         var tgtNode = columnIndex.get(tgtId);
-
         if (!srcNode) {
           warn("Found invalid source column id:", srcId);
           return null;
         }
-
         if (!tgtNode) {
           warn("Found invalid target column id:", tgtId);
           return null;
         }
-
         var item = {
           id: newLinkId(),
           value: value,
@@ -7525,33 +7283,40 @@
         srcNode.linksFrom.push(item);
         tgtNode.linksTo.push(item);
         return item;
-      }); // Extract the column nodes from the index
+      });
 
-      var listOfNodes = columnIndex.values(); // Calculate an array of total values for each column
+      // Extract the column nodes from the index
+      var listOfNodes = columnIndex.values();
 
+      // Calculate an array of total values for each column
       var columnTotals = listOfNodes.reduce(function (totals, node) {
         var fromTotal = d3.sum(node.linksFrom, valueAcc);
-        var toTotal = d3.sum(node.linksTo, valueAcc); // For correct visual display, the node's value is the max of the from and to links
+        var toTotal = d3.sum(node.linksTo, valueAcc);
 
+        // For correct visual display, the node's value is the max of the from and to links
         node.value = Math.max(0, fromTotal, toTotal);
         totals[node.columnIndex] += node.value;
         return totals;
-      }, filledArray(mColumnIds.length, 0)); // An array with the number of nodes in each column
+      }, filledArray(mColumnIds.length, 0));
 
+      // An array with the number of nodes in each column
       var columnLengths = mColumnIds.map(function (colIds) {
         return colIds.length;
-      }); // Sort the column nodes
-      // (note, this sorts all nodes for all columns in the same array)
+      });
 
-      listOfNodes.sort(valueSortFunc); // Sort the links in descending order of value. This means smaller links will render
+      // Sort the column nodes
+      // (note, this sorts all nodes for all columns in the same array)
+      listOfNodes.sort(valueSortFunc);
+
+      // Sort the links in descending order of value. This means smaller links will render
       // on top of larger links.
       // (note, this sorts all links for all columns in the same array)
+      listOfLinks.sort(byDescendingValue);
 
-      listOfLinks.sort(byDescendingValue); // Assign the valueOffset and nodeIndex properties
+      // Assign the valueOffset and nodeIndex properties
       // Here, columnData[0] is an array adding up value totals
       // and columnData[1] is an array adding up the number of nodes in each column
       // Both are used to assign cumulative properties to the nodes of each column
-
       listOfNodes.reduce(function (columnData, node) {
         // Assigns valueOffset and nodeIndex
         node.valueOffset = columnData[0][node.columnIndex];
@@ -7559,19 +7324,21 @@
         columnData[0][node.columnIndex] += node.value;
         columnData[1][node.columnIndex] += 1;
         return columnData;
-      }, [filledArray(mColumnIds.length, 0), filledArray(mColumnIds.length, 0)]); // Once the order of nodes is calculated, we need to sort the links going into the
+      }, [filledArray(mColumnIds.length, 0), filledArray(mColumnIds.length, 0)]);
+
+      // Once the order of nodes is calculated, we need to sort the links going into the
       // nodes and the links coming out of the nodes according to the ordering of the nodes
       // they come from or go to. This creates a visually appealing layout which minimizes
       // the number of link crossings
-
       listOfNodes.forEach(function (node) {
         node.linksFrom.sort(function (linkA, linkB) {
           return linkA.tgt.nodeIndex - linkB.tgt.nodeIndex;
         });
         node.linksTo.sort(function (linkA, linkB) {
           return linkA.src.nodeIndex - linkB.src.nodeIndex;
-        }); // Stack the links vertically within the node according to their order
+        });
 
+        // Stack the links vertically within the node according to their order
         node.linksFrom.reduce(function (sumValue, link) {
           link.srcOffset = sumValue;
           return sumValue + valueAcc(link);
@@ -7588,43 +7355,36 @@
         columnLengths: columnLengths
       };
     };
-
     main.apply = function (data) {
       return main(data);
     };
-
     main.source = function (func) {
       mGetSource = func;
       return main;
     };
-
     main.target = function (func) {
       mGetTarget = func;
       return main;
     };
-
     main.value = function (func) {
       mGetValue = func;
       return main;
     };
-
     main.descendingSort = function () {
       valueSortFunc = byDescendingValue;
       return main;
     };
-
     main.ascendingSort = function () {
       valueSortFunc = byAscendingValue;
       return main;
     };
-
     main.idLists = function (idLists) {
       mColumnIds = idLists;
       return main;
     };
-
     return main;
   };
+
   /**
    * sszvis.layout.sankey.computeLayout
    *
@@ -7647,48 +7407,53 @@
    *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
    *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
    */
-
-  var computeLayout = function computeLayout(columnLengths, columnTotals, columnHeight, columnWidth) {
+  var computeLayout = function (columnLengths, columnTotals, columnHeight, columnWidth) {
     // Calculate appropriate scale and padding values (in pixels)
     var padSpaceRatio = 0.15;
     var padMin = 12;
     var padMax = 50;
     var minDisplayPixels = 1; // Minimum number of pixels used for display area
-    // Compute the padding value (in pixels) for each column, then take the minimum value
 
+    // Compute the padding value (in pixels) for each column, then take the minimum value
     var computedPixPadding = d3.min(columnLengths.map(function (colLength) {
       // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
-      var colPadding = columnHeight * padSpaceRatio / (colLength - 1); // Limit by minimum and maximum pixel padding values
-
+      var colPadding = columnHeight * padSpaceRatio / (colLength - 1);
+      // Limit by minimum and maximum pixel padding values
       return Math.max(padMin, Math.min(padMax, colPadding));
-    })); // Given the computed padding value, compute each column's resulting "pixels per unit"
+    }));
+
+    // Given the computed padding value, compute each column's resulting "pixels per unit"
     // This is the number of remaining pixels available to display the column's total units,
     // after padding pixels have been subtracted. Then take the minimum value of that.
-
     var pixPerUnit = d3.min(columnLengths.map(function (colLength, colIndex) {
       // The non-padding pixels must have at least minDisplayPixels
       var nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
       return nonPaddingPixels / columnTotals[colIndex];
-    })); // The padding between bars, in bar value units
+    }));
 
-    var valuePadding = computedPixPadding / pixPerUnit; // The padding between bars, in pixels
+    // The padding between bars, in bar value units
+    var valuePadding = computedPixPadding / pixPerUnit;
+    // The padding between bars, in pixels
+    var nodePadding = computedPixPadding;
 
-    var nodePadding = computedPixPadding; // The maximum total value of any column
+    // The maximum total value of any column
+    var maxTotal = d3.max(columnTotals);
 
-    var maxTotal = d3.max(columnTotals); // Compute y-padding required to vertically center each column (in pixels)
-
+    // Compute y-padding required to vertically center each column (in pixels)
     var paddedHeights = columnLengths.map(function (colLength, colIndex) {
       return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding;
     });
     var maxPaddedHeight = d3.max(paddedHeights);
     var columnPaddings = columnLengths.map(function (colLength, colIndex) {
       return (maxPaddedHeight - paddedHeights[colIndex]) / 2;
-    }); // The domain of the size scale
+    });
 
-    var valueDomain = [0, maxTotal]; // The range of the size scale
+    // The domain of the size scale
+    var valueDomain = [0, maxTotal];
+    // The range of the size scale
+    var valueRange = [0, maxTotal * pixPerUnit];
 
-    var valueRange = [0, maxTotal * pixPerUnit]; // Calculate column (or row, as the case may be) positioning values
-
+    // Calculate column (or row, as the case may be) positioning values
     var nodeThickness = 20;
     var numColumns = columnLengths.length;
     var columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
@@ -7815,19 +7580,18 @@
    *                                padHeight:      This is the amount of vertical padding between each area multiple.
    *                              }
    */
+
   function stackedAreaMultiplesLayout (height, num, pct) {
     pct || (pct = 0.1);
     var step = height / (num - pct),
-        bandHeight = step * (1 - pct),
-        level = bandHeight,
-        // count from the top, and start at the bottom of the first band
-    range = [];
-
+      bandHeight = step * (1 - pct),
+      level = bandHeight,
+      // count from the top, and start at the bottom of the first band
+      range = [];
     while (level - height < 1) {
       range.push(level);
       level += step;
     }
-
     return {
       range: range,
       bandHeight: bandHeight,
@@ -7840,6 +7604,7 @@
    *
    * Helper functions for transforming your data to match the format required by the sunburst chart.
    */
+
   /**
    * sszvis.layout.sunburst.prepareData
    *
@@ -7865,19 +7630,17 @@
    *
    * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
    */
-
-  var prepareData$1 = function prepareData() {
+  var prepareData$1 = function () {
     var nester = d3.nest();
-    var valueAcc = identity; // Sibling nodes of the partition layout are sorted according to this sort function.
+    var valueAcc = identity;
+    // Sibling nodes of the partition layout are sorted according to this sort function.
     // The default value for this component tries to preserve the order of the input data.
     // However, input data order preservation is not guaranteed, because of an implementation
     // detail of d3.partition, probably having to do with the way that each browser can
     // implement its own key ordering for javascript objects.
-
-    var sortFn = function sortFn() {
+    var sortFn = function () {
       return 0;
     };
-
     function main(data) {
       nester.rollup(first);
       var root = d3.hierarchy({
@@ -7887,42 +7650,37 @@
         return x.value ? valueAcc(x.value) : 0;
       });
       d3.partition()(root);
-
       function flatten(node) {
         return [].concat.apply([node], (node.children || []).map(flatten));
-      } // Remove the root element from the data (but it still exists in memory so long as the data is alive)
+      }
 
-
+      // Remove the root element from the data (but it still exists in memory so long as the data is alive)
       return flatten(root).filter(function (d) {
         return !d.data.isSunburstRoot;
       });
     }
-
     main.calculate = function (data) {
       return main(data);
     };
-
     main.layer = function (keyFunc) {
       nester.key(keyFunc);
       return main;
     };
-
     main.value = function (accfn) {
       valueAcc = accfn;
       return main;
     };
-
     main.sort = function (sortFunc) {
       sortFn = sortFunc;
       return main;
     };
-
     return main;
   };
   var MAX_SUNBURST_RING_WIDTH = 60;
   var MAX_RW = MAX_SUNBURST_RING_WIDTH;
   var MIN_SUNBURST_RING_WIDTH = 10;
   var MIN_RW = MIN_SUNBURST_RING_WIDTH;
+
   /**
    * sszvis.layout.sunburst.computeLayout
    *
@@ -7935,8 +7693,7 @@
    *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
    *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
    */
-
-  var computeLayout$1 = function computeLayout(numLayers, chartWidth) {
+  var computeLayout$1 = function (numLayers, chartWidth) {
     // Diameter of the center circle is one-third the width
     var halfWidth = chartWidth / 2;
     var centerRadius = halfWidth / 3;
@@ -7947,6 +7704,7 @@
       ringWidth: ringWidth
     };
   };
+
   /**
    * sszvis.layout.sunburst.getRadiusExtent
    * @param  {Array} formattedData      An array of data to inspect for the extent of the radius scale
@@ -7956,8 +7714,7 @@
    *                                    function which abstracts away the way d3 stores positions within the partition layout used
    *                                    by the sunburst chart.
    */
-
-  var getRadiusExtent = function getRadiusExtent(formattedData) {
+  var getRadiusExtent = function (formattedData) {
     return [d3.min(formattedData, function (d) {
       return d.y0;
     }), d3.max(formattedData, function (d) {
@@ -7987,37 +7744,39 @@
    *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
    *                                }
    */
+
   function verticalBarChartDimensions (width, numBars) {
     var MAX_BAR_WIDTH = 48,
-        // the maximum width of a bar
-    MIN_PADDING = 2,
-        // the minimum padding value
-    MAX_PADDING = 100,
-        // the maximum padding value
-    TARGET_BAR_RATIO = 0.7,
-        // the ratio of width to width + padding used to compute the initial width and padding
-    TARGET_PADDING_RATIO = 1 - TARGET_BAR_RATIO,
-        // the inverse of the bar ratio, this is the ratio of padding to width + padding
-    numPads = numBars - 1,
-        // the number of padding spaces
-    // compute the target size of the padding
-    // the derivation of this equation is available upon request
-    padding = width * TARGET_PADDING_RATIO / (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars),
-        // based on the computed padding, calculate the bar width
-    barWidth = (width - padding * numPads) / numBars; // adjust for min and max bounds
+      // the maximum width of a bar
+      MIN_PADDING = 2,
+      // the minimum padding value
+      MAX_PADDING = 100,
+      // the maximum padding value
+      TARGET_BAR_RATIO = 0.7,
+      // the ratio of width to width + padding used to compute the initial width and padding
+      TARGET_PADDING_RATIO = 1 - TARGET_BAR_RATIO,
+      // the inverse of the bar ratio, this is the ratio of padding to width + padding
+      numPads = numBars - 1,
+      // the number of padding spaces
+      // compute the target size of the padding
+      // the derivation of this equation is available upon request
+      padding = width * TARGET_PADDING_RATIO / (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars),
+      // based on the computed padding, calculate the bar width
+      barWidth = (width - padding * numPads) / numBars;
 
+    // adjust for min and max bounds
     if (barWidth > MAX_BAR_WIDTH) {
-      barWidth = MAX_BAR_WIDTH; // recompute the padding value where necessary
-
+      barWidth = MAX_BAR_WIDTH;
+      // recompute the padding value where necessary
       padding = (width - barWidth * numBars) / numPads;
     }
-
     if (padding < MIN_PADDING) padding = MIN_PADDING;
-    if (padding > MAX_PADDING) padding = MAX_PADDING; // compute other information
+    if (padding > MAX_PADDING) padding = MAX_PADDING;
 
+    // compute other information
     var padRatio = 1 - barWidth / (barWidth + padding),
-        computedBarSpace = barWidth * numBars + padding * numPads,
-        outerRatio = (width - computedBarSpace) / 2 / (barWidth + padding);
+      computedBarSpace = barWidth * numBars + padding * numPads,
+      outerRatio = (width - computedBarSpace) / 2 / (barWidth + padding);
     return {
       barWidth: barWidth,
       padWidth: padding,
@@ -8069,8 +7828,9 @@
         });
         sum += w;
         pPrev = p;
-      }); // add the final box (last display value - > endpoint)
+      });
 
+      // add the final box (last display value - > endpoint)
       rectData.push({
         x: Math.floor(circleRad + sum),
         w: innerRange[1] - sum,
@@ -8136,21 +7896,18 @@
     return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat").labelFormat(identity).render(function () {
       var selection = d3.select(this);
       var props = selection.props();
-
       if (!props.scale) {
         error("legend.linearColorScale - a scale must be specified.");
         return false;
       }
-
       var domain = props.scale.domain();
       var values = props.displayValues;
-
       if (!values.length && props.scale.ticks) {
         values = props.scale.ticks(props.segments - 1);
       }
+      values.push(last(domain));
 
-      values.push(last(domain)); // Avoid division by zero
-
+      // Avoid division by zero
       var segWidth = values.length > 0 ? props.width / values.length : 0;
       var segHeight = 10;
       var segments = selection.selectAll("rect.sszvis-legend__mark").data(values);
@@ -8165,8 +7922,9 @@
         return props.scale(d);
       });
       var startEnd = [first(domain), last(domain)];
-      var labelText = props.labelText || startEnd; // rounded end caps for the segments
+      var labelText = props.labelText || startEnd;
 
+      // rounded end caps for the segments
       var endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd);
       var newEndCaps = endCaps.enter().append("circle").attr("class", "ssvis-legend--mark");
       endCaps.exit().remove();
@@ -8214,7 +7972,9 @@
       var tickValues = props.tickValues || [domain[1], props.scale.invert(d3.mean(props.scale.range())), domain[0]];
       var maxRadius = range(props.scale)[1];
       var group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]);
-      var newGroup = group.enter().append("g").attr("class", "sszvis-legend__elementgroup"); // FIXME: No exit?
+      var newGroup = group.enter().append("g").attr("class", "sszvis-legend__elementgroup");
+
+      // FIXME: No exit?
 
       group = group.merge(newGroup);
       group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
@@ -8222,15 +7982,12 @@
       var newCircles = circles.enter().append("circle").classed("sszvis-legend__greyline", true);
       circles.exit().remove();
       circles = circles.merge(newCircles);
-
       function getCircleCenter(d) {
         return maxRadius - props.scale(d);
       }
-
       function getCircleEdge(d) {
         return maxRadius - 2 * props.scale(d);
       }
-
       circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
       var lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues);
       var newLines = lines.enter().append("line").classed("sszvis-legend__dashedline", true);
@@ -8254,9 +8011,15 @@
    * @param  {Error} The error object
    */
 
-  var loadError = function loadError(error$1) {
-    error(error$1); // Don't use alert()!
+  // var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
+
+  var loadError = function (error$1) {
+    error(error$1);
+
+    // Don't use alert()!
+
     // TODO: render an inline error in the chart instead
+
     // if (error.status === 404) {
     //   alert('Die Daten konnten nicht geladen werden.\n\n' + error.responseURL + '\n\n' + RELOAD_MSG);
     // } else {
@@ -8275,6 +8038,7 @@
   var WAHL_KREISE_KEY = "zurichWahlKreise";
   var AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
   var SWITZERLAND_KEY = "switzerland";
+
   /**
    * swissMapProjection
    *
@@ -8289,14 +8053,15 @@
    * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
    * @return {Function}                               The projection function.
    */
-
   var swissMapProjection = memoize(function (width, height, featureCollection) {
     var mercatorProjection = d3.geoMercator().fitSize([width, height], featureCollection);
     return mercatorProjection;
-  }, // Memoize resolver
+  },
+  // Memoize resolver
   function (width, height, _, featureBoundsCacheKey) {
     return "" + width + "," + height + "," + featureBoundsCacheKey;
   });
+
   /**
    * This is a special d3.geoPath generator function tailored for rendering maps of
    * Switzerland. The values are chosen specifically to optimize path generation for
@@ -8313,11 +8078,11 @@
    *                                            and returns an svg path string which represents that geojson, projected using
    *                                            a map projection optimal for Swiss areas.
    */
-
-  var swissMapPath = function swissMapPath(width, height, featureCollection, featureBoundsCacheKey) {
+  var swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
     var mercatorPath = d3.geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
     return mercatorPath;
   };
+
   /**
    * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
    * The earth's radius is not constant, so this function uses an approximation for calculating the degree angle of
@@ -8331,28 +8096,29 @@
    *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
    * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
    */
-
-  var pixelsFromGeoDistance = function pixelsFromGeoDistance(projection, centerPoint, meterDistance) {
+  var pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
     // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
     // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
     var APPROX_EARTH_RADIUS = 6367475;
-    var APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS; // Compute the size of the angle made by the meter distance
-
-    var degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360; // Construct a square, centered at centerPoint, with sides that span that number of degrees
-
+    var APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
+    // Compute the size of the angle made by the meter distance
+    var degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360;
+    // Construct a square, centered at centerPoint, with sides that span that number of degrees
     var halfDegrees = degrees / 2;
-    var bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]]; // Project those bounds to pixel coordinates using the provided map projection
+    var bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
 
-    var projBounds = bounds.map(projection); // Depending on the rotation of the map, the sides of the box are not always positive quantities
+    // Project those bounds to pixel coordinates using the provided map projection
+    var projBounds = bounds.map(projection);
+    // Depending on the rotation of the map, the sides of the box are not always positive quantities
     // For example, on a north-is-up map, the pixel y-scale is inverted, so higher latitude degree
     // values are lower pixel y-values. On a south-is-up map, the opposite is true.
-
     var projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
     var projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
     var averageSideSize = (projXDist + projYDist) / 2;
     return averageSideSize;
   };
   var GEO_KEY_DEFAULT = "geoId";
+
   /**
    * prepareMergedData
    *
@@ -8367,15 +8133,16 @@
    * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
    *                                   geoJson property which is the feature, and a datum property which is the matched datum.
    */
+  var prepareMergedGeoData = function (dataset, geoJson, keyName) {
+    keyName || (keyName = GEO_KEY_DEFAULT);
 
-  var prepareMergedGeoData = function prepareMergedGeoData(dataset, geoJson, keyName) {
-    keyName || (keyName = GEO_KEY_DEFAULT); // group the input data by map entity id
-
+    // group the input data by map entity id
     var groupedInputData = Array.isArray(dataset) ? dataset.reduce(function (m, v) {
       m[v[keyName]] = v;
       return m;
-    }, {}) : {}; // merge the map features and the input data into new objects that include both
+    }, {}) : {};
 
+    // merge the map features and the input data into new objects that include both
     var mergedData = geoJson.features.map(function (feature) {
       return {
         geoJson: feature,
@@ -8384,6 +8151,7 @@
     });
     return mergedData;
   };
+
   /**
    * getGeoJsonCenter
    *
@@ -8399,20 +8167,18 @@
    * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
    *                                          (or user-specified center) of the object.
    */
-
-  var getGeoJsonCenter = function getGeoJsonCenter(geoJson) {
+  var getGeoJsonCenter = function (geoJson) {
     if (!geoJson.properties.cachedCenter) {
       var setCenter = geoJson.properties.center;
-
       if (setCenter) {
         geoJson.properties.cachedCenter = setCenter.split(",").map(parseFloat);
       } else {
         geoJson.properties.cachedCenter = d3.geoCentroid(geoJson);
       }
     }
-
     return geoJson.properties.cachedCenter;
   };
+
   /**
    * widthAdaptiveMapPathStroke
    *
@@ -8422,8 +8188,7 @@
    * @param  {number} width    The width of the container holding the map.
    * @return {number}          The stroke width that the map elements should have.
    */
-
-  var widthAdaptiveMapPathStroke = function widthAdaptiveMapPathStroke(width) {
+  var widthAdaptiveMapPathStroke = function (width) {
     return Math.min(Math.max(0.8, width / 400), 1.1);
   };
 
@@ -8470,10 +8235,10 @@
         return props.strokeWidth(d.datum);
       }).sort(function (a, b) {
         return props.radius(b.datum) - props.radius(a.datum);
-      }); // Remove the --entering modifier from the updating circles
+      });
 
+      // Remove the --entering modifier from the updating circles
       anchoredCircles.classed("sszvis-anchored-circle--entering", false);
-
       if (props.transition) {
         var t = defaultTransition();
         anchoredCircles.exit().transition(t).attr("r", 0).remove();
@@ -8483,12 +8248,10 @@
         anchoredCircles.attr("r", radiusAcc);
       }
     });
-
     anchoredCirclesComponent.on = function () {
       var value = event.on.apply(event, arguments);
       return value === event ? anchoredCirclesComponent : value;
     };
-
     return anchoredCirclesComponent;
   }
 
@@ -8521,40 +8284,43 @@
     }) // a function for the entity fill color. default is black
     .prop("transitionColor").transitionColor(true).render(function () {
       var selection = d3.select(this);
-      var props = selection.props(); // render the missing value pattern
+      var props = selection.props();
 
-      ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern); // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
+      // render the missing value pattern
+      ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
 
+      // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
       function getMapFill(d) {
         return props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
       }
+      var mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData);
 
-      var mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData); // add the base map paths - these are filled according to the map fill function
-
+      // add the base map paths - these are filled according to the map fill function
       var newMapAreas = mapAreas.enter().append("path").classed("sszvis-map__area", true).classed("sszvis-map__area--entering", true).attr("data-event-target", "").attr("fill", getMapFill);
       mapAreas.classed("sszvis-map__area--entering", false);
       mapAreas.exit().remove();
       mapAreas = mapAreas.merge(newMapAreas);
-      selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill); // change the fill if necessary
+      selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill);
 
+      // change the fill if necessary
       mapAreas.classed("sszvis-map__area--undefined", function (d) {
         return !defined(d.datum) || !props.defined(d.datum);
       }).attr("d", function (d) {
         return props.mapPath(d.geoJson);
       });
-
       if (props.transitionColor) {
         mapAreas.transition().call(slowTransition).attr("fill", getMapFill);
       } else {
         mapAreas.attr("fill", getMapFill);
-      } // the tooltip anchor generator
+      }
 
-
+      // the tooltip anchor generator
       var ta = tooltipAnchor().position(function (d) {
         return props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
       });
-      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData); // attach tooltip anchors
+      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
 
+      // attach tooltip anchors
       tooltipGroup.call(ta);
     });
   }
@@ -8585,13 +8351,15 @@
     var event = d3.dispatch("over", "out", "click");
     var geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
       var selection = d3.select(this);
-      var props = selection.props(); // render the missing value pattern
+      var props = selection.props();
 
-      ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern); // getDataKeyName will be called on data values. It should return a map entity id.
+      // render the missing value pattern
+      ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
+
+      // getDataKeyName will be called on data values. It should return a map entity id.
       // getMapKeyName will be called on the 'properties' of each map feature. It should
       // return a map entity id. Data values are matched with corresponding map features using
       // these entity ids.
-
       var getDataKeyName = prop(props.dataKeyName);
       var getMapKeyName = prop(props.geoJsonKeyName);
       var groupedInputData = data.reduce(function (m, v) {
@@ -8604,15 +8372,12 @@
           datum: groupedInputData[getMapKeyName(feature.properties)]
         };
       });
-
       function getMapFill(d) {
         return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
       }
-
       function getMapStroke(d) {
         return defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
       }
-
       var geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData);
       var newGeoElements = geoElements.enter().append("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "").attr("fill", getMapFill);
       geoElements.exit().remove();
@@ -8623,13 +8388,11 @@
       }).attr("d", function (d) {
         return props.mapPath(d.geoJson);
       });
-
       if (props.transitionColor) {
         geoElements.transition().call(slowTransition).attr("fill", getMapFill);
       } else {
         geoElements.attr("fill", getMapFill);
       }
-
       geoElements.attr("stroke", getMapStroke).attr("stroke-width", props.strokeWidth);
       selection.selectAll("[data-event-target]").on("mouseover", function (d) {
         event.over(d.datum);
@@ -8637,28 +8400,26 @@
         event.out(d.datum);
       }).on("click", function (d) {
         event.click(d.datum);
-      }); // the tooltip anchor generator
+      });
 
+      // the tooltip anchor generator
       var ta = tooltipAnchor().position(function (d) {
         d.geoJson.properties || (d.geoJson.properties = {});
         var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
-
         if (!sphericalCentroid) {
           d.geoJson.properties.sphericalCentroid = sphericalCentroid = d3.geoCentroid(d.geoJson);
         }
-
         return props.mapPath.projection()(sphericalCentroid);
       });
-      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData); // attach tooltip anchors
+      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
 
+      // attach tooltip anchors
       tooltipGroup.call(ta);
     });
-
     geojsonComponent.on = function () {
       var value = event.on.apply(event, arguments);
       return value === event ? geojsonComponent : value;
     };
-
     return geojsonComponent;
   }
 
@@ -8687,17 +8448,16 @@
       var selection = d3.select(this);
       var props = selection.props();
       var highlightBorders = selection.selectAll(".sszvis-map__highlight");
-
       if (!props.highlight.length) {
         highlightBorders.remove();
         return true; // no highlight, no worry
       }
-
       var groupedMapData = props.geoJson.features.reduce(function (m, feature) {
         m[feature.id] = feature;
         return m;
-      }, {}); // merge the highlight data
+      }, {});
 
+      // merge the highlight data
       var mergedHighlight = props.highlight.reduce(function (m, v) {
         if (v) {
           m.push({
@@ -8705,7 +8465,6 @@
             datum: v
           });
         }
-
         return m;
       }, []);
       highlightBorders = highlightBorders.data(mergedHighlight);
@@ -8785,8 +8544,9 @@
     return component().prop("geoJson").prop("mapPath").prop("borderColor").borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
     .prop("strokeWidth").strokeWidth(1.25).render(function () {
       var selection = d3.select(this);
-      var props = selection.props(); // add the map borders. These are rendered as one single path element
+      var props = selection.props();
 
+      // add the map borders. These are rendered as one single path element
       var meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]);
       var newMeshLine = meshLine.enter().append("path").classed("sszvis-map__border", true);
       meshLine.exit().remove();
@@ -8814,37 +8574,36 @@
   function mapRendererPatternedLakeOverlay () {
     return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").fadeOut(true).render(function () {
       var selection = d3.select(this);
-      var props = selection.props(); // the lake texture
+      var props = selection.props();
 
+      // the lake texture
       ensureDefsElement(selection, "pattern", "lake-pattern").call(mapLakePattern);
-
       if (props.fadeOut) {
         // the fade gradient
-        ensureDefsElement(selection, "linearGradient", "lake-fade-gradient").call(mapLakeFadeGradient); // the mask, which uses the fade gradient
+        ensureDefsElement(selection, "linearGradient", "lake-fade-gradient").call(mapLakeFadeGradient);
 
+        // the mask, which uses the fade gradient
         ensureDefsElement(selection, "mask", "lake-fade-mask").call(mapLakeGradientMask);
-      } // generate the Lake Zurich path
+      }
 
-
+      // generate the Lake Zurich path
       var zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]);
       var newZurichSee = zurichSee.enter().append("path").classed("sszvis-map__lakezurich", true);
       zurichSee.exit().remove();
       zurichSee = zurichSee.merge(newZurichSee);
       zurichSee.attr("d", props.mapPath).attr("fill", "url(#lake-pattern)");
-
       if (props.fadeOut) {
         // this mask applies the fade effect
         zurichSee.attr("mask", "url(#lake-fade-mask)");
-      } // add a path for the boundaries of map entities which extend over the lake.
+      }
+
+      // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
-
-
       var lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]);
       var newLakePath = lakePath.enter().append("path").classed("sszvis-map__lakepath", true);
       lakePath.exit().remove();
       lakePath = lakePath.merge(newLakePath);
       lakePath.attr("d", props.mapPath);
-
       if (props.lakePathColor) {
         lakePath.style("stroke", props.lakePathColor);
       }
@@ -8883,14 +8642,12 @@
       canvas.attr("width", props.width).attr("height", props.height).style("opacity", props.opacity);
       var ctx = canvas.node().getContext("2d");
       ctx.clearRect(0, 0, props.width, props.height);
-
       if (props.debug) {
         // Displays a rectangle that fills the canvas.
         // Useful for checking alignment with other render layers.
         ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
         ctx.fillRect(0, 0, props.width, props.height);
       }
-
       var halfSide = props.cellSide / 2;
       data.forEach(function (datum) {
         var position = props.position(datum);
@@ -8936,32 +8693,37 @@
     var highlightRenderer = mapRendererHighlight();
     var mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
       var selection = d3.select(this);
-      var props = selection.props(); // create a map path generator function
+      var props = selection.props();
 
+      // create a map path generator function
       var mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
-      var mergedData = prepareMergedGeoData(data, props.features, props.keyName); // Base shape
+      var mergedData = prepareMergedGeoData(data, props.features, props.keyName);
 
-      baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath); // Border mesh
+      // Base shape
+      baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath);
 
-      meshRenderer.geoJson(props.borders).mapPath(mapPath); // Lake Zurich shape
+      // Border mesh
+      meshRenderer.geoJson(props.borders).mapPath(mapPath);
 
-      lakeRenderer.lakeFeature(props.lakeFeatures).lakeBounds(props.lakeBorders).mapPath(mapPath).fadeOut(props.lakeFadeOut); // Highlight mesh
+      // Lake Zurich shape
+      lakeRenderer.lakeFeature(props.lakeFeatures).lakeBounds(props.lakeBorders).mapPath(mapPath).fadeOut(props.lakeFadeOut);
 
-      highlightRenderer.geoJson(props.features).keyName(props.keyName).mapPath(mapPath); // Rendering
+      // Highlight mesh
+      highlightRenderer.geoJson(props.features).keyName(props.keyName).mapPath(mapPath);
+
+      // Rendering
 
       selection.call(baseRenderer).call(meshRenderer);
-
       if (props.withLake) {
         selection.call(lakeRenderer);
       }
-
       selection.call(highlightRenderer);
-
       if (props.anchoredShape) {
         props.anchoredShape.mergedData(mergedData).mapPath(mapPath);
         selection.call(props.anchoredShape);
-      } // Event Binding
+      }
 
+      // Event Binding
 
       selection.selectAll("[data-event-target]").on("mouseover", function (d) {
         event.call("over", this, d.datum);
@@ -8971,12 +8733,10 @@
         event.call("click", this, d.datum);
       });
     });
-
     mapComponent.on = function () {
       var value = event.on.apply(event, arguments);
       return value === event ? mapComponent : value;
     };
-
     return mapComponent;
   }
 
@@ -8986,33 +8746,33 @@
    * @module sszvis/parse
    */
   var timeParse = d3.timeFormatLocale(locale).parse;
+
   /**
    * Parse Swiss date strings
    * @param  {String} d A Swiss date string, e.g. 17.08.2014
    * @return {Date}
    */
-
   var dateParser = timeParse("%d.%m.%Y");
-  var parseDate = function parseDate(d) {
+  var parseDate = function (d) {
     return dateParser(d);
   };
+
   /**
    * Parse year values
    * @param  {string} d   A string which should be parsed as if it were a year, like "2014"
    * @return {Date}       A javascript date object for the first time in the given year
    */
-
   var yearParser = timeParse("%Y");
-  var parseYear = function parseYear(d) {
+  var parseYear = function (d) {
     return yearParser(d);
   };
+
   /**
    * Parse untyped input
    * @param  {String} d A value that could be a number
    * @return {Number}   If d is not a number, NaN is returned
    */
-
-  var parseNumber = function parseNumber(d) {
+  var parseNumber = function (d) {
     return d.trim() === "" ? NaN : +d;
   };
 
@@ -9066,12 +8826,13 @@
    *
    * @returns {responsiveProps}
    */
+
   /* Exported module
   ----------------------------------------------- */
-
   function responsiveProps() {
     var breakpointSpec = breakpointDefaultSpec();
     var propsConfig = {};
+
     /**
      * Constructor
      *
@@ -9082,39 +8843,38 @@
      * @returns {Object.<string, any>} A map of all properties for the currently selected
      *          breakpoint as defined by the parameter `arg1`
      */
-
     function _responsiveProps(measurement) {
       if (!isObject(measurement) || !isBounds(measurement)) {
-        warn("Could not determine the current breakpoint, returning the default props"); // We choose the _ option for all configured props as a default.
-
+        warn("Could not determine the current breakpoint, returning the default props");
+        // We choose the _ option for all configured props as a default.
         return Object.keys(propsConfig).reduce(function (memo, val, key) {
           memo[key] = val._;
           return memo;
         }, {});
-      } // Finds out which breakpoints the provided measurements match up with
+      }
 
-
+      // Finds out which breakpoints the provided measurements match up with
       var matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
       return Object.keys(propsConfig).reduce(function (memo, propKey) {
         var propSpec = propsConfig[propKey];
-
         if (!validatePropSpec(propSpec, breakpointSpec)) {
           warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
           return memo;
-        } // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
+        }
+
+        // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
         // This function should always at least find '_' at the end of the array.
-
-
         var matchedBreakpoint = find(function (bp) {
           return defined(propSpec[bp.name]);
-        }, matchingBreakpoints); // the value in the query object for that property equals the propSpec value as a functor,
+        }, matchingBreakpoints);
+        // the value in the query object for that property equals the propSpec value as a functor,
         // invoked if necessary with the current width. Providing the width allows aspect ratio
         // calculations based on element width.
-
         memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
         return memo;
       }, {});
     }
+
     /**
      * responsiveProps.prop
      *
@@ -9152,12 +8912,11 @@
      *
      * @return {responsiveProps}
      */
-
-
     _responsiveProps.prop = function (propName, propSpec) {
       propsConfig[propName] = functorizeValues(propSpec);
       return _responsiveProps;
     };
+
     /**
      * responsiveProps.breakpoints
      *
@@ -9192,56 +8951,52 @@
      *   { name: 'large', width: 700 }
      * ])
      */
-
-
     _responsiveProps.breakpoints = function (bps) {
       if (arguments.length === 0) {
         return breakpointSpec;
       }
-
       breakpointSpec = breakpointCreateSpec(bps);
       return _responsiveProps;
     };
-
     return _responsiveProps;
-  } // Helpers
+  }
+
+  // Helpers
 
   function isBounds(arg1) {
     return defined(arg1) && defined(arg1.width) && defined(arg1.screenWidth) && defined(arg1.screenHeight);
   }
+
   /**
    * functorizeValues
    * @prop    {object} obj Original key-value object
    * @returns {object} Same as input object but with all values transformed to fn.functors
    */
-
-
   function functorizeValues(obj) {
     return Object.keys(obj).reduce(function (memo, key) {
       memo[key] = functor(obj[key]);
       return memo;
     }, {});
   }
-
   function validatePropSpec(propSpec, breakpointSpec) {
     // Ensure that the propSpec contains a '_' value.
     // This is used as the default value when the test width
     // is larger than any breakpoint.
     if (!defined(propSpec._)) {
       return false;
-    } // Validate the properties of the propSpec:
+    }
+
+    // Validate the properties of the propSpec:
     // each should be a valid breakpoint name, and its value should be defined
-
-
     for (var breakpointName in propSpec) {
       if ({}.hasOwnProperty.call(propSpec, breakpointName)) {
         if (breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
           return false;
         }
       }
-    } // All checks passed, propSpec is valid
+    }
 
-
+    // All checks passed, propSpec is valid
     return true;
   }
 
@@ -9278,16 +9033,15 @@
    *
    * @return {function} Formatting function that accepts a datum
    */
-
   function formatHTML() {
     var styles = {
-      plain: function plain(d) {
+      plain: function (d) {
         return d;
       },
-      italic: function italic(d) {
+      italic: function (d) {
         return "<em>" + d + "</em>";
       },
-      bold: function bold(d) {
+      bold: function (d) {
         return "<strong>" + d + "</strong>";
       }
     };
@@ -9299,16 +9053,15 @@
       }).join("<br/>");
     };
   }
-
   function formatSVG() {
     var styles = {
-      plain: function plain(d) {
+      plain: function (d) {
         return "<tspan>" + d + "</tspan>";
       },
-      italic: function italic(d) {
+      italic: function (d) {
         return '<tspan style="font-style:italic">' + d + "</tspan>";
       },
-      bold: function bold(d) {
+      bold: function (d) {
         return '<tspan style="font-weight:bold">' + d + "</tspan>";
       }
     };
@@ -9322,38 +9075,33 @@
       }, "");
     };
   }
-
   function structuredText() {
-    var _lines = [[]];
+    var lines = [[]];
     return {
-      addLine: function addLine() {
-        _lines.push([]);
+      addLine: function () {
+        lines.push([]);
       },
-      addWord: function addWord(style, text) {
-        last(_lines).push({
+      addWord: function (style, text) {
+        last(lines).push({
           text: functor(text),
           style: style
         });
       },
-      lines: function lines() {
-        return _lines;
+      lines: function () {
+        return lines;
       }
     };
   }
-
   function makeTextWithFormat(format) {
     return function () {
       var textBody = structuredText();
-
       function makeText(d) {
         return format(textBody, d);
       }
-
       makeText.newline = function () {
         textBody.addLine();
         return makeText;
       };
-
       ["bold", "italic", "plain"].forEach(function (style) {
         makeText[style] = function (text) {
           textBody.addWord(style, text);
@@ -9363,7 +9111,6 @@
       return makeText;
     };
   }
-
   var modularTextHTML = makeTextWithFormat(formatHTML());
   var modularTextSVG = makeTextWithFormat(formatSVG());
 

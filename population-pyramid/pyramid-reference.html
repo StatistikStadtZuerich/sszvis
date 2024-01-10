@@ -60,7 +60,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.groups = sszvis.set(state.data, gAcc).reverse();
             state.maxValue = d3.max(state.data, vAcc);
@@ -73,7 +73,7 @@
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -104,7 +104,6 @@
               left: pyramidDimensions.chartPadding,
               right: pyramidDimensions.chartPadding,
             },
-
             config.id
           );
 

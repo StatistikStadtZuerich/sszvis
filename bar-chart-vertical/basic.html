@@ -48,7 +48,7 @@
             _: "horizontal",
           })
           .prop("yLabelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatNumber;
             },
           });
@@ -73,25 +73,25 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.categories = state.data.map(xAcc);
             render(state);
           },
 
-          showTooltip: function showTooltip(category) {
+          showTooltip: function (category) {
             state.selection = state.data.filter(function (d) {
               return xAcc(d) === category;
             });
             render(state);
           },
 
-          hideTooltip: function hideTooltip() {
+          hideTooltip: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -117,10 +117,8 @@
                   ? props.leftPadding
                   : sszvis.measureAxisLabel(props.yLabelFormat(yMax)),
             },
-
             config.id
           );
-
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             Math.min(MAX_WIDTH, bounds.innerWidth),
             state.categories.length

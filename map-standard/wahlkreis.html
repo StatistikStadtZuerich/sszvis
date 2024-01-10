@@ -34,7 +34,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function _(width) {
+            _: function (width) {
               var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 30,
@@ -44,7 +44,7 @@
             },
           })
           .prop("legendWidth", {
-            _: function _(width) {
+            _: function (width) {
               return Math.min(width / 2, MAX_LEGEND_WIDTH);
             },
           });
@@ -69,7 +69,7 @@
 
           // Init
           // -----------------------------------------------
-          init: function init(state) {
+          init: function (state) {
             return Promise.all([
               d3.csv(config.data, parseRow),
               d3.json("../topo/stadt-zurich.json"),
@@ -86,7 +86,6 @@
                   topo.objects.wahlkreis_lakebounds
                 ),
               };
-
               state.selection = [];
               state.valueDomain = [0, 1];
             });
@@ -95,18 +94,18 @@
           // Actions
           // -----------------------------------------------
           actions: {
-            selectHovered: function selectHovered(state, d) {
+            selectHovered: function (state, d) {
               state.selection = [d.datum];
             },
 
-            deselectHovered: function deselectHovered(state) {
+            deselectHovered: function (state) {
               state.selection = [];
             },
           },
 
           // Render
           // -----------------------------------------------
-          render: function render(state, actions) {
+          render: function (state, actions) {
             var props = queryProps(sszvis.measureDimensions(config.id));
             var bounds = sszvis.bounds(props.bounds, config.id);
 

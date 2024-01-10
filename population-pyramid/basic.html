@@ -76,7 +76,7 @@
         // -----------------------------------------------
 
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.groups = sszvis.set(state.data, gAcc).reverse();
 
@@ -120,7 +120,6 @@
                   // here, calculate the sum value of the slice of data
                   value: d3.sum(sourceArr.slice(i, i + binStep), vAcc),
                 });
-
                 for (
                   var indexIter = i, lastIndex = i + binStep;
                   indexIter < lastIndex;
@@ -153,7 +152,7 @@
             render(state);
           },
 
-          selectBar: function selectBar(x, age) {
+          selectBar: function (x, age) {
             // use the age lookup index to figure out which age range is closest
             // to the mouse
             var nearestAgeRange = findNearestAgeRange(
@@ -174,12 +173,12 @@
             render(state);
           },
 
-          deselectBar: function deselectBar() {
+          deselectBar: function () {
             state.selectedAge = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -212,10 +211,8 @@
               left: pyramidDimensions.chartPadding,
               right: pyramidDimensions.chartPadding,
             },
-
             config.id
           );
-
           var props = queryProps(bounds);
 
           // Scales

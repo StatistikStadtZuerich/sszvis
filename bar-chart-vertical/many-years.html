@@ -39,7 +39,7 @@
             _: null,
           })
           .prop("yLabelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatNumber;
             },
           });
@@ -66,14 +66,14 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.categories = sszvis.set(state.data, xAcc);
             state.yearRange = d3.extent(state.data, xAcc);
             render(state);
           },
 
-          changeDate: function changeDate(selectedDate) {
+          changeDate: function (selectedDate) {
             var selectedYear = Math.round(selectedDate);
             state.selection = state.data.filter(function (v) {
               return xAcc(v) === selectedYear;
@@ -81,12 +81,12 @@
             render(state);
           },
 
-          resetDate: function resetDate() {
+          resetDate: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -111,7 +111,6 @@
                   ? props.leftPadding
                   : sszvis.measureAxisLabel(props.yLabelFormat(yMax)) + 10,
             },
-
             config.id
           );
 

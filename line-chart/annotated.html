@@ -34,8 +34,8 @@
         var yAcc = sszvis.prop("value");
 
         sszvis.app({
-          init: function init(state) {
-            return d3.csv("data/SL_daily.csv", parseRow).then(function (data) {
+          init: (state) => {
+            return d3.csv("data/SL_daily.csv", parseRow).then((data) => {
               state.data = data;
               state.dates = d3.extent(state.data, xAcc);
               state.lineData = [state.data];
@@ -47,7 +47,7 @@
               });
             });
           },
-          render: function render(state) {
+          render: (state) => {
             var bounds = sszvis.bounds(
               { top: 30, bottom: 45 },
               "#sszvis-chart"

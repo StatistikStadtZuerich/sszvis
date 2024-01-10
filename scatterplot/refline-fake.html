@@ -32,12 +32,12 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("xFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatFractionPercent;
             },
           })
           .prop("yFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatNumber;
             },
           })
@@ -79,7 +79,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
 
             // for the voronoi component to work, the data must first be filtered such that no two vertices
@@ -97,17 +97,17 @@
             render(state);
           },
 
-          setHighlight: function setHighlight(d) {
+          setHighlight: function (d) {
             state.highlightData = [d];
             render(state);
           },
 
-          resetHighlight: function resetHighlight() {
+          resetHighlight: function () {
             state.highlightData = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -128,7 +128,6 @@
               axisLabels: state.cExtent.map(props.xFormat),
               legendLabels: state.categories,
             },
-
             config.id
           );
 
@@ -140,7 +139,6 @@
               top: 20,
               bottom: legendLayout.bottomPadding,
             },
-
             config.id
           );
 

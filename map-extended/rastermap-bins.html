@@ -28,7 +28,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function _(width) {
+            _: function (width) {
               // The calculation of the rastermap bounds is a bit more complex due to the fact
               // that we have to deal with a raster image in the background that has a bigger
               // size than the vector map.
@@ -67,12 +67,12 @@
             },
           })
           .prop("legendWidth", {
-            _: function _(width) {
+            _: function (width) {
               return Math.min(width / 2, MAX_LEGEND_WIDTH);
             },
           })
           .prop("controlWidth", {
-            _: function _(width) {
+            _: function (width) {
               return Math.max(200, Math.min(MAX_LEGEND_WIDTH, width / 2));
             },
           });
@@ -103,7 +103,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareData: function prepareData(data) {
+          prepareData: function (data) {
             state.data = data;
             // Ignore the domain of the random data
             state.valueDomain = d3.extent(data, kinderAcc);
@@ -111,7 +111,7 @@
             actions.setKey(DEFAULT_KEY);
           },
 
-          prepareMapData: function prepareMapData(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.stadtkreise),
               borders: topojson.mesh(topo, topo.objects.stadtkreise),
@@ -121,17 +121,16 @@
                 topo.objects.stadtkreis_lakebounds
               ),
             };
-
             render(state);
           },
 
-          setKey: function setKey(key) {
+          setKey: function (key) {
             state.currentKey = key;
 
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -183,7 +182,6 @@
             state.valueDomain[0] + binStep * numBins,
             binStep
           );
-
           // Use a color scale function on an arbitrary range to calculate a set of bin colors easily.
           // This domain is used because we want to map the integer range [0, numBins - 1].
           var interpolateColor = sszvis
@@ -247,7 +245,6 @@
             state.mapData.features,
             "zurichStadtfeatures"
           );
-
           var projection = mapPath.projection();
 
           function roundPow10(n, pow10) {
@@ -285,7 +282,6 @@
             ],
             50
           );
-
           // Using the half pixel crisp setting reduces some of the grid-like overlap patterning that we see with the exact measurement
           pixelSide = sszvis.halfPixel(pixelSide);
 

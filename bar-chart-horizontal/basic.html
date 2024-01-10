@@ -61,25 +61,25 @@
         // -----------------------------------------------
 
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.categories = sszvis.set(state.data, cAcc);
             render(state);
           },
 
-          showTooltip: function showTooltip(_, category) {
+          showTooltip: function (_, category) {
             state.selected = state.data.filter(function (d) {
               return cAcc(d) === category;
             });
             render(state);
           },
 
-          hideTooltip: function hideTooltip() {
+          hideTooltip: function () {
             state.selected = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -103,10 +103,8 @@
               top: 30,
               bottom: 40,
             },
-
             config.id
           );
-
           var chartWidth = Math.min(bounds.innerWidth, 800);
 
           // Scales

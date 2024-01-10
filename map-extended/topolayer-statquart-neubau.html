@@ -24,7 +24,7 @@
         var TITLE = "Diagrammtitel";
         var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
         var queryProps = sszvis.responsiveProps().prop("bounds", {
-          _: function _(width) {
+          _: function (width) {
             // The calculation of the rastermap bounds is a bit more complex due to the fact
             // that we have to deal with a raster image in the background that has a bigger
             // size than the vector map.
@@ -91,14 +91,14 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareData: function prepareData(data) {
+          prepareData: function (data) {
             state.data = data;
             state.yearRange = d3.extent(data, yearAcc);
 
             render(state);
           },
 
-          prepareMapData: function prepareMapData(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(
                 topo,
@@ -111,29 +111,27 @@
                 topo.objects.statistische_quartiere_lakebounds
               ),
             };
-
             render(state);
           },
 
-          prepareAdditionalMapData: function prepareAdditionalMapData(geojson) {
+          prepareAdditionalMapData: function (geojson) {
             state.additionalMapData = {
               features: geojson,
             };
-
             render(state);
           },
 
-          selectHovered: function selectHovered(d) {
+          selectHovered: function (d) {
             state.selection = [d];
             render(state);
           },
 
-          deselectHovered: function deselectHovered() {
+          deselectHovered: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -213,7 +211,6 @@
             state.mapData.features,
             "zurichStadtfeatures"
           );
-
           var projection = mapPath.projection();
 
           var newBuildings = sszvis

@@ -33,7 +33,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function _(width) {
+            _: function (width) {
               var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 30,
@@ -43,16 +43,15 @@
             },
           })
           .prop("legendWidth", {
-            _: function _(width) {
+            _: function (width) {
               return Math.min(width / 2, 320);
             },
           })
-
           // Formatting function to use for the legend label. In this example, it defaults
           // to "sszvis.formatPercent" to render values from 0–100 as 0–100%, for other
           // values "sszvis.formatNumber" is maybe more appropriate
           .prop("labelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatFractionPercent;
             },
           })
@@ -83,14 +82,14 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
 
             render(state);
           },
 
-          prepareMapData: function prepareMapData(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(
                 topo,
@@ -103,21 +102,20 @@
                 topo.objects.statistische_quartiere_lakebounds
               ),
             };
-
             render(state);
           },
 
-          selectHovered: function selectHovered(d) {
+          selectHovered: function (d) {
             state.selection = [d.datum];
             render(state);
           },
 
-          deselectHovered: function deselectHovered() {
+          deselectHovered: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };

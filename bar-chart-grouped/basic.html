@@ -32,7 +32,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("xLabelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatText;
             },
           })
@@ -76,7 +76,7 @@
         // -----------------------------------------------
 
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.regions = sszvis.set(state.data, xAcc);
             state.valueExtent = zeroBasedAxisDomain(
@@ -96,19 +96,19 @@
             render(state);
           },
 
-          showTooltip: function showTooltip(x, y) {
+          showTooltip: function (x, y) {
             state.selection = state.groupedData.filter(function (d) {
               return sszvis.contains(d.map(xAcc), x);
             });
             render(state);
           },
 
-          hideTooltip: function hideTooltip(x, y) {
+          hideTooltip: function (x, y) {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -132,7 +132,6 @@
               legendLabels: state.categories,
               slant: props.textDirection,
             },
-
             config.id
           );
 
@@ -144,7 +143,6 @@
               top: 25,
               bottom: legendLayout.bottomPadding,
             },
-
             config.id
           );
 
@@ -163,11 +161,11 @@
             .domain(state.valueExtent)
             .range([bounds.innerHeight, 0]);
 
-          var yPosScale = function yPosScale(v) {
+          var yPosScale = function (v) {
             return isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
           };
 
-          var hScale = function hScale(v) {
+          var hScale = function (v) {
             // the size of the bar is distance from the y-position of the value to the y-position of 0
             return Math.abs(yScale(v) - yScale(0));
           };

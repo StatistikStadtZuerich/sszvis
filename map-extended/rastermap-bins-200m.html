@@ -28,7 +28,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function _(width) {
+            _: function (width) {
               // The calculation of the rastermap bounds is a bit more complex due to the fact
               // that we have to deal with a raster image in the background that has a bigger
               // size than the vector map.
@@ -67,7 +67,7 @@
             },
           })
           .prop("legendWidth", {
-            _: function _(width) {
+            _: function (width) {
               return Math.min(width / 2, MAX_LEGEND_WIDTH);
             },
           });
@@ -95,14 +95,14 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareData: function prepareData(data) {
+          prepareData: function (data) {
             state.data = data;
             state.valueDomain = d3.extent(data, kinderAcc);
 
             render(state);
           },
 
-          prepareMapData: function prepareMapData(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.stadtkreise),
               borders: topojson.mesh(topo, topo.objects.stadtkreise),
@@ -112,11 +112,10 @@
                 topo.objects.stadtkreis_lakebounds
               ),
             };
-
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -157,7 +156,6 @@
             state.valueDomain[0] + binStep * numBins,
             binStep
           );
-
           var interpolateColor = sszvis
             .scaleDivValGry()
             .reverse()
@@ -200,7 +198,6 @@
             state.mapData.features,
             "zurichStadtfeatures"
           );
-
           var projection = mapPath.projection();
 
           function roundPow10(n, pow10) {

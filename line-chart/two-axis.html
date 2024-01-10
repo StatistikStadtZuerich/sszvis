@@ -40,14 +40,14 @@
 
         // a few helpers to distinguish between data that belongs on axis1 (left) and axis2 (right)
         var axis2 = ["Schweiz"]; // the values for "Region" that go in axis2
-        var valueIsOnAxis2 = function valueIsOnAxis2(d) {
+        var valueIsOnAxis2 = function (d) {
           return sszvis.contains(axis2, d);
         };
         var datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
 
         sszvis.app({
-          init: function init(state) {
-            return d3.csv("data/S_2yAxis.csv", parseRow).then(function (data) {
+          init: (state) => {
+            return d3.csv("data/S_2yAxis.csv", parseRow).then((data) => {
               state.data = data;
               state.dates = d3.extent(state.data, xAcc);
               state.lineData = sszvis
@@ -77,7 +77,7 @@
             });
           },
           actions: {
-            changeDate: function changeDate(state, inputDate) {
+            changeDate: function (state, inputDate) {
               var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
               var closestData = state.lineData.map(function (linePoints) {
                 return sszvis.find(function (d) {
@@ -89,12 +89,11 @@
               );
             },
 
-            resetDate: function resetDate(state) {
+            resetDate: function (state) {
               state.selection = [];
             },
           },
-
-          render: function render(state, actions) {
+          render: (state, actions) => {
             var bounds = sszvis.bounds(
               { top: 30, bottom: 130 },
               "#sszvis-chart"
@@ -266,12 +265,8 @@
         }
 
         function isSelected(state) {
-          return function (d) {
-            return sszvis.contains(
-              state.selection.map(xAcc).map(String),
-              String(d)
-            );
-          };
+          return (d) =>
+            sszvis.contains(state.selection.map(xAcc).map(String), String(d));
         }
       })(d3, sszvis);
     </script>

@@ -38,7 +38,7 @@
             _: null,
           })
           .prop("xLabelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatYear;
             },
           })
@@ -79,7 +79,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.timeExtent = d3.extent(state.data, xAcc);
             state.categories = sszvis.set(state.data, cAcc);
@@ -124,12 +124,12 @@
             actions.resetDate();
           },
 
-          toggleMultiples: function toggleMultiples(g) {
+          toggleMultiples: function (g) {
             state.isMultiples = g === "Separiert";
             render(state);
           },
 
-          changeDate: function changeDate(xValue, yValue) {
+          changeDate: function (xValue, yValue) {
             var closest = findClosest(state.dates, xValue);
             state.highlightDate = closest;
             state.highlightData = state.stackedData.map(function (stack) {
@@ -152,12 +152,12 @@
             render(state);
           },
 
-          resetDate: function resetDate() {
+          resetDate: function () {
             var mostRecent = d3.max(state.data, xAcc);
             actions.changeDate(mostRecent, 0);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -178,7 +178,6 @@
               axisLabels: state.timeExtent.map(props.xLabelFormat),
               legendLabels: state.categories,
             },
-
             config.id
           );
 
@@ -190,7 +189,6 @@
               top: 20,
               bottom: legendLayout.bottomPadding,
             },
-
             config.id
           );
 

@@ -54,7 +54,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             var continentsList = [
               "Europa",
               "Asien",
@@ -70,7 +70,6 @@
                 continentsList.indexOf(continentAcc(a)),
                 continentsList.indexOf(continentAcc(b))
               );
-
               if (indexDiff !== 0) return indexDiff;
               return d3.descending(numAcc(a), numAcc(b));
             });
@@ -90,19 +89,19 @@
             render(state);
           },
 
-          onSliceOver: function onSliceOver(d) {
+          onSliceOver: function (d) {
             state.selection = [d];
 
             render(state);
           },
 
-          onSliceOut: function onSliceOut() {
+          onSliceOut: function () {
             state.selection = [];
 
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -120,7 +119,6 @@
             {
               legendLabels: state.continents,
             },
-
             config.id
           );
 

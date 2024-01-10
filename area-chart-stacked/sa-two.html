@@ -31,12 +31,12 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("controlWidth", {
-            _: function _(width) {
+            _: function (width) {
               return Math.min(width, 300);
             },
           })
           .prop("xLabelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatYear;
             },
           });
@@ -70,7 +70,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.timeExtent = d3.extent(state.data, xAcc);
             state.categories = sszvis.set(state.data, cAcc);
@@ -115,12 +115,12 @@
             actions.resetDate();
           },
 
-          toggleMultiples: function toggleMultiples(g) {
+          toggleMultiples: function (g) {
             state.isMultiples = g === "Separiert";
             render(state);
           },
 
-          changeDate: function changeDate(xValue, yValue) {
+          changeDate: function (xValue, yValue) {
             var closest = findClosest(state.dates, xValue);
             state.highlightDate = closest;
             state.highlightData = state.stackedData.map(function (stack) {
@@ -143,12 +143,12 @@
             render(state);
           },
 
-          resetDate: function resetDate() {
+          resetDate: function () {
             var mostRecent = d3.max(state.data, xAcc);
             actions.changeDate(mostRecent, 0);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -170,7 +170,6 @@
               legendLabels: state.categories,
               slant: props.xSlant,
             },
-
             config.id
           );
 

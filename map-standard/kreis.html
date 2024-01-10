@@ -32,7 +32,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            _: function _(width) {
+            _: function (width) {
               var innerHeight = sszvis.aspectRatioSquare(width);
               return {
                 top: 30,
@@ -42,12 +42,12 @@
             },
           })
           .prop("legendWidth", {
-            _: function _(width) {
+            _: function (width) {
               return Math.min(width / 2, 320);
             },
           })
           .prop("labelFormat", {
-            _: function _() {
+            _: function () {
               return sszvis.formatNumber;
             },
           })
@@ -78,14 +78,14 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
 
             render(state);
           },
 
-          prepareMapData: function prepareMapData(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.stadtkreise),
               borders: topojson.mesh(topo, topo.objects.stadtkreise),
@@ -95,12 +95,11 @@
                 topo.objects.stadtkreis_lakebounds
               ),
             };
-
             render(state);
           },
 
           // manage which datum is selected. These data are highlighted by the map.
-          selectHovered: function selectHovered(d) {
+          selectHovered: function (d) {
             if (state.selection[0] === d.datum) {
               return;
             }
@@ -108,7 +107,7 @@
             render(state);
           },
 
-          deselectHovered: function deselectHovered() {
+          deselectHovered: function () {
             if (state.selection.length === 0) {
               return;
             }
@@ -116,7 +115,7 @@
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };

@@ -23,7 +23,7 @@
         // -----------------------------------------------
 
         var queryProps = sszvis.responsiveProps().prop("bounds", {
-          _: function _(width) {
+          _: function (width) {
             var innerHeight = sszvis.aspectRatioPortrait(width);
             return {
               top: 10,
@@ -62,7 +62,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.valueDomain = [
               d3.min(state.data, vAcc),
@@ -85,7 +85,7 @@
             render(state);
           },
 
-          prepareMapData: function prepareMapData(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(topo, topo.objects.agglomeration),
               borders: topojson.mesh(topo, topo.objects.agglomeration),
@@ -98,22 +98,21 @@
                 topo.objects.lakezurich_lakegreifen
               ),
             };
-
             render(state);
           },
 
           // manage which datum is selected. These data are highlighted by the map.
-          selectHovered: function selectHovered(d) {
+          selectHovered: function (d) {
             state.selection = [d.datum];
             render(state);
           },
 
-          deselectHovered: function deselectHovered() {
+          deselectHovered: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -183,7 +182,7 @@
             .modularTextHTML()
             .bold(sszvis.compose(nameAcc, mDatumAcc));
 
-          var tooltipBody = function tooltipBody(d) {
+          var tooltipBody = function (d) {
             var value = sszvis.compose(vAcc, mDatumAcc);
             return [
               ["Anteil 75-jährige und Ältere", sszvis.formatPercent(value(d))],

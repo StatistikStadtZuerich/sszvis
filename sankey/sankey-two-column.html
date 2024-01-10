@@ -33,7 +33,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("bounds", {
-            palm: function palm(w) {
+            palm: function (w) {
               return {
                 top: 40,
                 left: 0,
@@ -45,7 +45,7 @@
                 ),
               };
             },
-            _: function _(w) {
+            _: function (w) {
               return {
                 top: 40,
                 left: w / 4,
@@ -92,7 +92,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             var leftColIds = sszvis.set(data, sourceAcc);
             var rightColIds = sszvis.set(data, targetAcc);
 
@@ -109,7 +109,7 @@
             render(state);
           },
 
-          onNodeOver: function onNodeOver(d) {
+          onNodeOver: function (d) {
             state.hoveredNode = d;
             state.linkSourceLabels = d.linksTo;
             state.linkTargetLabels = d.linksFrom;
@@ -119,7 +119,7 @@
             render(state);
           },
 
-          onNodeOut: function onNodeOut() {
+          onNodeOut: function () {
             state.hoveredNode = null;
             state.linkSourceLabels = [];
             state.linkTargetLabels = [];
@@ -129,21 +129,21 @@
             render(state);
           },
 
-          onLinkOver: function onLinkOver(d) {
+          onLinkOver: function (d) {
             state.hoveredLink = d;
             state.hoveredNode = null;
 
             render(state);
           },
 
-          onLinkOut: function onLinkOut() {
+          onLinkOut: function () {
             state.hoveredLink = {};
             state.hoveredNode = null;
 
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };

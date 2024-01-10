@@ -68,7 +68,7 @@
         var queryProps = sszvis
           .responsiveProps()
           .prop("rulerLabel", {
-            _: function _() {
+            _: function () {
               return sszvis
                 .modularTextSVG()
                 .bold(sszvis.compose(yLabelFormat, yAcc))
@@ -99,7 +99,7 @@
 
           // Init
           // -----------------------------------------------
-          init: function init(state) {
+          init: function (state) {
             return d3.csv(config.data, parseRow).then(function (data) {
               state.data = data;
               state.lineData = sszvis
@@ -110,24 +110,22 @@
               state.categories = sszvis.set(data, cAcc);
               state.maxY = d3.max(data, yAcc);
               state.selection = [];
-              return function (dispatch) {
-                return dispatch("resetDate");
-              };
+              return (dispatch) => dispatch("resetDate");
             });
           },
 
           // Actions
           // -----------------------------------------------
           actions: {
-            resetDate: function resetDate(state) {
+            resetDate: function (state) {
               // Find the most recent date in the data and set it as the selected date
               var mostRecentDate = d3.max(state.data, xAcc);
-              return function (dispatch) {
+              return (dispatch) => {
                 dispatch("changeDate", mostRecentDate);
               };
             },
 
-            changeDate: function changeDate(state, inputDate) {
+            changeDate: function (state, inputDate) {
               // Find the date of the datum closest to the input date
               var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
               // Find all data that have the same date as the closest datum
@@ -146,7 +144,7 @@
 
           // Render
           // -----------------------------------------------
-          render: function render(state, actions) {
+          render: function (state, actions) {
             var props = queryProps(sszvis.measureDimensions(config.id));
 
             var legendLayout = sszvis.colorLegendLayout(
@@ -154,7 +152,6 @@
                 axisLabels: state.xValues.map(xLabelFormat),
                 legendLabels: state.categories,
               },
-
               config.id
             );
 
@@ -169,7 +166,6 @@
                     : 10,
                 bottom: legendLayout.bottomPadding,
               },
-
               config.id
             );
 

@@ -40,10 +40,10 @@
           })
           .prop("lineChartPadding", {
             palm: 12,
-            lap: function lap(w) {
+            lap: function (w) {
               return w / 10;
             },
-            _: function _(w) {
+            _: function (w) {
               return w / 5;
             },
           });
@@ -83,7 +83,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.valueDomain = [0, d3.max(state.data, vAcc)];
             state.yearDomain = d3.extent(state.data, yearAcc);
@@ -125,14 +125,13 @@
               geoId: null,
               values: averageLineValues,
             };
-
             // add the average line to the lineData
             state.lineData.push(state.averageLine);
 
             actions.resetYear();
           },
 
-          prepareMapData: function prepareMapData(topo) {
+          prepareMapData: function (topo) {
             state.mapData = {
               features: topojson.feature(
                 topo,
@@ -145,14 +144,10 @@
                 topo.objects.statistische_quartiere_lakebounds
               ),
             };
-
             render(state);
           },
 
-          changeEntityNearDate: function changeEntityNearDate(
-            inputValue,
-            inputDate
-          ) {
+          changeEntityNearDate: function (inputValue, inputDate) {
             // find the closest year to the mouse
             var closestYear = yearAcc(
               closestDatum(state.data, yearAcc, inputDate)
@@ -190,7 +185,7 @@
             }
           },
 
-          changeYear: function changeYear(inputDate) {
+          changeYear: function (inputDate) {
             // find the closest year to the mouse
             var closestYear = yearAcc(
               closestDatum(state.data, yearAcc, inputDate)
@@ -218,26 +213,26 @@
           },
 
           // resets the active year
-          resetYear: function resetYear() {
+          resetYear: function () {
             var mostRecentDate = d3.max(state.yearDomain);
             actions.changeYear(mostRecentDate);
           },
 
           // called when moving over map entities with the mouse. Highlights certain entities
-          changeMapEntity: function changeMapEntity(d) {
+          changeMapEntity: function (d) {
             state.highlightEntity = d;
 
             actions.setHighlights();
           },
 
           // reset the highlighted map entity
-          resetMapEntity: function resetMapEntity() {
+          resetMapEntity: function () {
             state.highlightEntity = null;
 
             actions.setHighlights();
           },
 
-          setHighlights: function setHighlights() {
+          setHighlights: function () {
             // highlightData passed to the map is slightly different from the data passed to the line chart.
             // When no entity is highlighted, the map shows nothing special, but the line chart shows the average line.
             state.mapHighlightData = state.highlightEntity
@@ -255,7 +250,7 @@
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -287,7 +282,6 @@
               top: 30,
               bottom: props.mapBottomPadding,
             },
-
             "#sszvis-chart"
           );
 
@@ -301,7 +295,6 @@
               left: props.lineChartPadding,
               right: props.lineChartPadding,
             },
-
             "#sszvis-chart"
           );
 
@@ -309,7 +302,6 @@
             {
               height: mapBounds.height + lineChartBounds.height,
             },
-
             "#sszvis-chart"
           );
 

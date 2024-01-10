@@ -30,7 +30,7 @@
         // -----------------------------------------------
         var SLIDER_CONTROL_HEIGHT = 60;
         var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-          _: function _() {
+          _: function () {
             return sszvis.formatNumber;
           },
         });
@@ -67,7 +67,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.xExtent = [0, d3.max(state.data, xAcc)];
             state.yExtent = [0, d3.max(state.data, yAcc)];
@@ -86,7 +86,7 @@
             actions.setYear(d3.max(state.years));
           },
 
-          setYear: function setYear(inputYear) {
+          setYear: function (inputYear) {
             state.activeYear = closestDatum(
               state.years,
               sszvis.identity,
@@ -149,19 +149,19 @@
             render(state);
           },
 
-          selectPoint: function selectPoint(d) {
+          selectPoint: function (d) {
             state.selection = [d];
 
             render(state);
           },
 
-          deselectPoint: function deselectPoint() {
+          deselectPoint: function () {
             state.selection = [];
 
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -182,7 +182,6 @@
               axisLabels: state.xExtent.map(props.xLabelFormat),
               legendLabels: state.branches,
             },
-
             config.id
           );
 
@@ -196,7 +195,6 @@
               bottom: SLIDER_CONTROL_HEIGHT + legendLayout.bottomPadding,
               left: 5,
             },
-
             config.id
           );
 

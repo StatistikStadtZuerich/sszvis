@@ -35,7 +35,7 @@
         // and anything greater than or equal to the last element will be grouped in the last bin
         var BIN_EDGES = d3.range(100, 1000, 100);
         var queryProps = sszvis.responsiveProps().prop("legendWidth", {
-          _: function _(width) {
+          _: function (width) {
             return Math.min(width * 0.8, 260);
           },
         });
@@ -65,7 +65,7 @@
         // State transitions
         // -----------------------------------------------
         var actions = {
-          prepareState: function prepareState(data) {
+          prepareState: function (data) {
             state.data = data;
             state.g1List = sszvis.set(state.data, xAcc);
             state.g2List = sszvis.set(state.data, yAcc);
@@ -74,17 +74,17 @@
             render(state);
           },
 
-          showTooltip: function showTooltip(datum) {
+          showTooltip: function (datum) {
             state.selection = [datum];
             render(state);
           },
 
-          hideTooltip: function hideTooltip() {
+          hideTooltip: function () {
             state.selection = [];
             render(state);
           },
 
-          resize: function resize() {
+          resize: function () {
             render(state);
           },
         };
@@ -106,7 +106,6 @@
             bottom: 60,
             left: 40,
           };
-
           // heatTableDimensions calculates a set of useful properties for configuring the heat table.
           // give it the targeted width (final width will not necessarily match this), the padding between squares, and the number of squares
           // in each dimension (x, then y)
@@ -129,10 +128,8 @@
               top: tablePadding.top,
               bottom: tablePadding.bottom,
             },
-
             config.id
           );
-
           var props = queryProps(bounds);
 
           // Scales
