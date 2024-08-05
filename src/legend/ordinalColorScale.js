@@ -87,7 +87,7 @@
  * |fooBaz    barFoo |
  */
 
-import { select } from "d3";
+import { select } from "d3-selection";
 import { component } from "../d3-component.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";

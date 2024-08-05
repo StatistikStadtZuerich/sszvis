@@ -1,4 +1,4 @@
-var d3 = require("d3");
+import { randomLogNormal } from "d3-random";
 
 var quarters = [
   "Affoltern",
@@ -37,7 +37,7 @@ var quarters = [
   "Seefeld",
 ];
 
-var rand = d3.random.logNormal(3, 2);
+var rand = randomLogNormal(3, 2);
 
 var data = quarters
   .map(function (q1) {

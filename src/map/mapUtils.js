@@ -4,7 +4,7 @@
  * @module sszvis/map/utils
  */
 
-import { geoMercator, geoPath, geoCentroid } from "d3";
+import { geoMercator, geoPath, geoCentroid } from "d3-geo";
 import { memoize } from "../fn.js";
 
 export var STADT_KREISE_KEY = "zurichStadtKreise";

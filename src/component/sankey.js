@@ -60,7 +60,8 @@
  * @return {sszvis.component}
  */
 
-import { select, interpolateNumber } from "d3";
+import { select } from "d3-selection";
+import { interpolateNumber } from "d3-interpolate";
 
 import * as fn from "../fn.js";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
