@@ -28,7 +28,7 @@
  * @return {Object}
  */
 
-import { select } from "d3";
+import { select } from "d3-selection";
 import throttle from "nano-throttle";
 
 // This rather strange set of functions is designed to support the API:

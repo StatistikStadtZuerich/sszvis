@@ -40,7 +40,7 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3";
+import { select } from "d3-selection";
 
 import * as fn from "../fn.js";
 import translateString from "../svgUtils/translateString.js";

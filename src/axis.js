@@ -53,7 +53,6 @@
  * @return {sszvis.component}
  */
 
-// import { axisBottom, axisLeft, axisRight, axisTop, extent, select } from "d3";
 import { axisBottom, axisLeft, axisRight, axisTop } from "d3-axis";
 import { select } from "d3-selection";
 import { extent } from "d3-array";

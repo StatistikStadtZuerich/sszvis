@@ -4,7 +4,6 @@
  * @module sszvis/format
  */
 
-// import { formatLocale, timeFormatLocale } from "d3";
 import { formatLocale } from "d3-format";
 import { timeFormatLocale } from "d3-time-format";
 import * as fn from "./fn.js";
