@@ -7,16 +7,18 @@ on:
   pull_request:
 
 jobs:
-  storybook-testing:
-    name: "Storybook Testing"
+  snapshot-testing:
+    name: "Snapshot Testing"
     timeout-minutes: 60
+    env:
+      NODE_OPTIONS: --openssl-legacy-provider
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
 
       - name: Install dependencies
-        run: npm install --frozen-lockfile
+        run: npm install
 
       - name: Build Docs
         run: npm run build
