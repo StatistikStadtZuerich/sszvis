@@ -33,37 +33,4 @@
  * - d3 4.0: Partially supported (only "get" and "row" methods have been implemented)
  */
 
-import d3 from "d3-fetch";
-
-d3.csv = mkShim(d3.csv);
-d3.json = mkShim(d3.json);
-
 // -----------------------------------------------------------------------------
-
-function mkShim(request) {
-  function mkGet(...args) {
-    return function (cb) {
-      request(...args)
-        .then(function (data) {
-          cb(undefined, data);
-        })
-        .catch(cb);
-    };
-  }
-
-  return function (url, parseNew) {
-    return {
-      // This is the "new" d3-fetch way of loading data that uses a Promise
-      then: function (cb) {
-        return request(url, parseNew).then(cb);
-      },
-      // This is the "old" d3-request way of loading data using an XMLHttpRequest
-      get: mkGet(url),
-      row: function (parseRow) {
-        return {
-          get: mkGet(url, parseRow),
-        };
-      },
-    };
-  };
-}
