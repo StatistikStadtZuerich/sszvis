@@ -13,9 +13,6 @@
     "url": "https://github.com/statistikstadtzuerich/sszvis.git"
   },
   "license": "BSD-3-Clause",
-  "peerDependencies": {
-    "d3": ">=4.9.1"
-  },
   "devDependencies": {
     "@11ty/eleventy": "^0.11.0",
     "@babel/core": "^7.10.5",
