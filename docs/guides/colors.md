@@ -25,7 +25,8 @@ A light grey scale is included for use in cases where a data background should b
 
 ### `sszvis.scalePaleGry()`
 
-A pale grey shade which is used for elements which should be in the background, but shouldn't completely fade out. Currently used as the color of the links in the sankey diagram.
+A pale grey shade which is used for elements which should be in the background, but shouldn't
+completely fade out. Currently used as the color of the links in the sankey diagram.
 
 ```html|plain,run-script
 <div id="paleGreyScale" class="scale-container"></div>
@@ -37,7 +38,9 @@ A pale grey shade which is used for elements which should be in the background, 
 
 ### `sszvis.scaleGry()`
 
-A grey scale is included for use in cases where a data value should be shaded out. Currently, it is used for the color of inactive lines in the coordinated map and line chart example. At the moment, it has only one value.
+A grey scale is included for use in cases where a data value should be shaded out. Currently, it is
+used for the color of inactive lines in the coordinated map and line chart example. At the moment,
+it has only one value.
 
 ```html|plain,run-script
 <div id="greyScale" class="scale-container"></div>
@@ -49,7 +52,8 @@ A grey scale is included for use in cases where a data value should be shaded ou
 
 ### `sszvis.scaleDimGry()`
 
-A dim grey shade used for highlighting elements which are normally grey (`sszvis.scaleGry()`). Currently, it is used as the highlight color in the "bubble map".
+A dim grey shade used for highlighting elements which are normally grey (`sszvis.scaleGry()`).
+Currently, it is used as the highlight color in the "bubble map".
 
 ```html|plain,run-script
 <div id="dimGreyScale" class="scale-container"></div>
@@ -85,7 +89,9 @@ The deep grey color, as a standalone value.
 
 ## Qualitative scales
 
-Qualitative scales are used for data that has distinct categories. They distinguish categories based on color contrast. They should never be used to compare values, use sequential or divergent scales in this case.
+Qualitative scales are used for data that has distinct categories. They distinguish categories based
+on color contrast. They should never be used to compare values, use sequential or divergent scales
+in this case.
 
 #### `sszvis.scaleQual12()`
 
@@ -127,7 +133,8 @@ Qualitative scales are used for data that has distinct categories. They distingu
 </script>
 ```
 
-Qualitative scales can be brightened or darkened with the `scale.brighter()` and `scale.darker()` instance methods. These methods return new scale instances.
+Qualitative scales can be brightened or darkened with the `scale.brighter()` and `scale.darker()`
+instance methods. These methods return new scale instances.
 
 ```html|plain,run-script
 <div id="scaleQualBrigther" class="scale-container"></div>
@@ -141,7 +148,8 @@ Qualitative scales can be brightened or darkened with the `scale.brighter()` and
 </script>
 ```
 
-Qualitative scales can be reversed with the `scale.reverse()` instance method. This method returns a new scale.
+Qualitative scales can be reversed with the `scale.reverse()` instance method. This method returns a
+new scale.
 
 ```html|plain,run-script
 <div id="scaleQualReverse" class="scale-container"></div>
@@ -153,7 +161,8 @@ Qualitative scales can be reversed with the `scale.reverse()` instance method. T
 
 ## Sequential
 
-Sequential scales are used to compare values. These scales are designed to have the same brightness for the same input value.
+Sequential scales are used to compare values. These scales are designed to have the same brightness
+for the same input value.
 
 #### `sszvis.scaleSeqBlu()`
 
@@ -195,7 +204,8 @@ Sequential scales are used to compare values. These scales are designed to have 
 </script>
 ```
 
-Sequential scales can be reversed using the `scale.reverse()` instance method. This method returns a new scale instance.
+Sequential scales can be reversed using the `scale.reverse()` instance method. This method returns a
+new scale instance.
 
 ```html|plain,run-script
 <div id="scaleSeqBluRev" class="scale-container"></div>
@@ -229,7 +239,8 @@ Divergent scales are used to compare data that has two extremes. These scales ar
 </script>
 ```
 
-A grey midpoint can be used in situations where the contour of a data mark must be visible on a white background.
+A grey midpoint can be used in situations where the contour of a data mark must be visible on a
+white background.
 
 #### `sszvis.scaleDivValGry()`
 
@@ -251,7 +262,8 @@ A grey midpoint can be used in situations where the contour of a data mark must 
 </script>
 ```
 
-Divergent scales can be reversed using the `scale.reverse()` instance method. This method returns a new scale instance.
+Divergent scales can be reversed using the `scale.reverse()` instance method. This method returns a
+new scale instance.
 
 ```html|plain,run-script
 <div id="scaleDivValRev" class="scale-container"></div>

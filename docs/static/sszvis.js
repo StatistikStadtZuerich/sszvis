@@ -3,8 +3,8 @@
   typeof exports === "object" && typeof module !== "undefined"
     ? factory(exports, require("d3"))
     : typeof define === "function" && define.amd
-      ? define(["exports", "d3"], factory)
-      : factory((global.sszvis = {}), global.d3);
+    ? define(["exports", "d3"], factory)
+    : factory((global.sszvis = {}), global.d3);
 })(this, function (exports, d3) {
   "use strict";
 
@@ -779,18 +779,20 @@
    */
   var roundTransformString = function (transformStr) {
     var roundNumber = compose(Math.floor, Number);
-    return transformStr.replace(
-      /(translate\()\s*([0-9., ]+)\s*(\))/i,
-      function (_, left, vecStr, right) {
-        var roundVec = vecStr
-          .replace(",", " ")
-          .replace(/\s+/, " ")
-          .split(" ")
-          .map(roundNumber)
-          .join(",");
-        return left + roundVec + right;
-      }
-    );
+    return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function (
+      _,
+      left,
+      vecStr,
+      right
+    ) {
+      var roundVec = vecStr
+        .replace(",", " ")
+        .replace(/\s+/, " ")
+        .split(" ")
+        .map(roundNumber)
+        .join(",");
+      return left + roundVec + right;
+    });
   };
 
   /**
@@ -1817,16 +1819,16 @@
                     orient === "left" || orient === "right"
                       ? 0
                       : orient === "top" || orient === "bottom"
-                        ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
-                        : 0,
+                      ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
+                      : 0,
                   top:
                     orient === "left" || orient === "right"
                       ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
                       : orient === "top"
-                        ? 0
-                        : orient === "bottom"
-                          ? 32
-                          : 0,
+                      ? 0
+                      : orient === "bottom"
+                      ? 32
+                      : 0,
                 };
               } else {
                 titleProps = {
@@ -1834,14 +1836,14 @@
                     orient === "left" || orient === "right" || orient === "top"
                       ? 0
                       : orient === "bottom"
-                        ? axisScaleExtent[1]
-                        : 0,
+                      ? axisScaleExtent[1]
+                      : 0,
                   top:
                     orient === "left" || orient === "right" || orient === "top"
                       ? 0
                       : orient === "bottom"
-                        ? 32
-                        : 0,
+                      ? 32
+                      : 0,
                 };
               }
 
@@ -3990,20 +3992,17 @@
       var listOfNodes = columnIndex.values();
 
       // Calculate an array of total values for each column
-      var columnTotals = listOfNodes.reduce(
-        function (totals, node) {
-          var fromTotal = d3.sum(node.linksFrom, valueAcc);
-          var toTotal = d3.sum(node.linksTo, valueAcc);
+      var columnTotals = listOfNodes.reduce(function (totals, node) {
+        var fromTotal = d3.sum(node.linksFrom, valueAcc);
+        var toTotal = d3.sum(node.linksTo, valueAcc);
 
-          // For correct visual display, the node's value is the max of the from and to links
-          node.value = Math.max(0, fromTotal, toTotal);
+        // For correct visual display, the node's value is the max of the from and to links
+        node.value = Math.max(0, fromTotal, toTotal);
 
-          totals[node.columnIndex] += node.value;
+        totals[node.columnIndex] += node.value;
 
-          return totals;
-        },
-        filledArray(mColumnIds.length, 0)
-      );
+        return totals;
+      }, filledArray(mColumnIds.length, 0));
 
       // An array with the number of nodes in each column
       var columnLengths = mColumnIds.map(function (colIds) {
@@ -5272,15 +5271,15 @@
             return stringEqual(d, scaleDomain[0])
               ? "start"
               : stringEqual(d, scaleDomain[1])
-                ? "end"
-                : "middle";
+              ? "end"
+              : "middle";
           })
           .attr("dx", function (d) {
             return stringEqual(d, scaleDomain[0])
               ? -(handleWidth / 2)
               : stringEqual(d, scaleDomain[1])
-                ? handleWidth / 2
-                : 0;
+              ? handleWidth / 2
+              : 0;
           });
 
         handleEntering
