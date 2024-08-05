@@ -4,7 +4,8 @@
  * @module sszvis/fn
  */
 
-import { selection } from "d3";
+import { selection } from "d3-selection";
+import { map } from "d3-collection";
 
 /**
  * fn.identity
@@ -562,6 +563,6 @@ export var memoize = function (func, resolver) {
     memoized.cache = cache.set(key, result) || cache;
     return result;
   };
-  memoized.cache = new Map();
+  memoized.cache = map();
   return memoized;
 };

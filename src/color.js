@@ -41,7 +41,10 @@
  * @function lightGry  1-color scale for shaded backgrounds
  */
 
-import { scaleOrdinal, scaleLinear, hsl, rgb, lab, mean, quantile } from "d3";
+// import { scaleOrdinal, scaleLinear, hsl, rgb, mean, lab, quantile } from "d3";
+import { scaleOrdinal, scaleLinear } from "d3-scale";
+import { hsl, rgb, lab } from "d3-color";
+import { mean, quantile } from "d3-array";
 
 /* Constants
 ----------------------------------------------- */
@@ -51,7 +54,7 @@ var LIGHTNESS_STEP = 0.6;
 ----------------------------------------------- */
 function qualColorScale(colors) {
   return function () {
-    var scale = scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
+    var scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateOrdinalScale(scale);
   };
 }
@@ -212,12 +215,12 @@ export var withAlpha = function (c, a) {
 function decorateOrdinalScale(scale) {
   scale.darker = function () {
     return decorateOrdinalScale(
-      scale.copy().range(scale.range().map(lab).map(func("darker", LIGHTNESS_STEP)))
+      scale.copy().range(scale.range().map(func("darker", LIGHTNESS_STEP)))
     );
   };
   scale.brighter = function () {
     return decorateOrdinalScale(
-      scale.copy().range(scale.range().map(lab).map(func("brighter", LIGHTNESS_STEP)))
+      scale.copy().range(scale.range().map(func("brighter", LIGHTNESS_STEP)))
     );
   };
   scale.reverse = function () {
