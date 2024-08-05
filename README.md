@@ -8,6 +8,14 @@ The documentation is written in Markdown and bundled with [Catalog](https://www.
 
 ## Development
 
+To get started, you first need to [setup Nix](https://www.notion.so/interactivethings/Nix-0ca972e50d424f5992e2f4a7b173e19b).
+
+To run the development shell:
+
+```bash
+nix develop
+```
+
 This library is bundled using [Rollup](https://rollupjs.org/). To start developing, install dependencies using npm first.
 
 ```sh
