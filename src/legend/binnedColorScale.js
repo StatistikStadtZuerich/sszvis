@@ -15,7 +15,8 @@
  * @return {sszvis.component}
  */
 
-import { select, scaleLinear } from "d3";
+import { select } from "d3-selection";
+import { scaleLinear } from "d3-scale";
 
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";

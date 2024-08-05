@@ -12,7 +12,8 @@
  * @returns {sszvis.component}
  */
 
-import { select, mean } from "d3";
+import { select } from "d3-selection";
+import { mean } from "d3-array";
 
 import * as fn from "../fn.js";
 import { range } from "../scale.js";

@@ -4,7 +4,8 @@
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
 
-import { nest, hierarchy, partition, min, max } from "d3";
+import { nest, hierarchy, partition } from "d3-hierarchy";
+import { min, max } from "d3-array";
 
 import * as fn from "../fn.js";
 

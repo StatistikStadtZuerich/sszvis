@@ -33,7 +33,7 @@
  * - d3 4.0: Partially supported (only "get" and "row" methods have been implemented)
  */
 
-import d3 from "d3";
+import d3 from "d3-fetch";
 
 d3.csv = mkShim(d3.csv);
 d3.json = mkShim(d3.json);
