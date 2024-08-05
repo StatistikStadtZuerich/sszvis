@@ -28,7 +28,9 @@
  * @return {sszvis.component}
  */
 
-import { select, stack as d3Stack, max, line as d3Line } from "d3";
+import { select } from "d3-selection";
+import { stack as d3Stack, line as d3Line } from "d3-shape";
+import { max } from "d3-array";
 
 import * as fn from "../fn.js";
 import { cascade } from "../cascade.js";

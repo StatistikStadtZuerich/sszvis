@@ -3,7 +3,7 @@
  *
  * @module sszvis/measure
  */
-import * as d3 from "d3";
+import { select } from "d3-selection";
 import { isSelection, isString } from "./fn";
 
 /**
@@ -25,7 +25,7 @@ import { isSelection, isString } from "./fn";
 export var measureDimensions = function (arg) {
   var node;
   if (isString(arg)) {
-    node = d3.select(arg).node();
+    node = select(arg).node();
   } else if (isSelection(arg)) {
     node = arg.node();
   } else {

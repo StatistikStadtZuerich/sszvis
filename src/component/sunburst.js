@@ -28,7 +28,11 @@
  * @return {sszvis.component}
  */
 
-import { select, scaleLinear, hsl, arc, interpolate } from "d3";
+import { select } from "d3-selection";
+import { scaleLinear } from "d3-scale";
+import { hsl } from "d3-color";
+import { arc } from "d3-shape";
+import { interpolate } from "d3-interpolate";
 
 import * as logger from "../logger.js";
 import { defaultTransition } from "../transition.js";
