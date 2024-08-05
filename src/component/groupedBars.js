@@ -45,7 +45,9 @@
  * @return {sszvis.component}
  */
 
-import { select, scaleBand, range } from "d3";
+import { select } from "d3-selection";
+import { scaleBand } from "d3-scale";
+import { range } from "d3-array";
 
 import * as fn from "../fn.js";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
