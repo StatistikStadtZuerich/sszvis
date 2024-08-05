@@ -37,7 +37,8 @@
  * @return {d3.component}
  */
 
-import { select, dispatch } from "d3";
+import { select, event as d3Event } from "d3-selection";
+import {dispatch} from "d3-dispatch";
 
 import * as fn from "../fn.js";
 import { datumFromPanEvent } from "./util.js";
@@ -66,13 +67,13 @@ export default function () {
         .on("mouseleave", function () {
           event.apply("end", this, arguments);
         })
-        .on("touchstart", function (e) {
-          e.preventDefault();
+        .on("touchstart", function () {
+          d3Event.preventDefault();
           event.apply("start", this, arguments);
         })
-        .on("touchmove", function (e) {
-          e.preventDefault();
-          var datum = datumFromPanEvent(fn.firstTouch(e));
+        .on("touchmove", function () {
+          d3Event.preventDefault();
+          var datum = datumFromPanEvent(fn.firstTouch(d3Event));
           if (datum !== null) {
             event.apply("pan", this, arguments);
           } else {

@@ -41,7 +41,9 @@
  *
  */
 
-import { select, dispatch, Delaunay } from "d3";
+import { select, event as d3Event } from "d3-selection";
+import {dispatch} from "d3-dispatch";
+import { voronoi as d3Voronoi } from "d3-voronoi";
 
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
@@ -64,16 +66,12 @@ export default function () {
         logger.error("behavior.voronoi - requires bounds");
         return false;
       }
-      const delaunay = Delaunay.from(
-        data,
-        (d) => props.x(d),
-        (d) => props.y(d)
-      );
-      var voronoi = delaunay.voronoi(props.bounds);
+
+      var voronoi = d3Voronoi().x(props.x).y(props.y).extent(props.bounds);
 
       var polys = selection
         .selectAll("[data-sszvis-behavior-voronoi]")
-        .data(voronoi.cellPolygons());
+        .data(voronoi.polygons(data));
 
       var newPolys = polys
         .enter()
@@ -90,28 +88,26 @@ export default function () {
           return "M" + d.join("L") + "Z";
         })
         .attr("fill", "transparent")
-        .on("mouseover", function (e) {
+        .on("mouseover", function (datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX, e.clientY);
           if (
-            eventNearPoint(e, [
-              cbox.left + props.x(data[datumIdx]),
-              cbox.top + props.y(data[datumIdx]),
+            eventNearPoint(d3Event, [
+              cbox.left + props.x(datum.data),
+              cbox.top + props.y(datum.data),
             ])
           ) {
-            event.apply("over", this, [data[datumIdx]]);
+            event.apply("over", this, [datum.data]);
           }
         })
-        .on("mousemove", function (e) {
+        .on("mousemove", function (datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX, e.clientY);
           if (
-            eventNearPoint(e, [
-              cbox.left + props.x(data[datumIdx]),
-              cbox.top + props.y(data[datumIdx]),
+            eventNearPoint(d3Event, [
+              cbox.left + props.x(datum.data),
+              cbox.top + props.y(datum.data),
             ])
           ) {
-            event.apply("over", this, [data[datumIdx]]);
+            event.apply("over", this, [datum.data]);
           } else {
             event.apply("out", this, []);
           }
@@ -119,25 +115,23 @@ export default function () {
         .on("mouseout", function () {
           event.apply("out", this, []);
         })
-        .on("touchstart", function (e) {
+        .on("touchstart", function (datum) {
           var cbox = this.parentNode.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX, e.clientY);
-
           if (
-            eventNearPoint(fn.firstTouch(e), [
-              cbox.left + props.x(data[datumIdx]),
-              cbox.top + props.y(data[datumIdx]),
+            eventNearPoint(fn.firstTouch(d3Event), [
+              cbox.left + props.x(datum.data),
+              cbox.top + props.y(datum.data),
             ])
           ) {
-            e.preventDefault();
-            event.apply("over", this, [data[datumIdx]]);
+            d3Event.preventDefault();
+            event.apply("over", this, [datum.data]);
 
             // Attach these handlers only if the initial touch is within the max distance from the voronoi center
             // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
             // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
             // when users are performing touches that cause scrolling, we want to avoid firing the events.
             var pan = function () {
-              var touchEvent = fn.firstTouch(e);
+              var touchEvent = fn.firstTouch(d3Event);
               var element = elementFromEvent(touchEvent);
               var panDatum = datumFromPannableElement(element);
               if (panDatum !== null) {
@@ -152,8 +146,8 @@ export default function () {
                   // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
                   // says you are "still scrolling" and won't let you cancel the event. It will issue a warning, which
                   // we want to avoid.
-                  if (e.cancelable) {
-                    e.preventDefault();
+                  if (d3Event.cancelable) {
+                    d3Event.preventDefault();
                   }
                   event.apply("over", this, [panDatum.data]);
                 } else {

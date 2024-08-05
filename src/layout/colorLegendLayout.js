@@ -1,4 +1,4 @@
-import { max, sum } from "d3";
+import { max, sum } from "d3-array";
 import { scaleQual12, scaleQual6 } from "../color";
 import {
   DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT,
@@ -94,6 +94,6 @@ function numCols(totalWidth, columnWidth, num) {
   return num <= 1
     ? 1
     : columnWidth <= totalWidth / num
-      ? num
-      : numCols(totalWidth, columnWidth, num - 1);
+    ? num
+    : numCols(totalWidth, columnWidth, num - 1);
 }

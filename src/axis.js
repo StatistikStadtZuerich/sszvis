@@ -53,7 +53,9 @@
  * @return {sszvis.component}
  */
 
-import { axisBottom, axisLeft, axisRight, axisTop, select, extent } from "d3";
+import { axisBottom, axisLeft, axisRight, axisTop } from "d3-axis";
+import { select } from "d3-selection";
+import { extent } from "d3-array";
 import { component } from "./d3-component.js";
 import * as fn from "./fn.js";
 import { formatAxisTimeFormat, formatNumber, formatText } from "./format.js";
@@ -335,16 +337,16 @@ var axis = function () {
                   orient === "left" || orient === "right"
                     ? 0
                     : orient === "top" || orient === "bottom"
-                      ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
-                      : 0,
+                    ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
+                    : 0,
                 top:
                   orient === "left" || orient === "right"
                     ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
                     : orient === "top"
-                      ? 0
-                      : orient === "bottom"
-                        ? 32
-                        : 0,
+                    ? 0
+                    : orient === "bottom"
+                    ? 32
+                    : 0,
               };
             } else {
               titleProps = {
@@ -352,14 +354,14 @@ var axis = function () {
                   orient === "left" || orient === "right" || orient === "top"
                     ? 0
                     : orient === "bottom"
-                      ? axisScaleExtent[1]
-                      : 0,
+                    ? axisScaleExtent[1]
+                    : 0,
                 top:
                   orient === "left" || orient === "right" || orient === "top"
                     ? 0
                     : orient === "bottom"
-                      ? 32
-                      : 0,
+                    ? 32
+                    : 0,
               };
             }
 

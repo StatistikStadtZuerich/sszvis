@@ -3,7 +3,7 @@
  *
  * @module sszvis/measure
  */
-import { select } from "d3";
+import { select } from "d3-selection";
 import { isSelection, isString } from "./fn";
 
 /**

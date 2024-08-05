@@ -4,17 +4,11 @@
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
 
-import { hierarchy, partition, min, max, rollup } from "d3";
+import { hierarchy, partition } from "d3-hierarchy";
+import { nest } from "d3-collection";
+import { min, max } from "d3-array";
 
 import * as fn from "../fn.js";
-
-function unwrapNested(roll) {
-  return Array.from(roll, ([key, values]) => ({
-    key,
-    values: values.size ? unwrapNested(values) : undefined,
-    value: values.size ? undefined : values,
-  }));
-}
 
 /**
  * sszvis.layout.sunburst.prepareData
@@ -42,7 +36,7 @@ function unwrapNested(roll) {
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
 export var prepareData = function () {
-  const layers = [];
+  var nester = nest();
   var valueAcc = fn.identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
   // The default value for this component tries to preserve the order of the input data.
@@ -54,10 +48,9 @@ export var prepareData = function () {
   };
 
   function main(data) {
-    const nested = unwrapNested(rollup(data, fn.first, ...layers));
-    console.log(nested);
+    nester.rollup(fn.first);
 
-    const root = hierarchy({ isSunburstRoot: true, values: nested }, fn.prop("values"))
+    var root = hierarchy({ isSunburstRoot: true, values: nester.entries(data) }, fn.prop("values"))
       .sort(sortFn)
       .sum(function (x) {
         return x.value ? valueAcc(x.value) : 0;
@@ -80,7 +73,7 @@ export var prepareData = function () {
   };
 
   main.layer = function (keyFunc) {
-    layers.push(keyFunc);
+    nester.key(keyFunc);
     return main;
   };
 

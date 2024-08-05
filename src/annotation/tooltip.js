@@ -37,7 +37,7 @@
  *
  */
 
-import { select } from "d3";
+import { select } from "d3-selection";
 
 import * as fn from "../fn.js";
 import { component } from "../d3-component.js";

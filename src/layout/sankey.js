@@ -5,10 +5,11 @@
  * and layout required by the sankey component.
  */
 
-import { ascending, descending, sum, min, max } from "d3";
+import { ascending, descending, sum, min, max } from "d3-array";
 
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
+import { map } from "d3-collection";
 
 var newLinkId = (function () {
   var id = 0;
@@ -88,7 +89,7 @@ export var prepareData = function () {
       });
 
       return index;
-    }, new Map());
+    }, map());
 
     var listOfLinks = inputData.map(function (datum) {
       var srcId = mGetSource(datum);
@@ -124,23 +125,20 @@ export var prepareData = function () {
     });
 
     // Extract the column nodes from the index
-    var listOfNodes = [...columnIndex.values()];
+    var listOfNodes = columnIndex.values();
 
     // Calculate an array of total values for each column
-    var columnTotals = listOfNodes.reduce(
-      function (totals, node) {
-        var fromTotal = sum(node.linksFrom, valueAcc);
-        var toTotal = sum(node.linksTo, valueAcc);
+    var columnTotals = listOfNodes.reduce(function (totals, node) {
+      var fromTotal = sum(node.linksFrom, valueAcc);
+      var toTotal = sum(node.linksTo, valueAcc);
 
-        // For correct visual display, the node's value is the max of the from and to links
-        node.value = Math.max(0, fromTotal, toTotal);
+      // For correct visual display, the node's value is the max of the from and to links
+      node.value = Math.max(0, fromTotal, toTotal);
 
-        totals[node.columnIndex] += node.value;
+      totals[node.columnIndex] += node.value;
 
-        return totals;
-      },
-      fn.filledArray(mColumnIds.length, 0)
-    );
+      return totals;
+    }, fn.filledArray(mColumnIds.length, 0));
 
     // An array with the number of nodes in each column
     var columnLengths = mColumnIds.map(function (colIds) {
