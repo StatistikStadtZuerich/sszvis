@@ -7,6 +7,23 @@ on:
   pull_request:
 
 jobs:
+  unit-testing:
+    name: "Unit Testing"
+    timeout-minutes: 60
+    env:
+      CI: true
+    runs-on: ubuntu-latest
+    container: lironavon/docker-puppeteer-container:14.16.0
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Docs
+        run: npm run test:unit
+
   snapshot-testing:
     name: "Snapshot Testing"
     timeout-minutes: 60
