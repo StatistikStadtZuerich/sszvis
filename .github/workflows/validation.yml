@@ -10,9 +10,11 @@ jobs:
   lint:
     name: "Lint"
     runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: false
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@v13
+      - uses: DeterminateSystems/nix-installer-action@main
 
       - run: |
           nix develop --command bash -c \
@@ -20,4 +22,4 @@ jobs:
 
       - run: |
           nix develop --command bash -c \
-            'npm run test:lint'
+            'npm test:lint'
