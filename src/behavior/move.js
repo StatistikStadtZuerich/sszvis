@@ -45,7 +45,8 @@
  * @return {sszvis.component}
  */
 
-import { select, mouse, touches, event as d3Event, dispatch } from "d3-selection";
+import { select, mouse, touches, event as d3Event } from "d3-selection";
+import { dispatch } from "d3-dispatch";
 import { ascending } from "d3-array";
 
 import * as fn from "../fn.js";
