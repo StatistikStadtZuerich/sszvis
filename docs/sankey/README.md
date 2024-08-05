@@ -2,11 +2,19 @@
 
 ### Data structure
 
-You can use the sszvis.sankeyPrepareData configurable transform function to simplify creating the data structure expected by this component.
+You can use the sszvis.sankeyPrepareData configurable transform function to simplify creating the
+data structure expected by this component.
 
-The sankey.prepareData function expects a list of links, with a unique source node and target node id, and lists of node ids which fall into each column of the chart. Note that the same id should not appear multiple times, even in different columns. When this happens, an error is generated. The sizes of the nodes are defined implicitly by the fact that they have a link going to them or from them, and each node is the size of the sum of its links.
+The sankey.prepareData function expects a list of links, with a unique source node and target node
+id, and lists of node ids which fall into each column of the chart. Note that the same id should not
+appear multiple times, even in different columns. When this happens, an error is generated. The
+sizes of the nodes are defined implicitly by the fact that they have a link going to them or from
+them, and each node is the size of the sum of its links.
 
-The sankey component itself expects data of the form returned by layout.sankey.prepareData. Most important are the .nodes property, a list of node data, and the .links property, a list of links. The nodes have arrays containing references to elements in the links, and the links have references to their source and target nodes.
+The sankey component itself expects data of the form returned by layout.sankey.prepareData. Most
+important are the .nodes property, a list of node data, and the .links property, a list of links.
+The nodes have arrays containing references to elements in the links, and the links have references
+to their source and target nodes.
 
 ### Configuration
 
@@ -48,7 +56,9 @@ Fill color for the links.
 
 #### `sankey.linkSort`
 
-A function determining how to sort the links, which are rendered stacked on top of each other. The default implementation stacks links in decresing order of value, i.e. larger, thicker links are below smaller, thinner ones.
+A function determining how to sort the links, which are rendered stacked on top of each other. The
+default implementation stacks links in decresing order of value, i.e. larger, thicker links are
+below smaller, thinner ones.
 
 #### `sankey.labelSide`
 
@@ -56,15 +66,22 @@ A function determining the position of labels for the nodes. Should return 'left
 
 #### `sankey.labelHitBoxSize`
 
-A number for the width of 'hit boxes' added underneath the labels. This should basically be equal to the width of the widest label. For performance reasons, it doesn't make sense to calculate this value at run time while the component is rendered. The user is asked to provide a reasonable value.
+A number for the width of 'hit boxes' added underneath the labels. This should basically be equal to
+the width of the widest label. For performance reasons, it doesn't make sense to calculate this
+value at run time while the component is rendered. The user is asked to provide a reasonable value.
 
 #### `sankey.nameLabel`
 
-A function which takes the id of a node and should return the label for that node. Used to generate node labels
+A function which takes the id of a node and should return the label for that node. Used to generate
+node labels
 
 #### `sankey.linkSourceLabels`
 
-An array containing the data for links which should have labels on their 'source' end, that is the end of the link which is connected to the source node. These data values should match the values returned by sszvis.sankeyPrepareData. For performance reasons, you need to give the data values themselves here. See the examples for an implementation of the most straightforward mechanism for this.
+An array containing the data for links which should have labels on their 'source' end, that is the
+end of the link which is connected to the source node. These data values should match the values
+returned by sszvis.sankeyPrepareData. For performance reasons, you need to give the data values
+themselves here. See the examples for an implementation of the most straightforward mechanism for
+this.
 
 #### `sankey.linkTargetLabels`
 

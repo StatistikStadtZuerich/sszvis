@@ -1,4 +1,7 @@
-> Annotations are used to highlight certain sections of a chart. They are added as an additional layer above or below the chart contents themselves. Annotations in sszvis are themselves examples of the reusable chart pattern, so as with chart components and tooltips, data must be bound to the annotation layer before rendering the annotation into it.
+> Annotations are used to highlight certain sections of a chart. They are added as an additional
+> layer above or below the chart contents themselves. Annotations in sszvis are themselves examples
+> of the reusable chart pattern, so as with chart components and tooltips, data must be bound to the
+> annotation layer before rendering the annotation into it.
 
 ## Data Circle
 
@@ -54,7 +57,8 @@ The caption for the data area. (default position is the center of the circle).
 
 ### sszvis.annotationRectangle
 
-All properties of the annotation rectangle can be specified as either a constant or a function of data.
+All properties of the annotation rectangle can be specified as either a constant or a function of
+data.
 
 #### `annotationRectangle.x`
 
@@ -142,7 +146,8 @@ The y-offset of the caption
 
 #### `annotationLine.[caption]`
 
-A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
+A reference line caption. (default position is centered at the midpoint of the line, aligned with
+the slope angle of the line)
 
 ### Example
 
@@ -184,11 +189,13 @@ A number or function returning a number for the x-position of the ruler line.
 
 #### `annotationRuler.y`
 
-A function for determining the y-position of the ruler dots. Should take a data value as an argument and return a y-position.
+A function for determining the y-position of the ruler dots. Should take a data value as an argument
+and return a y-position.
 
 #### `annotationRuler.[label]`
 
-A function for determining the labels of the ruler dots. Should take a data value as argument and return a label.
+A function for determining the labels of the ruler dots. Should take a data value as argument and
+return a label.
 
 #### `annotationRuler.color`
 
@@ -196,11 +203,13 @@ A string or function to specify the color of the ruler dots.
 
 #### `annotationRuler.[flip]`
 
-A boolean or function which returns a boolean that specifies whether the labels on the ruler dots should be flipped. (they default to the right side)
+A boolean or function which returns a boolean that specifies whether the labels on the ruler dots
+should be flipped. (they default to the right side)
 
 ### Chart
 
-Shows the numeric values at the current mouse position. The x-axis shows the current quarter (Q1–Q4). Demonstrates the usage of the `annotationRuler()`.
+Shows the numeric values at the current mouse position. The x-axis shows the current quarter
+(Q1–Q4). Demonstrates the usage of the `annotationRuler()`.
 
 ```project
 {
@@ -224,7 +233,8 @@ Shows the numeric values at the current mouse position. The x-axis shows the cur
 
 ### sszvis.annotationRangeRuler
 
-The annotationRangeRuler is a ruler which depicts ranges. It also shows a label for each range section, and a total value of all ranges.
+The annotationRangeRuler is a ruler which depicts ranges. It also shows a label for each range
+section, and a total value of all ranges.
 
 #### `annotationRangeRuler.x`
 
@@ -266,7 +276,10 @@ If set to `false`, labels are allowed to overlap. This can be be useful in chart
 
 ### sszvis.annotationRangeFlag
 
-The annotationRangeFlag creates a pair of dots which identify a specific vertical range of data, and a tooltipAnchor between them. Used here in the stacked area chart, but could also be used in other chart types that have several data series sharing the same vertical space, for example a multi-line chart.
+The annotationRangeFlag creates a pair of dots which identify a specific vertical range of data, and
+a tooltipAnchor between them. Used here in the stacked area chart, but could also be used in other
+chart types that have several data series sharing the same vertical space, for example a multi-line
+chart.
 
 #### `annotationRangeFlag.x`
 

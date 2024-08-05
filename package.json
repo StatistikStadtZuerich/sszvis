@@ -75,7 +75,6 @@
     "test:watch": "vitest",
     "prepublishOnly": "npm run test:ci && npm run build",
     "prettier": "prettier --write .",
-    "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\".",
-    "test:browser": "vitest"
+    "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\"."
   }
 }

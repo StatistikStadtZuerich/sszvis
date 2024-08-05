@@ -4,7 +4,8 @@
 
 #### `sszvis.formatNumber(x)`
 
-A number greater than 9'999 will have a thousands separator space. Also, numbers will be shortened if they have insignificant decimals.
+A number greater than 9'999 will have a thousands separator space. Also, numbers will be shortened
+if they have insignificant decimals.
 
 ```table
 rows:
@@ -26,7 +27,10 @@ rows:
 
 `p` = The desired precision `d` = The number to be formatted
 
-A number will be formatted to a particular precision. It is a function that accepts numbers and returns formatted values. This function is "curried", meaning that it is a function with multiple arguments, but when you call it with less than the full number of arguments, it returns a function that takes less arguments and has the arguments you did provide "pre-filled" as parameters.
+A number will be formatted to a particular precision. It is a function that accepts numbers and
+returns formatted values. This function is "curried", meaning that it is a function with multiple
+arguments, but when you call it with less than the full number of arguments, it returns a function
+that takes less arguments and has the arguments you did provide "pre-filled" as parameters.
 
 ```table
 rows:
@@ -91,7 +95,8 @@ rows:
 
 #### `sszvis.formatAge(x)`
 
-A number will be formatted as an age. Means that any decimal number will be rounded to a full number.
+A number will be formatted as an age. Means that any decimal number will be rounded to a full
+number.
 
 ```table
 rows:
@@ -116,7 +121,8 @@ rows:
 
 #### `sszvis.formatMonth(x)`
 
-A date object will be formatted as a month. It will return a capitalized three-letter abbreviation of the German month name.
+A date object will be formatted as a month. It will return a capitalized three-letter abbreviation
+of the German month name.
 
 ```table
 rows:
