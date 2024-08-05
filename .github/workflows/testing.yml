@@ -27,4 +27,4 @@ jobs:
         run: |
           npx concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
             "npm run start" \
-            "npx run test:snapshot"
+            "npx wait-on tcp:127.0.0.1:8000 && npm run test:snapshot"
