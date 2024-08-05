@@ -10,7 +10,7 @@
  * too slow.
  */
 
-import { transition as d3Transition, easePolyOut } from "d3";
+import { transition as d3Transition, easePolyOut } from "d3-transition";
 
 var defaultEase = easePolyOut;
 

@@ -55,7 +55,8 @@
 
 // import { axisBottom, axisLeft, axisRight, axisTop, extent, select } from "d3";
 import { axisBottom, axisLeft, axisRight, axisTop } from "d3-axis";
-import { extent, select } from "d3-selection";
+import { select } from "d3-selection";
+import { extent } from "d3-array";
 import { component } from "./d3-component.js";
 import * as fn from "./fn.js";
 import { formatAxisTimeFormat, formatNumber, formatText } from "./format.js";
