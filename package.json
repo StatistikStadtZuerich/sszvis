@@ -74,6 +74,7 @@
     "test:snapshot": "rm -rf test/__image_snapshots__/__diff_output__ && jest --testPathPattern snapshot.test.js",
     "test:watch": "jest --watch",
     "prepublishOnly": "npm run test:ci && npm run build",
+    "prettier": "prettier --write .",
     "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\"."
   }
 }

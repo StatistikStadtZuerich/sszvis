@@ -1,10 +1,13 @@
-> Bar charts are suited to comparing numeric values for different categories. The categories can be ordered or unordered, numeric or non-numeric.
+> Bar charts are suited to comparing numeric values for different categories. The categories can be
+> ordered or unordered, numeric or non-numeric.
 
 ## sszvis.bar
 
 ### Data structure
 
-This chart requires one variable used for categorization, and one variable for the vertical extent of the bar. The extent variable must be numeric, while the categorization variable should be a set of unique values.
+This chart requires one variable used for categorization, and one variable for the vertical extent
+of the bar. The extent variable must be numeric, while the categorization variable should be a set
+of unique values.
 
 ### Configuration
 
@@ -39,8 +42,10 @@ Specifies the stroke-value of the rectangles. Can be a value or a function (defa
 This example shows several edge cases and specialties:
 
 - Long axis labels can be word-wrapped by configuring the axis component
-- Long axis ticks can be toggled as guide lines to aid chart reading, which can be useful to see when looking at static charts
-- Missing data renders a tooltip stating that there is no data. This uses `sszvis.move` to provide hover functionality in the absence of a bar.
+- Long axis ticks can be toggled as guide lines to aid chart reading, which can be useful to see
+  when looking at static charts
+- Missing data renders a tooltip stating that there is no data. This uses `sszvis.move` to provide
+  hover functionality in the absence of a bar.
 
 ```project
 {
@@ -62,7 +67,8 @@ This example shows several edge cases and specialties:
 
 ## Many Years
 
-In some cases, many values in a category should be shown. In this example, a linear scale is used in place of a categorical one. This simplifies the construction of the _x_-axis.
+In some cases, many values in a category should be shown. In this example, a linear scale is used in
+place of a categorical one. This simplifies the construction of the _x_-axis.
 
 ```project
 {

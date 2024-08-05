@@ -1,10 +1,17 @@
-> Axes are a visual representation of position and extent scales. They are used to display how numerical quantities are transformed into physical positions and sizes inside the chart.
+> Axes are a visual representation of position and extent scales. They are used to display how
+> numerical quantities are transformed into physical positions and sizes inside the chart.
 
-Often, the scales they represent are continuous linear transformations, but not always. Ordinal scales, where different categorical values are mapped to different positions, as well as logarithmic, quadratic, and exponential scales can also be displayed using axes. Usually, axes are positioned parallel to the visual dimension into which they transform data, hence the prominence of "x" and "y" axes. This is almost always the most readable and recognizable orientation.
+Often, the scales they represent are continuous linear transformations, but not always. Ordinal
+scales, where different categorical values are mapped to different positions, as well as
+logarithmic, quadratic, and exponential scales can also be displayed using axes. Usually, axes are
+positioned parallel to the visual dimension into which they transform data, hence the prominence of
+"x" and "y" axes. This is almost always the most readable and recognizable orientation.
 
 ## Axis labels
 
-Axis labels can be formatted very flexibly. A combination of `ticks`/`tickValues` and `tickFormat` is needed. The former to define how many and which ticks should be displayed, the latter to define what should be displayed. The documentation can be found here:
+Axis labels can be formatted very flexibly. A combination of `ticks`/`tickValues` and `tickFormat`
+is needed. The former to define how many and which ticks should be displayed, the latter to define
+what should be displayed. The documentation can be found here:
 
 - https://github.com/d3/d3-axis/blob/master/README.md#axis_ticks
 - https://github.com/d3/d3-axis/blob/master/README.md#axis_tickValues
@@ -15,15 +22,18 @@ There are also corresponding functions for date/time scales:
 - https://github.com/d3/d3-scale/blob/master/README.md#time_ticks
 - https://github.com/d3/d3-scale/blob/master/README.md#time_tickFormat
 
-Custom time formats can be defined using [d3.timeFormat](https://github.com/d3/d3-time-format/blob/master/README.md#d3-time-format)
+Custom time formats can be defined using
+[d3.timeFormat](https://github.com/d3/d3-time-format/blob/master/README.md#d3-time-format)
 
 ## Axis properties
 
-This is a selection of commonly used properties, more can be found in the [source code](https://github.com/StatistikStadtZuerich/sszvis/blob/master/src/axis.js).
+This is a selection of commonly used properties, more can be found in the
+[source code](https://github.com/StatistikStadtZuerich/sszvis/blob/master/src/axis.js).
 
 #### `axis.tickLength([x])`
 
-Set the length of the x- or y-axis ticks. While not usually applied because the charts can be explored interactively, it can be useful to display long ticks for print.
+Set the length of the x- or y-axis ticks. While not usually applied because the charts can be
+explored interactively, it can be useful to display long ticks for print.
 
 1. Set the `tickLength` property to a number
 
@@ -103,7 +113,9 @@ This x-axis displays ordinal categories
 
 ## X-axis (Centered Title, Custom Highlight Ticks)
 
-The x-axis title is centered because there are two y-axes. In addition, the ticks displayed on the bottom are customized, rather than using the default d3.scale.ticks. This is done to ensure that whichever value the user is hovering over is also displayed as a highlighted tick in the axis.
+The x-axis title is centered because there are two y-axes. In addition, the ticks displayed on the
+bottom are customized, rather than using the default d3.scale.ticks. This is done to ensure that
+whichever value the user is hovering over is also displayed as a highlighted tick in the axis.
 
 ```project
 {
@@ -125,7 +137,8 @@ The x-axis title is centered because there are two y-axes. In addition, the tick
 
 ## X-axis (Pyramid)
 
-This x-axis is specific to the population pyramid chart. It creates a two-sided axis that extends in the positive direction on either side of the center point.
+This x-axis is specific to the population pyramid chart. It creates a two-sided axis that extends in
+the positive direction on either side of the center point.
 
 ```project
 {
@@ -147,7 +160,8 @@ This x-axis is specific to the population pyramid chart. It creates a two-sided 
 
 ## Y-axis (With 0)
 
-By default, sszvis y-axes don't show a label at 0. Since values go negative in this chart, this one does.
+By default, sszvis y-axes don't show a label at 0. Since values go negative in this chart, this one
+does.
 
 ```project
 {
@@ -191,7 +205,9 @@ This y-axis shows ordinal categories
 
 ## Multi-Line Axis
 
-Sometimes, the axis labels are long enough that they will overlap their neighbors. In these cases, use the `textWrap` property. For bar charts, a good width for text wrapping is the width of a bar plus the space between bars.
+Sometimes, the axis labels are long enough that they will overlap their neighbors. In these cases,
+use the `textWrap` property. For bar charts, a good width for text wrapping is the width of a bar
+plus the space between bars.
 
 ```project
 {
@@ -237,9 +253,11 @@ This x-axis (with a 'top' orientation) has a diagonal slant
 
 This x-axis has a diagonal slant. Here are the guidelines for changing the slant of the axis:
 
-- Labels are always displayed horizontally, if there is enough space to show them clearly separate from each other.
+- Labels are always displayed horizontally, if there is enough space to show them clearly separate
+  from each other.
 - If horizontal labels don't have enough space and overlap, they are displayed diagonally (45°).
-- If diagonal labels don't have enough space and overlap or touch the canvas area, they are displayed orthogonally (90°).
+- If diagonal labels don't have enough space and overlap or touch the canvas area, they are
+  displayed orthogonally (90°).
 
 ```project
 {
@@ -261,7 +279,8 @@ This x-axis has a diagonal slant. Here are the guidelines for changing the slant
 
 ## Contours
 
-Contours are used to make labels stand out, especially when they are positioned above chart components. Contours should not be used on area charts.
+Contours are used to make labels stand out, especially when they are positioned above chart
+components. Contours should not be used on area charts.
 
 ```project
 {

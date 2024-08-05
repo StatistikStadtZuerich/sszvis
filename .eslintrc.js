@@ -3,15 +3,15 @@ module.exports = {
     browser: true,
     jest: true,
     es2017: true,
-    node: true
+    node: true,
   },
   extends: "eslint:recommended",
   parserOptions: {
-    sourceType: "module"
+    sourceType: "module",
   },
   rules: {
     "no-console": "off",
     "no-extra-semi": "off",
-    "no-shadow": "error"
-  }
+    "no-shadow": "error",
+  },
 };
