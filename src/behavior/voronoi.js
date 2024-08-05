@@ -41,7 +41,8 @@
  *
  */
 
-import { select, dispatch, event as d3Event } from "d3-selection";
+import { select, event as d3Event } from "d3-selection";
+import {dispatch} from "d3-dispatch";
 import { voronoi as d3Voronoi } from "d3-voronoi";
 
 import * as fn from "../fn.js";

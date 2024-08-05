@@ -37,7 +37,8 @@
  * @return {d3.component}
  */
 
-import { select, dispatch, event as d3Event } from "d3-selection";
+import { select, event as d3Event } from "d3-selection";
+import {dispatch} from "d3-dispatch";
 
 import * as fn from "../fn.js";
 import { datumFromPanEvent } from "./util.js";
