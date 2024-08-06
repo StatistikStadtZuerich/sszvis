@@ -43,7 +43,7 @@
 
 import { select } from "d3-selection";
 import { dispatch } from "d3-dispatch";
-import { voronoi as d3Voronoi } from "d3-voronoi";
+import { Delaunay } from "d3-delaunay";
 
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
@@ -66,12 +66,16 @@ export default function () {
         logger.error("behavior.voronoi - requires bounds");
         return false;
       }
-
-      var voronoi = d3Voronoi().x(props.x).y(props.y).extent(props.bounds);
+      const delaunay = Delaunay.from(
+        data,
+        (d) => props.x(d),
+        (d) => props.y(d)
+      );
+      var voronoi = delaunay.voronoi(props.bounds);
 
       var polys = selection
         .selectAll("[data-sszvis-behavior-voronoi]")
-        .data(voronoi.polygons(data));
+        .data(voronoi.cellPolygons());
 
       var newPolys = polys
         .enter()
@@ -88,20 +92,28 @@ export default function () {
           return "M" + d.join("L") + "Z";
         })
         .attr("fill", "transparent")
-        .on("mouseover", function (e, datum) {
+        .on("mouseover", function (e) {
           var cbox = this.parentNode.getBoundingClientRect();
+          const datumIdx = delaunay.find(e.clientX, e.clientY);
           if (
-            eventNearPoint(e, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])
+            eventNearPoint(e, [
+              cbox.left + props.x(data[datumIdx]),
+              cbox.top + props.y(data[datumIdx]),
+            ])
           ) {
-            event.apply("over", this, [datum.data]);
+            event.apply("over", this, [data[datumIdx]]);
           }
         })
-        .on("mousemove", function (e, datum) {
+        .on("mousemove", function (e) {
           var cbox = this.parentNode.getBoundingClientRect();
+          const datumIdx = delaunay.find(e.clientX, e.clientY);
           if (
-            eventNearPoint(e, [cbox.left + props.x(datum.data), cbox.top + props.y(datum.data)])
+            eventNearPoint(e, [
+              cbox.left + props.x(data[datumIdx]),
+              cbox.top + props.y(data[datumIdx]),
+            ])
           ) {
-            event.apply("over", this, [datum.data]);
+            event.apply("over", this, [data[datumIdx]]);
           } else {
             event.apply("out", this, []);
           }
@@ -109,16 +121,18 @@ export default function () {
         .on("mouseout", function () {
           event.apply("out", this, []);
         })
-        .on("touchstart", function (e, datum) {
+        .on("touchstart", function (e) {
           var cbox = this.parentNode.getBoundingClientRect();
+          const datumIdx = delaunay.find(e.clientX, e.clientY);
+
           if (
             eventNearPoint(fn.firstTouch(e), [
-              cbox.left + props.x(datum.data),
-              cbox.top + props.y(datum.data),
+              cbox.left + props.x(data[datumIdx]),
+              cbox.top + props.y(data[datumIdx]),
             ])
           ) {
             e.preventDefault();
-            event.apply("over", this, [datum.data]);
+            event.apply("over", this, [data[datumIdx]]);
 
             // Attach these handlers only if the initial touch is within the max distance from the voronoi center
             // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the

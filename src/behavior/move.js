@@ -107,13 +107,13 @@ export default function () {
         .on("mouseover", function () {
           event.apply("start", this, arguments);
         })
-        .on("mousedown", function () {
+        .on("mousedown", function (e) {
           var target = this;
           var doc = select(document);
           var win = select(window);
 
-          var drag = function (e) {
-            var xy = pointer(target);
+          var drag = function () {
+            var xy = pointer(e);
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
             e.preventDefault();
@@ -135,7 +135,7 @@ export default function () {
 
           win.on("mousemove.sszvis-behavior-move", drag);
           win.on("mouseup.sszvis-behavior-move", stopDragging);
-          doc.on("mouseout.sszvis-behavior-move", function (e) {
+          doc.on("mouseout.sszvis-behavior-move", function () {
             var from = e.relatedTarget || e.toElement;
             if (!from || from.nodeName === "HTML") {
               stopDragging();
