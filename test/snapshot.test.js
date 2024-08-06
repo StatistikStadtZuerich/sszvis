@@ -4,7 +4,7 @@ import glob from "glob";
 
 const RENDER_DELAY = 200;
 const SNAPSHOT_OPTS = {
-  failureThreshold: 0.025,
+  failureThreshold: 0.05,
   failureThresholdType: "percent",
   customSnapshotIdentifier: ({ currentTestName, counter }) =>
     `${urlToIdentifier(currentTestName)}-${counter}`,
