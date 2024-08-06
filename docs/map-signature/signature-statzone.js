@@ -73,7 +73,7 @@ var actions = {
     state.data = data;
     state.birthsRange = [0, d3.max(state.data, birthsAcc)];
 
-    actions.setFilter(state.currentFilter);
+    actions.setFilter(null, state.currentFilter);
   },
 
   prepareMapData: function (topo) {
@@ -84,7 +84,7 @@ var actions = {
     render(state);
   },
 
-  setFilter: function (filterValue) {
+  setFilter: function (e, filterValue) {
     state.currentFilter = filterValue;
     var filter = filterValue.toLowerCase().split(" ");
     var gender = filter[0];
@@ -97,7 +97,7 @@ var actions = {
     render(state);
   },
 
-  selectHovered: function (d) {
+  selectHovered: function (e, d) {
     state.selection = [d.datum];
     render(state);
   },

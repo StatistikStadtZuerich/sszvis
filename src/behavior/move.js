@@ -45,7 +45,7 @@
  * @return {sszvis.component}
  */
 
-import { select, mouse, touches, event as d3Event } from "d3-selection";
+import { select, pointer } from "d3-selection";
 import { dispatch } from "d3-dispatch";
 import { ascending } from "d3-array";
 
@@ -112,11 +112,11 @@ export default function () {
           var doc = select(document);
           var win = select(window);
 
-          var drag = function () {
-            var xy = mouse(target);
+          var drag = function (e) {
+            var xy = pointer(target);
             var x = scaleInvert(props.xScale, xy[0]);
             var y = scaleInvert(props.yScale, xy[1]);
-            d3Event.preventDefault();
+            e.preventDefault();
             event.apply("drag", this, [x, y]);
           };
 
@@ -135,8 +135,8 @@ export default function () {
 
           win.on("mousemove.sszvis-behavior-move", drag);
           win.on("mouseup.sszvis-behavior-move", stopDragging);
-          doc.on("mouseout.sszvis-behavior-move", function () {
-            var from = d3Event.relatedTarget || d3Event.toElement;
+          doc.on("mouseout.sszvis-behavior-move", function (e) {
+            var from = e.relatedTarget || e.toElement;
             if (!from || from.nodeName === "HTML") {
               stopDragging();
             }
@@ -144,9 +144,9 @@ export default function () {
 
           startDragging();
         })
-        .on("mousemove", function () {
+        .on("mousemove", function (e) {
           var target = this;
-          var xy = mouse(this);
+          var xy = pointer(e);
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
 
@@ -157,15 +157,15 @@ export default function () {
         .on("mouseout", function () {
           event.apply("end", this, []);
         })
-        .on("touchstart", function () {
-          var xy = fn.first(touches(this));
+        .on("touchstart", function (e) {
+          var xy = fn.first(pointer(e));
           var x = scaleInvert(props.xScale, xy[0]);
           var y = scaleInvert(props.yScale, xy[1]);
 
           var cancelScrolling = props.cancelScrolling(x, y);
 
           if (cancelScrolling) {
-            d3Event.preventDefault();
+            e.preventDefault();
           }
 
           // if fireOnPanOnly => cancelScrolling must be true
@@ -186,14 +186,14 @@ export default function () {
             event.apply("move", this, [x, y]);
 
             var pan = function () {
-              var panXY = fn.first(touches(this));
+              var panXY = fn.first(pointer(e));
               var panX = scaleInvert(props.xScale, panXY[0]);
               var panY = scaleInvert(props.yScale, panXY[1]);
 
               var panCancelScrolling = props.cancelScrolling(panX, panY);
 
               if (panCancelScrolling) {
-                d3Event.preventDefault();
+                e.preventDefault();
               }
 
               // See comment above about the same if condition.

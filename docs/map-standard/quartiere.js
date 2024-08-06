@@ -72,7 +72,7 @@ var actions = {
     render(state);
   },
 
-  selectHovered: function (d) {
+  selectHovered: function (e, d) {
     state.selection = [d.datum];
     render(state);
   },
