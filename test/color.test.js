@@ -20,10 +20,7 @@ import {
 } from "../src/color";
 
 const expectIsColor = (color) => {
-  expect(color).toHaveProperty("a");
-  expect(color).toHaveProperty("b");
-  expect(color).toHaveProperty("l");
-  expect(color).toHaveProperty("opacity");
+  expect(color).toContain("rgb");
 };
 
 describe("Color scales", () => {
