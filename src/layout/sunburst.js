@@ -5,10 +5,17 @@
  */
 
 import { hierarchy, partition } from "d3-hierarchy";
-import { nest } from "d3-collection";
-import { min, max } from "d3-array";
+import { rollup, min, max } from "d3-array";
 
 import * as fn from "../fn.js";
+
+function unwrapNested(roll) {
+  return Array.from(roll, ([key, values]) => ({
+    key,
+    values: values.size ? unwrapNested(values) : undefined,
+    value: values.size ? undefined : values,
+  }));
+}
 
 /**
  * sszvis.layout.sunburst.prepareData
@@ -36,7 +43,7 @@ import * as fn from "../fn.js";
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
 export var prepareData = function () {
-  var nester = nest();
+  const layers = [];
   var valueAcc = fn.identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
   // The default value for this component tries to preserve the order of the input data.
@@ -48,9 +55,9 @@ export var prepareData = function () {
   };
 
   function main(data) {
-    nester.rollup(fn.first);
+    const nested = unwrapNested(rollup(data, fn.first, ...layers));
 
-    var root = hierarchy({ isSunburstRoot: true, values: nester.entries(data) }, fn.prop("values"))
+    const root = hierarchy({ isSunburstRoot: true, values: nested }, fn.prop("values"))
       .sort(sortFn)
       .sum(function (x) {
         return x.value ? valueAcc(x.value) : 0;
@@ -73,7 +80,7 @@ export var prepareData = function () {
   };
 
   main.layer = function (keyFunc) {
-    nester.key(keyFunc);
+    layers.push(keyFunc);
     return main;
   };
 
