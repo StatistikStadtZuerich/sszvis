@@ -57,5 +57,5 @@ jobs:
         if: always()
         with:
           name: diff_output
-          path: /__w/sszvis/sszvis/test/__image_snapshots__/__diff_output__
+          path: /__w/sszvis/sszvis/test/__image_snapshots__/snapshot/__results__
           retention-days: 7

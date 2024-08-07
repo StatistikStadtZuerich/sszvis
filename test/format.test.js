@@ -1,4 +1,5 @@
 import { formatNumber, formatPreciseNumber } from "../src/format.js";
+import { expect, test, describe } from "vitest";
 
 const EN_DASH = "–";
 const THINSP = " ";
