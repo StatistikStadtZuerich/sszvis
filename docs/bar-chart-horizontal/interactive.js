@@ -39,10 +39,10 @@ var actions = {
     state.data = data;
     state.categories = sszvis.set(state.data, yAcc);
     state.years = sszvis.set(state.data, jAcc);
-    actions.selectYear(d3.max(state.years));
+    actions.selectYear(null, d3.max(state.years));
   },
 
-  selectYear: function (year) {
+  selectYear: function (e, year) {
     state.selectedYear = year;
     state.selectedData = state.data.filter(function (d) {
       return jAcc(d) === year;

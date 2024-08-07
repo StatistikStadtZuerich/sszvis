@@ -57,7 +57,7 @@ var actions = {
       })
       .apply(state.data);
 
-    actions.setYear(d3.max(state.years));
+    actions.setYear(null, d3.max(state.years));
   },
 
   setYear: function (inputYear) {
@@ -167,7 +167,7 @@ function render(state) {
 
   var yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
 
-  var tScale = d3.scaleTime().domain(state.tExtent).range([0, bounds.innerWidth]);
+  var tScale = d3.scaleLinear().domain(state.tExtent).range([0, bounds.innerWidth]);
 
   // Layers
 
@@ -220,8 +220,10 @@ function render(state) {
     .x(sszvis.compose(xScale, xAcc))
     .y(sszvis.compose(yScale, yAcc))
     .bounds([
-      [-bounds.padding.left, -bounds.padding.top],
-      [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20],
+      -bounds.padding.left,
+      -bounds.padding.top,
+      bounds.innerWidth + bounds.padding.right,
+      bounds.innerHeight + 20,
     ])
     .on("over", actions.selectPoint)
     .on("out", actions.deselectPoint);

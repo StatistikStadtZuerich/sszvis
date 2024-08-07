@@ -84,7 +84,7 @@ var actions = {
     actions.resetDate();
   },
 
-  toggleMultiples: function (g) {
+  toggleMultiples: function (e, g) {
     state.isMultiples = g === "Separiert";
     render(state);
   },

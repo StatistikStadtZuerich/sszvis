@@ -9,7 +9,6 @@ import { ascending, descending, sum, min, max } from "d3-array";
 
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
-import { map } from "d3-collection";
 
 var newLinkId = (function () {
   var id = 0;
@@ -89,7 +88,7 @@ export var prepareData = function () {
       });
 
       return index;
-    }, map());
+    }, new Map());
 
     var listOfLinks = inputData.map(function (datum) {
       var srcId = mGetSource(datum);
@@ -125,7 +124,7 @@ export var prepareData = function () {
     });
 
     // Extract the column nodes from the index
-    var listOfNodes = columnIndex.values();
+    var listOfNodes = [...columnIndex.values()];
 
     // Calculate an array of total values for each column
     var columnTotals = listOfNodes.reduce(function (totals, node) {

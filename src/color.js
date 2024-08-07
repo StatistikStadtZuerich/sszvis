@@ -214,12 +214,12 @@ export var withAlpha = function (c, a) {
 function decorateOrdinalScale(scale) {
   scale.darker = function () {
     return decorateOrdinalScale(
-      scale.copy().range(scale.range().map(func("darker", LIGHTNESS_STEP)))
+      scale.copy().range(scale.range().map(lab).map(func("darker", LIGHTNESS_STEP)))
     );
   };
   scale.brighter = function () {
     return decorateOrdinalScale(
-      scale.copy().range(scale.range().map(func("brighter", LIGHTNESS_STEP)))
+      scale.copy().range(scale.range().map(lab).map(func("brighter", LIGHTNESS_STEP)))
     );
   };
   scale.reverse = function () {

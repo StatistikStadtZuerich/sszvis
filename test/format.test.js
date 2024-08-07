@@ -14,7 +14,7 @@ describe("formatNumber", () => {
     [1, "1"],
     [0, "0"],
     [-0, "0"],
-    [-1, "-1"],
+    [-1, "−1"],
   ]);
 
   testMatrix("Range 0–1", formatNumber, [
