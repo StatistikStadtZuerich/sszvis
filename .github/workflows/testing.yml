@@ -13,7 +13,7 @@ jobs:
     env:
       CI: true
     runs-on: ubuntu-latest
-    container: lironavon/docker-puppeteer-container:16.10.0
+    container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
@@ -33,7 +33,7 @@ jobs:
       CI: true
       NODE_OPTIONS: --openssl-legacy-provider
     runs-on: ubuntu-latest
-    container: lironavon/docker-puppeteer-container:16.10.0
+    container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
