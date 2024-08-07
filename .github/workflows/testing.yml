@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v3
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --frozen-lockfile
 
       - name: Run tests
         run: npm run test:unit
@@ -36,7 +36,7 @@ jobs:
       - uses: actions/setup-node@v3
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --frozen-lockfile
 
       - name: Build Docs
         run: npm run build
