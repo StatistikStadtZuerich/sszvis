@@ -51,3 +51,11 @@ jobs:
           npx concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
             "npm run start" \
             "npx wait-on http://localhost:8000 && npm run test:snapshot"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: diff_output
+          path: /__w/sszvis/sszvis/test/__image_snapshots__/__diff_output__
+          retention-days: 7
