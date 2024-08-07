@@ -13,7 +13,7 @@ jobs:
     env:
       CI: true
     runs-on: ubuntu-latest
-    container: lironavon/docker-puppeteer-container:14.16.0
+    container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
@@ -32,7 +32,7 @@ jobs:
     env:
       CI: true
     runs-on: ubuntu-latest
-    container: lironavon/docker-puppeteer-container:14.16.0
+    container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
