@@ -125,7 +125,6 @@ export var prepareData = function () {
 
     // Extract the column nodes from the index
     var listOfNodes = [...columnIndex.values()];
-    console.log({ listOfNodes });
 
     // Calculate an array of total values for each column
     var columnTotals = listOfNodes.reduce(function (totals, node) {
