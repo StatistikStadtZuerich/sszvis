@@ -93,7 +93,7 @@
     "test:ci": "npm run test:lint && npm run test:unit",
     "test:lint": "eslint src",
     "test:unit": "jest --testPathIgnorePatterns snapshot.test.js",
-    "test:snapshot": "rm -rf test/__image_snapshots__/__diff_output__ && jest --testPathPattern snapshot.test.js --updateSnapshot",
+    "test:snapshot": "rm -rf test/__image_snapshots__/__diff_output__ && jest --testPathPattern snapshot.test.js",
     "test:watch": "jest --watch",
     "prepublishOnly": "npm run test:ci && npm run build",
     "prettier": "prettier --write .",
