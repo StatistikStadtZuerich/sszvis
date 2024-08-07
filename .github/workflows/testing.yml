@@ -32,7 +32,7 @@ jobs:
     env:
       CI: true
       NODE_OPTIONS: --openssl-legacy-provider
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
-        if: failure()
+        if: always()
         with:
           name: diff_output
           path: /__w/sszvis/sszvis/test/__image_snapshots__/__diff_output__

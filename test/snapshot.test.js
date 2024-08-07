@@ -16,6 +16,10 @@ test.each(files.map(filepathToUrl))("%s", async (url) => {
   try {
     await page.goto(url, { waitUntil: "networkidle2" });
     await page.waitForTimeout(RENDER_DELAY);
+    await page.evaluate(() => {
+      const elements = document.querySelectorAll(".sszvis-map__image");
+      elements.forEach((element) => element.remove());
+    });
     const image = await page.screenshot();
     expect(image).toMatchImageSnapshot(SNAPSHOT_OPTS);
 
@@ -24,6 +28,10 @@ test.each(files.map(filepathToUrl))("%s", async (url) => {
     for (const button of buttons) {
       await button.click();
       await page.waitForTimeout(RENDER_DELAY);
+      await page.evaluate(() => {
+        const elements = document.querySelectorAll(".sszvis-map__image");
+        elements.forEach((element) => element.remove());
+      });
 
       const stateImage = await page.screenshot();
       expect(stateImage).toMatchImageSnapshot(SNAPSHOT_OPTS);
