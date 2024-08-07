@@ -42,7 +42,7 @@ jobs:
         run: npm install --frozen-lockfile
 
       - name: Install playwright
-        run: npx playwright install
+        run: npx playwright install --with-deps
 
       - name: Build Docs
         run: npm run build
