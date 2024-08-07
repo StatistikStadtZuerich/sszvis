@@ -17,6 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
+      - uses: DeterminateSystems/nix-installer-action@v13
+      - uses: nicknovitski/nix-develop@v1
 
       - name: Install dependencies
         run: npm install --frozen-lockfile
@@ -34,6 +36,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
+      - uses: DeterminateSystems/nix-installer-action@v13
+      - uses: nicknovitski/nix-develop@v1
 
       - name: Install dependencies
         run: npm install --frozen-lockfile

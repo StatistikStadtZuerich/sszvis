@@ -14,12 +14,9 @@ jobs:
       PUPPETEER_SKIP_DOWNLOAD: false
     steps:
       - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/nix-installer-action@v13
+      - uses: nicknovitski/nix-develop@v1
 
-      - run: |
-          nix develop --command bash -c \
-            'npm install --frozen-lockfile'
+      - run: npm install --frozen-lockfile
 
-      - run: |
-          nix develop --command bash -c \
-            'npm run test:lint'
+      - run: npm run test:lint
