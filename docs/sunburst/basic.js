@@ -56,7 +56,7 @@ var actions = {
     render(state);
   },
 
-  onSliceOver: function (d) {
+  onSliceOver: function (e, d) {
     state.selection = [d];
 
     render(state);

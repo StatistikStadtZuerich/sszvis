@@ -69,7 +69,7 @@ var actions = {
   },
 
   // manage which datum is selected. These data are highlighted by the map.
-  selectHovered: function (d) {
+  selectHovered: function (e, d) {
     if (state.selection[0] === d.datum) {
       return;
     }
