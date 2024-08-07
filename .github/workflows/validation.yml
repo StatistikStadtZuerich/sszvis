@@ -15,8 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: nicknovitski/nix-develop@v1
 
-      - run: npm install --frozen-lockfile
+      - run: |
+          nix develop --command bash -c \
+            'npm install --frozen-lockfile'
 
-      - run: npm run test:lint
+      - run: |
+          nix develop --command bash -c \
+            'npm run test:lint'

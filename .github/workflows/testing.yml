@@ -17,13 +17,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: nicknovitski/nix-develop@v1
 
-      - name: Install dependencies
-        run: npm install --frozen-lockfile
+      - run: |
+          nix develop --command bash -c \
+            'npm install --frozen-lockfile'
 
-      - name: Run tests
-        run: npm run test:unit
+      - run: |
+          nix develop --command bash -c \
+            'npm run test:unit'
 
   snapshot-testing:
     name: "Snapshot Testing"
@@ -35,16 +36,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: nicknovitski/nix-develop@v1
 
-      - name: Install dependencies
-        run: npm install --frozen-lockfile
+      - run: |
+          nix develop --command bash -c \
+            'npm install --frozen-lockfile'
 
-      - name: Build Docs
-        run: npm run build
+      - run: |
+          nix develop --command bash -c \
+            'npm run build'
 
       - name: Serve docs and run tests
         run: |
-          npx concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
-            "npm run start" \
-            "npx wait-on http://localhost:8000 && npm run test:snapshot"
+          nix develop --command bash -c \  
+             'npx concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
+                "npm run start" \
+                "npx wait-on http://localhost:8000 && npm run test:snapshot"'
