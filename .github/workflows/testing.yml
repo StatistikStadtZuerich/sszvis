@@ -9,11 +9,7 @@ on:
 jobs:
   unit-testing:
     name: "Unit Testing"
-    timeout-minutes: 60
-    env:
-      CI: true
     runs-on: ubuntu-latest
-    container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
@@ -28,11 +24,8 @@ jobs:
 
   snapshot-testing:
     name: "Snapshot Testing"
-    timeout-minutes: 60
-    env:
-      CI: true
+    timeout-minutes: 15
     runs-on: ubuntu-latest
-    container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
       - uses: DeterminateSystems/nix-installer-action@main
