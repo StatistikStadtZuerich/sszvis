@@ -9,40 +9,44 @@ on:
 jobs:
   unit-testing:
     name: "Unit Testing"
+    timeout-minutes: 60
+    env:
+      CI: true
     runs-on: ubuntu-latest
+    container: lironavon/docker-puppeteer-container:14.16.0
     steps:
       - uses: actions/checkout@v3
-      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
 
-      - run: |
-          nix develop --command bash -c \
-            'npm install --frozen-lockfile'
+      - name: Install dependencies
+        run: npm install --frozen-lockfile
 
-      - run: |
-          nix develop --command bash -c \
-            'npm run test:unit'
+      - name: Run tests
+        run: npm run test:unit
 
   snapshot-testing:
     name: "Snapshot Testing"
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
-      NODE_OPTIONS: --openssl-legacy-provider
+      CI: true
+    runs-on: ubuntu-latest
+    container: lironavon/docker-puppeteer-container:14.16.0
     steps:
       - uses: actions/checkout@v3
-      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
 
-      - run: |
-          nix develop --command bash -c \
-            'npm install --frozen-lockfile'
+      - name: Install dependencies
+        run: npm install --frozen-lockfile
 
-      - run: |
-          nix develop --command bash -c \
-            'npm run build'
+      - name: Build Docs
+        run: npm run build
 
       - name: Serve docs and run tests
         run: |
-          nix develop --command bash -c \  
-             'npx concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
-                "npm run start" \
-                "npx wait-on http://localhost:8000 && npm run test:snapshot"'
+          npx concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
+            "npm run start" \
+            "npx wait-on http://localhost:8000 && npm run test:snapshot"
