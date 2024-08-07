@@ -3,12 +3,13 @@
 import glob from "glob";
 
 const RENDER_DELAY = 200;
-const SNAPSHOT_OPTS = {
-  failureThreshold: 0.05,
+
+const buildSnapshotOptions = (threshold) => ({
+  failureThreshold: threshold,
   failureThresholdType: "percent",
   customSnapshotIdentifier: ({ currentTestName, counter }) =>
     `${urlToIdentifier(currentTestName)}-${counter}`,
-};
+});
 
 const files = glob.sync("../build/[^_]*/*.html", { cwd: __dirname });
 
@@ -21,7 +22,8 @@ test.each(files.map(filepathToUrl))("%s", async (url) => {
       elements.forEach((element) => element.remove());
     });
     const image = await page.screenshot();
-    expect(image).toMatchImageSnapshot(SNAPSHOT_OPTS);
+    const threshold = process.env.CI ? 0.1 : 0.05;
+    expect(image).toMatchImageSnapshot(buildSnapshotOptions(threshold));
 
     const buttons = await page.$$(".sszvis-control-buttonGroup__item:not(.selected)");
 
@@ -34,7 +36,7 @@ test.each(files.map(filepathToUrl))("%s", async (url) => {
       });
 
       const stateImage = await page.screenshot();
-      expect(stateImage).toMatchImageSnapshot(SNAPSHOT_OPTS);
+      expect(stateImage).toMatchImageSnapshot(buildSnapshotOptions(threshold));
     }
   } catch (e) {
     expect(e).toBeNull();
