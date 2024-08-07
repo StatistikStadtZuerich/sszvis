@@ -92,7 +92,7 @@
     "test": "npm run test:lint && npm run test:unit && npm run test:snapshot",
     "test:ci": "npm run test:lint && npm run test:unit",
     "test:lint": "eslint src",
-    "test:unit": "vitest run --exclude */snapshot.test.js",
+    "test:unit": "vitest run --exclude **/snapshot.test.js",
     "test:snapshot": "rm -rf test/snapshot/__results__ && npx playwright test",
     "test:watch": "vitest",
     "prepublishOnly": "npm run test:ci && npm run build",
