@@ -19,7 +19,7 @@
  * @returns {sszvis.component} a rectangular data area component
  */
 
-import { select } from "d3-selection";
+import { select } from "d3";
 
 import * as fn from "../fn.js";
 import ensureDefsElement from "../svgUtils/ensureDefsElement.js";

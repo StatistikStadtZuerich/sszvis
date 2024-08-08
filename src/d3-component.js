@@ -1,4 +1,4 @@
-import { selection as d3Selection } from "d3-selection";
+import { selection as d3Selection } from "d3";
 
 /**
  * d3 plugin to simplify creating reusable charts. Implements

@@ -41,9 +41,7 @@
  * @function lightGry  1-color scale for shaded backgrounds
  */
 
-import { scaleOrdinal, scaleLinear } from "d3-scale";
-import { hsl, rgb, lab } from "d3-color";
-import { mean, quantile } from "d3-array";
+import { scaleOrdinal, scaleLinear, hsl, rgb, lab, mean, quantile } from "d3";
 
 /* Constants
 ----------------------------------------------- */
@@ -53,7 +51,7 @@ var LIGHTNESS_STEP = 0.6;
 ----------------------------------------------- */
 function qualColorScale(colors) {
   return function () {
-    var scale = scaleOrdinal().range(colors.map(convertLab));
+    var scale = scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
     return decorateOrdinalScale(scale);
   };
 }
@@ -275,7 +273,7 @@ function interpolatedColorScale(scale) {
 /* Helper functions
 ----------------------------------------------- */
 function convertLab(d) {
-  return lab(d).formatRgb();
+  return lab(d);
 }
 
 function func(fName) {

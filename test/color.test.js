@@ -21,7 +21,9 @@ import {
 import { expect, test, describe } from "vitest";
 
 const expectIsColor = (color) => {
-  expect(color).toContain("rgb");
+  expect(color).toHaveProperty("l");
+  expect(color).toHaveProperty("a");
+  expect(color).toHaveProperty("b");
 };
 
 describe("Color scales", () => {
@@ -76,6 +78,7 @@ describe("Color scales", () => {
   describe("Greyscale color scales", () => {
     test("should a single color", () => {
       expect(scaleGry().range()).toHaveLength(1);
+      console.log(scaleGry().range());
       expectIsColor(scaleGry().range()[0]);
     });
     test("should a single color", () => {

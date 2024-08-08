@@ -4,7 +4,7 @@
  * @module sszvis/parse
  */
 
-import { timeFormatLocale } from "d3-time-format";
+import { timeFormatLocale } from "d3";
 import { locale } from "./locale.js";
 
 var timeParse = timeFormatLocale(locale).parse;

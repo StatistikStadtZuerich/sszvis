@@ -30,8 +30,7 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3-selection";
-import { ascending } from "d3-array";
+import { select, ascending } from "d3";
 
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";

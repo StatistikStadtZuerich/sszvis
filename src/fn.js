@@ -4,7 +4,7 @@
  * @module sszvis/fn
  */
 
-import { selection } from "d3-selection";
+import { selection } from "d3";
 
 /**
  * fn.identity

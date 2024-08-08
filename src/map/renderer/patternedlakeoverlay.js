@@ -15,7 +15,7 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3-selection";
+import { select } from "d3";
 
 import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { mapLakePattern, mapLakeFadeGradient, mapLakeGradientMask } from "../../patterns.js";
