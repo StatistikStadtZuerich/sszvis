@@ -26,7 +26,7 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3-selection";
+import { select } from "d3";
 import { component } from "../../d3-component.js";
 
 export default function () {

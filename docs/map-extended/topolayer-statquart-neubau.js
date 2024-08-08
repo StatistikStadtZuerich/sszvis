@@ -115,7 +115,7 @@ var actions = {
 // -----------------------------------------------
 d3.csv("data/gemeinnuetzige.csv", parseRow).then(actions.prepareData).catch(sszvis.loadError);
 
-d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 d3.json("data/gemeinnuetzige.json").then(actions.prepareAdditionalMapData).catch(sszvis.loadError);
 

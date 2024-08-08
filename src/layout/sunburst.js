@@ -4,8 +4,7 @@
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
 
-import { hierarchy, partition } from "d3-hierarchy";
-import { rollup, min, max } from "d3-array";
+import { hierarchy, partition, min, max, rollup } from "d3";
 
 import * as fn from "../fn.js";
 
@@ -56,6 +55,7 @@ export var prepareData = function () {
 
   function main(data) {
     const nested = unwrapNested(rollup(data, fn.first, ...layers));
+    console.log(nested);
 
     const root = hierarchy({ isSunburstRoot: true, values: nested }, fn.prop("values"))
       .sort(sortFn)

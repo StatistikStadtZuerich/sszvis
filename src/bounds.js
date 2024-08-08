@@ -34,7 +34,7 @@
  *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
 
-import { select } from "d3-selection";
+import { select } from "d3";
 import { aspectRatioAuto } from "./aspectRatio.js";
 import * as fn from "./fn.js";
 import { measureDimensions } from "./measure.js";

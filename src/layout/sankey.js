@@ -5,7 +5,7 @@
  * and layout required by the sankey component.
  */
 
-import { ascending, descending, sum, min, max } from "d3-array";
+import { ascending, descending, sum, min, max } from "d3";
 
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";

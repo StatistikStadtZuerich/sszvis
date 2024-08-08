@@ -41,9 +41,7 @@
  *
  */
 
-import { select } from "d3-selection";
-import { dispatch } from "d3-dispatch";
-import { Delaunay } from "d3-delaunay";
+import { select, dispatch, Delaunay } from "d3";
 
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";

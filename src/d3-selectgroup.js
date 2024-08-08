@@ -1,4 +1,4 @@
-import { selection } from "d3-selection";
+import { selection } from "d3";
 
 /**
  * d3.selection plugin to simplify creating idempotent groups that are not

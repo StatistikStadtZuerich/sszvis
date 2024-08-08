@@ -19,9 +19,7 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3-selection";
-import { arc } from "d3-shape";
-import { interpolate } from "d3-interpolate";
+import { select, arc, interpolate } from "d3";
 
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";

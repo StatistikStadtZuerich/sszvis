@@ -15,8 +15,7 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3-selection";
-import {dispatch} from "d3-dispatch";
+import { select, dispatch } from "d3";
 
 import * as fn from "../../fn.js";
 import { defaultTransition } from "../../transition.js";
