@@ -28,8 +28,7 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3-selection";
-import { line as d3Line } from "d3-shape";
+import { select, line as d3Line } from "d3";
 
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";

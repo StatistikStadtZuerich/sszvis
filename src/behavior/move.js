@@ -45,9 +45,7 @@
  * @return {sszvis.component}
  */
 
-import { select, pointer } from "d3-selection";
-import { dispatch } from "d3-dispatch";
-import { ascending } from "d3-array";
+import { select, pointer, dispatch, ascending } from "d3";
 
 import * as fn from "../fn.js";
 import { range } from "../scale.js";

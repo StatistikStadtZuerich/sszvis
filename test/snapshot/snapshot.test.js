@@ -6,7 +6,7 @@ const RENDER_DELAY = 200;
 const files = glob.sync("../../build/[^_]*/*.html", { cwd: __dirname });
 
 for (const url of files.map(filepathToUrl)) {
-  test(urlToIdentifier(url), async ({ page }) => {
+  test(url, async ({ page }) => {
     try {
       await page.goto(url);
       await page.waitForTimeout(RENDER_DELAY);

@@ -18,7 +18,7 @@
  * @returns {d3.selection}
  */
 
-import { select } from "d3-selection";
+import { select } from "d3";
 
 import * as fn from "./fn.js";
 import { bounds as mkBounds } from "./bounds.js";

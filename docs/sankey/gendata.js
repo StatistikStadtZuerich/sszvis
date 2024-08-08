@@ -1,4 +1,4 @@
-import { randomLogNormal } from "d3-random";
+import { randomLogNormal } from "d3";
 
 var quarters = [
   "Affoltern",

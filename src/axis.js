@@ -53,9 +53,7 @@
  * @return {sszvis.component}
  */
 
-import { axisBottom, axisLeft, axisRight, axisTop } from "d3-axis";
-import { select } from "d3-selection";
-import { extent } from "d3-array";
+import { axisBottom, axisLeft, axisRight, axisTop, select, extent } from "d3";
 import { component } from "./d3-component.js";
 import * as fn from "./fn.js";
 import { formatAxisTimeFormat, formatNumber, formatText } from "./format.js";

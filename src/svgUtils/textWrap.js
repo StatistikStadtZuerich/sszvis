@@ -20,7 +20,7 @@
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
 
-import { select } from "d3-selection";
+import { select } from "d3";
 
 export default function (selection, width, paddingRightLeft, paddingTopBottom) {
   paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
