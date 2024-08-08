@@ -13,7 +13,6 @@ jobs:
     env:
       CI: true
     runs-on: ubuntu-latest
-    container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
@@ -33,7 +32,6 @@ jobs:
       CI: true
       NODE_OPTIONS: --openssl-legacy-provider
     runs-on: ubuntu-latest
-    container: buildkite/puppeteer:10.0.0
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
@@ -42,6 +40,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install --frozen-lockfile
+
+      - name: Install playwright
+        run: npx playwright install --with-deps
 
       - name: Build Docs
         run: npm run build
@@ -57,5 +58,5 @@ jobs:
         if: always()
         with:
           name: diff_output
-          path: /__w/sszvis/sszvis/test/__image_snapshots__/__diff_output__
+          path: /__w/sszvis/sszvis/test/__image_snapshots__/snapshot/__results__
           retention-days: 7

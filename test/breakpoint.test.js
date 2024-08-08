@@ -1,4 +1,5 @@
 import { responsiveProps } from "../src/responsiveProps.js";
+import { expect, test, describe } from "vitest";
 
 describe("queryProps", () => {
   const queryProps = responsiveProps()
