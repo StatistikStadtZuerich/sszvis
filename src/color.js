@@ -53,7 +53,7 @@ var LIGHTNESS_STEP = 0.6;
 ----------------------------------------------- */
 function qualColorScale(colors) {
   return function () {
-    var scale = scaleOrdinal().range(colors.map(convertLab));
+    var scale = scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
     return decorateOrdinalScale(scale);
   };
 }
@@ -275,7 +275,7 @@ function interpolatedColorScale(scale) {
 /* Helper functions
 ----------------------------------------------- */
 function convertLab(d) {
-  return lab(d).formatRgb();
+  return lab(d);
 }
 
 function func(fName) {
