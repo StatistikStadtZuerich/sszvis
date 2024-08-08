@@ -273,7 +273,7 @@ function interpolatedColorScale(scale) {
 /* Helper functions
 ----------------------------------------------- */
 function convertLab(d) {
-  return lab(d).formatRgb();
+  return lab(d);
 }
 
 function func(fName) {

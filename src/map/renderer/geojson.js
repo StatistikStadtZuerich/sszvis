@@ -21,9 +21,7 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3-selection";
-import {dispatch} from "d3-dispatch";
-import { geoCentroid } from "d3-geo";
+import { select, dispatch, geoCentroid } from "d3";
 
 import * as fn from "../../fn.js";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
