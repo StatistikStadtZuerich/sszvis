@@ -4,14 +4,11 @@
 
 ### Data structure
 
-This chart requires at least two variables that can be put in relation to each other. To create a
-multiple line chart, two variables are needed that can be plotted on the y-axis and that share a
-common third variable to define the x-axis.
+This chart requires at least two variables that can be put in relation to each other. To create a multiple line chart, two variables are needed that can be plotted on the y-axis and that share a common third variable to define the x-axis.
 
 ### Configuration
 
-Line charts use [d3.line](https://github.com/d3/d3-shape/blob/master/README.md#lines) internally and
-work similarly.
+Line charts use [d3.line](https://github.com/d3/d3-shape/blob/master/README.md#lines) internally and work similarly.
 
 #### `line.x([x])`
 
@@ -78,8 +75,7 @@ var EXTERNAL_CONFIG = {
 };
 ```
 
-You will likely need to do further adjustments, e.g. for the label formatting functions. In this
-example, we switched the y-axis label to be formatted as a percentage.
+You will likely need to do further adjustments, e.g. for the label formatting functions. In this example, we switched the y-axis label to be formatted as a percentage.
 
 ```project
 {
@@ -101,8 +97,7 @@ example, we switched the y-axis label to be formatted as a percentage.
 
 ## Usage example: Three axis chart
 
-Comparison of two datasets with huge differences in values over the same time period by using two
-y-axes instead of just one.
+Comparison of two datasets with huge differences in values over the same time period by using two y-axes instead of just one.
 
 ```project
 {

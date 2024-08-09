@@ -1,10 +1,8 @@
-> To make a chart accessible to people who can't read it visually, a fallback text should be
-> provided to explain the contents and purpose of the visualization.
+> To make a chart accessible to people who can't read it visually, a fallback text should be provided to explain the contents and purpose of the visualization.
 
 ### Usage
 
-To add accessibility hints, you need to provide a title and a description to the SVG element. This
-can be done by configuring `sszvis.createSvgLayer`:
+To add accessibility hints, you need to provide a title and a description to the SVG element. This can be done by configuring `sszvis.createSvgLayer`:
 
 ```
 var chart = sszvis.createSvgLayer('#sszvis-chart', bounds, {
@@ -14,13 +12,11 @@ var chart = sszvis.createSvgLayer('#sszvis-chart', bounds, {
 ```
 
 - The `title` will be rendered as a native tooltip, showing the title of this chart.
-- The `description` will only be used by screenreaders. The text provided for the description should
-  be a meaningful message of this chart.
+- The `description` will only be used by screenreaders. The text provided for the description should be a meaningful message of this chart.
 
 ### Using an external config
 
-Typically, the title and description are provided through an external source like a CMS. The
-following code snippet shows how an external config can be connected to the chart config.
+Typically, the title and description are provided through an external source like a CMS. The following code snippet shows how an external config can be connected to the chart config.
 
 ```
 <script>
@@ -45,9 +41,7 @@ following code snippet shows how an external config can be connected to the char
 </script>
 ```
 
-The following shows an example with accessible descriptions built-in. While this is meant to be
-consumed by screenreaders, some browsers will show a small tooltip on hover if the mouse is kept
-still.
+The following shows an example with accessible descriptions built-in. While this is meant to be consumed by screenreaders, some browsers will show a small tooltip on hover if the mouse is kept still.
 
 ```project
 {

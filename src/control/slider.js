@@ -22,7 +22,7 @@
  * @returns {sszvis.component}
  */
 
-import { select,scaleLinear} from "d3";
+import { select, scaleLinear } from "d3";
 
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";
