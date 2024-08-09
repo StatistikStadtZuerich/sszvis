@@ -139,8 +139,8 @@ function render(state) {
     return isNaN(v)
       ? "url(#ht-missing-value)"
       : v === 0
-      ? sszvis.scaleLightGry()(v)
-      : colorScale(v);
+        ? sszvis.scaleLightGry()(v)
+        : colorScale(v);
   }, vAcc);
 
   // Layers
