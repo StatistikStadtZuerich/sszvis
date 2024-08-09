@@ -1,18 +1,14 @@
 ## 3.0.0 (Aug 2024)
 
-The `sszvis` library now is dependent on `d3` version 7 . This means you will need to upgrade any
-scripts that import v5 to v7.
+- Upgraded d3 v5 to v7
 
-see [d3 v6 migration guide](https://observablehq.com/@d3/d3v6-migration-guide)
+The `sszvis` library now is dependent on `d3` version 7 (see [d3 v6 migration guide](https://observablehq.com/@d3/d3v6-migration-guide)). This means you will need to upgrade any scripts that import v5 to v7.
 
 ```code
 <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
 ```
 
-The upgrade to d3 v7 comes with a few breaking changes. The most notable one is the usage of newer
-ES6 data structures like `Map` and `Set` instead of the old `d3.map` and `d3.value` based data
-structures. This change was necessary to improve performance and to align with modern JavaScript
-practices.
+The upgrade to d3 v7 comes with a few breaking changes. The most notable one is the usage of newer ES6 data structures like `Map` and `Set` instead of the old `d3.map` and `d3.value` based data structures. This change was necessary to improve performance and to align with modern JavaScript practices.
 
 ```code
 // This d3 v5 code snippet should be updated to ...
@@ -22,9 +18,7 @@ state.maxStacked = d3.max(d3.values(dateValues), function (s) {...});
 state.maxStacked = d3.max(Object.values(dateValues), function (s) {...});
 ```
 
-The other major change is that to mouse event handlers which are now the first argument in the
-callback for any event listeners. This change causes any existing code that uses interactions
-(hover, mouse clicks etc) to break.
+The other major change is that to mouse event handlers which are now the first argument in the callback for any event listeners. This change causes any existing code that uses interactions (hover, mouse clicks etc) to break.
 
 ```code
 // This d3 v5 code snippet should be updated to ...
@@ -40,9 +34,7 @@ toggleMultiples: function (e, g) {
 },
 ```
 
-The last change is to the voronoi functionality which has now been updated to use Delaunay. The only
-noticeable change now is how boundaries are set, now accepting a single array of numbers, rather
-then two points:
+The last change is to the voronoi functionality which has now been updated to use Delaunay. The only noticeable change now is how boundaries are set, now accepting a single array of numbers, rather then two points:
 
 ```code
 // This d3 v5 code snippet should be updated to ...
@@ -70,13 +62,11 @@ var mouseOverlay = sszvis
 
 - Changed the color palette to match redesign color scheme
 - Added a default stroke to `axis` and `rangeRuler` text which can be bypassed with custom prop
-- Enforce default stroke on `pie`, `stackedBar` and `stackedArea` components to better visualise the
-  new color scheme
+- Enforce default stroke on `pie`, `stackedBar` and `stackedArea` components to better visualise the new color scheme
 
 ## 2.3.0 (Aug 2020)
 
-- Added `sszvis.app` as a more structured way to create sszvis apps. This helps with managing state
-  through actions and allows us to apply some performance optimizations behind the scenes.
+- Added `sszvis.app` as a more structured way to create sszvis apps. This helps with managing state through actions and allows us to apply some performance optimizations behind the scenes.
 
 ## 2.2.0 (Jul 2020)
 
@@ -91,9 +81,7 @@ var mouseOverlay = sszvis
 ### Breaking changes
 
 - Due to the use of more modern features, IE9 and below are no longer supported
-- If code relied on the old behaviour of `sszvis.defined` or `sszvis.isNumber` that considered `NaN`
-  as a number (which for most purposes of creating visualizations is not useful), existing code
-  might break and must be fixed.
+- If code relied on the old behaviour of `sszvis.defined` or `sszvis.isNumber` that considered `NaN` as a number (which for most purposes of creating visualizations is not useful), existing code might break and must be fixed.
 
 ### Docs
 
@@ -104,10 +92,7 @@ var mouseOverlay = sszvis
 
 ### Upgrade from 2.0 to 2.2.0
 
-The upgrade to d3 v5 is mostly backwards compatible (see
-[d3 v5's change log](https://github.com/d3/d3/blob/master/CHANGES.md#changes-in-d3-50)), but
-existing code should be updated to use the [d3-fetch](https://github.com/d3/d3-fetch) API instead of
-the old [d3-request](https://github.com/d3/d3-request) API.
+The upgrade to d3 v5 is mostly backwards compatible (see [d3 v5's change log](https://github.com/d3/d3/blob/master/CHANGES.md#changes-in-d3-50)), but existing code should be updated to use the [d3-fetch](https://github.com/d3/d3-fetch) API instead of the old [d3-request](https://github.com/d3/d3-request) API.
 
 ```code
 function parseRow(x) {
@@ -155,19 +140,14 @@ d3.json("http://example.com", parseRow)
 
 ### Upgrade from 1.x to 2.0
 
-The sszvis API has changed significantly from version 1.x to 2.0. This was done to a) align more
-closely with practices in the d3 ecosystem and to be able to leverage ES modules better (by not
-exporting whole namespaces but each function separately).
+The sszvis API has changed significantly from version 1.x to 2.0. This was done to a) align more closely with practices in the d3 ecosystem and to be able to leverage ES modules better (by not exporting whole namespaces but each function separately).
 
-sszvis now depends on d3 v4. See
-[d3 v4's change log](https://github.com/d3/d3/blob/master/CHANGES.md#changes-in-d3-40) for details
-on d3's API changes.
+sszvis now depends on d3 v4. See [d3 v4's change log](https://github.com/d3/d3/blob/master/CHANGES.md#changes-in-d3-40) for details on d3's API changes.
 
 ### Internals
 
 - `sszvis_namespace` ⟼ **replaced by ES modules**
-- No more setting of default locale, instead locale and localized formatting and parsing functions
-  are exported
+- No more setting of default locale, instead locale and localized formatting and parsing functions are exported
 
 ### D3 extensions
 
@@ -293,8 +273,7 @@ on d3's API changes.
 
 - `sszvis.svgUtils.crisp.halfPixel` ⟼ **`sszvis.halfPixel`**
 - `sszvis.svgUtils.crisp.roundTransformString` ⟼ **`sszvis.roundTransformString`**
-- `sszvis.svgUtils.crisp.transformTranslateSubpixelShift` ⟼
-  **`sszvis.transformTranslateSubpixelShift`**
+- `sszvis.svgUtils.crisp.transformTranslateSubpixelShift` ⟼ **`sszvis.transformTranslateSubpixelShift`**
 - `sszvis.svgUtils.modularText.svg` ⟼ **`sszvis.modularTextSVG`**
 - `sszvis.svgUtils.modularText.html` ⟼ **`sszvis.modularTextHTML`**
 - `sszvis.svgUtils.ensureDefsElement` ⟼ **`sszvis.ensureDefsElement`**
@@ -337,8 +316,7 @@ on d3's API changes.
 
 ### Maps
 
-Hard-coded map modules have been removed in favor of
-[loading geodata from GeoJSON or TopoJSON files](/map-standard#preparing-geodata).
+Hard-coded map modules have been removed in favor of [loading geodata from GeoJSON or TopoJSON files](/map-standard#preparing-geodata).
 
 - `sszvis.map.utils.constants.STADT_KREISE_KEY` ⟼ **`sszvis.STADT_KREISE_KEY`**
 - `sszvis.map.utils.constants.STATISTISCHE_QUARTIERE_KEY` ⟼ **`sszvis.STATISTISCHE_QUARTIERE_KEY`**

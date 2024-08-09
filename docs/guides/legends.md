@@ -1,5 +1,4 @@
-> Legends, like axes, are used to display information about a scale. Typically, the term "legend"
-> covers any kind of non-axis graphical hint about a chart's scale and visual encodings.
+> Legends, like axes, are used to display information about a scale. Typically, the term "legend" covers any kind of non-axis graphical hint about a chart's scale and visual encodings.
 
 ## Ordinal Color Scale Legend
 
@@ -27,8 +26,7 @@ The target number of columns for the legend.
 
 #### `legendColorOrdinal.orientation`
 
-The orientation (layout order) of the legend. should be either "horizontal" or "vertical".No
-default.
+The orientation (layout order) of the legend. should be either "horizontal" or "vertical".No default.
 
 #### `legendColorOrdinal.[reverse]`
 
@@ -128,13 +126,11 @@ The pixel width of the legend (default 200px)
 
 #### `legendColorLinear.[segments]`
 
-The number of segments to aim for. Note, this is only used if displayValues isn't specified, and
-then it is passed as the argument to scale.ticks for finding the ticks. (default 8)
+The number of segments to aim for. Note, this is only used if displayValues isn't specified, and then it is passed as the argument to scale.ticks for finding the ticks. (default 8)
 
 #### `legendColorLinear.[labelText]`
 
-Text or a text-returning function to use as the titles for the legend endpoints. If not supplied,
-defaults to using the first and last tick values.
+Text or a text-returning function to use as the titles for the legend endpoints. If not supplied, defaults to using the first and last tick values.
 
 #### `legendColorLinear.[labelFormat]`
 
@@ -175,8 +171,7 @@ An array of values which should be displayed. Usually these should be the bin ed
 
 #### `legendColorBinned.[endpoints]`
 
-The endpoints of the scale (note that these are not necessarily the first and last bin edges). These
-will become labels at either end of the legend.
+The endpoints of the scale (note that these are not necessarily the first and last bin edges). These will become labels at either end of the legend.
 
 #### `legendColorBinned.[width]`
 

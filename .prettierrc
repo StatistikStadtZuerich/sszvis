@@ -4,5 +4,5 @@
   "useTabs": false,
   "trailingComma": "es5",
   "singleQuote": false,
-  "proseWrap": "always"
+  "proseWrap": "never"
 }
