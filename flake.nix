@@ -18,7 +18,6 @@
           devShells.default = pkgs.mkShell {
             buildInputs = [
               pkgs.nodejs_20
-              pkgs.yarn
             ];
 
             shellHook = ''
@@ -28,8 +27,8 @@
               echo "┃                                               ┃"
               echo "┃  Welcome to the IXT development environment!  ┃"
               echo "┃                                               ┃"
-              echo "┃  Development Server:   'yarn dev'             ┃"
-              echo "┃  Storybook:            'yarn run storybook'   ┃"
+              echo "┃  Build Docs:   'npm run build'                ┃"
+              echo "┃  Server:       'npm start'                    ┃"
               echo "┃                                               ┃"
               echo "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
               echo ""
