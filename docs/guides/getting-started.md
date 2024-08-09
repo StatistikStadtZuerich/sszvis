@@ -11,9 +11,9 @@ The following provides a brief overview of a typical code example in this reposi
 <!DOCTYPE html>
 <html>
   <head>
-    <link href="https://unpkg.com/sszvis@2/build/sszvis.css" rel="stylesheet" />
+    <link href="https://unpkg.com/sszvis@3/build/sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
-    <script src="https://unpkg.com/sszvis@2/build/sszvis.min.js"></script>
+    <script src="https://unpkg.com/sszvis@3/build/sszvis.min.js"></script>
   </head>
   <body style="margin:0;padding:0;">
     <div id="sszvis-chart"></div>
