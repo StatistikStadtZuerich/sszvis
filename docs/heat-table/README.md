@@ -1,12 +1,8 @@
-> A heat table can be used to show off a matrix of values. Use it to display how a single variable
-> varies across all the combinations of two categorical variables.
+> A heat table can be used to show off a matrix of values. Use it to display how a single variable varies across all the combinations of two categorical variables.
 
 ## sszvis.bar
 
-The heat table does not have a special component. Instead, it is constructed using
-[sszvis.bar](bar-chart-vertical) by setting the width and height equal to each other, and with the
-use of the _x_- and _y_-position functions. Both _x_- and _y_-scales are ordinal scales which use
-the rangeBands function to calculate the output range.
+The heat table does not have a special component. Instead, it is constructed using [sszvis.bar](bar-chart-vertical) by setting the width and height equal to each other, and with the use of the _x_- and _y_-position functions. Both _x_- and _y_-scales are ordinal scales which use the rangeBands function to calculate the output range.
 
 ```hint
 ## Responsive Layout
@@ -16,8 +12,7 @@ The heat table's responsive layout is based on dynamically resizing the boxes of
 
 ### Data structure
 
-This component requires a flat array of objects, and each object is turned into one square in the
-heat table.
+This component requires a flat array of objects, and each object is turned into one square in the heat table.
 
 #### Minimum three dimensions
 
@@ -27,8 +22,7 @@ heat table.
 
 ### Configuration
 
-Heat tables are based on [sszvis.bar](bar-chart-vertical) and thus have the same configuration
-options.
+Heat tables are based on [sszvis.bar](bar-chart-vertical) and thus have the same configuration options.
 
 ### Chart
 
@@ -52,9 +46,7 @@ options.
 
 ## Irregularly Binned Color Scale
 
-Binned color scales can be used to group data and make it easier to see similar areas. For more on
-the different ways to construct binned color scales from a range of values, see
-[Telling the Truth](http://uxblog.idvsolutions.com/2011/10/telling-truth.html).
+Binned color scales can be used to group data and make it easier to see similar areas. For more on the different ways to construct binned color scales from a range of values, see [Telling the Truth](http://uxblog.idvsolutions.com/2011/10/telling-truth.html).
 
 This example shows what age each partner in a partnership had when they had their first child.
 
@@ -78,8 +70,7 @@ This example shows what age each partner in a partnership had when they had thei
 
 ## Regularly Binned Diverging Color Scale
 
-This example uses regularly spaced bins and shows positive/negative trends through a diverging color
-scale.
+This example uses regularly spaced bins and shows positive/negative trends through a diverging color scale.
 
 ```project
 {

@@ -1,13 +1,10 @@
-> Bar charts are suited to comparing numeric values for different categories. The categories can be
-> ordered or unordered, numeric or non-numeric.
+> Bar charts are suited to comparing numeric values for different categories. The categories can be ordered or unordered, numeric or non-numeric.
 
 ## sszvis.bar
 
 ### Data structure
 
-This chart requires one variable used for categorization, and one variable for the horizontal extent
-of the bar. The extent variable must be numeric, while the categorization variable should be a set
-of unique values.
+This chart requires one variable used for categorization, and one variable for the horizontal extent of the bar. The extent variable must be numeric, while the categorization variable should be a set of unique values.
 
 ### Configuration
 

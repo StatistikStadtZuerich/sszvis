@@ -1,8 +1,6 @@
 ## Bubble Map
 
-The "bubble map" concept is a map with sized circle data overlays for each map entity. The map
-shapes should be rendered with the standard map class for the type you want, and then the circles
-overhead are rendered as an "anchored shape".
+The "bubble map" concept is a map with sized circle data overlays for each map entity. The map shapes should be rendered with the standard map class for the type you want, and then the circles overhead are rendered as an "anchored shape".
 
 ## sszvis.mapRendererBubble
 
@@ -14,8 +12,7 @@ Expects an array of data which can be matched to map entities, much like the bas
 
 ### Configuration
 
-Configure this component, and a base map component, and pass this component as the .anchoredShape
-property of the base map component.
+Configure this component, and a base map component, and pass this component as the .anchoredShape property of the base map component.
 
 #### `mapRendererBubble.radius()`
 

@@ -1,7 +1,6 @@
 # Statistik Stadt Zürich Visualization Library
 
-sszvis can be installed from npm or embedded in a script tag. Please refer to the
-[interactive documentation](https://statistikstadtzuerich.github.io/sszvis/) for instructions.
+sszvis can be installed from npm or embedded in a script tag. Please refer to the [interactive documentation](https://statistikstadtzuerich.github.io/sszvis/) for instructions.
 
 ## Documentation
 
@@ -9,8 +8,7 @@ The documentation is written in Markdown and bundled with [Catalog](https://www.
 
 ## Development
 
-To get started, you first need to
-[setup Nix](https://www.notion.so/interactivethings/Nix-0ca972e50d424f5992e2f4a7b173e19b).
+To get started, you first need to [setup Nix](https://www.notion.so/interactivethings/Nix-0ca972e50d424f5992e2f4a7b173e19b).
 
 To run the development shell:
 
@@ -18,8 +16,7 @@ To run the development shell:
 nix develop
 ```
 
-This library is bundled using [Rollup](https://rollupjs.org/). To start developing, install
-dependencies using npm first.
+This library is bundled using [Rollup](https://rollupjs.org/). To start developing, install dependencies using npm first.
 
 ```sh
 # Install dependencies first
@@ -37,8 +34,7 @@ npm start
 
 ### Building
 
-sszvis builds are automated. You don't have to run build tasks for publishing but you may need them
-for developing the library:
+sszvis builds are automated. You don't have to run build tasks for publishing but you may need them for developing the library:
 
 ```sh
 # Build everything necessary for publishing (if necessary use export `NODE_OPTIONS=--openssl-legacy-provider`)
@@ -69,8 +65,7 @@ npm run test:snapshot
 
 ## Deploying
 
-Create a new version and push it, it will then be automatically deployed to NPM using GitHub
-Actions.
+Create a new version and push it, it will then be automatically deployed to NPM using GitHub Actions.
 
 ```sh
 npm version minor
@@ -79,8 +74,7 @@ git push --follow-tags
 
 ## License
 
-sszvis is published under the BSD-3-Clause license. sszvis can freely be used but no support will be
-provided by Statistik Stadt Zürich.
+sszvis is published under the BSD-3-Clause license. sszvis can freely be used but no support will be provided by Statistik Stadt Zürich.
 
 ## Contact
 
