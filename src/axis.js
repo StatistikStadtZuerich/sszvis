@@ -335,16 +335,16 @@ var axis = function () {
                   orient === "left" || orient === "right"
                     ? 0
                     : orient === "top" || orient === "bottom"
-                    ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
-                    : 0,
+                      ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
+                      : 0,
                 top:
                   orient === "left" || orient === "right"
                     ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
                     : orient === "top"
-                    ? 0
-                    : orient === "bottom"
-                    ? 32
-                    : 0,
+                      ? 0
+                      : orient === "bottom"
+                        ? 32
+                        : 0,
               };
             } else {
               titleProps = {
@@ -352,14 +352,14 @@ var axis = function () {
                   orient === "left" || orient === "right" || orient === "top"
                     ? 0
                     : orient === "bottom"
-                    ? axisScaleExtent[1]
-                    : 0,
+                      ? axisScaleExtent[1]
+                      : 0,
                 top:
                   orient === "left" || orient === "right" || orient === "top"
                     ? 0
                     : orient === "bottom"
-                    ? 32
-                    : 0,
+                      ? 32
+                      : 0,
               };
             }
 

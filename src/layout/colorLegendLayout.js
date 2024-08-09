@@ -94,6 +94,6 @@ function numCols(totalWidth, columnWidth, num) {
   return num <= 1
     ? 1
     : columnWidth <= totalWidth / num
-    ? num
-    : numCols(totalWidth, columnWidth, num - 1);
+      ? num
+      : numCols(totalWidth, columnWidth, num - 1);
 }
