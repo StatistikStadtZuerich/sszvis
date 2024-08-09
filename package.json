@@ -69,9 +69,9 @@
     "prettier": "^2.0.5",
     "rollup": "^2.21.0",
     "rollup-plugin-terser": "^6.1.0",
-    "topojson-client": "^3.0.0",
-    "topojson-server": "^3.0.0",
-    "topojson-simplify": "^3.0.1",
+    "topojson-client": "^3.1.0",
+    "topojson-server": "^3.0.1",
+    "topojson-simplify": "^3.0.3",
     "vitest": "^2.0.5"
   },
   "files": [
@@ -100,7 +100,6 @@
     "test:watch": "vitest",
     "prepublishOnly": "npm run test:ci && npm run build",
     "prettier": "prettier --write .",
-    "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\".",
-    "test:browser": "vitest"
+    "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\"."
   }
 }

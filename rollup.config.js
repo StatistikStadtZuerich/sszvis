@@ -16,9 +16,6 @@ const globals = {
 const createConfig = ({ input, output, plugins }) => ({
   input,
   output,
-  moduleContext: {
-    ["node_modules/whatwg-fetch/fetch.js"]: "window",
-  },
   plugins: [
     replace({
       "process.env.NODE_ENV": JSON.stringify("production"),
