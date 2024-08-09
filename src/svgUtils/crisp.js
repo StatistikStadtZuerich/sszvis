@@ -48,20 +48,18 @@ export var halfPixel = function (pos) {
  */
 export var roundTransformString = function (transformStr) {
   var roundNumber = fn.compose(Math.floor, Number);
-  return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function (
-    _,
-    left,
-    vecStr,
-    right
-  ) {
-    var roundVec = vecStr
-      .replace(",", " ")
-      .replace(/\s+/, " ")
-      .split(" ")
-      .map(roundNumber)
-      .join(",");
-    return left + roundVec + right;
-  });
+  return transformStr.replace(
+    /(translate\()\s*([0-9., ]+)\s*(\))/i,
+    function (_, left, vecStr, right) {
+      var roundVec = vecStr
+        .replace(",", " ")
+        .replace(/\s+/, " ")
+        .split(" ")
+        .map(roundNumber)
+        .join(",");
+      return left + roundVec + right;
+    }
+  );
 };
 
 /**

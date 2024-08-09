@@ -1,52 +1,30 @@
-> Tooltips are used to highlight particular data values or chart points of interest. They can also
-> be used to facilitate chart reading by allowing the user to focus on a particular visual object
-> and retrieve more information about it.
+> Tooltips are used to highlight particular data values or chart points of interest. They can also be used to facilitate chart reading by allowing the user to focus on a particular visual object and retrieve more information about it.
 
 ## Tooltip Class
 
 ### sszvis.tooltip
 
-The tooltip class is used to generate all tooltips. This class can be called on any selection. A
-potential tooltip is created for each element in the selection, and it uses whatever data is already
-bound to those elements. Within the sszvis library, a useful abstraction called tooltipAnchor is
-used as the root element to which tooltips are bound. However, any element, with or without bound
-data, can be used as the base for tooltips. Tooltips are created on a selection using
-selection.call(tooltipInstance). Unlike most sszvis components, tooltips do not render into or as
-siblings of the selection on which the function is called. Instead, you must pass a selection
-containing an HTML DOM element as the `renderInto` option. The tooltips get their data and position
-information from the elements of the selection on which the component is called, but they are
-rendered into the selection passed as the `renderInto` option. This enables the library to present
-HTML content next to or over SVG content without needing to mix the two.
+The tooltip class is used to generate all tooltips. This class can be called on any selection. A potential tooltip is created for each element in the selection, and it uses whatever data is already bound to those elements. Within the sszvis library, a useful abstraction called tooltipAnchor is used as the root element to which tooltips are bound. However, any element, with or without bound data, can be used as the base for tooltips. Tooltips are created on a selection using selection.call(tooltipInstance). Unlike most sszvis components, tooltips do not render into or as siblings of the selection on which the function is called. Instead, you must pass a selection containing an HTML DOM element as the `renderInto` option. The tooltips get their data and position information from the elements of the selection on which the component is called, but they are rendered into the selection passed as the `renderInto` option. This enables the library to present HTML content next to or over SVG content without needing to mix the two.
 
 #### `tooltip.renderInto`
 
-Provide a selection container into which to render the tooltip. Unlike most other components, the
-tooltip isn't rendered directly into the selection on which it is called. Instead, it's rendered
-into whichever selection is passed to the renderInto option.
+Provide a selection container into which to render the tooltip. Unlike most other components, the tooltip isn't rendered directly into the selection on which it is called. Instead, it's rendered into whichever selection is passed to the renderInto option.
 
 #### `tooltip.visible`
 
-Provide a predicate function which accepts a datum and determines whether the associated tooltip
-should be visible. The default value is false, meaning that no tooltips will be displayed unless
-this option is specified.
+Provide a predicate function which accepts a datum and determines whether the associated tooltip should be visible. The default value is false, meaning that no tooltips will be displayed unless this option is specified.
 
 #### `tooltip.[header]`
 
-A function accepting a datum. The result becomes the header of the tooltip. This function can return
-a plain string or an HTML string to be used as innerHTML.
+A function accepting a datum. The result becomes the header of the tooltip. This function can return a plain string or an HTML string to be used as innerHTML.
 
 #### `tooltip.[body]`
 
-A function accepting a datum. The result becomes the body of the tooltip. This function can return a
-plain string, an HTML string to be used as innerHTML, or an array of arrays, which produces a
-tabular layout where each sub-array is one row in the table.
+A function accepting a datum. The result becomes the body of the tooltip. This function can return a plain string, an HTML string to be used as innerHTML, or an array of arrays, which produces a tabular layout where each sub-array is one row in the table.
 
 #### `tooltip.[orientation]`
 
-A string or function returning a string which determines the orientation. This determines which
-direction the point of the tooltip sits relative to the body. Possible values are: "bottom" (points
-down), "top" (points upward), "left" (points left), and "right" (points right). In the examples
-below, each of the four orientations is demonstrated. Default is "bottom".
+A string or function returning a string which determines the orientation. This determines which direction the point of the tooltip sits relative to the body. Possible values are: "bottom" (points down), "top" (points upward), "left" (points left), and "right" (points right). In the examples below, each of the four orientations is demonstrated. Default is "bottom".
 
 #### `tooltip.[dx]`
 
@@ -62,9 +40,7 @@ A function or number which determines the opacity of the tooltip. Default is 1.
 
 ## Mini
 
-This is the most basic tooltip form. Only the `.header` accessor function is used. You could also
-use only `.body`. This tooltip uses a modular text instance which accesses and formats data values,
-then renders them as bold html text.
+This is the most basic tooltip form. Only the `.header` accessor function is used. You could also use only `.body`. This tooltip uses a modular text instance which accesses and formats data values, then renders them as bold html text.
 
 ```html|plain,run-script
 <div id="miniBottom" class="tooltip-container"></div>
@@ -174,8 +150,7 @@ then renders them as bold html text.
 
 ## Medium
 
-This example demonstrates use of both the `.header` and `.body` accessor functions. A bold section
-in the header modular text is used to highlight the data value.
+This example demonstrates use of both the `.header` and `.body` accessor functions. A bold section in the header modular text is used to highlight the data value.
 
 ```html|plain,run-script
 <div id="medBot" class="tooltip-container"></div>
@@ -301,9 +276,7 @@ in the header modular text is used to highlight the data value.
 
 ## Maxi
 
-For tabular-format tooltips, the `.body` accessor function should return an array of arrays. Each
-sub-array becomes a row in the tooltip table. This format is useful for displaying multiple data
-values. The elements of the sub array are placed into the resulting table row in order.
+For tabular-format tooltips, the `.body` accessor function should return an array of arrays. Each sub-array becomes a row in the tooltip table. This format is useful for displaying multiple data values. The elements of the sub array are placed into the resulting table row in order.
 
 ```html|plain,run-script
 <div id="maxBot" class="tooltip-container"></div>
@@ -421,12 +394,7 @@ values. The elements of the sub array are placed into the resulting table row in
 
 ## Tooltip Anchors
 
-Tooltip anchors provide a useful abstraction for positioning tooltips. They are not necessary for
-creating and positioning tooltips, but they are used by the sszvis components for this purpose. The
-tooltipAnchor class is configured with a position function, which tells each instance of the
-configured anchor where to place itself. The tooltips bound to these anchors will be positioned at
-that location. For help while developing, the `.debug` option can be set to true in order to reveal
-the position of the anchor, as seen in the example below.
+Tooltip anchors provide a useful abstraction for positioning tooltips. They are not necessary for creating and positioning tooltips, but they are used by the sszvis components for this purpose. The tooltipAnchor class is configured with a position function, which tells each instance of the configured anchor where to place itself. The tooltips bound to these anchors will be positioned at that location. For help while developing, the `.debug` option can be set to true in order to reveal the position of the anchor, as seen in the example below.
 
 ```html|plain,run-script
 <div id="tooltipAnchor" class="tooltip-container"></div>
