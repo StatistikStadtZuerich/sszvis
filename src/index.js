@@ -10,12 +10,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//  Polyfills and d3 plugins that need to be available for the                //
+//  D3 plugins that need to be available for the                              //
 //  to run correctly.                                                         //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-import "./polyfills/index.js";
 import "./d3-selectdiv.js";
 import "./d3-selectgroup.js";
 
