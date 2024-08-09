@@ -3,10 +3,10 @@ import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
 import { join } from "path";
-import { terser } from "rollup-plugin-terser";
-import { version } from "./package.json";
+import terser from "@rollup/plugin-terser";
+import pkg from "./package.json" assert { type: "json" };
 
-const banner = `/*! sszvis v${version}, Copyright 2014-present Statistik Stadt Zürich */`;
+const banner = `/*! sszvis v${pkg.version}, Copyright 2014-present Statistik Stadt Zürich */`;
 
 const globals = {
   d3: "d3",
@@ -14,6 +14,7 @@ const globals = {
 };
 
 const createConfig = ({ input, output, plugins }) => ({
+  strictDeprecations: true,
   input,
   output,
   plugins: [
