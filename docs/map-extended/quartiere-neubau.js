@@ -25,7 +25,6 @@ function parseRow(d) {
   };
 }
 
-var idAcc = sszvis.prop("id");
 var datumAcc = sszvis.prop("datum");
 var nameAcc = sszvis.prop("name");
 var yearAcc = sszvis.prop("year");

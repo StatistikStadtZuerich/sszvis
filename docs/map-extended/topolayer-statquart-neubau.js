@@ -2,8 +2,6 @@
 
 // Configuration
 // -----------------------------------------------
-var TITLE = "Diagrammtitel";
-var DESCRIPTION = "Kurze Beschreibung des Inhalts dieses Diagramms";
 var queryProps = sszvis.responsiveProps().prop("bounds", {
   _: function (width) {
     // The calculation of the rastermap bounds is a bit more complex due to the fact
@@ -54,7 +52,6 @@ function parseRow(d) {
   };
 }
 
-var idAcc = sszvis.prop("id");
 var datumAcc = sszvis.prop("datum");
 var nameAcc = sszvis.prop("name");
 var yearAcc = sszvis.prop("year");

@@ -209,8 +209,6 @@ function render(state) {
     .width(legendWidth)
     .labelFormat(sszvis.formatNumber);
 
-  var tooltipHeaderText = sszvis.modularTextHTML().bold("Paare");
-
   var tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
@@ -223,7 +221,6 @@ function render(state) {
     })
     .body(function (d) {
       var v = vAcc(d);
-      var y = yAcc(d);
       if (props.tSourceAxis === "y") {
         return [
           [props.xAxisLabel, xAcc(d)],

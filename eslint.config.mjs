@@ -7,4 +7,16 @@ export default [
   {
     ignores: ["contrib/", "build/", "docs/static/"],
   },
+  {
+    rules: {
+      "no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ];

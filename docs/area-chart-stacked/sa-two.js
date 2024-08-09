@@ -249,7 +249,7 @@ function render(state) {
       return d.data[d.key];
     })
     .total(state.totalHighlightValue)
-    .flip(function (d) {
+    .flip(function () {
       return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
     });
 
@@ -267,7 +267,7 @@ function render(state) {
   var rangeTooltip = sszvis
     .tooltip()
     .header(tooltipText)
-    .orientation(function (d) {
+    .orientation(function () {
       return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? "right" : "left";
     })
     .renderInto(htmlLayer)

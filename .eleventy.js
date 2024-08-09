@@ -1,4 +1,3 @@
-const FS = require("fs");
 const PATH = require("path");
 const babel = require("@babel/core");
 const prettier = require("prettier");

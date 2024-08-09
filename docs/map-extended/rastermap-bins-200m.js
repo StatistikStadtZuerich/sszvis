@@ -3,8 +3,6 @@
 // Configuration
 // -----------------------------------------------
 
-var DEFAULT_KEY = "Kinder";
-var KEY_OPTIONS = ["Kinder", "Random"];
 var MAX_LEGEND_WIDTH = 320;
 var queryProps = sszvis
   .responsiveProps()
