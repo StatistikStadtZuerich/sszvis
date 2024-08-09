@@ -201,10 +201,7 @@ function render(state) {
     .voronoi()
     .x(xValue)
     .y(yValue)
-    .bounds([
-      [0, 0],
-      [bounds.innerWidth, bounds.innerHeight],
-    ])
+    .bounds([0, 0, bounds.innerWidth, bounds.innerHeight])
     .on("over", actions.setHighlight)
     .on("out", actions.resetHighlight);
 
