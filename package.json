@@ -31,7 +31,7 @@
     "d3-dsv": "^3.0.1",
     "eslint": "^7.4.0",
     "eslint-plugin-react": "^7.20.3",
-    "glob": "^7.1.6",
+    "glob": "^11.0.0",
     "immer": "^10.1.1",
     "nano-throttle": "^1.0.3",
     "ndjson-cli": "^0.3.1",
