@@ -168,8 +168,8 @@ function render(state) {
   }
 
   var layerBounds = [
-    [8.431443 + geoOffset, 47.448978 + geoOffset],
-    [8.647471 + geoOffset, 47.309726 + geoOffset],
+    [8.431_443 + geoOffset, 47.448_978 + geoOffset],
+    [8.647_471 + geoOffset, 47.309_726 + geoOffset],
   ];
   // To calculate the length in pixels of a certain distance in meters, use this function.
   // You need to provide a projection (for calculating pixel values from decimal degree coordinates)
@@ -222,7 +222,7 @@ function render(state) {
 
     rasterLayer.debug(DEBUG);
 
-    var circlePos = projection([8.537617, 47.383303]);
+    var circlePos = projection([8.537_617, 47.383_303]);
 
     chartLayer
       .append("circle")

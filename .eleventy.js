@@ -1,4 +1,4 @@
-const PATH = require("path");
+const PATH = require("node:path");
 const babel = require("@babel/core");
 const prettier = require("prettier");
 

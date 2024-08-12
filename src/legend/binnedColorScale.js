@@ -49,7 +49,7 @@ export default function () {
       var sum = 0;
       var rectData = [];
       var pPrev = props.endpoints[0];
-      props.displayValues.forEach(function (p) {
+      for (const p of props.displayValues) {
         var w = barWidth(p) - sum;
         var offset = sum % 1;
         rectData.push({
@@ -60,7 +60,7 @@ export default function () {
         });
         sum += w;
         pPrev = p;
-      });
+      }
 
       // add the final box (last display value - > endpoint)
       rectData.push({

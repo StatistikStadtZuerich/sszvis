@@ -102,11 +102,7 @@ function truncateToWidth(metricsEl, maxWidth, originalString) {
   var fitText = function (str, i) {
     metricsEl.text(str);
     var textWidth = Math.ceil(metricsEl.node().clientWidth);
-    if (i < MAX_RECURSION && textWidth > maxWidth) {
-      return fitText(str.slice(0, str.length - 2) + "…", i + 1);
-    } else {
-      return str;
-    }
+    return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, - 2) + "…", i + 1) : str;
   };
   return fitText(originalString, 0);
 }

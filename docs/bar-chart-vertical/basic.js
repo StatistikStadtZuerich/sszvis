@@ -85,9 +85,9 @@ function render() {
       top: 3,
       bottom: props.bottomPadding,
       left:
-        props.leftPadding != null
-          ? props.leftPadding
-          : sszvis.measureAxisLabel(props.yLabelFormat(yMax)),
+        props.leftPadding == null
+          ? sszvis.measureAxisLabel(props.yLabelFormat(yMax))
+          : props.leftPadding,
     },
     config.id
   );
@@ -107,7 +107,7 @@ function render() {
 
   var heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
 
-  var yPosScale = heightScale.copy().range(heightScale.range().slice().reverse());
+  var yPosScale = heightScale.copy().range([...heightScale.range()].reverse());
 
   var cScale = sszvis.scaleQual12();
   var cScaleDark = cScale.darker();

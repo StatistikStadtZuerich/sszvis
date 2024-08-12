@@ -117,8 +117,8 @@ function render(state) {
   var geoOffset = -0.0011;
 
   var layerBounds = [
-    [8.431443 + geoOffset, 47.448978 + geoOffset],
-    [8.647471 + geoOffset, 47.309726 + geoOffset],
+    [8.431_443 + geoOffset, 47.448_978 + geoOffset],
+    [8.647_471 + geoOffset, 47.309_726 + geoOffset],
   ];
 
   // This example uses the map data modules containing base64-encoded clipped data

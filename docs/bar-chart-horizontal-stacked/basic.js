@@ -109,7 +109,7 @@ function render(state) {
   var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.yValues.length);
   var paddingTop = 20;
   var bottomPadding =
-    props.bottomPadding != null ? props.bottomPadding : legendLayout.bottomPadding;
+    props.bottomPadding == null ? legendLayout.bottomPadding : props.bottomPadding;
   var bounds = sszvis.bounds(
     {
       height: paddingTop + chartDimensions.totalHeight + bottomPadding,

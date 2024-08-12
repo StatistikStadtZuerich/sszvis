@@ -168,5 +168,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return state.selection.indexOf(d) !== -1;
+  return state.selection.includes(d);
 }

@@ -203,5 +203,5 @@ function isWithinBarContour(xValue, category) {
 }
 
 function isSelected(d) {
-  return state.selected.indexOf(d) >= 0;
+  return state.selected.includes(d);
 }

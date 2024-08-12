@@ -33,7 +33,7 @@ export default function (selection, width, paddingRightLeft, paddingTopBottom) {
     var text = select(this);
     var words = text
       .text()
-      .split(/[ \f\n\r\t\v]+/)
+      .split(/[\t\n\v\f\r ]+/)
       .reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
     var word;
     var line = [];
@@ -41,7 +41,7 @@ export default function (selection, width, paddingRightLeft, paddingTopBottom) {
     var lineHeight = 1.1; //Em
     var x;
     var y = text.attr("y");
-    var dy = parseFloat(text.attr("dy"));
+    var dy = Number.parseFloat(text.attr("dy"));
     var createdLineCount = 1; //Total line created count
     var textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
 
@@ -52,29 +52,35 @@ export default function (selection, width, paddingRightLeft, paddingTopBottom) {
     var wrapTickLabels = select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
     if (wrapTickLabels) {
       switch (textAlign) {
-        case "start":
+        case "start": {
           x = -width / 2;
           break;
-        case "middle":
+        }
+        case "middle": {
           x = 0;
           break;
-        case "end":
+        }
+        case "end": {
           x = width / 2;
           break;
+        }
         default:
       }
     } else {
       //untranslated <text> elements
       switch (textAlign) {
-        case "start":
+        case "start": {
           x = paddingRightLeft;
           break;
-        case "middle":
+        }
+        case "middle": {
           x = maxWidth / 2;
           break;
-        case "end":
+        }
+        case "end": {
           x = maxWidth - paddingRightLeft;
           break;
+        }
         default:
       }
     }

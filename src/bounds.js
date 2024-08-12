@@ -58,11 +58,7 @@ export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     }
   } else {
     _bounds = arg1;
-    if (fn.isSelection(arg2)) {
-      selection = arg2;
-    } else {
-      selection = select(arg2);
-    }
+    selection = fn.isSelection(arg2) ? arg2 : select(arg2);
   }
 
   // All padding sides have default values
@@ -104,5 +100,5 @@ export var RATIO = 16 / 9;
 /* Helper functions
 ----------------------------------------------- */
 function either(val, fallback) {
-  return typeof val === "undefined" ? fallback : val;
+  return val === undefined ? fallback : val;
 }

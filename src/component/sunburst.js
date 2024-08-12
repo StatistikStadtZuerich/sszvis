@@ -91,12 +91,12 @@ export default function () {
         .innerRadius(innerRadius)
         .outerRadius(outerRadius);
 
-      data.forEach(function (d) {
+      for (const d of data) {
         // _x and _dx are the destination values for the transition.
         // We set these to the computed x and dx.
         d._x0 = d.x0;
         d._x1 = d.x1;
-      });
+      }
 
       var arcs = selection
         .selectAll(".sszvis-sunburst-arc")

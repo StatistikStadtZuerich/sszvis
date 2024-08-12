@@ -130,7 +130,7 @@ export default function () {
           var y = fn.compose(halfPixel, props.y)(d);
 
           var dx = props.flip(d) ? -10 : 10;
-          var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
+          var dy = y < props.top + dy ? 2 * dy : (y > props.bottom - dy ? 0 : 5);
 
           return translateString(x + dx, y + dy);
         })

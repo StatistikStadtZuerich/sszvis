@@ -53,14 +53,14 @@ export default function () {
       var props = selection.props();
 
       //sszsch why reverse?
-      data = data.slice().reverse();
+      data = [...data].reverse();
 
       var defaultDefined = function () {
         return fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1);
       };
 
       var areaGen = area()
-        .defined(props.defined !== undefined ? props.defined : defaultDefined)
+        .defined(props.defined === undefined ? defaultDefined : props.defined)
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);
@@ -81,6 +81,6 @@ export default function () {
         .attr("d", fn.compose(areaGen, props.valuesAccessor))
         .attr("fill", props.fill)
         .attr("stroke", props.stroke)
-        .attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
+        .attr("stroke-width", props.strokeWidth === undefined ? 1 : props.strokeWidth);
     });
 }

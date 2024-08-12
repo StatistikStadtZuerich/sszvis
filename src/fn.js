@@ -57,52 +57,64 @@ export var isSelection = function (val) {
  */
 export var arity = function (n, fn) {
   switch (n) {
-    case 0:
+    case 0: {
       return function () {
         return fn.call(this);
       };
-    case 1:
+    }
+    case 1: {
       return function (a0) {
         return fn.call(this, a0);
       };
-    case 2:
+    }
+    case 2: {
       return function (a0, a1) {
         return fn.call(this, a0, a1);
       };
-    case 3:
+    }
+    case 3: {
       return function (a0, a1, a2) {
         return fn.call(this, a0, a1, a2);
       };
-    case 4:
+    }
+    case 4: {
       return function (a0, a1, a2, a3) {
         return fn.call(this, a0, a1, a2, a3);
       };
-    case 5:
+    }
+    case 5: {
       return function (a0, a1, a2, a3, a4) {
         return fn.call(this, a0, a1, a2, a3, a4);
       };
-    case 6:
+    }
+    case 6: {
       return function (a0, a1, a2, a3, a4, a5) {
         return fn.call(this, a0, a1, a2, a3, a4, a5);
       };
-    case 7:
+    }
+    case 7: {
       return function (a0, a1, a2, a3, a4, a5, a6) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
       };
-    case 8:
+    }
+    case 8: {
       return function (a0, a1, a2, a3, a4, a5, a6, a7) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
       };
-    case 9:
+    }
+    case 9: {
       return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
       };
-    case 10:
+    }
+    case 10: {
       return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
       };
-    default:
+    }
+    default: {
       return fn;
+    }
   }
 };
 
@@ -127,7 +139,7 @@ export var compose = function () {
     start = arguments.length - 1;
   return function () {
     var i = start;
-    var result = fns[i].apply(this, arguments);
+    var result = Reflect.apply(fns[i], this, arguments);
     while (i--) result = fns[i].call(this, result);
     return result;
   };
@@ -143,7 +155,7 @@ export var compose = function () {
  * @return {boolean}
  */
 export var contains = function (list, d) {
-  return list.indexOf(d) >= 0;
+  return list.includes(d);
 };
 
 /**
@@ -155,7 +167,7 @@ export var contains = function (list, d) {
  * @return {Boolean}     true if the value is defined, false if the value is undefined
  */
 export var defined = function (val) {
-  return typeof val !== "undefined" && val != null && !Number.isNaN(val);
+  return val !== undefined && val != null && !Number.isNaN(val);
 };
 
 /**
@@ -182,7 +194,7 @@ export var derivedSet = function (arr, acc) {
   for (var i = 0, l = arr.length; i < l; ++i) {
     sValue = arr[i];
     cValue = acc(sValue, i, arr);
-    if (seen.indexOf(cValue) < 0) {
+    if (!seen.includes(cValue)) {
       seen.push(cValue);
       result.push(sValue);
     }
@@ -201,8 +213,8 @@ export var derivedSet = function (arr, acc) {
  * @return {Boolean}                Whether every element in the array passes the test
  */
 export var every = function (predicate, arr) {
-  for (var i = 0; i < arr.length; i++) {
-    if (!predicate(arr[i])) {
+  for (const element of arr) {
+    if (!predicate(element)) {
       return false;
     }
   }
@@ -237,12 +249,12 @@ export var filledArray = function (len, val) {
  * @returns {arrayElement|undefined}
  */
 export var find = function (predicate, arr) {
-  for (var i = 0; i < arr.length; i++) {
-    if (predicate(arr[i])) {
-      return arr[i];
+  for (const element of arr) {
+    if (predicate(element)) {
+      return element;
     }
   }
-  return undefined;
+  return;
 };
 
 /**
@@ -268,7 +280,7 @@ export var first = function (arr) {
  * @return {Array}        A flattened Array
  */
 export var flatten = function (arr) {
-  return Array.prototype.concat.apply([], arr);
+  return arr.flat();
 };
 
 /**
@@ -285,9 +297,9 @@ export var flatten = function (arr) {
  *                              of touches.
  */
 export var firstTouch = function (event) {
-  if (event.touches && event.touches.length) {
+  if (event.touches && event.touches.length > 0) {
     return event.touches[0];
-  } else if (event.changedTouches && event.changedTouches.length) {
+  } else if (event.changedTouches && event.changedTouches.length > 0) {
     return event.changedTouches[0];
   }
   return null;
@@ -407,7 +419,7 @@ export var isObject = function (val) {
  * @return {*}     the last value in the array
  */
 export var last = function (arr) {
-  return arr[arr.length - 1];
+  return arr.at(-1);
 };
 
 /**
@@ -422,7 +434,7 @@ export var last = function (arr) {
  */
 export var not = function (f) {
   return function () {
-    return !f.apply(this, arguments);
+    return !Reflect.apply(f, this, arguments);
   };
 };
 
@@ -460,8 +472,8 @@ export var prop = function (key) {
  */
 export var propOr = function (key, defaultVal) {
   return function (object) {
-    var value = object !== undefined ? object[key] : undefined;
-    return value !== undefined ? value : defaultVal;
+    var value = object === undefined ? undefined : object[key];
+    return value === undefined ? defaultVal : value;
   };
 };
 
@@ -489,7 +501,7 @@ export var set = function (arr, acc) {
   acc || (acc = identity);
   return arr.reduce(function (m, value, i) {
     var computed = acc(value, i, arr);
-    return m.indexOf(computed) < 0 ? m.concat(computed) : m;
+    return m.includes(computed) ? m : m.concat(computed);
   }, []);
 };
 
@@ -504,8 +516,8 @@ export var set = function (arr, acc) {
  * @return {Boolean}                Whether some element in the array passes the test
  */
 export var some = function (predicate, arr) {
-  for (var i = 0; i < arr.length; i++) {
-    if (predicate(arr[i])) {
+  for (const element of arr) {
+    if (predicate(element)) {
       return true;
     }
   }

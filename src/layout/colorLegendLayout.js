@@ -77,12 +77,15 @@ export function colorLegendDimensions(labels, containerWidth) {
 
 function axisLabelHeight(slant, labels) {
   switch (slant) {
-    case "vertical":
+    case "vertical": {
       return 40 + max(labels, measureAxisLabel);
-    case "diagonal":
+    }
+    case "diagonal": {
       return 40 + Math.sqrt(2 * Math.pow(max(labels, measureAxisLabel) / 2, 2));
-    default:
+    }
+    default: {
       return 60;
+    }
   }
 }
 
@@ -93,7 +96,7 @@ function labelWidth(label) {
 function numCols(totalWidth, columnWidth, num) {
   return num <= 1
     ? 1
-    : columnWidth <= totalWidth / num
+    : (columnWidth <= totalWidth / num
       ? num
-      : numCols(totalWidth, columnWidth, num - 1);
+      : numCols(totalWidth, columnWidth, num - 1));
 }

@@ -121,7 +121,7 @@ function render(state) {
     .mapRendererBubble()
     .fill(sszvis.scaleQual6()(0))
     .radius(function (d) {
-      return !sszvis.defined(d) ? 0 : radiusScale(valueAcc(d));
+      return sszvis.defined(d) ? radiusScale(valueAcc(d)) : 0;
     })
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
@@ -187,5 +187,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return sszvis.defined(d) && state.selection.indexOf(d) !== -1;
+  return sszvis.defined(d) && state.selection.includes(d);
 }

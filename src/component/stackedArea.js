@@ -58,7 +58,7 @@ export default function () {
       };
 
       var areaGen = area()
-        .defined(props.defined !== undefined ? props.defined : defaultDefined)
+        .defined(props.defined === undefined ? defaultDefined : props.defined)
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);
@@ -79,6 +79,6 @@ export default function () {
         .attr("d", areaGen)
         .attr("fill", props.fill)
         .attr("stroke", props.stroke || "#ffffff")
-        .attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
+        .attr("stroke-width", props.strokeWidth === undefined ? 1 : props.strokeWidth);
     });
 }

@@ -63,7 +63,7 @@ export default function () {
       // Layouts
 
       var line = d3Line()
-        .defined(props.defined !== undefined ? props.defined : fn.compose(fn.not(isNaN), props.y))
+        .defined(props.defined === undefined ? fn.compose(fn.not(isNaN), props.y) : props.defined)
         .x(props.x)
         .y(props.y);
 

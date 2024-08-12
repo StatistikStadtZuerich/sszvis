@@ -30,6 +30,6 @@ export var range = function (scale) {
 function extent(domain) {
   // borrowed from d3 source - svg.axis
   var start = domain[0],
-    stop = domain[domain.length - 1];
+    stop = domain.at(-1);
   return start < stop ? [start, stop] : [stop, start];
 }

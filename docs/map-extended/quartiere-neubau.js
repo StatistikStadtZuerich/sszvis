@@ -16,7 +16,7 @@ var queryProps = sszvis.responsiveProps().prop("bounds", {
 
 function parseRow(d) {
   var parsedYear = sszvis.parseNumber(d["bezugsjahr"]);
-  parsedYear = parsedYear === 0 ? NaN : parsedYear;
+  parsedYear = parsedYear === 0 ? Number.NaN : parsedYear;
   return {
     id: sszvis.parseNumber(d["id"]),
     name: d["name"],
@@ -167,5 +167,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return state.selection.indexOf(d.datum) >= 0;
+  return state.selection.includes(d.datum);
 }

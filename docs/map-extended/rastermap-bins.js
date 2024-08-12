@@ -229,13 +229,13 @@ function render(state) {
   var valAcc =
     state.currentKey === "Kinder"
       ? kinderAcc
-      : state.currentKey === "Random"
+      : (state.currentKey === "Random"
         ? randomAcc
-        : sszvis.identity;
+        : sszvis.identity);
 
   var layerBounds = [
-    [8.431443 + geoOffset, 47.448978 + geoOffset],
-    [8.647471 + geoOffset, 47.309726 + geoOffset],
+    [8.431_443 + geoOffset, 47.448_978 + geoOffset],
+    [8.647_471 + geoOffset, 47.309_726 + geoOffset],
   ];
   var pixelSide = sszvis.pixelsFromGeoDistance(
     projection,

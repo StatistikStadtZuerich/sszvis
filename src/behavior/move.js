@@ -226,15 +226,17 @@ export default function () {
 }
 
 function scaleInvert(scale, px) {
-  var scaleType = scale.invert ? "Linear" : scale.paddingInner ? "Band" : "Point";
+  var scaleType = scale.invert ? "Linear" : (scale.paddingInner ? "Band" : "Point");
   switch (scaleType) {
     case "Linear": {
       return scale.invert(px);
     }
-    case "Band":
+    case "Band": {
       return invertBandScale(scale, px);
-    case "Point":
+    }
+    case "Point": {
       return invertPointScale(scale, px);
+    }
     default: {
       throw new Error("Unknown scale type, could not invert");
     }

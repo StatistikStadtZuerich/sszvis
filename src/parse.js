@@ -35,5 +35,5 @@ export var parseYear = function (d) {
  * @return {Number}   If d is not a number, NaN is returned
  */
 export var parseNumber = function (d) {
-  return d.trim() === "" ? NaN : +d;
+  return d.trim() === "" ? Number.NaN : +d;
 };

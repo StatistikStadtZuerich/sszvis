@@ -19,15 +19,15 @@
   function renderSwatch(containerId, colors) {
     var container = document.getElementById(containerId);
 
-    colors.forEach(function (c) {
+    for (const c of colors) {
       var colorDiv = document.createElement("div");
       colorDiv.style.height = px(BAR_HEIGHT);
       colorDiv.style.width = pct(100 / colors.length);
       colorDiv.style.maxWidth = px(BAR_WIDTH);
       colorDiv.style.backgroundColor = c;
       colorDiv.innerHTML = "<span>" + c + "</span>";
-      container.appendChild(colorDiv);
-    });
+      container.append(colorDiv);
+    }
   }
 
   function px(n) {

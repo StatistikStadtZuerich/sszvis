@@ -58,7 +58,7 @@ var actions = {
     state.timeExtent = d3.extent(state.data, xAcc);
     state.categories = sszvis.set(state.data, cAcc);
 
-    var stackLayout = d3.stack().keys(state.categories.slice().reverse());
+    var stackLayout = d3.stack().keys([...state.categories].reverse());
     state.stackedData = stackLayout(
       sszvis
         .cascade()
@@ -67,18 +67,18 @@ var actions = {
         .apply(state.data)
         .map(function (d) {
           var r = { xValue: xAcc(d[Object.keys(d)[0]][0]) };
-          state.categories.forEach(function (k) {
+          for (const k of state.categories) {
             r[k] = yAcc(d[k][0]);
-          });
+          }
           return r;
         })
     );
 
-    state.stackedData.forEach(function (stack, i) {
-      stack.forEach(function (d) {
-        d.key = state.categories.slice().reverse()[i];
-      });
-    });
+    for (const [i, stack] of state.stackedData.entries()) {
+      for (const d of stack) {
+        d.key = [...state.categories].reverse()[i];
+      }
+    }
 
     var dateValues = sszvis.cascade().objectBy(sszvis.compose(String, xAcc)).apply(state.data);
 
@@ -102,9 +102,9 @@ var actions = {
     var closest = findClosest(state.dates, xValue);
     state.highlightDate = closest;
     state.highlightData = state.stackedData.map(function (stack) {
-      var datum = stack.filter(function (d) {
+      var datum = stack.find(function (d) {
         return xAcc(d.data).toString() === closest.toString();
-      })[0];
+      });
       var r = { data: datum.data, index: stack.index, key: stack.key };
       r[0] = datum[0];
       r[1] = datum[1];

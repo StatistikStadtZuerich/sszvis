@@ -87,7 +87,7 @@ sszvis.app({
       .line()
       .x(sszvis.compose(xScale, xAcc))
       .y(function (d) {
-        return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
+        return datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d));
       })
       // Access the first data point of the line to decide on the stroke color
       .stroke(function (lineData) {
@@ -107,7 +107,7 @@ sszvis.app({
       .label(rulerLabel)
       .x(sszvis.compose(xScale, xAcc))
       .y(function (d) {
-        return !datumIsOnAxis2(d) ? yScale1(yAcc(d)) : yScale2(yAcc(d));
+        return datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d));
       })
       .flip(function (d) {
         return xScale(xAcc(d)) >= bounds.innerWidth / 2;

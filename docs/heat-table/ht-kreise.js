@@ -138,9 +138,9 @@ function render(state) {
   var cValue = sszvis.compose(function (v) {
     return isNaN(v)
       ? "url(#ht-missing-value)"
-      : v === 0
+      : (v === 0
         ? sszvis.scaleLightGry()(v)
-        : colorScale(v);
+        : colorScale(v));
   }, vAcc);
 
   // Layers
@@ -213,25 +213,17 @@ function render(state) {
     .tooltip()
     .renderInto(tooltipLayer)
     .header(function (d) {
-      if (props.tSourceAxis === "y") {
-        return yAcc(d) + " " + props.tTitleAdd;
-      } else {
-        return xAcc(d) + " " + props.tTitleAdd;
-      }
+      return props.tSourceAxis === "y" ? yAcc(d) + " " + props.tTitleAdd : xAcc(d) + " " + props.tTitleAdd;
     })
     .body(function (d) {
       var v = vAcc(d);
-      if (props.tSourceAxis === "y") {
-        return [
+      return props.tSourceAxis === "y" ? [
           [props.xAxisLabel, xAcc(d)],
           [props.valueLabel, isNaN(v) ? "–" : sszvis.formatNumber(v)],
-        ];
-      } else {
-        return [
+        ] : [
           [props.yAxisLabel, yAcc(d)],
           [props.valueLabel, isNaN(v) ? "–" : sszvis.formatNumber(v)],
         ];
-      }
     })
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .visible(isSelected);
@@ -287,11 +279,11 @@ function isSelected(d) {
 }
 
 function parseKreisInt(k) {
-  return parseInt(k.replace("Kreis ", ""), 10);
+  return Number.parseInt(k.replace("Kreis ", ""), 10);
 }
 
 function sortInt(a, b) {
-  return d3.ascending(parseInt(a, 10), parseInt(b, 10));
+  return d3.ascending(Number.parseInt(a, 10), Number.parseInt(b, 10));
 }
 
 function sortKreisInt(a, b) {

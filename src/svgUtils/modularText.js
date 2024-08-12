@@ -121,12 +121,12 @@ function makeTextWithFormat(format) {
       return makeText;
     };
 
-    ["bold", "italic", "plain"].forEach(function (style) {
+    for (const style of ["bold", "italic", "plain"]) {
       makeText[style] = function (text) {
         textBody.addWord(style, text);
         return makeText;
       };
-    });
+    }
 
     return makeText;
   };

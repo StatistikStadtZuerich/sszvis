@@ -163,6 +163,6 @@ sszvis.app({
 
 function isSelected(state) {
   return function (d) {
-    return state.selection.indexOf(d.datum) >= 0;
+    return state.selection.includes(d.datum);
   };
 }

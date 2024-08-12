@@ -208,5 +208,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return state.selection.indexOf(d.datum) >= 0;
+  return state.selection.includes(d.datum);
 }

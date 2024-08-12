@@ -60,13 +60,13 @@ function stackedBarData(order) {
         .order(order)(rows);
 
       // Simplify the 'data' property.
-      stacks.forEach(function (stack) {
-        stack.forEach(function (d) {
+      for (const stack of stacks) {
+        for (const d of stack) {
           d.series = stack.key;
           d.data = d.data[stack.key][0];
           d.stack = _stackAcc(d.data);
-        });
-      });
+        }
+      }
 
       stacks.keys = keys;
 

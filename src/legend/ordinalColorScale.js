@@ -125,7 +125,7 @@ export function legendColorOrdinal() {
       var domain = props.scale.domain();
 
       if (props.reverse) {
-        domain = domain.slice().reverse();
+        domain = [...domain].reverse();
       }
 
       var rows, cols;

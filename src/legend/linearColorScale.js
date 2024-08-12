@@ -45,7 +45,7 @@ export default function () {
       var domain = props.scale.domain();
 
       var values = props.displayValues;
-      if (!values.length && props.scale.ticks) {
+      if (values.length === 0 && props.scale.ticks) {
         values = props.scale.ticks(props.segments - 1);
       }
       values.push(fn.last(domain));
@@ -120,8 +120,7 @@ export default function () {
           );
         })
         .text(function (d, i) {
-          var formatted = props.labelFormat(d, i);
-          return formatted;
+          return props.labelFormat(d, i);
         });
     });
 }

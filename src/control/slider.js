@@ -33,7 +33,7 @@ import { axisX } from "../axis.js";
 import { component } from "../d3-component.js";
 
 function contains(x, a) {
-  return a.indexOf(x) >= 0;
+  return a.includes(x);
 }
 
 export default function () {
@@ -109,7 +109,7 @@ export default function () {
       });
       var numTicks = majorAxisText.size();
       majorAxisText.style("text-anchor", function (d, i) {
-        return i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle";
+        return i === 0 ? "start" : (i === numTicks - 1 ? "end" : "middle");
       });
 
       // create the slider background
@@ -187,16 +187,16 @@ export default function () {
         .style("text-anchor", function (d) {
           return fn.stringEqual(d, scaleDomain[0])
             ? "start"
-            : fn.stringEqual(d, scaleDomain[1])
+            : (fn.stringEqual(d, scaleDomain[1])
               ? "end"
-              : "middle";
+              : "middle");
         })
         .attr("dx", function (d) {
           return fn.stringEqual(d, scaleDomain[0])
             ? -(handleWidth / 2)
-            : fn.stringEqual(d, scaleDomain[1])
+            : (fn.stringEqual(d, scaleDomain[1])
               ? handleWidth / 2
-              : 0;
+              : 0);
         });
 
       handleEntering

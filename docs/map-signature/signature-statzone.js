@@ -87,7 +87,7 @@ var actions = {
     state.currentFilter = filterValue;
     var filter = filterValue.toLowerCase().split(" ");
     var gender = filter[0];
-    var year = parseInt(filter[1]);
+    var year = Number.parseInt(filter[1]);
 
     state.filteredData = state.data.filter(function (d) {
       return genderAcc(d) === gender && yearAcc(d) === year;
@@ -156,7 +156,7 @@ function render(state) {
     .mapRendererBubble()
     .fill(sszvis.scaleQual6()(0))
     .radius(function (d) {
-      return !sszvis.defined(d) ? 0 : radiusScale(birthsAcc(d));
+      return sszvis.defined(d) ? radiusScale(birthsAcc(d)) : 0;
     })
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
@@ -233,5 +233,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return sszvis.defined(d) && state.selection.indexOf(d) !== -1;
+  return sszvis.defined(d) && state.selection.includes(d);
 }

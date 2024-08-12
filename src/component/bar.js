@@ -103,7 +103,7 @@ export default function () {
           return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
         };
       } else if (props.tooltipAnchor) {
-        var uv = props.tooltipAnchor.map(parseFloat);
+        var uv = props.tooltipAnchor.map(Number.parseFloat);
         tooltipPosition = function (d) {
           return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
         };

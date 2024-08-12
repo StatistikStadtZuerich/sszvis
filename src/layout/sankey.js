@@ -65,7 +65,7 @@ export var prepareData = function () {
 
   var main = function (inputData) {
     var columnIndex = mColumnIds.reduce(function (index, columnIdsList, colIndex) {
-      columnIdsList.forEach(function (id) {
+      for (const id of columnIdsList) {
         if (index.has(id)) {
           logger.warn(
             "Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:",
@@ -85,7 +85,7 @@ export var prepareData = function () {
         };
 
         index.set(id, item);
-      });
+      }
 
       return index;
     }, new Map());
@@ -178,7 +178,7 @@ export var prepareData = function () {
     // nodes and the links coming out of the nodes according to the ordering of the nodes
     // they come from or go to. This creates a visually appealing layout which minimizes
     // the number of link crossings
-    listOfNodes.forEach(function (node) {
+    for (const node of listOfNodes) {
       node.linksFrom.sort(function (linkA, linkB) {
         return linkA.tgt.nodeIndex - linkB.tgt.nodeIndex;
       });
@@ -197,7 +197,7 @@ export var prepareData = function () {
         link.tgtOffset = sumValue;
         return sumValue + valueAcc(link);
       }, 0);
-    });
+    }
 
     return {
       nodes: listOfNodes,

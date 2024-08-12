@@ -150,14 +150,14 @@ export default function () {
       var ta = tooltipAnchor().position(function (group) {
         var xTotal = 0;
         var tallest = Infinity;
-        group.forEach(function (d, i) {
+        for (const [i, d] of group.entries()) {
           xTotal +=
             props.groupScale(d) +
             inGroupScale(d.__sszvisGroupedBarIndex__) +
             inGroupScale.bandwidth() / 2;
           // smaller y is higher
           tallest = Math.min(tallest, props.y(d, i));
-        });
+        }
         var xAverage = xTotal / group.length;
         return [xAverage, tallest];
       });

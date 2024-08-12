@@ -73,10 +73,10 @@ export default function () {
         .on("touchmove", function (e) {
           e.preventDefault();
           var datum = datumFromPanEvent(fn.firstTouch(e));
-          if (datum !== null) {
-            event.apply("pan", this, arguments);
-          } else {
+          if (datum === null) {
             event.apply("end", this, arguments);
+          } else {
+            event.apply("pan", this, arguments);
           }
         })
         .on("touchend", function () {

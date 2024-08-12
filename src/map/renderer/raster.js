@@ -66,7 +66,7 @@ export default function () {
       }
 
       var halfSide = props.cellSide / 2;
-      data.forEach(function (datum) {
+      for (const datum of data) {
         var position = props.position(datum);
         ctx.fillStyle = props.fill(datum);
         ctx.fillRect(
@@ -75,6 +75,6 @@ export default function () {
           props.cellSide,
           props.cellSide
         );
-      });
+      }
     });
 }

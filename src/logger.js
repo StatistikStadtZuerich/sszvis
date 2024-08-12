@@ -52,9 +52,9 @@ export var error = logger("error");
 function logger(type) {
   return function () {
     if (console && console[type]) {
-      slice(arguments).forEach(function (msg) {
+      for (const msg of slice(arguments)) {
         console[type](msg);
-      });
+      }
     }
   };
 }

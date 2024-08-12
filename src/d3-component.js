@@ -124,7 +124,7 @@ d3Selection.prototype.props = function () {
   // d3.selection.data(), but it would need some test cases,
   // so we currently simplify to the most common use-case:
   // getting props.
-  if (arguments.length) throw new Error("selection.props() does not accept any arguments");
+  if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
   if (this.size() != 1) throw new Error("only one group is supported");
   if (this._groups[0].length != 1) throw new Error("only one node is supported");
 
@@ -145,7 +145,7 @@ d3Selection.prototype.props = function () {
 function accessor(props, prop, setter) {
   setter || (setter = identity);
   return function () {
-    if (!arguments.length) return props[prop];
+    if (arguments.length === 0) return props[prop];
 
     props[prop] = setter.apply(null, slice(arguments));
     return this;
@@ -163,7 +163,7 @@ function slice(array) {
 function clone(obj) {
   var copy = {};
   for (var attr in obj) {
-    if ({}.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
+    if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
   }
   return copy;
 }

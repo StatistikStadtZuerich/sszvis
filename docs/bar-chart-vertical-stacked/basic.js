@@ -120,11 +120,11 @@ function render(state) {
   var bounds = sszvis.bounds(
     {
       top: 30,
-      bottom: props.bottomPadding != null ? props.bottomPadding : legendLayout.bottomPadding,
+      bottom: props.bottomPadding == null ? legendLayout.bottomPadding : props.bottomPadding,
       left:
-        props.leftPadding != null
-          ? props.leftPadding
-          : sszvis.measureAxisLabel(props.yLabelFormat(state.maxStacked)),
+        props.leftPadding == null
+          ? sszvis.measureAxisLabel(props.yLabelFormat(state.maxStacked))
+          : props.leftPadding,
     },
     config.id
   );

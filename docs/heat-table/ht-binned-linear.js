@@ -124,7 +124,7 @@ function render(state) {
 
   // the color bins are created by taking samples at equal spots along the data domain
   // binColors.length must equal BIN_EDGES.length + 1
-  var binColors = d3.range(0, 10001, 110).map(interpolateColor);
+  var binColors = d3.range(0, 10_001, 110).map(interpolateColor);
   // for the threshold scale, the number of values in the range must be one greater than the
   // number of values in the domain.
 

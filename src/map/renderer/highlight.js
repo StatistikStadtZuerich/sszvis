@@ -40,7 +40,7 @@ export default function () {
 
       var highlightBorders = selection.selectAll(".sszvis-map__highlight");
 
-      if (!props.highlight.length) {
+      if (props.highlight.length === 0) {
         highlightBorders.remove();
         return true; // no highlight, no worry
       }

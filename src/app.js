@@ -90,8 +90,8 @@ export const app = ({ init, render, actions = {}, fallback }) => {
       scheduleUpdate(effect);
       viewport.on("resize", scheduleUpdate);
     })
-    .catch((err) => {
-      invariant(false, err);
+    .catch((error) => {
+      invariant(false, error);
       fallback && fallbackRender(fallback.element, { src: fallback.src });
     });
 };

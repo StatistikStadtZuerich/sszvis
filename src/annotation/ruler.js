@@ -116,7 +116,7 @@ export default function () {
           var y = crispY(d);
 
           var dx = props.flip(d) ? -10 : 10;
-          var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
+          var dy = y < props.top + dy ? 2 * dy : (y > props.bottom - dy ? 0 : 5);
 
           return translateString(x + dx, y + dy);
         })
@@ -161,8 +161,8 @@ export default function () {
         // the 10th iteration, meaning that only 9 iterations are executed.
         while (ITERATIONS--) {
           // Calculate overlap and correct position
-          labelBounds.forEach(function (firstLabel, index) {
-            labelBounds.slice(index + 1).forEach(function (secondLabel) {
+          for (const [index, firstLabel] of labelBounds.entries()) {
+            for (const secondLabel of labelBounds.slice(index + 1)) {
               var overlap = firstLabel.bottom - secondLabel.top;
               if (overlap >= THRESHOLD) {
                 var offset = overlap / 2;
@@ -173,8 +173,8 @@ export default function () {
                 secondLabel.top += offset;
                 secondLabel.dy += offset;
               }
-            });
-          });
+            }
+          }
         }
 
         // Shift vertically to remove overlap

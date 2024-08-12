@@ -187,7 +187,7 @@ function render(state) {
       });
     })
     .visible(function (d) {
-      return state.selection.indexOf(d) >= 0;
+      return state.selection.includes(d);
     });
 
   // Rendering

@@ -6,7 +6,7 @@
 var queryProps = sszvis
   .responsiveProps()
   .prop("tooltipAnchor", {
-    palm: [0.0, 0.5],
+    palm: [0, 0.5],
     _: [0.5, 0.5],
   })
   .prop("tooltipOrientation", {
@@ -247,7 +247,7 @@ function render(state) {
       var rows = state.selectedAge.rows.map(function (r) {
         return [gAcc(r), sszvis.formatNumber(vAcc(r))];
       });
-      return rows.concat([["Alter", state.selectedAge.age]]);
+      return [...rows, ["Alter", state.selectedAge.age]];
     })
     .orientation(props.tooltipOrientation)
     .visible(function (d) {
@@ -310,11 +310,7 @@ function isWithinBarContour(binnedData, xCenter, xRelToPx, lengthScale) {
     });
     var x = xRelToPx(xRel);
     return sszvis.every(function (d) {
-      if (isLeft(d)) {
-        return x >= xCenter - lengthScale(vAcc(d));
-      } else {
-        return x <= xCenter + lengthScale(vAcc(d));
-      }
+      return isLeft(d) ? x >= xCenter - lengthScale(vAcc(d)) : x <= xCenter + lengthScale(vAcc(d));
     }, dataRow);
   };
 }

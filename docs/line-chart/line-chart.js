@@ -12,7 +12,7 @@ var queryProps = sszvis
         .modularTextSVG()
         .bold(sszvis.compose(yLabelFormat, yAcc))
         .plain(function (d) {
-          return cAcc(d) != null ? cAcc(d) : "";
+          return cAcc(d) == null ? "" : cAcc(d);
         });
     },
   })

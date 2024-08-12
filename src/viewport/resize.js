@@ -74,9 +74,9 @@ var off = function (name, cb) {
 var trigger = function (name) {
   var evtArgs = Array.prototype.slice.call(arguments, 1);
   if (callbacks[name]) {
-    callbacks[name].forEach(function (fn) {
+    for (const fn of callbacks[name]) {
       fn.apply(null, evtArgs);
-    });
+    }
   }
   return this;
 };

@@ -88,7 +88,7 @@ var actions = {
 
     // calculate a line which represents the average values in the dataset
     var averageLineValues = cascadedData.reduce(function (m, lineData) {
-      lineData.forEach(function (datum, index) {
+      for (const [index, datum] of lineData.entries()) {
         if (!m[index]) {
           m[index] = {
             // isAverageValue is used by the handleRuler component to determine the correct tooltip
@@ -98,7 +98,7 @@ var actions = {
           };
         }
         m[index].value += Math.round(datum.value / cascadedData.length);
-      });
+      }
       return m;
     }, []);
     state.averageLine = {
@@ -312,10 +312,10 @@ function render(state) {
     .stroke(function (lineData) {
       // this function determines whether the line is the highlighted line or not
       var isBlue;
-      if (!state.highlightEntity) {
-        isBlue = lineData.geoId === null; // if so, this is the average line
-      } else {
+      if (state.highlightEntity) {
         isBlue = state.highlightEntity.geoId === lineData.geoId;
+      } else {
+        isBlue = lineData.geoId === null; // if so, this is the average line
       }
       return isBlue ? state.lineHighlightColor : state.lineBaseColor;
     });
@@ -395,7 +395,7 @@ function render(state) {
   // this sorts the highlighted line to the front of all lines
   lineChart.selectAll(".sszvis-line").sort(function (a, b) {
     var highlightId = state.highlightEntity ? state.highlightEntity.geoId : null;
-    return a.geoId === highlightId ? 1 : b.geoId === highlightId ? -1 : 0;
+    return a.geoId === highlightId ? 1 : (b.geoId === highlightId ? -1 : 0);
   });
 
   lineChart

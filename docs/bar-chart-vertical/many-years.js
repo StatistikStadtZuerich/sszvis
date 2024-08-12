@@ -79,9 +79,9 @@ function render(state) {
       top: 3,
       bottom: 25,
       left:
-        props.leftPadding != null
-          ? props.leftPadding
-          : sszvis.measureAxisLabel(props.yLabelFormat(yMax)) + 10,
+        props.leftPadding == null
+          ? sszvis.measureAxisLabel(props.yLabelFormat(yMax)) + 10
+          : props.leftPadding,
     },
     config.id
   );
@@ -102,7 +102,7 @@ function render(state) {
 
   var heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
 
-  var yPosScale = heightScale.copy().range(heightScale.range().slice().reverse());
+  var yPosScale = heightScale.copy().range([...heightScale.range()].reverse());
 
   var xValue = sszvis.compose(xScale, xAcc);
   // rounding the y-values and the height prevents the bars from jumping around

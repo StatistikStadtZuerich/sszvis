@@ -193,11 +193,7 @@ function parseMeasurement(partialMeasurement) {
  */
 function parseBreakpoint(bp) {
   var measurement;
-  if (fn.defined(bp.measurement)) {
-    measurement = parseMeasurement(bp.measurement);
-  } else {
-    measurement = parseMeasurement({ width: bp.width, screenHeight: bp.screenHeight });
-  }
+  measurement = fn.defined(bp.measurement) ? parseMeasurement(bp.measurement) : parseMeasurement({ width: bp.width, screenHeight: bp.screenHeight });
   return {
     name: bp.name,
     measurement: measurement,

@@ -11,8 +11,8 @@ import * as fn from "../fn.js";
 function unwrapNested(roll) {
   return Array.from(roll, ([key, values]) => ({
     key,
-    values: values.size ? unwrapNested(values) : undefined,
-    value: values.size ? undefined : values,
+    values: values.size > 0 ? unwrapNested(values) : undefined,
+    value: values.size > 0 ? undefined : values,
   }));
 }
 
@@ -66,7 +66,7 @@ export var prepareData = function () {
     partition()(root);
 
     function flatten(node) {
-      return [].concat.apply([node], (node.children || []).map(flatten));
+      return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
     }
 
     // Remove the root element from the data (but it still exists in memory so long as the data is alive)

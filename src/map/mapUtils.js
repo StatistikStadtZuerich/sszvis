@@ -30,9 +30,7 @@ export var SWITZERLAND_KEY = "switzerland";
  */
 export var swissMapProjection = memoize(
   function (width, height, featureCollection) {
-    var mercatorProjection = geoMercator().fitSize([width, height], featureCollection);
-
-    return mercatorProjection;
+    return geoMercator().fitSize([width, height], featureCollection);
   },
   // Memoize resolver
   function (width, height, _, featureBoundsCacheKey) {
@@ -57,10 +55,9 @@ export var swissMapProjection = memoize(
  *                                            a map projection optimal for Swiss areas.
  */
 export var swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
-  var mercatorPath = geoPath().projection(
+  return geoPath().projection(
     swissMapProjection(width, height, featureCollection, featureBoundsCacheKey)
   );
-  return mercatorPath;
 };
 
 /**
@@ -79,7 +76,7 @@ export var swissMapPath = function (width, height, featureCollection, featureBou
 export var pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
   // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
-  var APPROX_EARTH_RADIUS = 6367475;
+  var APPROX_EARTH_RADIUS = 6_367_475;
   var APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
   // Compute the size of the angle made by the meter distance
   var degrees = (meterDistance / APPROX_EARTH_CIRCUMFERENCE) * 360;
@@ -97,9 +94,7 @@ export var pixelsFromGeoDistance = function (projection, centerPoint, meterDista
   // values are lower pixel y-values. On a south-is-up map, the opposite is true.
   var projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
   var projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
-  var averageSideSize = (projXDist + projYDist) / 2;
-
-  return averageSideSize;
+  return (projXDist + projYDist) / 2;
 };
 
 export var GEO_KEY_DEFAULT = "geoId";
@@ -130,14 +125,12 @@ export var prepareMergedGeoData = function (dataset, geoJson, keyName) {
     : {};
 
   // merge the map features and the input data into new objects that include both
-  var mergedData = geoJson.features.map(function (feature) {
+  return geoJson.features.map(function (feature) {
     return {
       geoJson: feature,
       datum: groupedInputData[feature.id],
     };
   });
-
-  return mergedData;
 };
 
 /**
@@ -158,11 +151,7 @@ export var prepareMergedGeoData = function (dataset, geoJson, keyName) {
 export var getGeoJsonCenter = function (geoJson) {
   if (!geoJson.properties.cachedCenter) {
     var setCenter = geoJson.properties.center;
-    if (setCenter) {
-      geoJson.properties.cachedCenter = setCenter.split(",").map(parseFloat);
-    } else {
-      geoJson.properties.cachedCenter = geoCentroid(geoJson);
-    }
+    geoJson.properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : geoCentroid(geoJson);
   }
 
   return geoJson.properties.cachedCenter;

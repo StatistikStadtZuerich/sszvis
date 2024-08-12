@@ -71,7 +71,9 @@ var axis = function () {
   // var axisDelegate = d3.axisBottom();
   // axisDelegate.orient = function() { return 'bottom'; };
 
-  var axisComponent = component()
+  // axisComponent.__delegate__ = axisDelegate;
+
+  return component()
     .prop("scale")
     .prop("orient")
     .prop("ticks")
@@ -119,18 +121,22 @@ var axis = function () {
 
       var axisDelegate = (function () {
         switch (props.orient) {
-          case "bottom":
+          case "bottom": {
             return axisBottom();
-          case "top":
+          }
+          case "top": {
             return axisTop();
-          case "left":
+          }
+          case "left": {
             return axisLeft();
-          case "right":
+          }
+          case "right": {
             return axisRight();
+          }
         }
       })();
 
-      [
+      for (const prop of [
         "scale",
         "ticks",
         "tickValues",
@@ -139,14 +145,14 @@ var axis = function () {
         "tickPadding",
         "tickFormat",
         "tickSize",
-      ].forEach(function (prop) {
+      ]) {
         if (props[prop] !== undefined) {
           if (axisDelegate[prop] === undefined) {
             throw new Error('axis: "' + prop + '" not available');
           }
           axisDelegate[prop](props[prop]);
         }
-      });
+      }
 
       if (props._scale) {
         axisDelegate.scale(props._scale);
@@ -234,14 +240,28 @@ var axis = function () {
 
           lines = lines.merge(newLines);
 
-          if (orientation === "top") {
+          switch (orientation) {
+          case "top": {
             lines.attr("y1", longLinePadding).attr("y2", props.tickLength);
-          } else if (orientation === "bottom") {
+          
+          break;
+          }
+          case "bottom": {
             lines.attr("y1", -longLinePadding).attr("y2", -props.tickLength);
-          } else if (orientation === "left") {
+          
+          break;
+          }
+          case "left": {
             lines.attr("x1", -longLinePadding).attr("x2", -props.tickLength);
-          } else if (orientation === "right") {
+          
+          break;
+          }
+          case "right": {
             lines.attr("x1", longLinePadding).attr("x2", props.tickLength);
+          
+          break;
+          }
+          // No default
           }
         } else {
           lines.remove();
@@ -304,11 +324,11 @@ var axis = function () {
             }
           });
 
-          activeBounds.forEach(function (active) {
-            passiveBounds.forEach(function (passive) {
+          for (const active of activeBounds) {
+            for (const passive of passiveBounds) {
               select(passive.node).classed("hidden", boundsOverlap(passive.bounds, active.bounds));
-            });
-          });
+            }
+          }
         }
       }
 
@@ -329,14 +349,13 @@ var axis = function () {
               axisScaleExtent = range(axisScale),
               titleProps;
 
-            if (props.titleCenter) {
-              titleProps = {
+            titleProps = props.titleCenter ? {
                 left:
                   orient === "left" || orient === "right"
                     ? 0
-                    : orient === "top" || orient === "bottom"
+                    : (orient === "top" || orient === "bottom"
                       ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
-                      : 0,
+                      : 0),
                 top:
                   orient === "left" || orient === "right"
                     ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2
@@ -345,23 +364,20 @@ var axis = function () {
                       : orient === "bottom"
                         ? 32
                         : 0,
-              };
-            } else {
-              titleProps = {
+              } : {
                 left:
                   orient === "left" || orient === "right" || orient === "top"
                     ? 0
-                    : orient === "bottom"
+                    : (orient === "bottom"
                       ? axisScaleExtent[1]
-                      : 0,
+                      : 0),
                 top:
                   orient === "left" || orient === "right" || orient === "top"
                     ? 0
-                    : orient === "bottom"
+                    : (orient === "bottom"
                       ? 32
-                      : 0,
+                      : 0),
               };
-            }
 
             titleProps.vertical = !!props.titleVertical;
             titleProps.left += props.dxTitle || 0;
@@ -378,14 +394,20 @@ var axis = function () {
           })
           .style("text-anchor", function () {
             var orient = props.orient;
-            if (typeof props.titleAnchor !== "undefined") {
-              return props.titleAnchor;
-            } else if (orient === "left") {
+            if (props.titleAnchor === undefined) {switch (orient) {
+ case "left": {
               return "end";
-            } else if (orient === "right") {
+            }
+ case "right": {
               return "start";
-            } else if (orient === "top" || orient === "bottom") {
+            }
+ case "top": 
+ case "bottom": {
               return "end";
+            }
+ // No default
+ }} else {
+              return props.titleAnchor;
             }
           });
       }
@@ -409,10 +431,6 @@ var axis = function () {
         });
       }
     });
-
-  // axisComponent.__delegate__ = axisDelegate;
-
-  return axisComponent;
 };
 
 var setOrdinalTicks = function (count) {
@@ -422,12 +440,12 @@ var setOrdinalTicks = function (count) {
     step = Math.round(domain.length / count);
 
   // include the first value
-  if (typeof domain[0] !== "undefined") values.push(domain[0]);
+  if (domain[0] !== undefined) values.push(domain[0]);
   for (var i = step, l = domain.length; i < l - 1; i += step) {
-    if (typeof domain[i] !== "undefined") values.push(domain[i]);
+    if (domain[i] !== undefined) values.push(domain[i]);
   }
   // include the last value
-  if (typeof domain[domain.length - 1] !== "undefined") values.push(domain[domain.length - 1]);
+  if (domain.at(-1) !== undefined) values.push(domain.at(-1));
 
   this.tickValues(values);
 

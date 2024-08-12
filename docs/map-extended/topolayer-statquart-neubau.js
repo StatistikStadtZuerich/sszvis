@@ -43,7 +43,7 @@ var queryProps = sszvis.responsiveProps().prop("bounds", {
 
 function parseRow(d) {
   var parsedYear = sszvis.parseNumber(d["bezugsjahr"]);
-  parsedYear = parsedYear === 0 ? NaN : parsedYear;
+  parsedYear = parsedYear === 0 ? Number.NaN : parsedYear;
   return {
     id: sszvis.parseNumber(d["id"]),
     name: d["name"],
@@ -188,8 +188,8 @@ function render(state) {
   var geoOffset = -0.0011;
 
   var layerBounds = [
-    [8.431443 + geoOffset, 47.448978 + geoOffset],
-    [8.647471 + geoOffset, 47.309726 + geoOffset],
+    [8.431_443 + geoOffset, 47.448_978 + geoOffset],
+    [8.647_471 + geoOffset, 47.309_726 + geoOffset],
   ];
 
   var topoLayer = sszvis
@@ -223,5 +223,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return state.selection.indexOf(d.datum) >= 0;
+  return state.selection.includes(d.datum);
 }

@@ -189,7 +189,7 @@ function render(state) {
       return linkIsSelected(d) ? highlightLinkBlue : linkGrey;
     })
     .linkSort(function (a, b) {
-      return linkIsSelected(a) ? 1 : linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b);
+      return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b));
     })
     .linkSourceLabels(state.linkSourceLabels)
     .linkTargetLabels(state.linkTargetLabels)

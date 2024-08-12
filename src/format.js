@@ -75,9 +75,9 @@ export var formatAxisTimeFormat = function (d) {
     ],
   ];
 
-  for (var i = 0; i < xs.length; ++i) {
-    if (xs[i][1](d)) {
-      return timeFormat(xs[i][0])(d);
+  for (const x of xs) {
+    if (x[1](d)) {
+      return timeFormat(x[0])(d);
     }
   }
 };
@@ -215,9 +215,7 @@ export var formatFractionPercent = function (d) {
  * @param  {number} d
  * @return {string} Fully formatted text
  */
-export var formatText = function (d) {
-  return String(d);
-};
+export var formatText = String;
 
 /* Helper functions
 ----------------------------------------------- */
@@ -232,5 +230,5 @@ function decimalPlaces(num) {
 }
 
 function stripTrailingZeroes(str) {
-  return str.replace(/(\.[0-9]*[1-9])0+$|\.0*$/, "$1");
+  return str.replace(/(\.\d*[1-9])0+$|\.0*$/, "$1");
 }

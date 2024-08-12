@@ -73,16 +73,16 @@ export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
             return valueAcc(x[key][0]);
           })(rows);
 
-        stacks.forEach(function (stack, i) {
-          stack.forEach(function (d, row) {
+        for (const [i, stack] of stacks.entries()) {
+          for (const [row, d] of stack.entries()) {
             d.data = d.data[keys[i]][0];
             d.series = keys[i];
             d.side = side;
             d.row = row;
             d.value = valueAcc(d.data);
-            return d;
-          });
-        });
+             d; continue;
+          }
+        }
 
         return stacks;
       });

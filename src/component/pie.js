@@ -39,7 +39,7 @@ export default function () {
       var stroke = props.stroke || "#FFFFFF";
 
       var angle = 0;
-      data.forEach(function (value) {
+      for (const value of data) {
         // In order for an angle transition to work correctly in d3, the transition must be done in data space.
         // The computed arc path itself cannot be interpolated without error.
         // see http://bl.ocks.org/mbostock/5100636 for a straightforward example.
@@ -54,7 +54,7 @@ export default function () {
         value._a1 = angle;
         // data values which don't already have angles set start out at the complete value.
         if (isNaN(value.a1)) value.a1 = angle;
-      });
+      }
 
       var arcGen = arc()
         .innerRadius(4)

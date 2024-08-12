@@ -264,7 +264,7 @@ function interpolatedColorScale(scale) {
       var threeDomain = [dom[0], mean(dom), dom[1]];
       return nativeDomain.call(this, threeDomain);
     } else {
-      return nativeDomain.apply(this, arguments);
+      return Reflect.apply(nativeDomain, this, arguments);
     }
   };
   return scale;

@@ -140,7 +140,9 @@ export default function () {
               var touchEvent = fn.firstTouch(e);
               var element = elementFromEvent(touchEvent);
               var panDatum = datumFromPannableElement(element);
-              if (panDatum !== null) {
+              if (panDatum === null) {
+                event.apply("out", this, []);
+              } else {
                 var panCbox = element.parentNode.getBoundingClientRect();
                 if (
                   eventNearPoint(touchEvent, [
@@ -159,8 +161,6 @@ export default function () {
                 } else {
                   event.apply("out", this, []);
                 }
-              } else {
-                event.apply("out", this, []);
               }
             };
 

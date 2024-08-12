@@ -203,31 +203,35 @@ var tooltipRenderer = function () {
           var tip = select(this);
           // only using dimensions.width and dimensions.height here. Not affected by scroll position
           var dimensions = tip.node().getBoundingClientRect();
-          var orientation = props.orientation.apply(this, arguments);
+          var orientation = Reflect.apply(props.orientation, this, arguments);
 
           // Position tooltip element
 
           switch (orientation) {
-            case "top":
+            case "top": {
               tip
                 .style("left", d.x - dimensions.width / 2 + "px")
                 .style("top", d.y + props.dy(d) + "px");
               break;
-            case "bottom":
+            }
+            case "bottom": {
               tip
                 .style("left", d.x - dimensions.width / 2 + "px")
                 .style("top", d.y - props.dy(d) - dimensions.height + "px");
               break;
-            case "left":
+            }
+            case "left": {
               tip
                 .style("left", d.x + props.dx(d) + "px")
                 .style("top", d.y - dimensions.height / 2 + "px");
               break;
-            case "right":
+            }
+            case "right": {
               tip
                 .style("left", d.x - props.dx(d) - dimensions.width + "px")
                 .style("top", d.y - dimensions.height / 2 + "px");
               break;
+            }
           }
 
           // Position background element
@@ -294,18 +298,22 @@ function formatTable(rows) {
  */
 function tooltipBackgroundGenerator(a, b, orientation, radius) {
   switch (orientation) {
-    case "top":
+    case "top": {
       a[1] = a[1] + TIP_SIZE;
       break;
-    case "bottom":
+    }
+    case "bottom": {
       b[1] = b[1] - TIP_SIZE;
       break;
-    case "left":
+    }
+    case "left": {
       a[0] = a[0] + TIP_SIZE;
       break;
-    case "right":
+    }
+    case "right": {
       b[0] = b[0] - TIP_SIZE;
       break;
+    }
   }
 
   function x(d) {
