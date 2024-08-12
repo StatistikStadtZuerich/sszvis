@@ -115,7 +115,7 @@ export function breakpointMatch(breakpoints, partialMeasurement) {
  * @returns {Array<Breakpoint>}
  */
 export function breakpointCreateSpec(spec) {
-  return spec.map(parseBreakpoint).concat(parseBreakpoint({ name: "_" }));
+  return [...spec.map(parseBreakpoint), parseBreakpoint({ name: "_" })];
 }
 
 /**
@@ -193,7 +193,9 @@ function parseMeasurement(partialMeasurement) {
  */
 function parseBreakpoint(bp) {
   var measurement;
-  measurement = fn.defined(bp.measurement) ? parseMeasurement(bp.measurement) : parseMeasurement({ width: bp.width, screenHeight: bp.screenHeight });
+  measurement = fn.defined(bp.measurement)
+    ? parseMeasurement(bp.measurement)
+    : parseMeasurement({ width: bp.width, screenHeight: bp.screenHeight });
   return {
     name: bp.name,
     measurement: measurement,

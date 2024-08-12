@@ -17,7 +17,7 @@
   // Utils
   // -----------------------------------------------
   function renderSwatch(containerId, colors) {
-    var container = document.getElementById(containerId);
+    var container = document.querySelector(`.${containerId}`);
 
     for (const c of colors) {
       var colorDiv = document.createElement("div");

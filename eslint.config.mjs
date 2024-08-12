@@ -29,7 +29,12 @@ export default [
       "unicorn/no-array-callback-reference": "off",
       "unicorn/no-array-reduce": "off",
       "unicorn/no-null": "off",
-      
+      "unicorn/no-array-method-this-argument": "off",
+      "unicorn/no-nested-ternary": "off",
+      "unicorn/no-anonymous-default-export": "off",
+      "unicorn/no-this-assignment": "off",
+      "unicorn/prefer-top-level-await": "off",
+      "sonarjs/no-duplicate-string": "off",
     },
   },
   {

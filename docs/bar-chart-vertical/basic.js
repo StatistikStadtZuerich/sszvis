@@ -50,23 +50,23 @@ var actions = {
   prepareState: function (data) {
     state.data = data;
     state.categories = state.data.map(xAcc);
-    render(state);
+    render();
   },
 
   showTooltip: function (e, category) {
     state.selection = state.data.filter(function (d) {
       return xAcc(d) === category;
     });
-    render(state);
+    render();
   },
 
   hideTooltip: function () {
     state.selection = [];
-    render(state);
+    render();
   },
 
   resize: function () {
-    render(state);
+    render();
   },
 };
 
@@ -146,7 +146,7 @@ function render() {
     .modularTextHTML()
     .bold(function (d) {
       var yValue = yAcc(d);
-      return isNaN(yValue) ? "keine" : sszvis.formatNumber(yValue);
+      return Number.isNaN(yValue) ? "keine" : sszvis.formatNumber(yValue);
     })
     .plain("Beschäftigte");
 
@@ -205,6 +205,6 @@ function isSelected(d) {
 
 function nanFallback(fallbackyValue) {
   return function (d) {
-    return isNaN(d) ? fallbackyValue : d;
+    return Number.isNaN(d) ? fallbackyValue : d;
   };
 }

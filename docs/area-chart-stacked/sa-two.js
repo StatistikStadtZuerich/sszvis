@@ -235,7 +235,9 @@ function render(state) {
       return state.isMultiples ? yPositionMultiples(d.key) : yScale(d[0]);
     })
     .y1(function (d) {
-      return state.isMultiples ? yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key]) : yScale(d[1]);
+      return state.isMultiples
+        ? yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key])
+        : yScale(d[1]);
     })
     .label(function (d) {
       return d.data[d.key];
@@ -272,10 +274,12 @@ function render(state) {
       return state.isMultiples ? yPositionMultiples(d.key) : yScale(d[0]);
     })
     .y1(function (d) {
-      return state.isMultiples ? yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key]) : yScale(d[1]);
+      return state.isMultiples
+        ? yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key])
+        : yScale(d[1]);
     });
 
-  var xAxisTicks = xScale.ticks(5).concat(state.highlightDate);
+  var xAxisTicks = [...xScale.ticks(5), state.highlightDate];
 
   var xAxis = sszvis.axisX
     .time()

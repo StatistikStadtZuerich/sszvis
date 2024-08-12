@@ -69,6 +69,13 @@ import translateString from "../svgUtils/translateString.js";
 import bar from "./bar.js";
 import { component } from "../d3-component.js";
 
+var linkPathString = function (x0, x1, x2, x3, y0, y1) {
+  return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
+};
+var linkBounds = function (x0, x1, y0, y1) {
+  return [x0, x1, y0, y1];
+};
+
 export default function () {
   return component()
     .prop("sizeScale")
@@ -127,14 +134,7 @@ export default function () {
       var yExtent = function (node) {
         return Math.ceil(Math.max(props.sizeScale(node.value), 1));
       };
-      var linkPathString = function (x0, x1, x2, x3, y0, y1) {
-        return (
-          "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1
-        );
-      };
-      var linkBounds = function (x0, x1, y0, y1) {
-        return [x0, x1, y0, y1];
-      };
+
       var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
       // Draw the nodes
@@ -150,7 +150,7 @@ export default function () {
       barGroup.call(barGen);
 
       var barTooltipAnchor = tooltipAnchor().position(function (node) {
-        return [xPosition(node) + xExtent(node) / 2, yPosition(node) + yExtent(node) / 2];
+        return [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2];
       });
 
       barGroup.call(barTooltipAnchor);

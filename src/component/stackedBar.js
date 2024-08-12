@@ -49,7 +49,7 @@ function stackedBarData(order) {
 
       // Collect all keys ()
       var keys = rows.reduce(function (a, row) {
-        return fn.set(a.concat(Object.keys(row)));
+        return fn.set([...a, ...Object.keys(row)]);
       }, []);
 
       var stacks = d3Stack()

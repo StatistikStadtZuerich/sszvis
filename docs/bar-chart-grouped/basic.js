@@ -123,7 +123,7 @@ function render(state) {
   var yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
 
   var yPosScale = function (v) {
-    return isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
+    return Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
   };
 
   var hScale = function (v) {
@@ -147,7 +147,7 @@ function render(state) {
     .y(sszvis.compose(yPosScale, yAcc))
     .height(sszvis.compose(hScale, yAcc))
     .fill(sszvis.compose(cScale, cAcc))
-    .defined(sszvis.compose(sszvis.not(isNaN), yAcc));
+    .defined(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
 
   var xAxis = sszvis.axisX
     .ordinal()
@@ -183,7 +183,7 @@ function render(state) {
       // generates a row from each data element
       return d.map(function (item) {
         var v = yAcc(item);
-        return [cAcc(item), isNaN(v) ? "–" : v];
+        return [cAcc(item), Number.isNaN(v) ? "–" : v];
       });
     })
     .visible(function (d) {

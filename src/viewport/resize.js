@@ -53,11 +53,12 @@ var on = function (name, cb) {
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
-  callbacks[name] = callbacks[name]
-    .filter(function (fn) {
+  callbacks[name] = [
+    ...callbacks[name].filter(function (fn) {
       return fn !== cb;
-    })
-    .concat(cb);
+    }),
+    cb,
+  ];
   return this;
 };
 

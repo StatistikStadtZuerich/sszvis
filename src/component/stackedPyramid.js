@@ -80,7 +80,6 @@ export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
             d.side = side;
             d.row = row;
             d.value = valueAcc(d.data);
-             d; continue;
           }
         }
 

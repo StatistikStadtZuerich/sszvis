@@ -91,7 +91,7 @@ function render(state) {
     .height(bounds.innerHeight)
     .fill(sszvis.compose(colorScale, vAcc))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
-    .defined(sszvis.compose(sszvis.not(isNaN), vAcc));
+    .defined(sszvis.compose(sszvis.not(Number.isNaN), vAcc));
 
   // Rendering
 

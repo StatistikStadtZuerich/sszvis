@@ -155,11 +155,6 @@ function render(state) {
   );
   var projection = mapPath.projection();
 
-  function roundPow10(n, pow10) {
-    var divisor = Math.pow(10, pow10);
-    return Math.round(n * divisor) / divisor;
-  }
-
   // Offset is applied for better alignment with the map data
   var geoOffset = -0.0011;
 
@@ -252,4 +247,11 @@ function render(state) {
     .call(legend);
 
   sszvis.viewport.on("resize", actions.resize);
+}
+
+// Helper functions
+// -----------------------------------------------
+function roundPow10(n, pow10) {
+  var divisor = Math.pow(10, pow10);
+  return Math.round(n * divisor) / divisor;
 }

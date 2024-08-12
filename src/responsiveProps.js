@@ -235,13 +235,12 @@ function validatePropSpec(propSpec, breakpointSpec) {
   // Validate the properties of the propSpec:
   // each should be a valid breakpoint name, and its value should be defined
   for (var breakpointName in propSpec) {
-    if (Object.prototype.hasOwnProperty.call(propSpec, breakpointName)) {
-      if (
-        breakpointName !== "_" &&
-        !fn.defined(breakpointFindByName(breakpointSpec, breakpointName))
-      ) {
-        return false;
-      }
+    if (
+      Object.prototype.hasOwnProperty.call(propSpec, breakpointName) &&
+      breakpointName !== "_" &&
+      !fn.defined(breakpointFindByName(breakpointSpec, breakpointName))
+    ) {
+      return false;
     }
   }
 

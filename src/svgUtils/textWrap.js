@@ -46,7 +46,7 @@ export default function (selection, width, paddingRightLeft, paddingTopBottom) {
     var textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
 
     //Clean the data in case <text> does not define those values
-    if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
+    if (Number.isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
 
     //Offset the text position based on the text-anchor
     var wrapTickLabels = select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..

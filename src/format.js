@@ -122,7 +122,7 @@ export var formatNumber = function (d) {
   var p;
   var dAbs = Math.abs(d);
 
-  if (d == null || isNaN(d)) {
+  if (d == null || Number.isNaN(d)) {
     return "–"; // This is an en-dash
   }
 
@@ -180,13 +180,7 @@ export var formatPreciseNumber = function (p, d) {
 
   return function (x) {
     var dAbs = Math.abs(x);
-    if (dAbs >= 100 && dAbs < 1e4) {
-      // No thousands separator
-      return format("." + p + "f")(x);
-    } else {
-      // Use the thousands separator
-      return format(",." + p + "f")(x);
-    }
+    return dAbs >= 100 && dAbs < 1e4 ? format("." + p + "f")(x) : format(",." + p + "f")(x);
   };
 };
 

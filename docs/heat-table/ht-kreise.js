@@ -136,7 +136,7 @@ function render(state) {
   var xValue = sszvis.compose(xScale, xAcc);
   var yValue = sszvis.compose(yScale, yAcc);
   var cValue = sszvis.compose(function (v) {
-    return isNaN(v)
+    return Number.isNaN(v)
       ? "url(#ht-missing-value)"
       : (v === 0
         ? sszvis.scaleLightGry()(v)
@@ -164,7 +164,7 @@ function render(state) {
     .height(tableDimensions.side)
     .fill(cValue)
     .stroke(function (d) {
-      return !isNaN(vAcc(d)) && sszvis.contains(state.selection, d)
+      return !Number.isNaN(vAcc(d)) && sszvis.contains(state.selection, d)
         ? sszvis.slightlyDarker(cValue(d))
         : "none";
     });
@@ -219,10 +219,10 @@ function render(state) {
       var v = vAcc(d);
       return props.tSourceAxis === "y" ? [
           [props.xAxisLabel, xAcc(d)],
-          [props.valueLabel, isNaN(v) ? "–" : sszvis.formatNumber(v)],
+          [props.valueLabel, Number.isNaN(v) ? "–" : sszvis.formatNumber(v)],
         ] : [
           [props.yAxisLabel, yAcc(d)],
-          [props.valueLabel, isNaN(v) ? "–" : sszvis.formatNumber(v)],
+          [props.valueLabel, Number.isNaN(v) ? "–" : sszvis.formatNumber(v)],
         ];
     })
     .orientation(sszvis.fitTooltip("bottom", bounds))

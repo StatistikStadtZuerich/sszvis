@@ -278,6 +278,40 @@ function formatTable(rows) {
   return '<table class="sszvis-tooltip__body__table">' + tableBody + "</table>";
 }
 
+function x(d) {
+  return d[0];
+}
+function y(d) {
+  return d[1];
+}
+function side(cx, cy, x0, y0, x1, y1, showTip) {
+  var mx = x0 + (x1 - x0) / 2;
+  var my = y0 + (y1 - y0) / 2;
+
+  var corner = ["Q", cx, cy, x0, y0];
+
+  var tip = [];
+  if (showTip && y0 === y1) {
+    tip =
+      x0 < x1
+        ? // Top
+          ["L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my]
+        : // Bottom
+          ["L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my];
+  } else if (showTip && x0 === x1) {
+    tip =
+      y0 < y1
+        ? // Right
+          ["L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE]
+        : // Left
+          ["L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE];
+  }
+
+  var end = ["L", x1, y1];
+
+  return [...corner, ...tip, ...end];
+}
+
 /**
  * Tooltip background generator
  *
@@ -314,42 +348,6 @@ function tooltipBackgroundGenerator(a, b, orientation, radius) {
       b[0] = b[0] - TIP_SIZE;
       break;
     }
-  }
-
-  function x(d) {
-    return d[0];
-  }
-  function y(d) {
-    return d[1];
-  }
-  function side(cx, cy, x0, y0, x1, y1, showTip) {
-    var mx = x0 + (x1 - x0) / 2;
-    var my = y0 + (y1 - y0) / 2;
-
-    var corner = ["Q", cx, cy, x0, y0];
-
-    var tip = [];
-    if (showTip && y0 === y1) {
-      if (x0 < x1) {
-        // Top
-        tip = ["L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my];
-      } else {
-        // Bottom
-        tip = ["L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my];
-      }
-    } else if (showTip && x0 === x1) {
-      if (y0 < y1) {
-        // Right
-        tip = ["L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE];
-      } else {
-        // Left
-        tip = ["L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE];
-      }
-    }
-
-    var end = ["L", x1, y1];
-
-    return [].concat(corner, tip, end);
   }
 
   return [

@@ -43,7 +43,7 @@ module.exports = class Page {
       ${function mkXAxis(ticks, selection, xScale, accessor) {
         // Add the highlighted data as additional ticks to the xScale
         var xTickValues = ticks ? xScale.ticks(ticks) : xScale.ticks();
-        xTickValues = xTickValues.concat(selection.map(accessor));
+        xTickValues = [...xTickValues, ...selection.map(accessor)];
         xTickValues = xTickValues.filter(function (v, i) {
           return xTickValues.map(String).indexOf(String(v)) === i;
         });

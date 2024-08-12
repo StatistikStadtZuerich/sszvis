@@ -56,7 +56,7 @@ export default function () {
       data = [...data].reverse();
 
       var defaultDefined = function () {
-        return fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1);
+        return fn.compose(fn.not(Number.isNaN), props.y0) && fn.compose(fn.not(Number.isNaN), props.y1);
       };
 
       var areaGen = area()

@@ -139,7 +139,7 @@ function render(state) {
 
   var tooltipHeader = sszvis.modularTextHTML().bold(
     sszvis.compose(function (d) {
-      return isNaN(d) ? "k. A." : sszvis.formatNumber(d);
+      return Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d);
     }, xAcc)
   );
 

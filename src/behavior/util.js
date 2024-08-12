@@ -95,7 +95,7 @@ export var testBarThreshold = function (cursorValue, datum, accessor, threshold)
   // and show the tooltip. The proximity which the touch must have to the 0-axis
   // is determined by threshold, which must be a value in the axis' domain (NOT range).
   return (
-    (cursorValue < threshold && isNaN(dataValue)) ||
+    (cursorValue < threshold && Number.isNaN(dataValue)) ||
     (cursorValue < threshold && dataValue < threshold) ||
     cursorValue < dataValue
   );

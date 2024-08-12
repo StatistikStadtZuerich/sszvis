@@ -95,7 +95,7 @@ function render(state) {
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
     .fill(sszvis.compose(colorScale, vAcc))
-    .defined(sszvis.compose(sszvis.not(isNaN), vAcc));
+    .defined(sszvis.compose(sszvis.not(Number.isNaN), vAcc));
 
   var legend = sszvis
     .legendColorLinear()

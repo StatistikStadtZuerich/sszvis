@@ -312,15 +312,13 @@ function render(state) {
     .stroke(function (lineData) {
       // this function determines whether the line is the highlighted line or not
       var isBlue;
-      if (state.highlightEntity) {
-        isBlue = state.highlightEntity.geoId === lineData.geoId;
-      } else {
-        isBlue = lineData.geoId === null; // if so, this is the average line
-      }
+      isBlue = state.highlightEntity
+        ? state.highlightEntity.geoId === lineData.geoId
+        : lineData.geoId === null; // if so, this is the average line
       return isBlue ? state.lineHighlightColor : state.lineBaseColor;
     });
 
-  var xTickValues = xScale.ticks(4).concat(state.currentYear);
+  var xTickValues = [...xScale.ticks(4), state.currentYear];
 
   var lineXAxis = sszvis.axisX
     .time()
@@ -395,7 +393,7 @@ function render(state) {
   // this sorts the highlighted line to the front of all lines
   lineChart.selectAll(".sszvis-line").sort(function (a, b) {
     var highlightId = state.highlightEntity ? state.highlightEntity.geoId : null;
-    return a.geoId === highlightId ? 1 : (b.geoId === highlightId ? -1 : 0);
+    return a.geoId === highlightId ? 1 : b.geoId === highlightId ? -1 : 0;
   });
 
   lineChart

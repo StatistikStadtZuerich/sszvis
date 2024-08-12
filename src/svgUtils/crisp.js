@@ -74,7 +74,7 @@ export var roundTransformString = function (transformStr) {
  */
 export var transformTranslateSubpixelShift = function (transformStr) {
   var roundNumber = fn.compose(Math.floor, Number);
-  var m = transformStr.match(/(translate\()\s*([\d ,.\-]+)\s*(\))/i);
+  var m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
   var vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
 
   if (vec.length === 1) vec.push([0]);

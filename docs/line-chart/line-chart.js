@@ -72,7 +72,7 @@ sszvis.app({
         }, linePoints);
       });
       // Make sure that the selection has a value to display
-      state.selection = closestData.filter(sszvis.compose(sszvis.not(isNaN), yAcc));
+      state.selection = closestData.filter(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
     },
   },
 

@@ -126,7 +126,7 @@ function render(state) {
 
   // the range is composed of colors sampled at equal distances along the color spectrum
   // such that binColors.length === BIN_EDGES.length + 1
-  var binColors = BIN_EDGES.concat(state.valueDomain[1]).map(interpolateColor);
+  var binColors = [...BIN_EDGES, state.valueDomain[1]].map(interpolateColor);
 
   // for the threshold scale, the number of values in the range must be one greater than the
   // number of values in the domain.

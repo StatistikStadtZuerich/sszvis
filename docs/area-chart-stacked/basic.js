@@ -249,7 +249,7 @@ function render(state) {
       return yScale(d[1]);
     });
 
-  var xAxisTicks = xScale.ticks(props.xTicks).concat(state.highlightDate);
+  var xAxisTicks = [...xScale.ticks(props.xTicks), state.highlightDate];
 
   var xAxis = sszvis.axisX
     .time()

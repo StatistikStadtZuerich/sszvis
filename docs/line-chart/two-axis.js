@@ -55,7 +55,7 @@ sszvis.app({
           return sszvis.stringEqual(xAcc(d), closestDate);
         }, linePoints);
       });
-      state.selection = closestData.filter(sszvis.compose(sszvis.not(isNaN), yAcc));
+      state.selection = closestData.filter(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
     },
 
     resetDate: function (state) {
@@ -116,7 +116,7 @@ sszvis.app({
         return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
       });
 
-    var xTickValues = xScale.ticks(5).concat(state.selection.map(xAcc));
+    var xTickValues = [...xScale.ticks(5), ...state.selection.map(xAcc)];
 
     var xAxis = sszvis.axisX
       .time()

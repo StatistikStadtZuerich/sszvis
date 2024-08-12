@@ -16,6 +16,10 @@ function unwrapNested(roll) {
   }));
 }
 
+var sortFn = function () {
+  return 0;
+};
+
 /**
  * sszvis.layout.sunburst.prepareData
  *
@@ -49,9 +53,6 @@ export var prepareData = function () {
   // However, input data order preservation is not guaranteed, because of an implementation
   // detail of d3.partition, probably having to do with the way that each browser can
   // implement its own key ordering for javascript objects.
-  var sortFn = function () {
-    return 0;
-  };
 
   function main(data) {
     const nested = unwrapNested(rollup(data, fn.first, ...layers));

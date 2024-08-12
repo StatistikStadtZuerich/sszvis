@@ -50,7 +50,7 @@ var data = quarters
       });
   })
   .reduce(function (memo, arr) {
-    return memo.concat(arr);
+    return [...memo, ...arr];
   }, [])
   .join("\n");
 

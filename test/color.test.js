@@ -76,27 +76,27 @@ describe("Color scales", () => {
   });
 
   describe("Greyscale color scales", () => {
-    test("should a single color", () => {
+    test("should a single color for scaleGry", () => {
       expect(scaleGry().range()).toHaveLength(1);
       expectIsColor(scaleGry().range()[0]);
     });
-    test("should a single color", () => {
+    test("should a single color for scaleDeepGry", () => {
       expect(scaleDeepGry().range()).toHaveLength(1);
       expectIsColor(scaleDeepGry().range()[0]);
     });
-    test("should a single color", () => {
+    test("should a single color for scaleDimGry", () => {
       expect(scaleDimGry().range()).toHaveLength(1);
       expectIsColor(scaleDimGry().range()[0]);
     });
-    test("should a single color", () => {
+    test("should a single color for scaleLightGry", () => {
       expect(scaleLightGry().range()).toHaveLength(1);
       expectIsColor(scaleLightGry().range()[0]);
     });
-    test("should a single color", () => {
+    test("should a single color for scaleMedGry", () => {
       expect(scaleMedGry().range()).toHaveLength(1);
       expectIsColor(scaleMedGry().range()[0]);
     });
-    test("should a single color", () => {
+    test("should a single color for scalePaleGry", () => {
       expect(scalePaleGry().range()).toHaveLength(1);
       expectIsColor(scalePaleGry().range()[0]);
     });

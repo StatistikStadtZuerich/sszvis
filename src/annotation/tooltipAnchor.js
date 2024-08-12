@@ -46,6 +46,12 @@ import * as fn from "../fn.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
+/* Helper functions
+  ----------------------------------------------- */
+function vectorToTranslateString(vec) {
+  return translateString.apply(null, vec);
+}
+
 export default function () {
   return component()
     .prop("position")
@@ -98,10 +104,4 @@ export default function () {
           .attr("transform", fn.compose(vectorToTranslateString, props.position));
       }
     });
-
-  /* Helper functions
-  ----------------------------------------------- */
-  function vectorToTranslateString(vec) {
-    return translateString.apply(null, vec);
-  }
 }

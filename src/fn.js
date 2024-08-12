@@ -231,7 +231,7 @@ export var every = function (predicate, arr) {
  * @return {Array}          An array of length len filled with val
  */
 export var filledArray = function (len, val) {
-  var arr = new Array(len);
+  var arr = Array.from({ length: len });
   for (var i = 0; i < len; ++i) {
     arr[i] = val;
   }
@@ -254,7 +254,6 @@ export var find = function (predicate, arr) {
       return element;
     }
   }
-  return;
 };
 
 /**
@@ -501,7 +500,7 @@ export var set = function (arr, acc) {
   acc || (acc = identity);
   return arr.reduce(function (m, value, i) {
     var computed = acc(value, i, arr);
-    return m.includes(computed) ? m : m.concat(computed);
+    return m.includes(computed) ? m : [...m, computed];
   }, []);
 };
 

@@ -81,7 +81,7 @@ export default function () {
         .hideBorderTickThreshold(0)
         .tickSize(majorTickSize)
         .tickPadding(6)
-        .tickValues(fn.set([].concat(props.majorTicks, props.minorTicks)))
+        .tickValues(fn.set([...props.majorTicks, ...props.minorTicks]))
         .tickFormat(function (d) {
           return contains(d, props.majorTicks) ? props.tickLabels(d) : "";
         });
@@ -109,7 +109,7 @@ export default function () {
       });
       var numTicks = majorAxisText.size();
       majorAxisText.style("text-anchor", function (d, i) {
-        return i === 0 ? "start" : (i === numTicks - 1 ? "end" : "middle");
+        return i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle";
       });
 
       // create the slider background
@@ -187,16 +187,16 @@ export default function () {
         .style("text-anchor", function (d) {
           return fn.stringEqual(d, scaleDomain[0])
             ? "start"
-            : (fn.stringEqual(d, scaleDomain[1])
+            : fn.stringEqual(d, scaleDomain[1])
               ? "end"
-              : "middle");
+              : "middle";
         })
         .attr("dx", function (d) {
           return fn.stringEqual(d, scaleDomain[0])
             ? -(handleWidth / 2)
-            : (fn.stringEqual(d, scaleDomain[1])
+            : fn.stringEqual(d, scaleDomain[1])
               ? handleWidth / 2
-              : 0);
+              : 0;
         });
 
       handleEntering
