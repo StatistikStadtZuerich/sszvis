@@ -45,30 +45,30 @@ export default function () {
     .dy(0)
     .prop("caption", fn.functor)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var x1 = props.xScale(props.x1);
-      var y1 = props.yScale(props.y1);
-      var x2 = props.xScale(props.x2);
-      var y2 = props.yScale(props.y2);
+      const x1 = props.xScale(props.x1);
+      const y1 = props.yScale(props.y1);
+      const x2 = props.xScale(props.x2);
+      const y2 = props.yScale(props.y2);
 
-      var line = selection.selectAll(".sszvis-referenceline").data(data);
+      let line = selection.selectAll(".sszvis-referenceline").data(data);
 
       line.exit().remove();
 
-      var newLine = line.enter().append("line").classed("sszvis-referenceline", true);
+      const newLine = line.enter().append("line").classed("sszvis-referenceline", true);
 
       line = line.merge(newLine);
 
       line.attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
 
       if (props.caption) {
-        var caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
+        let caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
 
         caption.exit().remove();
 
-        var newCaption = caption
+        const newCaption = caption
           .enter()
           .append("text")
           .classed("sszvis-referenceline__caption", true);
@@ -76,10 +76,10 @@ export default function () {
         caption = caption.merge(newCaption);
 
         caption
-          .attr("transform", function () {
-            var vx = x2 - x1;
-            var vy = y2 - y1;
-            var angle = (Math.atan2(vy, vx) * 180) / Math.PI;
+          .attr("transform", () => {
+            const vx = x2 - x1;
+            const vy = y2 - y1;
+            const angle = (Math.atan2(vy, vx) * 180) / Math.PI;
             return "translate(" + (x1 + x2) / 2 + "," + (y1 + y2) / 2 + ") rotate(" + angle + ")";
           })
           .attr("dx", props.dx)

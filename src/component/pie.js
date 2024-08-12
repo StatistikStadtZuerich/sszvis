@@ -33,13 +33,13 @@ export default function () {
     .prop("stroke")
     .prop("angle", fn.functor)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var stroke = props.stroke || "#FFFFFF";
+      const stroke = props.stroke || "#FFFFFF";
 
-      var angle = 0;
-      data.forEach(function (value) {
+      let angle = 0;
+      for (const value of data) {
         // In order for an angle transition to work correctly in d3, the transition must be done in data space.
         // The computed arc path itself cannot be interpolated without error.
         // see http://bl.ocks.org/mbostock/5100636 for a straightforward example.
@@ -49,26 +49,22 @@ export default function () {
         // value.a0 and value.a1 are the current values in the transition (either the initial value, some intermediate value, or the final angle value).
         value._a0 = angle;
         // These a0 and a1 values may be overwritten later if there is already data bound at this data index. (see the .each function further down).
-        if (isNaN(value.a0)) value.a0 = angle;
+        if (value.a0 == undefined || Number.isNaN(value.a0)) value.a0 = angle;
         angle += props.angle(value);
         value._a1 = angle;
         // data values which don't already have angles set start out at the complete value.
-        if (isNaN(value.a1)) value.a1 = angle;
-      });
+        if (value.a1 == undefined || Number.isNaN(value.a1)) value.a1 = angle;
+      }
 
-      var arcGen = arc()
+      const arcGen = arc()
         .innerRadius(4)
         .outerRadius(props.radius)
-        .startAngle(function (d) {
-          return d.a0;
-        })
-        .endAngle(function (d) {
-          return d.a1;
-        });
+        .startAngle((d) => d.a0)
+        .endAngle((d) => d.a1);
 
-      var segments = selection
+      let segments = selection
         .selectAll(".sszvis-path")
-        .each(function (d, i) {
+        .each((d, i) => {
           // This matches the data values iteratively in the same way d3 will when it does the data join.
           // This is kind of a hack, but it's the only way to get any existing angle values from the already-bound data
           if (data[i]) {
@@ -78,7 +74,7 @@ export default function () {
         })
         .data(data);
 
-      var newSegments = segments
+      const newSegments = segments
         .enter()
         .append("path")
         .classed("sszvis-path", true)
@@ -93,9 +89,9 @@ export default function () {
       segments
         .transition(defaultTransition())
         .attr("transform", "translate(" + props.radius + "," + props.radius + ")")
-        .attrTween("d", function (d) {
-          var angle0Interp = interpolate(d.a0, d._a0);
-          var angle1Interp = interpolate(d.a1, d._a1);
+        .attrTween("d", (d) => {
+          const angle0Interp = interpolate(d.a0, d._a0);
+          const angle1Interp = interpolate(d.a1, d._a1);
           return function (t) {
             d.a0 = angle0Interp(t);
             d.a1 = angle1Interp(t);
@@ -105,11 +101,11 @@ export default function () {
         .attr("fill", props.fill)
         .attr("stroke", stroke);
 
-      var ta = tooltipAnchor().position(function (d) {
+      const ta = tooltipAnchor().position((d) => {
         // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
         // makes the same correction to svg.arc() angles :o
-        var a = d.a0 + Math.abs(d.a1 - d.a0) / 2 - Math.PI / 2;
-        var r = (props.radius * 2) / 3;
+        const a = d.a0 + Math.abs(d.a1 - d.a0) / 2 - Math.PI / 2;
+        const r = (props.radius * 2) / 3;
         return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
       });
 

@@ -38,12 +38,12 @@ export default function () {
     .prop("opacity")
     .opacity(1)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var canvas = selection.selectAll(".sszvis-map__rasterimage").data([0]);
+      let canvas = selection.selectAll(".sszvis-map__rasterimage").data([0]);
 
-      var newCanvas = canvas.enter().append("canvas").classed("sszvis-map__rasterimage", true);
+      const newCanvas = canvas.enter().append("canvas").classed("sszvis-map__rasterimage", true);
 
       canvas.exit().remove();
 
@@ -54,7 +54,7 @@ export default function () {
         .attr("height", props.height)
         .style("opacity", props.opacity);
 
-      var ctx = canvas.node().getContext("2d");
+      const ctx = canvas.node().getContext("2d");
 
       ctx.clearRect(0, 0, props.width, props.height);
 
@@ -65,9 +65,9 @@ export default function () {
         ctx.fillRect(0, 0, props.width, props.height);
       }
 
-      var halfSide = props.cellSide / 2;
-      data.forEach(function (datum) {
-        var position = props.position(datum);
+      const halfSide = props.cellSide / 2;
+      for (const datum of data) {
+        const position = props.position(datum);
         ctx.fillStyle = props.fill(datum);
         ctx.fillRect(
           position[0] - halfSide,
@@ -75,6 +75,6 @@ export default function () {
           props.cellSide,
           props.cellSide
         );
-      });
+      }
     });
 }

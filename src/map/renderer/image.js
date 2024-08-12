@@ -37,19 +37,19 @@ export default function () {
     .prop("opacity")
     .opacity(1)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var image = selection.selectAll(".sszvis-map__image").data([0]); // At the moment, 1 image per container
+      let image = selection.selectAll(".sszvis-map__image").data([0]); // At the moment, 1 image per container
 
-      var newImage = image.enter().append("img").classed("sszvis-map__image", true);
+      const newImage = image.enter().append("img").classed("sszvis-map__image", true);
 
       image.exit().remove();
 
       image = image.merge(newImage);
 
-      var topLeft = props.projection(props.geoBounds[0]);
-      var bottomRight = props.projection(props.geoBounds[1]);
+      const topLeft = props.projection(props.geoBounds[0]);
+      const bottomRight = props.projection(props.geoBounds[1]);
 
       image
         .attr("src", props.src)

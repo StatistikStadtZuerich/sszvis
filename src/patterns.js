@@ -4,7 +4,7 @@
  * @module sszvis/patterns
  *
  * This module contains svg patterns and pattern helper functions which are used
- * to render important textures for various other components.
+ * to render important textures for constious other components.
  *
  * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
  * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
@@ -19,8 +19,8 @@
 
 import { scaleLightGry } from "./color.js";
 
-export var heatTableMissingValuePattern = function (selection) {
-  var rectFill = scaleLightGry(),
+export const heatTableMissingValuePattern = function (selection) {
+  const rectFill = scaleLightGry(),
     crossStroke = "#A4A4A4",
     crossStrokeWidth = 0.035,
     cross1 = 0.35,
@@ -61,8 +61,8 @@ export var heatTableMissingValuePattern = function (selection) {
     .attr("stroke", crossStroke);
 };
 
-export var mapMissingValuePattern = function (selection) {
-  var pWidth = 14,
+export const mapMissingValuePattern = function (selection) {
+  const pWidth = 14,
     pHeight = 14,
     fillColor = "#FAFAFA",
     lineStroke = "#CCCCCC";
@@ -116,10 +116,10 @@ export var mapMissingValuePattern = function (selection) {
     .attr("stroke", lineStroke);
 };
 
-export var mapLakePattern = function (selection) {
-  var pWidth = 6;
-  var pHeight = 6;
-  var offset = 0.5;
+export const mapLakePattern = function (selection) {
+  const pWidth = 6;
+  const pHeight = 6;
+  const offset = 0.5;
 
   selection
     .attr("patternUnits", "userSpaceOnUse")
@@ -156,7 +156,7 @@ export var mapLakePattern = function (selection) {
     .attr("stroke-linecap", "square");
 };
 
-export var mapLakeFadeGradient = function (selection) {
+export const mapLakeFadeGradient = function (selection) {
   selection
     .attr("x1", 0)
     .attr("y1", 0)
@@ -169,7 +169,7 @@ export var mapLakeFadeGradient = function (selection) {
   selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
 };
 
-export var mapLakeGradientMask = function (selection) {
+export const mapLakeGradientMask = function (selection) {
   selection.attr("maskContentUnits", "objectBoundingBox");
 
   selection
@@ -179,10 +179,10 @@ export var mapLakeGradientMask = function (selection) {
     .attr("height", 1);
 };
 
-export var dataAreaPattern = function (selection) {
-  var pWidth = 6;
-  var pHeight = 6;
-  var offset = 0.5;
+export const dataAreaPattern = function (selection) {
+  const pWidth = 6;
+  const pHeight = 6;
+  const offset = 0.5;
 
   selection
     .attr("patternUnits", "userSpaceOnUse")

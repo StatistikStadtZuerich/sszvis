@@ -8,7 +8,7 @@ describe("formatNumber", () => {
   testMatrix("Non-numbers", formatNumber, [
     [undefined, EN_DASH],
     [null, EN_DASH],
-    [NaN, EN_DASH],
+    [Number.NaN, EN_DASH],
   ]);
 
   testMatrix("Basics", formatNumber, [
@@ -38,9 +38,9 @@ describe("formatNumber", () => {
   ]);
 
   testMatrix("Range >10000", formatNumber, [
-    [10250, `10${THINSP}250`],
-    [10250.1, `10${THINSP}250`],
-    [10250.91, `10${THINSP}251`],
+    [10_250, `10${THINSP}250`],
+    [10_250.1, `10${THINSP}250`],
+    [10_250.91, `10${THINSP}251`],
   ]);
 });
 
@@ -49,8 +49,8 @@ describe("formatPreciseNumber", () => {
     [0, "0.000"],
     [0.0001, "0.000"],
     [0.0005, "0.001"],
-    [10250, `10${THINSP}250.000`],
-    [10250.1234, `10${THINSP}250.123`],
+    [10_250, `10${THINSP}250.000`],
+    [10_250.1234, `10${THINSP}250.123`],
   ]);
 });
 

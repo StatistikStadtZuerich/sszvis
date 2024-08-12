@@ -49,29 +49,29 @@ export default function () {
     .prop("strokeWidth")
     .prop("defined")
     .prop("key")
-    .key(function (d, i) {
-      return i;
-    })
+    .key((d, i) => i)
     .prop("valuesAccessor")
     .valuesAccessor(fn.identity)
     .prop("transition")
     .transition(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // Layouts
 
-      var line = d3Line()
-        .defined(props.defined !== undefined ? props.defined : fn.compose(fn.not(isNaN), props.y))
+      const line = d3Line()
+        .defined(
+          props.defined === undefined ? fn.compose(fn.not(Number.isNaN), props.y) : props.defined
+        )
         .x(props.x)
         .y(props.y);
 
       // Rendering
 
-      var path = selection.selectAll(".sszvis-line").data(data, props.key);
+      let path = selection.selectAll(".sszvis-line").data(data, props.key);
 
-      var newPath = path
+      const newPath = path
         .enter()
         .append("path")
         .classed("sszvis-line", true)

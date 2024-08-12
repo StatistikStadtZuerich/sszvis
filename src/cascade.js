@@ -72,9 +72,9 @@
  */
 
 function groupBy(data, keyFunc) {
-  var group = {},
-    key;
-  for (var i = 0, l = data.length, value; i < l; ++i) {
+  const group = {};
+  let key;
+  for (let i = 0, l = data.length, value; i < l; ++i) {
     value = data[i];
     key = keyFunc(value);
     group[key] ? group[key].push(value) : (group[key] = [value]);
@@ -83,22 +83,22 @@ function groupBy(data, keyFunc) {
 }
 
 function groupEach(data, func) {
-  for (var prop in data) {
+  for (const prop in data) {
     func(data[prop], prop);
   }
 }
 
 function arrEach(arr, func) {
-  for (var i = 0, l = arr.length; i < l; ++i) {
+  for (let i = 0, l = arr.length; i < l; ++i) {
     func(arr[i], i);
   }
 }
 
 export function cascade() {
-  var _cascade = {},
+  const _cascade = {},
     keys = [],
-    sorts = [],
-    valuesSort;
+    sorts = [];
+  let valuesSort;
 
   function make(data, depth) {
     if (depth >= keys.length) {
@@ -106,25 +106,25 @@ export function cascade() {
       return data;
     }
 
-    var sorter = sorts[depth];
-    var key = keys[depth++];
-    var grouped = groupBy(data, key.func);
+    const sorter = sorts[depth];
+    const key = keys[depth++];
+    const grouped = groupBy(data, key.func);
 
     if (key.type === "obj") {
-      var obj = {};
-      groupEach(grouped, function (value, k) {
+      const obj = {};
+      groupEach(grouped, (value, k) => {
         obj[k] = make(value, depth);
       });
       return obj;
     } else if (key.type === "arr") {
-      var arr = [];
+      const arr = [];
       if (sorter) {
-        var groupKeys = Object.keys(grouped).sort(sorter);
-        arrEach(groupKeys, function (k) {
+        const groupKeys = Object.keys(grouped).sort(sorter);
+        arrEach(groupKeys, (k) => {
           arr.push(make(grouped[k], depth));
         });
       } else {
-        groupEach(grouped, function (value) {
+        groupEach(grouped, (value) => {
           arr.push(make(value, depth));
         });
       }

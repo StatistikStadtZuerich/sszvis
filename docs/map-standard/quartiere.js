@@ -3,11 +3,11 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
-      var innerHeight = sszvis.aspectRatioSquare(width);
+    _(width) {
+      const innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
         bottom: 90,
@@ -16,17 +16,13 @@ var queryProps = sszvis
     },
   })
   .prop("legendWidth", {
-    _: function (width) {
-      return Math.min(width / 2, 320);
-    },
+    _: (width) => Math.min(width / 2, 320),
   })
   // Formatting function to use for the legend label. In this example, it defaults
   // to "sszvis.formatPercent" to render values from 0–100 as 0–100%, for other
   // values "sszvis.formatNumber" is maybe more appropriate
   .prop("labelFormat", {
-    _: function () {
-      return sszvis.formatFractionPercent;
-    },
+    _: () => sszvis.formatFractionPercent,
   })
   .prop("tooltipUnit", {
     _: "Ausländeranteil",
@@ -39,13 +35,13 @@ function parseRow(d) {
     value: sszvis.parseNumber(d["Ausländeranteil"]),
   };
 }
-var vAcc = sszvis.prop("value");
-var qnameAcc = sszvis.prop("quartername");
-var mDatumAcc = sszvis.prop("datum");
+const vAcc = sszvis.prop("value");
+const qnameAcc = sszvis.prop("quartername");
+const mDatumAcc = sszvis.prop("datum");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: null,
   mapData: null,
   valueDomain: [0, 0],
@@ -54,15 +50,15 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareState: function (data) {
+const actions = {
+  prepareState(data) {
     state.data = data;
     state.valueDomain = [0, d3.max(state.data, vAcc)];
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_quartiere),
       borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
@@ -72,17 +68,17 @@ var actions = {
     render(state);
   },
 
-  selectHovered: function (e, d) {
+  selectHovered(e, d) {
     state.selection = [d.datum];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -101,22 +97,22 @@ function render(state) {
     return true;
   }
 
-  var props = queryProps(sszvis.measureDimensions(config.id));
-  var bounds = sszvis.bounds(props.bounds, config.id);
+  const props = queryProps(sszvis.measureDimensions(config.id));
+  const bounds = sszvis.bounds(props.bounds, config.id);
 
   // Scales
 
-  var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+  const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
   // Components
 
-  var choroplethMap = sszvis
+  const choroplethMap = sszvis
     .choropleth()
     .features(state.mapData.features)
     .borders(state.mapData.borders)
@@ -124,46 +120,37 @@ function render(state) {
     .lakeBorders(state.mapData.lakeBorders)
     .keyName("quarternum")
     .highlight(state.selection)
-    .highlightStroke(function (d) {
+    .highlightStroke((d) => {
       // checks for undefined values and makes those white
-      var v = vAcc(d);
-      return isNaN(v) ? "white" : sszvis.muchDarker(colorScale(vAcc(d)));
+      const v = vAcc(d);
+      return Number.isNaN(v) ? "white" : sszvis.muchDarker(colorScale(vAcc(d)));
     })
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
-    .defined(function (d) {
-      // some of the values are empty in the .csv file. When parsed as a number,
-      // undefined or empty string values become NaN
-      return !isNaN(vAcc(d));
-    })
+    .defined(
+      (d) =>
+        // some of the values are empty in the .csv file. When parsed as a number,
+        // undefined or empty string values become NaN
+        !Number.isNaN(vAcc(d))
+    )
     .fill(sszvis.compose(colorScale, vAcc));
 
   // see the comment by the tooltip in docs/map-standard/kreis.html for more information
   // about accesing data properties of map entities.
-  var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(qnameAcc, mDatumAcc));
+  const tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(qnameAcc, mDatumAcc));
 
-  var tooltipBody = sszvis
+  const tooltipBody = sszvis
     .modularTextHTML()
     .plain(
       sszvis.compose(
-        function (v) {
-          return isNaN(v) ? "keine Daten" : sszvis.formatFractionPercent(v);
-        },
+        (v) => (Number.isNaN(v) ? "keine Daten" : sszvis.formatFractionPercent(v)),
         vAcc,
         mDatumAcc
       )
     )
-    .plain(
-      sszvis.compose(
-        function (v) {
-          return isNaN(v) ? null : props.tooltipUnit;
-        },
-        vAcc,
-        mDatumAcc
-      )
-    );
+    .plain(sszvis.compose((v) => (Number.isNaN(v) ? null : props.tooltipUnit), vAcc, mDatumAcc));
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(tooltipHeader)
@@ -171,7 +158,7 @@ function render(state) {
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .visible(isSelected);
 
-  var legend = sszvis
+  const legend = sszvis
     .legendColorLinear()
     .scale(colorScale)
     .width(props.legendWidth)
@@ -195,7 +182,7 @@ function render(state) {
 
   // Interaction
 
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-map__area")
     .on("start", actions.selectHovered)
@@ -208,5 +195,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return state.selection.indexOf(d.datum) >= 0;
+  return state.selection.includes(d.datum);
 }

@@ -22,8 +22,8 @@ import { isSelection, isString } from "./fn";
  *                      screenWidth: {number} The innerWidth of the screen
  *                      screenHeight: {number} The innerHeight of the screen
  */
-export var measureDimensions = function (arg) {
-  var node;
+export const measureDimensions = function (arg) {
+  let node;
   if (isString(arg)) {
     node = select(arg).node();
   } else if (isSelection(arg)) {
@@ -51,15 +51,15 @@ export var measureDimensions = function (arg) {
  * @returns {number} The width of the text
  *
  * @example
- * var helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
+ * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
  **/
-export var measureText = (function () {
-  var canvas = document.createElement("canvas");
-  var context = canvas.getContext("2d");
-  var cache = {};
+export const measureText = (function () {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  const cache = {};
 
   return function (fontSize, fontFace, text) {
-    var key = [fontSize, fontFace, text].join("-");
+    const key = [fontSize, fontFace, text].join("-");
     context.font = fontSize + "px " + fontFace;
     return cache[key] || (cache[key] = context.measureText(text).width);
   };
@@ -74,9 +74,9 @@ export var measureText = (function () {
  * @returns {number} The width of the text
  *
  * @example
- * var labelWidth = sszvis.measureAxisLabel("Hello!")
+ * const labelWidth = sszvis.measureAxisLabel("Hello!")
  */
-export var measureAxisLabel = function (text) {
+export const measureAxisLabel = function (text) {
   return measureText(10, "Arial, sans-serif", text);
 };
 
@@ -89,8 +89,8 @@ export var measureAxisLabel = function (text) {
  * @returns {number} The width of the text
  *
  * @example
- * var labelWidth = sszvis.measureLegendLabel("Hello!")
+ * const labelWidth = sszvis.measureLegendLabel("Hello!")
  */
-export var measureLegendLabel = function (text) {
+export const measureLegendLabel = function (text) {
   return measureText(12, "Arial, sans-serif", text);
 };

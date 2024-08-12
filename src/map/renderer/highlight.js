@@ -35,23 +35,23 @@ export default function () {
     .prop("highlightStrokeWidth", fn.functor)
     .highlightStrokeWidth(2)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var highlightBorders = selection.selectAll(".sszvis-map__highlight");
+      let highlightBorders = selection.selectAll(".sszvis-map__highlight");
 
-      if (!props.highlight.length) {
+      if (props.highlight.length === 0) {
         highlightBorders.remove();
         return true; // no highlight, no worry
       }
 
-      var groupedMapData = props.geoJson.features.reduce(function (m, feature) {
+      const groupedMapData = props.geoJson.features.reduce((m, feature) => {
         m[feature.id] = feature;
         return m;
       }, {});
 
       // merge the highlight data
-      var mergedHighlight = props.highlight.reduce(function (m, v) {
+      const mergedHighlight = props.highlight.reduce((m, v) => {
         if (v) {
           m.push({
             geoJson: groupedMapData[v[props.keyName]],
@@ -63,7 +63,7 @@ export default function () {
 
       highlightBorders = highlightBorders.data(mergedHighlight);
 
-      var newHighlightBorders = highlightBorders
+      const newHighlightBorders = highlightBorders
         .enter()
         .append("path")
         .classed("sszvis-map__highlight", true);
@@ -73,14 +73,8 @@ export default function () {
       highlightBorders = highlightBorders.merge(newHighlightBorders);
 
       highlightBorders
-        .attr("d", function (d) {
-          return props.mapPath(d.geoJson);
-        })
-        .style("stroke", function (d) {
-          return props.highlightStroke(d.datum);
-        })
-        .style("stroke-width", function (d) {
-          return props.highlightStrokeWidth(d.datum);
-        });
+        .attr("d", (d) => props.mapPath(d.geoJson))
+        .style("stroke", (d) => props.highlightStroke(d.datum))
+        .style("stroke-width", (d) => props.highlightStrokeWidth(d.datum));
     });
 }

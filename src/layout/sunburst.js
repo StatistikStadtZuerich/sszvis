@@ -11,10 +11,14 @@ import * as fn from "../fn.js";
 function unwrapNested(roll) {
   return Array.from(roll, ([key, values]) => ({
     key,
-    values: values.size ? unwrapNested(values) : undefined,
-    value: values.size ? undefined : values,
+    values: values.size > 0 ? unwrapNested(values) : undefined,
+    value: values.size > 0 ? undefined : values,
   }));
 }
+
+let sortFn = function () {
+  return 0;
+};
 
 /**
  * sszvis.layout.sunburst.prepareData
@@ -41,17 +45,14 @@ function unwrapNested(roll) {
  *
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
-export var prepareData = function () {
+export const prepareData = function () {
   const layers = [];
-  var valueAcc = fn.identity;
+  let valueAcc = fn.identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
   // The default value for this component tries to preserve the order of the input data.
   // However, input data order preservation is not guaranteed, because of an implementation
   // detail of d3.partition, probably having to do with the way that each browser can
   // implement its own key ordering for javascript objects.
-  var sortFn = function () {
-    return 0;
-  };
 
   function main(data) {
     const nested = unwrapNested(rollup(data, fn.first, ...layers));
@@ -59,20 +60,16 @@ export var prepareData = function () {
 
     const root = hierarchy({ isSunburstRoot: true, values: nested }, fn.prop("values"))
       .sort(sortFn)
-      .sum(function (x) {
-        return x.value ? valueAcc(x.value) : 0;
-      });
+      .sum((x) => (x.value ? valueAcc(x.value) : 0));
 
     partition()(root);
 
     function flatten(node) {
-      return [].concat.apply([node], (node.children || []).map(flatten));
+      return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
     }
 
     // Remove the root element from the data (but it still exists in memory so long as the data is alive)
-    return flatten(root).filter(function (d) {
-      return !d.data.isSunburstRoot;
-    });
+    return flatten(root).filter((d) => !d.data.isSunburstRoot);
   }
 
   main.calculate = function (data) {
@@ -97,11 +94,11 @@ export var prepareData = function () {
   return main;
 };
 
-export var MAX_SUNBURST_RING_WIDTH = 60;
-var MAX_RW = MAX_SUNBURST_RING_WIDTH;
+export const MAX_SUNBURST_RING_WIDTH = 60;
+const MAX_RW = MAX_SUNBURST_RING_WIDTH;
 
-export var MIN_SUNBURST_RING_WIDTH = 10;
-var MIN_RW = MIN_SUNBURST_RING_WIDTH;
+export const MIN_SUNBURST_RING_WIDTH = 10;
+const MIN_RW = MIN_SUNBURST_RING_WIDTH;
 
 /**
  * sszvis.layout.sunburst.computeLayout
@@ -115,16 +112,16 @@ var MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  */
-export var computeLayout = function (numLayers, chartWidth) {
+export const computeLayout = function (numLayers, chartWidth) {
   // Diameter of the center circle is one-third the width
-  var halfWidth = chartWidth / 2;
-  var centerRadius = halfWidth / 3;
-  var ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
+  const halfWidth = chartWidth / 2;
+  const centerRadius = halfWidth / 3;
+  const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
 
   return {
-    centerRadius: centerRadius,
-    numLayers: numLayers,
-    ringWidth: ringWidth,
+    centerRadius,
+    numLayers,
+    ringWidth,
   };
 };
 
@@ -137,13 +134,6 @@ export var computeLayout = function (numLayers, chartWidth) {
  *                                    function which abstracts away the way d3 stores positions within the partition layout used
  *                                    by the sunburst chart.
  */
-export var getRadiusExtent = function (formattedData) {
-  return [
-    min(formattedData, function (d) {
-      return d.y0;
-    }),
-    max(formattedData, function (d) {
-      return d.y1;
-    }),
-  ];
+export const getRadiusExtent = function (formattedData) {
+  return [min(formattedData, (d) => d.y0), max(formattedData, (d) => d.y1)];
 };

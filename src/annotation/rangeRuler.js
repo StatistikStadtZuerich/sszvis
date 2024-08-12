@@ -42,21 +42,21 @@ export default function () {
     .prop("flip", fn.functor)
     .flip(false)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var crispX = fn.compose(halfPixel, props.x);
-      var crispY0 = fn.compose(halfPixel, props.y0);
-      var crispY1 = fn.compose(halfPixel, props.y1);
-      var middleY = function (d) {
+      const crispX = fn.compose(halfPixel, props.x);
+      const crispY0 = fn.compose(halfPixel, props.y0);
+      const crispY1 = fn.compose(halfPixel, props.y1);
+      const middleY = function (d) {
         return halfPixel((props.y0(d) + props.y1(d)) / 2);
       };
 
-      var dotRadius = 1.5;
+      const dotRadius = 1.5;
 
-      var line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]);
+      let line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]);
 
-      var newLine = line.enter().append("line").classed("sszvis-rangeRuler__rule", true);
+      const newLine = line.enter().append("line").classed("sszvis-rangeRuler__rule", true);
 
       line.exit().remove();
 
@@ -64,9 +64,9 @@ export default function () {
 
       line.attr("x1", crispX).attr("y1", props.top).attr("x2", crispX).attr("y2", props.bottom);
 
-      var marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data);
+      let marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data);
 
-      var enteringMarks = marks.enter().append("g").classed("sszvis-rangeRuler--mark", true);
+      const enteringMarks = marks.enter().append("g").classed("sszvis-rangeRuler--mark", true);
 
       marks.exit().remove();
 
@@ -79,59 +79,47 @@ export default function () {
 
       marks
         .selectAll(".sszvis-rangeRuler__p1")
-        .data(function (d) {
-          return [d];
-        })
+        .data((d) => [d])
         .attr("cx", crispX)
         .attr("cy", crispY0)
         .attr("r", dotRadius);
 
       marks
         .selectAll(".sszvis-rangeRuler__p2")
-        .data(function (d) {
-          return [d];
-        })
+        .data((d) => [d])
         .attr("cx", crispX)
         .attr("cy", crispY1)
         .attr("r", dotRadius);
 
       marks
         .selectAll(".sszvis-rangeRuler__label")
-        .data(function (d) {
-          return [d];
-        })
-        .attr("x", function (d) {
-          var offset = props.flip(d) ? -10 : 10;
+        .data((d) => [d])
+        .attr("x", (d) => {
+          const offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
         })
         .attr("y", middleY)
         .attr("dy", "0.35em") // vertically-center
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .text(fn.compose(formatNumber, props.label));
 
       //make the contour behind the the label update with the label
       marks
         .selectAll(".sszvis-rangeRuler__label-contour")
-        .data(function (d) {
-          return [d];
-        })
-        .attr("x", function (d) {
-          var offset = props.flip(d) ? -10 : 10;
+        .data((d) => [d])
+        .attr("x", (d) => {
+          const offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
         })
         .attr("y", middleY)
         .attr("dy", "0.35em") // vertically-center
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .text(fn.compose(formatNumber, props.label));
 
       selection.selectAll("g.sszvis-rangeRuler--mark").each(function () {
-        var g = select(this);
-        var textNode = g.select("text").node();
-        var textContour = g.select(".sszvis-rangeRuler__label-contour");
+        const g = select(this);
+        const textNode = g.select("text").node();
+        let textContour = g.select(".sszvis-rangeRuler__label-contour");
         if (textContour.empty()) {
           textContour = select(textNode.cloneNode())
             .classed("sszvis-rangeRuler__label-contour", true)
@@ -139,15 +127,13 @@ export default function () {
           this.insertBefore(textContour.node(), textNode);
         } else {
           textContour
-            .attr("x", function (d) {
-              var offset = props.flip(d) ? -10 : 10;
+            .attr("x", (d) => {
+              const offset = props.flip(d) ? -10 : 10;
               return crispX(d) + offset;
             })
             .attr("y", middleY)
             .attr("dy", "0.35em") // vertically-center
-            .style("text-anchor", function (d) {
-              return props.flip(d) ? "end" : "start";
-            });
+            .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"));
         }
         textContour.text(textNode.textContent);
       });
@@ -156,27 +142,25 @@ export default function () {
         marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
 
-      var total = selection.selectAll(".sszvis-rangeRuler__total").data([fn.last(data)]);
+      let total = selection.selectAll(".sszvis-rangeRuler__total").data([fn.last(data)]);
 
-      var newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
+      const newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
 
       total.exit().remove();
 
       total = total.merge(newTotal);
 
       total
-        .attr("x", function (d) {
-          var offset = props.flip(d) ? -10 : 10;
+        .attr("x", (d) => {
+          const offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
         })
         .attr("y", props.top - 10)
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .text("Total " + formatNumber(props.total));
 
-      var totalNode = total.node();
-      var totalContour = selection.select(".sszvis-rangeRuler__total-contour");
+      const totalNode = total.node();
+      let totalContour = selection.select(".sszvis-rangeRuler__total-contour");
       if (totalContour.empty()) {
         totalContour = select(totalNode.cloneNode())
           .classed("sszvis-rangeRuler__total-contour", true)
@@ -184,14 +168,12 @@ export default function () {
         this.insertBefore(totalContour.node(), totalNode);
       } else {
         totalContour
-          .attr("x", function (d) {
-            var offset = props.flip(d) ? -10 : 10;
+          .attr("x", (d) => {
+            const offset = props.flip(d) ? -10 : 10;
             return crispX(d) + offset;
           })
           .attr("y", props.top - 10)
-          .style("text-anchor", function (d) {
-            return props.flip(d) ? "end" : "start";
-          });
+          .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"));
       }
       totalContour.text(totalNode.textContent);
 

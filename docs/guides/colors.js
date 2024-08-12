@@ -2,32 +2,32 @@
 (function (global) {
   "use strict";
 
-  var BAR_WIDTH = 80;
-  var BAR_HEIGHT = 80;
+  const BAR_WIDTH = 80;
+  const BAR_HEIGHT = 80;
 
-  global.colorSwatchFromLinearScale = function (containerId, scale, numBars) {
+  global.colorSwatchFromLinearScale = (containerId, scale, numBars) => {
     scale.domain([0, numBars - 1]);
     renderSwatch(containerId, d3.range(0, numBars).map(scale));
   };
 
-  global.colorSwatchFromColors = function (containerId, colors) {
+  global.colorSwatchFromColors = (containerId, colors) => {
     renderSwatch(containerId, colors.map(String));
   };
 
   // Utils
   // -----------------------------------------------
   function renderSwatch(containerId, colors) {
-    var container = document.getElementById(containerId);
+    const container = document.querySelector(`.${containerId}`);
 
-    colors.forEach(function (c) {
-      var colorDiv = document.createElement("div");
+    for (const c of colors) {
+      const colorDiv = document.createElement("div");
       colorDiv.style.height = px(BAR_HEIGHT);
       colorDiv.style.width = pct(100 / colors.length);
       colorDiv.style.maxWidth = px(BAR_WIDTH);
       colorDiv.style.backgroundColor = c;
       colorDiv.innerHTML = "<span>" + c + "</span>";
-      container.appendChild(colorDiv);
-    });
+      container.append(colorDiv);
+    }
   }
 
   function px(n) {

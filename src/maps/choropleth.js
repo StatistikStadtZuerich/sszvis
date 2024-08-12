@@ -39,14 +39,14 @@ import {
  */
 
 export default function () {
-  var event = dispatch("over", "out", "click");
+  const event = dispatch("over", "out", "click");
 
-  var baseRenderer = mapRendererBase();
-  var meshRenderer = mapRendererMesh();
-  var lakeRenderer = mapRendererPatternedLakeOverlay();
-  var highlightRenderer = mapRendererHighlight();
+  const baseRenderer = mapRendererBase();
+  const meshRenderer = mapRendererMesh();
+  const lakeRenderer = mapRendererPatternedLakeOverlay();
+  const highlightRenderer = mapRendererHighlight();
 
-  var mapComponent = component()
+  const mapComponent = component()
     .prop("width")
     .prop("height")
     .prop("keyName")
@@ -70,13 +70,18 @@ export default function () {
     .delegate("highlightStrokeWidth", highlightRenderer)
     .delegate("lakePathColor", lakeRenderer)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // create a map path generator function
-      var mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
+      const mapPath = swissMapPath(
+        props.width,
+        props.height,
+        props.features,
+        "zurichStadtfeatures"
+      );
 
-      var mergedData = prepareMergedGeoData(data, props.features, props.keyName);
+      const mergedData = prepareMergedGeoData(data, props.features, props.keyName);
 
       // Base shape
       baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath);
@@ -126,7 +131,7 @@ export default function () {
     });
 
   mapComponent.on = function () {
-    var value = event.on.apply(event, arguments);
+    const value = event.on.apply(event, arguments);
     return value === event ? mapComponent : value;
   };
 

@@ -63,35 +63,33 @@ export default function () {
     .prop("rows")
     .prop("cols")
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
-      var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
+      const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
+      const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
 
-      var horizontalCenter = unitWidth / 2;
-      var verticalCenter = unitHeight / 2;
+      const horizontalCenter = unitWidth / 2;
+      const verticalCenter = unitHeight / 2;
 
-      var multiples = selection.selectAll("g.sszvis-multiple").data(data);
+      let multiples = selection.selectAll("g.sszvis-multiple").data(data);
 
-      var newMultiples = multiples.enter().append("g").classed("sszvis-g sszvis-multiple", true);
+      const newMultiples = multiples.enter().append("g").classed("sszvis-g sszvis-multiple", true);
 
       multiples.exit().remove();
 
       multiples = multiples.merge(newMultiples);
 
-      var subGroups = multiples.selectAll("g.sszvis-multiple-chart").data(function (d) {
-        return [d.values];
-      });
+      let subGroups = multiples.selectAll("g.sszvis-multiple-chart").data((d) => [d.values]);
 
-      var newSubGroups = subGroups.enter().append("g").classed("sszvis-multiple-chart", true);
+      const newSubGroups = subGroups.enter().append("g").classed("sszvis-multiple-chart", true);
 
       subGroups.exit().remove();
 
       subGroups = subGroups.merge(newSubGroups);
 
       multiples
-        .datum(function (d, i) {
+        .datum((d, i) => {
           d.gx = (i % props.cols) * (unitWidth + props.paddingX);
           d.gw = unitWidth;
           d.cx = horizontalCenter;
@@ -100,8 +98,6 @@ export default function () {
           d.cy = verticalCenter;
           return d;
         })
-        .attr("transform", function (d) {
-          return "translate(" + d.gx + "," + d.gy + ")";
-        });
+        .attr("transform", (d) => "translate(" + d.gx + "," + d.gy + ")");
     });
 }

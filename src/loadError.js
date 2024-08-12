@@ -10,7 +10,7 @@ import * as logger from "./logger.js";
 
 // var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
-export var loadError = function (error) {
+export const loadError = function (error) {
   logger.error(error);
 
   // Don't use alert()!

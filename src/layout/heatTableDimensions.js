@@ -33,7 +33,7 @@ export default function (spaceWidth, squarePadding, numX, numY, chartPadding) {
   chartPadding.left || (chartPadding.left = 0);
 
   // this includes the default side length for the heat table
-  var DEFAULT_SIDE = 30,
+  const DEFAULT_SIDE = 30,
     availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
     side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
     paddedSide = side + squarePadding,
@@ -41,9 +41,9 @@ export default function (spaceWidth, squarePadding, numX, numY, chartPadding) {
     tableWidth = numX * paddedSide - squarePadding, // subtract the squarePadding at the end
     tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
   return {
-    side: side,
-    paddedSide: paddedSide,
-    padRatio: padRatio,
+    side,
+    paddedSide,
+    padRatio,
     width: tableWidth,
     height: tableHeight,
     centeredOffset: Math.max((availableChartWidth - tableWidth) / 2, 0),

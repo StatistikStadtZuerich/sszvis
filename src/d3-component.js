@@ -27,9 +27,9 @@ import { selection as d3Selection } from "d3";
  * @return {sszvis.component} A d3 reusable chart
  */
 export function component() {
-  var props = {};
-  var selectionRenderer = null;
-  var renderer = identity;
+  const props = {};
+  let selectionRenderer = null;
+  let renderer = identity;
 
   /**
    * Constructor
@@ -74,7 +74,7 @@ export function component() {
    */
   sszvisComponent.delegate = function (prop, delegate) {
     sszvisComponent[prop] = function () {
-      var result = delegate[prop].apply(delegate, slice(arguments));
+      const result = delegate[prop].apply(delegate, slice(arguments));
       return arguments.length === 0 ? result : sszvisComponent;
     };
     return sszvisComponent;
@@ -124,12 +124,12 @@ d3Selection.prototype.props = function () {
   // d3.selection.data(), but it would need some test cases,
   // so we currently simplify to the most common use-case:
   // getting props.
-  if (arguments.length) throw new Error("selection.props() does not accept any arguments");
+  if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
   if (this.size() != 1) throw new Error("only one group is supported");
   if (this._groups[0].length != 1) throw new Error("only one node is supported");
 
-  var group = this._groups[0];
-  var node = group[0];
+  const group = this._groups[0];
+  const node = group[0];
   return node.__props__ || {};
 };
 
@@ -145,7 +145,7 @@ d3Selection.prototype.props = function () {
 function accessor(props, prop, setter) {
   setter || (setter = identity);
   return function () {
-    if (!arguments.length) return props[prop];
+    if (arguments.length === 0) return props[prop];
 
     props[prop] = setter.apply(null, slice(arguments));
     return this;
@@ -161,9 +161,9 @@ function slice(array) {
 }
 
 function clone(obj) {
-  var copy = {};
-  for (var attr in obj) {
-    if ({}.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
+  const copy = {};
+  for (const attr in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
   }
   return copy;
 }

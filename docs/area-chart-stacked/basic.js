@@ -3,7 +3,7 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("xAxisLabel", {
     _: "",
@@ -12,9 +12,7 @@ var queryProps = sszvis
     _: null,
   })
   .prop("xLabelFormat", {
-    _: function () {
-      return sszvis.formatYear;
-    },
+    _: () => sszvis.formatYear,
   })
   .prop("yAxisLabel", {
     _: "",
@@ -31,13 +29,13 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("xValue");
-var yAcc = sszvis.prop("yValue");
-var cAcc = sszvis.prop("category");
+const xAcc = sszvis.prop("xValue");
+const yAcc = sszvis.prop("yValue");
+const cAcc = sszvis.prop("category");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   timeExtent: [0, 0],
   stackedData: [],
@@ -52,81 +50,76 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareState: function (data) {
+const actions = {
+  prepareState(data) {
     state.data = data;
     state.timeExtent = d3.extent(state.data, xAcc);
     state.categories = sszvis.set(state.data, cAcc);
 
-    var stackLayout = d3.stack().keys(state.categories.slice().reverse());
+    const stackLayout = d3.stack().keys([...state.categories].reverse());
     state.stackedData = stackLayout(
       sszvis
         .cascade()
         .arrayBy(xAcc)
         .objectBy(cAcc)
         .apply(state.data)
-        .map(function (d) {
-          var r = { xValue: xAcc(d[Object.keys(d)[0]][0]) };
-          state.categories.forEach(function (k) {
+        .map((d) => {
+          const r = { xValue: xAcc(d[Object.keys(d)[0]][0]) };
+          for (const k of state.categories) {
             r[k] = yAcc(d[k][0]);
-          });
+          }
           return r;
         })
     );
 
-    state.stackedData.forEach(function (stack, i) {
-      stack.forEach(function (d) {
-        d.key = state.categories.slice().reverse()[i];
-      });
-    });
+    for (const [i, stack] of state.stackedData.entries()) {
+      for (const d of stack) {
+        d.key = [...state.categories].reverse()[i];
+      }
+    }
 
-    var dateValues = sszvis.cascade().objectBy(sszvis.compose(String, xAcc)).apply(state.data);
+    const dateValues = sszvis.cascade().objectBy(sszvis.compose(String, xAcc)).apply(state.data);
 
     state.maxValue = d3.max(state.data, yAcc);
 
-    state.maxStacked = d3.max(Object.values(dateValues), function (s) {
-      return d3.sum(s, yAcc);
-    });
+    state.maxStacked = d3.max(Object.values(dateValues), (s) => d3.sum(s, yAcc));
 
     state.dates = sszvis.set(state.data, xAcc);
 
     actions.resetDate();
   },
 
-  toggleMultiples: function (g) {
+  toggleMultiples(g) {
     state.isMultiples = g === "Separiert";
     render(state);
   },
 
-  changeDate: function (xValue, yValue) {
-    var closest = findClosest(state.dates, xValue);
+  changeDate(xValue, yValue) {
+    const closest = findClosest(state.dates, xValue);
     state.highlightDate = closest;
-    state.highlightData = state.stackedData.map(function (stack) {
-      var datum = stack.filter(function (d) {
-        return xAcc(d.data).toString() === closest.toString();
-      })[0];
-      var r = { data: datum.data, index: stack.index, key: stack.key };
+    state.highlightData = state.stackedData.map((stack) => {
+      const datum = stack.find((d) => xAcc(d.data).toString() === closest.toString());
+      const r = { data: datum.data, index: stack.index, key: stack.key };
       r[0] = datum[0];
       r[1] = datum[1];
       return r;
     });
     state.totalHighlightValue =
-      state.highlightData.reduce(function (m, v) {
-        return state.categories.reduce(function (m, category) {
-          return v.data[category] + m;
-        }, m);
-      }, 0) / state.categories.length;
+      state.highlightData.reduce(
+        (m, v) => state.categories.reduce((m, category) => v.data[category] + m, m),
+        0
+      ) / state.categories.length;
     state.mouseYValue = yValue;
 
     render(state);
   },
 
-  resetDate: function () {
-    var mostRecent = d3.max(state.data, xAcc);
+  resetDate() {
+    const mostRecent = d3.max(state.data, xAcc);
     actions.changeDate(mostRecent, 0);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -138,9 +131,9 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var props = queryProps(sszvis.measureDimensions(config.id));
+  const props = queryProps(sszvis.measureDimensions(config.id));
 
-  var legendLayout = sszvis.colorLegendLayout(
+  const legendLayout = sszvis.colorLegendLayout(
     {
       axisLabels: state.timeExtent.map(props.xLabelFormat),
       legendLabels: state.categories,
@@ -148,10 +141,10 @@ function render(state) {
     config.id
   );
 
-  var cScale = legendLayout.scale;
-  var colorLegend = legendLayout.legend;
+  const cScale = legendLayout.scale;
+  const colorLegend = legendLayout.legend;
 
-  var bounds = sszvis.bounds(
+  const bounds = sszvis.bounds(
     {
       top: 20,
       bottom: legendLayout.bottomPadding,
@@ -161,111 +154,72 @@ function render(state) {
 
   // Scales
 
-  var xScale = d3.scaleTime().domain(state.timeExtent).range([0, bounds.innerWidth]);
+  const xScale = d3.scaleTime().domain(state.timeExtent).range([0, bounds.innerWidth]);
 
-  var yScale = d3.scaleLinear().domain([0, state.maxStacked]).range([bounds.innerHeight, 10]);
+  const yScale = d3.scaleLinear().domain([0, state.maxStacked]).range([bounds.innerHeight, 10]);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedData);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedData);
 
-  var htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
+  const htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
   // Components
 
-  var stackedArea = sszvis
+  const stackedArea = sszvis
     .stackedArea()
     .key(sszvis.prop("key"))
-    .x(
-      sszvis.compose(xScale, xAcc, function (d) {
-        return d.data;
-      })
-    )
-    .y0(
-      sszvis.compose(yScale, function (d) {
-        return d[0];
-      })
-    )
-    .y1(
-      sszvis.compose(yScale, function (d) {
-        return d[1];
-      })
-    )
-    .fill(
-      sszvis.compose(cScale, function (d) {
-        return d.key;
-      })
-    );
+    .x(sszvis.compose(xScale, xAcc, (d) => d.data))
+    .y0(sszvis.compose(yScale, (d) => d[0]))
+    .y1(sszvis.compose(yScale, (d) => d[1]))
+    .fill(sszvis.compose(cScale, (d) => d.key));
 
-  var topValue;
-  topValue = yScale(state.totalHighlightValue);
+  const topValue = yScale(state.totalHighlightValue);
 
-  var rangeRuler = sszvis
+  const rangeRuler = sszvis
     .annotationRangeRuler()
     .top(topValue)
     .bottom(bounds.innerHeight)
     .x(xScale(state.highlightDate))
-    .y0(function (d) {
-      return yScale(d[0]);
-    })
-    .y1(function (d) {
-      return yScale(d[1]);
-    })
-    .label(function (d) {
-      return d.data[d.key];
-    })
+    .y0((d) => yScale(d[0]))
+    .y1((d) => yScale(d[1]))
+    .label((d) => d.data[d.key])
     .total(state.totalHighlightValue)
-    .flip(function () {
-      return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
-    });
+    .flip(() => xScale(state.highlightDate) >= 0.5 * bounds.innerWidth);
 
-  var tooltipText = sszvis
+  const tooltipText = sszvis
     .modularTextHTML()
-    .bold(
-      sszvis.compose(sszvis.formatNumber, function (d) {
-        return d.data[d.key];
-      })
-    )
-    .plain(function (d) {
-      return d.key;
-    });
+    .bold(sszvis.compose(sszvis.formatNumber, (d) => d.data[d.key]))
+    .plain((d) => d.key);
 
-  var rangeTooltip = sszvis
+  const rangeTooltip = sszvis
     .tooltip()
     .header(tooltipText)
-    .orientation(function () {
-      return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? "right" : "left";
-    })
+    .orientation(() => (xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? "right" : "left"))
     .renderInto(htmlLayer)
     .visible(true);
 
-  var rangeFlag = sszvis
+  const rangeFlag = sszvis
     .annotationRangeFlag()
     .x(xScale(state.highlightDate))
-    .y0(function (d) {
-      return yScale(d[0]);
-    })
-    .y1(function (d) {
-      return yScale(d[1]);
-    });
+    .y0((d) => yScale(d[0]))
+    .y1((d) => yScale(d[1]));
 
-  var xAxisTicks = xScale.ticks(props.xTicks).concat(state.highlightDate);
+  const xAxisTicks = [...xScale.ticks(props.xTicks), state.highlightDate];
 
-  var xAxis = sszvis.axisX
+  const xAxis = sszvis.axisX
     .time()
     .scale(xScale)
     .orient("bottom")
     .tickValues(xAxisTicks)
     .tickFormat(props.xLabelFormat)
     .title(props.xAxisLabel)
-    .highlightTick(function (d) {
-      return sszvis.stringEqual(d, state.highlightDate);
-    })
+    .highlightTick((d) => sszvis.stringEqual(d, state.highlightDate))
     .alignOuterLabels(true);
 
-  var yAxisTicks = yScale.ticks(props.yTicks);
+  const yAxisTicks = yScale.ticks(props.yTicks);
 
-  var yAxis = sszvis
+  const yAxis = sszvis
     .axisY()
     .scale(yScale)
     .contour(true)
@@ -298,13 +252,9 @@ function render(state) {
 
   chartLayer.selectGroup("highlight").datum(state.highlightData).call(rangeRuler);
 
-  var flagGroup = chartLayer
+  const flagGroup = chartLayer
     .selectGroup("flag")
-    .datum(
-      state.highlightData.filter(function (v) {
-        return v[0] < state.mouseYValue && v[1] > state.mouseYValue;
-      })
-    )
+    .datum(state.highlightData.filter((v) => v[0] < state.mouseYValue && v[1] > state.mouseYValue))
     .call(rangeFlag);
 
   flagGroup.selectAll("[data-tooltip-anchor]").call(rangeTooltip);
@@ -312,7 +262,7 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 
   // Interaction
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .move()
     .xScale(xScale)
     .yScale(yScale)
@@ -325,8 +275,8 @@ function render(state) {
 // Helper functions
 // -----------------------------------------------
 function findClosest(data, datum) {
-  var i = d3.bisectLeft(data, datum, 1);
-  var d0 = data[i - 1];
-  var d1 = data[i] || d0;
+  const i = d3.bisectLeft(data, datum, 1);
+  const d0 = data[i - 1];
+  const d1 = data[i] || d0;
   return datum - d0 > d1 - datum ? d1 : d0;
 }

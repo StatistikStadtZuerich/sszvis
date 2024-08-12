@@ -32,15 +32,13 @@ export default function () {
     .prop("change")
     .change(fn.identity)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var wrapperEl = selection
+      let wrapperEl = selection
         .selectAll(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-select"], function (d) {
-          return d;
-        });
-      var newWrapperEl = wrapperEl
+        .data(["sszvis-control-select"], (d) => d);
+      const newWrapperEl = wrapperEl
         .enter()
         .append("div")
         .classed("sszvis-control-optionSelectable", true)
@@ -51,24 +49,24 @@ export default function () {
 
       wrapperEl.style("width", props.width + "px");
 
-      var metricsEl = wrapperEl
+      const metricsEl = wrapperEl
         .selectDiv("selectMetrics")
         .classed("sszvis-control-select__metrics", true);
 
-      var selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]);
+      let selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]);
 
-      var newSelectEl = selectEl
+      const newSelectEl = selectEl
         .enter()
         .append("select")
         .classed("sszvis-control-select__element", true)
         .on("change", function () {
           // We store the index in the select's value instead of the datum
           // because an option's value can only hold strings.
-          var i = select(this).property("value");
+          const i = select(this).property("value");
           props.change(props.values[i]);
           // Prevent highlights on the select element after users have selected
           // an option by moving away from it.
-          setTimeout(function () {
+          setTimeout(() => {
             window.focus();
           }, 0);
         });
@@ -77,36 +75,26 @@ export default function () {
 
       selectEl.style("width", props.width + 30 + "px");
 
-      var optionEls = selectEl.selectAll("option").data(props.values);
+      const optionEls = selectEl.selectAll("option").data(props.values);
 
-      var newOptionEls = optionEls.enter().append("option");
+      const newOptionEls = optionEls.enter().append("option");
 
       optionEls.exit().remove();
 
       optionEls
         .merge(newOptionEls)
-        .attr("selected", function (d) {
-          return d === props.current ? "selected" : null;
-        })
-        .attr("value", function (d, i) {
-          return i;
-        })
-        .text(function (d) {
-          return truncateToWidth(metricsEl, props.width - 40, d);
-        });
+        .attr("selected", (d) => (d === props.current ? "selected" : null))
+        .attr("value", (d, i) => i)
+        .text((d) => truncateToWidth(metricsEl, props.width - 40, d));
     });
 }
 
 function truncateToWidth(metricsEl, maxWidth, originalString) {
-  var MAX_RECURSION = 1000;
-  var fitText = function (str, i) {
+  const MAX_RECURSION = 1000;
+  const fitText = function (str, i) {
     metricsEl.text(str);
-    var textWidth = Math.ceil(metricsEl.node().clientWidth);
-    if (i < MAX_RECURSION && textWidth > maxWidth) {
-      return fitText(str.slice(0, str.length - 2) + "…", i + 1);
-    } else {
-      return str;
-    }
+    const textWidth = Math.ceil(metricsEl.node().clientWidth);
+    return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, -2) + "…", i + 1) : str;
   };
   return fitText(originalString, 0);
 }

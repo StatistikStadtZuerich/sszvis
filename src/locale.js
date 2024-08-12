@@ -1,4 +1,4 @@
-export var locale = {
+export const locale = {
   decimal: ".",
   thousands: " ", // This is a 'narrow space', not a regular space. Used as the thousands separator by d3.format
   grouping: [3],

@@ -38,10 +38,10 @@ import { component } from "../d3-component.js";
 
 /* Constants
 ----------------------------------------------- */
-var SPINE_PADDING = 0.5;
+const SPINE_PADDING = 0.5;
 
-var dataAcc = fn.prop("data");
-var rowAcc = fn.prop("row");
+const dataAcc = fn.prop("data");
+const rowAcc = fn.prop("row");
 
 /**
  * This function prepares the data for the stackedPyramid component
@@ -58,44 +58,35 @@ var rowAcc = fn.prop("row");
  */
 export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
   return function (data) {
-    var sides = cascade()
+    const sides = cascade()
       .arrayBy(sideAcc)
       .arrayBy(_rowAcc)
       .objectBy(seriesAcc)
       .apply(data)
-      .map(function (rows) {
-        var keys = Object.keys(rows[0]);
-        var side = sideAcc(rows[0][keys[0]][0]);
+      .map((rows) => {
+        const keys = Object.keys(rows[0]);
+        const side = sideAcc(rows[0][keys[0]][0]);
 
-        var stacks = d3Stack()
+        const stacks = d3Stack()
           .keys(keys)
-          .value(function (x, key) {
-            return valueAcc(x[key][0]);
-          })(rows);
+          .value((x, key) => valueAcc(x[key][0]))(rows);
 
-        stacks.forEach(function (stack, i) {
-          stack.forEach(function (d, row) {
+        for (const [i, stack] of stacks.entries()) {
+          for (const [row, d] of stack.entries()) {
             d.data = d.data[keys[i]][0];
             d.series = keys[i];
             d.side = side;
             d.row = row;
             d.value = valueAcc(d.data);
-            return d;
-          });
-        });
+          }
+        }
 
         return stacks;
       });
 
     // Compute the max value, for convenience. This value is needed to construct
     // the horizontal scale.
-    sides.maxValue = max(sides, function (side) {
-      return max(side, function (rows) {
-        return max(rows, function (row) {
-          return row[1];
-        });
-      });
-    });
+    sides.maxValue = max(sides, (side) => max(side, (rows) => max(rows, (row) => row[1])));
 
     return sides;
   };
@@ -117,45 +108,37 @@ export function stackedPyramid() {
     .prop("leftRefAccessor")
     .prop("rightRefAccessor")
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // Components
 
-      var leftBar = bar()
-        .x(function (d) {
-          return -SPINE_PADDING - props.barWidth(d[1]);
-        })
+      const leftBar = bar()
+        .x((d) => -SPINE_PADDING - props.barWidth(d[1]))
         .y(fn.compose(props.barPosition, rowAcc))
         .height(props.barHeight)
-        .width(function (d) {
-          return props.barWidth(d[1]) - props.barWidth(d[0]);
-        })
+        .width((d) => props.barWidth(d[1]) - props.barWidth(d[0]))
         .fill(fn.compose(props.barFill, dataAcc))
         .tooltipAnchor(props.tooltipAnchor);
 
-      var rightBar = bar()
-        .x(function (d) {
-          return SPINE_PADDING + props.barWidth(d[0]);
-        })
+      const rightBar = bar()
+        .x((d) => SPINE_PADDING + props.barWidth(d[0]))
         .y(fn.compose(props.barPosition, rowAcc))
         .height(props.barHeight)
-        .width(function (d) {
-          return props.barWidth(d[1]) - props.barWidth(d[0]);
-        })
+        .width((d) => props.barWidth(d[1]) - props.barWidth(d[0]))
         .fill(fn.compose(props.barFill, dataAcc))
         .tooltipAnchor(props.tooltipAnchor);
 
-      var leftStack = stackComponent().stackElement(leftBar);
+      const leftStack = stackComponent().stackElement(leftBar);
 
-      var rightStack = stackComponent().stackElement(rightBar);
+      const rightStack = stackComponent().stackElement(rightBar);
 
-      var leftLine = lineComponent()
+      const leftLine = lineComponent()
         .barPosition(props.barPosition)
         .barWidth(props.barWidth)
         .mirror(true);
 
-      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+      const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
 
       // Rendering
 
@@ -178,13 +161,13 @@ export function stackedPyramid() {
 function stackComponent() {
   return component()
     .prop("stackElement")
-    .renderSelection(function (selection) {
-      var datum = selection.datum();
-      var props = selection.props();
+    .renderSelection((selection) => {
+      const datum = selection.datum();
+      const props = selection.props();
 
-      var stack = selection.selectAll("[data-sszvis-stack]").data(datum);
+      let stack = selection.selectAll("[data-sszvis-stack]").data(datum);
 
-      var newStack = stack.enter().append("g").attr("data-sszvis-stack", "");
+      const newStack = stack.enter().append("g").attr("data-sszvis-stack", "");
 
       stack.exit().remove();
 
@@ -203,16 +186,16 @@ function lineComponent() {
     .prop("mirror")
     .mirror(false)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var lineGen = d3Line().x(props.barWidth).y(props.barPosition);
+      const lineGen = d3Line().x(props.barWidth).y(props.barPosition);
 
-      var line = selection.selectAll(".sszvis-path").data(data);
+      let line = selection.selectAll(".sszvis-path").data(data);
 
       line.exit().remove();
 
-      var newLine = line
+      const newLine = line
         .enter()
         .append("path")
         .attr("class", "sszvis-path")

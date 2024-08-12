@@ -13,11 +13,11 @@
  */
 
 export default function (selection, type, elementId) {
-  var element = ensureDefsSelection(selection)
+  const element = ensureDefsSelection(selection)
     .selectAll(type + "#" + elementId)
     .data([0]);
 
-  var newElement = element.enter().append(type).attr("id", elementId);
+  const newElement = element.enter().append(type).attr("id", elementId);
 
   return element.merge(newElement);
 }
@@ -32,9 +32,9 @@ export default function (selection, type, elementId) {
  * of other, visible, elements.
  */
 function ensureDefsSelection(selection) {
-  var defs = selection.selectAll("defs").data([0]);
+  const defs = selection.selectAll("defs").data([0]);
 
-  var newDefs = defs.enter().append("defs");
+  const newDefs = defs.enter().append("defs");
 
   return defs.merge(newDefs);
 }

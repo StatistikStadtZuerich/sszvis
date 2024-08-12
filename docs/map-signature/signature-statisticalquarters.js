@@ -3,11 +3,11 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
-      var innerHeight = sszvis.aspectRatioSquare(width);
+    _(width) {
+      const innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
         bottom: 30,
@@ -16,14 +16,10 @@ var queryProps = sszvis
     },
   })
   .prop("legendX", {
-    _: function (width) {
-      return Math.max(width / 2 - 205, 5);
-    },
+    _: (width) => Math.max(width / 2 - 205, 5),
   })
   .prop("radiusMax", {
-    _: function (width) {
-      return Math.min(14, Math.max(width / 28, 10));
-    },
+    _: (width) => Math.min(14, Math.max(width / 28, 10)),
   });
 
 function parseRow(d) {
@@ -34,13 +30,13 @@ function parseRow(d) {
   };
 }
 
-var datumAcc = sszvis.prop("datum");
-var valueAcc = sszvis.propOr("value", 0);
-var zoneNameAcc = sszvis.propOr("zonename", "--");
+const datumAcc = sszvis.prop("datum");
+const valueAcc = sszvis.propOr("value", 0);
+const zoneNameAcc = sszvis.propOr("zonename", "--");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: null,
   mapData: null,
   selection: [],
@@ -48,15 +44,15 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareData: function (data) {
+const actions = {
+  prepareData(data) {
     state.data = data;
     state.valueRange = [0, d3.max(state.data, valueAcc)];
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_quartiere),
       borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
@@ -65,17 +61,17 @@ var actions = {
     };
     render(state);
   },
-  selectHovered: function (d) {
+  selectHovered(d) {
     state.selection = [d.datum];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -96,8 +92,8 @@ function render(state) {
     return true;
   }
 
-  var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-  var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+  const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+  const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
   // Scales
   // Any time you visualize a quantity using a circle, you should make the total
@@ -107,25 +103,23 @@ function render(state) {
   // This scale takes the square root of the input and uses that to scale the radius. When the
   // result is used as the radius of a circle, the area of the circle will be linearly
   // proportional to the input quantity.
-  var radiusScale = d3.scaleSqrt().domain(state.valueRange).range([0, props.radiusMax]);
+  const radiusScale = d3.scaleSqrt().domain(state.valueRange).range([0, props.radiusMax]);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
 
   // Components
 
-  var bubbleMap = sszvis
+  const bubbleMap = sszvis
     .mapRendererBubble()
     .fill(sszvis.scaleQual6()(0))
-    .radius(function (d) {
-      return !sszvis.defined(d) ? 0 : radiusScale(valueAcc(d));
-    })
+    .radius((d) => (sszvis.defined(d) ? radiusScale(valueAcc(d)) : 0))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
-  var choroplethMap = sszvis
+  const choroplethMap = sszvis
     .choropleth()
     .features(state.mapData.features)
     .borders(state.mapData.borders)
@@ -134,27 +128,25 @@ function render(state) {
     .keyName("id")
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
-    .fill(function (d) {
-      return isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0);
-    })
+    .fill((d) => (isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0)))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
     .transitionColor(false)
     .anchoredShape(bubbleMap);
 
-  var tooltipHeader = sszvis
+  const tooltipHeader = sszvis
     .modularTextHTML()
     .plain(sszvis.compose(sszvis.formatNumber, valueAcc, datumAcc));
 
-  var tooltipBody = sszvis.modularTextHTML().plain(sszvis.compose(zoneNameAcc, datumAcc));
+  const tooltipBody = sszvis.modularTextHTML().plain(sszvis.compose(zoneNameAcc, datumAcc));
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(tooltipHeader)
     .body(tooltipBody)
     .visible(sszvis.compose(isSelected, datumAcc));
 
-  var radiusLegend = sszvis
+  const radiusLegend = sszvis
     .legendRadius()
     .scale(radiusScale)
     .tickFormat(sszvis.formatPreciseNumber(1));
@@ -174,7 +166,7 @@ function render(state) {
 
   // Interaction
 
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-map__area--entering, .sszvis-anchored-circle--entering")
     .on("start", actions.selectHovered)
@@ -187,5 +179,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return sszvis.defined(d) && state.selection.indexOf(d) !== -1;
+  return sszvis.defined(d) && state.selection.includes(d);
 }

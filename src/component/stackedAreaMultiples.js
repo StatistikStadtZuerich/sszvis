@@ -41,33 +41,33 @@ export default function () {
     .prop("strokeWidth")
     .prop("defined")
     .prop("key")
-    .key(function (d, i) {
-      return i;
-    })
+    .key((d, i) => i)
     .prop("valuesAccessor")
     .valuesAccessor(fn.identity)
     .prop("transition")
     .transition(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       //sszsch why reverse?
-      data = data.slice().reverse();
+      data = [...data].reverse();
 
-      var defaultDefined = function () {
-        return fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1);
+      const defaultDefined = function () {
+        return (
+          fn.compose(fn.not(Number.isNaN), props.y0) && fn.compose(fn.not(Number.isNaN), props.y1)
+        );
       };
 
-      var areaGen = area()
-        .defined(props.defined !== undefined ? props.defined : defaultDefined)
+      const areaGen = area()
+        .defined(props.defined === undefined ? defaultDefined : props.defined)
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);
 
-      var paths = selection.selectAll("path.sszvis-path").data(data, props.key);
+      let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
 
-      var newPaths = paths.enter().append("path").classed("sszvis-path", true);
+      const newPaths = paths.enter().append("path").classed("sszvis-path", true);
 
       paths.exit().remove();
 
@@ -81,6 +81,6 @@ export default function () {
         .attr("d", fn.compose(areaGen, props.valuesAccessor))
         .attr("fill", props.fill)
         .attr("stroke", props.stroke)
-        .attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
+        .attr("stroke-width", props.strokeWidth === undefined ? 1 : props.strokeWidth);
     });
 }

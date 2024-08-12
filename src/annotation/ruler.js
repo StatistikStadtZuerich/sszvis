@@ -52,18 +52,18 @@ export default function () {
     .prop("reduceOverlap")
     .reduceOverlap(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var labelId =
+      const labelId =
         props.labelId ||
         function (d) {
           return props.x(d) + "_" + props.y(d);
         };
 
-      var ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
+      let ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
 
-      var newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
+      const newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
 
       ruler.exit().remove();
       ruler = ruler.merge(newRuler);
@@ -74,9 +74,9 @@ export default function () {
         .attr("x2", fn.compose(halfPixel, props.x))
         .attr("y2", props.bottom);
 
-      var dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
+      let dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
 
-      var newDot = dot.enter().append("circle").classed("sszvis-ruler__dot", true);
+      const newDot = dot.enter().append("circle").classed("sszvis-ruler__dot", true);
 
       dot.exit().remove();
       dot = dot.merge(newDot);
@@ -87,9 +87,9 @@ export default function () {
         .attr("r", 3.5)
         .attr("fill", props.color);
 
-      var labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId);
+      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId);
 
-      var newLabelOutline = labelOutline
+      const newLabelOutline = labelOutline
         .enter()
         .append("text")
         .classed("sszvis-ruler__label-outline", true);
@@ -97,48 +97,46 @@ export default function () {
       labelOutline.exit().remove();
       labelOutline = labelOutline.merge(newLabelOutline);
 
-      var label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
+      let label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
 
-      var newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
+      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
 
       label.exit().remove();
       label = label.merge(newLabel);
 
       // Update both label and labelOutline selections
 
-      var crispX = fn.compose(halfPixel, props.x);
-      var crispY = fn.compose(halfPixel, props.y);
+      const crispX = fn.compose(halfPixel, props.x);
+      const crispY = fn.compose(halfPixel, props.y);
 
-      var textSelection = selection
+      const textSelection = selection
         .selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline")
-        .attr("transform", function (d) {
-          var x = crispX(d);
-          var y = crispY(d);
+        .attr("transform", (d) => {
+          const x = crispX(d);
+          const y = crispY(d);
 
-          var dx = props.flip(d) ? -10 : 10;
-          var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
+          const dx = props.flip(d) ? -10 : 10;
+          const dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
 
           return translateString(x + dx, y + dy);
         })
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .html(props.label);
 
       if (props.reduceOverlap) {
-        var THRESHOLD = 2;
-        var ITERATIONS = 10;
-        var labelBounds = [];
+        const THRESHOLD = 2;
+        let ITERATIONS = 10;
+        const labelBounds = [];
         // Optimization for the lookup later
-        var labelBoundsIndex = {};
+        const labelBoundsIndex = {};
 
         // Reset vertical shift (set by previous renders)
         textSelection.attr("y", "");
 
         // Create bounds objects
         label.each(function (d) {
-          var bounds = this.getBoundingClientRect();
-          var item = {
+          const bounds = this.getBoundingClientRect();
+          const item = {
             top: bounds.top,
             bottom: bounds.bottom,
             dy: 0,
@@ -149,9 +147,7 @@ export default function () {
 
         // Sort array in place by vertical position
         // (only supports labels of same height)
-        labelBounds.sort(function (a, b) {
-          return ascending(a.top, b.top);
-        });
+        labelBounds.sort((a, b) => ascending(a.top, b.top));
 
         // Using postfix decrement means the expression evaluates to the value of the variable
         // before the decrement takes place. In the case of 10 iterations, this means that the
@@ -161,11 +157,11 @@ export default function () {
         // the 10th iteration, meaning that only 9 iterations are executed.
         while (ITERATIONS--) {
           // Calculate overlap and correct position
-          labelBounds.forEach(function (firstLabel, index) {
-            labelBounds.slice(index + 1).forEach(function (secondLabel) {
-              var overlap = firstLabel.bottom - secondLabel.top;
+          for (const [index, firstLabel] of labelBounds.entries()) {
+            for (const secondLabel of labelBounds.slice(index + 1)) {
+              const overlap = firstLabel.bottom - secondLabel.top;
               if (overlap >= THRESHOLD) {
-                var offset = overlap / 2;
+                const offset = overlap / 2;
                 firstLabel.bottom -= offset;
                 firstLabel.top -= offset;
                 firstLabel.dy -= offset;
@@ -173,13 +169,13 @@ export default function () {
                 secondLabel.top += offset;
                 secondLabel.dy += offset;
               }
-            });
-          });
+            }
+          }
         }
 
         // Shift vertically to remove overlap
-        textSelection.attr("y", function (d) {
-          var textLabel = labelBoundsIndex[labelId(d)];
+        textSelection.attr("y", (d) => {
+          const textLabel = labelBoundsIndex[labelId(d)];
           return textLabel.dy;
         });
       }

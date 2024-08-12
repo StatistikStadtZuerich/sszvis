@@ -35,14 +35,14 @@
 import * as fn from "../fn.js";
 
 function formatHTML() {
-  var styles = {
-    plain: function (d) {
+  const styles = {
+    plain(d) {
       return d;
     },
-    italic: function (d) {
+    italic(d) {
       return "<em>" + d + "</em>";
     },
-    bold: function (d) {
+    bold(d) {
       return "<strong>" + d + "</strong>";
     },
   };
@@ -50,59 +50,49 @@ function formatHTML() {
   return function (textBody, datum) {
     return textBody
       .lines()
-      .map(function (line) {
-        return line
-          .map(function (word) {
-            return styles[word.style].call(null, word.text(datum));
-          })
-          .join(" ");
-      })
+      .map((line) => line.map((word) => styles[word.style].call(null, word.text(datum))).join(" "))
       .join("<br/>");
   };
 }
 
 function formatSVG() {
-  var styles = {
-    plain: function (d) {
+  const styles = {
+    plain(d) {
       return "<tspan>" + d + "</tspan>";
     },
-    italic: function (d) {
+    italic(d) {
       return '<tspan style="font-style:italic">' + d + "</tspan>";
     },
-    bold: function (d) {
+    bold(d) {
       return '<tspan style="font-weight:bold">' + d + "</tspan>";
     },
   };
 
   return function (textBody, datum) {
-    return textBody.lines().reduce(function (svg, line, i) {
-      var lineSvg = line
-        .map(function (word) {
-          return styles[word.style].call(null, word.text(datum));
-        })
-        .join(" ");
-      var dy = i === 0 ? 0 : "1.2em";
+    return textBody.lines().reduce((svg, line, i) => {
+      const lineSvg = line.map((word) => styles[word.style].call(null, word.text(datum))).join(" ");
+      const dy = i === 0 ? 0 : "1.2em";
       return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
     }, "");
   };
 }
 
 function structuredText() {
-  var lines = [[]];
+  const lines = [[]];
 
   return {
-    addLine: function () {
+    addLine() {
       lines.push([]);
     },
 
-    addWord: function (style, text) {
+    addWord(style, text) {
       fn.last(lines).push({
         text: fn.functor(text),
-        style: style,
+        style,
       });
     },
 
-    lines: function () {
+    lines() {
       return lines;
     },
   };
@@ -110,7 +100,7 @@ function structuredText() {
 
 function makeTextWithFormat(format) {
   return function () {
-    var textBody = structuredText();
+    const textBody = structuredText();
 
     function makeText(d) {
       return format(textBody, d);
@@ -121,16 +111,16 @@ function makeTextWithFormat(format) {
       return makeText;
     };
 
-    ["bold", "italic", "plain"].forEach(function (style) {
+    for (const style of ["bold", "italic", "plain"]) {
       makeText[style] = function (text) {
         textBody.addWord(style, text);
         return makeText;
       };
-    });
+    }
 
     return makeText;
   };
 }
 
-export var modularTextHTML = makeTextWithFormat(formatHTML());
-export var modularTextSVG = makeTextWithFormat(formatSVG());
+export const modularTextHTML = makeTextWithFormat(formatHTML());
+export const modularTextSVG = makeTextWithFormat(formatSVG());

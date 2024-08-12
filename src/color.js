@@ -32,8 +32,8 @@
  *
  * @function divVal    Diverging and valued color scale from red to blue
  * @function divNtr    Diverging and neutral color scale from brown to green
- * @function divValGry Variation of the valued scale with a grey midpoint
- * @function divNtrGry Variation of the neutral scale with a grey midpoint
+ * @function divValGry constiation of the valued scale with a grey midpoint
+ * @function divNtrGry constiation of the neutral scale with a grey midpoint
  * @method   reverse   Instance method to reverse the color order. @returns new scale
  *
  * Grey color scales
@@ -45,13 +45,13 @@ import { scaleOrdinal, scaleLinear, hsl, rgb, lab, mean, quantile } from "d3";
 
 /* Constants
 ----------------------------------------------- */
-var LIGHTNESS_STEP = 0.6;
+const LIGHTNESS_STEP = 0.6;
 
 /* Scales
 ----------------------------------------------- */
 function qualColorScale(colors) {
   return function () {
-    var scale = scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
+    const scale = scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
     return decorateOrdinalScale(scale);
   };
 }
@@ -72,7 +72,7 @@ const darkBrown = "#9A5B01";
 const mediumBrown = "#FF720C";
 const lightBrown = "#FBB900";
 
-export var scaleQual12 = qualColorScale([
+export const scaleQual12 = qualColorScale([
   darkBlue,
   mediumBlue,
   lightBlue,
@@ -87,7 +87,7 @@ export var scaleQual12 = qualColorScale([
   lightBrown,
 ]);
 
-export var scaleQual6 = qualColorScale([
+export const scaleQual6 = qualColorScale([
   darkBlue,
   mediumRed,
   mediumGreen,
@@ -96,7 +96,7 @@ export var scaleQual6 = qualColorScale([
   mediumBrown,
 ]);
 
-export var scaleQual6a = qualColorScale([
+export const scaleQual6a = qualColorScale([
   darkBlue,
   mediumBlue,
   lightBlue,
@@ -105,7 +105,7 @@ export var scaleQual6a = qualColorScale([
   lightRed,
 ]);
 
-export var scaleQual6b = qualColorScale([
+export const scaleQual6b = qualColorScale([
   darkGreen,
   mediumGreen,
   lightGreen,
@@ -116,24 +116,24 @@ export var scaleQual6b = qualColorScale([
 
 function seqColorScale(colors) {
   return function () {
-    var scale = scaleLinear().range(colors.map(convertLab));
+    const scale = scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
 }
 
-export var scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
-export var scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
-export var scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
-export var scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
+export const scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
+export const scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
+export const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
+export const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
 
 function divColorScale(colors) {
   return function () {
-    var scale = scaleLinear().range(colors.map(convertLab));
+    const scale = scaleLinear().range(colors.map(convertLab));
     return decorateDivScale(scale);
   };
 }
 
-export var scaleDivVal = divColorScale([
+export const scaleDivVal = divColorScale([
   "#611F00",
   "#A13200",
   "#EA5D00",
@@ -145,7 +145,7 @@ export var scaleDivVal = divColorScale([
   "#3431DE",
   "#211A8A",
 ]);
-export var scaleDivValGry = divColorScale([
+export const scaleDivValGry = divColorScale([
   "#782600",
   "#CC4309",
   "#FF720C",
@@ -156,7 +156,7 @@ export var scaleDivValGry = divColorScale([
   "#3B51FF",
   "#2F2ABB",
 ]);
-export var scaleDivNtr = divColorScale([
+export const scaleDivNtr = divColorScale([
   "#7D0044",
   "#C4006A",
   "#ED408D",
@@ -168,7 +168,7 @@ export var scaleDivNtr = divColorScale([
   "#1A7F2D",
   "#0C4B1F",
 ]);
-export var scaleDivNtrGry = divColorScale([
+export const scaleDivNtrGry = divColorScale([
   "#A30059",
   "#DB247D",
   "#FF579E",
@@ -182,28 +182,28 @@ export var scaleDivNtrGry = divColorScale([
 
 function greyColorScale(colors) {
   return function () {
-    var scale = scaleOrdinal().range(colors.map(convertLab));
+    const scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
 }
 
-export var scaleLightGry = greyColorScale(["#FAFAFA"]);
-export var scalePaleGry = greyColorScale(["#EAEAEA"]);
-export var scaleGry = greyColorScale(["#D6D6D6"]);
-export var scaleDimGry = greyColorScale(["#B8B8B8"]);
-export var scaleMedGry = greyColorScale(["#7C7C7C"]);
-export var scaleDeepGry = greyColorScale(["#545454"]);
+export const scaleLightGry = greyColorScale(["#FAFAFA"]);
+export const scalePaleGry = greyColorScale(["#EAEAEA"]);
+export const scaleGry = greyColorScale(["#D6D6D6"]);
+export const scaleDimGry = greyColorScale(["#B8B8B8"]);
+export const scaleMedGry = greyColorScale(["#7C7C7C"]);
+export const scaleDeepGry = greyColorScale(["#545454"]);
 
-export var slightlyDarker = function (c) {
+export const slightlyDarker = function (c) {
   return hsl(c).darker(0.4);
 };
 
-export var muchDarker = function (c) {
+export const muchDarker = function (c) {
   return hsl(c).darker(0.7);
 };
 
-export var withAlpha = function (c, a) {
-  var rgbColor = rgb(c);
+export const withAlpha = function (c, a) {
+  const rgbColor = rgb(c);
   return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
 };
 
@@ -235,13 +235,13 @@ function decorateDivScale(scale) {
 }
 
 function interpolatedDivergentColorScale(scale) {
-  var nativeDomain = scale.domain;
+  const nativeDomain = scale.domain;
   if (!scale.range()) return scale;
-  var length = scale.range().length;
+  const length = scale.range().length;
   scale.domain = function (dom) {
     if (!dom) return nativeDomain.call(this);
-    var xDomain = [];
-    for (var i = 0; i < length; i++) {
+    const xDomain = [];
+    for (let i = 0; i < length; i++) {
       xDomain.push(quantile(dom, i / (length - 1)));
     }
     return nativeDomain.call(this, xDomain);
@@ -258,13 +258,13 @@ function decorateLinearScale(scale) {
 }
 
 function interpolatedColorScale(scale) {
-  var nativeDomain = scale.domain;
+  const nativeDomain = scale.domain;
   scale.domain = function (dom) {
     if (arguments.length === 1) {
-      var threeDomain = [dom[0], mean(dom), dom[1]];
+      const threeDomain = [dom[0], mean(dom), dom[1]];
       return nativeDomain.call(this, threeDomain);
     } else {
-      return nativeDomain.apply(this, arguments);
+      return Reflect.apply(nativeDomain, this, arguments);
     }
   };
   return scale;
@@ -277,7 +277,7 @@ function convertLab(d) {
 }
 
 function func(fName) {
-  var args = Array.prototype.slice.call(arguments, 1);
+  const args = Array.prototype.slice.call(arguments, 1);
   return function (d) {
     return d[fName].apply(d, args);
   };

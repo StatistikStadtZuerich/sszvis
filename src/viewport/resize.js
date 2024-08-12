@@ -36,53 +36,43 @@ import throttle from "nano-throttle";
 // While still enabling the user to register multiple callbacks for the 'resize'
 // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
 // object would not allow.
-var callbacks = {
+const callbacks = {
   resize: [],
 };
 
 if (typeof window !== "undefined") {
   select(window).on(
     "resize",
-    throttle(function () {
+    throttle(() => {
       trigger("resize");
     }, 500)
   );
 }
 
-var on = function (name, cb) {
+const on = function (name, cb) {
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
-  callbacks[name] = callbacks[name]
-    .filter(function (fn) {
-      return fn !== cb;
-    })
-    .concat(cb);
+  callbacks[name] = [...callbacks[name].filter((fn) => fn !== cb), cb];
   return this;
 };
 
-var off = function (name, cb) {
+const off = function (name, cb) {
   if (!callbacks[name]) {
     return this;
   }
-  callbacks[name] = callbacks[name].filter(function (fn) {
-    return fn !== cb;
-  });
+  callbacks[name] = callbacks[name].filter((fn) => fn !== cb);
   return this;
 };
 
-var trigger = function (name) {
-  var evtArgs = Array.prototype.slice.call(arguments, 1);
+const trigger = function (name) {
+  const evtArgs = Array.prototype.slice.call(arguments, 1);
   if (callbacks[name]) {
-    callbacks[name].forEach(function (fn) {
+    for (const fn of callbacks[name]) {
       fn.apply(null, evtArgs);
-    });
+    }
   }
   return this;
 };
 
-export var viewport = {
-  on: on,
-  off: off,
-  trigger: trigger,
-};
+export const viewport = { on, off, trigger };

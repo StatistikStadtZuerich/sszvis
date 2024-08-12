@@ -46,20 +46,26 @@ import * as fn from "../fn.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
+/* Helper functions
+  ----------------------------------------------- */
+function vectorToTranslateString(vec) {
+  return translateString.apply(null, vec);
+}
+
 export default function () {
   return component()
     .prop("position")
     .position(fn.functor([0, 0]))
     .prop("debug")
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var anchor = selection.selectAll("[data-tooltip-anchor]").data(data);
+      let anchor = selection.selectAll("[data-tooltip-anchor]").data(data);
 
       // Enter
 
-      var newAnchor = anchor
+      const newAnchor = anchor
         .enter()
         .append("rect")
         .attr("height", 1)
@@ -80,9 +86,9 @@ export default function () {
 
       // Visible anchor if debug is true
       if (props.debug) {
-        var referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data);
+        let referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data);
 
-        var newReferencePoint = referencePoint
+        const newReferencePoint = referencePoint
           .enter()
           .append("circle")
           .attr("data-tooltip-anchor-debug", "");
@@ -98,10 +104,4 @@ export default function () {
           .attr("transform", fn.compose(vectorToTranslateString, props.position));
       }
     });
-
-  /* Helper functions
-  ----------------------------------------------- */
-  function vectorToTranslateString(vec) {
-    return translateString.apply(null, vec);
-  }
 }

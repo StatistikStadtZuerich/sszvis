@@ -34,14 +34,14 @@ export default function () {
     .prop("dy", fn.functor)
     .prop("caption", fn.functor)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
 
-      var dataArea = selection.selectAll(".sszvis-dataareacircle").data(data);
+      let dataArea = selection.selectAll(".sszvis-dataareacircle").data(data);
 
-      var newDataArea = dataArea.enter().append("circle").classed("sszvis-dataareacircle", true);
+      const newDataArea = dataArea.enter().append("circle").classed("sszvis-dataareacircle", true);
       dataArea = dataArea.merge(newDataArea);
 
       dataArea
@@ -51,9 +51,9 @@ export default function () {
         .attr("fill", "url(#data-area-pattern)");
 
       if (props.caption) {
-        var dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data);
+        let dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data);
 
-        var newDataCaptions = dataCaptions
+        const newDataCaptions = dataCaptions
           .enter()
           .append("text")
           .classed("sszvis-dataareacircle__caption", true);

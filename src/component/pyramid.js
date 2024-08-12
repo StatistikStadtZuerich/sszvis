@@ -37,7 +37,7 @@ import { component } from "../d3-component.js";
 
 /* Constants
 ----------------------------------------------- */
-var SPINE_PADDING = 0.5;
+const SPINE_PADDING = 0.5;
 
 /* Module
 ----------------------------------------------- */
@@ -55,22 +55,20 @@ export default function () {
     .prop("leftRefAccessor")
     .prop("rightRefAccessor")
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // Components
 
-      var leftBar = bar()
-        .x(function (d) {
-          return -SPINE_PADDING - props.barWidth(d);
-        })
+      const leftBar = bar()
+        .x((d) => -SPINE_PADDING - props.barWidth(d))
         .y(props.barPosition)
         .height(props.barHeight)
         .width(props.barWidth)
         .fill(props.barFill)
         .tooltipAnchor(props.tooltipAnchor);
 
-      var rightBar = bar()
+      const rightBar = bar()
         .x(SPINE_PADDING)
         .y(props.barPosition)
         .height(props.barHeight)
@@ -78,12 +76,12 @@ export default function () {
         .fill(props.barFill)
         .tooltipAnchor(props.tooltipAnchor);
 
-      var leftLine = lineComponent()
+      const leftLine = lineComponent()
         .barPosition(props.barPosition)
         .barWidth(props.barWidth)
         .mirror(true);
 
-      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+      const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
 
       // Rendering
 
@@ -110,16 +108,16 @@ function lineComponent() {
     .prop("mirror")
     .mirror(false)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var lineGen = d3Line().x(props.barWidth).y(props.barPosition);
+      const lineGen = d3Line().x(props.barWidth).y(props.barPosition);
 
-      var line = selection.selectAll(".sszvis-pyramid__referenceline").data(data);
+      let line = selection.selectAll(".sszvis-pyramid__referenceline").data(data);
 
       line.exit().remove();
 
-      var newLine = line.enter().append("path").attr("class", "sszvis-pyramid__referenceline");
+      const newLine = line.enter().append("path").attr("class", "sszvis-pyramid__referenceline");
 
       line = line.merge(newLine);
 

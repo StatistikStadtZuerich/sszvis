@@ -66,70 +66,68 @@ export default function () {
     .prop("defined", fn.functor)
     .defined(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var inGroupScale = scaleBand()
+      const inGroupScale = scaleBand()
         .domain(range(props.groupSize))
         .padding(props.groupSpace)
         .paddingOuter(0)
         .rangeRound([0, props.groupWidth]);
 
-      var groups = selection.selectAll("g.sszvis-bargroup").data(data);
+      let groups = selection.selectAll("g.sszvis-bargroup").data(data);
 
-      var newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
+      const newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
 
       groups.exit().remove();
       groups = groups.merge(newGroups);
 
-      var barUnits = groups.selectAll("g.sszvis-barunit").data(function (d) {
-        return d;
-      });
+      let barUnits = groups.selectAll("g.sszvis-barunit").data((d) => d);
 
-      var newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
+      const newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
 
       barUnits.exit().remove();
       barUnits = barUnits.merge(newBarUnits);
 
-      barUnits.each(function (d, i) {
+      barUnits.each((d, i) => {
         // necessary for the within-group scale
         d.__sszvisGroupedBarIndex__ = i;
       });
 
-      var unitsWithValue = barUnits.filter(props.defined);
+      const unitsWithValue = barUnits.filter(props.defined);
 
       // clear the units before rendering
       unitsWithValue.selectAll("*").remove();
 
       //sszsch: fix: reset previously assigned translations
-      unitsWithValue.attr("transform", function () {
-        return translateString(0, 0);
-      });
+      unitsWithValue.attr("transform", () => translateString(0, 0));
 
       unitsWithValue
         .append("rect")
         .classed("sszvis-bar", true)
         .attr("fill", props.fill)
-        .attr("x", function (d) {
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          return props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__);
-        })
+        .attr(
+          "x",
+          (d) =>
+            // first term is the x-position of the group, the second term is the x-position of the bar within the group
+            props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__)
+        )
         .attr("y", props.y)
         .attr("width", inGroupScale.bandwidth())
         .attr("height", props.height);
 
-      var unitsWithoutValue = barUnits.filter(fn.not(props.defined));
+      const unitsWithoutValue = barUnits.filter(fn.not(props.defined));
 
       unitsWithoutValue.selectAll("*").remove();
 
-      unitsWithoutValue.attr("transform", function (d, i) {
-        return translateString(
+      unitsWithoutValue.attr("transform", (d, i) =>
+        translateString(
           props.groupScale(d) +
             inGroupScale(d.__sszvisGroupedBarIndex__) +
             inGroupScale.bandwidth() / 2,
           props.y(d, i)
-        );
-      });
+        )
+      );
 
       unitsWithoutValue
         .append("line")
@@ -147,18 +145,18 @@ export default function () {
         .attr("x2", -4)
         .attr("y2", 4);
 
-      var ta = tooltipAnchor().position(function (group) {
-        var xTotal = 0;
-        var tallest = Infinity;
-        group.forEach(function (d, i) {
+      const ta = tooltipAnchor().position((group) => {
+        let xTotal = 0;
+        let tallest = Infinity;
+        for (const [i, d] of group.entries()) {
           xTotal +=
             props.groupScale(d) +
             inGroupScale(d.__sszvisGroupedBarIndex__) +
             inGroupScale.bandwidth() / 2;
           // smaller y is higher
           tallest = Math.min(tallest, props.y(d, i));
-        });
-        var xAverage = xTotal / group.length;
+        }
+        const xAverage = xTotal / group.length;
         return [xAverage, tallest];
       });
 

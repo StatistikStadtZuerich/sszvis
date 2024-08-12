@@ -8,23 +8,23 @@ import { formatLocale, timeFormatLocale } from "d3";
 import * as fn from "./fn.js";
 import { locale } from "./locale.js";
 
-var timeFormat = timeFormatLocale(locale).format;
-var format = formatLocale(locale).format;
+const timeFormat = timeFormatLocale(locale).format;
+const format = formatLocale(locale).format;
 
 /**
  * Format a number as an age
  * @param  {number} d
  * @return {string}
  */
-export var formatAge = function (d) {
+export const formatAge = function (d) {
   return String(Math.round(d));
 };
 
 /**
  * A multi time formatter used by the axis class
  */
-export var formatAxisTimeFormat = function (d) {
-  var xs = [
+export const formatAxisTimeFormat = function (d) {
+  const xs = [
     [
       ".%L",
       function (date) {
@@ -75,9 +75,9 @@ export var formatAxisTimeFormat = function (d) {
     ],
   ];
 
-  for (var i = 0; i < xs.length; ++i) {
-    if (xs[i][1](d)) {
-      return timeFormat(xs[i][0])(d);
+  for (const x of xs) {
+    if (x[1](d)) {
+      return timeFormat(x[0])(d);
     }
   }
 };
@@ -85,20 +85,18 @@ export var formatAxisTimeFormat = function (d) {
 /**
  * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
  */
-export var formatMonth = fn.compose(function (m) {
-  return m.toUpperCase();
-}, timeFormat("%b"));
+export const formatMonth = fn.compose((m) => m.toUpperCase(), timeFormat("%b"));
 
 /**
  * A year formatter for date objects. Gives the date's year.
  */
-export var formatYear = timeFormat("%Y");
+export const formatYear = timeFormat("%Y");
 
 /**
  * Formatter for no label
  * @return {string} the empty string
  */
-export var formatNone = function () {
+export const formatNone = function () {
   return "";
 };
 
@@ -118,11 +116,11 @@ export var formatNone = function () {
  * @param  {number} d   Number
  * @return {string}     Fully formatted number
  */
-export var formatNumber = function (d) {
-  var p;
-  var dAbs = Math.abs(d);
+export const formatNumber = function (d) {
+  let p;
+  const dAbs = Math.abs(d);
 
-  if (d == null || isNaN(d)) {
+  if (d == null || Number.isNaN(d)) {
     return "–"; // This is an en-dash
   }
 
@@ -174,19 +172,13 @@ export var formatNumber = function (d) {
  * @param  {Number} d           The number to be formatted
  * @return {String}             The formatted number
  */
-export var formatPreciseNumber = function (p, d) {
+export const formatPreciseNumber = function (p, d) {
   // This curries the function
   if (arguments.length > 1) return formatPreciseNumber(p)(d);
 
   return function (x) {
-    var dAbs = Math.abs(x);
-    if (dAbs >= 100 && dAbs < 1e4) {
-      // No thousands separator
-      return format("." + p + "f")(x);
-    } else {
-      // Use the thousands separator
-      return format(",." + p + "f")(x);
-    }
+    const dAbs = Math.abs(x);
+    return dAbs >= 100 && dAbs < 1e4 ? format("." + p + "f")(x) : format(",." + p + "f")(x);
   };
 };
 
@@ -195,7 +187,7 @@ export var formatPreciseNumber = function (p, d) {
  * @param  {number} d    A value to format, between 0 and 100
  * @return {string}      The formatted value
  */
-export var formatPercent = function (d) {
+export const formatPercent = function (d) {
   // Uses unix thin space
   return formatNumber(d) + " %";
 };
@@ -205,7 +197,7 @@ export var formatPercent = function (d) {
  * @param  {number} d    A value to format, between 0 and 1
  * @return {string}      The formatted value
  */
-export var formatFractionPercent = function (d) {
+export const formatFractionPercent = function (d) {
   // Uses unix thin space
   return formatNumber(d * 100) + " %";
 };
@@ -215,9 +207,7 @@ export var formatFractionPercent = function (d) {
  * @param  {number} d
  * @return {string} Fully formatted text
  */
-export var formatText = function (d) {
-  return String(d);
-};
+export const formatText = String;
 
 /* Helper functions
 ----------------------------------------------- */
@@ -232,5 +222,5 @@ function decimalPlaces(num) {
 }
 
 function stripTrailingZeroes(str) {
-  return str.replace(/(\.[0-9]*[1-9])0+$|\.0*$/, "$1");
+  return str.replace(/(\.\d*[1-9])0+$|\.0*$/, "$1");
 }

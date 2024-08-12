@@ -2,7 +2,7 @@ import babel from "@rollup/plugin-babel";
 import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
-import { join } from "path";
+import path from "node:path";
 import terser from "@rollup/plugin-terser";
 import pkg from "./package.json";
 
@@ -27,16 +27,17 @@ const createConfig = ({ input, output, plugins }) => ({
     }),
     nodeResolve(),
     commonjs(),
-  ].concat(plugins),
+    plugins,
+  ],
   external: ["d3", "topojson"],
 });
 
 export default [
   createConfig({
-    input: join(__dirname, "src", "index.js"),
+    input: path.join(__dirname, "src", "index.js"),
     output: [
       {
-        file: join(__dirname, "build", "sszvis.js"),
+        file: path.join(__dirname, "build", "sszvis.js"),
         format: "umd",
         banner,
         globals,
@@ -45,10 +46,10 @@ export default [
     ],
   }),
   createConfig({
-    input: join(__dirname, "src", "index.js"),
+    input: path.join(__dirname, "src", "index.js"),
     output: [
       {
-        file: join(__dirname, "build", "sszvis.min.js"),
+        file: path.join(__dirname, "build", "sszvis.min.js"),
         format: "umd",
         banner,
         globals,

@@ -26,7 +26,7 @@
  */
 
 export default function (numBars) {
-  var DEFAULT_HEIGHT = 24, // the default bar height
+  const DEFAULT_HEIGHT = 24, // the default bar height
     MIN_PADDING = 20, // the minimum padding size
     barHeight = DEFAULT_HEIGHT, // the bar height
     numPads = numBars - 1,
@@ -37,10 +37,10 @@ export default function (numBars) {
     outerRatio = 0; // no outer padding
 
   return {
-    barHeight: barHeight,
+    barHeight,
     padHeight: padding,
-    padRatio: padRatio,
-    outerRatio: outerRatio,
+    padRatio,
+    outerRatio,
     axisOffset: -(barHeight / 2) - 10,
     barGroupHeight: computedBarSpace,
     totalHeight: computedBarSpace + outerRatio * (barHeight + padding) * 2,

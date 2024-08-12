@@ -12,7 +12,7 @@ for (const url of files.map(filepathToUrl)) {
       await page.waitForTimeout(RENDER_DELAY);
       await page.evaluate(() => {
         const elements = document.querySelectorAll(".sszvis-map__image");
-        elements.forEach((element) => element.remove());
+        for (const element of elements) element.remove();
       });
 
       await expect(page).toHaveScreenshot(`${urlToIdentifier(url)}-0`);
@@ -24,13 +24,13 @@ for (const url of files.map(filepathToUrl)) {
         await page.waitForTimeout(RENDER_DELAY);
         await page.evaluate(() => {
           const elements = document.querySelectorAll(".sszvis-map__image");
-          elements.forEach((element) => element.remove());
+          for (const element of elements) element.remove();
         });
 
         await expect(page).toHaveScreenshot(`${urlToIdentifier(url)}-${idx + 1}`);
       }
-    } catch (e) {
-      expect(e).toBeNull();
+    } catch (error) {
+      expect(error).toBeNull();
     }
   });
 }

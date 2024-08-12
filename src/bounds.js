@@ -39,10 +39,10 @@ import { aspectRatioAuto } from "./aspectRatio.js";
 import * as fn from "./fn.js";
 import { measureDimensions } from "./measure.js";
 
-var DEFAULT_WIDTH = 516;
+const DEFAULT_WIDTH = 516;
 
 export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
-  var _bounds = null,
+  let _bounds = null,
     selection = null;
   if (arguments.length === 0) {
     _bounds = {};
@@ -58,15 +58,11 @@ export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     }
   } else {
     _bounds = arg1;
-    if (fn.isSelection(arg2)) {
-      selection = arg2;
-    } else {
-      selection = select(arg2);
-    }
+    selection = fn.isSelection(arg2) ? arg2 : select(arg2);
   }
 
   // All padding sides have default values
-  var padding = {
+  const padding = {
     top: either(_bounds.top, 0),
     right: either(_bounds.right, 1),
     bottom: either(_bounds.bottom, 0),
@@ -74,18 +70,20 @@ export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
   };
 
   // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
-  var dimensions = fn.defined(selection) ? measureDimensions(selection) : { width: DEFAULT_WIDTH };
+  const dimensions = fn.defined(selection)
+    ? measureDimensions(selection)
+    : { width: DEFAULT_WIDTH };
 
-  var width = either(_bounds.width, dimensions.width);
-  var innerHeight = aspectRatioAuto(dimensions);
-  var height = either(_bounds.height, innerHeight + padding.top + padding.bottom);
+  const width = either(_bounds.width, dimensions.width);
+  const innerHeight = aspectRatioAuto(dimensions);
+  const height = either(_bounds.height, innerHeight + padding.top + padding.bottom);
 
   return {
     innerHeight: height - padding.top - padding.bottom,
     innerWidth: width - padding.left - padding.right,
-    padding: padding,
-    height: height,
-    width: width,
+    padding,
+    height,
+    width,
     screenWidth: dimensions.screenWidth,
     screenHeight: dimensions.screenHeight,
   };
@@ -99,10 +97,10 @@ export { DEFAULT_WIDTH };
 // @deprecated Since the responsive revisions, the default aspect ratio has changed,
 //             so that it is now responsive to the container width.
 //             This property is preserved for compatibility reasons.
-export var RATIO = 16 / 9;
+export const RATIO = 16 / 9;
 
 /* Helper functions
 ----------------------------------------------- */
 function either(val, fallback) {
-  return typeof val === "undefined" ? fallback : val;
+  return val === undefined ? fallback : val;
 }

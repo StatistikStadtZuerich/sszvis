@@ -13,7 +13,7 @@
  * @return {array}          The extent of the scale's range. Useful for determining how far
  *                          a scale stretches in its output dimension.
  */
-export var range = function (scale) {
+export const range = function (scale) {
   // borrowed from d3 source - svg.axis
   return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
 };
@@ -29,7 +29,7 @@ export var range = function (scale) {
  */
 function extent(domain) {
   // borrowed from d3 source - svg.axis
-  var start = domain[0],
-    stop = domain[domain.length - 1];
+  const start = domain[0],
+    stop = domain.at(-1);
   return start < stop ? [start, stop] : [stop, start];
 }
