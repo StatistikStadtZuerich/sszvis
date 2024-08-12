@@ -19,7 +19,7 @@ var queryProps = sszvis
     _: 2,
   })
   .prop("bounds", {
-    palm: function (w) {
+    palm: function () {
       var legendHeight = 182;
       var bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
@@ -30,7 +30,7 @@ var queryProps = sszvis
         height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding,
       };
     },
-    lap: function (w) {
+    lap: function () {
       var legendHeight = 98;
       var bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
@@ -41,7 +41,7 @@ var queryProps = sszvis
         height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding,
       };
     },
-    _: function (w) {
+    _: function () {
       var legendHeight = 98;
       var bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
@@ -55,14 +55,14 @@ var queryProps = sszvis
   })
   .prop("legendPosition", {
     palm: function (w) {
-      return function (g) {
+      return function () {
         return {
           top: LEGEND_PADDING,
           left: (w - 2 * 10) / 2 - PIE_DIAMETER / 2,
         };
       };
     },
-    lap: function (w) {
+    lap: function () {
       return function (bounds, g) {
         var left = bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
         return {
@@ -72,7 +72,7 @@ var queryProps = sszvis
       };
     },
     _: function (w) {
-      return function (g) {
+      return function () {
         var colWidth = Math.min(w, MAX_WIDTH) / 2;
         return {
           top: LEGEND_PADDING,

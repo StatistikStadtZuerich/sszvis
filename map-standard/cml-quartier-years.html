@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Map | CML Quartier</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -135,13 +135,13 @@
             state.mapData = {
               features: topojson.feature(
                 topo,
-                topo.objects.statistische_quartiere
+                topo.objects.statistische_quartiere,
               ),
               borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
               lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
               lakeBorders: topojson.mesh(
                 topo,
-                topo.objects.statistische_quartiere_lakebounds
+                topo.objects.statistische_quartiere_lakebounds,
               ),
             };
             render(state);
@@ -150,7 +150,7 @@
           changeEntityNearDate: function (inputValue, inputDate) {
             // find the closest year to the mouse
             var closestYear = yearAcc(
-              closestDatum(state.data, yearAcc, inputDate)
+              closestDatum(state.data, yearAcc, inputDate),
             );
 
             // within the closest year's data values, find the one closest to the mouse position
@@ -188,7 +188,7 @@
           changeYear: function (inputDate) {
             // find the closest year to the mouse
             var closestYear = yearAcc(
-              closestDatum(state.data, yearAcc, inputDate)
+              closestDatum(state.data, yearAcc, inputDate),
             );
 
             // this is an optimization to ensure that the chart is only re-rendered when underlying state has changed
@@ -205,7 +205,7 @@
 
               state.highlightEntity = findEntityWithGeoId(
                 geoIdAcc(state.highlightEntity || {}),
-                state.currentMapData
+                state.currentMapData,
               );
 
               actions.setHighlights();
@@ -282,7 +282,7 @@
               top: 30,
               bottom: props.mapBottomPadding,
             },
-            "#sszvis-chart"
+            "#sszvis-chart",
           );
 
           // bounds for the line chart section
@@ -295,14 +295,14 @@
               left: props.lineChartPadding,
               right: props.lineChartPadding,
             },
-            "#sszvis-chart"
+            "#sszvis-chart",
           );
 
           var outerBounds = sszvis.bounds(
             {
               height: mapBounds.height + lineChartBounds.height,
             },
-            "#sszvis-chart"
+            "#sszvis-chart",
           );
 
           // Scales
@@ -440,8 +440,8 @@
               "transform",
               sszvis.translateString(
                 mapBounds.padding.left,
-                mapBounds.padding.top
-              )
+                mapBounds.padding.top,
+              ),
             )
             .call(choroplethMap);
 
@@ -452,8 +452,8 @@
               "transform",
               sszvis.translateString(
                 lineChartBounds.padding.left,
-                mapBounds.height + lineChartBounds.padding.top
-              )
+                mapBounds.height + lineChartBounds.padding.top,
+              ),
             )
             .call(lineMaker);
 
@@ -465,15 +465,15 @@
             return a.geoId === highlightId
               ? 1
               : b.geoId === highlightId
-              ? -1
-              : 0;
+                ? -1
+                : 0;
           });
 
           lineChart
             .selectGroup("xAxis")
             .attr(
               "transform",
-              sszvis.translateString(0, lineChartBounds.innerHeight)
+              sszvis.translateString(0, lineChartBounds.innerHeight),
             )
             .call(lineXAxis);
 
@@ -483,8 +483,8 @@
             "transform",
             sszvis.translateString(
               lineChartBounds.padding.left,
-              mapBounds.height + lineChartBounds.padding.top
-            )
+              mapBounds.height + lineChartBounds.padding.top,
+            ),
           );
 
           highlightLayer.selectGroup("handleRuler").call(handleRuler);
@@ -497,8 +497,8 @@
                 lineChartBounds.padding.left + lineChartBounds.innerWidth / 4,
                 mapBounds.padding.top +
                   mapBounds.innerHeight +
-                  (props.mapBottomPadding * 2) / 3
-              )
+                  (props.mapBottomPadding * 2) / 3,
+              ),
             )
             .call(legend);
 

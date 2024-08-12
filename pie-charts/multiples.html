@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Pie Chart | Multiples</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -45,7 +45,7 @@
             _: 2,
           })
           .prop("bounds", {
-            palm: function (w) {
+            palm: function () {
               var legendHeight = 182;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -56,7 +56,7 @@
                 height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding,
               };
             },
-            lap: function (w) {
+            lap: function () {
               var legendHeight = 98;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -67,7 +67,7 @@
                 height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding,
               };
             },
-            _: function (w) {
+            _: function () {
               var legendHeight = 98;
               var bottomPadding = LEGEND_PADDING + legendHeight + 20;
               return {
@@ -81,14 +81,14 @@
           })
           .prop("legendPosition", {
             palm: function (w) {
-              return function (g) {
+              return function () {
                 return {
                   top: LEGEND_PADDING,
                   left: (w - 2 * 10) / 2 - PIE_DIAMETER / 2,
                 };
               };
             },
-            lap: function (w) {
+            lap: function () {
               return function (bounds, g) {
                 var left =
                   bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
@@ -99,7 +99,7 @@
               };
             },
             _: function (w) {
-              return function (g) {
+              return function () {
                 var colWidth = Math.min(w, MAX_WIDTH) / 2;
                 return {
                   top: LEGEND_PADDING,
@@ -269,8 +269,8 @@
               "transform",
               sszvis.translateString(
                 bounds.innerWidth / 2 - multiplesMaker.width() / 2,
-                0
-              )
+                0,
+              ),
             )
             .call(multiplesMaker);
 
@@ -292,7 +292,7 @@
               .selectAll(".sszvis-multiple-chart")
               .attr(
                 "transform",
-                sszvis.translateString(d.cx - pieR, d.cy - pieR)
+                sszvis.translateString(d.cx - pieR, d.cy - pieR),
               )
               .call(pieMaker);
           });
@@ -307,8 +307,8 @@
               "transform",
               sszvis.translateString(
                 legendPosition.left,
-                bounds.innerHeight + legendPosition.top
-              )
+                bounds.innerHeight + legendPosition.top,
+              ),
             )
             .call(colorLegend);
 

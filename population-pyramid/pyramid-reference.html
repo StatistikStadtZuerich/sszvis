@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Population Pyramid | Reference</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -90,7 +90,7 @@
           var pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
           var pyramidDimensions = sszvis.layoutPopulationPyramid(
             pyramidWidth,
-            state.ages.length
+            state.ages.length,
           );
           var chartPadding = { top: 25, bottom: 86 };
           var bounds = sszvis.bounds(
@@ -104,7 +104,7 @@
               left: pyramidDimensions.chartPadding,
               right: pyramidDimensions.chartPadding,
             },
-            config.id
+            config.id,
           );
 
           // Scales
@@ -178,7 +178,7 @@
             .selectGroup("xAxis")
             .attr(
               "transform",
-              sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight)
+              sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight),
             )
             .call(xAxis);
 
@@ -191,7 +191,7 @@
             .selectGroup("colorLegend")
             .attr(
               "transform",
-              sszvis.translateString(0, bounds.innerHeight + 60)
+              sszvis.translateString(0, bounds.innerHeight + 60),
             )
             .call(colorLegend);
 

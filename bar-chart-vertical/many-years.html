@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Vertical Bar Chart | Many Years</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -111,12 +111,12 @@
                   ? props.leftPadding
                   : sszvis.measureAxisLabel(props.yLabelFormat(yMax)) + 10,
             },
-            config.id
+            config.id,
           );
 
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             bounds.innerWidth,
-            state.categories.length
+            state.categories.length,
           );
 
           // Scales
@@ -197,8 +197,8 @@
             "transform",
             sszvis.translateString(
               bounds.innerWidth / 2 - chartDimensions.totalWidth / 2,
-              bounds.padding.top
-            )
+              bounds.padding.top,
+            ),
           );
 
           var bars = chartLayer

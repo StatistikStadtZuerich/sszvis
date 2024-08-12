@@ -256,10 +256,6 @@ function render(state) {
     })
     .contour(true);
 
-  var numColumns = Math.ceil(cScale.domain().length / props.numLegendRows);
-  var columnWidth = Math.min(Math.max(bounds.innerWidth / numColumns, 260), 350);
-  var legendWidth = columnWidth * numColumns;
-
   var tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)

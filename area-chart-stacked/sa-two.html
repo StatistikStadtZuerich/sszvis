@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Area Chart Stacked | Two</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -90,7 +90,7 @@
                     r[k] = yAcc(d[k][0]);
                   });
                   return r;
-                })
+                }),
             );
 
             state.stackedData.forEach(function (stack, i) {
@@ -170,7 +170,7 @@
               legendLabels: state.categories,
               slant: props.xSlant,
             },
-            config.id
+            config.id,
           );
 
           var cScale = legendLayout.scale;
@@ -178,13 +178,13 @@
 
           var bounds = sszvis.bounds(
             { top: 70, bottom: legendLayout.bottomPadding },
-            config.id
+            config.id,
           );
 
           var multiplesLayout = sszvis.layoutStackedAreaMultiples(
             bounds.innerHeight,
             state.stackedData.length,
-            0.1
+            0.1,
           );
 
           // Scales
@@ -225,22 +225,22 @@
             .x(
               sszvis.compose(xScale, xAcc, function (d) {
                 return d.data;
-              })
+              }),
             )
             .y0(
               sszvis.compose(yScale, function (d) {
                 return d[0];
-              })
+              }),
             )
             .y1(
               sszvis.compose(yScale, function (d) {
                 return d[1];
-              })
+              }),
             )
             .fill(
               sszvis.compose(cScale, function (d) {
                 return d.key;
-              })
+              }),
             );
 
           var stackedAreaMultiples = sszvis
@@ -249,12 +249,12 @@
             .x(
               sszvis.compose(xScale, xAcc, function (d) {
                 return d.data;
-              })
+              }),
             )
             .y0(
               sszvis.compose(yPositionMultiples, function (d) {
                 return d.key;
-              })
+              }),
             )
             .y1(function (d) {
               return yPositionMultiples(d.key) - yScaleMultiples(d.data[d.key]);
@@ -262,7 +262,7 @@
             .fill(
               sszvis.compose(cScale, function (d) {
                 return d.key;
-              })
+              }),
             );
 
           var topValue;
@@ -300,7 +300,7 @@
               return d.data[d.key];
             })
             .total(state.totalHighlightValue)
-            .flip(function (d) {
+            .flip(function () {
               return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
             });
 
@@ -309,7 +309,7 @@
             .bold(
               sszvis.compose(sszvis.formatNumber, function (d) {
                 return d.data[d.key];
-              })
+              }),
             )
             .plain(function (d) {
               return d.key;
@@ -318,7 +318,7 @@
           var rangeTooltip = sszvis
             .tooltip()
             .header(tooltipText)
-            .orientation(function (d) {
+            .orientation(function () {
               return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth
                 ? "right"
                 : "left";
@@ -397,8 +397,8 @@
               "transform",
               sszvis.translateString(
                 0,
-                bounds.innerHeight + legendLayout.axisLabelPadding
-              )
+                bounds.innerHeight + legendLayout.axisLabelPadding,
+              ),
             )
             .call(colorLegend);
 
@@ -427,7 +427,7 @@
                 } else {
                   return v[0] < state.mouseYValue && v[1] > state.mouseYValue;
                 }
-              })
+              }),
             )
             .call(rangeFlag);
 

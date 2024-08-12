@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Vertical Bar Chart</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -117,11 +117,11 @@
                   ? props.leftPadding
                   : sszvis.measureAxisLabel(props.yLabelFormat(yMax)),
             },
-            config.id
+            config.id,
           );
           var chartDimensions = sszvis.dimensionsVerticalBarChart(
             Math.min(MAX_WIDTH, bounds.innerWidth),
-            state.categories.length
+            state.categories.length,
           );
 
           // Scales
@@ -161,7 +161,11 @@
             .bar()
             .x(sszvis.compose(xScale, xAcc))
             .y(
-              sszvis.compose(nanFallback(yPosScale.range()[0]), yPosScale, yAcc)
+              sszvis.compose(
+                nanFallback(yPosScale.range()[0]),
+                yPosScale,
+                yAcc,
+              ),
             )
             // Because we use sszvis.move in this example, we need to make
             // sure that bars have the exact same size as the scale's rangeBand. This
@@ -206,8 +210,8 @@
             "transform",
             sszvis.translateString(
               bounds.innerWidth / 2 - chartDimensions.totalWidth / 2,
-              bounds.padding.top
-            )
+              bounds.padding.top,
+            ),
           );
 
           var bars = chartLayer
@@ -244,10 +248,6 @@
         // -----------------------------------------------
         function isSelected(d) {
           return sszvis.contains(state.selection, d);
-        }
-
-        function labelWrapWidth(range) {
-          return (d3.max(range) - d3.min(range)) / range.length;
         }
 
         function nanFallback(fallbackyValue) {

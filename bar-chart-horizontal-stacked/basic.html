@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Stacked Horizontal Bar Chart</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -90,7 +90,7 @@
             state.stackedData = sszvis.stackedBarHorizontalData(
               yAcc,
               cAcc,
-              xAcc
+              xAcc,
             )(data);
             state.maxStacked = state.stackedData.maxValue;
 
@@ -131,7 +131,7 @@
               legendLabels: state.categories,
               slant: props.xSlant,
             },
-            config.id
+            config.id,
           );
 
           var cScale = legendLayout.scale;
@@ -139,7 +139,7 @@
 
           //the height and the bottom padding need to be calculated
           var chartDimensions = sszvis.dimensionsHorizontalBarChart(
-            state.yValues.length
+            state.yValues.length,
           );
           var paddingTop = 20;
           var bottomPadding =
@@ -152,7 +152,7 @@
               top: paddingTop,
               bottom: bottomPadding,
             },
-            config.id
+            config.id,
           );
           var chartWidth = Math.min(bounds.innerWidth, 800);
 
@@ -226,8 +226,8 @@
             "transform",
             sszvis.translateString(
               bounds.innerWidth / 2 - chartWidth / 2,
-              bounds.padding.top
-            )
+              bounds.padding.top,
+            ),
           );
 
           var bars = chartLayer.selectGroup("barchart").call(horizontalBars);
@@ -238,7 +238,7 @@
             .selectGroup("xAxis")
             .attr(
               "transform",
-              sszvis.translateString(0, chartDimensions.totalHeight)
+              sszvis.translateString(0, chartDimensions.totalHeight),
             )
             .call(xAxis);
 
@@ -246,7 +246,7 @@
             .selectGroup("yAxis")
             .attr(
               "transform",
-              sszvis.translateString(0, chartDimensions.axisOffset)
+              sszvis.translateString(0, chartDimensions.axisOffset),
             )
             .call(yAxis);
 
@@ -256,8 +256,8 @@
               "transform",
               sszvis.translateString(
                 0,
-                chartDimensions.totalHeight + legendLayout.axisLabelPadding
-              )
+                chartDimensions.totalHeight + legendLayout.axisLabelPadding,
+              ),
             )
             .call(colorLegend);
 

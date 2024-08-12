@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Heat Table | Kreise</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -125,7 +125,7 @@
             squarePadding,
             state.xList.length,
             state.yList.length,
-            tablePadding
+            tablePadding,
           );
 
           // construct the bounds as usual, but add the left and right padding to the width, and the top and bottom padding to the height
@@ -139,7 +139,7 @@
               top: tablePadding.top,
               bottom: tablePadding.bottom,
             },
-            config.id
+            config.id,
           );
 
           var props = queryProps(sszvis.measureDimensions(config.id));
@@ -168,8 +168,8 @@
             return isNaN(v)
               ? "url(#ht-missing-value)"
               : v === 0
-              ? sszvis.scaleLightGry()(v)
-              : colorScale(v);
+                ? sszvis.scaleLightGry()(v)
+                : colorScale(v);
           }, vAcc);
 
           // Layers
@@ -242,8 +242,6 @@
             .width(legendWidth)
             .labelFormat(sszvis.formatNumber);
 
-          var tooltipHeaderText = sszvis.modularTextHTML().bold("Paare");
-
           var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
@@ -256,7 +254,6 @@
             })
             .body(function (d) {
               var v = vAcc(d);
-              var y = yAcc(d);
               if (props.tSourceAxis === "y") {
                 return [
                   [props.xAxisLabel, xAcc(d)],
@@ -278,7 +275,7 @@
             .selectGroup("bars")
             .attr(
               "transform",
-              sszvis.translateString(tableDimensions.centeredOffset, 0)
+              sszvis.translateString(tableDimensions.centeredOffset, 0),
             )
             .call(barGen);
 
@@ -288,7 +285,7 @@
             .selectGroup("xAxis")
             .attr(
               "transform",
-              sszvis.translateString(tableDimensions.centeredOffset, -10)
+              sszvis.translateString(tableDimensions.centeredOffset, -10),
             )
             .call(xAxis);
 
@@ -296,7 +293,7 @@
             .selectGroup("yAxis")
             .attr(
               "transform",
-              sszvis.translateString(tableDimensions.centeredOffset - 10, 0)
+              sszvis.translateString(tableDimensions.centeredOffset - 10, 0),
             )
             .call(yAxis);
 
@@ -307,8 +304,8 @@
               sszvis.translateString(
                 tableDimensions.centeredOffset +
                   (tableDimensions.width - legendWidth) / 2,
-                bounds.innerHeight + 16
-              )
+                bounds.innerHeight + 16,
+              ),
             )
             .call(legend);
 

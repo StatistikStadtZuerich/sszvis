@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Horizontal Bar Chart</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -95,7 +95,7 @@
         function render(state) {
           var props = queryProps(sszvis.measureDimensions(config.id));
           var chartDimensions = sszvis.dimensionsHorizontalBarChart(
-            state.categories.length
+            state.categories.length,
           );
           var bounds = sszvis.bounds(
             {
@@ -103,7 +103,7 @@
               top: 30,
               bottom: 40,
             },
-            config.id
+            config.id,
           );
           var chartWidth = Math.min(bounds.innerWidth, 800);
 
@@ -125,8 +125,6 @@
           var chartLayer = sszvis
             .createSvgLayer(config.id, bounds)
             .datum(state.data);
-
-          var controlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
           var tooltipLayer = sszvis
             .createHtmlLayer(config.id, bounds)
@@ -158,7 +156,7 @@
           var tooltipHeader = sszvis.modularTextHTML().bold(
             sszvis.compose(function (d) {
               return isNaN(d) ? "k. A." : sszvis.formatNumber(d);
-            }, xAcc)
+            }, xAcc),
           );
 
           var tooltip = sszvis
@@ -174,8 +172,8 @@
             "transform",
             sszvis.translateString(
               bounds.innerWidth / 2 - chartWidth / 2,
-              bounds.padding.top
-            )
+              bounds.padding.top,
+            ),
           );
 
           var bars = chartLayer.selectGroup("bars").call(barGen);
@@ -184,7 +182,7 @@
             .selectGroup("xAxis")
             .attr(
               "transform",
-              sszvis.translateString(0, chartDimensions.totalHeight)
+              sszvis.translateString(0, chartDimensions.totalHeight),
             )
             .call(xAxis);
 
@@ -192,7 +190,7 @@
             .selectGroup("yAxis")
             .attr(
               "transform",
-              sszvis.translateString(0, chartDimensions.axisOffset)
+              sszvis.translateString(0, chartDimensions.axisOffset),
             )
             .call(yAxis);
 

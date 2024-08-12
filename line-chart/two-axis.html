@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Line Chart | Two-Axis</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -66,11 +66,11 @@
               // Two different sets of categories for two color scales
               state.categories1 = sszvis.set(
                 state.data.filter(sszvis.not(datumIsOnAxis2)),
-                cAcc
+                cAcc,
               );
               state.categories2 = sszvis.set(
                 state.data.filter(datumIsOnAxis2),
-                cAcc
+                cAcc,
               );
 
               state.selection = [];
@@ -85,7 +85,7 @@
                 }, linePoints);
               });
               state.selection = closestData.filter(
-                sszvis.compose(sszvis.not(isNaN), yAcc)
+                sszvis.compose(sszvis.not(isNaN), yAcc),
               );
             },
 
@@ -96,7 +96,7 @@
           render: (state, actions) => {
             var bounds = sszvis.bounds(
               { top: 30, bottom: 130 },
-              "#sszvis-chart"
+              "#sszvis-chart",
             );
             var props = queryProps(bounds);
 
@@ -221,7 +221,7 @@
               .selectGroup("cScale1")
               .attr(
                 "transform",
-                sszvis.translateString(0, bounds.innerHeight + 60)
+                sszvis.translateString(0, bounds.innerHeight + 60),
               )
               .call(cLegend1);
 
@@ -231,8 +231,8 @@
                 "transform",
                 sszvis.translateString(
                   bounds.innerWidth,
-                  bounds.innerHeight + 60
-                )
+                  bounds.innerHeight + 60,
+                ),
               )
               .call(cLegend2);
 

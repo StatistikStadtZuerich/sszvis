@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Scatterplot</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -90,7 +90,7 @@
             state.activeYear = closestDatum(
               state.years,
               sszvis.identity,
-              inputYear
+              inputYear,
             );
 
             state.currentLinesData = state.linesData.map(function (line) {
@@ -123,7 +123,7 @@
               {
                 currentData: [],
                 currentAndPastData: [],
-              }
+              },
             );
 
             state.currentData = splitData.currentData;
@@ -133,7 +133,7 @@
               splitData.currentAndPastData,
               function (d) {
                 return xAcc(d) + "__" + yAcc(d);
-              }
+              },
             );
 
             if (
@@ -142,7 +142,7 @@
               console.warn(
                 splitData.currentAndPastData.length -
                   state.voronoiPoints.length +
-                  " data points were filtered out of the voronoi points because the voronoi interaction layer requires that no two input vertices lie at the same point."
+                  " data points were filtered out of the voronoi points because the voronoi interaction layer requires that no two input vertices lie at the same point.",
               );
             }
 
@@ -182,7 +182,7 @@
               axisLabels: state.xExtent.map(props.xLabelFormat),
               legendLabels: state.branches,
             },
-            config.id
+            config.id,
           );
 
           var cScale = legendLayout.scale;
@@ -195,7 +195,7 @@
               bottom: SLIDER_CONTROL_HEIGHT + legendLayout.bottomPadding,
               left: 5,
             },
-            config.id
+            config.id,
           );
 
           // Scales
@@ -302,15 +302,6 @@
             })
             .contour(true);
 
-          var numColumns = Math.ceil(
-            cScale.domain().length / props.numLegendRows
-          );
-          var columnWidth = Math.min(
-            Math.max(bounds.innerWidth / numColumns, 260),
-            350
-          );
-          var legendWidth = columnWidth * numColumns;
-
           var tooltip = sszvis
             .tooltip()
             .renderInto(tooltipLayer)
@@ -371,7 +362,7 @@
             .selectGroup("slider")
             .attr(
               "transform",
-              sszvis.translateString(0, bounds.innerHeight + 46)
+              sszvis.translateString(0, bounds.innerHeight + 46),
             )
             .call(slider);
 
@@ -383,8 +374,8 @@
                 0,
                 bounds.innerHeight +
                   SLIDER_CONTROL_HEIGHT +
-                  legendLayout.axisLabelPadding
-              )
+                  legendLayout.axisLabelPadding,
+              ),
             )
             .call(colorLegend);
 

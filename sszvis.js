@@ -2,989 +2,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
   typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
-  (global = global || self, factory(global.sszvis = {}, global.d3));
-}(this, (function (exports, d3) { 'use strict';
-
-  function n(n){for(var t=arguments.length,r=Array(t>1?t-1:0),e=1;e<t;e++)r[e-1]=arguments[e];throw Error("[Immer] minified error nr: "+n+(r.length?" "+r.map((function(n){return "'"+n+"'"})).join(","):"")+". Find the full error at: https://bit.ly/3cXEKWf")}function t(n){return !!n&&!!n[Q]}function r(n){return !!n&&(function(n){if(!n||"object"!=typeof n)return !1;var t=Object.getPrototypeOf(n);return !t||t===Object.prototype}(n)||Array.isArray(n)||!!n[L]||!!n.constructor[L]||s(n)||v(n))}function i(n,t,r){void 0===r&&(r=!1),0===o(n)?(r?Object.keys:Z)(n).forEach((function(e){r&&"symbol"==typeof e||t(e,n[e],n);})):n.forEach((function(r,e){return t(e,r,n)}));}function o(n){var t=n[Q];return t?t.i>3?t.i-4:t.i:Array.isArray(n)?1:s(n)?2:v(n)?3:0}function u(n,t){return 2===o(n)?n.has(t):Object.prototype.hasOwnProperty.call(n,t)}function a(n,t){return 2===o(n)?n.get(t):n[t]}function f(n,t,r){var e=o(n);2===e?n.set(t,r):3===e?(n.delete(t),n.add(r)):n[t]=r;}function c(n,t){return n===t?0!==n||1/n==1/t:n!=n&&t!=t}function s(n){return X&&n instanceof Map}function v(n){return q&&n instanceof Set}function p(n){return n.o||n.t}function l(n){if(Array.isArray(n))return Array.prototype.slice.call(n);var t=nn(n);delete t[Q];for(var r=Z(t),e=0;e<r.length;e++){var i=r[e],o=t[i];!1===o.writable&&(o.writable=!0,o.configurable=!0),(o.get||o.set)&&(t[i]={configurable:!0,writable:!0,enumerable:o.enumerable,value:n[i]});}return Object.create(Object.getPrototypeOf(n),t)}function d(n,e){y(n)||t(n)||!r(n)||(o(n)>1&&(n.set=n.add=n.clear=n.delete=h),Object.freeze(n),e&&i(n,(function(n,t){return d(t,!0)}),!0));}function h(){n(2);}function y(n){return null==n||"object"!=typeof n||Object.isFrozen(n)}function b(t){var r=tn[t];return r||n(18,t),r}function m(n,t){tn[n]||(tn[n]=t);}function _(){return U}function j(n,t){t&&(b("Patches"),n.u=[],n.s=[],n.v=t);}function g(n){O(n),n.p.forEach(S),n.p=null;}function O(n){n===U&&(U=n.l);}function w(n){return U={p:[],l:U,h:n,m:!0,_:0}}function S(n){var t=n[Q];0===t.i||1===t.i?t.j():t.g=!0;}function P(t,e){e._=e.p.length;var i=e.p[0],o=void 0!==t&&t!==i;return e.h.O||b("ES5").S(e,t,o),o?(i[Q].P&&(g(e),n(4)),r(t)&&(t=M(e,t),e.l||x(e,t)),e.u&&b("Patches").M(i[Q],t,e.u,e.s)):t=M(e,i,[]),g(e),e.u&&e.v(e.u,e.s),t!==H?t:void 0}function M(n,t,r){if(y(t))return t;var e=t[Q];if(!e)return i(t,(function(i,o){return A(n,e,t,i,o,r)}),!0),t;if(e.A!==n)return t;if(!e.P)return x(n,e.t,!0),e.t;if(!e.I){e.I=!0,e.A._--;var o=4===e.i||5===e.i?e.o=l(e.k):e.o;i(3===e.i?new Set(o):o,(function(t,i){return A(n,e,o,t,i,r)})),x(n,o,!1),r&&n.u&&b("Patches").R(e,r,n.u,n.s);}return e.o}function A(e,i,o,a,c,s){if(t(c)){var v=M(e,c,s&&i&&3!==i.i&&!u(i.D,a)?s.concat(a):void 0);if(f(o,a,v),!t(v))return;e.m=!1;}if(r(c)&&!y(c)){if(!e.h.N&&e._<1)return;M(e,c),i&&i.A.l||x(e,c);}}function x(n,t,r){void 0===r&&(r=!1),n.h.N&&n.m&&d(t,r);}function z(n,t){var r=n[Q];return (r?p(r):n)[t]}function I(n,t){if(t in n)for(var r=Object.getPrototypeOf(n);r;){var e=Object.getOwnPropertyDescriptor(r,t);if(e)return e;r=Object.getPrototypeOf(r);}}function E(n){n.P||(n.P=!0,n.l&&E(n.l));}function k(n){n.o||(n.o=l(n.t));}function R(n,t,r){var e=s(t)?b("MapSet").T(t,r):v(t)?b("MapSet").F(t,r):n.O?function(n,t){var r=Array.isArray(n),e={i:r?1:0,A:t?t.A:_(),P:!1,I:!1,D:{},l:t,t:n,k:null,o:null,j:null,C:!1},i=e,o=rn;r&&(i=[e],o=en);var u=Proxy.revocable(i,o),a=u.revoke,f=u.proxy;return e.k=f,e.j=a,f}(t,r):b("ES5").J(t,r);return (r?r.A:_()).p.push(e),e}function D(e){return t(e)||n(22,e),function n(t){if(!r(t))return t;var e,u=t[Q],c=o(t);if(u){if(!u.P&&(u.i<4||!b("ES5").K(u)))return u.t;u.I=!0,e=N(t,c),u.I=!1;}else e=N(t,c);return i(e,(function(t,r){u&&a(u.t,t)===r||f(e,t,n(r));})),3===c?new Set(e):e}(e)}function N(n,t){switch(t){case 2:return new Map(n);case 3:return Array.from(n)}return l(n)}function T(){function r(n,t){var r=s[n];return r?r.enumerable=t:s[n]=r={configurable:!0,enumerable:t,get:function(){var t=this[Q];return rn.get(t,n)},set:function(t){var r=this[Q];rn.set(r,n,t);}},r}function e(n){for(var t=n.length-1;t>=0;t--){var r=n[t][Q];if(!r.P)switch(r.i){case 5:a(r)&&E(r);break;case 4:o(r)&&E(r);}}}function o(n){for(var t=n.t,r=n.k,e=Z(r),i=e.length-1;i>=0;i--){var o=e[i];if(o!==Q){var a=t[o];if(void 0===a&&!u(t,o))return !0;var f=r[o],s=f&&f[Q];if(s?s.t!==a:!c(f,a))return !0}}var v=!!t[Q];return e.length!==Z(t).length+(v?0:1)}function a(n){var t=n.k;if(t.length!==n.t.length)return !0;var r=Object.getOwnPropertyDescriptor(t,t.length-1);return !(!r||r.get)}var s={};m("ES5",{J:function(n,t){var e=Array.isArray(n),i=function(n,t){if(n){for(var e=Array(t.length),i=0;i<t.length;i++)Object.defineProperty(e,""+i,r(i,!0));return e}var o=nn(t);delete o[Q];for(var u=Z(o),a=0;a<u.length;a++){var f=u[a];o[f]=r(f,n||!!o[f].enumerable);}return Object.create(Object.getPrototypeOf(t),o)}(e,n),o={i:e?5:4,A:t?t.A:_(),P:!1,I:!1,D:{},l:t,t:n,k:i,o:null,g:!1,C:!1};return Object.defineProperty(i,Q,{value:o,writable:!0}),i},S:function(n,r,o){o?t(r)&&r[Q].A===n&&e(n.p):(n.u&&function n(t){if(t&&"object"==typeof t){var r=t[Q];if(r){var e=r.t,o=r.k,f=r.D,c=r.i;if(4===c)i(o,(function(t){t!==Q&&(void 0!==e[t]||u(e,t)?f[t]||n(o[t]):(f[t]=!0,E(r)));})),i(e,(function(n){void 0!==o[n]||u(o,n)||(f[n]=!1,E(r));}));else if(5===c){if(a(r)&&(E(r),f.length=!0),o.length<e.length)for(var s=o.length;s<e.length;s++)f[s]=!1;else for(var v=e.length;v<o.length;v++)f[v]=!0;for(var p=Math.min(o.length,e.length),l=0;l<p;l++)void 0===f[l]&&n(o[l]);}}}}(n.p[0]),e(n.p));},K:function(n){return 4===n.i?o(n):a(n)}});}var G,U,W="undefined"!=typeof Symbol&&"symbol"==typeof Symbol("x"),X="undefined"!=typeof Map,q="undefined"!=typeof Set,B="undefined"!=typeof Proxy&&void 0!==Proxy.revocable&&"undefined"!=typeof Reflect,H=W?Symbol.for("immer-nothing"):((G={})["immer-nothing"]=!0,G),L=W?Symbol.for("immer-draftable"):"__$immer_draftable",Q=W?Symbol.for("immer-state"):"__$immer_state",Z="undefined"!=typeof Reflect&&Reflect.ownKeys?Reflect.ownKeys:void 0!==Object.getOwnPropertySymbols?function(n){return Object.getOwnPropertyNames(n).concat(Object.getOwnPropertySymbols(n))}:Object.getOwnPropertyNames,nn=Object.getOwnPropertyDescriptors||function(n){var t={};return Z(n).forEach((function(r){t[r]=Object.getOwnPropertyDescriptor(n,r);})),t},tn={},rn={get:function(n,t){if(t===Q)return n;var e=p(n);if(!u(e,t))return function(n,t,r){var e,i=I(t,r);return i?"value"in i?i.value:null===(e=i.get)||void 0===e?void 0:e.call(n.k):void 0}(n,e,t);var i=e[t];return n.I||!r(i)?i:i===z(n.t,t)?(k(n),n.o[t]=R(n.A.h,i,n)):i},has:function(n,t){return t in p(n)},ownKeys:function(n){return Reflect.ownKeys(p(n))},set:function(n,t,r){var e=I(p(n),t);if(null==e?void 0:e.set)return e.set.call(n.k,r),!0;if(!n.P){var i=z(p(n),t),o=null==i?void 0:i[Q];if(o&&o.t===r)return n.o[t]=r,n.D[t]=!1,!0;if(c(r,i)&&(void 0!==r||u(n.t,t)))return !0;k(n),E(n);}return n.o[t]=r,n.D[t]=!0,!0},deleteProperty:function(n,t){return void 0!==z(n.t,t)||t in n.t?(n.D[t]=!1,k(n),E(n)):delete n.D[t],n.o&&delete n.o[t],!0},getOwnPropertyDescriptor:function(n,t){var r=p(n),e=Reflect.getOwnPropertyDescriptor(r,t);return e?{writable:!0,configurable:1!==n.i||"length"!==t,enumerable:e.enumerable,value:r[t]}:e},defineProperty:function(){n(11);},getPrototypeOf:function(n){return Object.getPrototypeOf(n.t)},setPrototypeOf:function(){n(12);}},en={};i(rn,(function(n,t){en[n]=function(){return arguments[0]=arguments[0][0],t.apply(this,arguments)};})),en.deleteProperty=function(t,r){return rn.deleteProperty.call(this,t[0],r)},en.set=function(t,r,e){return rn.set.call(this,t[0],r,e,t[0])};var on=function(){function e(n){this.O=B,this.N="production"!=="production","boolean"==typeof(null==n?void 0:n.useProxies)&&this.setUseProxies(n.useProxies),"boolean"==typeof(null==n?void 0:n.autoFreeze)&&this.setAutoFreeze(n.autoFreeze),this.produce=this.produce.bind(this),this.produceWithPatches=this.produceWithPatches.bind(this);}var i=e.prototype;return i.produce=function(t,e,i){if("function"==typeof t&&"function"!=typeof e){var o=e;e=t;var u=this;return function(n){var t=this;void 0===n&&(n=o);for(var r=arguments.length,i=Array(r>1?r-1:0),a=1;a<r;a++)i[a-1]=arguments[a];return u.produce(n,(function(n){var r;return (r=e).call.apply(r,[t,n].concat(i))}))}}var a;if("function"!=typeof e&&n(6),void 0!==i&&"function"!=typeof i&&n(7),r(t)){var f=w(this),c=R(this,t,void 0),s=!0;try{a=e(c),s=!1;}finally{s?g(f):O(f);}return "undefined"!=typeof Promise&&a instanceof Promise?a.then((function(n){return j(f,i),P(n,f)}),(function(n){throw g(f),n})):(j(f,i),P(a,f))}if(!t||"object"!=typeof t){if((a=e(t))===H)return;return void 0===a&&(a=t),this.N&&d(a,!0),a}n(21,t);},i.produceWithPatches=function(n,t){var r,e,i=this;return "function"==typeof n?function(t){for(var r=arguments.length,e=Array(r>1?r-1:0),o=1;o<r;o++)e[o-1]=arguments[o];return i.produceWithPatches(t,(function(t){return n.apply(void 0,[t].concat(e))}))}:[this.produce(n,t,(function(n,t){r=n,e=t;})),r,e]},i.createDraft=function(e){r(e)||n(8),t(e)&&(e=D(e));var i=w(this),o=R(this,e,void 0);return o[Q].C=!0,O(i),o},i.finishDraft=function(t,r){var e=t&&t[Q];var i=e.A;return j(i,r),P(void 0,i)},i.setAutoFreeze=function(n){this.N=n;},i.setUseProxies=function(t){t&&!B&&n(20),this.O=t;},i.applyPatches=function(n,r){var e;for(e=r.length-1;e>=0;e--){var i=r[e];if(0===i.path.length&&"replace"===i.op){n=i.value;break}}var o=b("Patches").$;return t(n)?o(n,r):this.produce(n,(function(n){return o(n,r.slice(e+1))}))},e}(),un=new on,fn=un.produceWithPatches.bind(un),cn=un.setAutoFreeze.bind(un),sn=un.setUseProxies.bind(un),vn=un.applyPatches.bind(un),pn=un.createDraft.bind(un),ln=un.finishDraft.bind(un);
-
-  /**
-   * @this {Promise}
-   */
-  function finallyConstructor(callback) {
-    var constructor = this.constructor;
-    return this.then(
-      function(value) {
-        // @ts-ignore
-        return constructor.resolve(callback()).then(function() {
-          return value;
-        });
-      },
-      function(reason) {
-        // @ts-ignore
-        return constructor.resolve(callback()).then(function() {
-          // @ts-ignore
-          return constructor.reject(reason);
-        });
-      }
-    );
-  }
-
-  // Store setTimeout reference so promise-polyfill will be unaffected by
-  // other code modifying setTimeout (like sinon.useFakeTimers())
-  var setTimeoutFunc = setTimeout;
-
-  function isArray(x) {
-    return Boolean(x && typeof x.length !== 'undefined');
-  }
-
-  function noop() {}
-
-  // Polyfill for Function.prototype.bind
-  function bind(fn, thisArg) {
-    return function() {
-      fn.apply(thisArg, arguments);
-    };
-  }
-
-  /**
-   * @constructor
-   * @param {Function} fn
-   */
-  function Promise$1(fn) {
-    if (!(this instanceof Promise$1))
-      throw new TypeError('Promises must be constructed via new');
-    if (typeof fn !== 'function') throw new TypeError('not a function');
-    /** @type {!number} */
-    this._state = 0;
-    /** @type {!boolean} */
-    this._handled = false;
-    /** @type {Promise|undefined} */
-    this._value = undefined;
-    /** @type {!Array<!Function>} */
-    this._deferreds = [];
-
-    doResolve(fn, this);
-  }
-
-  function handle(self, deferred) {
-    while (self._state === 3) {
-      self = self._value;
-    }
-    if (self._state === 0) {
-      self._deferreds.push(deferred);
-      return;
-    }
-    self._handled = true;
-    Promise$1._immediateFn(function() {
-      var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
-      if (cb === null) {
-        (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
-        return;
-      }
-      var ret;
-      try {
-        ret = cb(self._value);
-      } catch (e) {
-        reject(deferred.promise, e);
-        return;
-      }
-      resolve(deferred.promise, ret);
-    });
-  }
-
-  function resolve(self, newValue) {
-    try {
-      // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
-      if (newValue === self)
-        throw new TypeError('A promise cannot be resolved with itself.');
-      if (
-        newValue &&
-        (typeof newValue === 'object' || typeof newValue === 'function')
-      ) {
-        var then = newValue.then;
-        if (newValue instanceof Promise$1) {
-          self._state = 3;
-          self._value = newValue;
-          finale(self);
-          return;
-        } else if (typeof then === 'function') {
-          doResolve(bind(then, newValue), self);
-          return;
-        }
-      }
-      self._state = 1;
-      self._value = newValue;
-      finale(self);
-    } catch (e) {
-      reject(self, e);
-    }
-  }
-
-  function reject(self, newValue) {
-    self._state = 2;
-    self._value = newValue;
-    finale(self);
-  }
-
-  function finale(self) {
-    if (self._state === 2 && self._deferreds.length === 0) {
-      Promise$1._immediateFn(function() {
-        if (!self._handled) {
-          Promise$1._unhandledRejectionFn(self._value);
-        }
-      });
-    }
-
-    for (var i = 0, len = self._deferreds.length; i < len; i++) {
-      handle(self, self._deferreds[i]);
-    }
-    self._deferreds = null;
-  }
-
-  /**
-   * @constructor
-   */
-  function Handler(onFulfilled, onRejected, promise) {
-    this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
-    this.onRejected = typeof onRejected === 'function' ? onRejected : null;
-    this.promise = promise;
-  }
-
-  /**
-   * Take a potentially misbehaving resolver function and make sure
-   * onFulfilled and onRejected are only called once.
-   *
-   * Makes no guarantees about asynchrony.
-   */
-  function doResolve(fn, self) {
-    var done = false;
-    try {
-      fn(
-        function(value) {
-          if (done) return;
-          done = true;
-          resolve(self, value);
-        },
-        function(reason) {
-          if (done) return;
-          done = true;
-          reject(self, reason);
-        }
-      );
-    } catch (ex) {
-      if (done) return;
-      done = true;
-      reject(self, ex);
-    }
-  }
-
-  Promise$1.prototype['catch'] = function(onRejected) {
-    return this.then(null, onRejected);
-  };
-
-  Promise$1.prototype.then = function(onFulfilled, onRejected) {
-    // @ts-ignore
-    var prom = new this.constructor(noop);
-
-    handle(this, new Handler(onFulfilled, onRejected, prom));
-    return prom;
-  };
-
-  Promise$1.prototype['finally'] = finallyConstructor;
-
-  Promise$1.all = function(arr) {
-    return new Promise$1(function(resolve, reject) {
-      if (!isArray(arr)) {
-        return reject(new TypeError('Promise.all accepts an array'));
-      }
-
-      var args = Array.prototype.slice.call(arr);
-      if (args.length === 0) return resolve([]);
-      var remaining = args.length;
-
-      function res(i, val) {
-        try {
-          if (val && (typeof val === 'object' || typeof val === 'function')) {
-            var then = val.then;
-            if (typeof then === 'function') {
-              then.call(
-                val,
-                function(val) {
-                  res(i, val);
-                },
-                reject
-              );
-              return;
-            }
-          }
-          args[i] = val;
-          if (--remaining === 0) {
-            resolve(args);
-          }
-        } catch (ex) {
-          reject(ex);
-        }
-      }
-
-      for (var i = 0; i < args.length; i++) {
-        res(i, args[i]);
-      }
-    });
-  };
-
-  Promise$1.resolve = function(value) {
-    if (value && typeof value === 'object' && value.constructor === Promise$1) {
-      return value;
-    }
-
-    return new Promise$1(function(resolve) {
-      resolve(value);
-    });
-  };
-
-  Promise$1.reject = function(value) {
-    return new Promise$1(function(resolve, reject) {
-      reject(value);
-    });
-  };
-
-  Promise$1.race = function(arr) {
-    return new Promise$1(function(resolve, reject) {
-      if (!isArray(arr)) {
-        return reject(new TypeError('Promise.race accepts an array'));
-      }
-
-      for (var i = 0, len = arr.length; i < len; i++) {
-        Promise$1.resolve(arr[i]).then(resolve, reject);
-      }
-    });
-  };
-
-  // Use polyfill for setImmediate for performance gains
-  Promise$1._immediateFn =
-    // @ts-ignore
-    (typeof setImmediate === 'function' &&
-      function(fn) {
-        // @ts-ignore
-        setImmediate(fn);
-      }) ||
-    function(fn) {
-      setTimeoutFunc(fn, 0);
-    };
-
-  Promise$1._unhandledRejectionFn = function _unhandledRejectionFn(err) {
-    if (typeof console !== 'undefined' && console) {
-      console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
-    }
-  };
-
-  /** @suppress {undefinedVars} */
-  var globalNS = (function() {
-    // the only reliable means to get the global object is
-    // `Function('return this')()`
-    // However, this causes CSP violations in Chrome apps.
-    if (typeof self !== 'undefined') {
-      return self;
-    }
-    if (typeof window !== 'undefined') {
-      return window;
-    }
-    if (typeof global !== 'undefined') {
-      return global;
-    }
-    throw new Error('unable to locate global object');
-  })();
-
-  if (!('Promise' in globalNS)) {
-    globalNS['Promise'] = Promise$1;
-  } else if (!globalNS.Promise.prototype['finally']) {
-    globalNS.Promise.prototype['finally'] = finallyConstructor;
-  }
-
-  var global$1 = (function(self) {
-    return self
-    // eslint-disable-next-line no-invalid-this
-  })(typeof self !== 'undefined' ? self : window);
-  var support = {
-    searchParams: 'URLSearchParams' in global$1,
-    iterable: 'Symbol' in global$1 && 'iterator' in Symbol,
-    blob:
-      'FileReader' in global$1 &&
-      'Blob' in global$1 &&
-      (function() {
-        try {
-          new Blob();
-          return true
-        } catch (e) {
-          return false
-        }
-      })(),
-    formData: 'FormData' in global$1,
-    arrayBuffer: 'ArrayBuffer' in global$1
-  };
-
-  function isDataView(obj) {
-    return obj && DataView.prototype.isPrototypeOf(obj)
-  }
-
-  if (support.arrayBuffer) {
-    var viewClasses = [
-      '[object Int8Array]',
-      '[object Uint8Array]',
-      '[object Uint8ClampedArray]',
-      '[object Int16Array]',
-      '[object Uint16Array]',
-      '[object Int32Array]',
-      '[object Uint32Array]',
-      '[object Float32Array]',
-      '[object Float64Array]'
-    ];
-
-    var isArrayBufferView =
-      ArrayBuffer.isView ||
-      function(obj) {
-        return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1
-      };
-  }
-
-  function normalizeName(name) {
-    if (typeof name !== 'string') {
-      name = String(name);
-    }
-    if (/[^a-z0-9\-#$%&'*+.^_`|~!]/i.test(name) || name === '') {
-      throw new TypeError('Invalid character in header field name')
-    }
-    return name.toLowerCase()
-  }
-
-  function normalizeValue(value) {
-    if (typeof value !== 'string') {
-      value = String(value);
-    }
-    return value
-  }
-
-  // Build a destructive iterator for the value list
-  function iteratorFor(items) {
-    var iterator = {
-      next: function() {
-        var value = items.shift();
-        return {done: value === undefined, value: value}
-      }
-    };
-
-    if (support.iterable) {
-      iterator[Symbol.iterator] = function() {
-        return iterator
-      };
-    }
-
-    return iterator
-  }
-
-  function Headers(headers) {
-    this.map = {};
-
-    if (headers instanceof Headers) {
-      headers.forEach(function(value, name) {
-        this.append(name, value);
-      }, this);
-    } else if (Array.isArray(headers)) {
-      headers.forEach(function(header) {
-        this.append(header[0], header[1]);
-      }, this);
-    } else if (headers) {
-      Object.getOwnPropertyNames(headers).forEach(function(name) {
-        this.append(name, headers[name]);
-      }, this);
-    }
-  }
-
-  Headers.prototype.append = function(name, value) {
-    name = normalizeName(name);
-    value = normalizeValue(value);
-    var oldValue = this.map[name];
-    this.map[name] = oldValue ? oldValue + ', ' + value : value;
-  };
-
-  Headers.prototype['delete'] = function(name) {
-    delete this.map[normalizeName(name)];
-  };
-
-  Headers.prototype.get = function(name) {
-    name = normalizeName(name);
-    return this.has(name) ? this.map[name] : null
-  };
-
-  Headers.prototype.has = function(name) {
-    return this.map.hasOwnProperty(normalizeName(name))
-  };
-
-  Headers.prototype.set = function(name, value) {
-    this.map[normalizeName(name)] = normalizeValue(value);
-  };
-
-  Headers.prototype.forEach = function(callback, thisArg) {
-    for (var name in this.map) {
-      if (this.map.hasOwnProperty(name)) {
-        callback.call(thisArg, this.map[name], name, this);
-      }
-    }
-  };
-
-  Headers.prototype.keys = function() {
-    var items = [];
-    this.forEach(function(value, name) {
-      items.push(name);
-    });
-    return iteratorFor(items)
-  };
-
-  Headers.prototype.values = function() {
-    var items = [];
-    this.forEach(function(value) {
-      items.push(value);
-    });
-    return iteratorFor(items)
-  };
-
-  Headers.prototype.entries = function() {
-    var items = [];
-    this.forEach(function(value, name) {
-      items.push([name, value]);
-    });
-    return iteratorFor(items)
-  };
-
-  if (support.iterable) {
-    Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
-  }
-
-  function consumed(body) {
-    if (body.bodyUsed) {
-      return Promise.reject(new TypeError('Already read'))
-    }
-    body.bodyUsed = true;
-  }
-
-  function fileReaderReady(reader) {
-    return new Promise(function(resolve, reject) {
-      reader.onload = function() {
-        resolve(reader.result);
-      };
-      reader.onerror = function() {
-        reject(reader.error);
-      };
-    })
-  }
-
-  function readBlobAsArrayBuffer(blob) {
-    var reader = new FileReader();
-    var promise = fileReaderReady(reader);
-    reader.readAsArrayBuffer(blob);
-    return promise
-  }
-
-  function readBlobAsText(blob) {
-    var reader = new FileReader();
-    var promise = fileReaderReady(reader);
-    reader.readAsText(blob);
-    return promise
-  }
-
-  function readArrayBufferAsText(buf) {
-    var view = new Uint8Array(buf);
-    var chars = new Array(view.length);
-
-    for (var i = 0; i < view.length; i++) {
-      chars[i] = String.fromCharCode(view[i]);
-    }
-    return chars.join('')
-  }
-
-  function bufferClone(buf) {
-    if (buf.slice) {
-      return buf.slice(0)
-    } else {
-      var view = new Uint8Array(buf.byteLength);
-      view.set(new Uint8Array(buf));
-      return view.buffer
-    }
-  }
-
-  function Body() {
-    this.bodyUsed = false;
-
-    this._initBody = function(body) {
-      /*
-        fetch-mock wraps the Response object in an ES6 Proxy to
-        provide useful test harness features such as flush. However, on
-        ES5 browsers without fetch or Proxy support pollyfills must be used;
-        the proxy-pollyfill is unable to proxy an attribute unless it exists
-        on the object before the Proxy is created. This change ensures
-        Response.bodyUsed exists on the instance, while maintaining the
-        semantic of setting Request.bodyUsed in the constructor before
-        _initBody is called.
-      */
-      this.bodyUsed = this.bodyUsed;
-      this._bodyInit = body;
-      if (!body) {
-        this._bodyText = '';
-      } else if (typeof body === 'string') {
-        this._bodyText = body;
-      } else if (support.blob && Blob.prototype.isPrototypeOf(body)) {
-        this._bodyBlob = body;
-      } else if (support.formData && FormData.prototype.isPrototypeOf(body)) {
-        this._bodyFormData = body;
-      } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-        this._bodyText = body.toString();
-      } else if (support.arrayBuffer && support.blob && isDataView(body)) {
-        this._bodyArrayBuffer = bufferClone(body.buffer);
-        // IE 10-11 can't handle a DataView body.
-        this._bodyInit = new Blob([this._bodyArrayBuffer]);
-      } else if (support.arrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
-        this._bodyArrayBuffer = bufferClone(body);
-      } else {
-        this._bodyText = body = Object.prototype.toString.call(body);
-      }
-
-      if (!this.headers.get('content-type')) {
-        if (typeof body === 'string') {
-          this.headers.set('content-type', 'text/plain;charset=UTF-8');
-        } else if (this._bodyBlob && this._bodyBlob.type) {
-          this.headers.set('content-type', this._bodyBlob.type);
-        } else if (support.searchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-          this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
-        }
-      }
-    };
-
-    if (support.blob) {
-      this.blob = function() {
-        var rejected = consumed(this);
-        if (rejected) {
-          return rejected
-        }
-
-        if (this._bodyBlob) {
-          return Promise.resolve(this._bodyBlob)
-        } else if (this._bodyArrayBuffer) {
-          return Promise.resolve(new Blob([this._bodyArrayBuffer]))
-        } else if (this._bodyFormData) {
-          throw new Error('could not read FormData body as blob')
-        } else {
-          return Promise.resolve(new Blob([this._bodyText]))
-        }
-      };
-
-      this.arrayBuffer = function() {
-        if (this._bodyArrayBuffer) {
-          return consumed(this) || Promise.resolve(this._bodyArrayBuffer)
-        } else {
-          return this.blob().then(readBlobAsArrayBuffer)
-        }
-      };
-    }
-
-    this.text = function() {
-      var rejected = consumed(this);
-      if (rejected) {
-        return rejected
-      }
-
-      if (this._bodyBlob) {
-        return readBlobAsText(this._bodyBlob)
-      } else if (this._bodyArrayBuffer) {
-        return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer))
-      } else if (this._bodyFormData) {
-        throw new Error('could not read FormData body as text')
-      } else {
-        return Promise.resolve(this._bodyText)
-      }
-    };
-
-    if (support.formData) {
-      this.formData = function() {
-        return this.text().then(decode)
-      };
-    }
-
-    this.json = function() {
-      return this.text().then(JSON.parse)
-    };
-
-    return this
-  }
-
-  // HTTP methods whose capitalization should be normalized
-  var methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'];
-
-  function normalizeMethod(method) {
-    var upcased = method.toUpperCase();
-    return methods.indexOf(upcased) > -1 ? upcased : method
-  }
-
-  function Request(input, options) {
-    options = options || {};
-    var body = options.body;
-
-    if (input instanceof Request) {
-      if (input.bodyUsed) {
-        throw new TypeError('Already read')
-      }
-      this.url = input.url;
-      this.credentials = input.credentials;
-      if (!options.headers) {
-        this.headers = new Headers(input.headers);
-      }
-      this.method = input.method;
-      this.mode = input.mode;
-      this.signal = input.signal;
-      if (!body && input._bodyInit != null) {
-        body = input._bodyInit;
-        input.bodyUsed = true;
-      }
-    } else {
-      this.url = String(input);
-    }
-
-    this.credentials = options.credentials || this.credentials || 'same-origin';
-    if (options.headers || !this.headers) {
-      this.headers = new Headers(options.headers);
-    }
-    this.method = normalizeMethod(options.method || this.method || 'GET');
-    this.mode = options.mode || this.mode || null;
-    this.signal = options.signal || this.signal;
-    this.referrer = null;
-
-    if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-      throw new TypeError('Body not allowed for GET or HEAD requests')
-    }
-    this._initBody(body);
-
-    if (this.method === 'GET' || this.method === 'HEAD') {
-      if (options.cache === 'no-store' || options.cache === 'no-cache') {
-        // Search for a '_' parameter in the query string
-        var reParamSearch = /([?&])_=[^&]*/;
-        if (reParamSearch.test(this.url)) {
-          // If it already exists then set the value with the current time
-          this.url = this.url.replace(reParamSearch, '$1_=' + new Date().getTime());
-        } else {
-          // Otherwise add a new '_' parameter to the end with the current time
-          var reQueryString = /\?/;
-          this.url += (reQueryString.test(this.url) ? '&' : '?') + '_=' + new Date().getTime();
-        }
-      }
-    }
-  }
-
-  Request.prototype.clone = function() {
-    return new Request(this, {body: this._bodyInit})
-  };
-
-  function decode(body) {
-    var form = new FormData();
-    body
-      .trim()
-      .split('&')
-      .forEach(function(bytes) {
-        if (bytes) {
-          var split = bytes.split('=');
-          var name = split.shift().replace(/\+/g, ' ');
-          var value = split.join('=').replace(/\+/g, ' ');
-          form.append(decodeURIComponent(name), decodeURIComponent(value));
-        }
-      });
-    return form
-  }
-
-  function parseHeaders(rawHeaders) {
-    var headers = new Headers();
-    // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
-    // https://tools.ietf.org/html/rfc7230#section-3.2
-    var preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
-    preProcessedHeaders.split(/\r?\n/).forEach(function(line) {
-      var parts = line.split(':');
-      var key = parts.shift().trim();
-      if (key) {
-        var value = parts.join(':').trim();
-        headers.append(key, value);
-      }
-    });
-    return headers
-  }
-
-  Body.call(Request.prototype);
-
-  function Response(bodyInit, options) {
-    if (!options) {
-      options = {};
-    }
-
-    this.type = 'default';
-    this.status = options.status === undefined ? 200 : options.status;
-    this.ok = this.status >= 200 && this.status < 300;
-    this.statusText = 'statusText' in options ? options.statusText : '';
-    this.headers = new Headers(options.headers);
-    this.url = options.url || '';
-    this._initBody(bodyInit);
-  }
-
-  Body.call(Response.prototype);
-
-  Response.prototype.clone = function() {
-    return new Response(this._bodyInit, {
-      status: this.status,
-      statusText: this.statusText,
-      headers: new Headers(this.headers),
-      url: this.url
-    })
-  };
-
-  Response.error = function() {
-    var response = new Response(null, {status: 0, statusText: ''});
-    response.type = 'error';
-    return response
-  };
-
-  var redirectStatuses = [301, 302, 303, 307, 308];
-
-  Response.redirect = function(url, status) {
-    if (redirectStatuses.indexOf(status) === -1) {
-      throw new RangeError('Invalid status code')
-    }
-
-    return new Response(null, {status: status, headers: {location: url}})
-  };
-
-  var DOMException = global$1.DOMException;
-
-  if (typeof DOMException !== 'function') {
-    DOMException = function(message, name) {
-      this.message = message;
-      this.name = name;
-      var error = Error(message);
-      this.stack = error.stack;
-    };
-    DOMException.prototype = Object.create(Error.prototype);
-    DOMException.prototype.constructor = DOMException;
-  }
-
-  function fetch(input, init) {
-    return new Promise(function(resolve, reject) {
-      var request = new Request(input, init);
-
-      if (request.signal && request.signal.aborted) {
-        return reject(new DOMException('Aborted', 'AbortError'))
-      }
-
-      var xhr = new XMLHttpRequest();
-
-      function abortXhr() {
-        xhr.abort();
-      }
-
-      xhr.onload = function() {
-        var options = {
-          status: xhr.status,
-          statusText: xhr.statusText,
-          headers: parseHeaders(xhr.getAllResponseHeaders() || '')
-        };
-        options.url = 'responseURL' in xhr ? xhr.responseURL : options.headers.get('X-Request-URL');
-        var body = 'response' in xhr ? xhr.response : xhr.responseText;
-        setTimeout(function() {
-          resolve(new Response(body, options));
-        }, 0);
-      };
-
-      xhr.onerror = function() {
-        setTimeout(function() {
-          reject(new TypeError('Network request failed'));
-        }, 0);
-      };
-
-      xhr.ontimeout = function() {
-        setTimeout(function() {
-          reject(new TypeError('Network request failed'));
-        }, 0);
-      };
-
-      xhr.onabort = function() {
-        setTimeout(function() {
-          reject(new DOMException('Aborted', 'AbortError'));
-        }, 0);
-      };
-
-      function fixUrl(url) {
-        try {
-          return url === '' && global$1.location.href ? global$1.location.href : url
-        } catch (e) {
-          return url
-        }
-      }
-
-      xhr.open(request.method, fixUrl(request.url), true);
-
-      if (request.credentials === 'include') {
-        xhr.withCredentials = true;
-      } else if (request.credentials === 'omit') {
-        xhr.withCredentials = false;
-      }
-
-      if ('responseType' in xhr) {
-        if (support.blob) {
-          xhr.responseType = 'blob';
-        } else if (
-          support.arrayBuffer &&
-          request.headers.get('Content-Type') &&
-          request.headers.get('Content-Type').indexOf('application/octet-stream') !== -1
-        ) {
-          xhr.responseType = 'arraybuffer';
-        }
-      }
-
-      request.headers.forEach(function(value, name) {
-        xhr.setRequestHeader(name, value);
-      });
-
-      if (request.signal) {
-        request.signal.addEventListener('abort', abortXhr);
-
-        xhr.onreadystatechange = function() {
-          // DONE (success or failure)
-          if (xhr.readyState === 4) {
-            request.signal.removeEventListener('abort', abortXhr);
-          }
-        };
-      }
-
-      xhr.send(typeof request._bodyInit === 'undefined' ? null : request._bodyInit);
-    })
-  }
-
-  fetch.polyfill = true;
-
-  if (!global$1.fetch) {
-    global$1.fetch = fetch;
-    global$1.Headers = Headers;
-    global$1.Request = Request;
-    global$1.Response = Response;
-  }
-
-  /* eslint-disable */
-  /**
-   * innerHTML property for SVGElement
-   * Copyright(c) 2010, Jeff Schiller
-   *
-   * Licensed under the Apache License, Version 2
-   *
-   * Works in a SVG document in Chrome 6+, Safari 5+, Firefox 4+ and IE9+.
-   * Works in a HTML5 document in Chrome 7+, Firefox 4+ and IE9+.
-   * Does not work in Opera since it doesn't support the SVGElement interface yet.
-   *
-   * I haven't decided on the best name for this property - thus the duplication.
-   */
-
-  (function () {
-    if (typeof window === "undefined") {
-      return;
-    }
-    var serializeXML = function (node, output) {
-      var nodeType = node.nodeType;
-      if (nodeType == 3) {
-        // TEXT nodes.
-        // Replace special XML characters with their entities.
-        output.push(node.textContent.replace(/&/, "&amp;").replace(/</, "&lt;").replace(">", "&gt;"));
-      } else if (nodeType == 1) {
-        // ELEMENT nodes.
-        // Serialize Element nodes.
-        output.push("<", node.tagName);
-        if (node.hasAttributes()) {
-          var attrMap = node.attributes;
-          for (var i = 0, len = attrMap.length; i < len; ++i) {
-            var attrNode = attrMap.item(i);
-            output.push(" ", attrNode.name, "='", attrNode.value, "'");
-          }
-        }
-        if (node.hasChildNodes()) {
-          output.push(">");
-          var childNodes = node.childNodes;
-          for (var i = 0, len = childNodes.length; i < len; ++i) {
-            serializeXML(childNodes.item(i), output);
-          }
-          output.push("</", node.tagName, ">");
-        } else {
-          output.push("/>");
-        }
-      } else if (nodeType == 8) {
-        // TODO(codedread): Replace special characters with XML entities?
-        output.push("<!--", node.nodeValue, "-->");
-      } else {
-        // TODO: Handle CDATA nodes.
-        // TODO: Handle ENTITY nodes.
-        // TODO: Handle DOCUMENT nodes.
-        throw "Error serializing XML. Unhandled node of type: " + nodeType;
-      }
-    };
-    // The innerHTML DOM property for SVGElement.
-    Object.defineProperty(SVGElement.prototype, "innerHTML", {
-      get: function () {
-        var output = [];
-        var childNode = this.firstChild;
-        while (childNode) {
-          serializeXML(childNode, output);
-          childNode = childNode.nextSibling;
-        }
-        return output.join("");
-      },
-      set: function (markupText) {
-        // Wipe out the current contents of the element.
-        while (this.firstChild) {
-          this.removeChild(this.firstChild);
-        }
-        try {
-          // Parse the markup into valid nodes.
-          var dXML = new DOMParser();
-          dXML.async = false;
-          // Wrap the markup into a SVG node to ensure parsing works.
-          var sXML = "<svg xmlns='http://www.w3.org/2000/svg'>" + markupText + "</svg>";
-          var svgDocElement = dXML.parseFromString(sXML, "text/xml").documentElement;
-
-          // Now take each node, import it and append to this element.
-          var childNode = svgDocElement.firstChild;
-          while (childNode) {
-            this.appendChild(this.ownerDocument.importNode(childNode, true));
-            childNode = childNode.nextSibling;
-          }
-        } catch (e) {
-          throw new Error("Error parsing XML string");
-        }
-      }
-    });
-
-    // The innerSVG DOM property for SVGElement.
-    Object.defineProperty(SVGElement.prototype, "innerSVG", {
-      get: function () {
-        return this.innerHTML;
-      },
-      set: function (markupText) {
-        this.innerHTML = markupText;
-      }
-    });
-  })();
-
-  // This is the more strict version of `isNaN`. We need to polyfill it for Internet Explorer,
-  // all other browsers support this.
-  // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isNaN
-
-  Number.isNaN = Number.isNaN || function isNaN(input) {
-    return typeof input === "number" && input !== input;
-  };
-
-  T();
-
-  // d3 mutates state in many places, which is why we have to turn this off.
-  cn(false);
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.sszvis = {}, global.d3));
+})(this, (function (exports, d3) { 'use strict';
 
   /**
    * d3.selection plugin to simplify creating idempotent divs that are not
@@ -1026,6 +45,7 @@
    * @module sszvis/fn
    */
 
+
   /**
    * fn.identity
    *
@@ -1035,7 +55,7 @@
    * @param  {*} value any value
    * @return {*}       returns its argument
    */
-  var identity = function (value) {
+  var identity$1 = function (value) {
     return value;
   };
 
@@ -1148,9 +168,7 @@
     return function () {
       var i = start;
       var result = fns[i].apply(this, arguments);
-      while (i--) {
-        result = fns[i].call(this, result);
-      }
+      while (i--) result = fns[i].call(this, result);
       return result;
     };
   };
@@ -1164,7 +182,7 @@
    * @param  {any}   d    Item that might be in list
    * @return {boolean}
    */
-  var contains = function (list, d) {
+  var contains$1 = function (list, d) {
     return list.indexOf(d) >= 0;
   };
 
@@ -1196,7 +214,7 @@
    * @return {array}            An array of objects from the input array.
    */
   var derivedSet = function (arr, acc) {
-    acc || (acc = identity);
+    acc || (acc = identity$1);
     var seen = [],
       sValue,
       cValue,
@@ -1357,7 +375,7 @@
    * @return {Array} an Array of unique elements
    */
   var hashableSet = function (arr, acc) {
-    acc || (acc = identity);
+    acc || (acc = identity$1);
     var seen = {},
       value,
       result = [];
@@ -1379,7 +397,7 @@
    * @param {*} val the value to check
    * @return {Boolean} true if the value is a function, false otherwise
    */
-  var isFunction = function (val) {
+  var isFunction$1 = function (val) {
     return typeof val == "function";
   };
 
@@ -1507,8 +525,8 @@
    * the element's index in the input array, and the input array itself.
    * @return {Array} an Array of unique elements
    */
-  var set = function (arr, acc) {
-    acc || (acc = identity);
+  var set$1 = function (arr, acc) {
+    acc || (acc = identity$1);
     return arr.reduce(function (m, value, i) {
       var computed = acc(value, i, arr);
       return m.indexOf(computed) < 0 ? m.concat(computed) : m;
@@ -1663,6 +681,7 @@
    * @function lightGry  1-color scale for shaded backgrounds
    */
 
+
   /* Constants
   ----------------------------------------------- */
   var LIGHTNESS_STEP = 0.6;
@@ -1675,18 +694,18 @@
       return decorateOrdinalScale(scale);
     };
   }
-  var darkBlue = "#3431DE";
-  var mediumBlue = "#0A8DF6";
-  var lightBlue = "#23C3F1";
-  var darkRed = "#7B4FB7";
-  var mediumRed = "#DB247D";
-  var lightRed = "#FB737E";
-  var darkGreen = "#007C78";
-  var mediumGreen = "#1D942E";
-  var lightGreen = "#99C32E";
-  var darkBrown = "#9A5B01";
-  var mediumBrown = "#FF720C";
-  var lightBrown = "#FBB900";
+  const darkBlue = "#3431DE";
+  const mediumBlue = "#0A8DF6";
+  const lightBlue = "#23C3F1";
+  const darkRed = "#7B4FB7";
+  const mediumRed = "#DB247D";
+  const lightRed = "#FB737E";
+  const darkGreen = "#007C78";
+  const mediumGreen = "#1D942E";
+  const lightGreen = "#99C32E";
+  const darkBrown = "#9A5B01";
+  const mediumBrown = "#FF720C";
+  const lightBrown = "#FBB900";
   var scaleQual12 = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed, darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
   var scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
   var scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
@@ -1819,6 +838,7 @@
    * @method  dataAreaPattern                 The pattern for the data area texture.
    *
    */
+
   var heatTableMissingValuePattern = function (selection) {
     var rectFill = scaleLightGry(),
       crossStroke = "#A4A4A4",
@@ -1898,7 +918,7 @@
   function component() {
     var props = {};
     var selectionRenderer = null;
-    var renderer = identity$1;
+    var renderer = identity;
 
     /**
      * Constructor
@@ -1910,11 +930,11 @@
         selection.props = function () {
           return clone(props);
         };
-        selectionRenderer.apply(selection, slice(arguments));
+        selectionRenderer.apply(selection, slice$1(arguments));
       }
       selection.each(function () {
         this.__props__ = clone(props);
-        renderer.apply(this, slice(arguments));
+        renderer.apply(this, slice$1(arguments));
       });
     }
 
@@ -1927,7 +947,7 @@
      * @return {sszvis.component}
      */
     sszvisComponent.prop = function (prop, setter) {
-      setter || (setter = identity$1);
+      setter || (setter = identity);
       sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
       return sszvisComponent;
     };
@@ -1941,7 +961,7 @@
      */
     sszvisComponent.delegate = function (prop, delegate) {
       sszvisComponent[prop] = function () {
-        var result = delegate[prop].apply(delegate, slice(arguments));
+        var result = delegate[prop].apply(delegate, slice$1(arguments));
         return arguments.length === 0 ? result : sszvisComponent;
       };
       return sszvisComponent;
@@ -2008,17 +1028,17 @@
    * @return {Function} The accessor function
    */
   function accessor(props, prop, setter) {
-    setter || (setter = identity$1);
+    setter || (setter = identity);
     return function () {
       if (!arguments.length) return props[prop];
-      props[prop] = setter.apply(null, slice(arguments));
+      props[prop] = setter.apply(null, slice$1(arguments));
       return this;
     };
   }
-  function identity$1(d) {
+  function identity(d) {
     return d;
   }
-  function slice(array) {
+  function slice$1(array) {
     return Array.prototype.slice.call(array);
   }
   function clone(obj) {
@@ -2048,6 +1068,7 @@
    *
    * @returns {sszvis.component} a circular data area component
    */
+
   function circle () {
     return component().prop("x", functor).prop("y", functor).prop("r", functor).prop("dx", functor).prop("dy", functor).prop("caption", functor).render(function (data) {
       var selection = d3.select(this);
@@ -2090,11 +1111,12 @@
    * @returns {sszvis.component} a linear data area component (reference line)
    */
 
+
   // reference line specified in the form y = mx + b
   // user supplies m and b
   // default line is y = x
 
-  function line () {
+  function line$1 () {
     return component().prop("x1").prop("x2").prop("y1").prop("y2").prop("xScale").prop("yScale").prop("dx", functor).dx(0).prop("dy", functor).dy(0).prop("caption", functor).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -2141,6 +1163,7 @@
    *
    * @module sszvis/svgUtils/crisp
    */
+
 
   /**
    * crisp.halfPixel
@@ -2253,6 +1276,7 @@
    *
    * @return {sszvis.component}
    */
+
   function tooltipAnchor () {
     return component().prop("position").position(functor([0, 0])).prop("debug").render(function (data) {
       var selection = d3.select(this);
@@ -2306,6 +1330,7 @@
    *
    * @returns {sszvis.component}
    */
+
   function rangeFlag () {
     return component().prop("x", functor).prop("y0", functor).prop("y1", functor).render(function (data) {
       var selection = d3.select(this);
@@ -2351,6 +1376,7 @@
    *
    * @module sszvis/format
    */
+
   var timeFormat = d3.timeFormatLocale(locale).format;
   var format = d3.formatLocale(locale).format;
 
@@ -2563,6 +1589,7 @@
    *
    * @return {sszvis.component}
    */
+
   function rangeRuler () {
     return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("top").prop("bottom").prop("label").prop("removeStroke").label(functor("")).prop("total").prop("flip", functor).flip(false).render(function (data) {
       var selection = d3.select(this);
@@ -2684,6 +1711,7 @@
    *
    * @returns {sszvis.component} a rectangular data area component
    */
+
   function rectangle () {
     return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("dx", functor).prop("dy", functor).prop("caption", functor).render(function (data) {
       var selection = d3.select(this);
@@ -2743,6 +1771,7 @@
    *
    * @return {sszvis.component}
    */
+
   function ruler () {
     return component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
       var selection = d3.select(this);
@@ -2881,6 +1910,7 @@
    * @return {sszvis.component}
    *
    */
+
 
   /* Configuration
   ----------------------------------------------- */
@@ -3126,6 +2156,668 @@
     };
   }
 
+  // src/utils/env.ts
+  var NOTHING = Symbol.for("immer-nothing");
+  var DRAFTABLE = Symbol.for("immer-draftable");
+  var DRAFT_STATE = Symbol.for("immer-state");
+  function die(error, ...args) {
+    throw new Error(
+      `[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`
+    );
+  }
+
+  // src/utils/common.ts
+  var getPrototypeOf = Object.getPrototypeOf;
+  function isDraft(value) {
+    return !!value && !!value[DRAFT_STATE];
+  }
+  function isDraftable(value) {
+    if (!value)
+      return false;
+    return isPlainObject(value) || Array.isArray(value) || !!value[DRAFTABLE] || !!value.constructor?.[DRAFTABLE] || isMap(value) || isSet(value);
+  }
+  var objectCtorString = Object.prototype.constructor.toString();
+  function isPlainObject(value) {
+    if (!value || typeof value !== "object")
+      return false;
+    const proto = getPrototypeOf(value);
+    if (proto === null) {
+      return true;
+    }
+    const Ctor = Object.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+    if (Ctor === Object)
+      return true;
+    return typeof Ctor == "function" && Function.toString.call(Ctor) === objectCtorString;
+  }
+  function each(obj, iter) {
+    if (getArchtype(obj) === 0 /* Object */) {
+      Reflect.ownKeys(obj).forEach((key) => {
+        iter(key, obj[key], obj);
+      });
+    } else {
+      obj.forEach((entry, index) => iter(index, entry, obj));
+    }
+  }
+  function getArchtype(thing) {
+    const state = thing[DRAFT_STATE];
+    return state ? state.type_ : Array.isArray(thing) ? 1 /* Array */ : isMap(thing) ? 2 /* Map */ : isSet(thing) ? 3 /* Set */ : 0 /* Object */;
+  }
+  function has(thing, prop) {
+    return getArchtype(thing) === 2 /* Map */ ? thing.has(prop) : Object.prototype.hasOwnProperty.call(thing, prop);
+  }
+  function set(thing, propOrOldValue, value) {
+    const t = getArchtype(thing);
+    if (t === 2 /* Map */)
+      thing.set(propOrOldValue, value);
+    else if (t === 3 /* Set */) {
+      thing.add(value);
+    } else
+      thing[propOrOldValue] = value;
+  }
+  function is(x, y) {
+    if (x === y) {
+      return x !== 0 || 1 / x === 1 / y;
+    } else {
+      return x !== x && y !== y;
+    }
+  }
+  function isMap(target) {
+    return target instanceof Map;
+  }
+  function isSet(target) {
+    return target instanceof Set;
+  }
+  function latest(state) {
+    return state.copy_ || state.base_;
+  }
+  function shallowCopy(base, strict) {
+    if (isMap(base)) {
+      return new Map(base);
+    }
+    if (isSet(base)) {
+      return new Set(base);
+    }
+    if (Array.isArray(base))
+      return Array.prototype.slice.call(base);
+    const isPlain = isPlainObject(base);
+    if (strict === true || strict === "class_only" && !isPlain) {
+      const descriptors = Object.getOwnPropertyDescriptors(base);
+      delete descriptors[DRAFT_STATE];
+      let keys = Reflect.ownKeys(descriptors);
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        const desc = descriptors[key];
+        if (desc.writable === false) {
+          desc.writable = true;
+          desc.configurable = true;
+        }
+        if (desc.get || desc.set)
+          descriptors[key] = {
+            configurable: true,
+            writable: true,
+            // could live with !!desc.set as well here...
+            enumerable: desc.enumerable,
+            value: base[key]
+          };
+      }
+      return Object.create(getPrototypeOf(base), descriptors);
+    } else {
+      const proto = getPrototypeOf(base);
+      if (proto !== null && isPlain) {
+        return { ...base };
+      }
+      const obj = Object.create(proto);
+      return Object.assign(obj, base);
+    }
+  }
+  function freeze(obj, deep = false) {
+    if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj))
+      return obj;
+    if (getArchtype(obj) > 1) {
+      obj.set = obj.add = obj.clear = obj.delete = dontMutateFrozenCollections;
+    }
+    Object.freeze(obj);
+    if (deep)
+      Object.entries(obj).forEach(([key, value]) => freeze(value, true));
+    return obj;
+  }
+  function dontMutateFrozenCollections() {
+    die(2);
+  }
+  function isFrozen(obj) {
+    return Object.isFrozen(obj);
+  }
+
+  // src/utils/plugins.ts
+  var plugins = {};
+  function getPlugin(pluginKey) {
+    const plugin = plugins[pluginKey];
+    if (!plugin) {
+      die(0, pluginKey);
+    }
+    return plugin;
+  }
+
+  // src/core/scope.ts
+  var currentScope;
+  function getCurrentScope() {
+    return currentScope;
+  }
+  function createScope(parent_, immer_) {
+    return {
+      drafts_: [],
+      parent_,
+      immer_,
+      // Whenever the modified draft contains a draft from another scope, we
+      // need to prevent auto-freezing so the unowned draft can be finalized.
+      canAutoFreeze_: true,
+      unfinalizedDrafts_: 0
+    };
+  }
+  function usePatchesInScope(scope, patchListener) {
+    if (patchListener) {
+      getPlugin("Patches");
+      scope.patches_ = [];
+      scope.inversePatches_ = [];
+      scope.patchListener_ = patchListener;
+    }
+  }
+  function revokeScope(scope) {
+    leaveScope(scope);
+    scope.drafts_.forEach(revokeDraft);
+    scope.drafts_ = null;
+  }
+  function leaveScope(scope) {
+    if (scope === currentScope) {
+      currentScope = scope.parent_;
+    }
+  }
+  function enterScope(immer2) {
+    return currentScope = createScope(currentScope, immer2);
+  }
+  function revokeDraft(draft) {
+    const state = draft[DRAFT_STATE];
+    if (state.type_ === 0 /* Object */ || state.type_ === 1 /* Array */)
+      state.revoke_();
+    else
+      state.revoked_ = true;
+  }
+
+  // src/core/finalize.ts
+  function processResult(result, scope) {
+    scope.unfinalizedDrafts_ = scope.drafts_.length;
+    const baseDraft = scope.drafts_[0];
+    const isReplaced = result !== void 0 && result !== baseDraft;
+    if (isReplaced) {
+      if (baseDraft[DRAFT_STATE].modified_) {
+        revokeScope(scope);
+        die(4);
+      }
+      if (isDraftable(result)) {
+        result = finalize(scope, result);
+        if (!scope.parent_)
+          maybeFreeze(scope, result);
+      }
+      if (scope.patches_) {
+        getPlugin("Patches").generateReplacementPatches_(
+          baseDraft[DRAFT_STATE].base_,
+          result,
+          scope.patches_,
+          scope.inversePatches_
+        );
+      }
+    } else {
+      result = finalize(scope, baseDraft, []);
+    }
+    revokeScope(scope);
+    if (scope.patches_) {
+      scope.patchListener_(scope.patches_, scope.inversePatches_);
+    }
+    return result !== NOTHING ? result : void 0;
+  }
+  function finalize(rootScope, value, path) {
+    if (isFrozen(value))
+      return value;
+    const state = value[DRAFT_STATE];
+    if (!state) {
+      each(
+        value,
+        (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path)
+      );
+      return value;
+    }
+    if (state.scope_ !== rootScope)
+      return value;
+    if (!state.modified_) {
+      maybeFreeze(rootScope, state.base_, true);
+      return state.base_;
+    }
+    if (!state.finalized_) {
+      state.finalized_ = true;
+      state.scope_.unfinalizedDrafts_--;
+      const result = state.copy_;
+      let resultEach = result;
+      let isSet2 = false;
+      if (state.type_ === 3 /* Set */) {
+        resultEach = new Set(result);
+        result.clear();
+        isSet2 = true;
+      }
+      each(
+        resultEach,
+        (key, childValue) => finalizeProperty(rootScope, state, result, key, childValue, path, isSet2)
+      );
+      maybeFreeze(rootScope, result, false);
+      if (path && rootScope.patches_) {
+        getPlugin("Patches").generatePatches_(
+          state,
+          path,
+          rootScope.patches_,
+          rootScope.inversePatches_
+        );
+      }
+    }
+    return state.copy_;
+  }
+  function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath, targetIsSet) {
+    if (isDraft(childValue)) {
+      const path = rootPath && parentState && parentState.type_ !== 3 /* Set */ && // Set objects are atomic since they have no keys.
+      !has(parentState.assigned_, prop) ? rootPath.concat(prop) : void 0;
+      const res = finalize(rootScope, childValue, path);
+      set(targetObject, prop, res);
+      if (isDraft(res)) {
+        rootScope.canAutoFreeze_ = false;
+      } else
+        return;
+    } else if (targetIsSet) {
+      targetObject.add(childValue);
+    }
+    if (isDraftable(childValue) && !isFrozen(childValue)) {
+      if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
+        return;
+      }
+      finalize(rootScope, childValue);
+      if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && Object.prototype.propertyIsEnumerable.call(targetObject, prop))
+        maybeFreeze(rootScope, childValue);
+    }
+  }
+  function maybeFreeze(scope, value, deep = false) {
+    if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) {
+      freeze(value, deep);
+    }
+  }
+
+  // src/core/proxy.ts
+  function createProxyProxy(base, parent) {
+    const isArray = Array.isArray(base);
+    const state = {
+      type_: isArray ? 1 /* Array */ : 0 /* Object */,
+      // Track which produce call this is associated with.
+      scope_: parent ? parent.scope_ : getCurrentScope(),
+      // True for both shallow and deep changes.
+      modified_: false,
+      // Used during finalization.
+      finalized_: false,
+      // Track which properties have been assigned (true) or deleted (false).
+      assigned_: {},
+      // The parent draft state.
+      parent_: parent,
+      // The base state.
+      base_: base,
+      // The base proxy.
+      draft_: null,
+      // set below
+      // The base copy with any updated values.
+      copy_: null,
+      // Called by the `produce` function.
+      revoke_: null,
+      isManual_: false
+    };
+    let target = state;
+    let traps = objectTraps;
+    if (isArray) {
+      target = [state];
+      traps = arrayTraps;
+    }
+    const { revoke, proxy } = Proxy.revocable(target, traps);
+    state.draft_ = proxy;
+    state.revoke_ = revoke;
+    return proxy;
+  }
+  var objectTraps = {
+    get(state, prop) {
+      if (prop === DRAFT_STATE)
+        return state;
+      const source = latest(state);
+      if (!has(source, prop)) {
+        return readPropFromProto(state, source, prop);
+      }
+      const value = source[prop];
+      if (state.finalized_ || !isDraftable(value)) {
+        return value;
+      }
+      if (value === peek(state.base_, prop)) {
+        prepareCopy(state);
+        return state.copy_[prop] = createProxy(value, state);
+      }
+      return value;
+    },
+    has(state, prop) {
+      return prop in latest(state);
+    },
+    ownKeys(state) {
+      return Reflect.ownKeys(latest(state));
+    },
+    set(state, prop, value) {
+      const desc = getDescriptorFromProto(latest(state), prop);
+      if (desc?.set) {
+        desc.set.call(state.draft_, value);
+        return true;
+      }
+      if (!state.modified_) {
+        const current2 = peek(latest(state), prop);
+        const currentState = current2?.[DRAFT_STATE];
+        if (currentState && currentState.base_ === value) {
+          state.copy_[prop] = value;
+          state.assigned_[prop] = false;
+          return true;
+        }
+        if (is(value, current2) && (value !== void 0 || has(state.base_, prop)))
+          return true;
+        prepareCopy(state);
+        markChanged(state);
+      }
+      if (state.copy_[prop] === value && // special case: handle new props with value 'undefined'
+      (value !== void 0 || prop in state.copy_) || // special case: NaN
+      Number.isNaN(value) && Number.isNaN(state.copy_[prop]))
+        return true;
+      state.copy_[prop] = value;
+      state.assigned_[prop] = true;
+      return true;
+    },
+    deleteProperty(state, prop) {
+      if (peek(state.base_, prop) !== void 0 || prop in state.base_) {
+        state.assigned_[prop] = false;
+        prepareCopy(state);
+        markChanged(state);
+      } else {
+        delete state.assigned_[prop];
+      }
+      if (state.copy_) {
+        delete state.copy_[prop];
+      }
+      return true;
+    },
+    // Note: We never coerce `desc.value` into an Immer draft, because we can't make
+    // the same guarantee in ES5 mode.
+    getOwnPropertyDescriptor(state, prop) {
+      const owner = latest(state);
+      const desc = Reflect.getOwnPropertyDescriptor(owner, prop);
+      if (!desc)
+        return desc;
+      return {
+        writable: true,
+        configurable: state.type_ !== 1 /* Array */ || prop !== "length",
+        enumerable: desc.enumerable,
+        value: owner[prop]
+      };
+    },
+    defineProperty() {
+      die(11);
+    },
+    getPrototypeOf(state) {
+      return getPrototypeOf(state.base_);
+    },
+    setPrototypeOf() {
+      die(12);
+    }
+  };
+  var arrayTraps = {};
+  each(objectTraps, (key, fn) => {
+    arrayTraps[key] = function() {
+      arguments[0] = arguments[0][0];
+      return fn.apply(this, arguments);
+    };
+  });
+  arrayTraps.deleteProperty = function(state, prop) {
+    return arrayTraps.set.call(this, state, prop, void 0);
+  };
+  arrayTraps.set = function(state, prop, value) {
+    return objectTraps.set.call(this, state[0], prop, value, state[0]);
+  };
+  function peek(draft, prop) {
+    const state = draft[DRAFT_STATE];
+    const source = state ? latest(state) : draft;
+    return source[prop];
+  }
+  function readPropFromProto(state, source, prop) {
+    const desc = getDescriptorFromProto(source, prop);
+    return desc ? `value` in desc ? desc.value : (
+      // This is a very special case, if the prop is a getter defined by the
+      // prototype, we should invoke it with the draft as context!
+      desc.get?.call(state.draft_)
+    ) : void 0;
+  }
+  function getDescriptorFromProto(source, prop) {
+    if (!(prop in source))
+      return void 0;
+    let proto = getPrototypeOf(source);
+    while (proto) {
+      const desc = Object.getOwnPropertyDescriptor(proto, prop);
+      if (desc)
+        return desc;
+      proto = getPrototypeOf(proto);
+    }
+    return void 0;
+  }
+  function markChanged(state) {
+    if (!state.modified_) {
+      state.modified_ = true;
+      if (state.parent_) {
+        markChanged(state.parent_);
+      }
+    }
+  }
+  function prepareCopy(state) {
+    if (!state.copy_) {
+      state.copy_ = shallowCopy(
+        state.base_,
+        state.scope_.immer_.useStrictShallowCopy_
+      );
+    }
+  }
+
+  // src/core/immerClass.ts
+  var Immer2 = class {
+    constructor(config) {
+      this.autoFreeze_ = true;
+      this.useStrictShallowCopy_ = false;
+      /**
+       * The `produce` function takes a value and a "recipe function" (whose
+       * return value often depends on the base state). The recipe function is
+       * free to mutate its first argument however it wants. All mutations are
+       * only ever applied to a __copy__ of the base state.
+       *
+       * Pass only a function to create a "curried producer" which relieves you
+       * from passing the recipe function every time.
+       *
+       * Only plain objects and arrays are made mutable. All other objects are
+       * considered uncopyable.
+       *
+       * Note: This function is __bound__ to its `Immer` instance.
+       *
+       * @param {any} base - the initial state
+       * @param {Function} recipe - function that receives a proxy of the base state as first argument and which can be freely modified
+       * @param {Function} patchListener - optional function that will be called with all the patches produced here
+       * @returns {any} a new state, or the initial state if nothing was modified
+       */
+      this.produce = (base, recipe, patchListener) => {
+        if (typeof base === "function" && typeof recipe !== "function") {
+          const defaultBase = recipe;
+          recipe = base;
+          const self = this;
+          return function curriedProduce(base2 = defaultBase, ...args) {
+            return self.produce(base2, (draft) => recipe.call(this, draft, ...args));
+          };
+        }
+        if (typeof recipe !== "function")
+          die(6);
+        if (patchListener !== void 0 && typeof patchListener !== "function")
+          die(7);
+        let result;
+        if (isDraftable(base)) {
+          const scope = enterScope(this);
+          const proxy = createProxy(base, void 0);
+          let hasError = true;
+          try {
+            result = recipe(proxy);
+            hasError = false;
+          } finally {
+            if (hasError)
+              revokeScope(scope);
+            else
+              leaveScope(scope);
+          }
+          usePatchesInScope(scope, patchListener);
+          return processResult(result, scope);
+        } else if (!base || typeof base !== "object") {
+          result = recipe(base);
+          if (result === void 0)
+            result = base;
+          if (result === NOTHING)
+            result = void 0;
+          if (this.autoFreeze_)
+            freeze(result, true);
+          if (patchListener) {
+            const p = [];
+            const ip = [];
+            getPlugin("Patches").generateReplacementPatches_(base, result, p, ip);
+            patchListener(p, ip);
+          }
+          return result;
+        } else
+          die(1, base);
+      };
+      this.produceWithPatches = (base, recipe) => {
+        if (typeof base === "function") {
+          return (state, ...args) => this.produceWithPatches(state, (draft) => base(draft, ...args));
+        }
+        let patches, inversePatches;
+        const result = this.produce(base, recipe, (p, ip) => {
+          patches = p;
+          inversePatches = ip;
+        });
+        return [result, patches, inversePatches];
+      };
+      if (typeof config?.autoFreeze === "boolean")
+        this.setAutoFreeze(config.autoFreeze);
+      if (typeof config?.useStrictShallowCopy === "boolean")
+        this.setUseStrictShallowCopy(config.useStrictShallowCopy);
+    }
+    createDraft(base) {
+      if (!isDraftable(base))
+        die(8);
+      if (isDraft(base))
+        base = current(base);
+      const scope = enterScope(this);
+      const proxy = createProxy(base, void 0);
+      proxy[DRAFT_STATE].isManual_ = true;
+      leaveScope(scope);
+      return proxy;
+    }
+    finishDraft(draft, patchListener) {
+      const state = draft && draft[DRAFT_STATE];
+      if (!state || !state.isManual_)
+        die(9);
+      const { scope_: scope } = state;
+      usePatchesInScope(scope, patchListener);
+      return processResult(void 0, scope);
+    }
+    /**
+     * Pass true to automatically freeze all copies created by Immer.
+     *
+     * By default, auto-freezing is enabled.
+     */
+    setAutoFreeze(value) {
+      this.autoFreeze_ = value;
+    }
+    /**
+     * Pass true to enable strict shallow copy.
+     *
+     * By default, immer does not copy the object descriptors such as getter, setter and non-enumrable properties.
+     */
+    setUseStrictShallowCopy(value) {
+      this.useStrictShallowCopy_ = value;
+    }
+    applyPatches(base, patches) {
+      let i;
+      for (i = patches.length - 1; i >= 0; i--) {
+        const patch = patches[i];
+        if (patch.path.length === 0 && patch.op === "replace") {
+          base = patch.value;
+          break;
+        }
+      }
+      if (i > -1) {
+        patches = patches.slice(i + 1);
+      }
+      const applyPatchesImpl = getPlugin("Patches").applyPatches_;
+      if (isDraft(base)) {
+        return applyPatchesImpl(base, patches);
+      }
+      return this.produce(
+        base,
+        (draft) => applyPatchesImpl(draft, patches)
+      );
+    }
+  };
+  function createProxy(value, parent) {
+    const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent) : createProxyProxy(value, parent);
+    const scope = parent ? parent.scope_ : getCurrentScope();
+    scope.drafts_.push(draft);
+    return draft;
+  }
+
+  // src/core/current.ts
+  function current(value) {
+    if (!isDraft(value))
+      die(10, value);
+    return currentImpl(value);
+  }
+  function currentImpl(value) {
+    if (!isDraftable(value) || isFrozen(value))
+      return value;
+    const state = value[DRAFT_STATE];
+    let copy;
+    if (state) {
+      if (!state.modified_)
+        return state.base_;
+      state.finalized_ = true;
+      copy = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
+    } else {
+      copy = shallowCopy(value, true);
+    }
+    each(copy, (key, childValue) => {
+      set(copy, key, currentImpl(childValue));
+    });
+    if (state) {
+      state.finalized_ = false;
+    }
+    return copy;
+  }
+
+  // src/immer.ts
+  var immer = new Immer2();
+  immer.produce;
+  immer.produceWithPatches.bind(
+    immer
+  );
+  var setAutoFreeze = immer.setAutoFreeze.bind(immer);
+  immer.setUseStrictShallowCopy.bind(immer);
+  immer.applyPatches.bind(immer);
+  var createDraft = immer.createDraft.bind(immer);
+  var finishDraft = immer.finishDraft.bind(immer);
+
   /**
    * Fallback handling
    *
@@ -3139,6 +2831,7 @@
    *
    * @module sszvis/fallback
    */
+
   var fallbackUnsupported = function () {
     var supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
     return !supportsSVG;
@@ -3153,6 +2846,10 @@
     var selection = isSelection(selector) ? selector : d3.select(selector);
     selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
   };
+
+  function getDefaultExportFromCjs (x) {
+  	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+  }
 
   var nanoThrottle = function (callback, ms, trailing) {
     var t = 0, call;
@@ -3171,6 +2868,8 @@
       if (new Date().getTime() > t) call();
     }
   };
+
+  var throttle = /*@__PURE__*/getDefaultExportFromCjs(nanoThrottle);
 
   /**
    * Viewport Resize watcher
@@ -3202,6 +2901,7 @@
    * @return {Object}
    */
 
+
   // This rather strange set of functions is designed to support the API:
   // sszvis.viewport.on('resize', callback);
   // While still enabling the user to register multiple callbacks for the 'resize'
@@ -3211,11 +2911,11 @@
     resize: []
   };
   if (typeof window !== "undefined") {
-    d3.select(window).on("resize", nanoThrottle(function () {
+    d3.select(window).on("resize", throttle(function () {
       trigger("resize");
     }, 500));
   }
-  var on$1 = function (name, cb) {
+  var on = function (name, cb) {
     if (!callbacks[name]) {
       callbacks[name] = [];
     }
@@ -3243,10 +2943,13 @@
     return this;
   };
   var viewport = {
-    on: on$1,
+    on: on,
     off: off,
     trigger: trigger
   };
+
+  // d3 mutates state in many places, which is why we have to turn this off.
+  setAutoFreeze(false);
 
   /**
    * Application loop
@@ -3293,17 +2996,18 @@
    *
    * @module sszvis/app
    */
-  var app = ({
-    init,
-    render,
-    actions = {},
-    fallback
-  }) => {
-    var doing;
-    var state;
-    invariant(isFunction$1(init), 'An "init" function returning a Promise must be provided.');
-    invariant(isFunction$1(render), 'A "render" function must be provided.');
-    var actionDispatchers = Object.keys(actions).reduce((acc, key) => {
+  const app = _ref => {
+    let {
+      init,
+      render,
+      actions = {},
+      fallback
+    } = _ref;
+    let doing;
+    let state;
+    invariant(isFunction(init), 'An "init" function returning a Promise must be provided.');
+    invariant(isFunction(render), 'A "render" function must be provided.');
+    const actionDispatchers = Object.keys(actions).reduce((acc, key) => {
       acc[key] = args => {
         dispatch(key, args);
       };
@@ -3317,18 +3021,18 @@
           doing = false;
         });
       }
-      if (isFunction$1(effect)) effect(dispatch);
+      if (isFunction(effect)) effect(dispatch);
     }
     function dispatch(action, props) {
       invariant(actions[action] != null, "Action \"".concat(action, "\" is not defined, add it to \"actions\"."));
-      var draft = pn(state);
-      var effect = actions[action](draft, props);
-      state = ln(draft);
+      const draft = createDraft(state);
+      const effect = actions[action](draft, props);
+      state = finishDraft(draft);
       scheduleUpdate(effect);
     }
-    var initialState = pn({});
+    const initialState = createDraft({});
     init(initialState).then(effect => {
-      state = ln(initialState);
+      state = finishDraft(initialState);
       scheduleUpdate(effect);
       viewport.on("resize", scheduleUpdate);
     }).catch(err => {
@@ -3347,7 +3051,7 @@
       throw new Error("[sszvis.app] ".concat(message));
     }
   }
-  function isFunction$1(x) {
+  function isFunction(x) {
     return typeof x === "function";
   }
 
@@ -3388,6 +3092,7 @@
    *   measurement: Measurement
    * }
    */
+
 
   /**
    * breakpoint.find
@@ -3580,6 +3285,7 @@
    * @module sszvis/aspectRatio
    */
 
+
   /**
    * aspectRatio
    *
@@ -3754,6 +3460,7 @@
    *                             will handle the situation gracefully, and not cause an unexpected termination
    *                             of execution.
    */
+
   var warn = logger("warn");
   var error = logger("error");
 
@@ -3762,13 +3469,13 @@
   function logger(type) {
     return function () {
       if (console && console[type]) {
-        slice$1(arguments).forEach(function (msg) {
+        slice(arguments).forEach(function (msg) {
           console[type](msg);
         });
       }
     };
   }
-  function slice$1(array) {
+  function slice(array) {
     return Array.prototype.slice.call(array);
   }
 
@@ -3829,6 +3536,7 @@
    * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
    * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
    */
+
   function textWrap (selection, width, paddingRightLeft, paddingTopBottom) {
     paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
     paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
@@ -3953,6 +3661,7 @@
    *
    * @return {sszvis.component}
    */
+
   var TICK_PROXIMITY_THRESHOLD = 8;
   var TICK_END_THRESHOLD = 12;
   var LABEL_PROXIMITY_THRESHOLD = 10;
@@ -4336,6 +4045,7 @@
    *
    * @return {sszvis.component}
    */
+
   function move () {
     var event = d3.dispatch("start", "move", "drag", "end");
     var moveComponent = component().prop("debug").prop("xScale").prop("yScale").prop("draggable").prop("cancelScrolling", functor).cancelScrolling(false).prop("fireOnPanOnly", functor).fireOnPanOnly(false).prop("padding", function (p) {
@@ -4598,6 +4308,7 @@
    *                                                                                      number in the data's domain, and will be compared against both
    *                                                                                      cursorValue and the value accessed from the datum.
    */
+
   var elementFromEvent = function (evt) {
     if (!isNull(evt) && defined(evt)) {
       return document.elementFromPoint(evt.clientX, evt.clientY);
@@ -4658,6 +4369,7 @@
    *
    * @return {d3.component}
    */
+
   function panning () {
     var event = d3.dispatch("start", "pan", "end");
     var panningComponent = component().prop("elementSelector").render(function () {
@@ -4734,6 +4446,7 @@
    *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
    *
    */
+
   function voronoi () {
     var event = d3.dispatch("over", "out");
     var voronoiComponent = component().prop("x").prop("y").prop("bounds").prop("debug").render(function (data) {
@@ -4743,7 +4456,7 @@
         error("behavior.voronoi - requires bounds");
         return false;
       }
-      var delaunay = d3.Delaunay.from(data, d => props.x(d), d => props.y(d));
+      const delaunay = d3.Delaunay.from(data, d => props.x(d), d => props.y(d));
       var voronoi = delaunay.voronoi(props.bounds);
       var polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.cellPolygons());
       var newPolys = polys.enter().append("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
@@ -4753,13 +4466,13 @@
         return "M" + d.join("L") + "Z";
       }).attr("fill", "transparent").on("mouseover", function (e) {
         var cbox = this.parentNode.getBoundingClientRect();
-        var datumIdx = delaunay.find(e.clientX, e.clientY);
+        const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           event.apply("over", this, [data[datumIdx]]);
         }
       }).on("mousemove", function (e) {
         var cbox = this.parentNode.getBoundingClientRect();
-        var datumIdx = delaunay.find(e.clientX, e.clientY);
+        const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           event.apply("over", this, [data[datumIdx]]);
         } else {
@@ -4769,7 +4482,7 @@
         event.apply("out", this, []);
       }).on("touchstart", function (e) {
         var cbox = this.parentNode.getBoundingClientRect();
-        var datumIdx = delaunay.find(e.clientX, e.clientY);
+        const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(firstTouch(e), [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           e.preventDefault();
           event.apply("over", this, [data[datumIdx]]);
@@ -4955,6 +4668,7 @@
    *                               which contains calculated or default values for top, bottom, left, and right padding.
    *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
    */
+
   var DEFAULT_WIDTH = 516;
   function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     var _bounds = null,
@@ -5183,6 +4897,7 @@
    * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
    * too slow.
    */
+
   var defaultEase = d3.easePolyOut;
   var defaultTransition = function () {
     return d3.transition().ease(defaultEase).duration(300);
@@ -5236,6 +4951,7 @@
    *
    * @return {sszvis.component}
    */
+
 
   // replaces NaN values with 0
   function handleMissingVal(v) {
@@ -5294,6 +5010,7 @@
    *
    * @return {sszvis.component}
    */
+
   function dot () {
     return component().prop("x", functor).prop("y", functor).prop("radius").prop("stroke").prop("fill").prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
@@ -5361,6 +5078,7 @@
    *
    * @return {sszvis.component}
    */
+
   function groupedBars () {
     return component().prop("groupScale").prop("groupSize").prop("groupWidth").prop("groupSpace").groupSpace(0.05).prop("y", functor).prop("height").prop("fill").prop("stroke").prop("defined", functor).defined(true).render(function (data) {
       var selection = d3.select(this);
@@ -5451,10 +5169,11 @@
    *
    * @return {sszvis.component}
    */
-  function line$1 () {
+
+  function line () {
     return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key(function (d, i) {
       return i;
-    }).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+    }).prop("valuesAccessor").valuesAccessor(identity$1).prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
 
@@ -5496,6 +5215,7 @@
    *
    * @return {sszvis.component}
    */
+
   function pie () {
     return component().prop("radius").prop("fill").prop("stroke").prop("angle", functor).render(function (data) {
       var selection = d3.select(this);
@@ -5584,9 +5304,10 @@
    * @return {sszvis.component}
    */
 
+
   /* Constants
   ----------------------------------------------- */
-  var SPINE_PADDING = 0.5;
+  var SPINE_PADDING$1 = 0.5;
 
   /* Module
   ----------------------------------------------- */
@@ -5598,11 +5319,11 @@
       // Components
 
       var leftBar = bar().x(function (d) {
-        return -SPINE_PADDING - props.barWidth(d);
+        return -SPINE_PADDING$1 - props.barWidth(d);
       }).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
-      var rightBar = bar().x(SPINE_PADDING).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
-      var leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
-      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+      var rightBar = bar().x(SPINE_PADDING$1).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
+      var leftLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
+      var rightLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth);
 
       // Rendering
 
@@ -5612,7 +5333,7 @@
       selection.selectGroup("rightReference").datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : []).call(rightLine);
     });
   }
-  function lineComponent() {
+  function lineComponent$1() {
     return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -5686,11 +5407,12 @@
    *
    * @return {sszvis.component}
    */
+
   function sankey () {
     return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort", functor).linkSort(function (a, b) {
       return a.value - b.value;
     }) // Default sorts in descending order of value
-    .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel").nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
+    .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel").nameLabel(identity$1).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
       var idAcc = prop("id");
@@ -5877,6 +5599,7 @@
    *
    * @return {sszvis.component}
    */
+
   function stackedArea () {
     return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key(function (d, i) {
       return i;
@@ -5924,10 +5647,11 @@
    *
    * @return {sszvis.component}
    */
+
   function stackedAreaMultiples () {
     return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key(function (d, i) {
       return i;
-    }).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+    }).prop("valuesAccessor").valuesAccessor(identity$1).prop("transition").transition(true).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
 
@@ -5978,6 +5702,7 @@
    *
    * @return {sszvis.component}
    */
+
   var stackAcc = prop("stack");
 
   // Accessors for the first and second element of a tuple (2-element array).
@@ -5990,7 +5715,7 @@
 
         // Collect all keys ()
         var keys = rows.reduce(function (a, row) {
-          return set(a.concat(Object.keys(row)));
+          return set$1(a.concat(Object.keys(row)));
         }, []);
         var stacks = d3.stack().keys(keys).value(function (x, key) {
           return valueAcc(x[key][0]);
@@ -6097,9 +5822,10 @@
    * @return {sszvis.component}
    */
 
+
   /* Constants
   ----------------------------------------------- */
-  var SPINE_PADDING$1 = 0.5;
+  var SPINE_PADDING = 0.5;
   var dataAcc = prop("data");
   var rowAcc = prop("row");
 
@@ -6160,19 +5886,19 @@
       // Components
 
       var leftBar = bar().x(function (d) {
-        return -SPINE_PADDING$1 - props.barWidth(d[1]);
+        return -SPINE_PADDING - props.barWidth(d[1]);
       }).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(function (d) {
         return props.barWidth(d[1]) - props.barWidth(d[0]);
       }).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
       var rightBar = bar().x(function (d) {
-        return SPINE_PADDING$1 + props.barWidth(d[0]);
+        return SPINE_PADDING + props.barWidth(d[0]);
       }).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(function (d) {
         return props.barWidth(d[1]) - props.barWidth(d[0]);
       }).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
       var leftStack = stackComponent().stackElement(leftBar);
       var rightStack = stackComponent().stackElement(rightBar);
-      var leftLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
-      var rightLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth);
+      var leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
+      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
 
       // Rendering
 
@@ -6195,7 +5921,7 @@
       });
     });
   }
-  function lineComponent$1() {
+  function lineComponent() {
     return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
       var selection = d3.select(this);
       var props = selection.props();
@@ -6237,6 +5963,7 @@
    *
    * @return {sszvis.component}
    */
+
   var TWO_PI = 2 * Math.PI;
   function sunburst () {
     return component().prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (data) {
@@ -6335,8 +6062,9 @@
    *
    * @return {sszvis.component}
    */
+
   function buttonGroup () {
-    return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
+    return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity$1).render(function () {
       var selection = d3.select(this);
       var props = selection.props();
       var buttonWidth = props.width / props.values.length;
@@ -6379,6 +6107,7 @@
    *
    * @returns {sszvis.component}
    */
+
   function handleRuler () {
     return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
       var selection = d3.select(this);
@@ -6453,8 +6182,9 @@
    *
    * @return {sszvis.component}
    */
+
   function select () {
-    return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
+    return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity$1).render(function () {
       var selection = d3.select(this);
       var props = selection.props();
       var wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], function (d) {
@@ -6528,11 +6258,12 @@
    *
    * @returns {sszvis.component}
    */
-  function contains$1(x, a) {
+
+  function contains(x, a) {
     return a.indexOf(x) >= 0;
   }
   function slider () {
-    return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).tickLabels(identity).prop("label", functor).label(identity).render(function () {
+    return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).tickLabels(identity$1).prop("label", functor).label(identity$1).render(function () {
       var selection = d3.select(this);
       var props = selection.props();
       var axisOffset = 28; // vertical offset for the axis
@@ -6555,8 +6286,8 @@
       bg.exit().remove();
 
       // create the axis
-      var axis = axisX().scale(alteredScale).orient("bottom").hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set([].concat(props.majorTicks, props.minorTicks))).tickFormat(function (d) {
-        return contains$1(d, props.majorTicks) ? props.tickLabels(d) : "";
+      var axis = axisX().scale(alteredScale).orient("bottom").hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set$1([].concat(props.majorTicks, props.minorTicks))).tickFormat(function (d) {
+        return contains(d, props.majorTicks) ? props.tickLabels(d) : "";
       });
       var axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]);
       var newAxisSelection = axisSelection.enter().append("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
@@ -6565,10 +6296,10 @@
 
       // adjust visual aspects of the axis to fit the design
       axisSelection.selectAll(".tick line").filter(function (d) {
-        return !contains$1(d, props.majorTicks);
+        return !contains(d, props.majorTicks);
       }).attr("y2", 4);
       var majorAxisText = axisSelection.selectAll(".tick text").filter(function (d) {
-        return contains$1(d, props.majorTicks);
+        return contains(d, props.majorTicks);
       });
       var numTicks = majorAxisText.size();
       majorAxisText.style("text-anchor", function (d, i) {
@@ -6662,6 +6393,7 @@
    *
    * @returns {d3.selection}
    */
+
   function createHtmlLayer(selector, bounds$1, metadata) {
     bounds$1 || (bounds$1 = bounds());
     metadata || (metadata = {});
@@ -6695,6 +6427,7 @@
    *
    * @returns {d3.selection}
    */
+
   function createSvgLayer(selector, bounds$1, metadata) {
     bounds$1 || (bounds$1 = bounds());
     metadata || (metadata = {});
@@ -6805,6 +6538,7 @@
    * |fooBarBaz        |      <--- not enough space for padding + fooBaz
    * |fooBaz    barFoo |
    */
+
   var DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
   function legendColorOrdinal() {
     return component().prop("scale").prop("rowHeight").rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).prop("columnWidth").columnWidth(200).prop("rows").rows(3).prop("columns").columns(3).prop("verticallyCentered").verticallyCentered(false).prop("orientation").prop("reverse").reverse(false).prop("rightAlign").rightAlign(false).prop("horizontalFloat").horizontalFloat(false).prop("floatPadding").floatPadding(20).prop("floatWidth").floatWidth(600).render(function () {
@@ -6889,17 +6623,18 @@
    * Generate a color scale and a legend for the given labels. Compute how much
    * padding labels plus legend needs for use with `sszvis.bounds()`
    */
-  function colorLegendLayout({
-    legendLabels,
-    axisLabels = [],
-    slant = "horizontal"
-  }, container) {
-    var containerWidth = measureDimensions(container).width;
-    var layout = colorLegendDimensions(legendLabels, containerWidth);
-    var scale = legendLabels.length > 6 ? scaleQual12().domain(legendLabels) : scaleQual6().domain(legendLabels);
-    var legend = legendColorOrdinal().scale(scale).horizontalFloat(layout.horizontalFloat).rows(layout.rows).columnWidth(layout.columnWidth).orientation(layout.orientation);
-    var axisLabelPadding = axisLabelHeight(slant, axisLabels);
-    var legendPadding = layout.rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
+  function colorLegendLayout(_ref, container) {
+    let {
+      legendLabels,
+      axisLabels = [],
+      slant = "horizontal"
+    } = _ref;
+    const containerWidth = measureDimensions(container).width;
+    const layout = colorLegendDimensions(legendLabels, containerWidth);
+    const scale = legendLabels.length > 6 ? scaleQual12().domain(legendLabels) : scaleQual6().domain(legendLabels);
+    const legend = legendColorOrdinal().scale(scale).horizontalFloat(layout.horizontalFloat).rows(layout.rows).columnWidth(layout.columnWidth).orientation(layout.orientation);
+    const axisLabelPadding = axisLabelHeight(slant, axisLabels);
+    const legendPadding = layout.rows * DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;
     return {
       axisLabelPadding,
       legendPadding,
@@ -6916,15 +6651,15 @@
    * Compute all the dimensions necessary to generate an ordinal color legend.
    */
   function colorLegendDimensions(labels, containerWidth) {
-    var labelCount = labels.length;
-    var maxLabelWidth = d3.max(labels, labelWidth);
-    var totalLabelsWidth = d3.sum(labels, labelWidth);
+    const labelCount = labels.length;
+    const maxLabelWidth = d3.max(labels, labelWidth);
+    const totalLabelsWidth = d3.sum(labels, labelWidth);
 
     // Use a single column for four or fewer items
     var columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
 
     // Use a horizontal layout if all labels fit on one line
-    var isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;
+    const isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;
     return {
       columns,
       rows: isHorizontal ? 1 : Math.ceil(labelCount / columns),
@@ -7088,6 +6823,7 @@
    *                                      the value is 0 and no padding is needed.
    *                                    }
    */
+
   function populationPyramidLayout (spaceWidth, numBars) {
     var MAX_HEIGHT = 480; // Chart no taller than this
     var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
@@ -7123,6 +6859,7 @@
    * A module of helper functions for computing the data structure
    * and layout required by the sankey component.
    */
+
   var newLinkId = function () {
     var id = 0;
     return function () {
@@ -7159,10 +6896,10 @@
    *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
    *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
    */
-  var prepareData = function () {
-    var mGetSource = identity;
-    var mGetTarget = identity;
-    var mGetValue = identity;
+  var prepareData$1 = function () {
+    var mGetSource = identity$1;
+    var mGetTarget = identity$1;
+    var mGetValue = identity$1;
     var mColumnIds = [];
 
     // Helper functions
@@ -7345,7 +7082,7 @@
    *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
    *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
    */
-  var computeLayout = function (columnLengths, columnTotals, columnHeight, columnWidth) {
+  var computeLayout$1 = function (columnLengths, columnTotals, columnHeight, columnWidth) {
     // Calculate appropriate scale and padding values (in pixels)
     var padSpaceRatio = 0.15;
     var padMin = 12;
@@ -7461,6 +7198,7 @@
    *
    * @return {sszvis.component}
    */
+
   function smallMultiples () {
     return component().prop("width").prop("height").prop("paddingX").prop("paddingY").prop("rows").prop("cols").render(function (data) {
       var selection = d3.select(this);
@@ -7542,12 +7280,16 @@
    *
    * Helper functions for transforming your data to match the format required by the sunburst chart.
    */
+
   function unwrapNested(roll) {
-    return Array.from(roll, ([key, values]) => ({
-      key,
-      values: values.size ? unwrapNested(values) : undefined,
-      value: values.size ? undefined : values
-    }));
+    return Array.from(roll, _ref => {
+      let [key, values] = _ref;
+      return {
+        key,
+        values: values.size ? unwrapNested(values) : undefined,
+        value: values.size ? undefined : values
+      };
+    });
   }
 
   /**
@@ -7575,9 +7317,9 @@
    *
    * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
    */
-  var prepareData$1 = function () {
-    var layers = [];
-    var valueAcc = identity;
+  var prepareData = function () {
+    const layers = [];
+    var valueAcc = identity$1;
     // Sibling nodes of the partition layout are sorted according to this sort function.
     // The default value for this component tries to preserve the order of the input data.
     // However, input data order preservation is not guaranteed, because of an implementation
@@ -7587,9 +7329,9 @@
       return 0;
     };
     function main(data) {
-      var nested = unwrapNested(d3.rollup(data, first, ...layers));
+      const nested = unwrapNested(d3.rollup(data, first, ...layers));
       console.log(nested);
-      var root = d3.hierarchy({
+      const root = d3.hierarchy({
         isSunburstRoot: true,
         values: nested
       }, prop("values")).sort(sortFn).sum(function (x) {
@@ -7639,7 +7381,7 @@
    *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
    *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
    */
-  var computeLayout$1 = function (numLayers, chartWidth) {
+  var computeLayout = function (numLayers, chartWidth) {
     // Diameter of the center circle is one-third the width
     var halfWidth = chartWidth / 2;
     var centerRadius = halfWidth / 3;
@@ -7749,8 +7491,9 @@
    *
    * @return {sszvis.component}
    */
+
   function binnedColorScale () {
-    return component().prop("scale").prop("displayValues").prop("endpoints").prop("width").width(200).prop("labelFormat").labelFormat(identity).render(function () {
+    return component().prop("scale").prop("displayValues").prop("endpoints").prop("width").width(200).prop("labelFormat").labelFormat(identity$1).render(function () {
       var selection = d3.select(this);
       var props = selection.props();
       if (!props.scale) return error("legend.binnedColorScale - a scale must be specified.");
@@ -7838,8 +7581,9 @@
    *                                              defaults to using the first and last tick values.
    * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
    */
+
   function linearColorScale () {
-    return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat").labelFormat(identity).render(function () {
+    return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat").labelFormat(identity$1).render(function () {
       var selection = d3.select(this);
       var props = selection.props();
       if (!props.scale) {
@@ -7910,8 +7654,9 @@
    *
    * @returns {sszvis.component}
    */
+
   function radius () {
-    return component().prop("scale").prop("tickFormat").tickFormat(identity).prop("tickValues").render(function () {
+    return component().prop("scale").prop("tickFormat").tickFormat(identity$1).prop("tickValues").render(function () {
       var selection = d3.select(this);
       var props = selection.props();
       var domain = props.scale.domain();
@@ -7957,6 +7702,7 @@
    * @param  {Error} The error object
    */
 
+
   // var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
   var loadError = function (error$1) {
@@ -7978,6 +7724,7 @@
    *
    * @module sszvis/map/utils
    */
+
   var STADT_KREISE_KEY = "zurichStadtKreise";
   var STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
   var STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
@@ -8154,6 +7901,7 @@
    *
    * @return {sszvis.component}
    */
+
   var datumAcc = prop("datum");
   function bubble () {
     var event = d3.dispatch("over", "out", "click");
@@ -8223,6 +7971,7 @@
    *
    * @return {sszvis.component}
    */
+
   function mapRendererBase () {
     return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true) // a predicate function to determine whether a datum has a defined value
     .prop("fill", functor).fill(function () {
@@ -8293,6 +8042,7 @@
    *
    * @return {sszvis.component}
    */
+
   function geojson () {
     var event = d3.dispatch("over", "out", "click");
     var geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
@@ -8386,6 +8136,7 @@
    *
    * @return {sszvis.component}
    */
+
   function mapRendererHighlight () {
     return component().prop("keyName").keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
     .prop("geoJson").prop("mapPath").prop("highlight").highlight([]) // an array of data values to highlight
@@ -8454,6 +8205,7 @@
    *
    * @return {sszvis.component}
    */
+
   function image () {
     return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").opacity(1).render(function () {
       var selection = d3.select(this);
@@ -8486,6 +8238,7 @@
    *
    * @return {sszvis.component}
    */
+
   function mapRendererMesh () {
     return component().prop("geoJson").prop("mapPath").prop("borderColor").borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
     .prop("strokeWidth").strokeWidth(1.25).render(function () {
@@ -8517,6 +8270,7 @@
    *
    * @return {sszvis.component}
    */
+
   function mapRendererPatternedLakeOverlay () {
     return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").fadeOut(true).render(function () {
       var selection = d3.select(this);
@@ -8577,6 +8331,7 @@
    *
    * @return {sszvis.component}
    */
+
   function raster () {
     return component().prop("debug").debug(false).prop("width").prop("height").prop("position").prop("cellSide").cellSide(2).prop("fill", functor).prop("opacity").opacity(1).render(function (data) {
       var selection = d3.select(this);
@@ -8691,6 +8446,7 @@
    *
    * @module sszvis/parse
    */
+
   var timeParse = d3.timeFormatLocale(locale).parse;
 
   /**
@@ -8772,6 +8528,7 @@
    *
    * @returns {responsiveProps}
    */
+
 
   /* Exported module
   ----------------------------------------------- */
@@ -8979,6 +8736,7 @@
    *
    * @return {function} Formatting function that accepts a datum
    */
+
   function formatHTML() {
     var styles = {
       plain: function (d) {
@@ -9071,7 +8829,7 @@
   exports.SWITZERLAND_KEY = SWITZERLAND_KEY;
   exports.WAHL_KREISE_KEY = WAHL_KREISE_KEY;
   exports.annotationCircle = circle;
-  exports.annotationLine = line;
+  exports.annotationLine = line$1;
   exports.annotationRangeFlag = rangeFlag;
   exports.annotationRangeRuler = rangeRuler;
   exports.annotationRectangle = rectangle;
@@ -9103,7 +8861,7 @@
   exports.colorLegendDimensions = colorLegendDimensions;
   exports.colorLegendLayout = colorLegendLayout;
   exports.compose = compose;
-  exports.contains = contains;
+  exports.contains = contains$1;
   exports.createHtmlLayer = createHtmlLayer;
   exports.createSvgLayer = createSvgLayer;
   exports.dataAreaPattern = dataAreaPattern;
@@ -9144,8 +8902,8 @@
   exports.handleRuler = handleRuler;
   exports.hashableSet = hashableSet;
   exports.heatTableMissingValuePattern = heatTableMissingValuePattern;
-  exports.identity = identity;
-  exports.isFunction = isFunction;
+  exports.identity = identity$1;
+  exports.isFunction = isFunction$1;
   exports.isNull = isNull;
   exports.isNumber = isNumber;
   exports.isObject = isObject;
@@ -9159,7 +8917,7 @@
   exports.legendColorLinear = linearColorScale;
   exports.legendColorOrdinal = legendColorOrdinal;
   exports.legendRadius = radius;
-  exports.line = line$1;
+  exports.line = line;
   exports.loadError = loadError;
   exports.locale = locale;
   exports.mapLakeFadeGradient = mapLakeFadeGradient;
@@ -9198,8 +8956,8 @@
   exports.responsiveProps = responsiveProps;
   exports.roundTransformString = roundTransformString;
   exports.sankey = sankey;
-  exports.sankeyLayout = computeLayout;
-  exports.sankeyPrepareData = prepareData;
+  exports.sankeyLayout = computeLayout$1;
+  exports.sankeyPrepareData = prepareData$1;
   exports.scaleDeepGry = scaleDeepGry;
   exports.scaleDimGry = scaleDimGry;
   exports.scaleDivNtr = scaleDivNtr;
@@ -9219,7 +8977,7 @@
   exports.scaleSeqGrn = scaleSeqGrn;
   exports.scaleSeqRed = scaleSeqRed;
   exports.selectMenu = select;
-  exports.set = set;
+  exports.set = set$1;
   exports.slider = slider;
   exports.slightlyDarker = slightlyDarker;
   exports.slowTransition = slowTransition;
@@ -9235,8 +8993,8 @@
   exports.stringEqual = stringEqual;
   exports.sunburst = sunburst;
   exports.sunburstGetRadiusExtent = getRadiusExtent;
-  exports.sunburstLayout = computeLayout$1;
-  exports.sunburstPrepareData = prepareData$1;
+  exports.sunburstLayout = computeLayout;
+  exports.sunburstPrepareData = prepareData;
   exports.swissMapPath = swissMapPath;
   exports.swissMapProjection = swissMapProjection;
   exports.textWrap = textWrap;
@@ -9249,6 +9007,4 @@
   exports.widthAdaptiveMapPathStroke = widthAdaptiveMapPathStroke;
   exports.withAlpha = withAlpha;
 
-  Object.defineProperty(exports, '__esModule', { value: true });
-
-})));
+}));

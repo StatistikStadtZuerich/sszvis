@@ -62,14 +62,14 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (x, y) {
+  showTooltip: function (x) {
     state.selection = state.groupedData.filter(function (d) {
       return sszvis.contains(d.map(xAcc), x);
     });
     render(state);
   },
 
-  hideTooltip: function (x, y) {
+  hideTooltip: function () {
     state.selection = [];
     render(state);
   },

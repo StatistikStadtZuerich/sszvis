@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Area Chart Stacked | Basic</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -99,7 +99,7 @@
                     r[k] = yAcc(d[k][0]);
                   });
                   return r;
-                })
+                }),
             );
 
             state.stackedData.forEach(function (stack, i) {
@@ -178,7 +178,7 @@
               axisLabels: state.timeExtent.map(props.xLabelFormat),
               legendLabels: state.categories,
             },
-            config.id
+            config.id,
           );
 
           var cScale = legendLayout.scale;
@@ -189,7 +189,7 @@
               top: 20,
               bottom: legendLayout.bottomPadding,
             },
-            config.id
+            config.id,
           );
 
           // Scales
@@ -220,22 +220,22 @@
             .x(
               sszvis.compose(xScale, xAcc, function (d) {
                 return d.data;
-              })
+              }),
             )
             .y0(
               sszvis.compose(yScale, function (d) {
                 return d[0];
-              })
+              }),
             )
             .y1(
               sszvis.compose(yScale, function (d) {
                 return d[1];
-              })
+              }),
             )
             .fill(
               sszvis.compose(cScale, function (d) {
                 return d.key;
-              })
+              }),
             );
 
           var topValue;
@@ -256,7 +256,7 @@
               return d.data[d.key];
             })
             .total(state.totalHighlightValue)
-            .flip(function (d) {
+            .flip(function () {
               return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
             });
 
@@ -265,7 +265,7 @@
             .bold(
               sszvis.compose(sszvis.formatNumber, function (d) {
                 return d.data[d.key];
-              })
+              }),
             )
             .plain(function (d) {
               return d.key;
@@ -274,7 +274,7 @@
           var rangeTooltip = sszvis
             .tooltip()
             .header(tooltipText)
-            .orientation(function (d) {
+            .orientation(function () {
               return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth
                 ? "right"
                 : "left";
@@ -339,8 +339,8 @@
               "transform",
               sszvis.translateString(
                 0,
-                bounds.innerHeight + legendLayout.axisLabelPadding
-              )
+                bounds.innerHeight + legendLayout.axisLabelPadding,
+              ),
             )
             .call(colorLegend);
 
@@ -354,7 +354,7 @@
             .datum(
               state.highlightData.filter(function (v) {
                 return v[0] < state.mouseYValue && v[1] > state.mouseYValue;
-              })
+              }),
             )
             .call(rangeFlag);
 

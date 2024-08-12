@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Sankey Diagram | Same Sets</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -41,7 +41,7 @@
                 right: 0,
                 height: Math.max(
                   sszvis.aspectRatio4to3(w),
-                  MIN_CHART_HEIGHT + 40 + 20
+                  MIN_CHART_HEIGHT + 40 + 20,
                 ),
               };
             },
@@ -53,7 +53,7 @@
                 right: w / 4,
                 height: Math.max(
                   sszvis.aspectRatio4to3(w),
-                  MIN_CHART_HEIGHT + 40 + 20
+                  MIN_CHART_HEIGHT + 40 + 20,
                 ),
               };
             },
@@ -167,7 +167,7 @@
             state.data.columnLengths,
             state.data.columnTotals,
             bounds.innerHeight,
-            bounds.innerWidth
+            bounds.innerWidth,
           );
 
           // Scales
@@ -202,7 +202,7 @@
 
           var formatValue = sszvis.compose(
             sszvis.formatPreciseNumber(0),
-            valueAcc
+            valueAcc,
           );
 
           var sankeyGen = sszvis
@@ -232,8 +232,8 @@
               return linkIsSelected(a)
                 ? 1
                 : linkIsSelected(b)
-                ? -1
-                : valueAcc(a) - valueAcc(b);
+                  ? -1
+                  : valueAcc(a) - valueAcc(b);
             })
             .linkSourceLabels(state.linkSourceLabels)
             .linkTargetLabels(state.linkTargetLabels)
@@ -244,7 +244,7 @@
                 ? "right"
                 : "left";
             })
-            .labelOpacity(function (d) {
+            .labelOpacity(function () {
               return props.labelSide === "inside" && state.hoveredNode !== null
                 ? 0
                 : 1;

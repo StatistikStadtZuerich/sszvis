@@ -198,7 +198,7 @@ function render(state) {
     .labelSide(function (columnIndex) {
       return columnPosition(columnIndex) > bounds.innerWidth / 2 ? "right" : "left";
     })
-    .labelOpacity(function (d) {
+    .labelOpacity(function () {
       return props.labelSide === "inside" && state.hoveredNode !== null ? 0 : 1;
     })
     .labelHitBoxSize(props.hitboxSize)

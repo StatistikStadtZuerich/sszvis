@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Map | Rastermap Gradient</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -107,7 +107,7 @@
               lakeFeatures: topojson.feature(topo, topo.objects.lakezurich),
               lakeBorders: topojson.mesh(
                 topo,
-                topo.objects.stadtkreis_lakebounds
+                topo.objects.stadtkreis_lakebounds,
               ),
             };
             render(state);
@@ -183,7 +183,7 @@
             bounds.innerWidth,
             bounds.innerHeight,
             state.mapData.features,
-            "zurichStadtfeatures"
+            "zurichStadtfeatures",
           );
           var projection = mapPath.projection();
 
@@ -217,7 +217,7 @@
               (layerBounds[0][0] + layerBounds[1][0]) / 2,
               (layerBounds[0][1] + layerBounds[1][1]) / 2,
             ],
-            50
+            50,
           );
 
           var rasterLayer = sszvis
@@ -285,8 +285,8 @@
               "transform",
               sszvis.translateString(
                 (bounds.innerWidth - props.legendWidth) / 2,
-                bounds.innerHeight + bounds.padding.bottom - 40
-              )
+                bounds.innerHeight + bounds.padding.bottom - 40,
+              ),
             )
             .call(legend);
 

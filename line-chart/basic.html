@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Line Chart | Basic</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -142,7 +142,7 @@
               });
               // Make sure that the selection has a value to display
               state.selection = closestData.filter(
-                sszvis.compose(sszvis.not(isNaN), yAcc)
+                sszvis.compose(sszvis.not(isNaN), yAcc),
               );
             },
           },
@@ -157,7 +157,7 @@
                 axisLabels: state.xValues.map(xLabelFormat),
                 legendLabels: state.categories,
               },
-              config.id
+              config.id,
             );
 
             var cScale = legendLayout.scale;
@@ -171,7 +171,7 @@
                     : 10,
                 bottom: legendLayout.bottomPadding,
               },
-              config.id
+              config.id,
             );
 
             // Scales
@@ -249,8 +249,8 @@
                   "transform",
                   sszvis.translateString(
                     0,
-                    bounds.innerHeight + legendLayout.axisLabelPadding
-                  )
+                    bounds.innerHeight + legendLayout.axisLabelPadding,
+                  ),
                 )
                 .call(colorLegend);
             }
@@ -286,7 +286,7 @@
           return function (d) {
             return sszvis.contains(
               state.selection.map(xAcc).map(String),
-              String(d)
+              String(d),
             );
           };
         }

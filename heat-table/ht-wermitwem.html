@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Heat Table | Wer mit wem?</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -116,7 +116,7 @@
             squarePadding,
             state.manAgeList.length,
             state.womAgeList.length,
-            tablePadding
+            tablePadding,
           );
 
           // construct the bounds as usual, but add the left and right padding to the width, and the top and bottom padding to the height
@@ -130,7 +130,7 @@
               top: tablePadding.top,
               bottom: tablePadding.bottom,
             },
-            config.id
+            config.id,
           );
           var props = queryProps(bounds);
 
@@ -156,7 +156,7 @@
           // the range is composed of colors sampled at equal distances along the color spectrum
           // such that binColors.length === BIN_EDGES.length + 1
           var binColors = BIN_EDGES.concat(state.valueDomain[1]).map(
-            interpolateColor
+            interpolateColor,
           );
 
           // for the threshold scale, the number of values in the range must be one greater than the
@@ -262,7 +262,7 @@
             .selectGroup("bars")
             .attr(
               "transform",
-              sszvis.translateString(tableDimensions.centeredOffset, 0)
+              sszvis.translateString(tableDimensions.centeredOffset, 0),
             )
             .call(barGen);
 
@@ -272,7 +272,7 @@
             .selectGroup("xAxis")
             .attr(
               "transform",
-              sszvis.translateString(tableDimensions.centeredOffset, -10)
+              sszvis.translateString(tableDimensions.centeredOffset, -10),
             )
             .call(xAxis);
 
@@ -280,7 +280,7 @@
             .selectGroup("yAxis")
             .attr(
               "transform",
-              sszvis.translateString(tableDimensions.centeredOffset - 10, 0)
+              sszvis.translateString(tableDimensions.centeredOffset - 10, 0),
             )
             .call(yAxis);
 
@@ -296,7 +296,7 @@
             .selectGroup("legend")
             .attr(
               "transform",
-              sszvis.translateString(legendX, bounds.innerHeight + 16)
+              sszvis.translateString(legendX, bounds.innerHeight + 16),
             )
             .call(legend);
 

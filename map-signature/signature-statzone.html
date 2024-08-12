@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Map</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="https://unpkg.com/topojson-client@3/dist/topojson-client.min.js"></script>
@@ -45,10 +45,10 @@
             },
           })
           .prop("control", {
-            palm: function (width) {
+            palm: function () {
               return sszvis.selectMenu;
             },
-            _: function (width) {
+            _: function () {
               return sszvis.buttonGroup;
             },
           })
@@ -69,7 +69,6 @@
         }
 
         var datumAcc = sszvis.prop("datum");
-        var idAcc = sszvis.propOr("id", null);
         var yearAcc = sszvis.prop("year");
         var genderAcc = sszvis.prop("gender");
         var birthsAcc = sszvis.propOr("births", 0);
@@ -243,7 +242,7 @@
             .selectGroup("radiusLegend")
             .attr(
               "transform",
-              sszvis.translateString(props.legendX, bounds.innerHeight - 65)
+              sszvis.translateString(props.legendX, bounds.innerHeight - 65),
             )
             .call(radiusLegend);
 
@@ -260,7 +259,7 @@
           var interactionLayer = sszvis
             .panning()
             .elementSelector(
-              ".sszvis-map__area--entering, .sszvis-anchored-circle--entering"
+              ".sszvis-map__area--entering, .sszvis-anchored-circle--entering",
             )
             .on("start", actions.selectHovered)
             .on("pan", actions.selectHovered)

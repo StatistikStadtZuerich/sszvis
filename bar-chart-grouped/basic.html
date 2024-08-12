@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Grouped Bar Chart | Two Small</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -80,7 +80,7 @@
             state.data = data;
             state.regions = sszvis.set(state.data, xAcc);
             state.valueExtent = zeroBasedAxisDomain(
-              d3.extent(state.data, yAcc)
+              d3.extent(state.data, yAcc),
             );
             state.groups = sszvis.set(state.data, cAcc);
             state.groupedData = sszvis
@@ -89,21 +89,21 @@
               .apply(state.data);
             state.longestGroup = d3.max(
               state.groupedData,
-              sszvis.prop("length")
+              sszvis.prop("length"),
             );
             state.categories = sszvis.set(state.data, cAcc);
 
             render(state);
           },
 
-          showTooltip: function (x, y) {
+          showTooltip: function (x) {
             state.selection = state.groupedData.filter(function (d) {
               return sszvis.contains(d.map(xAcc), x);
             });
             render(state);
           },
 
-          hideTooltip: function (x, y) {
+          hideTooltip: function () {
             state.selection = [];
             render(state);
           },
@@ -132,7 +132,7 @@
               legendLabels: state.categories,
               slant: props.textDirection,
             },
-            config.id
+            config.id,
           );
 
           var cScale = legendLayout.scale;
@@ -143,7 +143,7 @@
               top: 25,
               bottom: legendLayout.bottomPadding,
             },
-            config.id
+            config.id,
           );
 
           var chartWidth = Math.min(800, bounds.innerWidth);
@@ -201,7 +201,7 @@
             .highlightTick(function (d) {
               return sszvis.contains(
                 state.selection.map(sszvis.compose(xAcc, sszvis.first)),
-                d
+                d,
               );
             });
           if (!props.textDirection) {
@@ -223,7 +223,7 @@
             .header(
               sszvis.modularTextHTML().plain(function (d) {
                 return xAcc(sszvis.first(d));
-              })
+              }),
             )
             .body(function (d) {
               // generates a row from each data element
@@ -242,8 +242,8 @@
             "transform",
             sszvis.translateString(
               bounds.innerWidth / 2 - chartWidth / 2,
-              bounds.padding.top
-            )
+              bounds.padding.top,
+            ),
           );
 
           chartLayer
@@ -263,8 +263,8 @@
               "transform",
               sszvis.translateString(
                 0,
-                bounds.innerHeight + legendLayout.axisLabelPadding
-              )
+                bounds.innerHeight + legendLayout.axisLabelPadding,
+              ),
             )
             .call(colorLegend);
 

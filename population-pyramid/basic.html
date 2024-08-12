@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Population Pyramid</title>
   </head>
-  <body style="margin: 0; padding: 0;">
+  <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
     <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
@@ -157,7 +157,7 @@
             // to the mouse
             var nearestAgeRange = findNearestAgeRange(
               age,
-              state.ageLookupIndex
+              state.ageLookupIndex,
             );
             // find the binned data rows with that age range
             var rows = state.binnedData.filter(function (v) {
@@ -197,7 +197,7 @@
           var pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
           var pyramidDimensions = sszvis.layoutPopulationPyramid(
             pyramidWidth,
-            state.ages.length
+            state.ages.length,
           );
           var chartPadding = { top: 25, bottom: 86 };
           var bounds = sszvis.bounds(
@@ -211,7 +211,7 @@
               left: pyramidDimensions.chartPadding,
               right: pyramidDimensions.chartPadding,
             },
-            config.id
+            config.id,
           );
           var props = queryProps(bounds);
 
@@ -235,7 +235,7 @@
           var yAxisLabelScale = positionScale.copy().range(
             pyramidDimensions.positions.map(function (d) {
               return d + pyramidDimensions.barHeight / 2;
-            })
+            }),
           );
 
           // Layers
@@ -319,7 +319,7 @@
             .selectGroup("xAxis")
             .attr(
               "transform",
-              sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight)
+              sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight),
             )
             .call(xAxis);
 
@@ -332,7 +332,7 @@
             .selectGroup("colorLegend")
             .attr(
               "transform",
-              sszvis.translateString(0, bounds.innerHeight + 60)
+              sszvis.translateString(0, bounds.innerHeight + 60),
             )
             .call(colorLegend);
 
@@ -358,8 +358,8 @@
                 state.binnedData,
                 bounds.innerWidth / 2,
                 mouseXScale,
-                lengthScale
-              )
+                lengthScale,
+              ),
             )
             .fireOnPanOnly(true)
             .on("move", actions.selectBar)
@@ -377,7 +377,7 @@
           binnedData,
           xCenter,
           xRelToPx,
-          lengthScale
+          lengthScale,
         ) {
           return function (xRel, age) {
             var ageBin = findNearestAgeRange(age, state.ageLookupIndex);
