@@ -72,7 +72,7 @@ var actions = {
     render(state);
   },
 
-  selectHovered: function (d) {
+  selectHovered: function (e, d) {
     state.selection = [d.datum];
     render(state);
   },
@@ -91,7 +91,7 @@ var actions = {
 // -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------

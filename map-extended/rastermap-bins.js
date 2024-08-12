@@ -88,7 +88,7 @@ var actions = {
     // Ignore the domain of the random data
     state.valueDomain = d3.extent(data, kinderAcc);
 
-    actions.setKey(DEFAULT_KEY);
+    actions.setKey(null, DEFAULT_KEY);
   },
 
   prepareMapData: function (topo) {
@@ -101,7 +101,7 @@ var actions = {
     render(state);
   },
 
-  setKey: function (key) {
+  setKey: function (e, key) {
     state.currentKey = key;
 
     render(state);
@@ -116,7 +116,7 @@ var actions = {
 // -----------------------------------------------
 d3.csv("data/kinder_segmented.csv", parseRow).then(actions.prepareData).catch(sszvis.loadError);
 
-d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------

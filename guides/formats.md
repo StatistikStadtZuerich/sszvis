@@ -24,8 +24,7 @@ rows:
 
 #### `sszvis.formatPreciseNumber(p, d)`
 
-`p` = The desired precision
-`d` = The number to be formatted
+`p` = The desired precision `d` = The number to be formatted
 
 A number will be formatted to a particular precision. It is a function that accepts numbers and returns formatted values. This function is "curried", meaning that it is a function with multiple arguments, but when you call it with less than the full number of arguments, it returns a function that takes less arguments and has the arguments you did provide "pre-filled" as parameters.
 

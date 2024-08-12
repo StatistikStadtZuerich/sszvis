@@ -9,7 +9,7 @@
   </head>
   <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -79,7 +79,7 @@
             render(state);
           },
 
-          showTooltip: function (category) {
+          showTooltip: function (e, category) {
             state.selection = state.data.filter(function (d) {
               return xAcc(d) === category;
             });
@@ -104,7 +104,7 @@
 
         // Render
         // -----------------------------------------------
-        function render(state) {
+        function render() {
           var yMax = d3.max(state.data, yAcc);
 
           var props = queryProps(sszvis.measureDimensions(config.id));

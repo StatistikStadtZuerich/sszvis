@@ -43,21 +43,22 @@ sszvis.app({
   // Init
   // -----------------------------------------------
   init: function (state) {
-    return Promise.all([d3.csv(config.data, parseRow), d3.json("../topo/stadt-zurich.json")]).then(
-      function (result) {
-        const data = result[0];
-        const topo = result[1];
-        state.data = data;
-        state.mapData = {
-          features: topojson.feature(topo, topo.objects.wahlkreise),
-          borders: topojson.mesh(topo, topo.objects.wahlkreise),
-          lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
-          lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
-        };
-        state.selection = [];
-        state.valueDomain = [0, 1];
-      }
-    );
+    return Promise.all([
+      d3.csv(config.data, parseRow),
+      d3.json("../static/topo/stadt-zurich.json"),
+    ]).then(function (result) {
+      const data = result[0];
+      const topo = result[1];
+      state.data = data;
+      state.mapData = {
+        features: topojson.feature(topo, topo.objects.wahlkreise),
+        borders: topojson.mesh(topo, topo.objects.wahlkreise),
+        lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
+        lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
+      };
+      state.selection = [];
+      state.valueDomain = [0, 1];
+    });
   },
 
   // Actions

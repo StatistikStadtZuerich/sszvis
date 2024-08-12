@@ -84,7 +84,7 @@ var actions = {
 
     state.maxValue = d3.max(state.data, yAcc);
 
-    state.maxStacked = d3.max(d3.values(dateValues), function (s) {
+    state.maxStacked = d3.max(Object.values(dateValues), function (s) {
       return d3.sum(s, yAcc);
     });
 

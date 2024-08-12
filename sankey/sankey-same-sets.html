@@ -9,7 +9,7 @@
   </head>
   <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -109,7 +109,7 @@
             render(state);
           },
 
-          onNodeOver: function (d) {
+          onNodeOver: function (e, d) {
             state.hoveredNode = d;
             state.linkSourceLabels = d.linksTo;
             state.linkTargetLabels = d.linksFrom;
@@ -129,7 +129,7 @@
             render(state);
           },
 
-          onLinkOver: function (d) {
+          onLinkOver: function (e, d) {
             state.hoveredLink = d;
             state.hoveredNode = null;
 

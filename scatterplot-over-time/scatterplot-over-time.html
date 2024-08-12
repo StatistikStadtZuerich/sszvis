@@ -9,7 +9,7 @@
   </head>
   <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -83,7 +83,7 @@
               })
               .apply(state.data);
 
-            actions.setYear(d3.max(state.years));
+            actions.setYear(null, d3.max(state.years));
           },
 
           setYear: function (inputYear) {
@@ -211,7 +211,7 @@
             .range([bounds.innerHeight, 0]);
 
           var tScale = d3
-            .scaleTime()
+            .scaleLinear()
             .domain(state.tExtent)
             .range([0, bounds.innerWidth]);
 
@@ -266,11 +266,10 @@
             .x(sszvis.compose(xScale, xAcc))
             .y(sszvis.compose(yScale, yAcc))
             .bounds([
-              [-bounds.padding.left, -bounds.padding.top],
-              [
-                bounds.innerWidth + bounds.padding.right,
-                bounds.innerHeight + 20,
-              ],
+              -bounds.padding.left,
+              -bounds.padding.top,
+              bounds.innerWidth + bounds.padding.right,
+              bounds.innerHeight + 20,
             ])
             .on("over", actions.selectPoint)
             .on("out", actions.deselectPoint);

@@ -262,9 +262,7 @@ Determines whether the rangeRuler labels should be flipped (they default to the 
 
 Determines whether overlapping labels should be avoided by moving them apart vertically (default).
 
-If set to `false`, labels are allowed to overlap. This can be be useful in charts with a lot of
-labels where moving them apart would move them outside the chart. In this case, it would be better
-to only show one label instead of all, though.
+If set to `false`, labels are allowed to overlap. This can be be useful in charts with a lot of labels where moving them apart would move them outside the chart. In this case, it would be better to only show one label instead of all, though.
 
 ### sszvis.annotationRangeFlag
 

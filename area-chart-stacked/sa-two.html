@@ -9,7 +9,7 @@
   </head>
   <body style="margin: 0; padding: 0;">
     <link href="../sszvis.css" rel="stylesheet" />
-    <script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
     <script src="../sszvis.js"></script>
 
     <div id="sszvis-chart"></div>
@@ -106,7 +106,7 @@
 
             state.maxValue = d3.max(state.data, yAcc);
 
-            state.maxStacked = d3.max(d3.values(dateValues), function (s) {
+            state.maxStacked = d3.max(Object.values(dateValues), function (s) {
               return d3.sum(s, yAcc);
             });
 
@@ -115,7 +115,7 @@
             actions.resetDate();
           },
 
-          toggleMultiples: function (g) {
+          toggleMultiples: function (e, g) {
             state.isMultiples = g === "Separiert";
             render(state);
           },
