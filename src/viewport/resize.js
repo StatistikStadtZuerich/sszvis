@@ -36,7 +36,7 @@ import throttle from "nano-throttle";
 // While still enabling the user to register multiple callbacks for the 'resize'
 // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
 // object would not allow.
-var callbacks = {
+const callbacks = {
   resize: [],
 };
 
@@ -49,7 +49,7 @@ if (typeof window !== "undefined") {
   );
 }
 
-var on = function (name, cb) {
+const on = function (name, cb) {
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
@@ -57,7 +57,7 @@ var on = function (name, cb) {
   return this;
 };
 
-var off = function (name, cb) {
+const off = function (name, cb) {
   if (!callbacks[name]) {
     return this;
   }
@@ -65,8 +65,8 @@ var off = function (name, cb) {
   return this;
 };
 
-var trigger = function (name) {
-  var evtArgs = Array.prototype.slice.call(arguments, 1);
+const trigger = function (name) {
+  const evtArgs = Array.prototype.slice.call(arguments, 1);
   if (callbacks[name]) {
     for (const fn of callbacks[name]) {
       fn.apply(null, evtArgs);
@@ -75,8 +75,4 @@ var trigger = function (name) {
   return this;
 };
 
-export var viewport = {
-  on,
-  off,
-  trigger,
-};
+export { on, off, trigger };

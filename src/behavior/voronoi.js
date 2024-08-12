@@ -49,16 +49,16 @@ import { elementFromEvent, datumFromPannableElement } from "./util.js";
 import { component } from "../d3-component.js";
 
 export default function () {
-  var event = dispatch("over", "out");
+  const event = dispatch("over", "out");
 
-  var voronoiComponent = component()
+  const voronoiComponent = component()
     .prop("x")
     .prop("y")
     .prop("bounds")
     .prop("debug")
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       if (!props.bounds) {
         logger.error("behavior.voronoi - requires bounds");
@@ -69,13 +69,13 @@ export default function () {
         (d) => props.x(d),
         (d) => props.y(d)
       );
-      var voronoi = delaunay.voronoi(props.bounds);
+      const voronoi = delaunay.voronoi(props.bounds);
 
-      var polys = selection
+      let polys = selection
         .selectAll("[data-sszvis-behavior-voronoi]")
         .data(voronoi.cellPolygons());
 
-      var newPolys = polys
+      const newPolys = polys
         .enter()
         .append("path")
         .attr("data-sszvis-behavior-voronoi", "")
@@ -89,7 +89,7 @@ export default function () {
         .attr("d", (d) => "M" + d.join("L") + "Z")
         .attr("fill", "transparent")
         .on("mouseover", function (e) {
-          var cbox = this.parentNode.getBoundingClientRect();
+          const cbox = this.parentNode.getBoundingClientRect();
           const datumIdx = delaunay.find(e.clientX, e.clientY);
           if (
             eventNearPoint(e, [
@@ -101,7 +101,7 @@ export default function () {
           }
         })
         .on("mousemove", function (e) {
-          var cbox = this.parentNode.getBoundingClientRect();
+          const cbox = this.parentNode.getBoundingClientRect();
           const datumIdx = delaunay.find(e.clientX, e.clientY);
           if (
             eventNearPoint(e, [
@@ -118,7 +118,7 @@ export default function () {
           event.apply("out", this, []);
         })
         .on("touchstart", function (e) {
-          var cbox = this.parentNode.getBoundingClientRect();
+          const cbox = this.parentNode.getBoundingClientRect();
           const datumIdx = delaunay.find(e.clientX, e.clientY);
 
           if (
@@ -134,14 +134,14 @@ export default function () {
             // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
             // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
             // when users are performing touches that cause scrolling, we want to avoid firing the events.
-            var pan = function () {
-              var touchEvent = fn.firstTouch(e);
-              var element = elementFromEvent(touchEvent);
-              var panDatum = datumFromPannableElement(element);
+            const pan = function () {
+              const touchEvent = fn.firstTouch(e);
+              const element = elementFromEvent(touchEvent);
+              const panDatum = datumFromPannableElement(element);
               if (panDatum === null) {
                 event.apply("out", this, []);
               } else {
-                var panCbox = element.parentNode.getBoundingClientRect();
+                const panCbox = element.parentNode.getBoundingClientRect();
                 if (
                   eventNearPoint(touchEvent, [
                     panCbox.left + props.x(panDatum.data),
@@ -162,7 +162,7 @@ export default function () {
               }
             };
 
-            var end = function () {
+            const end = function () {
               event.apply("out", this, []);
               select(this).on("touchmove", null).on("touchend", null);
             };
@@ -177,7 +177,7 @@ export default function () {
     });
 
   voronoiComponent.on = function () {
-    var value = event.on.apply(event, arguments);
+    const value = event.on.apply(event, arguments);
     return value === event ? voronoiComponent : value;
   };
 
@@ -185,10 +185,10 @@ export default function () {
 }
 
 // Perform distance calculations in units squared to avoid a costly Math.sqrt
-var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
+const MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
 
 function eventNearPoint(event, point) {
-  var dx = event.clientX - point[0];
-  var dy = event.clientY - point[1];
+  const dx = event.clientX - point[0];
+  const dy = event.clientY - point[1];
   return dx * dx + dy * dy < MAX_INTERACTION_RADIUS_SQUARED;
 }

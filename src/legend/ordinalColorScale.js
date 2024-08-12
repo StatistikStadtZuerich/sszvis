@@ -92,7 +92,7 @@ import { component } from "../d3-component.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 
-export var DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
+export const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
 
 export function legendColorOrdinal() {
   return component()
@@ -119,16 +119,16 @@ export function legendColorOrdinal() {
     .prop("floatWidth")
     .floatWidth(600)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var domain = props.scale.domain();
+      let domain = props.scale.domain();
 
       if (props.reverse) {
         domain = [...domain].reverse();
       }
 
-      var rows, cols;
+      let rows, cols;
       if (props.orientation === "horizontal") {
         cols = Math.ceil(props.columns);
         rows = Math.ceil(domain.length / cols);
@@ -137,18 +137,18 @@ export function legendColorOrdinal() {
         cols = Math.ceil(domain.length / rows);
       }
 
-      var groups = selection.selectAll(".sszvis-legend--entry").data(domain);
+      const groups = selection.selectAll(".sszvis-legend--entry").data(domain);
 
-      var newGroups = groups.enter().append("g").classed("sszvis-legend--entry", true);
+      const newGroups = groups.enter().append("g").classed("sszvis-legend--entry", true);
 
       groups.exit().remove();
 
-      var marks = groups
+      const marks = groups
         .merge(newGroups)
         .selectAll(".sszvis-legend__mark")
         .data((d) => [d]);
 
-      var newMarks = marks.enter().append("circle").classed("sszvis-legend__mark", true);
+      const newMarks = marks.enter().append("circle").classed("sszvis-legend__mark", true);
 
       marks.exit().remove();
 
@@ -161,12 +161,12 @@ export function legendColorOrdinal() {
         .attr("stroke", (d) => props.scale(d))
         .attr("stroke-width", 1);
 
-      var labels = groups
+      const labels = groups
         .merge(newGroups)
         .selectAll(".sszvis-legend__label")
         .data((d) => [d]);
 
-      var newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
+      const newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
 
       labels.exit().remove();
 
@@ -176,27 +176,27 @@ export function legendColorOrdinal() {
         .attr("dy", "0.35em") // vertically-center
         .style("text-anchor", () => (props.rightAlign ? "end" : "start"))
         .attr("transform", () => {
-          var x = props.rightAlign ? -18 : 18;
-          var y = halfPixel(props.rowHeight / 2);
+          const x = props.rightAlign ? -18 : 18;
+          const y = halfPixel(props.rowHeight / 2);
           return translateString(x, y);
         });
 
-      var verticalOffset = "";
+      let verticalOffset = "";
       if (props.verticallyCentered) {
         verticalOffset = "translate(0," + String(-((domain.length * props.rowHeight) / 2)) + ") ";
       }
 
       if (props.horizontalFloat) {
-        var rowPosition = 0,
+        let rowPosition = 0,
           horizontalPosition = 0;
         groups.merge(newGroups).attr("transform", function () {
           // not affected by scroll position
-          var width = this.getBoundingClientRect().width;
+          const width = this.getBoundingClientRect().width;
           if (horizontalPosition + width > props.floatWidth) {
             rowPosition += props.rowHeight;
             horizontalPosition = 0;
           }
-          var translate = translateString(horizontalPosition, rowPosition);
+          const translate = translateString(horizontalPosition, rowPosition);
           horizontalPosition += width + props.floatPadding;
           return verticalOffset + translate;
         });

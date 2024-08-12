@@ -30,28 +30,28 @@
 import { aspectRatioPortrait } from "../aspectRatio.js";
 
 export default function (spaceWidth, numBars) {
-  var MAX_HEIGHT = 480; // Chart no taller than this
-  var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
-  var defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
-  var padding = 1;
-  var numPads = numBars - 1;
-  var totalPadding = padding * numPads;
+  const MAX_HEIGHT = 480; // Chart no taller than this
+  const MIN_BAR_HEIGHT = 2; // Bars no shorter than this
+  const defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
+  const padding = 1;
+  const numPads = numBars - 1;
+  const totalPadding = padding * numPads;
 
-  var roundedBarHeight = Math.round((defaultHeight - totalPadding) / numBars);
+  let roundedBarHeight = Math.round((defaultHeight - totalPadding) / numBars);
   roundedBarHeight = Math.max(roundedBarHeight, MIN_BAR_HEIGHT);
 
-  var totalHeight = numBars * roundedBarHeight + totalPadding;
+  const totalHeight = numBars * roundedBarHeight + totalPadding;
 
-  var barPos = totalHeight - roundedBarHeight,
-    step = roundedBarHeight + padding,
+  let barPos = totalHeight - roundedBarHeight;
+  const step = roundedBarHeight + padding,
     positions = [];
   while (barPos >= 0) {
     positions.push(barPos);
     barPos -= step;
   }
 
-  var maxBarLength = Math.min(spaceWidth / 2, (aspectRatioPortrait.MAX_HEIGHT * (4 / 5)) / 2);
-  var chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
+  const maxBarLength = Math.min(spaceWidth / 2, (aspectRatioPortrait.MAX_HEIGHT * (4 / 5)) / 2);
+  const chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
 
   return {
     barHeight: roundedBarHeight,

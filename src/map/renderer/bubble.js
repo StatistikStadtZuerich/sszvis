@@ -23,12 +23,12 @@ import { getGeoJsonCenter } from "../mapUtils.js";
 import translateString from "../../svgUtils/translateString.js";
 import { component } from "../../d3-component.js";
 
-var datumAcc = fn.prop("datum");
+const datumAcc = fn.prop("datum");
 
 export default function () {
-  var event = dispatch("over", "out", "click");
+  const event = dispatch("over", "out", "click");
 
-  var anchoredCirclesComponent = component()
+  const anchoredCirclesComponent = component()
     .prop("mergedData")
     .prop("mapPath")
     .prop("radius", fn.functor)
@@ -40,12 +40,12 @@ export default function () {
     .prop("transition")
     .transition(true)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var radiusAcc = fn.compose(props.radius, datumAcc);
+      const radiusAcc = fn.compose(props.radius, datumAcc);
 
-      var anchoredCircles = selection
+      const anchoredCircles = selection
         .selectGroup("anchoredCircles")
         .selectAll(".sszvis-anchored-circle")
         .data(props.mergedData, (d) => d.geoJson.id);
@@ -66,7 +66,7 @@ export default function () {
         })
         .merge(anchoredCircles)
         .attr("transform", (d) => {
-          var position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
+          const position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
           return translateString(position[0], position[1]);
         })
         .style("fill", (d) => props.fill(d.datum))
@@ -78,7 +78,7 @@ export default function () {
       anchoredCircles.classed("sszvis-anchored-circle--entering", false);
 
       if (props.transition) {
-        var t = defaultTransition();
+        const t = defaultTransition();
         anchoredCircles.exit().transition(t).attr("r", 0).remove();
 
         anchoredCircles.transition(t).attr("r", radiusAcc);
@@ -89,7 +89,7 @@ export default function () {
     });
 
   anchoredCirclesComponent.on = function () {
-    var value = event.on.apply(event, arguments);
+    const value = event.on.apply(event, arguments);
     return value === event ? anchoredCirclesComponent : value;
   };
 

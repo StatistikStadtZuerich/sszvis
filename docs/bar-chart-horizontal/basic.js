@@ -3,7 +3,7 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("yLabel", {
     _: "Beschäftigte",
@@ -19,13 +19,13 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("xValue");
-var cAcc = sszvis.prop("category");
+const xAcc = sszvis.prop("xValue");
+const cAcc = sszvis.prop("category");
 
 // Application state
 // -----------------------------------------------
 
-var state = {
+const state = {
   data: [],
   categories: [],
   selected: [],
@@ -34,7 +34,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 
-var actions = {
+const actions = {
   prepareState(data) {
     state.data = data;
     state.categories = sszvis.set(state.data, cAcc);
@@ -63,9 +63,9 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var props = queryProps(sszvis.measureDimensions(config.id));
-  var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
-  var bounds = sszvis.bounds(
+  const props = queryProps(sszvis.measureDimensions(config.id));
+  const chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
+  const bounds = sszvis.bounds(
     {
       height: 30 + chartDimensions.totalHeight + 40,
       top: 30,
@@ -73,16 +73,16 @@ function render(state) {
     },
     config.id
   );
-  var chartWidth = Math.min(bounds.innerWidth, 800);
+  const chartWidth = Math.min(bounds.innerWidth, 800);
 
   // Scales
 
-  var widthScale = d3
+  const widthScale = d3
     .scaleLinear()
     .range([0, chartWidth])
     .domain([0, d3.max(state.data, xAcc)]);
 
-  var yScale = d3
+  const yScale = d3
     .scaleBand()
     .padding(chartDimensions.padRatio)
     .paddingOuter(chartDimensions.outerRatio)
@@ -90,12 +90,12 @@ function render(state) {
     .domain(state.categories);
 
   // Layers
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selected);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selected);
 
   // Components
-  var barGen = sszvis
+  const barGen = sszvis
     .bar()
     .x(0)
     .y(sszvis.compose(yScale, cAcc))
@@ -104,7 +104,7 @@ function render(state) {
     .centerTooltip(true)
     .fill(sszvis.scaleQual12());
 
-  var xAxis = sszvis
+  const xAxis = sszvis
     .axisX()
     .scale(widthScale)
     .orient("bottom")
@@ -115,13 +115,13 @@ function render(state) {
     xAxis.ticks(props.ticks);
   }
 
-  var yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
+  const yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
 
-  var tooltipHeader = sszvis
+  const tooltipHeader = sszvis
     .modularTextHTML()
     .bold(sszvis.compose((d) => (Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d)), xAcc));
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .orientation(sszvis.fitTooltip("bottom", bounds))
@@ -135,7 +135,7 @@ function render(state) {
     sszvis.translateString(bounds.innerWidth / 2 - chartWidth / 2, bounds.padding.top)
   );
 
-  var bars = chartLayer.selectGroup("bars").call(barGen);
+  const bars = chartLayer.selectGroup("bars").call(barGen);
 
   chartLayer
     .selectGroup("xAxis")
@@ -152,7 +152,7 @@ function render(state) {
   // Interaction
   // Use the move behavior to provide tooltips in the absence of a bar, i.e.
   // when we have missing data.
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .move()
     .xScale(widthScale)
     .yScale(yScale)
@@ -167,7 +167,7 @@ function render(state) {
 }
 
 function isWithinBarContour(xValue, category) {
-  var barDatum = sszvis.find((d) => cAcc(d) === category, state.data);
+  const barDatum = sszvis.find((d) => cAcc(d) === category, state.data);
   return sszvis.util.testBarThreshold(xValue, barDatum, xAcc, 1000);
 }
 

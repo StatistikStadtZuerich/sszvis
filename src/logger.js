@@ -43,9 +43,9 @@
  *                             of execution.
  */
 
-export var log = logger("log");
-export var warn = logger("warn");
-export var error = logger("error");
+export const log = logger("log");
+export const warn = logger("warn");
+export const error = logger("error");
 
 /* Helper functions
 ----------------------------------------------- */

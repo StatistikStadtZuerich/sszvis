@@ -12,18 +12,18 @@ function parseRow(d) {
   };
 }
 
-var vAcc = sszvis.prop("value");
-var gAcc = sszvis.prop("gender");
-var aAcc = sszvis.prop("age");
-var refAcc = sszvis.prop("group");
-var womenAcc = sszvis.prop("Frauen");
-var menAcc = sszvis.prop("Männer");
-var collegeAcc = sszvis.prop("Hochschulabschluss");
-var otherAcc = sszvis.prop("Andere");
+const vAcc = sszvis.prop("value");
+const gAcc = sszvis.prop("gender");
+const aAcc = sszvis.prop("age");
+const refAcc = sszvis.prop("group");
+const womenAcc = sszvis.prop("Frauen");
+const menAcc = sszvis.prop("Männer");
+const collegeAcc = sszvis.prop("Hochschulabschluss");
+const otherAcc = sszvis.prop("Andere");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   ages: d3.range(0, 101), // [0 ... 100]
   groups: [],
@@ -33,7 +33,7 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
+const actions = {
   prepareState(data) {
     state.data = data;
     state.groups = sszvis.set(state.data, gAcc).reverse();
@@ -55,10 +55,10 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
-  var pyramidDimensions = sszvis.layoutPopulationPyramid(pyramidWidth, state.ages.length);
-  var chartPadding = { top: 25, bottom: 86 };
-  var bounds = sszvis.bounds(
+  const pyramidWidth = sszvis.measureDimensions(config.id).width - 2;
+  const pyramidDimensions = sszvis.layoutPopulationPyramid(pyramidWidth, state.ages.length);
+  const chartPadding = { top: 25, bottom: 86 };
+  const bounds = sszvis.bounds(
     {
       height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom,
       top: chartPadding.top,
@@ -71,22 +71,22 @@ function render(state) {
 
   // Scales
 
-  var lengthScale = d3
+  const lengthScale = d3
     .scaleLinear()
     .domain([0, state.maxValue])
     .range([0, pyramidDimensions.maxBarLength]);
 
-  var positionScale = d3.scaleOrdinal().domain(state.ages).range(pyramidDimensions.positions);
+  const positionScale = d3.scaleOrdinal().domain(state.ages).range(pyramidDimensions.positions);
 
-  var colorScale = sszvis.scaleQual6().domain(state.groups);
+  const colorScale = sszvis.scaleQual6().domain(state.groups);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.populations);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.populations);
 
   // Components
 
-  var pyramid = sszvis
+  const pyramid = sszvis
     .pyramid()
     .barFill(sszvis.compose(colorScale, gAcc))
     .barPosition(sszvis.compose(positionScale, aAcc))
@@ -97,7 +97,7 @@ function render(state) {
     .leftRefAccessor(sszvis.compose(womenAcc, otherAcc))
     .rightRefAccessor(sszvis.compose(menAcc, otherAcc));
 
-  var xAxis = sszvis.axisX
+  const xAxis = sszvis.axisX
     .pyramid()
     .scale(lengthScale)
     .orient("bottom")
@@ -106,7 +106,7 @@ function render(state) {
     .titleAnchor("middle")
     .titleCenter(true);
 
-  var yAxis = sszvis.axisY
+  const yAxis = sszvis.axisY
     .ordinal()
     .scale(positionScale)
     .orient("right")
@@ -115,7 +115,7 @@ function render(state) {
     .title("Alter in Jahren")
     .dyTitle(-18);
 
-  var colorLegend = sszvis
+  const colorLegend = sszvis
     .legendColorOrdinal()
     .scale(colorScale)
     .reverse(true)

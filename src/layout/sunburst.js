@@ -16,7 +16,7 @@ function unwrapNested(roll) {
   }));
 }
 
-var sortFn = function () {
+let sortFn = function () {
   return 0;
 };
 
@@ -45,9 +45,9 @@ var sortFn = function () {
  *
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
-export var prepareData = function () {
+export const prepareData = function () {
   const layers = [];
-  var valueAcc = fn.identity;
+  let valueAcc = fn.identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
   // The default value for this component tries to preserve the order of the input data.
   // However, input data order preservation is not guaranteed, because of an implementation
@@ -94,11 +94,11 @@ export var prepareData = function () {
   return main;
 };
 
-export var MAX_SUNBURST_RING_WIDTH = 60;
-var MAX_RW = MAX_SUNBURST_RING_WIDTH;
+export const MAX_SUNBURST_RING_WIDTH = 60;
+const MAX_RW = MAX_SUNBURST_RING_WIDTH;
 
-export var MIN_SUNBURST_RING_WIDTH = 10;
-var MIN_RW = MIN_SUNBURST_RING_WIDTH;
+export const MIN_SUNBURST_RING_WIDTH = 10;
+const MIN_RW = MIN_SUNBURST_RING_WIDTH;
 
 /**
  * sszvis.layout.sunburst.computeLayout
@@ -112,11 +112,11 @@ var MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  */
-export var computeLayout = function (numLayers, chartWidth) {
+export const computeLayout = function (numLayers, chartWidth) {
   // Diameter of the center circle is one-third the width
-  var halfWidth = chartWidth / 2;
-  var centerRadius = halfWidth / 3;
-  var ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
+  const halfWidth = chartWidth / 2;
+  const centerRadius = halfWidth / 3;
+  const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
 
   return {
     centerRadius,
@@ -134,6 +134,6 @@ export var computeLayout = function (numLayers, chartWidth) {
  *                                    function which abstracts away the way d3 stores positions within the partition layout used
  *                                    by the sunburst chart.
  */
-export var getRadiusExtent = function (formattedData) {
+export const getRadiusExtent = function (formattedData) {
   return [min(formattedData, (d) => d.y0), max(formattedData, (d) => d.y1)];
 };

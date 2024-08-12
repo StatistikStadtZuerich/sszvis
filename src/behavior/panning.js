@@ -44,15 +44,15 @@ import { datumFromPanEvent } from "./util.js";
 import { component } from "../d3-component.js";
 
 export default function () {
-  var event = dispatch("start", "pan", "end");
+  const event = dispatch("start", "pan", "end");
 
-  var panningComponent = component()
+  const panningComponent = component()
     .prop("elementSelector")
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var elements = selection.selectAll(props.elementSelector);
+      const elements = selection.selectAll(props.elementSelector);
 
       elements
         .attr("data-sszvis-behavior-pannable", "")
@@ -72,7 +72,7 @@ export default function () {
         })
         .on("touchmove", function (e) {
           e.preventDefault();
-          var datum = datumFromPanEvent(fn.firstTouch(e));
+          const datum = datumFromPanEvent(fn.firstTouch(e));
           if (datum === null) {
             event.apply("end", this, arguments);
           } else {
@@ -85,7 +85,7 @@ export default function () {
     });
 
   panningComponent.on = function () {
-    var value = event.on.apply(event, arguments);
+    const value = event.on.apply(event, arguments);
     return value === event ? panningComponent : value;
   };
 

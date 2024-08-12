@@ -69,10 +69,10 @@ import translateString from "../svgUtils/translateString.js";
 import bar from "./bar.js";
 import { component } from "../d3-component.js";
 
-var linkPathString = function (x0, x1, x2, x3, y0, y1) {
+const linkPathString = function (x0, x1, x2, x3, y0, y1) {
   return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
 };
-var linkBounds = function (x0, x1, y0, y1) {
+const linkBounds = function (x0, x1, y0, y1) {
   return [x0, x1, y0, y1];
 };
 
@@ -108,46 +108,46 @@ export default function () {
     .linkTargetLabels([])
     .prop("linkLabel", fn.functor)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var idAcc = fn.prop("id");
+      const idAcc = fn.prop("id");
 
-      var getNodePosition = function (node) {
+      const getNodePosition = function (node) {
         return Math.floor(
           props.columnPadding(node.columnIndex) +
             props.sizeScale(node.valueOffset) +
             props.nodePadding * node.nodeIndex
         );
       };
-      var xPosition = function (node) {
+      const xPosition = function (node) {
         return props.columnPosition(node.columnIndex);
       };
-      var yPosition = function (node) {
+      const yPosition = function (node) {
         return getNodePosition(node);
       };
-      var xExtent = function () {
+      const xExtent = function () {
         return Math.max(props.nodeThickness, 1);
       };
-      var yExtent = function (node) {
+      const yExtent = function (node) {
         return Math.ceil(Math.max(props.sizeScale(node.value), 1));
       };
 
-      var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
+      const linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
       // Draw the nodes
-      var barGen = bar()
+      const barGen = bar()
         .x(xPosition)
         .y(yPosition)
         .width(xExtent)
         .height(yExtent)
         .fill(props.nodeColor);
 
-      var barGroup = selection.selectGroup("nodes").datum(data.nodes);
+      const barGroup = selection.selectGroup("nodes").datum(data.nodes);
 
       barGroup.call(barGen);
 
-      var barTooltipAnchor = tooltipAnchor().position((node) => [
+      const barTooltipAnchor = tooltipAnchor().position((node) => [
         xPosition(node) + xExtent() / 2,
         yPosition(node) + yExtent(node) / 2,
       ]);
@@ -155,17 +155,17 @@ export default function () {
       barGroup.call(barTooltipAnchor);
 
       // Draw the column labels
-      var columnLabelX = function (colIndex) {
+      const columnLabelX = function (colIndex) {
         return props.columnPosition(colIndex) + props.nodeThickness / 2;
       };
-      var columnLabelY = -24;
+      const columnLabelY = -24;
 
-      var columnLabels = barGroup
+      let columnLabels = barGroup
         .selectAll(".sszvis-sankey-column-label")
         // One number for each column
         .data(data.columnLengths);
 
-      var newColumnLabels = columnLabels
+      const newColumnLabels = columnLabels
         .enter()
         .append("text")
         .attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
@@ -180,11 +180,11 @@ export default function () {
         )
         .text((d, i) => props.columnLabel(i));
 
-      var columnLabelTicks = barGroup
+      let columnLabelTicks = barGroup
         .selectAll(".sszvis-sankey-column-label-tick")
         .data(data.columnLengths);
 
-      var newColumnLabelTicks = columnLabelTicks
+      const newColumnLabelTicks = columnLabelTicks
         .enter()
         .append("line")
         .attr("class", "sszvis-sankey-column-label-tick");
@@ -200,8 +200,8 @@ export default function () {
         .attr("y2", halfPixel(columnLabelY + 12));
 
       // Draw the links
-      var linkPoints = function (link) {
-        var curveStart =
+      const linkPoints = function (link) {
+        const curveStart =
             props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
           curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
           startLevel =
@@ -216,8 +216,8 @@ export default function () {
         return [curveStart, curveEnd, startLevel, endLevel];
       };
 
-      var linkPath = function (link) {
-        var points = linkPoints(link),
+      const linkPath = function (link) {
+        const points = linkPoints(link),
           curveInterp = interpolateNumber(points[0], points[1]),
           curveControlPtA = curveInterp(props.linkCurvature),
           curveControlPtB = curveInterp(1 - props.linkCurvature);
@@ -232,22 +232,22 @@ export default function () {
         );
       };
 
-      var linkBoundingBox = function (link) {
-        var points = linkPoints(link);
+      const linkBoundingBox = function (link) {
+        const points = linkPoints(link);
 
         return linkBounds(points[0], points[1], points[2], points[3]);
       };
 
-      var linkThickness = function (link) {
+      const linkThickness = function (link) {
         return Math.max(props.sizeScale(link.value), 1);
       };
 
       // Render the links
-      var linksGroup = selection.selectGroup("links");
+      const linksGroup = selection.selectGroup("links");
 
-      var linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
+      let linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
 
-      var newLinksElems = linksElems.enter().append("path").attr("class", "sszvis-link");
+      const newLinksElems = linksElems.enter().append("path").attr("class", "sszvis-link");
       linksElems = linksElems.merge(newLinksElems);
 
       linksElems.exit().remove();
@@ -261,22 +261,22 @@ export default function () {
 
       linksGroup.datum(data.links);
 
-      var linkTooltipAnchor = tooltipAnchor().position((link) => {
-        var bbox = linkBoundingBox(link);
+      const linkTooltipAnchor = tooltipAnchor().position((link) => {
+        const bbox = linkBoundingBox(link);
         return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
       });
 
       linksGroup.call(linkTooltipAnchor);
 
       // Render the link labels
-      var linkLabelsGroup = selection.selectGroup("linklabels");
+      const linkLabelsGroup = selection.selectGroup("linklabels");
 
       // If no props.linkSourceLabels are provided, most of this rendering is no-op
-      var linkSourceLabels = linkLabelsGroup
+      let linkSourceLabels = linkLabelsGroup
         .selectAll(".sszvis-sankey-link-source-label")
         .data(props.linkSourceLabels);
 
-      var newLinkSourceLabels = linkSourceLabels
+      const newLinkSourceLabels = linkSourceLabels
         .enter()
         .append("text")
         .attr(
@@ -289,17 +289,17 @@ export default function () {
 
       linkSourceLabels
         .attr("transform", (link) => {
-          var bbox = linkBoundingBox(link);
+          const bbox = linkBoundingBox(link);
           return translateString(bbox[0] + 6, bbox[2]);
         })
         .text(props.linkLabel);
 
       // If no props.linkTargetLabels are provided, most of this rendering is no-op
-      var linkTargetLabels = linkLabelsGroup
+      let linkTargetLabels = linkLabelsGroup
         .selectAll(".sszvis-sankey-link-target-label")
         .data(props.linkTargetLabels);
 
-      var newLinkTargetLabels = linkTargetLabels
+      const newLinkTargetLabels = linkTargetLabels
         .enter()
         .append("text")
         .attr(
@@ -312,25 +312,25 @@ export default function () {
 
       linkTargetLabels
         .attr("transform", (link) => {
-          var bbox = linkBoundingBox(link);
+          const bbox = linkBoundingBox(link);
           return translateString(bbox[1] - 6, bbox[3]);
         })
         .text(props.linkLabel);
 
       // Render the node labels and their hit boxes
-      var getLabelSide = function (colIndex) {
-        var side = props.labelSide(colIndex);
+      const getLabelSide = function (colIndex) {
+        let side = props.labelSide(colIndex);
         if (props.labelSideSwitch) {
           side = side === "left" ? "right" : "left";
         }
         return side;
       };
 
-      var nodeLabelsGroup = selection.selectGroup("nodelabels");
+      const nodeLabelsGroup = selection.selectGroup("nodelabels");
 
-      var barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes);
+      let barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes);
 
-      var newBarLabels = barLabels
+      const newBarLabels = barLabels
         .enter()
         .append("text")
         .attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
@@ -352,9 +352,9 @@ export default function () {
         .attr("y", (node) => yPosition(node) + yExtent(node) / 2)
         .style("opacity", props.labelOpacity);
 
-      var barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes);
+      let barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes);
 
-      var newBarLabelHitBoxes = barLabelHitBoxes
+      const newBarLabelHitBoxes = barLabelHitBoxes
         .enter()
         .append("rect")
         .attr("class", "sszvis-sankey-hitbox");

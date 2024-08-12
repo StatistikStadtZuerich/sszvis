@@ -38,24 +38,24 @@ export default function () {
     .prop("flip", fn.functor)
     .flip(false)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // Elements need to be placed on half-pixels in order to be rendered
       // crisply across browsers. That's why we create this position accessor
       // here that takes a datum as input, reads out its value (props.x) and
       // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
-      var crispX = fn.compose(halfPixel, props.x);
-      var crispY = fn.compose(halfPixel, props.y);
+      const crispX = fn.compose(halfPixel, props.x);
+      const crispY = fn.compose(halfPixel, props.y);
 
-      var bottom = props.bottom - 4;
-      var handleWidth = 10;
-      var handleHeight = 24;
-      var handleTop = props.top - handleHeight;
+      const bottom = props.bottom - 4;
+      const handleWidth = 10;
+      const handleHeight = 24;
+      const handleTop = props.top - handleHeight;
 
-      var group = selection.selectAll(".sszvis-handleRuler__group").data([0]);
+      let group = selection.selectAll(".sszvis-handleRuler__group").data([0]);
 
-      var entering = group.enter().append("g").classed("sszvis-handleRuler__group", true);
+      const entering = group.enter().append("g").classed("sszvis-handleRuler__group", true);
 
       group.exit().remove();
 
@@ -90,9 +90,9 @@ export default function () {
         .attr("x2", crispX)
         .attr("y2", halfPixel(handleTop + handleHeight * 0.85));
 
-      var dots = group.selectAll(".sszvis-ruler__dot").data(data);
+      let dots = group.selectAll(".sszvis-ruler__dot").data(data);
 
-      var newDots = dots.enter().append("circle").classed("sszvis-ruler__dot", true);
+      const newDots = dots.enter().append("circle").classed("sszvis-ruler__dot", true);
 
       dots.exit().remove();
 
@@ -100,9 +100,9 @@ export default function () {
 
       dots.attr("cx", crispX).attr("cy", crispY).attr("r", 3.5).attr("fill", props.color);
 
-      var labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data);
+      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data);
 
-      var newLabelOutline = labelOutline
+      const newLabelOutline = labelOutline
         .enter()
         .append("text")
         .classed("sszvis-ruler__label-outline", true);
@@ -111,9 +111,9 @@ export default function () {
 
       labelOutline = labelOutline.merge(newLabelOutline);
 
-      var label = selection.selectAll(".sszvis-ruler__label").data(data);
+      let label = selection.selectAll(".sszvis-ruler__label").data(data);
 
-      var newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
+      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
 
       label.exit().remove();
 
@@ -124,11 +124,11 @@ export default function () {
       selection
         .selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline")
         .attr("transform", (d) => {
-          var x = fn.compose(halfPixel, props.x)(d);
-          var y = fn.compose(halfPixel, props.y)(d);
+          const x = fn.compose(halfPixel, props.x)(d);
+          const y = fn.compose(halfPixel, props.y)(d);
 
-          var dx = props.flip(d) ? -10 : 10;
-          var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
+          const dx = props.flip(d) ? -10 : 10;
+          const dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
 
           return translateString(x + dx, y + dy);
         })

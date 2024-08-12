@@ -35,14 +35,14 @@
 import * as fn from "../fn.js";
 
 function formatHTML() {
-  var styles = {
-    plain (d) {
+  const styles = {
+    plain(d) {
       return d;
     },
-    italic (d) {
+    italic(d) {
       return "<em>" + d + "</em>";
     },
-    bold (d) {
+    bold(d) {
       return "<strong>" + d + "</strong>";
     },
   };
@@ -56,43 +56,43 @@ function formatHTML() {
 }
 
 function formatSVG() {
-  var styles = {
-    plain (d) {
+  const styles = {
+    plain(d) {
       return "<tspan>" + d + "</tspan>";
     },
-    italic (d) {
+    italic(d) {
       return '<tspan style="font-style:italic">' + d + "</tspan>";
     },
-    bold (d) {
+    bold(d) {
       return '<tspan style="font-weight:bold">' + d + "</tspan>";
     },
   };
 
   return function (textBody, datum) {
     return textBody.lines().reduce((svg, line, i) => {
-      var lineSvg = line.map((word) => styles[word.style].call(null, word.text(datum))).join(" ");
-      var dy = i === 0 ? 0 : "1.2em";
+      const lineSvg = line.map((word) => styles[word.style].call(null, word.text(datum))).join(" ");
+      const dy = i === 0 ? 0 : "1.2em";
       return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
     }, "");
   };
 }
 
 function structuredText() {
-  var lines = [[]];
+  const lines = [[]];
 
   return {
-    addLine () {
+    addLine() {
       lines.push([]);
     },
 
-    addWord (style, text) {
+    addWord(style, text) {
       fn.last(lines).push({
         text: fn.functor(text),
         style,
       });
     },
 
-    lines () {
+    lines() {
       return lines;
     },
   };
@@ -100,7 +100,7 @@ function structuredText() {
 
 function makeTextWithFormat(format) {
   return function () {
-    var textBody = structuredText();
+    const textBody = structuredText();
 
     function makeText(d) {
       return format(textBody, d);
@@ -122,5 +122,5 @@ function makeTextWithFormat(format) {
   };
 }
 
-export var modularTextHTML = makeTextWithFormat(formatHTML());
-export var modularTextSVG = makeTextWithFormat(formatSVG());
+export const modularTextHTML = makeTextWithFormat(formatHTML());
+export const modularTextSVG = makeTextWithFormat(formatSVG());

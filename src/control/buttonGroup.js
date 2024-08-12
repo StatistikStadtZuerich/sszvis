@@ -32,15 +32,15 @@ export default function () {
     .prop("change")
     .change(fn.identity)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var buttonWidth = props.width / props.values.length;
+      const buttonWidth = props.width / props.values.length;
 
-      var container = selection
+      let container = selection
         .selectAll(".sszvis-control-optionSelectable")
         .data(["sszvis-control-buttonGroup"], (d) => d);
-      var newContainer = container
+      const newContainer = container
         .enter()
         .append("div")
         .classed("sszvis-control-optionSelectable", true)
@@ -51,9 +51,9 @@ export default function () {
 
       container.style("width", props.width + "px");
 
-      var buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values);
+      let buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values);
 
-      var newButtons = buttons
+      const newButtons = buttons
         .enter()
         .append("div")
         .classed("sszvis-control-buttonGroup__item", true);

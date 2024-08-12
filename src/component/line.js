@@ -55,12 +55,12 @@ export default function () {
     .prop("transition")
     .transition(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // Layouts
 
-      var line = d3Line()
+      const line = d3Line()
         .defined(
           props.defined === undefined ? fn.compose(fn.not(Number.isNaN), props.y) : props.defined
         )
@@ -69,9 +69,9 @@ export default function () {
 
       // Rendering
 
-      var path = selection.selectAll(".sszvis-line").data(data, props.key);
+      let path = selection.selectAll(".sszvis-line").data(data, props.key);
 
-      var newPath = path
+      const newPath = path
         .enter()
         .append("path")
         .classed("sszvis-line", true)

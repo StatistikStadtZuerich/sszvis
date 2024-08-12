@@ -1,6 +1,6 @@
 import { randomLogNormal } from "d3";
 
-var quarters = [
+const quarters = [
   "Affoltern",
   "Albisrieden",
   "Alt-Wiedikon",
@@ -37,9 +37,9 @@ var quarters = [
   "Seefeld",
 ];
 
-var rand = randomLogNormal(3, 2);
+const rand = randomLogNormal(3, 2);
 
-var data = quarters
+const data = quarters
   .flatMap((q1) =>
     quarters
       .filter((q2) => q1 !== q2)

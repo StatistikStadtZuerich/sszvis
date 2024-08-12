@@ -47,27 +47,27 @@ export default function () {
     .prop("transition")
     .transition(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       //sszsch why reverse?
       data = [...data].reverse();
 
-      var defaultDefined = function () {
+      const defaultDefined = function () {
         return (
           fn.compose(fn.not(Number.isNaN), props.y0) && fn.compose(fn.not(Number.isNaN), props.y1)
         );
       };
 
-      var areaGen = area()
+      const areaGen = area()
         .defined(props.defined === undefined ? defaultDefined : props.defined)
         .x(props.x)
         .y0(props.y0)
         .y1(props.y1);
 
-      var paths = selection.selectAll("path.sszvis-path").data(data, props.key);
+      let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
 
-      var newPaths = paths.enter().append("path").classed("sszvis-path", true);
+      const newPaths = paths.enter().append("path").classed("sszvis-path", true);
 
       paths.exit().remove();
 

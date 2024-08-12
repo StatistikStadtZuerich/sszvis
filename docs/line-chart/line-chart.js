@@ -4,13 +4,14 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("rulerLabel", {
-    _: () => sszvis
-      .modularTextSVG()
-      .bold(sszvis.compose(yLabelFormat, yAcc))
-      .plain((d) => (cAcc(d) == null ? "" : cAcc(d))),
+    _: () =>
+      sszvis
+        .modularTextSVG()
+        .bold(sszvis.compose(yLabelFormat, yAcc))
+        .plain((d) => (cAcc(d) == null ? "" : cAcc(d))),
   })
   .prop("xLabel", {
     _: "",
@@ -22,9 +23,9 @@ var queryProps = sszvis
     _: 5,
   });
 
-var xAcc = sszvis.prop("xValue");
-var yAcc = sszvis.prop("yValue");
-var cAcc = sszvis.prop("category");
+const xAcc = sszvis.prop("xValue");
+const yAcc = sszvis.prop("yValue");
+const cAcc = sszvis.prop("category");
 
 sszvis.app({
   fallback: {
@@ -34,22 +35,23 @@ sszvis.app({
 
   // Init
   // -----------------------------------------------
-  init: (state) => d3.csv(config.data, parseRow).then((data) => {
-    state.data = data;
-    state.lineData = sszvis.cascade().arrayBy(cAcc, d3.ascending).apply(data);
-    state.xValues = xValues(data, xAcc);
-    state.categories = sszvis.set(data, cAcc);
-    state.maxY = d3.max(data, yAcc);
-    state.selection = [];
-    return (dispatch) => dispatch("resetDate");
-  }),
+  init: (state) =>
+    d3.csv(config.data, parseRow).then((data) => {
+      state.data = data;
+      state.lineData = sszvis.cascade().arrayBy(cAcc, d3.ascending).apply(data);
+      state.xValues = xValues(data, xAcc);
+      state.categories = sszvis.set(data, cAcc);
+      state.maxY = d3.max(data, yAcc);
+      state.selection = [];
+      return (dispatch) => dispatch("resetDate");
+    }),
 
   // Actions
   // -----------------------------------------------
   actions: {
     resetDate(state) {
       // Find the most recent date in the data and set it as the selected date
-      var mostRecentDate = d3.max(state.data, xAcc);
+      const mostRecentDate = d3.max(state.data, xAcc);
       return (dispatch) => {
         dispatch("changeDate", mostRecentDate);
       };
@@ -57,9 +59,9 @@ sszvis.app({
 
     changeDate(state, inputDate) {
       // Find the date of the datum closest to the input date
-      var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
+      const closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
       // Find all data that have the same date as the closest datum
-      var closestData = state.lineData.map((linePoints) =>
+      const closestData = state.lineData.map((linePoints) =>
         // For each line pick the first datum that matches
         sszvis.find((d) => xAcc(d).toString() === closestDate.toString(), linePoints)
       );
@@ -71,9 +73,9 @@ sszvis.app({
   // Render
   // -----------------------------------------------
   render(state, actions) {
-    var props = queryProps(sszvis.measureDimensions(config.id));
+    const props = queryProps(sszvis.measureDimensions(config.id));
 
-    var legendLayout = sszvis.colorLegendLayout(
+    const legendLayout = sszvis.colorLegendLayout(
       {
         axisLabels: state.xValues.map(xLabelFormat),
         legendLabels: state.categories,
@@ -81,10 +83,10 @@ sszvis.app({
       config.id
     );
 
-    var cScale = legendLayout.scale;
-    var colorLegend = legendLayout.legend;
+    const cScale = legendLayout.scale;
+    const colorLegend = legendLayout.legend;
 
-    var bounds = sszvis.bounds(
+    const bounds = sszvis.bounds(
       {
         top: typeof props.yLabel === "string" && props.yLabel.length > 0 ? 30 : 10,
         bottom: legendLayout.bottomPadding,
@@ -93,14 +95,14 @@ sszvis.app({
     );
 
     // Scales
-    var xScale = mkXScale();
+    const xScale = mkXScale();
 
     xScale.domain(state.xValues).range([0, bounds.innerWidth]);
 
-    var yScale = d3.scaleLinear().domain([0, state.maxY]).range([bounds.innerHeight, 0]);
+    const yScale = d3.scaleLinear().domain([0, state.maxY]).range([bounds.innerHeight, 0]);
 
     // Layers
-    var highlightLayer = sszvis
+    const highlightLayer = sszvis
       .annotationRuler()
       .top(0)
       .bottom(bounds.innerHeight)
@@ -110,17 +112,17 @@ sszvis.app({
       .flip((d) => xScale(xAcc(d)) >= bounds.innerWidth / 2)
       .color(sszvis.compose(cScale, cAcc));
 
-    var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);
+    const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);
 
     // Components
-    var line = sszvis
+    const line = sszvis
       .line()
       .x(sszvis.compose(xScale, xAcc))
       .y(sszvis.compose(yScale, yAcc))
       // Access the first data point of the line to decide on the stroke color
       .stroke(sszvis.compose(cScale, cAcc, sszvis.first));
 
-    var xAxis = mkXAxis(props.ticks, state.selection, xScale, xAcc);
+    const xAxis = mkXAxis(props.ticks, state.selection, xScale, xAcc);
 
     xAxis
       .title(props.xLabel)
@@ -130,7 +132,7 @@ sszvis.app({
       .highlightTick(isSelected)
       .alignOuterLabels(true);
 
-    var yAxis = sszvis
+    const yAxis = sszvis
       .axisY()
       .scale(yScale)
       .orient("right")
@@ -162,7 +164,7 @@ sszvis.app({
     chartLayer.selectGroup("highlight").datum(state.selection).call(highlightLayer);
 
     // Interaction
-    var interactionLayer = sszvis
+    const interactionLayer = sszvis
       .move()
       .xScale(xScale)
       .yScale(yScale)

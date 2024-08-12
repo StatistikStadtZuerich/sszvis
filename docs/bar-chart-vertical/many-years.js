@@ -3,7 +3,7 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("barPadding", {
     palm: 0.2,
@@ -23,12 +23,12 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("year");
-var yAcc = sszvis.prop("value");
+const xAcc = sszvis.prop("year");
+const yAcc = sszvis.prop("value");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   categories: [],
   yearRange: [],
@@ -37,7 +37,7 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
+const actions = {
   prepareState(data) {
     state.data = data;
     state.categories = sszvis.set(state.data, xAcc);
@@ -46,7 +46,7 @@ var actions = {
   },
 
   changeDate(selectedDate) {
-    var selectedYear = Math.round(selectedDate);
+    const selectedYear = Math.round(selectedDate);
     state.selection = state.data.filter((v) => xAcc(v) === selectedYear);
     render(state);
   },
@@ -68,9 +68,9 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var props = queryProps(sszvis.measureDimensions(config.id));
-  var yMax = d3.max(state.data, yAcc);
-  var bounds = sszvis.bounds(
+  const props = queryProps(sszvis.measureDimensions(config.id));
+  const yMax = d3.max(state.data, yAcc);
+  const bounds = sszvis.bounds(
     {
       top: 3,
       bottom: 25,
@@ -82,41 +82,41 @@ function render(state) {
     config.id
   );
 
-  var chartDimensions = sszvis.dimensionsVerticalBarChart(
+  const chartDimensions = sszvis.dimensionsVerticalBarChart(
     bounds.innerWidth,
     state.categories.length
   );
 
   // Scales
 
-  var xScale = d3
+  const xScale = d3
     .scaleBand()
     .domain(state.categories)
     .padding(chartDimensions.padRatio)
     .paddingOuter(props.barPadding)
     .range([0, chartDimensions.totalWidth]);
 
-  var heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
+  const heightScale = d3.scaleLinear().domain([0, yMax]).range([0, bounds.innerHeight]);
 
-  var yPosScale = heightScale.copy().range([...heightScale.range()].reverse());
+  const yPosScale = heightScale.copy().range([...heightScale.range()].reverse());
 
-  var xValue = sszvis.compose(xScale, xAcc);
+  const xValue = sszvis.compose(xScale, xAcc);
   // rounding the y-values and the height prevents the bars from jumping around
-  var yValue = sszvis.compose(Math.round, yPosScale, yAcc);
-  var hValue = sszvis.compose(Math.round, heightScale, yAcc);
+  const yValue = sszvis.compose(Math.round, yPosScale, yAcc);
+  const hValue = sszvis.compose(Math.round, heightScale, yAcc);
 
-  var cScale = sszvis.scaleQual12();
-  var cScaleDark = cScale.darker();
+  const cScale = sszvis.scaleQual12();
+  const cScaleDark = cScale.darker();
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
   // Components
 
-  var barGen = sszvis
+  const barGen = sszvis
     .bar()
     .x(xValue)
     .y(yValue)
@@ -124,13 +124,13 @@ function render(state) {
     .height(hValue)
     .fill((d) => (isSelected(d) ? cScaleDark(d) : cScale(d)));
 
-  var xAxis = sszvis.axisX.ordinal().scale(xScale).orient("bottom").alignOuterLabels(true).ticks(5);
+  const xAxis = sszvis.axisX.ordinal().scale(xScale).orient("bottom").alignOuterLabels(true).ticks(5);
 
-  var yAxis = sszvis.axisY().scale(yPosScale).orient("right");
+  const yAxis = sszvis.axisY().scale(yPosScale).orient("right");
 
-  var tooltipTitle = sszvis.modularTextHTML().bold(yAcc).plain("Hotelübernachtungen");
+  const tooltipTitle = sszvis.modularTextHTML().bold(yAcc).plain("Hotelübernachtungen");
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .renderInto(tooltipLayer)
@@ -148,7 +148,7 @@ function render(state) {
     )
   );
 
-  var bars = chartLayer
+  const bars = chartLayer
     .selectGroup("bars")
     .attr("transform", sszvis.translateString(bounds.padding.left, 0))
     .call(barGen);
@@ -164,7 +164,7 @@ function render(state) {
 
   // Interaction
 
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .move()
     .xScale(xScale)
     .yScale(yPosScale)

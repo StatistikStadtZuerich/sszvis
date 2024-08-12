@@ -3,7 +3,7 @@
 // Configuration
 // -----------------------------------------------
 
-var HIGHLIGHTED_DATES = [new Date(2013, 10, 10)];
+const HIGHLIGHTED_DATES = [new Date(2013, 10, 10)];
 
 function parseRow(d) {
   return {
@@ -12,8 +12,8 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("date");
-var yAcc = sszvis.prop("value");
+const xAcc = sszvis.prop("date");
+const yAcc = sszvis.prop("value");
 
 sszvis.app({
   init: (state) =>
@@ -26,31 +26,31 @@ sszvis.app({
       );
     }),
   render(state) {
-    var bounds = sszvis.bounds({ top: 30, bottom: 45 }, "#sszvis-chart");
+    const bounds = sszvis.bounds({ top: 30, bottom: 45 }, "#sszvis-chart");
 
     // Scales
 
-    var xScale = d3.scaleTime().domain(state.dates).range([0, bounds.innerWidth]);
+    const xScale = d3.scaleTime().domain(state.dates).range([0, bounds.innerWidth]);
 
-    var yScale = d3
+    const yScale = d3
       .scaleLinear()
       .domain([0, d3.max(state.data, yAcc)])
       .range([bounds.innerHeight, 0]);
 
     // Layers
-    var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.lineData);
+    const chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.lineData);
 
     // Components
 
-    var line = sszvis
+    const line = sszvis
       .line()
       .x(sszvis.compose(xScale, xAcc))
       .y(sszvis.compose(yScale, yAcc))
       .stroke(sszvis.scaleQual12());
 
-    var xAxis = sszvis.axisX.time().scale(xScale).orient("bottom").title("Datum");
+    const xAxis = sszvis.axisX.time().scale(xScale).orient("bottom").title("Datum");
 
-    var yAxis = sszvis
+    const yAxis = sszvis
       .axisY()
       .scale(yScale)
       .orient("right")
@@ -58,7 +58,7 @@ sszvis.app({
       .title("Regen")
       .dyTitle(-20);
 
-    var annotation = sszvis
+    const annotation = sszvis
       .annotationCircle()
       .x(sszvis.compose(xScale, xAcc))
       .y(sszvis.compose(yScale, yAcc))

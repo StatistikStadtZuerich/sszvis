@@ -48,6 +48,8 @@ export default [
       "prefer-arrow-callback": "warn",
       "arrow-body-style": ["warn", "as-needed"],
       "object-shorthand": ["error", "always", { avoidExplicitReturnArrows: true }],
+      "no-var": "error",
+      "prefer-const": "error",
     },
   },
 ];

@@ -34,29 +34,29 @@ export default function () {
     .prop("labelFormat")
     .labelFormat(fn.identity)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       if (!props.scale) {
         logger.error("legend.linearColorScale - a scale must be specified.");
         return false;
       }
 
-      var domain = props.scale.domain();
+      const domain = props.scale.domain();
 
-      var values = props.displayValues;
+      let values = props.displayValues;
       if (values.length === 0 && props.scale.ticks) {
         values = props.scale.ticks(props.segments - 1);
       }
       values.push(fn.last(domain));
 
       // Avoid division by zero
-      var segWidth = values.length > 0 ? props.width / values.length : 0;
-      var segHeight = 10;
+      const segWidth = values.length > 0 ? props.width / values.length : 0;
+      const segHeight = 10;
 
-      var segments = selection.selectAll("rect.sszvis-legend__mark").data(values);
+      let segments = selection.selectAll("rect.sszvis-legend__mark").data(values);
 
-      var newSegments = segments.enter().append("rect").classed("sszvis-legend__mark", true);
+      const newSegments = segments.enter().append("rect").classed("sszvis-legend__mark", true);
 
       segments.exit().remove();
 
@@ -69,13 +69,13 @@ export default function () {
         .attr("height", segHeight)
         .attr("fill", (d) => props.scale(d));
 
-      var startEnd = [fn.first(domain), fn.last(domain)];
-      var labelText = props.labelText || startEnd;
+      const startEnd = [fn.first(domain), fn.last(domain)];
+      const labelText = props.labelText || startEnd;
 
       // rounded end caps for the segments
-      var endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd);
+      let endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd);
 
-      var newEndCaps = endCaps.enter().append("circle").attr("class", "ssvis-legend--mark");
+      const newEndCaps = endCaps.enter().append("circle").attr("class", "ssvis-legend--mark");
 
       endCaps.exit().remove();
 
@@ -87,15 +87,15 @@ export default function () {
         .attr("r", segHeight / 2)
         .attr("fill", (d) => props.scale(d));
 
-      var labels = selection.selectAll(".sszvis-legend__label").data(labelText);
+      let labels = selection.selectAll(".sszvis-legend__label").data(labelText);
 
-      var newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
+      const newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
 
       labels.exit().remove();
 
       labels = labels.merge(newLabels);
 
-      var labelPadding = 16;
+      const labelPadding = 16;
 
       labels
         .style("text-anchor", (d, i) => (i === 0 ? "end" : "start"))

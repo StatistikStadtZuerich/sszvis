@@ -32,8 +32,8 @@ export default function () {
     .prop("labelFormat")
     .labelFormat(fn.identity)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       if (!props.scale) return logger.error("legend.binnedColorScale - a scale must be specified.");
       if (!props.displayValues)
@@ -41,17 +41,17 @@ export default function () {
       if (!props.endpoints)
         return logger.error("legend.binnedColorScale - endpoints must be specified");
 
-      var segHeight = 10;
-      var circleRad = segHeight / 2;
-      var innerRange = [0, props.width - 2 * circleRad];
+      const segHeight = 10;
+      const circleRad = segHeight / 2;
+      const innerRange = [0, props.width - 2 * circleRad];
 
-      var barWidth = scaleLinear().domain(props.endpoints).range(innerRange);
-      var sum = 0;
-      var rectData = [];
-      var pPrev = props.endpoints[0];
+      const barWidth = scaleLinear().domain(props.endpoints).range(innerRange);
+      let sum = 0;
+      const rectData = [];
+      let pPrev = props.endpoints[0];
       for (const p of props.displayValues) {
-        var w = barWidth(p) - sum;
-        var offset = sum % 1;
+        const w = barWidth(p) - sum;
+        const offset = sum % 1;
         rectData.push({
           x: Math.floor(circleRad + sum),
           w: w + offset,
@@ -69,9 +69,9 @@ export default function () {
         c: props.scale(pPrev),
       });
 
-      var circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints);
+      let circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints);
 
-      var newCircles = circles.enter().append("circle").classed("sszvis-legend__circle", true);
+      const newCircles = circles.enter().append("circle").classed("sszvis-legend__circle", true);
       circles = circles.merge(newCircles);
 
       circles.exit().remove();
@@ -82,9 +82,9 @@ export default function () {
         .attr("cx", (d, i) => (i === 0 ? circleRad : props.width - circleRad))
         .attr("fill", props.scale);
 
-      var segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData);
+      let segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData);
 
-      var newSegments = segments.enter().append("rect").classed("sszvis-legend__crispmark", true);
+      const newSegments = segments.enter().append("rect").classed("sszvis-legend__crispmark", true);
       segments = segments.merge(newSegments);
 
       segments.exit().remove();
@@ -96,11 +96,11 @@ export default function () {
         .attr("height", segHeight)
         .attr("fill", (d) => d.c);
 
-      var lineData = rectData.slice(0, -1);
+      const lineData = rectData.slice(0, -1);
 
-      var lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData);
+      const lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData);
 
-      var newLines = lines.enter().append("line").classed("sszvis-legend__crispmark", true);
+      const newLines = lines.enter().append("line").classed("sszvis-legend__crispmark", true);
       lines.merge(newLines);
 
       lines.exit().remove();
@@ -112,9 +112,9 @@ export default function () {
         .attr("y2", segHeight + 6)
         .attr("stroke", "#B8B8B8");
 
-      var labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData);
+      let labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData);
 
-      var newLabels = labels.enter().append("text").classed("sszvis-legend__axislabel", true);
+      const newLabels = labels.enter().append("text").classed("sszvis-legend__axislabel", true);
       labels = labels.merge(newLabels);
 
       labels.exit().remove();

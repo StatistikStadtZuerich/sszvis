@@ -52,9 +52,9 @@ import { range } from "../scale.js";
 import { component } from "../d3-component.js";
 
 export default function () {
-  var event = dispatch("start", "move", "drag", "end");
+  const event = dispatch("start", "move", "drag", "end");
 
-  var moveComponent = component()
+  const moveComponent = component()
     .prop("debug")
     .prop("xScale")
     .prop("yScale")
@@ -64,28 +64,28 @@ export default function () {
     .prop("fireOnPanOnly", fn.functor)
     .fireOnPanOnly(false)
     .prop("padding", (p) => {
-      var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
-      for (var prop in p) {
+      const defaults = { top: 0, left: 0, bottom: 0, right: 0 };
+      for (const prop in p) {
         defaults[prop] = p[prop];
       }
       return defaults;
     })
     .padding({})
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var xExtent = range(props.xScale).sort(ascending);
-      var yExtent = range(props.yScale).sort(ascending);
+      const xExtent = range(props.xScale).sort(ascending);
+      const yExtent = range(props.yScale).sort(ascending);
 
       xExtent[0] -= props.padding.left;
       xExtent[1] += props.padding.right;
       yExtent[0] -= props.padding.top;
       yExtent[1] += props.padding.bottom;
 
-      var layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]);
+      let layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]);
 
-      var newLayer = layer
+      const newLayer = layer
         .enter()
         .append("rect")
         .attr("data-sszvis-behavior-move", "")
@@ -106,24 +106,24 @@ export default function () {
           event.apply("start", this, arguments);
         })
         .on("mousedown", function (e) {
-          var target = this;
-          var doc = select(document);
-          var win = select(window);
+          const target = this;
+          const doc = select(document);
+          const win = select(window);
 
-          var drag = function () {
-            var xy = pointer(e);
-            var x = scaleInvert(props.xScale, xy[0]);
-            var y = scaleInvert(props.yScale, xy[1]);
+          const drag = function () {
+            const xy = pointer(e);
+            const x = scaleInvert(props.xScale, xy[0]);
+            const y = scaleInvert(props.yScale, xy[1]);
             e.preventDefault();
             event.apply("drag", this, [x, y]);
           };
 
-          var startDragging = function () {
+          const startDragging = function () {
             target.__dragging__ = true;
             drag();
           };
 
-          var stopDragging = function () {
+          const stopDragging = function () {
             target.__dragging__ = false;
             win.on("mouseup.sszvis-behavior-move", null);
             win.on("mousemove.sszvis-behavior-move", null);
@@ -134,7 +134,7 @@ export default function () {
           win.on("mousemove.sszvis-behavior-move", drag);
           win.on("mouseup.sszvis-behavior-move", stopDragging);
           doc.on("mouseout.sszvis-behavior-move", () => {
-            var from = e.relatedTarget || e.toElement;
+            const from = e.relatedTarget || e.toElement;
             if (!from || from.nodeName === "HTML") {
               stopDragging();
             }
@@ -143,10 +143,10 @@ export default function () {
           startDragging();
         })
         .on("mousemove", function (e) {
-          var target = this;
-          var xy = pointer(e);
-          var x = scaleInvert(props.xScale, xy[0]);
-          var y = scaleInvert(props.yScale, xy[1]);
+          const target = this;
+          const xy = pointer(e);
+          const x = scaleInvert(props.xScale, xy[0]);
+          const y = scaleInvert(props.yScale, xy[1]);
 
           if (!target.__dragging__) {
             event.apply("move", this, [x, y]);
@@ -156,11 +156,11 @@ export default function () {
           event.apply("end", this, []);
         })
         .on("touchstart", function (e) {
-          var xy = fn.first(pointer(e));
-          var x = scaleInvert(props.xScale, xy[0]);
-          var y = scaleInvert(props.yScale, xy[1]);
+          const xy = fn.first(pointer(e));
+          const x = scaleInvert(props.xScale, xy[0]);
+          const y = scaleInvert(props.yScale, xy[1]);
 
-          var cancelScrolling = props.cancelScrolling(x, y);
+          const cancelScrolling = props.cancelScrolling(x, y);
 
           if (cancelScrolling) {
             e.preventDefault();
@@ -183,12 +183,12 @@ export default function () {
             event.apply("drag", this, [x, y]);
             event.apply("move", this, [x, y]);
 
-            var pan = function () {
-              var panXY = fn.first(pointer(e));
-              var panX = scaleInvert(props.xScale, panXY[0]);
-              var panY = scaleInvert(props.yScale, panXY[1]);
+            const pan = function () {
+              const panXY = fn.first(pointer(e));
+              const panX = scaleInvert(props.xScale, panXY[0]);
+              const panY = scaleInvert(props.yScale, panXY[1]);
 
-              var panCancelScrolling = props.cancelScrolling(panX, panY);
+              const panCancelScrolling = props.cancelScrolling(panX, panY);
 
               if (panCancelScrolling) {
                 e.preventDefault();
@@ -203,7 +203,7 @@ export default function () {
               }
             };
 
-            var end = function () {
+            const end = function () {
               event.apply("end", this, []);
               select(this).on("touchmove", null).on("touchend", null);
             };
@@ -218,7 +218,7 @@ export default function () {
     });
 
   moveComponent.on = function () {
-    var value = event.on.apply(event, arguments);
+    const value = event.on.apply(event, arguments);
     return value === event ? moveComponent : value;
   };
 
@@ -226,7 +226,7 @@ export default function () {
 }
 
 function scaleInvert(scale, px) {
-  var scaleType = scale.invert ? "Linear" : scale.paddingInner ? "Band" : "Point";
+  const scaleType = scale.invert ? "Linear" : scale.paddingInner ? "Band" : "Point";
   switch (scaleType) {
     case "Linear": {
       return scale.invert(px);
@@ -244,12 +244,12 @@ function scaleInvert(scale, px) {
 }
 
 function invertBandScale(scale, px) {
-  var step = scale.step();
-  var paddingOuter = scale.paddingOuter() * step;
-  var paddingInner = scale.paddingInner() * step;
-  var bandWidth = scale.bandwidth();
-  var scaleRange = scale.range();
-  var domain = scale.domain();
+  const step = scale.step();
+  const paddingOuter = scale.paddingOuter() * step;
+  const paddingInner = scale.paddingInner() * step;
+  const bandWidth = scale.bandwidth();
+  const scaleRange = scale.range();
+  const domain = scale.domain();
 
   if (domain.length === 1) {
     if (scaleRange[0] <= px && scaleRange[1] >= px) {
@@ -258,7 +258,7 @@ function invertBandScale(scale, px) {
     return null;
   }
 
-  var ranges = domain.map((d, i) => {
+  const ranges = domain.map((d, i) => {
     if (i === 0) {
       return [scaleRange[0], scaleRange[0] + paddingOuter + bandWidth + paddingInner / 2];
     } else if (i === domain.length - 1) {
@@ -270,7 +270,7 @@ function invertBandScale(scale, px) {
       ];
     }
   });
-  for (var i = 0, l = ranges.length; i < l; i++) {
+  for (let i = 0, l = ranges.length; i < l; i++) {
     if (ranges[i][0] < px && px <= ranges[i][1]) {
       return domain[i];
     }
@@ -279,10 +279,10 @@ function invertBandScale(scale, px) {
 }
 
 function invertPointScale(scale, px) {
-  var step = scale.step();
-  var paddingOuter = scale.padding() * step;
-  var scaleRange = scale.range();
-  var domain = scale.domain();
+  const step = scale.step();
+  const paddingOuter = scale.padding() * step;
+  const scaleRange = scale.range();
+  const domain = scale.domain();
 
   if (domain.length === 1) {
     if (scaleRange[0] <= px && scaleRange[1] >= px) {
@@ -291,7 +291,7 @@ function invertPointScale(scale, px) {
     return null;
   }
 
-  var ranges = domain.map((d, i) => {
+  const ranges = domain.map((d, i) => {
     if (i === 0) {
       return [scaleRange[0], scaleRange[0] + paddingOuter + step / 2];
     } else if (i === domain.length - 1) {
@@ -303,7 +303,7 @@ function invertPointScale(scale, px) {
       ];
     }
   });
-  for (var i = 0, l = ranges.length; i < l; i++) {
+  for (let i = 0, l = ranges.length; i < l; i++) {
     if (ranges[i][0] < px && px <= ranges[i][1]) {
       return domain[i];
     }

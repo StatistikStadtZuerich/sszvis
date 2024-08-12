@@ -22,19 +22,19 @@
  */
 
 export default function (width, numBars) {
-  var MAX_BAR_WIDTH = 48, // the maximum width of a bar
+  const MAX_BAR_WIDTH = 48, // the maximum width of a bar
     MIN_PADDING = 2, // the minimum padding value
     MAX_PADDING = 100, // the maximum padding value
     TARGET_BAR_RATIO = 0.7, // the ratio of width to width + padding used to compute the initial width and padding
     TARGET_PADDING_RATIO = 1 - TARGET_BAR_RATIO, // the inverse of the bar ratio, this is the ratio of padding to width + padding
-    numPads = numBars - 1, // the number of padding spaces
-    // compute the target size of the padding
-    // the derivation of this equation is available upon request
-    padding =
-      (width * TARGET_PADDING_RATIO) /
-      (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars),
-    // based on the computed padding, calculate the bar width
-    barWidth = (width - padding * numPads) / numBars;
+    numPads = numBars - 1; // the number of padding spaces
+  // compute the target size of the padding
+  // the derivation of this equation is available upon request
+  let padding =
+    (width * TARGET_PADDING_RATIO) / (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars);
+  // based on the computed padding, calculate the bar width
+
+  let barWidth = (width - padding * numPads) / numBars;
 
   // adjust for min and max bounds
   if (barWidth > MAX_BAR_WIDTH) {
@@ -46,7 +46,7 @@ export default function (width, numBars) {
   if (padding > MAX_PADDING) padding = MAX_PADDING;
 
   // compute other information
-  var padRatio = 1 - barWidth / (barWidth + padding),
+  const padRatio = 1 - barWidth / (barWidth + padding),
     computedBarSpace = barWidth * numBars + padding * numPads,
     outerRatio = (width - computedBarSpace) / 2 / (barWidth + padding);
 

@@ -7,12 +7,12 @@
 import { geoMercator, geoPath, geoCentroid } from "d3";
 import { memoize } from "../fn.js";
 
-export var STADT_KREISE_KEY = "zurichStadtKreise";
-export var STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
-export var STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
-export var WAHL_KREISE_KEY = "zurichWahlKreise";
-export var AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
-export var SWITZERLAND_KEY = "switzerland";
+export const STADT_KREISE_KEY = "zurichStadtKreise";
+export const STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
+export const STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
+export const WAHL_KREISE_KEY = "zurichWahlKreise";
+export const AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
+export const SWITZERLAND_KEY = "switzerland";
 
 /**
  * swissMapProjection
@@ -28,7 +28,7 @@ export var SWITZERLAND_KEY = "switzerland";
  * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
  * @return {Function}                               The projection function.
  */
-export var swissMapProjection = memoize(
+export const swissMapProjection = memoize(
   (width, height, featureCollection) => geoMercator().fitSize([width, height], featureCollection),
   // Memoize resolver
   (width, height, _, featureBoundsCacheKey) =>
@@ -51,7 +51,7 @@ export var swissMapProjection = memoize(
  *                                            and returns an svg path string which represents that geojson, projected using
  *                                            a map projection optimal for Swiss areas.
  */
-export var swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
+export const swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
   return geoPath().projection(
     swissMapProjection(width, height, featureCollection, featureBoundsCacheKey)
   );
@@ -70,31 +70,31 @@ export var swissMapPath = function (width, height, featureCollection, featureBou
  *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
  * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
  */
-export var pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
+export const pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
   // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
-  var APPROX_EARTH_RADIUS = 6_367_475;
-  var APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
+  const APPROX_EARTH_RADIUS = 6_367_475;
+  const APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
   // Compute the size of the angle made by the meter distance
-  var degrees = (meterDistance / APPROX_EARTH_CIRCUMFERENCE) * 360;
+  const degrees = (meterDistance / APPROX_EARTH_CIRCUMFERENCE) * 360;
   // Construct a square, centered at centerPoint, with sides that span that number of degrees
-  var halfDegrees = degrees / 2;
-  var bounds = [
+  const halfDegrees = degrees / 2;
+  const bounds = [
     [centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees],
     [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees],
   ];
 
   // Project those bounds to pixel coordinates using the provided map projection
-  var projBounds = bounds.map(projection);
+  const projBounds = bounds.map(projection);
   // Depending on the rotation of the map, the sides of the box are not always positive quantities
   // For example, on a north-is-up map, the pixel y-scale is inverted, so higher latitude degree
   // values are lower pixel y-values. On a south-is-up map, the opposite is true.
-  var projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
-  var projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
+  const projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
+  const projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
   return (projXDist + projYDist) / 2;
 };
 
-export var GEO_KEY_DEFAULT = "geoId";
+export const GEO_KEY_DEFAULT = "geoId";
 
 /**
  * prepareMergedData
@@ -110,11 +110,11 @@ export var GEO_KEY_DEFAULT = "geoId";
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
-export var prepareMergedGeoData = function (dataset, geoJson, keyName) {
+export const prepareMergedGeoData = function (dataset, geoJson, keyName) {
   keyName || (keyName = GEO_KEY_DEFAULT);
 
   // group the input data by map entity id
-  var groupedInputData = Array.isArray(dataset)
+  const groupedInputData = Array.isArray(dataset)
     ? dataset.reduce((m, v) => {
         m[v[keyName]] = v;
         return m;
@@ -143,9 +143,9 @@ export var prepareMergedGeoData = function (dataset, geoJson, keyName) {
  * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
  *                                          (or user-specified center) of the object.
  */
-export var getGeoJsonCenter = function (geoJson) {
+export const getGeoJsonCenter = function (geoJson) {
   if (!geoJson.properties.cachedCenter) {
-    var setCenter = geoJson.properties.center;
+    const setCenter = geoJson.properties.center;
     geoJson.properties.cachedCenter = setCenter
       ? setCenter.split(",").map(Number.parseFloat)
       : geoCentroid(geoJson);
@@ -163,6 +163,6 @@ export var getGeoJsonCenter = function (geoJson) {
  * @param  {number} width    The width of the container holding the map.
  * @return {number}          The stroke width that the map elements should have.
  */
-export var widthAdaptiveMapPathStroke = function (width) {
+export const widthAdaptiveMapPathStroke = function (width) {
   return Math.min(Math.max(0.8, width / 400), 1.1);
 };

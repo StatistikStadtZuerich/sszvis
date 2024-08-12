@@ -6,8 +6,8 @@ import {
 } from "../legend/ordinalColorScale";
 import { measureAxisLabel, measureDimensions, measureLegendLabel } from "../measure";
 
-var DEFAULT_COLUMN_COUNT = 2;
-var LABEL_PADDING = 40;
+const DEFAULT_COLUMN_COUNT = 2;
+const LABEL_PADDING = 40;
 
 /**
  * colorLegendLayout
@@ -57,7 +57,7 @@ export function colorLegendDimensions(labels, containerWidth) {
   const totalLabelsWidth = sum(labels, labelWidth);
 
   // Use a single column for four or fewer items
-  var columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
+  const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
 
   // Use a horizontal layout if all labels fit on one line
   const isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;

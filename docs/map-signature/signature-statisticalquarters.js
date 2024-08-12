@@ -3,11 +3,11 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
     _(width) {
-      var innerHeight = sszvis.aspectRatioSquare(width);
+      const innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
         bottom: 30,
@@ -30,13 +30,13 @@ function parseRow(d) {
   };
 }
 
-var datumAcc = sszvis.prop("datum");
-var valueAcc = sszvis.propOr("value", 0);
-var zoneNameAcc = sszvis.propOr("zonename", "--");
+const datumAcc = sszvis.prop("datum");
+const valueAcc = sszvis.propOr("value", 0);
+const zoneNameAcc = sszvis.propOr("zonename", "--");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: null,
   mapData: null,
   selection: [],
@@ -44,7 +44,7 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
+const actions = {
   prepareData(data) {
     state.data = data;
     state.valueRange = [0, d3.max(state.data, valueAcc)];
@@ -92,8 +92,8 @@ function render(state) {
     return true;
   }
 
-  var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-  var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+  const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+  const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
   // Scales
   // Any time you visualize a quantity using a circle, you should make the total
@@ -103,23 +103,23 @@ function render(state) {
   // This scale takes the square root of the input and uses that to scale the radius. When the
   // result is used as the radius of a circle, the area of the circle will be linearly
   // proportional to the input quantity.
-  var radiusScale = d3.scaleSqrt().domain(state.valueRange).range([0, props.radiusMax]);
+  const radiusScale = d3.scaleSqrt().domain(state.valueRange).range([0, props.radiusMax]);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
 
   // Components
 
-  var bubbleMap = sszvis
+  const bubbleMap = sszvis
     .mapRendererBubble()
     .fill(sszvis.scaleQual6()(0))
     .radius((d) => (sszvis.defined(d) ? radiusScale(valueAcc(d)) : 0))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
-  var choroplethMap = sszvis
+  const choroplethMap = sszvis
     .choropleth()
     .features(state.mapData.features)
     .borders(state.mapData.borders)
@@ -133,20 +133,20 @@ function render(state) {
     .transitionColor(false)
     .anchoredShape(bubbleMap);
 
-  var tooltipHeader = sszvis
+  const tooltipHeader = sszvis
     .modularTextHTML()
     .plain(sszvis.compose(sszvis.formatNumber, valueAcc, datumAcc));
 
-  var tooltipBody = sszvis.modularTextHTML().plain(sszvis.compose(zoneNameAcc, datumAcc));
+  const tooltipBody = sszvis.modularTextHTML().plain(sszvis.compose(zoneNameAcc, datumAcc));
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(tooltipHeader)
     .body(tooltipBody)
     .visible(sszvis.compose(isSelected, datumAcc));
 
-  var radiusLegend = sszvis
+  const radiusLegend = sszvis
     .legendRadius()
     .scale(radiusScale)
     .tickFormat(sszvis.formatPreciseNumber(1));
@@ -166,7 +166,7 @@ function render(state) {
 
   // Interaction
 
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-map__area--entering, .sszvis-anchored-circle--entering")
     .on("start", actions.selectHovered)

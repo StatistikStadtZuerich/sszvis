@@ -28,13 +28,13 @@ export default function () {
     .prop("strokeWidth")
     .strokeWidth(1.25)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // add the map borders. These are rendered as one single path element
-      var meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]);
+      let meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]);
 
-      var newMeshLine = meshLine.enter().append("path").classed("sszvis-map__border", true);
+      const newMeshLine = meshLine.enter().append("path").classed("sszvis-map__border", true);
 
       meshLine.exit().remove();
 

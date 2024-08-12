@@ -44,15 +44,15 @@ import { component } from "../d3-component.js";
 
 /* Configuration
 ----------------------------------------------- */
-var SMALL_CORNER_RADIUS = 3;
-var LARGE_CORNER_RADIUS = 4;
-var TIP_SIZE = 6;
-var BLUR_PADDING = 5;
+const SMALL_CORNER_RADIUS = 3;
+const LARGE_CORNER_RADIUS = 4;
+const TIP_SIZE = 6;
+const BLUR_PADDING = 5;
 
 /* Exported module
 ----------------------------------------------- */
 export default function () {
-  var renderer = tooltipRenderer();
+  const renderer = tooltipRenderer();
 
   return component()
     .delegate("header", renderer)
@@ -65,14 +65,14 @@ export default function () {
     .prop("visible", fn.functor)
     .visible(false)
     .renderSelection((selection) => {
-      var props = selection.props();
-      var intoBCR = props.renderInto.node().getBoundingClientRect();
+      const props = selection.props();
+      const intoBCR = props.renderInto.node().getBoundingClientRect();
 
-      var tooltipData = [];
+      const tooltipData = [];
       selection.each(function (d) {
         if (props.visible(d)) {
-          var thisBCR = this.getBoundingClientRect();
-          var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
+          const thisBCR = this.getBoundingClientRect();
+          const pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
           tooltipData.push({
             datum: d,
             x: pos[0],
@@ -89,7 +89,7 @@ export default function () {
  * Tooltip renderer
  * @private
  */
-var tooltipRenderer = function () {
+const tooltipRenderer = function () {
   return component()
     .prop("header")
     .prop("body")
@@ -102,22 +102,22 @@ var tooltipRenderer = function () {
     .prop("opacity", fn.functor)
     .opacity(1)
     .renderSelection((selection) => {
-      var tooltipData = selection.datum();
-      var props = selection.props();
+      const tooltipData = selection.datum();
+      const props = selection.props();
 
-      var isDef = fn.defined;
-      var isSmall =
+      const isDef = fn.defined;
+      const isSmall =
         (isDef(props.header) && !isDef(props.body)) || (!isDef(props.header) && isDef(props.body));
 
       // Select tooltip elements
 
-      var tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData);
+      let tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData);
 
       tooltip.exit().remove();
 
       // Enter: tooltip
 
-      var enterTooltip = tooltip.enter().append("div");
+      const enterTooltip = tooltip.enter().append("div");
 
       tooltip = tooltip.merge(enterTooltip);
 
@@ -134,16 +134,16 @@ var tooltipRenderer = function () {
 
       // Enter: tooltip background
 
-      var enterBackground = enterTooltip
+      const enterBackground = enterTooltip
         .append("svg")
         .attr("class", "sszvis-tooltip__background")
         .attr("height", 0)
         .attr("width", 0);
 
-      var enterBackgroundPath = enterBackground.append("path");
+      const enterBackgroundPath = enterBackground.append("path");
 
       if (supportsSVGFilters()) {
-        var filter = enterBackground
+        const filter = enterBackground
           .append("filter")
           .attr("id", "sszvisTooltipShadowFilter")
           .attr("height", "150%");
@@ -156,7 +156,7 @@ var tooltipRenderer = function () {
           .attr("type", "linear")
           .attr("slope", 0.2);
 
-        var merge = filter.append("feMerge");
+        const merge = filter.append("feMerge");
         merge.append("feMergeNode"); // Contains the blurred image
         merge
           .append("feMergeNode") // Contains the element that the filter is applied to
@@ -169,7 +169,7 @@ var tooltipRenderer = function () {
 
       // Enter: tooltip content
 
-      var enterContent = enterTooltip.append("div").classed("sszvis-tooltip__content", true);
+      const enterContent = enterTooltip.append("div").classed("sszvis-tooltip__content", true);
 
       enterContent.append("div").classed("sszvis-tooltip__header", true);
 
@@ -186,7 +186,7 @@ var tooltipRenderer = function () {
         .select(".sszvis-tooltip__body")
         .datum(fn.prop("datum"))
         .html((d) => {
-          var body = props.body ? fn.functor(props.body)(d) : "";
+          const body = props.body ? fn.functor(props.body)(d) : "";
           return Array.isArray(body) ? formatTable(body) : body;
         });
 
@@ -194,10 +194,10 @@ var tooltipRenderer = function () {
         .selectAll(".sszvis-tooltip")
         .classed("sszvis-tooltip--small", isSmall)
         .each(function (d) {
-          var tip = select(this);
+          const tip = select(this);
           // only using dimensions.width and dimensions.height here. Not affected by scroll position
-          var dimensions = tip.node().getBoundingClientRect();
-          var orientation = Reflect.apply(props.orientation, this, arguments);
+          const dimensions = tip.node().getBoundingClientRect();
+          const orientation = Reflect.apply(props.orientation, this, arguments);
 
           // Position tooltip element
 
@@ -230,8 +230,8 @@ var tooltipRenderer = function () {
 
           // Position background element
 
-          var bgHeight = dimensions.height + 2 * BLUR_PADDING;
-          var bgWidth = dimensions.width + 2 * BLUR_PADDING;
+          const bgHeight = dimensions.height + 2 * BLUR_PADDING;
+          const bgWidth = dimensions.width + 2 * BLUR_PADDING;
           tip
             .select(".sszvis-tooltip__background")
             .attr("height", bgHeight)
@@ -256,7 +256,7 @@ var tooltipRenderer = function () {
  * formatTable
  */
 function formatTable(rows) {
-  var tableBody = rows
+  const tableBody = rows
     .map((row) => "<tr>" + row.map((cell) => "<td>" + cell + "</td>").join("") + "</tr>")
     .join("");
   return '<table class="sszvis-tooltip__body__table">' + tableBody + "</table>";
@@ -269,12 +269,12 @@ function y(d) {
   return d[1];
 }
 function side(cx, cy, x0, y0, x1, y1, showTip) {
-  var mx = x0 + (x1 - x0) / 2;
-  var my = y0 + (y1 - y0) / 2;
+  const mx = x0 + (x1 - x0) / 2;
+  const my = y0 + (y1 - y0) / 2;
 
-  var corner = ["Q", cx, cy, x0, y0];
+  const corner = ["Q", cx, cy, x0, y0];
 
-  var tip = [];
+  let tip = [];
   if (showTip && y0 === y1) {
     tip =
       x0 < x1
@@ -291,7 +291,7 @@ function side(cx, cy, x0, y0, x1, y1, showTip) {
           ["L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE];
   }
 
-  var end = ["L", x1, y1];
+  const end = ["L", x1, y1];
 
   return [...corner, ...tip, ...end];
 }

@@ -43,8 +43,8 @@ export default function () {
     .prop("transitionColor")
     .transitionColor(true)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // render the missing value pattern
       ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
@@ -54,10 +54,10 @@ export default function () {
         return props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
       }
 
-      var mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData);
+      let mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData);
 
       // add the base map paths - these are filled according to the map fill function
-      var newMapAreas = mapAreas
+      const newMapAreas = mapAreas
         .enter()
         .append("path")
         .classed("sszvis-map__area", true)
@@ -88,11 +88,11 @@ export default function () {
       }
 
       // the tooltip anchor generator
-      var ta = tooltipAnchor().position((d) =>
+      const ta = tooltipAnchor().position((d) =>
         props.mapPath.projection()(getGeoJsonCenter(d.geoJson))
       );
 
-      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
+      const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
 
       // attach tooltip anchors
       tooltipGroup.call(ta);

@@ -61,18 +61,18 @@ import { select } from "d3";
 
 import * as fn from "../fn.js";
 
-export var elementFromEvent = function (evt) {
+export const elementFromEvent = function (evt) {
   if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
   return null;
 };
 
-export var datumFromPannableElement = function (element) {
+export const datumFromPannableElement = function (element) {
   if (!fn.isNull(element)) {
-    var selection = select(element);
+    const selection = select(element);
     if (!fn.isNull(selection.attr("data-sszvis-behavior-pannable"))) {
-      var datum = selection.datum();
+      const datum = selection.datum();
       if (fn.defined(datum)) {
         return datum;
       }
@@ -81,15 +81,15 @@ export var datumFromPannableElement = function (element) {
   return null;
 };
 
-export var datumFromPanEvent = function (evt) {
+export const datumFromPanEvent = function (evt) {
   return datumFromPannableElement(elementFromEvent(evt));
 };
 
-export var testBarThreshold = function (cursorValue, datum, accessor, threshold) {
+export const testBarThreshold = function (cursorValue, datum, accessor, threshold) {
   if (!fn.defined(datum)) {
     return false;
   }
-  var dataValue = accessor(datum);
+  const dataValue = accessor(datum);
   // For bars that are very small, or have a NaN value, then
   // when the touch is close enough to the 0-axis, we prevent scrolling
   // and show the tooltip. The proximity which the touch must have to the 0-axis

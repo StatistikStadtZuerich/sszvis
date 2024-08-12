@@ -27,9 +27,9 @@ import { selection as d3Selection } from "d3";
  * @return {sszvis.component} A d3 reusable chart
  */
 export function component() {
-  var props = {};
-  var selectionRenderer = null;
-  var renderer = identity;
+  const props = {};
+  let selectionRenderer = null;
+  let renderer = identity;
 
   /**
    * Constructor
@@ -74,7 +74,7 @@ export function component() {
    */
   sszvisComponent.delegate = function (prop, delegate) {
     sszvisComponent[prop] = function () {
-      var result = delegate[prop].apply(delegate, slice(arguments));
+      const result = delegate[prop].apply(delegate, slice(arguments));
       return arguments.length === 0 ? result : sszvisComponent;
     };
     return sszvisComponent;
@@ -128,8 +128,8 @@ d3Selection.prototype.props = function () {
   if (this.size() != 1) throw new Error("only one group is supported");
   if (this._groups[0].length != 1) throw new Error("only one node is supported");
 
-  var group = this._groups[0];
-  var node = group[0];
+  const group = this._groups[0];
+  const node = group[0];
   return node.__props__ || {};
 };
 
@@ -161,8 +161,8 @@ function slice(array) {
 }
 
 function clone(obj) {
-  var copy = {};
-  for (var attr in obj) {
+  const copy = {};
+  for (const attr in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
   }
   return copy;

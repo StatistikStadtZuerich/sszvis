@@ -61,8 +61,8 @@ import * as logger from "./logger.js";
 /* Exported module
 ----------------------------------------------- */
 export function responsiveProps() {
-  var breakpointSpec = breakpointDefaultSpec();
-  var propsConfig = {};
+  let breakpointSpec = breakpointDefaultSpec();
+  const propsConfig = {};
 
   /**
    * Constructor
@@ -85,10 +85,10 @@ export function responsiveProps() {
     }
 
     // Finds out which breakpoints the provided measurements match up with
-    var matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
+    const matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
 
     return Object.keys(propsConfig).reduce((memo, propKey) => {
-      var propSpec = propsConfig[propKey];
+      const propSpec = propsConfig[propKey];
 
       if (!validatePropSpec(propSpec, breakpointSpec)) {
         logger.warn(
@@ -102,7 +102,7 @@ export function responsiveProps() {
 
       // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
       // This function should always at least find '_' at the end of the array.
-      var matchedBreakpoint = fn.find((bp) => fn.defined(propSpec[bp.name]), matchingBreakpoints);
+      const matchedBreakpoint = fn.find((bp) => fn.defined(propSpec[bp.name]), matchingBreakpoints);
       // the value in the query object for that property equals the propSpec value as a functor,
       // invoked if necessary with the current width. Providing the width allows aspect ratio
       // calculations based on element width.
@@ -232,7 +232,7 @@ function validatePropSpec(propSpec, breakpointSpec) {
 
   // Validate the properties of the propSpec:
   // each should be a valid breakpoint name, and its value should be defined
-  for (var breakpointName in propSpec) {
+  for (const breakpointName in propSpec) {
     if (
       Object.prototype.hasOwnProperty.call(propSpec, breakpointName) &&
       breakpointName !== "_" &&

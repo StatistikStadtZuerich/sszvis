@@ -35,7 +35,7 @@ import { defaultTransition } from "../transition.js";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { component } from "../d3-component.js";
 
-var TWO_PI = 2 * Math.PI;
+const TWO_PI = 2 * Math.PI;
 
 export default function () {
   return component()
@@ -47,8 +47,8 @@ export default function () {
     .prop("stroke")
     .stroke("white")
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
       function getColorRecursive(node) {
@@ -66,26 +66,26 @@ export default function () {
           return hsl(props.fill(node.data.key));
         } else {
           // Recurse up the tree and adjust the lightness value
-          var pColor = getColorRecursive(node.parent);
+          const pColor = getColorRecursive(node.parent);
           pColor.l *= 1.15;
           return pColor;
         }
       }
 
-      var startAngle = function (d) {
+      const startAngle = function (d) {
         return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
       };
-      var endAngle = function (d) {
+      const endAngle = function (d) {
         return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
       };
-      var innerRadius = function (d) {
+      const innerRadius = function (d) {
         return props.centerRadius + Math.max(0, props.radiusScale(d.y0));
       };
-      var outerRadius = function (d) {
+      const outerRadius = function (d) {
         return props.centerRadius + Math.max(0, props.radiusScale(d.y1));
       };
 
-      var arcGen = arc()
+      const arcGen = arc()
         .startAngle(startAngle)
         .endAngle(endAngle)
         .innerRadius(innerRadius)
@@ -98,7 +98,7 @@ export default function () {
         d._x1 = d.x1;
       }
 
-      var arcs = selection
+      let arcs = selection
         .selectAll(".sszvis-sunburst-arc")
         .each((d, i) => {
           if (data[i]) {
@@ -111,7 +111,7 @@ export default function () {
         })
         .data(data);
 
-      var newArcs = arcs.enter().append("path").attr("class", "sszvis-sunburst-arc");
+      const newArcs = arcs.enter().append("path").attr("class", "sszvis-sunburst-arc");
 
       arcs.exit().remove();
 
@@ -120,8 +120,8 @@ export default function () {
       arcs.attr("stroke", props.stroke).attr("fill", getColorRecursive);
 
       arcs.transition(defaultTransition()).attrTween("d", (d) => {
-        var x0Interp = interpolate(d.x0, d._x0);
-        var x1Interp = interpolate(d.x1, d._x1);
+        const x0Interp = interpolate(d.x0, d._x0);
+        const x1Interp = interpolate(d.x1, d._x1);
         return function (t) {
           d.x0 = x0Interp(t);
           d.x1 = x1Interp(t);
@@ -130,11 +130,11 @@ export default function () {
       });
 
       // Add tooltip anchors
-      var arcTooltipAnchor = tooltipAnchor().position((d) => {
-        var startA = startAngle(d);
-        var endA = endAngle(d);
-        var a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
-        var r = (innerRadius(d) + outerRadius(d)) / 2;
+      const arcTooltipAnchor = tooltipAnchor().position((d) => {
+        const startA = startAngle(d);
+        const endA = endAngle(d);
+        const a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
+        const r = (innerRadius(d) + outerRadius(d)) / 2;
         return [Math.cos(a) * r, Math.sin(a) * r];
       });
 

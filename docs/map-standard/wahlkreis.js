@@ -3,12 +3,12 @@
 // Configuration
 // -----------------------------------------------
 
-var MAX_LEGEND_WIDTH = 320;
-var queryProps = sszvis
+const MAX_LEGEND_WIDTH = 320;
+const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
     _(width) {
-      var innerHeight = sszvis.aspectRatioSquare(width);
+      const innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
         bottom: 90,
@@ -28,9 +28,9 @@ function parseRow(d) {
   };
 }
 
-var vAcc = sszvis.prop("value");
-var nameAcc = sszvis.prop("name");
-var mDatumAcc = sszvis.prop("datum");
+const vAcc = sszvis.prop("value");
+const nameAcc = sszvis.prop("name");
+const mDatumAcc = sszvis.prop("datum");
 
 sszvis.app({
   fallback: {
@@ -72,19 +72,19 @@ sszvis.app({
   // Render
   // -----------------------------------------------
   render(state, actions) {
-    var props = queryProps(sszvis.measureDimensions(config.id));
-    var bounds = sszvis.bounds(props.bounds, config.id);
+    const props = queryProps(sszvis.measureDimensions(config.id));
+    const bounds = sszvis.bounds(props.bounds, config.id);
 
     // Scales
-    var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+    const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
     // Layers
-    var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+    const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-    var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+    const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
     // Components
-    var choroplethMap = sszvis
+    const choroplethMap = sszvis
       .choropleth()
       .features(state.mapData.features)
       .borders(state.mapData.borders)
@@ -99,16 +99,16 @@ sszvis.app({
 
     // see the comment by the tooltip in docs/map-standard/kreis.html for more information
     // about accesing data properties of map entities.
-    var tooltipHeader = sszvis
+    const tooltipHeader = sszvis
       .modularTextHTML()
       .bold(sszvis.compose(sszvis.formatFractionPercent, vAcc, mDatumAcc));
 
-    var tooltipBody = sszvis
+    const tooltipBody = sszvis
       .modularTextHTML()
       .plain("Wahlkreis ")
       .plain(sszvis.compose(nameAcc, mDatumAcc));
 
-    var tooltip = sszvis
+    const tooltip = sszvis
       .tooltip()
       .renderInto(tooltipLayer)
       .header(tooltipHeader)
@@ -116,7 +116,7 @@ sszvis.app({
       .orientation(sszvis.fitTooltip("bottom", bounds))
       .visible(isSelected(state));
 
-    var legend = sszvis
+    const legend = sszvis
       .legendColorLinear()
       .scale(colorScale)
       .width(props.legendWidth)
@@ -138,7 +138,7 @@ sszvis.app({
       .call(legend);
 
     // Interaction
-    var interactionLayer = sszvis
+    const interactionLayer = sszvis
       .panning()
       .elementSelector(".sszvis-map__area")
       .on("start", actions.selectHovered)

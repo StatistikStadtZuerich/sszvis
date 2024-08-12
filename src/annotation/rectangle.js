@@ -36,16 +36,16 @@ export default function () {
     .prop("dy", fn.functor)
     .prop("caption", fn.functor)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
 
-      var dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data);
+      let dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data);
 
       // FIXME: no exit?
 
-      var newDataArea = dataArea.enter().append("rect").classed("sszvis-dataarearectangle", true);
+      const newDataArea = dataArea.enter().append("rect").classed("sszvis-dataarearectangle", true);
 
       dataArea = dataArea.merge(newDataArea);
 
@@ -57,11 +57,11 @@ export default function () {
         .attr("fill", "url(#data-area-pattern)");
 
       if (props.caption) {
-        var dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data);
+        let dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data);
 
         // FIXME: no exit?
 
-        var newDataCaptions = dataCaptions
+        const newDataCaptions = dataCaptions
           .enter()
           .append("text")
           .classed("sszvis-dataarearectangle__caption", true);

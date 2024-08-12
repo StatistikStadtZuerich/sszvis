@@ -2,9 +2,9 @@
 
 // Configuration
 // -----------------------------------------------
-var SLIDER_CONTROL_HEIGHT = 60;
-var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-  _ () {
+const SLIDER_CONTROL_HEIGHT = 60;
+const queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
+  _() {
     return sszvis.formatNumber;
   },
 });
@@ -18,14 +18,14 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("count");
-var yAcc = sszvis.prop("percent");
-var yearAcc = sszvis.prop("year");
-var branchAcc = sszvis.prop("branch");
+const xAcc = sszvis.prop("count");
+const yAcc = sszvis.prop("percent");
+const yearAcc = sszvis.prop("year");
+const branchAcc = sszvis.prop("branch");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   linesData: [],
   currentData: [],
@@ -40,8 +40,8 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareState (data) {
+const actions = {
+  prepareState(data) {
     state.data = data;
     state.xExtent = [0, d3.max(state.data, xAcc)];
     state.yExtent = [0, d3.max(state.data, yAcc)];
@@ -58,7 +58,7 @@ var actions = {
     actions.setYear(null, d3.max(state.years));
   },
 
-  setYear (inputYear) {
+  setYear(inputYear) {
     state.activeYear = closestDatum(state.years, sszvis.identity, inputYear);
 
     state.currentLinesData = state.linesData.map((line) =>
@@ -69,9 +69,9 @@ var actions = {
       line.filter((d) => yearAcc(d) >= state.activeYear)
     );
 
-    var splitData = state.data.reduce(
+    const splitData = state.data.reduce(
       (memo, datum) => {
-        var year = yearAcc(datum);
+        const year = yearAcc(datum);
 
         // We only render dots for the current year's data
         if (year === state.activeYear) {
@@ -109,19 +109,19 @@ var actions = {
     render(state);
   },
 
-  selectPoint (d) {
+  selectPoint(d) {
     state.selection = [d];
 
     render(state);
   },
 
-  deselectPoint () {
+  deselectPoint() {
     state.selection = [];
 
     render(state);
   },
 
-  resize () {
+  resize() {
     render(state);
   },
 };
@@ -133,9 +133,9 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var props = queryProps(sszvis.measureDimensions(config.id));
+  const props = queryProps(sszvis.measureDimensions(config.id));
 
-  var legendLayout = sszvis.colorLegendLayout(
+  const legendLayout = sszvis.colorLegendLayout(
     {
       axisLabels: state.xExtent.map(props.xLabelFormat),
       legendLabels: state.branches,
@@ -143,10 +143,10 @@ function render(state) {
     config.id
   );
 
-  var cScale = legendLayout.scale;
-  var colorLegend = legendLayout.legend;
+  const cScale = legendLayout.scale;
+  const colorLegend = legendLayout.legend;
 
-  var bounds = sszvis.bounds(
+  const bounds = sszvis.bounds(
     {
       top: 10,
       right: 5,
@@ -158,21 +158,21 @@ function render(state) {
 
   // Scales
 
-  var xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
+  const xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
 
-  var yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
+  const yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
 
-  var tScale = d3.scaleLinear().domain(state.tExtent).range([0, bounds.innerWidth]);
+  const tScale = d3.scaleLinear().domain(state.tExtent).range([0, bounds.innerWidth]);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds);
 
   // Components
 
-  var lines = sszvis
+  const lines = sszvis
     .line()
     .x(sszvis.compose(xScale, xAcc))
     .y(sszvis.compose(yScale, yAcc))
@@ -180,14 +180,14 @@ function render(state) {
     .strokeWidth(1.8)
     .transition(false);
 
-  var futureLines = sszvis
+  const futureLines = sszvis
     .line()
     .x(sszvis.compose(xScale, xAcc))
     .y(sszvis.compose(yScale, yAcc))
     .strokeWidth(1.8)
     .transition(false);
 
-  var visibleDots = sszvis
+  const visibleDots = sszvis
     .dot()
     .x(sszvis.compose(xScale, xAcc))
     .y(sszvis.compose(yScale, yAcc))
@@ -197,7 +197,7 @@ function render(state) {
     .stroke("#FFFFFF")
     .transition(false);
 
-  var invisibleDots = sszvis
+  const invisibleDots = sszvis
     .dot()
     .x(sszvis.compose(xScale, xAcc))
     .y(sszvis.compose(yScale, yAcc))
@@ -208,7 +208,7 @@ function render(state) {
     .stroke("#FFFFFF")
     .transition(false);
 
-  var mouseOverlay = sszvis
+  const mouseOverlay = sszvis
     .voronoi()
     .x(sszvis.compose(xScale, xAcc))
     .y(sszvis.compose(yScale, yAcc))
@@ -221,7 +221,7 @@ function render(state) {
     .on("over", actions.selectPoint)
     .on("out", actions.deselectPoint);
 
-  var slider = sszvis
+  const slider = sszvis
     .slider()
     .scale(tScale)
     .value(state.activeYear)
@@ -230,7 +230,7 @@ function render(state) {
     .label("")
     .onchange(actions.setYear);
 
-  var xAxis = sszvis
+  const xAxis = sszvis
     .axisX()
     .scale(xScale)
     .ticks(4)
@@ -238,7 +238,7 @@ function render(state) {
     .orient("bottom")
     .alignOuterLabels(true);
 
-  var yAxis = sszvis
+  const yAxis = sszvis
     .axisY()
     .scale(yScale)
     .ticks(6)
@@ -249,7 +249,7 @@ function render(state) {
     )
     .contour(true);
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .orientation(sszvis.fitTooltip("bottom", bounds))
@@ -314,9 +314,9 @@ function render(state) {
 }
 
 function closestDatum(data, accessor, datum) {
-  var i = d3.bisector(accessor).left(data, datum, 1);
-  var d0 = data[i - 1];
-  var d1 = data[i] || d0;
+  const i = d3.bisector(accessor).left(data, datum, 1);
+  const d0 = data[i - 1];
+  const d1 = data[i] || d0;
   return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
 }
 

@@ -10,8 +10,8 @@ import { ascending, descending, sum, min, max } from "d3";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 
-var newLinkId = (function () {
-  var id = 0;
+const newLinkId = (function () {
+  let id = 0;
   return function () {
     return ++id;
   };
@@ -46,25 +46,25 @@ var newLinkId = (function () {
  *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  */
-export var prepareData = function () {
-  var mGetSource = fn.identity;
-  var mGetTarget = fn.identity;
-  var mGetValue = fn.identity;
-  var mColumnIds = [];
+export const prepareData = function () {
+  let mGetSource = fn.identity;
+  let mGetTarget = fn.identity;
+  let mGetValue = fn.identity;
+  let mColumnIds = [];
 
   // Helper functions
-  var valueAcc = fn.prop("value");
-  var byAscendingValue = function (a, b) {
+  const valueAcc = fn.prop("value");
+  const byAscendingValue = function (a, b) {
     return ascending(valueAcc(a), valueAcc(b));
   };
-  var byDescendingValue = function (a, b) {
+  const byDescendingValue = function (a, b) {
     return descending(valueAcc(a), valueAcc(b));
   };
 
-  var valueSortFunc = byDescendingValue;
+  let valueSortFunc = byDescendingValue;
 
-  var main = function (inputData) {
-    var columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
+  const main = function (inputData) {
+    const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
       for (const id of columnIdsList) {
         if (index.has(id)) {
           logger.warn(
@@ -74,7 +74,7 @@ export var prepareData = function () {
           );
         }
 
-        var item = {
+        const item = {
           id,
           columnIndex: colIndex, // This is the index of the column containing this node
           nodeIndex: 0, // This will be overwritten at a later stage with the index of this node within its column
@@ -90,13 +90,13 @@ export var prepareData = function () {
       return index;
     }, new Map());
 
-    var listOfLinks = inputData.map((datum) => {
-      var srcId = mGetSource(datum);
-      var tgtId = mGetTarget(datum);
-      var value = +mGetValue(datum) || 0; // Cast this to number
+    const listOfLinks = inputData.map((datum) => {
+      const srcId = mGetSource(datum);
+      const tgtId = mGetTarget(datum);
+      const value = +mGetValue(datum) || 0; // Cast this to number
 
-      var srcNode = columnIndex.get(srcId);
-      var tgtNode = columnIndex.get(tgtId);
+      const srcNode = columnIndex.get(srcId);
+      const tgtNode = columnIndex.get(tgtId);
 
       if (!srcNode) {
         logger.warn("Found invalid source column id:", srcId);
@@ -108,7 +108,7 @@ export var prepareData = function () {
         return null;
       }
 
-      var item = {
+      const item = {
         id: newLinkId(),
         value,
         src: srcNode,
@@ -124,13 +124,13 @@ export var prepareData = function () {
     });
 
     // Extract the column nodes from the index
-    var listOfNodes = [...columnIndex.values()];
+    const listOfNodes = [...columnIndex.values()];
 
     // Calculate an array of total values for each column
-    var columnTotals = listOfNodes.reduce(
+    const columnTotals = listOfNodes.reduce(
       (totals, node) => {
-        var fromTotal = sum(node.linksFrom, valueAcc);
-        var toTotal = sum(node.linksTo, valueAcc);
+        const fromTotal = sum(node.linksFrom, valueAcc);
+        const toTotal = sum(node.linksTo, valueAcc);
 
         // For correct visual display, the node's value is the max of the from and to links
         node.value = Math.max(0, fromTotal, toTotal);
@@ -143,7 +143,7 @@ export var prepareData = function () {
     );
 
     // An array with the number of nodes in each column
-    var columnLengths = mColumnIds.map((colIds) => colIds.length);
+    const columnLengths = mColumnIds.map((colIds) => colIds.length);
 
     // Sort the column nodes
     // (note, this sorts all nodes for all columns in the same array)
@@ -260,18 +260,18 @@ export var prepareData = function () {
  *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  */
-export var computeLayout = function (columnLengths, columnTotals, columnHeight, columnWidth) {
+export const computeLayout = function (columnLengths, columnTotals, columnHeight, columnWidth) {
   // Calculate appropriate scale and padding values (in pixels)
-  var padSpaceRatio = 0.15;
-  var padMin = 12;
-  var padMax = 50;
-  var minDisplayPixels = 1; // Minimum number of pixels used for display area
+  const padSpaceRatio = 0.15;
+  const padMin = 12;
+  const padMax = 50;
+  const minDisplayPixels = 1; // Minimum number of pixels used for display area
 
   // Compute the padding value (in pixels) for each column, then take the minimum value
-  var computedPixPadding = min(
+  const computedPixPadding = min(
     columnLengths.map((colLength) => {
       // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
-      var colPadding = (columnHeight * padSpaceRatio) / (colLength - 1);
+      const colPadding = (columnHeight * padSpaceRatio) / (colLength - 1);
       // Limit by minimum and maximum pixel padding values
       return Math.max(padMin, Math.min(padMax, colPadding));
     })
@@ -280,10 +280,10 @@ export var computeLayout = function (columnLengths, columnTotals, columnHeight, 
   // Given the computed padding value, compute each column's resulting "pixels per unit"
   // This is the number of remaining pixels available to display the column's total units,
   // after padding pixels have been subtracted. Then take the minimum value of that.
-  var pixPerUnit = min(
+  const pixPerUnit = min(
     columnLengths.map((colLength, colIndex) => {
       // The non-padding pixels must have at least minDisplayPixels
-      var nonPaddingPixels = Math.max(
+      const nonPaddingPixels = Math.max(
         minDisplayPixels,
         columnHeight - (colLength - 1) * computedPixPadding
       );
@@ -292,33 +292,33 @@ export var computeLayout = function (columnLengths, columnTotals, columnHeight, 
   );
 
   // The padding between bars, in bar value units
-  var valuePadding = computedPixPadding / pixPerUnit;
+  const valuePadding = computedPixPadding / pixPerUnit;
   // The padding between bars, in pixels
-  var nodePadding = computedPixPadding;
+  const nodePadding = computedPixPadding;
 
   // The maximum total value of any column
-  var maxTotal = max(columnTotals);
+  const maxTotal = max(columnTotals);
 
   // Compute y-padding required to vertically center each column (in pixels)
-  var paddedHeights = columnLengths.map(
+  const paddedHeights = columnLengths.map(
     (colLength, colIndex) => columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding
   );
-  var maxPaddedHeight = max(paddedHeights);
-  var columnPaddings = columnLengths.map(
+  const maxPaddedHeight = max(paddedHeights);
+  const columnPaddings = columnLengths.map(
     (colLength, colIndex) => (maxPaddedHeight - paddedHeights[colIndex]) / 2
   );
 
   // The domain of the size scale
-  var valueDomain = [0, maxTotal];
+  const valueDomain = [0, maxTotal];
   // The range of the size scale
-  var valueRange = [0, maxTotal * pixPerUnit];
+  const valueRange = [0, maxTotal * pixPerUnit];
 
   // Calculate column (or row, as the case may be) positioning values
-  var nodeThickness = 20;
-  var numColumns = columnLengths.length;
-  var columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
-  var columnDomain = [0, 1];
-  var columnRange = [0, columnXMultiplier];
+  const nodeThickness = 20;
+  const numColumns = columnLengths.length;
+  const columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
+  const columnDomain = [0, 1];
+  const columnRange = [0, columnXMultiplier];
 
   return {
     valuePadding,

@@ -29,12 +29,12 @@ export default function () {
     .prop("y0", fn.functor)
     .prop("y1", fn.functor)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var crispX = fn.compose(halfPixel, props.x);
-      var crispY0 = fn.compose(halfPixel, props.y0);
-      var crispY1 = fn.compose(halfPixel, props.y1);
+      const crispX = fn.compose(halfPixel, props.x);
+      const crispY0 = fn.compose(halfPixel, props.y0);
+      const crispY1 = fn.compose(halfPixel, props.y1);
 
       selection
         .selectAll(".sszvis-rangeFlag__mark.bottom")
@@ -46,7 +46,7 @@ export default function () {
         .data(data)
         .call(makeFlagDot("top", crispX, crispY1));
 
-      var ta = tooltipAnchor().position((d) => [
+      const ta = tooltipAnchor().position((d) => [
         crispX(d),
         halfPixel((props.y0(d) + props.y1(d)) / 2),
       ]);
@@ -57,7 +57,7 @@ export default function () {
 
 function makeFlagDot(classed, cx, cy) {
   return function (dot) {
-    var newDot = dot
+    const newDot = dot
       .enter()
       .append("circle")
       .classed("sszvis-rangeFlag__mark", true)

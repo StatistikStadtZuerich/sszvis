@@ -67,7 +67,7 @@
     "build:watch": "npm run build:lib -- --watch",
     "test": "npm run test:lint && npm run test:unit && npm run test:snapshot",
     "test:ci": "npm run test:lint && npm run test:unit",
-    "test:lint": "npx eslint",
+    "test:lint": "npx eslint --fix",
     "test:unit": "vitest run --exclude **/snapshot.test.js",
     "test:snapshot": "rm -rf test/snapshot/__results__ && npx playwright test",
     "test:watch": "vitest",

@@ -32,9 +32,9 @@ import { GEO_KEY_DEFAULT } from "../mapUtils.js";
 import { component } from "../../d3-component.js";
 
 export default function () {
-  var event = dispatch("over", "out", "click");
+  const event = dispatch("over", "out", "click");
 
-  var geojsonComponent = component()
+  const geojsonComponent = component()
     .prop("dataKeyName")
     .dataKeyName(GEO_KEY_DEFAULT)
     .prop("geoJsonKeyName")
@@ -52,8 +52,8 @@ export default function () {
     .prop("transitionColor")
     .transitionColor(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // render the missing value pattern
       ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
@@ -62,15 +62,15 @@ export default function () {
       // getMapKeyName will be called on the 'properties' of each map feature. It should
       // return a map entity id. Data values are matched with corresponding map features using
       // these entity ids.
-      var getDataKeyName = fn.prop(props.dataKeyName);
-      var getMapKeyName = fn.prop(props.geoJsonKeyName);
+      const getDataKeyName = fn.prop(props.dataKeyName);
+      const getMapKeyName = fn.prop(props.geoJsonKeyName);
 
-      var groupedInputData = data.reduce((m, v) => {
+      const groupedInputData = data.reduce((m, v) => {
         m[getDataKeyName(v)] = v;
         return m;
       });
 
-      var mergedData = props.geoJson.features.map((feature) => ({
+      const mergedData = props.geoJson.features.map((feature) => ({
         geoJson: feature,
         datum: groupedInputData[getMapKeyName(feature.properties)],
       }));
@@ -85,9 +85,9 @@ export default function () {
         return fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
       }
 
-      var geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData);
+      let geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData);
 
-      var newGeoElements = geoElements
+      const newGeoElements = geoElements
         .enter()
         .append("path")
         .classed("sszvis-map__geojsonelement", true)
@@ -128,10 +128,10 @@ export default function () {
         });
 
       // the tooltip anchor generator
-      var ta = tooltipAnchor().position((d) => {
+      const ta = tooltipAnchor().position((d) => {
         d.geoJson.properties || (d.geoJson.properties = {});
 
-        var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
+        let sphericalCentroid = d.geoJson.properties.sphericalCentroid;
         if (!sphericalCentroid) {
           d.geoJson.properties.sphericalCentroid = sphericalCentroid = geoCentroid(d.geoJson);
         }
@@ -139,14 +139,14 @@ export default function () {
         return props.mapPath.projection()(sphericalCentroid);
       });
 
-      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
+      const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
 
       // attach tooltip anchors
       tooltipGroup.call(ta);
     });
 
   geojsonComponent.on = function () {
-    var value = event.on.apply(event, arguments);
+    const value = event.on.apply(event, arguments);
     return value === event ? geojsonComponent : value;
   };
 

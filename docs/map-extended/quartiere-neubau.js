@@ -3,9 +3,9 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis.responsiveProps().prop("bounds", {
+const queryProps = sszvis.responsiveProps().prop("bounds", {
   _(width) {
-    var innerHeight = sszvis.aspectRatioSquare(width);
+    const innerHeight = sszvis.aspectRatioSquare(width);
     return {
       top: 30,
       bottom: 30,
@@ -15,7 +15,7 @@ var queryProps = sszvis.responsiveProps().prop("bounds", {
 });
 
 function parseRow(d) {
-  var parsedYear = sszvis.parseNumber(d["bezugsjahr"]);
+  let parsedYear = sszvis.parseNumber(d["bezugsjahr"]);
   parsedYear = parsedYear === 0 ? Number.NaN : parsedYear;
   return {
     id: sszvis.parseNumber(d["id"]),
@@ -25,13 +25,13 @@ function parseRow(d) {
   };
 }
 
-var datumAcc = sszvis.prop("datum");
-var nameAcc = sszvis.prop("name");
-var yearAcc = sszvis.prop("year");
+const datumAcc = sszvis.prop("datum");
+const nameAcc = sszvis.prop("name");
+const yearAcc = sszvis.prop("year");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: null,
   mapData: null,
   additionalMapData: null,
@@ -41,7 +41,7 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
+const actions = {
   prepareData(data) {
     state.data = data;
     state.yearRange = d3.extent(data, yearAcc);
@@ -99,21 +99,21 @@ function render(state) {
     return true;
   }
 
-  var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-  var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+  const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+  const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
   // Scales
-  var colorScale = sszvis.scaleSeqBlu().reverse().domain(state.yearRange);
+  const colorScale = sszvis.scaleSeqBlu().reverse().domain(state.yearRange);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
 
   // Components
 
-  var mapMaker = sszvis
+  const mapMaker = sszvis
     .choropleth()
     .features(state.mapData.features)
     .borders(state.mapData.borders)
@@ -125,14 +125,14 @@ function render(state) {
     .fill("none")
     .borderColor("#7C7C7C");
 
-  var mapPath = sszvis.swissMapPath(
+  const mapPath = sszvis.swissMapPath(
     bounds.innerWidth,
     bounds.innerHeight,
     state.mapData.features,
     "zurichStadtfeatures"
   );
 
-  var newBuildings = sszvis
+  const newBuildings = sszvis
     .mapRendererGeoJson()
     .dataKeyName("id")
     .geoJsonKeyName("OBJECTID")
@@ -146,9 +146,9 @@ function render(state) {
     .on("click", actions.selectHovered)
     .on("out", actions.deselectHovered);
 
-  var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(nameAcc, datumAcc));
+  const tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(nameAcc, datumAcc));
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(tooltipHeader)

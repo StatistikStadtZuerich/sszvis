@@ -15,7 +15,7 @@ import { selection } from "d3";
  * @param  {*} value any value
  * @return {*}       returns its argument
  */
-export var identity = function (value) {
+export const identity = function (value) {
   return value;
 };
 
@@ -27,7 +27,7 @@ export var identity = function (value) {
  * @param  {*}  val       The value to check
  * @return {Boolean}      Whether the value is a string
  */
-export var isString = function (val) {
+export const isString = function (val) {
   return Object.prototype.toString.call(val) === "[object String]";
 };
 
@@ -39,7 +39,7 @@ export var isString = function (val) {
  * @param  {*}  val         The value to check
  * @return {Boolean}        Whether the value is a d3.selection
  */
-export var isSelection = function (val) {
+export const isSelection = function (val) {
   return val instanceof selection;
 };
 
@@ -55,7 +55,7 @@ export var isSelection = function (val) {
  * @return {Function} A new function wrapping `fn`. The new function is
  * guaranteed to be of arity `n`.
  */
-export var arity = function (n, fn) {
+export const arity = function (n, fn) {
   switch (n) {
     case 0: {
       return function () {
@@ -134,12 +134,12 @@ export var arity = function (n, fn) {
  * @param {Function...} ... Accepts any number of functions as arguments
  * @return {Function} returns a function which is the composition of the passed functions
  */
-export var compose = function () {
-  var fns = arguments,
+export const compose = function () {
+  const fns = arguments,
     start = arguments.length - 1;
   return function () {
-    var i = start;
-    var result = Reflect.apply(fns[i], this, arguments);
+    let i = start;
+    let result = Reflect.apply(fns[i], this, arguments);
     while (i--) result = fns[i].call(this, result);
     return result;
   };
@@ -154,7 +154,7 @@ export var compose = function () {
  * @param  {any}   d    Item that might be in list
  * @return {boolean}
  */
-export var contains = function (list, d) {
+export const contains = function (list, d) {
   return list.includes(d);
 };
 
@@ -166,7 +166,7 @@ export var contains = function (list, d) {
  * @param  {*} val the value to check
  * @return {Boolean}     true if the value is defined, false if the value is undefined
  */
-export var defined = function (val) {
+export const defined = function (val) {
   return val !== undefined && val != null && !Number.isNaN(val);
 };
 
@@ -185,13 +185,12 @@ export var defined = function (val) {
  * @param  {function} acc     An accessor function which calculates the set determiner.
  * @return {array}            An array of objects from the input array.
  */
-export var derivedSet = function (arr, acc) {
+export const derivedSet = function (arr, acc) {
   acc || (acc = identity);
-  var seen = [],
-    sValue,
-    cValue,
+  const seen = [],
     result = [];
-  for (var i = 0, l = arr.length; i < l; ++i) {
+  let sValue, cValue;
+  for (let i = 0, l = arr.length; i < l; ++i) {
     sValue = arr[i];
     cValue = acc(sValue, i, arr);
     if (!seen.includes(cValue)) {
@@ -212,7 +211,7 @@ export var derivedSet = function (arr, acc) {
  * @param  {Array} arr              The array to test
  * @return {Boolean}                Whether every element in the array passes the test
  */
-export var every = function (predicate, arr) {
+export const every = function (predicate, arr) {
   for (const element of arr) {
     if (!predicate(element)) {
       return false;
@@ -230,9 +229,9 @@ export var every = function (predicate, arr) {
  * @param  {Any} val        The value with which to fill the array
  * @return {Array}          An array of length len filled with val
  */
-export var filledArray = function (len, val) {
-  var arr = Array.from({ length: len });
-  for (var i = 0; i < len; ++i) {
+export const filledArray = function (len, val) {
+  const arr = Array.from({ length: len });
+  for (let i = 0; i < len; ++i) {
     arr[i] = val;
   }
   return arr;
@@ -248,7 +247,7 @@ export var filledArray = function (len, val) {
  *
  * @returns {arrayElement|undefined}
  */
-export var find = function (predicate, arr) {
+export const find = function (predicate, arr) {
   for (const element of arr) {
     if (predicate(element)) {
       return element;
@@ -264,7 +263,7 @@ export var find = function (predicate, arr) {
  * @param  {Array} arr an array
  * @return {*}     the first value in the array
  */
-export var first = function (arr) {
+export const first = function (arr) {
   return arr[0];
 };
 
@@ -278,7 +277,7 @@ export var first = function (arr) {
  * @param  {Array}        The Array to flatten
  * @return {Array}        A flattened Array
  */
-export var flatten = function (arr) {
+export const flatten = function (arr) {
   return arr.flat();
 };
 
@@ -295,7 +294,7 @@ export var flatten = function (arr) {
  * @return {Touch|null}         The first Touch object from the TouchEvent's lists
  *                              of touches.
  */
-export var firstTouch = function (event) {
+export const firstTouch = function (event) {
   if (event.touches && event.touches.length > 0) {
     return event.touches[0];
   } else if (event.changedTouches && event.changedTouches.length > 0) {
@@ -318,8 +317,8 @@ export var firstTouch = function (event) {
  *   informalGreeting: function() { return "How ya’ doin!" }
  * })
  */
-export var foldPattern = function (key, pattern) {
-  var result = pattern[key];
+export const foldPattern = function (key, pattern) {
+  const result = pattern[key];
   if (typeof result === "function") {
     return result();
   }
@@ -345,12 +344,12 @@ export var foldPattern = function (key, pattern) {
  * the element's index in the input array, and the input array itself.
  * @return {Array} an Array of unique elements
  */
-export var hashableSet = function (arr, acc) {
+export const hashableSet = function (arr, acc) {
   acc || (acc = identity);
-  var seen = {},
-    value,
+  const seen = {},
     result = [];
-  for (var i = 0, l = arr.length; i < l; ++i) {
+  let value;
+  for (let i = 0, l = arr.length; i < l; ++i) {
     value = acc(arr[i], i, arr);
     if (!seen[value]) {
       seen[value] = true;
@@ -368,7 +367,7 @@ export var hashableSet = function (arr, acc) {
  * @param {*} val the value to check
  * @return {Boolean} true if the value is a function, false otherwise
  */
-export var isFunction = function (val) {
+export const isFunction = function (val) {
   return typeof val == "function";
 };
 
@@ -380,7 +379,7 @@ export var isFunction = function (val) {
  * @param {*} val the value to check
  * @return {Boolean}     true if the value is null, false if the value is not null
  */
-export var isNull = function (val) {
+export const isNull = function (val) {
   return val === null;
 };
 
@@ -392,7 +391,7 @@ export var isNull = function (val) {
  * @param  {*}  val     The value to check
  * @return {Boolean}    Whether the value is a number
  */
-export var isNumber = function (val) {
+export const isNumber = function (val) {
   return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
 };
 
@@ -405,7 +404,7 @@ export var isNumber = function (val) {
  * @param  {*}  value      The value to test
  * @return {Boolean}       Whether the value is an object
  */
-export var isObject = function (val) {
+export const isObject = function (val) {
   return Object(val) === val;
 };
 
@@ -417,7 +416,7 @@ export var isObject = function (val) {
  * @param  {Array} arr an array
  * @return {*}     the last value in the array
  */
-export var last = function (arr) {
+export const last = function (arr) {
   return arr.at(-1);
 };
 
@@ -431,7 +430,7 @@ export var last = function (arr) {
  * @param  {Function} f the argument function
  * @return {Function}   a new function which returns the boolean opposite of the argument function
  */
-export var not = function (f) {
+export const not = function (f) {
   return function () {
     return !Reflect.apply(f, this, arguments);
   };
@@ -449,7 +448,7 @@ export var not = function (f) {
  * @return {Function}     A property-accessor function
  *
  */
-export var prop = function (key) {
+export const prop = function (key) {
   return function (object) {
     return object[key];
   };
@@ -469,9 +468,9 @@ export var prop = function (key) {
  * @param  {any} defaultVal     the default value to return when either the object or the requested property are undefined
  * @return {Function}           A property-accessor function
  */
-export var propOr = function (key, defaultVal) {
+export const propOr = function (key, defaultVal) {
   return function (object) {
-    var value = object === undefined ? undefined : object[key];
+    const value = object === undefined ? undefined : object[key];
     return value === undefined ? defaultVal : value;
   };
 };
@@ -496,10 +495,10 @@ export var propOr = function (key, defaultVal) {
  * the element's index in the input array, and the input array itself.
  * @return {Array} an Array of unique elements
  */
-export var set = function (arr, acc) {
+export const set = function (arr, acc) {
   acc || (acc = identity);
   return arr.reduce((m, value, i) => {
-    var computed = acc(value, i, arr);
+    const computed = acc(value, i, arr);
     return m.includes(computed) ? m : [...m, computed];
   }, []);
 };
@@ -514,7 +513,7 @@ export var set = function (arr, acc) {
  * @param  {Array} arr              The array to test
  * @return {Boolean}                Whether some element in the array passes the test
  */
-export var some = function (predicate, arr) {
+export const some = function (predicate, arr) {
   for (const element of arr) {
     if (predicate(element)) {
       return true;
@@ -534,7 +533,7 @@ export var some = function (predicate, arr) {
  * @param  {any} b        the second value
  * @return {boolean}      Whether the provided values are equal when converted to strings.
  */
-export var stringEqual = function (a, b) {
+export const stringEqual = function (a, b) {
   return a.toString() === b.toString();
 };
 
@@ -543,7 +542,7 @@ export var stringEqual = function (a, b) {
  *
  * Same as fn.functor in d3v3
  */
-export var functor = function (v) {
+export const functor = function (v) {
   return typeof v === "function"
     ? v
     : function () {
@@ -557,19 +556,19 @@ export var functor = function (v) {
  * Adapted from lodash's memoize() but using d3.map() as cache
  * See https://lodash.com/docs/4.17.4#memoize
  */
-export var memoize = function (func, resolver) {
+export const memoize = function (func, resolver) {
   if (typeof func != "function" || (resolver != null && typeof resolver != "function")) {
     throw new TypeError("Expected a function");
   }
-  var memoized = function () {
-    var args = arguments,
+  const memoized = function () {
+    const args = arguments,
       key = resolver ? resolver.apply(this, args) : args[0],
       cache = memoized.cache;
 
     if (cache.has(key)) {
       return cache.get(key);
     }
-    var result = func.apply(this, args);
+    const result = func.apply(this, args);
     memoized.cache = cache.set(key, result) || cache;
     return result;
   };

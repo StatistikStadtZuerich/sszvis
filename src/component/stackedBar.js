@@ -2,7 +2,7 @@
  * Stacked Bar component
  *
  * This component includes both the vertical and horizontal stacked bar chart components.
- * Both are variations on the same concept, and they both use the same abstract intermediate
+ * Both are constiations on the same concept, and they both use the same abstract intermediate
  * representation for the stack, but are rendered using different dimensions. Note that using
  * this component will add the properties 'y0' and 'y' to any passed-in data objects, as part of
  * computing the stack intermediate representation. Existing properties with these names will be
@@ -36,21 +36,21 @@ import { cascade } from "../cascade.js";
 import bar from "./bar.js";
 import { component } from "../d3-component.js";
 
-var stackAcc = fn.prop("stack");
+const stackAcc = fn.prop("stack");
 
 // Accessors for the first and second element of a tuple (2-element array).
-var fst = fn.prop("0");
-var snd = fn.prop("1");
+const fst = fn.prop("0");
+const snd = fn.prop("1");
 
 function stackedBarData(order) {
   return function (_stackAcc, seriesAcc, valueAcc) {
     return function (data) {
-      var rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
+      const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
       // Collect all keys ()
-      var keys = rows.reduce((a, row) => fn.set([...a, ...Object.keys(row)]), []);
+      const keys = rows.reduce((a, row) => fn.set([...a, ...Object.keys(row)]), []);
 
-      var stacks = d3Stack()
+      const stacks = d3Stack()
         .keys(keys)
         .value((x, key) => valueAcc(x[key][0]))
         .order(order)(rows);
@@ -73,8 +73,8 @@ function stackedBarData(order) {
   };
 }
 
-export var stackedBarHorizontalData = stackedBarData(stackOrderNone);
-export var stackedBarVerticalData = stackedBarData(stackOrderReverse);
+export const stackedBarHorizontalData = stackedBarData(stackOrderNone);
+export const stackedBarVerticalData = stackedBarData(stackOrderReverse);
 
 function stackedBar(config) {
   return component()
@@ -85,10 +85,10 @@ function stackedBar(config) {
     .prop("fill")
     .prop("stroke")
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var barGen = bar()
+      const barGen = bar()
         .x(config.x(props))
         .y(config.y(props))
         .width(config.width(props))
@@ -96,9 +96,9 @@ function stackedBar(config) {
         .fill(props.fill)
         .stroke(props.stroke || "#FFFFFF");
 
-      var groups = selection.selectAll(".sszvis-stack").data(data);
+      let groups = selection.selectAll(".sszvis-stack").data(data);
 
-      var newGroups = groups.enter().append("g").classed("sszvis-stack", true);
+      const newGroups = groups.enter().append("g").classed("sszvis-stack", true);
 
       groups.exit().remove();
 
@@ -108,42 +108,42 @@ function stackedBar(config) {
     });
 }
 
-var horizontalStackedBarConfig = {
-  x (props) {
+const horizontalStackedBarConfig = {
+  x(props) {
     return fn.compose(props.xScale, fst);
   },
-  y (props) {
+  y(props) {
     return fn.compose(props.yScale, stackAcc);
   },
-  width (props) {
+  width(props) {
     return function (d) {
       return props.xScale(d[1]) - props.xScale(d[0]);
     };
   },
-  height (props) {
+  height(props) {
     return props.height;
   },
 };
-export var stackedBarHorizontal = function () {
+export const stackedBarHorizontal = function () {
   return stackedBar(horizontalStackedBarConfig);
 };
 
-var verticalStackedBarConfig = {
-  x (props) {
+const verticalStackedBarConfig = {
+  x(props) {
     return fn.compose(props.xScale, stackAcc);
   },
-  y (props) {
+  y(props) {
     return fn.compose(props.yScale, snd);
   },
-  width (props) {
+  width(props) {
     return props.width;
   },
-  height (props) {
+  height(props) {
     return function (d) {
       return props.yScale(d[0]) - props.yScale(d[1]);
     };
   },
 };
-export var stackedBarVertical = function () {
+export const stackedBarVertical = function () {
   return stackedBar(verticalStackedBarConfig);
 };

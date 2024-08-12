@@ -3,11 +3,11 @@
 // Configuration
 // -----------------------------------------------
 
-var PIE_DIAMETER = 204;
-var LEGEND_PADDING = 40;
-var MAX_WIDTH = 3 * PIE_DIAMETER + 30;
+const PIE_DIAMETER = 204;
+const LEGEND_PADDING = 40;
+const MAX_WIDTH = 3 * PIE_DIAMETER + 30;
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("rowsCols", {
     palm: [5, 1],
@@ -20,8 +20,8 @@ var queryProps = sszvis
   })
   .prop("bounds", {
     palm() {
-      var legendHeight = 182;
-      var bottomPadding = LEGEND_PADDING + legendHeight + 20;
+      const legendHeight = 182;
+      const bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
         top: 20,
         right: 10,
@@ -31,8 +31,8 @@ var queryProps = sszvis
       };
     },
     lap() {
-      var legendHeight = 98;
-      var bottomPadding = LEGEND_PADDING + legendHeight + 20;
+      const legendHeight = 98;
+      const bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
         top: 20,
         right: 20,
@@ -42,8 +42,8 @@ var queryProps = sszvis
       };
     },
     _() {
-      var legendHeight = 98;
-      var bottomPadding = LEGEND_PADDING + legendHeight + 20;
+      const legendHeight = 98;
+      const bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
         top: 20,
         right: 20,
@@ -62,7 +62,7 @@ var queryProps = sszvis
     },
     lap() {
       return (bounds, g) => {
-        var left = bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
+        const left = bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
         return {
           top: LEGEND_PADDING,
           left,
@@ -71,7 +71,7 @@ var queryProps = sszvis
     },
     _(w) {
       return () => {
-        var colWidth = Math.min(w, MAX_WIDTH) / 2;
+        const colWidth = Math.min(w, MAX_WIDTH) / 2;
         return {
           top: LEGEND_PADDING,
           left: (w - 2 * 10) / 2 - colWidth,
@@ -96,13 +96,13 @@ function parseRow(d) {
   };
 }
 
-var gAcc = sszvis.prop("group");
-var vAcc = sszvis.prop("value");
-var cAcc = sszvis.prop("category");
+const gAcc = sszvis.prop("group");
+const vAcc = sszvis.prop("value");
+const cAcc = sszvis.prop("category");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   groups: [],
   totalValues: {},
@@ -115,10 +115,10 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
+const actions = {
   prepareState(data) {
     // groups the data into arrays by their 'group' value
-    var grouped = sszvis
+    const grouped = sszvis
       .cascade()
       .arrayBy(gAcc, (g1, g2) => state.groups.indexOf(g1) - state.groups.indexOf(g2))
       .apply(data);
@@ -168,29 +168,29 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var props = queryProps(sszvis.measureDimensions(config.id));
-  var bounds = sszvis.bounds(props.bounds, config.id);
+  const props = queryProps(sszvis.measureDimensions(config.id));
+  const bounds = sszvis.bounds(props.bounds, config.id);
 
   // Scales
 
   // this is a basic scale for the pie chart segment angles. It has no range because it will be copied
   // and a different range set, for each pie chart in the multiples.
-  var aScale = d3.scaleLinear().range([0, 2 * Math.PI]);
+  const aScale = d3.scaleLinear().range([0, 2 * Math.PI]);
 
-  var cScale = sszvis.scaleQual12().domain(state.categories);
+  const cScale = sszvis.scaleQual12().domain(state.categories);
 
   // Layers
 
-  var chart = sszvis.createSvgLayer(config.id, bounds).datum(state.pieGroups);
+  const chart = sszvis.createSvgLayer(config.id, bounds).datum(state.pieGroups);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds);
 
   // Components
 
-  var pieMaker = sszvis.pie().fill(sszvis.compose(cScale, cAcc));
+  const pieMaker = sszvis.pie().fill(sszvis.compose(cScale, cAcc));
 
   // this component generates svg 'g' tags into which chart instances can be rendered
-  var multiplesMaker = sszvis
+  const multiplesMaker = sszvis
     .layoutSmallMultiples()
     .width(Math.min(bounds.innerWidth, MAX_WIDTH))
     .height(bounds.innerHeight)
@@ -199,7 +199,7 @@ function render(state) {
     .rows(props.rowsCols[0])
     .cols(props.rowsCols[1]);
 
-  var colorLegend = sszvis
+  const colorLegend = sszvis
     .legendColorOrdinal()
     .scale(cScale)
     .columnWidth(Math.min(bounds.innerWidth, MAX_WIDTH) / 2)
@@ -210,7 +210,7 @@ function render(state) {
   // associate element isn't hovered, but another element in the same category is.
   // In these case, the infotip is faded slightly (by the infotipOpacity function),
   // but the infotip under the mouse position has full opacity.
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(cAcc)
@@ -220,7 +220,7 @@ function render(state) {
 
   // Rendering
 
-  var pieCharts = chart
+  const pieCharts = chart
     .selectGroup("piecharts")
     .attr(
       "transform",
@@ -232,9 +232,9 @@ function render(state) {
   pieCharts.selectAll(".sszvis-multiple").each(function (d) {
     // inside this closure, create a copy of the angle scale
     // which is relative to the group total calculated earlier
-    var groupScale = aScale.copy().domain([0, state.totalValues[d.group]]);
+    const groupScale = aScale.copy().domain([0, state.totalValues[d.group]]);
 
-    var pieR = pieRadius(d.gw, d.gh);
+    const pieR = pieRadius(d.gw, d.gh);
 
     // configure the pieMaker component for this particular group
     pieMaker.radius(pieR).angle(sszvis.compose(groupScale, vAcc));
@@ -249,7 +249,7 @@ function render(state) {
   // attach the tooltips
   pieCharts.selectAll("[data-tooltip-anchor]").call(tooltip);
 
-  var legendPosition = props.legendPosition(bounds, state.pieGroups[0]);
+  const legendPosition = props.legendPosition(bounds, state.pieGroups[0]);
   chart
     .selectGroup("colorLegend")
     .attr(
@@ -260,7 +260,7 @@ function render(state) {
 
   // Interaction
 
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-path")
     .on("start", actions.showTooltip)

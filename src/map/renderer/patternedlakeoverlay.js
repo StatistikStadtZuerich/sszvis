@@ -30,8 +30,8 @@ export default function () {
     .prop("fadeOut")
     .fadeOut(true)
     .render(function () {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // the lake texture
       ensureDefsElement(selection, "pattern", "lake-pattern").call(mapLakePattern);
@@ -47,9 +47,9 @@ export default function () {
       }
 
       // generate the Lake Zurich path
-      var zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]);
+      let zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]);
 
-      var newZurichSee = zurichSee.enter().append("path").classed("sszvis-map__lakezurich", true);
+      const newZurichSee = zurichSee.enter().append("path").classed("sszvis-map__lakezurich", true);
 
       zurichSee.exit().remove();
 
@@ -64,9 +64,9 @@ export default function () {
 
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
-      var lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]);
+      let lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]);
 
-      var newLakePath = lakePath.enter().append("path").classed("sszvis-map__lakepath", true);
+      const newLakePath = lakePath.enter().append("path").classed("sszvis-map__lakepath", true);
 
       lakePath.exit().remove();
 

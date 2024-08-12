@@ -2,11 +2,11 @@
 
 // Configuration
 // -----------------------------------------------
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
     _(width) {
-      var innerHeight = sszvis.aspectRatioSquare(width);
+      const innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
         bottom: 90,
@@ -31,13 +31,13 @@ function parseRow(d) {
     value: sszvis.parseNumber(d["Bevölkerung"]),
   };
 }
-var vAcc = sszvis.prop("value");
-var nameAcc = sszvis.prop("name");
-var mDatumAcc = sszvis.prop("datum");
+const vAcc = sszvis.prop("value");
+const nameAcc = sszvis.prop("name");
+const mDatumAcc = sszvis.prop("datum");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: null,
   mapData: null,
   selection: [],
@@ -46,7 +46,7 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
+const actions = {
   prepareState(data) {
     state.data = data;
     state.valueDomain = [0, d3.max(state.data, vAcc)];
@@ -100,22 +100,22 @@ function render(state) {
     return true;
   }
 
-  var props = queryProps(sszvis.measureDimensions(config.id));
-  var bounds = sszvis.bounds(props.bounds, config.id);
+  const props = queryProps(sszvis.measureDimensions(config.id));
+  const bounds = sszvis.bounds(props.bounds, config.id);
 
   // Scales
 
-  var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+  const colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
   // Components
 
-  var choroplethMap = sszvis
+  const choroplethMap = sszvis
     .choropleth()
     .features(state.mapData.features)
     .borders(state.mapData.borders)
@@ -128,9 +128,9 @@ function render(state) {
     .height(bounds.innerHeight)
     .fill(sszvis.compose(colorScale, vAcc));
 
-  var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(nameAcc, mDatumAcc));
+  const tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(nameAcc, mDatumAcc));
 
-  var tooltipBody = sszvis
+  const tooltipBody = sszvis
     .modularTextHTML()
     .plain(sszvis.compose(sszvis.formatNumber, vAcc, mDatumAcc))
     .plain(props.tooltipUnit);
@@ -140,7 +140,7 @@ function render(state) {
   // can be calculated from the geoJson. But that also means that when accessing the datum for other purposes,
   // such as creating tooltip text, the user must be aware that the 'd' argument is not just the data value.
   // The data value, if present, is available as d.datum.
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(tooltipHeader)
@@ -148,7 +148,7 @@ function render(state) {
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .visible(isSelected);
 
-  var legend = sszvis
+  const legend = sszvis
     .legendColorLinear()
     .scale(colorScale)
     .width(props.legendWidth)
@@ -172,7 +172,7 @@ function render(state) {
 
   // Interaction
 
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-map__area")
     .on("start", actions.selectHovered)

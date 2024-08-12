@@ -66,15 +66,15 @@ export default function () {
     .prop("transition")
     .transition(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var xAcc = fn.compose(handleMissingVal, props.x);
-      var yAcc = fn.compose(handleMissingVal, props.y);
-      var wAcc = fn.compose(handleMissingVal, props.width);
-      var hAcc = fn.compose(handleMissingVal, props.height);
+      const xAcc = fn.compose(handleMissingVal, props.x);
+      const yAcc = fn.compose(handleMissingVal, props.y);
+      const wAcc = fn.compose(handleMissingVal, props.width);
+      const hAcc = fn.compose(handleMissingVal, props.height);
 
-      var bars = selection.selectAll(".sszvis-bar").data(data);
+      let bars = selection.selectAll(".sszvis-bar").data(data);
 
       bars.exit().remove();
 
@@ -97,13 +97,13 @@ export default function () {
       bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
 
       // Tooltip anchors
-      var tooltipPosition;
+      let tooltipPosition;
       if (props.centerTooltip) {
         tooltipPosition = function (d) {
           return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
         };
       } else if (props.tooltipAnchor) {
-        var uv = props.tooltipAnchor.map(Number.parseFloat);
+        const uv = props.tooltipAnchor.map(Number.parseFloat);
         tooltipPosition = function (d) {
           return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
         };
@@ -113,7 +113,7 @@ export default function () {
         };
       }
 
-      var ta = tooltipAnchor().position(tooltipPosition);
+      const ta = tooltipAnchor().position(tooltipPosition);
 
       selection.call(ta);
     });

@@ -12,16 +12,16 @@
 
 import { transition as d3Transition, easePolyOut } from "d3";
 
-var defaultEase = easePolyOut;
+const defaultEase = easePolyOut;
 
-export var defaultTransition = function () {
+export const defaultTransition = function () {
   return d3Transition().ease(defaultEase).duration(300);
 };
 
-export var fastTransition = function () {
+export const fastTransition = function () {
   return d3Transition().ease(defaultEase).duration(50);
 };
 
-export var slowTransition = function () {
+export const slowTransition = function () {
   return d3Transition().ease(defaultEase).duration(500);
 };

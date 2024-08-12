@@ -32,10 +32,10 @@ export default function () {
     .prop("transition")
     .transition(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var dots = selection.selectAll(".sszvis-circle").data(data);
+      let dots = selection.selectAll(".sszvis-circle").data(data);
 
       dots.exit().remove();
 
@@ -58,7 +58,7 @@ export default function () {
 
       // Tooltip anchors
 
-      var ta = tooltipAnchor().position((d) => [props.x(d), props.y(d)]);
+      const ta = tooltipAnchor().position((d) => [props.x(d), props.y(d)]);
 
       selection.call(ta);
     });

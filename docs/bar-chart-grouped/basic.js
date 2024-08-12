@@ -3,7 +3,7 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("xLabelFormat", {
     _: () => sszvis.formatText,
@@ -26,14 +26,14 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("xValue");
-var yAcc = sszvis.prop("yValue");
-var cAcc = sszvis.prop("category");
+const xAcc = sszvis.prop("xValue");
+const yAcc = sszvis.prop("yValue");
+const cAcc = sszvis.prop("category");
 
 // Application state
 // -----------------------------------------------
 
-var state = {
+const state = {
   data: [],
   years: [],
   categories: [],
@@ -47,7 +47,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 
-var actions = {
+const actions = {
   prepareState(data) {
     state.data = data;
     state.regions = sszvis.set(state.data, xAcc);
@@ -84,9 +84,9 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // -----------------------------------------------
 
 function render(state) {
-  var props = queryProps(sszvis.measureDimensions(config.id));
+  const props = queryProps(sszvis.measureDimensions(config.id));
 
-  var legendLayout = sszvis.colorLegendLayout(
+  const legendLayout = sszvis.colorLegendLayout(
     {
       axisLabels: state.regions.map(props.xLabelFormat),
       legendLabels: state.categories,
@@ -95,10 +95,10 @@ function render(state) {
     config.id
   );
 
-  var cScale = legendLayout.scale;
-  var colorLegend = legendLayout.legend;
+  const cScale = legendLayout.scale;
+  const colorLegend = legendLayout.legend;
 
-  var bounds = sszvis.bounds(
+  const bounds = sszvis.bounds(
     {
       top: 25,
       bottom: legendLayout.bottomPadding,
@@ -106,33 +106,33 @@ function render(state) {
     config.id
   );
 
-  var chartWidth = Math.min(800, bounds.innerWidth);
+  const chartWidth = Math.min(800, bounds.innerWidth);
 
   // Scales
-  var xScale = d3
+  const xScale = d3
     .scaleBand()
     .domain(state.regions)
     .padding(0.26)
     .paddingOuter(0.8)
     .rangeRound([0, chartWidth]);
 
-  var yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
+  const yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
 
-  var yPosScale = (v) => Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
+  const yPosScale = (v) => Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
 
-  var hScale = (v) =>
+  const hScale = (v) =>
     // the size of the bar is distance from the y-position of the value to the y-position of 0
     Math.abs(yScale(v) - yScale(0));
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.groupedData);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.groupedData);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
   // Components
 
-  var barLayout = sszvis
+  const barLayout = sszvis
     .groupedBars()
     .groupScale(sszvis.compose(xScale, xAcc))
     .groupWidth(xScale.bandwidth())
@@ -142,7 +142,7 @@ function render(state) {
     .fill(sszvis.compose(cScale, cAcc))
     .defined(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
 
-  var xAxis = sszvis.axisX
+  const xAxis = sszvis.axisX
     .ordinal()
     .scale(xScale)
     .orient("bottom")
@@ -155,7 +155,7 @@ function render(state) {
     xAxis.textWrap(labelWrapWidth(xScale.range()));
   }
 
-  var yAxis = sszvis
+  const yAxis = sszvis
     .axisY()
     .scale(yScale)
     .showZeroY(isTwoSidedDomain(state.valueExtent))
@@ -163,7 +163,7 @@ function render(state) {
     .ticks(props.yTicks)
     .title(props.yAxisLabel);
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .orientation(sszvis.fitTooltip("bottom", bounds))
@@ -171,7 +171,7 @@ function render(state) {
     .body((d) =>
       // generates a row from each data element
       d.map((item) => {
-        var v = yAcc(item);
+        const v = yAcc(item);
         return [cAcc(item), Number.isNaN(v) ? "–" : v];
       })
     )
@@ -191,7 +191,7 @@ function render(state) {
 
   chartLayer.selectGroup("yAxis").call(yAxis);
 
-  var bars = chartLayer.selectGroup("bars").call(barLayout);
+  const bars = chartLayer.selectGroup("bars").call(barLayout);
 
   bars.selectAll("[data-tooltip-anchor]").call(tooltip);
 
@@ -206,7 +206,7 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 
   // Interaction
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .move()
     .xScale(xScale)
     .yScale(yScale)
@@ -224,14 +224,14 @@ function isTwoSidedDomain(extent) {
 }
 
 function zeroBasedAxisDomain(extent) {
-  var min = extent[0];
-  var max = extent[1];
+  let min = extent[0];
+  let max = extent[1];
   if (min < max) {
     if (min > 0) min = 0;
     if (max < 0) max = 0;
     return [min, max];
   } else {
-    var flipped = zeroBasedAxisDomain([max, min]);
+    const flipped = zeroBasedAxisDomain([max, min]);
     return [flipped[1], flipped[0]];
   }
 }

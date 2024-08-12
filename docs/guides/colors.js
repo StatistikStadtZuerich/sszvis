@@ -2,8 +2,8 @@
 (function (global) {
   "use strict";
 
-  var BAR_WIDTH = 80;
-  var BAR_HEIGHT = 80;
+  const BAR_WIDTH = 80;
+  const BAR_HEIGHT = 80;
 
   global.colorSwatchFromLinearScale = (containerId, scale, numBars) => {
     scale.domain([0, numBars - 1]);
@@ -17,10 +17,10 @@
   // Utils
   // -----------------------------------------------
   function renderSwatch(containerId, colors) {
-    var container = document.querySelector(`.${containerId}`);
+    const container = document.querySelector(`.${containerId}`);
 
     for (const c of colors) {
-      var colorDiv = document.createElement("div");
+      const colorDiv = document.createElement("div");
       colorDiv.style.height = px(BAR_HEIGHT);
       colorDiv.style.width = pct(100 / colors.length);
       colorDiv.style.maxWidth = px(BAR_WIDTH);

@@ -66,25 +66,25 @@ export default function () {
     .prop("defined", fn.functor)
     .defined(true)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var inGroupScale = scaleBand()
+      const inGroupScale = scaleBand()
         .domain(range(props.groupSize))
         .padding(props.groupSpace)
         .paddingOuter(0)
         .rangeRound([0, props.groupWidth]);
 
-      var groups = selection.selectAll("g.sszvis-bargroup").data(data);
+      let groups = selection.selectAll("g.sszvis-bargroup").data(data);
 
-      var newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
+      const newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
 
       groups.exit().remove();
       groups = groups.merge(newGroups);
 
-      var barUnits = groups.selectAll("g.sszvis-barunit").data((d) => d);
+      let barUnits = groups.selectAll("g.sszvis-barunit").data((d) => d);
 
-      var newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
+      const newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
 
       barUnits.exit().remove();
       barUnits = barUnits.merge(newBarUnits);
@@ -94,7 +94,7 @@ export default function () {
         d.__sszvisGroupedBarIndex__ = i;
       });
 
-      var unitsWithValue = barUnits.filter(props.defined);
+      const unitsWithValue = barUnits.filter(props.defined);
 
       // clear the units before rendering
       unitsWithValue.selectAll("*").remove();
@@ -116,7 +116,7 @@ export default function () {
         .attr("width", inGroupScale.bandwidth())
         .attr("height", props.height);
 
-      var unitsWithoutValue = barUnits.filter(fn.not(props.defined));
+      const unitsWithoutValue = barUnits.filter(fn.not(props.defined));
 
       unitsWithoutValue.selectAll("*").remove();
 
@@ -145,9 +145,9 @@ export default function () {
         .attr("x2", -4)
         .attr("y2", 4);
 
-      var ta = tooltipAnchor().position((group) => {
-        var xTotal = 0;
-        var tallest = Infinity;
+      const ta = tooltipAnchor().position((group) => {
+        let xTotal = 0;
+        let tallest = Infinity;
         for (const [i, d] of group.entries()) {
           xTotal +=
             props.groupScale(d) +
@@ -156,7 +156,7 @@ export default function () {
           // smaller y is higher
           tallest = Math.min(tallest, props.y(d, i));
         }
-        var xAverage = xTotal / group.length;
+        const xAverage = xTotal / group.length;
         return [xAverage, tallest];
       });
 

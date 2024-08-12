@@ -42,7 +42,7 @@ module.exports = class Page {
 
       ${function mkXAxis(ticks, selection, xScale, accessor) {
         // Add the highlighted data as additional ticks to the xScale
-        var xTickValues = ticks ? xScale.ticks(ticks) : xScale.ticks();
+        let xTickValues = ticks ? xScale.ticks(ticks) : xScale.ticks();
         xTickValues = [...xTickValues, ...selection.map(accessor)];
         xTickValues = xTickValues.filter(
           (v, i) => xTickValues.map(String).indexOf(String(v)) === i
@@ -51,9 +51,9 @@ module.exports = class Page {
       }.toString()}
       
       ${function closestDatum(data, accessor, datum) {
-        var i = d3.bisector(accessor).left(data, datum, 1);
-        var d0 = data[i - 1];
-        var d1 = data[i] || d0;
+        const i = d3.bisector(accessor).left(data, datum, 1);
+        const d0 = data[i - 1];
+        const d1 = data[i] || d0;
         return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
       }.toString()}
 

@@ -38,10 +38,10 @@ import { component } from "../d3-component.js";
 
 /* Constants
 ----------------------------------------------- */
-var SPINE_PADDING = 0.5;
+const SPINE_PADDING = 0.5;
 
-var dataAcc = fn.prop("data");
-var rowAcc = fn.prop("row");
+const dataAcc = fn.prop("data");
+const rowAcc = fn.prop("row");
 
 /**
  * This function prepares the data for the stackedPyramid component
@@ -58,16 +58,16 @@ var rowAcc = fn.prop("row");
  */
 export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
   return function (data) {
-    var sides = cascade()
+    const sides = cascade()
       .arrayBy(sideAcc)
       .arrayBy(_rowAcc)
       .objectBy(seriesAcc)
       .apply(data)
       .map((rows) => {
-        var keys = Object.keys(rows[0]);
-        var side = sideAcc(rows[0][keys[0]][0]);
+        const keys = Object.keys(rows[0]);
+        const side = sideAcc(rows[0][keys[0]][0]);
 
-        var stacks = d3Stack()
+        const stacks = d3Stack()
           .keys(keys)
           .value((x, key) => valueAcc(x[key][0]))(rows);
 
@@ -108,12 +108,12 @@ export function stackedPyramid() {
     .prop("leftRefAccessor")
     .prop("rightRefAccessor")
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
       // Components
 
-      var leftBar = bar()
+      const leftBar = bar()
         .x((d) => -SPINE_PADDING - props.barWidth(d[1]))
         .y(fn.compose(props.barPosition, rowAcc))
         .height(props.barHeight)
@@ -121,7 +121,7 @@ export function stackedPyramid() {
         .fill(fn.compose(props.barFill, dataAcc))
         .tooltipAnchor(props.tooltipAnchor);
 
-      var rightBar = bar()
+      const rightBar = bar()
         .x((d) => SPINE_PADDING + props.barWidth(d[0]))
         .y(fn.compose(props.barPosition, rowAcc))
         .height(props.barHeight)
@@ -129,16 +129,16 @@ export function stackedPyramid() {
         .fill(fn.compose(props.barFill, dataAcc))
         .tooltipAnchor(props.tooltipAnchor);
 
-      var leftStack = stackComponent().stackElement(leftBar);
+      const leftStack = stackComponent().stackElement(leftBar);
 
-      var rightStack = stackComponent().stackElement(rightBar);
+      const rightStack = stackComponent().stackElement(rightBar);
 
-      var leftLine = lineComponent()
+      const leftLine = lineComponent()
         .barPosition(props.barPosition)
         .barWidth(props.barWidth)
         .mirror(true);
 
-      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+      const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
 
       // Rendering
 
@@ -162,12 +162,12 @@ function stackComponent() {
   return component()
     .prop("stackElement")
     .renderSelection((selection) => {
-      var datum = selection.datum();
-      var props = selection.props();
+      const datum = selection.datum();
+      const props = selection.props();
 
-      var stack = selection.selectAll("[data-sszvis-stack]").data(datum);
+      let stack = selection.selectAll("[data-sszvis-stack]").data(datum);
 
-      var newStack = stack.enter().append("g").attr("data-sszvis-stack", "");
+      const newStack = stack.enter().append("g").attr("data-sszvis-stack", "");
 
       stack.exit().remove();
 
@@ -186,16 +186,16 @@ function lineComponent() {
     .prop("mirror")
     .mirror(false)
     .render(function (data) {
-      var selection = select(this);
-      var props = selection.props();
+      const selection = select(this);
+      const props = selection.props();
 
-      var lineGen = d3Line().x(props.barWidth).y(props.barPosition);
+      const lineGen = d3Line().x(props.barWidth).y(props.barPosition);
 
-      var line = selection.selectAll(".sszvis-path").data(data);
+      let line = selection.selectAll(".sszvis-path").data(data);
 
       line.exit().remove();
 
-      var newLine = line
+      const newLine = line
         .enter()
         .append("path")
         .attr("class", "sszvis-path")
