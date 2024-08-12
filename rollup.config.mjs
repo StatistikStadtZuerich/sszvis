@@ -4,11 +4,7 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
 import path from "node:path";
 import terser from "@rollup/plugin-terser";
-<<<<<<<< HEAD:rollup.config.mjs
 import pkg from "./package.json";
-========
-import pkg from "./package.json" assert { type: "json" };
->>>>>>>> 7ef15845 (chore: :arrow_up: upgrade rollup to v4):rollup.config.cjs
 
 const banner = `/*! sszvis v${pkg.version}, Copyright 2014-present Statistik Stadt Zürich */`;
 
