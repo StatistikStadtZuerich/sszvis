@@ -4,7 +4,7 @@
 // -----------------------------------------------
 var SLIDER_CONTROL_HEIGHT = 60;
 var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-  _: function () {
+  _ () {
     return sszvis.formatNumber;
   },
 });
@@ -41,7 +41,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState (data) {
     state.data = data;
     state.xExtent = [0, d3.max(state.data, xAcc)];
     state.yExtent = [0, d3.max(state.data, yAcc)];
@@ -58,7 +58,7 @@ var actions = {
     actions.setYear(null, d3.max(state.years));
   },
 
-  setYear: function (inputYear) {
+  setYear (inputYear) {
     state.activeYear = closestDatum(state.years, sszvis.identity, inputYear);
 
     state.currentLinesData = state.linesData.map((line) =>
@@ -109,19 +109,19 @@ var actions = {
     render(state);
   },
 
-  selectPoint: function (d) {
+  selectPoint (d) {
     state.selection = [d];
 
     render(state);
   },
 
-  deselectPoint: function () {
+  deselectPoint () {
     state.selection = [];
 
     render(state);
   },
 
-  resize: function () {
+  resize () {
     render(state);
   },
 };

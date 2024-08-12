@@ -5,14 +5,10 @@
 var queryProps = sszvis
   .responsiveProps()
   .prop("controlWidth", {
-    _: function (width) {
-      return Math.min(width, 300);
-    },
+    _: (width) => Math.min(width, 300),
   })
   .prop("xLabelFormat", {
-    _: function () {
-      return sszvis.formatYear;
-    },
+    _: () => sszvis.formatYear,
   });
 
 function parseRow(d) {
@@ -44,7 +40,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.timeExtent = d3.extent(state.data, xAcc);
     state.categories = sszvis.set(state.data, cAcc);
@@ -82,12 +78,12 @@ var actions = {
     actions.resetDate();
   },
 
-  toggleMultiples: function (e, g) {
+  toggleMultiples(e, g) {
     state.isMultiples = g === "Separiert";
     render(state);
   },
 
-  changeDate: function (xValue, yValue) {
+  changeDate(xValue, yValue) {
     var closest = findClosest(state.dates, xValue);
     state.highlightDate = closest;
     state.highlightData = state.stackedData.map((stack) => {
@@ -107,12 +103,12 @@ var actions = {
     render(state);
   },
 
-  resetDate: function () {
+  resetDate() {
     var mostRecent = d3.max(state.data, xAcc);
     actions.changeDate(mostRecent, 0);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

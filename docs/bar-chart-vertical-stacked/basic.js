@@ -22,9 +22,7 @@ var queryProps = sszvis
     _: "",
   })
   .prop("xLabelFormat", {
-    _: function () {
-      return sszvis.formatText;
-    },
+    _: () => sszvis.formatText,
   })
   .prop("xSlant", {
     palm: "vertical",
@@ -34,9 +32,7 @@ var queryProps = sszvis
     _: "Beschäftigte",
   })
   .prop("yLabelFormat", {
-    _: function () {
-      return sszvis.formatNumber;
-    },
+    _: () => sszvis.formatNumber,
   })
   .prop("ticks", {
     _: 5,
@@ -69,7 +65,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.years = sszvis.set(state.data, xAcc);
     state.categories = sszvis.set(state.data, cAcc);
@@ -80,17 +76,17 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (datum) {
+  showTooltip(datum) {
     state.selection = [datum];
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

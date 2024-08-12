@@ -35,23 +35,23 @@ var state = {
 // -----------------------------------------------
 
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.categories = sszvis.set(state.data, cAcc);
     render(state);
   },
 
-  showTooltip: function (_, category) {
+  showTooltip(e, category) {
     state.selected = state.data.filter((d) => cAcc(d) === category);
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selected = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

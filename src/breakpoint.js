@@ -194,7 +194,7 @@ function parseBreakpoint(bp) {
     : parseMeasurement({ width: bp.width, screenHeight: bp.screenHeight });
   return {
     name: bp.name,
-    measurement: measurement,
+    measurement,
   };
 }
 

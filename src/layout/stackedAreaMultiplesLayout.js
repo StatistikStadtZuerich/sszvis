@@ -35,8 +35,8 @@ export default function (height, num, pct) {
     level += step;
   }
   return {
-    range: range,
-    bandHeight: bandHeight,
+    range,
+    bandHeight,
     padHeight: step * pct,
   };
 }

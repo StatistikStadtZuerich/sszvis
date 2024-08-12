@@ -24,10 +24,9 @@ export default [
       "unused-imports/no-unused-vars": [
         "warn",
         {
-          vars: "all",
-          varsIgnorePattern: "^_",
-          args: "after-used",
           argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
         },
       ],
       "unicorn/better-regex": "warn",
@@ -48,6 +47,7 @@ export default [
       "sonarjs/no-duplicate-string": "off",
       "prefer-arrow-callback": "warn",
       "arrow-body-style": ["warn", "as-needed"],
+      "object-shorthand": ["error", "always", { avoidExplicitReturnArrows: true }],
     },
   },
 ];

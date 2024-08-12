@@ -6,14 +6,10 @@
 var queryProps = sszvis
   .responsiveProps()
   .prop("xFormat", {
-    _: function () {
-      return sszvis.formatFractionPercent;
-    },
+    _: () => sszvis.formatFractionPercent,
   })
   .prop("yFormat", {
-    _: function () {
-      return sszvis.formatNumber;
-    },
+    _: () => sszvis.formatNumber,
   })
   .prop("xAxisLabel", {
     _: "Prozent",
@@ -53,7 +49,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
 
     // for the voronoi component to work, the data must first be filtered such that no two vertices
@@ -69,17 +65,17 @@ var actions = {
     render(state);
   },
 
-  setHighlight: function (d) {
+  setHighlight(d) {
     state.highlightData = [d];
     render(state);
   },
 
-  resetHighlight: function () {
+  resetHighlight() {
     state.highlightData = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

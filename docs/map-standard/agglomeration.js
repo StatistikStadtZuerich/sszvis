@@ -4,7 +4,7 @@
 // -----------------------------------------------
 
 var queryProps = sszvis.responsiveProps().prop("bounds", {
-  _: function (width) {
+  _(width) {
     var innerHeight = sszvis.aspectRatioPortrait(width);
     return {
       top: 10,
@@ -43,7 +43,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.valueDomain = [d3.min(state.data, vAcc), d3.max(state.data, vAcc)];
     state.categories = sszvis
@@ -59,7 +59,7 @@ var actions = {
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.agglomeration),
       borders: topojson.mesh(topo, topo.objects.agglomeration),
@@ -70,17 +70,17 @@ var actions = {
   },
 
   // manage which datum is selected. These data are highlighted by the map.
-  selectHovered: function (e, d) {
+  selectHovered(_event, d) {
     state.selection = [d.datum];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -138,7 +138,7 @@ function render(state) {
 
   var tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(nameAcc, mDatumAcc));
 
-  var tooltipBody = function (d) {
+  var tooltipBody = (d) => {
     var value = sszvis.compose(vAcc, mDatumAcc);
     return [["Anteil 75-jährige und Ältere", sszvis.formatPercent(value(d))]];
   };

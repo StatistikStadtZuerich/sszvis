@@ -4,7 +4,7 @@
 // -----------------------------------------------
 
 var queryProps = sszvis.responsiveProps().prop("bounds", {
-  _: function (width) {
+  _(width) {
     var innerHeight = sszvis.aspectRatioSquare(width);
     return {
       top: 30,
@@ -34,14 +34,14 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.valueDomain = [0, d3.max(state.data, vAcc)];
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_zonen),
       borders: topojson.mesh(topo, topo.objects.statistische_zonen),
@@ -49,7 +49,7 @@ var actions = {
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

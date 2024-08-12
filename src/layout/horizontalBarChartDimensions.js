@@ -37,10 +37,10 @@ export default function (numBars) {
     outerRatio = 0; // no outer padding
 
   return {
-    barHeight: barHeight,
+    barHeight,
     padHeight: padding,
-    padRatio: padRatio,
-    outerRatio: outerRatio,
+    padRatio,
+    outerRatio,
     axisOffset: -(barHeight / 2) - 10,
     barGroupHeight: computedBarSpace,
     totalHeight: computedBarSpace + outerRatio * (barHeight + padding) * 2,

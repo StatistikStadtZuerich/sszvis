@@ -3,7 +3,7 @@
 // Configuration
 // -----------------------------------------------
 var queryProps = sszvis.responsiveProps().prop("bounds", {
-  _: function (width) {
+  _(width) {
     // The calculation of the rastermap bounds is a bit more complex due to the fact
     // that we have to deal with a raster image in the background that has a bigger
     // size than the vector map.
@@ -69,14 +69,14 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareData: function (data) {
+  prepareData(data) {
     state.data = data;
     state.yearRange = d3.extent(data, yearAcc);
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_quartiere),
       borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
@@ -86,24 +86,24 @@ var actions = {
     render(state);
   },
 
-  prepareAdditionalMapData: function (geojson) {
+  prepareAdditionalMapData(geojson) {
     state.additionalMapData = {
       features: geojson,
     };
     render(state);
   },
 
-  selectHovered: function (d) {
+  selectHovered(d) {
     state.selection = [d];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

@@ -553,21 +553,21 @@ function boundsOverlap(boundsA, boundsB) {
 
 var slantLabel = {
   top: {
-    horizontal: function (selection) {
+    horizontal (selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
         .attr("dy", "0.71em")
         .attr("transform", null);
     },
-    vertical: function (selection) {
+    vertical (selection) {
       selection
         .style("text-anchor", "start")
         .attr("dx", "0em")
         .attr("dy", "0.35em") // vertically-center
         .attr("transform", "rotate(-90)");
     },
-    diagonal: function (selection) {
+    diagonal (selection) {
       selection
         .style("text-anchor", "start")
         .attr("dx", "0.1em")
@@ -576,21 +576,21 @@ var slantLabel = {
     },
   },
   bottom: {
-    horizontal: function (selection) {
+    horizontal (selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
         .attr("dy", "0.71em")
         .attr("transform", null);
     },
-    vertical: function (selection) {
+    vertical (selection) {
       selection
         .style("text-anchor", "end")
         .attr("dx", "-1em")
         .attr("dy", "-0.75em")
         .attr("transform", "rotate(-90)");
     },
-    diagonal: function (selection) {
+    diagonal (selection) {
       selection
         .style("text-anchor", "end")
         .attr("dx", "-0.8em")

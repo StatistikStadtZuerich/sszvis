@@ -55,10 +55,10 @@ export default function (spaceWidth, numBars) {
 
   return {
     barHeight: roundedBarHeight,
-    padding: padding,
-    totalHeight: totalHeight,
-    positions: positions,
-    maxBarLength: maxBarLength,
-    chartPadding: chartPadding,
+    padding,
+    totalHeight,
+    positions,
+    maxBarLength,
+    chartPadding,
   };
 }

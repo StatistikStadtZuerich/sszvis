@@ -50,7 +50,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.yList = sszvis.set(state.data, yAcc).sort(sortInt);
     state.xList = sszvis.set(state.data, xAcc).sort(sortKreisInt);
@@ -59,17 +59,17 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (datum) {
+  showTooltip(datum) {
     state.selection = [datum];
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

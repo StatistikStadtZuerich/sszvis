@@ -6,7 +6,7 @@
 var queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
+    _(width) {
       var innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
@@ -16,14 +16,10 @@ var queryProps = sszvis
     },
   })
   .prop("legendX", {
-    _: function (width) {
-      return Math.max(width / 2 - 205, 5);
-    },
+    _: (width) => Math.max(width / 2 - 205, 5),
   })
   .prop("radiusMax", {
-    _: function (width) {
-      return Math.min(14, Math.max(width / 28, 10));
-    },
+    _: (width) => Math.min(14, Math.max(width / 28, 10)),
   });
 
 function parseRow(d) {
@@ -49,14 +45,14 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareData: function (data) {
+  prepareData(data) {
     state.data = data;
     state.valueRange = [0, d3.max(state.data, valueAcc)];
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_quartiere),
       borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
@@ -65,17 +61,17 @@ var actions = {
     };
     render(state);
   },
-  selectHovered: function (d) {
+  selectHovered(d) {
     state.selection = [d.datum];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

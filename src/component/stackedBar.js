@@ -109,18 +109,18 @@ function stackedBar(config) {
 }
 
 var horizontalStackedBarConfig = {
-  x: function (props) {
+  x (props) {
     return fn.compose(props.xScale, fst);
   },
-  y: function (props) {
+  y (props) {
     return fn.compose(props.yScale, stackAcc);
   },
-  width: function (props) {
+  width (props) {
     return function (d) {
       return props.xScale(d[1]) - props.xScale(d[0]);
     };
   },
-  height: function (props) {
+  height (props) {
     return props.height;
   },
 };
@@ -129,16 +129,16 @@ export var stackedBarHorizontal = function () {
 };
 
 var verticalStackedBarConfig = {
-  x: function (props) {
+  x (props) {
     return fn.compose(props.xScale, stackAcc);
   },
-  y: function (props) {
+  y (props) {
     return fn.compose(props.yScale, snd);
   },
-  width: function (props) {
+  width (props) {
     return props.width;
   },
-  height: function (props) {
+  height (props) {
     return function (d) {
       return props.yScale(d[0]) - props.yScale(d[1]);
     };

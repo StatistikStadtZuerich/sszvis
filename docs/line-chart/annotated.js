@@ -25,7 +25,7 @@ sszvis.app({
         sszvis.contains(HIGHLIGHTED_DATES.map(String), String(xAcc(d)))
       );
     }),
-  render: (state) => {
+  render(state) {
     var bounds = sszvis.bounds({ top: 30, bottom: 45 }, "#sszvis-chart");
 
     // Scales

@@ -21,12 +21,8 @@ var queryProps = sszvis
   })
   .prop("lineChartPadding", {
     palm: 12,
-    lap: function (w) {
-      return w / 10;
-    },
-    _: function (w) {
-      return w / 5;
-    },
+    lap: (w) => w / 10,
+    _: (w) => w / 5,
   });
 
 function parseRow(d) {
@@ -64,7 +60,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.valueDomain = [0, d3.max(state.data, vAcc)];
     state.yearDomain = d3.extent(state.data, yearAcc);
@@ -108,7 +104,7 @@ var actions = {
     actions.resetYear();
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_quartiere),
       borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
@@ -118,7 +114,7 @@ var actions = {
     render(state);
   },
 
-  changeEntityNearDate: function (inputValue, inputDate) {
+  changeEntityNearDate(inputValue, inputDate) {
     // find the closest year to the mouse
     var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
 
@@ -150,7 +146,7 @@ var actions = {
     }
   },
 
-  changeYear: function (inputDate) {
+  changeYear(inputDate) {
     // find the closest year to the mouse
     var closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
 
@@ -172,26 +168,26 @@ var actions = {
   },
 
   // resets the active year
-  resetYear: function () {
+  resetYear() {
     var mostRecentDate = d3.max(state.yearDomain);
     actions.changeYear(mostRecentDate);
   },
 
   // called when moving over map entities with the mouse. Highlights certain entities
-  changeMapEntity: function (d) {
+  changeMapEntity(d) {
     state.highlightEntity = d;
 
     actions.setHighlights();
   },
 
   // reset the highlighted map entity
-  resetMapEntity: function () {
+  resetMapEntity() {
     state.highlightEntity = null;
 
     actions.setHighlights();
   },
 
-  setHighlights: function () {
+  setHighlights() {
     // highlightData passed to the map is slightly different from the data passed to the line chart.
     // When no entity is highlighted, the map shows nothing special, but the line chart shows the average line.
     state.mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
@@ -204,7 +200,7 @@ var actions = {
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -465,9 +461,7 @@ function findEntityWithGeoId(geoId, data) {
 }
 
 function sortWithAcc(acc) {
-  return function (a, b) {
-    return d3.ascending(acc(a), acc(b));
-  };
+  return (a, b) => d3.ascending(acc(a), acc(b));
 }
 
 function tickIsSelected(d) {

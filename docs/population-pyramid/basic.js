@@ -50,7 +50,7 @@ var state = {
 // -----------------------------------------------
 
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.groups = sszvis.set(state.data, gAcc).reverse();
 
@@ -66,7 +66,6 @@ var actions = {
 
     // This example bins the data into five-year age ranges.
     // It uses d3.sum to compute the value of a bin.
-
     // compute bins
     var binnedData = [],
       // The number of data points to include in each bin
@@ -121,7 +120,7 @@ var actions = {
     render(state);
   },
 
-  selectBar: function (x, age) {
+  selectBar(x, age) {
     // use the age lookup index to figure out which age range is closest
     // to the mouse
     var nearestAgeRange = findNearestAgeRange(age, state.ageLookupIndex);
@@ -131,18 +130,18 @@ var actions = {
     // set the data for the tooltip
     state.selectedAge = {
       age: nearestAgeRange,
-      rows: rows,
+      rows,
     };
 
     render(state);
   },
 
-  deselectBar: function () {
+  deselectBar() {
     state.selectedAge = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -293,13 +292,12 @@ function render(state) {
 // -----------------------------------------------
 
 function isWithinBarContour(binnedData, xCenter, xRelToPx, lengthScale) {
-  return function (xRel, age) {
+  return (xRel, age) => {
     var ageBin = findNearestAgeRange(age, state.ageLookupIndex);
     var dataRow = binnedData.filter((d) => aAcc(d) === ageBin);
     var x = xRelToPx(xRel);
     return sszvis.every(
-      (d) =>
-        isLeft(d) ? x >= xCenter - lengthScale(vAcc(d)) : x <= xCenter + lengthScale(vAcc(d)),
+      (d) => isLeft(d) ? x >= xCenter - lengthScale(vAcc(d)) : x <= xCenter + lengthScale(vAcc(d)),
       dataRow
     );
   };

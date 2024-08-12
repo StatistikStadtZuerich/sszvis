@@ -6,9 +6,7 @@
 var queryProps = sszvis
   .responsiveProps()
   .prop("xLabelFormat", {
-    _: function () {
-      return sszvis.formatText;
-    },
+    _: () => sszvis.formatText,
   })
   .prop("yTicks", {
     _: null,
@@ -50,7 +48,7 @@ var state = {
 // -----------------------------------------------
 
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.regions = sszvis.set(state.data, xAcc);
     state.valueExtent = zeroBasedAxisDomain(d3.extent(state.data, yAcc));
@@ -62,17 +60,17 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (x) {
+  showTooltip(x) {
     state.selection = state.groupedData.filter((d) => sszvis.contains(d.map(xAcc), x));
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -120,14 +118,11 @@ function render(state) {
 
   var yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
 
-  var yPosScale = function (v) {
-    return Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
-  };
+  var yPosScale = (v) => Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
 
-  var hScale = function (v) {
+  var hScale = (v) =>
     // the size of the bar is distance from the y-position of the value to the y-position of 0
-    return Math.abs(yScale(v) - yScale(0));
-  };
+    Math.abs(yScale(v) - yScale(0));
 
   // Layers
 

@@ -7,7 +7,7 @@ var MAX_LEGEND_WIDTH = 320;
 var queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
+    _(width) {
       var innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
@@ -17,9 +17,7 @@ var queryProps = sszvis
     },
   })
   .prop("legendWidth", {
-    _: function (width) {
-      return Math.min(width / 2, MAX_LEGEND_WIDTH);
-    },
+    _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
   });
 
 function parseRow(d) {
@@ -42,55 +40,50 @@ sszvis.app({
 
   // Init
   // -----------------------------------------------
-  init: function (state) {
-    return Promise.all([
-      d3.csv(config.data, parseRow),
-      d3.json("../static/topo/stadt-zurich.json"),
-    ]).then((result) => {
-      const data = result[0];
-      const topo = result[1];
-      state.data = data;
-      state.mapData = {
-        features: topojson.feature(topo, topo.objects.wahlkreise),
-        borders: topojson.mesh(topo, topo.objects.wahlkreise),
-        lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
-        lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
-      };
-      state.selection = [];
-      state.valueDomain = [0, 1];
-    });
-  },
+  init: (state) => Promise.all([
+    d3.csv(config.data, parseRow),
+    d3.json("../static/topo/stadt-zurich.json"),
+  ]).then((result) => {
+    const data = result[0];
+    const topo = result[1];
+    state.data = data;
+    state.mapData = {
+      features: topojson.feature(topo, topo.objects.wahlkreise),
+      borders: topojson.mesh(topo, topo.objects.wahlkreise),
+      lakeFeatures: topojson.mesh(topo, topo.objects.lakezurich),
+      lakeBorders: topojson.mesh(topo, topo.objects.wahlkreis_lakebounds),
+    };
+    state.selection = [];
+    state.valueDomain = [0, 1];
+  }),
 
   // Actions
   // -----------------------------------------------
   actions: {
-    selectHovered: function (state, d) {
+    selectHovered(state, d) {
       state.selection = [d.datum];
     },
 
-    deselectHovered: function (state) {
+    deselectHovered(state) {
       state.selection = [];
     },
   },
 
   // Render
   // -----------------------------------------------
-  render: function (state, actions) {
+  render(state, actions) {
     var props = queryProps(sszvis.measureDimensions(config.id));
     var bounds = sszvis.bounds(props.bounds, config.id);
 
     // Scales
-
     var colorScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
     // Layers
-
     var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
     var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
     // Components
-
     var choroplethMap = sszvis
       .choropleth()
       .features(state.mapData.features)
@@ -130,7 +123,6 @@ sszvis.app({
       .labelFormat(sszvis.formatFractionPercent);
 
     // Rendering
-
     chartLayer
       .attr("transform", sszvis.translateString(bounds.padding.left, bounds.padding.top))
       .call(choroplethMap);
@@ -146,7 +138,6 @@ sszvis.app({
       .call(legend);
 
     // Interaction
-
     var interactionLayer = sszvis
       .panning()
       .elementSelector(".sszvis-map__area")
@@ -162,7 +153,5 @@ sszvis.app({
 // -----------------------------------------------
 
 function isSelected(state) {
-  return function (d) {
-    return state.selection.includes(d.datum);
-  };
+  return (d) => state.selection.includes(d.datum);
 }

@@ -9,7 +9,7 @@ var MAX_LEGEND_WIDTH = 320;
 var queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
+    _(width) {
       // The calculation of the rastermap bounds is a bit more complex due to the fact
       // that we have to deal with a raster image in the background that has a bigger
       // size than the vector map.
@@ -47,14 +47,10 @@ var queryProps = sszvis
     },
   })
   .prop("legendWidth", {
-    _: function (width) {
-      return Math.min(width / 2, MAX_LEGEND_WIDTH);
-    },
+    _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
   })
   .prop("controlWidth", {
-    _: function (width) {
-      return Math.max(200, Math.min(MAX_LEGEND_WIDTH, width / 2));
-    },
+    _: (width) => Math.max(200, Math.min(MAX_LEGEND_WIDTH, width / 2)),
   });
 
 function parseRow(d) {
@@ -83,7 +79,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareData: function (data) {
+  prepareData(data) {
     state.data = data;
     // Ignore the domain of the random data
     state.valueDomain = d3.extent(data, kinderAcc);
@@ -91,7 +87,7 @@ var actions = {
     actions.setKey(null, DEFAULT_KEY);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.stadtkreise),
       borders: topojson.mesh(topo, topo.objects.stadtkreise),
@@ -101,13 +97,13 @@ var actions = {
     render(state);
   },
 
-  setKey: function (e, key) {
+  setKey(_event, key) {
     state.currentKey = key;
 
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

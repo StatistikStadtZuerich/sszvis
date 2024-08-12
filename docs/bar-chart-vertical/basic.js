@@ -22,9 +22,7 @@ var queryProps = sszvis
     _: "horizontal",
   })
   .prop("yLabelFormat", {
-    _: function () {
-      return sszvis.formatNumber;
-    },
+    _: () => sszvis.formatNumber,
   });
 
 function parseRow(d) {
@@ -47,23 +45,23 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.categories = state.data.map(xAcc);
     render();
   },
 
-  showTooltip: function (e, category) {
+  showTooltip(e, category) {
     state.selection = state.data.filter((d) => xAcc(d) === category);
     render();
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selection = [];
     render();
   },
 
-  resize: function () {
+  resize() {
     render();
   },
 };
@@ -200,7 +198,5 @@ function isSelected(d) {
 }
 
 function nanFallback(fallbackyValue) {
-  return function (d) {
-    return Number.isNaN(d) ? fallbackyValue : d;
-  };
+  return (d) => (d == undefined || Number.isNaN(d) ? fallbackyValue : d);
 }

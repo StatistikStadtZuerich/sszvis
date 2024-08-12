@@ -76,7 +76,7 @@ var trigger = function (name) {
 };
 
 export var viewport = {
-  on: on,
-  off: off,
-  trigger: trigger,
+  on,
+  off,
+  trigger,
 };

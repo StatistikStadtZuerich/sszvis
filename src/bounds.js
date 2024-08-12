@@ -79,9 +79,9 @@ export function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
   return {
     innerHeight: height - padding.top - padding.bottom,
     innerWidth: width - padding.left - padding.right,
-    padding: padding,
-    height: height,
-    width: width,
+    padding,
+    height,
+    width,
     screenWidth: dimensions.screenWidth,
     screenHeight: dimensions.screenHeight,
   };

@@ -5,12 +5,12 @@
   var BAR_WIDTH = 80;
   var BAR_HEIGHT = 80;
 
-  global.colorSwatchFromLinearScale = function (containerId, scale, numBars) {
+  global.colorSwatchFromLinearScale = (containerId, scale, numBars) => {
     scale.domain([0, numBars - 1]);
     renderSwatch(containerId, d3.range(0, numBars).map(scale));
   };
 
-  global.colorSwatchFromColors = function (containerId, colors) {
+  global.colorSwatchFromColors = (containerId, colors) => {
     renderSwatch(containerId, colors.map(String));
   };
 

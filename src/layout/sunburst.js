@@ -119,9 +119,9 @@ export var computeLayout = function (numLayers, chartWidth) {
   var ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
 
   return {
-    centerRadius: centerRadius,
-    numLayers: numLayers,
-    ringWidth: ringWidth,
+    centerRadius,
+    numLayers,
+    ringWidth,
   };
 };
 

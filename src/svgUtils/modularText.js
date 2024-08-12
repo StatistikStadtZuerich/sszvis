@@ -36,13 +36,13 @@ import * as fn from "../fn.js";
 
 function formatHTML() {
   var styles = {
-    plain: function (d) {
+    plain (d) {
       return d;
     },
-    italic: function (d) {
+    italic (d) {
       return "<em>" + d + "</em>";
     },
-    bold: function (d) {
+    bold (d) {
       return "<strong>" + d + "</strong>";
     },
   };
@@ -57,13 +57,13 @@ function formatHTML() {
 
 function formatSVG() {
   var styles = {
-    plain: function (d) {
+    plain (d) {
       return "<tspan>" + d + "</tspan>";
     },
-    italic: function (d) {
+    italic (d) {
       return '<tspan style="font-style:italic">' + d + "</tspan>";
     },
-    bold: function (d) {
+    bold (d) {
       return '<tspan style="font-weight:bold">' + d + "</tspan>";
     },
   };
@@ -81,18 +81,18 @@ function structuredText() {
   var lines = [[]];
 
   return {
-    addLine: function () {
+    addLine () {
       lines.push([]);
     },
 
-    addWord: function (style, text) {
+    addWord (style, text) {
       fn.last(lines).push({
         text: fn.functor(text),
-        style: style,
+        style,
       });
     },
 
-    lines: function () {
+    lines () {
       return lines;
     },
   };

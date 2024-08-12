@@ -12,9 +12,7 @@ var queryProps = sszvis
     _: null,
   })
   .prop("xLabelFormat", {
-    _: function () {
-      return sszvis.formatYear;
-    },
+    _: () => sszvis.formatYear,
   })
   .prop("yAxisLabel", {
     _: "",
@@ -53,7 +51,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.timeExtent = d3.extent(state.data, xAcc);
     state.categories = sszvis.set(state.data, cAcc);
@@ -91,12 +89,12 @@ var actions = {
     actions.resetDate();
   },
 
-  toggleMultiples: function (g) {
+  toggleMultiples(g) {
     state.isMultiples = g === "Separiert";
     render(state);
   },
 
-  changeDate: function (xValue, yValue) {
+  changeDate(xValue, yValue) {
     var closest = findClosest(state.dates, xValue);
     state.highlightDate = closest;
     state.highlightData = state.stackedData.map((stack) => {
@@ -116,12 +114,12 @@ var actions = {
     render(state);
   },
 
-  resetDate: function () {
+  resetDate() {
     var mostRecent = d3.max(state.data, xAcc);
     actions.changeDate(mostRecent, 0);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

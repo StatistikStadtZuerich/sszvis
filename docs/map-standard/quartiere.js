@@ -6,7 +6,7 @@
 var queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
+    _(width) {
       var innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
@@ -16,17 +16,13 @@ var queryProps = sszvis
     },
   })
   .prop("legendWidth", {
-    _: function (width) {
-      return Math.min(width / 2, 320);
-    },
+    _: (width) => Math.min(width / 2, 320),
   })
   // Formatting function to use for the legend label. In this example, it defaults
   // to "sszvis.formatPercent" to render values from 0–100 as 0–100%, for other
   // values "sszvis.formatNumber" is maybe more appropriate
   .prop("labelFormat", {
-    _: function () {
-      return sszvis.formatFractionPercent;
-    },
+    _: () => sszvis.formatFractionPercent,
   })
   .prop("tooltipUnit", {
     _: "Ausländeranteil",
@@ -55,14 +51,14 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.valueDomain = [0, d3.max(state.data, vAcc)];
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_quartiere),
       borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
@@ -72,17 +68,17 @@ var actions = {
     render(state);
   },
 
-  selectHovered: function (e, d) {
+  selectHovered(e, d) {
     state.selection = [d.datum];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

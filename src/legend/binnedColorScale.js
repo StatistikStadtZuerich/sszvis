@@ -56,7 +56,7 @@ export default function () {
           x: Math.floor(circleRad + sum),
           w: w + offset,
           c: props.scale(pPrev),
-          p: p,
+          p,
         });
         sum += w;
         pPrev = p;

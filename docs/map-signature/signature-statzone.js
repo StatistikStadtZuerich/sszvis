@@ -6,7 +6,7 @@
 var queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
+    _(width) {
       var innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 90,
@@ -16,27 +16,17 @@ var queryProps = sszvis
     },
   })
   .prop("legendX", {
-    _: function (width) {
-      return Math.max(width / 2 - 205, 5);
-    },
+    _: (width) => Math.max(width / 2 - 205, 5),
   })
   .prop("radiusMax", {
-    _: function (width) {
-      return Math.min(14, Math.max(width / 28, 10));
-    },
+    _: (width) => Math.min(14, Math.max(width / 28, 10)),
   })
   .prop("control", {
-    palm: function () {
-      return sszvis.selectMenu;
-    },
-    _: function () {
-      return sszvis.buttonGroup;
-    },
+    palm: () => sszvis.selectMenu,
+    _: () => sszvis.buttonGroup,
   })
   .prop("controlWidth", {
-    _: function (width) {
-      return Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT);
-    },
+    _: (width) => Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT),
   });
 
 function parseRow(d) {
@@ -68,14 +58,14 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareData: function (data) {
+  prepareData(data) {
     state.data = data;
     state.birthsRange = [0, d3.max(state.data, birthsAcc)];
 
     actions.setFilter(null, state.currentFilter);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_zonen),
       borders: topojson.mesh(topo, topo.objects.statistische_zonen),
@@ -83,7 +73,7 @@ var actions = {
     render(state);
   },
 
-  setFilter: function (e, filterValue) {
+  setFilter(_event, filterValue) {
     state.currentFilter = filterValue;
     var filter = filterValue.toLowerCase().split(" ");
     var gender = filter[0];
@@ -94,17 +84,17 @@ var actions = {
     render(state);
   },
 
-  selectHovered: function (e, d) {
+  selectHovered(_event, d) {
     state.selection = [d.datum];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

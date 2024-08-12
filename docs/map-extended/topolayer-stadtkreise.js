@@ -4,7 +4,7 @@
 // -----------------------------------------------
 
 var queryProps = sszvis.responsiveProps().prop("bounds", {
-  _: function (width) {
+  _(width) {
     // The calculation of the rastermap bounds is a bit more complex due to the fact
     // that we have to deal with a raster image in the background that has a bigger
     // size than the vector map.
@@ -49,11 +49,11 @@ var state = {
 };
 
 var actions = {
-  resize: function () {
+  resize() {
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.stadtkreise),
       borders: topojson.mesh(topo, topo.objects.stadtkreise),

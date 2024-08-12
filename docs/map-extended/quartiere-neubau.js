@@ -4,7 +4,7 @@
 // -----------------------------------------------
 
 var queryProps = sszvis.responsiveProps().prop("bounds", {
-  _: function (width) {
+  _(width) {
     var innerHeight = sszvis.aspectRatioSquare(width);
     return {
       top: 30,
@@ -42,14 +42,14 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareData: function (data) {
+  prepareData(data) {
     state.data = data;
     state.yearRange = d3.extent(data, yearAcc);
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_quartiere),
       borders: topojson.mesh(topo, topo.objects.statistische_quartiere),
@@ -59,24 +59,24 @@ var actions = {
     render(state);
   },
 
-  prepareAdditionalMapData: function (geojson) {
+  prepareAdditionalMapData(geojson) {
     state.additionalMapData = {
       features: geojson,
     };
     render(state);
   },
 
-  selectHovered: function (d) {
+  selectHovered(d) {
     state.selection = [d];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

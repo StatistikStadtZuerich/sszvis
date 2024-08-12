@@ -4,9 +4,7 @@
 // -----------------------------------------------
 var MAX_CONTROL_WIDTH = 300;
 var queryProps = sszvis.responsiveProps().prop("controlWidth", {
-  _: function (width) {
-    return Math.min(width, MAX_CONTROL_WIDTH);
-  },
+  _: (width) => Math.min(width, MAX_CONTROL_WIDTH),
 });
 
 function parseRow(d) {
@@ -35,30 +33,30 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.categories = sszvis.set(state.data, yAcc);
     state.years = sszvis.set(state.data, jAcc);
     actions.selectYear(null, d3.max(state.years));
   },
 
-  selectYear: function (e, year) {
+  selectYear(_event, year) {
     state.selectedYear = year;
     state.selectedData = state.data.filter((d) => jAcc(d) === year);
     render(state);
   },
 
-  showTooltip: function (_, category) {
+  showTooltip(_event, category) {
     state.selected = state.data.filter((d) => yAcc(d) === category);
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selected = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

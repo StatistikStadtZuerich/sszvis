@@ -34,7 +34,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.groups = sszvis.set(state.data, gAcc).reverse();
     state.maxValue = d3.max(state.data, vAcc);
@@ -43,7 +43,7 @@ var actions = {
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

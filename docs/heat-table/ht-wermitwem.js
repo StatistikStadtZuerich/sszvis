@@ -11,9 +11,7 @@
 var BIN_EDGES = [5, 40, 200, 600];
 var MAX_LEGEND_WIDTH = 260;
 var queryProps = sszvis.responsiveProps().prop("legendWidth", {
-  _: function (width) {
-    return Math.min(width * 0.9, MAX_LEGEND_WIDTH);
-  },
+  _: (width) => Math.min(width * 0.9, MAX_LEGEND_WIDTH),
 });
 
 function parseRow(d) {
@@ -41,7 +39,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.manAgeList = sszvis.set(state.data, xAcc);
     state.womAgeList = sszvis.set(state.data, yAcc);
@@ -50,17 +48,17 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (datum) {
+  showTooltip(datum) {
     state.selection = [datum];
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

@@ -41,9 +41,9 @@ export default function (spaceWidth, squarePadding, numX, numY, chartPadding) {
     tableWidth = numX * paddedSide - squarePadding, // subtract the squarePadding at the end
     tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
   return {
-    side: side,
-    paddedSide: paddedSide,
-    padRatio: padRatio,
+    side,
+    paddedSide,
+    padRatio,
     width: tableWidth,
     height: tableHeight,
     centeredOffset: Math.max((availableChartWidth - tableWidth) / 2, 0),

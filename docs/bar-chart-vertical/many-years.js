@@ -13,9 +13,7 @@ var queryProps = sszvis
     _: null,
   })
   .prop("yLabelFormat", {
-    _: function () {
-      return sszvis.formatNumber;
-    },
+    _: () => sszvis.formatNumber,
   });
 
 function parseRow(d) {
@@ -40,25 +38,25 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.categories = sszvis.set(state.data, xAcc);
     state.yearRange = d3.extent(state.data, xAcc);
     render(state);
   },
 
-  changeDate: function (selectedDate) {
+  changeDate(selectedDate) {
     var selectedYear = Math.round(selectedDate);
     state.selection = state.data.filter((v) => xAcc(v) === selectedYear);
     render(state);
   },
 
-  resetDate: function () {
+  resetDate() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

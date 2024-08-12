@@ -7,7 +7,7 @@ var MAX_LEGEND_WIDTH = 320;
 var queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
+    _(width) {
       var innerHeight = Math.min(sszvis.aspectRatio4to3(width), 400);
       return {
         bottom: 40,
@@ -16,9 +16,7 @@ var queryProps = sszvis
     },
   })
   .prop("legendWidth", {
-    _: function (width) {
-      return Math.min(width / 2, MAX_LEGEND_WIDTH);
-    },
+    _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
   });
 
 function parseRow(d) {
@@ -41,14 +39,14 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.valueDomain = [0, d3.max(state.data, vAcc)];
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.cantons),
       borders: topojson.mesh(topo, topo.objects.cantons),
@@ -56,7 +54,7 @@ var actions = {
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

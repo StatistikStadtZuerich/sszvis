@@ -16,9 +16,7 @@ var queryProps = sszvis
     _: "Prozent",
   })
   .prop("xLabelFormat", {
-    _: function () {
-      return sszvis.formatText;
-    },
+    _: () => sszvis.formatText,
   })
   .prop("xSlant", {
     _: null,
@@ -56,7 +54,7 @@ var state = {
 // -----------------------------------------------
 
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.yValues = sszvis.set(state.data, yAcc);
     state.categories = sszvis.set(state.data, cAcc);
@@ -67,17 +65,17 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (datum) {
+  showTooltip(datum) {
     state.selection = [datum];
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

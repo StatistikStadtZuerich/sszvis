@@ -51,10 +51,10 @@ export default function (width, numBars) {
     outerRatio = (width - computedBarSpace) / 2 / (barWidth + padding);
 
   return {
-    barWidth: barWidth,
+    barWidth,
     padWidth: padding,
-    padRatio: padRatio,
-    outerRatio: outerRatio,
+    padRatio,
+    outerRatio,
     barGroupWidth: computedBarSpace,
     totalWidth: width,
   };

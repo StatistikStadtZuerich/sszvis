@@ -75,7 +75,7 @@ export var prepareData = function () {
         }
 
         var item = {
-          id: id,
+          id,
           columnIndex: colIndex, // This is the index of the column containing this node
           nodeIndex: 0, // This will be overwritten at a later stage with the index of this node within its column
           value: 0,
@@ -110,7 +110,7 @@ export var prepareData = function () {
 
       var item = {
         id: newLinkId(),
-        value: value,
+        value,
         src: srcNode,
         srcOffset: 0,
         tgt: tgtNode,
@@ -196,8 +196,8 @@ export var prepareData = function () {
     return {
       nodes: listOfNodes,
       links: listOfLinks,
-      columnTotals: columnTotals,
-      columnLengths: columnLengths,
+      columnTotals,
+      columnLengths,
     };
   };
 
@@ -321,13 +321,13 @@ export var computeLayout = function (columnLengths, columnTotals, columnHeight, 
   var columnRange = [0, columnXMultiplier];
 
   return {
-    valuePadding: valuePadding,
-    nodePadding: nodePadding,
-    columnPaddings: columnPaddings,
-    valueDomain: valueDomain,
-    valueRange: valueRange,
-    nodeThickness: nodeThickness,
-    columnDomain: columnDomain,
-    columnRange: columnRange,
+    valuePadding,
+    nodePadding,
+    columnPaddings,
+    valueDomain,
+    valueRange,
+    nodeThickness,
+    columnDomain,
+    columnRange,
   };
 };

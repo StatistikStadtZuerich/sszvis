@@ -5,7 +5,7 @@
 var queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
+    _(width) {
       var innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 30,
@@ -15,14 +15,10 @@ var queryProps = sszvis
     },
   })
   .prop("legendWidth", {
-    _: function (width) {
-      return Math.min(width / 2, 320);
-    },
+    _: (width) => Math.min(width / 2, 320),
   })
   .prop("labelFormat", {
-    _: function () {
-      return sszvis.formatNumber;
-    },
+    _: () => sszvis.formatNumber,
   })
   .prop("tooltipUnit", {
     _: "Einwohner",
@@ -51,14 +47,14 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.valueDomain = [0, d3.max(state.data, vAcc)];
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.stadtkreise),
       borders: topojson.mesh(topo, topo.objects.stadtkreise),
@@ -69,7 +65,7 @@ var actions = {
   },
 
   // manage which datum is selected. These data are highlighted by the map.
-  selectHovered: function (e, d) {
+  selectHovered(_event, d) {
     if (state.selection[0] === d.datum) {
       return;
     }
@@ -77,7 +73,7 @@ var actions = {
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     if (state.selection.length === 0) {
       return;
     }
@@ -85,7 +81,7 @@ var actions = {
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

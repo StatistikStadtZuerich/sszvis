@@ -19,7 +19,7 @@ var queryProps = sszvis
     _: 2,
   })
   .prop("bounds", {
-    palm: function () {
+    palm() {
       var legendHeight = 182;
       var bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
@@ -30,7 +30,7 @@ var queryProps = sszvis
         height: 20 + 5 * PIE_DIAMETER + 4 * 30 + bottomPadding,
       };
     },
-    lap: function () {
+    lap() {
       var legendHeight = 98;
       var bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
@@ -41,7 +41,7 @@ var queryProps = sszvis
         height: 20 + 3 * PIE_DIAMETER + 2 * 30 + bottomPadding,
       };
     },
-    _: function () {
+    _() {
       var legendHeight = 98;
       var bottomPadding = LEGEND_PADDING + legendHeight + 20;
       return {
@@ -54,25 +54,23 @@ var queryProps = sszvis
     },
   })
   .prop("legendPosition", {
-    palm: function (w) {
-      return function () {
-        return {
-          top: LEGEND_PADDING,
-          left: (w - 2 * 10) / 2 - PIE_DIAMETER / 2,
-        };
-      };
+    palm(w) {
+      return () => ({
+        top: LEGEND_PADDING,
+        left: (w - 2 * 10) / 2 - PIE_DIAMETER / 2,
+      });
     },
-    lap: function () {
-      return function (bounds, g) {
+    lap() {
+      return (bounds, g) => {
         var left = bounds.innerWidth / 2 - g.cx - 10 - pieRadius(g.gw, g.gh);
         return {
           top: LEGEND_PADDING,
-          left: left,
+          left,
         };
       };
     },
-    _: function (w) {
-      return function () {
+    _(w) {
+      return () => {
         var colWidth = Math.min(w, MAX_WIDTH) / 2;
         return {
           top: LEGEND_PADDING,
@@ -82,12 +80,10 @@ var queryProps = sszvis
     },
   })
   .prop("tooltipVisibility", {
-    palm: function () {
-      return function () {
-        return false;
-      };
+    palm() {
+      return () => false;
     },
-    _: function () {
+    _() {
       return isSelected;
     },
   });
@@ -120,7 +116,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     // groups the data into arrays by their 'group' value
     var grouped = sszvis
       .cascade()
@@ -146,21 +142,21 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (datum) {
+  showTooltip(datum) {
     state.hoveredDatum = datum;
     state.selection = state.data.filter((d) => datum.category === d.category);
     state.selectedCategories = state.selection.map(cAcc);
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.hoveredDatum = {};
     state.selection = [];
     state.selectedCategories = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

@@ -9,7 +9,7 @@ var LEGEND_LEFT_PADDING = 25;
 var LEGEND_HEIGHT = 145;
 var LEGEND_WIDTH = 102;
 var queryProps = sszvis.responsiveProps().prop("layout", {
-  palm: function (width) {
+  palm(width) {
     var sidePadding = Math.max((width - PIE_DIAMETER) / 2, 10);
     var diameter = width - 2 * sidePadding;
     var legendHeight = LEGEND_TOP_PADDING + LEGEND_HEIGHT + 20;
@@ -32,26 +32,24 @@ var queryProps = sszvis.responsiveProps().prop("layout", {
       },
     };
   },
-  _: function (width) {
-    return {
-      bounds: {
-        top: 20,
-        bottom: 20,
-        left: 20,
-        right: LEGEND_WIDTH,
-        height: 20 + 20 + PIE_DIAMETER,
-      },
-      pieRadius: PIE_DIAMETER / 2,
-      piePosition: {
-        top: 0,
-        left: width / 2 - (PIE_DIAMETER + LEGEND_LEFT_PADDING + LEGEND_WIDTH) / 2,
-      },
-      legendPosition: {
-        top: PIE_DIAMETER / 2 - LEGEND_HEIGHT / 2,
-        left: PIE_DIAMETER + LEGEND_LEFT_PADDING,
-      },
-    };
-  },
+  _: (width) => ({
+    bounds: {
+      top: 20,
+      bottom: 20,
+      left: 20,
+      right: LEGEND_WIDTH,
+      height: 20 + 20 + PIE_DIAMETER,
+    },
+    pieRadius: PIE_DIAMETER / 2,
+    piePosition: {
+      top: 0,
+      left: width / 2 - (PIE_DIAMETER + LEGEND_LEFT_PADDING + LEGEND_WIDTH) / 2,
+    },
+    legendPosition: {
+      top: PIE_DIAMETER / 2 - LEGEND_HEIGHT / 2,
+      left: PIE_DIAMETER + LEGEND_LEFT_PADDING,
+    },
+  }),
 });
 
 function parseRow(d) {
@@ -78,24 +76,24 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.totalValue = d3.sum(state.data, vAcc);
     state.categories = sszvis.set(state.data, cAcc);
     render(state);
   },
 
-  showTooltip: function (datum) {
+  showTooltip(datum) {
     state.selection = [datum];
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

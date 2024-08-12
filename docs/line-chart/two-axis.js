@@ -22,9 +22,7 @@ var cAcc = sszvis.prop("region");
 
 // a few helpers to distinguish between data that belongs on axis1 (left) and axis2 (right)
 var axis2 = ["Schweiz"]; // the values for "Region" that go in axis2
-var valueIsOnAxis2 = function (d) {
-  return sszvis.contains(axis2, d);
-};
+var valueIsOnAxis2 = (d) => sszvis.contains(axis2, d);
 var datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
 
 sszvis.app({
@@ -47,19 +45,18 @@ sszvis.app({
       state.selection = [];
     }),
   actions: {
-    changeDate: function (state, inputDate) {
+    changeDate(state, inputDate) {
       var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
-      var closestData = state.lineData.map((linePoints) =>
-        sszvis.find((d) => sszvis.stringEqual(xAcc(d), closestDate), linePoints)
+      var closestData = state.lineData.map((linePoints) => sszvis.find((d) => sszvis.stringEqual(xAcc(d), closestDate), linePoints)
       );
       state.selection = closestData.filter(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
     },
 
-    resetDate: function (state) {
+    resetDate(state) {
       state.selection = [];
     },
   },
-  render: (state, actions) => {
+  render(state, actions) {
     var bounds = sszvis.bounds({ top: 30, bottom: 130 }, "#sszvis-chart");
     var props = queryProps(bounds);
 

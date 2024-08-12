@@ -4,7 +4,7 @@
 // -----------------------------------------------
 var SLIDER_CONTROL_HEIGHT = 60;
 var queryProps = sszvis.responsiveProps().prop("xLabelFormat", {
-  _: function () {
+  _ () {
     return sszvis.formatNumber;
   },
 });
@@ -38,7 +38,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState (data) {
     state.data = data;
     state.xExtent = d3.extent(state.data, xAcc);
     state.yMax = d3.max(state.data, yAcc);
@@ -49,13 +49,13 @@ var actions = {
     actions.setQuarter(d3.max(state.quarters));
   },
 
-  setQuarter: function (inputQ) {
+  setQuarter (inputQ) {
     state.activeQuarter = closestDatum(state.quarters, sszvis.identity, inputQ);
 
     render(state);
   },
 
-  resize: function () {
+  resize () {
     render(state);
   },
 };

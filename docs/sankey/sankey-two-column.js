@@ -7,24 +7,20 @@ var MIN_CHART_HEIGHT = 650;
 var queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    palm: function (w) {
-      return {
-        top: 40,
-        left: 0,
-        bottom: 20,
-        right: 0,
-        height: Math.max(sszvis.aspectRatio4to3(w), MIN_CHART_HEIGHT + 40 + 20),
-      };
-    },
-    _: function (w) {
-      return {
-        top: 40,
-        left: w / 4,
-        bottom: 20,
-        right: w / 4,
-        height: Math.max(sszvis.aspectRatio4to3(w), MIN_CHART_HEIGHT + 40 + 20),
-      };
-    },
+    palm: (w) => ({
+      top: 40,
+      left: 0,
+      bottom: 20,
+      right: 0,
+      height: Math.max(sszvis.aspectRatio4to3(w), MIN_CHART_HEIGHT + 40 + 20),
+    }),
+    _: (w) => ({
+      top: 40,
+      left: w / 4,
+      bottom: 20,
+      right: w / 4,
+      height: Math.max(sszvis.aspectRatio4to3(w), MIN_CHART_HEIGHT + 40 + 20),
+    }),
   })
   .prop("labelSide", {
     palm: "inside",
@@ -60,7 +56,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     var leftColIds = sszvis.set(data, sourceAcc);
     var rightColIds = sszvis.set(data, targetAcc);
 
@@ -77,7 +73,7 @@ var actions = {
     render(state);
   },
 
-  onNodeOver: function (d) {
+  onNodeOver(d) {
     state.hoveredNode = d;
     state.linkSourceLabels = d.linksTo;
     state.linkTargetLabels = d.linksFrom;
@@ -87,7 +83,7 @@ var actions = {
     render(state);
   },
 
-  onNodeOut: function () {
+  onNodeOut() {
     state.hoveredNode = null;
     state.linkSourceLabels = [];
     state.linkTargetLabels = [];
@@ -97,21 +93,21 @@ var actions = {
     render(state);
   },
 
-  onLinkOver: function (d) {
+  onLinkOver(d) {
     state.hoveredLink = d;
     state.hoveredNode = null;
 
     render(state);
   },
 
-  onLinkOut: function () {
+  onLinkOut() {
     state.hoveredLink = {};
     state.hoveredNode = null;
 
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };

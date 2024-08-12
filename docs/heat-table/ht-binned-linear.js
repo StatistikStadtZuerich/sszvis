@@ -9,9 +9,7 @@
 // and anything greater than or equal to the last element will be grouped in the last bin
 var BIN_EDGES = d3.range(100, 1000, 100);
 var queryProps = sszvis.responsiveProps().prop("legendWidth", {
-  _: function (width) {
-    return Math.min(width * 0.8, 260);
-  },
+  _: (width) => Math.min(width * 0.8, 260),
 });
 
 function parseRow(d) {
@@ -39,7 +37,7 @@ var state = {
 // State transitions
 // -----------------------------------------------
 var actions = {
-  prepareState: function (data) {
+  prepareState(data) {
     state.data = data;
     state.g1List = sszvis.set(state.data, xAcc);
     state.g2List = sszvis.set(state.data, yAcc);
@@ -48,17 +46,17 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (datum) {
+  showTooltip(datum) {
     state.selection = [datum];
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
