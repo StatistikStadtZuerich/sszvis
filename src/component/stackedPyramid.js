@@ -63,15 +63,13 @@ export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
       .arrayBy(_rowAcc)
       .objectBy(seriesAcc)
       .apply(data)
-      .map(function (rows) {
+      .map((rows) => {
         var keys = Object.keys(rows[0]);
         var side = sideAcc(rows[0][keys[0]][0]);
 
         var stacks = d3Stack()
           .keys(keys)
-          .value(function (x, key) {
-            return valueAcc(x[key][0]);
-          })(rows);
+          .value((x, key) => valueAcc(x[key][0]))(rows);
 
         for (const [i, stack] of stacks.entries()) {
           for (const [row, d] of stack.entries()) {
@@ -88,13 +86,7 @@ export function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
 
     // Compute the max value, for convenience. This value is needed to construct
     // the horizontal scale.
-    sides.maxValue = max(sides, function (side) {
-      return max(side, function (rows) {
-        return max(rows, function (row) {
-          return row[1];
-        });
-      });
-    });
+    sides.maxValue = max(sides, (side) => max(side, (rows) => max(rows, (row) => row[1])));
 
     return sides;
   };
@@ -122,26 +114,18 @@ export function stackedPyramid() {
       // Components
 
       var leftBar = bar()
-        .x(function (d) {
-          return -SPINE_PADDING - props.barWidth(d[1]);
-        })
+        .x((d) => -SPINE_PADDING - props.barWidth(d[1]))
         .y(fn.compose(props.barPosition, rowAcc))
         .height(props.barHeight)
-        .width(function (d) {
-          return props.barWidth(d[1]) - props.barWidth(d[0]);
-        })
+        .width((d) => props.barWidth(d[1]) - props.barWidth(d[0]))
         .fill(fn.compose(props.barFill, dataAcc))
         .tooltipAnchor(props.tooltipAnchor);
 
       var rightBar = bar()
-        .x(function (d) {
-          return SPINE_PADDING + props.barWidth(d[0]);
-        })
+        .x((d) => SPINE_PADDING + props.barWidth(d[0]))
         .y(fn.compose(props.barPosition, rowAcc))
         .height(props.barHeight)
-        .width(function (d) {
-          return props.barWidth(d[1]) - props.barWidth(d[0]);
-        })
+        .width((d) => props.barWidth(d[1]) - props.barWidth(d[0]))
         .fill(fn.compose(props.barFill, dataAcc))
         .tooltipAnchor(props.tooltipAnchor);
 
@@ -177,7 +161,7 @@ export function stackedPyramid() {
 function stackComponent() {
   return component()
     .prop("stackElement")
-    .renderSelection(function (selection) {
+    .renderSelection((selection) => {
       var datum = selection.datum();
       var props = selection.props();
 

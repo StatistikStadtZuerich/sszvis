@@ -163,7 +163,7 @@ function render(state) {
     .xScale(xScale)
     .width(xScale.bandwidth())
     .yScale(yScale)
-    .fill(function (d) {
+    .fill((d) => {
       var color = cScale(cAcc(dataAcc(d)));
       return isSelected(d) ? sszvis.slightlyDarker(color) : color;
     });

@@ -60,9 +60,7 @@ export var prepareData = function () {
 
     const root = hierarchy({ isSunburstRoot: true, values: nested }, fn.prop("values"))
       .sort(sortFn)
-      .sum(function (x) {
-        return x.value ? valueAcc(x.value) : 0;
-      });
+      .sum((x) => (x.value ? valueAcc(x.value) : 0));
 
     partition()(root);
 
@@ -71,9 +69,7 @@ export var prepareData = function () {
     }
 
     // Remove the root element from the data (but it still exists in memory so long as the data is alive)
-    return flatten(root).filter(function (d) {
-      return !d.data.isSunburstRoot;
-    });
+    return flatten(root).filter((d) => !d.data.isSunburstRoot);
   }
 
   main.calculate = function (data) {
@@ -139,12 +135,5 @@ export var computeLayout = function (numLayers, chartWidth) {
  *                                    by the sunburst chart.
  */
 export var getRadiusExtent = function (formattedData) {
-  return [
-    min(formattedData, function (d) {
-      return d.y0;
-    }),
-    max(formattedData, function (d) {
-      return d.y1;
-    }),
-  ];
+  return [min(formattedData, (d) => d.y0), max(formattedData, (d) => d.y1)];
 };

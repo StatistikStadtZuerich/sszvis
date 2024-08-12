@@ -44,16 +44,12 @@ var actions = {
 
   selectYear: function (e, year) {
     state.selectedYear = year;
-    state.selectedData = state.data.filter(function (d) {
-      return jAcc(d) === year;
-    });
+    state.selectedData = state.data.filter((d) => jAcc(d) === year);
     render(state);
   },
 
   showTooltip: function (_, category) {
-    state.selected = state.data.filter(function (d) {
-      return yAcc(d) === category;
-    });
+    state.selected = state.data.filter((d) => yAcc(d) === category);
     render(state);
   },
 
@@ -116,9 +112,7 @@ function render(state) {
     .width(sszvis.compose(widthScale, xAcc))
     .height(chartDimensions.barHeight)
     .centerTooltip(true)
-    .fill(function (d) {
-      return isSelected(d) ? cScaleDark(d) : cScale(d);
-    });
+    .fill((d) => (isSelected(d) ? cScaleDark(d) : cScale(d)));
 
   var xAxis = sszvis.axisX().scale(widthScale).orient("bottom").alignOuterLabels(true);
 
@@ -126,9 +120,9 @@ function render(state) {
     .ordinal()
     .scale(yScale)
     .orient("right")
-    .highlightTick(function (d) {
-      return sszvis.contains(state.selected.map(sszvis.compose(String, yAcc)), String(d));
-    });
+    .highlightTick((d) =>
+      sszvis.contains(state.selected.map(sszvis.compose(String, yAcc)), String(d))
+    );
 
   var buttonGroup = sszvis
     .buttonGroup()
@@ -137,11 +131,9 @@ function render(state) {
     .current(state.selectedYear)
     .change(actions.selectYear);
 
-  var tooltipHeader = sszvis.modularTextHTML().bold(
-    sszvis.compose(function (d) {
-      return Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d);
-    }, xAcc)
-  );
+  var tooltipHeader = sszvis
+    .modularTextHTML()
+    .bold(sszvis.compose((d) => (Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d)), xAcc));
 
   var tooltip = sszvis
     .tooltip()
@@ -196,9 +188,10 @@ function render(state) {
 }
 
 function isWithinBarContour(xValue, category) {
-  var barDatum = sszvis.find(function (d) {
-    return jAcc(d) === state.selectedYear && yAcc(d) === category;
-  }, state.data);
+  var barDatum = sszvis.find(
+    (d) => jAcc(d) === state.selectedYear && yAcc(d) === category,
+    state.data
+  );
   return sszvis.util.testBarThreshold(xValue, barDatum, xAcc, 2000);
 }
 

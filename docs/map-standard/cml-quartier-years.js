@@ -73,21 +73,17 @@ var actions = {
     var cascadedData = sszvis
       .cascade()
       .arrayBy(geoIdAcc)
-      .sort(function (a, b) {
-        return d3.ascending(yearAcc(a), yearAcc(b));
-      })
+      .sort((a, b) => d3.ascending(yearAcc(a), yearAcc(b)))
       .apply(state.data);
 
     // transform the data into line objects, one for each line
-    state.lineData = cascadedData.map(function (lineData) {
-      return {
-        geoId: geoIdAcc(sszvis.first(lineData)),
-        values: lineData,
-      };
-    });
+    state.lineData = cascadedData.map((lineData) => ({
+      geoId: geoIdAcc(sszvis.first(lineData)),
+      values: lineData,
+    }));
 
     // calculate a line which represents the average values in the dataset
-    var averageLineValues = cascadedData.reduce(function (m, lineData) {
+    var averageLineValues = cascadedData.reduce((m, lineData) => {
       for (const [index, datum] of lineData.entries()) {
         if (!m[index]) {
           m[index] = {
@@ -128,9 +124,7 @@ var actions = {
 
     // within the closest year's data values, find the one closest to the mouse position
     var entitiesForYear = state.data
-      .filter(function (d) {
-        return sszvis.stringEqual(closestYear, yearAcc(d));
-      })
+      .filter((d) => sszvis.stringEqual(closestYear, yearAcc(d)))
       // entries have to be sorted so that d3.bisector will work on it.
       .sort(sortWithAcc(vAcc));
 
@@ -147,9 +141,10 @@ var actions = {
       // select the entity's sibling from the currently selected year instead
       // of from what's near the mouse in order to highlight the correct
       // entity on the ruler
-      state.highlightEntity = sszvis.find(function (d) {
-        return geoIdAcc(d) === geoIdAcc(closestEntity);
-      }, state.currentMapData);
+      state.highlightEntity = sszvis.find(
+        (d) => geoIdAcc(d) === geoIdAcc(closestEntity),
+        state.currentMapData
+      );
 
       actions.setHighlights();
     }
@@ -163,9 +158,7 @@ var actions = {
     if (state.currentYear !== closestYear) {
       state.currentYear = closestYear;
       state.currentMapData = state.data
-        .filter(function (v) {
-          return yearAcc(v).getFullYear() === state.currentYear.getFullYear();
-        })
+        .filter((v) => yearAcc(v).getFullYear() === state.currentYear.getFullYear())
         // currentMapData has to be sorted so that d3.bisector will work on it.
         .sort(sortWithAcc(vAcc));
 
@@ -204,9 +197,9 @@ var actions = {
     state.mapHighlightData = state.highlightEntity ? [state.highlightEntity] : [];
     state.lineHighlightData = state.highlightEntity
       ? [state.highlightEntity]
-      : state.averageLine.values.filter(function (averageObj) {
-          return yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear();
-        });
+      : state.averageLine.values.filter(
+          (averageObj) => yearAcc(averageObj).getFullYear() === state.currentYear.getFullYear()
+        );
 
     render(state);
   },
@@ -309,7 +302,7 @@ function render(state) {
     .valuesAccessor(sszvis.prop("values"))
     .x(sszvis.compose(xScale, yearAcc))
     .y(sszvis.compose(yScale, vAcc))
-    .stroke(function (lineData) {
+    .stroke((lineData) => {
       // this function determines whether the line is the highlighted line or not
       var isBlue;
       isBlue = state.highlightEntity
@@ -332,9 +325,7 @@ function render(state) {
   var rulerLabel = sszvis
     .modularTextSVG()
     .bold(sszvis.compose(sszvis.formatNumber, vAcc))
-    .plain(function (d) {
-      return d.isAverageValue ? "Durchschnitt" : d.name;
-    });
+    .plain((d) => (d.isAverageValue ? "Durchschnitt" : d.name));
 
   // The bar which marks the current year and shows the value of the highlighted entity
   var handleRuler = sszvis
@@ -343,9 +334,7 @@ function render(state) {
     .y(sszvis.compose(yScale, vAcc))
     .top(0)
     .bottom(lineChartBounds.innerHeight)
-    .flip(function (d) {
-      return xScale(yearAcc(d)) >= lineChartBounds.innerWidth / 2;
-    })
+    .flip((d) => xScale(yearAcc(d)) >= lineChartBounds.innerWidth / 2)
     .color(sszvis.scaleQual12())
     .label(rulerLabel);
 
@@ -358,12 +347,10 @@ function render(state) {
     .renderInto(tooltipLayer)
     .orientation(sszvis.fitTooltip("bottom", outerBounds))
     .header(tooltipHeader)
-    .body(function (d) {
-      return [
-        ["Jahr", sszvis.formatYear(yearAcc(mDatumAcc(d)))],
-        ["Einwohner", sszvis.formatNumber(vAcc(mDatumAcc(d)))],
-      ];
-    })
+    .body((d) => [
+      ["Jahr", sszvis.formatYear(yearAcc(mDatumAcc(d)))],
+      ["Einwohner", sszvis.formatNumber(vAcc(mDatumAcc(d)))],
+    ])
     .visible(entityIsSelected);
 
   var legend = sszvis
@@ -391,7 +378,7 @@ function render(state) {
     .call(lineMaker);
 
   // this sorts the highlighted line to the front of all lines
-  lineChart.selectAll(".sszvis-line").sort(function (a, b) {
+  lineChart.selectAll(".sszvis-line").sort((a, b) => {
     var highlightId = state.highlightEntity ? state.highlightEntity.geoId : null;
     return a.geoId === highlightId ? 1 : b.geoId === highlightId ? -1 : 0;
   });
@@ -429,13 +416,13 @@ function render(state) {
   var interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-map__area")
-    .on("start", function (d) {
+    .on("start", (d) => {
       actions.changeMapEntity(d.datum);
     })
-    .on("pan", function (d) {
+    .on("pan", (d) => {
       actions.changeMapEntity(d.datum);
     })
-    .on("end", function () {
+    .on("end", () => {
       actions.resetMapEntity();
     });
 
@@ -453,7 +440,7 @@ function render(state) {
     .draggable(true)
     .cancelScrolling(true)
     .on("drag", actions.changeYear)
-    .on("move", function (date, entity) {
+    .on("move", (date, entity) => {
       actions.changeEntityNearDate(entity, date);
     })
     .on("end", actions.resetMapEntity);
@@ -474,9 +461,7 @@ function closestDatum(data, accessor, value) {
 }
 
 function findEntityWithGeoId(geoId, data) {
-  return sszvis.find(function (d) {
-    return geoIdAcc(d) === geoId;
-  }, data);
+  return sszvis.find((d) => geoIdAcc(d) === geoId, data);
 }
 
 function sortWithAcc(acc) {

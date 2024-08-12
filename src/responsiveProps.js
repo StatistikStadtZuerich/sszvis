@@ -78,7 +78,7 @@ export function responsiveProps() {
     if (!fn.isObject(measurement) || !isBounds(measurement)) {
       logger.warn("Could not determine the current breakpoint, returning the default props");
       // We choose the _ option for all configured props as a default.
-      return Object.keys(propsConfig).reduce(function (memo, val, key) {
+      return Object.keys(propsConfig).reduce((memo, val, key) => {
         memo[key] = val._;
         return memo;
       }, {});
@@ -87,7 +87,7 @@ export function responsiveProps() {
     // Finds out which breakpoints the provided measurements match up with
     var matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
 
-    return Object.keys(propsConfig).reduce(function (memo, propKey) {
+    return Object.keys(propsConfig).reduce((memo, propKey) => {
       var propSpec = propsConfig[propKey];
 
       if (!validatePropSpec(propSpec, breakpointSpec)) {
@@ -102,9 +102,7 @@ export function responsiveProps() {
 
       // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
       // This function should always at least find '_' at the end of the array.
-      var matchedBreakpoint = fn.find(function (bp) {
-        return fn.defined(propSpec[bp.name]);
-      }, matchingBreakpoints);
+      var matchedBreakpoint = fn.find((bp) => fn.defined(propSpec[bp.name]), matchingBreakpoints);
       // the value in the query object for that property equals the propSpec value as a functor,
       // invoked if necessary with the current width. Providing the width allows aspect ratio
       // calculations based on element width.
@@ -218,7 +216,7 @@ function isBounds(arg1) {
  * @returns {object} Same as input object but with all values transformed to fn.functors
  */
 function functorizeValues(obj) {
-  return Object.keys(obj).reduce(function (memo, key) {
+  return Object.keys(obj).reduce((memo, key) => {
     memo[key] = fn.functor(obj[key]);
     return memo;
   }, {});

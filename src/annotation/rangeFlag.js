@@ -46,9 +46,10 @@ export default function () {
         .data(data)
         .call(makeFlagDot("top", crispX, crispY1));
 
-      var ta = tooltipAnchor().position(function (d) {
-        return [crispX(d), halfPixel((props.y0(d) + props.y1(d)) / 2)];
-      });
+      var ta = tooltipAnchor().position((d) => [
+        crispX(d),
+        halfPixel((props.y0(d) + props.y1(d)) / 2),
+      ]);
 
       selection.call(ta);
     });

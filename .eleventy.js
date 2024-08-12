@@ -39,9 +39,9 @@ module.exports = function (eleventyConfig) {
     return code;
   });
 
-  eleventyConfig.addTransform("prettify", function (content, outputPath) {
-    return outputPath.endsWith(".html") ? prettier.format(content, { parser: "html" }) : content;
-  });
+  eleventyConfig.addTransform("prettify", (content, outputPath) =>
+    outputPath.endsWith(".html") ? prettier.format(content, { parser: "html" }) : content
+  );
 
   return {
     dir: {

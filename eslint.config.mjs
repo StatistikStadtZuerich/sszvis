@@ -19,6 +19,17 @@ export default [
   eslintPluginUnicorn.configs["flat/recommended"],
   {
     rules: {
+      "no-unused-vars": "off",
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+        },
+      ],
       "unicorn/better-regex": "warn",
       "unicorn/filename-case": "off",
       "unicorn/prevent-abbreviations": "off",
@@ -35,21 +46,8 @@ export default [
       "unicorn/no-this-assignment": "off",
       "unicorn/prefer-top-level-await": "off",
       "sonarjs/no-duplicate-string": "off",
-    },
-  },
-  {
-    rules: {
-      "no-unused-vars": "off",
-      "unused-imports/no-unused-imports": "error",
-      "unused-imports/no-unused-vars": [
-        "warn",
-        {
-          vars: "all",
-          varsIgnorePattern: "^_",
-          args: "after-used",
-          argsIgnorePattern: "^_",
-        },
-      ],
+      "prefer-arrow-callback": "warn",
+      "arrow-body-style": ["warn", "as-needed"],
     },
   },
 ];

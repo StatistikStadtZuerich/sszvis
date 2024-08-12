@@ -100,7 +100,7 @@ export default function () {
 
       var arcs = selection
         .selectAll(".sszvis-sunburst-arc")
-        .each(function (d, i) {
+        .each((d, i) => {
           if (data[i]) {
             // x and dx are the current/transitioning values
             // We set these here, in case any datums already exist which have values set
@@ -119,7 +119,7 @@ export default function () {
 
       arcs.attr("stroke", props.stroke).attr("fill", getColorRecursive);
 
-      arcs.transition(defaultTransition()).attrTween("d", function (d) {
+      arcs.transition(defaultTransition()).attrTween("d", (d) => {
         var x0Interp = interpolate(d.x0, d._x0);
         var x1Interp = interpolate(d.x1, d._x1);
         return function (t) {
@@ -130,7 +130,7 @@ export default function () {
       });
 
       // Add tooltip anchors
-      var arcTooltipAnchor = tooltipAnchor().position(function (d) {
+      var arcTooltipAnchor = tooltipAnchor().position((d) => {
         var startA = startAngle(d);
         var endA = endAngle(d);
         var a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;

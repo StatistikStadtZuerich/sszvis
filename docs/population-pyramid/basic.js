@@ -57,10 +57,10 @@ var actions = {
     var grouper = sszvis
       .cascade()
       .objectBy(gAcc)
-      .sort(function (a, b) {
+      .sort((a, b) =>
         // Sort the groups in order of ascending age
-        return d3.ascending(aAcc(a), aAcc(b));
-      });
+        d3.ascending(aAcc(a), aAcc(b))
+      );
 
     var groupedData = grouper.apply(state.data);
 
@@ -126,9 +126,7 @@ var actions = {
     // to the mouse
     var nearestAgeRange = findNearestAgeRange(age, state.ageLookupIndex);
     // find the binned data rows with that age range
-    var rows = state.binnedData.filter(function (v) {
-      return aAcc(v) === nearestAgeRange;
-    });
+    var rows = state.binnedData.filter((v) => aAcc(v) === nearestAgeRange);
 
     // set the data for the tooltip
     state.selectedAge = {
@@ -187,11 +185,9 @@ function render(state) {
   // For the yAxis, we create a copy of the positionScale that's used for the
   // bars and shift the output range by half the bar height to center the
   // axis labels vertically within the bars
-  var yAxisLabelScale = positionScale.copy().range(
-    pyramidDimensions.positions.map(function (d) {
-      return d + pyramidDimensions.barHeight / 2;
-    })
-  );
+  var yAxisLabelScale = positionScale
+    .copy()
+    .range(pyramidDimensions.positions.map((d) => d + pyramidDimensions.barHeight / 2));
 
   // Layers
 
@@ -203,7 +199,7 @@ function render(state) {
 
   var pyramid = sszvis
     .pyramid()
-    .barFill(function (d) {
+    .barFill((d) => {
       var c = colorScale(gAcc(d));
       return aAcc(d) === state.selectedAge.age ? sszvis.slightlyDarker(c) : c;
     })
@@ -240,19 +236,13 @@ function render(state) {
   var tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
-    .header(function (d) {
-      return aAcc(d) + "-jährige";
-    })
-    .body(function () {
-      var rows = state.selectedAge.rows.map(function (r) {
-        return [gAcc(r), sszvis.formatNumber(vAcc(r))];
-      });
+    .header((d) => aAcc(d) + "-jährige")
+    .body(() => {
+      var rows = state.selectedAge.rows.map((r) => [gAcc(r), sszvis.formatNumber(vAcc(r))]);
       return [...rows, ["Alter", state.selectedAge.age]];
     })
     .orientation(props.tooltipOrientation)
-    .visible(function (d) {
-      return state.selectedAge.age === aAcc(d) && gAcc(d) === "Männer";
-    });
+    .visible((d) => state.selectedAge.age === aAcc(d) && gAcc(d) === "Männer");
 
   // Rendering
 
@@ -305,13 +295,13 @@ function render(state) {
 function isWithinBarContour(binnedData, xCenter, xRelToPx, lengthScale) {
   return function (xRel, age) {
     var ageBin = findNearestAgeRange(age, state.ageLookupIndex);
-    var dataRow = binnedData.filter(function (d) {
-      return aAcc(d) === ageBin;
-    });
+    var dataRow = binnedData.filter((d) => aAcc(d) === ageBin);
     var x = xRelToPx(xRel);
-    return sszvis.every(function (d) {
-      return isLeft(d) ? x >= xCenter - lengthScale(vAcc(d)) : x <= xCenter + lengthScale(vAcc(d));
-    }, dataRow);
+    return sszvis.every(
+      (d) =>
+        isLeft(d) ? x >= xCenter - lengthScale(vAcc(d)) : x <= xCenter + lengthScale(vAcc(d)),
+      dataRow
+    );
   };
 }
 

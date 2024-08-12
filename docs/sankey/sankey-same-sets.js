@@ -169,15 +169,11 @@ function render(state) {
     .sankey()
     .sizeScale(valueScale)
     .columnPosition(columnPosition)
-    .columnLabel(function (columnIndex) {
-      return ["Auszugsquartier", "Einzugsquartier"][columnIndex];
-    })
+    .columnLabel((columnIndex) => ["Auszugsquartier", "Einzugsquartier"][columnIndex])
     .nodeThickness(sankeyLayout.nodeThickness)
     .nodePadding(sankeyLayout.nodePadding)
-    .columnPadding(function (columnIndex) {
-      return sankeyLayout.columnPaddings[columnIndex];
-    })
-    .columnLabelOffset(function (d, i) {
+    .columnPadding((columnIndex) => sankeyLayout.columnPaddings[columnIndex])
+    .columnLabelOffset((d, i) => {
       if (props.labelSide === "inside") {
         return i === 0 ? 28 : -28;
       } else {
@@ -185,26 +181,20 @@ function render(state) {
       }
     })
     .nodeColor(nodeBlue)
-    .linkColor(function (d) {
-      return linkIsSelected(d) ? highlightLinkBlue : linkGrey;
-    })
-    .linkSort(function (a, b) {
-      return linkIsSelected(a) ? 1 : (linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b));
-    })
+    .linkColor((d) => (linkIsSelected(d) ? highlightLinkBlue : linkGrey))
+    .linkSort((a, b) =>
+      linkIsSelected(a) ? 1 : linkIsSelected(b) ? -1 : valueAcc(a) - valueAcc(b)
+    )
     .linkSourceLabels(state.linkSourceLabels)
     .linkTargetLabels(state.linkTargetLabels)
     .linkLabel(formatValue)
     .labelSideSwitch(props.labelSide === "inside")
-    .labelSide(function (columnIndex) {
-      return columnPosition(columnIndex) > bounds.innerWidth / 2 ? "right" : "left";
-    })
-    .labelOpacity(function () {
-      return props.labelSide === "inside" && state.hoveredNode !== null ? 0 : 1;
-    })
+    .labelSide((columnIndex) =>
+      columnPosition(columnIndex) > bounds.innerWidth / 2 ? "right" : "left"
+    )
+    .labelOpacity(() => (props.labelSide === "inside" && state.hoveredNode !== null ? 0 : 1))
     .labelHitBoxSize(props.hitboxSize)
-    .nameLabel(function (id) {
-      return id.slice(2);
-    }); // Remove the leading 'f-' or 't-' from the ids
+    .nameLabel((id) => id.slice(2)); // Remove the leading 'f-' or 't-' from the ids
 
   var linkTooltip = sszvis
     .tooltip()
@@ -217,9 +207,7 @@ function render(state) {
     .renderInto(nodeTooltipLayer)
     .visible(nodeIsHovered)
     .header(sszvis.modularTextHTML().bold(formatValue))
-    .orientation(function (d) {
-      return d.x >= bounds.innerWidth / 2 ? "right" : "left";
-    })
+    .orientation((d) => (d.x >= bounds.innerWidth / 2 ? "right" : "left"))
     .dx(20);
 
   // Rendering

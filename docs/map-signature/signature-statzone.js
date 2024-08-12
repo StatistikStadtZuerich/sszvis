@@ -89,9 +89,7 @@ var actions = {
     var gender = filter[0];
     var year = Number.parseInt(filter[1]);
 
-    state.filteredData = state.data.filter(function (d) {
-      return genderAcc(d) === gender && yearAcc(d) === year;
-    });
+    state.filteredData = state.data.filter((d) => genderAcc(d) === gender && yearAcc(d) === year);
 
     render(state);
   },
@@ -155,9 +153,7 @@ function render(state) {
   var bubbleMap = sszvis
     .mapRendererBubble()
     .fill(sszvis.scaleQual6()(0))
-    .radius(function (d) {
-      return sszvis.defined(d) ? radiusScale(birthsAcc(d)) : 0;
-    })
+    .radius((d) => (sszvis.defined(d) ? radiusScale(birthsAcc(d)) : 0))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
   var choroplethMap = sszvis
@@ -167,20 +163,14 @@ function render(state) {
     .keyName("id")
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
-    .fill(function (d) {
-      return isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0);
-    })
+    .fill((d) => (isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0)))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
     .transitionColor(false)
     .anchoredShape(bubbleMap);
 
-  var tooltipHeader = sszvis.modularTextHTML().plain(function (geod) {
-    return birthsAcc(geod.datum) + " Geburten";
-  });
+  var tooltipHeader = sszvis.modularTextHTML().plain((geod) => birthsAcc(geod.datum) + " Geburten");
 
-  var tooltipBody = sszvis.modularTextHTML().plain(function (geod) {
-    return zoneNameAcc(geod.datum);
-  });
+  var tooltipBody = sszvis.modularTextHTML().plain((geod) => zoneNameAcc(geod.datum));
 
   var tooltip = sszvis
     .tooltip()

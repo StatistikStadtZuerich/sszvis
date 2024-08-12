@@ -32,7 +32,7 @@ var actions = {
     var continentsList = ["Europa", "Asien", "Amerika", "Afrika", "Ozeanien", "Unzuteilbar"];
 
     // Sort the input data according to the desired order of the continents first, then by descending order of size
-    data.sort(function (a, b) {
+    data.sort((a, b) => {
       var indexDiff = d3.ascending(
         continentsList.indexOf(continentAcc(a)),
         continentsList.indexOf(continentAcc(b))
@@ -119,9 +119,7 @@ function render(state) {
     .radiusScale(radiusScale)
     .centerRadius(burstLayout.centerRadius);
 
-  var tooltipText = sszvis.modularTextHTML().bold(function (d) {
-    return d.data.key;
-  });
+  var tooltipText = sszvis.modularTextHTML().bold((d) => d.data.key);
 
   var tooltip = sszvis
     .tooltip()
@@ -129,9 +127,7 @@ function render(state) {
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .visible(isSelected)
     .header(tooltipText)
-    .body(function (d) {
-      return sszvis.formatNumber(d.value);
-    });
+    .body((d) => sszvis.formatNumber(d.value));
 
   // Rendering
 

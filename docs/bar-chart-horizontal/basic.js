@@ -42,9 +42,7 @@ var actions = {
   },
 
   showTooltip: function (_, category) {
-    state.selected = state.data.filter(function (d) {
-      return cAcc(d) === category;
-    });
+    state.selected = state.data.filter((d) => cAcc(d) === category);
     render(state);
   },
 
@@ -119,11 +117,9 @@ function render(state) {
 
   var yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
 
-  var tooltipHeader = sszvis.modularTextHTML().bold(
-    sszvis.compose(function (d) {
-      return Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d);
-    }, xAcc)
-  );
+  var tooltipHeader = sszvis
+    .modularTextHTML()
+    .bold(sszvis.compose((d) => (Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d)), xAcc));
 
   var tooltip = sszvis
     .tooltip()
@@ -171,9 +167,7 @@ function render(state) {
 }
 
 function isWithinBarContour(xValue, category) {
-  var barDatum = sszvis.find(function (d) {
-    return cAcc(d) === category;
-  }, state.data);
+  var barDatum = sszvis.find((d) => cAcc(d) === category, state.data);
   return sszvis.util.testBarThreshold(xValue, barDatum, xAcc, 1000);
 }
 

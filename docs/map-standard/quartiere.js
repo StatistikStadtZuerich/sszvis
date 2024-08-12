@@ -124,18 +124,19 @@ function render(state) {
     .lakeBorders(state.mapData.lakeBorders)
     .keyName("quarternum")
     .highlight(state.selection)
-    .highlightStroke(function (d) {
+    .highlightStroke((d) => {
       // checks for undefined values and makes those white
       var v = vAcc(d);
       return Number.isNaN(v) ? "white" : sszvis.muchDarker(colorScale(vAcc(d)));
     })
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
-    .defined(function (d) {
-      // some of the values are empty in the .csv file. When parsed as a number,
-      // undefined or empty string values become NaN
-      return !Number.isNaN(vAcc(d));
-    })
+    .defined(
+      (d) =>
+        // some of the values are empty in the .csv file. When parsed as a number,
+        // undefined or empty string values become NaN
+        !Number.isNaN(vAcc(d))
+    )
     .fill(sszvis.compose(colorScale, vAcc));
 
   // see the comment by the tooltip in docs/map-standard/kreis.html for more information
@@ -146,22 +147,12 @@ function render(state) {
     .modularTextHTML()
     .plain(
       sszvis.compose(
-        function (v) {
-          return Number.isNaN(v) ? "keine Daten" : sszvis.formatFractionPercent(v);
-        },
+        (v) => (Number.isNaN(v) ? "keine Daten" : sszvis.formatFractionPercent(v)),
         vAcc,
         mDatumAcc
       )
     )
-    .plain(
-      sszvis.compose(
-        function (v) {
-          return Number.isNaN(v) ? null : props.tooltipUnit;
-        },
-        vAcc,
-        mDatumAcc
-      )
-    );
+    .plain(sszvis.compose((v) => (Number.isNaN(v) ? null : props.tooltipUnit), vAcc, mDatumAcc));
 
   var tooltip = sszvis
     .tooltip()

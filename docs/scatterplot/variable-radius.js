@@ -61,9 +61,7 @@ var actions = {
 
     // for the voronoi component to work, the data must first be filtered such that no two vertices
     // fall at exactly the same point.
-    state.voronoiFiltered = sszvis.derivedSet(state.data, function (d) {
-      return xAcc(d) + "__" + yAcc(d);
-    });
+    state.voronoiFiltered = sszvis.derivedSet(state.data, (d) => xAcc(d) + "__" + yAcc(d));
 
     state.xExtent = d3.extent(state.data, xAcc);
     state.yExtent = d3.extent(state.data, yAcc);
@@ -133,9 +131,7 @@ function render(state) {
     .orient("bottom")
     .contour(true)
     .ticks(props.xTicks)
-    .tickFormat(function (d) {
-      return d < 1 ? d.toPrecision(1) : d;
-    })
+    .tickFormat((d) => (d < 1 ? d.toPrecision(1) : d))
     .title(props.xAxisLabel);
 
   var yAxis = sszvis
@@ -151,27 +147,19 @@ function render(state) {
     .legendRadius()
     .scale(rScale)
     .tickValues(props.legendTicks)
-    .tickFormat(function (d) {
-      return Math.round(d * 100) / 100;
-    });
+    .tickFormat((d) => Math.round(d * 100) / 100);
 
   var tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(cAcc)
-    .body(function (d) {
-      return [
-        [props.xAxisLabel, sszvis.formatNumber(xAcc(d))],
-        [props.yAxisLabel, sszvis.formatNumber(yAcc(d))],
-        [props.rLabel, sszvis.formatNumber(rAcc(d))],
-      ];
-    })
-    .visible(function (d) {
-      return sszvis.contains(state.highlightData, d);
-    })
-    .orientation(function (d) {
-      return xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right";
-    });
+    .body((d) => [
+      [props.xAxisLabel, sszvis.formatNumber(xAcc(d))],
+      [props.yAxisLabel, sszvis.formatNumber(yAcc(d))],
+      [props.rLabel, sszvis.formatNumber(rAcc(d))],
+    ])
+    .visible((d) => sszvis.contains(state.highlightData, d))
+    .orientation((d) => (xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right"));
 
   // Rendering
 

@@ -120,9 +120,7 @@ function render(state) {
   var bubbleMap = sszvis
     .mapRendererBubble()
     .fill(sszvis.scaleQual6()(0))
-    .radius(function (d) {
-      return sszvis.defined(d) ? radiusScale(valueAcc(d)) : 0;
-    })
+    .radius((d) => (sszvis.defined(d) ? radiusScale(valueAcc(d)) : 0))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
   var choroplethMap = sszvis
@@ -134,9 +132,7 @@ function render(state) {
     .keyName("id")
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
-    .fill(function (d) {
-      return isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0);
-    })
+    .fill((d) => (isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0)))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
     .transitionColor(false)
     .anchoredShape(bubbleMap);

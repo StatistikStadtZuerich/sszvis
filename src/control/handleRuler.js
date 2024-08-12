@@ -76,9 +76,7 @@ export default function () {
 
       group
         .selectAll(".sszvis-handleRuler__handle")
-        .attr("x", function (d) {
-          return crispX(d) - handleWidth / 2;
-        })
+        .attr("x", (d) => crispX(d) - handleWidth / 2)
         .attr("y", halfPixel(handleTop))
         .attr("width", handleWidth)
         .attr("height", handleHeight)
@@ -125,18 +123,16 @@ export default function () {
 
       selection
         .selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline")
-        .attr("transform", function (d) {
+        .attr("transform", (d) => {
           var x = fn.compose(halfPixel, props.x)(d);
           var y = fn.compose(halfPixel, props.y)(d);
 
           var dx = props.flip(d) ? -10 : 10;
-          var dy = y < props.top + dy ? 2 * dy : (y > props.bottom - dy ? 0 : 5);
+          var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
 
           return translateString(x + dx, y + dy);
         })
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .html(props.label);
     });
 }

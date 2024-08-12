@@ -54,9 +54,7 @@ var actions = {
   },
 
   showTooltip: function (e, category) {
-    state.selection = state.data.filter(function (d) {
-      return xAcc(d) === category;
-    });
+    state.selection = state.data.filter((d) => xAcc(d) === category);
     render();
   },
 
@@ -130,9 +128,7 @@ function render() {
     .width(xScale.bandwidth())
     .height(sszvis.compose(heightScale, yAcc))
     .centerTooltip(true)
-    .fill(function (d) {
-      return isSelected(d) ? cScaleDark(d) : cScale(d);
-    });
+    .fill((d) => (isSelected(d) ? cScaleDark(d) : cScale(d)));
 
   var xAxis = sszvis.axisX.ordinal().scale(xScale).orient("bottom").slant(props.slant);
 
@@ -144,7 +140,7 @@ function render() {
 
   var tooltipHeader = sszvis
     .modularTextHTML()
-    .bold(function (d) {
+    .bold((d) => {
       var yValue = yAcc(d);
       return Number.isNaN(yValue) ? "keine" : sszvis.formatNumber(yValue);
     })

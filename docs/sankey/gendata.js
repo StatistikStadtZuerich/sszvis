@@ -40,18 +40,11 @@ var quarters = [
 var rand = randomLogNormal(3, 2);
 
 var data = quarters
-  .map(function (q1) {
-    return quarters
-      .filter(function (q2) {
-        return q1 !== q2;
-      })
-      .map(function (q2) {
-        return "f-" + q1 + "," + "t-" + q2 + "," + rand().toPrecision(3);
-      });
-  })
-  .reduce(function (memo, arr) {
-    return [...memo, ...arr];
-  }, [])
+  .flatMap((q1) =>
+    quarters
+      .filter((q2) => q1 !== q2)
+      .map((q2) => "f-" + q1 + "," + "t-" + q2 + "," + rand().toPrecision(3))
+  )
   .join("\n");
 
 process.stdout.write("source,target,value\n");

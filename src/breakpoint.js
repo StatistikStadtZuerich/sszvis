@@ -49,9 +49,7 @@ import * as fn from "./fn.js";
  */
 export function breakpointFind(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
-  return fn.find(function (bp) {
-    return breakpointTest(bp, measurement);
-  }, breakpoints);
+  return fn.find((bp) => breakpointTest(bp, measurement), breakpoints);
 }
 
 /**
@@ -99,9 +97,7 @@ export function breakpointTest(breakpoint, partialMeasurement) {
  */
 export function breakpointMatch(breakpoints, partialMeasurement) {
   var measurement = parseMeasurement(partialMeasurement);
-  return breakpoints.filter(function (bp) {
-    return breakpointTest(bp, measurement);
-  });
+  return breakpoints.filter((bp) => breakpointTest(bp, measurement));
 }
 
 /**

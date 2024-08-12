@@ -39,9 +39,7 @@ export default function () {
 
       var container = selection
         .selectAll(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-buttonGroup"], function (d) {
-          return d;
-        });
+        .data(["sszvis-control-buttonGroup"], (d) => d);
       var newContainer = container
         .enter()
         .append("div")
@@ -66,12 +64,8 @@ export default function () {
 
       buttons
         .style("width", buttonWidth + "px")
-        .classed("selected", function (d) {
-          return d === props.current;
-        })
-        .text(function (d) {
-          return d;
-        })
+        .classed("selected", (d) => d === props.current)
+        .text((d) => d)
         .on("click", props.change);
     });
 }

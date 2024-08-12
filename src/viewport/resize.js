@@ -43,7 +43,7 @@ var callbacks = {
 if (typeof window !== "undefined") {
   select(window).on(
     "resize",
-    throttle(function () {
+    throttle(() => {
       trigger("resize");
     }, 500)
   );
@@ -53,12 +53,7 @@ var on = function (name, cb) {
   if (!callbacks[name]) {
     callbacks[name] = [];
   }
-  callbacks[name] = [
-    ...callbacks[name].filter(function (fn) {
-      return fn !== cb;
-    }),
-    cb,
-  ];
+  callbacks[name] = [...callbacks[name].filter((fn) => fn !== cb), cb];
   return this;
 };
 
@@ -66,9 +61,7 @@ var off = function (name, cb) {
   if (!callbacks[name]) {
     return this;
   }
-  callbacks[name] = callbacks[name].filter(function (fn) {
-    return fn !== cb;
-  });
+  callbacks[name] = callbacks[name].filter((fn) => fn !== cb);
   return this;
 };
 

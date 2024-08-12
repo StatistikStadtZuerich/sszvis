@@ -56,9 +56,7 @@ export function createSvgLayer(selector, bounds, metadata) {
   var viewport = svg
     .merge(svgEnter)
     .selectAll("[data-sszvis-svg-layer]")
-    .data(function () {
-      return [0];
-    });
+    .data(() => [0]);
   var viewportEnter = viewport.enter().append("g").attr("data-sszvis-svg-layer", "");
 
   viewport

@@ -92,9 +92,7 @@ export default function () {
     .prop("nodeColor", fn.functor)
     .prop("linkColor", fn.functor)
     .prop("linkSort", fn.functor)
-    .linkSort(function (a, b) {
-      return a.value - b.value;
-    }) // Default sorts in descending order of value
+    .linkSort((a, b) => a.value - b.value) // Default sorts in descending order of value
     .prop("labelSide", fn.functor)
     .labelSide("left")
     .prop("labelSideSwitch")
@@ -149,9 +147,10 @@ export default function () {
 
       barGroup.call(barGen);
 
-      var barTooltipAnchor = tooltipAnchor().position(function (node) {
-        return [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2];
-      });
+      var barTooltipAnchor = tooltipAnchor().position((node) => [
+        xPosition(node) + xExtent() / 2,
+        yPosition(node) + yExtent(node) / 2,
+      ]);
 
       barGroup.call(barTooltipAnchor);
 
@@ -176,12 +175,10 @@ export default function () {
       columnLabels.exit().remove();
 
       columnLabels
-        .attr("transform", function (d, i) {
-          return translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY);
-        })
-        .text(function (d, i) {
-          return props.columnLabel(i);
-        });
+        .attr("transform", (d, i) =>
+          translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY)
+        )
+        .text((d, i) => props.columnLabel(i));
 
       var columnLabelTicks = barGroup
         .selectAll(".sszvis-sankey-column-label-tick")
@@ -197,12 +194,8 @@ export default function () {
       columnLabelTicks.exit().remove();
 
       columnLabelTicks
-        .attr("x1", function (d, i) {
-          return halfPixel(columnLabelX(i));
-        })
-        .attr("x2", function (d, i) {
-          return halfPixel(columnLabelX(i));
-        })
+        .attr("x1", (d, i) => halfPixel(columnLabelX(i)))
+        .attr("x2", (d, i) => halfPixel(columnLabelX(i)))
         .attr("y1", halfPixel(columnLabelY + 8))
         .attr("y2", halfPixel(columnLabelY + 12));
 
@@ -268,7 +261,7 @@ export default function () {
 
       linksGroup.datum(data.links);
 
-      var linkTooltipAnchor = tooltipAnchor().position(function (link) {
+      var linkTooltipAnchor = tooltipAnchor().position((link) => {
         var bbox = linkBoundingBox(link);
         return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
       });
@@ -295,7 +288,7 @@ export default function () {
       linkSourceLabels.exit().remove();
 
       linkSourceLabels
-        .attr("transform", function (link) {
+        .attr("transform", (link) => {
           var bbox = linkBoundingBox(link);
           return translateString(bbox[0] + 6, bbox[2]);
         })
@@ -318,7 +311,7 @@ export default function () {
       linkTargetLabels.exit().remove();
 
       linkTargetLabels
-        .attr("transform", function (link) {
+        .attr("transform", (link) => {
           var bbox = linkBoundingBox(link);
           return translateString(bbox[1] - 6, bbox[3]);
         })
@@ -346,21 +339,17 @@ export default function () {
       barLabels.exit().remove();
 
       barLabels
-        .text(function (node) {
-          return props.nameLabel(node.id);
-        })
+        .text((node) => props.nameLabel(node.id))
         .attr("text-align", "middle")
-        .attr("text-anchor", function (node) {
-          return getLabelSide(node.columnIndex) === "left" ? "end" : "start";
-        })
-        .attr("x", function (node) {
-          return getLabelSide(node.columnIndex) === "left"
+        .attr("text-anchor", (node) =>
+          getLabelSide(node.columnIndex) === "left" ? "end" : "start"
+        )
+        .attr("x", (node) =>
+          getLabelSide(node.columnIndex) === "left"
             ? xPosition(node) - 6
-            : xPosition(node) + props.nodeThickness + 6;
-        })
-        .attr("y", function (node) {
-          return yPosition(node) + yExtent(node) / 2;
-        })
+            : xPosition(node) + props.nodeThickness + 6
+        )
+        .attr("y", (node) => yPosition(node) + yExtent(node) / 2)
         .style("opacity", props.labelOpacity);
 
       var barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes);
@@ -375,18 +364,14 @@ export default function () {
 
       barLabelHitBoxes
         .attr("fill", "transparent")
-        .attr("x", function (node) {
-          return (
+        .attr(
+          "x",
+          (node) =>
             xPosition(node) +
             (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)
-          );
-        })
-        .attr("y", function (node) {
-          return yPosition(node) - props.nodePadding / 2;
-        })
+        )
+        .attr("y", (node) => yPosition(node) - props.nodePadding / 2)
         .attr("width", props.labelHitBoxSize + props.nodeThickness)
-        .attr("height", function (node) {
-          return yExtent(node) + props.nodePadding;
-        });
+        .attr("height", (node) => yExtent(node) + props.nodePadding);
     });
 }

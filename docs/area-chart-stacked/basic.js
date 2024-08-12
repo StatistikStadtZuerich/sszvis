@@ -65,7 +65,7 @@ var actions = {
         .arrayBy(xAcc)
         .objectBy(cAcc)
         .apply(state.data)
-        .map(function (d) {
+        .map((d) => {
           var r = { xValue: xAcc(d[Object.keys(d)[0]][0]) };
           for (const k of state.categories) {
             r[k] = yAcc(d[k][0]);
@@ -84,9 +84,7 @@ var actions = {
 
     state.maxValue = d3.max(state.data, yAcc);
 
-    state.maxStacked = d3.max(Object.values(dateValues), function (s) {
-      return d3.sum(s, yAcc);
-    });
+    state.maxStacked = d3.max(Object.values(dateValues), (s) => d3.sum(s, yAcc));
 
     state.dates = sszvis.set(state.data, xAcc);
 
@@ -101,21 +99,18 @@ var actions = {
   changeDate: function (xValue, yValue) {
     var closest = findClosest(state.dates, xValue);
     state.highlightDate = closest;
-    state.highlightData = state.stackedData.map(function (stack) {
-      var datum = stack.find(function (d) {
-        return xAcc(d.data).toString() === closest.toString();
-      });
+    state.highlightData = state.stackedData.map((stack) => {
+      var datum = stack.find((d) => xAcc(d.data).toString() === closest.toString());
       var r = { data: datum.data, index: stack.index, key: stack.key };
       r[0] = datum[0];
       r[1] = datum[1];
       return r;
     });
     state.totalHighlightValue =
-      state.highlightData.reduce(function (m, v) {
-        return state.categories.reduce(function (m, category) {
-          return v.data[category] + m;
-        }, m);
-      }, 0) / state.categories.length;
+      state.highlightData.reduce(
+        (m, v) => state.categories.reduce((m, category) => v.data[category] + m, m),
+        0
+      ) / state.categories.length;
     state.mouseYValue = yValue;
 
     render(state);
@@ -176,26 +171,10 @@ function render(state) {
   var stackedArea = sszvis
     .stackedArea()
     .key(sszvis.prop("key"))
-    .x(
-      sszvis.compose(xScale, xAcc, function (d) {
-        return d.data;
-      })
-    )
-    .y0(
-      sszvis.compose(yScale, function (d) {
-        return d[0];
-      })
-    )
-    .y1(
-      sszvis.compose(yScale, function (d) {
-        return d[1];
-      })
-    )
-    .fill(
-      sszvis.compose(cScale, function (d) {
-        return d.key;
-      })
-    );
+    .x(sszvis.compose(xScale, xAcc, (d) => d.data))
+    .y0(sszvis.compose(yScale, (d) => d[0]))
+    .y1(sszvis.compose(yScale, (d) => d[1]))
+    .fill(sszvis.compose(cScale, (d) => d.key));
 
   var topValue;
   topValue = yScale(state.totalHighlightValue);
@@ -205,49 +184,29 @@ function render(state) {
     .top(topValue)
     .bottom(bounds.innerHeight)
     .x(xScale(state.highlightDate))
-    .y0(function (d) {
-      return yScale(d[0]);
-    })
-    .y1(function (d) {
-      return yScale(d[1]);
-    })
-    .label(function (d) {
-      return d.data[d.key];
-    })
+    .y0((d) => yScale(d[0]))
+    .y1((d) => yScale(d[1]))
+    .label((d) => d.data[d.key])
     .total(state.totalHighlightValue)
-    .flip(function () {
-      return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth;
-    });
+    .flip(() => xScale(state.highlightDate) >= 0.5 * bounds.innerWidth);
 
   var tooltipText = sszvis
     .modularTextHTML()
-    .bold(
-      sszvis.compose(sszvis.formatNumber, function (d) {
-        return d.data[d.key];
-      })
-    )
-    .plain(function (d) {
-      return d.key;
-    });
+    .bold(sszvis.compose(sszvis.formatNumber, (d) => d.data[d.key]))
+    .plain((d) => d.key);
 
   var rangeTooltip = sszvis
     .tooltip()
     .header(tooltipText)
-    .orientation(function () {
-      return xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? "right" : "left";
-    })
+    .orientation(() => (xScale(state.highlightDate) >= 0.5 * bounds.innerWidth ? "right" : "left"))
     .renderInto(htmlLayer)
     .visible(true);
 
   var rangeFlag = sszvis
     .annotationRangeFlag()
     .x(xScale(state.highlightDate))
-    .y0(function (d) {
-      return yScale(d[0]);
-    })
-    .y1(function (d) {
-      return yScale(d[1]);
-    });
+    .y0((d) => yScale(d[0]))
+    .y1((d) => yScale(d[1]));
 
   var xAxisTicks = [...xScale.ticks(props.xTicks), state.highlightDate];
 
@@ -258,9 +217,7 @@ function render(state) {
     .tickValues(xAxisTicks)
     .tickFormat(props.xLabelFormat)
     .title(props.xAxisLabel)
-    .highlightTick(function (d) {
-      return sszvis.stringEqual(d, state.highlightDate);
-    })
+    .highlightTick((d) => sszvis.stringEqual(d, state.highlightDate))
     .alignOuterLabels(true);
 
   var yAxisTicks = yScale.ticks(props.yTicks);
@@ -300,11 +257,7 @@ function render(state) {
 
   var flagGroup = chartLayer
     .selectGroup("flag")
-    .datum(
-      state.highlightData.filter(function (v) {
-        return v[0] < state.mouseYValue && v[1] > state.mouseYValue;
-      })
-    )
+    .datum(state.highlightData.filter((v) => v[0] < state.mouseYValue && v[1] > state.mouseYValue))
     .call(rangeFlag);
 
   flagGroup.selectAll("[data-tooltip-anchor]").call(rangeTooltip);

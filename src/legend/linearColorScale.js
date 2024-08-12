@@ -63,15 +63,11 @@ export default function () {
       segments = segments.merge(newSegments);
 
       segments
-        .attr("x", function (d, i) {
-          return i * segWidth - 1;
-        }) // The offsets here cover up half-pixel antialiasing artifacts
+        .attr("x", (d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("y", 0)
         .attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("height", segHeight)
-        .attr("fill", function (d) {
-          return props.scale(d);
-        });
+        .attr("fill", (d) => props.scale(d));
 
       var startEnd = [fn.first(domain), fn.last(domain)];
       var labelText = props.labelText || startEnd;
@@ -86,14 +82,10 @@ export default function () {
       endCaps = endCaps.merge(newEndCaps);
 
       endCaps
-        .attr("cx", function (d, i) {
-          return i * props.width;
-        })
+        .attr("cx", (d, i) => i * props.width)
         .attr("cy", segHeight / 2)
         .attr("r", segHeight / 2)
-        .attr("fill", function (d) {
-          return props.scale(d);
-        });
+        .attr("fill", (d) => props.scale(d));
 
       var labels = selection.selectAll(".sszvis-legend__label").data(labelText);
 
@@ -106,21 +98,17 @@ export default function () {
       var labelPadding = 16;
 
       labels
-        .style("text-anchor", function (d, i) {
-          return i === 0 ? "end" : "start";
-        })
+        .style("text-anchor", (d, i) => (i === 0 ? "end" : "start"))
         .attr("dy", "0.35em") // vertically-center
-        .attr("transform", function (d, i) {
-          return (
+        .attr(
+          "transform",
+          (d, i) =>
             "translate(" +
             (i * props.width + (i === 0 ? -1 : 1) * labelPadding) +
             ", " +
             segHeight / 2 +
             ")"
-          );
-        })
-        .text(function (d, i) {
-          return props.labelFormat(d, i);
-        });
+        )
+        .text((d, i) => props.labelFormat(d, i));
     });
 }

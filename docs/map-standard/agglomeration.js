@@ -50,15 +50,11 @@ var actions = {
       .cascade()
       .arrayBy(cAcc)
       .apply(state.data)
-      .map(function (d) {
-        return {
-          name: cAcc(d[0]),
-          value: d3.min(d, vAcc),
-        };
-      })
-      .sort(function (a, b) {
-        return d3.ascending(catValue(a), catValue(b));
-      });
+      .map((d) => ({
+        name: cAcc(d[0]),
+        value: d3.min(d, vAcc),
+      }))
+      .sort((a, b) => d3.ascending(catValue(a), catValue(b)));
 
     render(state);
   },

@@ -124,26 +124,22 @@ var actions = {
     // groups the data into arrays by their 'group' value
     var grouped = sszvis
       .cascade()
-      .arrayBy(gAcc, function (g1, g2) {
-        return state.groups.indexOf(g1) - state.groups.indexOf(g2);
-      })
+      .arrayBy(gAcc, (g1, g2) => state.groups.indexOf(g1) - state.groups.indexOf(g2))
       .apply(data);
 
     state.data = data;
     // a list of groups
     state.groups = sszvis.set(state.data, gAcc);
     // an index of the total values of the groups. Used for calculating the slice size of each component of the pie chart
-    state.totalValues = grouped.reduce(function (memo, group, i) {
+    state.totalValues = grouped.reduce((memo, group, i) => {
       memo[state.groups[i]] = d3.sum(group, vAcc);
       return memo;
     }, {});
     // map the groups into data objects, with a group name and a set of values
-    state.pieGroups = grouped.map(function (g, i) {
-      return {
-        group: state.groups[i],
-        values: g,
-      };
-    });
+    state.pieGroups = grouped.map((g, i) => ({
+      group: state.groups[i],
+      values: g,
+    }));
     // a list of categories (for the color scale)
     state.categories = sszvis.set(state.data, cAcc);
 
@@ -152,9 +148,7 @@ var actions = {
 
   showTooltip: function (datum) {
     state.hoveredDatum = datum;
-    state.selection = state.data.filter(function (d) {
-      return datum.category === d.category;
-    });
+    state.selection = state.data.filter((d) => datum.category === d.category);
     state.selectedCategories = state.selection.map(cAcc);
     render(state);
   },
@@ -224,9 +218,7 @@ function render(state) {
     .tooltip()
     .renderInto(tooltipLayer)
     .header(cAcc)
-    .body(function (d) {
-      return "Anzahl: " + d.value;
-    })
+    .body((d) => "Anzahl: " + d.value)
     .opacity(tooltipOpacity)
     .visible(props.tooltipVisibility);
 

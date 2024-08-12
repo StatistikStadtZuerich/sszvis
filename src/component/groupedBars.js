@@ -82,16 +82,14 @@ export default function () {
       groups.exit().remove();
       groups = groups.merge(newGroups);
 
-      var barUnits = groups.selectAll("g.sszvis-barunit").data(function (d) {
-        return d;
-      });
+      var barUnits = groups.selectAll("g.sszvis-barunit").data((d) => d);
 
       var newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
 
       barUnits.exit().remove();
       barUnits = barUnits.merge(newBarUnits);
 
-      barUnits.each(function (d, i) {
+      barUnits.each((d, i) => {
         // necessary for the within-group scale
         d.__sszvisGroupedBarIndex__ = i;
       });
@@ -102,18 +100,18 @@ export default function () {
       unitsWithValue.selectAll("*").remove();
 
       //sszsch: fix: reset previously assigned translations
-      unitsWithValue.attr("transform", function () {
-        return translateString(0, 0);
-      });
+      unitsWithValue.attr("transform", () => translateString(0, 0));
 
       unitsWithValue
         .append("rect")
         .classed("sszvis-bar", true)
         .attr("fill", props.fill)
-        .attr("x", function (d) {
-          // first term is the x-position of the group, the second term is the x-position of the bar within the group
-          return props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__);
-        })
+        .attr(
+          "x",
+          (d) =>
+            // first term is the x-position of the group, the second term is the x-position of the bar within the group
+            props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__)
+        )
         .attr("y", props.y)
         .attr("width", inGroupScale.bandwidth())
         .attr("height", props.height);
@@ -122,14 +120,14 @@ export default function () {
 
       unitsWithoutValue.selectAll("*").remove();
 
-      unitsWithoutValue.attr("transform", function (d, i) {
-        return translateString(
+      unitsWithoutValue.attr("transform", (d, i) =>
+        translateString(
           props.groupScale(d) +
             inGroupScale(d.__sszvisGroupedBarIndex__) +
             inGroupScale.bandwidth() / 2,
           props.y(d, i)
-        );
-      });
+        )
+      );
 
       unitsWithoutValue
         .append("line")
@@ -147,7 +145,7 @@ export default function () {
         .attr("x2", -4)
         .attr("y2", 4);
 
-      var ta = tooltipAnchor().position(function (group) {
+      var ta = tooltipAnchor().position((group) => {
         var xTotal = 0;
         var tallest = Infinity;
         for (const [i, d] of group.entries()) {

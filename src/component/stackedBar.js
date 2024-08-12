@@ -48,15 +48,11 @@ function stackedBarData(order) {
       var rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
       // Collect all keys ()
-      var keys = rows.reduce(function (a, row) {
-        return fn.set([...a, ...Object.keys(row)]);
-      }, []);
+      var keys = rows.reduce((a, row) => fn.set([...a, ...Object.keys(row)]), []);
 
       var stacks = d3Stack()
         .keys(keys)
-        .value(function (x, key) {
-          return valueAcc(x[key][0]);
-        })
+        .value((x, key) => valueAcc(x[key][0]))
         .order(order)(rows);
 
       // Simplify the 'data' property.
@@ -70,11 +66,7 @@ function stackedBarData(order) {
 
       stacks.keys = keys;
 
-      stacks.maxValue = max(stacks, function (stack) {
-        return max(stack, function (d) {
-          return d[1];
-        });
-      });
+      stacks.maxValue = max(stacks, (stack) => max(stack, (d) => d[1]));
 
       return stacks;
     };

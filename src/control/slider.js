@@ -82,9 +82,7 @@ export default function () {
         .tickSize(majorTickSize)
         .tickPadding(6)
         .tickValues(fn.set([...props.majorTicks, ...props.minorTicks]))
-        .tickFormat(function (d) {
-          return contains(d, props.majorTicks) ? props.tickLabels(d) : "";
-        });
+        .tickFormat((d) => (contains(d, props.majorTicks) ? props.tickLabels(d) : ""));
 
       var axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]);
 
@@ -99,18 +97,16 @@ export default function () {
       // adjust visual aspects of the axis to fit the design
       axisSelection
         .selectAll(".tick line")
-        .filter(function (d) {
-          return !contains(d, props.majorTicks);
-        })
+        .filter((d) => !contains(d, props.majorTicks))
         .attr("y2", 4);
 
-      var majorAxisText = axisSelection.selectAll(".tick text").filter(function (d) {
-        return contains(d, props.majorTicks);
-      });
+      var majorAxisText = axisSelection
+        .selectAll(".tick text")
+        .filter((d) => contains(d, props.majorTicks));
       var numTicks = majorAxisText.size();
-      majorAxisText.style("text-anchor", function (d, i) {
-        return i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle";
-      });
+      majorAxisText.style("text-anchor", (d, i) =>
+        i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle"
+      );
 
       // create the slider background
       var backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]);
@@ -172,32 +168,28 @@ export default function () {
         .classed("sszvis-control-slider__handle", true);
       handle = handle.merge(handleEntering);
 
-      handle.attr("transform", function (d) {
-        return translateString(halfPixel(alteredScale(d)), 0.5);
-      });
+      handle.attr("transform", (d) => translateString(halfPixel(alteredScale(d)), 0.5));
 
       handleEntering.append("text").classed("sszvis-control-slider--label", true);
 
       handle
         .selectAll(".sszvis-control-slider--label")
-        .data(function (d) {
-          return [d];
-        })
+        .data((d) => [d])
         .text(props.label)
-        .style("text-anchor", function (d) {
-          return fn.stringEqual(d, scaleDomain[0])
+        .style("text-anchor", (d) =>
+          fn.stringEqual(d, scaleDomain[0])
             ? "start"
             : fn.stringEqual(d, scaleDomain[1])
               ? "end"
-              : "middle";
-        })
-        .attr("dx", function (d) {
-          return fn.stringEqual(d, scaleDomain[0])
+              : "middle"
+        )
+        .attr("dx", (d) =>
+          fn.stringEqual(d, scaleDomain[0])
             ? -(handleWidth / 2)
             : fn.stringEqual(d, scaleDomain[1])
               ? handleWidth / 2
-              : 0;
-        });
+              : 0
+        );
 
       handleEntering
         .append("rect")

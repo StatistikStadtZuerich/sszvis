@@ -76,7 +76,7 @@ export default function () {
         caption = caption.merge(newCaption);
 
         caption
-          .attr("transform", function () {
+          .attr("transform", () => {
             var vx = x2 - x1;
             var vy = y2 - y1;
             var angle = (Math.atan2(vy, vx) * 180) / Math.PI;

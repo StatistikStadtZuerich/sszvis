@@ -10,9 +10,7 @@ import { selection } from "d3";
  * @return {d3.selection}
  */
 selection.prototype.selectGroup = function (key) {
-  var group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data(function (d) {
-    return [d];
-  });
+  var group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data((d) => [d]);
 
   var newGroup = group.enter().append("g").attr("data-d3-selectgroup", key);
 

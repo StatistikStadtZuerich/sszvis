@@ -44,9 +44,9 @@ module.exports = class Page {
         // Add the highlighted data as additional ticks to the xScale
         var xTickValues = ticks ? xScale.ticks(ticks) : xScale.ticks();
         xTickValues = [...xTickValues, ...selection.map(accessor)];
-        xTickValues = xTickValues.filter(function (v, i) {
-          return xTickValues.map(String).indexOf(String(v)) === i;
-        });
+        xTickValues = xTickValues.filter(
+          (v, i) => xTickValues.map(String).indexOf(String(v)) === i
+        );
         return sszvis.axisX.time().tickValues(xTickValues);
       }.toString()}
       

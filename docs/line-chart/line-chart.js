@@ -11,9 +11,7 @@ var queryProps = sszvis
       return sszvis
         .modularTextSVG()
         .bold(sszvis.compose(yLabelFormat, yAcc))
-        .plain(function (d) {
-          return cAcc(d) == null ? "" : cAcc(d);
-        });
+        .plain((d) => (cAcc(d) == null ? "" : cAcc(d)));
     },
   })
   .prop("xLabel", {
@@ -39,7 +37,7 @@ sszvis.app({
   // Init
   // -----------------------------------------------
   init: function (state) {
-    return d3.csv(config.data, parseRow).then(function (data) {
+    return d3.csv(config.data, parseRow).then((data) => {
       state.data = data;
       state.lineData = sszvis.cascade().arrayBy(cAcc, d3.ascending).apply(data);
       state.xValues = xValues(data, xAcc);
@@ -65,12 +63,10 @@ sszvis.app({
       // Find the date of the datum closest to the input date
       var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
       // Find all data that have the same date as the closest datum
-      var closestData = state.lineData.map(function (linePoints) {
+      var closestData = state.lineData.map((linePoints) =>
         // For each line pick the first datum that matches
-        return sszvis.find(function (d) {
-          return xAcc(d).toString() === closestDate.toString();
-        }, linePoints);
-      });
+        sszvis.find((d) => xAcc(d).toString() === closestDate.toString(), linePoints)
+      );
       // Make sure that the selection has a value to display
       state.selection = closestData.filter(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
     },
@@ -117,9 +113,7 @@ sszvis.app({
       .x(sszvis.compose(xScale, xAcc))
       .y(sszvis.compose(yScale, yAcc))
       .label(props.rulerLabel)
-      .flip(function (d) {
-        return xScale(xAcc(d)) >= bounds.innerWidth / 2;
-      })
+      .flip((d) => xScale(xAcc(d)) >= bounds.innerWidth / 2)
       .color(sszvis.compose(cScale, cAcc));
 
     var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.lineData);

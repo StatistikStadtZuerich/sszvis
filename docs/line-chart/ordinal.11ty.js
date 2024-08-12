@@ -45,11 +45,7 @@ module.exports = class Page {
       }.toString()}
       
       ${function closestDatum(data, accessor, datum) {
-        return (
-          sszvis.find(function (d) {
-            return accessor(d) === datum;
-          }, data) || data[0]
-        );
+        return sszvis.find((d) => accessor(d) === datum, data) || data[0];
       }.toString()}
 
       ${this.printFileContents("line-chart.js")}

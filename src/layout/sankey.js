@@ -64,7 +64,7 @@ export var prepareData = function () {
   var valueSortFunc = byDescendingValue;
 
   var main = function (inputData) {
-    var columnIndex = mColumnIds.reduce(function (index, columnIdsList, colIndex) {
+    var columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
       for (const id of columnIdsList) {
         if (index.has(id)) {
           logger.warn(
@@ -90,7 +90,7 @@ export var prepareData = function () {
       return index;
     }, new Map());
 
-    var listOfLinks = inputData.map(function (datum) {
+    var listOfLinks = inputData.map((datum) => {
       var srcId = mGetSource(datum);
       var tgtId = mGetTarget(datum);
       var value = +mGetValue(datum) || 0; // Cast this to number
@@ -128,7 +128,7 @@ export var prepareData = function () {
 
     // Calculate an array of total values for each column
     var columnTotals = listOfNodes.reduce(
-      function (totals, node) {
+      (totals, node) => {
         var fromTotal = sum(node.linksFrom, valueAcc);
         var toTotal = sum(node.linksTo, valueAcc);
 
@@ -143,9 +143,7 @@ export var prepareData = function () {
     );
 
     // An array with the number of nodes in each column
-    var columnLengths = mColumnIds.map(function (colIds) {
-      return colIds.length;
-    });
+    var columnLengths = mColumnIds.map((colIds) => colIds.length);
 
     // Sort the column nodes
     // (note, this sorts all nodes for all columns in the same array)
@@ -161,7 +159,7 @@ export var prepareData = function () {
     // and columnData[1] is an array adding up the number of nodes in each column
     // Both are used to assign cumulative properties to the nodes of each column
     listOfNodes.reduce(
-      function (columnData, node) {
+      (columnData, node) => {
         // Assigns valueOffset and nodeIndex
         node.valueOffset = columnData[0][node.columnIndex];
         node.nodeIndex = columnData[1][node.columnIndex];
@@ -179,21 +177,17 @@ export var prepareData = function () {
     // they come from or go to. This creates a visually appealing layout which minimizes
     // the number of link crossings
     for (const node of listOfNodes) {
-      node.linksFrom.sort(function (linkA, linkB) {
-        return linkA.tgt.nodeIndex - linkB.tgt.nodeIndex;
-      });
+      node.linksFrom.sort((linkA, linkB) => linkA.tgt.nodeIndex - linkB.tgt.nodeIndex);
 
-      node.linksTo.sort(function (linkA, linkB) {
-        return linkA.src.nodeIndex - linkB.src.nodeIndex;
-      });
+      node.linksTo.sort((linkA, linkB) => linkA.src.nodeIndex - linkB.src.nodeIndex);
 
       // Stack the links vertically within the node according to their order
-      node.linksFrom.reduce(function (sumValue, link) {
+      node.linksFrom.reduce((sumValue, link) => {
         link.srcOffset = sumValue;
         return sumValue + valueAcc(link);
       }, 0);
 
-      node.linksTo.reduce(function (sumValue, link) {
+      node.linksTo.reduce((sumValue, link) => {
         link.tgtOffset = sumValue;
         return sumValue + valueAcc(link);
       }, 0);
@@ -275,7 +269,7 @@ export var computeLayout = function (columnLengths, columnTotals, columnHeight, 
 
   // Compute the padding value (in pixels) for each column, then take the minimum value
   var computedPixPadding = min(
-    columnLengths.map(function (colLength) {
+    columnLengths.map((colLength) => {
       // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
       var colPadding = (columnHeight * padSpaceRatio) / (colLength - 1);
       // Limit by minimum and maximum pixel padding values
@@ -287,7 +281,7 @@ export var computeLayout = function (columnLengths, columnTotals, columnHeight, 
   // This is the number of remaining pixels available to display the column's total units,
   // after padding pixels have been subtracted. Then take the minimum value of that.
   var pixPerUnit = min(
-    columnLengths.map(function (colLength, colIndex) {
+    columnLengths.map((colLength, colIndex) => {
       // The non-padding pixels must have at least minDisplayPixels
       var nonPaddingPixels = Math.max(
         minDisplayPixels,
@@ -306,13 +300,13 @@ export var computeLayout = function (columnLengths, columnTotals, columnHeight, 
   var maxTotal = max(columnTotals);
 
   // Compute y-padding required to vertically center each column (in pixels)
-  var paddedHeights = columnLengths.map(function (colLength, colIndex) {
-    return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding;
-  });
+  var paddedHeights = columnLengths.map(
+    (colLength, colIndex) => columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding
+  );
   var maxPaddedHeight = max(paddedHeights);
-  var columnPaddings = columnLengths.map(function (colLength, colIndex) {
-    return (maxPaddedHeight - paddedHeights[colIndex]) / 2;
-  });
+  var columnPaddings = columnLengths.map(
+    (colLength, colIndex) => (maxPaddedHeight - paddedHeights[colIndex]) / 2
+  );
 
   // The domain of the size scale
   var valueDomain = [0, maxTotal];

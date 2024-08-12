@@ -79,9 +79,7 @@ export default function () {
       circles
         .attr("r", circleRad)
         .attr("cy", circleRad)
-        .attr("cx", function (d, i) {
-          return i === 0 ? circleRad : props.width - circleRad;
-        })
+        .attr("cx", (d, i) => (i === 0 ? circleRad : props.width - circleRad))
         .attr("fill", props.scale);
 
       var segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData);
@@ -92,17 +90,11 @@ export default function () {
       segments.exit().remove();
 
       segments
-        .attr("x", function (d) {
-          return d.x;
-        })
+        .attr("x", (d) => d.x)
         .attr("y", 0)
-        .attr("width", function (d) {
-          return d.w;
-        })
+        .attr("width", (d) => d.w)
         .attr("height", segHeight)
-        .attr("fill", function (d) {
-          return d.c;
-        });
+        .attr("fill", (d) => d.c);
 
       var lineData = rectData.slice(0, -1);
 
@@ -114,12 +106,8 @@ export default function () {
       lines.exit().remove();
 
       lines
-        .attr("x1", function (d) {
-          return halfPixel(d.x + d.w);
-        })
-        .attr("x2", function (d) {
-          return halfPixel(d.x + d.w);
-        })
+        .attr("x1", (d) => halfPixel(d.x + d.w))
+        .attr("x2", (d) => halfPixel(d.x + d.w))
         .attr("y1", segHeight + 1)
         .attr("y2", segHeight + 6)
         .attr("stroke", "#B8B8B8");
@@ -133,11 +121,7 @@ export default function () {
 
       labels
         .style("text-anchor", "middle")
-        .attr("transform", function (d) {
-          return "translate(" + (d.x + d.w) + "," + (segHeight + 20) + ")";
-        })
-        .text(function (d) {
-          return props.labelFormat(d.p);
-        });
+        .attr("transform", (d) => "translate(" + (d.x + d.w) + "," + (segHeight + 20) + ")")
+        .text((d) => props.labelFormat(d.p));
     });
 }

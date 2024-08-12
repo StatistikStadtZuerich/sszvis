@@ -46,7 +46,7 @@ sszvis.app({
     return Promise.all([
       d3.csv(config.data, parseRow),
       d3.json("../static/topo/stadt-zurich.json"),
-    ]).then(function (result) {
+    ]).then((result) => {
       const data = result[0];
       const topo = result[1];
       state.data = data;

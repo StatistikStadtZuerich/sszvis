@@ -69,12 +69,8 @@ export default function () {
         dataCaptions = dataCaptions.merge(newDataCaptions);
 
         dataCaptions
-          .attr("x", function (d, i) {
-            return props.x(d, i) + props.width(d, i) / 2;
-          })
-          .attr("y", function (d, i) {
-            return props.y(d, i) + props.height(d, i) / 2;
-          })
+          .attr("x", (d, i) => props.x(d, i) + props.width(d, i) / 2)
+          .attr("y", (d, i) => props.y(d, i) + props.height(d, i) / 2)
           .attr("dx", props.dx)
           .attr("dy", props.dy)
           .text(props.caption);

@@ -37,9 +37,7 @@ export default function () {
 
       var wrapperEl = selection
         .selectAll(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-select"], function (d) {
-          return d;
-        });
+        .data(["sszvis-control-select"], (d) => d);
       var newWrapperEl = wrapperEl
         .enter()
         .append("div")
@@ -68,7 +66,7 @@ export default function () {
           props.change(props.values[i]);
           // Prevent highlights on the select element after users have selected
           // an option by moving away from it.
-          setTimeout(function () {
+          setTimeout(() => {
             window.focus();
           }, 0);
         });
@@ -85,15 +83,9 @@ export default function () {
 
       optionEls
         .merge(newOptionEls)
-        .attr("selected", function (d) {
-          return d === props.current ? "selected" : null;
-        })
-        .attr("value", function (d, i) {
-          return i;
-        })
-        .text(function (d) {
-          return truncateToWidth(metricsEl, props.width - 40, d);
-        });
+        .attr("selected", (d) => (d === props.current ? "selected" : null))
+        .attr("value", (d, i) => i)
+        .text((d) => truncateToWidth(metricsEl, props.width - 40, d));
     });
 }
 
@@ -102,7 +94,7 @@ function truncateToWidth(metricsEl, maxWidth, originalString) {
   var fitText = function (str, i) {
     metricsEl.text(str);
     var textWidth = Math.ceil(metricsEl.node().clientWidth);
-    return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, - 2) + "…", i + 1) : str;
+    return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, -2) + "…", i + 1) : str;
   };
   return fitText(originalString, 0);
 }

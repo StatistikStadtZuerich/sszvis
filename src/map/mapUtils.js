@@ -29,13 +29,10 @@ export var SWITZERLAND_KEY = "switzerland";
  * @return {Function}                               The projection function.
  */
 export var swissMapProjection = memoize(
-  function (width, height, featureCollection) {
-    return geoMercator().fitSize([width, height], featureCollection);
-  },
+  (width, height, featureCollection) => geoMercator().fitSize([width, height], featureCollection),
   // Memoize resolver
-  function (width, height, _, featureBoundsCacheKey) {
-    return "" + width + "," + height + "," + featureBoundsCacheKey;
-  }
+  (width, height, _, featureBoundsCacheKey) =>
+    "" + width + "," + height + "," + featureBoundsCacheKey
 );
 
 /**
@@ -118,19 +115,17 @@ export var prepareMergedGeoData = function (dataset, geoJson, keyName) {
 
   // group the input data by map entity id
   var groupedInputData = Array.isArray(dataset)
-    ? dataset.reduce(function (m, v) {
+    ? dataset.reduce((m, v) => {
         m[v[keyName]] = v;
         return m;
       }, {})
     : {};
 
   // merge the map features and the input data into new objects that include both
-  return geoJson.features.map(function (feature) {
-    return {
-      geoJson: feature,
-      datum: groupedInputData[feature.id],
-    };
-  });
+  return geoJson.features.map((feature) => ({
+    geoJson: feature,
+    datum: groupedInputData[feature.id],
+  }));
 };
 
 /**
@@ -151,7 +146,9 @@ export var prepareMergedGeoData = function (dataset, geoJson, keyName) {
 export var getGeoJsonCenter = function (geoJson) {
   if (!geoJson.properties.cachedCenter) {
     var setCenter = geoJson.properties.center;
-    geoJson.properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : geoCentroid(geoJson);
+    geoJson.properties.cachedCenter = setCenter
+      ? setCenter.split(",").map(Number.parseFloat)
+      : geoCentroid(geoJson);
   }
 
   return geoJson.properties.cachedCenter;

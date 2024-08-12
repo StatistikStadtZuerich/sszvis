@@ -85,9 +85,7 @@ export var formatAxisTimeFormat = function (d) {
 /**
  * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
  */
-export var formatMonth = fn.compose(function (m) {
-  return m.toUpperCase();
-}, timeFormat("%b"));
+export var formatMonth = fn.compose((m) => m.toUpperCase(), timeFormat("%b"));
 
 /**
  * A year formatter for date objects. Gives the date's year.

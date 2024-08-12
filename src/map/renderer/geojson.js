@@ -65,17 +65,15 @@ export default function () {
       var getDataKeyName = fn.prop(props.dataKeyName);
       var getMapKeyName = fn.prop(props.geoJsonKeyName);
 
-      var groupedInputData = data.reduce(function (m, v) {
+      var groupedInputData = data.reduce((m, v) => {
         m[getDataKeyName(v)] = v;
         return m;
       });
 
-      var mergedData = props.geoJson.features.map(function (feature) {
-        return {
-          geoJson: feature,
-          datum: groupedInputData[getMapKeyName(feature.properties)],
-        };
-      });
+      var mergedData = props.geoJson.features.map((feature) => ({
+        geoJson: feature,
+        datum: groupedInputData[getMapKeyName(feature.properties)],
+      }));
 
       function getMapFill(d) {
         return fn.defined(d.datum) && props.defined(d.datum)
@@ -103,12 +101,11 @@ export default function () {
       selection.selectAll(".sszvis-map__geojsonelement--undefined").attr("fill", getMapFill);
 
       geoElements
-        .classed("sszvis-map__geojsonelement--undefined", function (d) {
-          return !fn.defined(d.datum) || !props.defined(d.datum);
-        })
-        .attr("d", function (d) {
-          return props.mapPath(d.geoJson);
-        });
+        .classed(
+          "sszvis-map__geojsonelement--undefined",
+          (d) => !fn.defined(d.datum) || !props.defined(d.datum)
+        )
+        .attr("d", (d) => props.mapPath(d.geoJson));
 
       if (props.transitionColor) {
         geoElements.transition().call(slowTransition).attr("fill", getMapFill);
@@ -120,18 +117,18 @@ export default function () {
 
       selection
         .selectAll("[data-event-target]")
-        .on("mouseover", function (d) {
+        .on("mouseover", (d) => {
           event.over(d.datum);
         })
-        .on("mouseout", function (d) {
+        .on("mouseout", (d) => {
           event.out(d.datum);
         })
-        .on("click", function (d) {
+        .on("click", (d) => {
           event.click(d.datum);
         });
 
       // the tooltip anchor generator
-      var ta = tooltipAnchor().position(function (d) {
+      var ta = tooltipAnchor().position((d) => {
         d.geoJson.properties || (d.geoJson.properties = {});
 
         var sphericalCentroid = d.geoJson.properties.sphericalCentroid;

@@ -64,7 +64,7 @@ export default function () {
     .prop("renderInto")
     .prop("visible", fn.functor)
     .visible(false)
-    .renderSelection(function (selection) {
+    .renderSelection((selection) => {
       var props = selection.props();
       var intoBCR = props.renderInto.node().getBoundingClientRect();
 
@@ -101,7 +101,7 @@ var tooltipRenderer = function () {
     .dy(1)
     .prop("opacity", fn.functor)
     .opacity(1)
-    .renderSelection(function (selection) {
+    .renderSelection((selection) => {
       var tooltipData = selection.datum();
       var props = selection.props();
 
@@ -124,18 +124,12 @@ var tooltipRenderer = function () {
       tooltip
         .style("pointer-events", "none")
         .style("opacity", props.opacity)
-        .style("padding-top", function (d) {
-          return props.orientation(d) === "top" ? TIP_SIZE + "px" : null;
-        })
-        .style("padding-right", function (d) {
-          return props.orientation(d) === "right" ? TIP_SIZE + "px" : null;
-        })
-        .style("padding-bottom", function (d) {
-          return props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null;
-        })
-        .style("padding-left", function (d) {
-          return props.orientation(d) === "left" ? TIP_SIZE + "px" : null;
-        })
+        .style("padding-top", (d) => (props.orientation(d) === "top" ? TIP_SIZE + "px" : null))
+        .style("padding-right", (d) => (props.orientation(d) === "right" ? TIP_SIZE + "px" : null))
+        .style("padding-bottom", (d) =>
+          props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null
+        )
+        .style("padding-left", (d) => (props.orientation(d) === "left" ? TIP_SIZE + "px" : null))
         .classed("sszvis-tooltip", true);
 
       // Enter: tooltip background
@@ -191,7 +185,7 @@ var tooltipRenderer = function () {
       tooltip
         .select(".sszvis-tooltip__body")
         .datum(fn.prop("datum"))
-        .html(function (d) {
+        .html((d) => {
           var body = props.body ? fn.functor(props.body)(d) : "";
           return Array.isArray(body) ? formatTable(body) : body;
         });
@@ -263,17 +257,7 @@ var tooltipRenderer = function () {
  */
 function formatTable(rows) {
   var tableBody = rows
-    .map(function (row) {
-      return (
-        "<tr>" +
-        row
-          .map(function (cell) {
-            return "<td>" + cell + "</td>";
-          })
-          .join("") +
-        "</tr>"
-      );
-    })
+    .map((row) => "<tr>" + row.map((cell) => "<td>" + cell + "</td>").join("") + "</tr>")
     .join("");
   return '<table class="sszvis-tooltip__body__table">' + tableBody + "</table>";
 }
@@ -362,9 +346,7 @@ function tooltipBackgroundGenerator(a, b, orientation, radius) {
     // Left side
     side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, orientation === "left"),
   ]
-    .map(function (d) {
-      return d.join(" ");
-    })
+    .map((d) => d.join(" "))
     .join(" ");
 }
 

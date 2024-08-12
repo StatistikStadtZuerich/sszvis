@@ -229,9 +229,9 @@ function render(state) {
   var valAcc =
     state.currentKey === "Kinder"
       ? kinderAcc
-      : (state.currentKey === "Random"
+      : state.currentKey === "Random"
         ? randomAcc
-        : sszvis.identity);
+        : sszvis.identity;
 
   var layerBounds = [
     [8.431_443 + geoOffset, 47.448_978 + geoOffset],

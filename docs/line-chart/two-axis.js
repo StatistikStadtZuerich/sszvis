@@ -28,8 +28,8 @@ var valueIsOnAxis2 = function (d) {
 var datumIsOnAxis2 = sszvis.compose(valueIsOnAxis2, cAcc);
 
 sszvis.app({
-  init: (state) => {
-    return d3.csv("data/S_2yAxis.csv", parseRow).then((data) => {
+  init: (state) =>
+    d3.csv("data/S_2yAxis.csv", parseRow).then((data) => {
       state.data = data;
       state.dates = d3.extent(state.data, xAcc);
       state.lineData = sszvis.cascade().arrayBy(cAcc, d3.ascending).apply(state.data);
@@ -45,16 +45,13 @@ sszvis.app({
       state.categories2 = sszvis.set(state.data.filter(datumIsOnAxis2), cAcc);
 
       state.selection = [];
-    });
-  },
+    }),
   actions: {
     changeDate: function (state, inputDate) {
       var closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
-      var closestData = state.lineData.map(function (linePoints) {
-        return sszvis.find(function (d) {
-          return sszvis.stringEqual(xAcc(d), closestDate);
-        }, linePoints);
-      });
+      var closestData = state.lineData.map((linePoints) =>
+        sszvis.find((d) => sszvis.stringEqual(xAcc(d), closestDate), linePoints)
+      );
       state.selection = closestData.filter(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
     },
 
@@ -86,11 +83,9 @@ sszvis.app({
     var line = sszvis
       .line()
       .x(sszvis.compose(xScale, xAcc))
-      .y(function (d) {
-        return datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d));
-      })
+      .y((d) => (datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d))))
       // Access the first data point of the line to decide on the stroke color
-      .stroke(function (lineData) {
+      .stroke((lineData) => {
         var d = sszvis.first(lineData);
         return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
       });
@@ -106,15 +101,9 @@ sszvis.app({
       .bottom(bounds.innerHeight)
       .label(rulerLabel)
       .x(sszvis.compose(xScale, xAcc))
-      .y(function (d) {
-        return datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d));
-      })
-      .flip(function (d) {
-        return xScale(xAcc(d)) >= bounds.innerWidth / 2;
-      })
-      .color(function (d) {
-        return datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d));
-      });
+      .y((d) => (datumIsOnAxis2(d) ? yScale2(yAcc(d)) : yScale1(yAcc(d))))
+      .flip((d) => xScale(xAcc(d)) >= bounds.innerWidth / 2)
+      .color((d) => (datumIsOnAxis2(d) ? cScale2(cAcc(d)) : cScale1(cAcc(d))));
 
     var xTickValues = [...xScale.ticks(5), ...state.selection.map(xAcc)];
 

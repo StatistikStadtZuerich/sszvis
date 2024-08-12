@@ -139,11 +139,9 @@ function render(state) {
     .rows(state.categories.length)
     .orientation("vertical");
 
-  var headerText = sszvis.modularTextHTML().bold(
-    sszvis.compose(sszvis.formatFractionPercent, function (d) {
-      return vAcc(d) / state.totalValue;
-    })
-  );
+  var headerText = sszvis
+    .modularTextHTML()
+    .bold(sszvis.compose(sszvis.formatFractionPercent, (d) => vAcc(d) / state.totalValue));
 
   var tooltip = sszvis.tooltip().renderInto(tooltipLayer).header(headerText).visible(isSelected);
 
@@ -161,12 +159,9 @@ function render(state) {
   chartLayer
     .selectGroup("colorLegend")
     // the magic number y-offset here vertically centers the color legend.
-    .attr("transform", function () {
-      return sszvis.translateString(
-        props.layout.legendPosition.left,
-        props.layout.legendPosition.top
-      );
-    })
+    .attr("transform", () =>
+      sszvis.translateString(props.layout.legendPosition.left, props.layout.legendPosition.top)
+    )
     .call(colorLegend);
 
   // Interaction

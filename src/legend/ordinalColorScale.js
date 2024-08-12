@@ -146,9 +146,7 @@ export function legendColorOrdinal() {
       var marks = groups
         .merge(newGroups)
         .selectAll(".sszvis-legend__mark")
-        .data(function (d) {
-          return [d];
-        });
+        .data((d) => [d]);
 
       var newMarks = marks.enter().append("circle").classed("sszvis-legend__mark", true);
 
@@ -159,20 +157,14 @@ export function legendColorOrdinal() {
         .attr("cx", props.rightAlign ? -6 : 6)
         .attr("cy", halfPixel(props.rowHeight / 2))
         .attr("r", 5)
-        .attr("fill", function (d) {
-          return props.scale(d);
-        })
-        .attr("stroke", function (d) {
-          return props.scale(d);
-        })
+        .attr("fill", (d) => props.scale(d))
+        .attr("stroke", (d) => props.scale(d))
         .attr("stroke-width", 1);
 
       var labels = groups
         .merge(newGroups)
         .selectAll(".sszvis-legend__label")
-        .data(function (d) {
-          return [d];
-        });
+        .data((d) => [d]);
 
       var newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
 
@@ -180,14 +172,10 @@ export function legendColorOrdinal() {
 
       labels
         .merge(newLabels)
-        .text(function (d) {
-          return d;
-        })
+        .text((d) => d)
         .attr("dy", "0.35em") // vertically-center
-        .style("text-anchor", function () {
-          return props.rightAlign ? "end" : "start";
-        })
-        .attr("transform", function () {
+        .style("text-anchor", () => (props.rightAlign ? "end" : "start"))
+        .attr("transform", () => {
           var x = props.rightAlign ? -18 : 18;
           var y = halfPixel(props.rowHeight / 2);
           return translateString(x, y);
@@ -213,7 +201,7 @@ export function legendColorOrdinal() {
           return verticalOffset + translate;
         });
       } else {
-        groups.merge(newGroups).attr("transform", function (d, i) {
+        groups.merge(newGroups).attr("transform", (d, i) => {
           if (props.orientation === "horizontal") {
             return (
               verticalOffset +

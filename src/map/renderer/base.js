@@ -39,9 +39,7 @@ export default function () {
     .prop("defined", fn.functor)
     .defined(true) // a predicate function to determine whether a datum has a defined value
     .prop("fill", fn.functor)
-    .fill(function () {
-      return "black";
-    }) // a function for the entity fill color. default is black
+    .fill(() => "black") // a function for the entity fill color. default is black
     .prop("transitionColor")
     .transitionColor(true)
     .render(function () {
@@ -77,12 +75,11 @@ export default function () {
 
       // change the fill if necessary
       mapAreas
-        .classed("sszvis-map__area--undefined", function (d) {
-          return !fn.defined(d.datum) || !props.defined(d.datum);
-        })
-        .attr("d", function (d) {
-          return props.mapPath(d.geoJson);
-        });
+        .classed(
+          "sszvis-map__area--undefined",
+          (d) => !fn.defined(d.datum) || !props.defined(d.datum)
+        )
+        .attr("d", (d) => props.mapPath(d.geoJson));
 
       if (props.transitionColor) {
         mapAreas.transition().call(slowTransition).attr("fill", getMapFill);
@@ -91,9 +88,9 @@ export default function () {
       }
 
       // the tooltip anchor generator
-      var ta = tooltipAnchor().position(function (d) {
-        return props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
-      });
+      var ta = tooltipAnchor().position((d) =>
+        props.mapPath.projection()(getGeoJsonCenter(d.geoJson))
+      );
 
       var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
 

@@ -112,7 +112,7 @@ export function cascade() {
 
     if (key.type === "obj") {
       var obj = {};
-      groupEach(grouped, function (value, k) {
+      groupEach(grouped, (value, k) => {
         obj[k] = make(value, depth);
       });
       return obj;
@@ -120,11 +120,11 @@ export function cascade() {
       var arr = [];
       if (sorter) {
         var groupKeys = Object.keys(grouped).sort(sorter);
-        arrEach(groupKeys, function (k) {
+        arrEach(groupKeys, (k) => {
           arr.push(make(grouped[k], depth));
         });
       } else {
-        groupEach(grouped, function (value) {
+        groupEach(grouped, (value) => {
           arr.push(make(value, depth));
         });
       }

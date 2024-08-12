@@ -41,9 +41,7 @@ export default function () {
     .prop("strokeWidth")
     .prop("defined")
     .prop("key")
-    .key(function (d, i) {
-      return i;
-    })
+    .key((d, i) => i)
     .prop("valuesAccessor")
     .valuesAccessor(fn.identity)
     .prop("transition")
@@ -56,7 +54,9 @@ export default function () {
       data = [...data].reverse();
 
       var defaultDefined = function () {
-        return fn.compose(fn.not(Number.isNaN), props.y0) && fn.compose(fn.not(Number.isNaN), props.y1);
+        return (
+          fn.compose(fn.not(Number.isNaN), props.y0) && fn.compose(fn.not(Number.isNaN), props.y1)
+        );
       };
 
       var areaGen = area()

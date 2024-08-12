@@ -80,9 +80,7 @@ export default function () {
 
       multiples = multiples.merge(newMultiples);
 
-      var subGroups = multiples.selectAll("g.sszvis-multiple-chart").data(function (d) {
-        return [d.values];
-      });
+      var subGroups = multiples.selectAll("g.sszvis-multiple-chart").data((d) => [d.values]);
 
       var newSubGroups = subGroups.enter().append("g").classed("sszvis-multiple-chart", true);
 
@@ -91,7 +89,7 @@ export default function () {
       subGroups = subGroups.merge(newSubGroups);
 
       multiples
-        .datum(function (d, i) {
+        .datum((d, i) => {
           d.gx = (i % props.cols) * (unitWidth + props.paddingX);
           d.gw = unitWidth;
           d.cx = horizontalCenter;
@@ -100,8 +98,6 @@ export default function () {
           d.cy = verticalCenter;
           return d;
         })
-        .attr("transform", function (d) {
-          return "translate(" + d.gx + "," + d.gy + ")";
-        });
+        .attr("transform", (d) => "translate(" + d.gx + "," + d.gy + ")");
     });
 }

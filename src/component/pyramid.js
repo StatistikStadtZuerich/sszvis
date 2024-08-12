@@ -61,9 +61,7 @@ export default function () {
       // Components
 
       var leftBar = bar()
-        .x(function (d) {
-          return -SPINE_PADDING - props.barWidth(d);
-        })
+        .x((d) => -SPINE_PADDING - props.barWidth(d))
         .y(props.barPosition)
         .height(props.barHeight)
         .width(props.barWidth)

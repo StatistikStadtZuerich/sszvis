@@ -86,9 +86,7 @@ export default function () {
       polys = polys.merge(newPolys);
 
       polys
-        .attr("d", function (d) {
-          return "M" + d.join("L") + "Z";
-        })
+        .attr("d", (d) => "M" + d.join("L") + "Z")
         .attr("fill", "transparent")
         .on("mouseover", function (e) {
           var cbox = this.parentNode.getBoundingClientRect();

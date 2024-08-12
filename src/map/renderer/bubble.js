@@ -48,9 +48,7 @@ export default function () {
       var anchoredCircles = selection
         .selectGroup("anchoredCircles")
         .selectAll(".sszvis-anchored-circle")
-        .data(props.mergedData, function (d) {
-          return d.geoJson.id;
-        });
+        .data(props.mergedData, (d) => d.geoJson.id);
 
       anchoredCircles
         .enter()
@@ -67,22 +65,14 @@ export default function () {
           event.call("click", this, d.datum);
         })
         .merge(anchoredCircles)
-        .attr("transform", function (d) {
+        .attr("transform", (d) => {
           var position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
           return translateString(position[0], position[1]);
         })
-        .style("fill", function (d) {
-          return props.fill(d.datum);
-        })
-        .style("stroke", function (d) {
-          return props.strokeColor(d.datum);
-        })
-        .style("stroke-width", function (d) {
-          return props.strokeWidth(d.datum);
-        })
-        .sort(function (a, b) {
-          return props.radius(b.datum) - props.radius(a.datum);
-        });
+        .style("fill", (d) => props.fill(d.datum))
+        .style("stroke", (d) => props.strokeColor(d.datum))
+        .style("stroke-width", (d) => props.strokeWidth(d.datum))
+        .sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
 
       // Remove the --entering modifier from the updating circles
       anchoredCircles.classed("sszvis-anchored-circle--entering", false);

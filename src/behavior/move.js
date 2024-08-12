@@ -63,7 +63,7 @@ export default function () {
     .cancelScrolling(false)
     .prop("fireOnPanOnly", fn.functor)
     .fireOnPanOnly(false)
-    .prop("padding", function (p) {
+    .prop("padding", (p) => {
       var defaults = { top: 0, left: 0, bottom: 0, right: 0 };
       for (var prop in p) {
         defaults[prop] = p[prop];
@@ -133,7 +133,7 @@ export default function () {
 
           win.on("mousemove.sszvis-behavior-move", drag);
           win.on("mouseup.sszvis-behavior-move", stopDragging);
-          doc.on("mouseout.sszvis-behavior-move", function () {
+          doc.on("mouseout.sszvis-behavior-move", () => {
             var from = e.relatedTarget || e.toElement;
             if (!from || from.nodeName === "HTML") {
               stopDragging();
@@ -226,7 +226,7 @@ export default function () {
 }
 
 function scaleInvert(scale, px) {
-  var scaleType = scale.invert ? "Linear" : (scale.paddingInner ? "Band" : "Point");
+  var scaleType = scale.invert ? "Linear" : scale.paddingInner ? "Band" : "Point";
   switch (scaleType) {
     case "Linear": {
       return scale.invert(px);
@@ -258,7 +258,7 @@ function invertBandScale(scale, px) {
     return null;
   }
 
-  var ranges = domain.map(function (d, i) {
+  var ranges = domain.map((d, i) => {
     if (i === 0) {
       return [scaleRange[0], scaleRange[0] + paddingOuter + bandWidth + paddingInner / 2];
     } else if (i === domain.length - 1) {
@@ -291,7 +291,7 @@ function invertPointScale(scale, px) {
     return null;
   }
 
-  var ranges = domain.map(function (d, i) {
+  var ranges = domain.map((d, i) => {
     if (i === 0) {
       return [scaleRange[0], scaleRange[0] + paddingOuter + step / 2];
     } else if (i === domain.length - 1) {

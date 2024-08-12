@@ -498,7 +498,7 @@ export var propOr = function (key, defaultVal) {
  */
 export var set = function (arr, acc) {
   acc || (acc = identity);
-  return arr.reduce(function (m, value, i) {
+  return arr.reduce((m, value, i) => {
     var computed = acc(value, i, arr);
     return m.includes(computed) ? m : [...m, computed];
   }, []);

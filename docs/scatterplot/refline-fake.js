@@ -58,9 +58,7 @@ var actions = {
 
     // for the voronoi component to work, the data must first be filtered such that no two vertices
     // fall at exactly the same point.
-    state.voronoiFiltered = sszvis.derivedSet(state.data, function (d) {
-      return xAcc(d) + "__" + yAcc(d);
-    });
+    state.voronoiFiltered = sszvis.derivedSet(state.data, (d) => xAcc(d) + "__" + yAcc(d));
 
     state.xExtent = d3.extent(state.data, xAcc);
     state.yExtent = d3.extent(state.data, yAcc);
@@ -163,18 +161,12 @@ function render(state) {
     .tooltip()
     .renderInto(tooltipLayer)
     .header(cAcc)
-    .body(function (d) {
-      return [
-        [props.xAxisLabel, props.xFormat(xAcc(d))],
-        [props.yAxisLabel, props.yFormat(yAcc(d))],
-      ];
-    })
-    .visible(function (d) {
-      return sszvis.contains(state.highlightData, d);
-    })
-    .orientation(function (d) {
-      return xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right";
-    });
+    .body((d) => [
+      [props.xAxisLabel, props.xFormat(xAcc(d))],
+      [props.yAxisLabel, props.yFormat(yAcc(d))],
+    ])
+    .visible((d) => sszvis.contains(state.highlightData, d))
+    .orientation((d) => (xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right"));
 
   // Rendering
 

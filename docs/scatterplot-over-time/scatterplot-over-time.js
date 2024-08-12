@@ -52,9 +52,7 @@ var actions = {
     state.linesData = sszvis
       .cascade()
       .arrayBy(branchAcc, d3.ascending)
-      .sort(function (a, b) {
-        return d3.ascending(yearAcc(a), yearAcc(b));
-      })
+      .sort((a, b) => d3.ascending(yearAcc(a), yearAcc(b)))
       .apply(state.data);
 
     actions.setYear(null, d3.max(state.years));
@@ -63,20 +61,16 @@ var actions = {
   setYear: function (inputYear) {
     state.activeYear = closestDatum(state.years, sszvis.identity, inputYear);
 
-    state.currentLinesData = state.linesData.map(function (line) {
-      return line.filter(function (d) {
-        return yearAcc(d) <= state.activeYear;
-      });
-    });
+    state.currentLinesData = state.linesData.map((line) =>
+      line.filter((d) => yearAcc(d) <= state.activeYear)
+    );
 
-    state.futureLinesData = state.linesData.map(function (line) {
-      return line.filter(function (d) {
-        return yearAcc(d) >= state.activeYear;
-      });
-    });
+    state.futureLinesData = state.linesData.map((line) =>
+      line.filter((d) => yearAcc(d) >= state.activeYear)
+    );
 
     var splitData = state.data.reduce(
-      function (memo, datum) {
+      (memo, datum) => {
         var year = yearAcc(datum);
 
         // We only render dots for the current year's data
@@ -99,9 +93,10 @@ var actions = {
     state.currentData = splitData.currentData;
 
     // For the voronoi component, it is essential that no two input vertices lie at the same point
-    state.voronoiPoints = sszvis.derivedSet(splitData.currentAndPastData, function (d) {
-      return xAcc(d) + "__" + yAcc(d);
-    });
+    state.voronoiPoints = sszvis.derivedSet(
+      splitData.currentAndPastData,
+      (d) => xAcc(d) + "__" + yAcc(d)
+    );
 
     if (splitData.currentAndPastData.length !== state.voronoiPoints.length) {
       console.warn(
@@ -207,9 +202,7 @@ function render(state) {
     .x(sszvis.compose(xScale, xAcc))
     .y(sszvis.compose(yScale, yAcc))
     // These dots are slightly smaller (radius 3) than the visible dots for the current time period (radius 4)
-    .radius(function (d) {
-      return isSelected(d) ? 3 : 0;
-    })
+    .radius((d) => (isSelected(d) ? 3 : 0))
     .fill(sszvis.compose(cScale, branchAcc))
     // use white outlines in scatterplots to assist in identifying distinct circles
     .stroke("#FFFFFF")
@@ -250,10 +243,10 @@ function render(state) {
     .scale(yScale)
     .ticks(6)
     .orient("right")
-    .tickFormat(function (d) {
+    .tickFormat((d) =>
       // Have to implement our own hiding for zero, because showZeroY is implemented through tickFormat
-      return d === 0 ? null : sszvis.formatPercent(d);
-    })
+      d === 0 ? null : sszvis.formatPercent(d)
+    )
     .contour(true);
 
   var tooltip = sszvis
@@ -262,13 +255,11 @@ function render(state) {
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .visible(isSelected)
     .header(sszvis.modularTextHTML().bold(branchAcc))
-    .body(function (d) {
-      return [
-        ["Jahr", sszvis.formatText(yearAcc(d))],
-        ["Beschäftige", sszvis.formatNumber(xAcc(d))],
-        ["Frauenanteil", sszvis.formatPercent(yAcc(d))],
-      ];
-    });
+    .body((d) => [
+      ["Jahr", sszvis.formatText(yearAcc(d))],
+      ["Beschäftige", sszvis.formatNumber(xAcc(d))],
+      ["Frauenanteil", sszvis.formatPercent(yAcc(d))],
+    ]);
 
   // Rendering
 

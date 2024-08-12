@@ -155,9 +155,9 @@ function render(state) {
     .width(tableDimensions.side)
     .height(tableDimensions.side)
     .fill(cValue)
-    .stroke(function (d) {
-      return sszvis.contains(state.selection, d) ? sszvis.slightlyDarker(cValue(d)) : "none";
-    });
+    .stroke((d) =>
+      sszvis.contains(state.selection, d) ? sszvis.slightlyDarker(cValue(d)) : "none"
+    );
 
   var xAxis = sszvis.axisX
     .ordinal()
@@ -171,11 +171,7 @@ function render(state) {
     .slant("vertical")
     .dyTitle(-36)
     .hideLabelThreshold(0)
-    .highlightTick(function (tickValue) {
-      return state.selection.some(function (d) {
-        return xAcc(d) === tickValue;
-      });
-    });
+    .highlightTick((tickValue) => state.selection.some((d) => xAcc(d) === tickValue));
 
   var yAxis = sszvis.axisY
     .ordinal()
@@ -186,11 +182,7 @@ function render(state) {
     .titleAnchor("middle")
     .titleCenter(true)
     .dxTitle(-45)
-    .highlightTick(function (tickValue) {
-      return state.selection.some(function (d) {
-        return yAcc(d) === tickValue;
-      });
-    });
+    .highlightTick((tickValue) => state.selection.some((d) => yAcc(d) === tickValue));
 
   var legend = sszvis
     .legendColorBinned()
@@ -206,13 +198,11 @@ function render(state) {
     .tooltip()
     .renderInto(tooltipLayer)
     .header(tooltipHeaderText)
-    .body(function (d) {
-      return [
-        ["Alter des Mannes:", xAcc(d)],
-        ["Alter der Frau:", yAcc(d)],
-        ["Anzahl: ", cAcc(d)],
-      ];
-    })
+    .body((d) => [
+      ["Alter des Mannes:", xAcc(d)],
+      ["Alter der Frau:", yAcc(d)],
+      ["Anzahl: ", cAcc(d)],
+    ])
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .visible(isSelected);
 

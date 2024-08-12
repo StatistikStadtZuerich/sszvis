@@ -49,9 +49,7 @@ var actions = {
 
   changeDate: function (selectedDate) {
     var selectedYear = Math.round(selectedDate);
-    state.selection = state.data.filter(function (v) {
-      return xAcc(v) === selectedYear;
-    });
+    state.selection = state.data.filter((v) => xAcc(v) === selectedYear);
     render(state);
   },
 
@@ -126,9 +124,7 @@ function render(state) {
     .y(yValue)
     .width(xScale.bandwidth())
     .height(hValue)
-    .fill(function (d) {
-      return isSelected(d) ? cScaleDark(d) : cScale(d);
-    });
+    .fill((d) => (isSelected(d) ? cScaleDark(d) : cScale(d)));
 
   var xAxis = sszvis.axisX.ordinal().scale(xScale).orient("bottom").alignOuterLabels(true).ticks(5);
 
@@ -141,9 +137,7 @@ function render(state) {
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .renderInto(tooltipLayer)
     .header(tooltipTitle)
-    .body(function (d) {
-      return "Im Jahr " + xAcc(d);
-    })
+    .body((d) => "Im Jahr " + xAcc(d))
     .visible(isSelected);
 
   // Rendering

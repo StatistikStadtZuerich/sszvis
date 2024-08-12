@@ -135,13 +135,15 @@ function render(state) {
 
   var xValue = sszvis.compose(xScale, xAcc);
   var yValue = sszvis.compose(yScale, yAcc);
-  var cValue = sszvis.compose(function (v) {
-    return Number.isNaN(v)
-      ? "url(#ht-missing-value)"
-      : (v === 0
-        ? sszvis.scaleLightGry()(v)
-        : colorScale(v));
-  }, vAcc);
+  var cValue = sszvis.compose(
+    (v) =>
+      Number.isNaN(v)
+        ? "url(#ht-missing-value)"
+        : v === 0
+          ? sszvis.scaleLightGry()(v)
+          : colorScale(v),
+    vAcc
+  );
 
   // Layers
 
@@ -163,11 +165,11 @@ function render(state) {
     .width(tableDimensions.side)
     .height(tableDimensions.side)
     .fill(cValue)
-    .stroke(function (d) {
-      return !Number.isNaN(vAcc(d)) && sszvis.contains(state.selection, d)
+    .stroke((d) =>
+      !Number.isNaN(vAcc(d)) && sszvis.contains(state.selection, d)
         ? sszvis.slightlyDarker(cValue(d))
-        : "none";
-    });
+        : "none"
+    );
 
   var xAxis = sszvis.axisX
     .ordinal()
@@ -180,11 +182,7 @@ function render(state) {
     .titleAnchor("middle")
     .titleCenter(true)
     .dyTitle(-40)
-    .highlightTick(function (tickValue) {
-      return state.selection.some(function (d) {
-        return xAcc(d) === tickValue;
-      });
-    });
+    .highlightTick((tickValue) => state.selection.some((d) => xAcc(d) === tickValue));
 
   var yAxis = sszvis.axisY
     .ordinal()
@@ -195,11 +193,7 @@ function render(state) {
     .titleAnchor("middle")
     .titleCenter(true)
     .dxTitle(-40)
-    .highlightTick(function (tickValue) {
-      return state.selection.some(function (d) {
-        return yAcc(d) === tickValue;
-      });
-    });
+    .highlightTick((tickValue) => state.selection.some((d) => yAcc(d) === tickValue));
 
   var legendWidth = Math.min(bounds.innerWidth / 2, 260);
 
@@ -212,18 +206,20 @@ function render(state) {
   var tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
-    .header(function (d) {
-      return props.tSourceAxis === "y" ? yAcc(d) + " " + props.tTitleAdd : xAcc(d) + " " + props.tTitleAdd;
-    })
-    .body(function (d) {
+    .header((d) =>
+      props.tSourceAxis === "y" ? yAcc(d) + " " + props.tTitleAdd : xAcc(d) + " " + props.tTitleAdd
+    )
+    .body((d) => {
       var v = vAcc(d);
-      return props.tSourceAxis === "y" ? [
-          [props.xAxisLabel, xAcc(d)],
-          [props.valueLabel, Number.isNaN(v) ? "–" : sszvis.formatNumber(v)],
-        ] : [
-          [props.yAxisLabel, yAcc(d)],
-          [props.valueLabel, Number.isNaN(v) ? "–" : sszvis.formatNumber(v)],
-        ];
+      return props.tSourceAxis === "y"
+        ? [
+            [props.xAxisLabel, xAcc(d)],
+            [props.valueLabel, Number.isNaN(v) ? "–" : sszvis.formatNumber(v)],
+          ]
+        : [
+            [props.yAxisLabel, yAcc(d)],
+            [props.valueLabel, Number.isNaN(v) ? "–" : sszvis.formatNumber(v)],
+          ];
     })
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .visible(isSelected);

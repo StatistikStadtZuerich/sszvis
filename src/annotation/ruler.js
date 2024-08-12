@@ -111,18 +111,16 @@ export default function () {
 
       var textSelection = selection
         .selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline")
-        .attr("transform", function (d) {
+        .attr("transform", (d) => {
           var x = crispX(d);
           var y = crispY(d);
 
           var dx = props.flip(d) ? -10 : 10;
-          var dy = y < props.top + dy ? 2 * dy : (y > props.bottom - dy ? 0 : 5);
+          var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
 
           return translateString(x + dx, y + dy);
         })
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .html(props.label);
 
       if (props.reduceOverlap) {
@@ -149,9 +147,7 @@ export default function () {
 
         // Sort array in place by vertical position
         // (only supports labels of same height)
-        labelBounds.sort(function (a, b) {
-          return ascending(a.top, b.top);
-        });
+        labelBounds.sort((a, b) => ascending(a.top, b.top));
 
         // Using postfix decrement means the expression evaluates to the value of the variable
         // before the decrement takes place. In the case of 10 iterations, this means that the
@@ -178,7 +174,7 @@ export default function () {
         }
 
         // Shift vertically to remove overlap
-        textSelection.attr("y", function (d) {
+        textSelection.attr("y", (d) => {
           var textLabel = labelBoundsIndex[labelId(d)];
           return textLabel.dy;
         });

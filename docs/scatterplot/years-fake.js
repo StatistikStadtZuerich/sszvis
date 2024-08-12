@@ -95,11 +95,9 @@ function render(state) {
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(
-    state.data.filter(function (d) {
-      return sszvis.stringEqual(qAcc(d), state.activeQuarter);
-    })
-  );
+  var chartLayer = sszvis
+    .createSvgLayer(config.id, bounds)
+    .datum(state.data.filter((d) => sszvis.stringEqual(qAcc(d), state.activeQuarter)));
 
   // Components
 
@@ -118,11 +116,7 @@ function render(state) {
     .value(state.activeQuarter)
     .minorTicks(state.quarters)
     // Be aware that this uses fn.derivedSet instead of fn.set
-    .majorTicks(
-      sszvis.derivedSet(state.quarters, function (d) {
-        return d.getYear();
-      })
-    )
+    .majorTicks(sszvis.derivedSet(state.quarters, (d) => d.getYear()))
     .tickLabels(sszvis.formatAxisTimeFormat)
     .label(sszvis.formatMonth)
     .onchange(actions.setQuarter);

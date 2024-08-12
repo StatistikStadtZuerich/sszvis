@@ -79,53 +79,41 @@ export default function () {
 
       marks
         .selectAll(".sszvis-rangeRuler__p1")
-        .data(function (d) {
-          return [d];
-        })
+        .data((d) => [d])
         .attr("cx", crispX)
         .attr("cy", crispY0)
         .attr("r", dotRadius);
 
       marks
         .selectAll(".sszvis-rangeRuler__p2")
-        .data(function (d) {
-          return [d];
-        })
+        .data((d) => [d])
         .attr("cx", crispX)
         .attr("cy", crispY1)
         .attr("r", dotRadius);
 
       marks
         .selectAll(".sszvis-rangeRuler__label")
-        .data(function (d) {
-          return [d];
-        })
-        .attr("x", function (d) {
+        .data((d) => [d])
+        .attr("x", (d) => {
           var offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
         })
         .attr("y", middleY)
         .attr("dy", "0.35em") // vertically-center
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .text(fn.compose(formatNumber, props.label));
 
       //make the contour behind the the label update with the label
       marks
         .selectAll(".sszvis-rangeRuler__label-contour")
-        .data(function (d) {
-          return [d];
-        })
-        .attr("x", function (d) {
+        .data((d) => [d])
+        .attr("x", (d) => {
           var offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
         })
         .attr("y", middleY)
         .attr("dy", "0.35em") // vertically-center
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .text(fn.compose(formatNumber, props.label));
 
       selection.selectAll("g.sszvis-rangeRuler--mark").each(function () {
@@ -139,15 +127,13 @@ export default function () {
           this.insertBefore(textContour.node(), textNode);
         } else {
           textContour
-            .attr("x", function (d) {
+            .attr("x", (d) => {
               var offset = props.flip(d) ? -10 : 10;
               return crispX(d) + offset;
             })
             .attr("y", middleY)
             .attr("dy", "0.35em") // vertically-center
-            .style("text-anchor", function (d) {
-              return props.flip(d) ? "end" : "start";
-            });
+            .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"));
         }
         textContour.text(textNode.textContent);
       });
@@ -165,14 +151,12 @@ export default function () {
       total = total.merge(newTotal);
 
       total
-        .attr("x", function (d) {
+        .attr("x", (d) => {
           var offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
         })
         .attr("y", props.top - 10)
-        .style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        })
+        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
         .text("Total " + formatNumber(props.total));
 
       var totalNode = total.node();
@@ -184,14 +168,12 @@ export default function () {
         this.insertBefore(totalContour.node(), totalNode);
       } else {
         totalContour
-          .attr("x", function (d) {
+          .attr("x", (d) => {
             var offset = props.flip(d) ? -10 : 10;
             return crispX(d) + offset;
           })
           .attr("y", props.top - 10)
-          .style("text-anchor", function (d) {
-            return props.flip(d) ? "end" : "start";
-          });
+          .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"));
       }
       totalContour.text(totalNode.textContent);
 

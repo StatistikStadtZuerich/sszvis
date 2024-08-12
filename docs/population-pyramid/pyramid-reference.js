@@ -110,9 +110,7 @@ function render(state) {
     .ordinal()
     .scale(positionScale)
     .orient("right")
-    .tickFormat(function (d) {
-      return d === 0 ? "" : sszvis.formatAge(d);
-    })
+    .tickFormat((d) => (d === 0 ? "" : sszvis.formatAge(d)))
     .ticks(5)
     .title("Alter in Jahren")
     .dyTitle(-18);

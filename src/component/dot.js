@@ -58,9 +58,7 @@ export default function () {
 
       // Tooltip anchors
 
-      var ta = tooltipAnchor().position(function (d) {
-        return [props.x(d), props.y(d)];
-      });
+      var ta = tooltipAnchor().position((d) => [props.x(d), props.y(d)]);
 
       selection.call(ta);
     });

@@ -63,9 +63,7 @@ var actions = {
   },
 
   showTooltip: function (x) {
-    state.selection = state.groupedData.filter(function (d) {
-      return sszvis.contains(d.map(xAcc), x);
-    });
+    state.selection = state.groupedData.filter((d) => sszvis.contains(d.map(xAcc), x));
     render(state);
   },
 
@@ -155,9 +153,9 @@ function render(state) {
     .orient("bottom")
     .slant(props.textDirection)
     .tickFormat(props.xLabelFormat)
-    .highlightTick(function (d) {
-      return sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d);
-    });
+    .highlightTick((d) =>
+      sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d)
+    );
   if (!props.textDirection) {
     xAxis.textWrap(labelWrapWidth(xScale.range()));
   }
@@ -174,21 +172,15 @@ function render(state) {
     .tooltip()
     .renderInto(tooltipLayer)
     .orientation(sszvis.fitTooltip("bottom", bounds))
-    .header(
-      sszvis.modularTextHTML().plain(function (d) {
-        return xAcc(sszvis.first(d));
-      })
-    )
-    .body(function (d) {
+    .header(sszvis.modularTextHTML().plain((d) => xAcc(sszvis.first(d))))
+    .body((d) =>
       // generates a row from each data element
-      return d.map(function (item) {
+      d.map((item) => {
         var v = yAcc(item);
         return [cAcc(item), Number.isNaN(v) ? "–" : v];
-      });
-    })
-    .visible(function (d) {
-      return state.selection.includes(d);
-    });
+      })
+    )
+    .visible((d) => state.selection.includes(d));
 
   // Rendering
 

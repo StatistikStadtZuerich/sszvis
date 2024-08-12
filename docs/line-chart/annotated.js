@@ -16,16 +16,15 @@ var xAcc = sszvis.prop("date");
 var yAcc = sszvis.prop("value");
 
 sszvis.app({
-  init: (state) => {
-    return d3.csv("data/SL_daily.csv", parseRow).then((data) => {
+  init: (state) =>
+    d3.csv("data/SL_daily.csv", parseRow).then((data) => {
       state.data = data;
       state.dates = d3.extent(state.data, xAcc);
       state.lineData = [state.data];
-      state.annotatedData = state.data.filter(function (d) {
-        return sszvis.contains(HIGHLIGHTED_DATES.map(String), String(xAcc(d)));
-      });
-    });
-  },
+      state.annotatedData = state.data.filter((d) =>
+        sszvis.contains(HIGHLIGHTED_DATES.map(String), String(xAcc(d)))
+      );
+    }),
   render: (state) => {
     var bounds = sszvis.bounds({ top: 30, bottom: 45 }, "#sszvis-chart");
 
@@ -65,9 +64,7 @@ sszvis.app({
       .y(sszvis.compose(yScale, yAcc))
       .r(20)
       .dy(-30)
-      .caption(function (d) {
-        return "Referenzwert A (" + yAcc(d) + ")";
-      });
+      .caption((d) => "Referenzwert A (" + yAcc(d) + ")");
 
     // Rendering
 

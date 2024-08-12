@@ -50,13 +50,7 @@ function formatHTML() {
   return function (textBody, datum) {
     return textBody
       .lines()
-      .map(function (line) {
-        return line
-          .map(function (word) {
-            return styles[word.style].call(null, word.text(datum));
-          })
-          .join(" ");
-      })
+      .map((line) => line.map((word) => styles[word.style].call(null, word.text(datum))).join(" "))
       .join("<br/>");
   };
 }
@@ -75,12 +69,8 @@ function formatSVG() {
   };
 
   return function (textBody, datum) {
-    return textBody.lines().reduce(function (svg, line, i) {
-      var lineSvg = line
-        .map(function (word) {
-          return styles[word.style].call(null, word.text(datum));
-        })
-        .join(" ");
+    return textBody.lines().reduce((svg, line, i) => {
+      var lineSvg = line.map((word) => styles[word.style].call(null, word.text(datum))).join(" ");
       var dy = i === 0 ? 0 : "1.2em";
       return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
     }, "");
