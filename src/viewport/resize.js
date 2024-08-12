@@ -75,4 +75,4 @@ const trigger = function (name) {
   return this;
 };
 
-export { on, off, trigger };
+export const viewport = { on, off, trigger };
