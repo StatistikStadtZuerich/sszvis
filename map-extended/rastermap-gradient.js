@@ -3,11 +3,11 @@
 // Configuration
 // -----------------------------------------------
 
-var MAX_LEGEND_WIDTH = 320;
-var queryProps = sszvis
+const MAX_LEGEND_WIDTH = 320;
+const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
+    _(width) {
       // The calculation of the rastermap bounds is a bit more complex due to the fact
       // that we have to deal with a raster image in the background that has a bigger
       // size than the vector map.
@@ -15,22 +15,22 @@ var queryProps = sszvis
       // At the maximum map size (420x420px) the raster image overlaps the image by
       // the magic padding numbers below. At smaller sizes, we apply a scale factor
       // to calculate the respective paddings.
-      var scale = width / (sszvis.aspectRatioSquare.MAX_HEIGHT + 49 + 42);
+      const scale = width / (sszvis.aspectRatioSquare.MAX_HEIGHT + 49 + 42);
 
-      var padding = {
+      const padding = {
         top: Math.min(36 * scale, 36),
         right: 49 * scale,
         bottom: 60 + Math.min(31 * scale, 31),
         left: 42 * scale,
       };
 
-      var innerWidth = width - padding.left - padding.right;
-      var innerHeight = sszvis.aspectRatioSquare(innerWidth);
+      const innerWidth = width - padding.left - padding.right;
+      const innerHeight = sszvis.aspectRatioSquare(innerWidth);
 
       // We always want a 1:1 ratio, so we restrict the innerWidth to the max height
       // by increasing the horizontal padding.
       if (innerHeight < innerWidth) {
-        var excessPadding = innerWidth - innerHeight;
+        const excessPadding = innerWidth - innerHeight;
         padding.right = padding.right + excessPadding / 2;
         padding.left = padding.left + excessPadding / 2;
       }
@@ -45,9 +45,7 @@ var queryProps = sszvis
     },
   })
   .prop("legendWidth", {
-    _: function (width) {
-      return Math.min(width / 2, MAX_LEGEND_WIDTH);
-    },
+    _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
   });
 
 function parseRow(d) {
@@ -58,13 +56,13 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("xpos");
-var yAcc = sszvis.prop("ypos");
-var valAcc = sszvis.prop("val");
+const xAcc = sszvis.prop("xpos");
+const yAcc = sszvis.prop("ypos");
+const valAcc = sszvis.prop("val");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: null,
   mapData: null,
   valueDomain: [0, 0],
@@ -72,15 +70,15 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareData: function (data) {
+const actions = {
+  prepareData(data) {
     state.data = data;
     state.valueDomain = d3.extent(data, valAcc);
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.stadtkreise),
       borders: topojson.mesh(topo, topo.objects.stadtkreise),
@@ -90,7 +88,7 @@ var actions = {
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -109,15 +107,15 @@ function render(state) {
     return true;
   }
 
-  var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-  var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+  const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+  const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
   // Scales
 
-  var alphaScale = d3.scaleLinear().domain(state.valueDomain).range([0, 1]);
+  const alphaScale = d3.scaleLinear().domain(state.valueDomain).range([0, 1]);
 
   // Scale the color values as well as the alpha values
-  var valueScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
+  const valueScale = sszvis.scaleSeqBlu().domain(state.valueDomain);
 
   // Uses a single color value
   // let solidBlue = sszvis.scaleQual12()(0);
@@ -128,13 +126,13 @@ function render(state) {
 
   // Layers
 
-  var htmlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.data);
+  const htmlLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.data);
 
-  var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds);
+  const chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds);
 
   // Components
 
-  var choroplethMap = sszvis
+  const choroplethMap = sszvis
     .choropleth()
     .features(state.mapData.features)
     .borders(state.mapData.borders)
@@ -147,41 +145,36 @@ function render(state) {
     .borderColor("#545454")
     .lakePathColor("#545454");
 
-  var mapPath = sszvis.swissMapPath(
+  const mapPath = sszvis.swissMapPath(
     bounds.innerWidth,
     bounds.innerHeight,
     state.mapData.features,
     "zurichStadtfeatures"
   );
-  var projection = mapPath.projection();
-
-  function roundPow10(n, pow10) {
-    var divisor = Math.pow(10, pow10);
-    return Math.round(n * divisor) / divisor;
-  }
+  const projection = mapPath.projection();
 
   // Offset is applied for better alignment with the map data
-  var geoOffset = -0.0011;
+  const geoOffset = -0.0011;
 
   function getRoundVal(val) {
     return [roundPow10(xAcc(val) + geoOffset, 5), roundPow10(yAcc(val) + geoOffset, 5)];
   }
 
-  var layerBounds = [
-    [8.431443 + geoOffset, 47.448978 + geoOffset],
-    [8.647471 + geoOffset, 47.309726 + geoOffset],
+  const layerBounds = [
+    [8.431_443 + geoOffset, 47.448_978 + geoOffset],
+    [8.647_471 + geoOffset, 47.309_726 + geoOffset],
   ];
   // To calculate the length in pixels of a certain distance in meters, use this function.
   // You need to provide a projection (for calculating pixel values from decimal degree coordinates)
   // and you need to provide a center point. The center point is required because the pixel size of
   // a given degree distance will be different if that square is at the equator or at one of the poles.
-  var pixelSide = sszvis.pixelsFromGeoDistance(
+  const pixelSide = sszvis.pixelsFromGeoDistance(
     projection,
     [(layerBounds[0][0] + layerBounds[1][0]) / 2, (layerBounds[0][1] + layerBounds[1][1]) / 2],
     50
   );
 
-  var rasterLayer = sszvis
+  const rasterLayer = sszvis
     .mapRendererRaster()
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
@@ -189,7 +182,7 @@ function render(state) {
     .cellSide(pixelSide)
     .fill(sszvis.compose(colorScale, valAcc));
 
-  var topoLayer = sszvis
+  const topoLayer = sszvis
     .mapRendererImage()
     .projection(projection)
     .src("data/topo_layer_280915.png")
@@ -197,7 +190,7 @@ function render(state) {
     .geoBounds(layerBounds)
     .opacity(0.4);
 
-  var legend = sszvis
+  const legend = sszvis
     .legendColorLinear()
     .scale(valueScale)
     .width(props.legendWidth)
@@ -205,7 +198,7 @@ function render(state) {
 
   // Rendering
 
-  var DEBUG = false;
+  const DEBUG = false;
 
   if (DEBUG) {
     chartLayer
@@ -222,7 +215,7 @@ function render(state) {
 
     rasterLayer.debug(DEBUG);
 
-    var circlePos = projection([8.537617, 47.383303]);
+    const circlePos = projection([8.537_617, 47.383_303]);
 
     chartLayer
       .append("circle")
@@ -252,4 +245,11 @@ function render(state) {
     .call(legend);
 
   sszvis.viewport.on("resize", actions.resize);
+}
+
+// Helper functions
+// -----------------------------------------------
+function roundPow10(n, pow10) {
+  const divisor = Math.pow(10, pow10);
+  return Math.round(n * divisor) / divisor;
 }

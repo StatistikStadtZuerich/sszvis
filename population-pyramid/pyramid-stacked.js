@@ -3,7 +3,7 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("bottomPadding", {
     lap: 150,
@@ -23,16 +23,16 @@ function parseRow(d) {
   };
 }
 
-var vAcc = sszvis.prop("value");
-var gAcc = sszvis.prop("gender");
-var aAcc = sszvis.prop("age");
-var stackAcc = sszvis.prop("group");
-var womenAcc = sszvis.prop("0");
-var menAcc = sszvis.prop("1");
+const vAcc = sszvis.prop("value");
+const gAcc = sszvis.prop("gender");
+const aAcc = sszvis.prop("age");
+const stackAcc = sszvis.prop("group");
+const womenAcc = sszvis.prop("0");
+const menAcc = sszvis.prop("1");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   ages: d3.range(0, 101), // [0 ... 100]
   groups: [],
@@ -42,8 +42,8 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareState: function (data) {
+const actions = {
+  prepareState(data) {
     state.data = data;
     state.groups = sszvis.set(state.data, groupAndStackAcc);
 
@@ -54,7 +54,7 @@ var actions = {
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -66,17 +66,17 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var chartDimensions = sszvis.measureDimensions(config.id);
+  const chartDimensions = sszvis.measureDimensions(config.id);
 
-  var props = queryProps(chartDimensions);
-  var pyramidDimensions = sszvis.layoutPopulationPyramid(
+  const props = queryProps(chartDimensions);
+  const pyramidDimensions = sszvis.layoutPopulationPyramid(
     chartDimensions.width - 2,
     state.ages.length
   );
 
-  var chartPadding = { top: 25, bottom: props.bottomPadding };
+  const chartPadding = { top: 25, bottom: props.bottomPadding };
 
-  var bounds = sszvis.bounds(
+  const bounds = sszvis.bounds(
     {
       height: chartPadding.top + pyramidDimensions.totalHeight + chartPadding.bottom,
       top: chartPadding.top,
@@ -89,14 +89,14 @@ function render(state) {
 
   // Scales
 
-  var lengthScale = d3
+  const lengthScale = d3
     .scaleLinear()
     .domain([0, state.maxStackedValue])
     .range([0, pyramidDimensions.maxBarLength]);
 
-  var positionScale = d3.scaleOrdinal().domain(state.ages).range(pyramidDimensions.positions);
+  const positionScale = d3.scaleOrdinal().domain(state.ages).range(pyramidDimensions.positions);
 
-  var colorScale = d3
+  const colorScale = d3
     .scaleOrdinal()
     .domain(state.groups)
     /**
@@ -113,11 +113,11 @@ function render(state) {
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedPyramidData);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.stackedPyramidData);
 
   // Components
 
-  var pyramid = sszvis
+  const pyramid = sszvis
     .stackedPyramid()
     .barFill(sszvis.compose(colorScale, groupAndStackAcc))
     .barPosition(positionScale)
@@ -126,7 +126,7 @@ function render(state) {
     .leftAccessor(womenAcc)
     .rightAccessor(menAcc);
 
-  var xAxis = sszvis.axisX
+  const xAxis = sszvis.axisX
     .pyramid()
     .scale(lengthScale)
     .orient("bottom")
@@ -134,18 +134,16 @@ function render(state) {
     .titleAnchor("middle")
     .titleCenter(true);
 
-  var yAxis = sszvis.axisY
+  const yAxis = sszvis.axisY
     .ordinal()
     .scale(positionScale)
     .orient("right")
-    .tickFormat(function (d) {
-      return d === 0 ? "" : sszvis.formatAge(d);
-    })
+    .tickFormat((d) => (d === 0 ? "" : sszvis.formatAge(d)))
     .ticks(5)
     .title("Alter in Jahren")
     .dyTitle(-18);
 
-  var colorLegend = sszvis
+  const colorLegend = sszvis
     .legendColorOrdinal()
     .scale(colorScale)
     .orientation("vertical")

@@ -3,11 +3,11 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
-      var innerHeight = sszvis.aspectRatioSquare(width);
+    _(width) {
+      const innerHeight = sszvis.aspectRatioSquare(width);
       return {
         top: 90,
         bottom: 30,
@@ -16,27 +16,17 @@ var queryProps = sszvis
     },
   })
   .prop("legendX", {
-    _: function (width) {
-      return Math.max(width / 2 - 205, 5);
-    },
+    _: (width) => Math.max(width / 2 - 205, 5),
   })
   .prop("radiusMax", {
-    _: function (width) {
-      return Math.min(14, Math.max(width / 28, 10));
-    },
+    _: (width) => Math.min(14, Math.max(width / 28, 10)),
   })
   .prop("control", {
-    palm: function () {
-      return sszvis.selectMenu;
-    },
-    _: function () {
-      return sszvis.buttonGroup;
-    },
+    palm: () => sszvis.selectMenu,
+    _: () => sszvis.buttonGroup,
   })
   .prop("controlWidth", {
-    _: function (width) {
-      return Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT);
-    },
+    _: (width) => Math.min(width, sszvis.aspectRatioSquare.MAX_HEIGHT),
   });
 
 function parseRow(d) {
@@ -49,15 +39,15 @@ function parseRow(d) {
   };
 }
 
-var datumAcc = sszvis.prop("datum");
-var yearAcc = sszvis.prop("year");
-var genderAcc = sszvis.prop("gender");
-var birthsAcc = sszvis.propOr("births", 0);
-var zoneNameAcc = sszvis.propOr("zonename", "--");
+const datumAcc = sszvis.prop("datum");
+const yearAcc = sszvis.prop("year");
+const genderAcc = sszvis.prop("gender");
+const birthsAcc = sszvis.propOr("births", 0);
+const zoneNameAcc = sszvis.propOr("zonename", "--");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: null,
   mapData: null,
   filteredData: [],
@@ -67,15 +57,15 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareData: function (data) {
+const actions = {
+  prepareData(data) {
     state.data = data;
     state.birthsRange = [0, d3.max(state.data, birthsAcc)];
 
     actions.setFilter(null, state.currentFilter);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.statistische_zonen),
       borders: topojson.mesh(topo, topo.objects.statistische_zonen),
@@ -83,30 +73,28 @@ var actions = {
     render(state);
   },
 
-  setFilter: function (e, filterValue) {
+  setFilter(_event, filterValue) {
     state.currentFilter = filterValue;
-    var filter = filterValue.toLowerCase().split(" ");
-    var gender = filter[0];
-    var year = parseInt(filter[1]);
+    const filter = filterValue.toLowerCase().split(" ");
+    const gender = filter[0];
+    const year = Number.parseInt(filter[1]);
 
-    state.filteredData = state.data.filter(function (d) {
-      return genderAcc(d) === gender && yearAcc(d) === year;
-    });
+    state.filteredData = state.data.filter((d) => genderAcc(d) === gender && yearAcc(d) === year);
 
     render(state);
   },
 
-  selectHovered: function (e, d) {
+  selectHovered(_event, d) {
     state.selection = [d.datum];
     render(state);
   },
 
-  deselectHovered: function () {
+  deselectHovered() {
     state.selection = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -127,8 +115,8 @@ function render(state) {
     return true;
   }
 
-  var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-  var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+  const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+  const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
   // Scales
   // Any time you visualize a quantity using a circle, you should make the total
@@ -138,65 +126,59 @@ function render(state) {
   // This scale takes the square root of the input and uses that to scale the radius. When the
   // result is used as the radius of a circle, the area of the circle will be linearly
   // proportional to the input quantity.
-  var radiusScale = d3.scaleSqrt().domain(state.birthsRange).range([0, props.radiusMax]);
+  const radiusScale = d3.scaleSqrt().domain(state.birthsRange).range([0, props.radiusMax]);
 
   // Layers
 
-  var chartLayer = sszvis
+  const chartLayer = sszvis
     .createSvgLayer("#sszvis-chart", bounds, {
       key: "chartlayer",
     })
     .datum(state.filteredData);
 
-  var tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer("#sszvis-chart", bounds).datum(state.selection);
 
   // Components
 
-  var bubbleMap = sszvis
+  const bubbleMap = sszvis
     .mapRendererBubble()
     .fill(sszvis.scaleQual6()(0))
-    .radius(function (d) {
-      return !sszvis.defined(d) ? 0 : radiusScale(birthsAcc(d));
-    })
+    .radius((d) => (sszvis.defined(d) ? radiusScale(birthsAcc(d)) : 0))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width));
 
-  var choroplethMap = sszvis
+  const choroplethMap = sszvis
     .choropleth()
     .features(state.mapData.features)
     .borders(state.mapData.borders)
     .keyName("id")
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
-    .fill(function (d) {
-      return isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0);
-    })
+    .fill((d) => (isSelected(d) ? sszvis.scaleDimGry()(0) : sszvis.scaleGry()(0)))
     .strokeWidth(sszvis.widthAdaptiveMapPathStroke(bounds.width))
     .transitionColor(false)
     .anchoredShape(bubbleMap);
 
-  var tooltipHeader = sszvis.modularTextHTML().plain(function (geod) {
-    return birthsAcc(geod.datum) + " Geburten";
-  });
+  const tooltipHeader = sszvis
+    .modularTextHTML()
+    .plain((geod) => birthsAcc(geod.datum) + " Geburten");
 
-  var tooltipBody = sszvis.modularTextHTML().plain(function (geod) {
-    return zoneNameAcc(geod.datum);
-  });
+  const tooltipBody = sszvis.modularTextHTML().plain((geod) => zoneNameAcc(geod.datum));
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(tooltipHeader)
     .body(tooltipBody)
     .visible(sszvis.compose(isSelected, datumAcc));
 
-  var control = props
+  const control = props
     .control()
     .values(["Männlich 1993", "Weiblich 1993", "Männlich 2014", "Weiblich 2014"])
     .current(state.currentFilter)
     .width(props.controlWidth)
     .change(actions.setFilter);
 
-  var radiusLegend = sszvis
+  const radiusLegend = sszvis
     .legendRadius()
     .scale(radiusScale)
     .tickFormat(sszvis.formatPreciseNumber(1));
@@ -220,7 +202,7 @@ function render(state) {
 
   // Interaction
 
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-map__area--entering, .sszvis-anchored-circle--entering")
     .on("start", actions.selectHovered)
@@ -233,5 +215,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return sszvis.defined(d) && state.selection.indexOf(d) !== -1;
+  return sszvis.defined(d) && state.selection.includes(d);
 }

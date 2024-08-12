@@ -3,7 +3,7 @@
 // Configuration
 // -----------------------------------------------
 
-var queryProps = sszvis
+const queryProps = sszvis
   .responsiveProps()
   .prop("xAxisLabel", {
     _: "NeubauAbs",
@@ -38,14 +38,14 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("xPosition");
-var yAcc = sszvis.prop("yPosition");
-var rAcc = sszvis.prop("radius");
-var cAcc = sszvis.prop("label");
+const xAcc = sszvis.prop("xPosition");
+const yAcc = sszvis.prop("yPosition");
+const rAcc = sszvis.prop("radius");
+const cAcc = sszvis.prop("label");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   highlightData: [],
   xExtent: [0, 0],
@@ -55,35 +55,33 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareState: function (data) {
+const actions = {
+  prepareState(data) {
     state.data = data;
 
     // for the voronoi component to work, the data must first be filtered such that no two vertices
     // fall at exactly the same point.
-    state.voronoiFiltered = sszvis.derivedSet(state.data, function (d) {
-      return xAcc(d) + "__" + yAcc(d);
-    });
+    state.voronoiFiltered = sszvis.derivedSet(state.data, (d) => xAcc(d) + "__" + yAcc(d));
 
     state.xExtent = d3.extent(state.data, xAcc);
     state.yExtent = d3.extent(state.data, yAcc);
-    var radiusExtent = d3.extent(state.data, rAcc);
+    const radiusExtent = d3.extent(state.data, rAcc);
     state.rExtent = [Math.floor(radiusExtent[0]), Math.ceil(radiusExtent[1])];
 
     render(state);
   },
 
-  setHighlight: function (d) {
+  setHighlight(d) {
     state.highlightData = [d];
     render(state);
   },
 
-  resetHighlight: function () {
+  resetHighlight() {
     state.highlightData = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -95,30 +93,30 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var props = queryProps(sszvis.measureDimensions(config.id));
-  var bounds = sszvis.bounds({ top: 20, bottom: 110 }, config.id);
+  const props = queryProps(sszvis.measureDimensions(config.id));
+  const bounds = sszvis.bounds({ top: 20, bottom: 110 }, config.id);
 
   // Scales
 
-  var xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
+  const xScale = d3.scaleLinear().domain(state.xExtent).range([0, bounds.innerWidth]);
 
-  var xValue = sszvis.compose(xScale, xAcc);
+  const xValue = sszvis.compose(xScale, xAcc);
 
-  var yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
+  const yScale = d3.scaleLinear().domain(state.yExtent).range([bounds.innerHeight, 0]);
 
-  var yValue = sszvis.compose(yScale, yAcc);
+  const yValue = sszvis.compose(yScale, yAcc);
 
-  var rScale = d3.scaleLinear().domain(state.rExtent).range([1, 20]);
+  const rScale = d3.scaleLinear().domain(state.rExtent).range([1, 20]);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.highlightData);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.highlightData);
 
   // Components
 
-  var dots = sszvis
+  const dots = sszvis
     .dot()
     .x(xValue)
     .y(yValue)
@@ -127,18 +125,16 @@ function render(state) {
     // use white outlines in scatterplots to assist in identifying distinct circles
     .stroke("#FFFFFF");
 
-  var xAxis = sszvis
+  const xAxis = sszvis
     .axisX()
     .scale(xScale)
     .orient("bottom")
     .contour(true)
     .ticks(props.xTicks)
-    .tickFormat(function (d) {
-      return d < 1 ? d.toPrecision(1) : d;
-    })
+    .tickFormat((d) => (d < 1 ? d.toPrecision(1) : d))
     .title(props.xAxisLabel);
 
-  var yAxis = sszvis
+  const yAxis = sszvis
     .axisY()
     .scale(yScale)
     .orient("right")
@@ -147,31 +143,23 @@ function render(state) {
     .ticks(props.yTicks)
     .title(props.yAxisLabel);
 
-  var radiusLegend = sszvis
+  const radiusLegend = sszvis
     .legendRadius()
     .scale(rScale)
     .tickValues(props.legendTicks)
-    .tickFormat(function (d) {
-      return Math.round(d * 100) / 100;
-    });
+    .tickFormat((d) => Math.round(d * 100) / 100);
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .header(cAcc)
-    .body(function (d) {
-      return [
-        [props.xAxisLabel, sszvis.formatNumber(xAcc(d))],
-        [props.yAxisLabel, sszvis.formatNumber(yAcc(d))],
-        [props.rLabel, sszvis.formatNumber(rAcc(d))],
-      ];
-    })
-    .visible(function (d) {
-      return sszvis.contains(state.highlightData, d);
-    })
-    .orientation(function (d) {
-      return xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right";
-    });
+    .body((d) => [
+      [props.xAxisLabel, sszvis.formatNumber(xAcc(d))],
+      [props.yAxisLabel, sszvis.formatNumber(yAcc(d))],
+      [props.rLabel, sszvis.formatNumber(rAcc(d))],
+    ])
+    .visible((d) => sszvis.contains(state.highlightData, d))
+    .orientation((d) => (xValue(d.datum) <= bounds.innerWidth / 2 ? "left" : "right"));
 
   // Rendering
 
@@ -197,7 +185,7 @@ function render(state) {
   sszvis.viewport.on("resize", actions.resize);
 
   // Interaction
-  var mouseOverlay = sszvis
+  const mouseOverlay = sszvis
     .voronoi()
     .x(xValue)
     .y(yValue)
@@ -214,7 +202,7 @@ function render(state) {
 function removeOverlappingYTickLabels(maxBottom) {
   return function (g) {
     g.selectAll("text").each(function () {
-      var bottom = this.getBoundingClientRect().bottom;
+      const bottom = this.getBoundingClientRect().bottom;
       if (bottom >= maxBottom) d3.select(this.parentNode).style("display", "none");
     });
   };

@@ -12,14 +12,14 @@ function parseRow(d) {
   };
 }
 
-var continentAcc = sszvis.prop("continent");
-var regionAcc = sszvis.prop("region");
-var countryAcc = sszvis.prop("country");
-var numAcc = sszvis.prop("number");
+const continentAcc = sszvis.prop("continent");
+const regionAcc = sszvis.prop("region");
+const countryAcc = sszvis.prop("country");
+const numAcc = sszvis.prop("number");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   radiusExtent: [0, 0],
   selection: [],
@@ -27,13 +27,13 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareState: function (data) {
-    var continentsList = ["Europa", "Asien", "Amerika", "Afrika", "Ozeanien", "Unzuteilbar"];
+const actions = {
+  prepareState(data) {
+    const continentsList = ["Europa", "Asien", "Amerika", "Afrika", "Ozeanien", "Unzuteilbar"];
 
     // Sort the input data according to the desired order of the continents first, then by descending order of size
-    data.sort(function (a, b) {
-      var indexDiff = d3.ascending(
+    data.sort((a, b) => {
+      const indexDiff = d3.ascending(
         continentsList.indexOf(continentAcc(a)),
         continentsList.indexOf(continentAcc(b))
       );
@@ -56,19 +56,19 @@ var actions = {
     render(state);
   },
 
-  onSliceOver: function (e, d) {
+  onSliceOver(e, d) {
     state.selection = [d];
 
     render(state);
   },
 
-  onSliceOut: function () {
+  onSliceOut() {
     state.selection = [];
 
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -80,62 +80,58 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var legendLayout = sszvis.colorLegendLayout(
+  const legendLayout = sszvis.colorLegendLayout(
     {
       legendLabels: state.continents,
     },
     config.id
   );
 
-  var colorScale = legendLayout.scale;
-  var colorLegend = legendLayout.legend;
+  const colorScale = legendLayout.scale;
+  const colorLegend = legendLayout.legend;
 
-  var bounds = sszvis.bounds(
+  const bounds = sszvis.bounds(
     { top: 20, right: 20, bottom: legendLayout.bottomPadding, left: 20 },
     config.id
   );
 
-  var burstLayout = sszvis.sunburstLayout(3, Math.min(bounds.innerWidth, bounds.innerHeight));
+  const burstLayout = sszvis.sunburstLayout(3, Math.min(bounds.innerWidth, bounds.innerHeight));
 
   // Scales
 
-  var radiusScale = d3
+  const radiusScale = d3
     .scaleLinear()
     .domain(state.radiusExtent)
     .range([0, burstLayout.numLayers * burstLayout.ringWidth]);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds);
 
   // Components
   // Note: the angleScale property has a sensible default, but should be
   // configured if you're not using sszvis.sunburstLayout
-  var sunburstMaker = sszvis
+  const sunburstMaker = sszvis
     .sunburst()
     .fill(colorScale)
     .radiusScale(radiusScale)
     .centerRadius(burstLayout.centerRadius);
 
-  var tooltipText = sszvis.modularTextHTML().bold(function (d) {
-    return d.data.key;
-  });
+  const tooltipText = sszvis.modularTextHTML().bold((d) => d.data.key);
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .orientation(sszvis.fitTooltip("bottom", bounds))
     .visible(isSelected)
     .header(tooltipText)
-    .body(function (d) {
-      return sszvis.formatNumber(d.value);
-    });
+    .body((d) => sszvis.formatNumber(d.value));
 
   // Rendering
 
-  var sunburstGroup = chartLayer
+  const sunburstGroup = chartLayer
     .selectGroup("sunburst")
     .attr("transform", sszvis.translateString(bounds.innerWidth / 2, bounds.innerHeight / 2))
     .call(sunburstMaker);
@@ -155,7 +151,7 @@ function render(state) {
 
   // Interaction
 
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-sunburst-arc")
     .on("start", actions.onSliceOver)
@@ -168,5 +164,5 @@ function render(state) {
 }
 
 function isSelected(d) {
-  return state.selection.indexOf(d) !== -1;
+  return state.selection.includes(d);
 }

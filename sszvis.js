@@ -15,10 +15,8 @@
    * @return {d3.selection}
    */
   d3.selection.prototype.selectDiv = function (key) {
-    var div = this.selectAll('[data-d3-selectdiv="' + key + '"]').data(function (d) {
-      return [d];
-    });
-    var newDiv = div.enter().append("div").attr("data-d3-selectdiv", key).style("position", "absolute");
+    const div = this.selectAll('[data-d3-selectdiv="' + key + '"]').data(d => [d]);
+    const newDiv = div.enter().append("div").attr("data-d3-selectdiv", key).style("position", "absolute");
     return div.merge(newDiv);
   };
 
@@ -32,10 +30,8 @@
    * @return {d3.selection}
    */
   d3.selection.prototype.selectGroup = function (key) {
-    var group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data(function (d) {
-      return [d];
-    });
-    var newGroup = group.enter().append("g").attr("data-d3-selectgroup", key);
+    const group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data(d => [d]);
+    const newGroup = group.enter().append("g").attr("data-d3-selectgroup", key);
     return group.merge(newGroup);
   };
 
@@ -55,7 +51,7 @@
    * @param  {*} value any value
    * @return {*}       returns its argument
    */
-  var identity$1 = function (value) {
+  const identity$1 = function (value) {
     return value;
   };
 
@@ -67,7 +63,7 @@
    * @param  {*}  val       The value to check
    * @return {Boolean}      Whether the value is a string
    */
-  var isString = function (val) {
+  const isString = function (val) {
     return Object.prototype.toString.call(val) === "[object String]";
   };
 
@@ -79,7 +75,7 @@
    * @param  {*}  val         The value to check
    * @return {Boolean}        Whether the value is a d3.selection
    */
-  var isSelection = function (val) {
+  const isSelection = function (val) {
     return val instanceof d3.selection;
   };
 
@@ -95,54 +91,78 @@
    * @return {Function} A new function wrapping `fn`. The new function is
    * guaranteed to be of arity `n`.
    */
-  var arity = function (n, fn) {
+  const arity = function (n, fn) {
     switch (n) {
       case 0:
-        return function () {
-          return fn.call(this);
-        };
+        {
+          return function () {
+            return fn.call(this);
+          };
+        }
       case 1:
-        return function (a0) {
-          return fn.call(this, a0);
-        };
+        {
+          return function (a0) {
+            return fn.call(this, a0);
+          };
+        }
       case 2:
-        return function (a0, a1) {
-          return fn.call(this, a0, a1);
-        };
+        {
+          return function (a0, a1) {
+            return fn.call(this, a0, a1);
+          };
+        }
       case 3:
-        return function (a0, a1, a2) {
-          return fn.call(this, a0, a1, a2);
-        };
+        {
+          return function (a0, a1, a2) {
+            return fn.call(this, a0, a1, a2);
+          };
+        }
       case 4:
-        return function (a0, a1, a2, a3) {
-          return fn.call(this, a0, a1, a2, a3);
-        };
+        {
+          return function (a0, a1, a2, a3) {
+            return fn.call(this, a0, a1, a2, a3);
+          };
+        }
       case 5:
-        return function (a0, a1, a2, a3, a4) {
-          return fn.call(this, a0, a1, a2, a3, a4);
-        };
+        {
+          return function (a0, a1, a2, a3, a4) {
+            return fn.call(this, a0, a1, a2, a3, a4);
+          };
+        }
       case 6:
-        return function (a0, a1, a2, a3, a4, a5) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5);
-        };
+        {
+          return function (a0, a1, a2, a3, a4, a5) {
+            return fn.call(this, a0, a1, a2, a3, a4, a5);
+          };
+        }
       case 7:
-        return function (a0, a1, a2, a3, a4, a5, a6) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
-        };
+        {
+          return function (a0, a1, a2, a3, a4, a5, a6) {
+            return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
+          };
+        }
       case 8:
-        return function (a0, a1, a2, a3, a4, a5, a6, a7) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
-        };
+        {
+          return function (a0, a1, a2, a3, a4, a5, a6, a7) {
+            return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
+          };
+        }
       case 9:
-        return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
-        };
+        {
+          return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
+            return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
+          };
+        }
       case 10:
-        return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
-          return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
-        };
+        {
+          return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+            return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+          };
+        }
       default:
-        return fn;
+        {
+          return fn;
+        }
     }
   };
 
@@ -162,12 +182,12 @@
    * @param {Function...} ... Accepts any number of functions as arguments
    * @return {Function} returns a function which is the composition of the passed functions
    */
-  var compose = function () {
-    var fns = arguments,
+  const compose = function () {
+    const fns = arguments,
       start = arguments.length - 1;
     return function () {
-      var i = start;
-      var result = fns[i].apply(this, arguments);
+      let i = start;
+      let result = Reflect.apply(fns[i], this, arguments);
       while (i--) result = fns[i].call(this, result);
       return result;
     };
@@ -182,8 +202,8 @@
    * @param  {any}   d    Item that might be in list
    * @return {boolean}
    */
-  var contains$1 = function (list, d) {
-    return list.indexOf(d) >= 0;
+  const contains$1 = function (list, d) {
+    return list.includes(d);
   };
 
   /**
@@ -194,8 +214,8 @@
    * @param  {*} val the value to check
    * @return {Boolean}     true if the value is defined, false if the value is undefined
    */
-  var defined = function (val) {
-    return typeof val !== "undefined" && val != null && !Number.isNaN(val);
+  const defined = function (val) {
+    return val !== undefined && val != null && !Number.isNaN(val);
   };
 
   /**
@@ -213,16 +233,15 @@
    * @param  {function} acc     An accessor function which calculates the set determiner.
    * @return {array}            An array of objects from the input array.
    */
-  var derivedSet = function (arr, acc) {
+  const derivedSet = function (arr, acc) {
     acc || (acc = identity$1);
-    var seen = [],
-      sValue,
-      cValue,
+    const seen = [],
       result = [];
-    for (var i = 0, l = arr.length; i < l; ++i) {
+    let sValue, cValue;
+    for (let i = 0, l = arr.length; i < l; ++i) {
       sValue = arr[i];
       cValue = acc(sValue, i, arr);
-      if (seen.indexOf(cValue) < 0) {
+      if (!seen.includes(cValue)) {
         seen.push(cValue);
         result.push(sValue);
       }
@@ -240,9 +259,9 @@
    * @param  {Array} arr              The array to test
    * @return {Boolean}                Whether every element in the array passes the test
    */
-  var every = function (predicate, arr) {
-    for (var i = 0; i < arr.length; i++) {
-      if (!predicate(arr[i])) {
+  const every = function (predicate, arr) {
+    for (const element of arr) {
+      if (!predicate(element)) {
         return false;
       }
     }
@@ -258,9 +277,11 @@
    * @param  {Any} val        The value with which to fill the array
    * @return {Array}          An array of length len filled with val
    */
-  var filledArray = function (len, val) {
-    var arr = new Array(len);
-    for (var i = 0; i < len; ++i) {
+  const filledArray = function (len, val) {
+    const arr = Array.from({
+      length: len
+    });
+    for (let i = 0; i < len; ++i) {
       arr[i] = val;
     }
     return arr;
@@ -276,13 +297,12 @@
    *
    * @returns {arrayElement|undefined}
    */
-  var find = function (predicate, arr) {
-    for (var i = 0; i < arr.length; i++) {
-      if (predicate(arr[i])) {
-        return arr[i];
+  const find = function (predicate, arr) {
+    for (const element of arr) {
+      if (predicate(element)) {
+        return element;
       }
     }
-    return undefined;
   };
 
   /**
@@ -293,7 +313,7 @@
    * @param  {Array} arr an array
    * @return {*}     the first value in the array
    */
-  var first = function (arr) {
+  const first = function (arr) {
     return arr[0];
   };
 
@@ -307,8 +327,8 @@
    * @param  {Array}        The Array to flatten
    * @return {Array}        A flattened Array
    */
-  var flatten = function (arr) {
-    return Array.prototype.concat.apply([], arr);
+  const flatten = function (arr) {
+    return arr.flat();
   };
 
   /**
@@ -324,10 +344,10 @@
    * @return {Touch|null}         The first Touch object from the TouchEvent's lists
    *                              of touches.
    */
-  var firstTouch = function (event) {
-    if (event.touches && event.touches.length) {
+  const firstTouch = function (event) {
+    if (event.touches && event.touches.length > 0) {
       return event.touches[0];
-    } else if (event.changedTouches && event.changedTouches.length) {
+    } else if (event.changedTouches && event.changedTouches.length > 0) {
       return event.changedTouches[0];
     }
     return null;
@@ -347,8 +367,8 @@
    *   informalGreeting: function() { return "How ya’ doin!" }
    * })
    */
-  var foldPattern = function (key, pattern) {
-    var result = pattern[key];
+  const foldPattern = function (key, pattern) {
+    const result = pattern[key];
     if (typeof result === "function") {
       return result();
     }
@@ -374,12 +394,12 @@
    * the element's index in the input array, and the input array itself.
    * @return {Array} an Array of unique elements
    */
-  var hashableSet = function (arr, acc) {
+  const hashableSet = function (arr, acc) {
     acc || (acc = identity$1);
-    var seen = {},
-      value,
+    const seen = {},
       result = [];
-    for (var i = 0, l = arr.length; i < l; ++i) {
+    let value;
+    for (let i = 0, l = arr.length; i < l; ++i) {
       value = acc(arr[i], i, arr);
       if (!seen[value]) {
         seen[value] = true;
@@ -397,7 +417,7 @@
    * @param {*} val the value to check
    * @return {Boolean} true if the value is a function, false otherwise
    */
-  var isFunction$1 = function (val) {
+  const isFunction$1 = function (val) {
     return typeof val == "function";
   };
 
@@ -409,7 +429,7 @@
    * @param {*} val the value to check
    * @return {Boolean}     true if the value is null, false if the value is not null
    */
-  var isNull = function (val) {
+  const isNull = function (val) {
     return val === null;
   };
 
@@ -421,7 +441,7 @@
    * @param  {*}  val     The value to check
    * @return {Boolean}    Whether the value is a number
    */
-  var isNumber = function (val) {
+  const isNumber = function (val) {
     return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
   };
 
@@ -434,7 +454,7 @@
    * @param  {*}  value      The value to test
    * @return {Boolean}       Whether the value is an object
    */
-  var isObject = function (val) {
+  const isObject = function (val) {
     return Object(val) === val;
   };
 
@@ -446,8 +466,8 @@
    * @param  {Array} arr an array
    * @return {*}     the last value in the array
    */
-  var last = function (arr) {
-    return arr[arr.length - 1];
+  const last = function (arr) {
+    return arr.at(-1);
   };
 
   /**
@@ -460,9 +480,9 @@
    * @param  {Function} f the argument function
    * @return {Function}   a new function which returns the boolean opposite of the argument function
    */
-  var not = function (f) {
+  const not = function (f) {
     return function () {
-      return !f.apply(this, arguments);
+      return !Reflect.apply(f, this, arguments);
     };
   };
 
@@ -478,7 +498,7 @@
    * @return {Function}     A property-accessor function
    *
    */
-  var prop = function (key) {
+  const prop = function (key) {
     return function (object) {
       return object[key];
     };
@@ -498,10 +518,10 @@
    * @param  {any} defaultVal     the default value to return when either the object or the requested property are undefined
    * @return {Function}           A property-accessor function
    */
-  var propOr = function (key, defaultVal) {
+  const propOr = function (key, defaultVal) {
     return function (object) {
-      var value = object !== undefined ? object[key] : undefined;
-      return value !== undefined ? value : defaultVal;
+      const value = object === undefined ? undefined : object[key];
+      return value === undefined ? defaultVal : value;
     };
   };
 
@@ -525,11 +545,11 @@
    * the element's index in the input array, and the input array itself.
    * @return {Array} an Array of unique elements
    */
-  var set$1 = function (arr, acc) {
+  const set$1 = function (arr, acc) {
     acc || (acc = identity$1);
-    return arr.reduce(function (m, value, i) {
-      var computed = acc(value, i, arr);
-      return m.indexOf(computed) < 0 ? m.concat(computed) : m;
+    return arr.reduce((m, value, i) => {
+      const computed = acc(value, i, arr);
+      return m.includes(computed) ? m : [...m, computed];
     }, []);
   };
 
@@ -543,9 +563,9 @@
    * @param  {Array} arr              The array to test
    * @return {Boolean}                Whether some element in the array passes the test
    */
-  var some = function (predicate, arr) {
-    for (var i = 0; i < arr.length; i++) {
-      if (predicate(arr[i])) {
+  const some = function (predicate, arr) {
+    for (const element of arr) {
+      if (predicate(element)) {
         return true;
       }
     }
@@ -563,7 +583,7 @@
    * @param  {any} b        the second value
    * @return {boolean}      Whether the provided values are equal when converted to strings.
    */
-  var stringEqual = function (a, b) {
+  const stringEqual = function (a, b) {
     return a.toString() === b.toString();
   };
 
@@ -572,7 +592,7 @@
    *
    * Same as fn.functor in d3v3
    */
-  var functor = function (v) {
+  const functor = function (v) {
     return typeof v === "function" ? v : function () {
       return v;
     };
@@ -584,18 +604,18 @@
    * Adapted from lodash's memoize() but using d3.map() as cache
    * See https://lodash.com/docs/4.17.4#memoize
    */
-  var memoize = function (func, resolver) {
+  const memoize = function (func, resolver) {
     if (typeof func != "function" || resolver != null && typeof resolver != "function") {
       throw new TypeError("Expected a function");
     }
-    var memoized = function () {
-      var args = arguments,
+    const memoized = function () {
+      const args = arguments,
         key = resolver ? resolver.apply(this, args) : args[0],
         cache = memoized.cache;
       if (cache.has(key)) {
         return cache.get(key);
       }
-      var result = func.apply(this, args);
+      const result = func.apply(this, args);
       memoized.cache = cache.set(key, result) || cache;
       return result;
     };
@@ -618,8 +638,8 @@
    */
 
   function ensureDefsElement (selection, type, elementId) {
-    var element = ensureDefsSelection(selection).selectAll(type + "#" + elementId).data([0]);
-    var newElement = element.enter().append(type).attr("id", elementId);
+    const element = ensureDefsSelection(selection).selectAll(type + "#" + elementId).data([0]);
+    const newElement = element.enter().append(type).attr("id", elementId);
     return element.merge(newElement);
   }
 
@@ -633,8 +653,8 @@
    * of other, visible, elements.
    */
   function ensureDefsSelection(selection) {
-    var defs = selection.selectAll("defs").data([0]);
-    var newDefs = defs.enter().append("defs");
+    const defs = selection.selectAll("defs").data([0]);
+    const newDefs = defs.enter().append("defs");
     return defs.merge(newDefs);
   }
 
@@ -672,8 +692,8 @@
    *
    * @function divVal    Diverging and valued color scale from red to blue
    * @function divNtr    Diverging and neutral color scale from brown to green
-   * @function divValGry Variation of the valued scale with a grey midpoint
-   * @function divNtrGry Variation of the neutral scale with a grey midpoint
+   * @function divValGry constiation of the valued scale with a grey midpoint
+   * @function divNtrGry constiation of the neutral scale with a grey midpoint
    * @method   reverse   Instance method to reverse the color order. @returns new scale
    *
    * Grey color scales
@@ -684,13 +704,13 @@
 
   /* Constants
   ----------------------------------------------- */
-  var LIGHTNESS_STEP = 0.6;
+  const LIGHTNESS_STEP = 0.6;
 
   /* Scales
   ----------------------------------------------- */
   function qualColorScale(colors) {
     return function () {
-      var scale = d3.scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
+      const scale = d3.scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
       return decorateOrdinalScale(scale);
     };
   }
@@ -706,50 +726,50 @@
   const darkBrown = "#9A5B01";
   const mediumBrown = "#FF720C";
   const lightBrown = "#FBB900";
-  var scaleQual12 = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed, darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
-  var scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
-  var scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
-  var scaleQual6b = qualColorScale([darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
+  const scaleQual12 = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed, darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
+  const scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
+  const scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
+  const scaleQual6b = qualColorScale([darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
   function seqColorScale(colors) {
     return function () {
-      var scale = d3.scaleLinear().range(colors.map(convertLab));
+      const scale = d3.scaleLinear().range(colors.map(convertLab));
       return decorateLinearScale(scale);
     };
   }
-  var scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
-  var scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
-  var scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
-  var scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
+  const scaleSeqBlu = seqColorScale(["#CADEFF", "#5B6EFF", "#211A8A"]);
+  const scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
+  const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
+  const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
   function divColorScale(colors) {
     return function () {
-      var scale = d3.scaleLinear().range(colors.map(convertLab));
+      const scale = d3.scaleLinear().range(colors.map(convertLab));
       return decorateDivScale(scale);
     };
   }
-  var scaleDivVal = divColorScale(["#611F00", "#A13200", "#EA5D00", "#FF9A54", "#FCDDBB", "#CADEFF", "#89AFFF", "#5B6EFF", "#3431DE", "#211A8A"]);
-  var scaleDivValGry = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88", "#E4E0DF", "#AECBFF", "#6B8EFF", "#3B51FF", "#2F2ABB"]);
-  var scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
-  var scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
+  const scaleDivVal = divColorScale(["#611F00", "#A13200", "#EA5D00", "#FF9A54", "#FCDDBB", "#CADEFF", "#89AFFF", "#5B6EFF", "#3431DE", "#211A8A"]);
+  const scaleDivValGry = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88", "#E4E0DF", "#AECBFF", "#6B8EFF", "#3B51FF", "#2F2ABB"]);
+  const scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
+  const scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
   function greyColorScale(colors) {
     return function () {
-      var scale = d3.scaleOrdinal().range(colors.map(convertLab));
+      const scale = d3.scaleOrdinal().range(colors.map(convertLab));
       return decorateLinearScale(scale);
     };
   }
-  var scaleLightGry = greyColorScale(["#FAFAFA"]);
-  var scalePaleGry = greyColorScale(["#EAEAEA"]);
-  var scaleGry = greyColorScale(["#D6D6D6"]);
-  var scaleDimGry = greyColorScale(["#B8B8B8"]);
-  var scaleMedGry = greyColorScale(["#7C7C7C"]);
-  var scaleDeepGry = greyColorScale(["#545454"]);
-  var slightlyDarker = function (c) {
+  const scaleLightGry = greyColorScale(["#FAFAFA"]);
+  const scalePaleGry = greyColorScale(["#EAEAEA"]);
+  const scaleGry = greyColorScale(["#D6D6D6"]);
+  const scaleDimGry = greyColorScale(["#B8B8B8"]);
+  const scaleMedGry = greyColorScale(["#7C7C7C"]);
+  const scaleDeepGry = greyColorScale(["#545454"]);
+  const slightlyDarker = function (c) {
     return d3.hsl(c).darker(0.4);
   };
-  var muchDarker = function (c) {
+  const muchDarker = function (c) {
     return d3.hsl(c).darker(0.7);
   };
-  var withAlpha = function (c, a) {
-    var rgbColor = d3.rgb(c);
+  const withAlpha = function (c, a) {
+    const rgbColor = d3.rgb(c);
     return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
   };
 
@@ -775,13 +795,13 @@
     return scale;
   }
   function interpolatedDivergentColorScale(scale) {
-    var nativeDomain = scale.domain;
+    const nativeDomain = scale.domain;
     if (!scale.range()) return scale;
-    var length = scale.range().length;
+    const length = scale.range().length;
     scale.domain = function (dom) {
       if (!dom) return nativeDomain.call(this);
-      var xDomain = [];
-      for (var i = 0; i < length; i++) {
+      const xDomain = [];
+      for (let i = 0; i < length; i++) {
         xDomain.push(d3.quantile(dom, i / (length - 1)));
       }
       return nativeDomain.call(this, xDomain);
@@ -796,13 +816,13 @@
     return scale;
   }
   function interpolatedColorScale(scale) {
-    var nativeDomain = scale.domain;
+    const nativeDomain = scale.domain;
     scale.domain = function (dom) {
       if (arguments.length === 1) {
-        var threeDomain = [dom[0], d3.mean(dom), dom[1]];
+        const threeDomain = [dom[0], d3.mean(dom), dom[1]];
         return nativeDomain.call(this, threeDomain);
       } else {
-        return nativeDomain.apply(this, arguments);
+        return Reflect.apply(nativeDomain, this, arguments);
       }
     };
     return scale;
@@ -814,7 +834,7 @@
     return d3.lab(d);
   }
   function func(fName) {
-    var args = Array.prototype.slice.call(arguments, 1);
+    const args = Array.prototype.slice.call(arguments, 1);
     return function (d) {
       return d[fName].apply(d, args);
     };
@@ -826,7 +846,7 @@
    * @module sszvis/patterns
    *
    * This module contains svg patterns and pattern helper functions which are used
-   * to render important textures for various other components.
+   * to render important textures for constious other components.
    *
    * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
    * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
@@ -839,8 +859,8 @@
    *
    */
 
-  var heatTableMissingValuePattern = function (selection) {
-    var rectFill = scaleLightGry(),
+  const heatTableMissingValuePattern = function (selection) {
+    const rectFill = scaleLightGry(),
       crossStroke = "#A4A4A4",
       crossStrokeWidth = 0.035,
       cross1 = 0.35,
@@ -850,8 +870,8 @@
     selection.append("line").attr("x1", cross1).attr("y1", cross1).attr("x2", cross2).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
     selection.append("line").attr("x1", cross2).attr("y1", cross1).attr("x2", cross1).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
   };
-  var mapMissingValuePattern = function (selection) {
-    var pWidth = 14,
+  const mapMissingValuePattern = function (selection) {
+    const pWidth = 14,
       pHeight = 14,
       fillColor = "#FAFAFA",
       lineStroke = "#CCCCCC";
@@ -862,28 +882,28 @@
     selection.append("line").attr("x1", 8).attr("y1", 3).attr("x2", 12).attr("y2", 7).attr("stroke", lineStroke);
     selection.append("line").attr("x1", 12).attr("y1", 3).attr("x2", 8).attr("y2", 7).attr("stroke", lineStroke);
   };
-  var mapLakePattern = function (selection) {
-    var pWidth = 6;
-    var pHeight = 6;
-    var offset = 0.5;
+  const mapLakePattern = function (selection) {
+    const pWidth = 6;
+    const pHeight = 6;
+    const offset = 0.5;
     selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
     selection.append("rect").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight).attr("fill", "#fff");
     selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#ddd").attr("stroke-linecap", "square");
     selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#ddd").attr("stroke-linecap", "square");
   };
-  var mapLakeFadeGradient = function (selection) {
+  const mapLakeFadeGradient = function (selection) {
     selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", "lake-fade-gradient");
     selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
     selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
   };
-  var mapLakeGradientMask = function (selection) {
+  const mapLakeGradientMask = function (selection) {
     selection.attr("maskContentUnits", "objectBoundingBox");
     selection.append("rect").attr("fill", "url(#lake-fade-gradient)").attr("width", 1).attr("height", 1);
   };
-  var dataAreaPattern = function (selection) {
-    var pWidth = 6;
-    var pHeight = 6;
-    var offset = 0.5;
+  const dataAreaPattern = function (selection) {
+    const pWidth = 6;
+    const pHeight = 6;
+    const offset = 0.5;
     selection.attr("patternUnits", "userSpaceOnUse").attr("patternContentUnits", "userSpaceOnUse").attr("x", 0).attr("y", 0).attr("width", pWidth).attr("height", pHeight);
     selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
     selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#e6e6e6").attr("stroke-width", 1.1);
@@ -916,9 +936,9 @@
    * @return {sszvis.component} A d3 reusable chart
    */
   function component() {
-    var props = {};
-    var selectionRenderer = null;
-    var renderer = identity;
+    const props = {};
+    let selectionRenderer = null;
+    let renderer = identity;
 
     /**
      * Constructor
@@ -961,7 +981,7 @@
      */
     sszvisComponent.delegate = function (prop, delegate) {
       sszvisComponent[prop] = function () {
-        var result = delegate[prop].apply(delegate, slice$1(arguments));
+        const result = delegate[prop].apply(delegate, slice$1(arguments));
         return arguments.length === 0 ? result : sszvisComponent;
       };
       return sszvisComponent;
@@ -1010,11 +1030,11 @@
     // d3.selection.data(), but it would need some test cases,
     // so we currently simplify to the most common use-case:
     // getting props.
-    if (arguments.length) throw new Error("selection.props() does not accept any arguments");
+    if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
     if (this.size() != 1) throw new Error("only one group is supported");
     if (this._groups[0].length != 1) throw new Error("only one node is supported");
-    var group = this._groups[0];
-    var node = group[0];
+    const group = this._groups[0];
+    const node = group[0];
     return node.__props__ || {};
   };
 
@@ -1030,7 +1050,7 @@
   function accessor(props, prop, setter) {
     setter || (setter = identity);
     return function () {
-      if (!arguments.length) return props[prop];
+      if (arguments.length === 0) return props[prop];
       props[prop] = setter.apply(null, slice$1(arguments));
       return this;
     };
@@ -1042,9 +1062,9 @@
     return Array.prototype.slice.call(array);
   }
   function clone(obj) {
-    var copy = {};
-    for (var attr in obj) {
-      if ({}.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
+    const copy = {};
+    for (const attr in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
     }
     return copy;
   }
@@ -1071,16 +1091,16 @@
 
   function circle () {
     return component().prop("x", functor).prop("y", functor).prop("r", functor).prop("dx", functor).prop("dy", functor).prop("caption", functor).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
-      var dataArea = selection.selectAll(".sszvis-dataareacircle").data(data);
-      var newDataArea = dataArea.enter().append("circle").classed("sszvis-dataareacircle", true);
+      let dataArea = selection.selectAll(".sszvis-dataareacircle").data(data);
+      const newDataArea = dataArea.enter().append("circle").classed("sszvis-dataareacircle", true);
       dataArea = dataArea.merge(newDataArea);
       dataArea.attr("cx", props.x).attr("cy", props.y).attr("r", props.r).attr("fill", "url(#data-area-pattern)");
       if (props.caption) {
-        var dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data);
-        var newDataCaptions = dataCaptions.enter().append("text").classed("sszvis-dataareacircle__caption", true);
+        let dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data);
+        const newDataCaptions = dataCaptions.enter().append("text").classed("sszvis-dataareacircle__caption", true);
         dataCaptions = dataCaptions.merge(newDataCaptions);
         dataCaptions.attr("x", props.x).attr("y", props.y).attr("dx", props.dx).attr("dy", props.dy).text(props.caption);
       }
@@ -1118,26 +1138,26 @@
 
   function line$1 () {
     return component().prop("x1").prop("x2").prop("y1").prop("y2").prop("xScale").prop("yScale").prop("dx", functor).dx(0).prop("dy", functor).dy(0).prop("caption", functor).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var x1 = props.xScale(props.x1);
-      var y1 = props.yScale(props.y1);
-      var x2 = props.xScale(props.x2);
-      var y2 = props.yScale(props.y2);
-      var line = selection.selectAll(".sszvis-referenceline").data(data);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const x1 = props.xScale(props.x1);
+      const y1 = props.yScale(props.y1);
+      const x2 = props.xScale(props.x2);
+      const y2 = props.yScale(props.y2);
+      let line = selection.selectAll(".sszvis-referenceline").data(data);
       line.exit().remove();
-      var newLine = line.enter().append("line").classed("sszvis-referenceline", true);
+      const newLine = line.enter().append("line").classed("sszvis-referenceline", true);
       line = line.merge(newLine);
       line.attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
       if (props.caption) {
-        var caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
+        let caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
         caption.exit().remove();
-        var newCaption = caption.enter().append("text").classed("sszvis-referenceline__caption", true);
+        const newCaption = caption.enter().append("text").classed("sszvis-referenceline__caption", true);
         caption = caption.merge(newCaption);
-        caption.attr("transform", function () {
-          var vx = x2 - x1;
-          var vy = y2 - y1;
-          var angle = Math.atan2(vy, vx) * 180 / Math.PI;
+        caption.attr("transform", () => {
+          const vx = x2 - x1;
+          const vy = y2 - y1;
+          const angle = Math.atan2(vy, vx) * 180 / Math.PI;
           return "translate(" + (x1 + x2) / 2 + "," + (y1 + y2) / 2 + ") rotate(" + angle + ")";
         }).attr("dx", props.dx).attr("dy", props.dy).text(props.caption);
       }
@@ -1174,7 +1194,7 @@
    * @param  {number} pos A pixel position
    * @return {number}     A pixel position snapped to the pixel grid
    */
-  var halfPixel = function (pos) {
+  const halfPixel = function (pos) {
     return Math.floor(pos) + 0.5;
   };
 
@@ -1191,10 +1211,10 @@
    * @param  {string} transformStr A valid SVG transform string
    * @return {string}              An SVG transform string with rounded values
    */
-  var roundTransformString = function (transformStr) {
-    var roundNumber = compose(Math.floor, Number);
-    return transformStr.replace(/(translate\()\s*([0-9., ]+)\s*(\))/i, function (_, left, vecStr, right) {
-      var roundVec = vecStr.replace(",", " ").replace(/\s+/, " ").split(" ").map(roundNumber).join(",");
+  const roundTransformString = function (transformStr) {
+    const roundNumber = compose(Math.floor, Number);
+    return transformStr.replace(/(translate\()\s*([\d ,.]+)\s*(\))/i, (_, left, vecStr, right) => {
+      const roundVec = vecStr.replace(",", " ").replace(/\s+/, " ").split(" ").map(roundNumber).join(",");
       return left + roundVec + right;
     });
   };
@@ -1209,12 +1229,12 @@
    * @param  {string} transformStr A valid SVG transform string
    * @return {vecor}               Two-element array ([dx, dy])
    */
-  var transformTranslateSubpixelShift = function (transformStr) {
-    var roundNumber = compose(Math.floor, Number);
-    var m = transformStr.match(/(translate\()\s*([0-9.,\- ]+)\s*(\))/i);
-    var vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
+  const transformTranslateSubpixelShift = function (transformStr) {
+    const roundNumber = compose(Math.floor, Number);
+    const m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
+    const vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
     if (vec.length === 1) vec.push([0]);
-    var vecRound = vec.map(roundNumber);
+    const vecRound = vec.map(roundNumber);
     return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
   };
 
@@ -1277,15 +1297,21 @@
    * @return {sszvis.component}
    */
 
+
+  /* Helper functions
+    ----------------------------------------------- */
+  function vectorToTranslateString(vec) {
+    return translateString.apply(null, vec);
+  }
   function tooltipAnchor () {
     return component().prop("position").position(functor([0, 0])).prop("debug").render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var anchor = selection.selectAll("[data-tooltip-anchor]").data(data);
+      const selection = d3.select(this);
+      const props = selection.props();
+      let anchor = selection.selectAll("[data-tooltip-anchor]").data(data);
 
       // Enter
 
-      var newAnchor = anchor.enter().append("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", "");
+      const newAnchor = anchor.enter().append("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", "");
 
       // Exit
 
@@ -1298,19 +1324,13 @@
 
       // Visible anchor if debug is true
       if (props.debug) {
-        var referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data);
-        var newReferencePoint = referencePoint.enter().append("circle").attr("data-tooltip-anchor-debug", "");
+        let referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data);
+        const newReferencePoint = referencePoint.enter().append("circle").attr("data-tooltip-anchor-debug", "");
         referencePoint.exit().remove();
         referencePoint = referencePoint.merge(newReferencePoint);
         referencePoint.attr("r", 2).attr("fill", "#fff").attr("stroke", "#f00").attr("stroke-width", 1.5).attr("transform", compose(vectorToTranslateString, props.position));
       }
     });
-
-    /* Helper functions
-    ----------------------------------------------- */
-    function vectorToTranslateString(vec) {
-      return translateString.apply(null, vec);
-    }
   }
 
   /**
@@ -1333,29 +1353,27 @@
 
   function rangeFlag () {
     return component().prop("x", functor).prop("y0", functor).prop("y1", functor).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var crispX = compose(halfPixel, props.x);
-      var crispY0 = compose(halfPixel, props.y0);
-      var crispY1 = compose(halfPixel, props.y1);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const crispX = compose(halfPixel, props.x);
+      const crispY0 = compose(halfPixel, props.y0);
+      const crispY1 = compose(halfPixel, props.y1);
       selection.selectAll(".sszvis-rangeFlag__mark.bottom").data(data).call(makeFlagDot("bottom", crispX, crispY0));
       selection.selectAll(".sszvis-rangeFlag__mark.top").data(data).call(makeFlagDot("top", crispX, crispY1));
-      var ta = tooltipAnchor().position(function (d) {
-        return [crispX(d), halfPixel((props.y0(d) + props.y1(d)) / 2)];
-      });
+      const ta = tooltipAnchor().position(d => [crispX(d), halfPixel((props.y0(d) + props.y1(d)) / 2)]);
       selection.call(ta);
     });
   }
   function makeFlagDot(classed, cx, cy) {
     return function (dot) {
-      var newDot = dot.enter().append("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true);
+      const newDot = dot.enter().append("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true);
       dot.exit().remove();
       dot = dot.merge(newDot);
       dot.attr("r", 3.5).attr("cx", cx).attr("cy", cy);
     };
   }
 
-  var locale = {
+  const locale = {
     decimal: ".",
     thousands: " ",
     // This is a 'narrow space', not a regular space. Used as the thousands separator by d3.format
@@ -1377,23 +1395,23 @@
    * @module sszvis/format
    */
 
-  var timeFormat = d3.timeFormatLocale(locale).format;
-  var format = d3.formatLocale(locale).format;
+  const timeFormat = d3.timeFormatLocale(locale).format;
+  const format = d3.formatLocale(locale).format;
 
   /**
    * Format a number as an age
    * @param  {number} d
    * @return {string}
    */
-  var formatAge = function (d) {
+  const formatAge = function (d) {
     return String(Math.round(d));
   };
 
   /**
    * A multi time formatter used by the axis class
    */
-  var formatAxisTimeFormat = function (d) {
-    var xs = [[".%L", function (date) {
+  const formatAxisTimeFormat = function (d) {
+    const xs = [[".%L", function (date) {
       return date.getMilliseconds();
     }], [":%S", function (date) {
       return date.getSeconds();
@@ -1410,9 +1428,9 @@
     }], ["%Y", function () {
       return true;
     }]];
-    for (var i = 0; i < xs.length; ++i) {
-      if (xs[i][1](d)) {
-        return timeFormat(xs[i][0])(d);
+    for (const x of xs) {
+      if (x[1](d)) {
+        return timeFormat(x[0])(d);
       }
     }
   };
@@ -1420,20 +1438,18 @@
   /**
    * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
    */
-  var formatMonth = compose(function (m) {
-    return m.toUpperCase();
-  }, timeFormat("%b"));
+  const formatMonth = compose(m => m.toUpperCase(), timeFormat("%b"));
 
   /**
    * A year formatter for date objects. Gives the date's year.
    */
-  var formatYear = timeFormat("%Y");
+  const formatYear = timeFormat("%Y");
 
   /**
    * Formatter for no label
    * @return {string} the empty string
    */
-  var formatNone = function () {
+  const formatNone = function () {
     return "";
   };
 
@@ -1453,10 +1469,10 @@
    * @param  {number} d   Number
    * @return {string}     Fully formatted number
    */
-  var formatNumber = function (d) {
-    var p;
-    var dAbs = Math.abs(d);
-    if (d == null || isNaN(d)) {
+  const formatNumber = function (d) {
+    let p;
+    const dAbs = Math.abs(d);
+    if (d == null || Number.isNaN(d)) {
       return "–"; // This is an en-dash
     }
 
@@ -1508,18 +1524,12 @@
    * @param  {Number} d           The number to be formatted
    * @return {String}             The formatted number
    */
-  var formatPreciseNumber = function (p, d) {
+  const formatPreciseNumber = function (p, d) {
     // This curries the function
     if (arguments.length > 1) return formatPreciseNumber(p)(d);
     return function (x) {
-      var dAbs = Math.abs(x);
-      if (dAbs >= 100 && dAbs < 1e4) {
-        // No thousands separator
-        return format("." + p + "f")(x);
-      } else {
-        // Use the thousands separator
-        return format(",." + p + "f")(x);
-      }
+      const dAbs = Math.abs(x);
+      return dAbs >= 100 && dAbs < 1e4 ? format("." + p + "f")(x) : format(",." + p + "f")(x);
     };
   };
 
@@ -1528,7 +1538,7 @@
    * @param  {number} d    A value to format, between 0 and 100
    * @return {string}      The formatted value
    */
-  var formatPercent = function (d) {
+  const formatPercent = function (d) {
     // Uses unix thin space
     return formatNumber(d) + " %";
   };
@@ -1538,7 +1548,7 @@
    * @param  {number} d    A value to format, between 0 and 1
    * @return {string}      The formatted value
    */
-  var formatFractionPercent = function (d) {
+  const formatFractionPercent = function (d) {
     // Uses unix thin space
     return formatNumber(d * 100) + " %";
   };
@@ -1548,9 +1558,7 @@
    * @param  {number} d
    * @return {string} Fully formatted text
    */
-  var formatText = function (d) {
-    return String(d);
-  };
+  const formatText = String;
 
   /* Helper functions
   ----------------------------------------------- */
@@ -1564,7 +1572,7 @@
     return (String(Math.abs(num)).split(".")[1] || "").length;
   }
   function stripTrailingZeroes(str) {
-    return str.replace(/(\.[0-9]*[1-9])0+$|\.0*$/, "$1");
+    return str.replace(/(\.\d*[1-9])0+$|\.0*$/, "$1");
   }
 
   /**
@@ -1592,97 +1600,79 @@
 
   function rangeRuler () {
     return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("top").prop("bottom").prop("label").prop("removeStroke").label(functor("")).prop("total").prop("flip", functor).flip(false).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var crispX = compose(halfPixel, props.x);
-      var crispY0 = compose(halfPixel, props.y0);
-      var crispY1 = compose(halfPixel, props.y1);
-      var middleY = function (d) {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const crispX = compose(halfPixel, props.x);
+      const crispY0 = compose(halfPixel, props.y0);
+      const crispY1 = compose(halfPixel, props.y1);
+      const middleY = function (d) {
         return halfPixel((props.y0(d) + props.y1(d)) / 2);
       };
-      var dotRadius = 1.5;
-      var line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]);
-      var newLine = line.enter().append("line").classed("sszvis-rangeRuler__rule", true);
+      const dotRadius = 1.5;
+      let line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]);
+      const newLine = line.enter().append("line").classed("sszvis-rangeRuler__rule", true);
       line.exit().remove();
       line = line.merge(newLine);
       line.attr("x1", crispX).attr("y1", props.top).attr("x2", crispX).attr("y2", props.bottom);
-      var marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data);
-      var enteringMarks = marks.enter().append("g").classed("sszvis-rangeRuler--mark", true);
+      let marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data);
+      const enteringMarks = marks.enter().append("g").classed("sszvis-rangeRuler--mark", true);
       marks.exit().remove();
       marks = marks.merge(enteringMarks);
       enteringMarks.append("circle").classed("sszvis-rangeRuler__p1", true);
       enteringMarks.append("circle").classed("sszvis-rangeRuler__p2", true);
       enteringMarks.append("text").classed("sszvis-rangeRuler__label-contour", true);
       enteringMarks.append("text").classed("sszvis-rangeRuler__label", true);
-      marks.selectAll(".sszvis-rangeRuler__p1").data(function (d) {
-        return [d];
-      }).attr("cx", crispX).attr("cy", crispY0).attr("r", dotRadius);
-      marks.selectAll(".sszvis-rangeRuler__p2").data(function (d) {
-        return [d];
-      }).attr("cx", crispX).attr("cy", crispY1).attr("r", dotRadius);
-      marks.selectAll(".sszvis-rangeRuler__label").data(function (d) {
-        return [d];
-      }).attr("x", function (d) {
-        var offset = props.flip(d) ? -10 : 10;
+      marks.selectAll(".sszvis-rangeRuler__p1").data(d => [d]).attr("cx", crispX).attr("cy", crispY0).attr("r", dotRadius);
+      marks.selectAll(".sszvis-rangeRuler__p2").data(d => [d]).attr("cx", crispX).attr("cy", crispY1).attr("r", dotRadius);
+      marks.selectAll(".sszvis-rangeRuler__label").data(d => [d]).attr("x", d => {
+        const offset = props.flip(d) ? -10 : 10;
         return crispX(d) + offset;
       }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
-      .style("text-anchor", function (d) {
-        return props.flip(d) ? "end" : "start";
-      }).text(compose(formatNumber, props.label));
+      .style("text-anchor", d => props.flip(d) ? "end" : "start").text(compose(formatNumber, props.label));
 
       //make the contour behind the the label update with the label
-      marks.selectAll(".sszvis-rangeRuler__label-contour").data(function (d) {
-        return [d];
-      }).attr("x", function (d) {
-        var offset = props.flip(d) ? -10 : 10;
+      marks.selectAll(".sszvis-rangeRuler__label-contour").data(d => [d]).attr("x", d => {
+        const offset = props.flip(d) ? -10 : 10;
         return crispX(d) + offset;
       }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
-      .style("text-anchor", function (d) {
-        return props.flip(d) ? "end" : "start";
-      }).text(compose(formatNumber, props.label));
+      .style("text-anchor", d => props.flip(d) ? "end" : "start").text(compose(formatNumber, props.label));
       selection.selectAll("g.sszvis-rangeRuler--mark").each(function () {
-        var g = d3.select(this);
-        var textNode = g.select("text").node();
-        var textContour = g.select(".sszvis-rangeRuler__label-contour");
+        const g = d3.select(this);
+        const textNode = g.select("text").node();
+        let textContour = g.select(".sszvis-rangeRuler__label-contour");
         if (textContour.empty()) {
           textContour = d3.select(textNode.cloneNode()).classed("sszvis-rangeRuler__label-contour", true).classed("sszvis-rangeRuler__label", false);
           this.insertBefore(textContour.node(), textNode);
         } else {
-          textContour.attr("x", function (d) {
-            var offset = props.flip(d) ? -10 : 10;
+          textContour.attr("x", d => {
+            const offset = props.flip(d) ? -10 : 10;
             return crispX(d) + offset;
           }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
-          .style("text-anchor", function (d) {
-            return props.flip(d) ? "end" : "start";
-          });
+          .style("text-anchor", d => props.flip(d) ? "end" : "start");
         }
         textContour.text(textNode.textContent);
       });
       if (!props.removeStroke) {
         marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
-      var total = selection.selectAll(".sszvis-rangeRuler__total").data([last(data)]);
-      var newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
+      let total = selection.selectAll(".sszvis-rangeRuler__total").data([last(data)]);
+      const newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
       total.exit().remove();
       total = total.merge(newTotal);
-      total.attr("x", function (d) {
-        var offset = props.flip(d) ? -10 : 10;
+      total.attr("x", d => {
+        const offset = props.flip(d) ? -10 : 10;
         return crispX(d) + offset;
-      }).attr("y", props.top - 10).style("text-anchor", function (d) {
-        return props.flip(d) ? "end" : "start";
-      }).text("Total " + formatNumber(props.total));
-      var totalNode = total.node();
-      var totalContour = selection.select(".sszvis-rangeRuler__total-contour");
+      }).attr("y", props.top - 10).style("text-anchor", d => props.flip(d) ? "end" : "start").text("Total " + formatNumber(props.total));
+      const totalNode = total.node();
+      let totalContour = selection.select(".sszvis-rangeRuler__total-contour");
       if (totalContour.empty()) {
         totalContour = d3.select(totalNode.cloneNode()).classed("sszvis-rangeRuler__total-contour", true).classed("sszvis-rangeRuler__total", false);
         this.insertBefore(totalContour.node(), totalNode);
       } else {
-        totalContour.attr("x", function (d) {
-          var offset = props.flip(d) ? -10 : 10;
+        totalContour.attr("x", d => {
+          const offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
-        }).attr("y", props.top - 10).style("text-anchor", function (d) {
-          return props.flip(d) ? "end" : "start";
-        });
+        }).attr("y", props.top - 10).style("text-anchor", d => props.flip(d) ? "end" : "start");
       }
       totalContour.text(totalNode.textContent);
       if (!props.removeStroke) {
@@ -1714,28 +1704,24 @@
 
   function rectangle () {
     return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("dx", functor).prop("dy", functor).prop("caption", functor).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
-      var dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data);
+      let dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data);
 
       // FIXME: no exit?
 
-      var newDataArea = dataArea.enter().append("rect").classed("sszvis-dataarearectangle", true);
+      const newDataArea = dataArea.enter().append("rect").classed("sszvis-dataarearectangle", true);
       dataArea = dataArea.merge(newDataArea);
       dataArea.attr("x", props.x).attr("y", props.y).attr("width", props.width).attr("height", props.height).attr("fill", "url(#data-area-pattern)");
       if (props.caption) {
-        var dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data);
+        let dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data);
 
         // FIXME: no exit?
 
-        var newDataCaptions = dataCaptions.enter().append("text").classed("sszvis-dataarearectangle__caption", true);
+        const newDataCaptions = dataCaptions.enter().append("text").classed("sszvis-dataarearectangle__caption", true);
         dataCaptions = dataCaptions.merge(newDataCaptions);
-        dataCaptions.attr("x", function (d, i) {
-          return props.x(d, i) + props.width(d, i) / 2;
-        }).attr("y", function (d, i) {
-          return props.y(d, i) + props.height(d, i) / 2;
-        }).attr("dx", props.dx).attr("dy", props.dy).text(props.caption);
+        dataCaptions.attr("x", (d, i) => props.x(d, i) + props.width(d, i) / 2).attr("y", (d, i) => props.y(d, i) + props.height(d, i) / 2).attr("dx", props.dx).attr("dy", props.dy).text(props.caption);
       }
     });
   }
@@ -1774,57 +1760,55 @@
 
   function ruler () {
     return component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var labelId = props.labelId || function (d) {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const labelId = props.labelId || function (d) {
         return props.x(d) + "_" + props.y(d);
       };
-      var ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
-      var newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
+      let ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
+      const newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
       ruler.exit().remove();
       ruler = ruler.merge(newRuler);
       ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", props.y).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
-      var dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
-      var newDot = dot.enter().append("circle").classed("sszvis-ruler__dot", true);
+      let dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
+      const newDot = dot.enter().append("circle").classed("sszvis-ruler__dot", true);
       dot.exit().remove();
       dot = dot.merge(newDot);
       dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", props.color);
-      var labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId);
-      var newLabelOutline = labelOutline.enter().append("text").classed("sszvis-ruler__label-outline", true);
+      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId);
+      const newLabelOutline = labelOutline.enter().append("text").classed("sszvis-ruler__label-outline", true);
       labelOutline.exit().remove();
       labelOutline = labelOutline.merge(newLabelOutline);
-      var label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
-      var newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
+      let label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
+      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
       label.exit().remove();
       label = label.merge(newLabel);
 
       // Update both label and labelOutline selections
 
-      var crispX = compose(halfPixel, props.x);
-      var crispY = compose(halfPixel, props.y);
-      var textSelection = selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", function (d) {
-        var x = crispX(d);
-        var y = crispY(d);
-        var dx = props.flip(d) ? -10 : 10;
-        var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
+      const crispX = compose(halfPixel, props.x);
+      const crispY = compose(halfPixel, props.y);
+      const textSelection = selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
+        const x = crispX(d);
+        const y = crispY(d);
+        const dx = props.flip(d) ? -10 : 10;
+        const dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
         return translateString(x + dx, y + dy);
-      }).style("text-anchor", function (d) {
-        return props.flip(d) ? "end" : "start";
-      }).html(props.label);
+      }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
       if (props.reduceOverlap) {
-        var THRESHOLD = 2;
-        var ITERATIONS = 10;
-        var labelBounds = [];
+        const THRESHOLD = 2;
+        let ITERATIONS = 10;
+        const labelBounds = [];
         // Optimization for the lookup later
-        var labelBoundsIndex = {};
+        const labelBoundsIndex = {};
 
         // Reset vertical shift (set by previous renders)
         textSelection.attr("y", "");
 
         // Create bounds objects
         label.each(function (d) {
-          var bounds = this.getBoundingClientRect();
-          var item = {
+          const bounds = this.getBoundingClientRect();
+          const item = {
             top: bounds.top,
             bottom: bounds.bottom,
             dy: 0
@@ -1835,9 +1819,7 @@
 
         // Sort array in place by vertical position
         // (only supports labels of same height)
-        labelBounds.sort(function (a, b) {
-          return d3.ascending(a.top, b.top);
-        });
+        labelBounds.sort((a, b) => d3.ascending(a.top, b.top));
 
         // Using postfix decrement means the expression evaluates to the value of the variable
         // before the decrement takes place. In the case of 10 iterations, this means that the
@@ -1847,11 +1829,11 @@
         // the 10th iteration, meaning that only 9 iterations are executed.
         while (ITERATIONS--) {
           // Calculate overlap and correct position
-          labelBounds.forEach(function (firstLabel, index) {
-            labelBounds.slice(index + 1).forEach(function (secondLabel) {
-              var overlap = firstLabel.bottom - secondLabel.top;
+          for (const [index, firstLabel] of labelBounds.entries()) {
+            for (const secondLabel of labelBounds.slice(index + 1)) {
+              const overlap = firstLabel.bottom - secondLabel.top;
               if (overlap >= THRESHOLD) {
-                var offset = overlap / 2;
+                const offset = overlap / 2;
                 firstLabel.bottom -= offset;
                 firstLabel.top -= offset;
                 firstLabel.dy -= offset;
@@ -1859,13 +1841,13 @@
                 secondLabel.top += offset;
                 secondLabel.dy += offset;
               }
-            });
-          });
+            }
+          }
         }
 
         // Shift vertically to remove overlap
-        textSelection.attr("y", function (d) {
-          var textLabel = labelBoundsIndex[labelId(d)];
+        textSelection.attr("y", d => {
+          const textLabel = labelBoundsIndex[labelId(d)];
           return textLabel.dy;
         });
       }
@@ -1914,23 +1896,23 @@
 
   /* Configuration
   ----------------------------------------------- */
-  var SMALL_CORNER_RADIUS = 3;
-  var LARGE_CORNER_RADIUS = 4;
-  var TIP_SIZE = 6;
-  var BLUR_PADDING = 5;
+  const SMALL_CORNER_RADIUS = 3;
+  const LARGE_CORNER_RADIUS = 4;
+  const TIP_SIZE = 6;
+  const BLUR_PADDING = 5;
 
   /* Exported module
   ----------------------------------------------- */
   function tooltip () {
-    var renderer = tooltipRenderer();
-    return component().delegate("header", renderer).delegate("body", renderer).delegate("orientation", renderer).delegate("dx", renderer).delegate("dy", renderer).delegate("opacity", renderer).prop("renderInto").prop("visible", functor).visible(false).renderSelection(function (selection) {
-      var props = selection.props();
-      var intoBCR = props.renderInto.node().getBoundingClientRect();
-      var tooltipData = [];
+    const renderer = tooltipRenderer();
+    return component().delegate("header", renderer).delegate("body", renderer).delegate("orientation", renderer).delegate("dx", renderer).delegate("dy", renderer).delegate("opacity", renderer).prop("renderInto").prop("visible", functor).visible(false).renderSelection(selection => {
+      const props = selection.props();
+      const intoBCR = props.renderInto.node().getBoundingClientRect();
+      const tooltipData = [];
       selection.each(function (d) {
         if (props.visible(d)) {
-          var thisBCR = this.getBoundingClientRect();
-          var pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
+          const thisBCR = this.getBoundingClientRect();
+          const pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
           tooltipData.push({
             datum: d,
             x: pos[0],
@@ -1946,41 +1928,33 @@
    * Tooltip renderer
    * @private
    */
-  var tooltipRenderer = function () {
-    return component().prop("header").prop("body").prop("orientation", functor).orientation("bottom").prop("dx", functor).dx(1).prop("dy", functor).dy(1).prop("opacity", functor).opacity(1).renderSelection(function (selection) {
-      var tooltipData = selection.datum();
-      var props = selection.props();
-      var isDef = defined;
-      var isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body);
+  const tooltipRenderer = function () {
+    return component().prop("header").prop("body").prop("orientation", functor).orientation("bottom").prop("dx", functor).dx(1).prop("dy", functor).dy(1).prop("opacity", functor).opacity(1).renderSelection(selection => {
+      const tooltipData = selection.datum();
+      const props = selection.props();
+      const isDef = defined;
+      const isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body);
 
       // Select tooltip elements
 
-      var tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData);
+      let tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData);
       tooltip.exit().remove();
 
       // Enter: tooltip
 
-      var enterTooltip = tooltip.enter().append("div");
+      const enterTooltip = tooltip.enter().append("div");
       tooltip = tooltip.merge(enterTooltip);
-      tooltip.style("pointer-events", "none").style("opacity", props.opacity).style("padding-top", function (d) {
-        return props.orientation(d) === "top" ? TIP_SIZE + "px" : null;
-      }).style("padding-right", function (d) {
-        return props.orientation(d) === "right" ? TIP_SIZE + "px" : null;
-      }).style("padding-bottom", function (d) {
-        return props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null;
-      }).style("padding-left", function (d) {
-        return props.orientation(d) === "left" ? TIP_SIZE + "px" : null;
-      }).classed("sszvis-tooltip", true);
+      tooltip.style("pointer-events", "none").style("opacity", props.opacity).style("padding-top", d => props.orientation(d) === "top" ? TIP_SIZE + "px" : null).style("padding-right", d => props.orientation(d) === "right" ? TIP_SIZE + "px" : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null).style("padding-left", d => props.orientation(d) === "left" ? TIP_SIZE + "px" : null).classed("sszvis-tooltip", true);
 
       // Enter: tooltip background
 
-      var enterBackground = enterTooltip.append("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
-      var enterBackgroundPath = enterBackground.append("path");
+      const enterBackground = enterTooltip.append("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
+      const enterBackgroundPath = enterBackground.append("path");
       if (supportsSVGFilters()) {
-        var filter = enterBackground.append("filter").attr("id", "sszvisTooltipShadowFilter").attr("height", "150%");
+        const filter = enterBackground.append("filter").attr("id", "sszvisTooltipShadowFilter").attr("height", "150%");
         filter.append("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
         filter.append("feComponentTransfer").append("feFuncA").attr("type", "linear").attr("slope", 0.2);
-        var merge = filter.append("feMerge");
+        const merge = filter.append("feMerge");
         merge.append("feMergeNode"); // Contains the blurred image
         merge.append("feMergeNode") // Contains the element that the filter is applied to
         .attr("in", "SourceGraphic");
@@ -1991,44 +1965,52 @@
 
       // Enter: tooltip content
 
-      var enterContent = enterTooltip.append("div").classed("sszvis-tooltip__content", true);
+      const enterContent = enterTooltip.append("div").classed("sszvis-tooltip__content", true);
       enterContent.append("div").classed("sszvis-tooltip__header", true);
       enterContent.append("div").classed("sszvis-tooltip__body", true);
 
       // Update: content
 
       tooltip.select(".sszvis-tooltip__header").datum(prop("datum")).html(props.header || functor(""));
-      tooltip.select(".sszvis-tooltip__body").datum(prop("datum")).html(function (d) {
-        var body = props.body ? functor(props.body)(d) : "";
+      tooltip.select(".sszvis-tooltip__body").datum(prop("datum")).html(d => {
+        const body = props.body ? functor(props.body)(d) : "";
         return Array.isArray(body) ? formatTable(body) : body;
       });
       selection.selectAll(".sszvis-tooltip").classed("sszvis-tooltip--small", isSmall).each(function (d) {
-        var tip = d3.select(this);
+        const tip = d3.select(this);
         // only using dimensions.width and dimensions.height here. Not affected by scroll position
-        var dimensions = tip.node().getBoundingClientRect();
-        var orientation = props.orientation.apply(this, arguments);
+        const dimensions = tip.node().getBoundingClientRect();
+        const orientation = Reflect.apply(props.orientation, this, arguments);
 
         // Position tooltip element
 
         switch (orientation) {
           case "top":
-            tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y + props.dy(d) + "px");
-            break;
+            {
+              tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y + props.dy(d) + "px");
+              break;
+            }
           case "bottom":
-            tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y - props.dy(d) - dimensions.height + "px");
-            break;
+            {
+              tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y - props.dy(d) - dimensions.height + "px");
+              break;
+            }
           case "left":
-            tip.style("left", d.x + props.dx(d) + "px").style("top", d.y - dimensions.height / 2 + "px");
-            break;
+            {
+              tip.style("left", d.x + props.dx(d) + "px").style("top", d.y - dimensions.height / 2 + "px");
+              break;
+            }
           case "right":
-            tip.style("left", d.x - props.dx(d) - dimensions.width + "px").style("top", d.y - dimensions.height / 2 + "px");
-            break;
+            {
+              tip.style("left", d.x - props.dx(d) - dimensions.width + "px").style("top", d.y - dimensions.height / 2 + "px");
+              break;
+            }
         }
 
         // Position background element
 
-        var bgHeight = dimensions.height + 2 * BLUR_PADDING;
-        var bgWidth = dimensions.width + 2 * BLUR_PADDING;
+        const bgHeight = dimensions.height + 2 * BLUR_PADDING;
+        const bgWidth = dimensions.width + 2 * BLUR_PADDING;
         tip.select(".sszvis-tooltip__background").attr("height", bgHeight).attr("width", bgWidth).style("left", -BLUR_PADDING + "px").style("top", -BLUR_PADDING + "px").select("path").attr("d", tooltipBackgroundGenerator([BLUR_PADDING, BLUR_PADDING], [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING], orientation, isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS));
       });
     });
@@ -2038,12 +2020,35 @@
    * formatTable
    */
   function formatTable(rows) {
-    var tableBody = rows.map(function (row) {
-      return "<tr>" + row.map(function (cell) {
-        return "<td>" + cell + "</td>";
-      }).join("") + "</tr>";
-    }).join("");
+    const tableBody = rows.map(row => "<tr>" + row.map(cell => "<td>" + cell + "</td>").join("") + "</tr>").join("");
     return '<table class="sszvis-tooltip__body__table">' + tableBody + "</table>";
+  }
+  function x(d) {
+    return d[0];
+  }
+  function y(d) {
+    return d[1];
+  }
+  function side(cx, cy, x0, y0, x1, y1, showTip) {
+    const mx = x0 + (x1 - x0) / 2;
+    const my = y0 + (y1 - y0) / 2;
+    const corner = ["Q", cx, cy, x0, y0];
+    let tip = [];
+    if (showTip && y0 === y1) {
+      tip = x0 < x1 ?
+      // Top
+      ["L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my] :
+      // Bottom
+      ["L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my];
+    } else if (showTip && x0 === x1) {
+      tip = y0 < y1 ?
+      // Right
+      ["L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE] :
+      // Left
+      ["L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE];
+    }
+    const end = ["L", x1, y1];
+    return [...corner, ...tip, ...end];
   }
 
   /**
@@ -2067,48 +2072,25 @@
   function tooltipBackgroundGenerator(a, b, orientation, radius) {
     switch (orientation) {
       case "top":
-        a[1] = a[1] + TIP_SIZE;
-        break;
+        {
+          a[1] = a[1] + TIP_SIZE;
+          break;
+        }
       case "bottom":
-        b[1] = b[1] - TIP_SIZE;
-        break;
+        {
+          b[1] = b[1] - TIP_SIZE;
+          break;
+        }
       case "left":
-        a[0] = a[0] + TIP_SIZE;
-        break;
+        {
+          a[0] = a[0] + TIP_SIZE;
+          break;
+        }
       case "right":
-        b[0] = b[0] - TIP_SIZE;
-        break;
-    }
-    function x(d) {
-      return d[0];
-    }
-    function y(d) {
-      return d[1];
-    }
-    function side(cx, cy, x0, y0, x1, y1, showTip) {
-      var mx = x0 + (x1 - x0) / 2;
-      var my = y0 + (y1 - y0) / 2;
-      var corner = ["Q", cx, cy, x0, y0];
-      var tip = [];
-      if (showTip && y0 === y1) {
-        if (x0 < x1) {
-          // Top
-          tip = ["L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my];
-        } else {
-          // Bottom
-          tip = ["L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my];
+        {
+          b[0] = b[0] - TIP_SIZE;
+          break;
         }
-      } else if (showTip && x0 === x1) {
-        if (y0 < y1) {
-          // Right
-          tip = ["L", mx, my - TIP_SIZE, "L", mx + TIP_SIZE, my, "L", mx, my + TIP_SIZE];
-        } else {
-          // Left
-          tip = ["L", mx, my + TIP_SIZE, "L", mx - TIP_SIZE, my, "L", mx, my - TIP_SIZE];
-        }
-      }
-      var end = ["L", x1, y1];
-      return [].concat(corner, tip, end);
     }
     return [
     // Start
@@ -2120,9 +2102,7 @@
     // Bottom side
     side(x(b), y(b), x(b) - radius, y(b), x(a) + radius, y(b), orientation === "bottom"),
     // Left side
-    side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, orientation === "left")].map(function (d) {
-      return d.join(" ");
-    }).join(" ");
+    side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, orientation === "left")].map(d => d.join(" ")).join(" ");
   }
 
   /**
@@ -2148,10 +2128,10 @@
    */
 
   function fitTooltip (defaultVal, bounds) {
-    var lo = Math.min(bounds.innerWidth * 1 / 4, 100);
-    var hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
+    const lo = Math.min(bounds.innerWidth * 1 / 4, 100);
+    const hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
     return function (d) {
-      var x = d.x;
+      const x = d.x;
       return x > hi ? "right" : x < lo ? "left" : defaultVal;
     };
   }
@@ -2832,18 +2812,18 @@
    * @module sszvis/fallback
    */
 
-  var fallbackUnsupported = function () {
-    var supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
+  const fallbackUnsupported = function () {
+    const supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
     return !supportsSVG;
   };
-  var fallbackCanvasUnsupported = function () {
-    var supportsCanvas = !!document.createElement("canvas").getContext;
+  const fallbackCanvasUnsupported = function () {
+    const supportsCanvas = !!document.createElement("canvas").getContext;
     return !supportsCanvas;
   };
-  var fallbackRender = function (selector, options) {
+  const fallbackRender = function (selector, options) {
     options || (options = {});
     options.src || (options.src = "fallback.png");
-    var selection = isSelection(selector) ? selector : d3.select(selector);
+    const selection = isSelection(selector) ? selector : d3.select(selector);
     selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
   };
 
@@ -2907,45 +2887,41 @@
   // While still enabling the user to register multiple callbacks for the 'resize'
   // event. Multiple callbacks are a feature which simply returning a d3.dispatch('resize')
   // object would not allow.
-  var callbacks = {
+  const callbacks = {
     resize: []
   };
   if (typeof window !== "undefined") {
-    d3.select(window).on("resize", throttle(function () {
+    d3.select(window).on("resize", throttle(() => {
       trigger("resize");
     }, 500));
   }
-  var on = function (name, cb) {
+  const on = function (name, cb) {
     if (!callbacks[name]) {
       callbacks[name] = [];
     }
-    callbacks[name] = callbacks[name].filter(function (fn) {
-      return fn !== cb;
-    }).concat(cb);
+    callbacks[name] = [...callbacks[name].filter(fn => fn !== cb), cb];
     return this;
   };
-  var off = function (name, cb) {
+  const off = function (name, cb) {
     if (!callbacks[name]) {
       return this;
     }
-    callbacks[name] = callbacks[name].filter(function (fn) {
-      return fn !== cb;
-    });
+    callbacks[name] = callbacks[name].filter(fn => fn !== cb);
     return this;
   };
-  var trigger = function (name) {
-    var evtArgs = Array.prototype.slice.call(arguments, 1);
+  const trigger = function (name) {
+    const evtArgs = Array.prototype.slice.call(arguments, 1);
     if (callbacks[name]) {
-      callbacks[name].forEach(function (fn) {
+      for (const fn of callbacks[name]) {
         fn.apply(null, evtArgs);
-      });
+      }
     }
     return this;
   };
-  var viewport = {
-    on: on,
-    off: off,
-    trigger: trigger
+  const viewport = {
+    on,
+    off,
+    trigger
   };
 
   // d3 mutates state in many places, which is why we have to turn this off.
@@ -3035,8 +3011,8 @@
       state = finishDraft(initialState);
       scheduleUpdate(effect);
       viewport.on("resize", scheduleUpdate);
-    }).catch(err => {
-      invariant(false, err);
+    }).catch(error => {
+      invariant(false, error);
       fallback && fallbackRender(fallback.element, {
         src: fallback.src
       });
@@ -3104,10 +3080,8 @@
    * @returns {Breakpoint}
    */
   function breakpointFind(breakpoints, partialMeasurement) {
-    var measurement = parseMeasurement(partialMeasurement);
-    return find(function (bp) {
-      return breakpointTest(bp, measurement);
-    }, breakpoints);
+    const measurement = parseMeasurement(partialMeasurement);
+    return find(bp => breakpointTest(bp, measurement), breakpoints);
   }
 
   /**
@@ -3122,7 +3096,7 @@
    *          breakpoint for the given name exists, that breakpoint is returned
    */
   function breakpointFindByName(breakpoints, name) {
-    var eqName = function (bp) {
+    const eqName = function (bp) {
       return bp.name === name;
     };
     return find(eqName, breakpoints);
@@ -3138,8 +3112,8 @@
    * @returns {boolean}
    */
   function breakpointTest(breakpoint, partialMeasurement) {
-    var bpm = breakpoint.measurement;
-    var measurement = parseMeasurement(partialMeasurement);
+    const bpm = breakpoint.measurement;
+    const measurement = parseMeasurement(partialMeasurement);
     return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
   }
 
@@ -3154,10 +3128,8 @@
    * @returns {Array<Breakpoint>}
    */
   function breakpointMatch(breakpoints, partialMeasurement) {
-    var measurement = parseMeasurement(partialMeasurement);
-    return breakpoints.filter(function (bp) {
-      return breakpointTest(bp, measurement);
-    });
+    const measurement = parseMeasurement(partialMeasurement);
+    return breakpoints.filter(bp => breakpointTest(bp, measurement));
   }
 
   /**
@@ -3171,9 +3143,9 @@
    * @returns {Array<Breakpoint>}
    */
   function breakpointCreateSpec(spec) {
-    return spec.map(parseBreakpoint).concat(parseBreakpoint({
+    return [...spec.map(parseBreakpoint), parseBreakpoint({
       name: "_"
-    }));
+    })];
   }
 
   /**
@@ -3182,8 +3154,8 @@
    * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
    *          default breakpoint spec.
    */
-  var breakpointDefaultSpec = function () {
-    var DEFAULT_SPEC = breakpointCreateSpec([{
+  const breakpointDefaultSpec = function () {
+    const DEFAULT_SPEC = breakpointCreateSpec([{
       name: "palm",
       width: 540
     }, {
@@ -3196,8 +3168,8 @@
   }();
 
   // Default tests
-  var breakpointPalm = makeTest("palm");
-  var breakpointLap = makeTest("lap");
+  const breakpointPalm = makeTest("palm");
+  const breakpointLap = makeTest("lap");
 
   // Helpers
 
@@ -3211,7 +3183,7 @@
    * not defined, it is initialized to Infinity, which matches all breakpoints.
    *
    * @example
-   *   var Measurement = {
+   *   const Measurement = {
    *     width: number,
    *     screenHeight: number
    *   }
@@ -3220,8 +3192,8 @@
    * @returns Measurement
    */
   function parseMeasurement(partialMeasurement) {
-    var widthOrInf = propOr("width", Infinity);
-    var screenHeightOrInf = propOr("screenHeight", Infinity);
+    const widthOrInf = propOr("width", Infinity);
+    const screenHeightOrInf = propOr("screenHeight", Infinity);
     return {
       width: widthOrInf(partialMeasurement),
       screenHeight: screenHeightOrInf(partialMeasurement)
@@ -3238,13 +3210,13 @@
    * can be directly supplied on the top object.
    *
    * @example
-   *   var PartialBreakpoint = {
+   *   const PartialBreakpoint = {
    *     name: string,
    *     width?: number,
    *     screenHeight?: number
    *   }
    *
-   *   var Breakpoint = {
+   *   const Breakpoint = {
    *     name: string,
    *     measurement: Measurement
    *   }
@@ -3253,18 +3225,13 @@
    * @returns Breakpoint
    */
   function parseBreakpoint(bp) {
-    var measurement;
-    if (defined(bp.measurement)) {
-      measurement = parseMeasurement(bp.measurement);
-    } else {
-      measurement = parseMeasurement({
-        width: bp.width,
-        screenHeight: bp.screenHeight
-      });
-    }
+    const measurement = defined(bp.measurement) ? parseMeasurement(bp.measurement) : parseMeasurement({
+      width: bp.width,
+      screenHeight: bp.screenHeight
+    });
     return {
       name: bp.name,
-      measurement: measurement
+      measurement
     };
   }
 
@@ -3301,7 +3268,7 @@
    *                    aspect ratio defined by x:y.
    */
   function aspectRatio(x, y) {
-    var ar = x / y;
+    const ar = x / y;
     return function (width) {
       return width / ar;
     };
@@ -3316,7 +3283,7 @@
    * @param {Number} width
    * @returns {Number} height
    */
-  var aspectRatio4to3 = aspectRatio(4, 3);
+  const aspectRatio4to3 = aspectRatio(4, 3);
 
   /**
    * aspectRatio16to10
@@ -3327,7 +3294,7 @@
    * @param {Number} width
    * @returns {Number} height
    */
-  var aspectRatio16to10 = aspectRatio(16, 10);
+  const aspectRatio16to10 = aspectRatio(16, 10);
 
   /**
    * aspectRatio12to5
@@ -3338,8 +3305,8 @@
    * @param {Number} width
    * @returns {Number} height
    */
-  var AR12TO5_MAX_HEIGHT = 500;
-  var aspectRatio12to5 = function (width) {
+  const AR12TO5_MAX_HEIGHT = 500;
+  const aspectRatio12to5 = function (width) {
     return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
   };
   aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
@@ -3360,8 +3327,8 @@
    * @param {Number} width
    * @returns {Number} height
    */
-  var SQUARE_MAX_HEIGHT = 420;
-  var aspectRatioSquare = function (width) {
+  const SQUARE_MAX_HEIGHT = 420;
+  const aspectRatioSquare = function (width) {
     return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
   };
   aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
@@ -3382,8 +3349,8 @@
    * @param {Number} width
    * @returns {Number} height
    */
-  var PORTRAIT_MAX_HEIGHT = 600;
-  var aspectRatioPortrait = function (width) {
+  const PORTRAIT_MAX_HEIGHT = 600;
+  const aspectRatioPortrait = function (width) {
     return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
   };
   aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
@@ -3403,16 +3370,16 @@
    *
    * @return {Number} The height which corresponds to the default aspect ratio for these measurements
    */
-  var defaultAspectRatios = {
+  const defaultAspectRatios = {
     palm: aspectRatio4to3,
     // palm-sized devices
     lap: aspectRatio16to10,
     // lap-sized devices
     _: aspectRatio12to5 // all other cases, including desk
   };
-  var aspectRatioAuto = function (measurement) {
-    var bp = breakpointFind(breakpointDefaultSpec(), measurement);
-    var ar = defaultAspectRatios[bp.name];
+  const aspectRatioAuto = function (measurement) {
+    const bp = breakpointFind(breakpointDefaultSpec(), measurement);
+    const ar = defaultAspectRatios[bp.name];
     return ar(measurement.width);
   };
 
@@ -3461,17 +3428,17 @@
    *                             of execution.
    */
 
-  var warn = logger("warn");
-  var error = logger("error");
+  const warn = logger("warn");
+  const error = logger("error");
 
   /* Helper functions
   ----------------------------------------------- */
   function logger(type) {
     return function () {
       if (console && console[type]) {
-        slice(arguments).forEach(function (msg) {
+        for (const msg of slice(arguments)) {
           console[type](msg);
-        });
+        }
       }
     };
   }
@@ -3494,7 +3461,7 @@
    * @return {array}          The extent of the scale's range. Useful for determining how far
    *                          a scale stretches in its output dimension.
    */
-  var range = function (scale) {
+  const range = function (scale) {
     // borrowed from d3 source - svg.axis
     return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
   };
@@ -3510,8 +3477,8 @@
    */
   function extent(domain) {
     // borrowed from d3 source - svg.axis
-    var start = domain[0],
-      stop = domain[domain.length - 1];
+    const start = domain[0],
+      stop = domain.at(-1);
     return start < stop ? [start, stop] : [stop, start];
   }
 
@@ -3540,56 +3507,68 @@
   function textWrap (selection, width, paddingRightLeft, paddingTopBottom) {
     paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
     paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
-    var maxWidth = width; //I store the tooltip max width
+    const maxWidth = width; //I store the tooltip max width
     width = width - paddingRightLeft * 2; //Take the padding into account
 
-    var arrLineCreatedCount = [];
+    const arrLineCreatedCount = [];
     selection.each(function () {
-      var text = d3.select(this);
-      var words = text.text().split(/[ \f\n\r\t\v]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
-      var word;
-      var line = [];
-      var lineNumber = 0;
-      var lineHeight = 1.1; //Em
-      var x;
-      var y = text.attr("y");
-      var dy = parseFloat(text.attr("dy"));
-      var createdLineCount = 1; //Total line created count
-      var textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
+      const text = d3.select(this);
+      const words = text.text().split(/[\t\n\v\f\r ]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
+      let word;
+      let line = [];
+      let lineNumber = 0;
+      const lineHeight = 1.1; //Em
+      let x;
+      let y = text.attr("y");
+      let dy = Number.parseFloat(text.attr("dy"));
+      let createdLineCount = 1; //Total line created count
+      const textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
 
       //Clean the data in case <text> does not define those values
-      if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
+      if (Number.isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
 
       //Offset the text position based on the text-anchor
-      var wrapTickLabels = d3.select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
+      const wrapTickLabels = d3.select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
       if (wrapTickLabels) {
         switch (textAlign) {
           case "start":
-            x = -width / 2;
-            break;
+            {
+              x = -width / 2;
+              break;
+            }
           case "middle":
-            x = 0;
-            break;
+            {
+              x = 0;
+              break;
+            }
           case "end":
-            x = width / 2;
-            break;
+            {
+              x = width / 2;
+              break;
+            }
         }
       } else {
         //untranslated <text> elements
         switch (textAlign) {
           case "start":
-            x = paddingRightLeft;
-            break;
+            {
+              x = paddingRightLeft;
+              break;
+            }
           case "middle":
-            x = maxWidth / 2;
-            break;
+            {
+              x = maxWidth / 2;
+              break;
+            }
           case "end":
-            x = maxWidth - paddingRightLeft;
-            break;
+            {
+              x = maxWidth - paddingRightLeft;
+              break;
+            }
         }
       }
       y = +(null === y ? paddingTopBottom : y);
-      var tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+      let tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
       while (words.length > 0) {
         word = words.pop();
         line.push(word);
@@ -3662,14 +3641,16 @@
    * @return {sszvis.component}
    */
 
-  var TICK_PROXIMITY_THRESHOLD = 8;
-  var TICK_END_THRESHOLD = 12;
-  var LABEL_PROXIMITY_THRESHOLD = 10;
-  var axis = function () {
-    // var axisDelegate = d3.axisBottom();
+  const TICK_PROXIMITY_THRESHOLD = 8;
+  const TICK_END_THRESHOLD = 12;
+  const LABEL_PROXIMITY_THRESHOLD = 10;
+  const axis = function () {
+    // const axisDelegate = d3.axisBottom();
     // axisDelegate.orient = function() { return 'bottom'; };
 
-    var axisComponent = component().prop("scale").prop("orient").prop("ticks").prop("tickValues").prop("tickSize").prop("tickSizeInner").prop("tickSizeOuter").prop("tickPadding").prop("tickFormat").prop("_scale").prop("orient").orient("bottom").prop("alignOuterLabels").alignOuterLabels(false).prop("contour").prop("hideBorderTickThreshold").hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD).prop("hideLabelThreshold").hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD).prop("highlightTick", functor).prop("showZeroY").showZeroY(false).prop("slant").prop("textWrap").prop("tickLength").prop("title").prop("titleAnchor") // start, end, or middle
+    // axisComponent.__delegate__ = axisDelegate;
+
+    return component().prop("scale").prop("orient").prop("ticks").prop("tickValues").prop("tickSize").prop("tickSizeInner").prop("tickSizeOuter").prop("tickPadding").prop("tickFormat").prop("_scale").prop("orient").orient("bottom").prop("alignOuterLabels").alignOuterLabels(false).prop("contour").prop("hideBorderTickThreshold").hideBorderTickThreshold(TICK_PROXIMITY_THRESHOLD).prop("hideLabelThreshold").hideLabelThreshold(LABEL_PROXIMITY_THRESHOLD).prop("highlightTick", functor).prop("showZeroY").showZeroY(false).prop("slant").prop("textWrap").prop("tickLength").prop("title").prop("titleAnchor") // start, end, or middle
     .prop("titleCenter") // a boolean value - whether to center the title
     .prop("dxTitle") // a numeric value for the left offset of the title
     .prop("dyTitle") // a numeric value for the top offset of the title
@@ -3677,44 +3658,52 @@
     //this property is typically used for the x-axis, but not for the y axis
     //it creates a gap between chart and x-axis by offsetting the the chart by a number of pixels
     .prop("yOffset").yOffset(0).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var isBottom = !props.vertical && props.orient === "bottom";
-      var axisDelegate = function () {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const isBottom = !props.vertical && props.orient === "bottom";
+      const axisDelegate = function () {
         switch (props.orient) {
           case "bottom":
-            return d3.axisBottom();
+            {
+              return d3.axisBottom();
+            }
           case "top":
-            return d3.axisTop();
+            {
+              return d3.axisTop();
+            }
           case "left":
-            return d3.axisLeft();
+            {
+              return d3.axisLeft();
+            }
           case "right":
-            return d3.axisRight();
+            {
+              return d3.axisRight();
+            }
         }
       }();
-      ["scale", "ticks", "tickValues", "tickSizeInner", "tickSizeOuter", "tickPadding", "tickFormat", "tickSize"].forEach(function (prop) {
+      for (const prop of ["scale", "ticks", "tickValues", "tickSizeInner", "tickSizeOuter", "tickPadding", "tickFormat", "tickSize"]) {
         if (props[prop] !== undefined) {
           if (axisDelegate[prop] === undefined) {
             throw new Error('axis: "' + prop + '" not available');
           }
           axisDelegate[prop](props[prop]);
         }
-      });
+      }
       if (props._scale) {
         axisDelegate.scale(props._scale);
       }
-      var group = selection.selectGroup("sszvis-axis").classed("sszvis-axis", true).classed("sszvis-axis--top", !props.vertical && props.orient === "top").classed("sszvis-axis--bottom", isBottom).classed("sszvis-axis--vertical", props.vertical).attr("transform", translateString(0, props.yOffset)).call(axisDelegate);
+      const group = selection.selectGroup("sszvis-axis").classed("sszvis-axis", true).classed("sszvis-axis--top", !props.vertical && props.orient === "top").classed("sszvis-axis--bottom", isBottom).classed("sszvis-axis--vertical", props.vertical).attr("transform", translateString(0, props.yOffset)).call(axisDelegate);
       group.attr("fill", null).attr("font-size", null).attr("font-family", null);
       // .attr("text-anchor", null);
 
-      var axisScale = axisDelegate.scale();
+      const axisScale = axisDelegate.scale();
 
       // Create selections here which will be used later for many custom configurations
-      // Note: Invariant: This is only valid so long as new .tick groups or tick label texts
+      // Note: Inconstiant: This is only valid so long as new .tick groups or tick label texts
       // are not being added after these selections are constructed. If that changes, these
       // selections need to be re-constructed.
-      var tickGroups = group.selectAll("g.tick");
-      var tickTexts = tickGroups.selectAll("text");
+      const tickGroups = group.selectAll("g.tick");
+      const tickTexts = tickGroups.selectAll("text");
 
       // To prevent anti-aliasing on elements that need to be rendered crisply
       // we need to position them on a half-pixel grid: 0.5, 1.5, 2.5, etc.
@@ -3723,9 +3712,9 @@
       // why we reach into the group and translate lines onto the half-pixel
       // grid by taking the translation of the group into account.
       tickGroups.each(function () {
-        var subpixelShift = transformTranslateSubpixelShift(this.getAttribute("transform"));
-        var dx = halfPixel(0) - subpixelShift[0];
-        var dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
+        const subpixelShift = transformTranslateSubpixelShift(this.getAttribute("transform"));
+        const dx = halfPixel(0) - subpixelShift[0];
+        const dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
         d3.select(this).select("line").attr("transform", translateString(dx, dy));
       });
       tickTexts.each(function () {
@@ -3742,48 +3731,60 @@
       // .attr('transform', translateString(halfPixel(0), halfPixel(0)));
 
       // hide ticks which are too close to one endpoint
-      var rangeExtent = range(axisScale);
+      const rangeExtent = range(axisScale);
       tickGroups.selectAll("line").each(function (d) {
-        var pos = axisScale(d),
+        const pos = axisScale(d),
           d3this = d3.select(this);
         d3this.classed("hidden", !d3this.classed("sszvis-axis__longtick") && (absDistance(pos, rangeExtent[0]) < props.hideBorderTickThreshold || absDistance(pos, rangeExtent[1]) < props.hideBorderTickThreshold));
       });
       if (defined(props.tickLength)) {
-        var domainExtent = d3.extent(axisScale.domain());
-        var ticks = tickGroups.filter(function (d) {
-          return !stringEqual(d, domainExtent[0]) && !stringEqual(d, domainExtent[1]);
-        });
-        var orientation = props.orient;
-        var longLinePadding = 2;
+        const domainExtent = d3.extent(axisScale.domain());
+        const ticks = tickGroups.filter(d => !stringEqual(d, domainExtent[0]) && !stringEqual(d, domainExtent[1]));
+        const orientation = props.orient;
+        let longLinePadding = 2;
         if (orientation === "left" || orientation === "right") {
           ticks.selectAll("text").each(function () {
             longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
           });
           longLinePadding += 2; // a lil' extra on the end
         }
-        var lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]);
+        let lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]);
         if (props.tickLength > longLinePadding) {
-          var newLines = lines.enter().append("line").classed("sszvis-axis__longtick", true);
+          const newLines = lines.enter().append("line").classed("sszvis-axis__longtick", true);
           lines = lines.merge(newLines);
-          if (orientation === "top") {
-            lines.attr("y1", longLinePadding).attr("y2", props.tickLength);
-          } else if (orientation === "bottom") {
-            lines.attr("y1", -longLinePadding).attr("y2", -props.tickLength);
-          } else if (orientation === "left") {
-            lines.attr("x1", -longLinePadding).attr("x2", -props.tickLength);
-          } else if (orientation === "right") {
-            lines.attr("x1", longLinePadding).attr("x2", props.tickLength);
+          switch (orientation) {
+            case "top":
+              {
+                lines.attr("y1", longLinePadding).attr("y2", props.tickLength);
+                break;
+              }
+            case "bottom":
+              {
+                lines.attr("y1", -longLinePadding).attr("y2", -props.tickLength);
+                break;
+              }
+            case "left":
+              {
+                lines.attr("x1", -longLinePadding).attr("x2", -props.tickLength);
+                break;
+              }
+            case "right":
+              {
+                lines.attr("x1", longLinePadding).attr("x2", props.tickLength);
+                break;
+              }
+            // No default
           }
         } else {
           lines.remove();
         }
       }
       if (props.alignOuterLabels) {
-        var alignmentBounds = range(axisScale);
-        var min = alignmentBounds[0];
-        var max = alignmentBounds[1];
-        tickTexts.style("text-anchor", function (d) {
-          var value = axisScale(d);
+        const alignmentBounds = range(axisScale);
+        const min = alignmentBounds[0];
+        const max = alignmentBounds[1];
+        tickTexts.style("text-anchor", d => {
+          const value = axisScale(d);
           if (absDistance(value, min) < TICK_END_THRESHOLD) {
             return "start";
           } else if (absDistance(value, max) < TICK_END_THRESHOLD) {
@@ -3801,8 +3802,8 @@
 
       // Highlight axis labels that return true for props.highlightTick.
       if (props.highlightTick) {
-        var activeBounds = [];
-        var passiveBounds = [];
+        const activeBounds = [];
+        const passiveBounds = [];
         tickTexts.classed("hidden", false).classed("active", props.highlightTick);
 
         // Hide axis labels that overlap with highlighted labels unless
@@ -3811,8 +3812,8 @@
           tickTexts.each(function (d) {
             // although getBoundingClientRect returns coordinates relative to the window, not the document,
             // this should still work, since all tick bounds are affected equally by scroll position changes.
-            var bcr = this.getBoundingClientRect();
-            var b = {
+            const bcr = this.getBoundingClientRect();
+            const b = {
               node: this,
               bounds: {
                 top: bcr.top,
@@ -3829,48 +3830,52 @@
               passiveBounds.push(b);
             }
           });
-          activeBounds.forEach(function (active) {
-            passiveBounds.forEach(function (passive) {
+          for (const active of activeBounds) {
+            for (const passive of passiveBounds) {
               d3.select(passive.node).classed("hidden", boundsOverlap(passive.bounds, active.bounds));
-            });
-          });
+            }
+          }
         }
       }
       if (props.title) {
-        var title = group.selectAll(".sszvis-axis__title").data([props.title]);
-        var newTitle = title.enter().append("text").classed("sszvis-axis__title", true);
+        const title = group.selectAll(".sszvis-axis__title").data([props.title]);
+        const newTitle = title.enter().append("text").classed("sszvis-axis__title", true);
         title.exit().remove();
-        title.merge(newTitle).text(function (d) {
-          return d;
-        }).attr("transform", function () {
-          var orient = props.orient,
-            axisScaleExtent = range(axisScale),
-            titleProps;
-          if (props.titleCenter) {
-            titleProps = {
-              left: orient === "left" || orient === "right" ? 0 : orient === "top" || orient === "bottom" ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : 0,
-              top: orient === "left" || orient === "right" ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : orient === "top" ? 0 : orient === "bottom" ? 32 : 0
-            };
-          } else {
-            titleProps = {
-              left: orient === "left" || orient === "right" || orient === "top" ? 0 : orient === "bottom" ? axisScaleExtent[1] : 0,
-              top: orient === "left" || orient === "right" || orient === "top" ? 0 : orient === "bottom" ? 32 : 0
-            };
-          }
+        title.merge(newTitle).text(d => d).attr("transform", () => {
+          const orient = props.orient,
+            axisScaleExtent = range(axisScale);
+          const titleProps = props.titleCenter ? {
+            left: orient === "left" || orient === "right" ? 0 : orient === "top" || orient === "bottom" ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : 0,
+            top: orient === "left" || orient === "right" ? (axisScaleExtent[0] + axisScaleExtent[1]) / 2 : orient === "top" ? 0 : orient === "bottom" ? 32 : 0
+          } : {
+            left: orient === "left" || orient === "right" || orient === "top" ? 0 : orient === "bottom" ? axisScaleExtent[1] : 0,
+            top: orient === "left" || orient === "right" || orient === "top" ? 0 : orient === "bottom" ? 32 : 0
+          };
           titleProps.vertical = !!props.titleVertical;
           titleProps.left += props.dxTitle || 0;
           titleProps.top += props.dyTitle || 0;
           return "translate(" + titleProps.left + ", " + titleProps.top + ") rotate(" + (titleProps.vertical ? "-90" : "0") + ")";
-        }).style("text-anchor", function () {
-          var orient = props.orient;
-          if (typeof props.titleAnchor !== "undefined") {
+        }).style("text-anchor", () => {
+          const orient = props.orient;
+          if (props.titleAnchor === undefined) {
+            switch (orient) {
+              case "left":
+                {
+                  return "end";
+                }
+              case "right":
+                {
+                  return "start";
+                }
+              case "top":
+              case "bottom":
+                {
+                  return "end";
+                }
+              // No default
+            }
+          } else {
             return props.titleAnchor;
-          } else if (orient === "left") {
-            return "end";
-          } else if (orient === "right") {
-            return "start";
-          } else if (orient === "top" || orient === "bottom") {
-            return "end";
           }
         });
       }
@@ -3883,9 +3888,9 @@
         warn("Can't apply contour to slanted labels");
       } else if (props.contour) {
         tickGroups.each(function () {
-          var g = d3.select(this);
-          var textNode = g.select("text").node();
-          var textContour = g.select(".sszvis-axis__label-contour");
+          const g = d3.select(this);
+          const textNode = g.select("text").node();
+          let textContour = g.select(".sszvis-axis__label-contour");
           if (textContour.empty()) {
             textContour = d3.select(textNode.cloneNode()).classed("sszvis-axis__label-contour", true);
             this.insertBefore(textContour.node(), textNode);
@@ -3894,28 +3899,24 @@
         });
       }
     });
-
-    // axisComponent.__delegate__ = axisDelegate;
-
-    return axisComponent;
   };
-  var setOrdinalTicks = function (count) {
+  const setOrdinalTicks = function (count) {
     // in this function, the 'this' context should be an sszvis.axis
-    var domain = this.scale().domain(),
+    const domain = this.scale().domain(),
       values = [],
       step = Math.round(domain.length / count);
 
     // include the first value
-    if (typeof domain[0] !== "undefined") values.push(domain[0]);
-    for (var i = step, l = domain.length; i < l - 1; i += step) {
-      if (typeof domain[i] !== "undefined") values.push(domain[i]);
+    if (domain[0] !== undefined) values.push(domain[0]);
+    for (let i = step, l = domain.length; i < l - 1; i += step) {
+      if (domain[i] !== undefined) values.push(domain[i]);
     }
     // include the last value
-    if (typeof domain[domain.length - 1] !== "undefined") values.push(domain[domain.length - 1]);
+    if (domain.at(-1) !== undefined) values.push(domain.at(-1));
     this.tickValues(values);
     return count;
   };
-  var axisX = function () {
+  const axisX = function () {
     return axis().yOffset(2) //gap between chart and x-axis
     .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
   };
@@ -3933,7 +3934,7 @@
   // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
   axisX.pyramid = function () {
     return axisX().ticks(10).prop("scale", function (s) {
-      var extended = s.copy(),
+      const extended = s.copy(),
         extendedDomain = extended.domain(),
         extendedRange = extended.range();
       extended
@@ -3943,16 +3944,13 @@
       .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
       this._scale(extended);
       return extended;
-    }).tickFormat(function (v) {
-      // this tick format means that the axis appears to be divergent around 0
-      // when in fact it is -domain[1] -> +domain[1]
-      return formatNumber(Math.abs(v));
-    });
+    }).tickFormat(v =>
+    // this tick format means that the axis appears to be divergent around 0
+    // when in fact it is -domain[1] -> +domain[1]
+    formatNumber(Math.abs(v)));
   };
-  var axisY = function () {
-    var newAxis = axis().ticks(6).tickSize(0, 0).tickPadding(0).tickFormat(function (d) {
-      return 0 === d && !newAxis.showZeroY() ? null : formatNumber(d);
-    }).vertical(true);
+  const axisY = function () {
+    const newAxis = axis().ticks(6).tickSize(0, 0).tickPadding(0).tickFormat(d => 0 === d && !newAxis.showZeroY() ? null : formatNumber(d)).vertical(true);
     return newAxis;
   };
   axisY.time = function () {
@@ -3973,27 +3971,27 @@
   function boundsOverlap(boundsA, boundsB) {
     return !(boundsB.left > boundsA.right || boundsB.right < boundsA.left || boundsB.top > boundsA.bottom || boundsB.bottom < boundsA.top);
   }
-  var slantLabel = {
+  const slantLabel = {
     top: {
-      horizontal: function (selection) {
+      horizontal(selection) {
         selection.style("text-anchor", "middle").attr("dx", "-0.5").attr("dy", "0.71em").attr("transform", null);
       },
-      vertical: function (selection) {
+      vertical(selection) {
         selection.style("text-anchor", "start").attr("dx", "0em").attr("dy", "0.35em") // vertically-center
         .attr("transform", "rotate(-90)");
       },
-      diagonal: function (selection) {
+      diagonal(selection) {
         selection.style("text-anchor", "start").attr("dx", "0.1em").attr("dy", "0.1em").attr("transform", "translate(-0.5) rotate(-45)");
       }
     },
     bottom: {
-      horizontal: function (selection) {
+      horizontal(selection) {
         selection.style("text-anchor", "middle").attr("dx", "-0.5").attr("dy", "0.71em").attr("transform", null);
       },
-      vertical: function (selection) {
+      vertical(selection) {
         selection.style("text-anchor", "end").attr("dx", "-1em").attr("dy", "-0.75em").attr("transform", "rotate(-90)");
       },
-      diagonal: function (selection) {
+      diagonal(selection) {
         selection.style("text-anchor", "end").attr("dx", "-0.8em").attr("dy", "0em").attr("transform", "rotate(-45)");
       }
     }
@@ -4047,29 +4045,29 @@
    */
 
   function move () {
-    var event = d3.dispatch("start", "move", "drag", "end");
-    var moveComponent = component().prop("debug").prop("xScale").prop("yScale").prop("draggable").prop("cancelScrolling", functor).cancelScrolling(false).prop("fireOnPanOnly", functor).fireOnPanOnly(false).prop("padding", function (p) {
-      var defaults = {
+    const event = d3.dispatch("start", "move", "drag", "end");
+    const moveComponent = component().prop("debug").prop("xScale").prop("yScale").prop("draggable").prop("cancelScrolling", functor).cancelScrolling(false).prop("fireOnPanOnly", functor).fireOnPanOnly(false).prop("padding", p => {
+      const defaults = {
         top: 0,
         left: 0,
         bottom: 0,
         right: 0
       };
-      for (var prop in p) {
+      for (const prop in p) {
         defaults[prop] = p[prop];
       }
       return defaults;
     }).padding({}).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var xExtent = range(props.xScale).sort(d3.ascending);
-      var yExtent = range(props.yScale).sort(d3.ascending);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const xExtent = range(props.xScale).sort(d3.ascending);
+      const yExtent = range(props.yScale).sort(d3.ascending);
       xExtent[0] -= props.padding.left;
       xExtent[1] += props.padding.right;
       yExtent[0] -= props.padding.top;
       yExtent[1] += props.padding.bottom;
-      var layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]);
-      var newLayer = layer.enter().append("rect").attr("data-sszvis-behavior-move", "").attr("class", "sszvis-interactive");
+      let layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]);
+      const newLayer = layer.enter().append("rect").attr("data-sszvis-behavior-move", "").attr("class", "sszvis-interactive");
       layer = layer.merge(newLayer);
       if (props.draggable) {
         layer.classed("sszvis-interactive--draggable", true);
@@ -4077,21 +4075,21 @@
       layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function () {
         event.apply("start", this, arguments);
       }).on("mousedown", function (e) {
-        var target = this;
-        var doc = d3.select(document);
-        var win = d3.select(window);
-        var drag = function () {
-          var xy = d3.pointer(e);
-          var x = scaleInvert(props.xScale, xy[0]);
-          var y = scaleInvert(props.yScale, xy[1]);
+        const target = this;
+        const doc = d3.select(document);
+        const win = d3.select(window);
+        const drag = function () {
+          const xy = d3.pointer(e);
+          const x = scaleInvert(props.xScale, xy[0]);
+          const y = scaleInvert(props.yScale, xy[1]);
           e.preventDefault();
           event.apply("drag", this, [x, y]);
         };
-        var startDragging = function () {
+        const startDragging = function () {
           target.__dragging__ = true;
           drag();
         };
-        var stopDragging = function () {
+        const stopDragging = function () {
           target.__dragging__ = false;
           win.on("mouseup.sszvis-behavior-move", null);
           win.on("mousemove.sszvis-behavior-move", null);
@@ -4100,28 +4098,28 @@
         };
         win.on("mousemove.sszvis-behavior-move", drag);
         win.on("mouseup.sszvis-behavior-move", stopDragging);
-        doc.on("mouseout.sszvis-behavior-move", function () {
-          var from = e.relatedTarget || e.toElement;
+        doc.on("mouseout.sszvis-behavior-move", () => {
+          const from = e.relatedTarget || e.toElement;
           if (!from || from.nodeName === "HTML") {
             stopDragging();
           }
         });
         startDragging();
       }).on("mousemove", function (e) {
-        var target = this;
-        var xy = d3.pointer(e);
-        var x = scaleInvert(props.xScale, xy[0]);
-        var y = scaleInvert(props.yScale, xy[1]);
+        const target = this;
+        const xy = d3.pointer(e);
+        const x = scaleInvert(props.xScale, xy[0]);
+        const y = scaleInvert(props.yScale, xy[1]);
         if (!target.__dragging__) {
           event.apply("move", this, [x, y]);
         }
       }).on("mouseout", function () {
         event.apply("end", this, []);
       }).on("touchstart", function (e) {
-        var xy = first(d3.pointer(e));
-        var x = scaleInvert(props.xScale, xy[0]);
-        var y = scaleInvert(props.yScale, xy[1]);
-        var cancelScrolling = props.cancelScrolling(x, y);
+        const xy = first(d3.pointer(e));
+        const x = scaleInvert(props.xScale, xy[0]);
+        const y = scaleInvert(props.yScale, xy[1]);
+        const cancelScrolling = props.cancelScrolling(x, y);
         if (cancelScrolling) {
           e.preventDefault();
         }
@@ -4142,11 +4140,11 @@
           event.apply("start", this, [x, y]);
           event.apply("drag", this, [x, y]);
           event.apply("move", this, [x, y]);
-          var pan = function () {
-            var panXY = first(d3.pointer(e));
-            var panX = scaleInvert(props.xScale, panXY[0]);
-            var panY = scaleInvert(props.yScale, panXY[1]);
-            var panCancelScrolling = props.cancelScrolling(panX, panY);
+          const pan = function () {
+            const panXY = first(d3.pointer(e));
+            const panX = scaleInvert(props.xScale, panXY[0]);
+            const panY = scaleInvert(props.yScale, panXY[1]);
+            const panCancelScrolling = props.cancelScrolling(panX, panY);
             if (panCancelScrolling) {
               e.preventDefault();
             }
@@ -4159,7 +4157,7 @@
               event.apply("end", this, []);
             }
           };
-          var end = function () {
+          const end = function () {
             event.apply("end", this, []);
             d3.select(this).on("touchmove", null).on("touchend", null);
           };
@@ -4171,22 +4169,26 @@
       }
     });
     moveComponent.on = function () {
-      var value = event.on.apply(event, arguments);
+      const value = event.on.apply(event, arguments);
       return value === event ? moveComponent : value;
     };
     return moveComponent;
   }
   function scaleInvert(scale, px) {
-    var scaleType = scale.invert ? "Linear" : scale.paddingInner ? "Band" : "Point";
+    const scaleType = scale.invert ? "Linear" : scale.paddingInner ? "Band" : "Point";
     switch (scaleType) {
       case "Linear":
         {
           return scale.invert(px);
         }
       case "Band":
-        return invertBandScale(scale, px);
+        {
+          return invertBandScale(scale, px);
+        }
       case "Point":
-        return invertPointScale(scale, px);
+        {
+          return invertPointScale(scale, px);
+        }
       default:
         {
           throw new Error("Unknown scale type, could not invert");
@@ -4194,19 +4196,19 @@
     }
   }
   function invertBandScale(scale, px) {
-    var step = scale.step();
-    var paddingOuter = scale.paddingOuter() * step;
-    var paddingInner = scale.paddingInner() * step;
-    var bandWidth = scale.bandwidth();
-    var scaleRange = scale.range();
-    var domain = scale.domain();
+    const step = scale.step();
+    const paddingOuter = scale.paddingOuter() * step;
+    const paddingInner = scale.paddingInner() * step;
+    const bandWidth = scale.bandwidth();
+    const scaleRange = scale.range();
+    const domain = scale.domain();
     if (domain.length === 1) {
       if (scaleRange[0] <= px && scaleRange[1] >= px) {
         return domain[0];
       }
       return null;
     }
-    var ranges = domain.map(function (d, i) {
+    const ranges = domain.map((d, i) => {
       if (i === 0) {
         return [scaleRange[0], scaleRange[0] + paddingOuter + bandWidth + paddingInner / 2];
       } else if (i === domain.length - 1) {
@@ -4215,7 +4217,7 @@
         return [scaleRange[0] + paddingOuter + i * step - paddingInner / 2, scaleRange[0] + paddingOuter + (i + 1) * step - paddingInner / 2];
       }
     });
-    for (var i = 0, l = ranges.length; i < l; i++) {
+    for (let i = 0, l = ranges.length; i < l; i++) {
       if (ranges[i][0] < px && px <= ranges[i][1]) {
         return domain[i];
       }
@@ -4223,17 +4225,17 @@
     return null;
   }
   function invertPointScale(scale, px) {
-    var step = scale.step();
-    var paddingOuter = scale.padding() * step;
-    var scaleRange = scale.range();
-    var domain = scale.domain();
+    const step = scale.step();
+    const paddingOuter = scale.padding() * step;
+    const scaleRange = scale.range();
+    const domain = scale.domain();
     if (domain.length === 1) {
       if (scaleRange[0] <= px && scaleRange[1] >= px) {
         return domain[0];
       }
       return null;
     }
-    var ranges = domain.map(function (d, i) {
+    const ranges = domain.map((d, i) => {
       if (i === 0) {
         return [scaleRange[0], scaleRange[0] + paddingOuter + step / 2];
       } else if (i === domain.length - 1) {
@@ -4242,7 +4244,7 @@
         return [scaleRange[0] + paddingOuter + i * step - step / 2, scaleRange[0] + paddingOuter + i * step + step / 2];
       }
     });
-    for (var i = 0, l = ranges.length; i < l; i++) {
+    for (let i = 0, l = ranges.length; i < l; i++) {
       if (ranges[i][0] < px && px <= ranges[i][1]) {
         return domain[i];
       }
@@ -4309,17 +4311,17 @@
    *                                                                                      cursorValue and the value accessed from the datum.
    */
 
-  var elementFromEvent = function (evt) {
+  const elementFromEvent = function (evt) {
     if (!isNull(evt) && defined(evt)) {
       return document.elementFromPoint(evt.clientX, evt.clientY);
     }
     return null;
   };
-  var datumFromPannableElement = function (element) {
+  const datumFromPannableElement = function (element) {
     if (!isNull(element)) {
-      var selection = d3.select(element);
+      const selection = d3.select(element);
       if (!isNull(selection.attr("data-sszvis-behavior-pannable"))) {
-        var datum = selection.datum();
+        const datum = selection.datum();
         if (defined(datum)) {
           return datum;
         }
@@ -4327,7 +4329,7 @@
     }
     return null;
   };
-  var datumFromPanEvent = function (evt) {
+  const datumFromPanEvent = function (evt) {
     return datumFromPannableElement(elementFromEvent(evt));
   };
 
@@ -4371,11 +4373,11 @@
    */
 
   function panning () {
-    var event = d3.dispatch("start", "pan", "end");
-    var panningComponent = component().prop("elementSelector").render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var elements = selection.selectAll(props.elementSelector);
+    const event = d3.dispatch("start", "pan", "end");
+    const panningComponent = component().prop("elementSelector").render(function () {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const elements = selection.selectAll(props.elementSelector);
       elements.attr("data-sszvis-behavior-pannable", "").classed("sszvis-interactive", true).on("mouseenter", function () {
         event.apply("start", this, arguments);
       }).on("mousemove", function () {
@@ -4387,18 +4389,18 @@
         event.apply("start", this, arguments);
       }).on("touchmove", function (e) {
         e.preventDefault();
-        var datum = datumFromPanEvent(firstTouch(e));
-        if (datum !== null) {
-          event.apply("pan", this, arguments);
-        } else {
+        const datum = datumFromPanEvent(firstTouch(e));
+        if (datum === null) {
           event.apply("end", this, arguments);
+        } else {
+          event.apply("pan", this, arguments);
         }
       }).on("touchend", function () {
         event.apply("end", this, arguments);
       });
     });
     panningComponent.on = function () {
-      var value = event.on.apply(event, arguments);
+      const value = event.on.apply(event, arguments);
       return value === event ? panningComponent : value;
     };
     return panningComponent;
@@ -4448,30 +4450,28 @@
    */
 
   function voronoi () {
-    var event = d3.dispatch("over", "out");
-    var voronoiComponent = component().prop("x").prop("y").prop("bounds").prop("debug").render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+    const event = d3.dispatch("over", "out");
+    const voronoiComponent = component().prop("x").prop("y").prop("bounds").prop("debug").render(function (data) {
+      const selection = d3.select(this);
+      const props = selection.props();
       if (!props.bounds) {
         error("behavior.voronoi - requires bounds");
         return false;
       }
       const delaunay = d3.Delaunay.from(data, d => props.x(d), d => props.y(d));
-      var voronoi = delaunay.voronoi(props.bounds);
-      var polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.cellPolygons());
-      var newPolys = polys.enter().append("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
+      const voronoi = delaunay.voronoi(props.bounds);
+      let polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.cellPolygons());
+      const newPolys = polys.enter().append("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
       polys.exit().remove();
       polys = polys.merge(newPolys);
-      polys.attr("d", function (d) {
-        return "M" + d.join("L") + "Z";
-      }).attr("fill", "transparent").on("mouseover", function (e) {
-        var cbox = this.parentNode.getBoundingClientRect();
+      polys.attr("d", d => "M" + d.join("L") + "Z").attr("fill", "transparent").on("mouseover", function (e) {
+        const cbox = this.parentNode.getBoundingClientRect();
         const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           event.apply("over", this, [data[datumIdx]]);
         }
       }).on("mousemove", function (e) {
-        var cbox = this.parentNode.getBoundingClientRect();
+        const cbox = this.parentNode.getBoundingClientRect();
         const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           event.apply("over", this, [data[datumIdx]]);
@@ -4481,7 +4481,7 @@
       }).on("mouseout", function () {
         event.apply("out", this, []);
       }).on("touchstart", function (e) {
-        var cbox = this.parentNode.getBoundingClientRect();
+        const cbox = this.parentNode.getBoundingClientRect();
         const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(firstTouch(e), [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           e.preventDefault();
@@ -4491,12 +4491,14 @@
           // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
           // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
           // when users are performing touches that cause scrolling, we want to avoid firing the events.
-          var pan = function () {
-            var touchEvent = firstTouch(e);
-            var element = elementFromEvent(touchEvent);
-            var panDatum = datumFromPannableElement(element);
-            if (panDatum !== null) {
-              var panCbox = element.parentNode.getBoundingClientRect();
+          const pan = function () {
+            const touchEvent = firstTouch(e);
+            const element = elementFromEvent(touchEvent);
+            const panDatum = datumFromPannableElement(element);
+            if (panDatum === null) {
+              event.apply("out", this, []);
+            } else {
+              const panCbox = element.parentNode.getBoundingClientRect();
               if (eventNearPoint(touchEvent, [panCbox.left + props.x(panDatum.data), panCbox.top + props.y(panDatum.data)])) {
                 // This event won't be cancelable if you start touching outside the hit area of a voronoi center,
                 // then start scrolling, then move your finger over the hit area of a voronoi center. The browser
@@ -4509,11 +4511,9 @@
               } else {
                 event.apply("out", this, []);
               }
-            } else {
-              event.apply("out", this, []);
             }
           };
-          var end = function () {
+          const end = function () {
             event.apply("out", this, []);
             d3.select(this).on("touchmove", null).on("touchend", null);
           };
@@ -4525,17 +4525,17 @@
       }
     });
     voronoiComponent.on = function () {
-      var value = event.on.apply(event, arguments);
+      const value = event.on.apply(event, arguments);
       return value === event ? voronoiComponent : value;
     };
     return voronoiComponent;
   }
 
   // Perform distance calculations in units squared to avoid a costly Math.sqrt
-  var MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
+  const MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
   function eventNearPoint(event, point) {
-    var dx = event.clientX - point[0];
-    var dy = event.clientY - point[1];
+    const dx = event.clientX - point[0];
+    const dy = event.clientY - point[1];
     return dx * dx + dy * dy < MAX_INTERACTION_RADIUS_SQUARED;
   }
 
@@ -4561,8 +4561,8 @@
    *                      screenWidth: {number} The innerWidth of the screen
    *                      screenHeight: {number} The innerHeight of the screen
    */
-  var measureDimensions = function (arg) {
-    var node;
+  const measureDimensions = function (arg) {
+    let node;
     if (isString(arg)) {
       node = d3.select(arg).node();
     } else if (isSelection(arg)) {
@@ -4590,14 +4590,14 @@
    * @returns {number} The width of the text
    *
    * @example
-   * var helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
+   * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
    **/
-  var measureText = function () {
-    var canvas = document.createElement("canvas");
-    var context = canvas.getContext("2d");
-    var cache = {};
+  const measureText = function () {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    const cache = {};
     return function (fontSize, fontFace, text) {
-      var key = [fontSize, fontFace, text].join("-");
+      const key = [fontSize, fontFace, text].join("-");
       context.font = fontSize + "px " + fontFace;
       return cache[key] || (cache[key] = context.measureText(text).width);
     };
@@ -4612,9 +4612,9 @@
    * @returns {number} The width of the text
    *
    * @example
-   * var labelWidth = sszvis.measureAxisLabel("Hello!")
+   * const labelWidth = sszvis.measureAxisLabel("Hello!")
    */
-  var measureAxisLabel = function (text) {
+  const measureAxisLabel = function (text) {
     return measureText(10, "Arial, sans-serif", text);
   };
 
@@ -4627,9 +4627,9 @@
    * @returns {number} The width of the text
    *
    * @example
-   * var labelWidth = sszvis.measureLegendLabel("Hello!")
+   * const labelWidth = sszvis.measureLegendLabel("Hello!")
    */
-  var measureLegendLabel = function (text) {
+  const measureLegendLabel = function (text) {
     return measureText(12, "Arial, sans-serif", text);
   };
 
@@ -4669,9 +4669,9 @@
    *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
    */
 
-  var DEFAULT_WIDTH = 516;
+  const DEFAULT_WIDTH = 516;
   function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
-    var _bounds = null,
+    let _bounds = null,
       selection = null;
     if (arguments.length === 0) {
       _bounds = {};
@@ -4687,15 +4687,11 @@
       }
     } else {
       _bounds = arg1;
-      if (isSelection(arg2)) {
-        selection = arg2;
-      } else {
-        selection = d3.select(arg2);
-      }
+      selection = isSelection(arg2) ? arg2 : d3.select(arg2);
     }
 
     // All padding sides have default values
-    var padding = {
+    const padding = {
       top: either(_bounds.top, 0),
       right: either(_bounds.right, 1),
       bottom: either(_bounds.bottom, 0),
@@ -4703,18 +4699,18 @@
     };
 
     // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
-    var dimensions = defined(selection) ? measureDimensions(selection) : {
+    const dimensions = defined(selection) ? measureDimensions(selection) : {
       width: DEFAULT_WIDTH
     };
-    var width = either(_bounds.width, dimensions.width);
-    var innerHeight = aspectRatioAuto(dimensions);
-    var height = either(_bounds.height, innerHeight + padding.top + padding.bottom);
+    const width = either(_bounds.width, dimensions.width);
+    const innerHeight = aspectRatioAuto(dimensions);
+    const height = either(_bounds.height, innerHeight + padding.top + padding.bottom);
     return {
       innerHeight: height - padding.top - padding.bottom,
       innerWidth: width - padding.left - padding.right,
-      padding: padding,
-      height: height,
-      width: width,
+      padding,
+      height,
+      width,
       screenWidth: dimensions.screenWidth,
       screenHeight: dimensions.screenHeight
     };
@@ -4726,12 +4722,12 @@
   // @deprecated Since the responsive revisions, the default aspect ratio has changed,
   //             so that it is now responsive to the container width.
   //             This property is preserved for compatibility reasons.
-  var RATIO = 16 / 9;
+  const RATIO = 16 / 9;
 
   /* Helper functions
   ----------------------------------------------- */
   function either(val, fallback) {
-    return typeof val === "undefined" ? fallback : val;
+    return val === undefined ? fallback : val;
   }
 
   /**
@@ -4808,9 +4804,9 @@
    */
 
   function groupBy(data, keyFunc) {
-    var group = {},
-      key;
-    for (var i = 0, l = data.length, value; i < l; ++i) {
+    const group = {};
+    let key;
+    for (let i = 0, l = data.length, value; i < l; ++i) {
       value = data[i];
       key = keyFunc(value);
       group[key] ? group[key].push(value) : group[key] = [value];
@@ -4818,43 +4814,43 @@
     return group;
   }
   function groupEach(data, func) {
-    for (var prop in data) {
+    for (const prop in data) {
       func(data[prop], prop);
     }
   }
   function arrEach(arr, func) {
-    for (var i = 0, l = arr.length; i < l; ++i) {
+    for (let i = 0, l = arr.length; i < l; ++i) {
       func(arr[i], i);
     }
   }
   function cascade() {
-    var _cascade = {},
+    const _cascade = {},
       keys = [],
-      sorts = [],
-      valuesSort;
+      sorts = [];
+    let valuesSort;
     function make(data, depth) {
       if (depth >= keys.length) {
         if (valuesSort) data.sort(valuesSort);
         return data;
       }
-      var sorter = sorts[depth];
-      var key = keys[depth++];
-      var grouped = groupBy(data, key.func);
+      const sorter = sorts[depth];
+      const key = keys[depth++];
+      const grouped = groupBy(data, key.func);
       if (key.type === "obj") {
-        var obj = {};
-        groupEach(grouped, function (value, k) {
+        const obj = {};
+        groupEach(grouped, (value, k) => {
           obj[k] = make(value, depth);
         });
         return obj;
       } else if (key.type === "arr") {
-        var arr = [];
+        const arr = [];
         if (sorter) {
-          var groupKeys = Object.keys(grouped).sort(sorter);
-          arrEach(groupKeys, function (k) {
+          const groupKeys = Object.keys(grouped).sort(sorter);
+          arrEach(groupKeys, k => {
             arr.push(make(grouped[k], depth));
           });
         } else {
-          groupEach(grouped, function (value) {
+          groupEach(grouped, value => {
             arr.push(make(value, depth));
           });
         }
@@ -4898,14 +4894,14 @@
    * too slow.
    */
 
-  var defaultEase = d3.easePolyOut;
-  var defaultTransition = function () {
+  const defaultEase = d3.easePolyOut;
+  const defaultTransition = function () {
     return d3.transition().ease(defaultEase).duration(300);
   };
-  var fastTransition = function () {
+  const fastTransition = function () {
     return d3.transition().ease(defaultEase).duration(50);
   };
-  var slowTransition = function () {
+  const slowTransition = function () {
     return d3.transition().ease(defaultEase).duration(500);
   };
 
@@ -4955,17 +4951,17 @@
 
   // replaces NaN values with 0
   function handleMissingVal(v) {
-    return isNaN(v) ? 0 : v;
+    return Number.isNaN(v) ? 0 : v;
   }
   function bar () {
     return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var xAcc = compose(handleMissingVal, props.x);
-      var yAcc = compose(handleMissingVal, props.y);
-      var wAcc = compose(handleMissingVal, props.width);
-      var hAcc = compose(handleMissingVal, props.height);
-      var bars = selection.selectAll(".sszvis-bar").data(data);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const xAcc = compose(handleMissingVal, props.x);
+      const yAcc = compose(handleMissingVal, props.y);
+      const wAcc = compose(handleMissingVal, props.width);
+      const hAcc = compose(handleMissingVal, props.height);
+      let bars = selection.selectAll(".sszvis-bar").data(data);
       bars.exit().remove();
       bars.enter().append("rect").classed("sszvis-bar", true).attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc).merge(bars).attr("fill", props.fill).attr("stroke", props.stroke);
       if (props.transition) {
@@ -4974,13 +4970,13 @@
       bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
 
       // Tooltip anchors
-      var tooltipPosition;
+      let tooltipPosition;
       if (props.centerTooltip) {
         tooltipPosition = function (d) {
           return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
         };
       } else if (props.tooltipAnchor) {
-        var uv = props.tooltipAnchor.map(parseFloat);
+        const uv = props.tooltipAnchor.map(Number.parseFloat);
         tooltipPosition = function (d) {
           return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
         };
@@ -4989,7 +4985,7 @@
           return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
         };
       }
-      var ta = tooltipAnchor().position(tooltipPosition);
+      const ta = tooltipAnchor().position(tooltipPosition);
       selection.call(ta);
     });
   }
@@ -5013,9 +5009,9 @@
 
   function dot () {
     return component().prop("x", functor).prop("y", functor).prop("radius").prop("stroke").prop("fill").prop("transition").transition(true).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var dots = selection.selectAll(".sszvis-circle").data(data);
+      const selection = d3.select(this);
+      const props = selection.props();
+      let dots = selection.selectAll(".sszvis-circle").data(data);
       dots.exit().remove();
       dots.enter().append("circle").classed("sszvis-circle", true).attr("cx", props.x).attr("cy", props.y).attr("r", props.radius).merge(dots).attr("stroke", props.stroke).attr("fill", props.fill);
       if (props.transition) {
@@ -5025,9 +5021,7 @@
 
       // Tooltip anchors
 
-      var ta = tooltipAnchor().position(function (d) {
-        return [props.x(d), props.y(d)];
-      });
+      const ta = tooltipAnchor().position(d => [props.x(d), props.y(d)]);
       selection.call(ta);
     });
   }
@@ -5081,52 +5075,45 @@
 
   function groupedBars () {
     return component().prop("groupScale").prop("groupSize").prop("groupWidth").prop("groupSpace").groupSpace(0.05).prop("y", functor).prop("height").prop("fill").prop("stroke").prop("defined", functor).defined(true).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var inGroupScale = d3.scaleBand().domain(d3.range(props.groupSize)).padding(props.groupSpace).paddingOuter(0).rangeRound([0, props.groupWidth]);
-      var groups = selection.selectAll("g.sszvis-bargroup").data(data);
-      var newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const inGroupScale = d3.scaleBand().domain(d3.range(props.groupSize)).padding(props.groupSpace).paddingOuter(0).rangeRound([0, props.groupWidth]);
+      let groups = selection.selectAll("g.sszvis-bargroup").data(data);
+      const newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
       groups.exit().remove();
       groups = groups.merge(newGroups);
-      var barUnits = groups.selectAll("g.sszvis-barunit").data(function (d) {
-        return d;
-      });
-      var newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
+      let barUnits = groups.selectAll("g.sszvis-barunit").data(d => d);
+      const newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
       barUnits.exit().remove();
       barUnits = barUnits.merge(newBarUnits);
-      barUnits.each(function (d, i) {
+      barUnits.each((d, i) => {
         // necessary for the within-group scale
         d.__sszvisGroupedBarIndex__ = i;
       });
-      var unitsWithValue = barUnits.filter(props.defined);
+      const unitsWithValue = barUnits.filter(props.defined);
 
       // clear the units before rendering
       unitsWithValue.selectAll("*").remove();
 
       //sszsch: fix: reset previously assigned translations
-      unitsWithValue.attr("transform", function () {
-        return translateString(0, 0);
-      });
-      unitsWithValue.append("rect").classed("sszvis-bar", true).attr("fill", props.fill).attr("x", function (d) {
-        // first term is the x-position of the group, the second term is the x-position of the bar within the group
-        return props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__);
-      }).attr("y", props.y).attr("width", inGroupScale.bandwidth()).attr("height", props.height);
-      var unitsWithoutValue = barUnits.filter(not(props.defined));
+      unitsWithValue.attr("transform", () => translateString(0, 0));
+      unitsWithValue.append("rect").classed("sszvis-bar", true).attr("fill", props.fill).attr("x", d =>
+      // first term is the x-position of the group, the second term is the x-position of the bar within the group
+      props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__)).attr("y", props.y).attr("width", inGroupScale.bandwidth()).attr("height", props.height);
+      const unitsWithoutValue = barUnits.filter(not(props.defined));
       unitsWithoutValue.selectAll("*").remove();
-      unitsWithoutValue.attr("transform", function (d, i) {
-        return translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.bandwidth() / 2, props.y(d, i));
-      });
+      unitsWithoutValue.attr("transform", (d, i) => translateString(props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.bandwidth() / 2, props.y(d, i)));
       unitsWithoutValue.append("line").classed("sszvis-bar--missing line1", true).attr("x1", -4).attr("y1", -4).attr("x2", 4).attr("y2", 4);
       unitsWithoutValue.append("line").classed("sszvis-bar--missing line2", true).attr("x1", 4).attr("y1", -4).attr("x2", -4).attr("y2", 4);
-      var ta = tooltipAnchor().position(function (group) {
-        var xTotal = 0;
-        var tallest = Infinity;
-        group.forEach(function (d, i) {
+      const ta = tooltipAnchor().position(group => {
+        let xTotal = 0;
+        let tallest = Infinity;
+        for (const [i, d] of group.entries()) {
           xTotal += props.groupScale(d) + inGroupScale(d.__sszvisGroupedBarIndex__) + inGroupScale.bandwidth() / 2;
           // smaller y is higher
           tallest = Math.min(tallest, props.y(d, i));
-        });
-        var xAverage = xTotal / group.length;
+        }
+        const xAverage = xTotal / group.length;
         return [xAverage, tallest];
       });
       selection.call(ta);
@@ -5171,20 +5158,18 @@
    */
 
   function line () {
-    return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key(function (d, i) {
-      return i;
-    }).prop("valuesAccessor").valuesAccessor(identity$1).prop("transition").transition(true).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+    return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("valuesAccessor").valuesAccessor(identity$1).prop("transition").transition(true).render(function (data) {
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // Layouts
 
-      var line = d3.line().defined(props.defined !== undefined ? props.defined : compose(not(isNaN), props.y)).x(props.x).y(props.y);
+      const line = d3.line().defined(props.defined === undefined ? compose(not(Number.isNaN), props.y) : props.defined).x(props.x).y(props.y);
 
       // Rendering
 
-      var path = selection.selectAll(".sszvis-line").data(data, props.key);
-      var newPath = path.enter().append("path").classed("sszvis-line", true).style("stroke", props.stroke);
+      let path = selection.selectAll(".sszvis-line").data(data, props.key);
+      const newPath = path.enter().append("path").classed("sszvis-line", true).style("stroke", props.stroke);
       path = path.merge(newPath);
       path.exit().remove();
       path.order();
@@ -5218,11 +5203,11 @@
 
   function pie () {
     return component().prop("radius").prop("fill").prop("stroke").prop("angle", functor).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var stroke = props.stroke || "#FFFFFF";
-      var angle = 0;
-      data.forEach(function (value) {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const stroke = props.stroke || "#FFFFFF";
+      let angle = 0;
+      for (const value of data) {
         // In order for an angle transition to work correctly in d3, the transition must be done in data space.
         // The computed arc path itself cannot be interpolated without error.
         // see http://bl.ocks.org/mbostock/5100636 for a straightforward example.
@@ -5232,18 +5217,14 @@
         // value.a0 and value.a1 are the current values in the transition (either the initial value, some intermediate value, or the final angle value).
         value._a0 = angle;
         // These a0 and a1 values may be overwritten later if there is already data bound at this data index. (see the .each function further down).
-        if (isNaN(value.a0)) value.a0 = angle;
+        if (value.a0 == undefined || Number.isNaN(value.a0)) value.a0 = angle;
         angle += props.angle(value);
         value._a1 = angle;
         // data values which don't already have angles set start out at the complete value.
-        if (isNaN(value.a1)) value.a1 = angle;
-      });
-      var arcGen = d3.arc().innerRadius(4).outerRadius(props.radius).startAngle(function (d) {
-        return d.a0;
-      }).endAngle(function (d) {
-        return d.a1;
-      });
-      var segments = selection.selectAll(".sszvis-path").each(function (d, i) {
+        if (value.a1 == undefined || Number.isNaN(value.a1)) value.a1 = angle;
+      }
+      const arcGen = d3.arc().innerRadius(4).outerRadius(props.radius).startAngle(d => d.a0).endAngle(d => d.a1);
+      let segments = selection.selectAll(".sszvis-path").each((d, i) => {
         // This matches the data values iteratively in the same way d3 will when it does the data join.
         // This is kind of a hack, but it's the only way to get any existing angle values from the already-bound data
         if (data[i]) {
@@ -5251,23 +5232,23 @@
           data[i].a1 = d.a1;
         }
       }).data(data);
-      var newSegments = segments.enter().append("path").classed("sszvis-path", true).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attr("fill", props.fill).attr("stroke", stroke);
+      const newSegments = segments.enter().append("path").classed("sszvis-path", true).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attr("fill", props.fill).attr("stroke", stroke);
       segments.exit().remove();
       segments = segments.merge(newSegments);
-      segments.transition(defaultTransition()).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attrTween("d", function (d) {
-        var angle0Interp = d3.interpolate(d.a0, d._a0);
-        var angle1Interp = d3.interpolate(d.a1, d._a1);
+      segments.transition(defaultTransition()).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attrTween("d", d => {
+        const angle0Interp = d3.interpolate(d.a0, d._a0);
+        const angle1Interp = d3.interpolate(d.a1, d._a1);
         return function (t) {
           d.a0 = angle0Interp(t);
           d.a1 = angle1Interp(t);
           return arcGen(d);
         };
       }).attr("fill", props.fill).attr("stroke", stroke);
-      var ta = tooltipAnchor().position(function (d) {
+      const ta = tooltipAnchor().position(d => {
         // The correction by - Math.PI / 2 is necessary because d3 automatically (and with brief, buried documentation!)
         // makes the same correction to svg.arc() angles :o
-        var a = d.a0 + Math.abs(d.a1 - d.a0) / 2 - Math.PI / 2;
-        var r = props.radius * 2 / 3;
+        const a = d.a0 + Math.abs(d.a1 - d.a0) / 2 - Math.PI / 2;
+        const r = props.radius * 2 / 3;
         return [props.radius + Math.cos(a) * r, props.radius + Math.sin(a) * r];
       });
       selection.datum(data).call(ta);
@@ -5307,23 +5288,21 @@
 
   /* Constants
   ----------------------------------------------- */
-  var SPINE_PADDING$1 = 0.5;
+  const SPINE_PADDING$1 = 0.5;
 
   /* Module
   ----------------------------------------------- */
   function pyramid () {
     return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // Components
 
-      var leftBar = bar().x(function (d) {
-        return -SPINE_PADDING$1 - props.barWidth(d);
-      }).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
-      var rightBar = bar().x(SPINE_PADDING$1).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
-      var leftLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
-      var rightLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth);
+      const leftBar = bar().x(d => -SPINE_PADDING$1 - props.barWidth(d)).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
+      const rightBar = bar().x(SPINE_PADDING$1).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
+      const leftLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
+      const rightLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth);
 
       // Rendering
 
@@ -5335,12 +5314,12 @@
   }
   function lineComponent$1() {
     return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var lineGen = d3.line().x(props.barWidth).y(props.barPosition);
-      var line = selection.selectAll(".sszvis-pyramid__referenceline").data(data);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const lineGen = d3.line().x(props.barWidth).y(props.barPosition);
+      let line = selection.selectAll(".sszvis-pyramid__referenceline").data(data);
       line.exit().remove();
-      var newLine = line.enter().append("path").attr("class", "sszvis-pyramid__referenceline");
+      const newLine = line.enter().append("path").attr("class", "sszvis-pyramid__referenceline");
       line = line.merge(newLine);
       line.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
     });
@@ -5408,165 +5387,139 @@
    * @return {sszvis.component}
    */
 
+  const linkPathString = function (x0, x1, x2, x3, y0, y1) {
+    return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
+  };
+  const linkBounds = function (x0, x1, y0, y1) {
+    return [x0, x1, y0, y1];
+  };
   function sankey () {
-    return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort", functor).linkSort(function (a, b) {
-      return a.value - b.value;
-    }) // Default sorts in descending order of value
+    return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort", functor).linkSort((a, b) => a.value - b.value) // Default sorts in descending order of value
     .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel").nameLabel(identity$1).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var idAcc = prop("id");
-      var getNodePosition = function (node) {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const idAcc = prop("id");
+      const getNodePosition = function (node) {
         return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
       };
-      var xPosition = function (node) {
+      const xPosition = function (node) {
         return props.columnPosition(node.columnIndex);
       };
-      var yPosition = function (node) {
+      const yPosition = function (node) {
         return getNodePosition(node);
       };
-      var xExtent = function () {
+      const xExtent = function () {
         return Math.max(props.nodeThickness, 1);
       };
-      var yExtent = function (node) {
+      const yExtent = function (node) {
         return Math.ceil(Math.max(props.sizeScale(node.value), 1));
       };
-      var linkPathString = function (x0, x1, x2, x3, y0, y1) {
-        return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
-      };
-      var linkBounds = function (x0, x1, y0, y1) {
-        return [x0, x1, y0, y1];
-      };
-      var linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
+      const linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
       // Draw the nodes
-      var barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor);
-      var barGroup = selection.selectGroup("nodes").datum(data.nodes);
+      const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor);
+      const barGroup = selection.selectGroup("nodes").datum(data.nodes);
       barGroup.call(barGen);
-      var barTooltipAnchor = tooltipAnchor().position(function (node) {
-        return [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2];
-      });
+      const barTooltipAnchor = tooltipAnchor().position(node => [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2]);
       barGroup.call(barTooltipAnchor);
 
       // Draw the column labels
-      var columnLabelX = function (colIndex) {
+      const columnLabelX = function (colIndex) {
         return props.columnPosition(colIndex) + props.nodeThickness / 2;
       };
-      var columnLabelY = -24;
-      var columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
+      const columnLabelY = -24;
+      let columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
       // One number for each column
       .data(data.columnLengths);
-      var newColumnLabels = columnLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
+      const newColumnLabels = columnLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
       columnLabels = columnLabels.merge(newColumnLabels);
       columnLabels.exit().remove();
-      columnLabels.attr("transform", function (d, i) {
-        return translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY);
-      }).text(function (d, i) {
-        return props.columnLabel(i);
-      });
-      var columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths);
-      var newColumnLabelTicks = columnLabelTicks.enter().append("line").attr("class", "sszvis-sankey-column-label-tick");
+      columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY)).text((d, i) => props.columnLabel(i));
+      let columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths);
+      const newColumnLabelTicks = columnLabelTicks.enter().append("line").attr("class", "sszvis-sankey-column-label-tick");
       columnLabelTicks = columnLabelTicks.merge(newColumnLabelTicks);
       columnLabelTicks.exit().remove();
-      columnLabelTicks.attr("x1", function (d, i) {
-        return halfPixel(columnLabelX(i));
-      }).attr("x2", function (d, i) {
-        return halfPixel(columnLabelX(i));
-      }).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
+      columnLabelTicks.attr("x1", (d, i) => halfPixel(columnLabelX(i))).attr("x2", (d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
 
       // Draw the links
-      var linkPoints = function (link) {
-        var curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
+      const linkPoints = function (link) {
+        const curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
           curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
           startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + props.sizeScale(link.value) / 2,
           endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + props.sizeScale(link.value) / 2;
         return [curveStart, curveEnd, startLevel, endLevel];
       };
-      var linkPath = function (link) {
-        var points = linkPoints(link),
+      const linkPath = function (link) {
+        const points = linkPoints(link),
           curveInterp = d3.interpolateNumber(points[0], points[1]),
           curveControlPtA = curveInterp(props.linkCurvature),
           curveControlPtB = curveInterp(1 - props.linkCurvature);
         return linkPathString(points[0], curveControlPtA, curveControlPtB, points[1], points[2], points[3]);
       };
-      var linkBoundingBox = function (link) {
-        var points = linkPoints(link);
+      const linkBoundingBox = function (link) {
+        const points = linkPoints(link);
         return linkBounds(points[0], points[1], points[2], points[3]);
       };
-      var linkThickness = function (link) {
+      const linkThickness = function (link) {
         return Math.max(props.sizeScale(link.value), 1);
       };
 
       // Render the links
-      var linksGroup = selection.selectGroup("links");
-      var linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
-      var newLinksElems = linksElems.enter().append("path").attr("class", "sszvis-link");
+      const linksGroup = selection.selectGroup("links");
+      let linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
+      const newLinksElems = linksElems.enter().append("path").attr("class", "sszvis-link");
       linksElems = linksElems.merge(newLinksElems);
       linksElems.exit().remove();
       linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", props.linkColor).sort(props.linkSort);
       linksGroup.datum(data.links);
-      var linkTooltipAnchor = tooltipAnchor().position(function (link) {
-        var bbox = linkBoundingBox(link);
+      const linkTooltipAnchor = tooltipAnchor().position(link => {
+        const bbox = linkBoundingBox(link);
         return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
       });
       linksGroup.call(linkTooltipAnchor);
 
       // Render the link labels
-      var linkLabelsGroup = selection.selectGroup("linklabels");
+      const linkLabelsGroup = selection.selectGroup("linklabels");
 
       // If no props.linkSourceLabels are provided, most of this rendering is no-op
-      var linkSourceLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-source-label").data(props.linkSourceLabels);
-      var newLinkSourceLabels = linkSourceLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label");
+      let linkSourceLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-source-label").data(props.linkSourceLabels);
+      const newLinkSourceLabels = linkSourceLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label");
       linkSourceLabels = linkSourceLabels.merge(newLinkSourceLabels);
       linkSourceLabels.exit().remove();
-      linkSourceLabels.attr("transform", function (link) {
-        var bbox = linkBoundingBox(link);
+      linkSourceLabels.attr("transform", link => {
+        const bbox = linkBoundingBox(link);
         return translateString(bbox[0] + 6, bbox[2]);
       }).text(props.linkLabel);
 
       // If no props.linkTargetLabels are provided, most of this rendering is no-op
-      var linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels);
-      var newLinkTargetLabels = linkTargetLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
+      let linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels);
+      const newLinkTargetLabels = linkTargetLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
       linkTargetLabels = linkTargetLabels.merge(newLinkTargetLabels);
       linkTargetLabels.exit().remove();
-      linkTargetLabels.attr("transform", function (link) {
-        var bbox = linkBoundingBox(link);
+      linkTargetLabels.attr("transform", link => {
+        const bbox = linkBoundingBox(link);
         return translateString(bbox[1] - 6, bbox[3]);
       }).text(props.linkLabel);
 
       // Render the node labels and their hit boxes
-      var getLabelSide = function (colIndex) {
-        var side = props.labelSide(colIndex);
+      const getLabelSide = function (colIndex) {
+        let side = props.labelSide(colIndex);
         if (props.labelSideSwitch) {
           side = side === "left" ? "right" : "left";
         }
         return side;
       };
-      var nodeLabelsGroup = selection.selectGroup("nodelabels");
-      var barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes);
-      var newBarLabels = barLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
+      const nodeLabelsGroup = selection.selectGroup("nodelabels");
+      let barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes);
+      const newBarLabels = barLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
       barLabels = barLabels.merge(newBarLabels);
       barLabels.exit().remove();
-      barLabels.text(function (node) {
-        return props.nameLabel(node.id);
-      }).attr("text-align", "middle").attr("text-anchor", function (node) {
-        return getLabelSide(node.columnIndex) === "left" ? "end" : "start";
-      }).attr("x", function (node) {
-        return getLabelSide(node.columnIndex) === "left" ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6;
-      }).attr("y", function (node) {
-        return yPosition(node) + yExtent(node) / 2;
-      }).style("opacity", props.labelOpacity);
-      var barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes);
-      var newBarLabelHitBoxes = barLabelHitBoxes.enter().append("rect").attr("class", "sszvis-sankey-hitbox");
+      barLabels.text(node => props.nameLabel(node.id)).attr("text-align", "middle").attr("text-anchor", node => getLabelSide(node.columnIndex) === "left" ? "end" : "start").attr("x", node => getLabelSide(node.columnIndex) === "left" ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6).attr("y", node => yPosition(node) + yExtent(node) / 2).style("opacity", props.labelOpacity);
+      let barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes);
+      const newBarLabelHitBoxes = barLabelHitBoxes.enter().append("rect").attr("class", "sszvis-sankey-hitbox");
       barLabelHitBoxes = barLabelHitBoxes.merge(newBarLabelHitBoxes);
       barLabelHitBoxes.exit().remove();
-      barLabelHitBoxes.attr("fill", "transparent").attr("x", function (node) {
-        return xPosition(node) + (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0);
-      }).attr("y", function (node) {
-        return yPosition(node) - props.nodePadding / 2;
-      }).attr("width", props.labelHitBoxSize + props.nodeThickness).attr("height", function (node) {
-        return yExtent(node) + props.nodePadding;
-      });
+      barLabelHitBoxes.attr("fill", "transparent").attr("x", node => xPosition(node) + (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)).attr("y", node => yPosition(node) - props.nodePadding / 2).attr("width", props.labelHitBoxSize + props.nodeThickness).attr("height", node => yExtent(node) + props.nodePadding);
     });
   }
 
@@ -5601,23 +5554,21 @@
    */
 
   function stackedArea () {
-    return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key(function (d, i) {
-      return i;
-    }).prop("transition").transition(true).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var defaultDefined = function () {
-        return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+    return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("transition").transition(true).render(function (data) {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const defaultDefined = function () {
+        return compose(not(Number.isNaN), props.y0) && compose(not(Number.isNaN), props.y1);
       };
-      var areaGen = d3.area().defined(props.defined !== undefined ? props.defined : defaultDefined).x(props.x).y0(props.y0).y1(props.y1);
-      var paths = selection.selectAll("path.sszvis-path").data(data, props.key);
-      var newPaths = paths.enter().append("path").classed("sszvis-path", true);
+      const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
+      let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
+      const newPaths = paths.enter().append("path").classed("sszvis-path", true);
       paths.exit().remove();
       paths = paths.merge(newPaths);
       if (props.transition) {
         paths = paths.transition(defaultTransition());
       }
-      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke || "#ffffff").attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
+      paths.attr("d", areaGen).attr("fill", props.fill).attr("stroke", props.stroke || "#ffffff").attr("stroke-width", props.strokeWidth === undefined ? 1 : props.strokeWidth);
     });
   }
 
@@ -5649,26 +5600,24 @@
    */
 
   function stackedAreaMultiples () {
-    return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key(function (d, i) {
-      return i;
-    }).prop("valuesAccessor").valuesAccessor(identity$1).prop("transition").transition(true).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+    return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("valuesAccessor").valuesAccessor(identity$1).prop("transition").transition(true).render(function (data) {
+      const selection = d3.select(this);
+      const props = selection.props();
 
       //sszsch why reverse?
-      data = data.slice().reverse();
-      var defaultDefined = function () {
-        return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+      data = [...data].reverse();
+      const defaultDefined = function () {
+        return compose(not(Number.isNaN), props.y0) && compose(not(Number.isNaN), props.y1);
       };
-      var areaGen = d3.area().defined(props.defined !== undefined ? props.defined : defaultDefined).x(props.x).y0(props.y0).y1(props.y1);
-      var paths = selection.selectAll("path.sszvis-path").data(data, props.key);
-      var newPaths = paths.enter().append("path").classed("sszvis-path", true);
+      const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
+      let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
+      const newPaths = paths.enter().append("path").classed("sszvis-path", true);
       paths.exit().remove();
       paths = newPaths.merge(paths);
       if (props.transition) {
         paths = paths.transition(defaultTransition());
       }
-      paths.attr("d", compose(areaGen, props.valuesAccessor)).attr("fill", props.fill).attr("stroke", props.stroke).attr("stroke-width", props.strokeWidth !== undefined ? props.strokeWidth : 1);
+      paths.attr("d", compose(areaGen, props.valuesAccessor)).attr("fill", props.fill).attr("stroke", props.stroke).attr("stroke-width", props.strokeWidth === undefined ? 1 : props.strokeWidth);
     });
   }
 
@@ -5676,7 +5625,7 @@
    * Stacked Bar component
    *
    * This component includes both the vertical and horizontal stacked bar chart components.
-   * Both are variations on the same concept, and they both use the same abstract intermediate
+   * Both are constiations on the same concept, and they both use the same abstract intermediate
    * representation for the stack, but are rendered using different dimensions. Note that using
    * this component will add the properties 'y0' and 'y' to any passed-in data objects, as part of
    * computing the stack intermediate representation. Existing properties with these names will be
@@ -5703,92 +5652,84 @@
    * @return {sszvis.component}
    */
 
-  var stackAcc = prop("stack");
+  const stackAcc = prop("stack");
 
   // Accessors for the first and second element of a tuple (2-element array).
-  var fst = prop("0");
-  var snd = prop("1");
+  const fst = prop("0");
+  const snd = prop("1");
   function stackedBarData(order) {
     return function (_stackAcc, seriesAcc, valueAcc) {
       return function (data) {
-        var rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
+        const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
         // Collect all keys ()
-        var keys = rows.reduce(function (a, row) {
-          return set$1(a.concat(Object.keys(row)));
-        }, []);
-        var stacks = d3.stack().keys(keys).value(function (x, key) {
-          return valueAcc(x[key][0]);
-        }).order(order)(rows);
+        const keys = rows.reduce((a, row) => set$1([...a, ...Object.keys(row)]), []);
+        const stacks = d3.stack().keys(keys).value((x, key) => valueAcc(x[key][0])).order(order)(rows);
 
         // Simplify the 'data' property.
-        stacks.forEach(function (stack) {
-          stack.forEach(function (d) {
+        for (const stack of stacks) {
+          for (const d of stack) {
             d.series = stack.key;
             d.data = d.data[stack.key][0];
             d.stack = _stackAcc(d.data);
-          });
-        });
+          }
+        }
         stacks.keys = keys;
-        stacks.maxValue = d3.max(stacks, function (stack) {
-          return d3.max(stack, function (d) {
-            return d[1];
-          });
-        });
+        stacks.maxValue = d3.max(stacks, stack => d3.max(stack, d => d[1]));
         return stacks;
       };
     };
   }
-  var stackedBarHorizontalData = stackedBarData(d3.stackOrderNone);
-  var stackedBarVerticalData = stackedBarData(d3.stackOrderReverse);
+  const stackedBarHorizontalData = stackedBarData(d3.stackOrderNone);
+  const stackedBarVerticalData = stackedBarData(d3.stackOrderReverse);
   function stackedBar(config) {
     return component().prop("xScale", functor).prop("width", functor).prop("yScale", functor).prop("height", functor).prop("fill").prop("stroke").render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var barGen = bar().x(config.x(props)).y(config.y(props)).width(config.width(props)).height(config.height(props)).fill(props.fill).stroke(props.stroke || "#FFFFFF");
-      var groups = selection.selectAll(".sszvis-stack").data(data);
-      var newGroups = groups.enter().append("g").classed("sszvis-stack", true);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const barGen = bar().x(config.x(props)).y(config.y(props)).width(config.width(props)).height(config.height(props)).fill(props.fill).stroke(props.stroke || "#FFFFFF");
+      let groups = selection.selectAll(".sszvis-stack").data(data);
+      const newGroups = groups.enter().append("g").classed("sszvis-stack", true);
       groups.exit().remove();
       groups = groups.merge(newGroups);
       groups.call(barGen);
     });
   }
-  var horizontalStackedBarConfig = {
-    x: function (props) {
+  const horizontalStackedBarConfig = {
+    x(props) {
       return compose(props.xScale, fst);
     },
-    y: function (props) {
+    y(props) {
       return compose(props.yScale, stackAcc);
     },
-    width: function (props) {
+    width(props) {
       return function (d) {
         return props.xScale(d[1]) - props.xScale(d[0]);
       };
     },
-    height: function (props) {
+    height(props) {
       return props.height;
     }
   };
-  var stackedBarHorizontal = function () {
+  const stackedBarHorizontal = function () {
     return stackedBar(horizontalStackedBarConfig);
   };
-  var verticalStackedBarConfig = {
-    x: function (props) {
+  const verticalStackedBarConfig = {
+    x(props) {
       return compose(props.xScale, stackAcc);
     },
-    y: function (props) {
+    y(props) {
       return compose(props.yScale, snd);
     },
-    width: function (props) {
+    width(props) {
       return props.width;
     },
-    height: function (props) {
+    height(props) {
       return function (d) {
         return props.yScale(d[0]) - props.yScale(d[1]);
       };
     }
   };
-  var stackedBarVertical = function () {
+  const stackedBarVertical = function () {
     return stackedBar(verticalStackedBarConfig);
   };
 
@@ -5825,9 +5766,9 @@
 
   /* Constants
   ----------------------------------------------- */
-  var SPINE_PADDING = 0.5;
-  var dataAcc = prop("data");
-  var rowAcc = prop("row");
+  const SPINE_PADDING = 0.5;
+  const dataAcc = prop("data");
+  const rowAcc = prop("row");
 
   /**
    * This function prepares the data for the stackedPyramid component
@@ -5844,34 +5785,25 @@
    */
   function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
     return function (data) {
-      var sides = cascade().arrayBy(sideAcc).arrayBy(_rowAcc).objectBy(seriesAcc).apply(data).map(function (rows) {
-        var keys = Object.keys(rows[0]);
-        var side = sideAcc(rows[0][keys[0]][0]);
-        var stacks = d3.stack().keys(keys).value(function (x, key) {
-          return valueAcc(x[key][0]);
-        })(rows);
-        stacks.forEach(function (stack, i) {
-          stack.forEach(function (d, row) {
+      const sides = cascade().arrayBy(sideAcc).arrayBy(_rowAcc).objectBy(seriesAcc).apply(data).map(rows => {
+        const keys = Object.keys(rows[0]);
+        const side = sideAcc(rows[0][keys[0]][0]);
+        const stacks = d3.stack().keys(keys).value((x, key) => valueAcc(x[key][0]))(rows);
+        for (const [i, stack] of stacks.entries()) {
+          for (const [row, d] of stack.entries()) {
             d.data = d.data[keys[i]][0];
             d.series = keys[i];
             d.side = side;
             d.row = row;
             d.value = valueAcc(d.data);
-            return d;
-          });
-        });
+          }
+        }
         return stacks;
       });
 
       // Compute the max value, for convenience. This value is needed to construct
       // the horizontal scale.
-      sides.maxValue = d3.max(sides, function (side) {
-        return d3.max(side, function (rows) {
-          return d3.max(rows, function (row) {
-            return row[1];
-          });
-        });
-      });
+      sides.maxValue = d3.max(sides, side => d3.max(side, rows => d3.max(rows, row => row[1])));
       return sides;
     };
   }
@@ -5880,25 +5812,17 @@
   ----------------------------------------------- */
   function stackedPyramid() {
     return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // Components
 
-      var leftBar = bar().x(function (d) {
-        return -SPINE_PADDING - props.barWidth(d[1]);
-      }).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(function (d) {
-        return props.barWidth(d[1]) - props.barWidth(d[0]);
-      }).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
-      var rightBar = bar().x(function (d) {
-        return SPINE_PADDING + props.barWidth(d[0]);
-      }).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(function (d) {
-        return props.barWidth(d[1]) - props.barWidth(d[0]);
-      }).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
-      var leftStack = stackComponent().stackElement(leftBar);
-      var rightStack = stackComponent().stackElement(rightBar);
-      var leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
-      var rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+      const leftBar = bar().x(d => -SPINE_PADDING - props.barWidth(d[1])).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(d => props.barWidth(d[1]) - props.barWidth(d[0])).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
+      const rightBar = bar().x(d => SPINE_PADDING + props.barWidth(d[0])).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(d => props.barWidth(d[1]) - props.barWidth(d[0])).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
+      const leftStack = stackComponent().stackElement(leftBar);
+      const rightStack = stackComponent().stackElement(rightBar);
+      const leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
+      const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
 
       // Rendering
 
@@ -5909,11 +5833,11 @@
     });
   }
   function stackComponent() {
-    return component().prop("stackElement").renderSelection(function (selection) {
-      var datum = selection.datum();
-      var props = selection.props();
-      var stack = selection.selectAll("[data-sszvis-stack]").data(datum);
-      var newStack = stack.enter().append("g").attr("data-sszvis-stack", "");
+    return component().prop("stackElement").renderSelection(selection => {
+      const datum = selection.datum();
+      const props = selection.props();
+      let stack = selection.selectAll("[data-sszvis-stack]").data(datum);
+      const newStack = stack.enter().append("g").attr("data-sszvis-stack", "");
       stack.exit().remove();
       stack = stack.merge(newStack);
       stack.each(function (d) {
@@ -5923,12 +5847,12 @@
   }
   function lineComponent() {
     return component().prop("barPosition").prop("barWidth").prop("mirror").mirror(false).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var lineGen = d3.line().x(props.barWidth).y(props.barPosition);
-      var line = selection.selectAll(".sszvis-path").data(data);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const lineGen = d3.line().x(props.barWidth).y(props.barPosition);
+      let line = selection.selectAll(".sszvis-path").data(data);
       line.exit().remove();
-      var newLine = line.enter().append("path").attr("class", "sszvis-path").attr("fill", "none").attr("stroke", "#aaa").attr("stroke-width", 2).attr("stroke-dasharray", "3 3");
+      const newLine = line.enter().append("path").attr("class", "sszvis-path").attr("fill", "none").attr("stroke", "#aaa").attr("stroke-width", 2).attr("stroke-dasharray", "3 3");
       line = line.merge(newLine);
       line.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
     });
@@ -5964,11 +5888,11 @@
    * @return {sszvis.component}
    */
 
-  var TWO_PI = 2 * Math.PI;
+  const TWO_PI = 2 * Math.PI;
   function sunburst () {
     return component().prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
       function getColorRecursive(node) {
@@ -5984,31 +5908,31 @@
           return d3.hsl(props.fill(node.data.key));
         } else {
           // Recurse up the tree and adjust the lightness value
-          var pColor = getColorRecursive(node.parent);
+          const pColor = getColorRecursive(node.parent);
           pColor.l *= 1.15;
           return pColor;
         }
       }
-      var startAngle = function (d) {
+      const startAngle = function (d) {
         return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
       };
-      var endAngle = function (d) {
+      const endAngle = function (d) {
         return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
       };
-      var innerRadius = function (d) {
+      const innerRadius = function (d) {
         return props.centerRadius + Math.max(0, props.radiusScale(d.y0));
       };
-      var outerRadius = function (d) {
+      const outerRadius = function (d) {
         return props.centerRadius + Math.max(0, props.radiusScale(d.y1));
       };
-      var arcGen = d3.arc().startAngle(startAngle).endAngle(endAngle).innerRadius(innerRadius).outerRadius(outerRadius);
-      data.forEach(function (d) {
+      const arcGen = d3.arc().startAngle(startAngle).endAngle(endAngle).innerRadius(innerRadius).outerRadius(outerRadius);
+      for (const d of data) {
         // _x and _dx are the destination values for the transition.
         // We set these to the computed x and dx.
         d._x0 = d.x0;
         d._x1 = d.x1;
-      });
-      var arcs = selection.selectAll(".sszvis-sunburst-arc").each(function (d, i) {
+      }
+      let arcs = selection.selectAll(".sszvis-sunburst-arc").each((d, i) => {
         if (data[i]) {
           // x and dx are the current/transitioning values
           // We set these here, in case any datums already exist which have values set
@@ -6017,13 +5941,13 @@
           // The transition tweens from x and dx to _x and _dx
         }
       }).data(data);
-      var newArcs = arcs.enter().append("path").attr("class", "sszvis-sunburst-arc");
+      const newArcs = arcs.enter().append("path").attr("class", "sszvis-sunburst-arc");
       arcs.exit().remove();
       arcs = arcs.merge(newArcs);
       arcs.attr("stroke", props.stroke).attr("fill", getColorRecursive);
-      arcs.transition(defaultTransition()).attrTween("d", function (d) {
-        var x0Interp = d3.interpolate(d.x0, d._x0);
-        var x1Interp = d3.interpolate(d.x1, d._x1);
+      arcs.transition(defaultTransition()).attrTween("d", d => {
+        const x0Interp = d3.interpolate(d.x0, d._x0);
+        const x1Interp = d3.interpolate(d.x1, d._x1);
         return function (t) {
           d.x0 = x0Interp(t);
           d.x1 = x1Interp(t);
@@ -6032,11 +5956,11 @@
       });
 
       // Add tooltip anchors
-      var arcTooltipAnchor = tooltipAnchor().position(function (d) {
-        var startA = startAngle(d);
-        var endA = endAngle(d);
-        var a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
-        var r = (innerRadius(d) + outerRadius(d)) / 2;
+      const arcTooltipAnchor = tooltipAnchor().position(d => {
+        const startA = startAngle(d);
+        const endA = endAngle(d);
+        const a = startA + Math.abs(endA - startA) / 2 - Math.PI / 2;
+        const r = (innerRadius(d) + outerRadius(d)) / 2;
         return [Math.cos(a) * r, Math.sin(a) * r];
       });
       selection.call(arcTooltipAnchor);
@@ -6065,25 +5989,19 @@
 
   function buttonGroup () {
     return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity$1).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var buttonWidth = props.width / props.values.length;
-      var container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], function (d) {
-        return d;
-      });
-      var newContainer = container.enter().append("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const buttonWidth = props.width / props.values.length;
+      let container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d);
+      const newContainer = container.enter().append("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true);
       container.exit().remove();
       container = container.merge(newContainer);
       container.style("width", props.width + "px");
-      var buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values);
-      var newButtons = buttons.enter().append("div").classed("sszvis-control-buttonGroup__item", true);
+      let buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values);
+      const newButtons = buttons.enter().append("div").classed("sszvis-control-buttonGroup__item", true);
       buttons.exit().remove();
       buttons = buttons.merge(newButtons);
-      buttons.style("width", buttonWidth + "px").classed("selected", function (d) {
-        return d === props.current;
-      }).text(function (d) {
-        return d;
-      }).on("click", props.change);
+      buttons.style("width", buttonWidth + "px").classed("selected", d => d === props.current).text(d => d).on("click", props.change);
     });
   }
 
@@ -6110,56 +6028,52 @@
 
   function handleRuler () {
     return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // Elements need to be placed on half-pixels in order to be rendered
       // crisply across browsers. That's why we create this position accessor
       // here that takes a datum as input, reads out its value (props.x) and
       // then rounds this pixel value to half pixels (1px -> 1.5px, 1.2px -> 1.5px)
-      var crispX = compose(halfPixel, props.x);
-      var crispY = compose(halfPixel, props.y);
-      var bottom = props.bottom - 4;
-      var handleWidth = 10;
-      var handleHeight = 24;
-      var handleTop = props.top - handleHeight;
-      var group = selection.selectAll(".sszvis-handleRuler__group").data([0]);
-      var entering = group.enter().append("g").classed("sszvis-handleRuler__group", true);
+      const crispX = compose(halfPixel, props.x);
+      const crispY = compose(halfPixel, props.y);
+      const bottom = props.bottom - 4;
+      const handleWidth = 10;
+      const handleHeight = 24;
+      const handleTop = props.top - handleHeight;
+      let group = selection.selectAll(".sszvis-handleRuler__group").data([0]);
+      const entering = group.enter().append("g").classed("sszvis-handleRuler__group", true);
       group.exit().remove();
       group = group.merge(entering);
       entering.append("line").classed("sszvis-ruler__rule", true);
       entering.append("rect").classed("sszvis-handleRuler__handle", true);
       entering.append("line").classed("sszvis-handleRuler__handle-mark", true);
       group.selectAll(".sszvis-ruler__rule").attr("x1", crispX).attr("y1", halfPixel(props.top)).attr("x2", crispX).attr("y2", halfPixel(bottom));
-      group.selectAll(".sszvis-handleRuler__handle").attr("x", function (d) {
-        return crispX(d) - handleWidth / 2;
-      }).attr("y", halfPixel(handleTop)).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
+      group.selectAll(".sszvis-handleRuler__handle").attr("x", d => crispX(d) - handleWidth / 2).attr("y", halfPixel(handleTop)).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
       group.selectAll(".sszvis-handleRuler__handle-mark").attr("x1", crispX).attr("y1", halfPixel(handleTop + handleHeight * 0.15)).attr("x2", crispX).attr("y2", halfPixel(handleTop + handleHeight * 0.85));
-      var dots = group.selectAll(".sszvis-ruler__dot").data(data);
-      var newDots = dots.enter().append("circle").classed("sszvis-ruler__dot", true);
+      let dots = group.selectAll(".sszvis-ruler__dot").data(data);
+      const newDots = dots.enter().append("circle").classed("sszvis-ruler__dot", true);
       dots.exit().remove();
       dots = dots.merge(newDots);
       dots.attr("cx", crispX).attr("cy", crispY).attr("r", 3.5).attr("fill", props.color);
-      var labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data);
-      var newLabelOutline = labelOutline.enter().append("text").classed("sszvis-ruler__label-outline", true);
+      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data);
+      const newLabelOutline = labelOutline.enter().append("text").classed("sszvis-ruler__label-outline", true);
       labelOutline.exit().remove();
       labelOutline = labelOutline.merge(newLabelOutline);
-      var label = selection.selectAll(".sszvis-ruler__label").data(data);
-      var newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
+      let label = selection.selectAll(".sszvis-ruler__label").data(data);
+      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
       label.exit().remove();
       label = label.merge(newLabel);
 
       // Update both labelOutline and labelOutline selections
 
-      selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", function (d) {
-        var x = compose(halfPixel, props.x)(d);
-        var y = compose(halfPixel, props.y)(d);
-        var dx = props.flip(d) ? -10 : 10;
-        var dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
+      selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
+        const x = compose(halfPixel, props.x)(d);
+        const y = compose(halfPixel, props.y)(d);
+        const dx = props.flip(d) ? -10 : 10;
+        const dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
         return translateString(x + dx, y + dy);
-      }).style("text-anchor", function (d) {
-        return props.flip(d) ? "end" : "start";
-      }).html(props.label);
+      }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
     });
   }
 
@@ -6185,52 +6099,40 @@
 
   function select () {
     return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity$1).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], function (d) {
-        return d;
-      });
-      var newWrapperEl = wrapperEl.enter().append("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-select", true);
+      const selection = d3.select(this);
+      const props = selection.props();
+      let wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], d => d);
+      const newWrapperEl = wrapperEl.enter().append("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-select", true);
       wrapperEl.exit().remove();
       wrapperEl = wrapperEl.merge(newWrapperEl);
       wrapperEl.style("width", props.width + "px");
-      var metricsEl = wrapperEl.selectDiv("selectMetrics").classed("sszvis-control-select__metrics", true);
-      var selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]);
-      var newSelectEl = selectEl.enter().append("select").classed("sszvis-control-select__element", true).on("change", function () {
+      const metricsEl = wrapperEl.selectDiv("selectMetrics").classed("sszvis-control-select__metrics", true);
+      let selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]);
+      const newSelectEl = selectEl.enter().append("select").classed("sszvis-control-select__element", true).on("change", function () {
         // We store the index in the select's value instead of the datum
         // because an option's value can only hold strings.
-        var i = d3.select(this).property("value");
+        const i = d3.select(this).property("value");
         props.change(props.values[i]);
         // Prevent highlights on the select element after users have selected
         // an option by moving away from it.
-        setTimeout(function () {
+        setTimeout(() => {
           window.focus();
         }, 0);
       });
       selectEl = selectEl.merge(newSelectEl);
       selectEl.style("width", props.width + 30 + "px");
-      var optionEls = selectEl.selectAll("option").data(props.values);
-      var newOptionEls = optionEls.enter().append("option");
+      const optionEls = selectEl.selectAll("option").data(props.values);
+      const newOptionEls = optionEls.enter().append("option");
       optionEls.exit().remove();
-      optionEls.merge(newOptionEls).attr("selected", function (d) {
-        return d === props.current ? "selected" : null;
-      }).attr("value", function (d, i) {
-        return i;
-      }).text(function (d) {
-        return truncateToWidth(metricsEl, props.width - 40, d);
-      });
+      optionEls.merge(newOptionEls).attr("selected", d => d === props.current ? "selected" : null).attr("value", (d, i) => i).text(d => truncateToWidth(metricsEl, props.width - 40, d));
     });
   }
   function truncateToWidth(metricsEl, maxWidth, originalString) {
-    var MAX_RECURSION = 1000;
-    var fitText = function (str, i) {
+    const MAX_RECURSION = 1000;
+    const fitText = function (str, i) {
       metricsEl.text(str);
-      var textWidth = Math.ceil(metricsEl.node().clientWidth);
-      if (i < MAX_RECURSION && textWidth > maxWidth) {
-        return fitText(str.slice(0, str.length - 2) + "…", i + 1);
-      } else {
-        return str;
-      }
+      const textWidth = Math.ceil(metricsEl.node().clientWidth);
+      return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, -2) + "…", i + 1) : str;
     };
     return fitText(originalString, 0);
   }
@@ -6260,91 +6162,75 @@
    */
 
   function contains(x, a) {
-    return a.indexOf(x) >= 0;
+    return a.includes(x);
   }
   function slider () {
     return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).tickLabels(identity$1).prop("label", functor).label(identity$1).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var axisOffset = 28; // vertical offset for the axis
-      var majorTickSize = 12;
-      var backgroundOffset = halfPixel(18); // vertical offset for the middle of the background
-      var handleWidth = 10; // the width of the handle
-      var handleHeight = 23; // the height of the handle
-      var bgWidth = 6; // the width of the background
-      var lineEndOffset = bgWidth / 2; // the amount by which to offset the ends of the background line
-      var handleSideOffset = handleWidth / 2 + 0.5; // the amount by which to offset the position of the handle
+      const selection = d3.select(this);
+      const props = selection.props();
+      const axisOffset = 28; // vertical offset for the axis
+      const majorTickSize = 12;
+      const backgroundOffset = halfPixel(18); // vertical offset for the middle of the background
+      const handleWidth = 10; // the width of the handle
+      const handleHeight = 23; // the height of the handle
+      const bgWidth = 6; // the width of the background
+      const lineEndOffset = bgWidth / 2; // the amount by which to offset the ends of the background line
+      const handleSideOffset = handleWidth / 2 + 0.5; // the amount by which to offset the position of the handle
 
-      var scaleDomain = props.scale.domain();
-      var scaleRange = range(props.scale);
-      var alteredScale = props.scale.copy().range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
+      const scaleDomain = props.scale.domain();
+      const scaleRange = range(props.scale);
+      const alteredScale = props.scale.copy().range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
 
       // the mostly unchanging bits
-      var bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]);
-      var newBg = bg.enter().append("g").classed("sszvis-control-slider__backgroundgroup", true);
+      let bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]);
+      const newBg = bg.enter().append("g").classed("sszvis-control-slider__backgroundgroup", true);
       bg = bg.merge(newBg);
       bg.exit().remove();
 
       // create the axis
-      var axis = axisX().scale(alteredScale).orient("bottom").hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set$1([].concat(props.majorTicks, props.minorTicks))).tickFormat(function (d) {
-        return contains(d, props.majorTicks) ? props.tickLabels(d) : "";
-      });
-      var axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]);
-      var newAxisSelection = axisSelection.enter().append("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
+      const axis = axisX().scale(alteredScale).orient("bottom").hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set$1([...props.majorTicks, ...props.minorTicks])).tickFormat(d => contains(d, props.majorTicks) ? props.tickLabels(d) : "");
+      let axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]);
+      const newAxisSelection = axisSelection.enter().append("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
       axisSelection = axisSelection.merge(newAxisSelection);
       axisSelection.attr("transform", translateString(0, axisOffset)).call(axis);
 
       // adjust visual aspects of the axis to fit the design
-      axisSelection.selectAll(".tick line").filter(function (d) {
-        return !contains(d, props.majorTicks);
-      }).attr("y2", 4);
-      var majorAxisText = axisSelection.selectAll(".tick text").filter(function (d) {
-        return contains(d, props.majorTicks);
-      });
-      var numTicks = majorAxisText.size();
-      majorAxisText.style("text-anchor", function (d, i) {
-        return i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle";
-      });
+      axisSelection.selectAll(".tick line").filter(d => !contains(d, props.majorTicks)).attr("y2", 4);
+      const majorAxisText = axisSelection.selectAll(".tick text").filter(d => contains(d, props.majorTicks));
+      const numTicks = majorAxisText.size();
+      majorAxisText.style("text-anchor", (d, i) => i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle");
 
       // create the slider background
-      var backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]);
-      var newBackgroundSelection = backgroundSelection.enter().append("g").classed("sszvis-slider__background", true);
+      let backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]);
+      const newBackgroundSelection = backgroundSelection.enter().append("g").classed("sszvis-slider__background", true);
       backgroundSelection = backgroundSelection.merge(newBackgroundSelection);
       backgroundSelection.attr("transform", translateString(0, backgroundOffset));
-      var bg1 = backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]);
-      var newBg1 = bg1.enter().append("line").classed("sszvis-slider__background__bg1", true).style("stroke-width", bgWidth).style("stroke", "#888").style("stroke-linecap", "round");
+      let bg1 = backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]);
+      const newBg1 = bg1.enter().append("line").classed("sszvis-slider__background__bg1", true).style("stroke-width", bgWidth).style("stroke", "#888").style("stroke-linecap", "round");
       bg1 = bg1.merge(newBg1);
       bg1.attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
-      var bg2 = backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]);
-      var newBg2 = bg2.enter().append("line").classed("sszvis-slider__background__bg2", true).style("stroke-width", bgWidth - 1).style("stroke", "#fff").style("stroke-linecap", "round");
+      let bg2 = backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]);
+      const newBg2 = bg2.enter().append("line").classed("sszvis-slider__background__bg2", true).style("stroke-width", bgWidth - 1).style("stroke", "#fff").style("stroke-linecap", "round");
       bg2 = bg2.merge(newBg2);
       bg2.attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
-      var shadow = backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]);
-      var newShadow = shadow.enter().append("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", bgWidth - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round");
+      let shadow = backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]);
+      const newShadow = shadow.enter().append("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", bgWidth - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round");
       shadow = shadow.merge(newShadow);
       shadow.attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", compose(Math.floor, alteredScale));
 
       // draw the handle and the label
-      var handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]);
+      let handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]);
       handle.exit().remove();
-      var handleEntering = handle.enter().append("g").classed("sszvis-control-slider__handle", true);
+      const handleEntering = handle.enter().append("g").classed("sszvis-control-slider__handle", true);
       handle = handle.merge(handleEntering);
-      handle.attr("transform", function (d) {
-        return translateString(halfPixel(alteredScale(d)), 0.5);
-      });
+      handle.attr("transform", d => translateString(halfPixel(alteredScale(d)), 0.5));
       handleEntering.append("text").classed("sszvis-control-slider--label", true);
-      handle.selectAll(".sszvis-control-slider--label").data(function (d) {
-        return [d];
-      }).text(props.label).style("text-anchor", function (d) {
-        return stringEqual(d, scaleDomain[0]) ? "start" : stringEqual(d, scaleDomain[1]) ? "end" : "middle";
-      }).attr("dx", function (d) {
-        return stringEqual(d, scaleDomain[0]) ? -(handleWidth / 2) : stringEqual(d, scaleDomain[1]) ? handleWidth / 2 : 0;
-      });
+      handle.selectAll(".sszvis-control-slider--label").data(d => [d]).text(props.label).style("text-anchor", d => stringEqual(d, scaleDomain[0]) ? "start" : stringEqual(d, scaleDomain[1]) ? "end" : "middle").attr("dx", d => stringEqual(d, scaleDomain[0]) ? -(handleWidth / 2) : stringEqual(d, scaleDomain[1]) ? handleWidth / 2 : 0);
       handleEntering.append("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -(handleWidth / 2)).attr("y", backgroundOffset - handleHeight / 2).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
-      var handleLineDimension = handleHeight / 2 - 4; // the amount by which to offset the small handle line within the handle
+      const handleLineDimension = handleHeight / 2 - 4; // the amount by which to offset the small handle line within the handle
 
       handleEntering.append("line").classed("sszvis-control-slider__handleline", true).attr("y1", backgroundOffset - handleLineDimension).attr("y2", backgroundOffset + handleLineDimension);
-      var sliderInteraction = move().xScale(props.scale)
+      const sliderInteraction = move().xScale(props.scale)
       // range goes from the text top (text is 11px tall) to the bottom of the axis
       .yScale(d3.scaleLinear().range([-11, axisOffset + majorTickSize])).draggable(true).on("drag", props.onchange);
       selection.selectGroup("sliderInteraction").classed("sszvis-control-slider--interactionLayer", true).attr("transform", translateString(0, 4)).call(sliderInteraction);
@@ -6397,12 +6283,12 @@
   function createHtmlLayer(selector, bounds$1, metadata) {
     bounds$1 || (bounds$1 = bounds());
     metadata || (metadata = {});
-    var key = metadata.key || "default";
-    var elementDataKey = "data-sszvis-html-" + key;
-    var root = isSelection(selector) ? selector : d3.select(selector);
+    const key = metadata.key || "default";
+    const elementDataKey = "data-sszvis-html-" + key;
+    const root = isSelection(selector) ? selector : d3.select(selector);
     root.classed("sszvis-outer-container", true);
-    var layer = root.selectAll("[data-sszvis-html-layer][" + elementDataKey + "]").data([0]);
-    var newLayer = layer.enter().append("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "");
+    let layer = root.selectAll("[data-sszvis-html-layer][" + elementDataKey + "]").data([0]);
+    const newLayer = layer.enter().append("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "");
     layer = layer.merge(newLayer);
     layer.style("position", "absolute").style("left", bounds$1.padding.left + "px").style("top", bounds$1.padding.top + "px");
     return layer;
@@ -6431,21 +6317,19 @@
   function createSvgLayer(selector, bounds$1, metadata) {
     bounds$1 || (bounds$1 = bounds());
     metadata || (metadata = {});
-    var key = metadata.key || "default";
-    var elementDataKey = "data-sszvis-svg-" + key;
-    var title = metadata.title || "";
-    var description = metadata.description || "";
-    var root = isSelection(selector) ? selector : d3.select(selector);
-    var svg = root.selectAll("svg[" + elementDataKey + "]").data([0]);
-    var svgEnter = svg.enter().append("svg");
+    const key = metadata.key || "default";
+    const elementDataKey = "data-sszvis-svg-" + key;
+    const title = metadata.title || "";
+    const description = metadata.description || "";
+    const root = isSelection(selector) ? selector : d3.select(selector);
+    const svg = root.selectAll("svg[" + elementDataKey + "]").data([0]);
+    const svgEnter = svg.enter().append("svg");
     svgEnter.classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", title + " – " + description);
     svgEnter.append("title").text(title);
     svgEnter.append("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
     svg.merge(svgEnter).attr("height", bounds$1.height).attr("width", bounds$1.width);
-    var viewport = svg.merge(svgEnter).selectAll("[data-sszvis-svg-layer]").data(function () {
-      return [0];
-    });
-    var viewportEnter = viewport.enter().append("g").attr("data-sszvis-svg-layer", "");
+    const viewport = svg.merge(svgEnter).selectAll("[data-sszvis-svg-layer]").data(() => [0]);
+    const viewportEnter = viewport.enter().append("g").attr("data-sszvis-svg-layer", "");
     viewport.merge(viewportEnter).attr("transform", "translate(" + bounds$1.padding.left + "," + bounds$1.padding.top + ")");
     return viewport.merge(viewportEnter);
   }
@@ -6539,16 +6423,16 @@
    * |fooBaz    barFoo |
    */
 
-  var DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
+  const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
   function legendColorOrdinal() {
     return component().prop("scale").prop("rowHeight").rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).prop("columnWidth").columnWidth(200).prop("rows").rows(3).prop("columns").columns(3).prop("verticallyCentered").verticallyCentered(false).prop("orientation").prop("reverse").reverse(false).prop("rightAlign").rightAlign(false).prop("horizontalFloat").horizontalFloat(false).prop("floatPadding").floatPadding(20).prop("floatWidth").floatWidth(600).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var domain = props.scale.domain();
+      const selection = d3.select(this);
+      const props = selection.props();
+      let domain = props.scale.domain();
       if (props.reverse) {
-        domain = domain.slice().reverse();
+        domain = [...domain].reverse();
       }
-      var rows, cols;
+      let rows, cols;
       if (props.orientation === "horizontal") {
         cols = Math.ceil(props.columns);
         rows = Math.ceil(domain.length / cols);
@@ -6556,54 +6440,42 @@
         rows = Math.ceil(props.rows);
         cols = Math.ceil(domain.length / rows);
       }
-      var groups = selection.selectAll(".sszvis-legend--entry").data(domain);
-      var newGroups = groups.enter().append("g").classed("sszvis-legend--entry", true);
+      const groups = selection.selectAll(".sszvis-legend--entry").data(domain);
+      const newGroups = groups.enter().append("g").classed("sszvis-legend--entry", true);
       groups.exit().remove();
-      var marks = groups.merge(newGroups).selectAll(".sszvis-legend__mark").data(function (d) {
-        return [d];
-      });
-      var newMarks = marks.enter().append("circle").classed("sszvis-legend__mark", true);
+      const marks = groups.merge(newGroups).selectAll(".sszvis-legend__mark").data(d => [d]);
+      const newMarks = marks.enter().append("circle").classed("sszvis-legend__mark", true);
       marks.exit().remove();
-      marks.merge(newMarks).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", function (d) {
-        return props.scale(d);
-      }).attr("stroke", function (d) {
-        return props.scale(d);
-      }).attr("stroke-width", 1);
-      var labels = groups.merge(newGroups).selectAll(".sszvis-legend__label").data(function (d) {
-        return [d];
-      });
-      var newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
+      marks.merge(newMarks).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => props.scale(d)).attr("stroke", d => props.scale(d)).attr("stroke-width", 1);
+      const labels = groups.merge(newGroups).selectAll(".sszvis-legend__label").data(d => [d]);
+      const newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
       labels.exit().remove();
-      labels.merge(newLabels).text(function (d) {
-        return d;
-      }).attr("dy", "0.35em") // vertically-center
-      .style("text-anchor", function () {
-        return props.rightAlign ? "end" : "start";
-      }).attr("transform", function () {
-        var x = props.rightAlign ? -18 : 18;
-        var y = halfPixel(props.rowHeight / 2);
+      labels.merge(newLabels).text(d => d).attr("dy", "0.35em") // vertically-center
+      .style("text-anchor", () => props.rightAlign ? "end" : "start").attr("transform", () => {
+        const x = props.rightAlign ? -18 : 18;
+        const y = halfPixel(props.rowHeight / 2);
         return translateString(x, y);
       });
-      var verticalOffset = "";
+      let verticalOffset = "";
       if (props.verticallyCentered) {
         verticalOffset = "translate(0," + String(-(domain.length * props.rowHeight / 2)) + ") ";
       }
       if (props.horizontalFloat) {
-        var rowPosition = 0,
+        let rowPosition = 0,
           horizontalPosition = 0;
         groups.merge(newGroups).attr("transform", function () {
           // not affected by scroll position
-          var width = this.getBoundingClientRect().width;
+          const width = this.getBoundingClientRect().width;
           if (horizontalPosition + width > props.floatWidth) {
             rowPosition += props.rowHeight;
             horizontalPosition = 0;
           }
-          var translate = translateString(horizontalPosition, rowPosition);
+          const translate = translateString(horizontalPosition, rowPosition);
           horizontalPosition += width + props.floatPadding;
           return verticalOffset + translate;
         });
       } else {
-        groups.merge(newGroups).attr("transform", function (d, i) {
+        groups.merge(newGroups).attr("transform", (d, i) => {
           if (props.orientation === "horizontal") {
             return verticalOffset + "translate(" + i % cols * props.columnWidth + "," + Math.floor(i / cols) * props.rowHeight + ")";
           } else if (props.orientation === "vertical") {
@@ -6614,8 +6486,8 @@
     });
   }
 
-  var DEFAULT_COLUMN_COUNT = 2;
-  var LABEL_PADDING = 40;
+  const DEFAULT_COLUMN_COUNT = 2;
+  const LABEL_PADDING = 40;
 
   /**
    * colorLegendLayout
@@ -6656,7 +6528,7 @@
     const totalLabelsWidth = d3.sum(labels, labelWidth);
 
     // Use a single column for four or fewer items
-    var columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
+    const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
 
     // Use a horizontal layout if all labels fit on one line
     const isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;
@@ -6676,11 +6548,17 @@
   function axisLabelHeight(slant, labels) {
     switch (slant) {
       case "vertical":
-        return 40 + d3.max(labels, measureAxisLabel);
+        {
+          return 40 + d3.max(labels, measureAxisLabel);
+        }
       case "diagonal":
-        return 40 + Math.sqrt(2 * Math.pow(d3.max(labels, measureAxisLabel) / 2, 2));
+        {
+          return 40 + Math.sqrt(2 * Math.pow(d3.max(labels, measureAxisLabel) / 2, 2));
+        }
       default:
-        return 60;
+        {
+          return 60;
+        }
     }
   }
   function labelWidth(label) {
@@ -6725,7 +6603,7 @@
     chartPadding.left || (chartPadding.left = 0);
 
     // this includes the default side length for the heat table
-    var DEFAULT_SIDE = 30,
+    const DEFAULT_SIDE = 30,
       availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
       side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
       paddedSide = side + squarePadding,
@@ -6734,9 +6612,9 @@
       // subtract the squarePadding at the end
       tableHeight = numY * paddedSide - squarePadding; // subtract the squarePadding at the end
     return {
-      side: side,
-      paddedSide: paddedSide,
-      padRatio: padRatio,
+      side,
+      paddedSide,
+      padRatio,
       width: tableWidth,
       height: tableHeight,
       centeredOffset: Math.max((availableChartWidth - tableWidth) / 2, 0)
@@ -6771,7 +6649,7 @@
    */
 
   function horizontalBarChartDimensions (numBars) {
-    var DEFAULT_HEIGHT = 24,
+    const DEFAULT_HEIGHT = 24,
       // the default bar height
       MIN_PADDING = 20,
       // the minimum padding size
@@ -6785,10 +6663,10 @@
       outerRatio = 0; // no outer padding
 
     return {
-      barHeight: barHeight,
+      barHeight,
       padHeight: padding,
-      padRatio: padRatio,
-      outerRatio: outerRatio,
+      padRatio,
+      outerRatio,
       axisOffset: -(barHeight / 2) - 10,
       barGroupHeight: computedBarSpace,
       totalHeight: computedBarSpace + outerRatio * (barHeight + padding) * 2
@@ -6825,31 +6703,31 @@
    */
 
   function populationPyramidLayout (spaceWidth, numBars) {
-    var MAX_HEIGHT = 480; // Chart no taller than this
-    var MIN_BAR_HEIGHT = 2; // Bars no shorter than this
-    var defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
-    var padding = 1;
-    var numPads = numBars - 1;
-    var totalPadding = padding * numPads;
-    var roundedBarHeight = Math.round((defaultHeight - totalPadding) / numBars);
+    const MAX_HEIGHT = 480; // Chart no taller than this
+    const MIN_BAR_HEIGHT = 2; // Bars no shorter than this
+    const defaultHeight = Math.min(aspectRatioPortrait(spaceWidth), MAX_HEIGHT);
+    const padding = 1;
+    const numPads = numBars - 1;
+    const totalPadding = padding * numPads;
+    let roundedBarHeight = Math.round((defaultHeight - totalPadding) / numBars);
     roundedBarHeight = Math.max(roundedBarHeight, MIN_BAR_HEIGHT);
-    var totalHeight = numBars * roundedBarHeight + totalPadding;
-    var barPos = totalHeight - roundedBarHeight,
-      step = roundedBarHeight + padding,
+    const totalHeight = numBars * roundedBarHeight + totalPadding;
+    let barPos = totalHeight - roundedBarHeight;
+    const step = roundedBarHeight + padding,
       positions = [];
     while (barPos >= 0) {
       positions.push(barPos);
       barPos -= step;
     }
-    var maxBarLength = Math.min(spaceWidth / 2, aspectRatioPortrait.MAX_HEIGHT * (4 / 5) / 2);
-    var chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
+    const maxBarLength = Math.min(spaceWidth / 2, aspectRatioPortrait.MAX_HEIGHT * (4 / 5) / 2);
+    const chartPadding = Math.max((spaceWidth - 2 * maxBarLength) / 2, 1);
     return {
       barHeight: roundedBarHeight,
-      padding: padding,
-      totalHeight: totalHeight,
-      positions: positions,
-      maxBarLength: maxBarLength,
-      chartPadding: chartPadding
+      padding,
+      totalHeight,
+      positions,
+      maxBarLength,
+      chartPadding
     };
   }
 
@@ -6860,8 +6738,8 @@
    * and layout required by the sankey component.
    */
 
-  var newLinkId = function () {
-    var id = 0;
+  const newLinkId = function () {
+    let id = 0;
     return function () {
       return ++id;
     };
@@ -6896,29 +6774,29 @@
    *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
    *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
    */
-  var prepareData$1 = function () {
-    var mGetSource = identity$1;
-    var mGetTarget = identity$1;
-    var mGetValue = identity$1;
-    var mColumnIds = [];
+  const prepareData$1 = function () {
+    let mGetSource = identity$1;
+    let mGetTarget = identity$1;
+    let mGetValue = identity$1;
+    let mColumnIds = [];
 
     // Helper functions
-    var valueAcc = prop("value");
-    var byAscendingValue = function (a, b) {
+    const valueAcc = prop("value");
+    const byAscendingValue = function (a, b) {
       return d3.ascending(valueAcc(a), valueAcc(b));
     };
-    var byDescendingValue = function (a, b) {
+    const byDescendingValue = function (a, b) {
       return d3.descending(valueAcc(a), valueAcc(b));
     };
-    var valueSortFunc = byDescendingValue;
-    var main = function (inputData) {
-      var columnIndex = mColumnIds.reduce(function (index, columnIdsList, colIndex) {
-        columnIdsList.forEach(function (id) {
+    let valueSortFunc = byDescendingValue;
+    const main = function (inputData) {
+      const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
+        for (const id of columnIdsList) {
           if (index.has(id)) {
             warn("Duplicate column member id passed to sszvis.layout.sankey.prepareData.column:", id, "The existing value will be overwritten");
           }
-          var item = {
-            id: id,
+          const item = {
+            id,
             columnIndex: colIndex,
             // This is the index of the column containing this node
             nodeIndex: 0,
@@ -6929,16 +6807,16 @@
             linksTo: []
           };
           index.set(id, item);
-        });
+        }
         return index;
       }, new Map());
-      var listOfLinks = inputData.map(function (datum) {
-        var srcId = mGetSource(datum);
-        var tgtId = mGetTarget(datum);
-        var value = +mGetValue(datum) || 0; // Cast this to number
+      const listOfLinks = inputData.map(datum => {
+        const srcId = mGetSource(datum);
+        const tgtId = mGetTarget(datum);
+        const value = +mGetValue(datum) || 0; // Cast this to number
 
-        var srcNode = columnIndex.get(srcId);
-        var tgtNode = columnIndex.get(tgtId);
+        const srcNode = columnIndex.get(srcId);
+        const tgtNode = columnIndex.get(tgtId);
         if (!srcNode) {
           warn("Found invalid source column id:", srcId);
           return null;
@@ -6947,9 +6825,9 @@
           warn("Found invalid target column id:", tgtId);
           return null;
         }
-        var item = {
+        const item = {
           id: newLinkId(),
-          value: value,
+          value,
           src: srcNode,
           srcOffset: 0,
           tgt: tgtNode,
@@ -6961,12 +6839,12 @@
       });
 
       // Extract the column nodes from the index
-      var listOfNodes = [...columnIndex.values()];
+      const listOfNodes = [...columnIndex.values()];
 
       // Calculate an array of total values for each column
-      var columnTotals = listOfNodes.reduce(function (totals, node) {
-        var fromTotal = d3.sum(node.linksFrom, valueAcc);
-        var toTotal = d3.sum(node.linksTo, valueAcc);
+      const columnTotals = listOfNodes.reduce((totals, node) => {
+        const fromTotal = d3.sum(node.linksFrom, valueAcc);
+        const toTotal = d3.sum(node.linksTo, valueAcc);
 
         // For correct visual display, the node's value is the max of the from and to links
         node.value = Math.max(0, fromTotal, toTotal);
@@ -6975,9 +6853,7 @@
       }, filledArray(mColumnIds.length, 0));
 
       // An array with the number of nodes in each column
-      var columnLengths = mColumnIds.map(function (colIds) {
-        return colIds.length;
-      });
+      const columnLengths = mColumnIds.map(colIds => colIds.length);
 
       // Sort the column nodes
       // (note, this sorts all nodes for all columns in the same array)
@@ -6992,7 +6868,7 @@
       // Here, columnData[0] is an array adding up value totals
       // and columnData[1] is an array adding up the number of nodes in each column
       // Both are used to assign cumulative properties to the nodes of each column
-      listOfNodes.reduce(function (columnData, node) {
+      listOfNodes.reduce((columnData, node) => {
         // Assigns valueOffset and nodeIndex
         node.valueOffset = columnData[0][node.columnIndex];
         node.nodeIndex = columnData[1][node.columnIndex];
@@ -7005,29 +6881,25 @@
       // nodes and the links coming out of the nodes according to the ordering of the nodes
       // they come from or go to. This creates a visually appealing layout which minimizes
       // the number of link crossings
-      listOfNodes.forEach(function (node) {
-        node.linksFrom.sort(function (linkA, linkB) {
-          return linkA.tgt.nodeIndex - linkB.tgt.nodeIndex;
-        });
-        node.linksTo.sort(function (linkA, linkB) {
-          return linkA.src.nodeIndex - linkB.src.nodeIndex;
-        });
+      for (const node of listOfNodes) {
+        node.linksFrom.sort((linkA, linkB) => linkA.tgt.nodeIndex - linkB.tgt.nodeIndex);
+        node.linksTo.sort((linkA, linkB) => linkA.src.nodeIndex - linkB.src.nodeIndex);
 
         // Stack the links vertically within the node according to their order
-        node.linksFrom.reduce(function (sumValue, link) {
+        node.linksFrom.reduce((sumValue, link) => {
           link.srcOffset = sumValue;
           return sumValue + valueAcc(link);
         }, 0);
-        node.linksTo.reduce(function (sumValue, link) {
+        node.linksTo.reduce((sumValue, link) => {
           link.tgtOffset = sumValue;
           return sumValue + valueAcc(link);
         }, 0);
-      });
+      }
       return {
         nodes: listOfNodes,
         links: listOfLinks,
-        columnTotals: columnTotals,
-        columnLengths: columnLengths
+        columnTotals,
+        columnLengths
       };
     };
     main.apply = function (data) {
@@ -7082,17 +6954,17 @@
    *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
    *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
    */
-  var computeLayout$1 = function (columnLengths, columnTotals, columnHeight, columnWidth) {
+  const computeLayout$1 = function (columnLengths, columnTotals, columnHeight, columnWidth) {
     // Calculate appropriate scale and padding values (in pixels)
-    var padSpaceRatio = 0.15;
-    var padMin = 12;
-    var padMax = 50;
-    var minDisplayPixels = 1; // Minimum number of pixels used for display area
+    const padSpaceRatio = 0.15;
+    const padMin = 12;
+    const padMax = 50;
+    const minDisplayPixels = 1; // Minimum number of pixels used for display area
 
     // Compute the padding value (in pixels) for each column, then take the minimum value
-    var computedPixPadding = d3.min(columnLengths.map(function (colLength) {
+    const computedPixPadding = d3.min(columnLengths.map(colLength => {
       // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
-      var colPadding = columnHeight * padSpaceRatio / (colLength - 1);
+      const colPadding = columnHeight * padSpaceRatio / (colLength - 1);
       // Limit by minimum and maximum pixel padding values
       return Math.max(padMin, Math.min(padMax, colPadding));
     }));
@@ -7100,49 +6972,45 @@
     // Given the computed padding value, compute each column's resulting "pixels per unit"
     // This is the number of remaining pixels available to display the column's total units,
     // after padding pixels have been subtracted. Then take the minimum value of that.
-    var pixPerUnit = d3.min(columnLengths.map(function (colLength, colIndex) {
+    const pixPerUnit = d3.min(columnLengths.map((colLength, colIndex) => {
       // The non-padding pixels must have at least minDisplayPixels
-      var nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
+      const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
       return nonPaddingPixels / columnTotals[colIndex];
     }));
 
     // The padding between bars, in bar value units
-    var valuePadding = computedPixPadding / pixPerUnit;
+    const valuePadding = computedPixPadding / pixPerUnit;
     // The padding between bars, in pixels
-    var nodePadding = computedPixPadding;
+    const nodePadding = computedPixPadding;
 
     // The maximum total value of any column
-    var maxTotal = d3.max(columnTotals);
+    const maxTotal = d3.max(columnTotals);
 
     // Compute y-padding required to vertically center each column (in pixels)
-    var paddedHeights = columnLengths.map(function (colLength, colIndex) {
-      return columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding;
-    });
-    var maxPaddedHeight = d3.max(paddedHeights);
-    var columnPaddings = columnLengths.map(function (colLength, colIndex) {
-      return (maxPaddedHeight - paddedHeights[colIndex]) / 2;
-    });
+    const paddedHeights = columnLengths.map((colLength, colIndex) => columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding);
+    const maxPaddedHeight = d3.max(paddedHeights);
+    const columnPaddings = columnLengths.map((colLength, colIndex) => (maxPaddedHeight - paddedHeights[colIndex]) / 2);
 
     // The domain of the size scale
-    var valueDomain = [0, maxTotal];
+    const valueDomain = [0, maxTotal];
     // The range of the size scale
-    var valueRange = [0, maxTotal * pixPerUnit];
+    const valueRange = [0, maxTotal * pixPerUnit];
 
     // Calculate column (or row, as the case may be) positioning values
-    var nodeThickness = 20;
-    var numColumns = columnLengths.length;
-    var columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
-    var columnDomain = [0, 1];
-    var columnRange = [0, columnXMultiplier];
+    const nodeThickness = 20;
+    const numColumns = columnLengths.length;
+    const columnXMultiplier = (columnWidth - nodeThickness) / (numColumns - 1);
+    const columnDomain = [0, 1];
+    const columnRange = [0, columnXMultiplier];
     return {
-      valuePadding: valuePadding,
-      nodePadding: nodePadding,
-      columnPaddings: columnPaddings,
-      valueDomain: valueDomain,
-      valueRange: valueRange,
-      nodeThickness: nodeThickness,
-      columnDomain: columnDomain,
-      columnRange: columnRange
+      valuePadding,
+      nodePadding,
+      columnPaddings,
+      valueDomain,
+      valueRange,
+      nodeThickness,
+      columnDomain,
+      columnRange
     };
   };
 
@@ -7201,23 +7069,21 @@
 
   function smallMultiples () {
     return component().prop("width").prop("height").prop("paddingX").prop("paddingY").prop("rows").prop("cols").render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
-      var unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
-      var horizontalCenter = unitWidth / 2;
-      var verticalCenter = unitHeight / 2;
-      var multiples = selection.selectAll("g.sszvis-multiple").data(data);
-      var newMultiples = multiples.enter().append("g").classed("sszvis-g sszvis-multiple", true);
+      const selection = d3.select(this);
+      const props = selection.props();
+      const unitWidth = (props.width - props.paddingX * (props.cols - 1)) / props.cols;
+      const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
+      const horizontalCenter = unitWidth / 2;
+      const verticalCenter = unitHeight / 2;
+      let multiples = selection.selectAll("g.sszvis-multiple").data(data);
+      const newMultiples = multiples.enter().append("g").classed("sszvis-g sszvis-multiple", true);
       multiples.exit().remove();
       multiples = multiples.merge(newMultiples);
-      var subGroups = multiples.selectAll("g.sszvis-multiple-chart").data(function (d) {
-        return [d.values];
-      });
-      var newSubGroups = subGroups.enter().append("g").classed("sszvis-multiple-chart", true);
+      let subGroups = multiples.selectAll("g.sszvis-multiple-chart").data(d => [d.values]);
+      const newSubGroups = subGroups.enter().append("g").classed("sszvis-multiple-chart", true);
       subGroups.exit().remove();
       subGroups = subGroups.merge(newSubGroups);
-      multiples.datum(function (d, i) {
+      multiples.datum((d, i) => {
         d.gx = i % props.cols * (unitWidth + props.paddingX);
         d.gw = unitWidth;
         d.cx = horizontalCenter;
@@ -7225,9 +7091,7 @@
         d.gh = unitHeight;
         d.cy = verticalCenter;
         return d;
-      }).attr("transform", function (d) {
-        return "translate(" + d.gx + "," + d.gy + ")";
-      });
+      }).attr("transform", d => "translate(" + d.gx + "," + d.gy + ")");
     });
   }
 
@@ -7259,18 +7123,17 @@
 
   function stackedAreaMultiplesLayout (height, num, pct) {
     pct || (pct = 0.1);
-    var step = height / (num - pct),
+    const step = height / (num - pct),
       bandHeight = step * (1 - pct),
-      level = bandHeight,
-      // count from the top, and start at the bottom of the first band
       range = [];
+    let level = bandHeight; // count from the top, and start at the bottom of the first band
     while (level - height < 1) {
       range.push(level);
       level += step;
     }
     return {
-      range: range,
-      bandHeight: bandHeight,
+      range,
+      bandHeight,
       padHeight: step * pct
     };
   }
@@ -7286,11 +7149,14 @@
       let [key, values] = _ref;
       return {
         key,
-        values: values.size ? unwrapNested(values) : undefined,
-        value: values.size ? undefined : values
+        values: values.size > 0 ? unwrapNested(values) : undefined,
+        value: values.size > 0 ? undefined : values
       };
     });
   }
+  let sortFn = function () {
+    return 0;
+  };
 
   /**
    * sszvis.layout.sunburst.prepareData
@@ -7317,35 +7183,29 @@
    *
    * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
    */
-  var prepareData = function () {
+  const prepareData = function () {
     const layers = [];
-    var valueAcc = identity$1;
+    let valueAcc = identity$1;
     // Sibling nodes of the partition layout are sorted according to this sort function.
     // The default value for this component tries to preserve the order of the input data.
     // However, input data order preservation is not guaranteed, because of an implementation
     // detail of d3.partition, probably having to do with the way that each browser can
     // implement its own key ordering for javascript objects.
-    var sortFn = function () {
-      return 0;
-    };
+
     function main(data) {
       const nested = unwrapNested(d3.rollup(data, first, ...layers));
       console.log(nested);
       const root = d3.hierarchy({
         isSunburstRoot: true,
         values: nested
-      }, prop("values")).sort(sortFn).sum(function (x) {
-        return x.value ? valueAcc(x.value) : 0;
-      });
+      }, prop("values")).sort(sortFn).sum(x => x.value ? valueAcc(x.value) : 0);
       d3.partition()(root);
       function flatten(node) {
-        return [].concat.apply([node], (node.children || []).map(flatten));
+        return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
       }
 
       // Remove the root element from the data (but it still exists in memory so long as the data is alive)
-      return flatten(root).filter(function (d) {
-        return !d.data.isSunburstRoot;
-      });
+      return flatten(root).filter(d => !d.data.isSunburstRoot);
     }
     main.calculate = function (data) {
       return main(data);
@@ -7364,10 +7224,10 @@
     };
     return main;
   };
-  var MAX_SUNBURST_RING_WIDTH = 60;
-  var MAX_RW = MAX_SUNBURST_RING_WIDTH;
-  var MIN_SUNBURST_RING_WIDTH = 10;
-  var MIN_RW = MIN_SUNBURST_RING_WIDTH;
+  const MAX_SUNBURST_RING_WIDTH = 60;
+  const MAX_RW = MAX_SUNBURST_RING_WIDTH;
+  const MIN_SUNBURST_RING_WIDTH = 10;
+  const MIN_RW = MIN_SUNBURST_RING_WIDTH;
 
   /**
    * sszvis.layout.sunburst.computeLayout
@@ -7381,15 +7241,15 @@
    *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
    *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
    */
-  var computeLayout = function (numLayers, chartWidth) {
+  const computeLayout = function (numLayers, chartWidth) {
     // Diameter of the center circle is one-third the width
-    var halfWidth = chartWidth / 2;
-    var centerRadius = halfWidth / 3;
-    var ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
+    const halfWidth = chartWidth / 2;
+    const centerRadius = halfWidth / 3;
+    const ringWidth = Math.max(MIN_RW, Math.min(MAX_RW, (halfWidth - centerRadius) / numLayers));
     return {
-      centerRadius: centerRadius,
-      numLayers: numLayers,
-      ringWidth: ringWidth
+      centerRadius,
+      numLayers,
+      ringWidth
     };
   };
 
@@ -7402,12 +7262,8 @@
    *                                    function which abstracts away the way d3 stores positions within the partition layout used
    *                                    by the sunburst chart.
    */
-  var getRadiusExtent = function (formattedData) {
-    return [d3.min(formattedData, function (d) {
-      return d.y0;
-    }), d3.max(formattedData, function (d) {
-      return d.y1;
-    })];
+  const getRadiusExtent = function (formattedData) {
+    return [d3.min(formattedData, d => d.y0), d3.max(formattedData, d => d.y1)];
   };
 
   /**
@@ -7434,7 +7290,7 @@
    */
 
   function verticalBarChartDimensions (width, numBars) {
-    var MAX_BAR_WIDTH = 48,
+    const MAX_BAR_WIDTH = 48,
       // the maximum width of a bar
       MIN_PADDING = 2,
       // the minimum padding value
@@ -7444,13 +7300,13 @@
       // the ratio of width to width + padding used to compute the initial width and padding
       TARGET_PADDING_RATIO = 1 - TARGET_BAR_RATIO,
       // the inverse of the bar ratio, this is the ratio of padding to width + padding
-      numPads = numBars - 1,
-      // the number of padding spaces
-      // compute the target size of the padding
-      // the derivation of this equation is available upon request
-      padding = width * TARGET_PADDING_RATIO / (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars),
-      // based on the computed padding, calculate the bar width
-      barWidth = (width - padding * numPads) / numBars;
+      numPads = numBars - 1; // the number of padding spaces
+    // compute the target size of the padding
+    // the derivation of this equation is available upon request
+    let padding = width * TARGET_PADDING_RATIO / (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars);
+    // based on the computed padding, calculate the bar width
+
+    let barWidth = (width - padding * numPads) / numBars;
 
     // adjust for min and max bounds
     if (barWidth > MAX_BAR_WIDTH) {
@@ -7462,14 +7318,14 @@
     if (padding > MAX_PADDING) padding = MAX_PADDING;
 
     // compute other information
-    var padRatio = 1 - barWidth / (barWidth + padding),
+    const padRatio = 1 - barWidth / (barWidth + padding),
       computedBarSpace = barWidth * numBars + padding * numPads,
       outerRatio = (width - computedBarSpace) / 2 / (barWidth + padding);
     return {
-      barWidth: barWidth,
+      barWidth,
       padWidth: padding,
-      padRatio: padRatio,
-      outerRatio: outerRatio,
+      padRatio,
+      outerRatio,
       barGroupWidth: computedBarSpace,
       totalWidth: width
     };
@@ -7494,30 +7350,30 @@
 
   function binnedColorScale () {
     return component().prop("scale").prop("displayValues").prop("endpoints").prop("width").width(200).prop("labelFormat").labelFormat(identity$1).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
       if (!props.scale) return error("legend.binnedColorScale - a scale must be specified.");
       if (!props.displayValues) return error("legend.binnedColorScale - display values must be specified.");
       if (!props.endpoints) return error("legend.binnedColorScale - endpoints must be specified");
-      var segHeight = 10;
-      var circleRad = segHeight / 2;
-      var innerRange = [0, props.width - 2 * circleRad];
-      var barWidth = d3.scaleLinear().domain(props.endpoints).range(innerRange);
-      var sum = 0;
-      var rectData = [];
-      var pPrev = props.endpoints[0];
-      props.displayValues.forEach(function (p) {
-        var w = barWidth(p) - sum;
-        var offset = sum % 1;
+      const segHeight = 10;
+      const circleRad = segHeight / 2;
+      const innerRange = [0, props.width - 2 * circleRad];
+      const barWidth = d3.scaleLinear().domain(props.endpoints).range(innerRange);
+      let sum = 0;
+      const rectData = [];
+      let pPrev = props.endpoints[0];
+      for (const p of props.displayValues) {
+        const w = barWidth(p) - sum;
+        const offset = sum % 1;
         rectData.push({
           x: Math.floor(circleRad + sum),
           w: w + offset,
           c: props.scale(pPrev),
-          p: p
+          p
         });
         sum += w;
         pPrev = p;
-      });
+      }
 
       // add the final box (last display value - > endpoint)
       rectData.push({
@@ -7525,43 +7381,27 @@
         w: innerRange[1] - sum,
         c: props.scale(pPrev)
       });
-      var circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints);
-      var newCircles = circles.enter().append("circle").classed("sszvis-legend__circle", true);
+      let circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints);
+      const newCircles = circles.enter().append("circle").classed("sszvis-legend__circle", true);
       circles = circles.merge(newCircles);
       circles.exit().remove();
-      circles.attr("r", circleRad).attr("cy", circleRad).attr("cx", function (d, i) {
-        return i === 0 ? circleRad : props.width - circleRad;
-      }).attr("fill", props.scale);
-      var segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData);
-      var newSegments = segments.enter().append("rect").classed("sszvis-legend__crispmark", true);
+      circles.attr("r", circleRad).attr("cy", circleRad).attr("cx", (d, i) => i === 0 ? circleRad : props.width - circleRad).attr("fill", props.scale);
+      let segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData);
+      const newSegments = segments.enter().append("rect").classed("sszvis-legend__crispmark", true);
       segments = segments.merge(newSegments);
       segments.exit().remove();
-      segments.attr("x", function (d) {
-        return d.x;
-      }).attr("y", 0).attr("width", function (d) {
-        return d.w;
-      }).attr("height", segHeight).attr("fill", function (d) {
-        return d.c;
-      });
-      var lineData = rectData.slice(0, -1);
-      var lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData);
-      var newLines = lines.enter().append("line").classed("sszvis-legend__crispmark", true);
+      segments.attr("x", d => d.x).attr("y", 0).attr("width", d => d.w).attr("height", segHeight).attr("fill", d => d.c);
+      const lineData = rectData.slice(0, -1);
+      const lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData);
+      const newLines = lines.enter().append("line").classed("sszvis-legend__crispmark", true);
       lines.merge(newLines);
       lines.exit().remove();
-      lines.attr("x1", function (d) {
-        return halfPixel(d.x + d.w);
-      }).attr("x2", function (d) {
-        return halfPixel(d.x + d.w);
-      }).attr("y1", segHeight + 1).attr("y2", segHeight + 6).attr("stroke", "#B8B8B8");
-      var labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData);
-      var newLabels = labels.enter().append("text").classed("sszvis-legend__axislabel", true);
+      lines.attr("x1", d => halfPixel(d.x + d.w)).attr("x2", d => halfPixel(d.x + d.w)).attr("y1", segHeight + 1).attr("y2", segHeight + 6).attr("stroke", "#B8B8B8");
+      let labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData);
+      const newLabels = labels.enter().append("text").classed("sszvis-legend__axislabel", true);
       labels = labels.merge(newLabels);
       labels.exit().remove();
-      labels.style("text-anchor", "middle").attr("transform", function (d) {
-        return "translate(" + (d.x + d.w) + "," + (segHeight + 20) + ")";
-      }).text(function (d) {
-        return props.labelFormat(d.p);
-      });
+      labels.style("text-anchor", "middle").attr("transform", d => "translate(" + (d.x + d.w) + "," + (segHeight + 20) + ")").text(d => props.labelFormat(d.p));
     });
   }
 
@@ -7584,60 +7424,45 @@
 
   function linearColorScale () {
     return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat").labelFormat(identity$1).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
       if (!props.scale) {
         error("legend.linearColorScale - a scale must be specified.");
         return false;
       }
-      var domain = props.scale.domain();
-      var values = props.displayValues;
-      if (!values.length && props.scale.ticks) {
+      const domain = props.scale.domain();
+      let values = props.displayValues;
+      if (values.length === 0 && props.scale.ticks) {
         values = props.scale.ticks(props.segments - 1);
       }
       values.push(last(domain));
 
       // Avoid division by zero
-      var segWidth = values.length > 0 ? props.width / values.length : 0;
-      var segHeight = 10;
-      var segments = selection.selectAll("rect.sszvis-legend__mark").data(values);
-      var newSegments = segments.enter().append("rect").classed("sszvis-legend__mark", true);
+      const segWidth = values.length > 0 ? props.width / values.length : 0;
+      const segHeight = 10;
+      let segments = selection.selectAll("rect.sszvis-legend__mark").data(values);
+      const newSegments = segments.enter().append("rect").classed("sszvis-legend__mark", true);
       segments.exit().remove();
       segments = segments.merge(newSegments);
-      segments.attr("x", function (d, i) {
-        return i * segWidth - 1;
-      }) // The offsets here cover up half-pixel antialiasing artifacts
+      segments.attr("x", (d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
       .attr("y", 0).attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
-      .attr("height", segHeight).attr("fill", function (d) {
-        return props.scale(d);
-      });
-      var startEnd = [first(domain), last(domain)];
-      var labelText = props.labelText || startEnd;
+      .attr("height", segHeight).attr("fill", d => props.scale(d));
+      const startEnd = [first(domain), last(domain)];
+      const labelText = props.labelText || startEnd;
 
       // rounded end caps for the segments
-      var endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd);
-      var newEndCaps = endCaps.enter().append("circle").attr("class", "ssvis-legend--mark");
+      let endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd);
+      const newEndCaps = endCaps.enter().append("circle").attr("class", "ssvis-legend--mark");
       endCaps.exit().remove();
       endCaps = endCaps.merge(newEndCaps);
-      endCaps.attr("cx", function (d, i) {
-        return i * props.width;
-      }).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", function (d) {
-        return props.scale(d);
-      });
-      var labels = selection.selectAll(".sszvis-legend__label").data(labelText);
-      var newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
+      endCaps.attr("cx", (d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));
+      let labels = selection.selectAll(".sszvis-legend__label").data(labelText);
+      const newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
       labels.exit().remove();
       labels = labels.merge(newLabels);
-      var labelPadding = 16;
-      labels.style("text-anchor", function (d, i) {
-        return i === 0 ? "end" : "start";
-      }).attr("dy", "0.35em") // vertically-center
-      .attr("transform", function (d, i) {
-        return "translate(" + (i * props.width + (i === 0 ? -1 : 1) * labelPadding) + ", " + segHeight / 2 + ")";
-      }).text(function (d, i) {
-        var formatted = props.labelFormat(d, i);
-        return formatted;
-      });
+      const labelPadding = 16;
+      labels.style("text-anchor", (d, i) => i === 0 ? "end" : "start").attr("dy", "0.35em") // vertically-center
+      .attr("transform", (d, i) => "translate(" + (i * props.width + (i === 0 ? -1 : 1) * labelPadding) + ", " + segHeight / 2 + ")").text((d, i) => props.labelFormat(d, i));
     });
   }
 
@@ -7657,20 +7482,20 @@
 
   function radius () {
     return component().prop("scale").prop("tickFormat").tickFormat(identity$1).prop("tickValues").render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var domain = props.scale.domain();
-      var tickValues = props.tickValues || [domain[1], props.scale.invert(d3.mean(props.scale.range())), domain[0]];
-      var maxRadius = range(props.scale)[1];
-      var group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]);
-      var newGroup = group.enter().append("g").attr("class", "sszvis-legend__elementgroup");
+      const selection = d3.select(this);
+      const props = selection.props();
+      const domain = props.scale.domain();
+      const tickValues = props.tickValues || [domain[1], props.scale.invert(d3.mean(props.scale.range())), domain[0]];
+      const maxRadius = range(props.scale)[1];
+      let group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]);
+      const newGroup = group.enter().append("g").attr("class", "sszvis-legend__elementgroup");
 
       // FIXME: No exit?
 
       group = group.merge(newGroup);
       group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
-      var circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues);
-      var newCircles = circles.enter().append("circle").classed("sszvis-legend__greyline", true);
+      let circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues);
+      const newCircles = circles.enter().append("circle").classed("sszvis-legend__greyline", true);
       circles.exit().remove();
       circles = circles.merge(newCircles);
       function getCircleCenter(d) {
@@ -7680,13 +7505,13 @@
         return maxRadius - 2 * props.scale(d);
       }
       circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
-      var lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues);
-      var newLines = lines.enter().append("line").classed("sszvis-legend__dashedline", true);
+      let lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues);
+      const newLines = lines.enter().append("line").classed("sszvis-legend__dashedline", true);
       lines.exit().remove();
       lines = lines.merge(newLines);
       lines.attr("x1", 0).attr("y1", getCircleEdge).attr("x2", maxRadius + 15).attr("y2", getCircleEdge);
-      var labels = group.selectAll(".sszvis-legend__label").data(tickValues);
-      var newLabels = labels.enter().append("text").attr("class", "sszvis-legend__label sszvis-legend__label--small");
+      let labels = group.selectAll(".sszvis-legend__label").data(tickValues);
+      const newLabels = labels.enter().append("text").attr("class", "sszvis-legend__label sszvis-legend__label--small");
       labels.exit().remove();
       labels = labels.merge(newLabels);
       labels.attr("dx", maxRadius + 18).attr("y", getCircleEdge).attr("dy", "0.35em") // vertically-center
@@ -7705,7 +7530,7 @@
 
   // var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
-  var loadError = function (error$1) {
+  const loadError = function (error$1) {
     error(error$1);
 
     // Don't use alert()!
@@ -7725,12 +7550,12 @@
    * @module sszvis/map/utils
    */
 
-  var STADT_KREISE_KEY = "zurichStadtKreise";
-  var STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
-  var STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
-  var WAHL_KREISE_KEY = "zurichWahlKreise";
-  var AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
-  var SWITZERLAND_KEY = "switzerland";
+  const STADT_KREISE_KEY = "zurichStadtKreise";
+  const STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
+  const STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
+  const WAHL_KREISE_KEY = "zurichWahlKreise";
+  const AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
+  const SWITZERLAND_KEY = "switzerland";
 
   /**
    * swissMapProjection
@@ -7746,14 +7571,9 @@
    * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
    * @return {Function}                               The projection function.
    */
-  var swissMapProjection = memoize(function (width, height, featureCollection) {
-    var mercatorProjection = d3.geoMercator().fitSize([width, height], featureCollection);
-    return mercatorProjection;
-  },
+  const swissMapProjection = memoize((width, height, featureCollection) => d3.geoMercator().fitSize([width, height], featureCollection),
   // Memoize resolver
-  function (width, height, _, featureBoundsCacheKey) {
-    return "" + width + "," + height + "," + featureBoundsCacheKey;
-  });
+  (width, height, _, featureBoundsCacheKey) => "" + width + "," + height + "," + featureBoundsCacheKey);
 
   /**
    * This is a special d3.geoPath generator function tailored for rendering maps of
@@ -7771,9 +7591,8 @@
    *                                            and returns an svg path string which represents that geojson, projected using
    *                                            a map projection optimal for Swiss areas.
    */
-  var swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
-    var mercatorPath = d3.geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
-    return mercatorPath;
+  const swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
+    return d3.geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
   };
 
   /**
@@ -7789,28 +7608,27 @@
    *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
    * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
    */
-  var pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
+  const pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
     // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
     // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
-    var APPROX_EARTH_RADIUS = 6367475;
-    var APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
+    const APPROX_EARTH_RADIUS = 6367475;
+    const APPROX_EARTH_CIRCUMFERENCE = Math.PI * 2 * APPROX_EARTH_RADIUS;
     // Compute the size of the angle made by the meter distance
-    var degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360;
+    const degrees = meterDistance / APPROX_EARTH_CIRCUMFERENCE * 360;
     // Construct a square, centered at centerPoint, with sides that span that number of degrees
-    var halfDegrees = degrees / 2;
-    var bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
+    const halfDegrees = degrees / 2;
+    const bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
 
     // Project those bounds to pixel coordinates using the provided map projection
-    var projBounds = bounds.map(projection);
+    const projBounds = bounds.map(projection);
     // Depending on the rotation of the map, the sides of the box are not always positive quantities
     // For example, on a north-is-up map, the pixel y-scale is inverted, so higher latitude degree
     // values are lower pixel y-values. On a south-is-up map, the opposite is true.
-    var projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
-    var projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
-    var averageSideSize = (projXDist + projYDist) / 2;
-    return averageSideSize;
+    const projXDist = Math.abs(projBounds[1][0] - projBounds[0][0]);
+    const projYDist = Math.abs(projBounds[1][1] - projBounds[0][1]);
+    return (projXDist + projYDist) / 2;
   };
-  var GEO_KEY_DEFAULT = "geoId";
+  const GEO_KEY_DEFAULT = "geoId";
 
   /**
    * prepareMergedData
@@ -7826,23 +7644,20 @@
    * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
    *                                   geoJson property which is the feature, and a datum property which is the matched datum.
    */
-  var prepareMergedGeoData = function (dataset, geoJson, keyName) {
+  const prepareMergedGeoData = function (dataset, geoJson, keyName) {
     keyName || (keyName = GEO_KEY_DEFAULT);
 
     // group the input data by map entity id
-    var groupedInputData = Array.isArray(dataset) ? dataset.reduce(function (m, v) {
+    const groupedInputData = Array.isArray(dataset) ? dataset.reduce((m, v) => {
       m[v[keyName]] = v;
       return m;
     }, {}) : {};
 
     // merge the map features and the input data into new objects that include both
-    var mergedData = geoJson.features.map(function (feature) {
-      return {
-        geoJson: feature,
-        datum: groupedInputData[feature.id]
-      };
-    });
-    return mergedData;
+    return geoJson.features.map(feature => ({
+      geoJson: feature,
+      datum: groupedInputData[feature.id]
+    }));
   };
 
   /**
@@ -7860,14 +7675,10 @@
    * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
    *                                          (or user-specified center) of the object.
    */
-  var getGeoJsonCenter = function (geoJson) {
+  const getGeoJsonCenter = function (geoJson) {
     if (!geoJson.properties.cachedCenter) {
-      var setCenter = geoJson.properties.center;
-      if (setCenter) {
-        geoJson.properties.cachedCenter = setCenter.split(",").map(parseFloat);
-      } else {
-        geoJson.properties.cachedCenter = d3.geoCentroid(geoJson);
-      }
+      const setCenter = geoJson.properties.center;
+      geoJson.properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : d3.geoCentroid(geoJson);
     }
     return geoJson.properties.cachedCenter;
   };
@@ -7881,7 +7692,7 @@
    * @param  {number} width    The width of the container holding the map.
    * @return {number}          The stroke width that the map elements should have.
    */
-  var widthAdaptiveMapPathStroke = function (width) {
+  const widthAdaptiveMapPathStroke = function (width) {
     return Math.min(Math.max(0.8, width / 400), 1.1);
   };
 
@@ -7902,39 +7713,29 @@
    * @return {sszvis.component}
    */
 
-  var datumAcc = prop("datum");
+  const datumAcc = prop("datum");
   function bubble () {
-    var event = d3.dispatch("over", "out", "click");
-    var anchoredCirclesComponent = component().prop("mergedData").prop("mapPath").prop("radius", functor).prop("fill", functor).prop("strokeColor", functor).strokeColor("#ffffff").prop("strokeWidth", functor).strokeWidth(1).prop("transition").transition(true).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var radiusAcc = compose(props.radius, datumAcc);
-      var anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle").data(props.mergedData, function (d) {
-        return d.geoJson.id;
-      });
+    const event = d3.dispatch("over", "out", "click");
+    const anchoredCirclesComponent = component().prop("mergedData").prop("mapPath").prop("radius", functor).prop("fill", functor).prop("strokeColor", functor).strokeColor("#ffffff").prop("strokeWidth", functor).strokeWidth(1).prop("transition").transition(true).render(function () {
+      const selection = d3.select(this);
+      const props = selection.props();
+      const radiusAcc = compose(props.radius, datumAcc);
+      const anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle").data(props.mergedData, d => d.geoJson.id);
       anchoredCircles.enter().append("circle").attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering").attr("r", radiusAcc).on("mouseover", function (d) {
         event.call("over", this, d.datum);
       }).on("mouseout", function (d) {
         event.call("out", this, d.datum);
       }).on("click", function (d) {
         event.call("click", this, d.datum);
-      }).merge(anchoredCircles).attr("transform", function (d) {
-        var position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
+      }).merge(anchoredCircles).attr("transform", d => {
+        const position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
         return translateString(position[0], position[1]);
-      }).style("fill", function (d) {
-        return props.fill(d.datum);
-      }).style("stroke", function (d) {
-        return props.strokeColor(d.datum);
-      }).style("stroke-width", function (d) {
-        return props.strokeWidth(d.datum);
-      }).sort(function (a, b) {
-        return props.radius(b.datum) - props.radius(a.datum);
-      });
+      }).style("fill", d => props.fill(d.datum)).style("stroke", d => props.strokeColor(d.datum)).style("stroke-width", d => props.strokeWidth(d.datum)).sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
 
       // Remove the --entering modifier from the updating circles
       anchoredCircles.classed("sszvis-anchored-circle--entering", false);
       if (props.transition) {
-        var t = defaultTransition();
+        const t = defaultTransition();
         anchoredCircles.exit().transition(t).attr("r", 0).remove();
         anchoredCircles.transition(t).attr("r", radiusAcc);
       } else {
@@ -7943,7 +7744,7 @@
       }
     });
     anchoredCirclesComponent.on = function () {
-      var value = event.on.apply(event, arguments);
+      const value = event.on.apply(event, arguments);
       return value === event ? anchoredCirclesComponent : value;
     };
     return anchoredCirclesComponent;
@@ -7974,12 +7775,10 @@
 
   function mapRendererBase () {
     return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true) // a predicate function to determine whether a datum has a defined value
-    .prop("fill", functor).fill(function () {
-      return "black";
-    }) // a function for the entity fill color. default is black
+    .prop("fill", functor).fill(() => "black") // a function for the entity fill color. default is black
     .prop("transitionColor").transitionColor(true).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // render the missing value pattern
       ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
@@ -7988,21 +7787,17 @@
       function getMapFill(d) {
         return props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
       }
-      var mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData);
+      let mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData);
 
       // add the base map paths - these are filled according to the map fill function
-      var newMapAreas = mapAreas.enter().append("path").classed("sszvis-map__area", true).classed("sszvis-map__area--entering", true).attr("data-event-target", "").attr("fill", getMapFill);
+      const newMapAreas = mapAreas.enter().append("path").classed("sszvis-map__area", true).classed("sszvis-map__area--entering", true).attr("data-event-target", "").attr("fill", getMapFill);
       mapAreas.classed("sszvis-map__area--entering", false);
       mapAreas.exit().remove();
       mapAreas = mapAreas.merge(newMapAreas);
       selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill);
 
       // change the fill if necessary
-      mapAreas.classed("sszvis-map__area--undefined", function (d) {
-        return !defined(d.datum) || !props.defined(d.datum);
-      }).attr("d", function (d) {
-        return props.mapPath(d.geoJson);
-      });
+      mapAreas.classed("sszvis-map__area--undefined", d => !defined(d.datum) || !props.defined(d.datum)).attr("d", d => props.mapPath(d.geoJson));
       if (props.transitionColor) {
         mapAreas.transition().call(slowTransition).attr("fill", getMapFill);
       } else {
@@ -8010,10 +7805,8 @@
       }
 
       // the tooltip anchor generator
-      var ta = tooltipAnchor().position(function (d) {
-        return props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
-      });
-      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
+      const ta = tooltipAnchor().position(d => props.mapPath.projection()(getGeoJsonCenter(d.geoJson)));
+      const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
 
       // attach tooltip anchors
       tooltipGroup.call(ta);
@@ -8044,10 +7837,10 @@
    */
 
   function geojson () {
-    var event = d3.dispatch("over", "out", "click");
-    var geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+    const event = d3.dispatch("over", "out", "click");
+    const geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // render the missing value pattern
       ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
@@ -8056,64 +7849,58 @@
       // getMapKeyName will be called on the 'properties' of each map feature. It should
       // return a map entity id. Data values are matched with corresponding map features using
       // these entity ids.
-      var getDataKeyName = prop(props.dataKeyName);
-      var getMapKeyName = prop(props.geoJsonKeyName);
-      var groupedInputData = data.reduce(function (m, v) {
+      const getDataKeyName = prop(props.dataKeyName);
+      const getMapKeyName = prop(props.geoJsonKeyName);
+      const groupedInputData = data.reduce((m, v) => {
         m[getDataKeyName(v)] = v;
         return m;
       });
-      var mergedData = props.geoJson.features.map(function (feature) {
-        return {
-          geoJson: feature,
-          datum: groupedInputData[getMapKeyName(feature.properties)]
-        };
-      });
+      const mergedData = props.geoJson.features.map(feature => ({
+        geoJson: feature,
+        datum: groupedInputData[getMapKeyName(feature.properties)]
+      }));
       function getMapFill(d) {
         return defined(d.datum) && props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
       }
       function getMapStroke(d) {
         return defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
       }
-      var geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData);
-      var newGeoElements = geoElements.enter().append("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "").attr("fill", getMapFill);
+      let geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData);
+      const newGeoElements = geoElements.enter().append("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "").attr("fill", getMapFill);
       geoElements.exit().remove();
       geoElements = geoElements.merge(newGeoElements);
       selection.selectAll(".sszvis-map__geojsonelement--undefined").attr("fill", getMapFill);
-      geoElements.classed("sszvis-map__geojsonelement--undefined", function (d) {
-        return !defined(d.datum) || !props.defined(d.datum);
-      }).attr("d", function (d) {
-        return props.mapPath(d.geoJson);
-      });
+      geoElements.classed("sszvis-map__geojsonelement--undefined", d => !defined(d.datum) || !props.defined(d.datum)).attr("d", d => props.mapPath(d.geoJson));
       if (props.transitionColor) {
         geoElements.transition().call(slowTransition).attr("fill", getMapFill);
       } else {
         geoElements.attr("fill", getMapFill);
       }
       geoElements.attr("stroke", getMapStroke).attr("stroke-width", props.strokeWidth);
-      selection.selectAll("[data-event-target]").on("mouseover", function (d) {
+      selection.selectAll("[data-event-target]").on("mouseover", d => {
         event.over(d.datum);
-      }).on("mouseout", function (d) {
+      }).on("mouseout", d => {
         event.out(d.datum);
-      }).on("click", function (d) {
+      }).on("click", d => {
         event.click(d.datum);
       });
 
       // the tooltip anchor generator
-      var ta = tooltipAnchor().position(function (d) {
+      const ta = tooltipAnchor().position(d => {
         d.geoJson.properties || (d.geoJson.properties = {});
-        var sphericalCentroid = d.geoJson.properties.sphericalCentroid;
+        let sphericalCentroid = d.geoJson.properties.sphericalCentroid;
         if (!sphericalCentroid) {
           d.geoJson.properties.sphericalCentroid = sphericalCentroid = d3.geoCentroid(d.geoJson);
         }
         return props.mapPath.projection()(sphericalCentroid);
       });
-      var tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
+      const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
 
       // attach tooltip anchors
       tooltipGroup.call(ta);
     });
     geojsonComponent.on = function () {
-      var value = event.on.apply(event, arguments);
+      const value = event.on.apply(event, arguments);
       return value === event ? geojsonComponent : value;
     };
     return geojsonComponent;
@@ -8142,20 +7929,20 @@
     .prop("geoJson").prop("mapPath").prop("highlight").highlight([]) // an array of data values to highlight
     .prop("highlightStroke", functor).highlightStroke("white") // a function for highlighted entity stroke colors (default: white)
     .prop("highlightStrokeWidth", functor).highlightStrokeWidth(2).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var highlightBorders = selection.selectAll(".sszvis-map__highlight");
-      if (!props.highlight.length) {
+      const selection = d3.select(this);
+      const props = selection.props();
+      let highlightBorders = selection.selectAll(".sszvis-map__highlight");
+      if (props.highlight.length === 0) {
         highlightBorders.remove();
         return true; // no highlight, no worry
       }
-      var groupedMapData = props.geoJson.features.reduce(function (m, feature) {
+      const groupedMapData = props.geoJson.features.reduce((m, feature) => {
         m[feature.id] = feature;
         return m;
       }, {});
 
       // merge the highlight data
-      var mergedHighlight = props.highlight.reduce(function (m, v) {
+      const mergedHighlight = props.highlight.reduce((m, v) => {
         if (v) {
           m.push({
             geoJson: groupedMapData[v[props.keyName]],
@@ -8165,16 +7952,10 @@
         return m;
       }, []);
       highlightBorders = highlightBorders.data(mergedHighlight);
-      var newHighlightBorders = highlightBorders.enter().append("path").classed("sszvis-map__highlight", true);
+      const newHighlightBorders = highlightBorders.enter().append("path").classed("sszvis-map__highlight", true);
       highlightBorders.exit().remove();
       highlightBorders = highlightBorders.merge(newHighlightBorders);
-      highlightBorders.attr("d", function (d) {
-        return props.mapPath(d.geoJson);
-      }).style("stroke", function (d) {
-        return props.highlightStroke(d.datum);
-      }).style("stroke-width", function (d) {
-        return props.highlightStrokeWidth(d.datum);
-      });
+      highlightBorders.attr("d", d => props.mapPath(d.geoJson)).style("stroke", d => props.highlightStroke(d.datum)).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
     });
   }
 
@@ -8208,15 +7989,15 @@
 
   function image () {
     return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").opacity(1).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var image = selection.selectAll(".sszvis-map__image").data([0]); // At the moment, 1 image per container
+      const selection = d3.select(this);
+      const props = selection.props();
+      let image = selection.selectAll(".sszvis-map__image").data([0]); // At the moment, 1 image per container
 
-      var newImage = image.enter().append("img").classed("sszvis-map__image", true);
+      const newImage = image.enter().append("img").classed("sszvis-map__image", true);
       image.exit().remove();
       image = image.merge(newImage);
-      var topLeft = props.projection(props.geoBounds[0]);
-      var bottomRight = props.projection(props.geoBounds[1]);
+      const topLeft = props.projection(props.geoBounds[0]);
+      const bottomRight = props.projection(props.geoBounds[1]);
       image.attr("src", props.src).style("left", Math.round(topLeft[0]) + "px").style("top", Math.round(topLeft[1]) + "px").style("width", Math.round(bottomRight[0] - topLeft[0]) + "px").style("height", Math.round(bottomRight[1] - topLeft[1]) + "px").style("opacity", props.opacity);
     });
   }
@@ -8242,12 +8023,12 @@
   function mapRendererMesh () {
     return component().prop("geoJson").prop("mapPath").prop("borderColor").borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
     .prop("strokeWidth").strokeWidth(1.25).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // add the map borders. These are rendered as one single path element
-      var meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]);
-      var newMeshLine = meshLine.enter().append("path").classed("sszvis-map__border", true);
+      let meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]);
+      const newMeshLine = meshLine.enter().append("path").classed("sszvis-map__border", true);
       meshLine.exit().remove();
       meshLine = meshLine.merge(newMeshLine);
       meshLine.attr("d", props.mapPath).style("stroke", props.borderColor).style("stroke-width", props.strokeWidth);
@@ -8273,8 +8054,8 @@
 
   function mapRendererPatternedLakeOverlay () {
     return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").fadeOut(true).render(function () {
-      var selection = d3.select(this);
-      var props = selection.props();
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // the lake texture
       ensureDefsElement(selection, "pattern", "lake-pattern").call(mapLakePattern);
@@ -8287,8 +8068,8 @@
       }
 
       // generate the Lake Zurich path
-      var zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]);
-      var newZurichSee = zurichSee.enter().append("path").classed("sszvis-map__lakezurich", true);
+      let zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]);
+      const newZurichSee = zurichSee.enter().append("path").classed("sszvis-map__lakezurich", true);
       zurichSee.exit().remove();
       zurichSee = zurichSee.merge(newZurichSee);
       zurichSee.attr("d", props.mapPath).attr("fill", "url(#lake-pattern)");
@@ -8299,8 +8080,8 @@
 
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
-      var lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]);
-      var newLakePath = lakePath.enter().append("path").classed("sszvis-map__lakepath", true);
+      let lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]);
+      const newLakePath = lakePath.enter().append("path").classed("sszvis-map__lakepath", true);
       lakePath.exit().remove();
       lakePath = lakePath.merge(newLakePath);
       lakePath.attr("d", props.mapPath);
@@ -8334,14 +8115,14 @@
 
   function raster () {
     return component().prop("debug").debug(false).prop("width").prop("height").prop("position").prop("cellSide").cellSide(2).prop("fill", functor).prop("opacity").opacity(1).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
-      var canvas = selection.selectAll(".sszvis-map__rasterimage").data([0]);
-      var newCanvas = canvas.enter().append("canvas").classed("sszvis-map__rasterimage", true);
+      const selection = d3.select(this);
+      const props = selection.props();
+      let canvas = selection.selectAll(".sszvis-map__rasterimage").data([0]);
+      const newCanvas = canvas.enter().append("canvas").classed("sszvis-map__rasterimage", true);
       canvas.exit().remove();
       canvas = canvas.merge(newCanvas);
       canvas.attr("width", props.width).attr("height", props.height).style("opacity", props.opacity);
-      var ctx = canvas.node().getContext("2d");
+      const ctx = canvas.node().getContext("2d");
       ctx.clearRect(0, 0, props.width, props.height);
       if (props.debug) {
         // Displays a rectangle that fills the canvas.
@@ -8349,12 +8130,12 @@
         ctx.fillStyle = "rgba(255, 0, 0, 0.2)";
         ctx.fillRect(0, 0, props.width, props.height);
       }
-      var halfSide = props.cellSide / 2;
-      data.forEach(function (datum) {
-        var position = props.position(datum);
+      const halfSide = props.cellSide / 2;
+      for (const datum of data) {
+        const position = props.position(datum);
         ctx.fillStyle = props.fill(datum);
         ctx.fillRect(position[0] - halfSide, position[1] - halfSide, props.cellSide, props.cellSide);
-      });
+      }
     });
   }
 
@@ -8387,18 +8168,18 @@
    */
 
   function choropleth () {
-    var event = d3.dispatch("over", "out", "click");
-    var baseRenderer = mapRendererBase();
-    var meshRenderer = mapRendererMesh();
-    var lakeRenderer = mapRendererPatternedLakeOverlay();
-    var highlightRenderer = mapRendererHighlight();
-    var mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
-      var selection = d3.select(this);
-      var props = selection.props();
+    const event = d3.dispatch("over", "out", "click");
+    const baseRenderer = mapRendererBase();
+    const meshRenderer = mapRendererMesh();
+    const lakeRenderer = mapRendererPatternedLakeOverlay();
+    const highlightRenderer = mapRendererHighlight();
+    const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
+      const selection = d3.select(this);
+      const props = selection.props();
 
       // create a map path generator function
-      var mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
-      var mergedData = prepareMergedGeoData(data, props.features, props.keyName);
+      const mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
+      const mergedData = prepareMergedGeoData(data, props.features, props.keyName);
 
       // Base shape
       baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath);
@@ -8435,7 +8216,7 @@
       });
     });
     mapComponent.on = function () {
-      var value = event.on.apply(event, arguments);
+      const value = event.on.apply(event, arguments);
       return value === event ? mapComponent : value;
     };
     return mapComponent;
@@ -8447,15 +8228,15 @@
    * @module sszvis/parse
    */
 
-  var timeParse = d3.timeFormatLocale(locale).parse;
+  const timeParse = d3.timeFormatLocale(locale).parse;
 
   /**
    * Parse Swiss date strings
    * @param  {String} d A Swiss date string, e.g. 17.08.2014
    * @return {Date}
    */
-  var dateParser = timeParse("%d.%m.%Y");
-  var parseDate = function (d) {
+  const dateParser = timeParse("%d.%m.%Y");
+  const parseDate = function (d) {
     return dateParser(d);
   };
 
@@ -8464,8 +8245,8 @@
    * @param  {string} d   A string which should be parsed as if it were a year, like "2014"
    * @return {Date}       A javascript date object for the first time in the given year
    */
-  var yearParser = timeParse("%Y");
-  var parseYear = function (d) {
+  const yearParser = timeParse("%Y");
+  const parseYear = function (d) {
     return yearParser(d);
   };
 
@@ -8474,8 +8255,8 @@
    * @param  {String} d A value that could be a number
    * @return {Number}   If d is not a number, NaN is returned
    */
-  var parseNumber = function (d) {
-    return d.trim() === "" ? NaN : +d;
+  const parseNumber = function (d) {
+    return d.trim() === "" ? Number.NaN : +d;
   };
 
   /**
@@ -8533,8 +8314,8 @@
   /* Exported module
   ----------------------------------------------- */
   function responsiveProps() {
-    var breakpointSpec = breakpointDefaultSpec();
-    var propsConfig = {};
+    let breakpointSpec = breakpointDefaultSpec();
+    const propsConfig = {};
 
     /**
      * Constructor
@@ -8550,16 +8331,16 @@
       if (!isObject(measurement) || !isBounds(measurement)) {
         warn("Could not determine the current breakpoint, returning the default props");
         // We choose the _ option for all configured props as a default.
-        return Object.keys(propsConfig).reduce(function (memo, val, key) {
+        return Object.keys(propsConfig).reduce((memo, val, key) => {
           memo[key] = val._;
           return memo;
         }, {});
       }
 
       // Finds out which breakpoints the provided measurements match up with
-      var matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
-      return Object.keys(propsConfig).reduce(function (memo, propKey) {
-        var propSpec = propsConfig[propKey];
+      const matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
+      return Object.keys(propsConfig).reduce((memo, propKey) => {
+        const propSpec = propsConfig[propKey];
         if (!validatePropSpec(propSpec, breakpointSpec)) {
           warn('responsiveProps was given an invalid propSpec for property: "' + propKey + '". The spec: ', propSpec);
           return memo;
@@ -8567,9 +8348,7 @@
 
         // Find the first breakpoint entry in the propSpec which matches one of the matched breakpoints
         // This function should always at least find '_' at the end of the array.
-        var matchedBreakpoint = find(function (bp) {
-          return defined(propSpec[bp.name]);
-        }, matchingBreakpoints);
+        const matchedBreakpoint = find(bp => defined(propSpec[bp.name]), matchingBreakpoints);
         // the value in the query object for that property equals the propSpec value as a functor,
         // invoked if necessary with the current width. Providing the width allows aspect ratio
         // calculations based on element width.
@@ -8676,7 +8455,7 @@
    * @returns {object} Same as input object but with all values transformed to fn.functors
    */
   function functorizeValues(obj) {
-    return Object.keys(obj).reduce(function (memo, key) {
+    return Object.keys(obj).reduce((memo, key) => {
       memo[key] = functor(obj[key]);
       return memo;
     }, {});
@@ -8691,11 +8470,9 @@
 
     // Validate the properties of the propSpec:
     // each should be a valid breakpoint name, and its value should be defined
-    for (var breakpointName in propSpec) {
-      if ({}.hasOwnProperty.call(propSpec, breakpointName)) {
-        if (breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
-          return false;
-        }
+    for (const breakpointName in propSpec) {
+      if (Object.prototype.hasOwnProperty.call(propSpec, breakpointName) && breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
+        return false;
       }
     }
 
@@ -8738,67 +8515,61 @@
    */
 
   function formatHTML() {
-    var styles = {
-      plain: function (d) {
+    const styles = {
+      plain(d) {
         return d;
       },
-      italic: function (d) {
+      italic(d) {
         return "<em>" + d + "</em>";
       },
-      bold: function (d) {
+      bold(d) {
         return "<strong>" + d + "</strong>";
       }
     };
     return function (textBody, datum) {
-      return textBody.lines().map(function (line) {
-        return line.map(function (word) {
-          return styles[word.style].call(null, word.text(datum));
-        }).join(" ");
-      }).join("<br/>");
+      return textBody.lines().map(line => line.map(word => styles[word.style].call(null, word.text(datum))).join(" ")).join("<br/>");
     };
   }
   function formatSVG() {
-    var styles = {
-      plain: function (d) {
+    const styles = {
+      plain(d) {
         return "<tspan>" + d + "</tspan>";
       },
-      italic: function (d) {
+      italic(d) {
         return '<tspan style="font-style:italic">' + d + "</tspan>";
       },
-      bold: function (d) {
+      bold(d) {
         return '<tspan style="font-weight:bold">' + d + "</tspan>";
       }
     };
     return function (textBody, datum) {
-      return textBody.lines().reduce(function (svg, line, i) {
-        var lineSvg = line.map(function (word) {
-          return styles[word.style].call(null, word.text(datum));
-        }).join(" ");
-        var dy = i === 0 ? 0 : "1.2em";
+      return textBody.lines().reduce((svg, line, i) => {
+        const lineSvg = line.map(word => styles[word.style].call(null, word.text(datum))).join(" ");
+        const dy = i === 0 ? 0 : "1.2em";
         return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
       }, "");
     };
   }
   function structuredText() {
-    var lines = [[]];
+    const lines = [[]];
     return {
-      addLine: function () {
+      addLine() {
         lines.push([]);
       },
-      addWord: function (style, text) {
+      addWord(style, text) {
         last(lines).push({
           text: functor(text),
-          style: style
+          style
         });
       },
-      lines: function () {
+      lines() {
         return lines;
       }
     };
   }
   function makeTextWithFormat(format) {
     return function () {
-      var textBody = structuredText();
+      const textBody = structuredText();
       function makeText(d) {
         return format(textBody, d);
       }
@@ -8806,17 +8577,17 @@
         textBody.addLine();
         return makeText;
       };
-      ["bold", "italic", "plain"].forEach(function (style) {
+      for (const style of ["bold", "italic", "plain"]) {
         makeText[style] = function (text) {
           textBody.addWord(style, text);
           return makeText;
         };
-      });
+      }
       return makeText;
     };
   }
-  var modularTextHTML = makeTextWithFormat(formatHTML());
-  var modularTextSVG = makeTextWithFormat(formatSVG());
+  const modularTextHTML = makeTextWithFormat(formatHTML());
+  const modularTextSVG = makeTextWithFormat(formatSVG());
 
   exports.AGGLOMERATION_2012_KEY = AGGLOMERATION_2012_KEY;
   exports.DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT;

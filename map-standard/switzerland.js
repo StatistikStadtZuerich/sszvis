@@ -3,12 +3,12 @@
 // Configuration
 // -----------------------------------------------
 
-var MAX_LEGEND_WIDTH = 320;
-var queryProps = sszvis
+const MAX_LEGEND_WIDTH = 320;
+const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
-    _: function (width) {
-      var innerHeight = Math.min(sszvis.aspectRatio4to3(width), 400);
+    _(width) {
+      const innerHeight = Math.min(sszvis.aspectRatio4to3(width), 400);
       return {
         bottom: 40,
         height: innerHeight + 40,
@@ -16,9 +16,7 @@ var queryProps = sszvis
     },
   })
   .prop("legendWidth", {
-    _: function (width) {
-      return Math.min(width / 2, MAX_LEGEND_WIDTH);
-    },
+    _: (width) => Math.min(width / 2, MAX_LEGEND_WIDTH),
   });
 
 function parseRow(d) {
@@ -28,11 +26,11 @@ function parseRow(d) {
   };
 }
 
-var vAcc = sszvis.prop("value");
+const vAcc = sszvis.prop("value");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: null,
   mapData: null,
   valueDomain: [0, 0],
@@ -40,15 +38,15 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareState: function (data) {
+const actions = {
+  prepareState(data) {
     state.data = data;
     state.valueDomain = [0, d3.max(state.data, vAcc)];
 
     render(state);
   },
 
-  prepareMapData: function (topo) {
+  prepareMapData(topo) {
     state.mapData = {
       features: topojson.feature(topo, topo.objects.cantons),
       borders: topojson.mesh(topo, topo.objects.cantons),
@@ -56,7 +54,7 @@ var actions = {
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -75,29 +73,29 @@ function render(state) {
     return true;
   }
 
-  var props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
-  var bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
+  const props = queryProps(sszvis.measureDimensions("#sszvis-chart"));
+  const bounds = sszvis.bounds(props.bounds, "#sszvis-chart");
 
   // Scales
 
-  var colorScale = sszvis.scaleDivNtrGry().domain(state.valueDomain);
+  const colorScale = sszvis.scaleDivNtrGry().domain(state.valueDomain);
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
+  const chartLayer = sszvis.createSvgLayer("#sszvis-chart", bounds).datum(state.data);
 
   // Components
 
-  var choroplethMap = sszvis
+  const choroplethMap = sszvis
     .choropleth()
     .features(state.mapData.features)
     .borders(state.mapData.borders)
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
     .fill(sszvis.compose(colorScale, vAcc))
-    .defined(sszvis.compose(sszvis.not(isNaN), vAcc));
+    .defined(sszvis.compose(sszvis.not(Number.isNaN), vAcc));
 
-  var legend = sszvis
+  const legend = sszvis
     .legendColorLinear()
     .scale(colorScale)
     .width(props.legendWidth)

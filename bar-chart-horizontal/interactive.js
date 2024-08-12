@@ -2,11 +2,9 @@
 
 // Configuration
 // -----------------------------------------------
-var MAX_CONTROL_WIDTH = 300;
-var queryProps = sszvis.responsiveProps().prop("controlWidth", {
-  _: function (width) {
-    return Math.min(width, MAX_CONTROL_WIDTH);
-  },
+const MAX_CONTROL_WIDTH = 300;
+const queryProps = sszvis.responsiveProps().prop("controlWidth", {
+  _: (width) => Math.min(width, MAX_CONTROL_WIDTH),
 });
 
 function parseRow(d) {
@@ -17,13 +15,13 @@ function parseRow(d) {
   };
 }
 
-var xAcc = sszvis.prop("value");
-var yAcc = sszvis.prop("category");
-var jAcc = sszvis.prop("year");
+const xAcc = sszvis.prop("value");
+const yAcc = sszvis.prop("category");
+const jAcc = sszvis.prop("year");
 
 // Application state
 // -----------------------------------------------
-var state = {
+const state = {
   data: [],
   categories: [],
   years: [],
@@ -34,35 +32,31 @@ var state = {
 
 // State transitions
 // -----------------------------------------------
-var actions = {
-  prepareState: function (data) {
+const actions = {
+  prepareState(data) {
     state.data = data;
     state.categories = sszvis.set(state.data, yAcc);
     state.years = sszvis.set(state.data, jAcc);
     actions.selectYear(null, d3.max(state.years));
   },
 
-  selectYear: function (e, year) {
+  selectYear(_event, year) {
     state.selectedYear = year;
-    state.selectedData = state.data.filter(function (d) {
-      return jAcc(d) === year;
-    });
+    state.selectedData = state.data.filter((d) => jAcc(d) === year);
     render(state);
   },
 
-  showTooltip: function (_, category) {
-    state.selected = state.data.filter(function (d) {
-      return yAcc(d) === category;
-    });
+  showTooltip(_event, category) {
+    state.selected = state.data.filter((d) => yAcc(d) === category);
     render(state);
   },
 
-  hideTooltip: function () {
+  hideTooltip() {
     state.selected = [];
     render(state);
   },
 
-  resize: function () {
+  resize() {
     render(state);
   },
 };
@@ -74,76 +68,72 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 // Render
 // -----------------------------------------------
 function render(state) {
-  var chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
-  var bounds = sszvis.bounds(
+  const chartDimensions = sszvis.dimensionsHorizontalBarChart(state.categories.length);
+  const bounds = sszvis.bounds(
     { height: 80 + chartDimensions.totalHeight + 33, top: 80, bottom: 25 },
     config.id
   );
-  var props = queryProps(bounds);
-  var chartWidth = Math.min(bounds.innerWidth, 800);
+  const props = queryProps(bounds);
+  const chartWidth = Math.min(bounds.innerWidth, 800);
 
   // Scales
 
-  var widthScale = d3
+  const widthScale = d3
     .scaleLinear()
     .range([0, chartWidth])
     .domain([0, d3.max(state.data, xAcc)]);
 
-  var yScale = d3
+  const yScale = d3
     .scaleBand()
     .padding(chartDimensions.padRatio)
     .paddingOuter(chartDimensions.outerRatio)
     .rangeRound([0, chartDimensions.totalHeight])
     .domain(state.categories);
 
-  var cScale = sszvis.scaleQual12();
-  var cScaleDark = cScale.darker();
+  const cScale = sszvis.scaleQual12();
+  const cScaleDark = cScale.darker();
 
   // Layers
 
-  var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.selectedData);
+  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.selectedData);
 
-  var controlLayer = sszvis.createHtmlLayer(config.id, bounds);
+  const controlLayer = sszvis.createHtmlLayer(config.id, bounds);
 
-  var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selected);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selected);
 
   // Components
 
-  var barGen = sszvis
+  const barGen = sszvis
     .bar()
     .x(0)
     .y(sszvis.compose(yScale, yAcc))
     .width(sszvis.compose(widthScale, xAcc))
     .height(chartDimensions.barHeight)
     .centerTooltip(true)
-    .fill(function (d) {
-      return isSelected(d) ? cScaleDark(d) : cScale(d);
-    });
+    .fill((d) => (isSelected(d) ? cScaleDark(d) : cScale(d)));
 
-  var xAxis = sszvis.axisX().scale(widthScale).orient("bottom").alignOuterLabels(true);
+  const xAxis = sszvis.axisX().scale(widthScale).orient("bottom").alignOuterLabels(true);
 
-  var yAxis = sszvis.axisY
+  const yAxis = sszvis.axisY
     .ordinal()
     .scale(yScale)
     .orient("right")
-    .highlightTick(function (d) {
-      return sszvis.contains(state.selected.map(sszvis.compose(String, yAcc)), String(d));
-    });
+    .highlightTick((d) =>
+      sszvis.contains(state.selected.map(sszvis.compose(String, yAcc)), String(d))
+    );
 
-  var buttonGroup = sszvis
+  const buttonGroup = sszvis
     .buttonGroup()
     .values(state.years)
     .width(props.controlWidth)
     .current(state.selectedYear)
     .change(actions.selectYear);
 
-  var tooltipHeader = sszvis.modularTextHTML().bold(
-    sszvis.compose(function (d) {
-      return isNaN(d) ? "k. A." : sszvis.formatNumber(d);
-    }, xAcc)
-  );
+  const tooltipHeader = sszvis
+    .modularTextHTML()
+    .bold(sszvis.compose((d) => (Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d)), xAcc));
 
-  var tooltip = sszvis
+  const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .orientation(sszvis.fitTooltip("bottom", bounds))
@@ -157,7 +147,7 @@ function render(state) {
     sszvis.translateString(bounds.innerWidth / 2 - chartWidth / 2, bounds.padding.top)
   );
 
-  var bars = chartLayer.selectGroup("bars").call(barGen);
+  const bars = chartLayer.selectGroup("bars").call(barGen);
 
   chartLayer
     .selectGroup("xAxis")
@@ -181,7 +171,7 @@ function render(state) {
 
   // Use the move behavior to provide tooltips in the absence of a bar, i.e.
   // when we have missing data.
-  var interactionLayer = sszvis
+  const interactionLayer = sszvis
     .move()
     .xScale(widthScale)
     .yScale(yScale)
@@ -196,12 +186,13 @@ function render(state) {
 }
 
 function isWithinBarContour(xValue, category) {
-  var barDatum = sszvis.find(function (d) {
-    return jAcc(d) === state.selectedYear && yAcc(d) === category;
-  }, state.data);
+  const barDatum = sszvis.find(
+    (d) => jAcc(d) === state.selectedYear && yAcc(d) === category,
+    state.data
+  );
   return sszvis.util.testBarThreshold(xValue, barDatum, xAcc, 2000);
 }
 
 function isSelected(d) {
-  return state.selected.indexOf(d) >= 0;
+  return state.selected.includes(d);
 }

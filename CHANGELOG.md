@@ -15,7 +15,7 @@ The upgrade to d3 v7 comes with a few breaking changes. The most notable one is 
 state.maxStacked = d3.max(d3.values(dateValues), function (s) {...});
 
 // ... this d3 v7 code snippet
-state.maxStacked = d3.max(Object.values(dateValues), function (s) {...});
+state.maxStacked = d3.max(Object.values(dateValues), (s) => {...});
 ```
 
 The other major change is that to mouse event handlers which are now the first argument in the callback for any event listeners. This change causes any existing code that uses interactions (hover, mouse clicks etc) to break.
@@ -28,7 +28,7 @@ toggleMultiples: function (g) {
 },
 
 // ... this d3 v7 code snippet
-toggleMultiples: function (e, g) {
+toggleMultiples: (e, g) => {
   state.isMultiples = g === "Separiert";
   render(state);
 },
