@@ -1,6 +1,8 @@
 ## 3.0.0 (Aug 2024)
 
-- Upgraded d3 v5 to v7
+- Upgraded d3 v5 to v7 (**BREAKING CHANGE**)
+- Remove polyfills for EI (**BREAKING CHANGE**)
+- Update code examples to use modern ES6 features
 
 The `sszvis` library now is dependent on `d3` version 7 (see [d3 v6 migration guide](https://observablehq.com/@d3/d3v6-migration-guide)). This means you will need to upgrade any scripts that import v5 to v7.
 
