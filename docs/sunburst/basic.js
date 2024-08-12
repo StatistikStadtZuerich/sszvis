@@ -28,7 +28,7 @@ const state = {
 // State transitions
 // -----------------------------------------------
 const actions = {
-  prepareState (data) {
+  prepareState(data) {
     const continentsList = ["Europa", "Asien", "Amerika", "Afrika", "Ozeanien", "Unzuteilbar"];
 
     // Sort the input data according to the desired order of the continents first, then by descending order of size
@@ -56,19 +56,19 @@ const actions = {
     render(state);
   },
 
-  onSliceOver (e, d) {
+  onSliceOver(e, d) {
     state.selection = [d];
 
     render(state);
   },
 
-  onSliceOut () {
+  onSliceOut() {
     state.selection = [];
 
     render(state);
   },
 
-  resize () {
+  resize() {
     render(state);
   },
 };

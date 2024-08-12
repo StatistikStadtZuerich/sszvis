@@ -57,7 +57,8 @@ export function colorLegendDimensions(labels, containerWidth) {
   const totalLabelsWidth = sum(labels, labelWidth);
 
   // Use a single column for four or fewer items
-  const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
+  const columns =
+    labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
 
   // Use a horizontal layout if all labels fit on one line
   const isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;

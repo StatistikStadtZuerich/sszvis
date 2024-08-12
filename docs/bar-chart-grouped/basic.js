@@ -118,7 +118,7 @@ function render(state) {
 
   const yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
 
-  const yPosScale = (v) => Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0));
+  const yPosScale = (v) => (Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0)));
 
   const hScale = (v) =>
     // the size of the bar is distance from the y-position of the value to the y-position of 0

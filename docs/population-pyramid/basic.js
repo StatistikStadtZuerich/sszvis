@@ -297,7 +297,8 @@ function isWithinBarContour(binnedData, xCenter, xRelToPx, lengthScale) {
     const dataRow = binnedData.filter((d) => aAcc(d) === ageBin);
     const x = xRelToPx(xRel);
     return sszvis.every(
-      (d) => isLeft(d) ? x >= xCenter - lengthScale(vAcc(d)) : x <= xCenter + lengthScale(vAcc(d)),
+      (d) =>
+        isLeft(d) ? x >= xCenter - lengthScale(vAcc(d)) : x <= xCenter + lengthScale(vAcc(d)),
       dataRow
     );
   };

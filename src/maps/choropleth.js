@@ -74,7 +74,12 @@ export default function () {
       const props = selection.props();
 
       // create a map path generator function
-      const mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
+      const mapPath = swissMapPath(
+        props.width,
+        props.height,
+        props.features,
+        "zurichStadtfeatures"
+      );
 
       const mergedData = prepareMergedGeoData(data, props.features, props.keyName);
 

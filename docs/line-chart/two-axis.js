@@ -47,7 +47,8 @@ sszvis.app({
   actions: {
     changeDate(state, inputDate) {
       const closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
-      const closestData = state.lineData.map((linePoints) => sszvis.find((d) => sszvis.stringEqual(xAcc(d), closestDate), linePoints)
+      const closestData = state.lineData.map((linePoints) =>
+        sszvis.find((d) => sszvis.stringEqual(xAcc(d), closestDate), linePoints)
       );
       state.selection = closestData.filter(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
     },

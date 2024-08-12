@@ -124,7 +124,12 @@ function render(state) {
     .height(hValue)
     .fill((d) => (isSelected(d) ? cScaleDark(d) : cScale(d)));
 
-  const xAxis = sszvis.axisX.ordinal().scale(xScale).orient("bottom").alignOuterLabels(true).ticks(5);
+  const xAxis = sszvis.axisX
+    .ordinal()
+    .scale(xScale)
+    .orient("bottom")
+    .alignOuterLabels(true)
+    .ticks(5);
 
   const yAxis = sszvis.axisY().scale(yPosScale).orient("right");
 

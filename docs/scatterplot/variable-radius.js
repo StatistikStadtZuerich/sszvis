@@ -56,7 +56,7 @@ const state = {
 // State transitions
 // -----------------------------------------------
 const actions = {
-  prepareState (data) {
+  prepareState(data) {
     state.data = data;
 
     // for the voronoi component to work, the data must first be filtered such that no two vertices
@@ -71,17 +71,17 @@ const actions = {
     render(state);
   },
 
-  setHighlight (d) {
+  setHighlight(d) {
     state.highlightData = [d];
     render(state);
   },
 
-  resetHighlight () {
+  resetHighlight() {
     state.highlightData = [];
     render(state);
   },
 
-  resize () {
+  resize() {
     render(state);
   },
 };

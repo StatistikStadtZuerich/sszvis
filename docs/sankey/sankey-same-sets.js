@@ -134,7 +134,10 @@ function render(state) {
 
   // Scales
 
-  const valueScale = d3.scaleLinear().domain(sankeyLayout.valueDomain).range(sankeyLayout.valueRange);
+  const valueScale = d3
+    .scaleLinear()
+    .domain(sankeyLayout.valueDomain)
+    .range(sankeyLayout.valueRange);
 
   const columnPosition = d3
     .scaleLinear()
