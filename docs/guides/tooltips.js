@@ -1,3 +1,4 @@
+/* global sszvis */
 (function (global) {
   "use strict";
 

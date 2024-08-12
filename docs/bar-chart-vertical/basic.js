@@ -203,10 +203,6 @@ function isSelected(d) {
   return sszvis.contains(state.selection, d);
 }
 
-function labelWrapWidth(range) {
-  return (d3.max(range) - d3.min(range)) / range.length;
-}
-
 function nanFallback(fallbackyValue) {
   return function (d) {
     return isNaN(d) ? fallbackyValue : d;

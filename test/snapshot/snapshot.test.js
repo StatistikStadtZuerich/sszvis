@@ -1,9 +1,9 @@
-import glob from "glob";
+import { globSync } from "glob";
 import { test, expect } from "@playwright/test";
 
 const RENDER_DELAY = 200;
 
-const files = glob.sync("../../build/[^_]*/*.html", { cwd: __dirname });
+const files = globSync("../../build/[^_]*/*.html", { cwd: __dirname });
 
 for (const url of files.map(filepathToUrl)) {
   test(url, async ({ page }) => {

@@ -230,8 +230,8 @@ function render(state) {
     state.currentKey === "Kinder"
       ? kinderAcc
       : state.currentKey === "Random"
-      ? randomAcc
-      : sszvis.identity;
+        ? randomAcc
+        : sszvis.identity;
 
   var layerBounds = [
     [8.431443 + geoOffset, 47.448978 + geoOffset],

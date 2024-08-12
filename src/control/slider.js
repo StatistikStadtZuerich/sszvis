@@ -188,15 +188,15 @@ export default function () {
           return fn.stringEqual(d, scaleDomain[0])
             ? "start"
             : fn.stringEqual(d, scaleDomain[1])
-            ? "end"
-            : "middle";
+              ? "end"
+              : "middle";
         })
         .attr("dx", function (d) {
           return fn.stringEqual(d, scaleDomain[0])
             ? -(handleWidth / 2)
             : fn.stringEqual(d, scaleDomain[1])
-            ? handleWidth / 2
-            : 0;
+              ? handleWidth / 2
+              : 0;
         });
 
       handleEntering

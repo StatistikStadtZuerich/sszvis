@@ -78,7 +78,6 @@ describe("Color scales", () => {
   describe("Greyscale color scales", () => {
     test("should a single color", () => {
       expect(scaleGry().range()).toHaveLength(1);
-      console.log(scaleGry().range());
       expectIsColor(scaleGry().range()[0]);
     });
     test("should a single color", () => {
