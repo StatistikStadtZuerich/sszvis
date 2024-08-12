@@ -1,6 +1,9 @@
-import { createDraft, finishDraft } from "immer";
+import { createDraft, finishDraft, setAutoFreeze } from "immer";
 import { fallbackRender } from "./fallback";
 import { viewport } from "./viewport/resize";
+
+// d3 mutates state in many places, which is why we have to turn this off.
+setAutoFreeze(false);
 
 /**
  * Application loop
