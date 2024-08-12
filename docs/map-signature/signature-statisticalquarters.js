@@ -35,7 +35,6 @@ function parseRow(d) {
 }
 
 var datumAcc = sszvis.prop("datum");
-var idAcc = sszvis.propOr("id", null);
 var valueAcc = sszvis.propOr("value", 0);
 var zoneNameAcc = sszvis.propOr("zonename", "--");
 

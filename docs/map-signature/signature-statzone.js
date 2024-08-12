@@ -26,10 +26,10 @@ var queryProps = sszvis
     },
   })
   .prop("control", {
-    palm: function (width) {
+    palm: function () {
       return sszvis.selectMenu;
     },
-    _: function (width) {
+    _: function () {
       return sszvis.buttonGroup;
     },
   })
@@ -50,7 +50,6 @@ function parseRow(d) {
 }
 
 var datumAcc = sszvis.prop("datum");
-var idAcc = sszvis.propOr("id", null);
 var yearAcc = sszvis.prop("year");
 var genderAcc = sszvis.prop("gender");
 var birthsAcc = sszvis.propOr("births", 0);

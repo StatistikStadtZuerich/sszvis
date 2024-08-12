@@ -112,8 +112,6 @@ function render(state) {
 
   var chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.data);
 
-  var htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
-
   var tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
 
   // Components

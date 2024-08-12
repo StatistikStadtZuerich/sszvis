@@ -1,3 +1,4 @@
+/* global d3 */
 (function (global) {
   "use strict";
 
