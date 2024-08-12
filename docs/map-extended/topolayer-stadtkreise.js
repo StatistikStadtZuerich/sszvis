@@ -67,7 +67,7 @@ var actions = {
 // Initialization
 // -----------------------------------------------
 
-d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------

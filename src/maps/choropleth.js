@@ -1,4 +1,4 @@
-import { dispatch, select } from "d3";
+import { select, dispatch } from "d3";
 import { component } from "../d3-component.js";
 import {
   GEO_KEY_DEFAULT,

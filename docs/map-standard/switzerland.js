@@ -65,7 +65,7 @@ var actions = {
 // -----------------------------------------------
 d3.csv("data/M_swiss_fake.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-d3.json("../topo/switzerland.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/switzerland.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------

@@ -1,3 +1,63 @@
+## 3.0.0 (Aug 2024)
+
+- Upgraded d3 v5 to v7
+
+The `sszvis` library now is dependent on `d3` version 7 (see [d3 v6 migration guide](https://observablehq.com/@d3/d3v6-migration-guide)). This means you will need to upgrade any scripts that import v5 to v7.
+
+```code
+<script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+```
+
+The upgrade to d3 v7 comes with a few breaking changes. The most notable one is the usage of newer ES6 data structures like `Map` and `Set` instead of the old `d3.map` and `d3.value` based data structures. This change was necessary to improve performance and to align with modern JavaScript practices.
+
+```code
+// This d3 v5 code snippet should be updated to ...
+state.maxStacked = d3.max(d3.values(dateValues), function (s) {...});
+
+// ... this d3 v7 code snippet
+state.maxStacked = d3.max(Object.values(dateValues), function (s) {...});
+```
+
+The other major change is that to mouse event handlers which are now the first argument in the callback for any event listeners. This change causes any existing code that uses interactions (hover, mouse clicks etc) to break.
+
+```code
+// This d3 v5 code snippet should be updated to ...
+toggleMultiples: function (g) {
+  state.isMultiples = g === "Separiert";
+  render(state);
+},
+
+// ... this d3 v7 code snippet
+toggleMultiples: function (e, g) {
+  state.isMultiples = g === "Separiert";
+  render(state);
+},
+```
+
+The last change is to the voronoi functionality which has now been updated to use Delaunay. The only noticeable change now is how boundaries are set, now accepting a single array of numbers, rather then two points:
+
+```code
+// This d3 v5 code snippet should be updated to ...
+var mouseOverlay = sszvis
+    .voronoi()
+    ...
+    .bounds([
+      [-bounds.padding.left, -bounds.padding.top],
+      [bounds.innerWidth + bounds.padding.right, bounds.innerHeight + 20],
+    ]);
+
+// ... this d3 v7 code snippet
+var mouseOverlay = sszvis
+    .voronoi()
+    ...
+    .bounds([
+      -bounds.padding.left,
+      -bounds.padding.top,
+      bounds.innerWidth + bounds.padding.right,
+      bounds.innerHeight + 20,
+    ]);
+```
+
 ## 2.3.1 (Dec 2022)
 
 - Changed the color palette to match redesign color scheme

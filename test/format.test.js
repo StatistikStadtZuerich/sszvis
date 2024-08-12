@@ -1,4 +1,5 @@
 import { formatNumber, formatPreciseNumber } from "../src/format.js";
+import { expect, test, describe } from "vitest";
 
 const EN_DASH = "–";
 const THINSP = " ";
@@ -14,7 +15,7 @@ describe("formatNumber", () => {
     [1, "1"],
     [0, "0"],
     [-0, "0"],
-    [-1, "-1"],
+    [-1, "−1"],
   ]);
 
   testMatrix("Range 0–1", formatNumber, [

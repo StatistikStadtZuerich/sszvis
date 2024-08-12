@@ -29,7 +29,7 @@
  * @return {sszvis.component}
  */
 
-import { select, stack as d3Stack, max, stackOrderNone, stackOrderReverse } from "d3";
+import { select, stack as d3Stack, stackOrderNone, stackOrderReverse, max } from "d3";
 
 import * as fn from "../fn.js";
 import { cascade } from "../cascade.js";

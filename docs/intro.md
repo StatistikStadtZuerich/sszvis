@@ -11,10 +11,10 @@ npm install sszvis d3 --save
 Or embed it directly on any website:
 
 ```code|lang-html
-<link href="https://unpkg.com/sszvis@2/build/sszvis.css" rel="stylesheet" />
+<link href="https://unpkg.com/sszvis@3/build/sszvis.css" rel="stylesheet" />
 
-<script src="https://unpkg.com/d3@5/dist/d3.min.js"></script>
-<script src="https://unpkg.com/sszvis@2/build/sszvis.min.js"></script>
+<script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+<script src="https://unpkg.com/sszvis@3/build/sszvis.min.js"></script>
 ```
 
 ##### TopoJSON (optional)

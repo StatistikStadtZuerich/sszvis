@@ -74,7 +74,7 @@ var actions = {
   },
 
   // manage which datum is selected. These data are highlighted by the map.
-  selectHovered: function (d) {
+  selectHovered: function (e, d) {
     state.selection = [d.datum];
     render(state);
   },
@@ -93,7 +93,9 @@ var actions = {
 // -----------------------------------------------
 d3.csv("data/agglomeration_2012.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-d3.json("../topo/agglomeration-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/agglomeration-zurich.json")
+  .then(actions.prepareMapData)
+  .catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------

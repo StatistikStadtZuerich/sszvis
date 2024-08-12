@@ -53,7 +53,7 @@ var actions = {
     render(state);
   },
 
-  showTooltip: function (category) {
+  showTooltip: function (e, category) {
     state.selection = state.data.filter(function (d) {
       return xAcc(d) === category;
     });
@@ -76,7 +76,7 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
 
 // Render
 // -----------------------------------------------
-function render(state) {
+function render() {
   var yMax = d3.max(state.data, yAcc);
 
   var props = queryProps(sszvis.measureDimensions(config.id));

@@ -87,7 +87,7 @@ d3.csv("data/fake_statistical_quarters.csv", parseRow)
   .then(actions.prepareData)
   .catch(sszvis.loadError);
 
-d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------

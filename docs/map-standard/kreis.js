@@ -69,7 +69,7 @@ var actions = {
   },
 
   // manage which datum is selected. These data are highlighted by the map.
-  selectHovered: function (d) {
+  selectHovered: function (e, d) {
     if (state.selection[0] === d.datum) {
       return;
     }
@@ -94,7 +94,7 @@ var actions = {
 // -----------------------------------------------
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------

@@ -207,8 +207,7 @@ Sequential scales can be reversed using the `scale.reverse()` instance method. T
 
 ## Divergent
 
-Divergent scales are used to compare data that has two extremes. These scales are
-designed to have the same brightness for the same input value.
+Divergent scales are used to compare data that has two extremes. These scales are designed to have the same brightness for the same input value.
 
 #### `sszvis.scaleDivVal()`
 

@@ -220,7 +220,7 @@ var actions = {
 // -----------------------------------------------
 d3.csv("data/CML_quartier_years.csv", parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-d3.json("../topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
+d3.json("../static/topo/stadt-zurich.json").then(actions.prepareMapData).catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------
