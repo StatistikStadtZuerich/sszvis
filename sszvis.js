@@ -467,7 +467,7 @@
    * @return {*}     the last value in the array
    */
   const last = function (arr) {
-    return arr.at(-1);
+    return arr[arr.length - 1];
   };
 
   /**
@@ -3478,7 +3478,7 @@
   function extent(domain) {
     // borrowed from d3 source - svg.axis
     const start = domain[0],
-      stop = domain.at(-1);
+      stop = domain[domain.length - 1];
     return start < stop ? [start, stop] : [stop, start];
   }
 
@@ -3912,7 +3912,7 @@
       if (domain[i] !== undefined) values.push(domain[i]);
     }
     // include the last value
-    if (domain.at(-1) !== undefined) values.push(domain.at(-1));
+    if (domain[domain.length - 1] !== "undefined") values.push(domain[domain.length - 1]);
     this.tickValues(values);
     return count;
   };
