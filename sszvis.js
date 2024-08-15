@@ -215,7 +215,7 @@
    * @return {Boolean}     true if the value is defined, false if the value is undefined
    */
   const defined = function (val) {
-    return val !== undefined && val != null && !Number.isNaN(val);
+    return val !== undefined && val != null && !isNaN(val);
   };
 
   /**
@@ -442,7 +442,7 @@
    * @return {Boolean}    Whether the value is a number
    */
   const isNumber = function (val) {
-    return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
+    return Object.prototype.toString.call(val) === "[object Number]" && !isNaN(val);
   };
 
   /**
@@ -1472,7 +1472,7 @@
   const formatNumber = function (d) {
     let p;
     const dAbs = Math.abs(d);
-    if (d == null || Number.isNaN(d)) {
+    if (d == null || isNaN(d)) {
       return "–"; // This is an en-dash
     }
 
@@ -1792,7 +1792,7 @@
         const x = crispX(d);
         const y = crispY(d);
         const dx = props.flip(d) ? -10 : 10;
-        const dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
+        const dy = y < props.top + y ? 2 * y : y > props.bottom - y ? 0 : 5;
         return translateString(x + dx, y + dy);
       }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
       if (props.reduceOverlap) {
@@ -3525,7 +3525,7 @@
       const textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
 
       //Clean the data in case <text> does not define those values
-      if (Number.isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
+      if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
 
       //Offset the text position based on the text-anchor
       const wrapTickLabels = d3.select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
@@ -4951,7 +4951,7 @@
 
   // replaces NaN values with 0
   function handleMissingVal(v) {
-    return Number.isNaN(v) ? 0 : v;
+    return isNaN(v) ? 0 : v;
   }
   function bar () {
     return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
@@ -5164,7 +5164,7 @@
 
       // Layouts
 
-      const line = d3.line().defined(props.defined === undefined ? compose(not(Number.isNaN), props.y) : props.defined).x(props.x).y(props.y);
+      const line = d3.line().defined(props.defined === undefined ? compose(not(isNaN), props.y) : props.defined).x(props.x).y(props.y);
 
       // Rendering
 
@@ -5217,11 +5217,11 @@
         // value.a0 and value.a1 are the current values in the transition (either the initial value, some intermediate value, or the final angle value).
         value._a0 = angle;
         // These a0 and a1 values may be overwritten later if there is already data bound at this data index. (see the .each function further down).
-        if (value.a0 == undefined || Number.isNaN(value.a0)) value.a0 = angle;
+        if (value.a0 == undefined || isNaN(value.a0)) value.a0 = angle;
         angle += props.angle(value);
         value._a1 = angle;
         // data values which don't already have angles set start out at the complete value.
-        if (value.a1 == undefined || Number.isNaN(value.a1)) value.a1 = angle;
+        if (value.a1 == undefined || isNaN(value.a1)) value.a1 = angle;
       }
       const arcGen = d3.arc().innerRadius(4).outerRadius(props.radius).startAngle(d => d.a0).endAngle(d => d.a1);
       let segments = selection.selectAll(".sszvis-path").each((d, i) => {
@@ -5558,7 +5558,7 @@
       const selection = d3.select(this);
       const props = selection.props();
       const defaultDefined = function () {
-        return compose(not(Number.isNaN), props.y0) && compose(not(Number.isNaN), props.y1);
+        return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
       };
       const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
       let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
@@ -5607,7 +5607,7 @@
       //sszsch why reverse?
       data = [...data].reverse();
       const defaultDefined = function () {
-        return compose(not(Number.isNaN), props.y0) && compose(not(Number.isNaN), props.y1);
+        return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
       };
       const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
       let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
@@ -6071,7 +6071,7 @@
         const x = compose(halfPixel, props.x)(d);
         const y = compose(halfPixel, props.y)(d);
         const dx = props.flip(d) ? -10 : 10;
-        const dy = y < props.top + dy ? 2 * dy : y > props.bottom - dy ? 0 : 5;
+        const dy = y < props.top + y ? 2 * y : y > props.bottom - y ? 0 : 5;
         return translateString(x + dx, y + dy);
       }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
     });

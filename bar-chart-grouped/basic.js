@@ -118,7 +118,7 @@ function render(state) {
 
   const yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
 
-  const yPosScale = (v) => (Number.isNaN(v) ? yScale(0) : yScale(Math.max(v, 0)));
+  const yPosScale = (v) => (isNaN(v) ? yScale(0) : yScale(Math.max(v, 0)));
 
   const hScale = (v) =>
     // the size of the bar is distance from the y-position of the value to the y-position of 0
@@ -140,7 +140,7 @@ function render(state) {
     .y(sszvis.compose(yPosScale, yAcc))
     .height(sszvis.compose(hScale, yAcc))
     .fill(sszvis.compose(cScale, cAcc))
-    .defined(sszvis.compose(sszvis.not(Number.isNaN), yAcc));
+    .defined(sszvis.compose(sszvis.not(isNaN), yAcc));
 
   const xAxis = sszvis.axisX
     .ordinal()
@@ -172,7 +172,7 @@ function render(state) {
       // generates a row from each data element
       d.map((item) => {
         const v = yAcc(item);
-        return [cAcc(item), Number.isNaN(v) ? "–" : v];
+        return [cAcc(item), isNaN(v) ? "–" : v];
       })
     )
     .visible((d) => state.selection.includes(d));

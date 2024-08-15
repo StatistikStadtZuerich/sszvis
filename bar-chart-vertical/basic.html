@@ -187,9 +187,7 @@
             .modularTextHTML()
             .bold((d) => {
               const yValue = yAcc(d);
-              return Number.isNaN(yValue)
-                ? "keine"
-                : sszvis.formatNumber(yValue);
+              return isNaN(yValue) ? "keine" : sszvis.formatNumber(yValue);
             })
             .plain("Beschäftigte");
 
@@ -247,8 +245,7 @@
         }
 
         function nanFallback(fallbackyValue) {
-          return (d) =>
-            d == undefined || Number.isNaN(d) ? fallbackyValue : d;
+          return (d) => (d == undefined || isNaN(d) ? fallbackyValue : d);
         }
       })(d3, sszvis, EXTERNAL_CONFIG);
     </script>
