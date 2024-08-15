@@ -1,3 +1,8 @@
+## 3.0.3 (2024-08-15)
+
+- correctly defined values using isNaN
+- fix dy calculation in rulers
+
 ## 3.0.0 (Aug 2024)
 
 - Upgraded d3 v5 to v7 (**BREAKING CHANGE**)
