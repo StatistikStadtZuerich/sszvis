@@ -155,7 +155,7 @@
             .modularTextHTML()
             .bold(
               sszvis.compose(
-                (d) => (isNaN(d) ? "k. A." : sszvis.formatNumber(d)),
+                (d) => (Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d)),
                 xAcc,
               ),
             );

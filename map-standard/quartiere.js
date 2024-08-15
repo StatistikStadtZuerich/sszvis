@@ -123,7 +123,7 @@ function render(state) {
     .highlightStroke((d) => {
       // checks for undefined values and makes those white
       const v = vAcc(d);
-      return isNaN(v) ? "white" : sszvis.muchDarker(colorScale(vAcc(d)));
+      return Number.isNaN(v) ? "white" : sszvis.muchDarker(colorScale(vAcc(d)));
     })
     .width(bounds.innerWidth)
     .height(bounds.innerHeight)
@@ -131,7 +131,7 @@ function render(state) {
       (d) =>
         // some of the values are empty in the .csv file. When parsed as a number,
         // undefined or empty string values become NaN
-        !isNaN(vAcc(d))
+        !Number.isNaN(vAcc(d))
     )
     .fill(sszvis.compose(colorScale, vAcc));
 
@@ -143,12 +143,12 @@ function render(state) {
     .modularTextHTML()
     .plain(
       sszvis.compose(
-        (v) => (isNaN(v) ? "keine Daten" : sszvis.formatFractionPercent(v)),
+        (v) => (Number.isNaN(v) ? "keine Daten" : sszvis.formatFractionPercent(v)),
         vAcc,
         mDatumAcc
       )
     )
-    .plain(sszvis.compose((v) => (isNaN(v) ? null : props.tooltipUnit), vAcc, mDatumAcc));
+    .plain(sszvis.compose((v) => (Number.isNaN(v) ? null : props.tooltipUnit), vAcc, mDatumAcc));
 
   const tooltip = sszvis
     .tooltip()

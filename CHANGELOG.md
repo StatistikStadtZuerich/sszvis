@@ -1,10 +1,3 @@
-## 3.0.3 (2024-08-15)
-
-### Bug Fixes
-
-- 🐛 fix dy calculation of ruler (ee8fea2)
-- 🐛 fix ruler text alignment (b1b3b3b)
-
 ## 3.0.0 (Aug 2024)
 
 - Upgraded d3 v5 to v7 (**BREAKING CHANGE**)

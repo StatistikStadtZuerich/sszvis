@@ -131,7 +131,7 @@ function render(state) {
 
   const tooltipHeader = sszvis
     .modularTextHTML()
-    .bold(sszvis.compose((d) => (isNaN(d) ? "k. A." : sszvis.formatNumber(d)), xAcc));
+    .bold(sszvis.compose((d) => (Number.isNaN(d) ? "k. A." : sszvis.formatNumber(d)), xAcc));
 
   const tooltip = sszvis
     .tooltip()
