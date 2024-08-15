@@ -50,7 +50,7 @@ import { component } from "../d3-component.js";
 
 // replaces NaN values with 0
 function handleMissingVal(v) {
-  return Number.isNaN(v) ? 0 : v;
+  return isNaN(v) ? 0 : v;
 }
 
 export default function () {

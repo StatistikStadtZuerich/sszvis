@@ -62,7 +62,7 @@ export default function () {
 
       const line = d3Line()
         .defined(
-          props.defined === undefined ? fn.compose(fn.not(Number.isNaN), props.y) : props.defined
+          props.defined === undefined ? fn.compose(fn.not(isNaN), props.y) : props.defined
         )
         .x(props.x)
         .y(props.y);

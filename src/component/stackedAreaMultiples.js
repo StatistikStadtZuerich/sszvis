@@ -55,7 +55,7 @@ export default function () {
 
       const defaultDefined = function () {
         return (
-          fn.compose(fn.not(Number.isNaN), props.y0) && fn.compose(fn.not(Number.isNaN), props.y1)
+          fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1)
         );
       };
 

@@ -120,7 +120,7 @@ export const formatNumber = function (d) {
   let p;
   const dAbs = Math.abs(d);
 
-  if (d == null || Number.isNaN(d)) {
+  if (d == null || isNaN(d)) {
     return "–"; // This is an en-dash
   }
 

@@ -49,11 +49,11 @@ export default function () {
         // value.a0 and value.a1 are the current values in the transition (either the initial value, some intermediate value, or the final angle value).
         value._a0 = angle;
         // These a0 and a1 values may be overwritten later if there is already data bound at this data index. (see the .each function further down).
-        if (value.a0 == undefined || Number.isNaN(value.a0)) value.a0 = angle;
+        if (value.a0 == undefined || isNaN(value.a0)) value.a0 = angle;
         angle += props.angle(value);
         value._a1 = angle;
         // data values which don't already have angles set start out at the complete value.
-        if (value.a1 == undefined || Number.isNaN(value.a1)) value.a1 = angle;
+        if (value.a1 == undefined || isNaN(value.a1)) value.a1 = angle;
       }
 
       const arcGen = arc()

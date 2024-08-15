@@ -52,9 +52,7 @@ export default function () {
       const props = selection.props();
 
       const defaultDefined = function () {
-        return (
-          fn.compose(fn.not(Number.isNaN), props.y0) && fn.compose(fn.not(Number.isNaN), props.y1)
-        );
+        return fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1);
       };
 
       const areaGen = area()
