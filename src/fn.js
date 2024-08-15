@@ -417,7 +417,7 @@ export const isObject = function (val) {
  * @return {*}     the last value in the array
  */
 export const last = function (arr) {
-  return arr.at(-1);
+  return arr[arr.length - 1];
 };
 
 /**

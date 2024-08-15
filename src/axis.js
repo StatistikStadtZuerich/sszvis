@@ -454,7 +454,7 @@ const setOrdinalTicks = function (count) {
     if (domain[i] !== undefined) values.push(domain[i]);
   }
   // include the last value
-  if (domain.at(-1) !== undefined) values.push(domain.at(-1));
+  if (domain[domain.length - 1] !== "undefined") values.push(domain[domain.length - 1]);
 
   this.tickValues(values);
 

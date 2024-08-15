@@ -44,6 +44,7 @@ export default [
       "unicorn/no-anonymous-default-export": "off",
       "unicorn/no-this-assignment": "off",
       "unicorn/prefer-top-level-await": "off",
+      "unicorn/prefer-at": "off",
       "sonarjs/no-duplicate-string": "off",
       "prefer-arrow-callback": "warn",
       "arrow-body-style": ["warn", "as-needed"],
