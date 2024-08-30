@@ -59,11 +59,11 @@ export default function () {
         .enter()
         .append("select")
         .classed("sszvis-control-select__element", true)
-        .on("change", function () {
+        .on("change", function (e) {
           // We store the index in the select's value instead of the datum
           // because an option's value can only hold strings.
           const i = select(this).property("value");
-          props.change(props.values[i]);
+          props.change(e, props.values[i]);
           // Prevent highlights on the select element after users have selected
           // an option by moving away from it.
           setTimeout(() => {
