@@ -110,28 +110,17 @@ export default function () {
           const doc = select(document);
           const win = select(window);
 
-          const drag = function () {
-            const xy = pointer(e);
-            const x = scaleInvert(props.xScale, xy[0]);
-            const y = scaleInvert(props.yScale, xy[1]);
-            e.preventDefault();
-            event.apply("drag", this, [x, y]);
-          };
-
           const startDragging = function () {
             target.__dragging__ = true;
-            drag();
           };
 
           const stopDragging = function () {
             target.__dragging__ = false;
-            win.on("mouseup.sszvis-behavior-move", null);
             win.on("mousemove.sszvis-behavior-move", null);
             doc.on("mouseout.sszvis-behavior-move", null);
             event.apply("end", this, arguments);
           };
 
-          win.on("mousemove.sszvis-behavior-move", drag);
           win.on("mouseup.sszvis-behavior-move", stopDragging);
           doc.on("mouseout.sszvis-behavior-move", () => {
             const from = e.relatedTarget || e.toElement;
@@ -148,12 +137,14 @@ export default function () {
           const x = scaleInvert(props.xScale, xy[0]);
           const y = scaleInvert(props.yScale, xy[1]);
 
-          if (!target.__dragging__) {
-            event.apply("move", this, [x, y]);
+          if (target.__dragging__) {
+            event.apply("drag", this, [e, x, y]);
+          } else {
+            event.apply("move", this, [e, x, y]);
           }
         })
-        .on("mouseout", function () {
-          event.apply("end", this, []);
+        .on("mouseout", function (e) {
+          event.apply("end", this, [e]);
         })
         .on("touchstart", function (e) {
           const xy = fn.first(pointer(e));
@@ -179,9 +170,9 @@ export default function () {
           // pass fireOnPanOnly = true, which flips this switch and relies on
           // cancelScrolling to determine whether to fire the events.
           if (!props.fireOnPanOnly() || cancelScrolling) {
-            event.apply("start", this, [x, y]);
-            event.apply("drag", this, [x, y]);
-            event.apply("move", this, [x, y]);
+            event.apply("start", this, [e, x, y]);
+            event.apply("drag", this, [e, x, y]);
+            event.apply("move", this, [e, x, y]);
 
             const pan = function () {
               const panXY = fn.first(pointer(e));
@@ -196,15 +187,15 @@ export default function () {
 
               // See comment above about the same if condition.
               if (!props.fireOnPanOnly() || panCancelScrolling) {
-                event.apply("drag", this, [panX, panY]);
-                event.apply("move", this, [panX, panY]);
+                event.apply("drag", this, [e, panX, panY]);
+                event.apply("move", this, [e, panX, panY]);
               } else {
-                event.apply("end", this, []);
+                event.apply("end", this, [e]);
               }
             };
 
             const end = function () {
-              event.apply("end", this, []);
+              event.apply("end", this, [e]);
               select(this).on("touchmove", null).on("touchend", null);
             };
 
