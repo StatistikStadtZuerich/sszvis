@@ -1,4 +1,4 @@
-/*! sszvis v3.0.3, Copyright 2014-present Statistik Stadt Zürich */
+/*! sszvis v3.0.4, Copyright 2014-present Statistik Stadt Zürich */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
   typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
@@ -4078,25 +4078,15 @@
         const target = this;
         const doc = d3.select(document);
         const win = d3.select(window);
-        const drag = function () {
-          const xy = d3.pointer(e);
-          const x = scaleInvert(props.xScale, xy[0]);
-          const y = scaleInvert(props.yScale, xy[1]);
-          e.preventDefault();
-          event.apply("drag", this, [x, y]);
-        };
         const startDragging = function () {
           target.__dragging__ = true;
-          drag();
         };
         const stopDragging = function () {
           target.__dragging__ = false;
-          win.on("mouseup.sszvis-behavior-move", null);
           win.on("mousemove.sszvis-behavior-move", null);
           doc.on("mouseout.sszvis-behavior-move", null);
           event.apply("end", this, arguments);
         };
-        win.on("mousemove.sszvis-behavior-move", drag);
         win.on("mouseup.sszvis-behavior-move", stopDragging);
         doc.on("mouseout.sszvis-behavior-move", () => {
           const from = e.relatedTarget || e.toElement;
@@ -4110,11 +4100,13 @@
         const xy = d3.pointer(e);
         const x = scaleInvert(props.xScale, xy[0]);
         const y = scaleInvert(props.yScale, xy[1]);
-        if (!target.__dragging__) {
-          event.apply("move", this, [x, y]);
+        if (target.__dragging__) {
+          event.apply("drag", this, [e, x, y]);
+        } else {
+          event.apply("move", this, [e, x, y]);
         }
-      }).on("mouseout", function () {
-        event.apply("end", this, []);
+      }).on("mouseout", function (e) {
+        event.apply("end", this, [e]);
       }).on("touchstart", function (e) {
         const xy = first(d3.pointer(e));
         const x = scaleInvert(props.xScale, xy[0]);
@@ -4137,9 +4129,9 @@
         // pass fireOnPanOnly = true, which flips this switch and relies on
         // cancelScrolling to determine whether to fire the events.
         if (!props.fireOnPanOnly() || cancelScrolling) {
-          event.apply("start", this, [x, y]);
-          event.apply("drag", this, [x, y]);
-          event.apply("move", this, [x, y]);
+          event.apply("start", this, [e, x, y]);
+          event.apply("drag", this, [e, x, y]);
+          event.apply("move", this, [e, x, y]);
           const pan = function () {
             const panXY = first(d3.pointer(e));
             const panX = scaleInvert(props.xScale, panXY[0]);
@@ -4151,14 +4143,14 @@
 
             // See comment above about the same if condition.
             if (!props.fireOnPanOnly() || panCancelScrolling) {
-              event.apply("drag", this, [panX, panY]);
-              event.apply("move", this, [panX, panY]);
+              event.apply("drag", this, [e, panX, panY]);
+              event.apply("move", this, [e, panX, panY]);
             } else {
-              event.apply("end", this, []);
+              event.apply("end", this, [e]);
             }
           };
           const end = function () {
-            event.apply("end", this, []);
+            event.apply("end", this, [e]);
             d3.select(this).on("touchmove", null).on("touchend", null);
           };
           d3.select(this).on("touchmove", pan).on("touchend", end);
@@ -4468,24 +4460,24 @@
         const cbox = this.parentNode.getBoundingClientRect();
         const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
-          event.apply("over", this, [data[datumIdx]]);
+          event.apply("over", this, [e, data[datumIdx]]);
         }
       }).on("mousemove", function (e) {
         const cbox = this.parentNode.getBoundingClientRect();
         const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
-          event.apply("over", this, [data[datumIdx]]);
+          event.apply("over", this, [e, data[datumIdx]]);
         } else {
-          event.apply("out", this, []);
+          event.apply("out", this, [e]);
         }
-      }).on("mouseout", function () {
-        event.apply("out", this, []);
+      }).on("mouseout", function (e) {
+        event.apply("out", this, [e]);
       }).on("touchstart", function (e) {
         const cbox = this.parentNode.getBoundingClientRect();
         const datumIdx = delaunay.find(e.clientX, e.clientY);
         if (eventNearPoint(firstTouch(e), [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           e.preventDefault();
-          event.apply("over", this, [data[datumIdx]]);
+          event.apply("over", this, [e, data[datumIdx]]);
 
           // Attach these handlers only if the initial touch is within the max distance from the voronoi center
           // This prevents the situation where a touch is outside that distance, and causes scrolling, but then the
@@ -4496,7 +4488,7 @@
             const element = elementFromEvent(touchEvent);
             const panDatum = datumFromPannableElement(element);
             if (panDatum === null) {
-              event.apply("out", this, []);
+              event.apply("out", this, [e]);
             } else {
               const panCbox = element.parentNode.getBoundingClientRect();
               if (eventNearPoint(touchEvent, [panCbox.left + props.x(panDatum.data), panCbox.top + props.y(panDatum.data)])) {
@@ -4507,14 +4499,14 @@
                 if (e.cancelable) {
                   e.preventDefault();
                 }
-                event.apply("over", this, [panDatum.data]);
+                event.apply("over", this, [e, panDatum.data]);
               } else {
-                event.apply("out", this, []);
+                event.apply("out", this, [e]);
               }
             }
           };
           const end = function () {
-            event.apply("out", this, []);
+            event.apply("out", this, [e]);
             d3.select(this).on("touchmove", null).on("touchend", null);
           };
           d3.select(this).on("touchmove", pan).on("touchend", end);
@@ -6108,11 +6100,11 @@
       wrapperEl.style("width", props.width + "px");
       const metricsEl = wrapperEl.selectDiv("selectMetrics").classed("sszvis-control-select__metrics", true);
       let selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]);
-      const newSelectEl = selectEl.enter().append("select").classed("sszvis-control-select__element", true).on("change", function () {
+      const newSelectEl = selectEl.enter().append("select").classed("sszvis-control-select__element", true).on("change", function (e) {
         // We store the index in the select's value instead of the datum
         // because an option's value can only hold strings.
         const i = d3.select(this).property("value");
-        props.change(props.values[i]);
+        props.change(e, props.values[i]);
         // Prevent highlights on the select element after users have selected
         // an option by moving away from it.
         setTimeout(() => {

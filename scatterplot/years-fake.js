@@ -46,10 +46,10 @@ const actions = {
     state.cities = sszvis.set(state.data, cAcc);
     state.quarters = sszvis.set(state.data, qAcc);
 
-    actions.setQuarter(d3.max(state.quarters));
+    actions.setQuarter(null, d3.max(state.quarters));
   },
 
-  setQuarter(inputQ) {
+  setQuarter(e, inputQ) {
     state.activeQuarter = closestDatum(state.quarters, sszvis.identity, inputQ);
 
     render(state);

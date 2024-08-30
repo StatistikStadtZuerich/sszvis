@@ -58,7 +58,7 @@ const actions = {
     actions.setYear(null, d3.max(state.years));
   },
 
-  setYear(inputYear) {
+  setYear(e, inputYear) {
     state.activeYear = closestDatum(state.years, sszvis.identity, inputYear);
 
     state.currentLinesData = state.linesData.map((line) =>
