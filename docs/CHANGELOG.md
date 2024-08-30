@@ -1,3 +1,8 @@
+## 3.0.4 (2024-08-30)
+
+- fix custom event handling in `sszvis.behavior.move` to match d3 v7
+- fix selectMenu to pass same `onChange` event as buttonGroup
+
 ## 3.0.3 (2024-08-15)
 
 - correctly defined values using isNaN
