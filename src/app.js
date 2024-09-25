@@ -58,7 +58,7 @@ export const app = ({ init, render, actions = {}, fallback }) => {
   invariant(isFunction(render), 'A "render" function must be provided.');
 
   const actionDispatchers = Object.keys(actions).reduce((acc, key) => {
-    acc[key] = (args) => {
+    acc[key] = (...args) => {
       dispatch(key, args);
     };
     return acc;
@@ -78,7 +78,7 @@ export const app = ({ init, render, actions = {}, fallback }) => {
   function dispatch(action, props) {
     invariant(actions[action] != null, `Action "${action}" is not defined, add it to "actions".`);
     const draft = createDraft(state);
-    const effect = actions[action](draft, props);
+    const effect = actions[action](draft, ...props);
     state = finishDraft(draft);
     scheduleUpdate(effect);
   }

@@ -57,7 +57,7 @@ sszvis.app({
       };
     },
 
-    changeDate(state, inputDate) {
+    changeDate(state, e, inputDate) {
       // Find the date of the datum closest to the input date
       const closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
       // Find all data that have the same date as the closest datum
