@@ -73,7 +73,7 @@ const actions = {
     render(state);
   },
 
-  onNodeOver(d) {
+  onNodeOver(e, d) {
     state.hoveredNode = d;
     state.linkSourceLabels = d.linksTo;
     state.linkTargetLabels = d.linksFrom;
@@ -93,7 +93,7 @@ const actions = {
     render(state);
   },
 
-  onLinkOver(d) {
+  onLinkOver(e, d) {
     state.hoveredLink = d;
     state.hoveredNode = null;
 

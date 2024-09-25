@@ -172,7 +172,7 @@
             render(state);
           },
 
-          showTooltip(datum) {
+          showTooltip(e, datum) {
             state.hoveredDatum = datum;
             state.selection = state.data.filter(
               (d) => datum.category === d.category,

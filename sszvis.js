@@ -1,4 +1,4 @@
-/*! sszvis v3.0.4, Copyright 2014-present Statistik Stadt Zürich */
+/*! sszvis v3.0.5, Copyright 2014-present Statistik Stadt Zürich */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
   typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
@@ -2984,7 +2984,10 @@
     invariant(isFunction(init), 'An "init" function returning a Promise must be provided.');
     invariant(isFunction(render), 'A "render" function must be provided.');
     const actionDispatchers = Object.keys(actions).reduce((acc, key) => {
-      acc[key] = args => {
+      acc[key] = function () {
+        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
         dispatch(key, args);
       };
       return acc;
@@ -3002,7 +3005,7 @@
     function dispatch(action, props) {
       invariant(actions[action] != null, "Action \"".concat(action, "\" is not defined, add it to \"actions\"."));
       const draft = createDraft(state);
-      const effect = actions[action](draft, props);
+      const effect = actions[action](draft, ...props);
       state = finishDraft(draft);
       scheduleUpdate(effect);
     }
@@ -5161,9 +5164,9 @@
       // Rendering
 
       let path = selection.selectAll(".sszvis-line").data(data, props.key);
+      path.exit().remove();
       const newPath = path.enter().append("path").classed("sszvis-line", true).style("stroke", props.stroke);
       path = path.merge(newPath);
-      path.exit().remove();
       path.order();
       if (props.transition) {
         path = path.transition(defaultTransition());
@@ -7186,7 +7189,6 @@
 
     function main(data) {
       const nested = unwrapNested(d3.rollup(data, first, ...layers));
-      console.log(nested);
       const root = d3.hierarchy({
         isSunburstRoot: true,
         values: nested

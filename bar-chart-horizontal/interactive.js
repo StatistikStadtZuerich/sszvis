@@ -46,7 +46,7 @@ const actions = {
     render(state);
   },
 
-  showTooltip(_event, category) {
+  showTooltip(_event, _x, category) {
     state.selected = state.data.filter((d) => yAcc(d) === category);
     render(state);
   },

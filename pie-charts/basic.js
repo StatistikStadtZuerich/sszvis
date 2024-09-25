@@ -83,7 +83,7 @@ const actions = {
     render(state);
   },
 
-  showTooltip(datum) {
+  showTooltip(e, datum) {
     state.selection = [datum];
     render(state);
   },

@@ -109,7 +109,7 @@ const actions = {
     render(state);
   },
 
-  selectPoint(d) {
+  selectPoint(e, d) {
     state.selection = [d];
 
     render(state);

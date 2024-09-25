@@ -60,7 +60,7 @@ sszvis.app({
   // Actions
   // -----------------------------------------------
   actions: {
-    selectHovered(state, d) {
+    selectHovered(state, e, d) {
       state.selection = [d.datum];
     },
 

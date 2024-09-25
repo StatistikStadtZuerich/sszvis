@@ -45,7 +45,7 @@ const actions = {
     render(state);
   },
 
-  changeDate(selectedDate) {
+  changeDate(e, selectedDate) {
     const selectedYear = Math.round(selectedDate);
     state.selection = state.data.filter((v) => xAcc(v) === selectedYear);
     render(state);

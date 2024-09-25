@@ -120,7 +120,7 @@ const actions = {
     render(state);
   },
 
-  selectBar(x, age) {
+  selectBar(e, x, age) {
     // use the age lookup index to figure out which age range is closest
     // to the mouse
     const nearestAgeRange = findNearestAgeRange(age, state.ageLookupIndex);

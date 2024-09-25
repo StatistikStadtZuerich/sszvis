@@ -41,7 +41,7 @@ const actions = {
     render(state);
   },
 
-  showTooltip(e, category) {
+  showTooltip(e, x, category) {
     state.selected = state.data.filter((d) => cAcc(d) === category);
     render(state);
   },

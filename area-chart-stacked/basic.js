@@ -94,7 +94,7 @@ const actions = {
     render(state);
   },
 
-  changeDate(xValue, yValue) {
+  changeDate(e, xValue, yValue) {
     const closest = findClosest(state.dates, xValue);
     state.highlightDate = closest;
     state.highlightData = state.stackedData.map((stack) => {

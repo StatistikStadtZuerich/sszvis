@@ -146,7 +146,7 @@ const actions = {
     }
   },
 
-  changeYear(inputDate) {
+  changeYear(e, inputDate) {
     // find the closest year to the mouse
     const closestYear = yearAcc(closestDatum(state.data, yearAcc, inputDate));
 
@@ -174,8 +174,8 @@ const actions = {
   },
 
   // called when moving over map entities with the mouse. Highlights certain entities
-  changeMapEntity(d) {
-    state.highlightEntity = d;
+  changeMapEntity(e, d) {
+    state.highlightEntity = d.datum;
 
     actions.setHighlights();
   },
@@ -411,15 +411,9 @@ function render(state) {
   const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-map__area")
-    .on("start", (d) => {
-      actions.changeMapEntity(d.datum);
-    })
-    .on("pan", (d) => {
-      actions.changeMapEntity(d.datum);
-    })
-    .on("end", () => {
-      actions.resetMapEntity();
-    });
+    .on("start", actions.changeMapEntity)
+    .on("pan", actions.changeMapEntity)
+    .on("end", actions.resetMapEntity);
 
   map.call(interactionLayer);
 
