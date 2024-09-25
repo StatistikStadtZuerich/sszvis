@@ -61,15 +61,14 @@ export default function () {
       // Layouts
 
       const line = d3Line()
-        .defined(
-          props.defined === undefined ? fn.compose(fn.not(isNaN), props.y) : props.defined
-        )
+        .defined(props.defined === undefined ? fn.compose(fn.not(isNaN), props.y) : props.defined)
         .x(props.x)
         .y(props.y);
 
       // Rendering
 
       let path = selection.selectAll(".sszvis-line").data(data, props.key);
+      path.exit().remove();
 
       const newPath = path
         .enter()
@@ -78,8 +77,6 @@ export default function () {
         .style("stroke", props.stroke);
 
       path = path.merge(newPath);
-
-      path.exit().remove();
 
       path.order();
 
