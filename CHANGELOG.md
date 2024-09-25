@@ -1,3 +1,8 @@
+## 3.0.5 (2024-09-25)
+
+- fix path removal when merging
+- fix interactions in documentation examples
+
 ## 3.0.4 (2024-08-30)
 
 - fix custom event handling in `sszvis.behavior.move` to match d3 v7
