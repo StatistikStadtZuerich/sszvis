@@ -56,7 +56,6 @@ export const prepareData = function () {
 
   function main(data) {
     const nested = unwrapNested(rollup(data, fn.first, ...layers));
-    console.log(nested);
 
     const root = hierarchy({ isSunburstRoot: true, values: nested }, fn.prop("values"))
       .sort(sortFn)

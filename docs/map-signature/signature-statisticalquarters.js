@@ -61,7 +61,7 @@ const actions = {
     };
     render(state);
   },
-  selectHovered(d) {
+  selectHovered(e, d) {
     state.selection = [d.datum];
     render(state);
   },

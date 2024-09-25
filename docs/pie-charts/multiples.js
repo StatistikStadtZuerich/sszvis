@@ -142,7 +142,7 @@ const actions = {
     render(state);
   },
 
-  showTooltip(datum) {
+  showTooltip(e, datum) {
     state.hoveredDatum = datum;
     state.selection = state.data.filter((d) => datum.category === d.category);
     state.selectedCategories = state.selection.map(cAcc);

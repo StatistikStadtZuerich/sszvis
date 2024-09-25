@@ -65,7 +65,7 @@ const actions = {
     render(state);
   },
 
-  setHighlight(d) {
+  setHighlight(e, d) {
     state.highlightData = [d];
     render(state);
   },
