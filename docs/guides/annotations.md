@@ -299,3 +299,9 @@ A value for the y-value of the upper range flag dot
     "sourceView": ["index.html", "data.csv"]
 }
 ```
+
+## Confidence Area
+
+The area is a shaded area that represents a confidence interval. It is used to show the range of values within which the true value is likely to fall.
+
+### sszvis.annotationConfArea
