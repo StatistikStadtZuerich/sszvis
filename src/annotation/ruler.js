@@ -174,7 +174,7 @@ export const annotationRuler = () =>
       }
     });
 
-export const ruleLabelVerticalSeparate = (cAcc) => (g) => {
+export const rulerLabelVerticalSeparate = (cAcc) => (g) => {
   const THRESHOLD = 2;
   let labelBounds = [];
 
