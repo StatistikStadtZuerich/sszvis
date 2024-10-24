@@ -37,8 +37,8 @@ import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
-export default function () {
-  return component()
+export const annotationRuler = () =>
+  component()
     .prop("top")
     .prop("bottom")
     .prop("x", fn.functor)
@@ -173,4 +173,55 @@ export default function () {
         });
       }
     });
-}
+
+export const rulerLabelVerticalSeparate = (cAcc) => (g) => {
+  const THRESHOLD = 2;
+  let labelBounds = [];
+
+  // Reset vertical shift
+  g.selectAll("text").each(function () {
+    select(this).attr("y", "");
+  });
+
+  // Calculate bounds
+  g.selectAll(".sszvis-ruler__label").each(function (d) {
+    const bounds = this.getBoundingClientRect();
+    labelBounds.push({
+      category: cAcc(d),
+      top: bounds.top,
+      bottom: bounds.bottom,
+      dy: 0,
+    });
+  });
+
+  // Sort by vertical position (only supports labels of same height)
+  labelBounds = labelBounds.sort((a, b) => ascending(a.top, b.top));
+
+  // Calculate overlap and correct position
+  for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < labelBounds.length; j++) {
+      for (let k = j + 1; k < labelBounds.length; k++) {
+        if (j === k) continue;
+        const firstLabel = labelBounds[j];
+        const secondLabel = labelBounds[k];
+        const overlap = firstLabel.bottom - secondLabel.top;
+        if (overlap >= THRESHOLD) {
+          firstLabel.bottom -= overlap / 2;
+          firstLabel.top -= overlap / 2;
+          firstLabel.dy -= overlap / 2;
+          secondLabel.bottom += overlap / 2;
+          secondLabel.top += overlap / 2;
+          secondLabel.dy += overlap / 2;
+        }
+      }
+    }
+  }
+
+  // Shift vertically to remove overlap
+  g.selectAll("text").each(function (d) {
+    const label = fn.find((l) => l.category === cAcc(d), labelBounds);
+    if (label) {
+      select(this).attr("y", label.dy);
+    }
+  });
+};
