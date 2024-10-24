@@ -1,4 +1,4 @@
-## sszvis.nestedBarVertical
+## sszvis.nestedStackedBarsVertical
 
 ### Data structure
 
@@ -10,31 +10,39 @@ Because it uses a d3.stack layout under the hood, this component will assign two
 
 ### Configuration
 
-The nestedBarVertical component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/d3/d3-shape/blob/master/README.md#stacks). The stack is constructed vertically, using the _x_-value of each data element to form groups, and then calculating, for each element, the cumulative _y_-values underneath it in the stack.
+The nestedStackedBarsVertical component is a complex component which is used to create a vertical stacked bar chart with nested groups. This component is a wrapper around the [d3 stack layout](https://github.com/d3/d3-shape/blob/master/README.md#stacks), and it is used to create a stacked bar chart with multiple layers of data. The component is designed to be used in conjunction with other components, such as the axis components, to create a complete chart.
 
-#### `nestedBarVertical.xScale(xScale)`
+#### `nestedStackedBarsVertical.offset(offset)`
 
-Specifies an _x_-scale for the stack layout. This scale is used to position stacks based on the result of the _x_-accessor.
+Specifies an offset function for the x positioning the nested groups.
 
-#### `nestedBarVertical.width(width)`
+#### `nestedStackedBarsVertical.xScale(xScale)`
 
-Specifies a width for the bars in the stack layout. In the vertical orientation, this determines how wide each stack is.
+Specifies an offset function for positioning the nested groups.
 
-#### `nestedBarVertical.yScale(yScale)`
+#### `nestedStackedBarsVertical.yScale(yScale)`
 
-A y-scale. After the stack is computed, the y-scale is used to position the rectangles based on the baseline (y0) and the extent of each rectangle (y).
+A y-scale. After the stack is computed, the y-scale is used to position each stack.
 
-#### `nestedBarVertical.height(height)`
+#### `nestedStackedBarsVertical.fill(fill)`
 
-Specify the height of each rectangle. This value is not used for the vertical orientation. (yScale(yAccessor(d))) is used instead).
+Specify a function or a string to fill the stack rectangles. If a function is provided, it will be called with the data element and should return a color. If a string is provided, all stack rectangles will be filled with that color.
 
-#### `nestedBarVertical.fill([fill])`
+#### `nestedStackedBarsVertical.tooltip(tooltip)`
 
-Specify a fill value for the rectangles (default black).
+A function which returns the content for the tooltip. The function is called with the data element and should return a string.
 
-#### `nestedBarVertical.stroke([stroke])`
+#### `nestedStackedBarsVertical.xAcc(xAcc)`
 
-Specify a stroke value for the stack rectangles (default none).
+A function which returns the x-value for each data element. This value is used to group elements into stacks.
+
+#### `nestedStackedBarsVertical.xLabel(xLabel)`
+
+A function which returns the x-axis label for each data element. This value is used to label the x-axis.
+
+#### `nestedStackedBarsVertical.slant(slant)`
+
+Specifies the slant of the x-axis labels. The default is no slant.
 
 ### Chart
 
@@ -46,7 +54,7 @@ Specify a stroke value for the stack rectangles (default none).
             "source": "bar-chart-vertical-nested/basic.html",
             "template": "template.html"
         },
-        "data.csv": "bar-chart-vertical-nested/data/StVB_7Categories_yearly.csv",
+        "data.csv": "bar-chart-vertical-nested/data/nested.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",

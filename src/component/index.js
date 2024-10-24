@@ -10,3 +10,4 @@ export { default as stackedAreaMultiples } from "./stackedAreaMultiples.js";
 export * from "./stackedBar.js";
 export * from "./stackedPyramid.js";
 export { default as sunburst } from "./sunburst.js";
+export { nestedStackedBarsVertical } from "./nestedStackedBar.js";
