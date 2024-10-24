@@ -160,19 +160,12 @@ export default function () {
       };
       const columnLabelY = -24;
 
-      let columnLabels = barGroup
+      const columnLabels = barGroup
         .selectAll(".sszvis-sankey-column-label")
         // One number for each column
-        .data(data.columnLengths);
-
-      const newColumnLabels = columnLabels
-        .enter()
-        .append("text")
+        .data(data.columnLengths)
+        .join("text")
         .attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
-
-      columnLabels = columnLabels.merge(newColumnLabels);
-
-      columnLabels.exit().remove();
 
       columnLabels
         .attr("transform", (d, i) =>
@@ -180,18 +173,11 @@ export default function () {
         )
         .text((d, i) => props.columnLabel(i));
 
-      let columnLabelTicks = barGroup
+      const columnLabelTicks = barGroup
         .selectAll(".sszvis-sankey-column-label-tick")
-        .data(data.columnLengths);
-
-      const newColumnLabelTicks = columnLabelTicks
-        .enter()
-        .append("line")
+        .data(data.columnLengths)
+        .join("line")
         .attr("class", "sszvis-sankey-column-label-tick");
-
-      columnLabelTicks = columnLabelTicks.merge(newColumnLabelTicks);
-
-      columnLabelTicks.exit().remove();
 
       columnLabelTicks
         .attr("x1", (d, i) => halfPixel(columnLabelX(i)))
@@ -245,12 +231,11 @@ export default function () {
       // Render the links
       const linksGroup = selection.selectGroup("links");
 
-      let linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
-
-      const newLinksElems = linksElems.enter().append("path").attr("class", "sszvis-link");
-      linksElems = linksElems.merge(newLinksElems);
-
-      linksElems.exit().remove();
+      const linksElems = linksGroup
+        .selectAll(".sszvis-link")
+        .data(data.links, idAcc)
+        .join("path")
+        .attr("class", "sszvis-link");
 
       linksElems
         .attr("fill", "none")
@@ -272,20 +257,14 @@ export default function () {
       const linkLabelsGroup = selection.selectGroup("linklabels");
 
       // If no props.linkSourceLabels are provided, most of this rendering is no-op
-      let linkSourceLabels = linkLabelsGroup
+      const linkSourceLabels = linkLabelsGroup
         .selectAll(".sszvis-sankey-link-source-label")
-        .data(props.linkSourceLabels);
-
-      const newLinkSourceLabels = linkSourceLabels
-        .enter()
-        .append("text")
+        .data(props.linkSourceLabels)
+        .join("text")
         .attr(
           "class",
           "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label"
         );
-      linkSourceLabels = linkSourceLabels.merge(newLinkSourceLabels);
-
-      linkSourceLabels.exit().remove();
 
       linkSourceLabels
         .attr("transform", (link) => {
@@ -295,20 +274,14 @@ export default function () {
         .text(props.linkLabel);
 
       // If no props.linkTargetLabels are provided, most of this rendering is no-op
-      let linkTargetLabels = linkLabelsGroup
+      const linkTargetLabels = linkLabelsGroup
         .selectAll(".sszvis-sankey-link-target-label")
-        .data(props.linkTargetLabels);
-
-      const newLinkTargetLabels = linkTargetLabels
-        .enter()
-        .append("text")
+        .data(props.linkTargetLabels)
+        .join("text")
         .attr(
           "class",
           "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label"
         );
-      linkTargetLabels = linkTargetLabels.merge(newLinkTargetLabels);
-
-      linkTargetLabels.exit().remove();
 
       linkTargetLabels
         .attr("transform", (link) => {
@@ -328,15 +301,11 @@ export default function () {
 
       const nodeLabelsGroup = selection.selectGroup("nodelabels");
 
-      let barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes);
-
-      const newBarLabels = barLabels
-        .enter()
-        .append("text")
+      const barLabels = nodeLabelsGroup
+        .selectAll(".sszvis-sankey-node-label")
+        .data(data.nodes)
+        .join("text")
         .attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
-      barLabels = barLabels.merge(newBarLabels);
-
-      barLabels.exit().remove();
 
       barLabels
         .text((node) => props.nameLabel(node.id))
@@ -352,15 +321,11 @@ export default function () {
         .attr("y", (node) => yPosition(node) + yExtent(node) / 2)
         .style("opacity", props.labelOpacity);
 
-      let barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes);
-
-      const newBarLabelHitBoxes = barLabelHitBoxes
-        .enter()
-        .append("rect")
+      const barLabelHitBoxes = nodeLabelsGroup
+        .selectAll(".sszvis-sankey-hitbox")
+        .data(data.nodes)
+        .join("rect")
         .attr("class", "sszvis-sankey-hitbox");
-      barLabelHitBoxes = barLabelHitBoxes.merge(newBarLabelHitBoxes);
-
-      barLabelHitBoxes.exit().remove();
 
       barLabelHitBoxes
         .attr("fill", "transparent")

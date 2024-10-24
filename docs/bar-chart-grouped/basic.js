@@ -60,7 +60,7 @@ const actions = {
     render(state);
   },
 
-  showTooltip(x) {
+  showTooltip(e, x) {
     state.selection = state.groupedData.filter((d) => sszvis.contains(d.map(xAcc), x));
     render(state);
   },

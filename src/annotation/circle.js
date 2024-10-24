@@ -39,10 +39,11 @@ export default function () {
 
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
 
-      let dataArea = selection.selectAll(".sszvis-dataareacircle").data(data);
-
-      const newDataArea = dataArea.enter().append("circle").classed("sszvis-dataareacircle", true);
-      dataArea = dataArea.merge(newDataArea);
+      const dataArea = selection
+        .selectAll(".sszvis-dataareacircle")
+        .data(data)
+        .join("circle")
+        .classed("sszvis-dataareacircle", true);
 
       dataArea
         .attr("cx", props.x)
@@ -51,13 +52,11 @@ export default function () {
         .attr("fill", "url(#data-area-pattern)");
 
       if (props.caption) {
-        let dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data);
-
-        const newDataCaptions = dataCaptions
-          .enter()
-          .append("text")
+        const dataCaptions = selection
+          .selectAll(".sszvis-dataareacircle__caption")
+          .data(data)
+          .join("text")
           .classed("sszvis-dataareacircle__caption", true);
-        dataCaptions = dataCaptions.merge(newDataCaptions);
 
         dataCaptions
           .attr("x", props.x)

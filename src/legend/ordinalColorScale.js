@@ -137,23 +137,17 @@ export function legendColorOrdinal() {
         cols = Math.ceil(domain.length / rows);
       }
 
-      const groups = selection.selectAll(".sszvis-legend--entry").data(domain);
+      const groups = selection
+        .selectAll(".sszvis-legend--entry")
+        .data(domain)
+        .join("g")
+        .classed("sszvis-legend--entry", true);
 
-      const newGroups = groups.enter().append("g").classed("sszvis-legend--entry", true);
-
-      groups.exit().remove();
-
-      const marks = groups
-        .merge(newGroups)
+      groups
         .selectAll(".sszvis-legend__mark")
-        .data((d) => [d]);
-
-      const newMarks = marks.enter().append("circle").classed("sszvis-legend__mark", true);
-
-      marks.exit().remove();
-
-      marks
-        .merge(newMarks)
+        .data((d) => [d])
+        .join("circle")
+        .classed("sszvis-legend__mark", true)
         .attr("cx", props.rightAlign ? -6 : 6)
         .attr("cy", halfPixel(props.rowHeight / 2))
         .attr("r", 5)
@@ -161,17 +155,11 @@ export function legendColorOrdinal() {
         .attr("stroke", (d) => props.scale(d))
         .attr("stroke-width", 1);
 
-      const labels = groups
-        .merge(newGroups)
+      groups
         .selectAll(".sszvis-legend__label")
-        .data((d) => [d]);
-
-      const newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
-
-      labels.exit().remove();
-
-      labels
-        .merge(newLabels)
+        .data((d) => [d])
+        .join("text")
+        .classed("sszvis-legend__label", true)
         .text((d) => d)
         .attr("dy", "0.35em") // vertically-center
         .style("text-anchor", () => (props.rightAlign ? "end" : "start"))
@@ -189,7 +177,7 @@ export function legendColorOrdinal() {
       if (props.horizontalFloat) {
         let rowPosition = 0,
           horizontalPosition = 0;
-        groups.merge(newGroups).attr("transform", function () {
+        groups.attr("transform", function () {
           // not affected by scroll position
           const width = this.getBoundingClientRect().width;
           if (horizontalPosition + width > props.floatWidth) {
@@ -201,7 +189,7 @@ export function legendColorOrdinal() {
           return verticalOffset + translate;
         });
       } else {
-        groups.merge(newGroups).attr("transform", (d, i) => {
+        groups.attr("transform", (d, i) => {
           if (props.orientation === "horizontal") {
             return (
               verticalOffset +

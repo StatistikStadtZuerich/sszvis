@@ -12,7 +12,7 @@ import { selection as d3Selection } from "d3";
  *     var selection = select(this);
  *     var props = selection.props();
  *     var axis = d3.svg.axis().ticks(props.ticks);
- *     selection.enter()
+ *     selection
  *       .append('g')
  *       .call(axis);
  *   })

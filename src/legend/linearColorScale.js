@@ -54,13 +54,11 @@ export default function () {
       const segWidth = values.length > 0 ? props.width / values.length : 0;
       const segHeight = 10;
 
-      let segments = selection.selectAll("rect.sszvis-legend__mark").data(values);
-
-      const newSegments = segments.enter().append("rect").classed("sszvis-legend__mark", true);
-
-      segments.exit().remove();
-
-      segments = segments.merge(newSegments);
+      const segments = selection
+        .selectAll("rect.sszvis-legend__mark")
+        .data(values)
+        .join("rect")
+        .classed("sszvis-legend__mark", true);
 
       segments
         .attr("x", (d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
@@ -73,13 +71,11 @@ export default function () {
       const labelText = props.labelText || startEnd;
 
       // rounded end caps for the segments
-      let endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd);
-
-      const newEndCaps = endCaps.enter().append("circle").attr("class", "ssvis-legend--mark");
-
-      endCaps.exit().remove();
-
-      endCaps = endCaps.merge(newEndCaps);
+      const endCaps = selection
+        .selectAll("circle.ssvis-legend--mark")
+        .data(startEnd)
+        .join("circle")
+        .attr("class", "ssvis-legend--mark");
 
       endCaps
         .attr("cx", (d, i) => i * props.width)
@@ -87,13 +83,11 @@ export default function () {
         .attr("r", segHeight / 2)
         .attr("fill", (d) => props.scale(d));
 
-      let labels = selection.selectAll(".sszvis-legend__label").data(labelText);
-
-      const newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
-
-      labels.exit().remove();
-
-      labels = labels.merge(newLabels);
+      const labels = selection
+        .selectAll(".sszvis-legend__label")
+        .data(labelText)
+        .join("text")
+        .classed("sszvis-legend__label", true);
 
       const labelPadding = 16;
 

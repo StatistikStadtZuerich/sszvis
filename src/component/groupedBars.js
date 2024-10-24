@@ -75,19 +75,17 @@ export default function () {
         .paddingOuter(0)
         .rangeRound([0, props.groupWidth]);
 
-      let groups = selection.selectAll("g.sszvis-bargroup").data(data);
+      const groups = selection
+        .selectAll("g.sszvis-bargroup")
+        .data(data)
+        .join("g")
+        .classed("sszvis-bargroup", true);
 
-      const newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
-
-      groups.exit().remove();
-      groups = groups.merge(newGroups);
-
-      let barUnits = groups.selectAll("g.sszvis-barunit").data((d) => d);
-
-      const newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
-
-      barUnits.exit().remove();
-      barUnits = barUnits.merge(newBarUnits);
+      const barUnits = groups
+        .selectAll("g.sszvis-barunit")
+        .data((d) => d)
+        .join("g")
+        .classed("sszvis-barunit", true);
 
       barUnits.each((d, i) => {
         // necessary for the within-group scale

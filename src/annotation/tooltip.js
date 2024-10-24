@@ -111,15 +111,7 @@ const tooltipRenderer = function () {
 
       // Select tooltip elements
 
-      let tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData);
-
-      tooltip.exit().remove();
-
-      // Enter: tooltip
-
-      const enterTooltip = tooltip.enter().append("div");
-
-      tooltip = tooltip.merge(enterTooltip);
+      const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
 
       tooltip
         .style("pointer-events", "none")
@@ -134,32 +126,47 @@ const tooltipRenderer = function () {
 
       // Enter: tooltip background
 
-      const enterBackground = enterTooltip
-        .append("svg")
+      const enterBackground = tooltip
+        .selectAll(".sszvis-tooltip__background")
+        .data([0])
+        .join("svg")
         .attr("class", "sszvis-tooltip__background")
         .attr("height", 0)
         .attr("width", 0);
 
-      const enterBackgroundPath = enterBackground.append("path");
+      const enterBackgroundPath = enterBackground.selectAll("path").data([0]).join("path");
 
       if (supportsSVGFilters()) {
         const filter = enterBackground
-          .append("filter")
+          .selectAll("filter")
+          .data([0])
+          .join("filter")
           .attr("id", "sszvisTooltipShadowFilter")
           .attr("height", "150%");
 
-        filter.append("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
+        filter
+          .selectAll("feGaussianBlur")
+          .data([0])
+          .join("feGaussianBlur")
+          .attr("in", "SourceAlpha")
+          .attr("stdDeviation", 2);
 
         filter
-          .append("feComponentTransfer")
-          .append("feFuncA")
+          .selectAll("feComponentTransfer")
+          .data([0])
+          .join("feComponentTransfer")
+          .selectAll("feFuncA")
+          .data([0])
+          .join("feFuncA")
           .attr("type", "linear")
           .attr("slope", 0.2);
 
-        const merge = filter.append("feMerge");
-        merge.append("feMergeNode"); // Contains the blurred image
+        const merge = filter.selectAll("feMerge").data([0]).join("feMerge");
+        merge.selectAll("feMergeNode").data([0]).join("feMergeNode"); // Contains the blurred image
         merge
-          .append("feMergeNode") // Contains the element that the filter is applied to
+          .selectAll("feMergeNode")
+          .data([0])
+          .join("feMergeNode") // Contains the element that the filter is applied to
           .attr("in", "SourceGraphic");
 
         enterBackgroundPath.attr("filter", "url(#sszvisTooltipShadowFilter)");
@@ -169,11 +176,23 @@ const tooltipRenderer = function () {
 
       // Enter: tooltip content
 
-      const enterContent = enterTooltip.append("div").classed("sszvis-tooltip__content", true);
+      const enterContent = tooltip
+        .selectAll(".sszvis-tooltip__content")
+        .data([0])
+        .join("div")
+        .classed("sszvis-tooltip__content", true);
 
-      enterContent.append("div").classed("sszvis-tooltip__header", true);
+      enterContent
+        .selectAll(".sszvis-tooltip__header")
+        .data([0])
+        .join("div")
+        .classed("sszvis-tooltip__header", true);
 
-      enterContent.append("div").classed("sszvis-tooltip__body", true);
+      enterContent
+        .selectAll(".sszvis-tooltip__body")
+        .data([0])
+        .join("div")
+        .classed("sszvis-tooltip__body", true);
 
       // Update: content
 

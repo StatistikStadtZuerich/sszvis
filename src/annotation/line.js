@@ -53,27 +53,20 @@ export default function () {
       const x2 = props.xScale(props.x2);
       const y2 = props.yScale(props.y2);
 
-      let line = selection.selectAll(".sszvis-referenceline").data(data);
-
-      line.exit().remove();
-
-      const newLine = line.enter().append("line").classed("sszvis-referenceline", true);
-
-      line = line.merge(newLine);
+      const line = selection
+        .selectAll(".sszvis-referenceline")
+        .data(data)
+        .join("line")
+        .classed("sszvis-referenceline", true);
 
       line.attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
 
       if (props.caption) {
-        let caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
-
-        caption.exit().remove();
-
-        const newCaption = caption
-          .enter()
-          .append("text")
+        const caption = selection
+          .selectAll(".sszvis-referenceline__caption")
+          .data([0])
+          .join("text")
           .classed("sszvis-referenceline__caption", true);
-
-        caption = caption.merge(newCaption);
 
         caption
           .attr("transform", () => {

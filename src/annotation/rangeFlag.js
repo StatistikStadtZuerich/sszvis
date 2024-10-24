@@ -57,16 +57,12 @@ export default function () {
 
 function makeFlagDot(classed, cx, cy) {
   return function (dot) {
-    const newDot = dot
-      .enter()
-      .append("circle")
+    dot
+      .join("circle")
       .classed("sszvis-rangeFlag__mark", true)
-      .classed(classed, true);
-
-    dot.exit().remove();
-
-    dot = dot.merge(newDot);
-
-    dot.attr("r", 3.5).attr("cx", cx).attr("cy", cy);
+      .classed(classed, true)
+      .attr("r", 3.5)
+      .attr("cx", cx)
+      .attr("cy", cy);
   };
 }

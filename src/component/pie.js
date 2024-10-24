@@ -62,7 +62,7 @@ export default function () {
         .startAngle((d) => d.a0)
         .endAngle((d) => d.a1);
 
-      let segments = selection
+      const segments = selection
         .selectAll(".sszvis-path")
         .each((d, i) => {
           // This matches the data values iteratively in the same way d3 will when it does the data join.
@@ -72,19 +72,12 @@ export default function () {
             data[i].a1 = d.a1;
           }
         })
-        .data(data);
-
-      const newSegments = segments
-        .enter()
-        .append("path")
+        .data(data)
+        .join("path")
         .classed("sszvis-path", true)
         .attr("transform", "translate(" + props.radius + "," + props.radius + ")")
         .attr("fill", props.fill)
         .attr("stroke", stroke);
-
-      segments.exit().remove();
-
-      segments = segments.merge(newSegments);
 
       segments
         .transition(defaultTransition())

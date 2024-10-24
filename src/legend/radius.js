@@ -38,23 +38,19 @@ export default function () {
       ];
       const maxRadius = range(props.scale)[1];
 
-      let group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]);
-
-      const newGroup = group.enter().append("g").attr("class", "sszvis-legend__elementgroup");
-
-      // FIXME: No exit?
-
-      group = group.merge(newGroup);
+      const group = selection
+        .selectAll("g.sszvis-legend__elementgroup")
+        .data([0])
+        .join("g")
+        .attr("class", "sszvis-legend__elementgroup");
 
       group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
 
-      let circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues);
-
-      const newCircles = circles.enter().append("circle").classed("sszvis-legend__greyline", true);
-
-      circles.exit().remove();
-
-      circles = circles.merge(newCircles);
+      const circles = group
+        .selectAll("circle.sszvis-legend__greyline")
+        .data(tickValues)
+        .join("circle")
+        .classed("sszvis-legend__greyline", true);
 
       function getCircleCenter(d) {
         return maxRadius - props.scale(d);
@@ -66,13 +62,11 @@ export default function () {
 
       circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
 
-      let lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues);
-
-      const newLines = lines.enter().append("line").classed("sszvis-legend__dashedline", true);
-
-      lines.exit().remove();
-
-      lines = lines.merge(newLines);
+      const lines = group
+        .selectAll("line.sszvis-legend__dashedline")
+        .data(tickValues)
+        .join("line")
+        .classed("sszvis-legend__dashedline", true);
 
       lines
         .attr("x1", 0)
@@ -80,16 +74,11 @@ export default function () {
         .attr("x2", maxRadius + 15)
         .attr("y2", getCircleEdge);
 
-      let labels = group.selectAll(".sszvis-legend__label").data(tickValues);
-
-      const newLabels = labels
-        .enter()
-        .append("text")
+      const labels = group
+        .selectAll(".sszvis-legend__label")
+        .data(tickValues)
+        .join("text")
         .attr("class", "sszvis-legend__label sszvis-legend__label--small");
-
-      labels.exit().remove();
-
-      labels = labels.merge(newLabels);
 
       labels
         .attr("dx", maxRadius + 18)

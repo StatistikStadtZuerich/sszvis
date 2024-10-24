@@ -85,18 +85,13 @@ export default function () {
         return fn.defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
       }
 
-      let geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData);
-
-      const newGeoElements = geoElements
-        .enter()
-        .append("path")
+      const geoElements = selection
+        .selectAll(".sszvis-map__geojsonelement")
+        .data(mergedData)
+        .join("path")
         .classed("sszvis-map__geojsonelement", true)
         .attr("data-event-target", "")
         .attr("fill", getMapFill);
-
-      geoElements.exit().remove();
-
-      geoElements = geoElements.merge(newGeoElements);
 
       selection.selectAll(".sszvis-map__geojsonelement--undefined").attr("fill", getMapFill);
 

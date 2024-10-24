@@ -33,35 +33,32 @@ export function createSvgLayer(selector, bounds, metadata) {
   const description = metadata.description || "";
 
   const root = fn.isSelection(selector) ? selector : select(selector);
-  const svg = root.selectAll("svg[" + elementDataKey + "]").data([0]);
-  const svgEnter = svg.enter().append("svg");
-
-  svgEnter
+  const svg = root
+    .selectAll("svg[" + elementDataKey + "]")
+    .data([0])
+    .join("svg")
     .classed("sszvis-svg-layer", true)
     .attr(elementDataKey, "")
     .attr("role", "img")
-    .attr("aria-label", title + " – " + description);
+    .attr("aria-label", title + " – " + description)
+    .attr("height", bounds.height)
+    .attr("width", bounds.width);
 
-  svgEnter.append("title").text(title);
+  svg.selectAll("title").data([0]).join("title").text(title);
 
-  svgEnter
-    .append("desc")
+  svg
+    .selectAll("desc")
+    .data([0])
+    .join("desc")
     .text(description)
     .classed("sszvis-svg-layer", true)
     .attr(elementDataKey, "")
     .attr("role", "img");
 
-  svg.merge(svgEnter).attr("height", bounds.height).attr("width", bounds.width);
-
-  const viewport = svg
-    .merge(svgEnter)
+  return svg
     .selectAll("[data-sszvis-svg-layer]")
-    .data(() => [0]);
-  const viewportEnter = viewport.enter().append("g").attr("data-sszvis-svg-layer", "");
-
-  viewport
-    .merge(viewportEnter)
+    .data(() => [0])
+    .join("g")
+    .attr("data-sszvis-svg-layer", "")
     .attr("transform", "translate(" + bounds.padding.left + "," + bounds.padding.top + ")");
-
-  return viewport.merge(viewportEnter);
 }

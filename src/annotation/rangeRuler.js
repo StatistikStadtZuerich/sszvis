@@ -54,28 +54,24 @@ export default function () {
 
       const dotRadius = 1.5;
 
-      let line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]);
-
-      const newLine = line.enter().append("line").classed("sszvis-rangeRuler__rule", true);
-
-      line.exit().remove();
-
-      line = line.merge(newLine);
+      const line = selection
+        .selectAll(".sszvis-rangeRuler__rule")
+        .data([0])
+        .join("line")
+        .classed("sszvis-rangeRuler__rule", true);
 
       line.attr("x1", crispX).attr("y1", props.top).attr("x2", crispX).attr("y2", props.bottom);
 
-      let marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data);
+      const marks = selection
+        .selectAll(".sszvis-rangeRuler--mark")
+        .data(data)
+        .join("g")
+        .classed("sszvis-rangeRuler--mark", true);
 
-      const enteringMarks = marks.enter().append("g").classed("sszvis-rangeRuler--mark", true);
-
-      marks.exit().remove();
-
-      marks = marks.merge(enteringMarks);
-
-      enteringMarks.append("circle").classed("sszvis-rangeRuler__p1", true);
-      enteringMarks.append("circle").classed("sszvis-rangeRuler__p2", true);
-      enteringMarks.append("text").classed("sszvis-rangeRuler__label-contour", true);
-      enteringMarks.append("text").classed("sszvis-rangeRuler__label", true);
+      marks.append("circle").classed("sszvis-rangeRuler__p1", true);
+      marks.append("circle").classed("sszvis-rangeRuler__p2", true);
+      marks.append("text").classed("sszvis-rangeRuler__label-contour", true);
+      marks.append("text").classed("sszvis-rangeRuler__label", true);
 
       marks
         .selectAll(".sszvis-rangeRuler__p1")
@@ -142,13 +138,11 @@ export default function () {
         marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
 
-      let total = selection.selectAll(".sszvis-rangeRuler__total").data([fn.last(data)]);
-
-      const newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
-
-      total.exit().remove();
-
-      total = total.merge(newTotal);
+      const total = selection
+        .selectAll(".sszvis-rangeRuler__total")
+        .data([fn.last(data)])
+        .join("text")
+        .classed("sszvis-rangeRuler__total", true);
 
       total
         .attr("x", (d) => {

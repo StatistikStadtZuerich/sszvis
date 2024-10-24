@@ -54,22 +54,15 @@ export default function () {
         return props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
       }
 
-      let mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData);
-
-      // add the base map paths - these are filled according to the map fill function
-      const newMapAreas = mapAreas
-        .enter()
-        .append("path")
+      const mapAreas = selection
+        .selectAll(".sszvis-map__area")
+        .data(props.mergedData)
+        .join("path")
         .classed("sszvis-map__area", true)
         .classed("sszvis-map__area--entering", true)
         .attr("data-event-target", "")
-        .attr("fill", getMapFill);
-
-      mapAreas.classed("sszvis-map__area--entering", false);
-
-      mapAreas.exit().remove();
-
-      mapAreas = mapAreas.merge(newMapAreas);
+        .attr("fill", getMapFill)
+        .classed("sszvis-map__area--entering", false);
 
       selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill);
 

@@ -72,21 +72,17 @@ export default function () {
       const horizontalCenter = unitWidth / 2;
       const verticalCenter = unitHeight / 2;
 
-      let multiples = selection.selectAll("g.sszvis-multiple").data(data);
+      const multiples = selection
+        .selectAll("g.sszvis-multiple")
+        .data(data)
+        .join("g")
+        .classed("sszvis-g sszvis-multiple", true);
 
-      const newMultiples = multiples.enter().append("g").classed("sszvis-g sszvis-multiple", true);
-
-      multiples.exit().remove();
-
-      multiples = multiples.merge(newMultiples);
-
-      let subGroups = multiples.selectAll("g.sszvis-multiple-chart").data((d) => [d.values]);
-
-      const newSubGroups = subGroups.enter().append("g").classed("sszvis-multiple-chart", true);
-
-      subGroups.exit().remove();
-
-      subGroups = subGroups.merge(newSubGroups);
+      multiples
+        .selectAll("g.sszvis-multiple-chart")
+        .data((d) => [d.values])
+        .join("g")
+        .classed("sszvis-multiple-chart", true);
 
       multiples
         .datum((d, i) => {

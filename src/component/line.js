@@ -67,16 +67,12 @@ export default function () {
 
       // Rendering
 
-      let path = selection.selectAll(".sszvis-line").data(data, props.key);
-      path.exit().remove();
-
-      const newPath = path
-        .enter()
-        .append("path")
+      let path = selection
+        .selectAll(".sszvis-line")
+        .data(data, props.key)
+        .join("path")
         .classed("sszvis-line", true)
         .style("stroke", props.stroke);
-
-      path = path.merge(newPath);
 
       path.order();
 

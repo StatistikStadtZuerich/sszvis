@@ -37,30 +37,20 @@ export default function () {
 
       const buttonWidth = props.width / props.values.length;
 
-      let container = selection
+      const container = selection
         .selectAll(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-buttonGroup"], (d) => d);
-      const newContainer = container
-        .enter()
-        .append("div")
+        .data(["sszvis-control-buttonGroup"], (d) => d)
+        .join("div")
         .classed("sszvis-control-optionSelectable", true)
         .classed("sszvis-control-buttonGroup", true);
-      container.exit().remove();
-
-      container = container.merge(newContainer);
 
       container.style("width", props.width + "px");
 
-      let buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values);
-
-      const newButtons = buttons
-        .enter()
-        .append("div")
+      const buttons = container
+        .selectAll(".sszvis-control-buttonGroup__item")
+        .data(props.values)
+        .join("div")
         .classed("sszvis-control-buttonGroup__item", true);
-
-      buttons.exit().remove();
-
-      buttons = buttons.merge(newButtons);
 
       buttons
         .style("width", buttonWidth + "px")

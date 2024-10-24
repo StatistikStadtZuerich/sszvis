@@ -41,13 +41,11 @@ export default function () {
 
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
 
-      let dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data);
-
-      // FIXME: no exit?
-
-      const newDataArea = dataArea.enter().append("rect").classed("sszvis-dataarearectangle", true);
-
-      dataArea = dataArea.merge(newDataArea);
+      const dataArea = selection
+        .selectAll(".sszvis-dataarearectangle")
+        .data(data)
+        .join("rect")
+        .classed("sszvis-dataarearectangle", true);
 
       dataArea
         .attr("x", props.x)
@@ -57,16 +55,11 @@ export default function () {
         .attr("fill", "url(#data-area-pattern)");
 
       if (props.caption) {
-        let dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data);
-
-        // FIXME: no exit?
-
-        const newDataCaptions = dataCaptions
-          .enter()
-          .append("text")
+        const dataCaptions = selection
+          .selectAll(".sszvis-dataarearectangle__caption")
+          .data(data)
+          .join("text")
           .classed("sszvis-dataarearectangle__caption", true);
-
-        dataCaptions = dataCaptions.merge(newDataCaptions);
 
         dataCaptions
           .attr("x", (d, i) => props.x(d, i) + props.width(d, i) / 2)

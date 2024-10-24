@@ -35,18 +35,14 @@ export default function () {
       const selection = select(this);
       const props = selection.props();
 
-      let dots = selection.selectAll(".sszvis-circle").data(data);
-
-      dots.exit().remove();
-
-      dots
-        .enter()
-        .append("circle")
+      let dots = selection
+        .selectAll(".sszvis-circle")
+        .data(data)
+        .join("circle")
         .classed("sszvis-circle", true)
         .attr("cx", props.x)
         .attr("cy", props.y)
         .attr("r", props.radius)
-        .merge(dots)
         .attr("stroke", props.stroke)
         .attr("fill", props.fill);
 

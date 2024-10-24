@@ -74,24 +74,20 @@ export default function () {
       const wAcc = fn.compose(handleMissingVal, props.width);
       const hAcc = fn.compose(handleMissingVal, props.height);
 
-      let bars = selection.selectAll(".sszvis-bar").data(data);
-
-      bars.exit().remove();
-
-      bars
-        .enter()
-        .append("rect")
+      const bars = selection
+        .selectAll(".sszvis-bar")
+        .data(data)
+        .join("rect")
         .classed("sszvis-bar", true)
         .attr("x", xAcc)
         .attr("y", yAcc)
         .attr("width", wAcc)
         .attr("height", hAcc)
-        .merge(bars)
         .attr("fill", props.fill)
         .attr("stroke", props.stroke);
 
       if (props.transition) {
-        bars = bars.transition(defaultTransition());
+        bars.transition(defaultTransition());
       }
 
       bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);

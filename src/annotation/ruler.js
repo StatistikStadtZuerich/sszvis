@@ -37,8 +37,8 @@ import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
 
-export default function () {
-  return component()
+export const annotationRuler = () =>
+  component()
     .prop("top")
     .prop("bottom")
     .prop("x", fn.functor)
@@ -61,12 +61,11 @@ export default function () {
           return props.x(d) + "_" + props.y(d);
         };
 
-      let ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
-
-      const newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
-
-      ruler.exit().remove();
-      ruler = ruler.merge(newRuler);
+      const ruler = selection
+        .selectAll(".sszvis-ruler__rule")
+        .data(data, labelId)
+        .join("line")
+        .classed("sszvis-ruler__rule", true);
 
       ruler
         .attr("x1", fn.compose(halfPixel, props.x))
@@ -74,12 +73,11 @@ export default function () {
         .attr("x2", fn.compose(halfPixel, props.x))
         .attr("y2", props.bottom);
 
-      let dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
-
-      const newDot = dot.enter().append("circle").classed("sszvis-ruler__dot", true);
-
-      dot.exit().remove();
-      dot = dot.merge(newDot);
+      const dot = selection
+        .selectAll(".sszvis-ruler__dot")
+        .data(data, labelId)
+        .join("circle")
+        .classed("sszvis-ruler__dot", true);
 
       dot
         .attr("cx", fn.compose(halfPixel, props.x))
@@ -87,22 +85,17 @@ export default function () {
         .attr("r", 3.5)
         .attr("fill", props.color);
 
-      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId);
-
-      const newLabelOutline = labelOutline
-        .enter()
-        .append("text")
+      selection
+        .selectAll(".sszvis-ruler__label-outline")
+        .data(data, labelId)
+        .join("text")
         .classed("sszvis-ruler__label-outline", true);
 
-      labelOutline.exit().remove();
-      labelOutline = labelOutline.merge(newLabelOutline);
-
-      let label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
-
-      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
-
-      label.exit().remove();
-      label = label.merge(newLabel);
+      const label = selection
+        .selectAll(".sszvis-ruler__label")
+        .data(data, labelId)
+        .join("text")
+        .classed("sszvis-ruler__label", true);
 
       // Update both label and labelOutline selections
 
@@ -180,4 +173,55 @@ export default function () {
         });
       }
     });
-}
+
+export const rulerLabelVerticalSeparate = (cAcc) => (g) => {
+  const THRESHOLD = 2;
+  let labelBounds = [];
+
+  // Reset vertical shift
+  g.selectAll("text").each(function () {
+    select(this).attr("y", "");
+  });
+
+  // Calculate bounds
+  g.selectAll(".sszvis-ruler__label").each(function (d) {
+    const bounds = this.getBoundingClientRect();
+    labelBounds.push({
+      category: cAcc(d),
+      top: bounds.top,
+      bottom: bounds.bottom,
+      dy: 0,
+    });
+  });
+
+  // Sort by vertical position (only supports labels of same height)
+  labelBounds = labelBounds.sort((a, b) => ascending(a.top, b.top));
+
+  // Calculate overlap and correct position
+  for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < labelBounds.length; j++) {
+      for (let k = j + 1; k < labelBounds.length; k++) {
+        if (j === k) continue;
+        const firstLabel = labelBounds[j];
+        const secondLabel = labelBounds[k];
+        const overlap = firstLabel.bottom - secondLabel.top;
+        if (overlap >= THRESHOLD) {
+          firstLabel.bottom -= overlap / 2;
+          firstLabel.top -= overlap / 2;
+          firstLabel.dy -= overlap / 2;
+          secondLabel.bottom += overlap / 2;
+          secondLabel.top += overlap / 2;
+          secondLabel.dy += overlap / 2;
+        }
+      }
+    }
+  }
+
+  // Shift vertically to remove overlap
+  g.selectAll("text").each(function (d) {
+    const label = fn.find((l) => l.category === cAcc(d), labelBounds);
+    if (label) {
+      select(this).attr("y", label.dy);
+    }
+  });
+};

@@ -83,14 +83,12 @@ export default function () {
       yExtent[0] -= props.padding.top;
       yExtent[1] += props.padding.bottom;
 
-      let layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]);
-
-      const newLayer = layer
-        .enter()
-        .append("rect")
+      const layer = selection
+        .selectAll("[data-sszvis-behavior-move]")
+        .data([0])
+        .join("rect")
         .attr("data-sszvis-behavior-move", "")
         .attr("class", "sszvis-interactive");
-      layer = layer.merge(newLayer);
 
       if (props.draggable) {
         layer.classed("sszvis-interactive--draggable", true);

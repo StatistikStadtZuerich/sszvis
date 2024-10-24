@@ -32,13 +32,11 @@ export default function () {
       const props = selection.props();
 
       // add the map borders. These are rendered as one single path element
-      let meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]);
-
-      const newMeshLine = meshLine.enter().append("path").classed("sszvis-map__border", true);
-
-      meshLine.exit().remove();
-
-      meshLine = meshLine.merge(newMeshLine);
+      const meshLine = selection
+        .selectAll(".sszvis-map__border")
+        .data([props.geoJson])
+        .join("path")
+        .classed("sszvis-map__border", true);
 
       meshLine
         .attr("d", props.mapPath)
