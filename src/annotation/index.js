@@ -7,3 +7,4 @@ export { default as annotationRuler } from "./ruler.js";
 export { default as tooltip } from "./tooltip.js";
 export { default as tooltipAnchor } from "./tooltipAnchor.js";
 export { default as fitTooltip } from "./fitTooltip.js";
+export { default as annotationConfArea } from "./confArea.js";
