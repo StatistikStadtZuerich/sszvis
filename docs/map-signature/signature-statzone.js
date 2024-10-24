@@ -204,7 +204,7 @@ function render(state) {
 
   const interactionLayer = sszvis
     .panning()
-    .elementSelector(".sszvis-map__area--entering, .sszvis-anchored-circle--entering")
+    .elementSelector(".sszvis-map__area, .sszvis-anchored-circle")
     .on("start", actions.selectHovered)
     .on("pan", actions.selectHovered)
     .on("end", actions.deselectHovered);
