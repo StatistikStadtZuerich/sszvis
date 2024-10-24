@@ -54,9 +54,7 @@ export default function () {
       data = [...data].reverse();
 
       const defaultDefined = function () {
-        return (
-          fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1)
-        );
+        return fn.compose(fn.not(isNaN), props.y0) && fn.compose(fn.not(isNaN), props.y1);
       };
 
       const areaGen = area()
@@ -65,16 +63,14 @@ export default function () {
         .y0(props.y0)
         .y1(props.y1);
 
-      let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
-
-      const newPaths = paths.enter().append("path").classed("sszvis-path", true);
-
-      paths.exit().remove();
-
-      paths = newPaths.merge(paths);
+      const paths = selection
+        .selectAll("path.sszvis-path")
+        .data(data, props.key)
+        .join("path")
+        .classed("sszvis-path", true);
 
       if (props.transition) {
-        paths = paths.transition(defaultTransition());
+        paths.transition(defaultTransition());
       }
 
       paths

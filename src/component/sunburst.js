@@ -98,7 +98,7 @@ export default function () {
         d._x1 = d.x1;
       }
 
-      let arcs = selection
+      const arcs = selection
         .selectAll(".sszvis-sunburst-arc")
         .each((d, i) => {
           if (data[i]) {
@@ -109,13 +109,9 @@ export default function () {
             // The transition tweens from x and dx to _x and _dx
           }
         })
-        .data(data);
-
-      const newArcs = arcs.enter().append("path").attr("class", "sszvis-sunburst-arc");
-
-      arcs.exit().remove();
-
-      arcs = arcs.merge(newArcs);
+        .data(data)
+        .join("path")
+        .attr("class", "sszvis-sunburst-arc");
 
       arcs.attr("stroke", props.stroke).attr("fill", getColorRecursive);
 

@@ -9,13 +9,9 @@ import { selection } from "d3";
  * @return {d3.selection}
  */
 selection.prototype.selectDiv = function (key) {
-  const div = this.selectAll('[data-d3-selectdiv="' + key + '"]').data((d) => [d]);
-
-  const newDiv = div
-    .enter()
-    .append("div")
+  return this.selectAll('[data-d3-selectdiv="' + key + '"]')
+    .data((d) => [d])
+    .join("div")
     .attr("data-d3-selectdiv", key)
     .style("position", "absolute");
-
-  return div.merge(newDiv);
 };

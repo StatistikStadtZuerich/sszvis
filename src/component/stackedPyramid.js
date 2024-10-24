@@ -165,13 +165,11 @@ function stackComponent() {
       const datum = selection.datum();
       const props = selection.props();
 
-      let stack = selection.selectAll("[data-sszvis-stack]").data(datum);
-
-      const newStack = stack.enter().append("g").attr("data-sszvis-stack", "");
-
-      stack.exit().remove();
-
-      stack = stack.merge(newStack);
+      const stack = selection
+        .selectAll("[data-sszvis-stack]")
+        .data(datum)
+        .join("g")
+        .attr("data-sszvis-stack", "");
 
       stack.each(function (d) {
         select(this).datum(d).call(props.stackElement);
@@ -191,20 +189,15 @@ function lineComponent() {
 
       const lineGen = d3Line().x(props.barWidth).y(props.barPosition);
 
-      let line = selection.selectAll(".sszvis-path").data(data);
-
-      line.exit().remove();
-
-      const newLine = line
-        .enter()
-        .append("path")
+      const line = selection
+        .selectAll(".sszvis-path")
+        .data(data)
+        .join("path")
         .attr("class", "sszvis-path")
         .attr("fill", "none")
         .attr("stroke", "#aaa")
         .attr("stroke-width", 2)
         .attr("stroke-dasharray", "3 3");
-
-      line = line.merge(newLine);
 
       line
         .attr("transform", props.mirror ? "scale(-1, 1)" : "")

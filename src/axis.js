@@ -234,13 +234,13 @@ const axis = function () {
             longLinePadding += 2; // a lil' extra on the end
           }
 
-          let lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]);
+          const lines = ticks
+            .selectAll("line.sszvis-axis__longtick")
+            .data([0])
+            .join("line")
+            .classed("sszvis-axis__longtick", true);
 
           if (props.tickLength > longLinePadding) {
-            const newLines = lines.enter().append("line").classed("sszvis-axis__longtick", true);
-
-            lines = lines.merge(newLines);
-
             switch (orientation) {
               case "top": {
                 lines.attr("y1", longLinePadding).attr("y2", props.tickLength);
@@ -337,14 +337,13 @@ const axis = function () {
         }
 
         if (props.title) {
-          const title = group.selectAll(".sszvis-axis__title").data([props.title]);
-
-          const newTitle = title.enter().append("text").classed("sszvis-axis__title", true);
-
-          title.exit().remove();
+          const title = group
+            .selectAll(".sszvis-axis__title")
+            .data([props.title])
+            .join("text")
+            .classed("sszvis-axis__title", true);
 
           title
-            .merge(newTitle)
             .text((d) => d)
             .attr("transform", () => {
               const orient = props.orient,

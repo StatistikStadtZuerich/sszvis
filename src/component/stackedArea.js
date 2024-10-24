@@ -61,13 +61,11 @@ export default function () {
         .y0(props.y0)
         .y1(props.y1);
 
-      let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
-
-      const newPaths = paths.enter().append("path").classed("sszvis-path", true);
-
-      paths.exit().remove();
-
-      paths = paths.merge(newPaths);
+      let paths = selection
+        .selectAll("path.sszvis-path")
+        .data(data, props.key)
+        .join("path")
+        .classed("sszvis-path", true);
 
       if (props.transition) {
         paths = paths.transition(defaultTransition());

@@ -47,15 +47,13 @@ export default function () {
       }
 
       // generate the Lake Zurich path
-      let zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]);
-
-      const newZurichSee = zurichSee.enter().append("path").classed("sszvis-map__lakezurich", true);
-
-      zurichSee.exit().remove();
-
-      zurichSee = zurichSee.merge(newZurichSee);
-
-      zurichSee.attr("d", props.mapPath).attr("fill", "url(#lake-pattern)");
+      const zurichSee = selection
+        .selectAll(".sszvis-map__lakezurich")
+        .data([props.lakeFeature])
+        .join("path")
+        .classed("sszvis-map__lakezurich", true)
+        .attr("d", props.mapPath)
+        .attr("fill", "url(#lake-pattern)");
 
       if (props.fadeOut) {
         // this mask applies the fade effect
@@ -64,15 +62,12 @@ export default function () {
 
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
-      let lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]);
-
-      const newLakePath = lakePath.enter().append("path").classed("sszvis-map__lakepath", true);
-
-      lakePath.exit().remove();
-
-      lakePath = lakePath.merge(newLakePath);
-
-      lakePath.attr("d", props.mapPath);
+      const lakePath = selection
+        .selectAll(".sszvis-map__lakepath")
+        .data([props.lakeBounds])
+        .join("path")
+        .classed("sszvis-map__lakepath", true)
+        .attr("d", props.mapPath);
 
       if (props.lakePathColor) {
         lakePath.style("stroke", props.lakePathColor);

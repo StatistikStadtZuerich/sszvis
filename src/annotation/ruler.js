@@ -61,12 +61,11 @@ export default function () {
           return props.x(d) + "_" + props.y(d);
         };
 
-      let ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
-
-      const newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
-
-      ruler.exit().remove();
-      ruler = ruler.merge(newRuler);
+      const ruler = selection
+        .selectAll(".sszvis-ruler__rule")
+        .data(data, labelId)
+        .join("line")
+        .classed("sszvis-ruler__rule", true);
 
       ruler
         .attr("x1", fn.compose(halfPixel, props.x))
@@ -74,12 +73,11 @@ export default function () {
         .attr("x2", fn.compose(halfPixel, props.x))
         .attr("y2", props.bottom);
 
-      let dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
-
-      const newDot = dot.enter().append("circle").classed("sszvis-ruler__dot", true);
-
-      dot.exit().remove();
-      dot = dot.merge(newDot);
+      const dot = selection
+        .selectAll(".sszvis-ruler__dot")
+        .data(data, labelId)
+        .join("circle")
+        .classed("sszvis-ruler__dot", true);
 
       dot
         .attr("cx", fn.compose(halfPixel, props.x))
@@ -87,22 +85,17 @@ export default function () {
         .attr("r", 3.5)
         .attr("fill", props.color);
 
-      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId);
-
-      const newLabelOutline = labelOutline
-        .enter()
-        .append("text")
+      selection
+        .selectAll(".sszvis-ruler__label-outline")
+        .data(data, labelId)
+        .join("text")
         .classed("sszvis-ruler__label-outline", true);
 
-      labelOutline.exit().remove();
-      labelOutline = labelOutline.merge(newLabelOutline);
-
-      let label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
-
-      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
-
-      label.exit().remove();
-      label = label.merge(newLabel);
+      const label = selection
+        .selectAll(".sszvis-ruler__label")
+        .data(data, labelId)
+        .join("text")
+        .classed("sszvis-ruler__label", true);
 
       // Update both label and labelOutline selections
 

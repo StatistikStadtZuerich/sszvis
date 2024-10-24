@@ -113,13 +113,11 @@ function lineComponent() {
 
       const lineGen = d3Line().x(props.barWidth).y(props.barPosition);
 
-      let line = selection.selectAll(".sszvis-pyramid__referenceline").data(data);
-
-      line.exit().remove();
-
-      const newLine = line.enter().append("path").attr("class", "sszvis-pyramid__referenceline");
-
-      line = line.merge(newLine);
+      const line = selection
+        .selectAll(".sszvis-pyramid__referenceline")
+        .data(data)
+        .join("path")
+        .attr("class", "sszvis-pyramid__referenceline");
 
       line
         .attr("transform", props.mirror ? "scale(-1, 1)" : "")
