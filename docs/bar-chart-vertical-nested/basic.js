@@ -1,77 +1,76 @@
 /* global d3, sszvis, config */
 
-// Configuration
-// -----------------------------------------------
+/* Configuration
+  ----------------------------------------------- */
+const MAX_CONTROL_WIDTH = 300;
 
 const queryProps = sszvis
   .responsiveProps()
-  .prop("columnCount", {
-    _: null,
+  .prop("targetNumColumns", {
+    palm: 1,
+    _: 2,
   })
   .prop("bottomPadding", {
-    _: null,
+    palm: 125,
+    _: 100,
   })
   .prop("barPadding", {
-    palm: 0.7,
-    _: 0.34,
+    palm: 10,
+    _: 12,
   })
-  .prop("leftPadding", {
-    _: null,
-  })
-  .prop("xLabel", {
-    _: "",
-  })
-  .prop("xLabelFormat", {
-    _: () => sszvis.formatText,
-  })
-  .prop("xSlant", {
-    palm: "vertical",
-    _: "horizontal",
-  })
-  .prop("yLabel", {
-    _: "Beschäftigte",
-  })
-  .prop("yLabelFormat", {
-    _: () => sszvis.formatNumber,
-  })
-  .prop("ticks", {
-    _: 5,
+  .prop("controlWidth", {
+    _(width) {
+      return Math.min(width, MAX_CONTROL_WIDTH);
+    },
   });
+
+const bvbScale = ["#E22D53", "#2AC7C7", "#009F9D"];
 
 function parseRow(d) {
   return {
-    xValue: d["Jahr"],
-    category: d["Berufsfeld"],
-    yValue: sszvis.parseNumber(d["Anzahl"]),
+    year: d["Jahr_F"],
+    xaxis: d["x"],
+    button: d["Alter_F"],
+    category: d["Auspraegung_F"],
+    konfvalue: d["95 % Konfidenzintervall (in %)"],
+    value: sszvis.parseNumber(d["Anteil (in %)"]),
+    nestedCategory: d["Geschlecht_F"],
   };
 }
 
-const xAcc = sszvis.prop("xValue");
-const yAcc = sszvis.prop("yValue");
+/* Shortcuts
+  ----------------------------------------------- */
+const xjAcc = sszvis.prop("year");
+const xAcc = sszvis.prop("xaxis");
+const bAcc = sszvis.prop("button");
+const yAcc = sszvis.prop("value");
 const cAcc = sszvis.prop("category");
-const dataAcc = sszvis.prop("data");
+const aAcc = sszvis.prop("nestedCategory");
+const kAcc = sszvis.prop("konfvalue");
 
-// Application state
-// -----------------------------------------------
+/* Application state
+  ----------------------------------------------- */
 const state = {
+  rawData: [],
   data: [],
   years: [],
+  nestedCategories: [],
+  aAxis: [],
   categories: [],
   stackedData: [],
   maxStacked: 0,
   selection: [],
+  selectedFilter: null,
 };
 
-// State transitions
-// -----------------------------------------------
+/* State transitions
+  ----------------------------------------------- */
 const actions = {
   prepareState(data) {
-    state.data = data;
-    state.years = sszvis.set(state.data, xAcc);
-    state.categories = sszvis.set(state.data, cAcc);
+    state.rawData = data;
+    state.filters = sszvis.set(state.rawData, (d) => bAcc(d));
 
-    state.stackedData = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc)(data);
-    state.maxStacked = state.stackedData.maxValue;
+    actions.selectFilter(null, state.filters[0]);
 
     render(state);
   },
@@ -80,9 +79,31 @@ const actions = {
     state.selection = [datum];
     render(state);
   },
-
   hideTooltip() {
     state.selection = [];
+    render(state);
+  },
+
+  selectFilter(e, filter) {
+    state.selectedFilter = filter;
+    state.data = state.rawData.filter((d) => bAcc(d) == state.selectedFilter);
+    state.xAxis = sszvis.set(state.data, xAcc);
+    state.years = sszvis.set(state.data, xjAcc);
+
+    state.categories = sszvis.set(state.data, cAcc);
+
+    state.stackedData = sszvis
+      .cascade()
+      .arrayBy(aAcc)
+      .apply(state.data)
+      .map((d) => {
+        const stack = sszvis.stackedBarVerticalData(xjAcc, cAcc, yAcc)(d);
+        stack.key = d[0].nestedCategory;
+        return stack;
+      });
+
+    state.nestedCategories = sszvis.set(state.data, aAcc);
+
     render(state);
   },
 
@@ -91,142 +112,133 @@ const actions = {
   },
 };
 
-// Data initialization
-// -----------------------------------------------
+/* Data initialization
+  ----------------------------------------------- */
 d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
 
-// Render
-// -----------------------------------------------
-
+/* Render
+  ----------------------------------------------- */
 function render(state) {
   const props = queryProps(sszvis.measureDimensions(config.id));
-
-  const legendLayout = sszvis.colorLegendLayout(
-    {
-      axisLabels: state.years.map(props.xLabelFormat),
-      legendLabels: state.categories,
-      slant: props.xSlant,
-    },
-    config.id
-  );
-
-  const cScale = legendLayout.scale;
-  const colorLegend = legendLayout.legend;
-
   const bounds = sszvis.bounds(
-    {
-      top: 30,
-      bottom: props.bottomPadding == null ? legendLayout.bottomPadding : props.bottomPadding,
-      left:
-        props.leftPadding == null
-          ? sszvis.measureAxisLabel(props.yLabelFormat(state.maxStacked))
-          : props.leftPadding,
-    },
+    { top: 10, bottom: props.bottomPadding, left: 10, right: 10 },
     config.id
-  );
-
-  const chartDimensions = sszvis.dimensionsVerticalBarChart(
-    Math.min(800, bounds.innerWidth),
-    state.categories.length
   );
 
   // Scales
 
+  const xaxis2Scale = d3
+    .scaleBand()
+    .domain(state.nestedCategories)
+    .range([50, bounds.innerWidth])
+    .paddingInner(0.2)
+    .paddingOuter(0);
+
   const xScale = d3
     .scaleBand()
-    .domain(state.years)
-    .padding(chartDimensions.padRatio)
-    .paddingOuter(props.barPadding)
-    .range([0, chartDimensions.totalWidth]);
+    .domain(sszvis.set(state.data, xjAcc))
+    .range([0, xaxis2Scale.bandwidth()])
+    .paddingInner(0.2)
+    .paddingOuter(0);
 
-  const yScale = d3.scaleLinear().domain([0, state.maxStacked]).range([bounds.innerHeight, 0]);
+  const yScale = d3
+    .scaleLinear()
+    .domain([0, 100])
+    .range([bounds.innerHeight - 10, 0]);
+
+  const cScale = d3.scaleOrdinal().domain(state.categories).range(bvbScale);
 
   // Layers
 
   const chartLayer = sszvis
     .createSvgLayer(config.id, bounds, {
-      title: config.title,
-      description: config.description,
+      title: "",
+      description: "",
     })
     .datum(state.stackedData);
 
-  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+  const tooltipLayer = sszvis.createHtmlLayer(config.id).datum(state.selection);
 
   // Components
 
-  const stackedBars = sszvis
-    .stackedBarVertical()
-    .xScale(xScale)
-    .width(xScale.bandwidth())
-    .yScale(yScale)
-    .fill((d) => {
-      const color = cScale(cAcc(dataAcc(d)));
-      return isSelected(d) ? sszvis.slightlyDarker(color) : color;
-    });
-
   const xAxis = sszvis.axisX
     .ordinal()
-    .scale(xScale)
+    .scale(xaxis2Scale)
     .orient("bottom")
-    .slant(props.xSlant)
-    .tickFormat(props.xLabelFormat)
-    .title(props.xLabel);
+    .tickSize(0)
+    .tickFormat((d) => d)
+    .title(config.xLabel);
 
   const yAxis = sszvis
     .axisY()
     .scale(yScale)
     .orient("right")
-    .title(props.yLabel)
-    .tickFormat(props.yLabelFormat)
-    .dyTitle(-20);
+    .title(config.yLabel)
+    .ticks(config.ticks)
+    .tickFormat((d) => {
+      if (d === 0) {
+        return sszvis.formatPercent(d);
+      }
+      return sszvis.formatPercent(d);
+    })
+    .dyTitle(-20)
+    .title("Anteil");
 
-  const tooltipHeader = sszvis.modularTextHTML().bold(sszvis.compose(cAcc, dataAcc));
-
-  const tooltipText = sszvis
-    .modularTextHTML()
-    .plain(sszvis.compose(sszvis.formatNumber, yAcc, dataAcc));
+  const colorLegend = sszvis
+    .legendColorOrdinal()
+    .scale(cScale)
+    .rows(state.categories.length / props.targetNumColumns)
+    .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 320))
+    .columns(props.targetNumColumns)
+    .reverse(false)
+    .orientation("vertical");
 
   const tooltip = sszvis
     .tooltip()
     .renderInto(tooltipLayer)
     .orientation(sszvis.fitTooltip("bottom", bounds))
-    .header(tooltipHeader)
-    .body(tooltipText)
+    .header(
+      sszvis
+        .modularTextHTML()
+        .bold((d) => cAcc(d.data))
+        .plain("/")
+        .plain((d) => xjAcc(d.data))
+    )
+    .body((d) => [
+      ["Anteil", sszvis.formatPercent(yAcc(d.data))],
+      ["95 % Konfidenzintervall", kAcc(d.data).replace(" bis", " % bis") + " %"],
+    ])
     .visible(isSelected);
+
+  const xaxis2Group = sszvis
+    .nestedStackedBarsVertical()
+    .offset((d) => xaxis2Scale(d.key))
+    .xScale(xScale)
+    .xAcc(xjAcc)
+    .yScale(yScale)
+    .fill((d) => cScale(cAcc(d.data)))
+    .tooltip(tooltip);
 
   // Rendering
 
-  chartLayer.attr(
-    "transform",
-    sszvis.translateString(
-      bounds.innerWidth / 2 - chartDimensions.totalWidth / 2,
-      bounds.padding.top
-    )
-  );
+  const nestedCategories = chartLayer.selectGroup("age-groups").call(xaxis2Group);
 
-  const bars = chartLayer
-    .selectGroup("barchart")
-    .attr("transform", sszvis.translateString(bounds.padding.left, 0))
-    .call(stackedBars);
-
-  bars.selectAll("[data-tooltip-anchor]").call(tooltip);
-
-  bars
+  chartLayer
     .selectGroup("xAxis")
     .attr("transform", sszvis.translateString(0, bounds.innerHeight))
-    .call(xAxis);
+    .call(xAxis)
+    .selectAll(".domain")
+    .remove();
 
   chartLayer.selectGroup("yAxis").attr("transform", sszvis.translateString(0, 0)).call(yAxis);
 
   chartLayer
     .selectGroup("colorLegend")
-    .attr(
-      "transform",
-      sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
-    )
+    .attr("transform", sszvis.translateString(0, bounds.innerHeight + 20))
     .call(colorLegend);
 
   // Interaction
+
   const interactionLayer = sszvis
     .panning()
     .elementSelector(".sszvis-bar")
@@ -234,13 +246,13 @@ function render(state) {
     .on("pan", actions.showTooltip)
     .on("end", actions.hideTooltip);
 
-  bars.call(interactionLayer);
+  nestedCategories.call(interactionLayer);
 
   sszvis.viewport.on("resize", actions.resize);
 }
 
-// Helper functions
-// -----------------------------------------------
+/* Helper functions
+  ----------------------------------------------- */
 function isSelected(d) {
   return sszvis.contains(state.selection, d);
 }
