@@ -41,13 +41,11 @@ export default function () {
       const selection = select(this);
       const props = selection.props();
 
-      let canvas = selection.selectAll(".sszvis-map__rasterimage").data([0]);
-
-      const newCanvas = canvas.enter().append("canvas").classed("sszvis-map__rasterimage", true);
-
-      canvas.exit().remove();
-
-      canvas = canvas.merge(newCanvas);
+      const canvas = selection
+        .selectAll(".sszvis-map__rasterimage")
+        .data([0])
+        .join("canvas")
+        .classed("sszvis-map__rasterimage", true);
 
       canvas
         .attr("width", props.width)

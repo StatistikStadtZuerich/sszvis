@@ -48,11 +48,8 @@ export default function () {
       const anchoredCircles = selection
         .selectGroup("anchoredCircles")
         .selectAll(".sszvis-anchored-circle")
-        .data(props.mergedData, (d) => d.geoJson.id);
-
-      anchoredCircles
-        .enter()
-        .append("circle")
+        .data(props.mergedData, (d) => d.geoJson.id)
+        .join("circle")
         .attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering")
         .attr("r", radiusAcc)
         .on("mouseover", function (d) {
@@ -64,7 +61,6 @@ export default function () {
         .on("click", function (d) {
           event.call("click", this, d.datum);
         })
-        .merge(anchoredCircles)
         .attr("transform", (d) => {
           const position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
           return translateString(position[0], position[1]);

@@ -96,13 +96,11 @@ function stackedBar(config) {
         .fill(props.fill)
         .stroke(props.stroke || "#FFFFFF");
 
-      let groups = selection.selectAll(".sszvis-stack").data(data);
-
-      const newGroups = groups.enter().append("g").classed("sszvis-stack", true);
-
-      groups.exit().remove();
-
-      groups = groups.merge(newGroups);
+      const groups = selection
+        .selectAll(".sszvis-stack")
+        .data(data)
+        .join("g")
+        .classed("sszvis-stack", true);
 
       groups.call(barGen);
     });

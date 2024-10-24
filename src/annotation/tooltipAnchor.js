@@ -61,13 +61,10 @@ export default function () {
       const selection = select(this);
       const props = selection.props();
 
-      let anchor = selection.selectAll("[data-tooltip-anchor]").data(data);
-
-      // Enter
-
-      const newAnchor = anchor
-        .enter()
-        .append("rect")
+      const anchor = selection
+        .selectAll("[data-tooltip-anchor]")
+        .data(data)
+        .join("rect")
         .attr("height", 1)
         .attr("width", 1)
         .attr("fill", "none")
@@ -75,26 +72,17 @@ export default function () {
         .attr("visibility", "none")
         .attr("data-tooltip-anchor", "");
 
-      // Exit
-
-      anchor.exit().remove();
-      anchor = anchor.merge(newAnchor);
-
       // Update
 
       anchor.attr("transform", fn.compose(vectorToTranslateString, props.position));
 
       // Visible anchor if debug is true
       if (props.debug) {
-        let referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data);
-
-        const newReferencePoint = referencePoint
-          .enter()
-          .append("circle")
+        const referencePoint = selection
+          .selectAll("[data-tooltip-anchor-debug]")
+          .data(data)
+          .join("circle")
           .attr("data-tooltip-anchor-debug", "");
-
-        referencePoint.exit().remove();
-        referencePoint = referencePoint.merge(newReferencePoint);
 
         referencePoint
           .attr("r", 2)

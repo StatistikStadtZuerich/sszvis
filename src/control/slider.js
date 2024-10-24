@@ -69,10 +69,11 @@ export default function () {
         .range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
 
       // the mostly unchanging bits
-      let bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]);
-      const newBg = bg.enter().append("g").classed("sszvis-control-slider__backgroundgroup", true);
-      bg = bg.merge(newBg);
-      bg.exit().remove();
+      const bg = selection
+        .selectAll("g.sszvis-control-slider__backgroundgroup")
+        .data([1])
+        .join("g")
+        .classed("sszvis-control-slider__backgroundgroup", true);
 
       // create the axis
       const axis = axisX()
@@ -84,13 +85,11 @@ export default function () {
         .tickValues(fn.set([...props.majorTicks, ...props.minorTicks]))
         .tickFormat((d) => (contains(d, props.majorTicks) ? props.tickLabels(d) : ""));
 
-      let axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]);
-
-      const newAxisSelection = axisSelection
-        .enter()
-        .append("g")
+      const axisSelection = bg
+        .selectAll("g.sszvis-axisGroup")
+        .data([1])
+        .join("g")
         .classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
-      axisSelection = axisSelection.merge(newAxisSelection);
 
       axisSelection.attr("transform", translateString(0, axisOffset)).call(axis);
 
@@ -109,68 +108,55 @@ export default function () {
       );
 
       // create the slider background
-      let backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]);
-      const newBackgroundSelection = backgroundSelection
-        .enter()
-        .append("g")
-        .classed("sszvis-slider__background", true);
-      backgroundSelection = backgroundSelection.merge(newBackgroundSelection);
-      backgroundSelection.attr("transform", translateString(0, backgroundOffset));
+      const backgroundSelection = bg
+        .selectAll("g.sszvis-slider__background")
+        .data([1])
+        .join("g")
+        .classed("sszvis-slider__background", true)
+        .attr("transform", translateString(0, backgroundOffset));
 
-      let bg1 = backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]);
-      const newBg1 = bg1
-        .enter()
-        .append("line")
+      backgroundSelection
+        .selectAll(".sszvis-slider__background__bg1")
+        .data([1])
+        .join("line")
         .classed("sszvis-slider__background__bg1", true)
         .style("stroke-width", bgWidth)
         .style("stroke", "#888")
-        .style("stroke-linecap", "round");
-      bg1 = bg1.merge(newBg1);
-      bg1
+        .style("stroke-linecap", "round")
         .attr("x1", Math.ceil(scaleRange[0] + lineEndOffset))
         .attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
 
-      let bg2 = backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]);
-      const newBg2 = bg2
-        .enter()
-        .append("line")
+      backgroundSelection
+        .selectAll(".sszvis-slider__background__bg2")
+        .data([1])
+        .join("line")
         .classed("sszvis-slider__background__bg2", true)
         .style("stroke-width", bgWidth - 1)
         .style("stroke", "#fff")
-        .style("stroke-linecap", "round");
-      bg2 = bg2.merge(newBg2);
-      bg2
+        .style("stroke-linecap", "round")
         .attr("x1", Math.ceil(scaleRange[0] + lineEndOffset))
         .attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
 
-      let shadow = backgroundSelection
+      backgroundSelection
         .selectAll(".sszvis-slider__backgroundshadow")
-        .data([props.value]);
-      const newShadow = shadow
-        .enter()
-        .append("line")
+        .data([props.value])
+        .join("line")
         .attr("class", "sszvis-slider__backgroundshadow")
         .attr("stroke-width", bgWidth - 1)
         .style("stroke", "#E0E0E0")
-        .style("stroke-linecap", "round");
-      shadow = shadow.merge(newShadow);
-      shadow
+        .style("stroke-linecap", "round")
         .attr("x1", Math.ceil(scaleRange[0] + lineEndOffset))
         .attr("x2", fn.compose(Math.floor, alteredScale));
 
       // draw the handle and the label
-      let handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]);
-      handle.exit().remove();
+      const handle = selection
+        .selectAll("g.sszvis-control-slider__handle")
+        .data([props.value])
+        .join("g")
+        .classed("sszvis-control-slider__handle", true)
+        .attr("transform", (d) => translateString(halfPixel(alteredScale(d)), 0.5));
 
-      const handleEntering = handle
-        .enter()
-        .append("g")
-        .classed("sszvis-control-slider__handle", true);
-      handle = handle.merge(handleEntering);
-
-      handle.attr("transform", (d) => translateString(halfPixel(alteredScale(d)), 0.5));
-
-      handleEntering.append("text").classed("sszvis-control-slider--label", true);
+      handle.append("text").classed("sszvis-control-slider--label", true);
 
       handle
         .selectAll(".sszvis-control-slider--label")
@@ -191,8 +177,10 @@ export default function () {
               : 0
         );
 
-      handleEntering
-        .append("rect")
+      handle
+        .selectAll(".sszvis-control-slider__handlebox")
+        .data([1])
+        .join("rect")
         .classed("sszvis-control-slider__handlebox", true)
         .attr("x", -(handleWidth / 2))
         .attr("y", backgroundOffset - handleHeight / 2)
@@ -203,8 +191,10 @@ export default function () {
 
       const handleLineDimension = handleHeight / 2 - 4; // the amount by which to offset the small handle line within the handle
 
-      handleEntering
-        .append("line")
+      handle
+        .selectAll(".sszvis-control-slider__handleline")
+        .data([1])
+        .join("line")
         .classed("sszvis-control-slider__handleline", true)
         .attr("y1", backgroundOffset - handleLineDimension)
         .attr("y2", backgroundOffset + handleLineDimension);

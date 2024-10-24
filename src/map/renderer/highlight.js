@@ -61,18 +61,10 @@ export default function () {
         return m;
       }, []);
 
-      highlightBorders = highlightBorders.data(mergedHighlight);
-
-      const newHighlightBorders = highlightBorders
-        .enter()
-        .append("path")
-        .classed("sszvis-map__highlight", true);
-
-      highlightBorders.exit().remove();
-
-      highlightBorders = highlightBorders.merge(newHighlightBorders);
-
-      highlightBorders
+      highlightBorders = highlightBorders
+        .data(mergedHighlight)
+        .join("path")
+        .classed("sszvis-map__highlight", true)
         .attr("d", (d) => props.mapPath(d.geoJson))
         .style("stroke", (d) => props.highlightStroke(d.datum))
         .style("stroke-width", (d) => props.highlightStrokeWidth(d.datum));

@@ -57,19 +57,14 @@ export function createHtmlLayer(selector, bounds, metadata) {
   const root = fn.isSelection(selector) ? selector : select(selector);
   root.classed("sszvis-outer-container", true);
 
-  let layer = root.selectAll("[data-sszvis-html-layer][" + elementDataKey + "]").data([0]);
-  const newLayer = layer
-    .enter()
-    .append("div")
+  return root
+    .selectAll("[data-sszvis-html-layer][" + elementDataKey + "]")
+    .data([0])
+    .join("div")
     .classed("sszvis-html-layer", true)
     .attr("data-sszvis-html-layer", "")
-    .attr(elementDataKey, "");
-
-  layer = layer.merge(newLayer);
-  layer
+    .attr(elementDataKey, "")
     .style("position", "absolute")
     .style("left", bounds.padding.left + "px")
     .style("top", bounds.padding.top + "px");
-
-  return layer;
 }

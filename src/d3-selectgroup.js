@@ -10,9 +10,8 @@ import { selection } from "d3";
  * @return {d3.selection}
  */
 selection.prototype.selectGroup = function (key) {
-  const group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data((d) => [d]);
-
-  const newGroup = group.enter().append("g").attr("data-d3-selectgroup", key);
-
-  return group.merge(newGroup);
+  return this.selectAll('[data-d3-selectgroup="' + key + '"]')
+    .data((d) => [d])
+    .join("g")
+    .attr("data-d3-selectgroup", key);
 };

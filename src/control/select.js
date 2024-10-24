@@ -35,17 +35,12 @@ export default function () {
       const selection = select(this);
       const props = selection.props();
 
-      let wrapperEl = selection
+      const wrapperEl = selection
         .selectAll(".sszvis-control-optionSelectable")
-        .data(["sszvis-control-select"], (d) => d);
-      const newWrapperEl = wrapperEl
-        .enter()
-        .append("div")
+        .data(["sszvis-control-select"], (d) => d)
+        .join("div")
         .classed("sszvis-control-optionSelectable", true)
         .classed("sszvis-control-select", true);
-      wrapperEl.exit().remove();
-
-      wrapperEl = wrapperEl.merge(newWrapperEl);
 
       wrapperEl.style("width", props.width + "px");
 
@@ -53,11 +48,10 @@ export default function () {
         .selectDiv("selectMetrics")
         .classed("sszvis-control-select__metrics", true);
 
-      let selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]);
-
-      const newSelectEl = selectEl
-        .enter()
-        .append("select")
+      const selectEl = wrapperEl
+        .selectAll(".sszvis-control-select__element")
+        .data([1])
+        .join("select")
         .classed("sszvis-control-select__element", true)
         .on("change", function (e) {
           // We store the index in the select's value instead of the datum
@@ -71,18 +65,12 @@ export default function () {
           }, 0);
         });
 
-      selectEl = selectEl.merge(newSelectEl);
-
       selectEl.style("width", props.width + 30 + "px");
 
-      const optionEls = selectEl.selectAll("option").data(props.values);
-
-      const newOptionEls = optionEls.enter().append("option");
-
-      optionEls.exit().remove();
-
-      optionEls
-        .merge(newOptionEls)
+      selectEl
+        .selectAll("option")
+        .data(props.values)
+        .join("option")
         .attr("selected", (d) => (d === props.current ? "selected" : null))
         .attr("value", (d, i) => i)
         .text((d) => truncateToWidth(metricsEl, props.width - 40, d));

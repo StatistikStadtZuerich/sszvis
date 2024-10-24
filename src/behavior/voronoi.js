@@ -71,19 +71,13 @@ export default function () {
       );
       const voronoi = delaunay.voronoi(props.bounds);
 
-      let polys = selection
+      const polys = selection
         .selectAll("[data-sszvis-behavior-voronoi]")
-        .data(voronoi.cellPolygons());
-
-      const newPolys = polys
-        .enter()
-        .append("path")
+        .data(voronoi.cellPolygons())
+        .join("path")
         .attr("data-sszvis-behavior-voronoi", "")
         .attr("data-sszvis-behavior-pannable", "")
         .attr("class", "sszvis-interactive");
-
-      polys.exit().remove();
-      polys = polys.merge(newPolys);
 
       polys
         .attr("d", (d) => "M" + d.join("L") + "Z")

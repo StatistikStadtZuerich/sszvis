@@ -69,12 +69,11 @@ export default function () {
         c: props.scale(pPrev),
       });
 
-      let circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints);
-
-      const newCircles = circles.enter().append("circle").classed("sszvis-legend__circle", true);
-      circles = circles.merge(newCircles);
-
-      circles.exit().remove();
+      const circles = selection
+        .selectAll("circle.sszvis-legend__circle")
+        .data(props.endpoints)
+        .join("circle")
+        .classed("sszvis-legend__circle", true);
 
       circles
         .attr("r", circleRad)
@@ -82,12 +81,11 @@ export default function () {
         .attr("cx", (d, i) => (i === 0 ? circleRad : props.width - circleRad))
         .attr("fill", props.scale);
 
-      let segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData);
-
-      const newSegments = segments.enter().append("rect").classed("sszvis-legend__crispmark", true);
-      segments = segments.merge(newSegments);
-
-      segments.exit().remove();
+      const segments = selection
+        .selectAll("rect.sszvis-legend__crispmark")
+        .data(rectData)
+        .join("rect")
+        .classed("sszvis-legend__crispmark", true);
 
       segments
         .attr("x", (d) => d.x)
@@ -98,12 +96,11 @@ export default function () {
 
       const lineData = rectData.slice(0, -1);
 
-      const lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData);
-
-      const newLines = lines.enter().append("line").classed("sszvis-legend__crispmark", true);
-      lines.merge(newLines);
-
-      lines.exit().remove();
+      const lines = selection
+        .selectAll("line.sszvis-legend__crispmark")
+        .data(lineData)
+        .join("line")
+        .classed("sszvis-legend__crispmark", true);
 
       lines
         .attr("x1", (d) => halfPixel(d.x + d.w))
@@ -112,12 +109,11 @@ export default function () {
         .attr("y2", segHeight + 6)
         .attr("stroke", "#B8B8B8");
 
-      let labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData);
-
-      const newLabels = labels.enter().append("text").classed("sszvis-legend__axislabel", true);
-      labels = labels.merge(newLabels);
-
-      labels.exit().remove();
+      const labels = selection
+        .selectAll(".sszvis-legend__axislabel")
+        .data(lineData)
+        .join("text")
+        .classed("sszvis-legend__axislabel", true);
 
       labels
         .style("text-anchor", "middle")

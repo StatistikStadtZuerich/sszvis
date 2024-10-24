@@ -53,19 +53,17 @@ export default function () {
       const handleHeight = 24;
       const handleTop = props.top - handleHeight;
 
-      let group = selection.selectAll(".sszvis-handleRuler__group").data([0]);
+      const group = selection
+        .selectAll(".sszvis-handleRuler__group")
+        .data([0])
+        .join("g")
+        .classed("sszvis-handleRuler__group", true);
 
-      const entering = group.enter().append("g").classed("sszvis-handleRuler__group", true);
+      group.append("line").classed("sszvis-ruler__rule", true);
 
-      group.exit().remove();
+      group.append("rect").classed("sszvis-handleRuler__handle", true);
 
-      group = group.merge(entering);
-
-      entering.append("line").classed("sszvis-ruler__rule", true);
-
-      entering.append("rect").classed("sszvis-handleRuler__handle", true);
-
-      entering.append("line").classed("sszvis-handleRuler__handle-mark", true);
+      group.append("line").classed("sszvis-handleRuler__handle-mark", true);
 
       group
         .selectAll(".sszvis-ruler__rule")
@@ -90,34 +88,25 @@ export default function () {
         .attr("x2", crispX)
         .attr("y2", halfPixel(handleTop + handleHeight * 0.85));
 
-      let dots = group.selectAll(".sszvis-ruler__dot").data(data);
-
-      const newDots = dots.enter().append("circle").classed("sszvis-ruler__dot", true);
-
-      dots.exit().remove();
-
-      dots = dots.merge(newDots);
+      const dots = group
+        .selectAll(".sszvis-ruler__dot")
+        .data(data)
+        .join("circle")
+        .classed("sszvis-ruler__dot", true);
 
       dots.attr("cx", crispX).attr("cy", crispY).attr("r", 3.5).attr("fill", props.color);
 
-      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data);
-
-      const newLabelOutline = labelOutline
-        .enter()
-        .append("text")
+      selection
+        .selectAll(".sszvis-ruler__label-outline")
+        .data(data)
+        .join("text")
         .classed("sszvis-ruler__label-outline", true);
 
-      labelOutline.exit().remove();
-
-      labelOutline = labelOutline.merge(newLabelOutline);
-
-      let label = selection.selectAll(".sszvis-ruler__label").data(data);
-
-      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
-
-      label.exit().remove();
-
-      label = label.merge(newLabel);
+      selection
+        .selectAll(".sszvis-ruler__label")
+        .data(data)
+        .join("text")
+        .classed("sszvis-ruler__label", true);
 
       // Update both labelOutline and labelOutline selections
 

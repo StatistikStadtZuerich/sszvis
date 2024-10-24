@@ -40,13 +40,11 @@ export default function () {
       const selection = select(this);
       const props = selection.props();
 
-      let image = selection.selectAll(".sszvis-map__image").data([0]); // At the moment, 1 image per container
-
-      const newImage = image.enter().append("img").classed("sszvis-map__image", true);
-
-      image.exit().remove();
-
-      image = image.merge(newImage);
+      const image = selection
+        .selectAll(".sszvis-map__image")
+        .data([0]) // At the moment, 1 image per container
+        .join("img")
+        .classed("sszvis-map__image", true);
 
       const topLeft = props.projection(props.geoBounds[0]);
       const bottomRight = props.projection(props.geoBounds[1]);
