@@ -116,3 +116,25 @@ Comparison of two datasets with huge differences in values over the same time pe
     "sourceView": ["index.html", "data.csv"]
 }
 ```
+
+## Usage example: Confidence intervals
+
+When the dataset has confidence intervals, you can use the `sszvis.annotationConfidenceArea` component to create a line chart with confidence intervals.
+
+```project
+{
+    "name": "line-chart-confidence-intervals",
+    "files": {
+        "index.html": {
+            "source": "line-chart/confidence.html",
+            "template": "template.html"
+        },
+        "data.csv": "line-chart/data/confidence.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "fallback.png",
+
+    },
+    "sourceView": ["index.html", "data.csv"]
+}
+```

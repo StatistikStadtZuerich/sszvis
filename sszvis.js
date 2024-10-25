@@ -15,9 +15,7 @@
    * @return {d3.selection}
    */
   d3.selection.prototype.selectDiv = function (key) {
-    const div = this.selectAll('[data-d3-selectdiv="' + key + '"]').data(d => [d]);
-    const newDiv = div.enter().append("div").attr("data-d3-selectdiv", key).style("position", "absolute");
-    return div.merge(newDiv);
+    return this.selectAll('[data-d3-selectdiv="' + key + '"]').data(d => [d]).join("div").attr("data-d3-selectdiv", key).style("position", "absolute");
   };
 
   /**
@@ -30,9 +28,7 @@
    * @return {d3.selection}
    */
   d3.selection.prototype.selectGroup = function (key) {
-    const group = this.selectAll('[data-d3-selectgroup="' + key + '"]').data(d => [d]);
-    const newGroup = group.enter().append("g").attr("data-d3-selectgroup", key);
-    return group.merge(newGroup);
+    return this.selectAll('[data-d3-selectgroup="' + key + '"]').data(d => [d]).join("g").attr("data-d3-selectgroup", key);
   };
 
   /**
@@ -638,9 +634,7 @@
    */
 
   function ensureDefsElement (selection, type, elementId) {
-    const element = ensureDefsSelection(selection).selectAll(type + "#" + elementId).data([0]);
-    const newElement = element.enter().append(type).attr("id", elementId);
-    return element.merge(newElement);
+    return ensureDefsSelection(selection).selectAll(type + "#" + elementId).data([0]).join(type).attr("id", elementId);
   }
 
   /* Helper functions
@@ -653,9 +647,7 @@
    * of other, visible, elements.
    */
   function ensureDefsSelection(selection) {
-    const defs = selection.selectAll("defs").data([0]);
-    const newDefs = defs.enter().append("defs");
-    return defs.merge(newDefs);
+    return selection.selectAll("defs").data([0]).join("defs");
   }
 
   /**
@@ -921,7 +913,7 @@
    *     var selection = select(this);
    *     var props = selection.props();
    *     var axis = d3.svg.axis().ticks(props.ticks);
-   *     selection.enter()
+   *     selection
    *       .append('g')
    *       .call(axis);
    *   })
@@ -1094,14 +1086,10 @@
       const selection = d3.select(this);
       const props = selection.props();
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
-      let dataArea = selection.selectAll(".sszvis-dataareacircle").data(data);
-      const newDataArea = dataArea.enter().append("circle").classed("sszvis-dataareacircle", true);
-      dataArea = dataArea.merge(newDataArea);
+      const dataArea = selection.selectAll(".sszvis-dataareacircle").data(data).join("circle").classed("sszvis-dataareacircle", true);
       dataArea.attr("cx", props.x).attr("cy", props.y).attr("r", props.r).attr("fill", "url(#data-area-pattern)");
       if (props.caption) {
-        let dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data);
-        const newDataCaptions = dataCaptions.enter().append("text").classed("sszvis-dataareacircle__caption", true);
-        dataCaptions = dataCaptions.merge(newDataCaptions);
+        const dataCaptions = selection.selectAll(".sszvis-dataareacircle__caption").data(data).join("text").classed("sszvis-dataareacircle__caption", true);
         dataCaptions.attr("x", props.x).attr("y", props.y).attr("dx", props.dx).attr("dy", props.dy).text(props.caption);
       }
     });
@@ -1144,16 +1132,10 @@
       const y1 = props.yScale(props.y1);
       const x2 = props.xScale(props.x2);
       const y2 = props.yScale(props.y2);
-      let line = selection.selectAll(".sszvis-referenceline").data(data);
-      line.exit().remove();
-      const newLine = line.enter().append("line").classed("sszvis-referenceline", true);
-      line = line.merge(newLine);
+      const line = selection.selectAll(".sszvis-referenceline").data(data).join("line").classed("sszvis-referenceline", true);
       line.attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
       if (props.caption) {
-        let caption = selection.selectAll(".sszvis-referenceline__caption").data([0]);
-        caption.exit().remove();
-        const newCaption = caption.enter().append("text").classed("sszvis-referenceline__caption", true);
-        caption = caption.merge(newCaption);
+        const caption = selection.selectAll(".sszvis-referenceline__caption").data([0]).join("text").classed("sszvis-referenceline__caption", true);
         caption.attr("transform", () => {
           const vx = x2 - x1;
           const vy = y2 - y1;
@@ -1307,16 +1289,7 @@
     return component().prop("position").position(functor([0, 0])).prop("debug").render(function (data) {
       const selection = d3.select(this);
       const props = selection.props();
-      let anchor = selection.selectAll("[data-tooltip-anchor]").data(data);
-
-      // Enter
-
-      const newAnchor = anchor.enter().append("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", "");
-
-      // Exit
-
-      anchor.exit().remove();
-      anchor = anchor.merge(newAnchor);
+      const anchor = selection.selectAll("[data-tooltip-anchor]").data(data).join("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", "");
 
       // Update
 
@@ -1324,10 +1297,7 @@
 
       // Visible anchor if debug is true
       if (props.debug) {
-        let referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data);
-        const newReferencePoint = referencePoint.enter().append("circle").attr("data-tooltip-anchor-debug", "");
-        referencePoint.exit().remove();
-        referencePoint = referencePoint.merge(newReferencePoint);
+        const referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data).join("circle").attr("data-tooltip-anchor-debug", "");
         referencePoint.attr("r", 2).attr("fill", "#fff").attr("stroke", "#f00").attr("stroke-width", 1.5).attr("transform", compose(vectorToTranslateString, props.position));
       }
     });
@@ -1366,10 +1336,7 @@
   }
   function makeFlagDot(classed, cx, cy) {
     return function (dot) {
-      const newDot = dot.enter().append("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true);
-      dot.exit().remove();
-      dot = dot.merge(newDot);
-      dot.attr("r", 3.5).attr("cx", cx).attr("cy", cy);
+      dot.join("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true).attr("r", 3.5).attr("cx", cx).attr("cy", cy);
     };
   }
 
@@ -1609,19 +1576,13 @@
         return halfPixel((props.y0(d) + props.y1(d)) / 2);
       };
       const dotRadius = 1.5;
-      let line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]);
-      const newLine = line.enter().append("line").classed("sszvis-rangeRuler__rule", true);
-      line.exit().remove();
-      line = line.merge(newLine);
+      const line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]).join("line").classed("sszvis-rangeRuler__rule", true);
       line.attr("x1", crispX).attr("y1", props.top).attr("x2", crispX).attr("y2", props.bottom);
-      let marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data);
-      const enteringMarks = marks.enter().append("g").classed("sszvis-rangeRuler--mark", true);
-      marks.exit().remove();
-      marks = marks.merge(enteringMarks);
-      enteringMarks.append("circle").classed("sszvis-rangeRuler__p1", true);
-      enteringMarks.append("circle").classed("sszvis-rangeRuler__p2", true);
-      enteringMarks.append("text").classed("sszvis-rangeRuler__label-contour", true);
-      enteringMarks.append("text").classed("sszvis-rangeRuler__label", true);
+      const marks = selection.selectAll(".sszvis-rangeRuler--mark").data(data).join("g").classed("sszvis-rangeRuler--mark", true);
+      marks.append("circle").classed("sszvis-rangeRuler__p1", true);
+      marks.append("circle").classed("sszvis-rangeRuler__p2", true);
+      marks.append("text").classed("sszvis-rangeRuler__label-contour", true);
+      marks.append("text").classed("sszvis-rangeRuler__label", true);
       marks.selectAll(".sszvis-rangeRuler__p1").data(d => [d]).attr("cx", crispX).attr("cy", crispY0).attr("r", dotRadius);
       marks.selectAll(".sszvis-rangeRuler__p2").data(d => [d]).attr("cx", crispX).attr("cy", crispY1).attr("r", dotRadius);
       marks.selectAll(".sszvis-rangeRuler__label").data(d => [d]).attr("x", d => {
@@ -1655,10 +1616,7 @@
       if (!props.removeStroke) {
         marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
-      let total = selection.selectAll(".sszvis-rangeRuler__total").data([last(data)]);
-      const newTotal = total.enter().append("text").classed("sszvis-rangeRuler__total", true);
-      total.exit().remove();
-      total = total.merge(newTotal);
+      const total = selection.selectAll(".sszvis-rangeRuler__total").data([last(data)]).join("text").classed("sszvis-rangeRuler__total", true);
       total.attr("x", d => {
         const offset = props.flip(d) ? -10 : 10;
         return crispX(d) + offset;
@@ -1707,20 +1665,10 @@
       const selection = d3.select(this);
       const props = selection.props();
       ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
-      let dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data);
-
-      // FIXME: no exit?
-
-      const newDataArea = dataArea.enter().append("rect").classed("sszvis-dataarearectangle", true);
-      dataArea = dataArea.merge(newDataArea);
+      const dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data).join("rect").classed("sszvis-dataarearectangle", true);
       dataArea.attr("x", props.x).attr("y", props.y).attr("width", props.width).attr("height", props.height).attr("fill", "url(#data-area-pattern)");
       if (props.caption) {
-        let dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data);
-
-        // FIXME: no exit?
-
-        const newDataCaptions = dataCaptions.enter().append("text").classed("sszvis-dataarearectangle__caption", true);
-        dataCaptions = dataCaptions.merge(newDataCaptions);
+        const dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data).join("text").classed("sszvis-dataarearectangle__caption", true);
         dataCaptions.attr("x", (d, i) => props.x(d, i) + props.width(d, i) / 2).attr("y", (d, i) => props.y(d, i) + props.height(d, i) / 2).attr("dx", props.dx).attr("dy", props.dy).text(props.caption);
       }
     });
@@ -1758,101 +1706,138 @@
    * @return {sszvis.component}
    */
 
-  function ruler () {
-    return component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
-      const selection = d3.select(this);
-      const props = selection.props();
-      const labelId = props.labelId || function (d) {
-        return props.x(d) + "_" + props.y(d);
-      };
-      let ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId);
-      const newRuler = ruler.enter().append("line").classed("sszvis-ruler__rule", true);
-      ruler.exit().remove();
-      ruler = ruler.merge(newRuler);
-      ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", props.y).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
-      let dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId);
-      const newDot = dot.enter().append("circle").classed("sszvis-ruler__dot", true);
-      dot.exit().remove();
-      dot = dot.merge(newDot);
-      dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", props.color);
-      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId);
-      const newLabelOutline = labelOutline.enter().append("text").classed("sszvis-ruler__label-outline", true);
-      labelOutline.exit().remove();
-      labelOutline = labelOutline.merge(newLabelOutline);
-      let label = selection.selectAll(".sszvis-ruler__label").data(data, labelId);
-      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
-      label.exit().remove();
-      label = label.merge(newLabel);
+  const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
+    const selection = d3.select(this);
+    const props = selection.props();
+    const labelId = props.labelId || function (d) {
+      return props.x(d) + "_" + props.y(d);
+    };
+    const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId).join("line").classed("sszvis-ruler__rule", true);
+    ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", props.y).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
+    const dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId).join("circle").classed("sszvis-ruler__dot", true);
+    dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", props.color);
+    selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId).join("text").classed("sszvis-ruler__label-outline", true);
+    const label = selection.selectAll(".sszvis-ruler__label").data(data, labelId).join("text").classed("sszvis-ruler__label", true);
 
-      // Update both label and labelOutline selections
+    // Update both label and labelOutline selections
 
-      const crispX = compose(halfPixel, props.x);
-      const crispY = compose(halfPixel, props.y);
-      const textSelection = selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
-        const x = crispX(d);
-        const y = crispY(d);
-        const dx = props.flip(d) ? -10 : 10;
-        const dy = y < props.top ? 2 * y : y > props.bottom ? 0 : 5;
-        return translateString(x + dx, y + dy);
-      }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
-      if (props.reduceOverlap) {
-        const THRESHOLD = 2;
-        let ITERATIONS = 10;
-        const labelBounds = [];
-        // Optimization for the lookup later
-        const labelBoundsIndex = {};
+    const crispX = compose(halfPixel, props.x);
+    const crispY = compose(halfPixel, props.y);
+    const textSelection = selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
+      const x = crispX(d);
+      const y = crispY(d);
+      const dx = props.flip(d) ? -10 : 10;
+      const dy = y < props.top ? 2 * y : y > props.bottom ? 0 : 5;
+      return translateString(x + dx, y + dy);
+    }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
+    if (props.reduceOverlap) {
+      const THRESHOLD = 2;
+      let ITERATIONS = 10;
+      const labelBounds = [];
+      // Optimization for the lookup later
+      const labelBoundsIndex = {};
 
-        // Reset vertical shift (set by previous renders)
-        textSelection.attr("y", "");
+      // Reset vertical shift (set by previous renders)
+      textSelection.attr("y", "");
 
-        // Create bounds objects
-        label.each(function (d) {
-          const bounds = this.getBoundingClientRect();
-          const item = {
-            top: bounds.top,
-            bottom: bounds.bottom,
-            dy: 0
-          };
-          labelBounds.push(item);
-          labelBoundsIndex[labelId(d)] = item;
-        });
+      // Create bounds objects
+      label.each(function (d) {
+        const bounds = this.getBoundingClientRect();
+        const item = {
+          top: bounds.top,
+          bottom: bounds.bottom,
+          dy: 0
+        };
+        labelBounds.push(item);
+        labelBoundsIndex[labelId(d)] = item;
+      });
 
-        // Sort array in place by vertical position
-        // (only supports labels of same height)
-        labelBounds.sort((a, b) => d3.ascending(a.top, b.top));
+      // Sort array in place by vertical position
+      // (only supports labels of same height)
+      labelBounds.sort((a, b) => d3.ascending(a.top, b.top));
 
-        // Using postfix decrement means the expression evaluates to the value of the variable
-        // before the decrement takes place. In the case of 10 iterations, this means that the
-        // variable gets to 0 after the truthiness of the 10th iteration is tested, and the
-        // expression is false at the beginning of the 11th, so 10 iterations are executed.
-        // If you use prefix decrement (--ITERATIONS), the variable gets to 0 at the beginning of
-        // the 10th iteration, meaning that only 9 iterations are executed.
-        while (ITERATIONS--) {
-          // Calculate overlap and correct position
-          for (const [index, firstLabel] of labelBounds.entries()) {
-            for (const secondLabel of labelBounds.slice(index + 1)) {
-              const overlap = firstLabel.bottom - secondLabel.top;
-              if (overlap >= THRESHOLD) {
-                const offset = overlap / 2;
-                firstLabel.bottom -= offset;
-                firstLabel.top -= offset;
-                firstLabel.dy -= offset;
-                secondLabel.bottom += offset;
-                secondLabel.top += offset;
-                secondLabel.dy += offset;
-              }
+      // Using postfix decrement means the expression evaluates to the value of the variable
+      // before the decrement takes place. In the case of 10 iterations, this means that the
+      // variable gets to 0 after the truthiness of the 10th iteration is tested, and the
+      // expression is false at the beginning of the 11th, so 10 iterations are executed.
+      // If you use prefix decrement (--ITERATIONS), the variable gets to 0 at the beginning of
+      // the 10th iteration, meaning that only 9 iterations are executed.
+      while (ITERATIONS--) {
+        // Calculate overlap and correct position
+        for (const [index, firstLabel] of labelBounds.entries()) {
+          for (const secondLabel of labelBounds.slice(index + 1)) {
+            const overlap = firstLabel.bottom - secondLabel.top;
+            if (overlap >= THRESHOLD) {
+              const offset = overlap / 2;
+              firstLabel.bottom -= offset;
+              firstLabel.top -= offset;
+              firstLabel.dy -= offset;
+              secondLabel.bottom += offset;
+              secondLabel.top += offset;
+              secondLabel.dy += offset;
             }
           }
         }
+      }
 
-        // Shift vertically to remove overlap
-        textSelection.attr("y", d => {
-          const textLabel = labelBoundsIndex[labelId(d)];
-          return textLabel.dy;
-        });
+      // Shift vertically to remove overlap
+      textSelection.attr("y", d => {
+        const textLabel = labelBoundsIndex[labelId(d)];
+        return textLabel.dy;
+      });
+    }
+  });
+  const rulerLabelVerticalSeparate = cAcc => g => {
+    const THRESHOLD = 2;
+    const labelBounds = [];
+
+    // Reset vertical shift
+    g.selectAll("text").each(function () {
+      d3.select(this).attr("y", "");
+    });
+
+    // Calculate bounds
+    g.selectAll(".sszvis-ruler__label").each(function (d) {
+      const bounds = this.getBoundingClientRect();
+      labelBounds.push({
+        category: cAcc(d),
+        top: bounds.top,
+        bottom: bounds.bottom,
+        dy: 0
+      });
+    });
+
+    // Sort by vertical position (only supports labels of same height)
+    labelBounds.sort((a, b) => d3.ascending(a.top, b.top));
+
+    // Calculate overlap and correct position
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < labelBounds.length; j++) {
+        for (let k = j + 1; k < labelBounds.length; k++) {
+          if (j === k) continue;
+          const firstLabel = labelBounds[j];
+          const secondLabel = labelBounds[k];
+          const overlap = firstLabel.bottom - secondLabel.top;
+          if (overlap >= THRESHOLD) {
+            firstLabel.bottom -= overlap / 2;
+            firstLabel.top -= overlap / 2;
+            firstLabel.dy -= overlap / 2;
+            secondLabel.bottom += overlap / 2;
+            secondLabel.top += overlap / 2;
+            secondLabel.dy += overlap / 2;
+          }
+        }
+      }
+    }
+
+    // Shift vertically to remove overlap
+    g.selectAll("text").each(function (d) {
+      const label = find(l => l.category === cAcc(d), labelBounds);
+      if (label) {
+        d3.select(this).attr("y", label.dy);
       }
     });
-  }
+  };
 
   /**
    * Tooltip annotation
@@ -1937,26 +1922,20 @@
 
       // Select tooltip elements
 
-      let tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData);
-      tooltip.exit().remove();
-
-      // Enter: tooltip
-
-      const enterTooltip = tooltip.enter().append("div");
-      tooltip = tooltip.merge(enterTooltip);
+      const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
       tooltip.style("pointer-events", "none").style("opacity", props.opacity).style("padding-top", d => props.orientation(d) === "top" ? TIP_SIZE + "px" : null).style("padding-right", d => props.orientation(d) === "right" ? TIP_SIZE + "px" : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null).style("padding-left", d => props.orientation(d) === "left" ? TIP_SIZE + "px" : null).classed("sszvis-tooltip", true);
 
       // Enter: tooltip background
 
-      const enterBackground = enterTooltip.append("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
-      const enterBackgroundPath = enterBackground.append("path");
+      const enterBackground = tooltip.selectAll(".sszvis-tooltip__background").data([0]).join("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
+      const enterBackgroundPath = enterBackground.selectAll("path").data([0]).join("path");
       if (supportsSVGFilters()) {
-        const filter = enterBackground.append("filter").attr("id", "sszvisTooltipShadowFilter").attr("height", "150%");
-        filter.append("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
-        filter.append("feComponentTransfer").append("feFuncA").attr("type", "linear").attr("slope", 0.2);
-        const merge = filter.append("feMerge");
-        merge.append("feMergeNode"); // Contains the blurred image
-        merge.append("feMergeNode") // Contains the element that the filter is applied to
+        const filter = enterBackground.selectAll("filter").data([0]).join("filter").attr("id", "sszvisTooltipShadowFilter").attr("height", "150%");
+        filter.selectAll("feGaussianBlur").data([0]).join("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
+        filter.selectAll("feComponentTransfer").data([0]).join("feComponentTransfer").selectAll("feFuncA").data([0]).join("feFuncA").attr("type", "linear").attr("slope", 0.2);
+        const merge = filter.selectAll("feMerge").data([0]).join("feMerge");
+        merge.selectAll("feMergeNode").data([0]).join("feMergeNode"); // Contains the blurred image
+        merge.selectAll("feMergeNode").data([0]).join("feMergeNode") // Contains the element that the filter is applied to
         .attr("in", "SourceGraphic");
         enterBackgroundPath.attr("filter", "url(#sszvisTooltipShadowFilter)");
       } else {
@@ -1965,9 +1944,9 @@
 
       // Enter: tooltip content
 
-      const enterContent = enterTooltip.append("div").classed("sszvis-tooltip__content", true);
-      enterContent.append("div").classed("sszvis-tooltip__header", true);
-      enterContent.append("div").classed("sszvis-tooltip__body", true);
+      const enterContent = tooltip.selectAll(".sszvis-tooltip__content").data([0]).join("div").classed("sszvis-tooltip__content", true);
+      enterContent.selectAll(".sszvis-tooltip__header").data([0]).join("div").classed("sszvis-tooltip__header", true);
+      enterContent.selectAll(".sszvis-tooltip__body").data([0]).join("div").classed("sszvis-tooltip__body", true);
 
       // Update: content
 
@@ -2134,6 +2113,72 @@
       const x = d.x;
       return x > hi ? "right" : x < lo ? "left" : defaultVal;
     };
+  }
+
+  /**
+   * Default transition attributes for sszvis
+   *
+   * @module sszvis/transition
+   *
+   * Generally speaking, this module is used internally by components which transition the state of the update selection.
+   * The module sszvis.transition encapsulates the basic transition attributes used in the app. It is invoked by doing
+   * d3.selection().transition().call(sszvis.transition), which applies the transition attributes to the passed transition.
+   * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
+   * too slow.
+   */
+
+  const defaultEase = d3.easePolyOut;
+  const defaultTransition = function () {
+    return d3.transition().ease(defaultEase).duration(300);
+  };
+  const fastTransition = function () {
+    return d3.transition().ease(defaultEase).duration(50);
+  };
+  const slowTransition = function () {
+    return d3.transition().ease(defaultEase).duration(500);
+  };
+
+  /**
+   * @function sszvis.annotationConfidenceArea
+   *
+   * A component for creating confidence areas. The component should be passed
+   * an array of data values, each of which will be used to render a confidence area
+   * by passing it through the accessor functions. You can specify the x, y0, and y1
+   * properties to define the area. The component also supports stroke, strokeWidth,
+   * and fill properties for styling.
+   *
+   * @module sszvis/annotation/confidenceArea
+   *
+   * @param {function} x             The x-accessor function.
+   * @param {function} y0            The y0-accessor function.
+   * @param {function} y1            The y1-accessor function.
+   * @param {string} [stroke]        The stroke color of the area.
+   * @param {number} [strokeWidth]   The stroke width of the area.
+   * @param {string} [fill]          The fill color of the area.
+   * @param {function} [key]         The key function for data binding.
+   * @param {function} [valuesAccessor] The accessor function for the data values.
+   * @param {boolean} [transition]   Whether to apply a transition to the area.
+   *
+   * @returns {sszvis.component} a confidence area component
+   */
+
+  function confidenceArea () {
+    return component().prop("x").prop("y0").prop("y1").prop("stroke").prop("strokeWidth").prop("fill").prop("key").key((_, i) => i).prop("valuesAccessor").valuesAccessor(identity$1).prop("transition").transition(true).render(function (data) {
+      const selection = d3.select(this);
+      const props = selection.props();
+      ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
+
+      // Layouts
+      const area = d3.area().x(props.x).y0(props.y0).y1(props.y1);
+
+      // Rendering
+
+      let path = selection.selectAll(".sszvis-area").data(data, props.key).join("path").classed("sszvis-area", true).style("stroke", props.stroke).attr("fill", "url(#data-area-pattern)").order();
+      if (props.transition) {
+        path = path.transition().call(defaultTransition);
+      }
+      path.attr("d", compose(area, props.valuesAccessor)).style("stroke", props.stroke).style("stroke-width", props.strokeWidth).attr("fill", "url(#data-area-pattern)");
+    });
   }
 
   // src/utils/env.ts
@@ -3751,10 +3796,8 @@
           });
           longLinePadding += 2; // a lil' extra on the end
         }
-        let lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]);
+        const lines = ticks.selectAll("line.sszvis-axis__longtick").data([0]).join("line").classed("sszvis-axis__longtick", true);
         if (props.tickLength > longLinePadding) {
-          const newLines = lines.enter().append("line").classed("sszvis-axis__longtick", true);
-          lines = lines.merge(newLines);
           switch (orientation) {
             case "top":
               {
@@ -3841,10 +3884,8 @@
         }
       }
       if (props.title) {
-        const title = group.selectAll(".sszvis-axis__title").data([props.title]);
-        const newTitle = title.enter().append("text").classed("sszvis-axis__title", true);
-        title.exit().remove();
-        title.merge(newTitle).text(d => d).attr("transform", () => {
+        const title = group.selectAll(".sszvis-axis__title").data([props.title]).join("text").classed("sszvis-axis__title", true);
+        title.text(d => d).attr("transform", () => {
           const orient = props.orient,
             axisScaleExtent = range(axisScale);
           const titleProps = props.titleCenter ? {
@@ -4069,9 +4110,7 @@
       xExtent[1] += props.padding.right;
       yExtent[0] -= props.padding.top;
       yExtent[1] += props.padding.bottom;
-      let layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]);
-      const newLayer = layer.enter().append("rect").attr("data-sszvis-behavior-move", "").attr("class", "sszvis-interactive");
-      layer = layer.merge(newLayer);
+      const layer = selection.selectAll("[data-sszvis-behavior-move]").data([0]).join("rect").attr("data-sszvis-behavior-move", "").attr("class", "sszvis-interactive");
       if (props.draggable) {
         layer.classed("sszvis-interactive--draggable", true);
       }
@@ -4455,10 +4494,7 @@
       }
       const delaunay = d3.Delaunay.from(data, d => props.x(d), d => props.y(d));
       const voronoi = delaunay.voronoi(props.bounds);
-      let polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.cellPolygons());
-      const newPolys = polys.enter().append("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
-      polys.exit().remove();
-      polys = polys.merge(newPolys);
+      const polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.cellPolygons()).join("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
       polys.attr("d", d => "M" + d.join("L") + "Z").attr("fill", "transparent").on("mouseover", function (e) {
         const cbox = this.parentNode.getBoundingClientRect();
         const datumIdx = delaunay.find(e.clientX, e.clientY);
@@ -4878,29 +4914,6 @@
   }
 
   /**
-   * Default transition attributes for sszvis
-   *
-   * @module sszvis/transition
-   *
-   * Generally speaking, this module is used internally by components which transition the state of the update selection.
-   * The module sszvis.transition encapsulates the basic transition attributes used in the app. It is invoked by doing
-   * d3.selection().transition().call(sszvis.transition), which applies the transition attributes to the passed transition.
-   * transition.fastTransition provides an alternate transition duration for certain situations where the standard duration is
-   * too slow.
-   */
-
-  const defaultEase = d3.easePolyOut;
-  const defaultTransition = function () {
-    return d3.transition().ease(defaultEase).duration(300);
-  };
-  const fastTransition = function () {
-    return d3.transition().ease(defaultEase).duration(50);
-  };
-  const slowTransition = function () {
-    return d3.transition().ease(defaultEase).duration(500);
-  };
-
-  /**
    * Bar component
    *
    * The bar component is a general-purpose component used to render rectangles, including
@@ -4956,11 +4969,9 @@
       const yAcc = compose(handleMissingVal, props.y);
       const wAcc = compose(handleMissingVal, props.width);
       const hAcc = compose(handleMissingVal, props.height);
-      let bars = selection.selectAll(".sszvis-bar").data(data);
-      bars.exit().remove();
-      bars.enter().append("rect").classed("sszvis-bar", true).attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc).merge(bars).attr("fill", props.fill).attr("stroke", props.stroke);
+      const bars = selection.selectAll(".sszvis-bar").data(data).join("rect").classed("sszvis-bar", true).attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc).attr("fill", props.fill).attr("stroke", props.stroke);
       if (props.transition) {
-        bars = bars.transition(defaultTransition());
+        bars.transition(defaultTransition());
       }
       bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
 
@@ -5006,9 +5017,7 @@
     return component().prop("x", functor).prop("y", functor).prop("radius").prop("stroke").prop("fill").prop("transition").transition(true).render(function (data) {
       const selection = d3.select(this);
       const props = selection.props();
-      let dots = selection.selectAll(".sszvis-circle").data(data);
-      dots.exit().remove();
-      dots.enter().append("circle").classed("sszvis-circle", true).attr("cx", props.x).attr("cy", props.y).attr("r", props.radius).merge(dots).attr("stroke", props.stroke).attr("fill", props.fill);
+      let dots = selection.selectAll(".sszvis-circle").data(data).join("circle").classed("sszvis-circle", true).attr("cx", props.x).attr("cy", props.y).attr("r", props.radius).attr("stroke", props.stroke).attr("fill", props.fill);
       if (props.transition) {
         dots = dots.transition(defaultTransition());
       }
@@ -5073,14 +5082,8 @@
       const selection = d3.select(this);
       const props = selection.props();
       const inGroupScale = d3.scaleBand().domain(d3.range(props.groupSize)).padding(props.groupSpace).paddingOuter(0).rangeRound([0, props.groupWidth]);
-      let groups = selection.selectAll("g.sszvis-bargroup").data(data);
-      const newGroups = groups.enter().append("g").classed("sszvis-bargroup", true);
-      groups.exit().remove();
-      groups = groups.merge(newGroups);
-      let barUnits = groups.selectAll("g.sszvis-barunit").data(d => d);
-      const newBarUnits = barUnits.enter().append("g").classed("sszvis-barunit", true);
-      barUnits.exit().remove();
-      barUnits = barUnits.merge(newBarUnits);
+      const groups = selection.selectAll("g.sszvis-bargroup").data(data).join("g").classed("sszvis-bargroup", true);
+      const barUnits = groups.selectAll("g.sszvis-barunit").data(d => d).join("g").classed("sszvis-barunit", true);
       barUnits.each((d, i) => {
         // necessary for the within-group scale
         d.__sszvisGroupedBarIndex__ = i;
@@ -5163,10 +5166,7 @@
 
       // Rendering
 
-      let path = selection.selectAll(".sszvis-line").data(data, props.key);
-      path.exit().remove();
-      const newPath = path.enter().append("path").classed("sszvis-line", true).style("stroke", props.stroke);
-      path = path.merge(newPath);
+      let path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", props.stroke);
       path.order();
       if (props.transition) {
         path = path.transition(defaultTransition());
@@ -5219,17 +5219,14 @@
         if (value.a1 == undefined || isNaN(value.a1)) value.a1 = angle;
       }
       const arcGen = d3.arc().innerRadius(4).outerRadius(props.radius).startAngle(d => d.a0).endAngle(d => d.a1);
-      let segments = selection.selectAll(".sszvis-path").each((d, i) => {
+      const segments = selection.selectAll(".sszvis-path").each((d, i) => {
         // This matches the data values iteratively in the same way d3 will when it does the data join.
         // This is kind of a hack, but it's the only way to get any existing angle values from the already-bound data
         if (data[i]) {
           data[i].a0 = d.a0;
           data[i].a1 = d.a1;
         }
-      }).data(data);
-      const newSegments = segments.enter().append("path").classed("sszvis-path", true).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attr("fill", props.fill).attr("stroke", stroke);
-      segments.exit().remove();
-      segments = segments.merge(newSegments);
+      }).data(data).join("path").classed("sszvis-path", true).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attr("fill", props.fill).attr("stroke", stroke);
       segments.transition(defaultTransition()).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attrTween("d", d => {
         const angle0Interp = d3.interpolate(d.a0, d._a0);
         const angle1Interp = d3.interpolate(d.a1, d._a1);
@@ -5312,10 +5309,7 @@
       const selection = d3.select(this);
       const props = selection.props();
       const lineGen = d3.line().x(props.barWidth).y(props.barPosition);
-      let line = selection.selectAll(".sszvis-pyramid__referenceline").data(data);
-      line.exit().remove();
-      const newLine = line.enter().append("path").attr("class", "sszvis-pyramid__referenceline");
-      line = line.merge(newLine);
+      const line = selection.selectAll(".sszvis-pyramid__referenceline").data(data).join("path").attr("class", "sszvis-pyramid__referenceline");
       line.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
     });
   }
@@ -5423,17 +5417,11 @@
         return props.columnPosition(colIndex) + props.nodeThickness / 2;
       };
       const columnLabelY = -24;
-      let columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
+      const columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
       // One number for each column
-      .data(data.columnLengths);
-      const newColumnLabels = columnLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
-      columnLabels = columnLabels.merge(newColumnLabels);
-      columnLabels.exit().remove();
+      .data(data.columnLengths).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-column-label");
       columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY)).text((d, i) => props.columnLabel(i));
-      let columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths);
-      const newColumnLabelTicks = columnLabelTicks.enter().append("line").attr("class", "sszvis-sankey-column-label-tick");
-      columnLabelTicks = columnLabelTicks.merge(newColumnLabelTicks);
-      columnLabelTicks.exit().remove();
+      const columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths).join("line").attr("class", "sszvis-sankey-column-label-tick");
       columnLabelTicks.attr("x1", (d, i) => halfPixel(columnLabelX(i))).attr("x2", (d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
 
       // Draw the links
@@ -5461,10 +5449,7 @@
 
       // Render the links
       const linksGroup = selection.selectGroup("links");
-      let linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc);
-      const newLinksElems = linksElems.enter().append("path").attr("class", "sszvis-link");
-      linksElems = linksElems.merge(newLinksElems);
-      linksElems.exit().remove();
+      const linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc).join("path").attr("class", "sszvis-link");
       linksElems.attr("fill", "none").attr("d", linkPath).attr("stroke-width", linkThickness).attr("stroke", props.linkColor).sort(props.linkSort);
       linksGroup.datum(data.links);
       const linkTooltipAnchor = tooltipAnchor().position(link => {
@@ -5477,20 +5462,14 @@
       const linkLabelsGroup = selection.selectGroup("linklabels");
 
       // If no props.linkSourceLabels are provided, most of this rendering is no-op
-      let linkSourceLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-source-label").data(props.linkSourceLabels);
-      const newLinkSourceLabels = linkSourceLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label");
-      linkSourceLabels = linkSourceLabels.merge(newLinkSourceLabels);
-      linkSourceLabels.exit().remove();
+      const linkSourceLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-source-label").data(props.linkSourceLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label");
       linkSourceLabels.attr("transform", link => {
         const bbox = linkBoundingBox(link);
         return translateString(bbox[0] + 6, bbox[2]);
       }).text(props.linkLabel);
 
       // If no props.linkTargetLabels are provided, most of this rendering is no-op
-      let linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels);
-      const newLinkTargetLabels = linkTargetLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
-      linkTargetLabels = linkTargetLabels.merge(newLinkTargetLabels);
-      linkTargetLabels.exit().remove();
+      const linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
       linkTargetLabels.attr("transform", link => {
         const bbox = linkBoundingBox(link);
         return translateString(bbox[1] - 6, bbox[3]);
@@ -5505,15 +5484,9 @@
         return side;
       };
       const nodeLabelsGroup = selection.selectGroup("nodelabels");
-      let barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes);
-      const newBarLabels = barLabels.enter().append("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
-      barLabels = barLabels.merge(newBarLabels);
-      barLabels.exit().remove();
+      const barLabels = nodeLabelsGroup.selectAll(".sszvis-sankey-node-label").data(data.nodes).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
       barLabels.text(node => props.nameLabel(node.id)).attr("text-align", "middle").attr("text-anchor", node => getLabelSide(node.columnIndex) === "left" ? "end" : "start").attr("x", node => getLabelSide(node.columnIndex) === "left" ? xPosition(node) - 6 : xPosition(node) + props.nodeThickness + 6).attr("y", node => yPosition(node) + yExtent(node) / 2).style("opacity", props.labelOpacity);
-      let barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes);
-      const newBarLabelHitBoxes = barLabelHitBoxes.enter().append("rect").attr("class", "sszvis-sankey-hitbox");
-      barLabelHitBoxes = barLabelHitBoxes.merge(newBarLabelHitBoxes);
-      barLabelHitBoxes.exit().remove();
+      const barLabelHitBoxes = nodeLabelsGroup.selectAll(".sszvis-sankey-hitbox").data(data.nodes).join("rect").attr("class", "sszvis-sankey-hitbox");
       barLabelHitBoxes.attr("fill", "transparent").attr("x", node => xPosition(node) + (getLabelSide(node.columnIndex) === "left" ? -props.labelHitBoxSize : 0)).attr("y", node => yPosition(node) - props.nodePadding / 2).attr("width", props.labelHitBoxSize + props.nodeThickness).attr("height", node => yExtent(node) + props.nodePadding);
     });
   }
@@ -5556,10 +5529,7 @@
         return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
       };
       const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
-      let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
-      const newPaths = paths.enter().append("path").classed("sszvis-path", true);
-      paths.exit().remove();
-      paths = paths.merge(newPaths);
+      let paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
       if (props.transition) {
         paths = paths.transition(defaultTransition());
       }
@@ -5605,12 +5575,9 @@
         return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
       };
       const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
-      let paths = selection.selectAll("path.sszvis-path").data(data, props.key);
-      const newPaths = paths.enter().append("path").classed("sszvis-path", true);
-      paths.exit().remove();
-      paths = newPaths.merge(paths);
+      const paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
       if (props.transition) {
-        paths = paths.transition(defaultTransition());
+        paths.transition(defaultTransition());
       }
       paths.attr("d", compose(areaGen, props.valuesAccessor)).attr("fill", props.fill).attr("stroke", props.stroke).attr("stroke-width", props.strokeWidth === undefined ? 1 : props.strokeWidth);
     });
@@ -5682,10 +5649,7 @@
       const selection = d3.select(this);
       const props = selection.props();
       const barGen = bar().x(config.x(props)).y(config.y(props)).width(config.width(props)).height(config.height(props)).fill(props.fill).stroke(props.stroke || "#FFFFFF");
-      let groups = selection.selectAll(".sszvis-stack").data(data);
-      const newGroups = groups.enter().append("g").classed("sszvis-stack", true);
-      groups.exit().remove();
-      groups = groups.merge(newGroups);
+      const groups = selection.selectAll(".sszvis-stack").data(data).join("g").classed("sszvis-stack", true);
       groups.call(barGen);
     });
   }
@@ -5831,10 +5795,7 @@
     return component().prop("stackElement").renderSelection(selection => {
       const datum = selection.datum();
       const props = selection.props();
-      let stack = selection.selectAll("[data-sszvis-stack]").data(datum);
-      const newStack = stack.enter().append("g").attr("data-sszvis-stack", "");
-      stack.exit().remove();
-      stack = stack.merge(newStack);
+      const stack = selection.selectAll("[data-sszvis-stack]").data(datum).join("g").attr("data-sszvis-stack", "");
       stack.each(function (d) {
         d3.select(this).datum(d).call(props.stackElement);
       });
@@ -5845,10 +5806,7 @@
       const selection = d3.select(this);
       const props = selection.props();
       const lineGen = d3.line().x(props.barWidth).y(props.barPosition);
-      let line = selection.selectAll(".sszvis-path").data(data);
-      line.exit().remove();
-      const newLine = line.enter().append("path").attr("class", "sszvis-path").attr("fill", "none").attr("stroke", "#aaa").attr("stroke-width", 2).attr("stroke-dasharray", "3 3");
-      line = line.merge(newLine);
+      const line = selection.selectAll(".sszvis-path").data(data).join("path").attr("class", "sszvis-path").attr("fill", "none").attr("stroke", "#aaa").attr("stroke-width", 2).attr("stroke-dasharray", "3 3");
       line.attr("transform", props.mirror ? "scale(-1, 1)" : "").transition(defaultTransition()).attr("d", lineGen);
     });
   }
@@ -5927,7 +5885,7 @@
         d._x0 = d.x0;
         d._x1 = d.x1;
       }
-      let arcs = selection.selectAll(".sszvis-sunburst-arc").each((d, i) => {
+      const arcs = selection.selectAll(".sszvis-sunburst-arc").each((d, i) => {
         if (data[i]) {
           // x and dx are the current/transitioning values
           // We set these here, in case any datums already exist which have values set
@@ -5935,10 +5893,7 @@
           data[i].x1 = d.x1;
           // The transition tweens from x and dx to _x and _dx
         }
-      }).data(data);
-      const newArcs = arcs.enter().append("path").attr("class", "sszvis-sunburst-arc");
-      arcs.exit().remove();
-      arcs = arcs.merge(newArcs);
+      }).data(data).join("path").attr("class", "sszvis-sunburst-arc");
       arcs.attr("stroke", props.stroke).attr("fill", getColorRecursive);
       arcs.transition(defaultTransition()).attrTween("d", d => {
         const x0Interp = d3.interpolate(d.x0, d._x0);
@@ -5961,6 +5916,54 @@
       selection.call(arcTooltipAnchor);
     });
   }
+
+  /**
+   * Nested Stacked Bars Vertical component
+   *
+   * This component renders a nested stacked bar chart with vertical orientation.
+   * It uses the same abstract intermediate representation for the stack, but is rendered
+   * using vertical dimensions. Note that using this component will add the properties 'y0'
+   * and 'y' to any passed-in data objects, as part of computing the stack intermediate representation.
+   * Existing properties with these names will be overwritten.
+   *
+   * @module sszvis/component/nestedStackedBarsVertical
+   *
+   * @property {function} offset              Specifies an offset function for positioning the nested groups.
+   * @property {function} xScale              Specifies an x-scale for the stack layout. This scale is used to position
+   *                                          the elements of each stack, both the left offset value and the width of each stack segment.
+   * @property {function} yScale              A y-scale. After the stack is computed, the y-scale is used to position each stack.
+   * @property {function} fill                Specify a fill value for the rectangles (default black).
+   * @property {function} tooltip             Specify a tooltip function for the rectangles.
+   * @property {function} xAcc                Specifies an x-accessor for the stack layout. The result of this function
+   *                                          is used to compute the horizontal extent of each element in the stack.
+   *                                          The return value must be a number.
+   * @property {function} xLabel              Specifies a label for the x-axis.
+   * @property {string} slant                 Specifies the slant of the x-axis labels.
+   *
+   * @return {sszvis.component}
+   */
+
+  const nestedStackedBarsVertical = () => component().prop("offset", functor).prop("xScale", functor).prop("yScale", functor).prop("fill", functor).prop("tooltip", functor).prop("xAcc", functor).prop("xLabel", functor).prop("xLabel", functor).prop("slant").render(function (data) {
+    const selection = d3.select(this);
+    const props = selection.props();
+    const {
+      offset,
+      xScale,
+      yScale,
+      fill,
+      tooltip,
+      xAcc,
+      xLabel
+    } = props;
+    const xAxis = axisX.ordinal().scale(xScale).ticks(1).tickSize(0).orient("bottom").slant(props.slant).title(xLabel);
+    const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
+    group.join("g").attr("data-nested-stacked-bars", d => xAcc(d[0][0].data));
+    group.attr("transform", d => "translate(".concat(offset(d), " 0)"));
+    group.selectGroup("nested-x-axis").attr("transform", translateString(0, yScale(0))).call(xAxis);
+    const stackedBars = stackedBarVertical().xScale(xScale).width(xScale.bandwidth()).yScale(yScale).fill(fill);
+    const bars = group.selectGroup("barchart").call(stackedBars);
+    bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+  });
 
   /**
    * Button Group control
@@ -5987,15 +5990,9 @@
       const selection = d3.select(this);
       const props = selection.props();
       const buttonWidth = props.width / props.values.length;
-      let container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d);
-      const newContainer = container.enter().append("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true);
-      container.exit().remove();
-      container = container.merge(newContainer);
+      const container = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-buttonGroup"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-buttonGroup", true);
       container.style("width", props.width + "px");
-      let buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values);
-      const newButtons = buttons.enter().append("div").classed("sszvis-control-buttonGroup__item", true);
-      buttons.exit().remove();
-      buttons = buttons.merge(newButtons);
+      const buttons = container.selectAll(".sszvis-control-buttonGroup__item").data(props.values).join("div").classed("sszvis-control-buttonGroup__item", true);
       buttons.style("width", buttonWidth + "px").classed("selected", d => d === props.current).text(d => d).on("click", props.change);
     });
   }
@@ -6036,29 +6033,17 @@
       const handleWidth = 10;
       const handleHeight = 24;
       const handleTop = props.top - handleHeight;
-      let group = selection.selectAll(".sszvis-handleRuler__group").data([0]);
-      const entering = group.enter().append("g").classed("sszvis-handleRuler__group", true);
-      group.exit().remove();
-      group = group.merge(entering);
-      entering.append("line").classed("sszvis-ruler__rule", true);
-      entering.append("rect").classed("sszvis-handleRuler__handle", true);
-      entering.append("line").classed("sszvis-handleRuler__handle-mark", true);
+      const group = selection.selectAll(".sszvis-handleRuler__group").data([0]).join("g").classed("sszvis-handleRuler__group", true);
+      group.append("line").classed("sszvis-ruler__rule", true);
+      group.append("rect").classed("sszvis-handleRuler__handle", true);
+      group.append("line").classed("sszvis-handleRuler__handle-mark", true);
       group.selectAll(".sszvis-ruler__rule").attr("x1", crispX).attr("y1", halfPixel(props.top)).attr("x2", crispX).attr("y2", halfPixel(bottom));
       group.selectAll(".sszvis-handleRuler__handle").attr("x", d => crispX(d) - handleWidth / 2).attr("y", halfPixel(handleTop)).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
       group.selectAll(".sszvis-handleRuler__handle-mark").attr("x1", crispX).attr("y1", halfPixel(handleTop + handleHeight * 0.15)).attr("x2", crispX).attr("y2", halfPixel(handleTop + handleHeight * 0.85));
-      let dots = group.selectAll(".sszvis-ruler__dot").data(data);
-      const newDots = dots.enter().append("circle").classed("sszvis-ruler__dot", true);
-      dots.exit().remove();
-      dots = dots.merge(newDots);
+      const dots = group.selectAll(".sszvis-ruler__dot").data(data).join("circle").classed("sszvis-ruler__dot", true);
       dots.attr("cx", crispX).attr("cy", crispY).attr("r", 3.5).attr("fill", props.color);
-      let labelOutline = selection.selectAll(".sszvis-ruler__label-outline").data(data);
-      const newLabelOutline = labelOutline.enter().append("text").classed("sszvis-ruler__label-outline", true);
-      labelOutline.exit().remove();
-      labelOutline = labelOutline.merge(newLabelOutline);
-      let label = selection.selectAll(".sszvis-ruler__label").data(data);
-      const newLabel = label.enter().append("text").classed("sszvis-ruler__label", true);
-      label.exit().remove();
-      label = label.merge(newLabel);
+      selection.selectAll(".sszvis-ruler__label-outline").data(data).join("text").classed("sszvis-ruler__label-outline", true);
+      selection.selectAll(".sszvis-ruler__label").data(data).join("text").classed("sszvis-ruler__label", true);
 
       // Update both labelOutline and labelOutline selections
 
@@ -6096,14 +6081,10 @@
     return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity$1).render(function () {
       const selection = d3.select(this);
       const props = selection.props();
-      let wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], d => d);
-      const newWrapperEl = wrapperEl.enter().append("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-select", true);
-      wrapperEl.exit().remove();
-      wrapperEl = wrapperEl.merge(newWrapperEl);
+      const wrapperEl = selection.selectAll(".sszvis-control-optionSelectable").data(["sszvis-control-select"], d => d).join("div").classed("sszvis-control-optionSelectable", true).classed("sszvis-control-select", true);
       wrapperEl.style("width", props.width + "px");
       const metricsEl = wrapperEl.selectDiv("selectMetrics").classed("sszvis-control-select__metrics", true);
-      let selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]);
-      const newSelectEl = selectEl.enter().append("select").classed("sszvis-control-select__element", true).on("change", function (e) {
+      const selectEl = wrapperEl.selectAll(".sszvis-control-select__element").data([1]).join("select").classed("sszvis-control-select__element", true).on("change", function (e) {
         // We store the index in the select's value instead of the datum
         // because an option's value can only hold strings.
         const i = d3.select(this).property("value");
@@ -6114,12 +6095,8 @@
           window.focus();
         }, 0);
       });
-      selectEl = selectEl.merge(newSelectEl);
       selectEl.style("width", props.width + 30 + "px");
-      const optionEls = selectEl.selectAll("option").data(props.values);
-      const newOptionEls = optionEls.enter().append("option");
-      optionEls.exit().remove();
-      optionEls.merge(newOptionEls).attr("selected", d => d === props.current ? "selected" : null).attr("value", (d, i) => i).text(d => truncateToWidth(metricsEl, props.width - 40, d));
+      selectEl.selectAll("option").data(props.values).join("option").attr("selected", d => d === props.current ? "selected" : null).attr("value", (d, i) => i).text(d => truncateToWidth(metricsEl, props.width - 40, d));
     });
   }
   function truncateToWidth(metricsEl, maxWidth, originalString) {
@@ -6177,16 +6154,11 @@
       const alteredScale = props.scale.copy().range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
 
       // the mostly unchanging bits
-      let bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]);
-      const newBg = bg.enter().append("g").classed("sszvis-control-slider__backgroundgroup", true);
-      bg = bg.merge(newBg);
-      bg.exit().remove();
+      const bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]).join("g").classed("sszvis-control-slider__backgroundgroup", true);
 
       // create the axis
       const axis = axisX().scale(alteredScale).orient("bottom").hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set$1([...props.majorTicks, ...props.minorTicks])).tickFormat(d => contains(d, props.majorTicks) ? props.tickLabels(d) : "");
-      let axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]);
-      const newAxisSelection = axisSelection.enter().append("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
-      axisSelection = axisSelection.merge(newAxisSelection);
+      const axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]).join("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
       axisSelection.attr("transform", translateString(0, axisOffset)).call(axis);
 
       // adjust visual aspects of the axis to fit the design
@@ -6196,35 +6168,19 @@
       majorAxisText.style("text-anchor", (d, i) => i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle");
 
       // create the slider background
-      let backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]);
-      const newBackgroundSelection = backgroundSelection.enter().append("g").classed("sszvis-slider__background", true);
-      backgroundSelection = backgroundSelection.merge(newBackgroundSelection);
-      backgroundSelection.attr("transform", translateString(0, backgroundOffset));
-      let bg1 = backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]);
-      const newBg1 = bg1.enter().append("line").classed("sszvis-slider__background__bg1", true).style("stroke-width", bgWidth).style("stroke", "#888").style("stroke-linecap", "round");
-      bg1 = bg1.merge(newBg1);
-      bg1.attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
-      let bg2 = backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]);
-      const newBg2 = bg2.enter().append("line").classed("sszvis-slider__background__bg2", true).style("stroke-width", bgWidth - 1).style("stroke", "#fff").style("stroke-linecap", "round");
-      bg2 = bg2.merge(newBg2);
-      bg2.attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
-      let shadow = backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]);
-      const newShadow = shadow.enter().append("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", bgWidth - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round");
-      shadow = shadow.merge(newShadow);
-      shadow.attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", compose(Math.floor, alteredScale));
+      const backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]).join("g").classed("sszvis-slider__background", true).attr("transform", translateString(0, backgroundOffset));
+      backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]).join("line").classed("sszvis-slider__background__bg1", true).style("stroke-width", bgWidth).style("stroke", "#888").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
+      backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]).join("line").classed("sszvis-slider__background__bg2", true).style("stroke-width", bgWidth - 1).style("stroke", "#fff").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
+      backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]).join("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", bgWidth - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", compose(Math.floor, alteredScale));
 
       // draw the handle and the label
-      let handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]);
-      handle.exit().remove();
-      const handleEntering = handle.enter().append("g").classed("sszvis-control-slider__handle", true);
-      handle = handle.merge(handleEntering);
-      handle.attr("transform", d => translateString(halfPixel(alteredScale(d)), 0.5));
-      handleEntering.append("text").classed("sszvis-control-slider--label", true);
+      const handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]).join("g").classed("sszvis-control-slider__handle", true).attr("transform", d => translateString(halfPixel(alteredScale(d)), 0.5));
+      handle.append("text").classed("sszvis-control-slider--label", true);
       handle.selectAll(".sszvis-control-slider--label").data(d => [d]).text(props.label).style("text-anchor", d => stringEqual(d, scaleDomain[0]) ? "start" : stringEqual(d, scaleDomain[1]) ? "end" : "middle").attr("dx", d => stringEqual(d, scaleDomain[0]) ? -(handleWidth / 2) : stringEqual(d, scaleDomain[1]) ? handleWidth / 2 : 0);
-      handleEntering.append("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -(handleWidth / 2)).attr("y", backgroundOffset - handleHeight / 2).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
+      handle.selectAll(".sszvis-control-slider__handlebox").data([1]).join("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -(handleWidth / 2)).attr("y", backgroundOffset - handleHeight / 2).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
       const handleLineDimension = handleHeight / 2 - 4; // the amount by which to offset the small handle line within the handle
 
-      handleEntering.append("line").classed("sszvis-control-slider__handleline", true).attr("y1", backgroundOffset - handleLineDimension).attr("y2", backgroundOffset + handleLineDimension);
+      handle.selectAll(".sszvis-control-slider__handleline").data([1]).join("line").classed("sszvis-control-slider__handleline", true).attr("y1", backgroundOffset - handleLineDimension).attr("y2", backgroundOffset + handleLineDimension);
       const sliderInteraction = move().xScale(props.scale)
       // range goes from the text top (text is 11px tall) to the bottom of the axis
       .yScale(d3.scaleLinear().range([-11, axisOffset + majorTickSize])).draggable(true).on("drag", props.onchange);
@@ -6282,11 +6238,7 @@
     const elementDataKey = "data-sszvis-html-" + key;
     const root = isSelection(selector) ? selector : d3.select(selector);
     root.classed("sszvis-outer-container", true);
-    let layer = root.selectAll("[data-sszvis-html-layer][" + elementDataKey + "]").data([0]);
-    const newLayer = layer.enter().append("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "");
-    layer = layer.merge(newLayer);
-    layer.style("position", "absolute").style("left", bounds$1.padding.left + "px").style("top", bounds$1.padding.top + "px");
-    return layer;
+    return root.selectAll("[data-sszvis-html-layer][" + elementDataKey + "]").data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", bounds$1.padding.left + "px").style("top", bounds$1.padding.top + "px");
   }
 
   /**
@@ -6317,16 +6269,10 @@
     const title = metadata.title || "";
     const description = metadata.description || "";
     const root = isSelection(selector) ? selector : d3.select(selector);
-    const svg = root.selectAll("svg[" + elementDataKey + "]").data([0]);
-    const svgEnter = svg.enter().append("svg");
-    svgEnter.classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", title + " – " + description);
-    svgEnter.append("title").text(title);
-    svgEnter.append("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
-    svg.merge(svgEnter).attr("height", bounds$1.height).attr("width", bounds$1.width);
-    const viewport = svg.merge(svgEnter).selectAll("[data-sszvis-svg-layer]").data(() => [0]);
-    const viewportEnter = viewport.enter().append("g").attr("data-sszvis-svg-layer", "");
-    viewport.merge(viewportEnter).attr("transform", "translate(" + bounds$1.padding.left + "," + bounds$1.padding.top + ")");
-    return viewport.merge(viewportEnter);
+    const svg = root.selectAll("svg[" + elementDataKey + "]").data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", title + " – " + description).attr("height", bounds$1.height).attr("width", bounds$1.width);
+    svg.selectAll("title").data([0]).join("title").text(title);
+    svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
+    return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(" + bounds$1.padding.left + "," + bounds$1.padding.top + ")");
   }
 
   /**
@@ -6435,17 +6381,9 @@
         rows = Math.ceil(props.rows);
         cols = Math.ceil(domain.length / rows);
       }
-      const groups = selection.selectAll(".sszvis-legend--entry").data(domain);
-      const newGroups = groups.enter().append("g").classed("sszvis-legend--entry", true);
-      groups.exit().remove();
-      const marks = groups.merge(newGroups).selectAll(".sszvis-legend__mark").data(d => [d]);
-      const newMarks = marks.enter().append("circle").classed("sszvis-legend__mark", true);
-      marks.exit().remove();
-      marks.merge(newMarks).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => props.scale(d)).attr("stroke", d => props.scale(d)).attr("stroke-width", 1);
-      const labels = groups.merge(newGroups).selectAll(".sszvis-legend__label").data(d => [d]);
-      const newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
-      labels.exit().remove();
-      labels.merge(newLabels).text(d => d).attr("dy", "0.35em") // vertically-center
+      const groups = selection.selectAll(".sszvis-legend--entry").data(domain).join("g").classed("sszvis-legend--entry", true);
+      groups.selectAll(".sszvis-legend__mark").data(d => [d]).join("circle").classed("sszvis-legend__mark", true).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => props.scale(d)).attr("stroke", d => props.scale(d)).attr("stroke-width", 1);
+      groups.selectAll(".sszvis-legend__label").data(d => [d]).join("text").classed("sszvis-legend__label", true).text(d => d).attr("dy", "0.35em") // vertically-center
       .style("text-anchor", () => props.rightAlign ? "end" : "start").attr("transform", () => {
         const x = props.rightAlign ? -18 : 18;
         const y = halfPixel(props.rowHeight / 2);
@@ -6458,7 +6396,7 @@
       if (props.horizontalFloat) {
         let rowPosition = 0,
           horizontalPosition = 0;
-        groups.merge(newGroups).attr("transform", function () {
+        groups.attr("transform", function () {
           // not affected by scroll position
           const width = this.getBoundingClientRect().width;
           if (horizontalPosition + width > props.floatWidth) {
@@ -6470,7 +6408,7 @@
           return verticalOffset + translate;
         });
       } else {
-        groups.merge(newGroups).attr("transform", (d, i) => {
+        groups.attr("transform", (d, i) => {
           if (props.orientation === "horizontal") {
             return verticalOffset + "translate(" + i % cols * props.columnWidth + "," + Math.floor(i / cols) * props.rowHeight + ")";
           } else if (props.orientation === "vertical") {
@@ -7070,14 +7008,8 @@
       const unitHeight = (props.height - props.paddingY * (props.rows - 1)) / props.rows;
       const horizontalCenter = unitWidth / 2;
       const verticalCenter = unitHeight / 2;
-      let multiples = selection.selectAll("g.sszvis-multiple").data(data);
-      const newMultiples = multiples.enter().append("g").classed("sszvis-g sszvis-multiple", true);
-      multiples.exit().remove();
-      multiples = multiples.merge(newMultiples);
-      let subGroups = multiples.selectAll("g.sszvis-multiple-chart").data(d => [d.values]);
-      const newSubGroups = subGroups.enter().append("g").classed("sszvis-multiple-chart", true);
-      subGroups.exit().remove();
-      subGroups = subGroups.merge(newSubGroups);
+      const multiples = selection.selectAll("g.sszvis-multiple").data(data).join("g").classed("sszvis-g sszvis-multiple", true);
+      multiples.selectAll("g.sszvis-multiple-chart").data(d => [d.values]).join("g").classed("sszvis-multiple-chart", true);
       multiples.datum((d, i) => {
         d.gx = i % props.cols * (unitWidth + props.paddingX);
         d.gw = unitWidth;
@@ -7375,26 +7307,14 @@
         w: innerRange[1] - sum,
         c: props.scale(pPrev)
       });
-      let circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints);
-      const newCircles = circles.enter().append("circle").classed("sszvis-legend__circle", true);
-      circles = circles.merge(newCircles);
-      circles.exit().remove();
+      const circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints).join("circle").classed("sszvis-legend__circle", true);
       circles.attr("r", circleRad).attr("cy", circleRad).attr("cx", (d, i) => i === 0 ? circleRad : props.width - circleRad).attr("fill", props.scale);
-      let segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData);
-      const newSegments = segments.enter().append("rect").classed("sszvis-legend__crispmark", true);
-      segments = segments.merge(newSegments);
-      segments.exit().remove();
+      const segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData).join("rect").classed("sszvis-legend__crispmark", true);
       segments.attr("x", d => d.x).attr("y", 0).attr("width", d => d.w).attr("height", segHeight).attr("fill", d => d.c);
       const lineData = rectData.slice(0, -1);
-      const lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData);
-      const newLines = lines.enter().append("line").classed("sszvis-legend__crispmark", true);
-      lines.merge(newLines);
-      lines.exit().remove();
+      const lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData).join("line").classed("sszvis-legend__crispmark", true);
       lines.attr("x1", d => halfPixel(d.x + d.w)).attr("x2", d => halfPixel(d.x + d.w)).attr("y1", segHeight + 1).attr("y2", segHeight + 6).attr("stroke", "#B8B8B8");
-      let labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData);
-      const newLabels = labels.enter().append("text").classed("sszvis-legend__axislabel", true);
-      labels = labels.merge(newLabels);
-      labels.exit().remove();
+      const labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData).join("text").classed("sszvis-legend__axislabel", true);
       labels.style("text-anchor", "middle").attr("transform", d => "translate(" + (d.x + d.w) + "," + (segHeight + 20) + ")").text(d => props.labelFormat(d.p));
     });
   }
@@ -7434,10 +7354,7 @@
       // Avoid division by zero
       const segWidth = values.length > 0 ? props.width / values.length : 0;
       const segHeight = 10;
-      let segments = selection.selectAll("rect.sszvis-legend__mark").data(values);
-      const newSegments = segments.enter().append("rect").classed("sszvis-legend__mark", true);
-      segments.exit().remove();
-      segments = segments.merge(newSegments);
+      const segments = selection.selectAll("rect.sszvis-legend__mark").data(values).join("rect").classed("sszvis-legend__mark", true);
       segments.attr("x", (d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
       .attr("y", 0).attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
       .attr("height", segHeight).attr("fill", d => props.scale(d));
@@ -7445,15 +7362,9 @@
       const labelText = props.labelText || startEnd;
 
       // rounded end caps for the segments
-      let endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd);
-      const newEndCaps = endCaps.enter().append("circle").attr("class", "ssvis-legend--mark");
-      endCaps.exit().remove();
-      endCaps = endCaps.merge(newEndCaps);
+      const endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd).join("circle").attr("class", "ssvis-legend--mark");
       endCaps.attr("cx", (d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));
-      let labels = selection.selectAll(".sszvis-legend__label").data(labelText);
-      const newLabels = labels.enter().append("text").classed("sszvis-legend__label", true);
-      labels.exit().remove();
-      labels = labels.merge(newLabels);
+      const labels = selection.selectAll(".sszvis-legend__label").data(labelText).join("text").classed("sszvis-legend__label", true);
       const labelPadding = 16;
       labels.style("text-anchor", (d, i) => i === 0 ? "end" : "start").attr("dy", "0.35em") // vertically-center
       .attr("transform", (d, i) => "translate(" + (i * props.width + (i === 0 ? -1 : 1) * labelPadding) + ", " + segHeight / 2 + ")").text((d, i) => props.labelFormat(d, i));
@@ -7481,17 +7392,9 @@
       const domain = props.scale.domain();
       const tickValues = props.tickValues || [domain[1], props.scale.invert(d3.mean(props.scale.range())), domain[0]];
       const maxRadius = range(props.scale)[1];
-      let group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]);
-      const newGroup = group.enter().append("g").attr("class", "sszvis-legend__elementgroup");
-
-      // FIXME: No exit?
-
-      group = group.merge(newGroup);
+      const group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]).join("g").attr("class", "sszvis-legend__elementgroup");
       group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
-      let circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues);
-      const newCircles = circles.enter().append("circle").classed("sszvis-legend__greyline", true);
-      circles.exit().remove();
-      circles = circles.merge(newCircles);
+      const circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues).join("circle").classed("sszvis-legend__greyline", true);
       function getCircleCenter(d) {
         return maxRadius - props.scale(d);
       }
@@ -7499,15 +7402,9 @@
         return maxRadius - 2 * props.scale(d);
       }
       circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
-      let lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues);
-      const newLines = lines.enter().append("line").classed("sszvis-legend__dashedline", true);
-      lines.exit().remove();
-      lines = lines.merge(newLines);
+      const lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues).join("line").classed("sszvis-legend__dashedline", true);
       lines.attr("x1", 0).attr("y1", getCircleEdge).attr("x2", maxRadius + 15).attr("y2", getCircleEdge);
-      let labels = group.selectAll(".sszvis-legend__label").data(tickValues);
-      const newLabels = labels.enter().append("text").attr("class", "sszvis-legend__label sszvis-legend__label--small");
-      labels.exit().remove();
-      labels = labels.merge(newLabels);
+      const labels = group.selectAll(".sszvis-legend__label").data(tickValues).join("text").attr("class", "sszvis-legend__label sszvis-legend__label--small");
       labels.attr("dx", maxRadius + 18).attr("y", getCircleEdge).attr("dy", "0.35em") // vertically-center
       .text(props.tickFormat);
     });
@@ -7714,14 +7611,13 @@
       const selection = d3.select(this);
       const props = selection.props();
       const radiusAcc = compose(props.radius, datumAcc);
-      const anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle").data(props.mergedData, d => d.geoJson.id);
-      anchoredCircles.enter().append("circle").attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering").attr("r", radiusAcc).on("mouseover", function (d) {
+      const anchoredCircles = selection.selectGroup("anchoredCircles").selectAll(".sszvis-anchored-circle").data(props.mergedData, d => d.geoJson.id).join("circle").attr("class", "sszvis-anchored-circle sszvis-anchored-circle--entering").attr("r", radiusAcc).on("mouseover", function (d) {
         event.call("over", this, d.datum);
       }).on("mouseout", function (d) {
         event.call("out", this, d.datum);
       }).on("click", function (d) {
         event.call("click", this, d.datum);
-      }).merge(anchoredCircles).attr("transform", d => {
+      }).attr("transform", d => {
         const position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
         return translateString(position[0], position[1]);
       }).style("fill", d => props.fill(d.datum)).style("stroke", d => props.strokeColor(d.datum)).style("stroke-width", d => props.strokeWidth(d.datum)).sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
@@ -7781,13 +7677,7 @@
       function getMapFill(d) {
         return props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
       }
-      let mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData);
-
-      // add the base map paths - these are filled according to the map fill function
-      const newMapAreas = mapAreas.enter().append("path").classed("sszvis-map__area", true).classed("sszvis-map__area--entering", true).attr("data-event-target", "").attr("fill", getMapFill);
-      mapAreas.classed("sszvis-map__area--entering", false);
-      mapAreas.exit().remove();
-      mapAreas = mapAreas.merge(newMapAreas);
+      const mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData).join("path").classed("sszvis-map__area", true).classed("sszvis-map__area--entering", true).attr("data-event-target", "").attr("fill", getMapFill).classed("sszvis-map__area--entering", false);
       selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill);
 
       // change the fill if necessary
@@ -7859,10 +7749,7 @@
       function getMapStroke(d) {
         return defined(d.datum) && props.defined(d.datum) ? props.stroke(d.datum) : "";
       }
-      let geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData);
-      const newGeoElements = geoElements.enter().append("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "").attr("fill", getMapFill);
-      geoElements.exit().remove();
-      geoElements = geoElements.merge(newGeoElements);
+      const geoElements = selection.selectAll(".sszvis-map__geojsonelement").data(mergedData).join("path").classed("sszvis-map__geojsonelement", true).attr("data-event-target", "").attr("fill", getMapFill);
       selection.selectAll(".sszvis-map__geojsonelement--undefined").attr("fill", getMapFill);
       geoElements.classed("sszvis-map__geojsonelement--undefined", d => !defined(d.datum) || !props.defined(d.datum)).attr("d", d => props.mapPath(d.geoJson));
       if (props.transitionColor) {
@@ -7945,11 +7832,7 @@
         }
         return m;
       }, []);
-      highlightBorders = highlightBorders.data(mergedHighlight);
-      const newHighlightBorders = highlightBorders.enter().append("path").classed("sszvis-map__highlight", true);
-      highlightBorders.exit().remove();
-      highlightBorders = highlightBorders.merge(newHighlightBorders);
-      highlightBorders.attr("d", d => props.mapPath(d.geoJson)).style("stroke", d => props.highlightStroke(d.datum)).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
+      highlightBorders = highlightBorders.data(mergedHighlight).join("path").classed("sszvis-map__highlight", true).attr("d", d => props.mapPath(d.geoJson)).style("stroke", d => props.highlightStroke(d.datum)).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
     });
   }
 
@@ -7985,11 +7868,8 @@
     return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").opacity(1).render(function () {
       const selection = d3.select(this);
       const props = selection.props();
-      let image = selection.selectAll(".sszvis-map__image").data([0]); // At the moment, 1 image per container
-
-      const newImage = image.enter().append("img").classed("sszvis-map__image", true);
-      image.exit().remove();
-      image = image.merge(newImage);
+      const image = selection.selectAll(".sszvis-map__image").data([0]) // At the moment, 1 image per container
+      .join("img").classed("sszvis-map__image", true);
       const topLeft = props.projection(props.geoBounds[0]);
       const bottomRight = props.projection(props.geoBounds[1]);
       image.attr("src", props.src).style("left", Math.round(topLeft[0]) + "px").style("top", Math.round(topLeft[1]) + "px").style("width", Math.round(bottomRight[0] - topLeft[0]) + "px").style("height", Math.round(bottomRight[1] - topLeft[1]) + "px").style("opacity", props.opacity);
@@ -8021,10 +7901,7 @@
       const props = selection.props();
 
       // add the map borders. These are rendered as one single path element
-      let meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]);
-      const newMeshLine = meshLine.enter().append("path").classed("sszvis-map__border", true);
-      meshLine.exit().remove();
-      meshLine = meshLine.merge(newMeshLine);
+      const meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]).join("path").classed("sszvis-map__border", true);
       meshLine.attr("d", props.mapPath).style("stroke", props.borderColor).style("stroke-width", props.strokeWidth);
     });
   }
@@ -8062,11 +7939,7 @@
       }
 
       // generate the Lake Zurich path
-      let zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]);
-      const newZurichSee = zurichSee.enter().append("path").classed("sszvis-map__lakezurich", true);
-      zurichSee.exit().remove();
-      zurichSee = zurichSee.merge(newZurichSee);
-      zurichSee.attr("d", props.mapPath).attr("fill", "url(#lake-pattern)");
+      const zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr("d", props.mapPath).attr("fill", "url(#lake-pattern)");
       if (props.fadeOut) {
         // this mask applies the fade effect
         zurichSee.attr("mask", "url(#lake-fade-mask)");
@@ -8074,11 +7947,7 @@
 
       // add a path for the boundaries of map entities which extend over the lake.
       // This path is rendered as a dotted line over the lake shape
-      let lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]);
-      const newLakePath = lakePath.enter().append("path").classed("sszvis-map__lakepath", true);
-      lakePath.exit().remove();
-      lakePath = lakePath.merge(newLakePath);
-      lakePath.attr("d", props.mapPath);
+      const lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr("d", props.mapPath);
       if (props.lakePathColor) {
         lakePath.style("stroke", props.lakePathColor);
       }
@@ -8111,10 +7980,7 @@
     return component().prop("debug").debug(false).prop("width").prop("height").prop("position").prop("cellSide").cellSide(2).prop("fill", functor).prop("opacity").opacity(1).render(function (data) {
       const selection = d3.select(this);
       const props = selection.props();
-      let canvas = selection.selectAll(".sszvis-map__rasterimage").data([0]);
-      const newCanvas = canvas.enter().append("canvas").classed("sszvis-map__rasterimage", true);
-      canvas.exit().remove();
-      canvas = canvas.merge(newCanvas);
+      const canvas = selection.selectAll(".sszvis-map__rasterimage").data([0]).join("canvas").classed("sszvis-map__rasterimage", true);
       canvas.attr("width", props.width).attr("height", props.height).style("opacity", props.opacity);
       const ctx = canvas.node().getContext("2d");
       ctx.clearRect(0, 0, props.width, props.height);
@@ -8594,11 +8460,12 @@
   exports.SWITZERLAND_KEY = SWITZERLAND_KEY;
   exports.WAHL_KREISE_KEY = WAHL_KREISE_KEY;
   exports.annotationCircle = circle;
+  exports.annotationConfidenceArea = confidenceArea;
   exports.annotationLine = line$1;
   exports.annotationRangeFlag = rangeFlag;
   exports.annotationRangeRuler = rangeRuler;
   exports.annotationRectangle = rectangle;
-  exports.annotationRuler = ruler;
+  exports.annotationRuler = annotationRuler;
   exports.app = app;
   exports.arity = arity;
   exports.aspectRatio = aspectRatio;
@@ -8706,6 +8573,7 @@
   exports.modularTextSVG = modularTextSVG;
   exports.move = move;
   exports.muchDarker = muchDarker;
+  exports.nestedStackedBarsVertical = nestedStackedBarsVertical;
   exports.not = not;
   exports.panning = panning;
   exports.parseDate = parseDate;
@@ -8720,6 +8588,7 @@
   exports.range = range;
   exports.responsiveProps = responsiveProps;
   exports.roundTransformString = roundTransformString;
+  exports.rulerLabelVerticalSeparate = rulerLabelVerticalSeparate;
   exports.sankey = sankey;
   exports.sankeyLayout = computeLayout$1;
   exports.sankeyPrepareData = prepareData$1;
