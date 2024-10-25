@@ -1,3 +1,11 @@
+## 3.1.0 (2024-10-25)
+
+- added `sszvis.nestedStackedBarsVertical` component
+- added `sszvis.annotationConfidenceArea` component
+- added `sszvis.rulerLabelVerticalSeparate` function
+- improved performance by changing the `.enter().exit()` pattern to `.join()`
+- fixes to documentation and examples to improve clarity
+
 ## 3.0.5 (2024-09-25)
 
 - fix path removal when merging
