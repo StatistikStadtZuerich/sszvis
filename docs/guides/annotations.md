@@ -304,29 +304,29 @@ A value for the y-value of the upper range flag dot
 
 The area is a shaded area that represents a confidence interval. It is used to show the range of values within which the true value is likely to fall.
 
-### sszvis.annotationConfArea
+### sszvis.annotationConfidenceArea
 
-#### `annotationConfArea.x`
+#### `annotationConfidenceArea.x`
 
 The x-position of the confidence area.
 
-#### `annotationConfArea.y0`
+#### `annotationConfidenceArea.y0`
 
 The y-position of the lower bound of the confidence area.
 
-#### `annotationConfArea.y1`
+#### `annotationConfidenceArea.y1`
 
 The y-position of the upper bound of the confidence area.
 
-#### `annotationConfArea.stroke`
+#### `annotationConfidenceArea.stroke`
 
 A string for the stroke color of the confidence area.
 
-#### `annotationConfArea.strokeWidth`
+#### `annotationConfidenceArea.strokeWidth`
 
 A number for the stroke width of the confidence area.
 
-#### `annotationConfArea.fill`
+#### `annotationConfidenceArea.fill`
 
 A string for the fill color of the confidence area.
 

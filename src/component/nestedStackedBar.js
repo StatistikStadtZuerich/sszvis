@@ -47,13 +47,7 @@ export const nestedStackedBarsVertical = () =>
       const selection = select(this);
       const props = selection.props();
 
-      const offset = props.offset;
-      const xScale = props.xScale;
-      const yScale = props.yScale;
-      const fill = props.fill;
-      const tooltip = props.tooltip;
-      const xAcc = props.xAcc;
-      const xLabel = props.xLabel;
+      const { offset, xScale, yScale, fill, tooltip, xAcc, xLabel } = props;
 
       const xAxis = axisX
         .ordinal()

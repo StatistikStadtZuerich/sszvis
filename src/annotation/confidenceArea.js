@@ -1,5 +1,5 @@
 /**
- * @function sszvis.annotationConfArea
+ * @function sszvis.annotationConfidenceArea
  *
  * A component for creating confidence areas. The component should be passed
  * an array of data values, each of which will be used to render a confidence area
@@ -7,7 +7,7 @@
  * properties to define the area. The component also supports stroke, strokeWidth,
  * and fill properties for styling.
  *
- * @module sszvis/annotation/confArea
+ * @module sszvis/annotation/confidenceArea
  *
  * @param {function} x             The x-accessor function.
  * @param {function} y0            The y0-accessor function.
