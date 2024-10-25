@@ -176,7 +176,7 @@ export const annotationRuler = () =>
 
 export const rulerLabelVerticalSeparate = (cAcc) => (g) => {
   const THRESHOLD = 2;
-  let labelBounds = [];
+  const labelBounds = [];
 
   // Reset vertical shift
   g.selectAll("text").each(function () {
@@ -195,7 +195,7 @@ export const rulerLabelVerticalSeparate = (cAcc) => (g) => {
   });
 
   // Sort by vertical position (only supports labels of same height)
-  labelBounds = labelBounds.sort((a, b) => ascending(a.top, b.top));
+  labelBounds.sort((a, b) => ascending(a.top, b.top));
 
   // Calculate overlap and correct position
   for (let i = 0; i < 10; i++) {

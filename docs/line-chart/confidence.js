@@ -165,7 +165,7 @@
 
     // for confindence interval
     const area = sszvis
-      .annotationConfArea()
+      .annotationConfidenceArea()
       .x(sszvis.compose(xScale, xAcc))
       .y0(sszvis.compose(yScale, lAcc))
       .y1(sszvis.compose(yScale, uAcc))

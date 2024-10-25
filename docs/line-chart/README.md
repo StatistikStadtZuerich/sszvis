@@ -119,7 +119,7 @@ Comparison of two datasets with huge differences in values over the same time pe
 
 ## Usage example: Confidence intervals
 
-When the dataset has confidence intervals, you can use the `sszvis.annotationConfArea` component to create a line chart with confidence intervals.
+When the dataset has confidence intervals, you can use the `sszvis.annotationConfidenceArea` component to create a line chart with confidence intervals.
 
 ```project
 {
