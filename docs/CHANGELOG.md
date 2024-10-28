@@ -1,3 +1,8 @@
+## 3.1.1 (2024-10-28)
+
+- fix the selection of the `sszvis.nestedStackedBarsVertical` to render first time
+- updated documentation on data structure to match new `d3.stack` and include examples
+
 ## 3.1.0 (2024-10-25)
 
 - added `sszvis.nestedStackedBarsVertical` component
