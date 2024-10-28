@@ -57,9 +57,11 @@ const actions = {
   prepareState(data) {
     state.data = data;
     state.yValues = sszvis.set(state.data, yAcc);
-    state.categories = sszvis.set(state.data, cAcc);
 
-    state.stackedData = sszvis.stackedBarHorizontalData(yAcc, cAcc, xAcc)(data);
+    const stackLayout = sszvis.stackedBarHorizontalData(yAcc, cAcc, xAcc);
+    state.stackedData = stackLayout(data);
+
+    state.categories = state.stackedData.keys;
     state.maxStacked = state.stackedData.maxValue;
 
     render(state);
