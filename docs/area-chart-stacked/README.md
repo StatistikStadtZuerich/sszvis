@@ -4,11 +4,45 @@
 
 ### Data structure
 
-This component requires an array of layer objects, where each layer object represents a layer in the stack.
+The stackedArea component requires an stacked structure of data. The structure converts a flat data array into an array of layer arrays, where each layer array represents a category or component of the total quantity. Each layer array should have a `key` property, which is used to identify the layer in the data join. The layer array is then made up of computed values for the _y0_ and _y1_ positions of the area, which are used to draw the area chart as well as a `data` property, which is the original data object that the layer was computed from.
+
+```code
+const stackedData = [
+  [
+      [0, 10, data: {...}],
+      [0, 20, data: {...}]
+      key: "key1"
+  ],
+    [
+      [10, 16, data: {...}],
+      [20, 29, data: {...}]
+      key: "key2"
+  ]
+]
+```
 
 ### Configuration
 
-The stackedArea component uses a [d3 stack layout](https://github.com/d3/d3-shape/blob/master/README.md#stacks) under the hood, so some of its configuration properties are similar.
+In order to construct a stacked data structure we use [d3 stack](https://d3js.org/d3-shape/stack) to build a generator function that takes the data and returns the stacked data. The generator function is then called with the data to get the stacked data. In order to convert the tidy data into a flat structure, we use the sszvis cascade function to group the data by the x-axis and then by the category. The data is then mapped to the stacked data structure.
+
+```code
+var stackLayout = d3.stack().keys(["key1", "key2", "key3"]);
+
+var stackedData = stackLayout(
+  sszvis
+    .cascade()
+    .arrayBy(xAcc)
+    .objectBy(cAcc)
+    .apply(state.data)
+    .map((d) => {
+      const r = { yValue: d[Object.keys(d)[0]][0].yValue };
+      for (const k of ["key1", "key2", "key3"]) {
+        r[k] = yAcc(d[k][0]);
+      }
+      return r;
+    })
+);
+```
 
 #### `stackedArea.x(x)`
 
