@@ -61,12 +61,6 @@ const actions = {
         })
     );
 
-    for (const [i, stack] of state.stackedData.entries()) {
-      for (const d of stack) {
-        d.key = [...state.categories].reverse()[i];
-      }
-    }
-
     const dateValues = sszvis.cascade().objectBy(sszvis.compose(String, xAcc)).apply(state.data);
 
     state.maxValue = d3.max(state.data, yAcc);
