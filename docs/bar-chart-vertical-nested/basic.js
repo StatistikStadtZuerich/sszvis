@@ -30,7 +30,6 @@ function parseRow(d) {
   return {
     year: d["Jahr_F"],
     xaxis: d["x"],
-    button: d["Alter_F"],
     category: d["Auspraegung_F"],
     konfvalue: d["95 % Konfidenzintervall (in %)"],
     value: sszvis.parseNumber(d["Anteil (in %)"]),
@@ -41,8 +40,6 @@ function parseRow(d) {
 /* Shortcuts
   ----------------------------------------------- */
 const xjAcc = sszvis.prop("year");
-const xAcc = sszvis.prop("xaxis");
-const bAcc = sszvis.prop("button");
 const yAcc = sszvis.prop("value");
 const cAcc = sszvis.prop("category");
 const aAcc = sszvis.prop("nestedCategory");
@@ -51,59 +48,43 @@ const kAcc = sszvis.prop("konfvalue");
 /* Application state
   ----------------------------------------------- */
 const state = {
-  rawData: [],
   data: [],
-  years: [],
   nestedCategories: [],
-  aAxis: [],
   categories: [],
   stackedData: [],
   maxStacked: 0,
   selection: [],
-  selectedFilter: null,
 };
 
 /* State transitions
   ----------------------------------------------- */
 const actions = {
   prepareState(data) {
-    state.rawData = data;
-    state.filters = sszvis.set(state.rawData, (d) => bAcc(d));
+    state.data = data;
 
-    actions.selectFilter(null, state.filters[0]);
-
-    render(state);
-  },
-
-  showTooltip(e, datum) {
-    state.selection = [datum];
-    render(state);
-  },
-  hideTooltip() {
-    state.selection = [];
-    render(state);
-  },
-
-  selectFilter(e, filter) {
-    state.selectedFilter = filter;
-    state.data = state.rawData.filter((d) => bAcc(d) == state.selectedFilter);
-    state.xAxis = sszvis.set(state.data, xAcc);
-    state.years = sszvis.set(state.data, xjAcc);
-
-    state.categories = sszvis.set(state.data, cAcc);
-
+    const stackLayout = sszvis.stackedBarVerticalData(xjAcc, cAcc, yAcc);
     state.stackedData = sszvis
       .cascade()
       .arrayBy(aAcc)
       .apply(state.data)
       .map((d) => {
-        const stack = sszvis.stackedBarVerticalData(xjAcc, cAcc, yAcc)(d);
-        stack.key = d[0].nestedCategory;
+        const stack = stackLayout(d);
+        stack.nest = d[0].nestedCategory;
         return stack;
       });
 
+    state.categories = sszvis.set(state.data, xjAcc);
     state.nestedCategories = sszvis.set(state.data, aAcc);
 
+    render(state);
+  },
+
+  showTooltip(_e, datum) {
+    state.selection = [datum];
+    render(state);
+  },
+  hideTooltip() {
+    state.selection = [];
     render(state);
   },
 
@@ -136,7 +117,7 @@ function render(state) {
 
   const xScale = d3
     .scaleBand()
-    .domain(sszvis.set(state.data, xjAcc))
+    .domain(state.categories)
     .range([0, xaxis2Scale.bandwidth()])
     .paddingInner(0.2)
     .paddingOuter(0);
@@ -212,7 +193,7 @@ function render(state) {
 
   const xaxis2Group = sszvis
     .nestedStackedBarsVertical()
-    .offset((d) => xaxis2Scale(d.key))
+    .offset((d) => xaxis2Scale(d.nest))
     .xScale(xScale)
     .xAcc(xjAcc)
     .yScale(yScale)

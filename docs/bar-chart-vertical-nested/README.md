@@ -2,15 +2,44 @@
 
 ### Data structure
 
-This chart expects an array of arrays, where each sub array is one layer of the stack. The stacks are formed by finding elements in each layer with the same _x_-value, and computing the size of each element based on a _y_-value.
+The nestedStackedBarsVertical is a combination of the two data structures used in the [Stacked BarVertical](../#/bar-chart-vertical-stacked) and [Bar Vertical](../#/bar-chart-vertical) components. The first layer is a grouping based on the x-axis value, and the second layer is a computed layout baded on the `sszvis.stackedBarVerticalData` function. The result is an array of arrays, where each array represents a group of bars, and each group is represented by computed slices. Each slice should be an array consist of two values for the _y0_ and _y1_ properties, followed a data object, series and stack properties.
 
-#### Caution
-
-Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: `y0`, the baseline value for each point, and `y`, the extent of each point. This assignment will overwrite any existing properties on the data object named `y0` or `y`.
+```code
+const stackedData = [
+    [
+        [0,10, data: {...}, nest: "A",],
+        [0,20, data: {...}, nest: "B",],
+        [0,16, data: {...}, nest: "C",]
+        key: "key1"
+    ],
+    [
+        [10,14, data: {...}, nest: "A",],
+        [20,22, data: {...}, nest: "B",],
+        [16,22, data: {...}, nest: "C",]
+        key: "key2"
+    ],
+]
+```
 
 ### Configuration
 
-The nestedStackedBarsVertical component is a complex component which is used to create a vertical stacked bar chart with nested groups. This component is a wrapper around the [d3 stack layout](https://github.com/d3/d3-shape/blob/master/README.md#stacks), and it is used to create a stacked bar chart with multiple layers of data. The component is designed to be used in conjunction with other components, such as the axis components, to create a complete chart.
+The nestedStackedBarsVertical component is a complex component which is used to create a vertical stacked bar chart with nested groups. To define the data structure first use the `sszvis.cascade` function to group the data by the first key, and then use the `sszvis.stackedBarVerticalData` function to compute the layout of the stacks.
+
+```code
+const stackLayout = sszvis.stackedBarVerticalData(xjAcc, cAcc, yAcc);
+state.stackedData = sszvis
+  .cascade()
+  .arrayBy(aAcc)
+  .apply(state.data)
+  .map((d) => {
+    const stack = stackLayout(d);
+    stack.nest = d[0].nestedCategory;
+    return stack;
+  });
+
+state.categories = sszvis.set(state.data, xjAcc);
+state.nestedCategories = sszvis.set(state.data, aAcc);
+```
 
 #### `nestedStackedBarsVertical.offset(offset)`
 

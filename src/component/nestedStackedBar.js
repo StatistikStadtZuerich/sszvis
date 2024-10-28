@@ -60,11 +60,13 @@ export const nestedStackedBarsVertical = () =>
 
       const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
 
-      group.join("g").attr("data-nested-stacked-bars", (d) => xAcc(d[0][0].data));
+      const nestedGroups = group
+        .join("g")
+        .attr("data-nested-stacked-bars", (d) => xAcc(d[0][0].data));
 
-      group.attr("transform", (d) => `translate(${offset(d)} 0)`);
+      nestedGroups.attr("transform", (d) => `translate(${offset(d)} 0)`);
 
-      group
+      nestedGroups
         .selectGroup("nested-x-axis")
         .attr("transform", translateString(0, yScale(0)))
         .call(xAxis);
@@ -75,7 +77,7 @@ export const nestedStackedBarsVertical = () =>
         .yScale(yScale)
         .fill(fill);
 
-      const bars = group.selectGroup("barchart").call(stackedBars);
+      const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
 
       bars.selectAll("[data-tooltip-anchor]").call(tooltip);
     });
