@@ -21,6 +21,10 @@ const stackedData = [
 ]
 ```
 
+#### Caution
+
+Because it uses a [d3 stack](https://d3js.org/d3-shape/stack) under the hood, this component will assign two special values to each data point passed to it: `0`, the baseline value for each point, and `1`, the extent of each point. This assignment will overwrite any existing properties on the data object named `0` or `1`.
+
 ### Configuration
 
 The nestedStackedBarsVertical component is a complex component which is used to create a vertical stacked bar chart with nested groups. To define the data structure first use the `sszvis.cascade` function to group the data by the first key, and then use the `sszvis.stackedBarVerticalData` function to compute the layout of the stacks.

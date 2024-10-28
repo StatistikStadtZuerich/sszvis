@@ -11,19 +11,21 @@ const stackedData = [
         [0,8, data: {...}, series: "key1", stack: "B"],
         [0,16, data: {...}, series:"key1"2, stack: "C"]
         key: "key1"
-    ]
+    ],
     [
         [10,16, data: {...}, series: "key1", stack: "A"],
         [8,20, data: {...}, series: "key1", stack: "B"],
         [16,18, data: {...}, series: "key1", stack: "C"]
         key: "key2"
-    ]
+    ],
+    keys:["key1", "key2"],
+    maxValue: 20
 ]
 ```
 
 #### Caution
 
-Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: `y0`, the baseline value for each point, and `y`, the extent of each point. This assignment will overwrite any existing properties on the data object named `y0` or `y`. These are intermediate values used to compute the bars' positioning in stack, and will be assigned even though the stack is horizontal. In the end, these values are used to calculate _x_ positions and bar _widths_.
+Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: `0`, the baseline value for each point, and `1`, the extent of each point. This assignment will overwrite any existing properties on the data object named `0` or `1`. These are intermediate values used to compute the bars' positioning in stack, and will be assigned even though the stack is horizontal. In the end, these values are used to calculate _x_ positions and bar _widths_.
 
 ### Configuration
 

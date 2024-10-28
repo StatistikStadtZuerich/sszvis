@@ -70,7 +70,8 @@ const actions = {
     state.years = sszvis.set(state.data, xAcc);
     state.categories = sszvis.set(state.data, cAcc);
 
-    state.stackedData = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc)(data);
+    const stackLayout = sszvis.stackedBarVerticalData(xAcc, cAcc, yAcc);
+    state.stackedData = stackLayout(data);
     state.maxStacked = state.stackedData.maxValue;
 
     render(state);
