@@ -68,6 +68,8 @@ Supply an accessor function for reference data for the right side. If this optio
 
 This component, like the standard pyramid component, expects an object with left and right sides, plus property accessors for getting the side data. However, unlike the standard pyramid, it expects that the returned data structure is an array of sub-arrays, where each sub-array represents one layer of the stack. This component is essentially a combination of the population pyramid component and the stacked bar chart component.
 
+To create the stacked pyramid, you can use the `sszvis.stackedPyramidData` function to transform your data into the correct format. This function accepts the gender accessor, the age accessor, stack accessor and the value accessor, and returns an generator that can be applies to the data.
+
 ### Configuration
 
 The configuration options are the same as for the standard pyramid component, including the possibility of adding reference lines
