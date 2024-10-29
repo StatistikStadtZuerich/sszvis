@@ -2,11 +2,11 @@
 
 ### Data structure
 
-You can use the sszvis.sankeyPrepareData configurable transform function to simplify creating the data structure expected by this component.
+You can use the `sszvis.sankeyPrepareData` configurable transform function to simplify creating the data structure expected by this component.
 
 The sankey.prepareData function expects a list of links, with a unique source node and target node id, and lists of node ids which fall into each column of the chart. Note that the same id should not appear multiple times, even in different columns. When this happens, an error is generated. The sizes of the nodes are defined implicitly by the fact that they have a link going to them or from them, and each node is the size of the sum of its links.
 
-The sankey component itself expects data of the form returned by layout.sankey.prepareData. Most important are the .nodes property, a list of node data, and the .links property, a list of links. The nodes have arrays containing references to elements in the links, and the links have references to their source and target nodes.
+The sankey component itself expects data of the form returned by `.sankeyPrepareData`. Most important are the `.nodes` property, a list of node data, and the `.links` property, a list of links. The nodes have arrays containing references to elements in the links, and the links have references to their source and target nodes.
 
 ### Configuration
 
@@ -48,7 +48,7 @@ Fill color for the links.
 
 #### `sankey.linkSort`
 
-A function determining how to sort the links, which are rendered stacked on top of each other. The default implementation stacks links in decresing order of value, i.e. larger, thicker links are below smaller, thinner ones.
+A function determining how to sort the links, which are rendered stacked on top of each other. The default implementation stacks links in decreasing order of value, i.e. larger, thicker links are below smaller, thinner ones.
 
 #### `sankey.labelSide`
 
