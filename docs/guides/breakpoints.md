@@ -12,7 +12,7 @@ The new website for the city of Zürich uses the following breakpoints. For this
 
 # Aspect Ratios
 
-We decided on the following aspect ratios based on the container sizes available. We tried to strike a good balance between the overall area the chart uses, the chart's height, and the phyiscal size of the chart.
+We decided on the following aspect ratios based on the container sizes available. We tried to strike a good balance between the overall area the chart uses, the chart's height, and the physical size of the chart.
 
 ```image|plain
 {

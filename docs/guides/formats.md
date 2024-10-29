@@ -2,7 +2,7 @@
 
 ## Formatting Functions
 
-#### `sszvis.formatNumber(x)`
+### `sszvis.formatNumber(x)`
 
 A number greater than 9'999 will have a thousands separator space. Also, numbers will be shortened if they have insignificant decimals.
 
@@ -22,7 +22,7 @@ rows:
     Result: "42"
 ```
 
-#### `sszvis.formatPreciseNumber(p, d)`
+### `sszvis.formatPreciseNumber(p, d)`
 
 `p` = The desired precision `d` = The number to be formatted
 
@@ -41,7 +41,7 @@ rows:
     Result: 14
 ```
 
-#### `sszvis.formatPercent(x)`
+### `sszvis.formatPercent(x)`
 
 A number will be transformed into a percent format. Formats percentages on the range 0–100.
 
@@ -58,7 +58,7 @@ rows:
     Result: "0.25 %"
 ```
 
-#### `sszvis.formatFractionPercent(x)`
+### `sszvis.formatFractionPercent(x)`
 
 A number will be transformed into a percent format. Format percentages on the range 0–1.
 
@@ -75,7 +75,7 @@ rows:
     Result: "24.59 %"
 ```
 
-#### `sszvis.formatText(x)`
+### `sszvis.formatText(x)`
 
 Any given data is returned as a string and will be formatted as Text.
 
@@ -103,7 +103,7 @@ rows:
     Result: "555435"
 ```
 
-#### `sszvis.formatYear(x)`
+### `sszvis.formatYear(x)`
 
 A date object will be formatted as a year. Gives the date's year.
 
@@ -114,7 +114,7 @@ rows:
     Result: "2020"
 ```
 
-#### `sszvis.formatMonth(x)`
+### `sszvis.formatMonth(x)`
 
 A date object will be formatted as a month. It will return a capitalized three-letter abbreviation of the German month name.
 
@@ -125,7 +125,7 @@ rows:
     Result: "JAN"
 ```
 
-#### `sszvis.formatNone()`
+### `sszvis.formatNone()`
 
 This is a Formatter for no label, only returning an empty string.
 

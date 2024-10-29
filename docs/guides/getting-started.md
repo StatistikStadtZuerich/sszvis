@@ -53,9 +53,9 @@ The following provides a brief overview of a typical code example in this reposi
 </html>
 ```
 
-#### 1. `EXTERNAL_CONFIG`
+### 1. `EXTERNAL_CONFIG`
 
-Charts often take configuration from an external source such as a CMS. The `EXTERNAL_CONFFIG` pattern (the variable can be named differently, if you like) is a way to provide such configuration to the chart. Here is an example:
+Charts often take configuration from an external source such as a CMS. The `EXTERNAL_CONFIG` pattern (the variable can be named differently, if you like) is a way to provide such configuration to the chart. Here is an example:
 
 ```code|lang-html
 <script>
@@ -67,7 +67,7 @@ Charts often take configuration from an external source such as a CMS. The `EXTE
 </script>
 ```
 
-#### 2. `responsiveProps()`
+### 2. `responsiveProps()`
 
 The `ResponsiveProps` module provides a declarative way to configure properties which need to change based on some breakpoints. SSZVIS comes with a default set of breakpoints (see `sszvis.breakpoint`), but you can also define your own breakpoints.
 
@@ -86,7 +86,7 @@ var queryProps = sszvis
   });
 ```
 
-#### 3. `parseRow()`
+### 3. `parseRow()`
 
 The `parseRow` function takes a row of CSV data (`d`) and parses it into the representation the chart needs at runtime.
 
@@ -100,7 +100,7 @@ function parseRow(d) {
 }
 ```
 
-#### 4. Accessors
+### 4. Accessors
 
 "Acc" is short for "accessor". These functions allow us to safely access a given field in a data point throughout the script.
 
@@ -110,18 +110,18 @@ function parseRow(d) {
     var cAcc = sszvis.prop("category");
 ```
 
-#### 5. State
+### 5. State
 
 The application state holds all the data necessary to render the visualization.
 
-#### 6. Actions
+### 6. Actions
 
 Actions update the state and then re-render the visualization by calling `render()` (8.)
 
-#### 7. Fetching data
+### 7. Fetching data
 
 Fetch CSV from a server and start the application when the data arrived by calling the `prepareState` action
 
-#### 8. Render
+### 8. Render
 
 The render function is called on every state change. It must be idempotent, meaning that if it is run multiple times with the same state, the result must always be the same.

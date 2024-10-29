@@ -4,7 +4,7 @@
 
 To add accessibility hints, you need to provide a title and a description to the SVG element. This can be done by configuring `sszvis.createSvgLayer`:
 
-```
+```code
 var chart = sszvis.createSvgLayer('#sszvis-chart', bounds, {
   title: "Hours of sunshine",
   description: "This chart shows the amount of hours of sunshine throughout a typical year."
@@ -12,13 +12,13 @@ var chart = sszvis.createSvgLayer('#sszvis-chart', bounds, {
 ```
 
 - The `title` will be rendered as a native tooltip, showing the title of this chart.
-- The `description` will only be used by screenreaders. The text provided for the description should be a meaningful message of this chart.
+- The `description` will only be used by screen readers. The text provided for the description should be a meaningful message of this chart.
 
 ### Using an external config
 
 Typically, the title and description are provided through an external source like a CMS. The following code snippet shows how an external config can be connected to the chart config.
 
-```
+```code
 <script>
   var EXTERNAL_CONFIG = {
     data: "data/SHB_basic_percent.csv",
@@ -41,7 +41,7 @@ Typically, the title and description are provided through an external source lik
 </script>
 ```
 
-The following shows an example with accessible descriptions built-in. While this is meant to be consumed by screenreaders, some browsers will show a small tooltip on hover if the mouse is kept still.
+The following shows an example with accessible descriptions built-in. While this is meant to be consumed by screen readers, some browsers will show a small tooltip on hover if the mouse is kept still.
 
 ```project
 {
