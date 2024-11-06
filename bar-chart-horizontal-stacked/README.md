@@ -2,15 +2,42 @@
 
 ### Data structure
 
-This chart expects an array of arrays, where each sub array is one layer of the stack. The stacks are formed by finding elements in each layer with the same _y_-value, and computing the size of each element based on a _x_-value.
+The stackedBarHorizontal component requires an array of arrays, where each array represents a slice of the stack. Each slice should be an array consist of two values for the _x0_ and _x1_ properties, followed a data object, series and stack properties.
+
+```code
+const stackedData = [
+    [
+        [0,10, data: {...}, series: "key1", stack: "A"],
+        [0,8, data: {...}, series: "key1", stack: "B"],
+        [0,16, data: {...}, series:"key1"2, stack: "C"]
+        key: "key1"
+    ],
+    [
+        [10,16, data: {...}, series: "key1", stack: "A"],
+        [8,20, data: {...}, series: "key1", stack: "B"],
+        [16,18, data: {...}, series: "key1", stack: "C"]
+        key: "key2"
+    ],
+    keys:["key1", "key2"],
+    maxValue: 20
+]
+```
 
 #### Caution
 
-Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: `y0`, the baseline value for each point, and `y`, the extent of each point. This assignment will overwrite any existing properties on the data object named `y0` or `y`. These are intermediate values used to compute the bars' positioning in stack, and will be assigned even though the stack is horizontal. In the end, these values are used to calculate _x_ positions and bar _widths_.
+Because it uses a d3.stack layout under the hood, this component will assign two special values to each data point passed to it: `0`, the baseline value for each point, and `1`, the extent of each point. This assignment will overwrite any existing properties on the data object named `0` or `1`. These are intermediate values used to compute the bars' positioning in stack, and will be assigned even though the stack is horizontal. In the end, these values are used to calculate _x_ positions and bar _widths_.
 
 ### Configuration
 
-The stackedBar.horizontal component is a combination of the sszvis bar component and a [d3 stack layout](https://github.com/d3/d3-shape/blob/master/README.md#stacks). The stack is constructed horizontally, using the _y_-value of each data element to form groups, and then calculating, for each element, the cumulative _x_-values to the left of it in the stack.
+In order to construct a stacked data structure we use the `sszvis.stackedBarHorizontalData` function to build a generator function that takes the data and returns the stacked data. The generator function is then called with the data to get the stacked data. The generator function takes the _y_, _c_, and _x_ accessors as arguments. and returns data with aggregated values for the `.maxValue` and `keys`.
+
+```code
+const stackLayout = sszvis.stackedBarHorizontalData(yAcc, cAcc, xAcc);
+state.stackedData = stackLayout(data);
+
+state.categories = state.stackedData.keys;
+state.maxStacked = state.stackedData.maxValue;
+```
 
 #### `stackedBarHorizontal.xAccessor(xAcc)`
 

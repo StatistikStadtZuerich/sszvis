@@ -1,3 +1,8 @@
+## 3.1.1 (2024-10-28)
+
+- fix the selection of the `sszvis.nestedStackedBarsVertical` to render first time
+- updated documentation on data structure to match new `d3.stack` and include examples
+
 ## 3.1.0 (2024-10-25)
 
 - added `sszvis.nestedStackedBarsVertical` component
@@ -87,7 +92,7 @@ var mouseOverlay = sszvis
 
 - Changed the color palette to match redesign color scheme
 - Added a default stroke to `axis` and `rangeRuler` text which can be bypassed with custom prop
-- Enforce default stroke on `pie`, `stackedBar` and `stackedArea` components to better visualise the new color scheme
+- Enforce default stroke on `pie`, `stackedBar` and `stackedArea` components to better visualize the new color scheme
 
 ## 2.3.0 (Aug 2020)
 
@@ -106,7 +111,7 @@ var mouseOverlay = sszvis
 ### Breaking changes
 
 - Due to the use of more modern features, IE9 and below are no longer supported
-- If code relied on the old behaviour of `sszvis.defined` or `sszvis.isNumber` that considered `NaN` as a number (which for most purposes of creating visualizations is not useful), existing code might break and must be fixed.
+- If code relied on the old behavior of `sszvis.defined` or `sszvis.isNumber` that considered `NaN` as a number (which for most purposes of creating visualizations is not useful), existing code might break and must be fixed.
 
 ### Docs
 

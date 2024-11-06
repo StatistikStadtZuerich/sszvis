@@ -5957,11 +5957,11 @@
     } = props;
     const xAxis = axisX.ordinal().scale(xScale).ticks(1).tickSize(0).orient("bottom").slant(props.slant).title(xLabel);
     const group = selection.selectAll("[data-nested-stacked-bars]").data(data);
-    group.join("g").attr("data-nested-stacked-bars", d => xAcc(d[0][0].data));
-    group.attr("transform", d => "translate(".concat(offset(d), " 0)"));
-    group.selectGroup("nested-x-axis").attr("transform", translateString(0, yScale(0))).call(xAxis);
+    const nestedGroups = group.join("g").attr("data-nested-stacked-bars", d => xAcc(d[0][0].data));
+    nestedGroups.attr("transform", d => "translate(".concat(offset(d), " 0)"));
+    nestedGroups.selectGroup("nested-x-axis").attr("transform", translateString(0, yScale(0))).call(xAxis);
     const stackedBars = stackedBarVertical().xScale(xScale).width(xScale.bandwidth()).yScale(yScale).fill(fill);
-    const bars = group.selectGroup("barchart").call(stackedBars);
+    const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
     bars.selectAll("[data-tooltip-anchor]").call(tooltip);
   });
 

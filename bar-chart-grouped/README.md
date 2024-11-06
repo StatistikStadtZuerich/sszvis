@@ -4,9 +4,30 @@
 
 ### Data structure
 
-This chart requires a set of subsets, where each subset is a group of data objects to be displayed as a bar.
+This chart requires an array of arrays, grouped by the desired dimension. Each group should be an array of objects, where each object represents a bar in the group.
+
+```code
+const data = [
+  [
+    { category: "A", value: 10 },
+    { category: "B", value: 20 },
+    { category: "C", value: 30 },
+  ],
+  [
+    { category: "A", value: 15 },
+    { category: "B", value: 25 },
+    { category: "C", value: 35 },
+  ],
+];
+```
 
 ### Configuration
+
+In order to construct a grouped bar chart, we can use the `sszvis.cascade()` function to group the data by the desired dimension. The data is then mapped to the grouped data structure.
+
+```code
+state.groupedData = sszvis.cascade().arrayBy(xAcc).apply(state.data);
+```
 
 #### `groupedBars.groupScale(scale)`
 

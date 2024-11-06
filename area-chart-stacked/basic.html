@@ -100,12 +100,6 @@
                 }),
             );
 
-            for (const [i, stack] of state.stackedData.entries()) {
-              for (const d of stack) {
-                d.key = [...state.categories].reverse()[i];
-              }
-            }
-
             const dateValues = sszvis
               .cascade()
               .objectBy(sszvis.compose(String, xAcc))

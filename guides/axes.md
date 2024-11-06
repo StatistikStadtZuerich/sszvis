@@ -21,13 +21,13 @@ Custom time formats can be defined using [d3.timeFormat](https://github.com/d3/d
 
 This is a selection of commonly used properties, more can be found in the [source code](https://github.com/StatistikStadtZuerich/sszvis/blob/master/src/axis.js).
 
-#### `axis.tickLength([x])`
+### `axis.tickLength([x])`
 
 Set the length of the x- or y-axis ticks. While not usually applied because the charts can be explored interactively, it can be useful to display long ticks for print.
 
 1. Set the `tickLength` property to a number
 
-```
+```code
 var yAxis = sszvis
   .axisY()
   .scale(yPosScale)
@@ -211,7 +211,7 @@ Sometimes, the axis labels are long enough that they will overlap their neighbor
 }
 ```
 
-## Slants (Diagonal)
+## Slants (Diagonal - Top)
 
 This x-axis (with a 'top' orientation) has a diagonal slant
 
