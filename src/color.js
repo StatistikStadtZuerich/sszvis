@@ -114,6 +114,52 @@ export const scaleQual6b = qualColorScale([
   lightBrown,
 ]);
 
+const female = "#349894";
+const male = "#FFD736";
+const misc = "#986AD5";
+
+export const scaleGender3 = () =>
+  qualColorScale([female, male, misc])().domain(["Frauen", "Männer", "Divers"]);
+
+const swissFemale = "#00615D";
+const foreignFemale = "#349894";
+const swissMale = "#DA9C00";
+const foreignMale = "#FFD736";
+const swissMisc = "#5E359A";
+const foreignMisc = "#986AD5";
+
+export const scaleGender6Origin = () =>
+  qualColorScale([
+    swissFemale,
+    foreignFemale,
+    swissMale,
+    foreignMale,
+    swissMisc,
+    foreignMisc,
+  ])().domain([
+    "Schweizerinnen",
+    "Ausländerinnen",
+    "Schweizer",
+    "Ausländer",
+    "Divers Schweiz",
+    "Divers Ausland",
+  ]);
+
+const femaleFemale = "#349894";
+const maleMale = "#FFD736";
+const femaleMale = "#3431DE";
+const femaleUnknown = "#B8B8B8";
+const maleUnknown = "#D6D6D6";
+
+export const scaleGender5Wedding = () =>
+  qualColorScale([femaleFemale, maleMale, femaleMale, femaleUnknown, maleUnknown])().domain([
+    "Frau / Frau",
+    "Mann / Mann",
+    "Frau / Mann",
+    "Frau / Unbekannt",
+    "Mann / Unbekannt",
+  ]);
+
 function seqColorScale(colors) {
   return function () {
     const scale = scaleLinear().range(colors.map(convertLab));
