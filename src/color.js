@@ -321,10 +321,3 @@ function interpolatedColorScale(scale) {
 function convertLab(d) {
   return lab(d);
 }
-
-function func(fName) {
-  const args = Array.prototype.slice.call(arguments, 1);
-  return function (d) {
-    return d[fName].apply(d, args);
-  };
-}
