@@ -696,7 +696,7 @@
 
   /* Constants
   ----------------------------------------------- */
-  const LIGHTNESS_STEP = 0.6;
+  const LIGHTNESS_STEP = 1;
 
   /* Scales
   ----------------------------------------------- */
@@ -722,6 +722,23 @@
   const scaleQual6 = qualColorScale([darkBlue, mediumRed, mediumGreen, lightBrown, lightBlue, mediumBrown]);
   const scaleQual6a = qualColorScale([darkBlue, mediumBlue, lightBlue, darkRed, mediumRed, lightRed]);
   const scaleQual6b = qualColorScale([darkGreen, mediumGreen, lightGreen, darkBrown, mediumBrown, lightBrown]);
+  const female = "#349894";
+  const male = "#FFD736";
+  const misc = "#986AD5";
+  const scaleGender3 = () => qualColorScale([female, male, misc])().domain(["Frauen", "Männer", "Divers"]);
+  const swissFemale = "#00615D";
+  const foreignFemale = "#349894";
+  const swissMale = "#DA9C00";
+  const foreignMale = "#FFD736";
+  const swissMisc = "#5E359A";
+  const foreignMisc = "#986AD5";
+  const scaleGender6Origin = () => qualColorScale([swissFemale, foreignFemale, swissMale, foreignMale, swissMisc, foreignMisc])().domain(["Schweizerinnen", "Ausländerinnen", "Schweizer", "Ausländer", "Divers Schweiz", "Divers Ausland"]);
+  const femaleFemale = "#349894";
+  const maleMale = "#FFD736";
+  const femaleMale = "#3431DE";
+  const femaleUnknown = "#B8B8B8";
+  const maleUnknown = "#D6D6D6";
+  const scaleGender5Wedding = () => qualColorScale([femaleFemale, maleMale, femaleMale, femaleUnknown, maleUnknown])().domain(["Frau / Frau", "Mann / Mann", "Frau / Mann", "Frau / Unbekannt", "Mann / Unbekannt"]);
   function seqColorScale(colors) {
     return function () {
       const scale = d3.scaleLinear().range(colors.map(convertLab));
@@ -769,10 +786,10 @@
   ----------------------------------------------- */
   function decorateOrdinalScale(scale) {
     scale.darker = function () {
-      return decorateOrdinalScale(scale.copy().range(scale.range().map(d3.lab).map(func("darker", LIGHTNESS_STEP))));
+      return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
     };
     scale.brighter = function () {
-      return decorateOrdinalScale(scale.copy().range(scale.range().map(d3.lab).map(func("brighter", LIGHTNESS_STEP))));
+      return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
     };
     scale.reverse = function () {
       return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
@@ -824,12 +841,6 @@
   ----------------------------------------------- */
   function convertLab(d) {
     return d3.lab(d);
-  }
-  function func(fName) {
-    const args = Array.prototype.slice.call(arguments, 1);
-    return function (d) {
-      return d[fName].apply(d, args);
-    };
   }
 
   /**
@@ -8598,6 +8609,9 @@
   exports.scaleDivNtrGry = scaleDivNtrGry;
   exports.scaleDivVal = scaleDivVal;
   exports.scaleDivValGry = scaleDivValGry;
+  exports.scaleGender3 = scaleGender3;
+  exports.scaleGender5Wedding = scaleGender5Wedding;
+  exports.scaleGender6Origin = scaleGender6Origin;
   exports.scaleGry = scaleGry;
   exports.scaleLightGry = scaleLightGry;
   exports.scaleMedGry = scaleMedGry;

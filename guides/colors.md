@@ -87,7 +87,7 @@ The deep grey color, as a standalone value.
 
 Qualitative scales are used for data that has distinct categories. They distinguish categories based on color contrast. They should never be used to compare values, use sequential or divergent scales in this case.
 
-#### `sszvis.scaleQual12()`
+### `sszvis.scaleQual12()`
 
 ```html|plain,run-script
 <div id="scaleQual" class="scale-container"></div>
@@ -97,7 +97,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 </script>
 ```
 
-#### `sszvis.scaleQual6()`
+### `sszvis.scaleQual6()`
 
 ```html|plain,run-script
 <div id="scaleQual6" class="scale-container"></div>
@@ -107,7 +107,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 </script>
 ```
 
-#### `sszvis.scaleQual6a()`
+### `sszvis.scaleQual6a()`
 
 ```html|plain,run-script
 <div id="scaleQual6a" class="scale-container"></div>
@@ -117,7 +117,7 @@ Qualitative scales are used for data that has distinct categories. They distingu
 </script>
 ```
 
-#### `sszvis.scaleQual6b()`
+### `sszvis.scaleQual6b()`
 
 ```html|plain,run-script
 <div id="scaleQual6b" class="scale-container"></div>
@@ -130,12 +130,12 @@ Qualitative scales are used for data that has distinct categories. They distingu
 Qualitative scales can be brightened or darkened with the `scale.brighter()` and `scale.darker()` instance methods. These methods return new scale instances.
 
 ```html|plain,run-script
-<div id="scaleQualBrigther" class="scale-container"></div>
+<div id="scaleQualBrighter" class="scale-container"></div>
 <div id="scaleQualDefault" class="scale-container"></div>
 <div id="scaleQualDarker" class="scale-container"></div>
 <script>
   var scale = sszvis.scaleQual12();
-  colorSwatchFromColors("scaleQualBrigther", scale.brighter().range());
+  colorSwatchFromColors("scaleQualBrighter", scale.brighter().range());
   colorSwatchFromColors("scaleQualDefault", scale.range());
   colorSwatchFromColors("scaleQualDarker", scale.darker().range());
 </script>
@@ -155,7 +155,7 @@ Qualitative scales can be reversed with the `scale.reverse()` instance method. T
 
 Sequential scales are used to compare values. These scales are designed to have the same brightness for the same input value.
 
-#### `sszvis.scaleSeqBlu()`
+### `sszvis.scaleSeqBlu()`
 
 ```html|plain,run-script
 <div id="scale1" class="scale-container"></div>
@@ -165,7 +165,7 @@ Sequential scales are used to compare values. These scales are designed to have 
 </script>
 ```
 
-#### `sszvis.scaleSeqRed()`
+### `sszvis.scaleSeqRed()`
 
 ```html|plain,run-script
 <div id="scale2" class="scale-container"></div>
@@ -175,7 +175,7 @@ Sequential scales are used to compare values. These scales are designed to have 
 </script>
 ```
 
-#### `sszvis.scaleSeqGrn()`
+### `sszvis.scaleSeqGrn()`
 
 ```html|plain,run-script
 <div id="scale3" class="scale-container"></div>
@@ -185,7 +185,7 @@ Sequential scales are used to compare values. These scales are designed to have 
 </script>
 ```
 
-#### `sszvis.scaleSeqBrn()`
+### `sszvis.scaleSeqBrn()`
 
 ```html|plain,run-script
 <div id="scale4" class="scale-container"></div>
@@ -209,7 +209,7 @@ Sequential scales can be reversed using the `scale.reverse()` instance method. T
 
 Divergent scales are used to compare data that has two extremes. These scales are designed to have the same brightness for the same input value.
 
-#### `sszvis.scaleDivVal()`
+### `sszvis.scaleDivVal()`
 
 ```html|plain,run-script
 <div id="scale5" class="scale-container"></div>
@@ -219,7 +219,7 @@ Divergent scales are used to compare data that has two extremes. These scales ar
 </script>
 ```
 
-#### `sszvis.scaleDivNtr()`
+### `sszvis.scaleDivNtr()`
 
 ```html|plain,run-script
 <div id="scale7" class="scale-container"></div>
@@ -231,7 +231,7 @@ Divergent scales are used to compare data that has two extremes. These scales ar
 
 A grey midpoint can be used in situations where the contour of a data mark must be visible on a white background.
 
-#### `sszvis.scaleDivValGry()`
+### `sszvis.scaleDivValGry()`
 
 ```html|plain,run-script
 <div id="scale6" class="scale-container"></div>
@@ -241,7 +241,7 @@ A grey midpoint can be used in situations where the contour of a data mark must 
 </script>
 ```
 
-#### `sszvis.scaleDivNtrGry()`
+### `sszvis.scaleDivNtrGry()`
 
 ```html|plain,run-script
 <div id="scale8" class="scale-container"></div>
@@ -258,5 +258,72 @@ Divergent scales can be reversed using the `scale.reverse()` instance method. Th
 <script>
   var scale = sszvis.scaleDivValGry();
   colorSwatchFromLinearScale("scaleDivValRev", scale.reverse(), 9);
+</script>
+```
+
+## Gender
+
+Categorical scales for highlighting datasets dealing with gender. These scales are designed to be easily distinguishable for people with color vision deficiencies.
+
+### `sszvis.scaleGender3()`
+
+By default, the domain of the colors represent `Frauen`, `Männer`, and `Divers`. However these can be overridden by defining the domain of the scale:
+
+```code
+const scale = sszvis.scaleGender3().domain(["Female", "Male", "Other"]);
+```
+
+```html|plain,run-script
+<div id="scaleGender3" class="scale-container"></div>
+<script>
+  var scale = sszvis.scaleGender3();
+  colorSwatchFromColors("scaleGender3", scale.range());
+</script>
+```
+
+### `sszvis.scaleGender6Origin()`
+
+By default, the domain of the colors represent `Schweizerinnen`, `Ausländerinnen`, `Schweizer`, `Ausländer`, `Divers Schweiz`, and `Divers Ausland`. However these can be overridden by defining the domain of the scale.
+
+```code
+const scale = sszvis.scaleGender6Origin()
+  .domain([
+    "Swiss Female",
+    "Foreign Male",
+    "Swiss Male",
+    "Foreign Male",
+    "Swiss Other",
+    "Foreign Other",
+  ]);
+```
+
+```html|plain,run-script
+<div id="scaleGender6Origin" class="scale-container"></div>
+<script>
+  var scale = sszvis.scaleGender6Origin();
+  colorSwatchFromColors("scaleGender6Origin", scale.range());
+</script>
+```
+
+### `sszvis.scaleGender5Wedding()`
+
+By default, the domain of the colors represent `Frau / Frau`, `Mann / Mann`, `Frau / Mann`, `Frau / Unbekannt`, and `Mann / Unbekannt`. However these can be overridden by defining the domain of the scale.
+
+```code
+const scale = sszvis.scaleGender5Wedding()
+  .domain([
+    "Female / Female",
+    "Male / Male",
+    "Female / Male",
+    "Female / Unknown",
+    "Male / Unknown",
+  ]);
+```
+
+```html|plain,run-script
+<div id="scaleGender5Wedding" class="scale-container"></div>
+<script>
+  var scale = sszvis.scaleGender5Wedding();
+  colorSwatchFromColors("scaleGender5Wedding", scale.range());
 </script>
 ```
