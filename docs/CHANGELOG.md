@@ -1,3 +1,8 @@
+## 3.2.0 (2025-03-17)
+
+- add new color scales for genders: `sszvis.scaleGender3`, `sszvis.scaleGender6Origin`, `sszvis.scaleGender5Wedding`
+- fix darker and brighter color fn
+
 ## 3.1.1 (2024-10-28)
 
 - fix the selection of the `sszvis.nestedStackedBarsVertical` to render first time
