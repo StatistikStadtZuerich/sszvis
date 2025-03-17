@@ -130,12 +130,12 @@ Qualitative scales are used for data that has distinct categories. They distingu
 Qualitative scales can be brightened or darkened with the `scale.brighter()` and `scale.darker()` instance methods. These methods return new scale instances.
 
 ```html|plain,run-script
-<div id="scaleQualBrigther" class="scale-container"></div>
+<div id="scaleQualBrighter" class="scale-container"></div>
 <div id="scaleQualDefault" class="scale-container"></div>
 <div id="scaleQualDarker" class="scale-container"></div>
 <script>
   var scale = sszvis.scaleQual12();
-  colorSwatchFromColors("scaleQualBrigther", scale.brighter().range());
+  colorSwatchFromColors("scaleQualBrighter", scale.brighter().range());
   colorSwatchFromColors("scaleQualDefault", scale.range());
   colorSwatchFromColors("scaleQualDarker", scale.darker().range());
 </script>
