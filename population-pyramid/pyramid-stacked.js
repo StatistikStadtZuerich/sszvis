@@ -96,20 +96,7 @@ function render(state) {
 
   const positionScale = d3.scaleOrdinal().domain(state.ages).range(pyramidDimensions.positions);
 
-  const colorScale = d3
-    .scaleOrdinal()
-    .domain(state.groups)
-    /**
-     * A pointscale using a diverging color scheme would be more flexible here, but the pyramid
-     * sorting goes against the reading order. So we use a sequential color schemes and manually
-     * assign the colors to the groups.
-     */
-    .range([
-      sszvis.scaleSeqRed()(1),
-      sszvis.scaleSeqRed()(0.25),
-      sszvis.scaleSeqBlu()(1),
-      sszvis.scaleSeqBlu()(0.25),
-    ]);
+  const colorScale = sszvis.scaleGender6Origin().domain(state.groups);
 
   // Layers
 
