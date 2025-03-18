@@ -26,7 +26,6 @@ const otherAcc = sszvis.prop("Andere");
 const state = {
   data: [],
   ages: d3.range(0, 101), // [0 ... 100]
-  groups: [],
   maxValue: 0,
   populations: {},
 };
@@ -36,7 +35,6 @@ const state = {
 const actions = {
   prepareState(data) {
     state.data = data;
-    state.groups = sszvis.set(state.data, gAcc).reverse();
     state.maxValue = d3.max(state.data, vAcc);
     state.populations = sszvis.cascade().objectBy(refAcc).objectBy(gAcc).apply(state.data);
 
@@ -78,7 +76,7 @@ function render(state) {
 
   const positionScale = d3.scaleOrdinal().domain(state.ages).range(pyramidDimensions.positions);
 
-  const colorScale = sszvis.scaleQual6().domain(state.groups);
+  const colorScale = sszvis.scaleGender3();
 
   // Layers
 

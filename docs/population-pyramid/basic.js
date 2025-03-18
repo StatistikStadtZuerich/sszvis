@@ -39,7 +39,6 @@ const state = {
   data: [],
   ages: [],
   ageExtent: [],
-  groups: [],
   maxValue: 0,
   binnedData: [],
   populations: {},
@@ -52,7 +51,6 @@ const state = {
 const actions = {
   prepareState(data) {
     state.data = data;
-    state.groups = sszvis.set(state.data, gAcc).reverse();
 
     const grouper = sszvis
       .cascade()
@@ -177,7 +175,7 @@ function render(state) {
     .domain([0, state.maxValue])
     .range([0, pyramidDimensions.maxBarLength]);
 
-  const colorScale = sszvis.scaleQual6().domain(state.groups);
+  const colorScale = sszvis.scaleGender3();
 
   const positionScale = d3.scaleOrdinal().domain(state.ages).range(pyramidDimensions.positions);
 
