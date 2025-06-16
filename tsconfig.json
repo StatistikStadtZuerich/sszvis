@@ -25,7 +25,8 @@
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": false,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "noEmit": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build", "docs", "test", "contrib", "geodata", "playwright-report"]
