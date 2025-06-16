@@ -23,7 +23,7 @@ const stackedData = [
 
 ### Configuration
 
-In order to construct a stacked data structure we use  to build a generator function that takes the data and returns the stacked data. The generator function is then called with the data to get the stacked data. In order to convert the tidy data into a flat structure, we use the sszvis cascade function to group the data by the x-axis and then by the category. The data is then mapped to the stacked data structure.
+In order to construct a stacked data structure we use to build a generator function that takes the data and returns the stacked data. The generator function is then called with the data to get the stacked data. In order to convert the tidy data into a flat structure, we use the sszvis cascade function to group the data by the x-axis and then by the category. The data is then mapped to the stacked data structure.
 
 ```code
 var stackLayout = d3.stack().keys(["key1", "key2", "key3"]);
