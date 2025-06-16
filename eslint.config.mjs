@@ -8,14 +8,8 @@ export default [
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   pluginJs.configs.recommended,
   sonarjs.configs.recommended,
-  {
-    plugins: {
-      "unused-imports": unusedImports,
-    },
-  },
-  {
-    ignores: ["contrib/", "build/", "docs/static/"],
-  },
+  { plugins: { "unused-imports": unusedImports } },
+  { ignores: ["contrib/", "build/", "docs/static/"] },
   eslintPluginUnicorn.configs["flat/recommended"],
   {
     rules: {
@@ -23,11 +17,7 @@ export default [
       "unused-imports/no-unused-imports": "error",
       "unused-imports/no-unused-vars": [
         "warn",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
       ],
       "unicorn/better-regex": "warn",
       "unicorn/filename-case": "off",
@@ -47,6 +37,11 @@ export default [
       "unicorn/prefer-at": "off",
       "unicorn/prefer-query-selector": "off",
       "sonarjs/no-duplicate-string": "off",
+      "sonarjs/slow-regex": "off",
+      "sonarjs/todo-tag": "warn",
+      "sonarjs/no-nested-conditional": "warn",
+      "sonarjs/no-nested-functions": "warn",
+      "sonarjs/cognitive-complexity": "warn",
       "prefer-arrow-callback": "warn",
       "arrow-body-style": ["warn", "as-needed"],
       "object-shorthand": ["error", "always", { avoidExplicitReturnArrows: true }],

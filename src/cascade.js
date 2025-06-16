@@ -77,7 +77,11 @@ function groupBy(data, keyFunc) {
   for (let i = 0, l = data.length, value; i < l; ++i) {
     value = data[i];
     key = keyFunc(value);
-    group[key] ? group[key].push(value) : (group[key] = [value]);
+    if (group[key]) {
+      group[key].push(value);
+    } else {
+      group[key] = [value];
+    }
   }
   return group;
 }

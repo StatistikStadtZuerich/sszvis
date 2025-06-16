@@ -40,8 +40,8 @@ const callbacks = {
   resize: [],
 };
 
-if (typeof window !== "undefined") {
-  select(window).on(
+if (globalThis.window !== undefined) {
+  select(globalThis).on(
     "resize",
     throttle(() => {
       trigger("resize");

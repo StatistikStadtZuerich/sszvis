@@ -106,7 +106,7 @@ export default function () {
         .on("mousedown", function (e) {
           const target = this;
           const doc = select(document);
-          const win = select(window);
+          const win = select(globalThis);
 
           const startDragging = function () {
             target.__dragging__ = true;

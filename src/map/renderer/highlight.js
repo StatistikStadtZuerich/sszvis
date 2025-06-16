@@ -38,7 +38,7 @@ export default function () {
       const selection = select(this);
       const props = selection.props();
 
-      let highlightBorders = selection.selectAll(".sszvis-map__highlight");
+      const highlightBorders = selection.selectAll(".sszvis-map__highlight");
 
       if (props.highlight.length === 0) {
         highlightBorders.remove();
@@ -61,7 +61,7 @@ export default function () {
         return m;
       }, []);
 
-      highlightBorders = highlightBorders
+      highlightBorders
         .data(mergedHighlight)
         .join("path")
         .classed("sszvis-map__highlight", true)
