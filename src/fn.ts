@@ -4,7 +4,7 @@
  * @module sszvis/fn
  */
 
-import { selection } from "d3";
+import { selection, Selection } from "d3";
 
 /**
  * fn.identity
@@ -15,7 +15,7 @@ import { selection } from "d3";
  * @param  {*} value any value
  * @return {*}       returns its argument
  */
-export const identity = function (value) {
+export const identity = function <T>(value: T): T {
   return value;
 };
 
@@ -27,7 +27,7 @@ export const identity = function (value) {
  * @param  {*}  val       The value to check
  * @return {Boolean}      Whether the value is a string
  */
-export const isString = function (val) {
+export const isString = function (val: unknown): val is string {
   return Object.prototype.toString.call(val) === "[object String]";
 };
 
@@ -39,7 +39,7 @@ export const isString = function (val) {
  * @param  {*}  val         The value to check
  * @return {Boolean}        Whether the value is a d3.selection
  */
-export const isSelection = function (val) {
+export const isSelection = function (val: unknown): val is Selection<any, any, any, any> {
   return val instanceof selection;
 };
 
@@ -55,60 +55,93 @@ export const isSelection = function (val) {
  * @return {Function} A new function wrapping `fn`. The new function is
  * guaranteed to be of arity `n`.
  */
-export const arity = function (n, fn) {
+export const arity = function (n: number, fn: (...args: any[]) => any): (...args: any[]) => any {
   switch (n) {
     case 0: {
-      return function () {
+      return function (this: any) {
         return fn.call(this);
       };
     }
     case 1: {
-      return function (a0) {
+      return function (this: any, a0: any) {
         return fn.call(this, a0);
       };
     }
     case 2: {
-      return function (a0, a1) {
+      return function (this: any, a0: any, a1: any) {
         return fn.call(this, a0, a1);
       };
     }
     case 3: {
-      return function (a0, a1, a2) {
+      return function (this: any, a0: any, a1: any, a2: any) {
         return fn.call(this, a0, a1, a2);
       };
     }
     case 4: {
-      return function (a0, a1, a2, a3) {
+      return function (this: any, a0: any, a1: any, a2: any, a3: any) {
         return fn.call(this, a0, a1, a2, a3);
       };
     }
     case 5: {
-      return function (a0, a1, a2, a3, a4) {
+      return function (this: any, a0: any, a1: any, a2: any, a3: any, a4: any) {
         return fn.call(this, a0, a1, a2, a3, a4);
       };
     }
     case 6: {
-      return function (a0, a1, a2, a3, a4, a5) {
+      return function (this: any, a0: any, a1: any, a2: any, a3: any, a4: any, a5: any) {
         return fn.call(this, a0, a1, a2, a3, a4, a5);
       };
     }
     case 7: {
-      return function (a0, a1, a2, a3, a4, a5, a6) {
+      return function (this: any, a0: any, a1: any, a2: any, a3: any, a4: any, a5: any, a6: any) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6);
       };
     }
     case 8: {
-      return function (a0, a1, a2, a3, a4, a5, a6, a7) {
+      return function (
+        this: any,
+        a0: any,
+        a1: any,
+        a2: any,
+        a3: any,
+        a4: any,
+        a5: any,
+        a6: any,
+        a7: any
+      ) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7);
       };
     }
     case 9: {
-      return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
+      return function (
+        this: any,
+        a0: any,
+        a1: any,
+        a2: any,
+        a3: any,
+        a4: any,
+        a5: any,
+        a6: any,
+        a7: any,
+        a8: any
+      ) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8);
       };
     }
     case 10: {
-      return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+      return function (
+        this: any,
+        a0: any,
+        a1: any,
+        a2: any,
+        a3: any,
+        a4: any,
+        a5: any,
+        a6: any,
+        a7: any,
+        a8: any,
+        a9: any
+      ) {
         return fn.call(this, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
       };
     }
@@ -134,12 +167,11 @@ export const arity = function (n, fn) {
  * @param {Function...} ... Accepts any number of functions as arguments
  * @return {Function} returns a function which is the composition of the passed functions
  */
-export const compose = function () {
-  const fns = arguments,
-    start = arguments.length - 1;
-  return function () {
+export const compose = function (...fns: ((...args: any[]) => any)[]): (...args: any[]) => any {
+  const start = fns.length - 1;
+  return function (this: any, ...args: any[]) {
     let i = start;
-    let result = Reflect.apply(fns[i], this, arguments);
+    let result = Reflect.apply(fns[i], this, args);
     while (i--) result = fns[i].call(this, result);
     return result;
   };
@@ -154,7 +186,7 @@ export const compose = function () {
  * @param  {any}   d    Item that might be in list
  * @return {boolean}
  */
-export const contains = function (list, d) {
+export const contains = function <T>(list: T[], d: T): boolean {
   return list.includes(d);
 };
 
@@ -166,7 +198,7 @@ export const contains = function (list, d) {
  * @param  {*} val the value to check
  * @return {Boolean}     true if the value is defined, false if the value is undefined
  */
-export const defined = function (val) {
+export const defined = function <T>(val: T): val is NonNullable<T> {
   return val !== undefined && val != null && !Number.isNaN(val);
 };
 
@@ -185,14 +217,17 @@ export const defined = function (val) {
  * @param  {function} acc     An accessor function which calculates the set determiner.
  * @return {array}            An array of objects from the input array.
  */
-export const derivedSet = function (arr, acc) {
-  acc || (acc = identity);
-  const seen = [],
-    result = [];
-  let sValue, cValue;
+export const derivedSet = function <T>(
+  arr: T[],
+  acc?: (value: T, index: number, array: T[]) => any
+): T[] {
+  const accessor = acc || identity;
+  const seen: any[] = [];
+  const result: T[] = [];
+  let sValue: T, cValue: any;
   for (let i = 0, l = arr.length; i < l; ++i) {
     sValue = arr[i];
-    cValue = acc(sValue, i, arr);
+    cValue = accessor(sValue, i, arr);
     if (!seen.includes(cValue)) {
       seen.push(cValue);
       result.push(sValue);
@@ -211,7 +246,7 @@ export const derivedSet = function (arr, acc) {
  * @param  {Array} arr              The array to test
  * @return {Boolean}                Whether every element in the array passes the test
  */
-export const every = function (predicate, arr) {
+export const every = function <T>(predicate: (element: T) => boolean, arr: T[]): boolean {
   for (const element of arr) {
     if (!predicate(element)) {
       return false;
@@ -229,8 +264,8 @@ export const every = function (predicate, arr) {
  * @param  {Any} val        The value with which to fill the array
  * @return {Array}          An array of length len filled with val
  */
-export const filledArray = function (len, val) {
-  const arr = Array.from({ length: len });
+export const filledArray = function <T>(len: number, val: T): T[] {
+  const arr = Array.from({ length: len }) as T[];
   for (let i = 0; i < len; ++i) {
     arr[i] = val;
   }
@@ -247,12 +282,13 @@ export const filledArray = function (len, val) {
  *
  * @returns {arrayElement|undefined}
  */
-export const find = function (predicate, arr) {
+export const find = function <T>(predicate: (element: T) => boolean, arr: T[]): T | undefined {
   for (const element of arr) {
     if (predicate(element)) {
       return element;
     }
   }
+  return undefined;
 };
 
 /**
@@ -263,7 +299,7 @@ export const find = function (predicate, arr) {
  * @param  {Array} arr an array
  * @return {*}     the first value in the array
  */
-export const first = function (arr) {
+export const first = function <T>(arr: T[]): T | undefined {
   return arr[0];
 };
 
@@ -277,7 +313,7 @@ export const first = function (arr) {
  * @param  {Array}        The Array to flatten
  * @return {Array}        A flattened Array
  */
-export const flatten = function (arr) {
+export const flatten = function <T>(arr: T[][]): T[] {
   return arr.flat();
 };
 
@@ -294,7 +330,7 @@ export const flatten = function (arr) {
  * @return {Touch|null}         The first Touch object from the TouchEvent's lists
  *                              of touches.
  */
-export const firstTouch = function (event) {
+export const firstTouch = function (event: TouchEvent): Touch | null {
   if (event.touches && event.touches.length > 0) {
     return event.touches[0];
   } else if (event.changedTouches && event.changedTouches.length > 0) {
@@ -314,10 +350,10 @@ export const firstTouch = function (event) {
  * @example
  * sszvis.foldPattern('formalGreeting', {
  *   formalGreeting: function() { return "Pleased to meet you."},
- *   informalGreeting: function() { return "How ya’ doin!" }
+ *   informalGreeting: function() { return "How ya' doin!" }
  * })
  */
-export const foldPattern = function (key, pattern) {
+export const foldPattern = function <T>(key: string, pattern: Record<string, () => T>): T {
   const result = pattern[key];
   if (typeof result === "function") {
     return result();
@@ -344,13 +380,16 @@ export const foldPattern = function (key, pattern) {
  * the element's index in the input array, and the input array itself.
  * @return {Array} an Array of unique elements
  */
-export const hashableSet = function (arr, acc) {
-  acc || (acc = identity);
-  const seen = {},
-    result = [];
-  let value;
+export const hashableSet = function <T, U extends string | number>(
+  arr: T[],
+  acc?: (element: T, index: number, array: T[]) => U
+): U[] {
+  const accessor = acc || (identity as (element: T, index: number, array: T[]) => U);
+  const seen: Record<string | number, boolean> = {};
+  const result: U[] = [];
+  let value: U;
   for (let i = 0, l = arr.length; i < l; ++i) {
-    value = acc(arr[i], i, arr);
+    value = accessor(arr[i], i, arr);
     if (!seen[value]) {
       seen[value] = true;
       result.push(value);
@@ -367,7 +406,7 @@ export const hashableSet = function (arr, acc) {
  * @param {*} val the value to check
  * @return {Boolean} true if the value is a function, false otherwise
  */
-export const isFunction = function (val) {
+export const isFunction = function (val: unknown): val is (...args: any[]) => any {
   return typeof val == "function";
 };
 
@@ -379,7 +418,7 @@ export const isFunction = function (val) {
  * @param {*} val the value to check
  * @return {Boolean}     true if the value is null, false if the value is not null
  */
-export const isNull = function (val) {
+export const isNull = function (val: unknown): val is null {
   return val === null;
 };
 
@@ -391,7 +430,7 @@ export const isNull = function (val) {
  * @param  {*}  val     The value to check
  * @return {Boolean}    Whether the value is a number
  */
-export const isNumber = function (val) {
+export const isNumber = function (val: unknown): val is number {
   return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
 };
 
@@ -404,7 +443,7 @@ export const isNumber = function (val) {
  * @param  {*}  value      The value to test
  * @return {Boolean}       Whether the value is an object
  */
-export const isObject = function (val) {
+export const isObject = function (val: unknown): val is object {
   return Object(val) === val;
 };
 
@@ -416,7 +455,7 @@ export const isObject = function (val) {
  * @param  {Array} arr an array
  * @return {*}     the last value in the array
  */
-export const last = function (arr) {
+export const last = function <T>(arr: T[]): T | undefined {
   return arr[arr.length - 1];
 };
 
@@ -430,9 +469,9 @@ export const last = function (arr) {
  * @param  {Function} f the argument function
  * @return {Function}   a new function which returns the boolean opposite of the argument function
  */
-export const not = function (f) {
-  return function () {
-    return !Reflect.apply(f, this, arguments);
+export const not = function <T extends any[]>(f: (...args: T) => any): (...args: T) => boolean {
+  return function (this: any, ...args: T): boolean {
+    return !Reflect.apply(f, this, args);
   };
 };
 
@@ -448,8 +487,10 @@ export const not = function (f) {
  * @return {Function}     A property-accessor function
  *
  */
-export const prop = function (key) {
-  return function (object) {
+export const prop = function <K extends string | number | symbol>(
+  key: K
+): <T extends Record<K, any>>(object: T) => T[K] {
+  return function <T extends Record<K, any>>(object: T): T[K] {
     return object[key];
   };
 };
@@ -468,10 +509,13 @@ export const prop = function (key) {
  * @param  {any} defaultVal     the default value to return when either the object or the requested property are undefined
  * @return {Function}           A property-accessor function
  */
-export const propOr = function (key, defaultVal) {
-  return function (object) {
+export const propOr = function <K extends string | number | symbol, D>(
+  key: K,
+  defaultVal?: D
+): <T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D {
+  return function <T extends Partial<Record<K, any>>>(object: T | undefined): T[K] | D {
     const value = object === undefined ? undefined : object[key];
-    return value === undefined ? defaultVal : value;
+    return value === undefined ? (defaultVal as D) : value;
   };
 };
 
@@ -495,10 +539,13 @@ export const propOr = function (key, defaultVal) {
  * the element's index in the input array, and the input array itself.
  * @return {Array} an Array of unique elements
  */
-export const set = function (arr, acc) {
-  acc || (acc = identity);
-  return arr.reduce((m, value, i) => {
-    const computed = acc(value, i, arr);
+export const set = function <T, U>(
+  arr: T[],
+  acc?: (value: T, index: number, array: T[]) => U
+): U[] {
+  const accessor = acc || (identity as (value: T, index: number, array: T[]) => U);
+  return arr.reduce((m: U[], value: T, i: number) => {
+    const computed = accessor(value, i, arr);
     return m.includes(computed) ? m : [...m, computed];
   }, []);
 };
@@ -513,7 +560,7 @@ export const set = function (arr, acc) {
  * @param  {Array} arr              The array to test
  * @return {Boolean}                Whether some element in the array passes the test
  */
-export const some = function (predicate, arr) {
+export const some = function <T>(predicate: (element: T) => boolean, arr: T[]): boolean {
   for (const element of arr) {
     if (predicate(element)) {
       return true;
@@ -533,7 +580,10 @@ export const some = function (predicate, arr) {
  * @param  {any} b        the second value
  * @return {boolean}      Whether the provided values are equal when converted to strings.
  */
-export const stringEqual = function (a, b) {
+export const stringEqual = function (
+  a: { toString(): string },
+  b: { toString(): string }
+): boolean {
   return a.toString() === b.toString();
 };
 
@@ -542,10 +592,10 @@ export const stringEqual = function (a, b) {
  *
  * Same as fn.functor in d3v3
  */
-export const functor = function (v) {
+export const functor = function <T>(v: T | (() => T)): () => T {
   return typeof v === "function"
-    ? v
-    : function () {
+    ? (v as () => T)
+    : function (): T {
         return v;
       };
 };
@@ -556,22 +606,25 @@ export const functor = function (v) {
  * Adapted from lodash's memoize() but using d3.map() as cache
  * See https://lodash.com/docs/4.17.4#memoize
  */
-export const memoize = function (func, resolver) {
+export const memoize = function <TFunc extends (...args: any[]) => any>(
+  func: TFunc,
+  resolver?: (...args: Parameters<TFunc>) => string | number
+): TFunc & { cache: Map<string | number, ReturnType<TFunc>> } {
   if (typeof func != "function" || (resolver != null && typeof resolver != "function")) {
     throw new TypeError("Expected a function");
   }
-  const memoized = function () {
-    const args = arguments,
-      key = resolver ? resolver.apply(this, args) : args[0],
-      cache = memoized.cache;
+  const memoized = function (...args: Parameters<TFunc>): ReturnType<TFunc> {
+    const key = resolver ? resolver(...args) : args[0];
+    const cache = memoized.cache;
 
     if (cache.has(key)) {
-      return cache.get(key);
+      return cache.get(key)!;
     }
-    const result = func.apply(this, args);
+    const result = func(...args);
     memoized.cache = cache.set(key, result) || cache;
     return result;
-  };
-  memoized.cache = new Map();
+  } as TFunc & { cache: Map<string | number, ReturnType<TFunc>> };
+
+  memoized.cache = new Map<string | number, ReturnType<TFunc>>();
   return memoized;
 };
