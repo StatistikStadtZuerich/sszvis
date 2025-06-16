@@ -12,8 +12,6 @@ const format = formatLocale(locale as unknown as FormatLocaleDefinition).format;
 
 /**
  * Format a number as an age
- * @param  {number} d
- * @return {string}
  */
 export const formatAge = function (d: number): string {
   return String(Math.round(d));
@@ -96,7 +94,6 @@ export const formatYear = timeFormat("%Y");
 
 /**
  * Formatter for no label
- * @return {string} the empty string
  */
 export const formatNone = function (): string {
   return "";
@@ -114,9 +111,6 @@ export const formatNone = function (): string {
  * - Up to 2 significant decimal places for smaller numbers
  *
  * See also: many test cases for this function in format.test.js
- *
- * @param  {number} d   Number
- * @return {string}     Fully formatted number
  */
 export const formatNumber = function (d: number | null | undefined): string {
   let p: number;
@@ -169,10 +163,6 @@ export const formatNumber = function (d: number | null | undefined): string {
  * preciseNumber(2) -> function that accepts numbers and returns formatted values
  *
  * Note that preciseNumber(2, 14.1234) is equivalent to preciseNumber(2)(14.1234)
- *
- * @param  {Number} p           The desired precision
- * @param  {Number} d           The number to be formatted
- * @return {String}             The formatted number
  */
 export function formatPreciseNumber(p: number): (x: number) => string;
 export function formatPreciseNumber(p: number, d: number): string;
@@ -188,8 +178,6 @@ export function formatPreciseNumber(p: number, d?: number): string | ((x: number
 
 /**
  * Format percentages on the range 0 - 100
- * @param  {number} d    A value to format, between 0 and 100
- * @return {string}      The formatted value
  */
 export const formatPercent = function (d: number): string {
   // Uses unix thin space
@@ -198,8 +186,6 @@ export const formatPercent = function (d: number): string {
 
 /**
  * Format percentages on the range 0 - 1
- * @param  {number} d    A value to format, between 0 and 1
- * @return {string}      The formatted value
  */
 export const formatFractionPercent = function (d: number): string {
   // Uses unix thin space
@@ -208,8 +194,6 @@ export const formatFractionPercent = function (d: number): string {
 
 /**
  * Default formatter for text
- * @param  {any} d
- * @return {string} Fully formatted text
  */
 export const formatText = String;
 
