@@ -2887,25 +2887,34 @@
   	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
   }
 
-  var nanoThrottle = function (callback, ms, trailing) {
-    var t = 0, call;
-    arguments.length < 3 && (trailing = true);
-    return function () {
-      var args = arguments;
-      var self = this;
-      call = function () {
-        callback.apply(self, args);
-        t = new Date().getTime() + ms;
-        call = null;
-        trailing && setTimeout(function () {
-          call && call();
-        }, ms);
-      };
-      if (new Date().getTime() > t) call();
-    }
-  };
+  var nanoThrottle;
+  var hasRequiredNanoThrottle;
 
-  var throttle = /*@__PURE__*/getDefaultExportFromCjs(nanoThrottle);
+  function requireNanoThrottle () {
+  	if (hasRequiredNanoThrottle) return nanoThrottle;
+  	hasRequiredNanoThrottle = 1;
+  	nanoThrottle = function (callback, ms, trailing) {
+  	  var t = 0, call;
+  	  arguments.length < 3 && (trailing = true);
+  	  return function () {
+  	    var args = arguments;
+  	    var self = this;
+  	    call = function () {
+  	      callback.apply(self, args);
+  	      t = new Date().getTime() + ms;
+  	      call = null;
+  	      trailing && setTimeout(function () {
+  	        call && call();
+  	      }, ms);
+  	    };
+  	    if (new Date().getTime() > t) call();
+  	  }
+  	};
+  	return nanoThrottle;
+  }
+
+  var nanoThrottleExports = requireNanoThrottle();
+  var throttle = /*@__PURE__*/getDefaultExportFromCjs(nanoThrottleExports);
 
   /**
    * Viewport Resize watcher
@@ -2946,8 +2955,8 @@
   const callbacks = {
     resize: []
   };
-  if (typeof window !== "undefined") {
-    d3.select(window).on("resize", throttle(() => {
+  if (globalThis.window !== undefined) {
+    d3.select(globalThis).on("resize", throttle(() => {
       trigger("resize");
     }, 500));
   }
@@ -4130,7 +4139,7 @@
       }).on("mousedown", function (e) {
         const target = this;
         const doc = d3.select(document);
-        const win = d3.select(window);
+        const win = d3.select(globalThis);
         const startDragging = function () {
           target.__dragging__ = true;
         };
@@ -4851,7 +4860,11 @@
     for (let i = 0, l = data.length, value; i < l; ++i) {
       value = data[i];
       key = keyFunc(value);
-      group[key] ? group[key].push(value) : group[key] = [value];
+      if (group[key]) {
+        group[key].push(value);
+      } else {
+        group[key] = [value];
+      }
     }
     return group;
   }
@@ -6187,8 +6200,8 @@
       // draw the handle and the label
       const handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]).join("g").classed("sszvis-control-slider__handle", true).attr("transform", d => translateString(halfPixel(alteredScale(d)), 0.5));
       handle.append("text").classed("sszvis-control-slider--label", true);
-      handle.selectAll(".sszvis-control-slider--label").data(d => [d]).text(props.label).style("text-anchor", d => stringEqual(d, scaleDomain[0]) ? "start" : stringEqual(d, scaleDomain[1]) ? "end" : "middle").attr("dx", d => stringEqual(d, scaleDomain[0]) ? -(handleWidth / 2) : stringEqual(d, scaleDomain[1]) ? handleWidth / 2 : 0);
-      handle.selectAll(".sszvis-control-slider__handlebox").data([1]).join("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -(handleWidth / 2)).attr("y", backgroundOffset - handleHeight / 2).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
+      handle.selectAll(".sszvis-control-slider--label").data(d => [d]).text(props.label).style("text-anchor", d => stringEqual(d, scaleDomain[0]) ? "start" : stringEqual(d, scaleDomain[1]) ? "end" : "middle").attr("dx", d => stringEqual(d, scaleDomain[0]) ? -5 : stringEqual(d, scaleDomain[1]) ? handleWidth / 2 : 0);
+      handle.selectAll(".sszvis-control-slider__handlebox").data([1]).join("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -5).attr("y", backgroundOffset - handleHeight / 2).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
       const handleLineDimension = handleHeight / 2 - 4; // the amount by which to offset the small handle line within the handle
 
       handle.selectAll(".sszvis-control-slider__handleline").data([1]).join("line").classed("sszvis-control-slider__handleline", true).attr("y1", backgroundOffset - handleLineDimension).attr("y2", backgroundOffset + handleLineDimension);
@@ -6509,7 +6522,8 @@
     return measureLegendLabel(label) + LABEL_PADDING;
   }
   function numCols(totalWidth, columnWidth, num) {
-    return num <= 1 ? 1 : columnWidth <= totalWidth / num ? num : numCols(totalWidth, columnWidth, num - 1);
+    if (num <= 1) return 1;
+    return columnWidth <= totalWidth / num ? num : numCols(totalWidth, columnWidth, num - 1);
   }
 
   /**
@@ -6611,7 +6625,7 @@
       padHeight: padding,
       padRatio,
       outerRatio,
-      axisOffset: -(barHeight / 2) - 10,
+      axisOffset: -12 - 10,
       barGroupHeight: computedBarSpace,
       totalHeight: computedBarSpace + outerRatio * (barHeight + padding) * 2
     };
@@ -7823,7 +7837,7 @@
     .prop("highlightStrokeWidth", functor).highlightStrokeWidth(2).render(function () {
       const selection = d3.select(this);
       const props = selection.props();
-      let highlightBorders = selection.selectAll(".sszvis-map__highlight");
+      const highlightBorders = selection.selectAll(".sszvis-map__highlight");
       if (props.highlight.length === 0) {
         highlightBorders.remove();
         return true; // no highlight, no worry
@@ -7843,7 +7857,7 @@
         }
         return m;
       }, []);
-      highlightBorders = highlightBorders.data(mergedHighlight).join("path").classed("sszvis-map__highlight", true).attr("d", d => props.mapPath(d.geoJson)).style("stroke", d => props.highlightStroke(d.datum)).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
+      highlightBorders.data(mergedHighlight).join("path").classed("sszvis-map__highlight", true).attr("d", d => props.mapPath(d.geoJson)).style("stroke", d => props.highlightStroke(d.datum)).style("stroke-width", d => props.highlightStrokeWidth(d.datum));
     });
   }
 
