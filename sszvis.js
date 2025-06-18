@@ -1,4 +1,4 @@
-/*! sszvis v3.2.0, Copyright 2014-present Statistik Stadt Zürich */
+/*! sszvis v3.2.1, Copyright 2014-present Statistik Stadt Zürich */
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
   typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
@@ -4517,13 +4517,13 @@
       const polys = selection.selectAll("[data-sszvis-behavior-voronoi]").data(voronoi.cellPolygons()).join("path").attr("data-sszvis-behavior-voronoi", "").attr("data-sszvis-behavior-pannable", "").attr("class", "sszvis-interactive");
       polys.attr("d", d => "M" + d.join("L") + "Z").attr("fill", "transparent").on("mouseover", function (e) {
         const cbox = this.parentNode.getBoundingClientRect();
-        const datumIdx = delaunay.find(e.clientX, e.clientY);
+        const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
         if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           event.apply("over", this, [e, data[datumIdx]]);
         }
       }).on("mousemove", function (e) {
         const cbox = this.parentNode.getBoundingClientRect();
-        const datumIdx = delaunay.find(e.clientX, e.clientY);
+        const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
         if (eventNearPoint(e, [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           event.apply("over", this, [e, data[datumIdx]]);
         } else {
@@ -4533,7 +4533,7 @@
         event.apply("out", this, [e]);
       }).on("touchstart", function (e) {
         const cbox = this.parentNode.getBoundingClientRect();
-        const datumIdx = delaunay.find(e.clientX, e.clientY);
+        const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
         if (eventNearPoint(firstTouch(e), [cbox.left + props.x(data[datumIdx]), cbox.top + props.y(data[datumIdx])])) {
           e.preventDefault();
           event.apply("over", this, [e, data[datumIdx]]);

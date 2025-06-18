@@ -1,3 +1,7 @@
+## 3.2.1 (2025-06-18)
+
+- fix `sszvis.voronoi` when using with centered elements
+
 ## 3.2.0 (2025-03-17)
 
 - add new color scales for genders: `sszvis.scaleGender3`, `sszvis.scaleGender6Origin`, `sszvis.scaleGender5Wedding`
