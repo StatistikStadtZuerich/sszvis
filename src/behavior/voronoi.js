@@ -84,7 +84,7 @@ export default function () {
         .attr("fill", "transparent")
         .on("mouseover", function (e) {
           const cbox = this.parentNode.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX, e.clientY);
+          const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
           if (
             eventNearPoint(e, [
               cbox.left + props.x(data[datumIdx]),
@@ -96,7 +96,7 @@ export default function () {
         })
         .on("mousemove", function (e) {
           const cbox = this.parentNode.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX, e.clientY);
+          const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
           if (
             eventNearPoint(e, [
               cbox.left + props.x(data[datumIdx]),
@@ -113,7 +113,7 @@ export default function () {
         })
         .on("touchstart", function (e) {
           const cbox = this.parentNode.getBoundingClientRect();
-          const datumIdx = delaunay.find(e.clientX, e.clientY);
+          const datumIdx = delaunay.find(e.clientX - cbox.left, e.clientY - cbox.top);
 
           if (
             eventNearPoint(fn.firstTouch(e), [
