@@ -4,72 +4,69 @@
  * @module sszvis/format
  */
 
-import { formatLocale, timeFormatLocale } from "d3";
-import * as fn from "./fn.js";
-import { locale } from "./locale.js";
-
-const timeFormat = timeFormatLocale(locale).format;
-const format = formatLocale(locale).format;
+import { formatLocale, timeFormatLocale, FormatLocaleDefinition, TimeLocaleDefinition } from "d3";
+import * as fn from "./fn";
+import { locale } from "./locale";
+const timeFormat = timeFormatLocale(locale as unknown as TimeLocaleDefinition).format;
+const format = formatLocale(locale as unknown as FormatLocaleDefinition).format;
 
 /**
  * Format a number as an age
- * @param  {number} d
- * @return {string}
  */
-export const formatAge = function (d) {
+export const formatAge = function (d: number): string {
   return String(Math.round(d));
 };
 
 /**
  * A multi time formatter used by the axis class
  */
-export const formatAxisTimeFormat = function (d) {
-  const xs = [
+export const formatAxisTimeFormat = function (d: Date): string {
+  const xs: [string, (date: Date) => boolean | number][] = [
     [
       ".%L",
-      function (date) {
+      function (date: Date): number {
         return date.getMilliseconds();
       },
     ],
     [
       ":%S",
-      function (date) {
+      function (date: Date): number {
         return date.getSeconds();
       },
     ],
     [
       "%H:%M",
-      function (date) {
+      function (date: Date): number {
         return date.getMinutes();
       },
     ],
     [
       "%H Uhr",
-      function (date) {
+      function (date: Date): number {
         return date.getHours();
       },
     ],
     [
       "%a., %d.",
-      function (date) {
-        return date.getDay() && date.getDate() != 1;
+      function (date: Date): boolean {
+        return Boolean(date.getDay() && date.getDate() != 1);
       },
     ],
     [
       "%e. %b",
-      function (date) {
+      function (date: Date): boolean {
         return date.getDate() != 1;
       },
     ],
     [
       "%B",
-      function (date) {
+      function (date: Date): number {
         return date.getMonth();
       },
     ],
     [
       "%Y",
-      function () {
+      function (): boolean {
         return true;
       },
     ],
@@ -80,12 +77,15 @@ export const formatAxisTimeFormat = function (d) {
       return timeFormat(x[0])(d);
     }
   }
+
+  // Fallback - should never happen, but TypeScript requires a return
+  return timeFormat("%Y")(d);
 };
 
 /**
  * A month name formatter which gives a capitalized three-letter abbreviation of the German month name.
  */
-export const formatMonth = fn.compose((m) => m.toUpperCase(), timeFormat("%b"));
+export const formatMonth = fn.compose((m: string) => m.toUpperCase(), timeFormat("%b"));
 
 /**
  * A year formatter for date objects. Gives the date's year.
@@ -94,9 +94,8 @@ export const formatYear = timeFormat("%Y");
 
 /**
  * Formatter for no label
- * @return {string} the empty string
  */
-export const formatNone = function () {
+export const formatNone = function (): string {
   return "";
 };
 
@@ -112,13 +111,10 @@ export const formatNone = function () {
  * - Up to 2 significant decimal places for smaller numbers
  *
  * See also: many test cases for this function in format.test.js
- *
- * @param  {number} d   Number
- * @return {string}     Fully formatted number
  */
-export const formatNumber = function (d) {
-  let p;
-  const dAbs = Math.abs(d);
+export const formatNumber = function (d: number | null | undefined): string {
+  let p: number;
+  const dAbs = Math.abs(d ?? 0);
 
   if (d == null || isNaN(d)) {
     return "–"; // This is an en-dash
@@ -167,45 +163,37 @@ export const formatNumber = function (d) {
  * preciseNumber(2) -> function that accepts numbers and returns formatted values
  *
  * Note that preciseNumber(2, 14.1234) is equivalent to preciseNumber(2)(14.1234)
- *
- * @param  {Number} p           The desired precision
- * @param  {Number} d           The number to be formatted
- * @return {String}             The formatted number
  */
-export const formatPreciseNumber = function (p, d) {
+export function formatPreciseNumber(p: number): (x: number) => string;
+export function formatPreciseNumber(p: number, d: number): string;
+export function formatPreciseNumber(p: number, d?: number): string | ((x: number) => string) {
   // This curries the function
-  if (arguments.length > 1) return formatPreciseNumber(p)(d);
+  if (arguments.length > 1 && d !== undefined) return formatPreciseNumber(p)(d);
 
-  return function (x) {
+  return function (x: number): string {
     const dAbs = Math.abs(x);
     return dAbs >= 100 && dAbs < 1e4 ? format("." + p + "f")(x) : format(",." + p + "f")(x);
   };
-};
+}
 
 /**
  * Format percentages on the range 0 - 100
- * @param  {number} d    A value to format, between 0 and 100
- * @return {string}      The formatted value
  */
-export const formatPercent = function (d) {
+export const formatPercent = function (d: number): string {
   // Uses unix thin space
   return formatNumber(d) + " %";
 };
 
 /**
  * Format percentages on the range 0 - 1
- * @param  {number} d    A value to format, between 0 and 1
- * @return {string}      The formatted value
  */
-export const formatFractionPercent = function (d) {
+export const formatFractionPercent = function (d: number): string {
   // Uses unix thin space
   return formatNumber(d * 100) + " %";
 };
 
 /**
  * Default formatter for text
- * @param  {number} d
- * @return {string} Fully formatted text
  */
 export const formatText = String;
 
@@ -217,10 +205,10 @@ export const formatText = String;
 // 0.0000 -> 0 (Javascript's number implementation chops off trailing zeroes)
 // 123456.1 -> 1
 // 123456.00001 -> 5
-function decimalPlaces(num) {
+function decimalPlaces(num: number): number {
   return (String(Math.abs(num)).split(".")[1] || "").length;
 }
 
-function stripTrailingZeroes(str) {
+function stripTrailingZeroes(str: string): string {
   return str.replace(/(\.\d*[1-9])0+$|\.0*$/, "$1");
 }

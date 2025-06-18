@@ -1,3 +1,5 @@
+export type LocaleDefinition = typeof locale;
+
 export const locale = {
   decimal: ".",
   thousands: " ", // This is a 'narrow space', not a regular space. Used as the thousands separator by d3.format
@@ -6,7 +8,7 @@ export const locale = {
   dateTime: "%a. %e. %B %X %Y",
   date: "%d.%m.%Y",
   time: "%H:%M:%S",
-  periods: [],
+  periods: ["", ""], // Fixed: D3 expects a tuple of 2 strings for AM/PM
   days: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
   shortDays: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
   months: [
@@ -24,4 +26,4 @@ export const locale = {
     "Dezember",
   ],
   shortMonths: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
-};
+} as const;
