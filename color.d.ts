@@ -1,0 +1,25 @@
+export function scaleQual12(): any;
+export function scaleQual6(): any;
+export function scaleQual6a(): any;
+export function scaleQual6b(): any;
+export function scaleGender3(): any;
+export function scaleGender6Origin(): any;
+export function scaleGender5Wedding(): any;
+export function scaleSeqBlu(): any;
+export function scaleSeqRed(): any;
+export function scaleSeqGrn(): any;
+export function scaleSeqBrn(): any;
+export function scaleDivVal(): any;
+export function scaleDivValGry(): any;
+export function scaleDivNtr(): any;
+export function scaleDivNtrGry(): any;
+export function scaleLightGry(): any;
+export function scalePaleGry(): any;
+export function scaleGry(): any;
+export function scaleDimGry(): any;
+export function scaleMedGry(): any;
+export function scaleDeepGry(): any;
+export function slightlyDarker(c: any): import("d3-color").HSLColor;
+export function muchDarker(c: any): import("d3-color").HSLColor;
+export function withAlpha(c: any, a: any): string;
+//# sourceMappingURL=color.d.ts.map

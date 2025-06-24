@@ -1,0 +1,2 @@
+export function createSvgLayer(selector: any, bounds: any, metadata: any): import("d3-selection").Selection<import("d3-selection").BaseType | SVGGElement, number, import("d3-selection").BaseType | SVGSVGElement, number>;
+//# sourceMappingURL=createSvgLayer.d.ts.map

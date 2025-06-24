@@ -1,0 +1,19 @@
+/**
+ * translateString
+ *
+ * Pass an x and a y component, and this returns a translate string, which can be set as the 'transform' property of
+ * an svg element.
+ *
+ * @module sszvis/svgUtils/translateString
+ *
+ * @param  {number} x     The x-component of the transform
+ * @param  {number} y     The y-component of the transform
+ * @return {string}       The translate string
+ */
+
+function translateString (x, y) {
+  return "translate(" + x + "," + y + ")";
+}
+
+export { translateString as default };
+//# sourceMappingURL=translateString.js.map

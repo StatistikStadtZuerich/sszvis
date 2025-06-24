@@ -1,0 +1,43 @@
+import { select } from 'd3';
+import { functor } from '../fn.js';
+import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
+import { dataAreaPattern } from '../patterns.js';
+import { component } from '../d3-component.js';
+
+/**
+ * Rectangle annotation
+ *
+ * A component for creating rectangular data areas. The component should be passed
+ * an array of data values, each of which will be used to render a data area by
+ * passing it through the accessor functions. You can specify a caption to display,
+ * which can be offset from the center of the data area by specifying dx or dy properties.
+ *
+ * @module sszvis/annotation/rectangle
+ *
+ * @param {number, function} x        The x-position of the upper left corner of the data area.
+ * @param {number, function} y        The y-position of the upper left corner of the data area.
+ * @param {number, function} width    The width of the data area.
+ * @param {number, function} height   The height of the data area.
+ * @param {number, function} dx       The x-offset of the data area caption.
+ * @param {number, function} dy       The y-offset of the data area caption.
+ * @param {string, function} caption  The caption for the data area.
+ *
+ * @returns {sszvis.component} a rectangular data area component
+ */
+
+function rectangle () {
+  return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("dx", functor).prop("dy", functor).prop("caption", functor).render(function (data) {
+    const selection = select(this);
+    const props = selection.props();
+    ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
+    const dataArea = selection.selectAll(".sszvis-dataarearectangle").data(data).join("rect").classed("sszvis-dataarearectangle", true);
+    dataArea.attr("x", props.x).attr("y", props.y).attr("width", props.width).attr("height", props.height).attr("fill", "url(#data-area-pattern)");
+    if (props.caption) {
+      const dataCaptions = selection.selectAll(".sszvis-dataarearectangle__caption").data(data).join("text").classed("sszvis-dataarearectangle__caption", true);
+      dataCaptions.attr("x", (d, i) => props.x(d, i) + props.width(d, i) / 2).attr("y", (d, i) => props.y(d, i) + props.height(d, i) / 2).attr("dx", props.dx).attr("dy", props.dy).text(props.caption);
+    }
+  });
+}
+
+export { rectangle as default };
+//# sourceMappingURL=rectangle.js.map

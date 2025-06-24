@@ -1,0 +1,2 @@
+export function createHtmlLayer(selector: any, bounds: any, metadata: any): import("d3-selection").Selection<import("d3-selection").BaseType | HTMLDivElement, number, any, any>;
+//# sourceMappingURL=createHtmlLayer.d.ts.map
