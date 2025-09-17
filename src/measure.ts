@@ -6,14 +6,7 @@
 import { select, Selection } from "d3";
 import { isSelection, isString } from "./fn";
 
-/**
- * Interface for dimension measurement results
- */
-export interface DimensionMeasurement {
-  width: number | undefined;
-  screenWidth: number;
-  screenHeight: number;
-}
+import type { DimensionMeasurement } from "./types.js";
 
 /**
  * Type for elements that can be measured - selector string, DOM element, or d3 selection

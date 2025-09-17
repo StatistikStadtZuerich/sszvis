@@ -40,3 +40,31 @@ export type LinearGradientSelection = SVGElementSelection<SVGLinearGradientEleme
  * Type for SVG mask selections
  */
 export type MaskSelection = SVGElementSelection<SVGMaskElement>;
+
+/**
+ * A measurement object with width and screen height
+ * This is the unified measurement interface used across sszvis
+ */
+export interface Measurement {
+  width: number;
+  screenHeight: number;
+  screenWidth?: number;
+  bounds?: any;
+}
+
+/**
+ * A breakpoint definition with name and measurement constraints
+ */
+export interface Breakpoint {
+  name: string;
+  measurement: Measurement;
+}
+
+/**
+ * Interface for dimension measurement results from measureDimensions
+ */
+export interface DimensionMeasurement {
+  width: number | undefined;
+  screenWidth: number;
+  screenHeight: number;
+}

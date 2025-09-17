@@ -6,7 +6,8 @@
  * @module sszvis/aspectRatio
  */
 
-import { breakpointFind, breakpointDefaultSpec, Measurement } from "./breakpoint.js";
+import { breakpointFind, breakpointDefaultSpec } from "./breakpoint.js";
+import type { Measurement } from "./types.js";
 
 /**
  * Aspect ratio function type that calculates height from width

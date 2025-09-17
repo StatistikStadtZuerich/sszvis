@@ -16,7 +16,8 @@
 import { select } from "d3";
 import { aspectRatioAuto } from "./aspectRatio.js";
 import * as fn from "./fn.js";
-import { measureDimensions, type DimensionMeasurement } from "./measure.js";
+import { measureDimensions } from "./measure.js";
+import type { DimensionMeasurement } from "./types.js";
 import { type AnySelection } from "./types.js";
 
 /**

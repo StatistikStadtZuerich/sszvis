@@ -18,21 +18,7 @@
 
 import * as fn from "./fn";
 
-/**
- * A measurement object with width and screen height
- */
-export interface Measurement {
-  width: number;
-  screenHeight: number;
-}
-
-/**
- * A breakpoint definition with name and measurement constraints
- */
-export interface Breakpoint {
-  name: string;
-  measurement: Measurement;
-}
+import type { Measurement, Breakpoint } from "./types.js";
 
 /**
  * Breakpoint definition with explicit measurement object
