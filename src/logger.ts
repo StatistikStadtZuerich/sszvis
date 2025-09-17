@@ -43,22 +43,28 @@
  *                             of execution.
  */
 
-export const log = logger("log");
-export const warn = logger("warn");
-export const error = logger("error");
+/**
+ * Type for console log methods
+ */
+type ConsoleMethod = "log" | "warn" | "error";
+
+/**
+ * Type for logger function that accepts any number of arguments
+ */
+type LoggerFunction = (...args: any[]) => void;
+
+export const log: LoggerFunction = logger("log");
+export const warn: LoggerFunction = logger("warn");
+export const error: LoggerFunction = logger("error");
 
 /* Helper functions
 ----------------------------------------------- */
-function logger(type) {
-  return function () {
+function logger(type: ConsoleMethod): LoggerFunction {
+  return function (...args: any[]): void {
     if (console && console[type]) {
-      for (const msg of slice(arguments)) {
+      for (const msg of args) {
         console[type](msg);
       }
     }
   };
-}
-
-function slice(array) {
-  return Array.prototype.slice.call(array);
 }
