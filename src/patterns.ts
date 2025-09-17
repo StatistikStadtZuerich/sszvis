@@ -4,7 +4,7 @@
  * @module sszvis/patterns
  *
  * This module contains svg patterns and pattern helper functions which are used
- * to render important textures for constious other components.
+ * to render important textures for various other components.
  *
  * @method  heatTableMissingValuePattern    The pattern for the missing values in the heat table
  * @method  mapMissingValuePattern          The pattern for the map areas which are missing values. Used by map.js internally
@@ -17,9 +17,34 @@
  *
  */
 
-import { scaleLightGry } from "./color.js";
+import { Selection } from "d3";
+import { scaleLightGry } from "./color";
 
-export const heatTableMissingValuePattern = function (selection) {
+/**
+ * Generic type for SVG element selections used in patterns
+ */
+type SVGElementSelection<T extends SVGElement> = Selection<T, unknown, null, undefined>;
+
+/**
+ * Type for SVG pattern selections
+ */
+type PatternSelection = SVGElementSelection<SVGPatternElement>;
+
+/**
+ * Type for SVG linear gradient selections
+ */
+type LinearGradientSelection = SVGElementSelection<SVGLinearGradientElement>;
+
+/**
+ * Type for SVG mask selections
+ */
+type MaskSelection = SVGElementSelection<SVGMaskElement>;
+
+/**
+ * The pattern for the missing values in the heat table
+ * @param selection A d3 selection of SVG pattern elements
+ */
+export const heatTableMissingValuePattern = function (selection: PatternSelection): void {
   const rectFill = scaleLightGry(),
     crossStroke = "#A4A4A4",
     crossStrokeWidth = 0.035,
@@ -61,7 +86,11 @@ export const heatTableMissingValuePattern = function (selection) {
     .attr("stroke", crossStroke);
 };
 
-export const mapMissingValuePattern = function (selection) {
+/**
+ * The pattern for the map areas which are missing values
+ * @param selection A d3 selection of SVG pattern elements
+ */
+export const mapMissingValuePattern = function (selection: PatternSelection): void {
   const pWidth = 14,
     pHeight = 14,
     fillColor = "#FAFAFA",
@@ -116,7 +145,11 @@ export const mapMissingValuePattern = function (selection) {
     .attr("stroke", lineStroke);
 };
 
-export const mapLakePattern = function (selection) {
+/**
+ * The pattern for Lake Zurich in the map component
+ * @param selection A d3 selection of SVG pattern elements
+ */
+export const mapLakePattern = function (selection: PatternSelection): void {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;
@@ -156,7 +189,11 @@ export const mapLakePattern = function (selection) {
     .attr("stroke-linecap", "square");
 };
 
-export const mapLakeFadeGradient = function (selection) {
+/**
+ * The gradient used by the alpha fade pattern in the Lake Zurich shape
+ * @param selection A d3 selection of SVG linear gradient elements
+ */
+export const mapLakeFadeGradient = function (selection: LinearGradientSelection): void {
   selection
     .attr("x1", 0)
     .attr("y1", 0)
@@ -169,7 +206,11 @@ export const mapLakeFadeGradient = function (selection) {
   selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
 };
 
-export const mapLakeGradientMask = function (selection) {
+/**
+ * The gradient alpha fade mask for the Lake Zurich shape
+ * @param selection A d3 selection of SVG mask elements
+ */
+export const mapLakeGradientMask = function (selection: MaskSelection): void {
   selection.attr("maskContentUnits", "objectBoundingBox");
 
   selection
@@ -179,7 +220,11 @@ export const mapLakeGradientMask = function (selection) {
     .attr("height", 1);
 };
 
-export const dataAreaPattern = function (selection) {
+/**
+ * The pattern for the data area texture
+ * @param selection A d3 selection of SVG pattern elements
+ */
+export const dataAreaPattern = function (selection: PatternSelection): void {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;
