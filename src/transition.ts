@@ -14,14 +14,26 @@ import { transition as d3Transition, easePolyOut } from "d3";
 
 const defaultEase = easePolyOut;
 
+/**
+ * Creates a default transition with standard easing and duration
+ * @returns A d3 transition with 300ms duration and polynomial ease-out
+ */
 export const defaultTransition = function () {
   return d3Transition().ease(defaultEase).duration(300);
 };
 
+/**
+ * Creates a fast transition for quick animations
+ * @returns A d3 transition with 50ms duration and polynomial ease-out
+ */
 export const fastTransition = function () {
   return d3Transition().ease(defaultEase).duration(50);
 };
 
+/**
+ * Creates a slow transition for gradual animations
+ * @returns A d3 transition with 500ms duration and polynomial ease-out
+ */
 export const slowTransition = function () {
   return d3Transition().ease(defaultEase).duration(500);
 };
