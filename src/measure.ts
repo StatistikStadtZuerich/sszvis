@@ -67,7 +67,11 @@ export const measureDimensions = function (arg: MeasurableElement): DimensionMea
  * @example
  * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
  **/
-export const measureText = (function (): (fontSize: number, fontFace: string, text: string) => number {
+export const measureText = (function (): (
+  fontSize: number,
+  fontFace: string,
+  text: string
+) => number {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d")!; // Non-null assertion since canvas 2d context is always available
   const cache: Record<string, number> = {};

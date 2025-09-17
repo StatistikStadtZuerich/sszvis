@@ -65,7 +65,10 @@ export type PartialBreakpoint = BreakpointWithMeasurement | BreakpointWithInline
  * @param partialMeasurement A partial measurement to match to the spec
  * @returns The first matching breakpoint or undefined if none match
  */
-export function breakpointFind(breakpoints: Breakpoint[], partialMeasurement: Partial<Measurement>): Breakpoint | undefined {
+export function breakpointFind(
+  breakpoints: Breakpoint[],
+  partialMeasurement: Partial<Measurement>
+): Breakpoint | undefined {
   const measurement = parseMeasurement(partialMeasurement);
   return fn.find((bp: Breakpoint) => breakpointTest(bp, measurement), breakpoints);
 }
@@ -77,7 +80,10 @@ export function breakpointFind(breakpoints: Breakpoint[], partialMeasurement: Pa
  * @param name A breakpoint name
  * @returns The breakpoint with the given name or undefined if not found
  */
-export function breakpointFindByName(breakpoints: Breakpoint[], name: string): Breakpoint | undefined {
+export function breakpointFindByName(
+  breakpoints: Breakpoint[],
+  name: string
+): Breakpoint | undefined {
   const eqName = function (bp: Breakpoint): boolean {
     return bp.name === name;
   };
@@ -91,7 +97,10 @@ export function breakpointFindByName(breakpoints: Breakpoint[], name: string): B
  * @param partialMeasurement A partial measurement to match to the breakpoint
  * @returns True if the measurement fits within the breakpoint
  */
-export function breakpointTest(breakpoint: Breakpoint, partialMeasurement: Partial<Measurement>): boolean {
+export function breakpointTest(
+  breakpoint: Breakpoint,
+  partialMeasurement: Partial<Measurement>
+): boolean {
   const bpm = breakpoint.measurement;
   const measurement = parseMeasurement(partialMeasurement);
   return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
@@ -104,7 +113,10 @@ export function breakpointTest(breakpoint: Breakpoint, partialMeasurement: Parti
  * @param partialMeasurement A partial measurement to match to the spec
  * @returns Array of matching breakpoints
  */
-export function breakpointMatch(breakpoints: Breakpoint[], partialMeasurement: Partial<Measurement>): Breakpoint[] {
+export function breakpointMatch(
+  breakpoints: Breakpoint[],
+  partialMeasurement: Partial<Measurement>
+): Breakpoint[] {
   const measurement = parseMeasurement(partialMeasurement);
   return breakpoints.filter((bp) => breakpointTest(bp, measurement));
 }
@@ -166,13 +178,13 @@ function parseMeasurement(partialMeasurement: Partial<Measurement>): Measurement
 function parseBreakpoint(bp: PartialBreakpoint): Breakpoint {
   // Type guard to check if bp has measurement property
   const hasMeasurement = (obj: PartialBreakpoint): obj is BreakpointWithMeasurement => {
-    return 'measurement' in obj;
+    return "measurement" in obj;
   };
 
   const measurement = hasMeasurement(bp)
     ? parseMeasurement(bp.measurement)
     : parseMeasurement({ width: bp.width, screenHeight: bp.screenHeight });
-    
+
   return {
     name: bp.name,
     measurement,

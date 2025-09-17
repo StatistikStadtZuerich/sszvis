@@ -49,15 +49,18 @@ export const fallbackCanvasUnsupported = function (): boolean {
  * @param selector CSS selector string or d3 selection
  * @param options Configuration options for the fallback image
  */
-export const fallbackRender = function (selector: SelectableElement, options: FallbackOptions = {}): void {
+export const fallbackRender = function (
+  selector: SelectableElement,
+  options: FallbackOptions = {}
+): void {
   const { src = "fallback.png" } = options;
   let selection: AnySelection;
-  
+
   if (fn.isSelection(selector)) {
     selection = selector;
   } else {
     selection = select(selector as string);
   }
-  
+
   selection.append("img").attr("class", "sszvis-fallback-image").attr("src", src);
 };
