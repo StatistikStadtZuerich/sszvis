@@ -13,6 +13,9 @@
  * @property {array} minorTicks               An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis
  * @property {array} majorTicks               An array of ticks which become major (larger and labeled) ticks on the slider's axis
  * @property {function} tickLabels            A function to use to format the major tick labels.
+ * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
+ *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
+ *                                                      Use "horizontal" to reset to a horizontal slant.
  * @property {any} value                      The current value of the slider. Should be set whenever slider interaction causes the state to change.
  * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
  * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
@@ -46,6 +49,7 @@ export default function () {
     .prop("majorTicks")
     .majorTicks([])
     .prop("tickLabels", fn.functor)
+    .prop("slant")
     .tickLabels(fn.identity)
     .prop("label", fn.functor)
     .label(fn.identity)
@@ -79,6 +83,7 @@ export default function () {
       const axis = axisX()
         .scale(alteredScale)
         .orient("bottom")
+        .slant(props.slant)
         .hideBorderTickThreshold(0)
         .tickSize(majorTickSize)
         .tickPadding(6)
@@ -102,10 +107,23 @@ export default function () {
       const majorAxisText = axisSelection
         .selectAll(".tick text")
         .filter((d) => contains(d, props.majorTicks));
-      const numTicks = majorAxisText.size();
-      majorAxisText.style("text-anchor", (d, i) =>
-        i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle"
-      );
+
+      if (!props.slant || props.slant === "horizontal") {
+        const numTicks = majorAxisText.size();
+        majorAxisText.style("text-anchor", (d, i) =>
+          i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle"
+        );
+      }
+
+      if (props.slant === "vertical") {
+        majorAxisText.attr("dx", "-1.8em");
+        majorAxisText.attr("dy", "-1.5em");
+      }
+
+      if (props.slant === "diagonal") {
+        majorAxisText.attr("dx", "-1.6em");
+        majorAxisText.attr("dy", "0.2em");
+      }
 
       // create the slider background
       const backgroundSelection = bg
