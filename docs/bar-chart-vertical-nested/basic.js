@@ -24,8 +24,6 @@ const queryProps = sszvis
     },
   });
 
-const bvbScale = ["#E22D53", "#2AC7C7", "#009F9D"];
-
 function parseRow(d) {
   return {
     year: d["Jahr_F"],
@@ -51,6 +49,7 @@ const state = {
   data: [],
   nestedCategories: [],
   categories: [],
+  stackGroup: [],
   stackedData: [],
   maxStacked: 0,
   selection: [],
@@ -75,6 +74,7 @@ const actions = {
 
     state.categories = sszvis.set(state.data, xjAcc);
     state.nestedCategories = sszvis.set(state.data, aAcc);
+    state.stackGroup = sszvis.set(state.data, cAcc);
 
     render(state);
   },
@@ -101,6 +101,16 @@ d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError)
   ----------------------------------------------- */
 function render(state) {
   const props = queryProps(sszvis.measureDimensions(config.id));
+
+  const legendLayout = sszvis.colorLegendLayout(
+    {
+      axisLabels: state.categories,
+      legendLabels: state.stackGroup,
+      slant: props.xSlant,
+    },
+    config.id
+  );
+
   const bounds = sszvis.bounds(
     { top: 10, bottom: props.bottomPadding, left: 10, right: 10 },
     config.id
@@ -127,7 +137,8 @@ function render(state) {
     .domain([0, 100])
     .range([bounds.innerHeight - 10, 0]);
 
-  const cScale = d3.scaleOrdinal().domain(state.categories).range(bvbScale);
+  const cScale = legendLayout.scale;
+  const colorLegend = legendLayout.legend;
 
   // Layers
 
@@ -164,15 +175,6 @@ function render(state) {
     })
     .dyTitle(-20)
     .title("Anteil");
-
-  const colorLegend = sszvis
-    .legendColorOrdinal()
-    .scale(cScale)
-    .rows(state.categories.length / props.targetNumColumns)
-    .columnWidth(Math.min(bounds.innerWidth / props.targetNumColumns, 320))
-    .columns(props.targetNumColumns)
-    .reverse(false)
-    .orientation("vertical");
 
   const tooltip = sszvis
     .tooltip()
