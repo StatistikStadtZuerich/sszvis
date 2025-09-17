@@ -1,4 +1,5 @@
 import { selection } from "d3";
+import type { AnySelection } from "./types.js";
 
 /**
  * d3.selection plugin to simplify creating idempotent groups that are not
@@ -9,9 +10,17 @@ import { selection } from "d3";
  * @param  {String} key The name of the group
  * @return {d3.selection}
  */
-selection.prototype.selectGroup = function (key) {
+
+// Augment the D3 Selection interface to include our custom method
+declare module "d3" {
+  interface Selection<GElement, Datum, PElement, PDatum> {
+    selectGroup(key: string): AnySelection;
+  }
+}
+
+(selection.prototype as any).selectGroup = function (key: string): AnySelection {
   return this.selectAll('[data-d3-selectgroup="' + key + '"]')
-    .data((d) => [d])
+    .data((d: any) => [d])
     .join("g")
     .attr("data-d3-selectgroup", key);
 };
