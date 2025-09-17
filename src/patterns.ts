@@ -17,28 +17,8 @@
  *
  */
 
-import { Selection } from "d3";
 import { scaleLightGry } from "./color";
-
-/**
- * Generic type for SVG element selections used in patterns
- */
-type SVGElementSelection<T extends SVGElement> = Selection<T, unknown, null, undefined>;
-
-/**
- * Type for SVG pattern selections
- */
-type PatternSelection = SVGElementSelection<SVGPatternElement>;
-
-/**
- * Type for SVG linear gradient selections
- */
-type LinearGradientSelection = SVGElementSelection<SVGLinearGradientElement>;
-
-/**
- * Type for SVG mask selections
- */
-type MaskSelection = SVGElementSelection<SVGMaskElement>;
+import { PatternSelection, LinearGradientSelection, MaskSelection } from "./types";
 
 /**
  * The pattern for the missing values in the heat table

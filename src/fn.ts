@@ -4,7 +4,8 @@
  * @module sszvis/fn
  */
 
-import { type Selection, selection } from "d3";
+import { selection } from "d3";
+import { AnySelection } from "./types";
 
 /**
  * fn.identity
@@ -30,7 +31,7 @@ export const isString = function (val: unknown): val is string {
  *
  * determine whether the value is a d3.selection.
  */
-export const isSelection = function (val: unknown): val is Selection<any, any, any, any> {
+export const isSelection = function (val: unknown): val is AnySelection {
   return val instanceof selection;
 };
 
