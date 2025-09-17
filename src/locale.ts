@@ -1,10 +1,19 @@
-export type LocaleDefinition = typeof locale;
+import { TimeLocaleDefinition, FormatLocaleDefinition } from "d3";
 
-export const locale = {
+/**
+ * Swiss German format locale definition for d3.format functions
+ */
+export const formatLocale: FormatLocaleDefinition = {
   decimal: ".",
   thousands: " ", // This is a 'narrow space', not a regular space. Used as the thousands separator by d3.format
   grouping: [3],
   currency: ["CHF ", ""],
+};
+
+/**
+ * Swiss German time locale definition for d3.time functions
+ */
+export const timeLocale: TimeLocaleDefinition = {
   dateTime: "%a. %e. %B %X %Y",
   date: "%d.%m.%Y",
   time: "%H:%M:%S",
@@ -26,4 +35,4 @@ export const locale = {
     "Dezember",
   ],
   shortMonths: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
-} as const;
+};
