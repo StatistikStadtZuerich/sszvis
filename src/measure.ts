@@ -3,8 +3,22 @@
  *
  * @module sszvis/measure
  */
-import { select } from "d3";
+import { select, Selection } from "d3";
 import { isSelection, isString } from "./fn";
+
+/**
+ * Interface for dimension measurement results
+ */
+export interface DimensionMeasurement {
+  width: number | undefined;
+  screenWidth: number;
+  screenHeight: number;
+}
+
+/**
+ * Type for elements that can be measured - selector string, DOM element, or d3 selection
+ */
+export type MeasurableElement = string | Element | Selection<any, any, any, any>;
 
 /**
  * measureDimensions
@@ -14,20 +28,20 @@ import { isSelection, isString } from "./fn";
  * measured `undefined` is returned for the width. Returns also measurements of
  * the screen, which are used by some responsive components.
  *
- * @param  {string|DOMElement|d3.selection} el The element to measure
+ * @param  {string|Element|d3.selection} arg The element to measure
  *
- * @return {Object} The measurement of the width of the element, plus dimensions of the screen
+ * @return {DimensionMeasurement} The measurement of the width of the element, plus dimensions of the screen
  *                  The returned object contains:
  *                      width: {number|undefined} The width of the element
  *                      screenWidth: {number} The innerWidth of the screen
  *                      screenHeight: {number} The innerHeight of the screen
  */
-export const measureDimensions = function (arg) {
-  let node;
+export const measureDimensions = function (arg: MeasurableElement): DimensionMeasurement {
+  let node: Element | null;
   if (isString(arg)) {
-    node = select(arg).node();
+    node = select(arg).node() as Element | null;
   } else if (isSelection(arg)) {
-    node = arg.node();
+    node = arg.node() as Element | null;
   } else {
     node = arg;
   }
@@ -53,12 +67,12 @@ export const measureDimensions = function (arg) {
  * @example
  * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
  **/
-export const measureText = (function () {
+export const measureText = (function (): (fontSize: number, fontFace: string, text: string) => number {
   const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  const cache = {};
+  const context = canvas.getContext("2d")!; // Non-null assertion since canvas 2d context is always available
+  const cache: Record<string, number> = {};
 
-  return function (fontSize, fontFace, text) {
+  return function (fontSize: number, fontFace: string, text: string): number {
     const key = [fontSize, fontFace, text].join("-");
     context.font = fontSize + "px " + fontFace;
     return cache[key] || (cache[key] = context.measureText(text).width);
@@ -76,7 +90,7 @@ export const measureText = (function () {
  * @example
  * const labelWidth = sszvis.measureAxisLabel("Hello!")
  */
-export const measureAxisLabel = function (text) {
+export const measureAxisLabel = function (text: string): number {
   return measureText(10, "Arial, sans-serif", text);
 };
 
@@ -91,6 +105,6 @@ export const measureAxisLabel = function (text) {
  * @example
  * const labelWidth = sszvis.measureLegendLabel("Hello!")
  */
-export const measureLegendLabel = function (text) {
+export const measureLegendLabel = function (text: string): number {
   return measureText(12, "Arial, sans-serif", text);
 };
