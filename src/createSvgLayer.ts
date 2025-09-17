@@ -19,19 +19,31 @@
  */
 
 import { select } from "d3";
-import { bounds as mkBounds } from "./bounds.js";
+import type { SelectableElement, AnySelection } from "./types.js";
+import type { BoundsResult } from "./bounds.js";
 import * as fn from "./fn.js";
+import { bounds as mkBounds } from "./bounds.js";
 
-export function createSvgLayer(selector, bounds, metadata) {
-  bounds || (bounds = mkBounds());
-  metadata || (metadata = {});
+export interface SvgLayerMetadata {
+  key?: string;
+  title?: string;
+  description?: string;
+}
+
+export function createSvgLayer(
+  selector: SelectableElement,
+  bounds?: BoundsResult,
+  metadata?: SvgLayerMetadata
+): AnySelection {
+  bounds ||= mkBounds();
+  metadata ||= {};
 
   const key = metadata.key || "default";
   const elementDataKey = "data-sszvis-svg-" + key;
   const title = metadata.title || "";
   const description = metadata.description || "";
 
-  const root = fn.isSelection(selector) ? selector : select(selector);
+  const root: AnySelection = fn.isSelection(selector) ? selector : select(selector);
   const svg = root
     .selectAll("svg[" + elementDataKey + "]")
     .data([0])
