@@ -24,8 +24,6 @@ const queryProps = sszvis
     },
   });
 
-const bvbScale = ["#E22D53", "#2AC7C7", "#009F9D"];
-
 function parseRow(d) {
   return {
     year: d["Jahr_F"],
