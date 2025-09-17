@@ -17,7 +17,6 @@
  *
  */
 
-import { scaleLightGry } from "./color";
 import { PatternSelection, LinearGradientSelection, MaskSelection } from "./types";
 
 /**
@@ -25,7 +24,7 @@ import { PatternSelection, LinearGradientSelection, MaskSelection } from "./type
  * @param selection A d3 selection of SVG pattern elements
  */
 export const heatTableMissingValuePattern = function (selection: PatternSelection): void {
-  const rectFill = scaleLightGry(),
+  const rectFill = "#FAFAFA", // Light grey color directly
     crossStroke = "#A4A4A4",
     crossStrokeWidth = 0.035,
     cross1 = 0.35,
