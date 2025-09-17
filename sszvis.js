@@ -2148,11 +2148,16 @@
     if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj))
       return obj;
     if (getArchtype(obj) > 1) {
-      obj.set = obj.add = obj.clear = obj.delete = dontMutateFrozenCollections;
+      Object.defineProperties(obj, {
+        set: { value: dontMutateFrozenCollections },
+        add: { value: dontMutateFrozenCollections },
+        clear: { value: dontMutateFrozenCollections },
+        delete: { value: dontMutateFrozenCollections }
+      });
     }
     Object.freeze(obj);
     if (deep)
-      Object.entries(obj).forEach(([key, value]) => freeze(value, true));
+      Object.values(obj).forEach((value) => freeze(value, true));
     return obj;
   }
   function dontMutateFrozenCollections() {
@@ -2311,7 +2316,7 @@
         return;
       }
       finalize(rootScope, childValue);
-      if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && Object.prototype.propertyIsEnumerable.call(targetObject, prop))
+      if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && (isMap(targetObject) ? targetObject.has(prop) : Object.prototype.propertyIsEnumerable.call(targetObject, prop)))
         maybeFreeze(rootScope, childValue);
     }
   }
@@ -2683,14 +2688,9 @@
   // src/immer.ts
   var immer = new Immer2();
   immer.produce;
-  immer.produceWithPatches.bind(
-    immer
-  );
-  var setAutoFreeze = immer.setAutoFreeze.bind(immer);
-  immer.setUseStrictShallowCopy.bind(immer);
-  immer.applyPatches.bind(immer);
-  var createDraft = immer.createDraft.bind(immer);
-  var finishDraft = immer.finishDraft.bind(immer);
+  var setAutoFreeze = /* @__PURE__ */ immer.setAutoFreeze.bind(immer);
+  var createDraft = /* @__PURE__ */ immer.createDraft.bind(immer);
+  var finishDraft = /* @__PURE__ */ immer.finishDraft.bind(immer);
 
   /**
    * Fallback handling
@@ -5986,6 +5986,9 @@
    * @property {array} minorTicks               An array of ticks which become minor (smaller and unlabeled) ticks on the slider's axis
    * @property {array} majorTicks               An array of ticks which become major (larger and labeled) ticks on the slider's axis
    * @property {function} tickLabels            A function to use to format the major tick labels.
+   * @property {string} slant                             Specify a label slant for the tick labels. Can be "vertical" - labels are displayed vertically - or
+   *                                                      "diagonal" - labels are displayed at a 45 degree angle to the axis.
+   *                                                      Use "horizontal" to reset to a horizontal slant.
    * @property {any} value                      The current value of the slider. Should be set whenever slider interaction causes the state to change.
    * @property {string, function} label         A string or function for the handle label. The datum associated with it is the current slider value.
    * @property {function} onchange              A callback function called whenever user interaction attempts to change the slider value.
@@ -5999,7 +6002,7 @@
     return a.includes(x);
   }
   function slider () {
-    return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).tickLabels(identity$1).prop("label", functor).label(identity$1).render(function () {
+    return component().prop("scale").prop("value").prop("onchange").prop("minorTicks").minorTicks([]).prop("majorTicks").majorTicks([]).prop("tickLabels", functor).prop("slant").tickLabels(identity$1).prop("label", functor).label(identity$1).render(function () {
       const selection = d3.select(this);
       const props = selection.props();
       const axisOffset = 28; // vertical offset for the axis
@@ -6019,15 +6022,25 @@
       const bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]).join("g").classed("sszvis-control-slider__backgroundgroup", true);
 
       // create the axis
-      const axis = axisX().scale(alteredScale).orient("bottom").hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set$1([...props.majorTicks, ...props.minorTicks])).tickFormat(d => contains(d, props.majorTicks) ? props.tickLabels(d) : "");
+      const axis = axisX().scale(alteredScale).orient("bottom").slant(props.slant).hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set$1([...props.majorTicks, ...props.minorTicks])).tickFormat(d => contains(d, props.majorTicks) ? props.tickLabels(d) : "");
       const axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]).join("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
       axisSelection.attr("transform", translateString(0, axisOffset)).call(axis);
 
       // adjust visual aspects of the axis to fit the design
       axisSelection.selectAll(".tick line").filter(d => !contains(d, props.majorTicks)).attr("y2", 4);
       const majorAxisText = axisSelection.selectAll(".tick text").filter(d => contains(d, props.majorTicks));
-      const numTicks = majorAxisText.size();
-      majorAxisText.style("text-anchor", (d, i) => i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle");
+      if (!props.slant || props.slant === "horizontal") {
+        const numTicks = majorAxisText.size();
+        majorAxisText.style("text-anchor", (d, i) => i === 0 ? "start" : i === numTicks - 1 ? "end" : "middle");
+      }
+      if (props.slant === "vertical") {
+        majorAxisText.attr("dx", "-1.8em");
+        majorAxisText.attr("dy", "-1.5em");
+      }
+      if (props.slant === "diagonal") {
+        majorAxisText.attr("dx", "-1.6em");
+        majorAxisText.attr("dy", "0.2em");
+      }
 
       // create the slider background
       const backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]).join("g").classed("sszvis-slider__background", true).attr("transform", translateString(0, backgroundOffset));

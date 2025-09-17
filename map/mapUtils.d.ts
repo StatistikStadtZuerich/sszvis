@@ -18,8 +18,8 @@ export const SWITZERLAND_KEY: "switzerland";
  * @param  {String} featureBoundsCacheKey           Used internally, this is a key for the cache for the expensive part of this computation.
  * @return {Function}                               The projection function.
  */
-export const swissMapProjection: ((width: any, height: any, featureCollection: any) => import("d3-geo").GeoProjection) & {
-    cache: Map<string | number, import("d3-geo").GeoProjection>;
+export const swissMapProjection: ((...args: any[]) => any) & {
+    cache: Map<string | number, any>;
 };
 export function swissMapPath(width: number, height: number, featureCollection: GeoJson, featureBoundsCacheKey?: string): typeof geoPath;
 export function pixelsFromGeoDistance(projection: Function, centerPoint: array, meterDistance: number): number;

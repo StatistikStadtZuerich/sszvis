@@ -106,6 +106,10 @@ An array of ticks which become minor (smaller and unlabeled) ticks on the slider
 
 An array of ticks which become major (larger and labeled) ticks on the slider's axis.
 
+#### `slider.slant`
+
+A string which can be either "horizontal", "vertical" or "diagonal". This controls the orientation of the major tick labels. If not specified, the labels will be horizontal.
+
 #### `slider.tickLabels`
 
 A function to use to format the major tick labels.
