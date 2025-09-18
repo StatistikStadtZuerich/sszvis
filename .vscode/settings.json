@@ -1,4 +1,8 @@
 {
   "cSpell.words": ["sankey", "scatterplot", "scatterplots", "sszvis"],
-  "cSpell.language": "en,de"
+  "cSpell.language": "en,de",
+  "bun.test.enable": false,
+  "vitest.enable": true,
+  "vitest.commandLine": "npx vitest",
+  "testing.defaultGutterClickAction": "run"
 }
