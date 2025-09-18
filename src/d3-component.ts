@@ -1,91 +1,23 @@
 import { type BaseType, selection as d3Selection, type Selection } from "d3";
 import type { AnySelection } from "./types.js";
 
-/**
- * Props object type for component properties
- */
 export interface ComponentProps {
   [key: string]: any;
 }
-
-/**
- * Render callback function for individual elements
- */
 export type RenderCallback = (this: any, ...args: any[]) => void;
-
-/**
- * Selection render callback function for the entire selection
- */
 export type SelectionRenderCallback = (this: any, ...args: any[]) => void;
-
-/**
- * Property setter function type
- */
 export type PropertySetter<T = any> = (...args: any[]) => T;
-
-/**
- * Delegate object interface with getter/setter methods
- */
 export interface PropertyDelegate {
   [key: string]: (...args: any[]) => any;
 }
-
-/**
- * Enhanced selection interface with props method
- */
-export interface SelectionWithProps<
-  GElement extends BaseType = BaseType,
-  Datum = any,
-  PElement extends BaseType = BaseType,
-  PDatum = any,
-> extends Selection<GElement, Datum, PElement, PDatum> {
-  props(): ComponentProps;
-}
-
-/**
- * Component interface with all methods
- */
 export interface Component {
-  /**
-   * Main component function that can be called on selections
-   */
   <GElement extends BaseType, Datum, PElement extends BaseType, PDatum>(
     selection: Selection<GElement, Datum, PElement, PDatum>
   ): void;
-
-  /**
-   * Define a property accessor with an optional setter
-   * @param prop The property's name
-   * @param setter The setter's context will be bound to the component
-   * @returns The component for method chaining
-   */
   prop<T>(prop: string, setter?: PropertySetter<T>): Component;
-
-  /**
-   * Delegate a property's accessors to a delegate object
-   * @param prop The property's name
-   * @param delegate The target having getter and setter methods for prop
-   * @returns The component for method chaining
-   */
   delegate(prop: string, delegate: PropertyDelegate): Component;
-
-  /**
-   * Creates a render context for the given component's parent selection
-   * @param callback Render callback with access to full selection
-   * @returns The component for method chaining
-   */
   renderSelection(callback: SelectionRenderCallback): Component;
-
-  /**
-   * Creates a render context for the given component
-   * @param callback Render callback following d3.selection.each interface
-   * @returns The component for method chaining
-   */
   render(callback: RenderCallback): Component;
-
-  /**
-   * Dynamic property accessors added by prop() method
-   */
   [key: string]: any;
 }
 

@@ -4,9 +4,6 @@
  * @module sszvis/scale
  */
 
-/**
- * Generic scale interface representing any D3 scale
- */
 interface Scale {
   range(): any[];
   rangeExtent?(): [number, number];

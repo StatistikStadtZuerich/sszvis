@@ -16,9 +16,6 @@ import { select } from "d3";
 import * as fn from "./fn";
 import { AnySelection, SelectableElement } from "./types";
 
-/**
- * Options for fallback image rendering
- */
 export interface FallbackOptions {
   src?: string;
   height?: number;

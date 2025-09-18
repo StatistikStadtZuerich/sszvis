@@ -19,7 +19,7 @@
  * will have produced the same value when passed into the accessor function.
  *
  * For example, if a flat data set contains a number of elements, and some have a value "city = Zurich",
- * while others have a value "Basel", performing a groupBy operation on this data set
+ * while others have a value "city = Basel", performing a groupBy operation on this data set
  * and passing a predicate function which returns the value of the "city" property of these objects
  * will form the objects into groups where all objects in one group have "city = Zurich", and all objects
  * in the other group have "city = Basel".
@@ -71,63 +71,21 @@
  * @returns                 An instance of sszvis.cascade
  */
 
-/**
- * Accessor function type for extracting grouping keys from data
- */
 export type KeyAccessor<T, K = string | number> = (datum: T) => K;
-
-/**
- * Sort function type for comparing keys
- */
 export type KeySorter<K = string | number> = (a: K, b: K) => number;
-
-/**
- * Sort function type for comparing data values
- */
 export type ValueSorter<T> = (a: T, b: T) => number;
-
-/**
- * Internal key specification
- */
 interface KeySpec<T> {
   type: "obj" | "arr";
   func: KeyAccessor<T>;
 }
 
-/**
- * Cascade instance interface
- */
 export interface CascadeInstance<T> {
-  /**
-   * Apply the cascade to a flat array of data objects
-   * @param data - The flat array of data to be transformed
-   * @returns The nested data structure
-   */
   apply(data: T[]): any;
-
-  /**
-   * Add an object-based grouping level
-   * @param accessor - Function to extract grouping keys from data
-   * @returns The cascade instance for method chaining
-   */
   objectBy<K extends string | number>(accessor: KeyAccessor<T, K>): CascadeInstance<T>;
-
-  /**
-   * Add an array-based grouping level
-   * @param accessor - Function to extract grouping keys from data
-   * @param sorter - Optional sorting function for the resulting groups
-   * @returns The cascade instance for method chaining
-   */
   arrayBy<K extends string | number>(
     accessor: KeyAccessor<T, K>,
     sorter?: KeySorter<K>
   ): CascadeInstance<T>;
-
-  /**
-   * Set the sorting function for the final data arrays
-   * @param sorter - Function to sort the final data arrays
-   * @returns The cascade instance for method chaining
-   */
   sort(sorter: ValueSorter<T>): CascadeInstance<T>;
 }
 

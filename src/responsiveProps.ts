@@ -98,6 +98,7 @@ export function responsiveProps(): ResponsivePropsInstance {
       // We choose the _ option for all configured props as a default.
       return Object.keys(propsConfig).reduce(
         (memo, val, key) => {
+          // BUG: doesn't support fallback
           memo[key] = val;
           return memo;
         },

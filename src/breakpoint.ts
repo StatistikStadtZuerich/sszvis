@@ -14,34 +14,42 @@
  * is chosen. The user should, where possible, specify breakpoints in increasing order of size.
  * Since there are multiple dimensions on which 'size' can be defined, we do not specify our own
  * algorithm for sorting user-defined breakpoints. We rely on the judgment of the user to do that.
+ *
+ * @property {Function} createSpec
+ * @property {Function} defaultSpec
+ * @property {Function} findByName
+ * @property {Function} find
+ * @property {Function} match
+ * @property {Function} test
+ *
+ * @property {Function} palm Breakpoint for plam-sized devices (phones)
+ * @property {Function} lap  Breakpoint for lap-sized devices (tablets, small notebooks)
+ *
+ * @type Measurement {
+ *   width: number,
+ *   screenHeight: number
+ * }
+ *
+ * @type Breakpoint {
+ *   name: string,
+ *   measurement: Measurement
+ * }
  */
+
 
 import * as fn from "./fn";
 
 import type { Breakpoint, Measurement } from "./types.js";
 
-/**
- * Breakpoint definition with explicit measurement object
- * @example { name: "mobile", measurement: { width: 480, screenHeight: 800 } }
- */
 interface BreakpointWithMeasurement {
   name: string;
   measurement: Partial<Measurement>;
 }
 
-/**
- * Breakpoint definition with inline measurement properties
- * @example { name: "mobile", width: 480, screenHeight: 800 }
- */
 interface BreakpointWithInlineProps extends Partial<Measurement> {
   name: string;
 }
 
-/**
- * Union type for breakpoint creation - supports two patterns:
- * 1. With explicit measurement object
- * 2. With inline width/screenHeight properties
- */
 export type PartialBreakpoint = BreakpointWithMeasurement | BreakpointWithInlineProps;
 
 /**
