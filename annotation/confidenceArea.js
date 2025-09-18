@@ -1,9 +1,9 @@
 import { select, area } from 'd3';
-import { identity, compose } from '../fn.js';
-import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
-import { dataAreaPattern } from '../patterns.js';
-import { defaultTransition } from '../transition.js';
 import { component } from '../d3-component.js';
+import { identity, compose } from '../fn.js';
+import { dataAreaPattern } from '../patterns.js';
+import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
+import { defaultTransition } from '../transition.js';
 
 /**
  * @function sszvis.annotationConfidenceArea

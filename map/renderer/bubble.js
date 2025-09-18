@@ -1,9 +1,9 @@
 import { dispatch, select } from 'd3';
+import { component } from '../../d3-component.js';
 import { functor, compose, prop } from '../../fn.js';
+import translateString from '../../svgUtils/translateString.js';
 import { defaultTransition } from '../../transition.js';
 import { getGeoJsonCenter } from '../mapUtils.js';
-import translateString from '../../svgUtils/translateString.js';
-import { component } from '../../d3-component.js';
 
 /**
  * @module sszvis/map/anchoredCircles
@@ -51,7 +51,7 @@ function bubble () {
       anchoredCircles.attr("r", radiusAcc);
     }
   });
-  anchoredCirclesComponent.on = function () {
+  anchoredCirclesComponent.on = () => {
     const value = event.on.apply(event, arguments);
     return value === event ? anchoredCirclesComponent : value;
   };

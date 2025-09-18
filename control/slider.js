@@ -1,11 +1,11 @@
 import { select, scaleLinear } from 'd3';
+import { axisX } from '../axis.js';
+import move from '../behavior/move.js';
+import { component } from '../d3-component.js';
 import { functor, identity, set, compose, stringEqual } from '../fn.js';
+import { range } from '../scale.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
-import { range } from '../scale.js';
-import move from '../behavior/move.js';
-import { axisX } from '../axis.js';
-import { component } from '../d3-component.js';
 
 /**
  * Slider control

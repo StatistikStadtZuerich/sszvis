@@ -1,8 +1,8 @@
 import { scaleLinear, select, arc, interpolate, hsl } from 'd3';
-import { warn } from '../logger.js';
-import { defaultTransition } from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
+import { warn } from '../logger.js';
+import { defaultTransition } from '../transition.js';
 
 /**
  * Sunburst component
@@ -59,18 +59,10 @@ function sunburst () {
         return pColor;
       }
     }
-    const startAngle = function (d) {
-      return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
-    };
-    const endAngle = function (d) {
-      return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
-    };
-    const innerRadius = function (d) {
-      return props.centerRadius + Math.max(0, props.radiusScale(d.y0));
-    };
-    const outerRadius = function (d) {
-      return props.centerRadius + Math.max(0, props.radiusScale(d.y1));
-    };
+    const startAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
+    const endAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
+    const innerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y0));
+    const outerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y1));
     const arcGen = arc().startAngle(startAngle).endAngle(endAngle).innerRadius(innerRadius).outerRadius(outerRadius);
     for (const d of data) {
       // _x and _dx are the destination values for the transition.
@@ -91,7 +83,7 @@ function sunburst () {
     arcs.transition(defaultTransition()).attrTween("d", d => {
       const x0Interp = interpolate(d.x0, d._x0);
       const x1Interp = interpolate(d.x1, d._x1);
-      return function (t) {
+      return t => {
         d.x0 = x0Interp(t);
         d.x1 = x1Interp(t);
         return arcGen(d);

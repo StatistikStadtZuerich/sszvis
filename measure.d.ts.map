@@ -1,1 +1,1 @@
-{"version":3,"file":"measure.d.ts","sourceRoot":"","sources":["../src/measure.js"],"names":[],"mappings":"AAwBO,6CANK,MAAM,CAoBjB;AAsBQ,0EAIN;AAcI,uCANI,MAAM,GACJ,MAAM,CAOlB;AAaM,yCANI,MAAM,GACJ,MAAM,CAOlB"}
+{"version":3,"file":"measure.d.ts","sourceRoot":"","sources":["../src/measure.js"],"names":[],"mappings":"AAwBO,6CANK,MAAM,CAoBjB;AAsBQ,0EAIN;AAcI,uCANI,MAAM,GACJ,MAAM,CAKiE;AAa7E,yCANI,MAAM,GACJ,MAAM,CAKmE"}

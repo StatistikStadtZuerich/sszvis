@@ -1,7 +1,7 @@
 import { select } from 'd3';
+import { component } from '../d3-component.js';
 import { identity, last, first } from '../fn.js';
 import { error } from '../logger.js';
-import { component } from '../d3-component.js';
 
 /**
  * Linear Color Scale Legend

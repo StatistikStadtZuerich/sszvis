@@ -1,7 +1,7 @@
 import { select } from 'd3';
+import { component } from '../d3-component.js';
 import { functor, compose } from '../fn.js';
 import translateString from '../svgUtils/translateString.js';
-import { component } from '../d3-component.js';
 
 /**
  * Tooltip anchor annotation

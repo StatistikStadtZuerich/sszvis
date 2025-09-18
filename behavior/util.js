@@ -60,13 +60,13 @@ import { isNull, defined } from '../fn.js';
  *                                                                                      cursorValue and the value accessed from the datum.
  */
 
-const elementFromEvent = function (evt) {
+const elementFromEvent = evt => {
   if (!isNull(evt) && defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
   return null;
 };
-const datumFromPannableElement = function (element) {
+const datumFromPannableElement = element => {
   if (!isNull(element)) {
     const selection = select(element);
     if (!isNull(selection.attr("data-sszvis-behavior-pannable"))) {
@@ -78,10 +78,8 @@ const datumFromPannableElement = function (element) {
   }
   return null;
 };
-const datumFromPanEvent = function (evt) {
-  return datumFromPannableElement(elementFromEvent(evt));
-};
-const testBarThreshold = function (cursorValue, datum, accessor, threshold) {
+const datumFromPanEvent = evt => datumFromPannableElement(elementFromEvent(evt));
+const testBarThreshold = (cursorValue, datum, accessor, threshold) => {
   if (!defined(datum)) {
     return false;
   }

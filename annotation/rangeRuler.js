@@ -1,8 +1,8 @@
 import { select } from 'd3';
-import { functor, compose, last } from '../fn.js';
-import { halfPixel } from '../svgUtils/crisp.js';
-import { formatNumber } from '../format.js';
 import { component } from '../d3-component.js';
+import { functor, compose, last } from '../fn.js';
+import { formatNumber } from '../format.js';
+import { halfPixel } from '../svgUtils/crisp.js';
 
 /**
  * RangeRuler annotation
@@ -34,9 +34,7 @@ function rangeRuler () {
     const crispX = compose(halfPixel, props.x);
     const crispY0 = compose(halfPixel, props.y0);
     const crispY1 = compose(halfPixel, props.y1);
-    const middleY = function (d) {
-      return halfPixel((props.y0(d) + props.y1(d)) / 2);
-    };
+    const middleY = d => halfPixel((props.y0(d) + props.y1(d)) / 2);
     const dotRadius = 1.5;
     const line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]).join("line").classed("sszvis-rangeRuler__rule", true);
     line.attr("x1", crispX).attr("y1", props.top).attr("x2", crispX).attr("y2", props.bottom);

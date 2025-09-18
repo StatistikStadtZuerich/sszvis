@@ -1,9 +1,9 @@
 import { stack, max, select, line } from 'd3';
-import { functor, compose, prop } from '../fn.js';
 import { cascade } from '../cascade.js';
+import { component } from '../d3-component.js';
+import { functor, compose, prop } from '../fn.js';
 import { defaultTransition } from '../transition.js';
 import bar from './bar.js';
-import { component } from '../d3-component.js';
 
 /**
  * Stacked Pyramid component
@@ -56,7 +56,7 @@ const rowAcc = prop("row");
  * in the data. This function makes no effort to normalize the data if that's not the case.
  */
 function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
-  return function (data) {
+  return data => {
     const sides = cascade().arrayBy(sideAcc).arrayBy(_rowAcc).objectBy(seriesAcc).apply(data).map(rows => {
       const keys = Object.keys(rows[0]);
       const side = sideAcc(rows[0][keys[0]][0]);

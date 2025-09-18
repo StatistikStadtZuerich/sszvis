@@ -82,7 +82,7 @@ function choropleth () {
       event.call("click", this, d.datum);
     });
   });
-  mapComponent.on = function () {
+  mapComponent.on = () => {
     const value = event.on.apply(event, arguments);
     return value === event ? mapComponent : value;
   };

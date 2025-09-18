@@ -1,8 +1,8 @@
 import { select, arc, interpolate } from 'd3';
-import { functor } from '../fn.js';
-import { defaultTransition } from '../transition.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
 import { component } from '../d3-component.js';
+import { functor } from '../fn.js';
+import { defaultTransition } from '../transition.js';
 
 /**
  * Pie component
@@ -59,7 +59,7 @@ function pie () {
     segments.transition(defaultTransition()).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attrTween("d", d => {
       const angle0Interp = interpolate(d.a0, d._a0);
       const angle1Interp = interpolate(d.a1, d._a1);
-      return function (t) {
+      return t => {
         d.a0 = angle0Interp(t);
         d.a1 = angle1Interp(t);
         return arcGen(d);

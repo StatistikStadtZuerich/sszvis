@@ -16,7 +16,7 @@
 function fitTooltip (defaultVal, bounds) {
   const lo = Math.min(bounds.innerWidth * 1 / 4, 100);
   const hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
-  return function (d) {
+  return d => {
     const x = d.x;
     return x > hi ? "right" : x < lo ? "left" : defaultVal;
   };

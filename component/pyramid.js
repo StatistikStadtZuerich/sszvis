@@ -1,8 +1,8 @@
 import { select, line } from 'd3';
+import { component } from '../d3-component.js';
 import { functor } from '../fn.js';
 import { defaultTransition } from '../transition.js';
 import bar from './bar.js';
-import { component } from '../d3-component.js';
 
 /**
  * Pyramid component

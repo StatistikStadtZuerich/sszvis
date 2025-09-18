@@ -11,7 +11,7 @@ import { error } from './logger.js';
 
 // var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
-const loadError = function (error$1) {
+const loadError = error$1 => {
   error(error$1);
 
   // Don't use alert()!

@@ -1,6 +1,6 @@
 import { select } from 'd3';
-import { functor } from '../../fn.js';
 import { component } from '../../d3-component.js';
+import { functor } from '../../fn.js';
 
 /**
  * raster renderer component

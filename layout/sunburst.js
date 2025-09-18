@@ -17,9 +17,7 @@ function unwrapNested(roll) {
     };
   });
 }
-let sortFn = function () {
-  return 0;
-};
+let sortFn = () => 0;
 
 /**
  * sszvis.layout.sunburst.prepareData
@@ -46,7 +44,7 @@ let sortFn = function () {
  *
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
-const prepareData = function () {
+const prepareData = () => {
   const layers = [];
   let valueAcc = identity;
   // Sibling nodes of the partition layout are sorted according to this sort function.
@@ -69,18 +67,16 @@ const prepareData = function () {
     // Remove the root element from the data (but it still exists in memory so long as the data is alive)
     return flatten(root).filter(d => !d.data.isSunburstRoot);
   }
-  main.calculate = function (data) {
-    return main(data);
-  };
-  main.layer = function (keyFunc) {
+  main.calculate = data => main(data);
+  main.layer = keyFunc => {
     layers.push(keyFunc);
     return main;
   };
-  main.value = function (accfn) {
+  main.value = accfn => {
     valueAcc = accfn;
     return main;
   };
-  main.sort = function (sortFunc) {
+  main.sort = sortFunc => {
     sortFn = sortFunc;
     return main;
   };
@@ -103,7 +99,7 @@ const MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  */
-const computeLayout = function (numLayers, chartWidth) {
+const computeLayout = (numLayers, chartWidth) => {
   // Diameter of the center circle is one-third the width
   const halfWidth = chartWidth / 2;
   const centerRadius = halfWidth / 3;
@@ -124,9 +120,7 @@ const computeLayout = function (numLayers, chartWidth) {
  *                                    function which abstracts away the way d3 stores positions within the partition layout used
  *                                    by the sunburst chart.
  */
-const getRadiusExtent = function (formattedData) {
-  return [min(formattedData, d => d.y0), max(formattedData, d => d.y1)];
-};
+const getRadiusExtent = formattedData => [min(formattedData, d => d.y0), max(formattedData, d => d.y1)];
 
 export { MAX_SUNBURST_RING_WIDTH, MIN_SUNBURST_RING_WIDTH, computeLayout, getRadiusExtent, prepareData };
 //# sourceMappingURL=sunburst.js.map

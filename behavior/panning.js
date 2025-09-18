@@ -1,7 +1,7 @@
 import { dispatch, select } from 'd3';
+import { component } from '../d3-component.js';
 import { firstTouch } from '../fn.js';
 import { datumFromPanEvent } from './util.js';
-import { component } from '../d3-component.js';
 
 /**
  * Panning behavior
@@ -69,7 +69,7 @@ function panning () {
       event.apply("end", this, arguments);
     });
   });
-  panningComponent.on = function () {
+  panningComponent.on = () => {
     const value = event.on.apply(event, arguments);
     return value === event ? panningComponent : value;
   };

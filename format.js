@@ -12,30 +12,12 @@ const format = formatLocale(locale).format;
 /**
  * Format a number as an age
  */
-const formatAge = function (d) {
-  return String(Math.round(d));
-};
+const formatAge = d => String(Math.round(d));
 /**
  * A multi time formatter used by the axis class
  */
-const formatAxisTimeFormat = function (d) {
-  const xs = [[".%L", function (date) {
-    return date.getMilliseconds();
-  }], [":%S", function (date) {
-    return date.getSeconds();
-  }], ["%H:%M", function (date) {
-    return date.getMinutes();
-  }], ["%H Uhr", function (date) {
-    return date.getHours();
-  }], ["%a., %d.", function (date) {
-    return Boolean(date.getDay() && date.getDate() != 1);
-  }], ["%e. %b", function (date) {
-    return date.getDate() != 1;
-  }], ["%B", function (date) {
-    return date.getMonth();
-  }], ["%Y", function () {
-    return true;
-  }]];
+const formatAxisTimeFormat = d => {
+  const xs = [[".%L", date => date.getMilliseconds()], [":%S", date => date.getSeconds()], ["%H:%M", date => date.getMinutes()], ["%H Uhr", date => date.getHours()], ["%a., %d.", date => Boolean(date.getDay() && date.getDate() != 1)], ["%e. %b", date => date.getDate() != 1], ["%B", date => date.getMonth()], ["%Y", () => true]];
   for (const x of xs) {
     if (x[1](d)) {
       return timeFormat(x[0])(d);
@@ -55,9 +37,7 @@ const formatYear = timeFormat("%Y");
 /**
  * Formatter for no label
  */
-const formatNone = function () {
-  return "";
-};
+const formatNone = () => "";
 /**
  * Format numbers according to the sszvis style guide. The most important
  * rules are:
@@ -71,7 +51,7 @@ const formatNone = function () {
  *
  * See also: many test cases for this function in format.test.js
  */
-const formatNumber = function (d) {
+const formatNumber = d => {
   let p;
   const dAbs = Math.abs(d !== null && d !== void 0 ? d : 0);
   if (d == null || isNaN(d)) {
@@ -110,7 +90,7 @@ const formatNumber = function (d) {
 function formatPreciseNumber(p, d) {
   // This curries the function
   if (arguments.length > 1 && d !== undefined) return formatPreciseNumber(p)(d);
-  return function (x) {
+  return x => {
     const dAbs = Math.abs(x);
     return dAbs >= 100 && dAbs < 1e4 ? format("." + p + "f")(x) : format(",." + p + "f")(x);
   };
@@ -118,14 +98,14 @@ function formatPreciseNumber(p, d) {
 /**
  * Format percentages on the range 0 - 100
  */
-const formatPercent = function (d) {
+const formatPercent = d => {
   // Uses unix thin space
   return formatNumber(d) + " %";
 };
 /**
  * Format percentages on the range 0 - 1
  */
-const formatFractionPercent = function (d) {
+const formatFractionPercent = d => {
   // Uses unix thin space
   return formatNumber(d * 100) + " %";
 };

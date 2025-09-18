@@ -1,6 +1,6 @@
 import { select as select$1 } from 'd3';
-import { identity } from '../fn.js';
 import { component } from '../d3-component.js';
+import { identity } from '../fn.js';
 
 /**
  * Select control
@@ -46,7 +46,7 @@ function select () {
 }
 function truncateToWidth(metricsEl, maxWidth, originalString) {
   const MAX_RECURSION = 1000;
-  const fitText = function (str, i) {
+  const fitText = (str, i) => {
     metricsEl.text(str);
     const textWidth = Math.ceil(metricsEl.node().clientWidth);
     return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, -2) + "…", i + 1) : str;

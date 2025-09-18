@@ -1,11 +1,11 @@
 import { dispatch, select, geoCentroid } from 'd3';
-import { functor, prop, defined } from '../../fn.js';
 import tooltipAnchor from '../../annotation/tooltipAnchor.js';
-import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
+import { component } from '../../d3-component.js';
+import { functor, prop, defined } from '../../fn.js';
 import { mapMissingValuePattern } from '../../patterns.js';
+import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
 import { slowTransition } from '../../transition.js';
 import { GEO_KEY_DEFAULT } from '../mapUtils.js';
-import { component } from '../../d3-component.js';
 
 /**
  * geojson renderer component
@@ -90,7 +90,7 @@ function geojson () {
     // attach tooltip anchors
     tooltipGroup.call(ta);
   });
-  geojsonComponent.on = function () {
+  geojsonComponent.on = () => {
     const value = event.on.apply(event, arguments);
     return value === event ? geojsonComponent : value;
   };

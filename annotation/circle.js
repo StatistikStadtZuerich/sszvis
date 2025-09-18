@@ -1,8 +1,8 @@
 import { select } from 'd3';
-import { functor } from '../fn.js';
-import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
-import { dataAreaPattern } from '../patterns.js';
 import { component } from '../d3-component.js';
+import { functor } from '../fn.js';
+import { dataAreaPattern } from '../patterns.js';
+import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
 
 /**
  * Circle annotation

@@ -1,8 +1,8 @@
 import { select } from 'd3';
-import { functor, compose } from '../fn.js';
-import { halfPixel } from '../svgUtils/crisp.js';
 import tooltipAnchor from './tooltipAnchor.js';
 import { component } from '../d3-component.js';
+import { functor, compose } from '../fn.js';
+import { halfPixel } from '../svgUtils/crisp.js';
 
 /**
  * Range Flag annotation
@@ -36,7 +36,7 @@ function rangeFlag () {
   });
 }
 function makeFlagDot(classed, cx, cy) {
-  return function (dot) {
+  return dot => {
     dot.join("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true).attr("r", 3.5).attr("cx", cx).attr("cy", cy);
   };
 }

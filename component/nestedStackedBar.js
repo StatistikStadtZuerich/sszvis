@@ -1,9 +1,9 @@
 import { select } from 'd3';
-import { functor } from '../fn.js';
-import { component } from '../d3-component.js';
 import { axisX } from '../axis.js';
-import { stackedBarVertical } from './stackedBar.js';
+import { component } from '../d3-component.js';
+import { functor } from '../fn.js';
 import translateString from '../svgUtils/translateString.js';
+import { stackedBarVertical } from './stackedBar.js';
 
 /**
  * Nested Stacked Bars Vertical component

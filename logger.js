@@ -50,7 +50,7 @@ const error = logger("error");
 /* Helper functions
 ----------------------------------------------- */
 function logger(type) {
-  return function () {
+  return () => {
     if (console && console[type]) {
       for (const msg of slice(arguments)) {
         console[type](msg);

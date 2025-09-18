@@ -9,12 +9,10 @@ import { warn } from '../logger.js';
  * and layout required by the sankey component.
  */
 
-const newLinkId = function () {
+const newLinkId = (() => {
   let id = 0;
-  return function () {
-    return ++id;
-  };
-}();
+  return () => ++id;
+})();
 
 /**
  * sszvis.layout.sankey.prepareData
@@ -45,7 +43,7 @@ const newLinkId = function () {
  *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
  *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
  */
-const prepareData = function () {
+const prepareData = () => {
   let mGetSource = identity;
   let mGetTarget = identity;
   let mGetValue = identity;
@@ -53,14 +51,10 @@ const prepareData = function () {
 
   // Helper functions
   const valueAcc = prop("value");
-  const byAscendingValue = function (a, b) {
-    return ascending(valueAcc(a), valueAcc(b));
-  };
-  const byDescendingValue = function (a, b) {
-    return descending(valueAcc(a), valueAcc(b));
-  };
+  const byAscendingValue = (a, b) => ascending(valueAcc(a), valueAcc(b));
+  const byDescendingValue = (a, b) => descending(valueAcc(a), valueAcc(b));
   let valueSortFunc = byDescendingValue;
-  const main = function (inputData) {
+  const main = inputData => {
     const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
       for (const id of columnIdsList) {
         if (index.has(id)) {
@@ -173,30 +167,28 @@ const prepareData = function () {
       columnLengths
     };
   };
-  main.apply = function (data) {
-    return main(data);
-  };
-  main.source = function (func) {
+  main.apply = data => main(data);
+  main.source = func => {
     mGetSource = func;
     return main;
   };
-  main.target = function (func) {
+  main.target = func => {
     mGetTarget = func;
     return main;
   };
-  main.value = function (func) {
+  main.value = func => {
     mGetValue = func;
     return main;
   };
-  main.descendingSort = function () {
+  main.descendingSort = () => {
     valueSortFunc = byDescendingValue;
     return main;
   };
-  main.ascendingSort = function () {
+  main.ascendingSort = () => {
     valueSortFunc = byAscendingValue;
     return main;
   };
-  main.idLists = function (idLists) {
+  main.idLists = idLists => {
     mColumnIds = idLists;
     return main;
   };
@@ -225,7 +217,7 @@ const prepareData = function () {
  *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
  */
-const computeLayout = function (columnLengths, columnTotals, columnHeight, columnWidth) {
+const computeLayout = (columnLengths, columnTotals, columnHeight, columnWidth) => {
   // Calculate appropriate scale and padding values (in pixels)
   const padSpaceRatio = 0.15;
   const padMin = 12;

@@ -1,7 +1,7 @@
 import { dispatch, select, ascending, pointer } from 'd3';
+import { component } from '../d3-component.js';
 import { functor, first } from '../fn.js';
 import { range } from '../scale.js';
-import { component } from '../d3-component.js';
 
 /**
  * Move behavior
@@ -82,7 +82,7 @@ function move () {
       const target = this;
       const doc = select(document);
       const win = select(globalThis);
-      const startDragging = function () {
+      const startDragging = () => {
         target.__dragging__ = true;
       };
       const stopDragging = function () {
@@ -100,11 +100,10 @@ function move () {
       });
       startDragging();
     }).on("mousemove", function (e) {
-      const target = this;
       const xy = pointer(e);
       const x = scaleInvert(props.xScale, xy[0]);
       const y = scaleInvert(props.yScale, xy[1]);
-      if (target.__dragging__) {
+      if (this.__dragging__) {
         event.apply("drag", this, [e, x, y]);
       } else {
         event.apply("move", this, [e, x, y]);
@@ -164,7 +163,7 @@ function move () {
       layer.attr("fill", "rgba(255,0,0,0.2)");
     }
   });
-  moveComponent.on = function () {
+  moveComponent.on = () => {
     const value = event.on.apply(event, arguments);
     return value === event ? moveComponent : value;
   };

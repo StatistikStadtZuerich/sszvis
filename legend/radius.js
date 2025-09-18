@@ -1,9 +1,9 @@
 import { select, mean } from 'd3';
+import { component } from '../d3-component.js';
 import { identity } from '../fn.js';
 import { range } from '../scale.js';
 import { halfPixel } from '../svgUtils/crisp.js';
 import translateString from '../svgUtils/translateString.js';
-import { component } from '../d3-component.js';
 
 /**
  * Radius size legend

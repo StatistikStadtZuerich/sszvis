@@ -1,8 +1,8 @@
 import { select, scaleBand, range } from 'd3';
-import { functor, not } from '../fn.js';
 import tooltipAnchor from '../annotation/tooltipAnchor.js';
-import translateString from '../svgUtils/translateString.js';
 import { component } from '../d3-component.js';
+import { functor, not } from '../fn.js';
+import translateString from '../svgUtils/translateString.js';
 
 /**
  * Grouped Bars component

@@ -38,9 +38,7 @@ function component() {
    */
   function sszvisComponent(selection) {
     if (selectionRenderer) {
-      selection.props = function () {
-        return clone(props);
-      };
+      selection.props = () => clone(props);
       selectionRenderer.apply(selection, slice(arguments));
     }
     selection.each(function () {
@@ -57,7 +55,7 @@ function component() {
    *         sszvis.component. Sets the returned value to the given property
    * @return {sszvis.component}
    */
-  sszvisComponent.prop = function (prop, setter) {
+  sszvisComponent.prop = (prop, setter) => {
     setter || (setter = identity);
     sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
     return sszvisComponent;
@@ -70,8 +68,8 @@ function component() {
    * @param  {Object} delegate The target having getter and setter methods for prop
    * @return {sszvis.component}
    */
-  sszvisComponent.delegate = function (prop, delegate) {
-    sszvisComponent[prop] = function () {
+  sszvisComponent.delegate = (prop, delegate) => {
+    sszvisComponent[prop] = () => {
       const result = delegate[prop].apply(delegate, slice(arguments));
       return arguments.length === 0 ? result : sszvisComponent;
     };
@@ -87,7 +85,7 @@ function component() {
    * @param  {Function} callback
    * @return {[sszvis.component]}
    */
-  sszvisComponent.renderSelection = function (callback) {
+  sszvisComponent.renderSelection = callback => {
     selectionRenderer = callback;
     return sszvisComponent;
   };
@@ -101,7 +99,7 @@ function component() {
    * @param  {Function} callback
    * @return {sszvis.component}
    */
-  sszvisComponent.render = function (callback) {
+  sszvisComponent.render = callback => {
     renderer = callback;
     return sszvisComponent;
   };
@@ -155,7 +153,7 @@ function slice(array) {
 function clone(obj) {
   const copy = {};
   for (const attr in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
+    if (Object.hasOwn(obj, attr)) copy[attr] = obj[attr];
   }
   return copy;
 }

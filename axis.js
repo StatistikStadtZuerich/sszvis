@@ -66,7 +66,7 @@ import translateString from './svgUtils/translateString.js';
 const TICK_PROXIMITY_THRESHOLD = 8;
 const TICK_END_THRESHOLD = 12;
 const LABEL_PROXIMITY_THRESHOLD = 10;
-const axis = function () {
+const axis = () => {
   // const axisDelegate = d3.axisBottom();
   // axisDelegate.orient = function() { return 'bottom'; };
 
@@ -83,7 +83,7 @@ const axis = function () {
     const selection = select(this);
     const props = selection.props();
     const isBottom = !props.vertical && props.orient === "bottom";
-    const axisDelegate = function () {
+    const axisDelegate = (() => {
       switch (props.orient) {
         case "bottom":
           {
@@ -102,7 +102,7 @@ const axis = function () {
             return axisRight();
           }
       }
-    }();
+    })();
     for (const prop of ["scale", "ticks", "tickValues", "tickSizeInner", "tickSizeOuter", "tickPadding", "tickFormat", "tickSize"]) {
       if (props[prop] !== undefined) {
         if (axisDelegate[prop] === undefined) {
@@ -334,51 +334,39 @@ const setOrdinalTicks = function (count) {
   this.tickValues(values);
   return count;
 };
-const axisX = function () {
-  return axis().yOffset(2) //gap between chart and x-axis
-  .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
-};
-axisX.time = function () {
-  return axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
-};
-axisX.ordinal = function () {
-  return axisX()
-  // extend this class a little with a custom implementation of 'ticks'
-  // that allows you to set a custom number of ticks,
-  // including the first and last value in the ordinal scale
-  .prop("ticks", setOrdinalTicks).tickFormat(formatText);
-};
+const axisX = () => axis().yOffset(2) //gap between chart and x-axis
+.ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
+axisX.time = () => axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
+axisX.ordinal = () => axisX()
+// extend this class a little with a custom implementation of 'ticks'
+// that allows you to set a custom number of ticks,
+// including the first and last value in the ordinal scale
+.prop("ticks", setOrdinalTicks).tickFormat(formatText);
 
 // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
-axisX.pyramid = function () {
-  return axisX().ticks(10).prop("scale", function (s) {
-    const extended = s.copy(),
-      extendedDomain = extended.domain(),
-      extendedRange = extended.range();
-    extended
-    // the domain is mirrored - ±domain[1]
-    .domain([-extendedDomain[1], extendedDomain[1]])
-    // the range is mirrored – ±range[1]
-    .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
-    this._scale(extended);
-    return extended;
-  }).tickFormat(v =>
-  // this tick format means that the axis appears to be divergent around 0
-  // when in fact it is -domain[1] -> +domain[1]
-  formatNumber(Math.abs(v)));
-};
-const axisY = function () {
+axisX.pyramid = () => axisX().ticks(10).prop("scale", function (s) {
+  const extended = s.copy(),
+    extendedDomain = extended.domain(),
+    extendedRange = extended.range();
+  extended
+  // the domain is mirrored - ±domain[1]
+  .domain([-extendedDomain[1], extendedDomain[1]])
+  // the range is mirrored – ±range[1]
+  .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
+  this._scale(extended);
+  return extended;
+}).tickFormat(v =>
+// this tick format means that the axis appears to be divergent around 0
+// when in fact it is -domain[1] -> +domain[1]
+formatNumber(Math.abs(v)));
+const axisY = () => {
   const newAxis = axis().ticks(6).tickSize(0, 0).tickPadding(0).tickFormat(d => 0 === d && !newAxis.showZeroY() ? null : formatNumber(d)).vertical(true);
   return newAxis;
 };
-axisY.time = function () {
-  return axisY().tickFormat(formatAxisTimeFormat);
-};
-axisY.ordinal = function () {
-  return axisY()
-  // add custom 'ticks' function
-  .prop("ticks", setOrdinalTicks).tickFormat(formatText);
-};
+axisY.time = () => axisY().tickFormat(formatAxisTimeFormat);
+axisY.ordinal = () => axisY()
+// add custom 'ticks' function
+.prop("ticks", setOrdinalTicks).tickFormat(formatText);
 
 /* Helper functions
 ----------------------------------------------- */

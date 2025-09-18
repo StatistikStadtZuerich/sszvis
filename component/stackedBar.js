@@ -1,8 +1,8 @@
 import { stack, max, stackOrderReverse, select, stackOrderNone } from 'd3';
-import { set, functor, compose, prop } from '../fn.js';
 import { cascade } from '../cascade.js';
-import bar from './bar.js';
 import { component } from '../d3-component.js';
+import { set, functor, compose, prop } from '../fn.js';
+import bar from './bar.js';
 
 /**
  * Stacked Bar component
@@ -41,26 +41,24 @@ const stackAcc = prop("stack");
 const fst = prop("0");
 const snd = prop("1");
 function stackedBarData(order) {
-  return function (_stackAcc, seriesAcc, valueAcc) {
-    return function (data) {
-      const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
+  return (_stackAcc, seriesAcc, valueAcc) => data => {
+    const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
-      // Collect all keys ()
-      const keys = rows.reduce((a, row) => set([...a, ...Object.keys(row)]), []);
-      const stacks = stack().keys(keys).value((x, key) => valueAcc(x[key][0])).order(order)(rows);
+    // Collect all keys ()
+    const keys = rows.reduce((a, row) => set([...a, ...Object.keys(row)]), []);
+    const stacks = stack().keys(keys).value((x, key) => valueAcc(x[key][0])).order(order)(rows);
 
-      // Simplify the 'data' property.
-      for (const stack of stacks) {
-        for (const d of stack) {
-          d.series = stack.key;
-          d.data = d.data[stack.key][0];
-          d.stack = _stackAcc(d.data);
-        }
+    // Simplify the 'data' property.
+    for (const stack of stacks) {
+      for (const d of stack) {
+        d.series = stack.key;
+        d.data = d.data[stack.key][0];
+        d.stack = _stackAcc(d.data);
       }
-      stacks.keys = keys;
-      stacks.maxValue = max(stacks, stack => max(stack, d => d[1]));
-      return stacks;
-    };
+    }
+    stacks.keys = keys;
+    stacks.maxValue = max(stacks, stack => max(stack, d => d[1]));
+    return stacks;
   };
 }
 const stackedBarHorizontalData = stackedBarData(stackOrderNone);
@@ -82,17 +80,13 @@ const horizontalStackedBarConfig = {
     return compose(props.yScale, stackAcc);
   },
   width(props) {
-    return function (d) {
-      return props.xScale(d[1]) - props.xScale(d[0]);
-    };
+    return d => props.xScale(d[1]) - props.xScale(d[0]);
   },
   height(props) {
     return props.height;
   }
 };
-const stackedBarHorizontal = function () {
-  return stackedBar(horizontalStackedBarConfig);
-};
+const stackedBarHorizontal = () => stackedBar(horizontalStackedBarConfig);
 const verticalStackedBarConfig = {
   x(props) {
     return compose(props.xScale, stackAcc);
@@ -104,14 +98,10 @@ const verticalStackedBarConfig = {
     return props.width;
   },
   height(props) {
-    return function (d) {
-      return props.yScale(d[0]) - props.yScale(d[1]);
-    };
+    return d => props.yScale(d[0]) - props.yScale(d[1]);
   }
 };
-const stackedBarVertical = function () {
-  return stackedBar(verticalStackedBarConfig);
-};
+const stackedBarVertical = () => stackedBar(verticalStackedBarConfig);
 
 export { stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData };
 //# sourceMappingURL=stackedBar.js.map

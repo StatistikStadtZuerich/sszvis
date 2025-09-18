@@ -13,15 +13,9 @@ import { transition, easePolyOut } from 'd3';
  */
 
 const defaultEase = easePolyOut;
-const defaultTransition = function () {
-  return transition().ease(defaultEase).duration(300);
-};
-const fastTransition = function () {
-  return transition().ease(defaultEase).duration(50);
-};
-const slowTransition = function () {
-  return transition().ease(defaultEase).duration(500);
-};
+const defaultTransition = () => transition().ease(defaultEase).duration(300);
+const fastTransition = () => transition().ease(defaultEase).duration(50);
+const slowTransition = () => transition().ease(defaultEase).duration(500);
 
 export { defaultTransition, fastTransition, slowTransition };
 //# sourceMappingURL=transition.js.map

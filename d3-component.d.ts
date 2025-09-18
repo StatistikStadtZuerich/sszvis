@@ -24,5 +24,5 @@
  *
  * @return {sszvis.component} A d3 reusable chart
  */
-export function component(): sszvis.component;
+export function component(...args: any[]): sszvis.component;
 //# sourceMappingURL=d3-component.d.ts.map

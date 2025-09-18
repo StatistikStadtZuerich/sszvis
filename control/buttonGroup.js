@@ -1,6 +1,6 @@
 import { select } from 'd3';
-import { identity } from '../fn.js';
 import { component } from '../d3-component.js';
+import { identity } from '../fn.js';
 
 /**
  * Button Group control

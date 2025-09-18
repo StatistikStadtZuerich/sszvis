@@ -1,7 +1,7 @@
 import { select, line as line$1 } from 'd3';
+import { component } from '../d3-component.js';
 import { identity, compose, not } from '../fn.js';
 import { defaultTransition } from '../transition.js';
-import { component } from '../d3-component.js';
 
 /**
  * Line component

@@ -30,9 +30,7 @@ import { compose } from '../fn.js';
  * @param  {number} pos A pixel position
  * @return {number}     A pixel position snapped to the pixel grid
  */
-const halfPixel = function (pos) {
-  return Math.floor(pos) + 0.5;
-};
+const halfPixel = pos => Math.floor(pos) + 0.5;
 
 /**
  * crisp.roundTransformString
@@ -47,7 +45,7 @@ const halfPixel = function (pos) {
  * @param  {string} transformStr A valid SVG transform string
  * @return {string}              An SVG transform string with rounded values
  */
-const roundTransformString = function (transformStr) {
+const roundTransformString = transformStr => {
   const roundNumber = compose(Math.floor, Number);
   return transformStr.replace(/(translate\()\s*([\d ,.]+)\s*(\))/i, (_, left, vecStr, right) => {
     const roundVec = vecStr.replace(",", " ").replace(/\s+/, " ").split(" ").map(roundNumber).join(",");
@@ -65,7 +63,7 @@ const roundTransformString = function (transformStr) {
  * @param  {string} transformStr A valid SVG transform string
  * @return {vecor}               Two-element array ([dx, dy])
  */
-const transformTranslateSubpixelShift = function (transformStr) {
+const transformTranslateSubpixelShift = transformStr => {
   const roundNumber = compose(Math.floor, Number);
   const m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
   const vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);

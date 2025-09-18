@@ -1,7 +1,7 @@
 import { select } from 'd3';
+import { component } from '../../d3-component.js';
 import { functor } from '../../fn.js';
 import { GEO_KEY_DEFAULT } from '../mapUtils.js';
-import { component } from '../../d3-component.js';
 
 /**
  * highlight renderer component

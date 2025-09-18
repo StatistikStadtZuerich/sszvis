@@ -1,6 +1,6 @@
 import { select } from 'd3';
-import { isSelection } from './fn.js';
 import { bounds } from './bounds.js';
+import { isSelection } from './fn.js';
 
 /**
  * Factory that returns an SVG element appended to the given target selector,

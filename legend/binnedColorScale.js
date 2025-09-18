@@ -1,8 +1,8 @@
 import { select, scaleLinear } from 'd3';
+import { component } from '../d3-component.js';
 import { identity } from '../fn.js';
 import { error } from '../logger.js';
 import { halfPixel } from '../svgUtils/crisp.js';
-import { component } from '../d3-component.js';
 
 /**
  * Binned Color Scale Legend
