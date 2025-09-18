@@ -13,24 +13,32 @@
  */
 
 import { select } from "d3";
+import * as fn from "./fn";
+import { AnySelection, SelectableElement } from "./types";
 
-import * as fn from "./fn.js";
+export interface FallbackOptions {
+  src?: string;
+  height?: number;
+}
 
-export const fallbackUnsupported = function () {
+export const fallbackUnsupported = function (): boolean {
   const supportsSVG =
     !!document.createElementNS &&
     !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
   return !supportsSVG;
 };
 
-export const fallbackCanvasUnsupported = function () {
+export const fallbackCanvasUnsupported = function (): boolean {
   const supportsCanvas = !!document.createElement("canvas").getContext;
   return !supportsCanvas;
 };
 
-export const fallbackRender = function (selector, options) {
+export const fallbackRender = (
+  selector: SelectableElement,
+  options: FallbackOptions = {}
+): void => {
   options || (options = {});
   options.src || (options.src = "fallback.png");
-  const selection = fn.isSelection(selector) ? selector : select(selector);
+  const selection: AnySelection = fn.isSelection(selector) ? selector : select(selector);
   selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
 };

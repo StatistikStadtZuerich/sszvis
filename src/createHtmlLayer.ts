@@ -42,18 +42,28 @@
  */
 
 import { select } from "d3";
+import type { BoundsResult } from "./bounds.js";
 import { bounds as mkBounds } from "./bounds.js";
 import * as fn from "./fn.js";
+import type { AnySelection, SelectableElement } from "./types.js";
 
-export function createHtmlLayer(selector, bounds, metadata) {
-  bounds || (bounds = mkBounds());
-  metadata || (metadata = {});
+export interface LayerMetadata {
+  key?: string;
+}
+
+export function createHtmlLayer(
+  selector: SelectableElement,
+  bounds?: BoundsResult,
+  metadata?: LayerMetadata
+): AnySelection {
+  bounds ||= mkBounds();
+  metadata ||= {};
 
   const key = metadata.key || "default";
 
   const elementDataKey = "data-sszvis-html-" + key;
 
-  const root = fn.isSelection(selector) ? selector : select(selector);
+  const root: AnySelection = fn.isSelection(selector) ? selector : select(selector);
   root.classed("sszvis-outer-container", true);
 
   return root

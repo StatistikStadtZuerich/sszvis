@@ -4,17 +4,12 @@
  * @module sszvis/format
  */
 
-import {
-  type FormatLocaleDefinition,
-  formatLocale,
-  type TimeLocaleDefinition,
-  timeFormatLocale,
-} from "d3";
+import { formatLocale, timeFormatLocale } from "d3";
 import * as fn from "./fn";
-import { locale } from "./locale";
+import { formatLocale as formatLocaleDefinition, timeLocale } from "./locale";
 
-const timeFormat = timeFormatLocale(locale as unknown as TimeLocaleDefinition).format;
-const format = formatLocale(locale as unknown as FormatLocaleDefinition).format;
+const timeFormat = timeFormatLocale(timeLocale).format;
+const format = formatLocale(formatLocaleDefinition).format;
 
 /**
  * Format a number as an age

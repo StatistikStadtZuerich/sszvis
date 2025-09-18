@@ -7,6 +7,19 @@
  */
 
 import { breakpointDefaultSpec, breakpointFind } from "./breakpoint.js";
+import type { Measurement } from "./types.js";
+
+/**
+ * Aspect ratio function type that calculates height from width
+ */
+export type AspectRatioFunction = (width: number) => number;
+
+/**
+ * Aspect ratio function with a MAX_HEIGHT property
+ */
+export interface AspectRatioFunctionWithMaxHeight extends AspectRatioFunction {
+  MAX_HEIGHT: number;
+}
 
 /**
  * aspectRatio
@@ -16,15 +29,15 @@ import { breakpointDefaultSpec, breakpointFind } from "./breakpoint.js";
  * returned function accepts any width, returning the corresponding
  * height for the aspect ratio you configured.
  *
- * @param {Number} x  The number of parts on the horizontal axis (dividend)
- * @param {Number} y  The number of parts on the vertical axis (divisor)
- * @return {Function} The aspect ratio function. Takes a width as an argument
- *                    and returns the corresponding height based on the
- *                    aspect ratio defined by x:y.
+ * @param x  The number of parts on the horizontal axis (dividend)
+ * @param y  The number of parts on the vertical axis (divisor)
+ * @return The aspect ratio function. Takes a width as an argument
+ *         and returns the corresponding height based on the
+ *         aspect ratio defined by x:y.
  */
-export function aspectRatio(x, y) {
+export function aspectRatio(x: number, y: number): AspectRatioFunction {
   const ar = x / y;
-  return function (width) {
+  return function (width: number): number {
     return width / ar;
   };
 }
@@ -34,36 +47,27 @@ export function aspectRatio(x, y) {
  *
  * Recommended breakpoints:
  *   - palm
- *
- * @param {Number} width
- * @returns {Number} height
  */
-export const aspectRatio4to3 = aspectRatio(4, 3);
+export const aspectRatio4to3: AspectRatioFunction = aspectRatio(4, 3);
 
 /**
  * aspectRatio16to10
  *
  * Recommended breakpoints:
  *   - lap
- *
- * @param {Number} width
- * @returns {Number} height
  */
-export const aspectRatio16to10 = aspectRatio(16, 10);
+export const aspectRatio16to10: AspectRatioFunction = aspectRatio(16, 10);
 
 /**
  * aspectRatio12to5
  *
  * Recommended breakpoints:
  *   - desk
- *
- * @param {Number} width
- * @returns {Number} height
  */
 const AR12TO5_MAX_HEIGHT = 500;
-export const aspectRatio12to5 = function (width) {
+export const aspectRatio12to5: AspectRatioFunctionWithMaxHeight = function (width: number): number {
   return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
-};
+} as AspectRatioFunctionWithMaxHeight;
 aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
 
 /**
@@ -78,14 +82,13 @@ aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
  *   - palm
  *   - lap
  *   - desk
- *
- * @param {Number} width
- * @returns {Number} height
  */
 const SQUARE_MAX_HEIGHT = 420;
-export const aspectRatioSquare = function (width) {
+export const aspectRatioSquare: AspectRatioFunctionWithMaxHeight = function (
+  width: number
+): number {
   return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
-};
+} as AspectRatioFunctionWithMaxHeight;
 aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
 
 /**
@@ -100,14 +103,13 @@ aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
  *   - palm
  *   - lap
  *   - desk
- *
- * @param {Number} width
- * @returns {Number} height
  */
 const PORTRAIT_MAX_HEIGHT = 600;
-export const aspectRatioPortrait = function (width) {
+export const aspectRatioPortrait: AspectRatioFunctionWithMaxHeight = function (
+  width: number
+): number {
   return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
-};
+} as AspectRatioFunctionWithMaxHeight;
 aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
 
 /**
@@ -118,21 +120,21 @@ aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
  * value of the height for that container. Note that the aspect ratio chosen may
  * depend on the container width itself. This is because of default breakpoints.
  *
- * @param  {Measurement} measurement The measurements object for the container for which you
- *                                   want a height value. Should have at least the properties:
- *                                     - `width`: container's width
- *                                     - `screenHeight`: the height of the window at the current time.
+ * @param measurement The measurements object for the container for which you
+ *                    want a height value. Should have at least the properties:
+ *                      - `width`: container's width
+ *                      - `screenHeight`: the height of the window at the current time.
  *
- * @return {Number} The height which corresponds to the default aspect ratio for these measurements
+ * @return The height which corresponds to the default aspect ratio for these measurements
  */
-const defaultAspectRatios = {
+const defaultAspectRatios: Record<string, AspectRatioFunction> = {
   palm: aspectRatio4to3, // palm-sized devices
   lap: aspectRatio16to10, // lap-sized devices
   _: aspectRatio12to5, // all other cases, including desk
 };
 
-export const aspectRatioAuto = function (measurement) {
+export const aspectRatioAuto = function (measurement: Measurement): number {
   const bp = breakpointFind(breakpointDefaultSpec(), measurement);
-  const ar = defaultAspectRatios[bp.name];
+  const ar = defaultAspectRatios[bp?.name || "_"];
   return ar(measurement.width);
 };

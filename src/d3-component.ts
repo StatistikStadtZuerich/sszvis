@@ -1,4 +1,25 @@
-import { selection as d3Selection } from "d3";
+import { type BaseType, selection as d3Selection, type Selection } from "d3";
+import type { AnySelection } from "./types.js";
+
+export interface ComponentProps {
+  [key: string]: any;
+}
+export type RenderCallback = (this: any, ...args: any[]) => void;
+export type SelectionRenderCallback = (this: any, ...args: any[]) => void;
+export type PropertySetter<T = any> = (...args: any[]) => T;
+export interface PropertyDelegate {
+  [key: string]: (...args: any[]) => any;
+}
+export interface Component {
+  <GElement extends BaseType, Datum, PElement extends BaseType, PDatum>(
+    selection: Selection<GElement, Datum, PElement, PDatum>
+  ): void;
+  prop<T>(prop: string, setter?: PropertySetter<T>): Component;
+  delegate(prop: string, delegate: PropertyDelegate): Component;
+  renderSelection(callback: SelectionRenderCallback): Component;
+  render(callback: RenderCallback): Component;
+  [key: string]: any;
+}
 
 /**
  * d3 plugin to simplify creating reusable charts. Implements
@@ -26,25 +47,25 @@ import { selection as d3Selection } from "d3";
  *
  * @return {sszvis.component} A d3 reusable chart
  */
-export function component() {
-  const props = {};
-  let selectionRenderer = null;
-  let renderer = identity;
+export function component(): Component {
+  const props: ComponentProps = {};
+  let selectionRenderer: SelectionRenderCallback | null = null;
+  let renderer: RenderCallback = identity;
 
   /**
    * Constructor
    *
    * @param  {d3.selection} selection Passed in by d3
    */
-  function sszvisComponent(selection) {
+  function sszvisComponent(selection: AnySelection): void {
     if (selectionRenderer) {
-      selection.props = function () {
+      (selection as any).props = function (): ComponentProps {
         return clone(props);
       };
       selectionRenderer.apply(selection, slice(arguments));
     }
     selection.each(function () {
-      this.__props__ = clone(props);
+      (this as any).__props__ = clone(props);
       renderer.apply(this, slice(arguments));
     });
   }
@@ -57,12 +78,12 @@ export function component() {
    *         sszvis.component. Sets the returned value to the given property
    * @return {sszvis.component}
    */
-  sszvisComponent.prop = function (prop, setter) {
+  sszvisComponent.prop = function <T>(prop: string, setter?: PropertySetter<T>): Component {
     setter || (setter = identity);
-    sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(
+    (sszvisComponent as any)[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(
       sszvisComponent
     );
-    return sszvisComponent;
+    return sszvisComponent as Component;
   };
 
   /**
@@ -72,12 +93,12 @@ export function component() {
    * @param  {Object} delegate The target having getter and setter methods for prop
    * @return {sszvis.component}
    */
-  sszvisComponent.delegate = function (prop, delegate) {
-    sszvisComponent[prop] = function () {
-      const result = delegate[prop].apply(delegate, slice(arguments));
-      return arguments.length === 0 ? result : sszvisComponent;
+  sszvisComponent.delegate = function (prop: string, delegate: PropertyDelegate): Component {
+    (sszvisComponent as any)[prop] = function (...args: any[]): any {
+      const result = delegate[prop].apply(delegate, slice(args));
+      return args.length === 0 ? result : sszvisComponent;
     };
-    return sszvisComponent;
+    return sszvisComponent as Component;
   };
 
   /**
@@ -89,9 +110,9 @@ export function component() {
    * @param  {Function} callback
    * @return {[sszvis.component]}
    */
-  sszvisComponent.renderSelection = function (callback) {
+  sszvisComponent.renderSelection = function (callback: SelectionRenderCallback): Component {
     selectionRenderer = callback;
-    return sszvisComponent;
+    return sszvisComponent as Component;
   };
 
   /**
@@ -103,12 +124,18 @@ export function component() {
    * @param  {Function} callback
    * @return {sszvis.component}
    */
-  sszvisComponent.render = function (callback) {
+  sszvisComponent.render = function (callback: RenderCallback): Component {
     renderer = callback;
-    return sszvisComponent;
+    return sszvisComponent as Component;
   };
 
-  return sszvisComponent;
+  return sszvisComponent as Component;
+}
+
+declare module "d3" {
+  interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
+    props(): ComponentProps;
+  }
 }
 
 /**
@@ -119,16 +146,16 @@ export function component() {
  *
  * @return {Object} An object of properties for the given component
  */
-d3Selection.prototype.props = function () {
+d3Selection.prototype.props = function (): ComponentProps {
   // It would be possible to make this work exactly like
   // d3.selection.data(), but it would need some test cases,
   // so we currently simplify to the most common use-case:
   // getting props.
   if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
   if (this.size() != 1) throw new Error("only one group is supported");
-  if (this._groups[0].length != 1) throw new Error("only one node is supported");
+  if ((this as any)._groups[0].length != 1) throw new Error("only one node is supported");
 
-  const group = this._groups[0];
+  const group = (this as any)._groups[0];
   const node = group[0];
   return node.__props__ || {};
 };
@@ -142,26 +169,26 @@ d3Selection.prototype.props = function () {
  * @param  {Function} [setter] Transforms the data on set
  * @return {Function} The accessor function
  */
-function accessor(props, prop, setter) {
+function accessor(props: ComponentProps, prop: string, setter?: PropertySetter): Function {
   setter || (setter = identity);
-  return function () {
-    if (arguments.length === 0) return props[prop];
+  return function (this: Component, ...args: any[]): any {
+    if (args.length === 0) return props[prop];
 
-    props[prop] = setter.apply(null, slice(arguments));
+    props[prop] = setter!.apply(null, args);
     return this;
   };
 }
 
-function identity(d) {
+function identity<T>(d: T): T {
   return d;
 }
 
-function slice(array) {
-  return Array.prototype.slice.call(array);
+function slice(arrayLike: ArrayLike<any>): any[] {
+  return Array.prototype.slice.call(arrayLike);
 }
 
-function clone(obj) {
-  const copy = {};
+function clone(obj: ComponentProps): ComponentProps {
+  const copy: ComponentProps = {};
   for (const attr in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
   }

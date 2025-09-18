@@ -71,40 +71,62 @@
  * @returns                 An instance of sszvis.cascade
  */
 
-function groupBy(data, keyFunc) {
-  const group = {};
-  let key;
-  for (let i = 0, l = data.length, value; i < l; ++i) {
+export type KeyAccessor<T, K = string | number> = (datum: T) => K;
+export type KeySorter<K = string | number> = (a: K, b: K) => number;
+export type ValueSorter<T> = (a: T, b: T) => number;
+interface KeySpec<T> {
+  type: "obj" | "arr";
+  func: KeyAccessor<T>;
+}
+
+export interface CascadeInstance<T> {
+  apply(data: T[]): any;
+  objectBy<K extends string | number>(accessor: KeyAccessor<T, K>): CascadeInstance<T>;
+  arrayBy<K extends string | number>(
+    accessor: KeyAccessor<T, K>,
+    sorter?: KeySorter<K>
+  ): CascadeInstance<T>;
+  sort(sorter: ValueSorter<T>): CascadeInstance<T>;
+}
+
+function groupBy<T, K extends string | number>(
+  data: T[],
+  keyFunc: KeyAccessor<T, K>
+): Record<string, T[]> {
+  const group: Record<string, T[]> = {};
+  let key: K;
+  for (let i = 0, l = data.length, value: T; i < l; ++i) {
     value = data[i];
     key = keyFunc(value);
-    if (group[key]) {
-      group[key].push(value);
+    const keyStr = String(key);
+    if (group[keyStr]) {
+      group[keyStr].push(value);
     } else {
-      group[key] = [value];
+      group[keyStr] = [value];
     }
   }
   return group;
 }
 
-function groupEach(data, func) {
+function groupEach<T>(data: Record<string, T[]>, func: (value: T[], key: string) => void): void {
   for (const prop in data) {
     func(data[prop], prop);
   }
 }
 
-function arrEach(arr, func) {
+function arrEach<T>(arr: T[], func: (value: T, index: number) => void): void {
   for (let i = 0, l = arr.length; i < l; ++i) {
     func(arr[i], i);
   }
 }
 
-export function cascade() {
-  const _cascade = {},
-    keys = [],
-    sorts = [];
-  let valuesSort;
+export function cascade<T = any>(): CascadeInstance<T> {
+  const _cascade = {} as CascadeInstance<T>;
+  const keys: KeySpec<T>[] = [];
+  const sorts: (KeySorter<any> | undefined)[] = [];
+  let valuesSort: ValueSorter<T> | undefined;
 
-  function make(data, depth) {
+  function make(data: T[], depth: number): any {
     if (depth >= keys.length) {
       if (valuesSort) data.sort(valuesSort);
       return data;
@@ -115,13 +137,13 @@ export function cascade() {
     const grouped = groupBy(data, key.func);
 
     if (key.type === "obj") {
-      const obj = {};
+      const obj: Record<string, any> = {};
       groupEach(grouped, (value, k) => {
         obj[k] = make(value, depth);
       });
       return obj;
     } else if (key.type === "arr") {
-      const arr = [];
+      const arr: any[] = [];
       if (sorter) {
         const groupKeys = Object.keys(grouped).sort(sorter);
         arrEach(groupKeys, (k) => {
@@ -136,29 +158,34 @@ export function cascade() {
     }
   }
 
-  _cascade.apply = function (data) {
+  _cascade.apply = function (data: T[]): any {
     return make(data, 0);
   };
 
-  _cascade.objectBy = function (d) {
+  _cascade.objectBy = function <K extends string | number>(
+    accessor: KeyAccessor<T, K>
+  ): CascadeInstance<T> {
     keys.push({
       type: "obj",
-      func: d,
+      func: accessor,
     });
     return _cascade;
   };
 
-  _cascade.arrayBy = function (d, sorter) {
+  _cascade.arrayBy = function <K extends string | number>(
+    accessor: KeyAccessor<T, K>,
+    sorter?: KeySorter<K>
+  ): CascadeInstance<T> {
     keys.push({
       type: "arr",
-      func: d,
+      func: accessor,
     });
     if (sorter) sorts[keys.length - 1] = sorter;
     return _cascade;
   };
 
-  _cascade.sort = function (d) {
-    valuesSort = d;
+  _cascade.sort = function (sorter: ValueSorter<T>): CascadeInstance<T> {
+    valuesSort = sorter;
     return _cascade;
   };
 

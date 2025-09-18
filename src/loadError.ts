@@ -2,15 +2,15 @@
  * Handle data load errors in a standardized way
  *
  * @module sszvis/loadError
- *
- * @param  {Error} The error object
  */
 
-import * as logger from "./logger.js";
+import * as logger from "./logger";
 
-// var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
-
-export const loadError = function (error) {
+/**
+ * Handle data loading errors by logging them
+ * @param error The error object from a failed data load operation
+ */
+export const loadError = function (error: Error | unknown): void {
   logger.error(error);
 
   // Don't use alert()!

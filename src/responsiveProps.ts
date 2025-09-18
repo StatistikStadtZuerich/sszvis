@@ -28,25 +28,25 @@
  *     _: 'bottom'
  *   })
  *   .prop('height', {
- *     small: function(w) { return w / (16 / 9); },
- *     medium: function(w) { return w / (20 / 9); },
- *     large: function(w) { return w / (28 / 9); },
- *     _: function(w) { return w / (38 / 9); }
- *   })
- *   .prop('numAxisTicks', {
- *     small: 4,
- *     medium: 8,
- *     large: 12,
- *     _: 16
+ *     small: 200,
+ *     medium: function(width) { return width * 3/4; },
+ *     large: function(width) { return width / 2; },
+ *     _: 400
  *   });
  *
- * var props = queryProps(sszvis.measureDimensions('#sszvis-chart'));
- * --- OR ---
- * var props = queryProps(sszvis.bounds({ ... }, '#sszvis-chart'));
+ * queryProps({width: 300, screenHeight: 400}).axisOrientation; // returns "left"
+ * queryProps({width: 300, screenHeight: 400}).height; // returns the result of 200 or the function call
  *
- * ... use props.axisOrientation, props.height, and props.numAxisTicks ...
+ * @param {{width: number, screenHeight: number}|{bounds: object, screenWidth: number, screenHeight: number}} arg dimensions object
+ * @return {object} An object containing the properties you configured for the matching breakpoint
  *
- * @returns {responsiveProps}
+ * You can also configure different breakpoints than the defaults using:
+ *
+ * @method responsiveProps.breakpoints
+ *
+ * And you can add responsive properties using:
+ *
+ * @method responsiveProps.prop
  */
 
 import {
@@ -57,45 +57,68 @@ import {
 } from "./breakpoint.js";
 import * as fn from "./fn.js";
 import * as logger from "./logger.js";
+import type { Breakpoint, Measurement } from "./types.js";
+
+// Type definitions
+export interface ResponsivePropValue<T = any> {
+  [breakpointName: string]: T | ((width: number) => T);
+  _: T | ((width: number) => T); // Default fallback required
+}
+
+export interface ResponsivePropsConfig {
+  [propName: string]: ResponsivePropValue;
+}
+
+export interface ResponsivePropsInstance {
+  (measurements: Measurement): Record<string, any>;
+  prop<T>(propName: string, propSpec: ResponsivePropValue<T>): ResponsivePropsInstance;
+  breakpoints(): Breakpoint[];
+  breakpoints(bps: Breakpoint[]): ResponsivePropsInstance;
+}
 
 /* Exported module
 ----------------------------------------------- */
-export function responsiveProps() {
+export function responsiveProps(): ResponsivePropsInstance {
   let breakpointSpec = breakpointDefaultSpec();
-  const propsConfig = {};
+  const propsConfig: ResponsivePropsConfig = {};
 
   /**
    * Constructor
    *
-   * @param   {{width: number, screenHeight: number}} arg1 Accepts a 'measurements' object with a
-   *          'width' property and a 'screenHeight' property. This makes it possible to pass
-   *          in a sszvis.bounds object or the result of sszvis.measureDimensions.
-   *
-   * @returns {Object.<string, any>} A map of all properties for the currently selected
+   * @param   {Measurement} arg1 Accepts a 'measurement' object with a
+   *          width and screenHeight. You can also pass it a 'bounds' object which contains
+   *          measurements, but you must also include the screen measurements. This is the shape
+   *          of object returned by sszvis.measureDimensions
+   * @returns {object} An object containing the configured properties and their values for the current
    *          breakpoint as defined by the parameter `arg1`
    */
-  function _responsiveProps(measurement) {
+  function _responsiveProps(measurement: Measurement): Record<string, any> {
     if (!fn.isObject(measurement) || !isBounds(measurement)) {
       logger.warn("Could not determine the current breakpoint, returning the default props");
       // We choose the _ option for all configured props as a default.
-      return Object.keys(propsConfig).reduce((memo, val, key) => {
-        memo[key] = val._;
-        return memo;
-      }, {});
+      return Object.keys(propsConfig).reduce(
+        (memo, val, key) => {
+          // BUG: doesn't support fallback
+          memo[key] = val;
+          return memo;
+        },
+        {} as Record<string, any>
+      );
     }
 
-    // Finds out which breakpoints the provided measurements match up with
-    const matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
-
-    return Object.keys(propsConfig).reduce((memo, propKey) => {
+    // Create results object based on the current measurements and the configured breakpoints and properties
+    return Object.keys(propsConfig).reduce((memo: Record<string, any>, propKey: string) => {
       const propSpec = propsConfig[propKey];
 
+      // Finds out which breakpoints the provided measurements match up with
+      const matchingBreakpoints = breakpointMatch(breakpointSpec, measurement);
+
+      // Validate the propSpec for the current propKey
       if (!validatePropSpec(propSpec, breakpointSpec)) {
         logger.warn(
-          'responsiveProps was given an invalid propSpec for property: "' +
+          "ResponsiveProps - invalid propSpec for " +
             propKey +
-            '". The spec: ',
-          propSpec
+            ". Make sure you define the '_' fallback and that all breakpoint names are valid."
         );
         return memo;
       }
@@ -106,7 +129,13 @@ export function responsiveProps() {
       // the value in the query object for that property equals the propSpec value as a functor,
       // invoked if necessary with the current width. Providing the width allows aspect ratio
       // calculations based on element width.
-      memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
+      if (matchedBreakpoint) {
+        memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
+      } else {
+        // Use fallback value if no breakpoint matches
+        const fallback = propSpec._;
+        memo[propKey] = typeof fallback === "function" ? fallback(measurement.width) : fallback;
+      }
 
       return memo;
     }, {});
@@ -149,7 +178,10 @@ export function responsiveProps() {
    *
    * @return {responsiveProps}
    */
-  _responsiveProps.prop = function (propName, propSpec) {
+  _responsiveProps.prop = function <T>(
+    propName: string,
+    propSpec: ResponsivePropValue<T>
+  ): ResponsivePropsInstance {
     propsConfig[propName] = functorizeValues(propSpec);
     return _responsiveProps;
   };
@@ -188,10 +220,11 @@ export function responsiveProps() {
    *   { name: 'large', width: 700 }
    * ])
    */
-  _responsiveProps.breakpoints = function (bps) {
-    if (arguments.length === 0) {
+  _responsiveProps.breakpoints = function (...args: any[]): any {
+    if (args.length === 0) {
       return breakpointSpec;
     }
+    const bps = args[0] as Breakpoint[];
     breakpointSpec = breakpointCreateSpec(bps);
     return _responsiveProps;
   };
@@ -201,7 +234,7 @@ export function responsiveProps() {
 
 // Helpers
 
-function isBounds(arg1) {
+function isBounds(arg1: any): arg1 is Measurement & { bounds: any } {
   return (
     fn.defined(arg1) &&
     fn.defined(arg1.width) &&
@@ -213,16 +246,24 @@ function isBounds(arg1) {
 /**
  * functorizeValues
  * @prop    {object} obj Original key-value object
- * @returns {object} Same as input object but with all values transformed to fn.functors
+ * @returns {object} Same as input object but with all values transformed to width-accepting functions
  */
-function functorizeValues(obj) {
-  return Object.keys(obj).reduce((memo, key) => {
-    memo[key] = fn.functor(obj[key]);
-    return memo;
-  }, {});
+function functorizeValues<T>(obj: ResponsivePropValue<T>): ResponsivePropValue<T> {
+  const result: ResponsivePropValue<T> = {} as ResponsivePropValue<T>;
+
+  Object.keys(obj).forEach((key: string) => {
+    const value = obj[key];
+    if (typeof value === "function") {
+      result[key] = value;
+    } else {
+      result[key] = () => value;
+    }
+  });
+
+  return result;
 }
 
-function validatePropSpec(propSpec, breakpointSpec) {
+function validatePropSpec(propSpec: ResponsivePropValue, breakpointSpec: Breakpoint[]): boolean {
   // Ensure that the propSpec contains a '_' value.
   // This is used as the default value when the test width
   // is larger than any breakpoint.

@@ -36,7 +36,20 @@
  * }
  */
 
-import * as fn from "./fn.js";
+import * as fn from "./fn";
+
+import type { Breakpoint, Measurement } from "./types.js";
+
+interface BreakpointWithMeasurement {
+  name: string;
+  measurement: Partial<Measurement>;
+}
+
+interface BreakpointWithInlineProps extends Partial<Measurement> {
+  name: string;
+}
+
+export type PartialBreakpoint = BreakpointWithMeasurement | BreakpointWithInlineProps;
 
 /**
  * breakpoint.find
@@ -47,9 +60,12 @@ import * as fn from "./fn.js";
  * @param {Measurement} partialMeasurement A partial measurement to match to the spec
  * @returns {Breakpoint}
  */
-export function breakpointFind(breakpoints, partialMeasurement) {
+export function breakpointFind(
+  breakpoints: Breakpoint[],
+  partialMeasurement: Partial<Measurement>
+): Breakpoint | undefined {
   const measurement = parseMeasurement(partialMeasurement);
-  return fn.find((bp) => breakpointTest(bp, measurement), breakpoints);
+  return fn.find((bp: Breakpoint) => breakpointTest(bp, measurement), breakpoints);
 }
 
 /**
@@ -63,8 +79,11 @@ export function breakpointFind(breakpoints, partialMeasurement) {
  * @returns {Breakpoint?} If no breakpoint matches, undefined is returned. If a
  *          breakpoint for the given name exists, that breakpoint is returned
  */
-export function breakpointFindByName(breakpoints, name) {
-  const eqName = function (bp) {
+export function breakpointFindByName(
+  breakpoints: Breakpoint[],
+  name: string
+): Breakpoint | undefined {
+  const eqName = function (bp: Breakpoint): boolean {
     return bp.name === name;
   };
   return fn.find(eqName, breakpoints);
@@ -79,7 +98,10 @@ export function breakpointFindByName(breakpoints, name) {
  * @param {Measurement} partialMeasurement A partial measurement to match to the breakpoint
  * @returns {boolean}
  */
-export function breakpointTest(breakpoint, partialMeasurement) {
+export function breakpointTest(
+  breakpoint: Breakpoint,
+  partialMeasurement: Partial<Measurement>
+): boolean {
   const bpm = breakpoint.measurement;
   const measurement = parseMeasurement(partialMeasurement);
   return measurement.width <= bpm.width && measurement.screenHeight <= bpm.screenHeight;
@@ -95,7 +117,10 @@ export function breakpointTest(breakpoint, partialMeasurement) {
  * @param {Measurement} partialMeasurement A partial measurement to match to the spec
  * @returns {Array<Breakpoint>}
  */
-export function breakpointMatch(breakpoints, partialMeasurement) {
+export function breakpointMatch(
+  breakpoints: Breakpoint[],
+  partialMeasurement: Partial<Measurement>
+): Breakpoint[] {
   const measurement = parseMeasurement(partialMeasurement);
   return breakpoints.filter((bp) => breakpointTest(bp, measurement));
 }
@@ -110,7 +135,7 @@ export function breakpointMatch(breakpoints, partialMeasurement) {
  *        so it's possible to only provide partial breakpoint definitions.
  * @returns {Array<Breakpoint>}
  */
-export function breakpointCreateSpec(spec) {
+export function breakpointCreateSpec(spec: PartialBreakpoint[]): Breakpoint[] {
   return [...spec.map(parseBreakpoint), parseBreakpoint({ name: "_" })];
 }
 
@@ -120,12 +145,12 @@ export function breakpointCreateSpec(spec) {
  * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
  *          default breakpoint spec.
  */
-export const breakpointDefaultSpec = (function () {
+export const breakpointDefaultSpec = (function (): () => Breakpoint[] {
   const DEFAULT_SPEC = breakpointCreateSpec([
     { name: "palm", width: 540 },
     { name: "lap", width: 749 },
   ]);
-  return function () {
+  return function (): Breakpoint[] {
     return DEFAULT_SPEC;
   };
 })();
@@ -154,12 +179,12 @@ export const breakpointLap = makeTest("lap");
  * @param {{width?: number, screenHeight?: number}} partialMeasurement
  * @returns Measurement
  */
-function parseMeasurement(partialMeasurement) {
+function parseMeasurement(partialMeasurement: Partial<Measurement>): Measurement {
   const widthOrInf = fn.propOr("width", Infinity);
   const screenHeightOrInf = fn.propOr("screenHeight", Infinity);
   return {
-    width: widthOrInf(partialMeasurement),
-    screenHeight: screenHeightOrInf(partialMeasurement),
+    width: widthOrInf(partialMeasurement) as number,
+    screenHeight: screenHeightOrInf(partialMeasurement) as number,
   };
 }
 
@@ -187,10 +212,16 @@ function parseMeasurement(partialMeasurement) {
  * @param {{name: string, width?: number, screenHeight?: number, measurement?: Measurement}} bp
  * @returns Breakpoint
  */
-function parseBreakpoint(bp) {
-  const measurement = fn.defined(bp.measurement)
+function parseBreakpoint(bp: PartialBreakpoint): Breakpoint {
+  // Type guard to check if bp has measurement property
+  const hasMeasurement = (obj: PartialBreakpoint): obj is BreakpointWithMeasurement => {
+    return "measurement" in obj;
+  };
+
+  const measurement = hasMeasurement(bp)
     ? parseMeasurement(bp.measurement)
     : parseMeasurement({ width: bp.width, screenHeight: bp.screenHeight });
+
   return {
     name: bp.name,
     measurement,
@@ -200,8 +231,9 @@ function parseBreakpoint(bp) {
 /**
  * Create a partially applied test function
  */
-function makeTest(name) {
-  return function (measurement) {
-    return breakpointTest(breakpointFindByName(breakpointDefaultSpec(), name), measurement);
+function makeTest(name: string): (measurement: Partial<Measurement>) => boolean {
+  return function (measurement: Partial<Measurement>): boolean {
+    const breakpoint = breakpointFindByName(breakpointDefaultSpec(), name);
+    return breakpoint ? breakpointTest(breakpoint, measurement) : false;
   };
 }

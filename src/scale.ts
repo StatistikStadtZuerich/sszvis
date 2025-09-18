@@ -4,6 +4,11 @@
  * @module sszvis/scale
  */
 
+interface Scale {
+  range(): any[];
+  rangeExtent?(): [number, number];
+}
+
 /**
  * Scale range
  *
@@ -13,7 +18,7 @@
  * @return {array}          The extent of the scale's range. Useful for determining how far
  *                          a scale stretches in its output dimension.
  */
-export const range = function (scale) {
+export const range = function (scale: Scale): [number, number] {
   // borrowed from d3 source - svg.axis
   return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
 };
@@ -27,9 +32,9 @@ export const range = function (scale) {
  * @param  {array} domain     an array, sorted in either ascending or descending order
  * @return {array}            the extent of the array, with the smaller term first.
  */
-function extent(domain) {
+function extent(domain: any[]): [number, number] {
   // borrowed from d3 source - svg.axis
-  const start = domain[0],
-    stop = domain[domain.length - 1];
+  const start = domain[0];
+  const stop = domain[domain.length - 1];
   return start < stop ? [start, stop] : [stop, start];
 }
