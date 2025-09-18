@@ -30,12 +30,11 @@
  * @return {sszvis.component}
  */
 
-import { select, ascending } from "d3";
-
+import { ascending, select } from "d3";
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
-import { component } from "../d3-component.js";
 
 export const annotationRuler = () =>
   component()

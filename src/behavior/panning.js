@@ -37,11 +37,10 @@
  * @return {d3.component}
  */
 
-import { select, dispatch } from "d3";
-
+import { dispatch, select } from "d3";
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { datumFromPanEvent } from "./util.js";
-import { component } from "../d3-component.js";
 
 export default function () {
   const event = dispatch("start", "pan", "end");

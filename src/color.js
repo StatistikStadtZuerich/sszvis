@@ -41,7 +41,7 @@
  * @function lightGry  1-color scale for shaded backgrounds
  */
 
-import { scaleOrdinal, scaleLinear, hsl, rgb, lab, mean, quantile } from "d3";
+import { hsl, lab, mean, quantile, rgb, scaleLinear, scaleOrdinal } from "d3";
 
 /* Constants
 ----------------------------------------------- */

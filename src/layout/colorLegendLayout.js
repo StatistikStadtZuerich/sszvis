@@ -1,5 +1,5 @@
 import { max, sum } from "d3";
-import { scaleQual12, scaleQual6 } from "../color";
+import { scaleQual6, scaleQual12 } from "../color";
 import {
   DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT,
   legendColorOrdinal,

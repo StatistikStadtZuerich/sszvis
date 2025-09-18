@@ -81,7 +81,7 @@
     "format": "npx biome format --write .",
     "lint": "npx biome lint .",
     "lint:fix": "npx biome lint --write .",
-    "check": "npx biome check .",
+    "check": "npx biome check . --diagnostic-level=error",
     "check:fix": "npx biome check --write .",
     "postversion": "npx echo-cli Don't forget to push the new version's tag with \"git push --follow-tags\"."
   }

@@ -16,10 +16,9 @@
  */
 
 import { select } from "d3";
-
-import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
-import { mapLakePattern, mapLakeFadeGradient, mapLakeGradientMask } from "../../patterns.js";
 import { component } from "../../d3-component.js";
+import { mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern } from "../../patterns.js";
+import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 
 export default function () {
   return component()

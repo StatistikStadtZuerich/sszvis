@@ -35,11 +35,10 @@
  * @return {sszvis.component}
  */
 
-import { select, line as d3Line } from "d3";
-
+import { line as d3Line, select } from "d3";
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
-import { component } from "../d3-component.js";
 
 export default function () {
   return component()

@@ -6,7 +6,7 @@
  * @module sszvis/aspectRatio
  */
 
-import { breakpointFind, breakpointDefaultSpec } from "./breakpoint.js";
+import { breakpointDefaultSpec, breakpointFind } from "./breakpoint.js";
 
 /**
  * aspectRatio

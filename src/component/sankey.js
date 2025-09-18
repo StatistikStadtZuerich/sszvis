@@ -60,14 +60,13 @@
  * @return {sszvis.component}
  */
 
-import { select, interpolateNumber } from "d3";
-
-import * as fn from "../fn.js";
+import { interpolateNumber, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { component } from "../d3-component.js";
+import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import bar from "./bar.js";
-import { component } from "../d3-component.js";
 
 const linkPathString = function (x0, x1, x2, x3, y0, y1) {
   return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;

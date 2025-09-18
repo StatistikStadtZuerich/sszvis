@@ -45,11 +45,10 @@
  * @return {sszvis.component}
  */
 
-import { select, pointer, dispatch, ascending } from "d3";
-
+import { ascending, dispatch, pointer, select } from "d3";
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { range } from "../scale.js";
-import { component } from "../d3-component.js";
 
 export default function () {
   const event = dispatch("start", "move", "drag", "end");

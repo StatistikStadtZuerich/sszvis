@@ -15,13 +15,12 @@
  * @return {sszvis.component}
  */
 
-import { select, dispatch } from "d3";
-
+import { dispatch, select } from "d3";
+import { component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
+import translateString from "../../svgUtils/translateString.js";
 import { defaultTransition } from "../../transition.js";
 import { getGeoJsonCenter } from "../mapUtils.js";
-import translateString from "../../svgUtils/translateString.js";
-import { component } from "../../d3-component.js";
 
 const datumAcc = fn.prop("datum");
 

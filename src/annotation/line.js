@@ -23,9 +23,8 @@
  */
 
 import { select } from "d3";
-
-import * as fn from "../fn.js";
 import { component } from "../d3-component.js";
+import * as fn from "../fn.js";
 
 // reference line specified in the form y = mx + b
 // user supplies m and b

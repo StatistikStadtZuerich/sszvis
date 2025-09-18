@@ -45,12 +45,11 @@
  * @return {sszvis.component}
  */
 
-import { select, scaleBand, range } from "d3";
-
-import * as fn from "../fn.js";
+import { range, scaleBand, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import translateString from "../svgUtils/translateString.js";
 import { component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import translateString from "../svgUtils/translateString.js";
 
 export default function () {
   return component()

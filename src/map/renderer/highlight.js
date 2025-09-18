@@ -17,10 +17,9 @@
  */
 
 import { select } from "d3";
-
+import { component } from "../../d3-component.js";
 import * as fn from "../../fn.js";
 import { GEO_KEY_DEFAULT } from "../mapUtils.js";
-import { component } from "../../d3-component.js";
 
 export default function () {
   return component()

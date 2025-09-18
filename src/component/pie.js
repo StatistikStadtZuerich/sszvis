@@ -19,12 +19,11 @@
  * @return {sszvis.component}
  */
 
-import { select, arc, interpolate } from "d3";
-
-import * as fn from "../fn.js";
-import { defaultTransition } from "../transition.js";
+import { arc, interpolate, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { defaultTransition } from "../transition.js";
 
 export default function () {
   return component()

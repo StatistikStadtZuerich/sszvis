@@ -22,11 +22,10 @@
  */
 
 import { select } from "d3";
-
-import * as fn from "../fn.js";
-import { halfPixel } from "../svgUtils/crisp.js";
-import { formatNumber } from "../format.js";
 import { component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { formatNumber } from "../format.js";
+import { halfPixel } from "../svgUtils/crisp.js";
 
 export default function () {
   return component()

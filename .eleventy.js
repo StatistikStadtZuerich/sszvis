@@ -27,7 +27,11 @@ module.exports = function (eleventyConfig) {
    * exported using "modules.export = …" and prints it verbatim.
    */
   eleventyConfig.addShortcode("printFileContents", function (relativePath) {
-    const path = PATH.join(__dirname, PATH.dirname(this.page.inputPath), relativePath);
+    const path = PATH.join(
+      __dirname,
+      PATH.dirname(this.page.inputPath),
+      relativePath
+    );
     const { code } = babel.transformFileSync(path, {
       sourceType: "script",
       generatorOpts: {
@@ -40,7 +44,9 @@ module.exports = function (eleventyConfig) {
   });
 
   eleventyConfig.addTransform("prettify", (content, outputPath) =>
-    outputPath.endsWith(".html") ? prettier.format(content, { parser: "html" }) : content
+    outputPath.endsWith(".html")
+      ? prettier.format(content, { parser: "html" })
+      : content
   );
 
   return {

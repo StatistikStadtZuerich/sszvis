@@ -4,9 +4,15 @@
  * @module sszvis/format
  */
 
-import { formatLocale, timeFormatLocale, FormatLocaleDefinition, TimeLocaleDefinition } from "d3";
+import {
+  type FormatLocaleDefinition,
+  formatLocale,
+  type TimeLocaleDefinition,
+  timeFormatLocale,
+} from "d3";
 import * as fn from "./fn";
 import { locale } from "./locale";
+
 const timeFormat = timeFormatLocale(locale as unknown as TimeLocaleDefinition).format;
 const format = formatLocale(locale as unknown as FormatLocaleDefinition).format;
 

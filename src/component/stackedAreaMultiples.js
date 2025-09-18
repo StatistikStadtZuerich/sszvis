@@ -25,11 +25,10 @@
  * @return {sszvis.component}
  */
 
-import { select, area } from "d3";
-
+import { area, select } from "d3";
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
-import { component } from "../d3-component.js";
 
 export default function () {
   return component()

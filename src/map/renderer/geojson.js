@@ -21,15 +21,14 @@
  * @return {sszvis.component}
  */
 
-import { select, dispatch, geoCentroid } from "d3";
-
-import * as fn from "../../fn.js";
+import { dispatch, geoCentroid, select } from "d3";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
-import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
+import { component } from "../../d3-component.js";
+import * as fn from "../../fn.js";
 import { mapMissingValuePattern } from "../../patterns.js";
+import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
 import { slowTransition } from "../../transition.js";
 import { GEO_KEY_DEFAULT } from "../mapUtils.js";
-import { component } from "../../d3-component.js";
 
 export default function () {
   const event = dispatch("over", "out", "click");

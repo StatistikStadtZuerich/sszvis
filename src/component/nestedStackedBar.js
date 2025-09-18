@@ -25,12 +25,11 @@
  */
 
 import { select } from "d3";
-
-import * as fn from "../fn.js";
-import { component } from "../d3-component.js";
 import { axisX } from "../axis.js";
-import { stackedBarVertical } from "./stackedBar.js";
+import { component } from "../d3-component.js";
+import * as fn from "../fn.js";
 import translateString from "../svgUtils/translateString.js";
+import { stackedBarVertical } from "./stackedBar.js";
 
 export const nestedStackedBarsVertical = () =>
   component()

@@ -22,14 +22,13 @@
  */
 
 import { select } from "d3";
-
-import * as fn from "../../fn.js";
-import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
-import { mapMissingValuePattern } from "../../patterns.js";
-import { slowTransition } from "../../transition.js";
 import tooltipAnchor from "../../annotation/tooltipAnchor.js";
-import { getGeoJsonCenter } from "../mapUtils.js";
 import { component } from "../../d3-component.js";
+import * as fn from "../../fn.js";
+import { mapMissingValuePattern } from "../../patterns.js";
+import ensureDefsElement from "../../svgUtils/ensureDefsElement.js";
+import { slowTransition } from "../../transition.js";
+import { getGeoJsonCenter } from "../mapUtils.js";
 
 export default function () {
   return component()

@@ -16,10 +16,9 @@
  */
 
 import { select } from "d3";
-
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
-import { component } from "../d3-component.js";
 
 export default function () {
   return component()

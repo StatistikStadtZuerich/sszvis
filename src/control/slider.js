@@ -25,15 +25,14 @@
  * @returns {sszvis.component}
  */
 
-import { select, scaleLinear } from "d3";
-
+import { scaleLinear, select } from "d3";
+import { axisX } from "../axis.js";
+import move from "../behavior/move.js";
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import { range } from "../scale.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
-import { range } from "../scale.js";
-import move from "../behavior/move.js";
-import { axisX } from "../axis.js";
-import { component } from "../d3-component.js";
 
 function contains(x, a) {
   return a.includes(x);

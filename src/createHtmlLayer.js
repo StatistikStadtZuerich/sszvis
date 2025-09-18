@@ -42,9 +42,8 @@
  */
 
 import { select } from "d3";
-
-import * as fn from "./fn.js";
 import { bounds as mkBounds } from "./bounds.js";
+import * as fn from "./fn.js";
 
 export function createHtmlLayer(selector, bounds, metadata) {
   bounds || (bounds = mkBounds());

@@ -28,12 +28,11 @@
  * @return {sszvis.component}
  */
 
-import { select, scaleLinear, hsl, arc, interpolate } from "d3";
-
-import * as logger from "../logger.js";
-import { defaultTransition } from "../transition.js";
+import { arc, hsl, interpolate, scaleLinear, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { component } from "../d3-component.js";
+import * as logger from "../logger.js";
+import { defaultTransition } from "../transition.js";
 
 const TWO_PI = 2 * Math.PI;
 

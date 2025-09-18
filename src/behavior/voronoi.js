@@ -41,12 +41,11 @@
  *
  */
 
-import { select, dispatch, Delaunay } from "d3";
-
+import { Delaunay, dispatch, select } from "d3";
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
-import { elementFromEvent, datumFromPannableElement } from "./util.js";
-import { component } from "../d3-component.js";
+import { datumFromPannableElement, elementFromEvent } from "./util.js";
 
 export default function () {
   const event = dispatch("over", "out");

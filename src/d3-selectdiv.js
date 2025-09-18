@@ -1,4 +1,5 @@
 import { selection } from "d3";
+
 /**
  * d3.selection plugin to simplify creating idempotent divs that are not
  * recreated when rendered again.

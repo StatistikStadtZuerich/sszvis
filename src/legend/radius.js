@@ -12,13 +12,12 @@
  * @returns {sszvis.component}
  */
 
-import { select, mean } from "d3";
-
+import { mean, select } from "d3";
+import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { range } from "../scale.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
-import { component } from "../d3-component.js";
 
 export default function () {
   return component()

@@ -29,12 +29,11 @@
  * @return {sszvis.component}
  */
 
-import { select, stack as d3Stack, stackOrderNone, stackOrderReverse, max } from "d3";
-
-import * as fn from "../fn.js";
+import { stack as d3Stack, max, select, stackOrderNone, stackOrderReverse } from "d3";
 import { cascade } from "../cascade.js";
-import bar from "./bar.js";
 import { component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import bar from "./bar.js";
 
 const stackAcc = fn.prop("stack");
 
