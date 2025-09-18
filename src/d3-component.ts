@@ -1,6 +1,26 @@
 import { type BaseType, selection as d3Selection, type Selection } from "d3";
 import type { AnySelection } from "./types.js";
 
+export interface ComponentProps {
+  [key: string]: any;
+}
+export type RenderCallback = (this: any, ...args: any[]) => void;
+export type SelectionRenderCallback = (this: any, ...args: any[]) => void;
+export type PropertySetter<T = any> = (...args: any[]) => T;
+export interface PropertyDelegate {
+  [key: string]: (...args: any[]) => any;
+}
+export interface Component {
+  <GElement extends BaseType, Datum, PElement extends BaseType, PDatum>(
+    selection: Selection<GElement, Datum, PElement, PDatum>
+  ): void;
+  prop<T>(prop: string, setter?: PropertySetter<T>): Component;
+  delegate(prop: string, delegate: PropertyDelegate): Component;
+  renderSelection(callback: SelectionRenderCallback): Component;
+  render(callback: RenderCallback): Component;
+  [key: string]: any;
+}
+
 /**
  * d3 plugin to simplify creating reusable charts. Implements
  * the reusable chart interface and can thus be used interchangeably
@@ -33,9 +53,9 @@ export function component(): Component {
   let renderer: RenderCallback = identity;
 
   /**
-   * Constructor	
-   *	
-   * @param  {d3.selection} selection Passed in by d3	
+   * Constructor
+   *
+   * @param  {d3.selection} selection Passed in by d3
    */
   function sszvisComponent(selection: AnySelection): void {
     if (selectionRenderer) {
@@ -51,12 +71,12 @@ export function component(): Component {
   }
 
   /**
-   * Define a property accessor with an optional setter	
-   *	
-   * @param  {String} prop The property's name	
-   * @param  {Function} [setter] The setter's context will be bound to the	
-   *         sszvis.component. Sets the returned value to the given property	
-   * @return {sszvis.component}	
+   * Define a property accessor with an optional setter
+   *
+   * @param  {String} prop The property's name
+   * @param  {Function} [setter] The setter's context will be bound to the
+   *         sszvis.component. Sets the returned value to the given property
+   * @return {sszvis.component}
    */
   sszvisComponent.prop = function <T>(prop: string, setter?: PropertySetter<T>): Component {
     setter || (setter = identity);
@@ -67,11 +87,11 @@ export function component(): Component {
   };
 
   /**
-   * Delegate a properties' accessors to a delegate object	
-   *	
-   * @param  {String} prop     The property's name	
-   * @param  {Object} delegate The target having getter and setter methods for prop	
-   * @return {sszvis.component}	
+   * Delegate a properties' accessors to a delegate object
+   *
+   * @param  {String} prop     The property's name
+   * @param  {Object} delegate The target having getter and setter methods for prop
+   * @return {sszvis.component}
    */
   sszvisComponent.delegate = function (prop: string, delegate: PropertyDelegate): Component {
     (sszvisComponent as any)[prop] = function (...args: any[]): any {
@@ -82,27 +102,27 @@ export function component(): Component {
   };
 
   /**
-   * Creates a render context for the given component's parent selection.	
-   * Use this, when you need full control over the rendering of the component	
-   * and you need access to the full selection instead of just the selection	
-   * of one datum.	
-   *	
-   * @param  {Function} callback	
-   * @return {[sszvis.component]}	
+   * Creates a render context for the given component's parent selection.
+   * Use this, when you need full control over the rendering of the component
+   * and you need access to the full selection instead of just the selection
+   * of one datum.
+   *
+   * @param  {Function} callback
+   * @return {[sszvis.component]}
    */
   sszvisComponent.renderSelection = function (callback: SelectionRenderCallback): Component {
     selectionRenderer = callback;
     return sszvisComponent as Component;
   };
 
-  /**	
-   * Creates a render context for the given component. Implements the	
-   * d3.selection.each interface.	
-   *	
-   * @see https://github.com/mbostock/d3/wiki/Selections#each	
-   *	
-   * @param  {Function} callback	
-   * @return {sszvis.component}	
+  /**
+   * Creates a render context for the given component. Implements the
+   * d3.selection.each interface.
+   *
+   * @see https://github.com/mbostock/d3/wiki/Selections#each
+   *
+   * @param  {Function} callback
+   * @return {sszvis.component}
    */
   sszvisComponent.render = function (callback: RenderCallback): Component {
     renderer = callback;
@@ -112,39 +132,19 @@ export function component(): Component {
   return sszvisComponent as Component;
 }
 
-export interface ComponentProps {
-  [key: string]: any;
-}
-export type RenderCallback = (this: any, ...args: any[]) => void;
-export type SelectionRenderCallback = (this: any, ...args: any[]) => void;
-export type PropertySetter<T = any> = (...args: any[]) => T;
-export interface PropertyDelegate {
-  [key: string]: (...args: any[]) => any;
-}
-export interface Component {
-  <GElement extends BaseType, Datum, PElement extends BaseType, PDatum>(
-    selection: Selection<GElement, Datum, PElement, PDatum>
-  ): void;
-  prop<T>(prop: string, setter?: PropertySetter<T>): Component;
-  delegate(prop: string, delegate: PropertyDelegate): Component;
-  renderSelection(callback: SelectionRenderCallback): Component;
-  render(callback: RenderCallback): Component;
-  [key: string]: any;
-}
-
 declare module "d3" {
   interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
     props(): ComponentProps;
   }
 }
 
-/**	
- * d3.selection plugin to get the properties of a sszvis.component.	
- * Works similarly to d3.selection.data, but for properties.	
- *	
- * @see https://github.com/mbostock/d3/wiki/Selections	
- *	
- * @return {Object} An object of properties for the given component	
+/**
+ * d3.selection plugin to get the properties of a sszvis.component.
+ * Works similarly to d3.selection.data, but for properties.
+ *
+ * @see https://github.com/mbostock/d3/wiki/Selections
+ *
+ * @return {Object} An object of properties for the given component
  */
 d3Selection.prototype.props = function (): ComponentProps {
   // It would be possible to make this work exactly like
@@ -161,13 +161,13 @@ d3Selection.prototype.props = function (): ComponentProps {
 };
 
 /**
- * Creates an accessor function that either gets or sets a value, depending	
- * on whether or not it is called with arguments.	
- *	
- * @param  {Object} props The props to get from or set to	
- * @param  {String} attr The property to be accessed	
- * @param  {Function} [setter] Transforms the data on set	
- * @return {Function} The accessor function	
+ * Creates an accessor function that either gets or sets a value, depending
+ * on whether or not it is called with arguments.
+ *
+ * @param  {Object} props The props to get from or set to
+ * @param  {String} attr The property to be accessed
+ * @param  {Function} [setter] Transforms the data on set
+ * @return {Function} The accessor function
  */
 function accessor(props: ComponentProps, prop: string, setter?: PropertySetter): Function {
   setter || (setter = identity);
