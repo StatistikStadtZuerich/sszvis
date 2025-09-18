@@ -1,16 +1,20 @@
+import { select } from "d3";
+import { beforeEach, describe, expect, test } from "vitest";
 import {
+  dataAreaPattern,
   heatTableMissingValuePattern,
-  mapMissingValuePattern,
-  mapLakePattern,
   mapLakeFadeGradient,
   mapLakeGradientMask,
-  dataAreaPattern,
-} from "../src/patterns.js";
-import { expect, test, describe, beforeEach } from "vitest";
-import { select } from "d3";
+  mapLakePattern,
+  mapMissingValuePattern,
+} from "../src/patterns";
 
 describe("patterns", () => {
-  let svg, defs, pattern, gradient, mask;
+  let svg: SVGSVGElement,
+    defs: SVGDefsElement,
+    pattern: SVGPatternElement,
+    gradient: SVGGradientElement,
+    mask: SVGMaskElement;
 
   beforeEach(() => {
     svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -40,11 +44,11 @@ describe("patterns", () => {
       heatTableMissingValuePattern(select(pattern));
       const rect = pattern.querySelector("rect");
       expect(rect).toBeTruthy();
-      expect(rect.getAttribute("x")).toBe("0");
-      expect(rect.getAttribute("y")).toBe("0");
-      expect(rect.getAttribute("width")).toBe("1");
-      expect(rect.getAttribute("height")).toBe("1");
-      expect(rect.getAttribute("fill")).toBeTruthy();
+      expect(rect?.getAttribute("x")).toBe("0");
+      expect(rect?.getAttribute("y")).toBe("0");
+      expect(rect?.getAttribute("width")).toBe("1");
+      expect(rect?.getAttribute("height")).toBe("1");
+      expect(rect?.getAttribute("fill")).toBeTruthy();
     });
 
     test("should append two line elements for cross pattern", () => {
@@ -77,11 +81,11 @@ describe("patterns", () => {
       mapMissingValuePattern(select(pattern));
       const rect = pattern.querySelector("rect");
       expect(rect).toBeTruthy();
-      expect(rect.getAttribute("x")).toBe("0");
-      expect(rect.getAttribute("y")).toBe("0");
-      expect(rect.getAttribute("width")).toBe("14");
-      expect(rect.getAttribute("height")).toBe("14");
-      expect(rect.getAttribute("fill")).toBe("#FAFAFA");
+      expect(rect?.getAttribute("x")).toBe("0");
+      expect(rect?.getAttribute("y")).toBe("0");
+      expect(rect?.getAttribute("width")).toBe("14");
+      expect(rect?.getAttribute("height")).toBe("14");
+      expect(rect?.getAttribute("fill")).toBe("#FAFAFA");
     });
 
     test("should create diagonal line pattern", () => {
@@ -112,7 +116,7 @@ describe("patterns", () => {
 
   describe("mapLakeFadeGradient", () => {
     test("should set correct gradient attributes", () => {
-      mapLakeFadeGradient(select(gradient));
+      mapLakeFadeGradient(select(gradient as any));
       expect(gradient.getAttribute("x1")).toBe("0");
       expect(gradient.getAttribute("y1")).toBe("0");
       expect(gradient.getAttribute("x2")).toBe("0.55");
@@ -121,7 +125,7 @@ describe("patterns", () => {
     });
 
     test("should append gradient stops", () => {
-      mapLakeFadeGradient(select(gradient));
+      mapLakeFadeGradient(select(gradient as any));
       const stops = gradient.querySelectorAll("stop");
       expect(stops.length).toBe(2);
       for (const stop of stops) {
@@ -141,7 +145,7 @@ describe("patterns", () => {
       mapLakeGradientMask(select(mask));
       const rect = mask.querySelector("rect");
       expect(rect).toBeTruthy();
-      expect(rect.getAttribute("fill")).toBe("url(#lake-fade-gradient)");
+      expect(rect?.getAttribute("fill")).toBe("url(#lake-fade-gradient)");
     });
   });
 

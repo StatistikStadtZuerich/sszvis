@@ -1,7 +1,7 @@
-import { createSvgLayer } from "../src/createSvgLayer.js";
-import { bounds } from "../src/bounds.js";
-import { expect, test, describe } from "vitest";
 import { select } from "d3";
+import { describe, expect, test } from "vitest";
+import { bounds } from "../src/bounds.js";
+import { createSvgLayer } from "../src/createSvgLayer";
 
 describe("createSvgLayer", () => {
   test("should create SVG layer with default bounds", () => {
@@ -10,14 +10,14 @@ describe("createSvgLayer", () => {
     expect(createSvgLayer(container)).toBeDefined();
     const svg = container.querySelector("svg");
     expect(svg).toBeTruthy();
-    expect(svg.classList.contains("sszvis-svg-layer")).toBe(true);
+    expect(svg?.classList.contains("sszvis-svg-layer")).toBe(true);
   });
 
   test("should create SVG layer with CSS selector", () => {
     const container = document.createElement("div");
     container.id = "chart-container";
     document.body.append(container);
-    expect(createSvgLayer("#chart-container", null, { key: "test-layer" })).toBeDefined();
+    expect(createSvgLayer("#chart-container", undefined, { key: "test-layer" })).toBeDefined();
     const svg = container.querySelector("svg");
     expect(svg).toBeTruthy();
   });
@@ -39,53 +39,53 @@ describe("createSvgLayer", () => {
     });
     createSvgLayer(container, customBounds);
     const svg = container.querySelector("svg");
-    expect(svg.getAttribute("width")).toBe("800");
-    expect(svg.getAttribute("height")).toBe("600");
+    expect(svg?.getAttribute("width")).toBe("800");
+    expect(svg?.getAttribute("height")).toBe("600");
   });
 
   test("should be idempotent with same key", () => {
     const container = document.createElement("div");
     document.body.append(container);
-    createSvgLayer(container, null, { key: "same" });
-    createSvgLayer(container, null, { key: "same" });
+    createSvgLayer(container, undefined, { key: "same" });
+    createSvgLayer(container, undefined, { key: "same" });
     expect(container.querySelectorAll("svg")).toHaveLength(1);
   });
 
   test("should create different layers with different keys", () => {
     const container = document.createElement("div");
     document.body.append(container);
-    createSvgLayer(container, null, { key: "layer1" });
-    createSvgLayer(container, null, { key: "layer2" });
+    createSvgLayer(container, undefined, { key: "layer1" });
+    createSvgLayer(container, undefined, { key: "layer2" });
     expect(container.querySelectorAll("svg")).toHaveLength(2);
   });
 
   test("should set accessibility attributes", () => {
     const container = document.createElement("div");
     document.body.append(container);
-    createSvgLayer(container, null, {
+    createSvgLayer(container, undefined, {
       title: "Test Chart",
       description: "A test chart description",
     });
     const svg = container.querySelector("svg");
-    expect(svg.getAttribute("role")).toBe("img");
-    expect(svg.getAttribute("aria-label")).toContain("Test Chart");
-    expect(svg.getAttribute("aria-label")).toContain("A test chart description");
+    expect(svg?.getAttribute("role")).toBe("img");
+    expect(svg?.getAttribute("aria-label")).toContain("Test Chart");
+    expect(svg?.getAttribute("aria-label")).toContain("A test chart description");
   });
 
   test("should include title and description elements", () => {
     const container = document.createElement("div");
     document.body.append(container);
-    createSvgLayer(container, null, {
+    createSvgLayer(container, undefined, {
       title: "Chart Title",
       description: "Chart Description",
     });
     const svg = container.querySelector("svg");
-    const title = svg.querySelector("title");
-    const desc = svg.querySelector("desc");
+    const title = svg?.querySelector("title");
+    const desc = svg?.querySelector("desc");
     expect(title).toBeTruthy();
     expect(desc).toBeTruthy();
-    expect(title.textContent).toBe("Chart Title");
-    expect(desc.textContent).toBe("Chart Description");
+    expect(title?.textContent).toBe("Chart Title");
+    expect(desc?.textContent).toBe("Chart Description");
   });
 
   test("should apply transform for padding", () => {

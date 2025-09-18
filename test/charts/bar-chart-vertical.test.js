@@ -1,5 +1,5 @@
 import { extent, stack } from "d3";
-import { test, describe, expect } from "vitest";
+import { describe, expect, test } from "vitest";
 import { cascade } from "../../src/cascade";
 import { stackedBarVerticalData } from "../../src/component/stackedBar";
 

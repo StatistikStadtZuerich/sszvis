@@ -1,5 +1,5 @@
+import { expect, test } from "@playwright/test";
 import { globSync } from "glob";
-import { test, expect } from "@playwright/test";
 
 const RENDER_DELAY = 200;
 

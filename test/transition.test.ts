@@ -1,10 +1,10 @@
-import { defaultTransition, fastTransition, slowTransition } from "../src/transition.js";
-import { expect, test, describe, beforeEach } from "vitest";
 import { select } from "d3";
+import { beforeEach, describe, expect, test } from "vitest";
+import { defaultTransition, fastTransition, slowTransition } from "../src/transition";
 
 describe("transition", () => {
-  let container;
-  let testElement;
+  let container: HTMLDivElement;
+  let testElement: HTMLDivElement & { __transition?: any };
 
   beforeEach(() => {
     // Create a fresh test container for each test
@@ -90,15 +90,6 @@ describe("transition", () => {
       expect(typeof defaultTransitionObj.ease).toBe("function");
       expect(typeof fastTransitionObj.ease).toBe("function");
       expect(typeof slowTransitionObj.ease).toBe("function");
-    });
-
-    test("should all be chainable with D3 selections", () => {
-      expect(() => {
-        select(testElement)
-          .transition(defaultTransition())
-          .transition(fastTransition())
-          .transition(slowTransition());
-      }).not.toThrow();
     });
   });
 

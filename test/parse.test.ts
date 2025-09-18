@@ -1,22 +1,22 @@
-import { parseDate, parseYear, parseNumber } from "../src/parse.js";
-import { expect, test, describe } from "vitest";
+import { describe, expect, test } from "vitest";
+import { parseDate, parseNumber, parseYear } from "../src/parse";
 
 describe("parse", () => {
   describe("parseDate", () => {
     test("should parse valid Swiss date format", () => {
       const result = parseDate("17.08.2014");
       expect(result).toBeInstanceOf(Date);
-      expect(result.getFullYear()).toBe(2014);
-      expect(result.getMonth()).toBe(7); // Month is 0-indexed
-      expect(result.getDate()).toBe(17);
+      expect(result?.getFullYear()).toBe(2014);
+      expect(result?.getMonth()).toBe(7); // Month is 0-indexed
+      expect(result?.getDate()).toBe(17);
     });
 
     test("should parse date with single-digit day and month", () => {
       const result = parseDate("5.3.2020");
       expect(result).toBeInstanceOf(Date);
-      expect(result.getFullYear()).toBe(2020);
-      expect(result.getMonth()).toBe(2);
-      expect(result.getDate()).toBe(5);
+      expect(result?.getFullYear()).toBe(2020);
+      expect(result?.getMonth()).toBe(2);
+      expect(result?.getDate()).toBe(5);
     });
 
     test("should return null for invalid date format", () => {
@@ -35,15 +35,15 @@ describe("parse", () => {
     test("should parse valid year string", () => {
       const result = parseYear("2014");
       expect(result).toBeInstanceOf(Date);
-      expect(result.getFullYear()).toBe(2014);
-      expect(result.getMonth()).toBe(0);
-      expect(result.getDate()).toBe(1);
+      expect(result?.getFullYear()).toBe(2014);
+      expect(result?.getMonth()).toBe(0);
+      expect(result?.getDate()).toBe(1);
     });
 
     test("should parse year with leading zeros", () => {
       const result = parseYear("0001");
       expect(result).toBeInstanceOf(Date);
-      expect(result.getFullYear()).toBe(1);
+      expect(result?.getFullYear()).toBe(1);
     });
 
     test("should return null for invalid year format", () => {

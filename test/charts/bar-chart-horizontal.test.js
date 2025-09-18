@@ -1,5 +1,5 @@
+import { describe, expect, test } from "vitest";
 import { stackedBarHorizontalData } from "../../src/component/stackedBar";
-import { test, describe, expect } from "vitest";
 
 const xAcc = (d) => d.xValue;
 const yAcc = (d) => d.yValue;

@@ -1,11 +1,11 @@
+import { describe, expect, test } from "vitest";
 import {
   aspectRatio,
   aspectRatio4to3,
-  aspectRatio16to10,
   aspectRatio12to5,
+  aspectRatio16to10,
   aspectRatioAuto,
-} from "../src/aspectRatio.js";
-import { expect, test, describe } from "vitest";
+} from "../src/aspectRatio";
 
 describe("aspectRatio", () => {
   describe("aspectRatio", () => {

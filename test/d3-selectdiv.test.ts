@@ -1,6 +1,6 @@
-import "../src/d3-selectdiv.js"; // Import to add prototype method
-import { expect, test, describe } from "vitest";
 import { select } from "d3";
+import { describe, expect, test } from "vitest";
+import "../src/d3-selectdiv"; // Import to add prototype method
 
 describe("selectDiv", () => {
   test("should add selectDiv method to d3 selection prototype", () => {
@@ -13,16 +13,16 @@ describe("selectDiv", () => {
     const container = document.createElement("div");
     document.body.append(container);
     select(container).selectDiv("test-key");
-    expect(container.querySelector('[data-d3-selectdiv="test-key"]').tagName).toBe("DIV");
+    expect(container?.querySelector('[data-d3-selectdiv="test-key"]')?.tagName).toBe("DIV");
   });
 
   test("should set position absolute style", () => {
     const container = document.createElement("div");
     document.body.append(container);
     select(container).selectDiv("positioned");
-    expect(container.querySelector('[data-d3-selectdiv="positioned"]').style.position).toBe(
-      "absolute"
-    );
+    expect(
+      (container.querySelector('[data-d3-selectdiv="positioned"]') as HTMLDivElement).style.position
+    ).toBe("absolute");
   });
 
   test("should be idempotent - not recreate existing div", () => {

@@ -1,8 +1,6 @@
+import type { LabColor } from "d3";
+import { describe, expect, test } from "vitest";
 import {
-  scaleQual12,
-  scaleQual6,
-  scaleQual6a,
-  scaleQual6b,
   scaleDeepGry,
   scaleDimGry,
   scaleDivNtr,
@@ -13,14 +11,17 @@ import {
   scaleLightGry,
   scaleMedGry,
   scalePaleGry,
+  scaleQual6,
+  scaleQual6a,
+  scaleQual6b,
+  scaleQual12,
   scaleSeqBlu,
   scaleSeqBrn,
   scaleSeqGrn,
   scaleSeqRed,
 } from "../src/color";
-import { expect, test, describe } from "vitest";
 
-const expectIsColor = (color) => {
+const expectIsColor = (color: LabColor) => {
   expect(color).toHaveProperty("l");
   expect(color).toHaveProperty("a");
   expect(color).toHaveProperty("b");

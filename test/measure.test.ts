@@ -1,6 +1,6 @@
-import { measureDimensions, measureText } from "../src/measure.js";
-import { expect, test, describe, vi } from "vitest";
 import { select } from "d3";
+import { describe, expect, test, vi } from "vitest";
+import { measureDimensions, measureText } from "../src/measure";
 
 describe("measure", () => {
   describe("measureDimensions", () => {
@@ -47,7 +47,7 @@ describe("measure", () => {
     });
 
     test("should return undefined width when node is null", () => {
-      expect(measureDimensions(null)).toEqual({
+      expect(measureDimensions(null as unknown as string)).toEqual({
         width: undefined,
         screenWidth: window.innerWidth || 1024,
         screenHeight: window.innerHeight || 768,
@@ -69,7 +69,7 @@ describe("measure", () => {
   });
 
   describe("measureText", () => {
-    test.each([
+    test.each<[[number, string, string], number]>([
       [[9, "Arial, sans-serif", "Test"], 16.5],
       [[16, "Arial, sans-serif", "Test"], 29],
       [[36, "Arial, sans-serif", "Test"], 66],

@@ -1,6 +1,6 @@
+import { extent, stack } from "d3";
+import { describe, expect, test } from "vitest";
 import { cascade } from "../../src/cascade";
-import { stack, extent } from "d3";
-import { test, describe, expect } from "vitest";
 
 const xAcc = (d) => d.xValue;
 const yAcc = (d) => d.yValue;

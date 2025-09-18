@@ -1,6 +1,6 @@
-import "../src/d3-selectgroup.js"; // Import to add prototype method
-import { expect, test, describe } from "vitest";
 import { select } from "d3";
+import { describe, expect, test } from "vitest";
+import "../src/d3-selectgroup"; // Import to add prototype method
 
 describe("selectGroup", () => {
   test("should add selectGroup method to d3 selection prototype", () => {
@@ -14,7 +14,7 @@ describe("selectGroup", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     document.body.append(svg);
     select(svg).selectGroup("test-group");
-    expect(svg.querySelector('[data-d3-selectgroup="test-group"]').tagName).toBe("g");
+    expect(svg.querySelector('[data-d3-selectgroup="test-group"]')?.tagName).toBe("g");
   });
 
   test("should be idempotent - not recreate existing group", () => {
@@ -67,7 +67,7 @@ describe("selectGroup", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     document.body.append(svg);
     select(svg).selectGroup("main").append("circle").attr("r", 5);
-    const circle = svg.querySelector('[data-d3-selectgroup="main"]').querySelector("circle");
-    expect(circle.getAttribute("r")).toBe("5");
+    const circle = svg.querySelector('[data-d3-selectgroup="main"]')?.querySelector("circle");
+    expect(circle?.getAttribute("r")).toBe("5");
   });
 });

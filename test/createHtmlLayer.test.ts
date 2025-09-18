@@ -1,7 +1,7 @@
-import { createHtmlLayer } from "../src/createHtmlLayer.js";
-import { bounds } from "../src/bounds.js";
-import { expect, test, describe } from "vitest";
 import { select } from "d3";
+import { describe, expect, test } from "vitest";
+import { bounds } from "../src/bounds.js";
+import { createHtmlLayer } from "../src/createHtmlLayer";
 
 describe("createHtmlLayer", () => {
   test("should create HTML layer with default bounds", () => {
@@ -39,7 +39,7 @@ describe("createHtmlLayer", () => {
       top: 15,
     });
     createHtmlLayer(container, customBounds);
-    const style = container.querySelector("[data-sszvis-html-layer]").style;
+    const style = (container.querySelector("[data-sszvis-html-layer]") as HTMLElement).style;
     expect(style.position).toBe("absolute");
     expect(style.left).toBe("25px");
     expect(style.top).toBe("15px");
@@ -48,16 +48,16 @@ describe("createHtmlLayer", () => {
   test("should be idempotent with same key", () => {
     const container = document.createElement("div");
     document.body.append(container);
-    createHtmlLayer(container, null, { key: "same" });
-    createHtmlLayer(container, null, { key: "same" });
+    createHtmlLayer(container, undefined, { key: "same" });
+    createHtmlLayer(container, undefined, { key: "same" });
     expect(container.querySelectorAll("[data-sszvis-html-layer]")).toHaveLength(1);
   });
 
   test("should create different layers with different keys", () => {
     const container = document.createElement("div");
     document.body.append(container);
-    createHtmlLayer(container, null, { key: "layer1" });
-    createHtmlLayer(container, null, { key: "layer2" });
+    createHtmlLayer(container, undefined, { key: "layer1" });
+    createHtmlLayer(container, undefined, { key: "layer2" });
     expect(container.querySelectorAll("[data-sszvis-html-layer]")).toHaveLength(2);
   });
 });

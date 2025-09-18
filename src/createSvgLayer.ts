@@ -31,7 +31,7 @@ export interface SvgLayerMetadata {
 }
 
 export function createSvgLayer(
-  selector: SelectableElement,
+  selector: SelectableElement | HTMLElement,
   bounds?: BoundsResult,
   metadata: SvgLayerMetadata = {}
 ): AnySelection {
@@ -42,7 +42,7 @@ export function createSvgLayer(
   const title = metadata.title || "";
   const description = metadata.description || "";
 
-  const root: AnySelection = fn.isSelection(selector) ? selector : select(selector);
+  const root: AnySelection = fn.isSelection(selector) ? selector : select(selector as any);
   const svg = root
     .selectAll(`svg[${elementDataKey}]`)
     .data([0])

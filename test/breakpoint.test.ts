@@ -1,12 +1,9 @@
-import { responsiveProps } from "../src/responsiveProps.js";
-import { expect, test, describe } from "vitest";
+import { describe, expect, test } from "vitest";
+import { responsiveProps } from "../src/responsiveProps";
 
 describe("queryProps", () => {
   const queryProps = responsiveProps()
-    .breakpoints([
-      { name: "small", width: 10 },
-      { name: "medium", width: 20 },
-    ])
+    .breakpoints([{ name: "small", width: 10 } as any, { name: "medium", width: 20 } as any])
     .prop("example", {
       small: "A",
       medium: "B",
@@ -26,6 +23,6 @@ describe("queryProps", () => {
 
 // -----------------------------------------------------------------------------
 
-function mkDimensions(width) {
+function mkDimensions(width: number) {
   return { width, screenWidth: 400, screenHeight: 300 };
 }

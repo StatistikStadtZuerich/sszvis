@@ -1,5 +1,5 @@
-import { expect, test, describe } from "vitest";
-import { bounds } from "../src/bounds.js";
+import { describe, expect, test } from "vitest";
+import { bounds } from "../src/bounds";
 
 describe("bounds", () => {
   describe("default", () => {
@@ -67,7 +67,7 @@ describe("bounds", () => {
   describe("DOM element measurement", () => {
     test("should measure DOM element for width", () => {
       const div = document.createElement("div");
-      div.getBoundingClientRect = () => ({ width: 500 });
+      div.getBoundingClientRect = () => ({ width: 500 }) as DOMRect;
       document.body.append(div);
       const result = bounds({}, div);
       expect(result.width).toBe(500);
@@ -76,7 +76,7 @@ describe("bounds", () => {
     test("should use CSS selector to find element", () => {
       const div = document.createElement("div");
       div.id = "test-element";
-      div.getBoundingClientRect = () => ({ width: 300 });
+      div.getBoundingClientRect = () => ({ width: 300 }) as DOMRect;
       document.body.append(div);
       const result = bounds({}, "#test-element");
       expect(result.width).toBe(300);
@@ -84,7 +84,7 @@ describe("bounds", () => {
 
     test("should prefer custom width over measured width", () => {
       const div = document.createElement("div");
-      div.getBoundingClientRect = () => ({ width: 500 });
+      div.getBoundingClientRect = () => ({ width: 500 }) as DOMRect;
       document.body.append(div);
       const result = bounds({ width: 800 }, div);
       expect(result.width).toBe(800); // Custom width takes priority
@@ -94,7 +94,7 @@ describe("bounds", () => {
   describe("selector handling", () => {
     test("should handle ID selector", () => {
       const div = document.createElement("div");
-      div.getBoundingClientRect = () => ({ width: 400 });
+      div.getBoundingClientRect = () => ({ width: 400 }) as DOMRect;
       div.id = "test-div";
       document.body.append(div);
       const result = bounds("#test-div");
@@ -104,7 +104,7 @@ describe("bounds", () => {
     test("should handle CSS selector", () => {
       const div = document.createElement("div");
       div.className = "test-class";
-      div.getBoundingClientRect = () => ({ width: 350 });
+      div.getBoundingClientRect = () => ({ width: 350 }) as DOMRect;
       document.body.append(div);
       const result = bounds(".test-class");
       expect(result.width).toBe(350);

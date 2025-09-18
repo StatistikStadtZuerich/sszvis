@@ -1,5 +1,5 @@
+import { describe, expect, test } from "vitest";
 import { axisX, axisY } from "../src/axis";
-import { expect, test, describe } from "vitest";
 
 describe("axis", () => {
   test("smoke test for axis X", () => {

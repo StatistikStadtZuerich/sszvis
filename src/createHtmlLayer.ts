@@ -52,7 +52,7 @@ export interface LayerMetadata {
 }
 
 export function createHtmlLayer(
-  selector: SelectableElement,
+  selector: SelectableElement | HTMLElement,
   bounds?: BoundsResult,
   metadata: LayerMetadata = {}
 ): AnySelection {
@@ -60,7 +60,7 @@ export function createHtmlLayer(
   const key = metadata.key || "default";
   const elementDataKey = `data-sszvis-html-${key}`;
 
-  const root: AnySelection = fn.isSelection(selector) ? selector : select(selector);
+  const root: AnySelection = fn.isSelection(selector) ? selector : select(selector as any);
   root.classed("sszvis-outer-container", true);
 
   return root

@@ -87,11 +87,16 @@ const DEFAULT_WIDTH = 516;
  *         Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
 export function bounds(): BoundsResult;
-export function bounds(boundsOrSelection: BoundsConfig | string | AnySelection): BoundsResult;
-export function bounds(bounds: BoundsConfig, selection: string | AnySelection): BoundsResult;
 export function bounds(
-  arg1?: BoundsConfig | string | AnySelection,
-  arg2?: string | AnySelection
+  boundsOrSelection: BoundsConfig | string | AnySelection | HTMLElement
+): BoundsResult;
+export function bounds(
+  bounds: BoundsConfig,
+  selection: string | AnySelection | HTMLElement
+): BoundsResult;
+export function bounds(
+  arg1?: BoundsConfig | string | AnySelection | HTMLElement,
+  arg2?: string | AnySelection | HTMLElement
 ): BoundsResult {
   let _bounds: BoundsConfig = {};
   let selection: AnySelection | null = null;

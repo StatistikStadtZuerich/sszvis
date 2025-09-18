@@ -1,5 +1,5 @@
-import { formatNumber, formatPreciseNumber } from "../src/format.js";
-import { expect, test, describe } from "vitest";
+import { describe, expect, test } from "vitest";
+import { formatNumber, formatPreciseNumber } from "../src/format";
 
 const EN_DASH = "–";
 const THINSP = " ";
@@ -56,7 +56,11 @@ describe("formatPreciseNumber", () => {
 
 // -----------------------------------------------------------------------------
 
-function testMatrix(label, format, matrix) {
+function testMatrix(
+  label: string,
+  format: (input: any) => string,
+  matrix: [number | null | undefined, string][]
+) {
   describe(label, () => {
     test.each(matrix)('%s -> "%s"', (input, output) => {
       expect(format(input)).toBe(output);

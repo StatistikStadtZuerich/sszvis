@@ -1,6 +1,6 @@
-import { component } from "../src/d3-component.js";
-import { expect, test, describe, vi } from "vitest";
 import { select } from "d3";
+import { describe, expect, test, vi } from "vitest";
+import { component } from "../src/d3-component";
 
 describe("d3-component", () => {
   describe("prop method", () => {
@@ -20,7 +20,7 @@ describe("d3-component", () => {
 
     test("should bind setter context to component", () => {
       let contextCheck = null;
-      const comp = component().prop("test", function (value) {
+      const comp = component().prop("test", function (this: any, value) {
         contextCheck = this;
         return value;
       });
@@ -38,7 +38,7 @@ describe("d3-component", () => {
 
     test("should pass correct context to render function", () => {
       let renderContext = null;
-      const renderFn = function () {
+      const renderFn = function (this: any) {
         renderContext = this;
       };
       const selection = select(document.createElement("div")).call(component().render(renderFn));
@@ -48,7 +48,7 @@ describe("d3-component", () => {
     test("should receive data in render function", () => {
       const testData = [{ value: 42 }];
       let receivedData = null;
-      const renderFn = function (data) {
+      const renderFn = (data: any) => {
         receivedData = data;
       };
       select(document.createElement("div")).data(testData).call(component().render(renderFn));
@@ -117,7 +117,7 @@ describe("d3-component", () => {
       const selection = select(document.createElement("div"));
       selection.call(comp);
 
-      expect(selection.node().textContent).toBe("Hello World");
+      expect(selection?.node()?.textContent).toBe("Hello World");
     });
   });
 });

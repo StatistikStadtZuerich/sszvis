@@ -1,8 +1,13 @@
-import { cascade } from "../src/cascade.js";
-import { expect, test, describe } from "vitest";
+import { describe, expect, test } from "vitest";
+import { cascade } from "../src/cascade";
 
+type DataItem = {
+  city: string;
+  category: string;
+  value: number;
+};
 describe("cascade", () => {
-  const testData = [
+  const testData: DataItem[] = [
     { city: "Zurich", category: "A", value: 10 },
     { city: "Basel", category: "A", value: 20 },
     { city: "Zurich", category: "B", value: 15 },
@@ -62,9 +67,9 @@ describe("cascade", () => {
         .apply(testData);
       expect(Array.isArray(result)).toBe(true);
       expect(result).toHaveLength(3);
-      expect(result[0].some((d) => d.city === "Basel")).toBe(true);
-      expect(result[1].some((d) => d.city === "Geneva")).toBe(true);
-      expect(result[2].some((d) => d.city === "Zurich")).toBe(true);
+      expect(result[0].some((d: DataItem) => d.city === "Basel")).toBe(true);
+      expect(result[1].some((d: DataItem) => d.city === "Geneva")).toBe(true);
+      expect(result[2].some((d: DataItem) => d.city === "Zurich")).toBe(true);
     });
 
     test("should handle nested arrayBy grouping", () => {
