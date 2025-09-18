@@ -77,19 +77,19 @@ describe("measure", () => {
       [[16, "Arial, sans-serif", "The rabbit goes down the hole"], 215],
       [[36, "Arial, sans-serif", "The rabbit goes down the hole"], 484],
 
-      [[9, "Georgia, serif", "Test"], 17],
-      [[16, "Georgia, serif", "Test"], 30],
-      [[36, "Georgia, serif", "Test"], 68],
-      [[9, "Georgia, serif", "The rabbit goes down the hole"], 119],
-      [[16, "Georgia, serif", "The rabbit goes down the hole"], 212],
-      [[36, "Georgia, serif", "The rabbit goes down the hole"], 478],
+      [[9, "Times, serif", "Test"], 15],
+      [[16, "Times, serif", "Test"], 26],
+      [[36, "Times, serif", "Test"], 59],
+      [[9, "Times, serif", "The rabbit goes down the hole"], 109],
+      [[16, "Times, serif", "The rabbit goes down the hole"], 194],
+      [[36, "Times, serif", "The rabbit goes down the hole"], 437],
 
-      [[9, "Monaco, monospace", "Test"], 22],
-      [[16, "Monaco, monospace", "Test"], 38],
-      [[36, "Monaco, monospace", "Test"], 86],
-      [[9, "Monaco, monospace", "The rabbit goes down the hole"], 157],
-      [[16, "Monaco, monospace", "The rabbit goes down the hole"], 278],
-      [[36, "Monaco, monospace", "The rabbit goes down the hole"], 627],
+      [[9, "Courier, monospace", "Test"], 22],
+      [[16, "Courier, monospace", "Test"], 38],
+      [[36, "Courier, monospace", "Test"], 86],
+      [[9, "Courier, monospace", "The rabbit goes down the hole"], 157],
+      [[16, "Courier, monospace", "The rabbit goes down the hole"], 278],
+      [[36, "Courier, monospace", "The rabbit goes down the hole"], 627],
     ])('%s -> "%s"', (input, output) => {
       expect(measureText(...input)).toBeCloseTo(output, 0);
     });
