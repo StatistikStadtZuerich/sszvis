@@ -11,8 +11,8 @@ const timeParse = timeFormatLocale(timeLocale).parse;
 
 /**
  * Parse Swiss date strings
- * @param  {string} d A Swiss date string, e.g. 17.08.2014
- * @return {Date | null} Parsed date or null if parsing fails
+ * @param  {String} d A Swiss date string, e.g. 17.08.2014
+ * @return {Date}
  */
 const dateParser = timeParse("%d.%m.%Y");
 export const parseDate = function (d: string): Date | null {
@@ -22,7 +22,7 @@ export const parseDate = function (d: string): Date | null {
 /**
  * Parse year values
  * @param  {string} d   A string which should be parsed as if it were a year, like "2014"
- * @return {Date | null} A javascript date object for the first time in the given year, or null if parsing fails
+ * @return {Date}       A javascript date object for the first time in the given year
  */
 const yearParser = timeParse("%Y");
 export const parseYear = function (d: string): Date | null {
@@ -31,8 +31,8 @@ export const parseYear = function (d: string): Date | null {
 
 /**
  * Parse untyped input
- * @param  {string} d A value that could be a number
- * @return {number}   If d is not a number, NaN is returned
+ * @param  {String} d A value that could be a number
+ * @return {Number}   If d is not a number, NaN is returned
  */
 export const parseNumber = function (d: string): number {
   return d.trim() === "" ? Number.NaN : +d;
