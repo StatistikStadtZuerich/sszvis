@@ -1,0 +1,67 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
+  "files": {
+    "ignoreUnknown": false,
+    "includes": ["src/**/*"]
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "error"
+      },
+      "style": {
+        "useBlockStatements": "off",
+        "useConsistentArrayType": "error",
+        "useConst": "error",
+        "noParameterAssign": "warn",
+        "useTemplate": "warn"
+      },
+      "suspicious": {
+        "noDoubleEquals": "warn",
+        "noExplicitAny": "warn",
+        "noArrayIndexKey": "warn",
+        "noDebugger": "error",
+        "noConfusingVoidType": "off",
+        "noGlobalIsNan": "warn",
+        "noAssignInExpressions": "warn"
+      },
+      "performance": {
+        "noDelete": "warn"
+      },
+      "complexity": {
+        "noArguments": "off",
+        "useArrowFunction": "warn"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "trailingCommas": "es5",
+      "semicolons": "always",
+      "arrowParentheses": "always"
+    }
+  },
+  "json": {
+    "formatter": {
+      "indentStyle": "space",
+      "indentWidth": 2
+    }
+  }
+}
