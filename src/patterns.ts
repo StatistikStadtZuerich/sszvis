@@ -17,13 +17,13 @@
  *
  */
 
-import { LinearGradientSelection, MaskSelection, PatternSelection } from "./types";
+import type { LinearGradientSelection, MaskSelection, PatternSelection } from "./types";
 
 /**
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements
  */
-export const heatTableMissingValuePattern = function (selection: PatternSelection): void {
+export const heatTableMissingValuePattern = (selection: PatternSelection): void => {
   const rectFill = "#FAFAFA", // Light grey color directly
     crossStroke = "#A4A4A4",
     crossStrokeWidth = 0.035,
@@ -69,7 +69,7 @@ export const heatTableMissingValuePattern = function (selection: PatternSelectio
  * The pattern for the map areas which are missing values
  * @param selection A d3 selection of SVG pattern elements
  */
-export const mapMissingValuePattern = function (selection: PatternSelection): void {
+export const mapMissingValuePattern = (selection: PatternSelection): void => {
   const pWidth = 14,
     pHeight = 14,
     fillColor = "#FAFAFA",
@@ -128,7 +128,7 @@ export const mapMissingValuePattern = function (selection: PatternSelection): vo
  * The pattern for Lake Zurich in the map component
  * @param selection A d3 selection of SVG pattern elements
  */
-export const mapLakePattern = function (selection: PatternSelection): void {
+export const mapLakePattern = (selection: PatternSelection): void => {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;
@@ -172,7 +172,7 @@ export const mapLakePattern = function (selection: PatternSelection): void {
  * The gradient used by the alpha fade pattern in the Lake Zurich shape
  * @param selection A d3 selection of SVG linear gradient elements
  */
-export const mapLakeFadeGradient = function (selection: LinearGradientSelection): void {
+export const mapLakeFadeGradient = (selection: LinearGradientSelection): void => {
   selection
     .attr("x1", 0)
     .attr("y1", 0)
@@ -189,7 +189,7 @@ export const mapLakeFadeGradient = function (selection: LinearGradientSelection)
  * The gradient alpha fade mask for the Lake Zurich shape
  * @param selection A d3 selection of SVG mask elements
  */
-export const mapLakeGradientMask = function (selection: MaskSelection): void {
+export const mapLakeGradientMask = (selection: MaskSelection): void => {
   selection.attr("maskContentUnits", "objectBoundingBox");
 
   selection
@@ -203,7 +203,7 @@ export const mapLakeGradientMask = function (selection: MaskSelection): void {
  * The pattern for the data area texture
  * @param selection A d3 selection of SVG pattern elements
  */
-export const dataAreaPattern = function (selection: PatternSelection): void {
+export const dataAreaPattern = (selection: PatternSelection): void => {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;

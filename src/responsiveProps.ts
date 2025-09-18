@@ -178,10 +178,10 @@ export function responsiveProps(): ResponsivePropsInstance {
    *
    * @return {responsiveProps}
    */
-  _responsiveProps.prop = function <T>(
+  _responsiveProps.prop = <T>(
     propName: string,
     propSpec: ResponsivePropValue<T>
-  ): ResponsivePropsInstance {
+  ): ResponsivePropsInstance => {
     propsConfig[propName] = functorizeValues(propSpec);
     return _responsiveProps;
   };
@@ -220,7 +220,7 @@ export function responsiveProps(): ResponsivePropsInstance {
    *   { name: 'large', width: 700 }
    * ])
    */
-  _responsiveProps.breakpoints = function (...args: any[]): any {
+  _responsiveProps.breakpoints = (...args: any[]): any => {
     if (args.length === 0) {
       return breakpointSpec;
     }
@@ -275,7 +275,7 @@ function validatePropSpec(propSpec: ResponsivePropValue, breakpointSpec: Breakpo
   // each should be a valid breakpoint name, and its value should be defined
   for (const breakpointName in propSpec) {
     if (
-      Object.prototype.hasOwnProperty.call(propSpec, breakpointName) &&
+      Object.hasOwn(propSpec, breakpointName) &&
       breakpointName !== "_" &&
       !fn.defined(breakpointFindByName(breakpointSpec, breakpointName))
     ) {

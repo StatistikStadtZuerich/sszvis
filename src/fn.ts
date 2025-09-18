@@ -5,7 +5,7 @@
  */
 
 import { selection } from "d3";
-import { AnySelection } from "./types";
+import type { AnySelection } from "./types";
 
 /**
  * fn.identity
@@ -13,27 +13,22 @@ import { AnySelection } from "./types";
  * The identity function. It returns the first argument passed to it.
  * Useful as a default where a function is required.
  */
-export const identity = function <T>(value: T): T {
-  return value;
-};
+export const identity = <T>(value: T): T => value;
 
 /**
  * fn.isString
  *
  * determine whether the value is a string
  */
-export const isString = function (val: unknown): val is string {
-  return Object.prototype.toString.call(val) === "[object String]";
-};
+export const isString = (val: unknown): val is string =>
+  Object.prototype.toString.call(val) === "[object String]";
 
 /**
  * fn.isSelection
  *
  * determine whether the value is a d3.selection.
  */
-export const isSelection = function (val: unknown): val is AnySelection {
-  return val instanceof selection;
-};
+export const isSelection = (val: unknown): val is AnySelection => val instanceof selection;
 
 /**
  * fn.arity
@@ -42,7 +37,7 @@ export const isSelection = function (val: unknown): val is AnySelection {
  * accepts exactly `n` parameters. Any extraneous parameters will not be
  * passed to the supplied function.
  */
-export const arity = function (n: number, fn: (...args: any[]) => any): (...args: any[]) => any {
+export const arity = (n: number, fn: (...args: any[]) => any): ((...args: any[]) => any) => {
   switch (n) {
     case 0: {
       return function (this: any) {
@@ -151,7 +146,7 @@ export const arity = function (n: number, fn: (...args: any[]) => any): (...args
  *
  * Note: all composed functions but the last should be of arity 1.
  */
-export const compose = function (...fns: ((...args: any[]) => any)[]): (...args: any[]) => any {
+export const compose = (...fns: ((...args: any[]) => any)[]): ((...args: any[]) => any) => {
   const start = fns.length - 1;
   return function (this: any, ...args: any[]) {
     let i = start;
@@ -166,18 +161,15 @@ export const compose = function (...fns: ((...args: any[]) => any)[]): (...args:
  *
  * Checks whether an item is present in the given list (by strict equality).
  */
-export const contains = function <T>(list: T[], d: T): boolean {
-  return list.includes(d);
-};
+export const contains = <T>(list: T[], d: T): boolean => list.includes(d);
 
 /**
  * fn.defined
  *
  * determines if the passed value is defined.
  */
-export const defined = function <T>(val: T): val is NonNullable<T> {
-  return val !== undefined && val != null && !Number.isNaN(val);
-};
+export const defined = <T>(val: T): val is NonNullable<T> =>
+  val !== undefined && val != null && !Number.isNaN(val);
 
 /**
  * fn.derivedSet
@@ -190,10 +182,10 @@ export const defined = function <T>(val: T): val is NonNullable<T> {
  * in the other set functions, the set of derived properties is returned, whereas this function
  * returns a set of objects from the input array.
  */
-export const derivedSet = function <T>(
+export const derivedSet = <T>(
   arr: T[],
   acc?: (value: T, index: number, array: T[]) => any
-): T[] {
+): T[] => {
   const accessor = acc || identity;
   const seen: any[] = [];
   const result: T[] = [];
@@ -215,7 +207,7 @@ export const derivedSet = function <T>(
  * Use a predicate function to test if every element in an array passes some test.
  * Returns false as soon as an element fails the predicate test. Returns true otherwise.
  */
-export const every = function <T>(predicate: (element: T) => boolean, arr: T[]): boolean {
+export const every = <T>(predicate: (element: T) => boolean, arr: T[]): boolean => {
   for (const element of arr) {
     if (!predicate(element)) {
       return false;
@@ -229,7 +221,7 @@ export const every = function <T>(predicate: (element: T) => boolean, arr: T[]):
  *
  * returns a new array with length `len` filled with `val`
  */
-export const filledArray = function <T>(len: number, val: T): T[] {
+export const filledArray = <T>(len: number, val: T): T[] => {
   const arr = Array.from({ length: len }) as T[];
   for (let i = 0; i < len; ++i) {
     arr[i] = val;
@@ -242,7 +234,7 @@ export const filledArray = function <T>(len: number, val: T): T[] {
  *
  * Finds the first occurrence of an element in an array that passes the predicate function
  */
-export const find = function <T>(predicate: (element: T) => boolean, arr: T[]): T | undefined {
+export const find = <T>(predicate: (element: T) => boolean, arr: T[]): T | undefined => {
   for (const element of arr) {
     if (predicate(element)) {
       return element;
@@ -256,9 +248,7 @@ export const find = function <T>(predicate: (element: T) => boolean, arr: T[]): 
  *
  * Returns the first value in the passed array, or undefined if the array is empty
  */
-export const first = function <T>(arr: T[]): T | undefined {
-  return arr[0];
-};
+export const first = <T>(arr: T[]): T | undefined => arr[0];
 
 /**
  * fn.flatten
@@ -267,9 +257,7 @@ export const first = function <T>(arr: T[]): T | undefined {
  * a two-dimensional array (i.e. its elements are also arrays). The result is a
  * one-dimensional array consisting of all the elements of the sub-arrays.
  */
-export const flatten = function <T>(arr: T[][]): T[] {
-  return arr.flat();
-};
+export const flatten = <T>(arr: T[][]): T[] => arr.flat();
 
 /**
  * fn.firstTouch
@@ -284,7 +272,7 @@ export const flatten = function <T>(arr: T[][]): T[] {
  * @return {Touch|null}         The first Touch object from the TouchEvent's lists
  *                              of touches.
  */
-export const firstTouch = function (event: TouchEvent): Touch | null {
+export const firstTouch = (event: TouchEvent): Touch | null => {
   if (event.touches && event.touches.length > 0) {
     return event.touches[0];
   } else if (event.changedTouches && event.changedTouches.length > 0) {
@@ -304,7 +292,7 @@ export const firstTouch = function (event: TouchEvent): Touch | null {
  *   informalGreeting: function() { return "How ya' doin!" }
  * })
  */
-export const foldPattern = function <T>(key: string, pattern: Record<string, () => T>): T {
+export const foldPattern = <T>(key: string, pattern: Record<string, () => T>): T => {
   const result = pattern[key];
   if (typeof result === "function") {
     return result();
@@ -323,10 +311,10 @@ export const foldPattern = function <T>(key: string, pattern: Record<string, () 
  * MUST be "hashable" - convertible to unique keys of a JavaScript object.
  * As payoff for obeying this restriction, the algorithm can run much faster.
  */
-export const hashableSet = function <T, U extends string | number>(
+export const hashableSet = <T, U extends string | number>(
   arr: T[],
   acc?: (element: T, index: number, array: T[]) => U
-): U[] {
+): U[] => {
   const accessor = acc || (identity as (element: T, index: number, array: T[]) => U);
   const seen: Record<string | number, boolean> = {};
   const result: U[] = [];
@@ -346,27 +334,23 @@ export const hashableSet = function <T, U extends string | number>(
  *
  * Determines if the passed value is a function
  */
-export const isFunction = function (val: unknown): val is (...args: any[]) => any {
-  return typeof val == "function";
-};
+export const isFunction = (val: unknown): val is (...args: any[]) => any =>
+  typeof val == "function";
 
 /**
  * fn.isNull
  *
  * determines if the passed value is null.
  */
-export const isNull = function (val: unknown): val is null {
-  return val === null;
-};
+export const isNull = (val: unknown): val is null => val === null;
 
 /**
  * fn.isNumber
  *
  * determine whether the value is a number
  */
-export const isNumber = function (val: unknown): val is number {
-  return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
-};
+export const isNumber = (val: unknown): val is number =>
+  Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
 
 /**
  * fn.isObject
@@ -374,18 +358,14 @@ export const isNumber = function (val: unknown): val is number {
  * determines if the passed value is of an "object" type, or if it is something else,
  * e.g. a raw number, string, null, undefined, NaN, something like that.
  */
-export const isObject = function (val: unknown): val is object {
-  return Object(val) === val;
-};
+export const isObject = (val: unknown): val is object => Object(val) === val;
 
 /**
  * fn.last
  *
  * Returns the last value in the passed array, or undefined if the array is empty
  */
-export const last = function <T>(arr: T[]): T | undefined {
-  return arr[arr.length - 1];
-};
+export const last = <T>(arr: T[]): T | undefined => arr[arr.length - 1];
 
 /**
  * fn.not
@@ -394,11 +374,10 @@ export const last = function <T>(arr: T[]): T | undefined {
  * which calls f on its arguments and returns the
  * boolean opposite of f's return value.
  */
-export const not = function <T extends any[]>(f: (...args: T) => any): (...args: T) => boolean {
-  return function (this: any, ...args: T): boolean {
+export const not = <T extends any[]>(f: (...args: T) => any): ((...args: T) => boolean) =>
+  function (this: any, ...args: T): boolean {
     return !Reflect.apply(f, this, args);
   };
-};
 
 /**
  * fn.prop
@@ -408,13 +387,12 @@ export const not = function <T extends any[]>(f: (...args: T) => any): (...args:
  * it returns that object's value for the named property. (or undefined, if the object
  * does not contain the property.)
  */
-export const prop = function <K extends string | number | symbol>(
+export const prop = <K extends string | number | symbol>(
   key: K
-): <T extends Record<K, any>>(object: T) => T[K] {
-  return function <T extends Record<K, any>>(object: T): T[K] {
+): (<T extends Record<K, any>>(object: T) => T[K]) =>
+  function <T extends Record<K, any>>(object: T): T[K] {
     return object[key];
   };
-};
 
 /**
  * fn.propOr
@@ -426,15 +404,14 @@ export const prop = function <K extends string | number | symbol>(
  * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
  * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
  */
-export const propOr = function <K extends string | number | symbol, D>(
+export const propOr = <K extends string | number | symbol, D>(
   key: K,
   defaultVal?: D
-): <T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D {
-  return function <T extends Partial<Record<K, any>>>(object: T | undefined): T[K] | D {
+): (<T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D) =>
+  function <T extends Partial<Record<K, any>>>(object: T | undefined): T[K] | D {
     const value = object === undefined ? undefined : object[key];
     return value === undefined ? (defaultVal as D) : value;
   };
-};
 
 /**
  * fn.set
@@ -448,10 +425,7 @@ export const propOr = function <K extends string | number | symbol, D>(
  * ["b", a", "b", "b"] -> ["b", "a"]
  * [{obj1}, {obj2}, {obj1}, {obj3}] -> [{obj1}, {obj2}, {obj3}]
  */
-export const set = function <T, U>(
-  arr: T[],
-  acc?: (value: T, index: number, array: T[]) => U
-): U[] {
+export const set = <T, U>(arr: T[], acc?: (value: T, index: number, array: T[]) => U): U[] => {
   const accessor = acc || (identity as (value: T, index: number, array: T[]) => U);
   return arr.reduce((m: U[], value: T, i: number) => {
     const computed = accessor(value, i, arr);
@@ -465,7 +439,7 @@ export const set = function <T, U>(
  * Test an array with a predicate and determine whether some element in the array passes the test.
  * Returns true as soon as an element passes the test. Returns false otherwise.
  */
-export const some = function <T>(predicate: (element: T) => boolean, arr: T[]): boolean {
+export const some = <T>(predicate: (element: T) => boolean, arr: T[]): boolean => {
   for (const element of arr) {
     if (predicate(element)) {
       return true;
@@ -481,25 +455,20 @@ export const some = function <T>(predicate: (element: T) => boolean, arr: T[]): 
  * date objects, because two different date objects are not considered equal, even if they
  * represent the same date.
  */
-export const stringEqual = function (
-  a: { toString(): string },
-  b: { toString(): string }
-): boolean {
-  return a.toString() === b.toString();
-};
+export const stringEqual = (a: { toString(): string }, b: { toString(): string }): boolean =>
+  a.toString() === b.toString();
 
 /**
  * fn.functor
  *
  * Same as fn.functor in d3v3
  */
-export const functor = function <T>(v: T | (() => T)): () => T {
-  return typeof v === "function"
+export const functor = <T>(v: T | (() => T)): (() => T) =>
+  typeof v === "function"
     ? (v as () => T)
     : function (): T {
         return v;
       };
-};
 
 /**
  * fn.memoize
@@ -507,24 +476,24 @@ export const functor = function <T>(v: T | (() => T)): () => T {
  * Adapted from lodash's memoize() but using d3.map() as cache
  * See https://lodash.com/docs/4.17.4#memoize
  */
-export const memoize = function <TFunc extends (...args: any[]) => any>(
+export const memoize = <TFunc extends (...args: any[]) => any>(
   func: TFunc,
   resolver?: (...args: Parameters<TFunc>) => string | number
-): TFunc & { cache: Map<string | number, ReturnType<TFunc>> } {
-  if (typeof func != "function" || (resolver != null && typeof resolver != "function")) {
+): TFunc & { cache: Map<string | number, ReturnType<TFunc>> } => {
+  if (typeof func !== "function" || (resolver != null && typeof resolver !== "function")) {
     throw new TypeError("Expected a function");
   }
-  const memoized = function (...args: Parameters<TFunc>): ReturnType<TFunc> {
+  const memoized = ((...args: Parameters<TFunc>): ReturnType<TFunc> => {
     const key = resolver ? resolver(...args) : args[0];
     const cache = memoized.cache;
 
     if (cache.has(key)) {
-      return cache.get(key)!;
+      return cache.get(key) as ReturnType<TFunc>;
     }
     const result = func(...args);
     memoized.cache = cache.set(key, result) || cache;
     return result;
-  } as TFunc & { cache: Map<string | number, ReturnType<TFunc>> };
+  }) as TFunc & { cache: Map<string | number, ReturnType<TFunc>> };
 
   memoized.cache = new Map<string | number, ReturnType<TFunc>>();
   return memoized;

@@ -105,10 +105,10 @@ const LIGHTNESS_STEP = 1;
 /* Scales
 ----------------------------------------------- */
 function qualColorScale(colors: string[]): ColorScaleFactory<ExtendedOrdinalScale> {
-  return function (): ExtendedOrdinalScale {
+  return (): ExtendedOrdinalScale => {
     const scale = scaleOrdinal<string, LabColor>().range(colors.map(convertLab));
     // Set unknown to first color without the type constraint
-    (scale as any).unknown(convertLab(colors[0]));
+    scale.unknown(convertLab(colors[0]));
     return decorateOrdinalScale(scale);
   };
 }
@@ -218,7 +218,7 @@ export const scaleGender5Wedding = (): ExtendedOrdinalScale =>
   ]);
 
 function seqColorScale(colors: string[]): ColorScaleFactory<ExtendedLinearScale> {
-  return function (): ExtendedLinearScale {
+  return (): ExtendedLinearScale => {
     const scale = scaleLinear<LabColor, LabColor>().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
@@ -230,7 +230,7 @@ export const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
 export const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
 
 function divColorScale(colors: string[]): ColorScaleFactory<ExtendedDivergingScale> {
-  return function (): ExtendedDivergingScale {
+  return (): ExtendedDivergingScale => {
     const scale = scaleLinear<LabColor, LabColor>().range(colors.map(convertLab));
     return decorateDivScale(scale);
   };
@@ -284,10 +284,10 @@ export const scaleDivNtrGry = divColorScale([
 ]);
 
 function greyColorScale(colors: string[]): ColorScaleFactory<ExtendedLinearScale> {
-  return function (): ExtendedLinearScale {
+  return (): ExtendedLinearScale => {
     // Grey color scales are really ordinal but we treat them like linear for the API
     const scale = scaleOrdinal<string, LabColor>().range(colors.map(convertLab));
-    return decorateLinearScale(scale);
+    return decorateLinearScale(scale as unknown as ScaleLinear<LabColor, LabColor>);
   };
 }
 
@@ -298,17 +298,13 @@ export const scaleDimGry = greyColorScale(["#B8B8B8"]);
 export const scaleMedGry = greyColorScale(["#7C7C7C"]);
 export const scaleDeepGry = greyColorScale(["#545454"]);
 
-export const slightlyDarker = function (c: string): HSLColor {
-  return hsl(c).darker(0.4);
-};
+export const slightlyDarker = (c: string): HSLColor => hsl(c).darker(0.4);
 
-export const muchDarker = function (c: string): HSLColor {
-  return hsl(c).darker(0.7);
-};
+export const muchDarker = (c: string): HSLColor => hsl(c).darker(0.7);
 
-export const withAlpha = function (c: string, a: number): string {
+export const withAlpha = (c: string, a: number): string => {
   const rgbColor = rgb(c);
-  return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
+  return `rgba(${rgbColor.r},${rgbColor.g},${rgbColor.b},${a})`;
 };
 
 /* Scale extensions
@@ -316,32 +312,22 @@ export const withAlpha = function (c: string, a: number): string {
 function decorateOrdinalScale(scale: ScaleOrdinal<string, LabColor>): ExtendedOrdinalScale {
   const enhancedScale = scale as ExtendedOrdinalScale;
 
-  enhancedScale.darker = function (): ExtendedOrdinalScale {
-    return decorateOrdinalScale(
-      scale.copy().range(scale.range().map((d) => d.brighter(LIGHTNESS_STEP)))
-    );
-  };
+  enhancedScale.darker = (): ExtendedOrdinalScale =>
+    decorateOrdinalScale(scale.copy().range(scale.range().map((d) => d.brighter(LIGHTNESS_STEP))));
 
-  enhancedScale.brighter = function (): ExtendedOrdinalScale {
-    return decorateOrdinalScale(
-      scale.copy().range(scale.range().map((d) => d.darker(LIGHTNESS_STEP)))
-    );
-  };
+  enhancedScale.brighter = (): ExtendedOrdinalScale =>
+    decorateOrdinalScale(scale.copy().range(scale.range().map((d) => d.darker(LIGHTNESS_STEP))));
 
-  enhancedScale.reverse = function (): ExtendedOrdinalScale {
-    return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
-  };
+  enhancedScale.reverse = (): ExtendedOrdinalScale =>
+    decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
 
   return enhancedScale;
 }
 
 function decorateDivScale(scale: ScaleLinear<LabColor, LabColor>): ExtendedDivergingScale {
   const enhancedScale = interpolatedDivergentColorScale(scale) as ExtendedDivergingScale;
-  enhancedScale.reverse = function (): ExtendedDivergingScale {
-    return decorateLinearScale(
-      scale.copy().range(scale.range().reverse())
-    ) as ExtendedDivergingScale;
-  };
+  enhancedScale.reverse = (): ExtendedDivergingScale =>
+    decorateLinearScale(scale.copy().range(scale.range().reverse())) as ExtendedDivergingScale;
   return enhancedScale;
 }
 
@@ -364,12 +350,12 @@ function interpolatedDivergentColorScale(
   return scale;
 }
 
-function decorateLinearScale(scale: ScaleLinear<LabColor, LabColor> | any): ExtendedLinearScale {
+function decorateLinearScale(scale: ScaleLinear<LabColor, LabColor>): ExtendedLinearScale {
   // Only apply interpolation to actual linear scales, not ordinal scales used for grey
   const processedScale = "interpolate" in scale ? interpolatedColorScale(scale) : scale;
   const enhancedScale = processedScale as ExtendedLinearScale;
 
-  enhancedScale.reverse = function (): ExtendedLinearScale {
+  enhancedScale.reverse = (): ExtendedLinearScale => {
     const copiedScale = "copy" in scale ? scale.copy() : scale;
     return decorateLinearScale(copiedScale.range(scale.range().reverse()));
   };

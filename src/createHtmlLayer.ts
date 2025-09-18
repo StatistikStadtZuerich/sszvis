@@ -54,26 +54,23 @@ export interface LayerMetadata {
 export function createHtmlLayer(
   selector: SelectableElement,
   bounds?: BoundsResult,
-  metadata?: LayerMetadata
+  metadata: LayerMetadata = {}
 ): AnySelection {
-  bounds ||= mkBounds();
-  metadata ||= {};
-
+  const { padding } = bounds || mkBounds();
   const key = metadata.key || "default";
-
-  const elementDataKey = "data-sszvis-html-" + key;
+  const elementDataKey = `data-sszvis-html-${key}`;
 
   const root: AnySelection = fn.isSelection(selector) ? selector : select(selector);
   root.classed("sszvis-outer-container", true);
 
   return root
-    .selectAll("[data-sszvis-html-layer][" + elementDataKey + "]")
+    .selectAll(`[data-sszvis-html-layer][${elementDataKey}]`)
     .data([0])
     .join("div")
     .classed("sszvis-html-layer", true)
     .attr("data-sszvis-html-layer", "")
     .attr(elementDataKey, "")
     .style("position", "absolute")
-    .style("left", bounds.padding.left + "px")
-    .style("top", bounds.padding.top + "px");
+    .style("left", `${padding.left}px`)
+    .style("top", `${padding.top}px`);
 }

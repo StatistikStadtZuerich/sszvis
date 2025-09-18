@@ -59,9 +59,7 @@ export function component(): Component {
    */
   function sszvisComponent(selection: AnySelection): void {
     if (selectionRenderer) {
-      (selection as any).props = function (): ComponentProps {
-        return clone(props);
-      };
+      (selection as any).props = (): ComponentProps => clone(props);
       selectionRenderer.apply(selection, slice(arguments));
     }
     selection.each(function () {
@@ -78,8 +76,7 @@ export function component(): Component {
    *         sszvis.component. Sets the returned value to the given property
    * @return {sszvis.component}
    */
-  sszvisComponent.prop = function <T>(prop: string, setter?: PropertySetter<T>): Component {
-    setter || (setter = identity);
+  sszvisComponent.prop = <T>(prop: string, setter: PropertySetter<T> = identity): Component => {
     (sszvisComponent as any)[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(
       sszvisComponent
     );
@@ -93,8 +90,8 @@ export function component(): Component {
    * @param  {Object} delegate The target having getter and setter methods for prop
    * @return {sszvis.component}
    */
-  sszvisComponent.delegate = function (prop: string, delegate: PropertyDelegate): Component {
-    (sszvisComponent as any)[prop] = function (...args: any[]): any {
+  sszvisComponent.delegate = (prop: string, delegate: PropertyDelegate): Component => {
+    (sszvisComponent as any)[prop] = (...args: any[]): any => {
       const result = delegate[prop].apply(delegate, slice(args));
       return args.length === 0 ? result : sszvisComponent;
     };
@@ -110,7 +107,7 @@ export function component(): Component {
    * @param  {Function} callback
    * @return {[sszvis.component]}
    */
-  sszvisComponent.renderSelection = function (callback: SelectionRenderCallback): Component {
+  sszvisComponent.renderSelection = (callback: SelectionRenderCallback): Component => {
     selectionRenderer = callback;
     return sszvisComponent as Component;
   };
@@ -124,7 +121,7 @@ export function component(): Component {
    * @param  {Function} callback
    * @return {sszvis.component}
    */
-  sszvisComponent.render = function (callback: RenderCallback): Component {
+  sszvisComponent.render = (callback: RenderCallback): Component => {
     renderer = callback;
     return sszvisComponent as Component;
   };
@@ -152,8 +149,8 @@ d3Selection.prototype.props = function (): ComponentProps {
   // so we currently simplify to the most common use-case:
   // getting props.
   if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
-  if (this.size() != 1) throw new Error("only one group is supported");
-  if ((this as any)._groups[0].length != 1) throw new Error("only one node is supported");
+  if (this.size() !== 1) throw new Error("only one group is supported");
+  if ((this as any)._groups[0].length !== 1) throw new Error("only one node is supported");
 
   const group = (this as any)._groups[0];
   const node = group[0];
@@ -169,12 +166,11 @@ d3Selection.prototype.props = function (): ComponentProps {
  * @param  {Function} [setter] Transforms the data on set
  * @return {Function} The accessor function
  */
-function accessor(props: ComponentProps, prop: string, setter?: PropertySetter): Function {
-  setter || (setter = identity);
+function accessor(props: ComponentProps, prop: string, setter: PropertySetter = identity) {
   return function (this: Component, ...args: any[]): any {
     if (args.length === 0) return props[prop];
 
-    props[prop] = setter!.apply(null, args);
+    props[prop] = setter.apply(null, args);
     return this;
   };
 }
@@ -190,7 +186,7 @@ function slice(arrayLike: ArrayLike<any>): any[] {
 function clone(obj: ComponentProps): ComponentProps {
   const copy: ComponentProps = {};
   for (const attr in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
+    if (Object.hasOwn(obj, attr)) copy[attr] = obj[attr];
   }
   return copy;
 }

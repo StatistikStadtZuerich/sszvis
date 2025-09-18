@@ -14,63 +14,21 @@ const format = formatLocale(formatLocaleDefinition).format;
 /**
  * Format a number as an age
  */
-export const formatAge = function (d: number): string {
-  return String(Math.round(d));
-};
+export const formatAge = (d: number): string => String(Math.round(d));
 
 /**
  * A multi time formatter used by the axis class
  */
-export const formatAxisTimeFormat = function (d: Date): string {
+export const formatAxisTimeFormat = (d: Date): string => {
   const xs: [string, (date: Date) => boolean | number][] = [
-    [
-      ".%L",
-      function (date: Date): number {
-        return date.getMilliseconds();
-      },
-    ],
-    [
-      ":%S",
-      function (date: Date): number {
-        return date.getSeconds();
-      },
-    ],
-    [
-      "%H:%M",
-      function (date: Date): number {
-        return date.getMinutes();
-      },
-    ],
-    [
-      "%H Uhr",
-      function (date: Date): number {
-        return date.getHours();
-      },
-    ],
-    [
-      "%a., %d.",
-      function (date: Date): boolean {
-        return Boolean(date.getDay() && date.getDate() != 1);
-      },
-    ],
-    [
-      "%e. %b",
-      function (date: Date): boolean {
-        return date.getDate() != 1;
-      },
-    ],
-    [
-      "%B",
-      function (date: Date): number {
-        return date.getMonth();
-      },
-    ],
-    [
-      "%Y",
-      function (): boolean {
-        return true;
-      },
-    ],
+    [".%L", (date: Date): number => date.getMilliseconds()],
+    [":%S", (date: Date): number => date.getSeconds()],
+    ["%H:%M", (date: Date): number => date.getMinutes()],
+    ["%H Uhr", (date: Date): number => date.getHours()],
+    ["%a., %d.", (date: Date): boolean => Boolean(date.getDay() && date.getDate() !== 1)],
+    ["%e. %b", (date: Date): boolean => date.getDate() !== 1],
+    ["%B", (date: Date): number => date.getMonth()],
+    ["%Y", (): boolean => true],
   ];
 
   for (const x of xs) {
@@ -96,9 +54,7 @@ export const formatYear = timeFormat("%Y");
 /**
  * Formatter for no label
  */
-export const formatNone = function (): string {
-  return "";
-};
+export const formatNone = (): string => "";
 
 /**
  * Format numbers according to the sszvis style guide. The most important
@@ -113,11 +69,11 @@ export const formatNone = function (): string {
  *
  * See also: many test cases for this function in format.test.js
  */
-export const formatNumber = function (d: number | null | undefined): string {
+export const formatNumber = (d: number | null | undefined): string => {
   let p: number;
   const dAbs = Math.abs(d ?? 0);
 
-  if (d == null || isNaN(d)) {
+  if (d == null || Number.isNaN(d)) {
     return "–"; // This is an en-dash
   }
 
@@ -135,7 +91,7 @@ export const formatNumber = function (d: number | null | undefined): string {
     p = Math.min(1, decimalPlaces(d));
     // Where there are decimals, round to 1 position
     // To display more precision, use the preciseNumber function.
-    return stripTrailingZeroes(format("." + p + "f")(d));
+    return stripTrailingZeroes(format(`.${p}f`)(d));
   }
 
   // 41       -> "41"
@@ -145,7 +101,7 @@ export const formatNumber = function (d: number | null | undefined): string {
     p = Math.min(2, decimalPlaces(d));
     // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
     // but not more. To display more precision, use the preciseNumber function.
-    return stripTrailingZeroes(format("." + p + "f")(d));
+    return stripTrailingZeroes(format(`.${p}f`)(d));
   }
 
   // If abs(num) is not > 0, num is 0
@@ -171,26 +127,26 @@ export function formatPreciseNumber(p: number, d?: number): string | ((x: number
   // This curries the function
   if (arguments.length > 1 && d !== undefined) return formatPreciseNumber(p)(d);
 
-  return function (x: number): string {
+  return (x: number): string => {
     const dAbs = Math.abs(x);
-    return dAbs >= 100 && dAbs < 1e4 ? format("." + p + "f")(x) : format(",." + p + "f")(x);
+    return dAbs >= 100 && dAbs < 1e4 ? format(`.${p}f`)(x) : format(`,.${p}f`)(x);
   };
 }
 
 /**
  * Format percentages on the range 0 - 100
  */
-export const formatPercent = function (d: number): string {
+export const formatPercent = (d: number): string => {
   // Uses unix thin space
-  return formatNumber(d) + " %";
+  return `${formatNumber(d)} %`;
 };
 
 /**
  * Format percentages on the range 0 - 1
  */
-export const formatFractionPercent = function (d: number): string {
+export const formatFractionPercent = (d: number): string => {
   // Uses unix thin space
-  return formatNumber(d * 100) + " %";
+  return `${formatNumber(d * 100)} %`;
 };
 
 /**

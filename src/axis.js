@@ -67,7 +67,7 @@ const TICK_PROXIMITY_THRESHOLD = 8;
 const TICK_END_THRESHOLD = 12;
 const LABEL_PROXIMITY_THRESHOLD = 10;
 
-const axis = function () {
+function axis() {
   // const axisDelegate = d3.axisBottom();
   // axisDelegate.orient = function() { return 'bottom'; };
 
@@ -120,7 +120,7 @@ const axis = function () {
 
         const isBottom = !props.vertical && props.orient === "bottom";
 
-        const axisDelegate = (function () {
+        const axisDelegate = (() => {
           switch (props.orient) {
             case "bottom": {
               return axisBottom();
@@ -149,7 +149,7 @@ const axis = function () {
         ]) {
           if (props[prop] !== undefined) {
             if (axisDelegate[prop] === undefined) {
-              throw new Error('axis: "' + prop + '" not available');
+              throw new Error(`axis: "${prop}" not available`);
             }
             axisDelegate[prop](props[prop]);
           }
@@ -439,7 +439,7 @@ const axis = function () {
         }
       })
   );
-};
+}
 
 const setOrdinalTicks = function (count) {
   // in this function, the 'this' context should be an sszvis.axis
@@ -460,34 +460,28 @@ const setOrdinalTicks = function (count) {
   return count;
 };
 
-export const axisX = function () {
-  return axis()
+export const axisX = () =>
+  axis()
     .yOffset(2) //gap between chart and x-axis
     .ticks(3)
     .tickSizeInner(4)
     .tickSizeOuter(6.5)
     .tickPadding(6)
     .tickFormat(fn.arity(1, formatNumber));
-};
 
-axisX.time = function () {
-  return axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
-};
+axisX.time = () => axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
 
-axisX.ordinal = function () {
-  return (
-    axisX()
-      // extend this class a little with a custom implementation of 'ticks'
-      // that allows you to set a custom number of ticks,
-      // including the first and last value in the ordinal scale
-      .prop("ticks", setOrdinalTicks)
-      .tickFormat(formatText)
-  );
-};
+axisX.ordinal = () =>
+  axisX()
+    // extend this class a little with a custom implementation of 'ticks'
+    // that allows you to set a custom number of ticks,
+    // including the first and last value in the ordinal scale
+    .prop("ticks", setOrdinalTicks)
+    .tickFormat(formatText);
 
 // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
-axisX.pyramid = function () {
-  return axisX()
+axisX.pyramid = () =>
+  axisX()
     .ticks(10)
     .prop("scale", function (s) {
       const extended = s.copy(),
@@ -508,9 +502,8 @@ axisX.pyramid = function () {
       // when in fact it is -domain[1] -> +domain[1]
       formatNumber(Math.abs(v))
     );
-};
 
-export const axisY = function () {
+export const axisY = () => {
   const newAxis = axis()
     .ticks(6)
     .tickSize(0, 0)
@@ -520,18 +513,13 @@ export const axisY = function () {
   return newAxis;
 };
 
-axisY.time = function () {
-  return axisY().tickFormat(formatAxisTimeFormat);
-};
+axisY.time = () => axisY().tickFormat(formatAxisTimeFormat);
 
-axisY.ordinal = function () {
-  return (
-    axisY()
-      // add custom 'ticks' function
-      .prop("ticks", setOrdinalTicks)
-      .tickFormat(formatText)
-  );
-};
+axisY.ordinal = () =>
+  axisY()
+    // add custom 'ticks' function
+    .prop("ticks", setOrdinalTicks)
+    .tickFormat(formatText);
 
 /* Helper functions
 ----------------------------------------------- */

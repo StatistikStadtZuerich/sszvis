@@ -158,13 +158,11 @@ export function cascade<T = any>(): CascadeInstance<T> {
     }
   }
 
-  _cascade.apply = function (data: T[]): any {
-    return make(data, 0);
-  };
+  _cascade.apply = (data: T[]): any => make(data, 0);
 
-  _cascade.objectBy = function <K extends string | number>(
+  _cascade.objectBy = <K extends string | number>(
     accessor: KeyAccessor<T, K>
-  ): CascadeInstance<T> {
+  ): CascadeInstance<T> => {
     keys.push({
       type: "obj",
       func: accessor,
@@ -172,10 +170,10 @@ export function cascade<T = any>(): CascadeInstance<T> {
     return _cascade;
   };
 
-  _cascade.arrayBy = function <K extends string | number>(
+  _cascade.arrayBy = <K extends string | number>(
     accessor: KeyAccessor<T, K>,
     sorter?: KeySorter<K>
-  ): CascadeInstance<T> {
+  ): CascadeInstance<T> => {
     keys.push({
       type: "arr",
       func: accessor,
@@ -184,7 +182,7 @@ export function cascade<T = any>(): CascadeInstance<T> {
     return _cascade;
   };
 
-  _cascade.sort = function (sorter: ValueSorter<T>): CascadeInstance<T> {
+  _cascade.sort = (sorter: ValueSorter<T>): CascadeInstance<T> => {
     valuesSort = sorter;
     return _cascade;
   };

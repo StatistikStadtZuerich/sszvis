@@ -51,7 +51,7 @@ type ConsoleMethod = "log" | "warn" | "error";
 /**
  * Type for logger function that accepts any number of arguments
  */
-type LoggerFunction = (...args: any[]) => void;
+type LoggerFunction = (...args: unknown[]) => void;
 
 export const log: LoggerFunction = logger("log");
 export const warn: LoggerFunction = logger("warn");
@@ -60,8 +60,8 @@ export const error: LoggerFunction = logger("error");
 /* Helper functions
 ----------------------------------------------- */
 function logger(type: ConsoleMethod): LoggerFunction {
-  return function (...args: any[]): void {
-    if (console && console[type]) {
+  return (...args: unknown[]): void => {
+    if (console?.[type]) {
       for (const msg of args) {
         console[type](msg);
       }

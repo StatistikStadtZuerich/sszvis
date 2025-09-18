@@ -18,9 +18,9 @@ declare module "d3" {
   }
 }
 
-(selection.prototype as any).selectDiv = function (key: string): AnySelection {
-  return this.selectAll('[data-d3-selectdiv="' + key + '"]')
-    .data((d: any) => [d])
+selection.prototype.selectDiv = function (key: string): AnySelection {
+  return this.selectAll(`[data-d3-selectdiv="${key}"]`)
+    .data((d: unknown) => [d])
     .join("div")
     .attr("data-d3-selectdiv", key)
     .style("position", "absolute");

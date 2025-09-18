@@ -10,7 +10,7 @@ import * as logger from "./logger";
  * Handle data loading errors by logging them
  * @param error The error object from a failed data load operation
  */
-export const loadError = function (error: Error | unknown): void {
+export const loadError = (error: Error | unknown): void => {
   logger.error(error);
 
   // Don't use alert()!

@@ -18,7 +18,7 @@ interface Scale {
  * @return {array}          The extent of the scale's range. Useful for determining how far
  *                          a scale stretches in its output dimension.
  */
-export const range = function (scale: Scale): [number, number] {
+export const range = (scale: Scale): [number, number] => {
   // borrowed from d3 source - svg.axis
   return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
 };

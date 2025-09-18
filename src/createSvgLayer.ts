@@ -33,27 +33,26 @@ export interface SvgLayerMetadata {
 export function createSvgLayer(
   selector: SelectableElement,
   bounds?: BoundsResult,
-  metadata?: SvgLayerMetadata
+  metadata: SvgLayerMetadata = {}
 ): AnySelection {
-  bounds ||= mkBounds();
-  metadata ||= {};
+  const { padding, height, width } = bounds || mkBounds();
 
   const key = metadata.key || "default";
-  const elementDataKey = "data-sszvis-svg-" + key;
+  const elementDataKey = `data-sszvis-svg-${key}`;
   const title = metadata.title || "";
   const description = metadata.description || "";
 
   const root: AnySelection = fn.isSelection(selector) ? selector : select(selector);
   const svg = root
-    .selectAll("svg[" + elementDataKey + "]")
+    .selectAll(`svg[${elementDataKey}]`)
     .data([0])
     .join("svg")
     .classed("sszvis-svg-layer", true)
     .attr(elementDataKey, "")
     .attr("role", "img")
-    .attr("aria-label", title + " – " + description)
-    .attr("height", bounds.height)
-    .attr("width", bounds.width);
+    .attr("aria-label", `${title} – ${description}`)
+    .attr("height", height)
+    .attr("width", width);
 
   svg.selectAll("title").data([0]).join("title").text(title);
 
@@ -71,5 +70,5 @@ export function createSvgLayer(
     .data(() => [0])
     .join("g")
     .attr("data-sszvis-svg-layer", "")
-    .attr("transform", "translate(" + bounds.padding.left + "," + bounds.padding.top + ")");
+    .attr("transform", `translate(${padding.left},${padding.top})`);
 }
