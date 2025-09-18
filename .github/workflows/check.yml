@@ -1,0 +1,88 @@
+name: "Check"
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  check:
+    name: "Check"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Run Check
+        run: npm run check
+
+  verify-types:
+    name: "Types"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Verify Types
+        run: npm run type-check
+
+  unit-test:
+    needs:
+      - check
+      - verify-types
+    name: "Unit Test"
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+
+      - name: Run Component Tests
+        run: npm run test:unit
+
+  snapshot-test:
+    needs:
+      - check
+      - verify-types
+    name: "Snapshot Test"
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      NODE_OPTIONS: --openssl-legacy-provider
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+
+      - name: Build Docs
+        run: npm run build
+
+      - name: Serve docs and run tests
+        run: |
+          npx concurrently -k -s first -n "DOC,TEST" -c "magenta,blue" \
+            "npm run start" \
+            "npx wait-on http://localhost:8000 && npm run test:snapshot"
