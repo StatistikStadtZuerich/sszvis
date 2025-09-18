@@ -17,7 +17,7 @@
  *
  */
 
-import { PatternSelection, LinearGradientSelection, MaskSelection } from "./types";
+import { LinearGradientSelection, MaskSelection, PatternSelection } from "./types";
 
 /**
  * The pattern for the missing values in the heat table

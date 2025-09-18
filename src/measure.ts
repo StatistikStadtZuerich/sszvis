@@ -3,7 +3,7 @@
  *
  * @module sszvis/measure
  */
-import { select, Selection } from "d3";
+import { Selection, select } from "d3";
 import { isSelection, isString } from "./fn";
 
 import type { DimensionMeasurement } from "./types.js";

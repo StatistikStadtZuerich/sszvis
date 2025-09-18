@@ -49,7 +49,6 @@
  * @method responsiveProps.prop
  */
 
-import type { Measurement, Breakpoint } from "./types.js";
 import {
   breakpointCreateSpec,
   breakpointDefaultSpec,
@@ -58,6 +57,7 @@ import {
 } from "./breakpoint.js";
 import * as fn from "./fn.js";
 import * as logger from "./logger.js";
+import type { Breakpoint, Measurement } from "./types.js";
 
 // Type definitions
 export interface ResponsivePropValue<T = any> {

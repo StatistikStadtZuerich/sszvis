@@ -4,7 +4,7 @@
  * @module sszvis/types
  */
 
-import { Selection, BaseType } from "d3";
+import type { Selection } from "d3";
 
 /**
  * Generic type for SVG element selections with sensible defaults

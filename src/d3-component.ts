@@ -1,5 +1,5 @@
-import { selection as d3Selection, type Selection, type BaseType } from "d3";
-import { type AnySelection } from "./types.js";
+import { type BaseType, selection as d3Selection, type Selection } from "d3";
+import type { AnySelection } from "./types.js";
 
 /**
  * Props object type for component properties

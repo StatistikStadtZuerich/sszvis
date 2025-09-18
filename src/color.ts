@@ -42,17 +42,17 @@
  */
 
 import {
-  scaleOrdinal,
-  scaleLinear,
+  type HSLColor,
   hsl,
-  rgb,
+  type LabColor,
   lab,
   mean,
   quantile,
-  type ScaleOrdinal,
+  rgb,
   type ScaleLinear,
-  type LabColor,
-  type HSLColor,
+  type ScaleOrdinal,
+  scaleLinear,
+  scaleOrdinal,
 } from "d3";
 
 /**

@@ -42,10 +42,10 @@
  */
 
 import { select } from "d3";
-import type { SelectableElement, AnySelection } from "./types.js";
 import type { BoundsResult } from "./bounds.js";
-import * as fn from "./fn.js";
 import { bounds as mkBounds } from "./bounds.js";
+import * as fn from "./fn.js";
+import type { AnySelection, SelectableElement } from "./types.js";
 
 export interface LayerMetadata {
   key?: string;

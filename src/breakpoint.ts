@@ -18,7 +18,7 @@
 
 import * as fn from "./fn";
 
-import type { Measurement, Breakpoint } from "./types.js";
+import type { Breakpoint, Measurement } from "./types.js";
 
 /**
  * Breakpoint definition with explicit measurement object

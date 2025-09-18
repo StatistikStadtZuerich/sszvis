@@ -12,9 +12,9 @@
  * @module sszvis/fallback
  */
 
-import { select, Selection } from "d3";
+import { select } from "d3";
 import * as fn from "./fn";
-import { SelectableElement, AnySelection } from "./types";
+import { AnySelection, SelectableElement } from "./types";
 
 /**
  * Options for fallback image rendering
