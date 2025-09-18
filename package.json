@@ -36,6 +36,7 @@
     "@semantic-release/changelog": "^6.0.3",
     "@types/d3": "^7.4.3",
     "@types/node": "^24.5.1",
+    "@vitest/browser": "^3.2.4",
     "d3": "^7.9.0",
     "d3-dsv": "^3.0.1",
     "eslint": "^9.35.0",
