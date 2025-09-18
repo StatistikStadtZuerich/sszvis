@@ -1,4 +1,4 @@
-export function responsiveProps(...args: any[]): {
+export function responsiveProps(): {
     (measurement: any): {
         [x: string]: any;
     };

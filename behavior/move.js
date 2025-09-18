@@ -82,7 +82,7 @@ function move () {
       const target = this;
       const doc = select(document);
       const win = select(globalThis);
-      const startDragging = () => {
+      const startDragging = function () {
         target.__dragging__ = true;
       };
       const stopDragging = function () {
@@ -100,10 +100,11 @@ function move () {
       });
       startDragging();
     }).on("mousemove", function (e) {
+      const target = this;
       const xy = pointer(e);
       const x = scaleInvert(props.xScale, xy[0]);
       const y = scaleInvert(props.yScale, xy[1]);
-      if (this.__dragging__) {
+      if (target.__dragging__) {
         event.apply("drag", this, [e, x, y]);
       } else {
         event.apply("move", this, [e, x, y]);
@@ -163,7 +164,7 @@ function move () {
       layer.attr("fill", "rgba(255,0,0,0.2)");
     }
   });
-  moveComponent.on = () => {
+  moveComponent.on = function () {
     const value = event.on.apply(event, arguments);
     return value === event ? moveComponent : value;
   };

@@ -1,4 +1,4 @@
-import { hsl, scaleOrdinal, scaleLinear, rgb, lab, mean, quantile } from 'd3';
+import { scaleOrdinal, scaleLinear, hsl, rgb, lab, mean, quantile } from 'd3';
 
 /**
  * Color scales
@@ -51,7 +51,7 @@ const LIGHTNESS_STEP = 1;
 /* Scales
 ----------------------------------------------- */
 function qualColorScale(colors) {
-  return () => {
+  return function () {
     const scale = scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
     return decorateOrdinalScale(scale);
   };
@@ -90,7 +90,7 @@ const femaleUnknown = "#B8B8B8";
 const maleUnknown = "#D6D6D6";
 const scaleGender5Wedding = () => qualColorScale([femaleFemale, maleMale, femaleMale, femaleUnknown, maleUnknown])().domain(["Frau / Frau", "Mann / Mann", "Frau / Mann", "Frau / Unbekannt", "Mann / Unbekannt"]);
 function seqColorScale(colors) {
-  return () => {
+  return function () {
     const scale = scaleLinear().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
@@ -100,7 +100,7 @@ const scaleSeqRed = seqColorScale(["#FED2EE", "#ED408D", "#7D0044"]);
 const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
 const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
 function divColorScale(colors) {
-  return () => {
+  return function () {
     const scale = scaleLinear().range(colors.map(convertLab));
     return decorateDivScale(scale);
   };
@@ -110,7 +110,7 @@ const scaleDivValGry = divColorScale(["#782600", "#CC4309", "#FF720C", "#FFBC88"
 const scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
 const scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
 function greyColorScale(colors) {
-  return () => {
+  return function () {
     const scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
@@ -121,9 +121,13 @@ const scaleGry = greyColorScale(["#D6D6D6"]);
 const scaleDimGry = greyColorScale(["#B8B8B8"]);
 const scaleMedGry = greyColorScale(["#7C7C7C"]);
 const scaleDeepGry = greyColorScale(["#545454"]);
-const slightlyDarker = c => hsl(c).darker(0.4);
-const muchDarker = c => hsl(c).darker(0.7);
-const withAlpha = (c, a) => {
+const slightlyDarker = function (c) {
+  return hsl(c).darker(0.4);
+};
+const muchDarker = function (c) {
+  return hsl(c).darker(0.7);
+};
+const withAlpha = function (c, a) {
   const rgbColor = rgb(c);
   return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
 };
@@ -131,14 +135,22 @@ const withAlpha = (c, a) => {
 /* Scale extensions
 ----------------------------------------------- */
 function decorateOrdinalScale(scale) {
-  scale.darker = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
-  scale.brighter = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
-  scale.reverse = () => decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
+  scale.darker = function () {
+    return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
+  };
+  scale.brighter = function () {
+    return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
+  };
+  scale.reverse = function () {
+    return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
+  };
   return scale;
 }
 function decorateDivScale(scale) {
   scale = interpolatedDivergentColorScale(scale);
-  scale.reverse = () => decorateLinearScale(scale.copy().range(scale.range().reverse()));
+  scale.reverse = function () {
+    return decorateLinearScale(scale.copy().range(scale.range().reverse()));
+  };
   return scale;
 }
 function interpolatedDivergentColorScale(scale) {
@@ -157,7 +169,9 @@ function interpolatedDivergentColorScale(scale) {
 }
 function decorateLinearScale(scale) {
   scale = interpolatedColorScale(scale);
-  scale.reverse = () => decorateLinearScale(scale.copy().range(scale.range().reverse()));
+  scale.reverse = function () {
+    return decorateLinearScale(scale.copy().range(scale.range().reverse()));
+  };
   return scale;
 }
 function interpolatedColorScale(scale) {

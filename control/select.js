@@ -46,7 +46,7 @@ function select () {
 }
 function truncateToWidth(metricsEl, maxWidth, originalString) {
   const MAX_RECURSION = 1000;
-  const fitText = (str, i) => {
+  const fitText = function (str, i) {
     metricsEl.text(str);
     const textWidth = Math.ceil(metricsEl.node().clientWidth);
     return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, -2) + "…", i + 1) : str;

@@ -129,15 +129,17 @@ function cascade() {
       return arr;
     }
   }
-  _cascade.apply = data => make(data, 0);
-  _cascade.objectBy = d => {
+  _cascade.apply = function (data) {
+    return make(data, 0);
+  };
+  _cascade.objectBy = function (d) {
     keys.push({
       type: "obj",
       func: d
     });
     return _cascade;
   };
-  _cascade.arrayBy = (d, sorter) => {
+  _cascade.arrayBy = function (d, sorter) {
     keys.push({
       type: "arr",
       func: d
@@ -145,7 +147,7 @@ function cascade() {
     if (sorter) sorts[keys.length - 1] = sorter;
     return _cascade;
   };
-  _cascade.sort = d => {
+  _cascade.sort = function (d) {
     valuesSort = d;
     return _cascade;
   };

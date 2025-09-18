@@ -69,7 +69,7 @@ function panning () {
       event.apply("end", this, arguments);
     });
   });
-  panningComponent.on = () => {
+  panningComponent.on = function () {
     const value = event.on.apply(event, arguments);
     return value === event ? panningComponent : value;
   };

@@ -46,7 +46,9 @@ function formatHTML() {
       return "<strong>" + d + "</strong>";
     }
   };
-  return (textBody, datum) => textBody.lines().map(line => line.map(word => styles[word.style].call(null, word.text(datum))).join(" ")).join("<br/>");
+  return function (textBody, datum) {
+    return textBody.lines().map(line => line.map(word => styles[word.style].call(null, word.text(datum))).join(" ")).join("<br/>");
+  };
 }
 function formatSVG() {
   const styles = {
@@ -60,11 +62,13 @@ function formatSVG() {
       return '<tspan style="font-weight:bold">' + d + "</tspan>";
     }
   };
-  return (textBody, datum) => textBody.lines().reduce((svg, line, i) => {
-    const lineSvg = line.map(word => styles[word.style].call(null, word.text(datum))).join(" ");
-    const dy = i === 0 ? 0 : "1.2em";
-    return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
-  }, "");
+  return function (textBody, datum) {
+    return textBody.lines().reduce((svg, line, i) => {
+      const lineSvg = line.map(word => styles[word.style].call(null, word.text(datum))).join(" ");
+      const dy = i === 0 ? 0 : "1.2em";
+      return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
+    }, "");
+  };
 }
 function structuredText() {
   const lines = [[]];
@@ -84,17 +88,17 @@ function structuredText() {
   };
 }
 function makeTextWithFormat(format) {
-  return () => {
+  return function () {
     const textBody = structuredText();
     function makeText(d) {
       return format(textBody, d);
     }
-    makeText.newline = () => {
+    makeText.newline = function () {
       textBody.addLine();
       return makeText;
     };
     for (const style of ["bold", "italic", "plain"]) {
-      makeText[style] = text => {
+      makeText[style] = function (text) {
         textBody.addWord(style, text);
         return makeText;
       };

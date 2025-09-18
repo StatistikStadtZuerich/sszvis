@@ -65,7 +65,9 @@ function breakpointFind(breakpoints, partialMeasurement) {
  *          breakpoint for the given name exists, that breakpoint is returned
  */
 function breakpointFindByName(breakpoints, name) {
-  const eqName = bp => bp.name === name;
+  const eqName = function (bp) {
+    return bp.name === name;
+  };
   return find(eqName, breakpoints);
 }
 
@@ -121,7 +123,7 @@ function breakpointCreateSpec(spec) {
  * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
  *          default breakpoint spec.
  */
-const breakpointDefaultSpec = (() => {
+const breakpointDefaultSpec = function () {
   const DEFAULT_SPEC = breakpointCreateSpec([{
     name: "palm",
     width: 540
@@ -129,8 +131,10 @@ const breakpointDefaultSpec = (() => {
     name: "lap",
     width: 749
   }]);
-  return () => DEFAULT_SPEC;
-})();
+  return function () {
+    return DEFAULT_SPEC;
+  };
+}();
 
 // Default tests
 const breakpointPalm = makeTest("palm");
@@ -204,7 +208,9 @@ function parseBreakpoint(bp) {
  * Create a partially applied test function
  */
 function makeTest(name) {
-  return measurement => breakpointTest(breakpointFindByName(breakpointDefaultSpec(), name), measurement);
+  return function (measurement) {
+    return breakpointTest(breakpointFindByName(breakpointDefaultSpec(), name), measurement);
+  };
 }
 
 export { breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest };

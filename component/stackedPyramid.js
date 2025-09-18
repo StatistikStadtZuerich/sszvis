@@ -56,7 +56,7 @@ const rowAcc = prop("row");
  * in the data. This function makes no effort to normalize the data if that's not the case.
  */
 function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
-  return data => {
+  return function (data) {
     const sides = cascade().arrayBy(sideAcc).arrayBy(_rowAcc).objectBy(seriesAcc).apply(data).map(rows => {
       const keys = Object.keys(rows[0]);
       const side = sideAcc(rows[0][keys[0]][0]);

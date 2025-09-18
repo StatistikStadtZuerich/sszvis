@@ -1,4 +1,4 @@
-import { geoPath, geoCentroid, geoMercator } from 'd3';
+import { geoCentroid, geoMercator, geoPath } from 'd3';
 import { memoize } from '../fn.js';
 
 /*
@@ -48,7 +48,9 @@ const swissMapProjection = memoize((width, height, featureCollection) => geoMerc
  *                                            and returns an svg path string which represents that geojson, projected using
  *                                            a map projection optimal for Swiss areas.
  */
-const swissMapPath = (width, height, featureCollection, featureBoundsCacheKey) => geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
+const swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
+  return geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
+};
 
 /**
  * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
@@ -63,7 +65,7 @@ const swissMapPath = (width, height, featureCollection, featureBoundsCacheKey) =
  *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
  * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
  */
-const pixelsFromGeoDistance = (projection, centerPoint, meterDistance) => {
+const pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
   // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
   // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
   const APPROX_EARTH_RADIUS = 6367475;
@@ -99,7 +101,7 @@ const GEO_KEY_DEFAULT = "geoId";
  * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
  *                                   geoJson property which is the feature, and a datum property which is the matched datum.
  */
-const prepareMergedGeoData = (dataset, geoJson, keyName) => {
+const prepareMergedGeoData = function (dataset, geoJson, keyName) {
   keyName || (keyName = GEO_KEY_DEFAULT);
 
   // group the input data by map entity id
@@ -130,7 +132,7 @@ const prepareMergedGeoData = (dataset, geoJson, keyName) => {
  * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
  *                                          (or user-specified center) of the object.
  */
-const getGeoJsonCenter = geoJson => {
+const getGeoJsonCenter = function (geoJson) {
   if (!geoJson.properties.cachedCenter) {
     const setCenter = geoJson.properties.center;
     geoJson.properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : geoCentroid(geoJson);
@@ -147,7 +149,9 @@ const getGeoJsonCenter = geoJson => {
  * @param  {number} width    The width of the container holding the map.
  * @return {number}          The stroke width that the map elements should have.
  */
-const widthAdaptiveMapPathStroke = width => Math.min(Math.max(0.8, width / 400), 1.1);
+const widthAdaptiveMapPathStroke = function (width) {
+  return Math.min(Math.max(0.8, width / 400), 1.1);
+};
 
 export { AGGLOMERATION_2012_KEY, GEO_KEY_DEFAULT, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, getGeoJsonCenter, pixelsFromGeoDistance, prepareMergedGeoData, swissMapPath, swissMapProjection, widthAdaptiveMapPathStroke };
 //# sourceMappingURL=mapUtils.js.map

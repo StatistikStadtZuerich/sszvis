@@ -69,7 +69,9 @@
      */
     function sszvisComponent(selection) {
       if (selectionRenderer) {
-        selection.props = () => clone(props);
+        selection.props = function () {
+          return clone(props);
+        };
         selectionRenderer.apply(selection, slice$1(arguments));
       }
       selection.each(function () {
@@ -86,7 +88,7 @@
      *         sszvis.component. Sets the returned value to the given property
      * @return {sszvis.component}
      */
-    sszvisComponent.prop = (prop, setter) => {
+    sszvisComponent.prop = function (prop, setter) {
       setter || (setter = identity$1);
       sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
       return sszvisComponent;
@@ -99,8 +101,8 @@
      * @param  {Object} delegate The target having getter and setter methods for prop
      * @return {sszvis.component}
      */
-    sszvisComponent.delegate = (prop, delegate) => {
-      sszvisComponent[prop] = () => {
+    sszvisComponent.delegate = function (prop, delegate) {
+      sszvisComponent[prop] = function () {
         const result = delegate[prop].apply(delegate, slice$1(arguments));
         return arguments.length === 0 ? result : sszvisComponent;
       };
@@ -116,7 +118,7 @@
      * @param  {Function} callback
      * @return {[sszvis.component]}
      */
-    sszvisComponent.renderSelection = callback => {
+    sszvisComponent.renderSelection = function (callback) {
       selectionRenderer = callback;
       return sszvisComponent;
     };
@@ -130,7 +132,7 @@
      * @param  {Function} callback
      * @return {sszvis.component}
      */
-    sszvisComponent.render = callback => {
+    sszvisComponent.render = function (callback) {
       renderer = callback;
       return sszvisComponent;
     };
@@ -184,7 +186,7 @@
   function clone(obj) {
     const copy = {};
     for (const attr in obj) {
-      if (Object.hasOwn(obj, attr)) copy[attr] = obj[attr];
+      if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
     }
     return copy;
   }
@@ -200,19 +202,25 @@
    * The identity function. It returns the first argument passed to it.
    * Useful as a default where a function is required.
    */
-  const identity = value => value;
+  const identity = function (value) {
+    return value;
+  };
   /**
    * fn.isString
    *
    * determine whether the value is a string
    */
-  const isString = val => Object.prototype.toString.call(val) === "[object String]";
+  const isString = function (val) {
+    return Object.prototype.toString.call(val) === "[object String]";
+  };
   /**
    * fn.isSelection
    *
    * determine whether the value is a d3.selection.
    */
-  const isSelection = val => val instanceof d3.selection;
+  const isSelection = function (val) {
+    return val instanceof d3.selection;
+  };
   /**
    * fn.arity
    *
@@ -220,7 +228,7 @@
    * accepts exactly `n` parameters. Any extraneous parameters will not be
    * passed to the supplied function.
    */
-  const arity = (n, fn) => {
+  const arity = function (n, fn) {
     switch (n) {
       case 0:
         {
@@ -327,13 +335,17 @@
    *
    * Checks whether an item is present in the given list (by strict equality).
    */
-  const contains$1 = (list, d) => list.includes(d);
+  const contains$1 = function (list, d) {
+    return list.includes(d);
+  };
   /**
    * fn.defined
    *
    * determines if the passed value is defined.
    */
-  const defined = val => val !== undefined && val != null && !Number.isNaN(val);
+  const defined = function (val) {
+    return val !== undefined && val != null && !Number.isNaN(val);
+  };
   /**
    * fn.derivedSet
    *
@@ -345,7 +357,7 @@
    * in the other set functions, the set of derived properties is returned, whereas this function
    * returns a set of objects from the input array.
    */
-  const derivedSet = (arr, acc) => {
+  const derivedSet = function (arr, acc) {
     const accessor = acc || identity;
     const seen = [];
     const result = [];
@@ -366,7 +378,7 @@
    * Use a predicate function to test if every element in an array passes some test.
    * Returns false as soon as an element fails the predicate test. Returns true otherwise.
    */
-  const every = (predicate, arr) => {
+  const every = function (predicate, arr) {
     for (const element of arr) {
       if (!predicate(element)) {
         return false;
@@ -379,7 +391,7 @@
    *
    * returns a new array with length `len` filled with `val`
    */
-  const filledArray = (len, val) => {
+  const filledArray = function (len, val) {
     const arr = Array.from({
       length: len
     });
@@ -393,7 +405,7 @@
    *
    * Finds the first occurrence of an element in an array that passes the predicate function
    */
-  const find = (predicate, arr) => {
+  const find = function (predicate, arr) {
     for (const element of arr) {
       if (predicate(element)) {
         return element;
@@ -406,7 +418,9 @@
    *
    * Returns the first value in the passed array, or undefined if the array is empty
    */
-  const first = arr => arr[0];
+  const first = function (arr) {
+    return arr[0];
+  };
   /**
    * fn.flatten
    *
@@ -414,7 +428,9 @@
    * a two-dimensional array (i.e. its elements are also arrays). The result is a
    * one-dimensional array consisting of all the elements of the sub-arrays.
    */
-  const flatten = arr => arr.flat();
+  const flatten = function (arr) {
+    return arr.flat();
+  };
   /**
    * fn.firstTouch
    *
@@ -428,7 +444,7 @@
    * @return {Touch|null}         The first Touch object from the TouchEvent's lists
    *                              of touches.
    */
-  const firstTouch = event => {
+  const firstTouch = function (event) {
     if (event.touches && event.touches.length > 0) {
       return event.touches[0];
     } else if (event.changedTouches && event.changedTouches.length > 0) {
@@ -447,7 +463,7 @@
    *   informalGreeting: function() { return "How ya' doin!" }
    * })
    */
-  const foldPattern = (key, pattern) => {
+  const foldPattern = function (key, pattern) {
     const result = pattern[key];
     if (typeof result === "function") {
       return result();
@@ -465,7 +481,7 @@
    * MUST be "hashable" - convertible to unique keys of a JavaScript object.
    * As payoff for obeying this restriction, the algorithm can run much faster.
    */
-  const hashableSet = (arr, acc) => {
+  const hashableSet = function (arr, acc) {
     const accessor = acc || identity;
     const seen = {};
     const result = [];
@@ -484,32 +500,42 @@
    *
    * Determines if the passed value is a function
    */
-  const isFunction$1 = val => typeof val == "function";
+  const isFunction$1 = function (val) {
+    return typeof val == "function";
+  };
   /**
    * fn.isNull
    *
    * determines if the passed value is null.
    */
-  const isNull = val => val === null;
+  const isNull = function (val) {
+    return val === null;
+  };
   /**
    * fn.isNumber
    *
    * determine whether the value is a number
    */
-  const isNumber = val => Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
+  const isNumber = function (val) {
+    return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
+  };
   /**
    * fn.isObject
    *
    * determines if the passed value is of an "object" type, or if it is something else,
    * e.g. a raw number, string, null, undefined, NaN, something like that.
    */
-  const isObject = val => Object(val) === val;
+  const isObject = function (val) {
+    return Object(val) === val;
+  };
   /**
    * fn.last
    *
    * Returns the last value in the passed array, or undefined if the array is empty
    */
-  const last = arr => arr[arr.length - 1];
+  const last = function (arr) {
+    return arr[arr.length - 1];
+  };
   /**
    * fn.not
    *
@@ -517,11 +543,13 @@
    * which calls f on its arguments and returns the
    * boolean opposite of f's return value.
    */
-  const not = f => function () {
-    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      args[_key3] = arguments[_key3];
-    }
-    return !Reflect.apply(f, this, args);
+  const not = function (f) {
+    return function () {
+      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
+      }
+      return !Reflect.apply(f, this, args);
+    };
   };
   /**
    * fn.prop
@@ -531,7 +559,11 @@
    * it returns that object's value for the named property. (or undefined, if the object
    * does not contain the property.)
    */
-  const prop = key => object => object[key];
+  const prop = function (key) {
+    return function (object) {
+      return object[key];
+    };
+  };
   /**
    * fn.propOr
    *
@@ -542,9 +574,11 @@
    * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
    * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
    */
-  const propOr = (key, defaultVal) => object => {
-    const value = object === undefined ? undefined : object[key];
-    return value === undefined ? defaultVal : value;
+  const propOr = function (key, defaultVal) {
+    return function (object) {
+      const value = object === undefined ? undefined : object[key];
+      return value === undefined ? defaultVal : value;
+    };
   };
   /**
    * fn.set
@@ -558,7 +592,7 @@
    * ["b", a", "b", "b"] -> ["b", "a"]
    * [{obj1}, {obj2}, {obj1}, {obj3}] -> [{obj1}, {obj2}, {obj3}]
    */
-  const set$1 = (arr, acc) => {
+  const set$1 = function (arr, acc) {
     const accessor = acc || identity;
     return arr.reduce((m, value, i) => {
       const computed = accessor(value, i, arr);
@@ -571,7 +605,7 @@
    * Test an array with a predicate and determine whether some element in the array passes the test.
    * Returns true as soon as an element passes the test. Returns false otherwise.
    */
-  const some = (predicate, arr) => {
+  const some = function (predicate, arr) {
     for (const element of arr) {
       if (predicate(element)) {
         return true;
@@ -586,20 +620,26 @@
    * date objects, because two different date objects are not considered equal, even if they
    * represent the same date.
    */
-  const stringEqual = (a, b) => a.toString() === b.toString();
+  const stringEqual = function (a, b) {
+    return a.toString() === b.toString();
+  };
   /**
    * fn.functor
    *
    * Same as fn.functor in d3v3
    */
-  const functor = v => typeof v === "function" ? v : () => v;
+  const functor = function (v) {
+    return typeof v === "function" ? v : function () {
+      return v;
+    };
+  };
   /**
    * fn.memoize
    *
    * Adapted from lodash's memoize() but using d3.map() as cache
    * See https://lodash.com/docs/4.17.4#memoize
    */
-  const memoize = (func, resolver) => {
+  const memoize = function (func, resolver) {
     if (typeof func != "function" || resolver != null && typeof resolver != "function") {
       throw new TypeError("Expected a function");
     }
@@ -668,7 +708,7 @@
   /* Scales
   ----------------------------------------------- */
   function qualColorScale(colors) {
-    return () => {
+    return function () {
       const scale = d3.scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
       return decorateOrdinalScale(scale);
     };
@@ -707,7 +747,7 @@
   const maleUnknown = "#D6D6D6";
   const scaleGender5Wedding = () => qualColorScale([femaleFemale, maleMale, femaleMale, femaleUnknown, maleUnknown])().domain(["Frau / Frau", "Mann / Mann", "Frau / Mann", "Frau / Unbekannt", "Mann / Unbekannt"]);
   function seqColorScale(colors) {
-    return () => {
+    return function () {
       const scale = d3.scaleLinear().range(colors.map(convertLab));
       return decorateLinearScale(scale);
     };
@@ -717,7 +757,7 @@
   const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
   const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
   function divColorScale(colors) {
-    return () => {
+    return function () {
       const scale = d3.scaleLinear().range(colors.map(convertLab));
       return decorateDivScale(scale);
     };
@@ -727,7 +767,7 @@
   const scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
   const scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
   function greyColorScale(colors) {
-    return () => {
+    return function () {
       const scale = d3.scaleOrdinal().range(colors.map(convertLab));
       return decorateLinearScale(scale);
     };
@@ -738,9 +778,13 @@
   const scaleDimGry = greyColorScale(["#B8B8B8"]);
   const scaleMedGry = greyColorScale(["#7C7C7C"]);
   const scaleDeepGry = greyColorScale(["#545454"]);
-  const slightlyDarker = c => d3.hsl(c).darker(0.4);
-  const muchDarker = c => d3.hsl(c).darker(0.7);
-  const withAlpha = (c, a) => {
+  const slightlyDarker = function (c) {
+    return d3.hsl(c).darker(0.4);
+  };
+  const muchDarker = function (c) {
+    return d3.hsl(c).darker(0.7);
+  };
+  const withAlpha = function (c, a) {
     const rgbColor = d3.rgb(c);
     return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
   };
@@ -748,14 +792,22 @@
   /* Scale extensions
   ----------------------------------------------- */
   function decorateOrdinalScale(scale) {
-    scale.darker = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
-    scale.brighter = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
-    scale.reverse = () => decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
+    scale.darker = function () {
+      return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
+    };
+    scale.brighter = function () {
+      return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
+    };
+    scale.reverse = function () {
+      return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
+    };
     return scale;
   }
   function decorateDivScale(scale) {
     scale = interpolatedDivergentColorScale(scale);
-    scale.reverse = () => decorateLinearScale(scale.copy().range(scale.range().reverse()));
+    scale.reverse = function () {
+      return decorateLinearScale(scale.copy().range(scale.range().reverse()));
+    };
     return scale;
   }
   function interpolatedDivergentColorScale(scale) {
@@ -774,7 +826,9 @@
   }
   function decorateLinearScale(scale) {
     scale = interpolatedColorScale(scale);
-    scale.reverse = () => decorateLinearScale(scale.copy().range(scale.range().reverse()));
+    scale.reverse = function () {
+      return decorateLinearScale(scale.copy().range(scale.range().reverse()));
+    };
     return scale;
   }
   function interpolatedColorScale(scale) {
@@ -815,7 +869,7 @@
    *
    */
 
-  const heatTableMissingValuePattern = selection => {
+  const heatTableMissingValuePattern = function (selection) {
     const rectFill = scaleLightGry(),
       crossStroke = "#A4A4A4",
       crossStrokeWidth = 0.035,
@@ -826,7 +880,7 @@
     selection.append("line").attr("x1", cross1).attr("y1", cross1).attr("x2", cross2).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
     selection.append("line").attr("x1", cross2).attr("y1", cross1).attr("x2", cross1).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
   };
-  const mapMissingValuePattern = selection => {
+  const mapMissingValuePattern = function (selection) {
     const pWidth = 14,
       pHeight = 14,
       fillColor = "#FAFAFA",
@@ -838,7 +892,7 @@
     selection.append("line").attr("x1", 8).attr("y1", 3).attr("x2", 12).attr("y2", 7).attr("stroke", lineStroke);
     selection.append("line").attr("x1", 12).attr("y1", 3).attr("x2", 8).attr("y2", 7).attr("stroke", lineStroke);
   };
-  const mapLakePattern = selection => {
+  const mapLakePattern = function (selection) {
     const pWidth = 6;
     const pHeight = 6;
     const offset = 0.5;
@@ -847,16 +901,16 @@
     selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#ddd").attr("stroke-linecap", "square");
     selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#ddd").attr("stroke-linecap", "square");
   };
-  const mapLakeFadeGradient = selection => {
+  const mapLakeFadeGradient = function (selection) {
     selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", "lake-fade-gradient");
     selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
     selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
   };
-  const mapLakeGradientMask = selection => {
+  const mapLakeGradientMask = function (selection) {
     selection.attr("maskContentUnits", "objectBoundingBox");
     selection.append("rect").attr("fill", "url(#lake-fade-gradient)").attr("width", 1).attr("height", 1);
   };
-  const dataAreaPattern = selection => {
+  const dataAreaPattern = function (selection) {
     const pWidth = 6;
     const pHeight = 6;
     const offset = 0.5;
@@ -943,9 +997,15 @@
    */
 
   const defaultEase = d3.easePolyOut;
-  const defaultTransition = () => d3.transition().ease(defaultEase).duration(300);
-  const fastTransition = () => d3.transition().ease(defaultEase).duration(50);
-  const slowTransition = () => d3.transition().ease(defaultEase).duration(500);
+  const defaultTransition = function () {
+    return d3.transition().ease(defaultEase).duration(300);
+  };
+  const fastTransition = function () {
+    return d3.transition().ease(defaultEase).duration(50);
+  };
+  const slowTransition = function () {
+    return d3.transition().ease(defaultEase).duration(500);
+  };
 
   /**
    * @function sszvis.annotationConfidenceArea
@@ -1008,7 +1068,7 @@
   function fitTooltip (defaultVal, bounds) {
     const lo = Math.min(bounds.innerWidth * 1 / 4, 100);
     const hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
-    return d => {
+    return function (d) {
       const x = d.x;
       return x > hi ? "right" : x < lo ? "left" : defaultVal;
     };
@@ -1178,7 +1238,9 @@
    * @param  {number} pos A pixel position
    * @return {number}     A pixel position snapped to the pixel grid
    */
-  const halfPixel = pos => Math.floor(pos) + 0.5;
+  const halfPixel = function (pos) {
+    return Math.floor(pos) + 0.5;
+  };
 
   /**
    * crisp.roundTransformString
@@ -1193,7 +1255,7 @@
    * @param  {string} transformStr A valid SVG transform string
    * @return {string}              An SVG transform string with rounded values
    */
-  const roundTransformString = transformStr => {
+  const roundTransformString = function (transformStr) {
     const roundNumber = compose(Math.floor, Number);
     return transformStr.replace(/(translate\()\s*([\d ,.]+)\s*(\))/i, (_, left, vecStr, right) => {
       const roundVec = vecStr.replace(",", " ").replace(/\s+/, " ").split(" ").map(roundNumber).join(",");
@@ -1211,7 +1273,7 @@
    * @param  {string} transformStr A valid SVG transform string
    * @return {vecor}               Two-element array ([dx, dy])
    */
-  const transformTranslateSubpixelShift = transformStr => {
+  const transformTranslateSubpixelShift = function (transformStr) {
     const roundNumber = compose(Math.floor, Number);
     const m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
     const vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
@@ -1252,7 +1314,7 @@
     });
   }
   function makeFlagDot(classed, cx, cy) {
-    return dot => {
+    return function (dot) {
       dot.join("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true).attr("r", 3.5).attr("cx", cx).attr("cy", cy);
     };
   }
@@ -1284,12 +1346,30 @@
   /**
    * Format a number as an age
    */
-  const formatAge = d => String(Math.round(d));
+  const formatAge = function (d) {
+    return String(Math.round(d));
+  };
   /**
    * A multi time formatter used by the axis class
    */
-  const formatAxisTimeFormat = d => {
-    const xs = [[".%L", date => date.getMilliseconds()], [":%S", date => date.getSeconds()], ["%H:%M", date => date.getMinutes()], ["%H Uhr", date => date.getHours()], ["%a., %d.", date => Boolean(date.getDay() && date.getDate() != 1)], ["%e. %b", date => date.getDate() != 1], ["%B", date => date.getMonth()], ["%Y", () => true]];
+  const formatAxisTimeFormat = function (d) {
+    const xs = [[".%L", function (date) {
+      return date.getMilliseconds();
+    }], [":%S", function (date) {
+      return date.getSeconds();
+    }], ["%H:%M", function (date) {
+      return date.getMinutes();
+    }], ["%H Uhr", function (date) {
+      return date.getHours();
+    }], ["%a., %d.", function (date) {
+      return Boolean(date.getDay() && date.getDate() != 1);
+    }], ["%e. %b", function (date) {
+      return date.getDate() != 1;
+    }], ["%B", function (date) {
+      return date.getMonth();
+    }], ["%Y", function () {
+      return true;
+    }]];
     for (const x of xs) {
       if (x[1](d)) {
         return timeFormat(x[0])(d);
@@ -1309,7 +1389,9 @@
   /**
    * Formatter for no label
    */
-  const formatNone = () => "";
+  const formatNone = function () {
+    return "";
+  };
   /**
    * Format numbers according to the sszvis style guide. The most important
    * rules are:
@@ -1323,7 +1405,7 @@
    *
    * See also: many test cases for this function in format.test.js
    */
-  const formatNumber = d => {
+  const formatNumber = function (d) {
     let p;
     const dAbs = Math.abs(d !== null && d !== void 0 ? d : 0);
     if (d == null || isNaN(d)) {
@@ -1362,7 +1444,7 @@
   function formatPreciseNumber(p, d) {
     // This curries the function
     if (arguments.length > 1 && d !== undefined) return formatPreciseNumber(p)(d);
-    return x => {
+    return function (x) {
       const dAbs = Math.abs(x);
       return dAbs >= 100 && dAbs < 1e4 ? format("." + p + "f")(x) : format(",." + p + "f")(x);
     };
@@ -1370,14 +1452,14 @@
   /**
    * Format percentages on the range 0 - 100
    */
-  const formatPercent = d => {
+  const formatPercent = function (d) {
     // Uses unix thin space
     return formatNumber(d) + " %";
   };
   /**
    * Format percentages on the range 0 - 1
    */
-  const formatFractionPercent = d => {
+  const formatFractionPercent = function (d) {
     // Uses unix thin space
     return formatNumber(d * 100) + " %";
   };
@@ -1429,7 +1511,9 @@
       const crispX = compose(halfPixel, props.x);
       const crispY0 = compose(halfPixel, props.y0);
       const crispY1 = compose(halfPixel, props.y1);
-      const middleY = d => halfPixel((props.y0(d) + props.y1(d)) / 2);
+      const middleY = function (d) {
+        return halfPixel((props.y0(d) + props.y1(d)) / 2);
+      };
       const dotRadius = 1.5;
       const line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]).join("line").classed("sszvis-rangeRuler__rule", true);
       line.attr("x1", crispX).attr("y1", props.top).attr("x2", crispX).attr("y2", props.bottom);
@@ -1564,7 +1648,9 @@
   const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
     const selection = d3.select(this);
     const props = selection.props();
-    const labelId = props.labelId || (d => props.x(d) + "_" + props.y(d));
+    const labelId = props.labelId || function (d) {
+      return props.x(d) + "_" + props.y(d);
+    };
     const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId).join("line").classed("sszvis-ruler__rule", true);
     ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", props.y).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
     const dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId).join("circle").classed("sszvis-ruler__dot", true);
@@ -1766,85 +1852,87 @@
    * Tooltip renderer
    * @private
    */
-  const tooltipRenderer = () => component().prop("header").prop("body").prop("orientation", functor).orientation("bottom").prop("dx", functor).dx(1).prop("dy", functor).dy(1).prop("opacity", functor).opacity(1).renderSelection(selection => {
-    const tooltipData = selection.datum();
-    const props = selection.props();
-    const isDef = defined;
-    const isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body);
+  const tooltipRenderer = function () {
+    return component().prop("header").prop("body").prop("orientation", functor).orientation("bottom").prop("dx", functor).dx(1).prop("dy", functor).dy(1).prop("opacity", functor).opacity(1).renderSelection(selection => {
+      const tooltipData = selection.datum();
+      const props = selection.props();
+      const isDef = defined;
+      const isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body);
 
-    // Select tooltip elements
+      // Select tooltip elements
 
-    const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
-    tooltip.style("pointer-events", "none").style("opacity", props.opacity).style("padding-top", d => props.orientation(d) === "top" ? TIP_SIZE + "px" : null).style("padding-right", d => props.orientation(d) === "right" ? TIP_SIZE + "px" : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null).style("padding-left", d => props.orientation(d) === "left" ? TIP_SIZE + "px" : null).classed("sszvis-tooltip", true);
+      const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
+      tooltip.style("pointer-events", "none").style("opacity", props.opacity).style("padding-top", d => props.orientation(d) === "top" ? TIP_SIZE + "px" : null).style("padding-right", d => props.orientation(d) === "right" ? TIP_SIZE + "px" : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null).style("padding-left", d => props.orientation(d) === "left" ? TIP_SIZE + "px" : null).classed("sszvis-tooltip", true);
 
-    // Enter: tooltip background
+      // Enter: tooltip background
 
-    const enterBackground = tooltip.selectAll(".sszvis-tooltip__background").data([0]).join("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
-    const enterBackgroundPath = enterBackground.selectAll("path").data([0]).join("path");
-    if (supportsSVGFilters()) {
-      const filter = enterBackground.selectAll("filter").data([0]).join("filter").attr("id", "sszvisTooltipShadowFilter").attr("height", "150%");
-      filter.selectAll("feGaussianBlur").data([0]).join("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
-      filter.selectAll("feComponentTransfer").data([0]).join("feComponentTransfer").selectAll("feFuncA").data([0]).join("feFuncA").attr("type", "linear").attr("slope", 0.2);
-      const merge = filter.selectAll("feMerge").data([0]).join("feMerge");
-      merge.selectAll("feMergeNode").data([0]).join("feMergeNode"); // Contains the blurred image
-      merge.selectAll("feMergeNode").data([0]).join("feMergeNode") // Contains the element that the filter is applied to
-      .attr("in", "SourceGraphic");
-      enterBackgroundPath.attr("filter", "url(#sszvisTooltipShadowFilter)");
-    } else {
-      enterBackground.classed("sszvis-tooltip__background--fallback", true);
-    }
-
-    // Enter: tooltip content
-
-    const enterContent = tooltip.selectAll(".sszvis-tooltip__content").data([0]).join("div").classed("sszvis-tooltip__content", true);
-    enterContent.selectAll(".sszvis-tooltip__header").data([0]).join("div").classed("sszvis-tooltip__header", true);
-    enterContent.selectAll(".sszvis-tooltip__body").data([0]).join("div").classed("sszvis-tooltip__body", true);
-
-    // Update: content
-
-    tooltip.select(".sszvis-tooltip__header").datum(prop("datum")).html(props.header || functor(""));
-    tooltip.select(".sszvis-tooltip__body").datum(prop("datum")).html(d => {
-      const body = props.body ? functor(props.body)(d) : "";
-      return Array.isArray(body) ? formatTable(body) : body;
-    });
-    selection.selectAll(".sszvis-tooltip").classed("sszvis-tooltip--small", isSmall).each(function (d) {
-      const tip = d3.select(this);
-      // only using dimensions.width and dimensions.height here. Not affected by scroll position
-      const dimensions = tip.node().getBoundingClientRect();
-      const orientation = Reflect.apply(props.orientation, this, arguments);
-
-      // Position tooltip element
-
-      switch (orientation) {
-        case "top":
-          {
-            tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y + props.dy(d) + "px");
-            break;
-          }
-        case "bottom":
-          {
-            tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y - props.dy(d) - dimensions.height + "px");
-            break;
-          }
-        case "left":
-          {
-            tip.style("left", d.x + props.dx(d) + "px").style("top", d.y - dimensions.height / 2 + "px");
-            break;
-          }
-        case "right":
-          {
-            tip.style("left", d.x - props.dx(d) - dimensions.width + "px").style("top", d.y - dimensions.height / 2 + "px");
-            break;
-          }
+      const enterBackground = tooltip.selectAll(".sszvis-tooltip__background").data([0]).join("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
+      const enterBackgroundPath = enterBackground.selectAll("path").data([0]).join("path");
+      if (supportsSVGFilters()) {
+        const filter = enterBackground.selectAll("filter").data([0]).join("filter").attr("id", "sszvisTooltipShadowFilter").attr("height", "150%");
+        filter.selectAll("feGaussianBlur").data([0]).join("feGaussianBlur").attr("in", "SourceAlpha").attr("stdDeviation", 2);
+        filter.selectAll("feComponentTransfer").data([0]).join("feComponentTransfer").selectAll("feFuncA").data([0]).join("feFuncA").attr("type", "linear").attr("slope", 0.2);
+        const merge = filter.selectAll("feMerge").data([0]).join("feMerge");
+        merge.selectAll("feMergeNode").data([0]).join("feMergeNode"); // Contains the blurred image
+        merge.selectAll("feMergeNode").data([0]).join("feMergeNode") // Contains the element that the filter is applied to
+        .attr("in", "SourceGraphic");
+        enterBackgroundPath.attr("filter", "url(#sszvisTooltipShadowFilter)");
+      } else {
+        enterBackground.classed("sszvis-tooltip__background--fallback", true);
       }
 
-      // Position background element
+      // Enter: tooltip content
 
-      const bgHeight = dimensions.height + 2 * BLUR_PADDING;
-      const bgWidth = dimensions.width + 2 * BLUR_PADDING;
-      tip.select(".sszvis-tooltip__background").attr("height", bgHeight).attr("width", bgWidth).style("left", -BLUR_PADDING + "px").style("top", -BLUR_PADDING + "px").select("path").attr("d", tooltipBackgroundGenerator([BLUR_PADDING, BLUR_PADDING], [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING], orientation, isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS));
+      const enterContent = tooltip.selectAll(".sszvis-tooltip__content").data([0]).join("div").classed("sszvis-tooltip__content", true);
+      enterContent.selectAll(".sszvis-tooltip__header").data([0]).join("div").classed("sszvis-tooltip__header", true);
+      enterContent.selectAll(".sszvis-tooltip__body").data([0]).join("div").classed("sszvis-tooltip__body", true);
+
+      // Update: content
+
+      tooltip.select(".sszvis-tooltip__header").datum(prop("datum")).html(props.header || functor(""));
+      tooltip.select(".sszvis-tooltip__body").datum(prop("datum")).html(d => {
+        const body = props.body ? functor(props.body)(d) : "";
+        return Array.isArray(body) ? formatTable(body) : body;
+      });
+      selection.selectAll(".sszvis-tooltip").classed("sszvis-tooltip--small", isSmall).each(function (d) {
+        const tip = d3.select(this);
+        // only using dimensions.width and dimensions.height here. Not affected by scroll position
+        const dimensions = tip.node().getBoundingClientRect();
+        const orientation = Reflect.apply(props.orientation, this, arguments);
+
+        // Position tooltip element
+
+        switch (orientation) {
+          case "top":
+            {
+              tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y + props.dy(d) + "px");
+              break;
+            }
+          case "bottom":
+            {
+              tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y - props.dy(d) - dimensions.height + "px");
+              break;
+            }
+          case "left":
+            {
+              tip.style("left", d.x + props.dx(d) + "px").style("top", d.y - dimensions.height / 2 + "px");
+              break;
+            }
+          case "right":
+            {
+              tip.style("left", d.x - props.dx(d) - dimensions.width + "px").style("top", d.y - dimensions.height / 2 + "px");
+              break;
+            }
+        }
+
+        // Position background element
+
+        const bgHeight = dimensions.height + 2 * BLUR_PADDING;
+        const bgWidth = dimensions.width + 2 * BLUR_PADDING;
+        tip.select(".sszvis-tooltip__background").attr("height", bgHeight).attr("width", bgWidth).style("left", -BLUR_PADDING + "px").style("top", -BLUR_PADDING + "px").select("path").attr("d", tooltipBackgroundGenerator([BLUR_PADDING, BLUR_PADDING], [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING], orientation, isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS));
+      });
     });
-  });
+  };
 
   /**
    * formatTable
@@ -2618,15 +2706,15 @@
    * @module sszvis/fallback
    */
 
-  const fallbackUnsupported = () => {
+  const fallbackUnsupported = function () {
     const supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
     return !supportsSVG;
   };
-  const fallbackCanvasUnsupported = () => {
+  const fallbackCanvasUnsupported = function () {
     const supportsCanvas = !!document.createElement("canvas").getContext;
     return !supportsCanvas;
   };
-  const fallbackRender = (selector, options) => {
+  const fallbackRender = function (selector, options) {
     options || (options = {});
     options.src || (options.src = "fallback.png");
     const selection = isSelection(selector) ? selector : d3.select(selector);
@@ -2914,7 +3002,9 @@
    *          breakpoint for the given name exists, that breakpoint is returned
    */
   function breakpointFindByName(breakpoints, name) {
-    const eqName = bp => bp.name === name;
+    const eqName = function (bp) {
+      return bp.name === name;
+    };
     return find(eqName, breakpoints);
   }
 
@@ -2970,7 +3060,7 @@
    * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
    *          default breakpoint spec.
    */
-  const breakpointDefaultSpec = (() => {
+  const breakpointDefaultSpec = function () {
     const DEFAULT_SPEC = breakpointCreateSpec([{
       name: "palm",
       width: 540
@@ -2978,8 +3068,10 @@
       name: "lap",
       width: 749
     }]);
-    return () => DEFAULT_SPEC;
-  })();
+    return function () {
+      return DEFAULT_SPEC;
+    };
+  }();
 
   // Default tests
   const breakpointPalm = makeTest("palm");
@@ -3053,7 +3145,9 @@
    * Create a partially applied test function
    */
   function makeTest(name) {
-    return measurement => breakpointTest(breakpointFindByName(breakpointDefaultSpec(), name), measurement);
+    return function (measurement) {
+      return breakpointTest(breakpointFindByName(breakpointDefaultSpec(), name), measurement);
+    };
   }
 
   /**
@@ -3081,7 +3175,9 @@
    */
   function aspectRatio(x, y) {
     const ar = x / y;
-    return width => width / ar;
+    return function (width) {
+      return width / ar;
+    };
   }
 
   /**
@@ -3116,7 +3212,9 @@
    * @returns {Number} height
    */
   const AR12TO5_MAX_HEIGHT = 500;
-  const aspectRatio12to5 = width => Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
+  const aspectRatio12to5 = function (width) {
+    return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
+  };
   aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
 
   /**
@@ -3136,7 +3234,9 @@
    * @returns {Number} height
    */
   const SQUARE_MAX_HEIGHT = 420;
-  const aspectRatioSquare = width => Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
+  const aspectRatioSquare = function (width) {
+    return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
+  };
   aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
 
   /**
@@ -3156,7 +3256,9 @@
    * @returns {Number} height
    */
   const PORTRAIT_MAX_HEIGHT = 600;
-  const aspectRatioPortrait = width => Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
+  const aspectRatioPortrait = function (width) {
+    return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
+  };
   aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
 
   /**
@@ -3181,7 +3283,7 @@
     // lap-sized devices
     _: aspectRatio12to5 // all other cases, including desk
   };
-  const aspectRatioAuto = measurement => {
+  const aspectRatioAuto = function (measurement) {
     const bp = breakpointFind(breakpointDefaultSpec(), measurement);
     const ar = defaultAspectRatios[bp.name];
     return ar(measurement.width);
@@ -3238,7 +3340,7 @@
   /* Helper functions
   ----------------------------------------------- */
   function logger(type) {
-    return () => {
+    return function () {
       if (console && console[type]) {
         for (const msg of slice(arguments)) {
           console[type](msg);
@@ -3265,7 +3367,7 @@
    * @return {array}          The extent of the scale's range. Useful for determining how far
    *                          a scale stretches in its output dimension.
    */
-  const range = scale => {
+  const range = function (scale) {
     // borrowed from d3 source - svg.axis
     return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
   };
@@ -3448,7 +3550,7 @@
   const TICK_PROXIMITY_THRESHOLD = 8;
   const TICK_END_THRESHOLD = 12;
   const LABEL_PROXIMITY_THRESHOLD = 10;
-  const axis = () => {
+  const axis = function () {
     // const axisDelegate = d3.axisBottom();
     // axisDelegate.orient = function() { return 'bottom'; };
 
@@ -3465,7 +3567,7 @@
       const selection = d3.select(this);
       const props = selection.props();
       const isBottom = !props.vertical && props.orient === "bottom";
-      const axisDelegate = (() => {
+      const axisDelegate = function () {
         switch (props.orient) {
           case "bottom":
             {
@@ -3484,7 +3586,7 @@
               return d3.axisRight();
             }
         }
-      })();
+      }();
       for (const prop of ["scale", "ticks", "tickValues", "tickSizeInner", "tickSizeOuter", "tickPadding", "tickFormat", "tickSize"]) {
         if (props[prop] !== undefined) {
           if (axisDelegate[prop] === undefined) {
@@ -3716,39 +3818,51 @@
     this.tickValues(values);
     return count;
   };
-  const axisX = () => axis().yOffset(2) //gap between chart and x-axis
-  .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
-  axisX.time = () => axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
-  axisX.ordinal = () => axisX()
-  // extend this class a little with a custom implementation of 'ticks'
-  // that allows you to set a custom number of ticks,
-  // including the first and last value in the ordinal scale
-  .prop("ticks", setOrdinalTicks).tickFormat(formatText);
+  const axisX = function () {
+    return axis().yOffset(2) //gap between chart and x-axis
+    .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
+  };
+  axisX.time = function () {
+    return axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
+  };
+  axisX.ordinal = function () {
+    return axisX()
+    // extend this class a little with a custom implementation of 'ticks'
+    // that allows you to set a custom number of ticks,
+    // including the first and last value in the ordinal scale
+    .prop("ticks", setOrdinalTicks).tickFormat(formatText);
+  };
 
   // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
-  axisX.pyramid = () => axisX().ticks(10).prop("scale", function (s) {
-    const extended = s.copy(),
-      extendedDomain = extended.domain(),
-      extendedRange = extended.range();
-    extended
-    // the domain is mirrored - ±domain[1]
-    .domain([-extendedDomain[1], extendedDomain[1]])
-    // the range is mirrored – ±range[1]
-    .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
-    this._scale(extended);
-    return extended;
-  }).tickFormat(v =>
-  // this tick format means that the axis appears to be divergent around 0
-  // when in fact it is -domain[1] -> +domain[1]
-  formatNumber(Math.abs(v)));
-  const axisY = () => {
+  axisX.pyramid = function () {
+    return axisX().ticks(10).prop("scale", function (s) {
+      const extended = s.copy(),
+        extendedDomain = extended.domain(),
+        extendedRange = extended.range();
+      extended
+      // the domain is mirrored - ±domain[1]
+      .domain([-extendedDomain[1], extendedDomain[1]])
+      // the range is mirrored – ±range[1]
+      .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
+      this._scale(extended);
+      return extended;
+    }).tickFormat(v =>
+    // this tick format means that the axis appears to be divergent around 0
+    // when in fact it is -domain[1] -> +domain[1]
+    formatNumber(Math.abs(v)));
+  };
+  const axisY = function () {
     const newAxis = axis().ticks(6).tickSize(0, 0).tickPadding(0).tickFormat(d => 0 === d && !newAxis.showZeroY() ? null : formatNumber(d)).vertical(true);
     return newAxis;
   };
-  axisY.time = () => axisY().tickFormat(formatAxisTimeFormat);
-  axisY.ordinal = () => axisY()
-  // add custom 'ticks' function
-  .prop("ticks", setOrdinalTicks).tickFormat(formatText);
+  axisY.time = function () {
+    return axisY().tickFormat(formatAxisTimeFormat);
+  };
+  axisY.ordinal = function () {
+    return axisY()
+    // add custom 'ticks' function
+    .prop("ticks", setOrdinalTicks).tickFormat(formatText);
+  };
 
   /* Helper functions
   ----------------------------------------------- */
@@ -3864,7 +3978,7 @@
         const target = this;
         const doc = d3.select(document);
         const win = d3.select(globalThis);
-        const startDragging = () => {
+        const startDragging = function () {
           target.__dragging__ = true;
         };
         const stopDragging = function () {
@@ -3882,10 +3996,11 @@
         });
         startDragging();
       }).on("mousemove", function (e) {
+        const target = this;
         const xy = d3.pointer(e);
         const x = scaleInvert(props.xScale, xy[0]);
         const y = scaleInvert(props.yScale, xy[1]);
-        if (this.__dragging__) {
+        if (target.__dragging__) {
           event.apply("drag", this, [e, x, y]);
         } else {
           event.apply("move", this, [e, x, y]);
@@ -3945,7 +4060,7 @@
         layer.attr("fill", "rgba(255,0,0,0.2)");
       }
     });
-    moveComponent.on = () => {
+    moveComponent.on = function () {
       const value = event.on.apply(event, arguments);
       return value === event ? moveComponent : value;
     };
@@ -4088,13 +4203,13 @@
    *                                                                                      cursorValue and the value accessed from the datum.
    */
 
-  const elementFromEvent = evt => {
+  const elementFromEvent = function (evt) {
     if (!isNull(evt) && defined(evt)) {
       return document.elementFromPoint(evt.clientX, evt.clientY);
     }
     return null;
   };
-  const datumFromPannableElement = element => {
+  const datumFromPannableElement = function (element) {
     if (!isNull(element)) {
       const selection = d3.select(element);
       if (!isNull(selection.attr("data-sszvis-behavior-pannable"))) {
@@ -4106,7 +4221,9 @@
     }
     return null;
   };
-  const datumFromPanEvent = evt => datumFromPannableElement(elementFromEvent(evt));
+  const datumFromPanEvent = function (evt) {
+    return datumFromPannableElement(elementFromEvent(evt));
+  };
 
   /**
    * Panning behavior
@@ -4174,7 +4291,7 @@
         event.apply("end", this, arguments);
       });
     });
-    panningComponent.on = () => {
+    panningComponent.on = function () {
       const value = event.on.apply(event, arguments);
       return value === event ? panningComponent : value;
     };
@@ -4296,7 +4413,7 @@
         polys.attr("stroke", "#f00");
       }
     });
-    voronoiComponent.on = () => {
+    voronoiComponent.on = function () {
       const value = event.on.apply(event, arguments);
       return value === event ? voronoiComponent : value;
     };
@@ -4304,7 +4421,7 @@
   }
 
   // Perform distance calculations in units squared to avoid a costly Math.sqrt
-  const MAX_INTERACTION_RADIUS_SQUARED = 15 ** 2;
+  const MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
   function eventNearPoint(event, point) {
     const dx = event.clientX - point[0];
     const dy = event.clientY - point[1];
@@ -4333,7 +4450,7 @@
    *                      screenWidth: {number} The innerWidth of the screen
    *                      screenHeight: {number} The innerHeight of the screen
    */
-  const measureDimensions = arg => {
+  const measureDimensions = function (arg) {
     let node;
     if (isString(arg)) {
       node = d3.select(arg).node();
@@ -4364,16 +4481,16 @@
    * @example
    * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
    **/
-  const measureText = (() => {
+  const measureText = function () {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
     const cache = {};
-    return (fontSize, fontFace, text) => {
+    return function (fontSize, fontFace, text) {
       const key = [fontSize, fontFace, text].join("-");
       context.font = fontSize + "px " + fontFace;
       return cache[key] || (cache[key] = context.measureText(text).width);
     };
-  })();
+  }();
 
   /**
    * measureAxisLabel
@@ -4386,7 +4503,9 @@
    * @example
    * const labelWidth = sszvis.measureAxisLabel("Hello!")
    */
-  const measureAxisLabel = text => measureText(10, "Arial, sans-serif", text);
+  const measureAxisLabel = function (text) {
+    return measureText(10, "Arial, sans-serif", text);
+  };
 
   /**
    * measureLegendLabel
@@ -4399,7 +4518,9 @@
    * @example
    * const labelWidth = sszvis.measureLegendLabel("Hello!")
    */
-  const measureLegendLabel = text => measureText(12, "Arial, sans-serif", text);
+  const measureLegendLabel = function (text) {
+    return measureText(12, "Arial, sans-serif", text);
+  };
 
   /**
    * Bounds
@@ -4629,15 +4750,17 @@
         return arr;
       }
     }
-    _cascade.apply = data => make(data, 0);
-    _cascade.objectBy = d => {
+    _cascade.apply = function (data) {
+      return make(data, 0);
+    };
+    _cascade.objectBy = function (d) {
       keys.push({
         type: "obj",
         func: d
       });
       return _cascade;
     };
-    _cascade.arrayBy = (d, sorter) => {
+    _cascade.arrayBy = function (d, sorter) {
       keys.push({
         type: "arr",
         func: d
@@ -4645,7 +4768,7 @@
       if (sorter) sorts[keys.length - 1] = sorter;
       return _cascade;
     };
-    _cascade.sort = d => {
+    _cascade.sort = function (d) {
       valuesSort = d;
       return _cascade;
     };
@@ -4717,12 +4840,18 @@
       // Tooltip anchors
       let tooltipPosition;
       if (props.centerTooltip) {
-        tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+        tooltipPosition = function (d) {
+          return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+        };
       } else if (props.tooltipAnchor) {
         const uv = props.tooltipAnchor.map(Number.parseFloat);
-        tooltipPosition = d => [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
+        tooltipPosition = function (d) {
+          return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
+        };
       } else {
-        tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+        tooltipPosition = function (d) {
+          return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+        };
       }
       const ta = tooltipAnchor().position(tooltipPosition);
       selection.call(ta);
@@ -4945,24 +5074,26 @@
   const fst = prop("0");
   const snd = prop("1");
   function stackedBarData(order) {
-    return (_stackAcc, seriesAcc, valueAcc) => data => {
-      const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
+    return function (_stackAcc, seriesAcc, valueAcc) {
+      return function (data) {
+        const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
 
-      // Collect all keys ()
-      const keys = rows.reduce((a, row) => set$1([...a, ...Object.keys(row)]), []);
-      const stacks = d3.stack().keys(keys).value((x, key) => valueAcc(x[key][0])).order(order)(rows);
+        // Collect all keys ()
+        const keys = rows.reduce((a, row) => set$1([...a, ...Object.keys(row)]), []);
+        const stacks = d3.stack().keys(keys).value((x, key) => valueAcc(x[key][0])).order(order)(rows);
 
-      // Simplify the 'data' property.
-      for (const stack of stacks) {
-        for (const d of stack) {
-          d.series = stack.key;
-          d.data = d.data[stack.key][0];
-          d.stack = _stackAcc(d.data);
+        // Simplify the 'data' property.
+        for (const stack of stacks) {
+          for (const d of stack) {
+            d.series = stack.key;
+            d.data = d.data[stack.key][0];
+            d.stack = _stackAcc(d.data);
+          }
         }
-      }
-      stacks.keys = keys;
-      stacks.maxValue = d3.max(stacks, stack => d3.max(stack, d => d[1]));
-      return stacks;
+        stacks.keys = keys;
+        stacks.maxValue = d3.max(stacks, stack => d3.max(stack, d => d[1]));
+        return stacks;
+      };
     };
   }
   const stackedBarHorizontalData = stackedBarData(d3.stackOrderNone);
@@ -4984,13 +5115,17 @@
       return compose(props.yScale, stackAcc);
     },
     width(props) {
-      return d => props.xScale(d[1]) - props.xScale(d[0]);
+      return function (d) {
+        return props.xScale(d[1]) - props.xScale(d[0]);
+      };
     },
     height(props) {
       return props.height;
     }
   };
-  const stackedBarHorizontal = () => stackedBar(horizontalStackedBarConfig);
+  const stackedBarHorizontal = function () {
+    return stackedBar(horizontalStackedBarConfig);
+  };
   const verticalStackedBarConfig = {
     x(props) {
       return compose(props.xScale, stackAcc);
@@ -5002,10 +5137,14 @@
       return props.width;
     },
     height(props) {
-      return d => props.yScale(d[0]) - props.yScale(d[1]);
+      return function (d) {
+        return props.yScale(d[0]) - props.yScale(d[1]);
+      };
     }
   };
-  const stackedBarVertical = () => stackedBar(verticalStackedBarConfig);
+  const stackedBarVertical = function () {
+    return stackedBar(verticalStackedBarConfig);
+  };
 
   /**
    * Nested Stacked Bars Vertical component
@@ -5110,7 +5249,7 @@
       segments.transition(defaultTransition()).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attrTween("d", d => {
         const angle0Interp = d3.interpolate(d.a0, d._a0);
         const angle1Interp = d3.interpolate(d.a1, d._a1);
-        return t => {
+        return function (t) {
           d.a0 = angle0Interp(t);
           d.a1 = angle1Interp(t);
           return arcGen(d);
@@ -5256,19 +5395,33 @@
    * @return {sszvis.component}
    */
 
-  const linkPathString = (x0, x1, x2, x3, y0, y1) => "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
-  const linkBounds = (x0, x1, y0, y1) => [x0, x1, y0, y1];
+  const linkPathString = function (x0, x1, x2, x3, y0, y1) {
+    return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
+  };
+  const linkBounds = function (x0, x1, y0, y1) {
+    return [x0, x1, y0, y1];
+  };
   function sankey () {
     return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort", functor).linkSort((a, b) => a.value - b.value) // Default sorts in descending order of value
     .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel").nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
       const selection = d3.select(this);
       const props = selection.props();
       const idAcc = prop("id");
-      const getNodePosition = node => Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
-      const xPosition = node => props.columnPosition(node.columnIndex);
-      const yPosition = node => getNodePosition(node);
-      const xExtent = () => Math.max(props.nodeThickness, 1);
-      const yExtent = node => Math.ceil(Math.max(props.sizeScale(node.value), 1));
+      const getNodePosition = function (node) {
+        return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
+      };
+      const xPosition = function (node) {
+        return props.columnPosition(node.columnIndex);
+      };
+      const yPosition = function (node) {
+        return getNodePosition(node);
+      };
+      const xExtent = function () {
+        return Math.max(props.nodeThickness, 1);
+      };
+      const yExtent = function (node) {
+        return Math.ceil(Math.max(props.sizeScale(node.value), 1));
+      };
       const linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
       // Draw the nodes
@@ -5279,7 +5432,9 @@
       barGroup.call(barTooltipAnchor);
 
       // Draw the column labels
-      const columnLabelX = colIndex => props.columnPosition(colIndex) + props.nodeThickness / 2;
+      const columnLabelX = function (colIndex) {
+        return props.columnPosition(colIndex) + props.nodeThickness / 2;
+      };
       const columnLabelY = -24;
       const columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
       // One number for each column
@@ -5289,25 +5444,27 @@
       columnLabelTicks.attr("x1", (d, i) => halfPixel(columnLabelX(i))).attr("x2", (d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
 
       // Draw the links
-      const linkPoints = link => {
+      const linkPoints = function (link) {
         const curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
           curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
           startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + props.sizeScale(link.value) / 2,
           endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + props.sizeScale(link.value) / 2;
         return [curveStart, curveEnd, startLevel, endLevel];
       };
-      const linkPath = link => {
+      const linkPath = function (link) {
         const points = linkPoints(link),
           curveInterp = d3.interpolateNumber(points[0], points[1]),
           curveControlPtA = curveInterp(props.linkCurvature),
           curveControlPtB = curveInterp(1 - props.linkCurvature);
         return linkPathString(points[0], curveControlPtA, curveControlPtB, points[1], points[2], points[3]);
       };
-      const linkBoundingBox = link => {
+      const linkBoundingBox = function (link) {
         const points = linkPoints(link);
         return linkBounds(points[0], points[1], points[2], points[3]);
       };
-      const linkThickness = link => Math.max(props.sizeScale(link.value), 1);
+      const linkThickness = function (link) {
+        return Math.max(props.sizeScale(link.value), 1);
+      };
 
       // Render the links
       const linksGroup = selection.selectGroup("links");
@@ -5338,7 +5495,7 @@
       }).text(props.linkLabel);
 
       // Render the node labels and their hit boxes
-      const getLabelSide = colIndex => {
+      const getLabelSide = function (colIndex) {
         let side = props.labelSide(colIndex);
         if (props.labelSideSwitch) {
           side = side === "left" ? "right" : "left";
@@ -5387,7 +5544,9 @@
     return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("transition").transition(true).render(function (data) {
       const selection = d3.select(this);
       const props = selection.props();
-      const defaultDefined = () => compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+      const defaultDefined = function () {
+        return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+      };
       const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
       let paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
       if (props.transition) {
@@ -5431,7 +5590,9 @@
 
       //sszsch why reverse?
       data = [...data].reverse();
-      const defaultDefined = () => compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+      const defaultDefined = function () {
+        return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+      };
       const areaGen = d3.area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
       const paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
       if (props.transition) {
@@ -5492,7 +5653,7 @@
    * in the data. This function makes no effort to normalize the data if that's not the case.
    */
   function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
-    return data => {
+    return function (data) {
       const sides = cascade().arrayBy(sideAcc).arrayBy(_rowAcc).objectBy(seriesAcc).apply(data).map(rows => {
         const keys = Object.keys(rows[0]);
         const side = sideAcc(rows[0][keys[0]][0]);
@@ -5615,10 +5776,18 @@
           return pColor;
         }
       }
-      const startAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
-      const endAngle = d => Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
-      const innerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y0));
-      const outerRadius = d => props.centerRadius + Math.max(0, props.radiusScale(d.y1));
+      const startAngle = function (d) {
+        return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x0)));
+      };
+      const endAngle = function (d) {
+        return Math.max(0, Math.min(TWO_PI, props.angleScale(d.x1)));
+      };
+      const innerRadius = function (d) {
+        return props.centerRadius + Math.max(0, props.radiusScale(d.y0));
+      };
+      const outerRadius = function (d) {
+        return props.centerRadius + Math.max(0, props.radiusScale(d.y1));
+      };
       const arcGen = d3.arc().startAngle(startAngle).endAngle(endAngle).innerRadius(innerRadius).outerRadius(outerRadius);
       for (const d of data) {
         // _x and _dx are the destination values for the transition.
@@ -5639,7 +5808,7 @@
       arcs.transition(defaultTransition()).attrTween("d", d => {
         const x0Interp = d3.interpolate(d.x0, d._x0);
         const x1Interp = d3.interpolate(d.x1, d._x1);
-        return t => {
+        return function (t) {
           d.x0 = x0Interp(t);
           d.x1 = x1Interp(t);
           return arcGen(d);
@@ -5794,7 +5963,7 @@
   }
   function truncateToWidth(metricsEl, maxWidth, originalString) {
     const MAX_RECURSION = 1000;
-    const fitText = (str, i) => {
+    const fitText = function (str, i) {
       metricsEl.text(str);
       const textWidth = Math.ceil(metricsEl.node().clientWidth);
       return i < MAX_RECURSION && textWidth > maxWidth ? fitText(str.slice(0, -2) + "…", i + 1) : str;
@@ -6192,7 +6361,7 @@
         }
       case "diagonal":
         {
-          return 40 + Math.sqrt(2 * (d3.max(labels, measureAxisLabel) / 2) ** 2);
+          return 40 + Math.sqrt(2 * Math.pow(d3.max(labels, measureAxisLabel) / 2, 2));
         }
       default:
         {
@@ -6378,10 +6547,12 @@
    * and layout required by the sankey component.
    */
 
-  const newLinkId = (() => {
+  const newLinkId = function () {
     let id = 0;
-    return () => ++id;
-  })();
+    return function () {
+      return ++id;
+    };
+  }();
 
   /**
    * sszvis.layout.sankey.prepareData
@@ -6412,7 +6583,7 @@
    *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
    *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
    */
-  const prepareData$1 = () => {
+  const prepareData$1 = function () {
     let mGetSource = identity;
     let mGetTarget = identity;
     let mGetValue = identity;
@@ -6420,10 +6591,14 @@
 
     // Helper functions
     const valueAcc = prop("value");
-    const byAscendingValue = (a, b) => d3.ascending(valueAcc(a), valueAcc(b));
-    const byDescendingValue = (a, b) => d3.descending(valueAcc(a), valueAcc(b));
+    const byAscendingValue = function (a, b) {
+      return d3.ascending(valueAcc(a), valueAcc(b));
+    };
+    const byDescendingValue = function (a, b) {
+      return d3.descending(valueAcc(a), valueAcc(b));
+    };
     let valueSortFunc = byDescendingValue;
-    const main = inputData => {
+    const main = function (inputData) {
       const columnIndex = mColumnIds.reduce((index, columnIdsList, colIndex) => {
         for (const id of columnIdsList) {
           if (index.has(id)) {
@@ -6536,28 +6711,30 @@
         columnLengths
       };
     };
-    main.apply = data => main(data);
-    main.source = func => {
+    main.apply = function (data) {
+      return main(data);
+    };
+    main.source = function (func) {
       mGetSource = func;
       return main;
     };
-    main.target = func => {
+    main.target = function (func) {
       mGetTarget = func;
       return main;
     };
-    main.value = func => {
+    main.value = function (func) {
       mGetValue = func;
       return main;
     };
-    main.descendingSort = () => {
+    main.descendingSort = function () {
       valueSortFunc = byDescendingValue;
       return main;
     };
-    main.ascendingSort = () => {
+    main.ascendingSort = function () {
       valueSortFunc = byAscendingValue;
       return main;
     };
-    main.idLists = idLists => {
+    main.idLists = function (idLists) {
       mColumnIds = idLists;
       return main;
     };
@@ -6586,7 +6763,7 @@
    *         @property {Array} columnDomain         The domain for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
    *         @property {Array} columnRange          The range for the coumn position scale. use to configure a linear scale for component.sankey.columnPosition
    */
-  const computeLayout$1 = (columnLengths, columnTotals, columnHeight, columnWidth) => {
+  const computeLayout$1 = function (columnLengths, columnTotals, columnHeight, columnWidth) {
     // Calculate appropriate scale and padding values (in pixels)
     const padSpaceRatio = 0.15;
     const padMin = 12;
@@ -6780,7 +6957,9 @@
       };
     });
   }
-  let sortFn = () => 0;
+  let sortFn = function () {
+    return 0;
+  };
 
   /**
    * sszvis.layout.sunburst.prepareData
@@ -6807,7 +6986,7 @@
    *
    * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
    */
-  const prepareData = () => {
+  const prepareData = function () {
     const layers = [];
     let valueAcc = identity;
     // Sibling nodes of the partition layout are sorted according to this sort function.
@@ -6830,16 +7009,18 @@
       // Remove the root element from the data (but it still exists in memory so long as the data is alive)
       return flatten(root).filter(d => !d.data.isSunburstRoot);
     }
-    main.calculate = data => main(data);
-    main.layer = keyFunc => {
+    main.calculate = function (data) {
+      return main(data);
+    };
+    main.layer = function (keyFunc) {
       layers.push(keyFunc);
       return main;
     };
-    main.value = accfn => {
+    main.value = function (accfn) {
       valueAcc = accfn;
       return main;
     };
-    main.sort = sortFunc => {
+    main.sort = function (sortFunc) {
       sortFn = sortFunc;
       return main;
     };
@@ -6862,7 +7043,7 @@
    *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
    *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
    */
-  const computeLayout = (numLayers, chartWidth) => {
+  const computeLayout = function (numLayers, chartWidth) {
     // Diameter of the center circle is one-third the width
     const halfWidth = chartWidth / 2;
     const centerRadius = halfWidth / 3;
@@ -6883,7 +7064,9 @@
    *                                    function which abstracts away the way d3 stores positions within the partition layout used
    *                                    by the sunburst chart.
    */
-  const getRadiusExtent = formattedData => [d3.min(formattedData, d => d.y0), d3.max(formattedData, d => d.y1)];
+  const getRadiusExtent = function (formattedData) {
+    return [d3.min(formattedData, d => d.y0), d3.max(formattedData, d => d.y1)];
+  };
 
   /**
    * Vertical Bar Chart Dimensions
@@ -7114,7 +7297,7 @@
 
   // var RELOAD_MSG = 'Versuchen Sie, die Webseite neu zu laden. Sollte das Problem weiterhin bestehen, nehmen Sie mit uns Kontakt auf.';
 
-  const loadError = error$1 => {
+  const loadError = function (error$1) {
     error(error$1);
 
     // Don't use alert()!
@@ -7175,7 +7358,9 @@
    *                                            and returns an svg path string which represents that geojson, projected using
    *                                            a map projection optimal for Swiss areas.
    */
-  const swissMapPath = (width, height, featureCollection, featureBoundsCacheKey) => d3.geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
+  const swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
+    return d3.geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
+  };
 
   /**
    * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
@@ -7190,7 +7375,7 @@
    *                                  at the equator or at one of the poles. This value should be specified as a [lon, lat] array pair.
    * @param {number} meterDistance    The distance (in meters) for which you want the pixel value
    */
-  const pixelsFromGeoDistance = (projection, centerPoint, meterDistance) => {
+  const pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) {
     // This radius (in meters) is halfway between the radius of the earth at the equator (6378200m) and that at its poles (6356750m).
     // I figure it's an appropriate approximation for Switzerland, which is at roughly 45deg latitude.
     const APPROX_EARTH_RADIUS = 6367475;
@@ -7226,7 +7411,7 @@
    * @return {Array}                   An array of objects (one for each element of the geojson's features). Each should have a
    *                                   geoJson property which is the feature, and a datum property which is the matched datum.
    */
-  const prepareMergedGeoData = (dataset, geoJson, keyName) => {
+  const prepareMergedGeoData = function (dataset, geoJson, keyName) {
     keyName || (keyName = GEO_KEY_DEFAULT);
 
     // group the input data by map entity id
@@ -7257,7 +7442,7 @@
    * @return {Array[float, float]}            The geographical coordinates (in the form [lon, lat]) of the centroid
    *                                          (or user-specified center) of the object.
    */
-  const getGeoJsonCenter = geoJson => {
+  const getGeoJsonCenter = function (geoJson) {
     if (!geoJson.properties.cachedCenter) {
       const setCenter = geoJson.properties.center;
       geoJson.properties.cachedCenter = setCenter ? setCenter.split(",").map(Number.parseFloat) : d3.geoCentroid(geoJson);
@@ -7274,7 +7459,9 @@
    * @param  {number} width    The width of the container holding the map.
    * @return {number}          The stroke width that the map elements should have.
    */
-  const widthAdaptiveMapPathStroke = width => Math.min(Math.max(0.8, width / 400), 1.1);
+  const widthAdaptiveMapPathStroke = function (width) {
+    return Math.min(Math.max(0.8, width / 400), 1.1);
+  };
 
   /**
    * base renderer component
@@ -7379,7 +7566,7 @@
         anchoredCircles.attr("r", radiusAcc);
       }
     });
-    anchoredCirclesComponent.on = () => {
+    anchoredCirclesComponent.on = function () {
       const value = event.on.apply(event, arguments);
       return value === event ? anchoredCirclesComponent : value;
     };
@@ -7469,7 +7656,7 @@
       // attach tooltip anchors
       tooltipGroup.call(ta);
     });
-    geojsonComponent.on = () => {
+    geojsonComponent.on = function () {
       const value = event.on.apply(event, arguments);
       return value === event ? geojsonComponent : value;
     };
@@ -7764,7 +7951,7 @@
         event.call("click", this, d.datum);
       });
     });
-    mapComponent.on = () => {
+    mapComponent.on = function () {
       const value = event.on.apply(event, arguments);
       return value === event ? mapComponent : value;
     };
@@ -7785,7 +7972,9 @@
    * @return {Date}
    */
   const dateParser = timeParse("%d.%m.%Y");
-  const parseDate = d => dateParser(d);
+  const parseDate = function (d) {
+    return dateParser(d);
+  };
 
   /**
    * Parse year values
@@ -7793,14 +7982,18 @@
    * @return {Date}       A javascript date object for the first time in the given year
    */
   const yearParser = timeParse("%Y");
-  const parseYear = d => yearParser(d);
+  const parseYear = function (d) {
+    return yearParser(d);
+  };
 
   /**
    * Parse untyped input
    * @param  {String} d A value that could be a number
    * @return {Number}   If d is not a number, NaN is returned
    */
-  const parseNumber = d => d.trim() === "" ? Number.NaN : +d;
+  const parseNumber = function (d) {
+    return d.trim() === "" ? Number.NaN : +d;
+  };
 
   /**
    * ResponsiveProps module
@@ -7937,7 +8130,7 @@
      *
      * @return {responsiveProps}
      */
-    _responsiveProps.prop = (propName, propSpec) => {
+    _responsiveProps.prop = function (propName, propSpec) {
       propsConfig[propName] = functorizeValues(propSpec);
       return _responsiveProps;
     };
@@ -7976,7 +8169,7 @@
      *   { name: 'large', width: 700 }
      * ])
      */
-    _responsiveProps.breakpoints = bps => {
+    _responsiveProps.breakpoints = function (bps) {
       if (arguments.length === 0) {
         return breakpointSpec;
       }
@@ -8014,7 +8207,7 @@
     // Validate the properties of the propSpec:
     // each should be a valid breakpoint name, and its value should be defined
     for (const breakpointName in propSpec) {
-      if (Object.hasOwn(propSpec, breakpointName) && breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
+      if (Object.prototype.hasOwnProperty.call(propSpec, breakpointName) && breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
         return false;
       }
     }
@@ -8069,7 +8262,9 @@
         return "<strong>" + d + "</strong>";
       }
     };
-    return (textBody, datum) => textBody.lines().map(line => line.map(word => styles[word.style].call(null, word.text(datum))).join(" ")).join("<br/>");
+    return function (textBody, datum) {
+      return textBody.lines().map(line => line.map(word => styles[word.style].call(null, word.text(datum))).join(" ")).join("<br/>");
+    };
   }
   function formatSVG() {
     const styles = {
@@ -8083,11 +8278,13 @@
         return '<tspan style="font-weight:bold">' + d + "</tspan>";
       }
     };
-    return (textBody, datum) => textBody.lines().reduce((svg, line, i) => {
-      const lineSvg = line.map(word => styles[word.style].call(null, word.text(datum))).join(" ");
-      const dy = i === 0 ? 0 : "1.2em";
-      return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
-    }, "");
+    return function (textBody, datum) {
+      return textBody.lines().reduce((svg, line, i) => {
+        const lineSvg = line.map(word => styles[word.style].call(null, word.text(datum))).join(" ");
+        const dy = i === 0 ? 0 : "1.2em";
+        return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
+      }, "");
+    };
   }
   function structuredText() {
     const lines = [[]];
@@ -8107,17 +8304,17 @@
     };
   }
   function makeTextWithFormat(format) {
-    return () => {
+    return function () {
       const textBody = structuredText();
       function makeText(d) {
         return format(textBody, d);
       }
-      makeText.newline = () => {
+      makeText.newline = function () {
         textBody.addLine();
         return makeText;
       };
       for (const style of ["bold", "italic", "plain"]) {
-        makeText[style] = text => {
+        makeText[style] = function (text) {
           textBody.addWord(style, text);
           return makeText;
         };

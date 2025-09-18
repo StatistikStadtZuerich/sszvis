@@ -51,7 +51,7 @@ function bubble () {
       anchoredCircles.attr("r", radiusAcc);
     }
   });
-  anchoredCirclesComponent.on = () => {
+  anchoredCirclesComponent.on = function () {
     const value = event.on.apply(event, arguments);
     return value === event ? anchoredCirclesComponent : value;
   };

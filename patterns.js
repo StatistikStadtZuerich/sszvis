@@ -19,7 +19,7 @@ import { scaleLightGry } from './color.js';
  *
  */
 
-const heatTableMissingValuePattern = selection => {
+const heatTableMissingValuePattern = function (selection) {
   const rectFill = scaleLightGry(),
     crossStroke = "#A4A4A4",
     crossStrokeWidth = 0.035,
@@ -30,7 +30,7 @@ const heatTableMissingValuePattern = selection => {
   selection.append("line").attr("x1", cross1).attr("y1", cross1).attr("x2", cross2).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
   selection.append("line").attr("x1", cross2).attr("y1", cross1).attr("x2", cross1).attr("y2", cross2).attr("stroke-width", crossStrokeWidth).attr("stroke", crossStroke);
 };
-const mapMissingValuePattern = selection => {
+const mapMissingValuePattern = function (selection) {
   const pWidth = 14,
     pHeight = 14,
     fillColor = "#FAFAFA",
@@ -42,7 +42,7 @@ const mapMissingValuePattern = selection => {
   selection.append("line").attr("x1", 8).attr("y1", 3).attr("x2", 12).attr("y2", 7).attr("stroke", lineStroke);
   selection.append("line").attr("x1", 12).attr("y1", 3).attr("x2", 8).attr("y2", 7).attr("stroke", lineStroke);
 };
-const mapLakePattern = selection => {
+const mapLakePattern = function (selection) {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;
@@ -51,16 +51,16 @@ const mapLakePattern = selection => {
   selection.append("line").attr("x1", 0).attr("y1", pHeight * offset).attr("x2", pWidth * offset).attr("y2", 0).attr("stroke", "#ddd").attr("stroke-linecap", "square");
   selection.append("line").attr("x1", pWidth * offset).attr("y1", pHeight).attr("x2", pWidth).attr("y2", pHeight * offset).attr("stroke", "#ddd").attr("stroke-linecap", "square");
 };
-const mapLakeFadeGradient = selection => {
+const mapLakeFadeGradient = function (selection) {
   selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", "lake-fade-gradient");
   selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
   selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
 };
-const mapLakeGradientMask = selection => {
+const mapLakeGradientMask = function (selection) {
   selection.attr("maskContentUnits", "objectBoundingBox");
   selection.append("rect").attr("fill", "url(#lake-fade-gradient)").attr("width", 1).attr("height", 1);
 };
-const dataAreaPattern = selection => {
+const dataAreaPattern = function (selection) {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;

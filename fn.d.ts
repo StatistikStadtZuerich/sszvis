@@ -30,7 +30,7 @@ export declare const isSelection: (val: unknown) => val is Selection<any, any, a
  * accepts exactly `n` parameters. Any extraneous parameters will not be
  * passed to the supplied function.
  */
-export declare const arity: (n: number, fn: (...args: any[]) => any) => ((...args: any[]) => any);
+export declare const arity: (n: number, fn: (...args: any[]) => any) => (...args: any[]) => any;
 /**
  * fn.compose
  *
@@ -44,7 +44,7 @@ export declare const arity: (n: number, fn: (...args: any[]) => any) => ((...arg
  *
  * Note: all composed functions but the last should be of arity 1.
  */
-export declare const compose: (...fns: ((...args: any[]) => any)[]) => ((...args: any[]) => any);
+export declare const compose: (...fns: ((...args: any[]) => any)[]) => (...args: any[]) => any;
 /**
  * fn.contains
  *
@@ -178,7 +178,7 @@ export declare const last: <T>(arr: T[]) => T | undefined;
  * which calls f on its arguments and returns the
  * boolean opposite of f's return value.
  */
-export declare const not: <T extends any[]>(f: (...args: T) => any) => ((...args: T) => boolean);
+export declare const not: <T extends any[]>(f: (...args: T) => any) => (...args: T) => boolean;
 /**
  * fn.prop
  *
@@ -187,7 +187,7 @@ export declare const not: <T extends any[]>(f: (...args: T) => any) => ((...args
  * it returns that object's value for the named property. (or undefined, if the object
  * does not contain the property.)
  */
-export declare const prop: <K extends string | number | symbol>(key: K) => (<T extends Record<K, any>>(object: T) => T[K]);
+export declare const prop: <K extends string | number | symbol>(key: K) => <T extends Record<K, any>>(object: T) => T[K];
 /**
  * fn.propOr
  *
@@ -198,7 +198,7 @@ export declare const prop: <K extends string | number | symbol>(key: K) => (<T e
  * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
  * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
  */
-export declare const propOr: <K extends string | number | symbol, D>(key: K, defaultVal?: D) => (<T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D);
+export declare const propOr: <K extends string | number | symbol, D>(key: K, defaultVal?: D) => <T extends Partial<Record<K, any>>>(object: T | undefined) => T[K] | D;
 /**
  * fn.set
  *
@@ -236,7 +236,7 @@ export declare const stringEqual: (a: {
  *
  * Same as fn.functor in d3v3
  */
-export declare const functor: <T>(v: T | (() => T)) => (() => T);
+export declare const functor: <T>(v: T | (() => T)) => () => T;
 /**
  * fn.memoize
  *

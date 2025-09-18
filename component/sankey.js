@@ -68,19 +68,33 @@ import bar from './bar.js';
  * @return {sszvis.component}
  */
 
-const linkPathString = (x0, x1, x2, x3, y0, y1) => "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
-const linkBounds = (x0, x1, y0, y1) => [x0, x1, y0, y1];
+const linkPathString = function (x0, x1, x2, x3, y0, y1) {
+  return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
+};
+const linkBounds = function (x0, x1, y0, y1) {
+  return [x0, x1, y0, y1];
+};
 function sankey () {
   return component().prop("sizeScale").prop("columnPosition").prop("nodeThickness").prop("nodePadding").prop("columnPadding", functor).prop("columnLabel", functor).columnLabel("").prop("columnLabelOffset", functor).columnLabelOffset(0).prop("linkCurvature").linkCurvature(0.5).prop("nodeColor", functor).prop("linkColor", functor).prop("linkSort", functor).linkSort((a, b) => a.value - b.value) // Default sorts in descending order of value
   .prop("labelSide", functor).labelSide("left").prop("labelSideSwitch").prop("labelOpacity", functor).labelOpacity(1).prop("labelHitBoxSize").labelHitBoxSize(0).prop("nameLabel").nameLabel(identity).prop("linkSourceLabels").linkSourceLabels([]).prop("linkTargetLabels").linkTargetLabels([]).prop("linkLabel", functor).render(function (data) {
     const selection = select(this);
     const props = selection.props();
     const idAcc = prop("id");
-    const getNodePosition = node => Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
-    const xPosition = node => props.columnPosition(node.columnIndex);
-    const yPosition = node => getNodePosition(node);
-    const xExtent = () => Math.max(props.nodeThickness, 1);
-    const yExtent = node => Math.ceil(Math.max(props.sizeScale(node.value), 1));
+    const getNodePosition = function (node) {
+      return Math.floor(props.columnPadding(node.columnIndex) + props.sizeScale(node.valueOffset) + props.nodePadding * node.nodeIndex);
+    };
+    const xPosition = function (node) {
+      return props.columnPosition(node.columnIndex);
+    };
+    const yPosition = function (node) {
+      return getNodePosition(node);
+    };
+    const xExtent = function () {
+      return Math.max(props.nodeThickness, 1);
+    };
+    const yExtent = function (node) {
+      return Math.ceil(Math.max(props.sizeScale(node.value), 1));
+    };
     const linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
 
     // Draw the nodes
@@ -91,7 +105,9 @@ function sankey () {
     barGroup.call(barTooltipAnchor);
 
     // Draw the column labels
-    const columnLabelX = colIndex => props.columnPosition(colIndex) + props.nodeThickness / 2;
+    const columnLabelX = function (colIndex) {
+      return props.columnPosition(colIndex) + props.nodeThickness / 2;
+    };
     const columnLabelY = -24;
     const columnLabels = barGroup.selectAll(".sszvis-sankey-column-label")
     // One number for each column
@@ -101,25 +117,27 @@ function sankey () {
     columnLabelTicks.attr("x1", (d, i) => halfPixel(columnLabelX(i))).attr("x2", (d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
 
     // Draw the links
-    const linkPoints = link => {
+    const linkPoints = function (link) {
       const curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
         curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
         startLevel = getNodePosition(link.src) + props.sizeScale(link.srcOffset) + props.sizeScale(link.value) / 2,
         endLevel = getNodePosition(link.tgt) + props.sizeScale(link.tgtOffset) + props.sizeScale(link.value) / 2;
       return [curveStart, curveEnd, startLevel, endLevel];
     };
-    const linkPath = link => {
+    const linkPath = function (link) {
       const points = linkPoints(link),
         curveInterp = interpolateNumber(points[0], points[1]),
         curveControlPtA = curveInterp(props.linkCurvature),
         curveControlPtB = curveInterp(1 - props.linkCurvature);
       return linkPathString(points[0], curveControlPtA, curveControlPtB, points[1], points[2], points[3]);
     };
-    const linkBoundingBox = link => {
+    const linkBoundingBox = function (link) {
       const points = linkPoints(link);
       return linkBounds(points[0], points[1], points[2], points[3]);
     };
-    const linkThickness = link => Math.max(props.sizeScale(link.value), 1);
+    const linkThickness = function (link) {
+      return Math.max(props.sizeScale(link.value), 1);
+    };
 
     // Render the links
     const linksGroup = selection.selectGroup("links");
@@ -150,7 +168,7 @@ function sankey () {
     }).text(props.linkLabel);
 
     // Render the node labels and their hit boxes
-    const getLabelSide = colIndex => {
+    const getLabelSide = function (colIndex) {
       let side = props.labelSide(colIndex);
       if (props.labelSideSwitch) {
         side = side === "left" ? "right" : "left";

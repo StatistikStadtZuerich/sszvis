@@ -15,7 +15,9 @@ const timeParse = timeFormatLocale(locale).parse;
  * @return {Date}
  */
 const dateParser = timeParse("%d.%m.%Y");
-const parseDate = d => dateParser(d);
+const parseDate = function (d) {
+  return dateParser(d);
+};
 
 /**
  * Parse year values
@@ -23,14 +25,18 @@ const parseDate = d => dateParser(d);
  * @return {Date}       A javascript date object for the first time in the given year
  */
 const yearParser = timeParse("%Y");
-const parseYear = d => yearParser(d);
+const parseYear = function (d) {
+  return yearParser(d);
+};
 
 /**
  * Parse untyped input
  * @param  {String} d A value that could be a number
  * @return {Number}   If d is not a number, NaN is returned
  */
-const parseNumber = d => d.trim() === "" ? Number.NaN : +d;
+const parseNumber = function (d) {
+  return d.trim() === "" ? Number.NaN : +d;
+};
 
 export { parseDate, parseNumber, parseYear };
 //# sourceMappingURL=parse.js.map

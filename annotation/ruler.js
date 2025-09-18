@@ -39,7 +39,9 @@ import translateString from '../svgUtils/translateString.js';
 const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
   const selection = select(this);
   const props = selection.props();
-  const labelId = props.labelId || (d => props.x(d) + "_" + props.y(d));
+  const labelId = props.labelId || function (d) {
+    return props.x(d) + "_" + props.y(d);
+  };
   const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId).join("line").classed("sszvis-ruler__rule", true);
   ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", props.y).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
   const dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId).join("circle").classed("sszvis-ruler__dot", true);

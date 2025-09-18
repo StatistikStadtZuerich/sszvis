@@ -90,7 +90,7 @@ function geojson () {
     // attach tooltip anchors
     tooltipGroup.call(ta);
   });
-  geojsonComponent.on = () => {
+  geojsonComponent.on = function () {
     const value = event.on.apply(event, arguments);
     return value === event ? geojsonComponent : value;
   };

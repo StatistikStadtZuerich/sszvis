@@ -69,12 +69,18 @@ function bar () {
     // Tooltip anchors
     let tooltipPosition;
     if (props.centerTooltip) {
-      tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+      tooltipPosition = function (d) {
+        return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
+      };
     } else if (props.tooltipAnchor) {
       const uv = props.tooltipAnchor.map(Number.parseFloat);
-      tooltipPosition = d => [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
+      tooltipPosition = function (d) {
+        return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
+      };
     } else {
-      tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+      tooltipPosition = function (d) {
+        return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
+      };
     }
     const ta = tooltipAnchor().position(tooltipPosition);
     selection.call(ta);

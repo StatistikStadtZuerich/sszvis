@@ -70,7 +70,7 @@ function axisLabelHeight(slant, labels) {
       }
     case "diagonal":
       {
-        return 40 + Math.sqrt(2 * (max(labels, measureAxisLabel) / 2) ** 2);
+        return 40 + Math.sqrt(2 * Math.pow(max(labels, measureAxisLabel) / 2, 2));
       }
     default:
       {

@@ -59,7 +59,7 @@ function pie () {
     segments.transition(defaultTransition()).attr("transform", "translate(" + props.radius + "," + props.radius + ")").attrTween("d", d => {
       const angle0Interp = interpolate(d.a0, d._a0);
       const angle1Interp = interpolate(d.a1, d._a1);
-      return t => {
+      return function (t) {
         d.a0 = angle0Interp(t);
         d.a1 = angle1Interp(t);
         return arcGen(d);

@@ -119,7 +119,7 @@ function voronoi () {
       polys.attr("stroke", "#f00");
     }
   });
-  voronoiComponent.on = () => {
+  voronoiComponent.on = function () {
     const value = event.on.apply(event, arguments);
     return value === event ? voronoiComponent : value;
   };
@@ -127,7 +127,7 @@ function voronoi () {
 }
 
 // Perform distance calculations in units squared to avoid a costly Math.sqrt
-const MAX_INTERACTION_RADIUS_SQUARED = 15 ** 2;
+const MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
 function eventNearPoint(event, point) {
   const dx = event.clientX - point[0];
   const dy = event.clientY - point[1];

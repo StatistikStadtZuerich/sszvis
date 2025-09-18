@@ -37,7 +37,9 @@ function stackedArea () {
   return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("transition").transition(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-    const defaultDefined = () => compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+    const defaultDefined = function () {
+      return compose(not(isNaN), props.y0) && compose(not(isNaN), props.y1);
+    };
     const areaGen = area().defined(props.defined === undefined ? defaultDefined : props.defined).x(props.x).y0(props.y0).y1(props.y1);
     let paths = selection.selectAll("path.sszvis-path").data(data, props.key).join("path").classed("sszvis-path", true);
     if (props.transition) {

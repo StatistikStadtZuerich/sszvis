@@ -36,7 +36,7 @@ function rangeFlag () {
   });
 }
 function makeFlagDot(classed, cx, cy) {
-  return dot => {
+  return function (dot) {
     dot.join("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true).attr("r", 3.5).attr("cx", cx).attr("cy", cy);
   };
 }

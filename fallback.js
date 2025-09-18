@@ -15,15 +15,15 @@ import { isSelection } from './fn.js';
  * @module sszvis/fallback
  */
 
-const fallbackUnsupported = () => {
+const fallbackUnsupported = function () {
   const supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
   return !supportsSVG;
 };
-const fallbackCanvasUnsupported = () => {
+const fallbackCanvasUnsupported = function () {
   const supportsCanvas = !!document.createElement("canvas").getContext;
   return !supportsCanvas;
 };
-const fallbackRender = (selector, options) => {
+const fallbackRender = function (selector, options) {
   options || (options = {});
   options.src || (options.src = "fallback.png");
   const selection = isSelection(selector) ? selector : select(selector);
