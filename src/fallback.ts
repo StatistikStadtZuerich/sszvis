@@ -1,15 +1,15 @@
-/**	
- * Fallback handling	
- *	
- * Defaults to rendering a fallback image with standard chart proportions.	
- *	
- * @example	
- * if (sszvis.fallback.unsupported()) {	
- *   sszvis.fallback.render('#sszvis-chart', {src: '../fallback.png', height: 300});	
- *   return;	
- * }	
- *	
- * @module sszvis/fallback	
+/**
+ * Fallback handling
+ *
+ * Defaults to rendering a fallback image with standard chart proportions.
+ *
+ * @example
+ * if (sszvis.fallback.unsupported()) {
+ *   sszvis.fallback.render('#sszvis-chart', {src: '../fallback.png', height: 300});
+ *   return;
+ * }
+ *
+ * @module sszvis/fallback
  */
 
 import { select } from "d3";
@@ -33,18 +33,12 @@ export const fallbackCanvasUnsupported = function (): boolean {
   return !supportsCanvas;
 };
 
-export const fallbackRender = function (
+export const fallbackRender = (
   selector: SelectableElement,
   options: FallbackOptions = {}
-): void {
-  const { src = "fallback.png" } = options;
-  let selection: AnySelection;
-
-  if (fn.isSelection(selector)) {
-    selection = selector;
-  } else {
-    selection = select(selector as string);
-  }
-
-  selection.append("img").attr("class", "sszvis-fallback-image").attr("src", src);
+): void => {
+  options || (options = {});
+  options.src || (options.src = "fallback.png");
+  const selection: AnySelection = fn.isSelection(selector) ? selector : select(selector);
+  selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
 };
