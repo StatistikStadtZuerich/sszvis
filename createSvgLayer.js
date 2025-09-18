@@ -21,18 +21,22 @@ import { isSelection } from './fn.js';
  *
  * @returns {d3.selection}
  */
-function createSvgLayer(selector, bounds$1, metadata) {
-  bounds$1 || (bounds$1 = bounds());
-  metadata || (metadata = {});
+function createSvgLayer(selector, bounds$1) {
+  let metadata = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  const {
+    padding,
+    height,
+    width
+  } = bounds$1 || bounds();
   const key = metadata.key || "default";
-  const elementDataKey = "data-sszvis-svg-" + key;
+  const elementDataKey = "data-sszvis-svg-".concat(key);
   const title = metadata.title || "";
   const description = metadata.description || "";
   const root = isSelection(selector) ? selector : select(selector);
-  const svg = root.selectAll("svg[" + elementDataKey + "]").data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", title + " – " + description).attr("height", bounds$1.height).attr("width", bounds$1.width);
+  const svg = root.selectAll("svg[".concat(elementDataKey, "]")).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", "".concat(title, " \u2013 ").concat(description)).attr("height", height).attr("width", width);
   svg.selectAll("title").data([0]).join("title").text(title);
   svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
-  return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(" + bounds$1.padding.left + "," + bounds$1.padding.top + ")");
+  return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(".concat(padding.left, ",").concat(padding.top, ")"));
 }
 
 export { createSvgLayer };

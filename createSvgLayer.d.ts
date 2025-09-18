@@ -24,5 +24,5 @@ export interface SvgLayerMetadata {
     title?: string;
     description?: string;
 }
-export declare function createSvgLayer(selector: SelectableElement, bounds?: BoundsResult, metadata?: SvgLayerMetadata): AnySelection;
+export declare function createSvgLayer(selector: SelectableElement | HTMLElement, bounds?: BoundsResult, metadata?: SvgLayerMetadata): AnySelection;
 //# sourceMappingURL=createSvgLayer.d.ts.map

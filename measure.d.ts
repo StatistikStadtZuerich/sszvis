@@ -3,7 +3,7 @@
  *
  * @module sszvis/measure
  */
-import { Selection } from "d3";
+import { type Selection } from "d3";
 import type { DimensionMeasurement } from "./types.js";
 /**
  * Type for elements that can be measured - selector string, DOM element, or d3 selection

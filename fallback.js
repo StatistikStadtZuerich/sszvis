@@ -14,18 +14,18 @@ import { isSelection } from './fn.js';
  *
  * @module sszvis/fallback
  */
-const fallbackUnsupported = function () {
+const fallbackUnsupported = () => {
   const supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
   return !supportsSVG;
 };
-const fallbackCanvasUnsupported = function () {
+const fallbackCanvasUnsupported = () => {
   const supportsCanvas = !!document.createElement("canvas").getContext;
   return !supportsCanvas;
 };
 const fallbackRender = function (selector) {
-  let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  options || (options = {});
-  options.src || (options.src = "fallback.png");
+  let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
+    src: "fallback.png"
+  };
   const selection = isSelection(selector) ? selector : select(selector);
   selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
 };

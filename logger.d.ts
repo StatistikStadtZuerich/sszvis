@@ -45,7 +45,7 @@
 /**
  * Type for logger function that accepts any number of arguments
  */
-type LoggerFunction = (...args: any[]) => void;
+type LoggerFunction = (...args: unknown[]) => void;
 export declare const log: LoggerFunction;
 export declare const warn: LoggerFunction;
 export declare const error: LoggerFunction;

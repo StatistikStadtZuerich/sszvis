@@ -9,7 +9,7 @@ import { error } from './logger.js';
  * Handle data loading errors by logging them
  * @param error The error object from a failed data load operation
  */
-const loadError = function (error$1) {
+const loadError = error$1 => {
   error(error$1);
   // Don't use alert()!
   // TODO: render an inline error in the chart instead

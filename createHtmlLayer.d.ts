@@ -45,5 +45,5 @@ import type { AnySelection, SelectableElement } from "./types.js";
 export interface LayerMetadata {
     key?: string;
 }
-export declare function createHtmlLayer(selector: SelectableElement, bounds?: BoundsResult, metadata?: LayerMetadata): AnySelection;
+export declare function createHtmlLayer(selector: SelectableElement | HTMLElement, bounds?: BoundsResult, metadata?: LayerMetadata): AnySelection;
 //# sourceMappingURL=createHtmlLayer.d.ts.map

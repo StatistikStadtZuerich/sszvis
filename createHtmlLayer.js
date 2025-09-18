@@ -44,14 +44,16 @@ import { isSelection } from './fn.js';
  *
  * @returns {d3.selection}
  */
-function createHtmlLayer(selector, bounds$1, metadata) {
-  bounds$1 || (bounds$1 = bounds());
-  metadata || (metadata = {});
+function createHtmlLayer(selector, bounds$1) {
+  let metadata = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  const {
+    padding
+  } = bounds$1 || bounds();
   const key = metadata.key || "default";
-  const elementDataKey = "data-sszvis-html-" + key;
+  const elementDataKey = "data-sszvis-html-".concat(key);
   const root = isSelection(selector) ? selector : select(selector);
   root.classed("sszvis-outer-container", true);
-  return root.selectAll("[data-sszvis-html-layer][" + elementDataKey + "]").data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", bounds$1.padding.left + "px").style("top", bounds$1.padding.top + "px");
+  return root.selectAll("[data-sszvis-html-layer][".concat(elementDataKey, "]")).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", "".concat(padding.left, "px")).style("top", "".concat(padding.top, "px"));
 }
 
 export { createHtmlLayer };

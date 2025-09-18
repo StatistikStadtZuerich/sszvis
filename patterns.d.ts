@@ -16,7 +16,7 @@
  * @method  dataAreaPattern                 The pattern for the data area texture.
  *
  */
-import { LinearGradientSelection, MaskSelection, PatternSelection } from "./types";
+import type { LinearGradientSelection, MaskSelection, PatternSelection } from "./types";
 /**
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements

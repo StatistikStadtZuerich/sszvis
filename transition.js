@@ -16,23 +16,17 @@ const defaultEase = easePolyOut;
  * Creates a default transition with standard easing and duration
  * @returns A d3 transition with 300ms duration and polynomial ease-out
  */
-const defaultTransition = function () {
-  return transition().ease(defaultEase).duration(300);
-};
+const defaultTransition = () => transition().ease(defaultEase).duration(300);
 /**
  * Creates a fast transition for quick animations
  * @returns A d3 transition with 50ms duration and polynomial ease-out
  */
-const fastTransition = function () {
-  return transition().ease(defaultEase).duration(50);
-};
+const fastTransition = () => transition().ease(defaultEase).duration(50);
 /**
  * Creates a slow transition for gradual animations
  * @returns A d3 transition with 500ms duration and polynomial ease-out
  */
-const slowTransition = function () {
-  return transition().ease(defaultEase).duration(500);
-};
+const slowTransition = () => transition().ease(defaultEase).duration(500);
 
 export { defaultTransition, fastTransition, slowTransition };
 //# sourceMappingURL=transition.js.map

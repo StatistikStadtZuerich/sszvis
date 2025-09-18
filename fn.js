@@ -11,25 +11,19 @@ import { selection } from 'd3';
  * The identity function. It returns the first argument passed to it.
  * Useful as a default where a function is required.
  */
-const identity = function (value) {
-  return value;
-};
+const identity = value => value;
 /**
  * fn.isString
  *
  * determine whether the value is a string
  */
-const isString = function (val) {
-  return Object.prototype.toString.call(val) === "[object String]";
-};
+const isString = val => Object.prototype.toString.call(val) === "[object String]";
 /**
  * fn.isSelection
  *
  * determine whether the value is a d3.selection.
  */
-const isSelection = function (val) {
-  return val instanceof selection;
-};
+const isSelection = val => val instanceof selection;
 /**
  * fn.arity
  *
@@ -37,7 +31,7 @@ const isSelection = function (val) {
  * accepts exactly `n` parameters. Any extraneous parameters will not be
  * passed to the supplied function.
  */
-const arity = function (n, fn) {
+const arity = (n, fn) => {
   switch (n) {
     case 0:
       {
@@ -144,17 +138,13 @@ const compose = function () {
  *
  * Checks whether an item is present in the given list (by strict equality).
  */
-const contains = function (list, d) {
-  return list.includes(d);
-};
+const contains = (list, d) => list.includes(d);
 /**
  * fn.defined
  *
  * determines if the passed value is defined.
  */
-const defined = function (val) {
-  return val !== undefined && val != null && !Number.isNaN(val);
-};
+const defined = val => val !== undefined && val != null && !Number.isNaN(val);
 /**
  * fn.derivedSet
  *
@@ -166,7 +156,7 @@ const defined = function (val) {
  * in the other set functions, the set of derived properties is returned, whereas this function
  * returns a set of objects from the input array.
  */
-const derivedSet = function (arr, acc) {
+const derivedSet = (arr, acc) => {
   const accessor = acc || identity;
   const seen = [];
   const result = [];
@@ -187,7 +177,7 @@ const derivedSet = function (arr, acc) {
  * Use a predicate function to test if every element in an array passes some test.
  * Returns false as soon as an element fails the predicate test. Returns true otherwise.
  */
-const every = function (predicate, arr) {
+const every = (predicate, arr) => {
   for (const element of arr) {
     if (!predicate(element)) {
       return false;
@@ -200,7 +190,7 @@ const every = function (predicate, arr) {
  *
  * returns a new array with length `len` filled with `val`
  */
-const filledArray = function (len, val) {
+const filledArray = (len, val) => {
   const arr = Array.from({
     length: len
   });
@@ -214,7 +204,7 @@ const filledArray = function (len, val) {
  *
  * Finds the first occurrence of an element in an array that passes the predicate function
  */
-const find = function (predicate, arr) {
+const find = (predicate, arr) => {
   for (const element of arr) {
     if (predicate(element)) {
       return element;
@@ -227,9 +217,7 @@ const find = function (predicate, arr) {
  *
  * Returns the first value in the passed array, or undefined if the array is empty
  */
-const first = function (arr) {
-  return arr[0];
-};
+const first = arr => arr[0];
 /**
  * fn.flatten
  *
@@ -237,9 +225,7 @@ const first = function (arr) {
  * a two-dimensional array (i.e. its elements are also arrays). The result is a
  * one-dimensional array consisting of all the elements of the sub-arrays.
  */
-const flatten = function (arr) {
-  return arr.flat();
-};
+const flatten = arr => arr.flat();
 /**
  * fn.firstTouch
  *
@@ -253,7 +239,7 @@ const flatten = function (arr) {
  * @return {Touch|null}         The first Touch object from the TouchEvent's lists
  *                              of touches.
  */
-const firstTouch = function (event) {
+const firstTouch = event => {
   if (event.touches && event.touches.length > 0) {
     return event.touches[0];
   } else if (event.changedTouches && event.changedTouches.length > 0) {
@@ -272,7 +258,7 @@ const firstTouch = function (event) {
  *   informalGreeting: function() { return "How ya' doin!" }
  * })
  */
-const foldPattern = function (key, pattern) {
+const foldPattern = (key, pattern) => {
   const result = pattern[key];
   if (typeof result === "function") {
     return result();
@@ -290,7 +276,7 @@ const foldPattern = function (key, pattern) {
  * MUST be "hashable" - convertible to unique keys of a JavaScript object.
  * As payoff for obeying this restriction, the algorithm can run much faster.
  */
-const hashableSet = function (arr, acc) {
+const hashableSet = (arr, acc) => {
   const accessor = acc || identity;
   const seen = {};
   const result = [];
@@ -309,42 +295,32 @@ const hashableSet = function (arr, acc) {
  *
  * Determines if the passed value is a function
  */
-const isFunction = function (val) {
-  return typeof val == "function";
-};
+const isFunction = val => typeof val == "function";
 /**
  * fn.isNull
  *
  * determines if the passed value is null.
  */
-const isNull = function (val) {
-  return val === null;
-};
+const isNull = val => val === null;
 /**
  * fn.isNumber
  *
  * determine whether the value is a number
  */
-const isNumber = function (val) {
-  return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
-};
+const isNumber = val => Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
 /**
  * fn.isObject
  *
  * determines if the passed value is of an "object" type, or if it is something else,
  * e.g. a raw number, string, null, undefined, NaN, something like that.
  */
-const isObject = function (val) {
-  return Object(val) === val;
-};
+const isObject = val => Object(val) === val;
 /**
  * fn.last
  *
  * Returns the last value in the passed array, or undefined if the array is empty
  */
-const last = function (arr) {
-  return arr[arr.length - 1];
-};
+const last = arr => arr[arr.length - 1];
 /**
  * fn.not
  *
@@ -352,13 +328,11 @@ const last = function (arr) {
  * which calls f on its arguments and returns the
  * boolean opposite of f's return value.
  */
-const not = function (f) {
-  return function () {
-    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-      args[_key3] = arguments[_key3];
-    }
-    return !Reflect.apply(f, this, args);
-  };
+const not = f => function () {
+  for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+    args[_key3] = arguments[_key3];
+  }
+  return !Reflect.apply(f, this, args);
 };
 /**
  * fn.prop
@@ -368,10 +342,8 @@ const not = function (f) {
  * it returns that object's value for the named property. (or undefined, if the object
  * does not contain the property.)
  */
-const prop = function (key) {
-  return function (object) {
-    return object[key];
-  };
+const prop = key => function (object) {
+  return object[key];
 };
 /**
  * fn.propOr
@@ -383,11 +355,9 @@ const prop = function (key) {
  * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
  * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
  */
-const propOr = function (key, defaultVal) {
-  return function (object) {
-    const value = object === undefined ? undefined : object[key];
-    return value === undefined ? defaultVal : value;
-  };
+const propOr = (key, defaultVal) => function (object) {
+  const value = object === undefined ? undefined : object[key];
+  return value === undefined ? defaultVal : value;
 };
 /**
  * fn.set
@@ -401,7 +371,7 @@ const propOr = function (key, defaultVal) {
  * ["b", a", "b", "b"] -> ["b", "a"]
  * [{obj1}, {obj2}, {obj1}, {obj3}] -> [{obj1}, {obj2}, {obj3}]
  */
-const set = function (arr, acc) {
+const set = (arr, acc) => {
   const accessor = acc || identity;
   return arr.reduce((m, value, i) => {
     const computed = accessor(value, i, arr);
@@ -414,7 +384,7 @@ const set = function (arr, acc) {
  * Test an array with a predicate and determine whether some element in the array passes the test.
  * Returns true as soon as an element passes the test. Returns false otherwise.
  */
-const some = function (predicate, arr) {
+const some = (predicate, arr) => {
   for (const element of arr) {
     if (predicate(element)) {
       return true;
@@ -429,18 +399,14 @@ const some = function (predicate, arr) {
  * date objects, because two different date objects are not considered equal, even if they
  * represent the same date.
  */
-const stringEqual = function (a, b) {
-  return a.toString() === b.toString();
-};
+const stringEqual = (a, b) => a.toString() === b.toString();
 /**
  * fn.functor
  *
  * Same as fn.functor in d3v3
  */
-const functor = function (v) {
-  return typeof v === "function" ? v : function () {
-    return v;
-  };
+const functor = v => typeof v === "function" ? v : function () {
+  return v;
 };
 /**
  * fn.memoize
@@ -448,8 +414,8 @@ const functor = function (v) {
  * Adapted from lodash's memoize() but using d3.map() as cache
  * See https://lodash.com/docs/4.17.4#memoize
  */
-const memoize = function (func, resolver) {
-  if (typeof func != "function" || resolver != null && typeof resolver != "function") {
+const memoize = (func, resolver) => {
+  if (typeof func !== "function" || resolver != null && typeof resolver !== "function") {
     throw new TypeError("Expected a function");
   }
   const memoized = function () {

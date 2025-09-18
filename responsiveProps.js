@@ -140,7 +140,7 @@ function responsiveProps() {
    *
    * @return {responsiveProps}
    */
-  _responsiveProps.prop = function (propName, propSpec) {
+  _responsiveProps.prop = (propName, propSpec) => {
     propsConfig[propName] = functorizeValues(propSpec);
     return _responsiveProps;
   };
@@ -219,7 +219,7 @@ function validatePropSpec(propSpec, breakpointSpec) {
   // Validate the properties of the propSpec:
   // each should be a valid breakpoint name, and its value should be defined
   for (const breakpointName in propSpec) {
-    if (Object.prototype.hasOwnProperty.call(propSpec, breakpointName) && breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
+    if (Object.hasOwn(propSpec, breakpointName) && breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
       return false;
     }
   }

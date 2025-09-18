@@ -77,8 +77,8 @@ declare const DEFAULT_WIDTH = 516;
  *         Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
 export declare function bounds(): BoundsResult;
-export declare function bounds(boundsOrSelection: BoundsConfig | string | AnySelection): BoundsResult;
-export declare function bounds(bounds: BoundsConfig, selection: string | AnySelection): BoundsResult;
+export declare function bounds(boundsOrSelection: BoundsConfig | string | AnySelection | HTMLElement): BoundsResult;
+export declare function bounds(bounds: BoundsConfig, selection: string | AnySelection | HTMLElement): BoundsResult;
 export { DEFAULT_WIDTH };
 export declare const RATIO: number;
 //# sourceMappingURL=bounds.d.ts.map

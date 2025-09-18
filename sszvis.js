@@ -6,11 +6,11 @@
 })(this, (function (exports, d3) { 'use strict';
 
     d3.selection.prototype.selectDiv = function (key) {
-      return this.selectAll('[data-d3-selectdiv="' + key + '"]').data(d => [d]).join("div").attr("data-d3-selectdiv", key).style("position", "absolute");
+      return this.selectAll("[data-d3-selectdiv=\"".concat(key, "\"]")).data(d => [d]).join("div").attr("data-d3-selectdiv", key).style("position", "absolute");
     };
 
     d3.selection.prototype.selectGroup = function (key) {
-      return this.selectAll('[data-d3-selectgroup="' + key + '"]').data(d => [d]).join("g").attr("data-d3-selectgroup", key);
+      return this.selectAll("[data-d3-selectgroup=\"".concat(key, "\"]")).data(d => [d]).join("g").attr("data-d3-selectgroup", key);
     };
 
     /**
@@ -50,9 +50,7 @@
        */
       function sszvisComponent(selection) {
         if (selectionRenderer) {
-          selection.props = function () {
-            return clone(props);
-          };
+          selection.props = () => clone(props);
           selectionRenderer.apply(selection, slice(arguments));
         }
         selection.each(function () {
@@ -68,8 +66,8 @@
        *         sszvis.component. Sets the returned value to the given property
        * @return {sszvis.component}
        */
-      sszvisComponent.prop = function (prop, setter) {
-        setter || (setter = identity$1);
+      sszvisComponent.prop = function (prop) {
+        let setter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : identity$1;
         sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
         return sszvisComponent;
       };
@@ -80,7 +78,7 @@
        * @param  {Object} delegate The target having getter and setter methods for prop
        * @return {sszvis.component}
        */
-      sszvisComponent.delegate = function (prop, delegate) {
+      sszvisComponent.delegate = (prop, delegate) => {
         sszvisComponent[prop] = function () {
           for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
             args[_key] = arguments[_key];
@@ -99,7 +97,7 @@
        * @param  {Function} callback
        * @return {[sszvis.component]}
        */
-      sszvisComponent.renderSelection = function (callback) {
+      sszvisComponent.renderSelection = callback => {
         selectionRenderer = callback;
         return sszvisComponent;
       };
@@ -112,7 +110,7 @@
        * @param  {Function} callback
        * @return {sszvis.component}
        */
-      sszvisComponent.render = function (callback) {
+      sszvisComponent.render = callback => {
         renderer = callback;
         return sszvisComponent;
       };
@@ -132,8 +130,8 @@
       // so we currently simplify to the most common use-case:
       // getting props.
       if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
-      if (this.size() != 1) throw new Error("only one group is supported");
-      if (this._groups[0].length != 1) throw new Error("only one node is supported");
+      if (this.size() !== 1) throw new Error("only one group is supported");
+      if (this._groups[0].length !== 1) throw new Error("only one node is supported");
       const group = this._groups[0];
       const node = group[0];
       return node.__props__ || {};
@@ -147,8 +145,8 @@
      * @param  {Function} [setter] Transforms the data on set
      * @return {Function} The accessor function
      */
-    function accessor(props, prop, setter) {
-      setter || (setter = identity$1);
+    function accessor(props, prop) {
+      let setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : identity$1;
       return function () {
         for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
           args[_key2] = arguments[_key2];
@@ -167,7 +165,7 @@
     function clone(obj) {
       const copy = {};
       for (const attr in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
+        if (Object.hasOwn(obj, attr)) copy[attr] = obj[attr];
       }
       return copy;
     }
@@ -183,25 +181,19 @@
      * The identity function. It returns the first argument passed to it.
      * Useful as a default where a function is required.
      */
-    const identity = function (value) {
-      return value;
-    };
+    const identity = value => value;
     /**
      * fn.isString
      *
      * determine whether the value is a string
      */
-    const isString = function (val) {
-      return Object.prototype.toString.call(val) === "[object String]";
-    };
+    const isString = val => Object.prototype.toString.call(val) === "[object String]";
     /**
      * fn.isSelection
      *
      * determine whether the value is a d3.selection.
      */
-    const isSelection = function (val) {
-      return val instanceof d3.selection;
-    };
+    const isSelection = val => val instanceof d3.selection;
     /**
      * fn.arity
      *
@@ -209,7 +201,7 @@
      * accepts exactly `n` parameters. Any extraneous parameters will not be
      * passed to the supplied function.
      */
-    const arity = function (n, fn) {
+    const arity = (n, fn) => {
       switch (n) {
         case 0:
           {
@@ -316,17 +308,13 @@
      *
      * Checks whether an item is present in the given list (by strict equality).
      */
-    const contains$1 = function (list, d) {
-      return list.includes(d);
-    };
+    const contains$1 = (list, d) => list.includes(d);
     /**
      * fn.defined
      *
      * determines if the passed value is defined.
      */
-    const defined = function (val) {
-      return val !== undefined && val != null && !Number.isNaN(val);
-    };
+    const defined = val => val !== undefined && val != null && !Number.isNaN(val);
     /**
      * fn.derivedSet
      *
@@ -338,7 +326,7 @@
      * in the other set functions, the set of derived properties is returned, whereas this function
      * returns a set of objects from the input array.
      */
-    const derivedSet = function (arr, acc) {
+    const derivedSet = (arr, acc) => {
       const accessor = acc || identity;
       const seen = [];
       const result = [];
@@ -359,7 +347,7 @@
      * Use a predicate function to test if every element in an array passes some test.
      * Returns false as soon as an element fails the predicate test. Returns true otherwise.
      */
-    const every = function (predicate, arr) {
+    const every = (predicate, arr) => {
       for (const element of arr) {
         if (!predicate(element)) {
           return false;
@@ -372,7 +360,7 @@
      *
      * returns a new array with length `len` filled with `val`
      */
-    const filledArray = function (len, val) {
+    const filledArray = (len, val) => {
       const arr = Array.from({
         length: len
       });
@@ -386,7 +374,7 @@
      *
      * Finds the first occurrence of an element in an array that passes the predicate function
      */
-    const find = function (predicate, arr) {
+    const find = (predicate, arr) => {
       for (const element of arr) {
         if (predicate(element)) {
           return element;
@@ -399,9 +387,7 @@
      *
      * Returns the first value in the passed array, or undefined if the array is empty
      */
-    const first = function (arr) {
-      return arr[0];
-    };
+    const first = arr => arr[0];
     /**
      * fn.flatten
      *
@@ -409,9 +395,7 @@
      * a two-dimensional array (i.e. its elements are also arrays). The result is a
      * one-dimensional array consisting of all the elements of the sub-arrays.
      */
-    const flatten = function (arr) {
-      return arr.flat();
-    };
+    const flatten = arr => arr.flat();
     /**
      * fn.firstTouch
      *
@@ -425,7 +409,7 @@
      * @return {Touch|null}         The first Touch object from the TouchEvent's lists
      *                              of touches.
      */
-    const firstTouch = function (event) {
+    const firstTouch = event => {
       if (event.touches && event.touches.length > 0) {
         return event.touches[0];
       } else if (event.changedTouches && event.changedTouches.length > 0) {
@@ -444,7 +428,7 @@
      *   informalGreeting: function() { return "How ya' doin!" }
      * })
      */
-    const foldPattern = function (key, pattern) {
+    const foldPattern = (key, pattern) => {
       const result = pattern[key];
       if (typeof result === "function") {
         return result();
@@ -462,7 +446,7 @@
      * MUST be "hashable" - convertible to unique keys of a JavaScript object.
      * As payoff for obeying this restriction, the algorithm can run much faster.
      */
-    const hashableSet = function (arr, acc) {
+    const hashableSet = (arr, acc) => {
       const accessor = acc || identity;
       const seen = {};
       const result = [];
@@ -481,42 +465,32 @@
      *
      * Determines if the passed value is a function
      */
-    const isFunction$1 = function (val) {
-      return typeof val == "function";
-    };
+    const isFunction$1 = val => typeof val == "function";
     /**
      * fn.isNull
      *
      * determines if the passed value is null.
      */
-    const isNull = function (val) {
-      return val === null;
-    };
+    const isNull = val => val === null;
     /**
      * fn.isNumber
      *
      * determine whether the value is a number
      */
-    const isNumber = function (val) {
-      return Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
-    };
+    const isNumber = val => Object.prototype.toString.call(val) === "[object Number]" && !Number.isNaN(val);
     /**
      * fn.isObject
      *
      * determines if the passed value is of an "object" type, or if it is something else,
      * e.g. a raw number, string, null, undefined, NaN, something like that.
      */
-    const isObject = function (val) {
-      return Object(val) === val;
-    };
+    const isObject = val => Object(val) === val;
     /**
      * fn.last
      *
      * Returns the last value in the passed array, or undefined if the array is empty
      */
-    const last = function (arr) {
-      return arr[arr.length - 1];
-    };
+    const last = arr => arr[arr.length - 1];
     /**
      * fn.not
      *
@@ -524,13 +498,11 @@
      * which calls f on its arguments and returns the
      * boolean opposite of f's return value.
      */
-    const not = function (f) {
-      return function () {
-        for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-          args[_key3] = arguments[_key3];
-        }
-        return !Reflect.apply(f, this, args);
-      };
+    const not = f => function () {
+      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
+      }
+      return !Reflect.apply(f, this, args);
     };
     /**
      * fn.prop
@@ -540,10 +512,8 @@
      * it returns that object's value for the named property. (or undefined, if the object
      * does not contain the property.)
      */
-    const prop = function (key) {
-      return function (object) {
-        return object[key];
-      };
+    const prop = key => function (object) {
+      return object[key];
     };
     /**
      * fn.propOr
@@ -555,11 +525,9 @@
      * parameter to propOr, and it is optional. (When you don't provide a default value, the returned
      * function will work fine, and if the object or property are `undefined`, it returns `undefined`).
      */
-    const propOr = function (key, defaultVal) {
-      return function (object) {
-        const value = object === undefined ? undefined : object[key];
-        return value === undefined ? defaultVal : value;
-      };
+    const propOr = (key, defaultVal) => function (object) {
+      const value = object === undefined ? undefined : object[key];
+      return value === undefined ? defaultVal : value;
     };
     /**
      * fn.set
@@ -573,7 +541,7 @@
      * ["b", a", "b", "b"] -> ["b", "a"]
      * [{obj1}, {obj2}, {obj1}, {obj3}] -> [{obj1}, {obj2}, {obj3}]
      */
-    const set$1 = function (arr, acc) {
+    const set$1 = (arr, acc) => {
       const accessor = acc || identity;
       return arr.reduce((m, value, i) => {
         const computed = accessor(value, i, arr);
@@ -586,7 +554,7 @@
      * Test an array with a predicate and determine whether some element in the array passes the test.
      * Returns true as soon as an element passes the test. Returns false otherwise.
      */
-    const some = function (predicate, arr) {
+    const some = (predicate, arr) => {
       for (const element of arr) {
         if (predicate(element)) {
           return true;
@@ -601,18 +569,14 @@
      * date objects, because two different date objects are not considered equal, even if they
      * represent the same date.
      */
-    const stringEqual = function (a, b) {
-      return a.toString() === b.toString();
-    };
+    const stringEqual = (a, b) => a.toString() === b.toString();
     /**
      * fn.functor
      *
      * Same as fn.functor in d3v3
      */
-    const functor = function (v) {
-      return typeof v === "function" ? v : function () {
-        return v;
-      };
+    const functor = v => typeof v === "function" ? v : function () {
+      return v;
     };
     /**
      * fn.memoize
@@ -620,8 +584,8 @@
      * Adapted from lodash's memoize() but using d3.map() as cache
      * See https://lodash.com/docs/4.17.4#memoize
      */
-    const memoize = function (func, resolver) {
-      if (typeof func != "function" || resolver != null && typeof resolver != "function") {
+    const memoize = (func, resolver) => {
+      if (typeof func !== "function" || resolver != null && typeof resolver !== "function") {
         throw new TypeError("Expected a function");
       }
       const memoized = function () {
@@ -660,7 +624,7 @@
      * The pattern for the missing values in the heat table
      * @param selection A d3 selection of SVG pattern elements
      */
-    const heatTableMissingValuePattern = function (selection) {
+    const heatTableMissingValuePattern = selection => {
       const rectFill = "#FAFAFA",
         // Light grey color directly
         crossStroke = "#A4A4A4",
@@ -676,7 +640,7 @@
      * The pattern for the map areas which are missing values
      * @param selection A d3 selection of SVG pattern elements
      */
-    const mapMissingValuePattern = function (selection) {
+    const mapMissingValuePattern = selection => {
       const pWidth = 14,
         pHeight = 14,
         fillColor = "#FAFAFA",
@@ -692,7 +656,7 @@
      * The pattern for Lake Zurich in the map component
      * @param selection A d3 selection of SVG pattern elements
      */
-    const mapLakePattern = function (selection) {
+    const mapLakePattern = selection => {
       const pWidth = 6;
       const pHeight = 6;
       const offset = 0.5;
@@ -705,7 +669,7 @@
      * The gradient used by the alpha fade pattern in the Lake Zurich shape
      * @param selection A d3 selection of SVG linear gradient elements
      */
-    const mapLakeFadeGradient = function (selection) {
+    const mapLakeFadeGradient = selection => {
       selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", "lake-fade-gradient");
       selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
       selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
@@ -714,7 +678,7 @@
      * The gradient alpha fade mask for the Lake Zurich shape
      * @param selection A d3 selection of SVG mask elements
      */
-    const mapLakeGradientMask = function (selection) {
+    const mapLakeGradientMask = selection => {
       selection.attr("maskContentUnits", "objectBoundingBox");
       selection.append("rect").attr("fill", "url(#lake-fade-gradient)").attr("width", 1).attr("height", 1);
     };
@@ -722,7 +686,7 @@
      * The pattern for the data area texture
      * @param selection A d3 selection of SVG pattern elements
      */
-    const dataAreaPattern = function (selection) {
+    const dataAreaPattern = selection => {
       const pWidth = 6;
       const pHeight = 6;
       const offset = 0.5;
@@ -812,23 +776,17 @@
      * Creates a default transition with standard easing and duration
      * @returns A d3 transition with 300ms duration and polynomial ease-out
      */
-    const defaultTransition = function () {
-      return d3.transition().ease(defaultEase).duration(300);
-    };
+    const defaultTransition = () => d3.transition().ease(defaultEase).duration(300);
     /**
      * Creates a fast transition for quick animations
      * @returns A d3 transition with 50ms duration and polynomial ease-out
      */
-    const fastTransition = function () {
-      return d3.transition().ease(defaultEase).duration(50);
-    };
+    const fastTransition = () => d3.transition().ease(defaultEase).duration(50);
     /**
      * Creates a slow transition for gradual animations
      * @returns A d3 transition with 500ms duration and polynomial ease-out
      */
-    const slowTransition = function () {
-      return d3.transition().ease(defaultEase).duration(500);
-    };
+    const slowTransition = () => d3.transition().ease(defaultEase).duration(500);
 
     /**
      * @function sszvis.annotationConfidenceArea
@@ -1177,30 +1135,12 @@
     /**
      * Format a number as an age
      */
-    const formatAge = function (d) {
-      return String(Math.round(d));
-    };
+    const formatAge = d => String(Math.round(d));
     /**
      * A multi time formatter used by the axis class
      */
-    const formatAxisTimeFormat = function (d) {
-      const xs = [[".%L", function (date) {
-        return date.getMilliseconds();
-      }], [":%S", function (date) {
-        return date.getSeconds();
-      }], ["%H:%M", function (date) {
-        return date.getMinutes();
-      }], ["%H Uhr", function (date) {
-        return date.getHours();
-      }], ["%a., %d.", function (date) {
-        return Boolean(date.getDay() && date.getDate() != 1);
-      }], ["%e. %b", function (date) {
-        return date.getDate() != 1;
-      }], ["%B", function (date) {
-        return date.getMonth();
-      }], ["%Y", function () {
-        return true;
-      }]];
+    const formatAxisTimeFormat = d => {
+      const xs = [[".%L", date => date.getMilliseconds()], [":%S", date => date.getSeconds()], ["%H:%M", date => date.getMinutes()], ["%H Uhr", date => date.getHours()], ["%a., %d.", date => Boolean(date.getDay() && date.getDate() !== 1)], ["%e. %b", date => date.getDate() !== 1], ["%B", date => date.getMonth()], ["%Y", () => true]];
       for (const x of xs) {
         if (x[1](d)) {
           return timeFormat(x[0])(d);
@@ -1220,9 +1160,7 @@
     /**
      * Formatter for no label
      */
-    const formatNone = function () {
-      return "";
-    };
+    const formatNone = () => "";
     /**
      * Format numbers according to the sszvis style guide. The most important
      * rules are:
@@ -1236,10 +1174,10 @@
      *
      * See also: many test cases for this function in format.test.js
      */
-    const formatNumber = function (d) {
+    const formatNumber = d => {
       let p;
       const dAbs = Math.abs(d !== null && d !== void 0 ? d : 0);
-      if (d == null || isNaN(d)) {
+      if (d == null || Number.isNaN(d)) {
         return "–"; // This is an en-dash
       }
       // 10250    -> "10 250"
@@ -1255,7 +1193,7 @@
         p = Math.min(1, decimalPlaces(d));
         // Where there are decimals, round to 1 position
         // To display more precision, use the preciseNumber function.
-        return stripTrailingZeroes(format("." + p + "f")(d));
+        return stripTrailingZeroes(format(".".concat(p, "f"))(d));
       }
       // 41       -> "41"
       // 41.1     -> "41.1"
@@ -1264,7 +1202,7 @@
         p = Math.min(2, decimalPlaces(d));
         // Rounds to (the minimum of decLen or 2) digits. This means that 1 digit or 2 digits are possible,
         // but not more. To display more precision, use the preciseNumber function.
-        return stripTrailingZeroes(format("." + p + "f")(d));
+        return stripTrailingZeroes(format(".".concat(p, "f"))(d));
       }
       // If abs(num) is not > 0, num is 0
       // 0       -> "0"
@@ -1275,24 +1213,24 @@
     function formatPreciseNumber(p, d) {
       // This curries the function
       if (arguments.length > 1 && d !== undefined) return formatPreciseNumber(p)(d);
-      return function (x) {
+      return x => {
         const dAbs = Math.abs(x);
-        return dAbs >= 100 && dAbs < 1e4 ? format("." + p + "f")(x) : format(",." + p + "f")(x);
+        return dAbs >= 100 && dAbs < 1e4 ? format(".".concat(p, "f"))(x) : format(",.".concat(p, "f"))(x);
       };
     }
     /**
      * Format percentages on the range 0 - 100
      */
-    const formatPercent = function (d) {
+    const formatPercent = d => {
       // Uses unix thin space
-      return formatNumber(d) + " %";
+      return "".concat(formatNumber(d), " %");
     };
     /**
      * Format percentages on the range 0 - 1
      */
-    const formatFractionPercent = function (d) {
+    const formatFractionPercent = d => {
       // Uses unix thin space
-      return formatNumber(d * 100) + " %";
+      return "".concat(formatNumber(d * 100), " %");
     };
     /**
      * Default formatter for text
@@ -2536,18 +2474,18 @@
      *
      * @module sszvis/fallback
      */
-    const fallbackUnsupported = function () {
+    const fallbackUnsupported = () => {
       const supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
       return !supportsSVG;
     };
-    const fallbackCanvasUnsupported = function () {
+    const fallbackCanvasUnsupported = () => {
       const supportsCanvas = !!document.createElement("canvas").getContext;
       return !supportsCanvas;
     };
     const fallbackRender = function (selector) {
-      let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      options || (options = {});
-      options.src || (options.src = "fallback.png");
+      let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
+        src: "fallback.png"
+      };
       const selection = isSelection(selector) ? selector : d3.select(selector);
       selection.append("img").attr("class", "sszvis-fallback-image").attr("src", options.src);
     };
@@ -2830,9 +2768,7 @@
      *          breakpoint for the given name exists, that breakpoint is returned
      */
     function breakpointFindByName(breakpoints, name) {
-      const eqName = function (bp) {
-        return bp.name === name;
-      };
+      const eqName = bp => bp.name === name;
       return find(eqName, breakpoints);
     }
     /**
@@ -2884,18 +2820,13 @@
      * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
      *          default breakpoint spec.
      */
-    const breakpointDefaultSpec = function () {
-      const DEFAULT_SPEC = breakpointCreateSpec([{
-        name: "palm",
-        width: 540
-      }, {
-        name: "lap",
-        width: 749
-      }]);
-      return function () {
-        return DEFAULT_SPEC;
-      };
-    }();
+    const breakpointDefaultSpec = () => breakpointCreateSpec([{
+      name: "palm",
+      width: 540
+    }, {
+      name: "lap",
+      width: 749
+    }]);
     // Default tests
     const breakpointPalm = makeTest("palm");
     const breakpointLap = makeTest("lap");
@@ -2968,7 +2899,7 @@
      * Create a partially applied test function
      */
     function makeTest(name) {
-      return function (measurement) {
+      return measurement => {
         const breakpoint = breakpointFindByName(breakpointDefaultSpec(), name);
         return breakpoint ? breakpointTest(breakpoint, measurement) : false;
       };
@@ -3140,7 +3071,8 @@
     ----------------------------------------------- */
     function logger(type) {
       return function () {
-        if (console && console[type]) {
+        var _console;
+        if ((_console = console) !== null && _console !== void 0 && _console[type]) {
           for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
             args[_key] = arguments[_key];
           }
@@ -3165,7 +3097,7 @@
      * @return {array}          The extent of the scale's range. Useful for determining how far
      *                          a scale stretches in its output dimension.
      */
-    const range = function (scale) {
+    const range = scale => {
       // borrowed from d3 source - svg.axis
       return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
     };
@@ -3347,7 +3279,7 @@
     const TICK_PROXIMITY_THRESHOLD = 8;
     const TICK_END_THRESHOLD = 12;
     const LABEL_PROXIMITY_THRESHOLD = 10;
-    const axis = function () {
+    function axis() {
       // const axisDelegate = d3.axisBottom();
       // axisDelegate.orient = function() { return 'bottom'; };
 
@@ -3364,7 +3296,7 @@
         const selection = d3.select(this);
         const props = selection.props();
         const isBottom = !props.vertical && props.orient === "bottom";
-        const axisDelegate = function () {
+        const axisDelegate = (() => {
           switch (props.orient) {
             case "bottom":
               {
@@ -3383,11 +3315,11 @@
                 return d3.axisRight();
               }
           }
-        }();
+        })();
         for (const prop of ["scale", "ticks", "tickValues", "tickSizeInner", "tickSizeOuter", "tickPadding", "tickFormat", "tickSize"]) {
           if (props[prop] !== undefined) {
             if (axisDelegate[prop] === undefined) {
-              throw new Error('axis: "' + prop + '" not available');
+              throw new Error("axis: \"".concat(prop, "\" not available"));
             }
             axisDelegate[prop](props[prop]);
           }
@@ -3598,7 +3530,7 @@
           });
         }
       });
-    };
+    }
     const setOrdinalTicks = function (count) {
       // in this function, the 'this' context should be an sszvis.axis
       const domain = this.scale().domain(),
@@ -3615,51 +3547,39 @@
       this.tickValues(values);
       return count;
     };
-    const axisX = function () {
-      return axis().yOffset(2) //gap between chart and x-axis
-      .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
-    };
-    axisX.time = function () {
-      return axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
-    };
-    axisX.ordinal = function () {
-      return axisX()
-      // extend this class a little with a custom implementation of 'ticks'
-      // that allows you to set a custom number of ticks,
-      // including the first and last value in the ordinal scale
-      .prop("ticks", setOrdinalTicks).tickFormat(formatText);
-    };
+    const axisX = () => axis().yOffset(2) //gap between chart and x-axis
+    .ticks(3).tickSizeInner(4).tickSizeOuter(6.5).tickPadding(6).tickFormat(arity(1, formatNumber));
+    axisX.time = () => axisX().tickFormat(formatAxisTimeFormat).alignOuterLabels(true);
+    axisX.ordinal = () => axisX()
+    // extend this class a little with a custom implementation of 'ticks'
+    // that allows you to set a custom number of ticks,
+    // including the first and last value in the ordinal scale
+    .prop("ticks", setOrdinalTicks).tickFormat(formatText);
 
     // need to be a little tricky to get the built-in d3.axis to display as if the underlying scale is discontinuous
-    axisX.pyramid = function () {
-      return axisX().ticks(10).prop("scale", function (s) {
-        const extended = s.copy(),
-          extendedDomain = extended.domain(),
-          extendedRange = extended.range();
-        extended
-        // the domain is mirrored - ±domain[1]
-        .domain([-extendedDomain[1], extendedDomain[1]])
-        // the range is mirrored – ±range[1]
-        .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
-        this._scale(extended);
-        return extended;
-      }).tickFormat(v =>
-      // this tick format means that the axis appears to be divergent around 0
-      // when in fact it is -domain[1] -> +domain[1]
-      formatNumber(Math.abs(v)));
-    };
-    const axisY = function () {
+    axisX.pyramid = () => axisX().ticks(10).prop("scale", function (s) {
+      const extended = s.copy(),
+        extendedDomain = extended.domain(),
+        extendedRange = extended.range();
+      extended
+      // the domain is mirrored - ±domain[1]
+      .domain([-extendedDomain[1], extendedDomain[1]])
+      // the range is mirrored – ±range[1]
+      .range([extendedRange[0] - extendedRange[1], extendedRange[0] + extendedRange[1]]);
+      this._scale(extended);
+      return extended;
+    }).tickFormat(v =>
+    // this tick format means that the axis appears to be divergent around 0
+    // when in fact it is -domain[1] -> +domain[1]
+    formatNumber(Math.abs(v)));
+    const axisY = () => {
       const newAxis = axis().ticks(6).tickSize(0, 0).tickPadding(0).tickFormat(d => 0 === d && !newAxis.showZeroY() ? null : formatNumber(d)).vertical(true);
       return newAxis;
     };
-    axisY.time = function () {
-      return axisY().tickFormat(formatAxisTimeFormat);
-    };
-    axisY.ordinal = function () {
-      return axisY()
-      // add custom 'ticks' function
-      .prop("ticks", setOrdinalTicks).tickFormat(formatText);
-    };
+    axisY.time = () => axisY().tickFormat(formatAxisTimeFormat);
+    axisY.ordinal = () => axisY()
+    // add custom 'ticks' function
+    .prop("ticks", setOrdinalTicks).tickFormat(formatText);
 
     /* Helper functions
     ----------------------------------------------- */
@@ -4246,7 +4166,7 @@
      *                      screenWidth: {number} The innerWidth of the screen
      *                      screenHeight: {number} The innerHeight of the screen
      */
-    const measureDimensions = function (arg) {
+    const measureDimensions = arg => {
       let node;
       if (isString(arg)) {
         node = d3.select(arg).node();
@@ -4276,16 +4196,16 @@
      * @example
      * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
      **/
-    const measureText = function () {
+    const measureText = (() => {
       const canvas = document.createElement("canvas");
       const context = canvas.getContext("2d"); // Non-null assertion since canvas 2d context is always available
       const cache = {};
-      return function (fontSize, fontFace, text) {
+      return (fontSize, fontFace, text) => {
         const key = [fontSize, fontFace, text].join("-");
-        context.font = fontSize + "px " + fontFace;
-        return cache[key] || (cache[key] = context.measureText(text).width);
+        context.font = "".concat(fontSize, "px ").concat(fontFace);
+        return cache[key] || context.measureText(text).width;
       };
-    }();
+    })();
     /**
      * measureAxisLabel
      *
@@ -4297,9 +4217,7 @@
      * @example
      * const labelWidth = sszvis.measureAxisLabel("Hello!")
      */
-    const measureAxisLabel = function (text) {
-      return measureText(10, "Arial, sans-serif", text);
-    };
+    const measureAxisLabel = text => measureText(10, "Arial, sans-serif", text);
     /**
      * measureLegendLabel
      *
@@ -4311,9 +4229,7 @@
      * @example
      * const labelWidth = sszvis.measureLegendLabel("Hello!")
      */
-    const measureLegendLabel = function (text) {
-      return measureText(12, "Arial, sans-serif", text);
-    };
+    const measureLegendLabel = text => measureText(12, "Arial, sans-serif", text);
 
     /**
      * Bounds
@@ -4546,17 +4462,15 @@
           return arr;
         }
       }
-      _cascade.apply = function (data) {
-        return make(data, 0);
-      };
-      _cascade.objectBy = function (accessor) {
+      _cascade.apply = data => make(data, 0);
+      _cascade.objectBy = accessor => {
         keys.push({
           type: "obj",
           func: accessor
         });
         return _cascade;
       };
-      _cascade.arrayBy = function (accessor, sorter) {
+      _cascade.arrayBy = (accessor, sorter) => {
         keys.push({
           type: "arr",
           func: accessor
@@ -4564,7 +4478,7 @@
         if (sorter) sorts[keys.length - 1] = sorter;
         return _cascade;
       };
-      _cascade.sort = function (sorter) {
+      _cascade.sort = sorter => {
         valuesSort = sorter;
         return _cascade;
       };
@@ -4619,7 +4533,7 @@
     /* Scales
     ----------------------------------------------- */
     function qualColorScale(colors) {
-      return function () {
+      return () => {
         const scale = d3.scaleOrdinal().range(colors.map(convertLab));
         // Set unknown to first color without the type constraint
         scale.unknown(convertLab(colors[0]));
@@ -4660,7 +4574,7 @@
     const maleUnknown = "#D6D6D6";
     const scaleGender5Wedding = () => qualColorScale([femaleFemale, maleMale, femaleMale, femaleUnknown, maleUnknown])().domain(["Frau / Frau", "Mann / Mann", "Frau / Mann", "Frau / Unbekannt", "Mann / Unbekannt"]);
     function seqColorScale(colors) {
-      return function () {
+      return () => {
         const scale = d3.scaleLinear().range(colors.map(convertLab));
         return decorateLinearScale(scale);
       };
@@ -4670,7 +4584,7 @@
     const scaleSeqGrn = seqColorScale(["#CFEED8", "#34B446", "#0C4B1F"]);
     const scaleSeqBrn = seqColorScale(["#FCDDBB", "#EA5D00", "#611F00"]);
     function divColorScale(colors) {
-      return function () {
+      return () => {
         const scale = d3.scaleLinear().range(colors.map(convertLab));
         return decorateDivScale(scale);
       };
@@ -4680,7 +4594,7 @@
     const scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "#FED2EE", "#CFEED8", "#81C789", "#34B446", "#1A7F2D", "#0C4B1F"]);
     const scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
     function greyColorScale(colors) {
-      return function () {
+      return () => {
         // Grey color scales are really ordinal but we treat them like linear for the API
         const scale = d3.scaleOrdinal().range(colors.map(convertLab));
         return decorateLinearScale(scale);
@@ -4692,36 +4606,24 @@
     const scaleDimGry = greyColorScale(["#B8B8B8"]);
     const scaleMedGry = greyColorScale(["#7C7C7C"]);
     const scaleDeepGry = greyColorScale(["#545454"]);
-    const slightlyDarker = function (c) {
-      return d3.hsl(c).darker(0.4);
-    };
-    const muchDarker = function (c) {
-      return d3.hsl(c).darker(0.7);
-    };
-    const withAlpha = function (c, a) {
+    const slightlyDarker = c => d3.hsl(c).darker(0.4);
+    const muchDarker = c => d3.hsl(c).darker(0.7);
+    const withAlpha = (c, a) => {
       const rgbColor = d3.rgb(c);
-      return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
+      return "rgba(".concat(rgbColor.r, ",").concat(rgbColor.g, ",").concat(rgbColor.b, ",").concat(a, ")");
     };
     /* Scale extensions
     ----------------------------------------------- */
     function decorateOrdinalScale(scale) {
       const enhancedScale = scale;
-      enhancedScale.darker = function () {
-        return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
-      };
-      enhancedScale.brighter = function () {
-        return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
-      };
-      enhancedScale.reverse = function () {
-        return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
-      };
+      enhancedScale.darker = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
+      enhancedScale.brighter = () => decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
+      enhancedScale.reverse = () => decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
       return enhancedScale;
     }
     function decorateDivScale(scale) {
       const enhancedScale = interpolatedDivergentColorScale(scale);
-      enhancedScale.reverse = function () {
-        return decorateLinearScale(scale.copy().range(scale.range().reverse()));
-      };
+      enhancedScale.reverse = () => decorateLinearScale(scale.copy().range(scale.range().reverse()));
       return enhancedScale;
     }
     function interpolatedDivergentColorScale(scale) {
@@ -4742,7 +4644,7 @@
       // Only apply interpolation to actual linear scales, not ordinal scales used for grey
       const processedScale = "interpolate" in scale ? interpolatedColorScale(scale) : scale;
       const enhancedScale = processedScale;
-      enhancedScale.reverse = function () {
+      enhancedScale.reverse = () => {
         const copiedScale = "copy" in scale ? scale.copy() : scale;
         return decorateLinearScale(copiedScale.range(scale.range().reverse()));
       };
@@ -6096,14 +5998,16 @@
      *
      * @returns {d3.selection}
      */
-    function createHtmlLayer(selector, bounds$1, metadata) {
-      bounds$1 || (bounds$1 = bounds());
-      metadata || (metadata = {});
+    function createHtmlLayer(selector, bounds$1) {
+      let metadata = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      const {
+        padding
+      } = bounds$1 || bounds();
       const key = metadata.key || "default";
-      const elementDataKey = "data-sszvis-html-" + key;
+      const elementDataKey = "data-sszvis-html-".concat(key);
       const root = isSelection(selector) ? selector : d3.select(selector);
       root.classed("sszvis-outer-container", true);
-      return root.selectAll("[data-sszvis-html-layer][" + elementDataKey + "]").data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", bounds$1.padding.left + "px").style("top", bounds$1.padding.top + "px");
+      return root.selectAll("[data-sszvis-html-layer][".concat(elementDataKey, "]")).data([0]).join("div").classed("sszvis-html-layer", true).attr("data-sszvis-html-layer", "").attr(elementDataKey, "").style("position", "absolute").style("left", "".concat(padding.left, "px")).style("top", "".concat(padding.top, "px"));
     }
 
     /**
@@ -6125,18 +6029,22 @@
      *
      * @returns {d3.selection}
      */
-    function createSvgLayer(selector, bounds$1, metadata) {
-      bounds$1 || (bounds$1 = bounds());
-      metadata || (metadata = {});
+    function createSvgLayer(selector, bounds$1) {
+      let metadata = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      const {
+        padding,
+        height,
+        width
+      } = bounds$1 || bounds();
       const key = metadata.key || "default";
-      const elementDataKey = "data-sszvis-svg-" + key;
+      const elementDataKey = "data-sszvis-svg-".concat(key);
       const title = metadata.title || "";
       const description = metadata.description || "";
       const root = isSelection(selector) ? selector : d3.select(selector);
-      const svg = root.selectAll("svg[" + elementDataKey + "]").data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", title + " – " + description).attr("height", bounds$1.height).attr("width", bounds$1.width);
+      const svg = root.selectAll("svg[".concat(elementDataKey, "]")).data([0]).join("svg").classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img").attr("aria-label", "".concat(title, " \u2013 ").concat(description)).attr("height", height).attr("width", width);
       svg.selectAll("title").data([0]).join("title").text(title);
       svg.selectAll("desc").data([0]).join("desc").text(description).classed("sszvis-svg-layer", true).attr(elementDataKey, "").attr("role", "img");
-      return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(" + bounds$1.padding.left + "," + bounds$1.padding.top + ")");
+      return svg.selectAll("[data-sszvis-svg-layer]").data(() => [0]).join("g").attr("data-sszvis-svg-layer", "").attr("transform", "translate(".concat(padding.left, ",").concat(padding.top, ")"));
     }
 
     /**
@@ -7284,7 +7192,7 @@
      * Handle data loading errors by logging them
      * @param error The error object from a failed data load operation
      */
-    const loadError = function (error$1) {
+    const loadError = error$1 => {
       error(error$1);
       // Don't use alert()!
       // TODO: render an inline error in the chart instead
@@ -7954,26 +7862,20 @@
      * @return {Date}
      */
     const dateParser = timeParse("%d.%m.%Y");
-    const parseDate = function (d) {
-      return dateParser(d);
-    };
+    const parseDate = d => dateParser(d);
     /**
      * Parse year values
      * @param  {string} d   A string which should be parsed as if it were a year, like "2014"
      * @return {Date}       A javascript date object for the first time in the given year
      */
     const yearParser = timeParse("%Y");
-    const parseYear = function (d) {
-      return yearParser(d);
-    };
+    const parseYear = d => yearParser(d);
     /**
      * Parse untyped input
      * @param  {String} d A value that could be a number
      * @return {Number}   If d is not a number, NaN is returned
      */
-    const parseNumber = function (d) {
-      return d.trim() === "" ? Number.NaN : +d;
-    };
+    const parseNumber = d => d.trim() === "" ? Number.NaN : +d;
 
     /**
      * ResponsiveProps module
@@ -8113,7 +8015,7 @@
        *
        * @return {responsiveProps}
        */
-      _responsiveProps.prop = function (propName, propSpec) {
+      _responsiveProps.prop = (propName, propSpec) => {
         propsConfig[propName] = functorizeValues(propSpec);
         return _responsiveProps;
       };
@@ -8192,7 +8094,7 @@
       // Validate the properties of the propSpec:
       // each should be a valid breakpoint name, and its value should be defined
       for (const breakpointName in propSpec) {
-        if (Object.prototype.hasOwnProperty.call(propSpec, breakpointName) && breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
+        if (Object.hasOwn(propSpec, breakpointName) && breakpointName !== "_" && !defined(breakpointFindByName(breakpointSpec, breakpointName))) {
           return false;
         }
       }

@@ -1,4 +1,4 @@
-import { FormatLocaleDefinition, TimeLocaleDefinition } from "d3";
+import type { FormatLocaleDefinition, TimeLocaleDefinition } from "d3";
 /**
  * Swiss German format locale definition for d3.format functions
  */

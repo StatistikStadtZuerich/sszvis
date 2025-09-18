@@ -1,4 +1,4 @@
-import { propOr, find } from './fn.js';
+import { find, propOr } from './fn.js';
 
 /**
  * Responsive design breakpoints for sszvis
@@ -62,9 +62,7 @@ function breakpointFind(breakpoints, partialMeasurement) {
  *          breakpoint for the given name exists, that breakpoint is returned
  */
 function breakpointFindByName(breakpoints, name) {
-  const eqName = function (bp) {
-    return bp.name === name;
-  };
+  const eqName = bp => bp.name === name;
   return find(eqName, breakpoints);
 }
 /**
@@ -116,18 +114,13 @@ function breakpointCreateSpec(spec) {
  * @returns {Array<{name: string, width: number, screenHeight: number}>} The SSZVIS
  *          default breakpoint spec.
  */
-const breakpointDefaultSpec = function () {
-  const DEFAULT_SPEC = breakpointCreateSpec([{
-    name: "palm",
-    width: 540
-  }, {
-    name: "lap",
-    width: 749
-  }]);
-  return function () {
-    return DEFAULT_SPEC;
-  };
-}();
+const breakpointDefaultSpec = () => breakpointCreateSpec([{
+  name: "palm",
+  width: 540
+}, {
+  name: "lap",
+  width: 749
+}]);
 // Default tests
 const breakpointPalm = makeTest("palm");
 const breakpointLap = makeTest("lap");
@@ -200,7 +193,7 @@ function parseBreakpoint(bp) {
  * Create a partially applied test function
  */
 function makeTest(name) {
-  return function (measurement) {
+  return measurement => {
     const breakpoint = breakpointFindByName(breakpointDefaultSpec(), name);
     return breakpoint ? breakpointTest(breakpoint, measurement) : false;
   };

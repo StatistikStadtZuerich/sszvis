@@ -22,7 +22,7 @@ import { isString, isSelection } from './fn.js';
  *                      screenWidth: {number} The innerWidth of the screen
  *                      screenHeight: {number} The innerHeight of the screen
  */
-const measureDimensions = function (arg) {
+const measureDimensions = arg => {
   let node;
   if (isString(arg)) {
     node = select(arg).node();
@@ -52,16 +52,16 @@ const measureDimensions = function (arg) {
  * @example
  * const helloWidth = sszvis.measureText(14, "Arial, sans-serif")("Hello!")
  **/
-const measureText = function () {
+const measureText = (() => {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d"); // Non-null assertion since canvas 2d context is always available
   const cache = {};
-  return function (fontSize, fontFace, text) {
+  return (fontSize, fontFace, text) => {
     const key = [fontSize, fontFace, text].join("-");
-    context.font = fontSize + "px " + fontFace;
-    return cache[key] || (cache[key] = context.measureText(text).width);
+    context.font = "".concat(fontSize, "px ").concat(fontFace);
+    return cache[key] || context.measureText(text).width;
   };
-}();
+})();
 /**
  * measureAxisLabel
  *
@@ -73,9 +73,7 @@ const measureText = function () {
  * @example
  * const labelWidth = sszvis.measureAxisLabel("Hello!")
  */
-const measureAxisLabel = function (text) {
-  return measureText(10, "Arial, sans-serif", text);
-};
+const measureAxisLabel = text => measureText(10, "Arial, sans-serif", text);
 /**
  * measureLegendLabel
  *
@@ -87,9 +85,7 @@ const measureAxisLabel = function (text) {
  * @example
  * const labelWidth = sszvis.measureLegendLabel("Hello!")
  */
-const measureLegendLabel = function (text) {
-  return measureText(12, "Arial, sans-serif", text);
-};
+const measureLegendLabel = text => measureText(12, "Arial, sans-serif", text);
 
 export { measureAxisLabel, measureDimensions, measureLegendLabel, measureText };
 //# sourceMappingURL=measure.js.map

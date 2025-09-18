@@ -11,9 +11,9 @@
  *
  * @module sszvis/fallback
  */
-import { SelectableElement } from "./types";
+import type { SelectableElement } from "./types";
 export interface FallbackOptions {
-    src?: string;
+    src: string;
     height?: number;
 }
 export declare const fallbackUnsupported: () => boolean;

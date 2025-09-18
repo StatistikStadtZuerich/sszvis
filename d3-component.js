@@ -37,9 +37,7 @@ function component() {
    */
   function sszvisComponent(selection) {
     if (selectionRenderer) {
-      selection.props = function () {
-        return clone(props);
-      };
+      selection.props = () => clone(props);
       selectionRenderer.apply(selection, slice(arguments));
     }
     selection.each(function () {
@@ -55,8 +53,8 @@ function component() {
    *         sszvis.component. Sets the returned value to the given property
    * @return {sszvis.component}
    */
-  sszvisComponent.prop = function (prop, setter) {
-    setter || (setter = identity);
+  sszvisComponent.prop = function (prop) {
+    let setter = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : identity;
     sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
     return sszvisComponent;
   };
@@ -67,7 +65,7 @@ function component() {
    * @param  {Object} delegate The target having getter and setter methods for prop
    * @return {sszvis.component}
    */
-  sszvisComponent.delegate = function (prop, delegate) {
+  sszvisComponent.delegate = (prop, delegate) => {
     sszvisComponent[prop] = function () {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
@@ -86,7 +84,7 @@ function component() {
    * @param  {Function} callback
    * @return {[sszvis.component]}
    */
-  sszvisComponent.renderSelection = function (callback) {
+  sszvisComponent.renderSelection = callback => {
     selectionRenderer = callback;
     return sszvisComponent;
   };
@@ -99,7 +97,7 @@ function component() {
    * @param  {Function} callback
    * @return {sszvis.component}
    */
-  sszvisComponent.render = function (callback) {
+  sszvisComponent.render = callback => {
     renderer = callback;
     return sszvisComponent;
   };
@@ -119,8 +117,8 @@ selection.prototype.props = function () {
   // so we currently simplify to the most common use-case:
   // getting props.
   if (arguments.length > 0) throw new Error("selection.props() does not accept any arguments");
-  if (this.size() != 1) throw new Error("only one group is supported");
-  if (this._groups[0].length != 1) throw new Error("only one node is supported");
+  if (this.size() !== 1) throw new Error("only one group is supported");
+  if (this._groups[0].length !== 1) throw new Error("only one node is supported");
   const group = this._groups[0];
   const node = group[0];
   return node.__props__ || {};
@@ -134,8 +132,8 @@ selection.prototype.props = function () {
  * @param  {Function} [setter] Transforms the data on set
  * @return {Function} The accessor function
  */
-function accessor(props, prop, setter) {
-  setter || (setter = identity);
+function accessor(props, prop) {
+  let setter = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : identity;
   return function () {
     for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
       args[_key2] = arguments[_key2];
@@ -154,7 +152,7 @@ function slice(arrayLike) {
 function clone(obj) {
   const copy = {};
   for (const attr in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, attr)) copy[attr] = obj[attr];
+    if (Object.hasOwn(obj, attr)) copy[attr] = obj[attr];
   }
   return copy;
 }

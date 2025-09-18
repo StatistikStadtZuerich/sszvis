@@ -1,1 +1,1 @@
-{"version":3,"file":"axis.d.ts","sourceRoot":"","sources":["../src/axis.js"],"names":[],"mappings":"AA8cO,6BAQN;;IAED,qBAEC;IAED,wBASC;IAGD,wBAsBC;;AAEM,6BAQN;;IAED,qBAEC;IAED,wBAOC"}
+{"version":3,"file":"axis.d.ts","sourceRoot":"","sources":["../src/axis.js"],"names":[],"mappings":"AA8cO,6BAOmC;;IAE1C,qBAAkF;IAElF,wBAM2B;IAG3B,wBAqBK;;AAEE,6BAQN;;IAED,qBAA2D;IAE3D,wBAI2B"}

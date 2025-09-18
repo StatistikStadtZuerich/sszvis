@@ -20,7 +20,7 @@
  * The pattern for the missing values in the heat table
  * @param selection A d3 selection of SVG pattern elements
  */
-const heatTableMissingValuePattern = function (selection) {
+const heatTableMissingValuePattern = selection => {
   const rectFill = "#FAFAFA",
     // Light grey color directly
     crossStroke = "#A4A4A4",
@@ -36,7 +36,7 @@ const heatTableMissingValuePattern = function (selection) {
  * The pattern for the map areas which are missing values
  * @param selection A d3 selection of SVG pattern elements
  */
-const mapMissingValuePattern = function (selection) {
+const mapMissingValuePattern = selection => {
   const pWidth = 14,
     pHeight = 14,
     fillColor = "#FAFAFA",
@@ -52,7 +52,7 @@ const mapMissingValuePattern = function (selection) {
  * The pattern for Lake Zurich in the map component
  * @param selection A d3 selection of SVG pattern elements
  */
-const mapLakePattern = function (selection) {
+const mapLakePattern = selection => {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;
@@ -65,7 +65,7 @@ const mapLakePattern = function (selection) {
  * The gradient used by the alpha fade pattern in the Lake Zurich shape
  * @param selection A d3 selection of SVG linear gradient elements
  */
-const mapLakeFadeGradient = function (selection) {
+const mapLakeFadeGradient = selection => {
   selection.attr("x1", 0).attr("y1", 0).attr("x2", 0.55).attr("y2", 1).attr("id", "lake-fade-gradient");
   selection.append("stop").attr("offset", 0.74).attr("stop-color", "white").attr("stop-opacity", 1);
   selection.append("stop").attr("offset", 0.97).attr("stop-color", "white").attr("stop-opacity", 0);
@@ -74,7 +74,7 @@ const mapLakeFadeGradient = function (selection) {
  * The gradient alpha fade mask for the Lake Zurich shape
  * @param selection A d3 selection of SVG mask elements
  */
-const mapLakeGradientMask = function (selection) {
+const mapLakeGradientMask = selection => {
   selection.attr("maskContentUnits", "objectBoundingBox");
   selection.append("rect").attr("fill", "url(#lake-fade-gradient)").attr("width", 1).attr("height", 1);
 };
@@ -82,7 +82,7 @@ const mapLakeGradientMask = function (selection) {
  * The pattern for the data area texture
  * @param selection A d3 selection of SVG pattern elements
  */
-const dataAreaPattern = function (selection) {
+const dataAreaPattern = selection => {
   const pWidth = 6;
   const pHeight = 6;
   const offset = 0.5;

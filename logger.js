@@ -49,7 +49,8 @@ const error = logger("error");
 ----------------------------------------------- */
 function logger(type) {
   return function () {
-    if (console && console[type]) {
+    var _console;
+    if ((_console = console) !== null && _console !== void 0 && _console[type]) {
       for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
       }
