@@ -92,12 +92,17 @@ export function responsiveProps(): ResponsivePropsInstance {
    * @returns {object} An object containing the configured properties and their values for the current
    *          breakpoint as defined by the parameter `arg1`
    */
-  function _responsiveProps(arg1: Measurement): Record<string, any> {
-    const measurement = isBounds(arg1) ? arg1 : arg1;
-
-    if (!fn.defined(measurement.width) || !fn.defined(measurement.screenHeight)) {
+  function _responsiveProps(measurement: Measurement): Record<string, any> {
+    if (!fn.isObject(measurement) || !isBounds(measurement)) {
       logger.warn("Could not determine the current breakpoint, returning the default props");
-      return {};
+      // We choose the _ option for all configured props as a default.
+      return Object.keys(propsConfig).reduce(
+        (memo, val, key) => {
+          memo[key] = val;
+          return memo;
+        },
+        {} as Record<string, any>
+      );
     }
 
     // Create results object based on the current measurements and the configured breakpoints and properties
@@ -125,6 +130,10 @@ export function responsiveProps(): ResponsivePropsInstance {
       // calculations based on element width.
       if (matchedBreakpoint) {
         memo[propKey] = propSpec[matchedBreakpoint.name](measurement.width);
+      } else {
+        // Use fallback value if no breakpoint matches
+        const fallback = propSpec._;
+        memo[propKey] = typeof fallback === "function" ? fallback(measurement.width) : fallback;
       }
 
       return memo;

@@ -287,7 +287,7 @@ function greyColorScale(colors: string[]): ColorScaleFactory<ExtendedLinearScale
   return function (): ExtendedLinearScale {
     // Grey color scales are really ordinal but we treat them like linear for the API
     const scale = scaleOrdinal<string, LabColor>().range(colors.map(convertLab));
-    return decorateLinearScale(scale as any);
+    return decorateLinearScale(scale);
   };
 }
 
