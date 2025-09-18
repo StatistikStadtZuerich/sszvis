@@ -3,7 +3,6 @@
  *
  * @module sszvis/scale
  */
-
 /**
  * Scale range
  *
@@ -17,7 +16,6 @@ const range = function (scale) {
   // borrowed from d3 source - svg.axis
   return scale.rangeExtent ? scale.rangeExtent() : extent(scale.range());
 };
-
 /**
  * Helper function
  * Extent
@@ -29,8 +27,8 @@ const range = function (scale) {
  */
 function extent(domain) {
   // borrowed from d3 source - svg.axis
-  const start = domain[0],
-    stop = domain[domain.length - 1];
+  const start = domain[0];
+  const stop = domain[domain.length - 1];
   return start < stop ? [start, stop] : [stop, start];
 }
 

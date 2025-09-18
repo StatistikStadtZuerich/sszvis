@@ -14,7 +14,6 @@ import { isSelection } from './fn.js';
  *
  * @module sszvis/fallback
  */
-
 const fallbackUnsupported = function () {
   const supportsSVG = !!document.createElementNS && !!document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGRect;
   return !supportsSVG;
@@ -23,7 +22,8 @@ const fallbackCanvasUnsupported = function () {
   const supportsCanvas = !!document.createElement("canvas").getContext;
   return !supportsCanvas;
 };
-const fallbackRender = function (selector, options) {
+const fallbackRender = function (selector) {
+  let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   options || (options = {});
   options.src || (options.src = "fallback.png");
   const selection = isSelection(selector) ? selector : select(selector);

@@ -14,7 +14,7 @@ export function colorLegendLayout({ legendLabels, axisLabels, slant }: {
     bottomPadding: number;
     legendWidth: number;
     legend: any;
-    scale: any;
+    scale: import("../color").ExtendedOrdinalScale;
 };
 /**
  * colorLegendDimensions

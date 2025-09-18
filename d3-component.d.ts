@@ -1,3 +1,21 @@
+import { type BaseType, type Selection } from "d3";
+export interface ComponentProps {
+    [key: string]: any;
+}
+export type RenderCallback = (this: any, ...args: any[]) => void;
+export type SelectionRenderCallback = (this: any, ...args: any[]) => void;
+export type PropertySetter<T = any> = (...args: any[]) => T;
+export interface PropertyDelegate {
+    [key: string]: (...args: any[]) => any;
+}
+export interface Component {
+    <GElement extends BaseType, Datum, PElement extends BaseType, PDatum>(selection: Selection<GElement, Datum, PElement, PDatum>): void;
+    prop<T>(prop: string, setter?: PropertySetter<T>): Component;
+    delegate(prop: string, delegate: PropertyDelegate): Component;
+    renderSelection(callback: SelectionRenderCallback): Component;
+    render(callback: RenderCallback): Component;
+    [key: string]: any;
+}
 /**
  * d3 plugin to simplify creating reusable charts. Implements
  * the reusable chart interface and can thus be used interchangeably
@@ -24,5 +42,10 @@
  *
  * @return {sszvis.component} A d3 reusable chart
  */
-export function component(): sszvis.component;
+export declare function component(): Component;
+declare module "d3" {
+    interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
+        props(): ComponentProps;
+    }
+}
 //# sourceMappingURL=d3-component.d.ts.map

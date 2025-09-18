@@ -7,8 +7,6 @@ import { breakpointFind, breakpointDefaultSpec } from './breakpoint.js';
  *
  * @module sszvis/aspectRatio
  */
-
-
 /**
  * aspectRatio
  *
@@ -17,11 +15,11 @@ import { breakpointFind, breakpointDefaultSpec } from './breakpoint.js';
  * returned function accepts any width, returning the corresponding
  * height for the aspect ratio you configured.
  *
- * @param {Number} x  The number of parts on the horizontal axis (dividend)
- * @param {Number} y  The number of parts on the vertical axis (divisor)
- * @return {Function} The aspect ratio function. Takes a width as an argument
- *                    and returns the corresponding height based on the
- *                    aspect ratio defined by x:y.
+ * @param x  The number of parts on the horizontal axis (dividend)
+ * @param y  The number of parts on the vertical axis (divisor)
+ * @return The aspect ratio function. Takes a width as an argument
+ *         and returns the corresponding height based on the
+ *         aspect ratio defined by x:y.
  */
 function aspectRatio(x, y) {
   const ar = x / y;
@@ -29,44 +27,31 @@ function aspectRatio(x, y) {
     return width / ar;
   };
 }
-
 /**
  * aspectRatio4to3
  *
  * Recommended breakpoints:
  *   - palm
- *
- * @param {Number} width
- * @returns {Number} height
  */
 const aspectRatio4to3 = aspectRatio(4, 3);
-
 /**
  * aspectRatio16to10
  *
  * Recommended breakpoints:
  *   - lap
- *
- * @param {Number} width
- * @returns {Number} height
  */
 const aspectRatio16to10 = aspectRatio(16, 10);
-
 /**
  * aspectRatio12to5
  *
  * Recommended breakpoints:
  *   - desk
- *
- * @param {Number} width
- * @returns {Number} height
  */
 const AR12TO5_MAX_HEIGHT = 500;
 const aspectRatio12to5 = function (width) {
   return Math.min(aspectRatio(12, 5)(width), AR12TO5_MAX_HEIGHT);
 };
 aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
-
 /**
  * aspectRatioSquare
  *
@@ -79,16 +64,12 @@ aspectRatio12to5.MAX_HEIGHT = AR12TO5_MAX_HEIGHT;
  *   - palm
  *   - lap
  *   - desk
- *
- * @param {Number} width
- * @returns {Number} height
  */
 const SQUARE_MAX_HEIGHT = 420;
 const aspectRatioSquare = function (width) {
   return Math.min(aspectRatio(1, 1)(width), SQUARE_MAX_HEIGHT);
 };
 aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
-
 /**
  * aspectRatioPortrait
  *
@@ -101,16 +82,12 @@ aspectRatioSquare.MAX_HEIGHT = SQUARE_MAX_HEIGHT;
  *   - palm
  *   - lap
  *   - desk
- *
- * @param {Number} width
- * @returns {Number} height
  */
 const PORTRAIT_MAX_HEIGHT = 600;
 const aspectRatioPortrait = function (width) {
   return Math.min(aspectRatio(4, 5)(width), PORTRAIT_MAX_HEIGHT);
 };
 aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
-
 /**
  * aspectRatioAuto
  *
@@ -119,12 +96,12 @@ aspectRatioPortrait.MAX_HEIGHT = PORTRAIT_MAX_HEIGHT;
  * value of the height for that container. Note that the aspect ratio chosen may
  * depend on the container width itself. This is because of default breakpoints.
  *
- * @param  {Measurement} measurement The measurements object for the container for which you
- *                                   want a height value. Should have at least the properties:
- *                                     - `width`: container's width
- *                                     - `screenHeight`: the height of the window at the current time.
+ * @param measurement The measurements object for the container for which you
+ *                    want a height value. Should have at least the properties:
+ *                      - `width`: container's width
+ *                      - `screenHeight`: the height of the window at the current time.
  *
- * @return {Number} The height which corresponds to the default aspect ratio for these measurements
+ * @return The height which corresponds to the default aspect ratio for these measurements
  */
 const defaultAspectRatios = {
   palm: aspectRatio4to3,
@@ -135,7 +112,7 @@ const defaultAspectRatios = {
 };
 const aspectRatioAuto = function (measurement) {
   const bp = breakpointFind(breakpointDefaultSpec(), measurement);
-  const ar = defaultAspectRatios[bp.name];
+  const ar = defaultAspectRatios[(bp === null || bp === void 0 ? void 0 : bp.name) || "_"];
   return ar(measurement.width);
 };
 

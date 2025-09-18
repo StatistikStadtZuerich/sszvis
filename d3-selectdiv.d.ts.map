@@ -1,1 +1,1 @@
-{"version":3,"file":"d3-selectdiv.d.ts","sourceRoot":"","sources":["../src/d3-selectdiv.js"],"names":[],"mappings":""}
+{"version":3,"file":"d3-selectdiv.d.ts","sourceRoot":"","sources":["../src/d3-selectdiv.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,YAAY,CAAC;AAE/C;;;;;;;;GAQG;AAGH,OAAO,QAAQ,IAAI,CAAC;IAClB,UAAU,SAAS,CAAC,QAAQ,EAAE,KAAK,EAAE,QAAQ,EAAE,MAAM;QACnD,SAAS,CAAC,GAAG,EAAE,MAAM,GAAG,YAAY,CAAC;KACtC;CACF"}

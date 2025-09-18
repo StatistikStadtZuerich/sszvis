@@ -21,7 +21,6 @@ import { isSelection } from './fn.js';
  *
  * @returns {d3.selection}
  */
-
 function createSvgLayer(selector, bounds$1, metadata) {
   bounds$1 || (bounds$1 = bounds());
   metadata || (metadata = {});

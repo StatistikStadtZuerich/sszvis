@@ -6,7 +6,6 @@ import { isString, isSelection } from './fn.js';
  *
  * @module sszvis/measure
  */
-
 /**
  * measureDimensions
  *
@@ -15,9 +14,9 @@ import { isString, isSelection } from './fn.js';
  * measured `undefined` is returned for the width. Returns also measurements of
  * the screen, which are used by some responsive components.
  *
- * @param  {string|DOMElement|d3.selection} el The element to measure
+ * @param  {string|Element|d3.selection} arg The element to measure
  *
- * @return {Object} The measurement of the width of the element, plus dimensions of the screen
+ * @return {DimensionMeasurement} The measurement of the width of the element, plus dimensions of the screen
  *                  The returned object contains:
  *                      width: {number|undefined} The width of the element
  *                      screenWidth: {number} The innerWidth of the screen
@@ -38,7 +37,6 @@ const measureDimensions = function (arg) {
     screenHeight: window.innerHeight
   };
 };
-
 /**
  * measureText
  *
@@ -56,7 +54,7 @@ const measureDimensions = function (arg) {
  **/
 const measureText = function () {
   const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
+  const context = canvas.getContext("2d"); // Non-null assertion since canvas 2d context is always available
   const cache = {};
   return function (fontSize, fontFace, text) {
     const key = [fontSize, fontFace, text].join("-");
@@ -64,7 +62,6 @@ const measureText = function () {
     return cache[key] || (cache[key] = context.measureText(text).width);
   };
 }();
-
 /**
  * measureAxisLabel
  *
@@ -79,7 +76,6 @@ const measureText = function () {
 const measureAxisLabel = function (text) {
   return measureText(10, "Arial, sans-serif", text);
 };
-
 /**
  * measureLegendLabel
  *

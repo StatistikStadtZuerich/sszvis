@@ -42,24 +42,22 @@
  *                             will handle the situation gracefully, and not cause an unexpected termination
  *                             of execution.
  */
-
 const log = logger("log");
 const warn = logger("warn");
 const error = logger("error");
-
 /* Helper functions
 ----------------------------------------------- */
 function logger(type) {
   return function () {
     if (console && console[type]) {
-      for (const msg of slice(arguments)) {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+      for (const msg of args) {
         console[type](msg);
       }
     }
   };
-}
-function slice(array) {
-  return Array.prototype.slice.call(array);
 }
 
 export { error, log, warn };

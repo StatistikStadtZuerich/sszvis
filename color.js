@@ -42,17 +42,16 @@ import { scaleOrdinal, scaleLinear, hsl, rgb, lab, mean, quantile } from 'd3';
  * @function gry       1-color scale for shaded values
  * @function lightGry  1-color scale for shaded backgrounds
  */
-
-
 /* Constants
 ----------------------------------------------- */
 const LIGHTNESS_STEP = 1;
-
 /* Scales
 ----------------------------------------------- */
 function qualColorScale(colors) {
   return function () {
-    const scale = scaleOrdinal().range(colors.map(convertLab)).unknown(convertLab(colors[0]));
+    const scale = scaleOrdinal().range(colors.map(convertLab));
+    // Set unknown to first color without the type constraint
+    scale.unknown(convertLab(colors[0]));
     return decorateOrdinalScale(scale);
   };
 }
@@ -111,6 +110,7 @@ const scaleDivNtr = divColorScale(["#7D0044", "#C4006A", "#ED408D", "#FF83B9", "
 const scaleDivNtrGry = divColorScale(["#A30059", "#DB247D", "#FF579E", "#FFA8D0", "#E4E0DF", "#A8DBB1", "#55BC5D", "#1D942E", "#10652A"]);
 function greyColorScale(colors) {
   return function () {
+    // Grey color scales are really ordinal but we treat them like linear for the API
     const scale = scaleOrdinal().range(colors.map(convertLab));
     return decorateLinearScale(scale);
   };
@@ -131,54 +131,57 @@ const withAlpha = function (c, a) {
   const rgbColor = rgb(c);
   return "rgba(" + rgbColor.r + "," + rgbColor.g + "," + rgbColor.b + "," + a + ")";
 };
-
 /* Scale extensions
 ----------------------------------------------- */
 function decorateOrdinalScale(scale) {
-  scale.darker = function () {
+  const enhancedScale = scale;
+  enhancedScale.darker = function () {
     return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.brighter(LIGHTNESS_STEP))));
   };
-  scale.brighter = function () {
+  enhancedScale.brighter = function () {
     return decorateOrdinalScale(scale.copy().range(scale.range().map(d => d.darker(LIGHTNESS_STEP))));
   };
-  scale.reverse = function () {
+  enhancedScale.reverse = function () {
     return decorateOrdinalScale(scale.copy().range(scale.range().reverse()));
   };
-  return scale;
+  return enhancedScale;
 }
 function decorateDivScale(scale) {
-  scale = interpolatedDivergentColorScale(scale);
-  scale.reverse = function () {
+  const enhancedScale = interpolatedDivergentColorScale(scale);
+  enhancedScale.reverse = function () {
     return decorateLinearScale(scale.copy().range(scale.range().reverse()));
   };
-  return scale;
+  return enhancedScale;
 }
 function interpolatedDivergentColorScale(scale) {
   const nativeDomain = scale.domain;
   if (!scale.range()) return scale;
   const length = scale.range().length;
   scale.domain = function (dom) {
-    if (!dom) return nativeDomain.call(this);
+    if (!dom) return nativeDomain.call(this, []);
     const xDomain = [];
     for (let i = 0; i < length; i++) {
-      xDomain.push(quantile(dom, i / (length - 1)));
+      xDomain.push(quantile(dom, i / (length - 1)) || 0);
     }
     return nativeDomain.call(this, xDomain);
   };
   return scale;
 }
 function decorateLinearScale(scale) {
-  scale = interpolatedColorScale(scale);
-  scale.reverse = function () {
-    return decorateLinearScale(scale.copy().range(scale.range().reverse()));
+  // Only apply interpolation to actual linear scales, not ordinal scales used for grey
+  const processedScale = "interpolate" in scale ? interpolatedColorScale(scale) : scale;
+  const enhancedScale = processedScale;
+  enhancedScale.reverse = function () {
+    const copiedScale = "copy" in scale ? scale.copy() : scale;
+    return decorateLinearScale(copiedScale.range(scale.range().reverse()));
   };
-  return scale;
+  return enhancedScale;
 }
 function interpolatedColorScale(scale) {
   const nativeDomain = scale.domain;
   scale.domain = function (dom) {
-    if (arguments.length === 1) {
-      const threeDomain = [dom[0], mean(dom), dom[1]];
+    if (arguments.length === 1 && dom && dom.length === 2) {
+      const threeDomain = [dom[0], mean(dom) || 0, dom[1]];
       return nativeDomain.call(this, threeDomain);
     } else {
       return Reflect.apply(nativeDomain, this, arguments);
@@ -186,7 +189,6 @@ function interpolatedColorScale(scale) {
   };
   return scale;
 }
-
 /* Helper functions
 ----------------------------------------------- */
 function convertLab(d) {

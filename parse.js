@@ -1,14 +1,12 @@
 import { timeFormatLocale } from 'd3';
-import { locale } from './locale.js';
+import { timeLocale } from './locale.js';
 
 /**
  * Parsing functions
  *
  * @module sszvis/parse
  */
-
-const timeParse = timeFormatLocale(locale).parse;
-
+const timeParse = timeFormatLocale(timeLocale).parse;
 /**
  * Parse Swiss date strings
  * @param  {String} d A Swiss date string, e.g. 17.08.2014
@@ -18,7 +16,6 @@ const dateParser = timeParse("%d.%m.%Y");
 const parseDate = function (d) {
   return dateParser(d);
 };
-
 /**
  * Parse year values
  * @param  {string} d   A string which should be parsed as if it were a year, like "2014"
@@ -28,7 +25,6 @@ const yearParser = timeParse("%Y");
 const parseYear = function (d) {
   return yearParser(d);
 };
-
 /**
  * Parse untyped input
  * @param  {String} d A value that could be a number

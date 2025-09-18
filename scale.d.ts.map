@@ -1,1 +1,1 @@
-{"version":3,"file":"scale.d.ts","sourceRoot":"","sources":["../src/scale.js"],"names":[],"mappings":"AAeO,6BAJK,KAAK,GACL,KAAK,CAMhB"}
+{"version":3,"file":"scale.d.ts","sourceRoot":"","sources":["../src/scale.ts"],"names":[],"mappings":"AAAA;;;;GAIG;AAEH,UAAU,KAAK;IACb,KAAK,IAAI,GAAG,EAAE,CAAC;IACf,WAAW,CAAC,IAAI,CAAC,MAAM,EAAE,MAAM,CAAC,CAAC;CAClC;AAED;;;;;;;;GAQG;AACH,eAAO,MAAM,KAAK,GAAa,OAAO,KAAK,KAAG,CAAC,MAAM,EAAE,MAAM,CAG5D,CAAC"}

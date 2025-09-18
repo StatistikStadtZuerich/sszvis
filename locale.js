@@ -1,9 +1,17 @@
-const locale = {
+/**
+ * Swiss German format locale definition for d3.format functions
+ */
+const formatLocale = {
   decimal: ".",
   thousands: " ",
   // This is a 'narrow space', not a regular space. Used as the thousands separator by d3.format
   grouping: [3],
-  currency: ["CHF ", ""],
+  currency: ["CHF ", ""]
+};
+/**
+ * Swiss German time locale definition for d3.time functions
+ */
+const timeLocale = {
   dateTime: "%a. %e. %B %X %Y",
   date: "%d.%m.%Y",
   time: "%H:%M:%S",
@@ -15,5 +23,5 @@ const locale = {
   shortMonths: ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"]
 };
 
-export { locale };
+export { formatLocale, timeLocale };
 //# sourceMappingURL=locale.js.map

@@ -1,16 +1,10 @@
-export type LocaleDefinition = typeof locale;
-export declare const locale: {
-    readonly decimal: ".";
-    readonly thousands: " ";
-    readonly grouping: readonly [3];
-    readonly currency: readonly ["CHF ", ""];
-    readonly dateTime: "%a. %e. %B %X %Y";
-    readonly date: "%d.%m.%Y";
-    readonly time: "%H:%M:%S";
-    readonly periods: readonly ["", ""];
-    readonly days: readonly ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-    readonly shortDays: readonly ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-    readonly months: readonly ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
-    readonly shortMonths: readonly ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
-};
+import { FormatLocaleDefinition, TimeLocaleDefinition } from "d3";
+/**
+ * Swiss German format locale definition for d3.format functions
+ */
+export declare const formatLocale: FormatLocaleDefinition;
+/**
+ * Swiss German time locale definition for d3.time functions
+ */
+export declare const timeLocale: TimeLocaleDefinition;
 //# sourceMappingURL=locale.d.ts.map

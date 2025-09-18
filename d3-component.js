@@ -30,7 +30,6 @@ function component() {
   const props = {};
   let selectionRenderer = null;
   let renderer = identity;
-
   /**
    * Constructor
    *
@@ -48,7 +47,6 @@ function component() {
       renderer.apply(this, slice(arguments));
     });
   }
-
   /**
    * Define a property accessor with an optional setter
    *
@@ -62,7 +60,6 @@ function component() {
     sszvisComponent[prop] = accessor(props, prop, setter.bind(sszvisComponent)).bind(sszvisComponent);
     return sszvisComponent;
   };
-
   /**
    * Delegate a properties' accessors to a delegate object
    *
@@ -72,12 +69,14 @@ function component() {
    */
   sszvisComponent.delegate = function (prop, delegate) {
     sszvisComponent[prop] = function () {
-      const result = delegate[prop].apply(delegate, slice(arguments));
-      return arguments.length === 0 ? result : sszvisComponent;
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+      const result = delegate[prop].apply(delegate, slice(args));
+      return args.length === 0 ? result : sszvisComponent;
     };
     return sszvisComponent;
   };
-
   /**
    * Creates a render context for the given component's parent selection.
    * Use this, when you need full control over the rendering of the component
@@ -91,7 +90,6 @@ function component() {
     selectionRenderer = callback;
     return sszvisComponent;
   };
-
   /**
    * Creates a render context for the given component. Implements the
    * d3.selection.each interface.
@@ -107,7 +105,6 @@ function component() {
   };
   return sszvisComponent;
 }
-
 /**
  * d3.selection plugin to get the properties of a sszvis.component.
  * Works similarly to d3.selection.data, but for properties.
@@ -128,7 +125,6 @@ selection.prototype.props = function () {
   const node = group[0];
   return node.__props__ || {};
 };
-
 /**
  * Creates an accessor function that either gets or sets a value, depending
  * on whether or not it is called with arguments.
@@ -141,16 +137,19 @@ selection.prototype.props = function () {
 function accessor(props, prop, setter) {
   setter || (setter = identity);
   return function () {
-    if (arguments.length === 0) return props[prop];
-    props[prop] = setter.apply(null, slice(arguments));
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+    if (args.length === 0) return props[prop];
+    props[prop] = setter.apply(null, args);
     return this;
   };
 }
 function identity(d) {
   return d;
 }
-function slice(array) {
-  return Array.prototype.slice.call(array);
+function slice(arrayLike) {
+  return Array.prototype.slice.call(arrayLike);
 }
 function clone(obj) {
   const copy = {};

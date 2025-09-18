@@ -1,3 +1,14 @@
+/**
+ * sszvis.js is the visualization library used by Statistik Stadt Zürich.
+ * It uses d3.js <http://d3js.org>
+ *
+ * Contact:
+ *   Product Owner     - Statistik Stadt Zürich <https://www.stadt-zuerich.ch/statistik>
+ *   Technical Contact - Interactive Things <http://interactivethings.com>
+ *
+ */
+import "./d3-selectdiv.js";
+import "./d3-selectgroup.js";
 export * from "./annotation/index.js";
 export * from "./app.js";
 export * from "./aspectRatio.js";

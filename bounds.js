@@ -38,11 +38,11 @@ import { measureDimensions } from './measure.js';
  *                               which contains calculated or default values for top, bottom, left, and right padding.
  *                               Lastly, the object includes 'screenWidth' and 'screenHeight', which are occasionally used by responsive components.
  */
-
 const DEFAULT_WIDTH = 516;
-function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
-  let _bounds = null,
-    selection = null;
+function bounds(arg1, arg2) {
+  var _dimensions$width;
+  let _bounds = {};
+  let selection = null;
   if (arguments.length === 0) {
     _bounds = {};
   } else if (arguments.length === 1) {
@@ -59,7 +59,6 @@ function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     _bounds = arg1;
     selection = isSelection(arg2) ? arg2 : select(arg2);
   }
-
   // All padding sides have default values
   const padding = {
     top: either(_bounds.top, 0),
@@ -67,13 +66,19 @@ function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     bottom: either(_bounds.bottom, 0),
     left: either(_bounds.left, 1)
   };
-
   // Width is calculated as: _bounds.width (if provided) -> selection.getBoundingClientRect().width (if provided) -> DEFAULT_WIDTH
   const dimensions = defined(selection) ? measureDimensions(selection) : {
-    width: DEFAULT_WIDTH
+    width: DEFAULT_WIDTH,
+    screenWidth: window.innerWidth,
+    screenHeight: window.innerHeight
   };
-  const width = either(_bounds.width, dimensions.width);
-  const innerHeight = aspectRatioAuto(dimensions);
+  const width = either(_bounds.width, (_dimensions$width = dimensions.width) !== null && _dimensions$width !== void 0 ? _dimensions$width : DEFAULT_WIDTH);
+  // Create measurement object for aspectRatioAuto that matches the Measurement interface
+  const measurement = {
+    width: width,
+    screenHeight: dimensions.screenHeight
+  };
+  const innerHeight = aspectRatioAuto(measurement);
   const height = either(_bounds.height, innerHeight + padding.top + padding.bottom);
   return {
     innerHeight: height - padding.top - padding.bottom,
@@ -85,7 +90,6 @@ function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
     screenHeight: dimensions.screenHeight
   };
 }
-
 // This is the default aspect ratio. It is defined as: width / innerHeight
 // See the Offerte document for SSZVIS 1.3, and here: https://basecamp.com/1762663/projects/10790469/todos/212434984
 // To calculate the default innerHeight, do width / ASPECT_RATIO
@@ -93,7 +97,6 @@ function bounds(arg1 /* bounds or selection */, arg2 /* [selection] */) {
 //             so that it is now responsive to the container width.
 //             This property is preserved for compatibility reasons.
 const RATIO = 16 / 9;
-
 /* Helper functions
 ----------------------------------------------- */
 function either(val, fallback) {

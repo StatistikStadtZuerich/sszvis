@@ -70,17 +70,17 @@
  *
  * @returns                 An instance of sszvis.cascade
  */
-
 function groupBy(data, keyFunc) {
   const group = {};
   let key;
   for (let i = 0, l = data.length, value; i < l; ++i) {
     value = data[i];
     key = keyFunc(value);
-    if (group[key]) {
-      group[key].push(value);
+    const keyStr = String(key);
+    if (group[keyStr]) {
+      group[keyStr].push(value);
     } else {
-      group[key] = [value];
+      group[keyStr] = [value];
     }
   }
   return group;
@@ -96,9 +96,9 @@ function arrEach(arr, func) {
   }
 }
 function cascade() {
-  const _cascade = {},
-    keys = [],
-    sorts = [];
+  const _cascade = {};
+  const keys = [];
+  const sorts = [];
   let valuesSort;
   function make(data, depth) {
     if (depth >= keys.length) {
@@ -132,23 +132,23 @@ function cascade() {
   _cascade.apply = function (data) {
     return make(data, 0);
   };
-  _cascade.objectBy = function (d) {
+  _cascade.objectBy = function (accessor) {
     keys.push({
       type: "obj",
-      func: d
+      func: accessor
     });
     return _cascade;
   };
-  _cascade.arrayBy = function (d, sorter) {
+  _cascade.arrayBy = function (accessor, sorter) {
     keys.push({
       type: "arr",
-      func: d
+      func: accessor
     });
     if (sorter) sorts[keys.length - 1] = sorter;
     return _cascade;
   };
-  _cascade.sort = function (d) {
-    valuesSort = d;
+  _cascade.sort = function (sorter) {
+    valuesSort = sorter;
     return _cascade;
   };
   return _cascade;

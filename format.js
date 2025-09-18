@@ -1,14 +1,14 @@
 import { timeFormatLocale, formatLocale } from 'd3';
 import { compose } from './fn.js';
-import { locale } from './locale.js';
+import { timeLocale, formatLocale as formatLocale$1 } from './locale.js';
 
 /**
  * Formatting functions
  *
  * @module sszvis/format
  */
-const timeFormat = timeFormatLocale(locale).format;
-const format = formatLocale(locale).format;
+const timeFormat = timeFormatLocale(timeLocale).format;
+const format = formatLocale(formatLocale$1).format;
 /**
  * Format a number as an age
  */
