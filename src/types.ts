@@ -4,7 +4,7 @@
  * @module sszvis/types
  */
 
-import type { Selection } from "d3";
+import type { NumberValue, Selection } from "d3";
 
 /**
  * Generic type for SVG element selections with sensible defaults
@@ -78,5 +78,6 @@ export type Accessor<T, R> = R | ((d: T) => R);
 /**
  * Specific accessor types for common use cases in annotations
  */
-export type NumberAccessor<T = unknown> = Accessor<T, import("d3").NumberValue>;
+export type NumberAccessor<T = unknown> = Accessor<T, NumberValue>;
 export type StringAccessor<T = unknown> = Accessor<T, string>;
+export type BooleanAccessor<T = unknown> = Accessor<T, boolean>;

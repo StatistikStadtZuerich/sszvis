@@ -21,13 +21,41 @@
  * @return {sszvis.component}
  */
 
-import { select } from "d3";
-import { component } from "../d3-component.js";
-import * as fn from "../fn.js";
-import { formatNumber } from "../format.js";
-import { halfPixel } from "../svgUtils/crisp.js";
+import { type NumberValue, select } from "d3";
+import { type Component, component } from "../d3-component";
+import * as fn from "../fn";
+import { formatNumber } from "../format";
+import { halfPixel } from "../svgUtils/crisp";
+import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types";
 
-export default function () {
+// Type definitions for range ruler component
+type Datum<T = unknown> = T;
+
+interface RangeRulerProps<T = unknown> {
+  x: (d: Datum<T>) => NumberValue;
+  y0: (d: Datum<T>) => NumberValue;
+  y1: (d: Datum<T>) => NumberValue;
+  top: number;
+  bottom: number;
+  label: (d: Datum<T>) => string | number;
+  removeStroke?: boolean;
+  total?: number;
+  flip: (d: Datum<T>) => boolean;
+}
+
+interface RangeRulerComponent<T = unknown> extends Component {
+  x(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;
+  y0(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;
+  y1(accessor?: NumberAccessor<Datum<T>>): RangeRulerComponent<T>;
+  top(value?: number): RangeRulerComponent<T>;
+  bottom(value?: number): RangeRulerComponent<T>;
+  label(accessor?: StringAccessor<Datum<T>>): RangeRulerComponent<T>;
+  removeStroke(value?: boolean): RangeRulerComponent<T>;
+  total(value?: number): RangeRulerComponent<T>;
+  flip(accessor?: BooleanAccessor<Datum<T>>): RangeRulerComponent<T>;
+}
+
+export default function <T = unknown>(): RangeRulerComponent<T> {
   return component()
     .prop("x", fn.functor)
     .prop("y0", fn.functor)
@@ -40,15 +68,15 @@ export default function () {
     .prop("total")
     .prop("flip", fn.functor)
     .flip(false)
-    .render(function (data) {
+    .render(function (this: Element, data: Datum<T>[]) {
       const selection = select(this);
-      const props = selection.props();
+      const props = selection.props() as RangeRulerProps<T>;
 
       const crispX = fn.compose(halfPixel, props.x);
       const crispY0 = fn.compose(halfPixel, props.y0);
       const crispY1 = fn.compose(halfPixel, props.y1);
-      const middleY = function (d) {
-        return halfPixel((props.y0(d) + props.y1(d)) / 2);
+      const middleY = (d: Datum<T>) => {
+        return halfPixel((Number(props.y0(d)) + Number(props.y1(d))) / 2);
       };
 
       const dotRadius = 1.5;
@@ -113,24 +141,37 @@ export default function () {
 
       selection.selectAll("g.sszvis-rangeRuler--mark").each(function () {
         const g = select(this);
-        const textNode = g.select("text").node();
+        const textNode = g.select("text").node() as SVGTextElement | null;
         let textContour = g.select(".sszvis-rangeRuler__label-contour");
         if (textContour.empty()) {
-          textContour = select(textNode.cloneNode())
-            .classed("sszvis-rangeRuler__label-contour", true)
-            .classed("sszvis-rangeRuler__label", false);
-          this.insertBefore(textContour.node(), textNode);
+          if (textNode) {
+            const clonedNode = textNode.cloneNode(true) as SVGTextElement;
+            textContour = select(clonedNode) as unknown as typeof textContour;
+            textContour
+              .classed("sszvis-rangeRuler__label-contour", true)
+              .classed("sszvis-rangeRuler__label", false);
+            const contourNode = textContour.node() as SVGTextElement | null;
+            if (contourNode && this instanceof Element) {
+              this.insertBefore(contourNode, textNode);
+            }
+          }
         } else {
           textContour
             .attr("x", (d) => {
-              const offset = props.flip(d) ? -10 : 10;
-              return crispX(d) + offset;
+              const datum = d as Datum<T>;
+              const offset = props.flip(datum) ? -10 : 10;
+              return crispX(datum) + offset;
             })
-            .attr("y", middleY)
+            .attr("y", (d) => middleY(d as Datum<T>))
             .attr("dy", "0.35em") // vertically-center
-            .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"));
+            .style("text-anchor", (d) => {
+              const datum = d as Datum<T>;
+              return props.flip(datum) ? "end" : "start";
+            });
         }
-        textContour.text(textNode.textContent);
+        if (textNode) {
+          textContour.text(textNode.textContent || "");
+        }
       });
 
       if (!props.removeStroke) {
@@ -145,33 +186,50 @@ export default function () {
 
       total
         .attr("x", (d) => {
-          const offset = props.flip(d) ? -10 : 10;
-          return crispX(d) + offset;
+          const datum = d as Datum<T>;
+          const offset = props.flip(datum) ? -10 : 10;
+          return crispX(datum) + offset;
         })
         .attr("y", props.top - 10)
-        .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"))
-        .text("Total " + formatNumber(props.total));
+        .style("text-anchor", (d) => {
+          const datum = d as Datum<T>;
+          return props.flip(datum) ? "end" : "start";
+        })
+        .text(`Total ${formatNumber(props.total)}`);
 
-      const totalNode = total.node();
+      const totalNode = total.node() as SVGTextElement | null;
       let totalContour = selection.select(".sszvis-rangeRuler__total-contour");
       if (totalContour.empty()) {
-        totalContour = select(totalNode.cloneNode())
-          .classed("sszvis-rangeRuler__total-contour", true)
-          .classed("sszvis-rangeRuler__total", false);
-        this.insertBefore(totalContour.node(), totalNode);
+        if (totalNode) {
+          const clonedTotalNode = totalNode.cloneNode(true) as SVGTextElement;
+          totalContour = select(clonedTotalNode) as unknown as typeof totalContour;
+          totalContour
+            .classed("sszvis-rangeRuler__total-contour", true)
+            .classed("sszvis-rangeRuler__total", false);
+          const contourNode = totalContour.node() as SVGTextElement | null;
+          if (contourNode && this instanceof Element) {
+            this.insertBefore(contourNode, totalNode);
+          }
+        }
       } else {
         totalContour
           .attr("x", (d) => {
-            const offset = props.flip(d) ? -10 : 10;
-            return crispX(d) + offset;
+            const datum = d as Datum<T>;
+            const offset = props.flip(datum) ? -10 : 10;
+            return crispX(datum) + offset;
           })
           .attr("y", props.top - 10)
-          .style("text-anchor", (d) => (props.flip(d) ? "end" : "start"));
+          .style("text-anchor", (d) => {
+            const datum = d as Datum<T>;
+            return props.flip(datum) ? "end" : "start";
+          });
       }
-      totalContour.text(totalNode.textContent);
+      if (totalNode) {
+        totalContour.text(totalNode.textContent || "");
+      }
 
       if (!props.removeStroke) {
         total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
       }
-    });
+    }) as RangeRulerComponent<T>;
 }

@@ -23,7 +23,7 @@
  * @returns {sszvis.component} a linear data area component (reference line)
  */
 
-import { AxisDomain, AxisScale, type NumberValue, select } from "d3";
+import { type AxisDomain, type AxisScale, type NumberValue, select } from "d3";
 import { type Component, component } from "../d3-component";
 import * as fn from "../fn";
 import type { NumberAccessor, StringAccessor } from "../types";

@@ -23,8 +23,8 @@
  */
 
 import { type NumberValue, range, scaleBand, select } from "d3";
-import { type Component, component } from "../d3-component.js";
-import * as fn from "../fn.js";
+import { type Component, component } from "../d3-component";
+import * as fn from "../fn";
 
 // Type definitions for confidence bar component
 type Datum<T = unknown> = T & {

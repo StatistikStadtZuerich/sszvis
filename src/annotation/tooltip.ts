@@ -41,7 +41,7 @@
 import { type NumberValue, select } from "d3";
 import { type Component, component } from "../d3-component";
 import * as fn from "../fn";
-import type { NumberAccessor, StringAccessor, AnySelection, Accessor } from "../types";
+import type { Accessor, AnySelection, NumberAccessor, StringAccessor } from "../types";
 
 // Type definitions for tooltip annotation component
 type Datum<T = unknown> = T;
