@@ -68,3 +68,15 @@ export interface DimensionMeasurement {
   screenWidth: number;
   screenHeight: number;
 }
+
+/**
+ * Common accessor type for annotation components
+ * Supports both constant values and accessor functions
+ */
+export type Accessor<T, R> = R | ((d: T) => R);
+
+/**
+ * Specific accessor types for common use cases in annotations
+ */
+export type NumberAccessor<T = unknown> = Accessor<T, import("d3").NumberValue>;
+export type StringAccessor<T = unknown> = Accessor<T, string>;

@@ -1,4 +1,4 @@
-import { scaleLinear, select } from "d3";
+import { type ScaleLinear, scaleLinear, select } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import line from "../../src/annotation/line";
 import { createSvgLayer } from "../../src/createSvgLayer";
@@ -6,8 +6,8 @@ import "../../src/d3-selectgroup";
 
 describe("annotation/line", () => {
   let container: HTMLDivElement;
-  let xScale: (value: number) => number;
-  let yScale: (value: number) => number;
+  let xScale: ScaleLinear<number, number>;
+  let yScale: ScaleLinear<number, number>;
 
   beforeEach(() => {
     container = document.createElement("div");

@@ -46,11 +46,11 @@ describe("annotation/rectangle", () => {
   ];
 
   test("should render rectangle annotation with proper DOM structure", () => {
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height);
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height);
 
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("rectangles")
@@ -74,11 +74,11 @@ describe("annotation/rectangle", () => {
   });
 
   test("should position rectangles correctly using accessor functions", () => {
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height);
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height);
 
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("rectangles")
@@ -110,11 +110,11 @@ describe("annotation/rectangle", () => {
   });
 
   test("should apply data area pattern fill to rectangles", () => {
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height);
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height);
 
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("rectangles")
@@ -129,12 +129,12 @@ describe("annotation/rectangle", () => {
   });
 
   test("should render captions when caption accessor is provided", () => {
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height)
-      .caption((d: unknown) => (d as TestDatum).caption);
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height)
+      .caption((d) => d.caption || "");
 
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("rectangles")
@@ -167,11 +167,11 @@ describe("annotation/rectangle", () => {
   });
 
   test("should not render captions when caption accessor is not provided", () => {
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height);
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height);
 
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("rectangles")
@@ -184,12 +184,12 @@ describe("annotation/rectangle", () => {
   });
 
   test("should offset captions using dx and dy properties", () => {
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height)
-      .caption((d: unknown) => (d as TestDatum).caption)
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height)
+      .caption((d) => d.caption || "")
       .dx(() => 15)
       .dy(() => -10);
 
@@ -208,7 +208,7 @@ describe("annotation/rectangle", () => {
   });
 
   test("should work with constant values instead of accessor functions", () => {
-    const rectangleComponent = rectangle()
+    const rectangleComponent = rectangle<TestDatum>()
       .x(150)
       .y(125)
       .width(100)
@@ -257,14 +257,14 @@ describe("annotation/rectangle", () => {
       },
     ];
 
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as ComplexTestDatum).position.x)
-      .y((d: unknown) => (d as ComplexTestDatum).position.y)
-      .width((d: unknown) => (d as ComplexTestDatum).dimensions.width)
-      .height((d: unknown) => (d as ComplexTestDatum).dimensions.height)
-      .caption((d: unknown) => (d as ComplexTestDatum).label)
-      .dx((d: unknown) => (d as ComplexTestDatum).offset.dx)
-      .dy((d: unknown) => (d as ComplexTestDatum).offset.dy);
+    const rectangleComponent = rectangle<ComplexTestDatum>()
+      .x((d) => d.position.x)
+      .y((d) => d.position.y)
+      .width((d) => d.dimensions.width)
+      .height((d) => d.dimensions.height)
+      .caption((d) => d.label)
+      .dx((d) => d.offset.dx)
+      .dy((d) => d.offset.dy);
 
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("rectangles")
@@ -299,11 +299,11 @@ describe("annotation/rectangle", () => {
   });
 
   test("should handle empty data array", () => {
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height);
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height);
 
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("rectangles")
@@ -318,11 +318,11 @@ describe("annotation/rectangle", () => {
   });
 
   test("should handle data updates correctly", () => {
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height);
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height);
 
     const chartLayer = createSvgLayer("#chart-container", undefined, {
       key: "test-layer",
@@ -350,11 +350,11 @@ describe("annotation/rectangle", () => {
       { x: 200, y: 100, width: 120, height: 0 }, // Zero height
     ];
 
-    const rectangleComponent = rectangle()
-      .x((d: unknown) => (d as TestDatum).x)
-      .y((d: unknown) => (d as TestDatum).y)
-      .width((d: unknown) => (d as TestDatum).width)
-      .height((d: unknown) => (d as TestDatum).height);
+    const rectangleComponent = rectangle<TestDatum>()
+      .x((d) => d.x)
+      .y((d) => d.y)
+      .width((d) => d.width)
+      .height((d) => d.height);
 
     const chartLayer = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
       .selectGroup("rectangles")
