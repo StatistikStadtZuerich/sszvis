@@ -16,20 +16,36 @@
  * @returns {sszvis.component}
  */
 
-import { select } from "d3";
-import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { component } from "../d3-component.js";
-import * as fn from "../fn.js";
-import { halfPixel } from "../svgUtils/crisp.js";
+import { type NumberValue, select } from "d3";
+import { type Component, component } from "../d3-component";
+import * as fn from "../fn";
+import { halfPixel } from "../svgUtils/crisp";
+import type { AnySelection, NumberAccessor } from "../types";
+import tooltipAnchor from "./tooltipAnchor";
 
-export default function () {
+// Type definitions for range flag component
+type Datum<T = unknown> = T;
+
+interface RangeFlagProps<T = unknown> {
+  x: (d: Datum<T>) => NumberValue;
+  y0: (d: Datum<T>) => NumberValue;
+  y1: (d: Datum<T>) => NumberValue;
+}
+
+interface RangeFlagComponent<T = unknown> extends Component {
+  x(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;
+  y0(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;
+  y1(accessor?: NumberAccessor<Datum<T>>): RangeFlagComponent<T>;
+}
+
+export default function <T = unknown>(): RangeFlagComponent<T> {
   return component()
     .prop("x", fn.functor)
     .prop("y0", fn.functor)
     .prop("y1", fn.functor)
-    .render(function (data) {
-      const selection = select(this);
-      const props = selection.props();
+    .render(function (this: Element, data: Datum<T>[]) {
+      const selection = select<Element, Datum<T>>(this);
+      const props = selection.props<RangeFlagProps<T>>();
 
       const crispX = fn.compose(halfPixel, props.x);
       const crispY0 = fn.compose(halfPixel, props.y0);
@@ -45,17 +61,17 @@ export default function () {
         .data(data)
         .call(makeFlagDot("top", crispX, crispY1));
 
-      const ta = tooltipAnchor().position((d) => [
+      const ta = tooltipAnchor<Datum<T>>().position((d) => [
         crispX(d),
-        halfPixel((props.y0(d) + props.y1(d)) / 2),
+        halfPixel((Number(props.y0(d)) + Number(props.y1(d))) / 2),
       ]);
 
       selection.call(ta);
-    });
+    }) as RangeFlagComponent<T>;
 }
 
-function makeFlagDot(classed, cx, cy) {
-  return function (dot) {
+function makeFlagDot<T>(classed: string, cx: (d: Datum<T>) => number, cy: (d: Datum<T>) => number) {
+  return (dot: AnySelection) => {
     dot
       .join("circle")
       .classed("sszvis-rangeFlag__mark", true)

@@ -4,7 +4,7 @@
  * @module sszvis/types
  */
 
-import type { Selection } from "d3";
+import type { NumberValue, Selection } from "d3";
 
 /**
  * Generic type for SVG element selections with sensible defaults
@@ -14,7 +14,7 @@ export type SVGElementSelection<T extends SVGElement> = Selection<T, unknown, nu
 /**
  * Generic selection type with default parameters
  */
-export type AnySelection = Selection<any, any, any, any>;
+export type AnySelection<T = any> = Selection<any, T, any, any>;
 
 /**
  * Type for elements that can be selected - CSS selector string or d3 selection
@@ -68,3 +68,16 @@ export interface DimensionMeasurement {
   screenWidth: number;
   screenHeight: number;
 }
+
+/**
+ * Common accessor type for annotation components
+ * Supports both constant values and accessor functions
+ */
+export type Accessor<T, R> = R | ((d: T) => R);
+
+/**
+ * Specific accessor types for common use cases in annotations
+ */
+export type NumberAccessor<T = unknown> = Accessor<T, NumberValue>;
+export type StringAccessor<T = unknown> = Accessor<T, string>;
+export type BooleanAccessor<T = unknown> = Accessor<T, boolean>;

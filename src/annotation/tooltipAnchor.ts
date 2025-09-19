@@ -10,6 +10,7 @@
  * Tooltips can be bound to by selecting for the tooltip data attribute.
  *
  * @module sszvis/annotation/tooltipAnchor
+ * @template T The type of the data objects used with the tooltip anchor
  *
  * @example
  * var tooltip = sszvis.tooltip();
@@ -41,24 +42,37 @@
  */
 
 import { select } from "d3";
-import { component } from "../d3-component.js";
-import * as fn from "../fn.js";
-import translateString from "../svgUtils/translateString.js";
+import { type Component, component } from "../d3-component";
+import * as fn from "../fn";
+import translateString from "../svgUtils/translateString";
+
+// Type definitions for tooltip anchor annotation component
+type Datum<T = unknown> = T;
+
+interface TooltipAnchorProps<T = unknown> {
+  position: (d: Datum<T>) => [number, number];
+  debug?: boolean;
+}
+
+interface TooltipAnchorComponent<T = unknown> extends Component {
+  position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
+  debug(value?: boolean): TooltipAnchorComponent<T>;
+}
 
 /* Helper functions
   ----------------------------------------------- */
-function vectorToTranslateString(vec) {
+function vectorToTranslateString(vec: [number, number]): string {
   return translateString.apply(null, vec);
 }
 
-export default function () {
+export default function <T = unknown>(): TooltipAnchorComponent<T> {
   return component()
     .prop("position")
     .position(fn.functor([0, 0]))
     .prop("debug")
-    .render(function (data) {
-      const selection = select(this);
-      const props = selection.props();
+    .render(function (this: Element, data: Datum<T>[]) {
+      const selection = select<Element, Datum<T>>(this);
+      const props = selection.props<TooltipAnchorProps<T>>();
 
       const anchor = selection
         .selectAll("[data-tooltip-anchor]")

@@ -9,6 +9,7 @@
  *
  * @module sszvis/annotation/tooltip
  *
+ * @template T The type of the data objects used in the tooltip
  * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
  *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
  *                                      on which it is called. Instead, it's rendered into whichever selection is
@@ -37,9 +38,43 @@
  *
  */
 
-import { select } from "d3";
-import { component } from "../d3-component.js";
-import * as fn from "../fn.js";
+import { type NumberValue, select } from "d3";
+import { type Component, component } from "../d3-component";
+import * as fn from "../fn";
+import type { Accessor, AnySelection, NumberAccessor, StringAccessor } from "../types";
+
+// Type definitions for tooltip annotation component
+type Datum<T = unknown> = T;
+
+type TooltipOrientation = "top" | "bottom" | "left" | "right";
+
+interface TooltipData<T = unknown> {
+  datum: Datum<T>;
+  x: number;
+  y: number;
+}
+
+interface TooltipProps<T = unknown> {
+  renderInto: AnySelection;
+  visible: (d: Datum<T>) => boolean;
+  header?: ((d: Datum<T>) => string) | string;
+  body?: ((d: Datum<T>) => string | string[][]) | string | string[][];
+  orientation: (d: TooltipData<T>) => TooltipOrientation;
+  dx: (d: TooltipData<T>) => NumberValue;
+  dy: (d: TooltipData<T>) => NumberValue;
+  opacity: (d: TooltipData<T>) => NumberValue;
+}
+
+interface TooltipComponent<T = unknown> extends Component {
+  renderInto(selection?: AnySelection): TooltipComponent<T>;
+  visible(accessor?: Accessor<Datum<T>, boolean>): TooltipComponent<T>;
+  header(accessor?: StringAccessor<Datum<T>>): TooltipComponent<T>;
+  body(accessor?: StringAccessor<Datum<T>> | ((d: Datum<T>) => string[][])): TooltipComponent<T>;
+  orientation(accessor?: StringAccessor<TooltipData<T>>): TooltipComponent<T>;
+  dx(accessor?: NumberAccessor<TooltipData<T>>): TooltipComponent<T>;
+  dy(accessor?: NumberAccessor<TooltipData<T>>): TooltipComponent<T>;
+  opacity(accessor?: NumberAccessor<TooltipData<T>>): TooltipComponent<T>;
+}
 
 /* Configuration
 ----------------------------------------------- */
@@ -50,8 +85,8 @@ const BLUR_PADDING = 5;
 
 /* Exported module
 ----------------------------------------------- */
-export default function () {
-  const renderer = tooltipRenderer();
+export default function <T = unknown>(): TooltipComponent<T> {
+  const renderer = tooltipRenderer<T>();
 
   return component()
     .delegate("header", renderer)
@@ -63,12 +98,12 @@ export default function () {
     .prop("renderInto")
     .prop("visible", fn.functor)
     .visible(false)
-    .renderSelection((selection) => {
-      const props = selection.props();
+    .renderSelection((selection: AnySelection) => {
+      const props = selection.props<TooltipProps<T>>();
       const intoBCR = props.renderInto.node().getBoundingClientRect();
 
-      const tooltipData = [];
-      selection.each(function (d) {
+      const tooltipData: TooltipData<T>[] = [];
+      selection.each(function (this: Element, d: Datum<T>) {
         if (props.visible(d)) {
           const thisBCR = this.getBoundingClientRect();
           const pos = [thisBCR.left - intoBCR.left, thisBCR.top - intoBCR.top];
@@ -88,7 +123,7 @@ export default function () {
  * Tooltip renderer
  * @private
  */
-const tooltipRenderer = function () {
+const tooltipRenderer = <T = unknown>(): Component => {
   return component()
     .prop("header")
     .prop("body")
@@ -100,9 +135,9 @@ const tooltipRenderer = function () {
     .dy(1)
     .prop("opacity", fn.functor)
     .opacity(1)
-    .renderSelection((selection) => {
-      const tooltipData = selection.datum();
-      const props = selection.props();
+    .renderSelection((selection: AnySelection<Datum<T>>) => {
+      const tooltipData = selection.datum() as TooltipData<T>[];
+      const props = selection.props<TooltipProps<T>>();
 
       const isDef = fn.defined;
       const isSmall =
@@ -110,17 +145,20 @@ const tooltipRenderer = function () {
 
       // Select tooltip elements
 
-      const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
+      const tooltip = selection
+        .selectAll<Element, TooltipData<T>>(".sszvis-tooltip")
+        .data(tooltipData)
+        .join("div");
 
       tooltip
         .style("pointer-events", "none")
-        .style("opacity", props.opacity)
-        .style("padding-top", (d) => (props.orientation(d) === "top" ? TIP_SIZE + "px" : null))
-        .style("padding-right", (d) => (props.orientation(d) === "right" ? TIP_SIZE + "px" : null))
+        .style("opacity", (d) => String(props.opacity(d)))
+        .style("padding-top", (d) => (props.orientation(d) === "top" ? `${TIP_SIZE}px` : null))
+        .style("padding-right", (d) => (props.orientation(d) === "right" ? `${TIP_SIZE}px` : null))
         .style("padding-bottom", (d) =>
-          props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null
+          props.orientation(d) === "bottom" ? `${TIP_SIZE}px` : null
         )
-        .style("padding-left", (d) => (props.orientation(d) === "left" ? TIP_SIZE + "px" : null))
+        .style("padding-left", (d) => (props.orientation(d) === "left" ? `${TIP_SIZE}px` : null))
         .classed("sszvis-tooltip", true);
 
       // Enter: tooltip background
@@ -204,44 +242,47 @@ const tooltipRenderer = function () {
         .select(".sszvis-tooltip__body")
         .datum(fn.prop("datum"))
         .html((d) => {
-          const body = props.body ? fn.functor(props.body)(d) : "";
+          if (!props.body) return "";
+          const body = typeof props.body === "function" ? props.body(d) : props.body;
           return Array.isArray(body) ? formatTable(body) : body;
         });
 
       selection
-        .selectAll(".sszvis-tooltip")
+        .selectAll<Element, TooltipData<T>>(".sszvis-tooltip")
         .classed("sszvis-tooltip--small", isSmall)
         .each(function (d) {
           const tip = select(this);
           // only using dimensions.width and dimensions.height here. Not affected by scroll position
-          const dimensions = tip.node().getBoundingClientRect();
-          const orientation = Reflect.apply(props.orientation, this, arguments);
+          const node = tip.node();
+          if (!node) return;
+          const dimensions = node.getBoundingClientRect();
+          const orientation = props.orientation(d);
 
           // Position tooltip element
 
           switch (orientation) {
             case "top": {
               tip
-                .style("left", d.x - dimensions.width / 2 + "px")
-                .style("top", d.y + props.dy(d) + "px");
+                .style("left", `${d.x - dimensions.width / 2}px`)
+                .style("top", `${d.y + Number(props.dy(d))}px`);
               break;
             }
             case "bottom": {
               tip
-                .style("left", d.x - dimensions.width / 2 + "px")
-                .style("top", d.y - props.dy(d) - dimensions.height + "px");
+                .style("left", `${d.x - dimensions.width / 2}px`)
+                .style("top", `${d.y - Number(props.dy(d)) - dimensions.height}px`);
               break;
             }
             case "left": {
               tip
-                .style("left", d.x + props.dx(d) + "px")
-                .style("top", d.y - dimensions.height / 2 + "px");
+                .style("left", `${d.x + Number(props.dx(d))}px`)
+                .style("top", `${d.y - dimensions.height / 2}px`);
               break;
             }
             case "right": {
               tip
-                .style("left", d.x - props.dx(d) - dimensions.width + "px")
-                .style("top", d.y - dimensions.height / 2 + "px");
+                .style("left", `${d.x - Number(props.dx(d)) - dimensions.width}px`)
+                .style("top", `${d.y - dimensions.height / 2}px`);
               break;
             }
           }
@@ -254,8 +295,8 @@ const tooltipRenderer = function () {
             .select(".sszvis-tooltip__background")
             .attr("height", bgHeight)
             .attr("width", bgWidth)
-            .style("left", -BLUR_PADDING + "px")
-            .style("top", -BLUR_PADDING + "px")
+            .style("left", `${-BLUR_PADDING}px`)
+            .style("top", `${-BLUR_PADDING}px`)
             .select("path")
             .attr(
               "d",
@@ -273,26 +314,34 @@ const tooltipRenderer = function () {
 /**
  * formatTable
  */
-function formatTable(rows) {
+function formatTable(rows: string[][]): string {
   const tableBody = rows
-    .map((row) => "<tr>" + row.map((cell) => "<td>" + cell + "</td>").join("") + "</tr>")
+    .map((row: string[]) => `<tr>${row.map((cell: string) => `<td>${cell}</td>`).join("")}</tr>`)
     .join("");
-  return '<table class="sszvis-tooltip__body__table">' + tableBody + "</table>";
+  return `<table class="sszvis-tooltip__body__table">${tableBody}</table>`;
 }
 
-function x(d) {
+function x(d: [number, number]): number {
   return d[0];
 }
-function y(d) {
+function y(d: [number, number]): number {
   return d[1];
 }
-function side(cx, cy, x0, y0, x1, y1, showTip) {
+function side(
+  cx: number,
+  cy: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  showTip: boolean
+): (string | number)[] {
   const mx = x0 + (x1 - x0) / 2;
   const my = y0 + (y1 - y0) / 2;
 
   const corner = ["Q", cx, cy, x0, y0];
 
-  let tip = [];
+  let tip: (string | number)[] = [];
   if (showTip && y0 === y1) {
     tip =
       x0 < x1
@@ -332,7 +381,12 @@ function side(cx, cy, x0, y0, x1, y1, showTip) {
  *
  * @return {Path}               SVG path description
  */
-function tooltipBackgroundGenerator(a, b, orientation, radius) {
+function tooltipBackgroundGenerator(
+  a: [number, number],
+  b: [number, number],
+  orientation: TooltipOrientation,
+  radius: number
+): string {
   switch (orientation) {
     case "top": {
       a[1] = a[1] + TIP_SIZE;
@@ -371,9 +425,9 @@ function tooltipBackgroundGenerator(a, b, orientation, radius) {
 /**
  * Detect whether the current browser supports SVG filters
  */
-function supportsSVGFilters() {
+function supportsSVGFilters(): boolean {
   return (
     window["SVGFEColorMatrixElement"] !== undefined &&
-    SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE == 2
+    SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE === 2
   );
 }

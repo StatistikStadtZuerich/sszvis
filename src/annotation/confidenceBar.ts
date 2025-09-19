@@ -23,8 +23,8 @@
  */
 
 import { type NumberValue, range, scaleBand, select } from "d3";
-import { type Component, component } from "../d3-component.js";
-import * as fn from "../fn.js";
+import { type Component, component } from "../d3-component";
+import * as fn from "../fn";
 
 // Type definitions for confidence bar component
 type Datum<T = unknown> = T & {
@@ -68,7 +68,7 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
     .groupSpace(0.05)
     .prop("groupScale", fn.functor)
     .render(function (this: Element, data: Datum<T>[][]) {
-      const selection = select(this);
+      const selection = select<Element, Datum<T>>(this);
       const props = selection.props<ConfidenceBarProps<T>>();
 
       const inGroupScale = scaleBand()
@@ -85,11 +85,11 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
 
       const barUnits = groups
         .selectAll("g.sszvis-confidence-barunit")
-        .data((d: Datum<T>[]) => d)
+        .data((d) => d)
         .join("g")
         .classed("sszvis-confidence-barunit", true);
 
-      barUnits.each((d: Datum<T>, i: number) => {
+      barUnits.each((d, i) => {
         // necessary for the within-group scale
         d.__sszvisGroupedBarConfidenceIndex__ = i;
       });
@@ -104,24 +104,24 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
       unitsWithValue
         .append("line")
         .classed("sszvis-confidence-bar", true)
-        .attr("x1", (d: Datum<T>): number => {
+        .attr("x1", (d): number => {
           // first term is the x-position of the group, the second term is the x-position of the bar within the group
           const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
           return (
             props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2
           );
         })
-        .attr("y1", (d: Datum<T>): number => {
+        .attr("y1", (d) => {
           return Number(props.confidenceHigh(d));
         })
-        .attr("x2", (d: Datum<T>): number => {
+        .attr("x2", (d) => {
           // first term is the x-position of the group, the second term is the x-position of the bar within the group
           const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
           return (
             props.groupScale(d) + (inGroupScale(String(index)) || 0) + inGroupScale.bandwidth() / 2
           );
         })
-        .attr("y2", (d: Datum<T>): number => {
+        .attr("y2", (d) => {
           return Number(props.confidenceLow(d));
         })
         .attr("stroke", "#767676")
@@ -131,7 +131,7 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
       unitsWithValue
         .append("line")
         .classed("sszvis-confidence-bar", true)
-        .attr("x1", (d: Datum<T>): number => {
+        .attr("x1", (d) => {
           // first term is the x-position of the group, the second term is the x-position of the bar within the group
           const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
           return (
@@ -141,10 +141,10 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
             props.width / 2
           );
         })
-        .attr("y1", (d: Datum<T>): number => {
+        .attr("y1", (d) => {
           return Number(props.confidenceHigh(d));
         })
-        .attr("x2", (d: Datum<T>): number => {
+        .attr("x2", (d) => {
           // first term is the x-position of the group, the second term is the x-position of the bar within the group
           const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
           return (
@@ -154,7 +154,7 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
             props.width / 2
           );
         })
-        .attr("y2", (d: Datum<T>): number => {
+        .attr("y2", (d) => {
           return Number(props.confidenceHigh(d));
         })
         .attr("stroke", "#767676")
@@ -164,7 +164,7 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
       unitsWithValue
         .append("line")
         .classed("sszvis-confidence-bar", true)
-        .attr("x1", (d: Datum<T>): number => {
+        .attr("x1", (d) => {
           // first term is the x-position of the group, the second term is the x-position of the bar within the group
           const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
           return (
@@ -174,10 +174,10 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
             props.width / 2
           );
         })
-        .attr("y1", (d: Datum<T>): number => {
+        .attr("y1", (d) => {
           return Number(props.confidenceLow(d));
         })
-        .attr("x2", (d: Datum<T>): number => {
+        .attr("x2", (d) => {
           // first term is the x-position of the group, the second term is the x-position of the bar within the group
           const index = d.__sszvisGroupedBarConfidenceIndex__ ?? 0;
           return (
@@ -187,7 +187,7 @@ export default function <T = unknown>(): ConfidenceBarComponent<T> {
             props.width / 2
           );
         })
-        .attr("y2", (d: Datum<T>): number => {
+        .attr("y2", (d) => {
           return Number(props.confidenceLow(d));
         })
         .attr("stroke", "#767676")
