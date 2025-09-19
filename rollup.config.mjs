@@ -3,6 +3,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
 import typescript from "@rollup/plugin-typescript";
+import {dts} from "rollup-plugin-dts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync, readdirSync, statSync } from "node:fs";
@@ -128,4 +129,15 @@ export default [
       }),
     ],
   }),
+
+  // Bundle TypeScript declarations into sszvis.d.ts
+  {
+    input: path.join(__dirname, "build", "index.d.ts"),
+    output: {
+      file: path.join(__dirname, "build", "sszvis.d.ts"),
+      format: "es"
+    },
+    plugins: [dts()],
+    external: ["d3", "topojson"]
+  },
 ];

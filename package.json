@@ -45,6 +45,7 @@
     "playwright": "^1.55.0",
     "prettier": "^3.6.2",
     "rollup": "^4.50.2",
+    "rollup-plugin-dts": "^6.2.3",
     "topojson-client": "^3.1.0",
     "topojson-server": "^3.0.1",
     "topojson-simplify": "^3.0.3",
@@ -62,6 +63,18 @@
   "jsnext:main": "build/index.js",
   "unpkg": "build/sszvis.js",
   "jsdelivr": "build/sszvis.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./build/index.d.ts",
+        "default": "./build/index.js"
+      },
+      "require": {
+        "types": "./build/sszvis.d.ts",
+        "default": "./build/sszvis.js"
+      }
+    }
+  },
   "scripts": {
     "start": "npx @11ty/eleventy --serve --port 8000",
     "clean": "rm -rf build && mkdir -p build",
