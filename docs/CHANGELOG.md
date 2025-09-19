@@ -1,3 +1,12 @@
+## 3.3.0 (2025-09-19)
+
+- add `sszvis.annotationConfidenceBar` annotation component for displaying confidence intervals and error ranges
+- expand props for adding slants to `sszvis.slider` labels
+
+The `sszvis` library now partially supports TypeScript. There are a lot of files still to be converted, but most of the utility functionality is now typed as well as new components like `sszvis.annotationConfidenceBar`. More conversions will follow in future releases.
+
+If you are using TypeScript, you can now import types directly from the `sszvis` package without the need for separate type declaration files.
+
 ## 3.2.1 (2025-06-18)
 
 - fix `sszvis.voronoi` when using with centered elements
