@@ -131,7 +131,7 @@ export function component(): Component {
 
 declare module "d3" {
   interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
-    props(): ComponentProps;
+    props<A>(): A extends ComponentProps ? A : ComponentProps;
   }
 }
 

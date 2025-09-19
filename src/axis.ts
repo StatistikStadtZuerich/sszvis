@@ -54,13 +54,15 @@
  */
 
 import {
+  type Axis,
+  type AxisDomain,
   type AxisScale,
   axisBottom,
   axisLeft,
   axisRight,
   axisTop,
   type BaseType,
-  type AxisDomain as D3AxisDomain,
+  type NumberValue,
   type Selection,
   select,
 } from "d3";
@@ -78,7 +80,6 @@ const TICK_END_THRESHOLD = 12;
 const LABEL_PROXIMITY_THRESHOLD = 10;
 
 // Type definitions for axis component
-type AxisDomain = D3AxisDomain;
 type AxisOrientation = "top" | "bottom" | "left" | "right";
 type SlantDirection = "horizontal" | "vertical" | "diagonal";
 type TextAnchor = "start" | "middle" | "end";
@@ -111,7 +112,6 @@ interface AxisProps {
   titleVertical?: boolean;
   vertical?: boolean;
   yOffset?: number;
-  [key: string]: unknown; // Allow dynamic property access
 }
 
 interface BoundingBox {
@@ -127,7 +127,7 @@ interface BoundingBoxWithNode {
 }
 
 interface AxisComponent extends Component {
-  scale(scale?: AxisScale<AxisDomain>): AxisComponent;
+  scale(scale?: AxisScale<NumberValue>): AxisComponent;
   orient(orientation?: AxisOrientation): AxisComponent;
   ticks(ticks?: number | number[]): AxisComponent;
   tickValues(values?: AxisDomain[]): AxisComponent;
@@ -202,55 +202,66 @@ function axis(): AxisComponent {
       .yOffset(0)
       .render(function (this: BaseType) {
         const selection = select(this);
-        const props = selection.props() as AxisProps;
+        const props = selection.props<AxisProps>();
 
         const isBottom = !props.vertical && props.orient === "bottom";
 
         const scale = props.scale || props._scale;
-        let axisDelegate: ReturnType<typeof axisBottom<AxisDomain>>;
-
+        if (!scale) {
+          throw new Error("axis: need to specify a scale");
+        }
+        let axisDelegate: Axis<AxisDomain>;
         switch (props.orient) {
           case "bottom": {
-            axisDelegate = axisBottom(scale as AxisScale<AxisDomain>);
+            axisDelegate = axisBottom(scale);
             break;
           }
           case "top": {
-            axisDelegate = axisTop(scale as AxisScale<AxisDomain>);
+            axisDelegate = axisTop(scale);
             break;
           }
           case "left": {
-            axisDelegate = axisLeft(scale as AxisScale<AxisDomain>);
+            axisDelegate = axisLeft(scale);
             break;
           }
           case "right": {
-            axisDelegate = axisRight(scale as AxisScale<AxisDomain>);
+            axisDelegate = axisRight(scale);
             break;
           }
           default: {
-            axisDelegate = axisBottom(scale as AxisScale<AxisDomain>);
+            axisDelegate = axisBottom(scale);
             break;
           }
         }
 
-        for (const prop of [
-          "scale",
-          "ticks",
-          "tickValues",
-          "tickSizeInner",
-          "tickSizeOuter",
-          "tickPadding",
-          "tickFormat",
-          "tickSize",
-        ]) {
-          if (props[prop] !== undefined) {
-            const axisMethod = (axisDelegate as unknown as Record<string, unknown>)[prop];
-            if (typeof axisMethod !== "function") {
-              throw new Error(`axis: "${prop}" not available`);
-            }
-            (axisMethod as (value: unknown) => void)(props[prop]);
+        if (props.scale !== undefined) {
+          axisDelegate.scale(props.scale);
+        }
+        if (props.ticks !== undefined) {
+          if (Array.isArray(props.ticks) && props.ticks.length > 0) {
+            axisDelegate.ticks(...(props.ticks as [number, ...number[]]));
+          } else {
+            axisDelegate.ticks(props.ticks);
           }
         }
-
+        if (props.tickValues !== undefined) {
+          axisDelegate.tickValues(props.tickValues);
+        }
+        if (props.tickSizeInner !== undefined) {
+          axisDelegate.tickSizeInner(props.tickSizeInner);
+        }
+        if (props.tickSizeOuter !== undefined) {
+          axisDelegate.tickSizeOuter(props.tickSizeOuter);
+        }
+        if (props.tickPadding !== undefined) {
+          axisDelegate.tickPadding(props.tickPadding);
+        }
+        if (props.tickFormat !== undefined) {
+          axisDelegate.tickFormat((d) => props.tickFormat?.(d) ?? "");
+        }
+        if (props.tickSize !== undefined) {
+          axisDelegate.tickSize(props.tickSize);
+        }
         if (props._scale) {
           axisDelegate.scale(props._scale);
         }
@@ -273,8 +284,8 @@ function axis(): AxisComponent {
         // Note: Inconstiant: This is only valid so long as new .tick groups or tick label texts
         // are not being added after these selections are constructed. If that changes, these
         // selections need to be re-constructed.
-        const tickGroups = group.selectAll("g.tick");
-        const tickTexts = tickGroups.selectAll("text");
+        const tickGroups = group.selectAll<SVGGElement, AxisDomain>("g.tick");
+        const tickTexts = tickGroups.selectAll<SVGTextElement, AxisDomain>("text");
 
         // To prevent anti-aliasing on elements that need to be rendered crisply
         // we need to position them on a half-pixel grid: 0.5, 1.5, 2.5, etc.
@@ -282,15 +293,13 @@ function axis(): AxisComponent {
         // leads to weird type rendering artefacts in some browsers. That's
         // why we reach into the group and translate lines onto the half-pixel
         // grid by taking the translation of the group into account.
-        tickGroups.each(function () {
-          const element = this as Element;
-          const transform = element.getAttribute("transform");
-          if (transform) {
-            const subpixelShift = transformTranslateSubpixelShift(transform);
-            const dx = halfPixel(0) - subpixelShift[0];
-            const dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
-            select(this).select("line").attr("transform", translateString(dx, dy));
-          }
+        tickGroups.each(function (this) {
+          const subpixelShift = transformTranslateSubpixelShift(
+            this.getAttribute("transform") || ""
+          );
+          const dx = halfPixel(0) - subpixelShift[0];
+          const dy = halfPixel(isBottom ? 2 : 0) + subpixelShift[1];
+          select(this).select("line").attr("transform", translateString(dx, dy));
         });
 
         tickTexts.each(function () {
@@ -308,11 +317,11 @@ function axis(): AxisComponent {
 
         // hide ticks which are too close to one endpoint
         const rangeExtent = range(axisScale);
-        tickGroups.selectAll("line").each(function (d) {
-          const pos = axisScale(d as AxisDomain) as number,
+        tickGroups.selectAll<SVGLineElement, AxisDomain>("line").each(function (this, d) {
+          const pos = axisScale(d) ?? 0,
             d3this = select(this);
-          const min = rangeExtent[0] ?? 0;
-          const max = rangeExtent[1] ?? 0;
+          const min = rangeExtent[0];
+          const max = rangeExtent[1];
           d3this.classed(
             "hidden",
             !d3this.classed("sszvis-axis__longtick") &&
@@ -323,7 +332,6 @@ function axis(): AxisComponent {
 
         if (fn.defined(props.tickLength)) {
           const domain = axisScale.domain();
-          // Handle both numeric and string domains for extent calculation
           const domainExtent =
             domain.length > 0 ? [domain[0], domain[domain.length - 1]] : [undefined, undefined];
           const ticks = tickGroups.filter(
@@ -337,14 +345,8 @@ function axis(): AxisComponent {
 
           let longLinePadding = 2;
           if (orientation === "left" || orientation === "right") {
-            ticks.selectAll("text").each(function () {
-              const element = this as Element;
-              if (element && "getBoundingClientRect" in element) {
-                longLinePadding = Math.max(
-                  (element as HTMLElement).getBoundingClientRect().width,
-                  longLinePadding
-                );
-              }
+            ticks.selectAll<SVGTextElement, AxisDomain>("text").each(function (this) {
+              longLinePadding = Math.max(this.getBoundingClientRect().width, longLinePadding);
             });
             longLinePadding += 2; // a lil' extra on the end
           }
@@ -390,7 +392,7 @@ function axis(): AxisComponent {
           const max = alignmentBounds[1];
 
           tickTexts.style("text-anchor", (d) => {
-            const value = axisScale(d as AxisDomain) as number;
+            const value = axisScale(d) ?? 0;
             const minVal = min ?? 0;
             const maxVal = max ?? 0;
             if (absDistance(value, minVal) < TICK_END_THRESHOLD) {
@@ -417,33 +419,30 @@ function axis(): AxisComponent {
 
           tickTexts
             .classed("hidden", false)
-            .classed("active", (d) => props.highlightTick?.(d as AxisDomain) || false);
+            .classed("active", (d) => props.highlightTick?.(d) || false);
 
           // Hide axis labels that overlap with highlighted labels unless
           // the labels are slanted (in which case the bounding boxes overlap)
           if ((props.hideLabelThreshold || 0) > 0 && !props.slant) {
-            tickTexts.each(function (d) {
+            tickTexts.each(function (this, d) {
               // although getBoundingClientRect returns coordinates relative to the window, not the document,
               // this should still work, since all tick bounds are affected equally by scroll position changes.
-              const element = this as HTMLElement;
-              if (element && "getBoundingClientRect" in element) {
-                const bcr = element.getBoundingClientRect();
-                const b = {
-                  node: this,
-                  bounds: {
-                    top: bcr.top,
-                    right: bcr.right,
-                    bottom: bcr.bottom,
-                    left: bcr.left,
-                  },
-                };
-                if (props.highlightTick?.(d as AxisDomain)) {
-                  b.bounds.left -= props.hideLabelThreshold || 0;
-                  b.bounds.right += props.hideLabelThreshold || 0;
-                  activeBounds.push(b);
-                } else {
-                  passiveBounds.push(b);
-                }
+              const bcr = this.getBoundingClientRect();
+              const b = {
+                node: this,
+                bounds: {
+                  top: bcr.top,
+                  right: bcr.right,
+                  bottom: bcr.bottom,
+                  left: bcr.left,
+                },
+              };
+              if (props.highlightTick?.(d)) {
+                b.bounds.left -= props.hideLabelThreshold || 0;
+                b.bounds.right += props.hideLabelThreshold || 0;
+                activeBounds.push(b);
+              } else {
+                passiveBounds.push(b);
               }
             });
 
@@ -532,7 +531,7 @@ function axis(): AxisComponent {
                     return "end";
                   }
                   default: {
-                    return "end";
+                    return null;
                   }
                 }
               } else {
@@ -549,29 +548,17 @@ function axis(): AxisComponent {
           logger.warn("Can't apply contour to slanted labels");
         } else if (props.contour) {
           tickGroups.each(function () {
-            const g = select(this);
-            const textNode = g.select("text").node() as Element;
-            let textContour = g.select(".sszvis-axis__label-contour");
+            const g = select<SVGGElement, AxisDomain>(this);
+            const textNode = g.select<SVGTextElement>("text").node();
+            let textContour = g.select<SVGTextElement>(".sszvis-axis__label-contour");
             if (textContour.empty() && textNode && "cloneNode" in textNode) {
-              const clonedNode = textNode.cloneNode(true);
-              textContour = select(clonedNode as BaseType).classed(
-                "sszvis-axis__label-contour",
-                true
-              );
-              const parent = this as Element;
-              const contourNode = textContour.node();
-              if (
-                parent &&
-                "insertBefore" in parent &&
-                contourNode &&
-                contourNode instanceof Node
-              ) {
-                parent.insertBefore(contourNode, textNode);
-              }
+              textContour = select<SVGTextElement, AxisDomain>(
+                textNode.cloneNode(true) as SVGTextElement
+              ).classed("sszvis-axis__label-contour", true);
+              this.insertBefore(textContour.node()!, textNode);
             }
             if (textNode && "textContent" in textNode) {
-              const textElement = textNode as HTMLElement;
-              textContour.text(textElement.textContent || "");
+              textContour.text(textNode.textContent || "");
             }
           });
         }
@@ -610,7 +597,7 @@ export const axisX = () =>
 
 axisX.time = () =>
   axisX()
-    .tickFormat(formatAxisTimeFormat as (d: AxisDomain) => string | null)
+    .tickFormat(formatAxisTimeFormat as (d: AxisDomain) => string)
     .alignOuterLabels(true);
 
 axisX.ordinal = () =>
@@ -626,33 +613,23 @@ axisX.pyramid = () =>
   axisX()
     .ticks(10)
     .prop("scale", function (this: AxisComponent, s: AxisScale<AxisDomain>) {
-      const extended = (
-        s as unknown as {
-          copy(): AxisScale<AxisDomain>;
-          domain(): AxisDomain[];
-          range(): number[];
-        }
-      ).copy();
+      const extended = s.copy();
+      const scaleWithMethods = extended as AxisScale<AxisDomain> & {
+        domain(domain: AxisDomain[]): AxisDomain[];
+        range(range: number[]): number[];
+      };
 
-      const extendedDomain = (extended as unknown as { domain(): AxisDomain[] }).domain();
-      const extendedRange = (extended as unknown as { range(): number[] }).range();
-
-      // Mirror the domain and range for pyramid display
-      const mirroredDomain = [-extendedDomain[1] as number, extendedDomain[1] as number];
+      const extendedDomain = scaleWithMethods.domain();
+      const extendedRange = scaleWithMethods.range();
+      const mirroredDomain = [-extendedDomain[1], extendedDomain[1]];
       const mirroredRange = [
         extendedRange[0] - extendedRange[1],
         extendedRange[0] + extendedRange[1],
       ];
+      scaleWithMethods.domain(mirroredDomain);
+      scaleWithMethods.range(mirroredRange);
 
-      // Apply mirrored domain and range using type assertion to bypass strict typing
-      (extended as unknown as Record<string, (value: unknown) => AxisScale<AxisDomain>>).domain(
-        mirroredDomain
-      );
-      (extended as unknown as Record<string, (value: unknown) => AxisScale<AxisDomain>>).range(
-        mirroredRange
-      );
-
-      (this as unknown as AxisProps)._scale = extended;
+      this._scale = extended;
       return extended;
     })
     .tickFormat((v: AxisDomain) =>
@@ -664,8 +641,7 @@ axisX.pyramid = () =>
 export const axisY = (): AxisComponent => {
   const newAxis: AxisComponent = axis()
     .ticks(6)
-    .tickSizeInner(0)
-    .tickSizeOuter(0)
+    .tickSize(0)
     .tickPadding(0)
     .tickFormat((d: AxisDomain): string | null =>
       0 === d && !newAxis.showZeroY() ? null : formatNumber(d as number)
@@ -698,7 +674,7 @@ function boundsOverlap(boundsA: BoundingBox, boundsB: BoundingBox): boolean {
   );
 }
 
-type SlantFunction = (selection: Selection<BaseType, unknown, BaseType, unknown>) => void;
+type SlantFunction = (selection: Selection<SVGTextElement, AxisDomain, BaseType, unknown>) => void;
 
 interface SlantLabelConfig {
   horizontal: SlantFunction;
@@ -708,21 +684,21 @@ interface SlantLabelConfig {
 
 const slantLabel: Record<AxisOrientation, SlantLabelConfig> = {
   top: {
-    horizontal(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    horizontal(selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
         .attr("dy", "0.71em")
         .attr("transform", null);
     },
-    vertical(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    vertical(selection) {
       selection
         .style("text-anchor", "start")
         .attr("dx", "0em")
         .attr("dy", "0.35em") // vertically-center
         .attr("transform", "rotate(-90)");
     },
-    diagonal(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    diagonal(selection) {
       selection
         .style("text-anchor", "start")
         .attr("dx", "0.1em")
@@ -731,21 +707,21 @@ const slantLabel: Record<AxisOrientation, SlantLabelConfig> = {
     },
   },
   bottom: {
-    horizontal(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    horizontal(selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
         .attr("dy", "0.71em")
         .attr("transform", null);
     },
-    vertical(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    vertical(selection) {
       selection
         .style("text-anchor", "end")
         .attr("dx", "-1em")
         .attr("dy", "-0.75em")
         .attr("transform", "rotate(-90)");
     },
-    diagonal(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    diagonal(selection) {
       selection
         .style("text-anchor", "end")
         .attr("dx", "-0.8em")
@@ -754,21 +730,21 @@ const slantLabel: Record<AxisOrientation, SlantLabelConfig> = {
     },
   },
   left: {
-    horizontal(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    horizontal(selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
         .attr("dy", "0.71em")
         .attr("transform", null);
     },
-    vertical(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    vertical(selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "0em")
         .attr("dy", "0.35em")
         .attr("transform", "rotate(-90)");
     },
-    diagonal(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    diagonal(selection) {
       selection
         .style("text-anchor", "end")
         .attr("dx", "-0.8em")
@@ -777,21 +753,21 @@ const slantLabel: Record<AxisOrientation, SlantLabelConfig> = {
     },
   },
   right: {
-    horizontal(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    horizontal(selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "-0.5")
         .attr("dy", "0.71em")
         .attr("transform", null);
     },
-    vertical(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    vertical(selection) {
       selection
         .style("text-anchor", "middle")
         .attr("dx", "0em")
         .attr("dy", "0.35em")
         .attr("transform", "rotate(-90)");
     },
-    diagonal(selection: Selection<BaseType, unknown, BaseType, unknown>) {
+    diagonal(selection) {
       selection
         .style("text-anchor", "start")
         .attr("dx", "0.1em")

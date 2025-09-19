@@ -205,7 +205,7 @@ describe("axis", () => {
       const xAxis = axisX()
         .scale(scaleLinear().domain([0, 100]).range([0, 300]))
         .orient("bottom")
-        .tickFormat((d: number) => `${d}%`);
+        .tickFormat((d) => `${d}%`);
       const formattedLabels = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
         .selectGroup("xAxis")
         .call(xAxis)
@@ -220,7 +220,7 @@ describe("axis", () => {
       const xAxis = axisX()
         .scale(scaleLinear().domain([0, 100]).range([0, 300]))
         .orient("bottom")
-        .highlightTick((d: number) => d === 50);
+        .highlightTick((d) => d === 50);
       const activeTickTexts = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
         .selectGroup("xAxis")
         .call(xAxis)
@@ -234,7 +234,7 @@ describe("axis", () => {
       const xAxis = axisX()
         .scale(scaleLinear().domain([0, 100]).range([0, 300]))
         .orient("bottom")
-        .highlightTick((d: number) => d === 50)
+        .highlightTick((d) => d === 50)
         .hideLabelThreshold(0); // Disable label hiding
       const axisGroup = createSvgLayer("#chart-container", undefined, { key: "test-layer" })
         .selectGroup("xAxis")
