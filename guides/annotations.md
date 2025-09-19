@@ -8,8 +8,7 @@
 
 ### sszvis.annotationCircle
 
-All properties of the data circle can be specified as either a constant or a
-function of data.
+All properties of the data circle can be specified as either a constant or a function of data.
 
 #### `annotationCircle.x`
 
@@ -59,8 +58,7 @@ The caption for the data area. (default position is the center of the circle).
 
 ### sszvis.annotationRectangle
 
-All properties of the annotation rectangle can be specified as either a constant
-or a function of data.
+All properties of the annotation rectangle can be specified as either a constant or a function of data.
 
 #### `annotationRectangle.x`
 
@@ -132,13 +130,11 @@ The y-value, in data units, of the second reference line point.
 
 #### `annotationLine.xScale`
 
-The x-scale of the chart. Used to transform the given x- values into chart
-coordinates.
+The x-scale of the chart. Used to transform the given x- values into chart coordinates.
 
 #### `annotationLine.yScale`
 
-The y-scale of the chart. Used to transform the given y- values into chart
-coordinates.
+The y-scale of the chart. Used to transform the given y- values into chart coordinates.
 
 #### `annotationLine.[dx]`
 
@@ -150,8 +146,7 @@ The y-offset of the caption
 
 #### `annotationLine.[caption]`
 
-A reference line caption. (default position is centered at the midpoint of the
-line, aligned with the slope angle of the line)
+A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
 
 ### Example
 
@@ -193,13 +188,11 @@ A number or function returning a number for the x-position of the ruler line.
 
 #### `annotationRuler.y`
 
-A function for determining the y-position of the ruler dots. Should take a data
-value as an argument and return a y-position.
+A function for determining the y-position of the ruler dots. Should take a data value as an argument and return a y-position.
 
 #### `annotationRuler.[label]`
 
-A function for determining the labels of the ruler dots. Should take a data
-value as argument and return a label.
+A function for determining the labels of the ruler dots. Should take a data value as argument and return a label.
 
 #### `annotationRuler.color`
 
@@ -207,13 +200,11 @@ A string or function to specify the color of the ruler dots.
 
 #### `annotationRuler.[flip]`
 
-A boolean or function which returns a boolean that specifies whether the labels
-on the ruler dots should be flipped. (they default to the right side)
+A boolean or function which returns a boolean that specifies whether the labels on the ruler dots should be flipped. (they default to the right side)
 
 ### Chart
 
-Shows the numeric values at the current mouse position. The x-axis shows the
-current quarter (Q1–Q4). Demonstrates the usage of the `annotationRuler()`.
+Shows the numeric values at the current mouse position. The x-axis shows the current quarter (Q1–Q4). Demonstrates the usage of the `annotationRuler()`.
 
 ```project
 {
@@ -237,8 +228,7 @@ current quarter (Q1–Q4). Demonstrates the usage of the `annotationRuler()`.
 
 ### sszvis.annotationRangeRuler
 
-The annotationRangeRuler is a ruler which depicts ranges. It also shows a label
-for each range section, and a total value of all ranges.
+The annotationRangeRuler is a ruler which depicts ranges. It also shows a label for each range section, and a total value of all ranges.
 
 #### `annotationRangeRuler.x`
 
@@ -275,21 +265,13 @@ right side)
 
 #### `annotationRangeRuler.[reduceOverlap]`
 
-Determines whether overlapping labels should be avoided by moving them apart
-vertically (default).
+Determines whether overlapping labels should be avoided by moving them apart vertically (default).
 
-If set to `false`, labels are allowed to overlap. This can be be useful in
-charts with a lot of labels where moving them apart would move them outside the
-chart. In this case, it would be better to only show one label instead of all,
-though.
+If set to `false`, labels are allowed to overlap. This can be be useful in charts with a lot of labels where moving them apart would move them outside the chart. In this case, it would be better to only show one label instead of all, though.
 
 ### sszvis.annotationRangeFlag
 
-The annotationRangeFlag creates a pair of dots which identify a specific
-vertical range of data, and a tooltipAnchor between them. Used here in the
-stacked area chart, but could also be used in other chart types that have
-several data series sharing the same vertical space, for example a multi-line
-chart.
+The annotationRangeFlag creates a pair of dots which identify a specific vertical range of data, and a tooltipAnchor between them. Used here in the stacked area chart, but could also be used in other chart types that have several data series sharing the same vertical space, for example a multi-line chart.
 
 #### `annotationRangeFlag.x`
 
@@ -325,8 +307,7 @@ A value for the y-value of the upper range flag dot
 
 ## Confidence Area
 
-The area is a shaded area that represents a confidence interval. It is used to
-show the range of values within which the true value is likely to fall.
+The area is a shaded area that represents a confidence interval. It is used to show the range of values within which the true value is likely to fall.
 
 ### sszvis.annotationConfidenceArea
 
@@ -376,14 +357,11 @@ A string for the fill color of the confidence area.
 
 ## Confidence Bar
 
-Confidence bars are used to display confidence intervals or error ranges on data
-points. They consist of a vertical line connecting the confidence bounds and
-horizontal caps at the top and bottom.
+Confidence bars are used to display confidence intervals or error ranges on data points. They consist of a vertical line connecting the confidence bounds and horizontal caps at the top and bottom.
 
 ### sszvis.annotationConfidenceBar
 
-All properties of the confidence bar can be specified as either a constant or a
-function of data.
+All properties of the confidence bar can be specified as either a constant or a function of data.
 
 #### `annotationConfidenceBar.x`
 
