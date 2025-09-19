@@ -1,6 +1,6 @@
 {
   "name": "sszvis",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": "Statistik Stadt Zürich Visualization Library",
   "keywords": [
     "d3",
@@ -87,6 +87,7 @@
     "build:watch": "mkdir -p build && npm run build:topo && npm run build:ts -- --watch & npm run build:lib -- --watch & npx @11ty/eleventy --watch & cd contrib/ProjectSpecimen && NODE_OPTIONS='--openssl-legacy-provider' npm run start && cd -",
     "generate:changelogs": "npx semantic-release",
     "test": "vitest run ",
+    "test:ci": "npm run lint && npm run type-check && npm run check",
     "test:unit": "vitest run --exclude **/snapshot.test.js",
     "test:snapshot": "rm -rf test/snapshot/__results__ && npx playwright test",
     "test:watch": "vitest",
