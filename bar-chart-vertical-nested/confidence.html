@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Vertical Bar Chart with Confidence Bars</title>
+  </head>
+  <body style="margin: 0; padding: 0">
+    <link href="../sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="../sszvis.js"></script>
+
+    <div id="sszvis-chart"></div>
+
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/nested.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png",
+      };
+    </script>
+
+    <script data-catalog-project-expose="script.js">
+      (function (d3, sszvis, config) {
+        "use strict";
+
+        // Configuration
+        // -----------------------------------------------
+
+        const MAX_WIDTH = 800;
+        const queryProps = sszvis
+          .responsiveProps()
+          .prop("bottomPadding", {
+            palm: 140,
+            _: 120,
+          })
+          .prop("leftPadding", {
+            palm: 40,
+            _: 20,
+          })
+          .prop("rightPadding", {
+            _: 20,
+          });
+
+        // Helper function to parse confidence intervals in "X bis Y" format
+        function parseConfidenceInterval(confidenceStr) {
+          if (!confidenceStr || confidenceStr === "") {
+            return { lower: null, upper: null };
+          }
+          const parts = confidenceStr.split(" bis ");
+          if (parts.length === 2) {
+            return {
+              lower: sszvis.parseNumber(parts[0]),
+              upper: sszvis.parseNumber(parts[1]),
+            };
+          }
+          return { lower: null, upper: null };
+        }
+
+        const xAcc = sszvis.prop("ageGroup");
+        const yAcc = sszvis.prop("value");
+        const cAcc = sszvis.prop("response");
+        const genderAcc = sszvis.prop("gender");
+        const lowAcc = sszvis.prop("confidenceLower");
+        const highAcc = sszvis.prop("confidenceUpper");
+
+        // Application state
+        // -----------------------------------------------
+        const state = {
+          data: [],
+          filteredData: [],
+          ageGroups: [],
+          responses: [],
+          genders: [],
+          selectedYear: "2021",
+          selectedGender: "Weiblich",
+          selection: null,
+          groupedData: [],
+        };
+
+        // State transitions
+        // -----------------------------------------------
+        const actions = {
+          prepareState(data) {
+            state.data = data;
+            state.ageGroups = sszvis.set(state.data, xAcc);
+            state.responses = sszvis.set(state.data, cAcc);
+            state.genders = sszvis.set(state.data, genderAcc);
+
+            // Filter data for initial display
+            state.filteredData = state.data.filter(
+              (d) =>
+                d.year === state.selectedYear &&
+                genderAcc(d) === state.selectedGender,
+            );
+
+            // Group data by age group
+            state.groupedData = sszvis
+              .cascade()
+              .arrayBy(xAcc)
+              .apply(state.filteredData);
+
+            render();
+          },
+
+          showTooltip(_e, datum) {
+            if (state.selection !== datum) {
+              state.selection = datum;
+              render();
+            }
+          },
+
+          hideTooltip() {
+            if (state.selection !== null) {
+              state.selection = null;
+              render();
+            }
+          },
+
+          resize() {
+            render();
+          },
+        };
+
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, (d) => {
+          return {
+            ageGroup: d["Alter_F"],
+            gender: d["Geschlecht_F"],
+            response: d["Auspraegung_F"],
+            value: sszvis.parseNumber(d["Anteil (in %)"]),
+            confidenceLower: parseConfidenceInterval(
+              d["95 % Konfidenzintervall (in %)"],
+            ).lower,
+            confidenceUpper: parseConfidenceInterval(
+              d["95 % Konfidenzintervall (in %)"],
+            ).upper,
+            year: d["Jahr_F"],
+          };
+        })
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
+
+        // Viewport resize handler
+        sszvis.viewport.on("resize", actions.resize);
+
+        // Render
+        // -----------------------------------------------
+        function render() {
+          if (state.filteredData.length === 0) return;
+
+          const props = queryProps(sszvis.measureDimensions(config.id));
+          // Create proper color legend layout for consistent colors
+          const legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.ageGroups,
+              legendLabels: state.responses,
+            },
+            config.id,
+          );
+
+          // Calculate bounds
+          const yMax = d3.max(state.filteredData, yAcc);
+          const bounds = sszvis.bounds(
+            {
+              top: 30,
+              bottom: props.bottomPadding,
+              left: props.leftPadding,
+              right: props.rightPadding,
+            },
+            config.id,
+          );
+
+          const chartWidth = Math.min(MAX_WIDTH, bounds.innerWidth);
+
+          // Scales
+          const xScale = d3
+            .scaleBand()
+            .domain(state.ageGroups)
+            .range([0, chartWidth])
+            .paddingOuter(0.2)
+            .padding(0.26);
+
+          const yScale = d3
+            .scaleLinear()
+            .domain([0, yMax * 1.1]) // Add some padding for error bars
+            .range([bounds.innerHeight, 0]);
+
+          const colorScale = legendLayout.scale;
+          const colorLegend = legendLayout.legend;
+
+          // Layers
+          const chartLayer = sszvis.createSvgLayer(config.id, bounds);
+          const tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selection);
+
+          // Create grouped bars layout
+          const longestGroup = d3.max(state.groupedData, (d) => d.length);
+
+          const barLayout = sszvis
+            .groupedBars()
+            .groupScale(sszvis.compose(xScale, xAcc))
+            .groupWidth(xScale.bandwidth())
+            .groupSize(longestGroup)
+            .y(sszvis.compose(yScale, yAcc))
+            .height(sszvis.compose((d) => bounds.innerHeight - yScale(d), yAcc))
+            .fill(sszvis.compose(colorScale, cAcc))
+            .defined(sszvis.compose((d) => !Number.isNaN(d), yAcc));
+
+          // Error bars component
+          const errorBars = sszvis
+            .annotationConfidenceBar()
+            .groupScale(sszvis.compose(xScale, xAcc))
+            .groupWidth(xScale.bandwidth())
+            .groupSize(longestGroup)
+            .confidenceLow(sszvis.compose((d) => yScale(d || 0), lowAcc))
+            .confidenceHigh(sszvis.compose((d) => yScale(d || 0), highAcc))
+            .width(8); // Width of horizontal caps
+
+          // Components
+          const xAxis = sszvis
+            .axisX()
+            .scale(xScale)
+            .orient("bottom")
+            .slant("diagonal")
+            .tickFormat(props.xLabelFormat)
+            .highlightTick(
+              (d) => state.selection && xAcc(state.selection) === d,
+            );
+
+          const yAxis = sszvis
+            .axisY()
+            .scale(yScale)
+            .orient("left")
+            .title("Anteil (in %)")
+            .tickFormat((d) => "".concat(d, "%"));
+
+          const tooltip = sszvis
+            .tooltip()
+            .renderInto(tooltipLayer)
+            .orientation(sszvis.fitTooltip("bottom", bounds))
+            .header(
+              sszvis
+                .modularTextHTML()
+                .plain((d) => "".concat(xAcc(d), " - ").concat(cAcc(d))),
+            )
+            .body((d) => {
+              const v = yAcc(d);
+              const confLow = lowAcc(d);
+              const confHigh = highAcc(d);
+              const result = [];
+
+              // Main value with inline confidence interval as relative values
+              if (Number.isNaN(v)) {
+                result.push(["Wert", "–"]);
+              } else {
+                let valueText = "".concat(v.toFixed(1), "%");
+
+                // Add confidence interval as relative values if available
+                if (confLow && confHigh) {
+                  const lowerDiff = (confLow - v).toFixed(0);
+                  const upperDiff = (confHigh - v).toFixed(0);
+                  valueText += " ("
+                    .concat(lowerDiff, "/+")
+                    .concat(upperDiff, ")");
+                }
+
+                result.push(["Wert", valueText]);
+              }
+
+              return result;
+            })
+            .visible((d) => state.selection === d);
+
+          // Rendering
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, bounds.innerHeight))
+            .call(xAxis);
+
+          chartLayer.selectGroup("yAxis").call(yAxis);
+
+          // Render bars
+          const bars = chartLayer
+            .selectGroup("bars")
+            .datum(state.groupedData)
+            .call(barLayout);
+
+          // Add error bars on top of the bars
+          chartLayer
+            .selectGroup("errorBars")
+            .datum(state.groupedData)
+            .call(errorBars);
+
+          bars
+            .selectAll(".sszvis-barunit rect")
+            .on("mouseover", actions.showTooltip)
+            .on("mouseout", actions.hideTooltip)
+            .call(tooltip);
+
+          // Add legend
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight + 60),
+            )
+            .call(colorLegend);
+        }
+      })(d3, sszvis, EXTERNAL_CONFIG);
+    </script>
+  </body>
+</html>

@@ -2,6 +2,7 @@ import './d3-selectdiv.js';
 import './d3-selectgroup.js';
 export { default as annotationCircle } from './annotation/circle.js';
 export { default as annotationConfidenceArea } from './annotation/confidenceArea.js';
+export { default as annotationConfidenceBar } from './annotation/confidenceBar.js';
 export { default as fitTooltip } from './annotation/fitTooltip.js';
 export { default as annotationLine } from './annotation/line.js';
 export { default as annotationRangeFlag } from './annotation/rangeFlag.js';

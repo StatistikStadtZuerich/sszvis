@@ -1,3 +1,7 @@
+## 3.3.0 (2025-09-19)
+
+- add `sszvis.annotationConfidenceBar` annotation component for displaying confidence intervals and error ranges
+
 ## 3.2.1 (2025-06-18)
 
 - fix `sszvis.voronoi` when using with centered elements

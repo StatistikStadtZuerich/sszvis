@@ -1,5 +1,6 @@
 export { default as annotationCircle } from './circle.js';
 export { default as annotationConfidenceArea } from './confidenceArea.js';
+export { default as annotationConfidenceBar } from './confidenceBar.js';
 export { default as fitTooltip } from './fitTooltip.js';
 export { default as annotationLine } from './line.js';
 export { default as annotationRangeFlag } from './rangeFlag.js';
