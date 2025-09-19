@@ -35,22 +35,17 @@ import translateString from '../svgUtils/translateString.js';
  *
  * @return {sszvis.component}
  */
-
 const annotationRuler = () => component().prop("top").prop("bottom").prop("x", functor).prop("y", functor).prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).prop("labelId", functor).prop("reduceOverlap").reduceOverlap(true).render(function (data) {
   const selection = select(this);
   const props = selection.props();
-  const labelId = props.labelId || function (d) {
-    return props.x(d) + "_" + props.y(d);
-  };
-  const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, labelId).join("line").classed("sszvis-ruler__rule", true);
-  ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", props.y).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
-  const dot = selection.selectAll(".sszvis-ruler__dot").data(data, labelId).join("circle").classed("sszvis-ruler__dot", true);
-  dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", props.color);
-  selection.selectAll(".sszvis-ruler__label-outline").data(data, labelId).join("text").classed("sszvis-ruler__label-outline", true);
-  const label = selection.selectAll(".sszvis-ruler__label").data(data, labelId).join("text").classed("sszvis-ruler__label", true);
-
+  const labelId = props.labelId || (d => "".concat(props.x(d), "_").concat(props.y(d)));
+  const ruler = selection.selectAll(".sszvis-ruler__rule").data(data, d => labelId(d)).join("line").classed("sszvis-ruler__rule", true);
+  ruler.attr("x1", compose(halfPixel, props.x)).attr("y1", d => Number(props.y(d))).attr("x2", compose(halfPixel, props.x)).attr("y2", props.bottom);
+  const dot = selection.selectAll(".sszvis-ruler__dot").data(data, d => labelId(d)).join("circle").classed("sszvis-ruler__dot", true);
+  dot.attr("cx", compose(halfPixel, props.x)).attr("cy", compose(halfPixel, props.y)).attr("r", 3.5).attr("fill", props.color || "black");
+  selection.selectAll(".sszvis-ruler__label-outline").data(data, d => labelId(d)).join("text").classed("sszvis-ruler__label-outline", true);
+  const label = selection.selectAll(".sszvis-ruler__label").data(data, d => labelId(d)).join("text").classed("sszvis-ruler__label", true);
   // Update both label and labelOutline selections
-
   const crispX = compose(halfPixel, props.x);
   const crispY = compose(halfPixel, props.y);
   const textSelection = selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
@@ -59,17 +54,15 @@ const annotationRuler = () => component().prop("top").prop("bottom").prop("x", f
     const dx = props.flip(d) ? -10 : 10;
     const dy = y < props.top ? 2 * y : y > props.bottom ? 0 : 5;
     return translateString(x + dx, y + dy);
-  }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(props.label);
+  }).style("text-anchor", d => props.flip(d) ? "end" : "start").html(d => props.label(d));
   if (props.reduceOverlap) {
     const THRESHOLD = 2;
     let ITERATIONS = 10;
     const labelBounds = [];
     // Optimization for the lookup later
     const labelBoundsIndex = {};
-
     // Reset vertical shift (set by previous renders)
     textSelection.attr("y", "");
-
     // Create bounds objects
     label.each(function (d) {
       const bounds = this.getBoundingClientRect();
@@ -81,11 +74,9 @@ const annotationRuler = () => component().prop("top").prop("bottom").prop("x", f
       labelBounds.push(item);
       labelBoundsIndex[labelId(d)] = item;
     });
-
     // Sort array in place by vertical position
     // (only supports labels of same height)
     labelBounds.sort((a, b) => ascending(a.top, b.top));
-
     // Using postfix decrement means the expression evaluates to the value of the variable
     // before the decrement takes place. In the case of 10 iterations, this means that the
     // variable gets to 0 after the truthiness of the 10th iteration is tested, and the
@@ -109,7 +100,6 @@ const annotationRuler = () => component().prop("top").prop("bottom").prop("x", f
         }
       }
     }
-
     // Shift vertically to remove overlap
     textSelection.attr("y", d => {
       const textLabel = labelBoundsIndex[labelId(d)];
@@ -120,12 +110,10 @@ const annotationRuler = () => component().prop("top").prop("bottom").prop("x", f
 const rulerLabelVerticalSeparate = cAcc => g => {
   const THRESHOLD = 2;
   const labelBounds = [];
-
   // Reset vertical shift
   g.selectAll("text").each(function () {
     select(this).attr("y", "");
   });
-
   // Calculate bounds
   g.selectAll(".sszvis-ruler__label").each(function (d) {
     const bounds = this.getBoundingClientRect();
@@ -136,10 +124,8 @@ const rulerLabelVerticalSeparate = cAcc => g => {
       dy: 0
     });
   });
-
   // Sort by vertical position (only supports labels of same height)
   labelBounds.sort((a, b) => ascending(a.top, b.top));
-
   // Calculate overlap and correct position
   for (let i = 0; i < 10; i++) {
     for (let j = 0; j < labelBounds.length; j++) {
@@ -159,7 +145,6 @@ const rulerLabelVerticalSeparate = cAcc => g => {
       }
     }
   }
-
   // Shift vertically to remove overlap
   g.selectAll("text").each(function (d) {
     const label = find(l => l.category === cAcc(d), labelBounds);

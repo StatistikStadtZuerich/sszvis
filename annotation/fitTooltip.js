@@ -7,16 +7,16 @@
  * or right edge of the bounds, it is oriented away from the edge. Otherwise the default
  * is used.
  *
+ * @template T The type of the data objects used in the tooltip
  * @param {String} defaultValue         The default value for the tooltip orientation
  * @param {Object} bounds               The bounds object within which the tooltip should stay.
  *
  * @returns {Function}                  A function for calculating the orientation of the tooltips.
  */
-
 function fitTooltip (defaultVal, bounds) {
   const lo = Math.min(bounds.innerWidth * 1 / 4, 100);
   const hi = Math.max(bounds.innerWidth * 3 / 4, bounds.innerWidth - 100);
-  return function (d) {
+  return d => {
     const x = d.x;
     return x > hi ? "right" : x < lo ? "left" : defaultVal;
   };

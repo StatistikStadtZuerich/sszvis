@@ -7,10 +7,21 @@
  * or right edge of the bounds, it is oriented away from the edge. Otherwise the default
  * is used.
  *
+ * @template T The type of the data objects used in the tooltip
  * @param {String} defaultValue         The default value for the tooltip orientation
  * @param {Object} bounds               The bounds object within which the tooltip should stay.
  *
  * @returns {Function}                  A function for calculating the orientation of the tooltips.
  */
-export default function _default(defaultVal: any, bounds: Object): Function;
+type TooltipOrientation = "top" | "bottom" | "left" | "right";
+interface TooltipData<T = unknown> {
+    datum: T;
+    x: number;
+    y: number;
+}
+interface Bounds {
+    innerWidth: number;
+}
+export default function <T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData<T>) => TooltipOrientation;
+export {};
 //# sourceMappingURL=fitTooltip.d.ts.map

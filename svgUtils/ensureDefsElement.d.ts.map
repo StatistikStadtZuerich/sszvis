@@ -1,1 +1,1 @@
-{"version":3,"file":"ensureDefsElement.d.ts","sourceRoot":"","sources":["../../src/svgUtils/ensureDefsElement.js"],"names":[],"mappings":"AAAA;;;;;;;;;;;;GAYG;AAEH,sFAJW,MAAM,aACN,MAAM,OAShB"}
+{"version":3,"file":"ensureDefsElement.d.ts","sourceRoot":"","sources":["../../src/svgUtils/ensureDefsElement.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;GAYG;AAEH,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,UAAU,CAAC;AAE7C,MAAM,CAAC,OAAO,UAAU,iBAAiB,CACvC,SAAS,EAAE,YAAY,EACvB,IAAI,EAAE,MAAM,EACZ,SAAS,EAAE,MAAM,GAChB,YAAY,CAMd"}

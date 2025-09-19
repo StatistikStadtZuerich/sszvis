@@ -22,7 +22,7 @@
  * @returns {sszvis.component} An confidence bar annotation component
  */
 import { type NumberValue } from "d3";
-import { type Component } from "../d3-component.js";
+import { type Component } from "../d3-component";
 type Datum<T = unknown> = T & {
     __sszvisGroupedBarConfidenceIndex__?: number;
 };

@@ -14,6 +14,7 @@ import { functor } from '../fn.js';
  *
  * @module sszvis/annotation/line
  *
+ * @template T The type of the data objects used in the line annotations
  * @param {any} x1             The x-value, in data units, of the first reference line point.
  * @param {any} x2             The x-value, in data units, of the second reference line point.
  * @param {any} y1             The y-value, in data units, of the first reference line point.
@@ -25,20 +26,14 @@ import { functor } from '../fn.js';
  * @param {string} [caption]      A reference line caption. (default position is centered at the midpoint of the line, aligned with the slope angle of the line)
  * @returns {sszvis.component} a linear data area component (reference line)
  */
-
-
-// reference line specified in the form y = mx + b
-// user supplies m and b
-// default line is y = x
-
 function line () {
   return component().prop("x1").prop("x2").prop("y1").prop("y2").prop("xScale").prop("yScale").prop("dx", functor).dx(0).prop("dy", functor).dy(0).prop("caption", functor).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-    const x1 = props.xScale(props.x1);
-    const y1 = props.yScale(props.y1);
-    const x2 = props.xScale(props.x2);
-    const y2 = props.yScale(props.y2);
+    const x1 = props.xScale(props.x1) || 0;
+    const y1 = props.yScale(props.y1) || 0;
+    const x2 = props.xScale(props.x2) || 0;
+    const y2 = props.yScale(props.y2) || 0;
     const line = selection.selectAll(".sszvis-referenceline").data(data).join("line").classed("sszvis-referenceline", true);
     line.attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2);
     if (props.caption) {
@@ -47,8 +42,8 @@ function line () {
         const vx = x2 - x1;
         const vy = y2 - y1;
         const angle = Math.atan2(vy, vx) * 180 / Math.PI;
-        return "translate(" + (x1 + x2) / 2 + "," + (y1 + y2) / 2 + ") rotate(" + angle + ")";
-      }).attr("dx", props.dx).attr("dy", props.dy).text(props.caption);
+        return "translate(".concat((x1 + x2) / 2, ",").concat((y1 + y2) / 2, ") rotate(").concat(angle, ")");
+      }).attr("dx", props.dx ? Number(props.dx(data[0])) : null).attr("dy", props.dy ? Number(props.dy(data[0])) : null).text(props.caption ? props.caption(data[0]) : null);
     }
   });
 }

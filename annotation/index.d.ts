@@ -1,12 +1,12 @@
-export { default as annotationCircle } from "./circle.js";
-export { default as annotationConfidenceArea } from "./confidenceArea.js";
-export { default as annotationConfidenceBar } from "./confidenceBar.js";
-export { default as fitTooltip } from "./fitTooltip.js";
-export { default as annotationLine } from "./line.js";
-export { default as annotationRangeFlag } from "./rangeFlag.js";
-export { default as annotationRangeRuler } from "./rangeRuler.js";
-export { default as annotationRectangle } from "./rectangle.js";
-export { default as tooltip } from "./tooltip.js";
-export { default as tooltipAnchor } from "./tooltipAnchor.js";
-export { annotationRuler, rulerLabelVerticalSeparate } from "./ruler.js";
+export { default as annotationCircle } from "./circle";
+export { default as annotationConfidenceArea } from "./confidenceArea";
+export { default as annotationConfidenceBar } from "./confidenceBar";
+export { default as fitTooltip } from "./fitTooltip";
+export { default as annotationLine } from "./line";
+export { default as annotationRangeFlag } from "./rangeFlag";
+export { default as annotationRangeRuler } from "./rangeRuler";
+export { default as annotationRectangle } from "./rectangle";
+export { annotationRuler, rulerLabelVerticalSeparate } from "./ruler";
+export { default as tooltip } from "./tooltip";
+export { default as tooltipAnchor } from "./tooltipAnchor";
 //# sourceMappingURL=index.d.ts.map

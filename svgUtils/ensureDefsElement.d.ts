@@ -11,5 +11,6 @@
  * @param {string}       type       Element to create
  * @param {string}       elementId  The ID to assign to the created element
  */
-export default function _default(selection: import("d3-selection").SelectionFn, type: string, elementId: string): any;
+import type { AnySelection } from "../types";
+export default function ensureDefsElement(selection: AnySelection, type: string, elementId: string): AnySelection;
 //# sourceMappingURL=ensureDefsElement.d.ts.map

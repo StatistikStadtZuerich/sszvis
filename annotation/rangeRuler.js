@@ -26,7 +26,6 @@ import { halfPixel } from '../svgUtils/crisp.js';
  *
  * @return {sszvis.component}
  */
-
 function rangeRuler () {
   return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("top").prop("bottom").prop("label").prop("removeStroke").label(functor("")).prop("total").prop("flip", functor).flip(false).render(function (data) {
     const selection = select(this);
@@ -34,8 +33,8 @@ function rangeRuler () {
     const crispX = compose(halfPixel, props.x);
     const crispY0 = compose(halfPixel, props.y0);
     const crispY1 = compose(halfPixel, props.y1);
-    const middleY = function (d) {
-      return halfPixel((props.y0(d) + props.y1(d)) / 2);
+    const middleY = d => {
+      return halfPixel((Number(props.y0(d)) + Number(props.y1(d))) / 2);
     };
     const dotRadius = 1.5;
     const line = selection.selectAll(".sszvis-rangeRuler__rule").data([0]).join("line").classed("sszvis-rangeRuler__rule", true);
@@ -52,7 +51,6 @@ function rangeRuler () {
       return crispX(d) + offset;
     }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
     .style("text-anchor", d => props.flip(d) ? "end" : "start").text(compose(formatNumber, props.label));
-
     //make the contour behind the the label update with the label
     marks.selectAll(".sszvis-rangeRuler__label-contour").data(d => [d]).attr("x", d => {
       const offset = props.flip(d) ? -10 : 10;
@@ -64,16 +62,27 @@ function rangeRuler () {
       const textNode = g.select("text").node();
       let textContour = g.select(".sszvis-rangeRuler__label-contour");
       if (textContour.empty()) {
-        textContour = select(textNode.cloneNode()).classed("sszvis-rangeRuler__label-contour", true).classed("sszvis-rangeRuler__label", false);
-        this.insertBefore(textContour.node(), textNode);
+        if (textNode) {
+          const clonedNode = textNode.cloneNode(true);
+          textContour = select(clonedNode);
+          textContour.classed("sszvis-rangeRuler__label-contour", true).classed("sszvis-rangeRuler__label", false);
+          const contourNode = textContour.node();
+          if (contourNode && this instanceof Element) {
+            this.insertBefore(contourNode, textNode);
+          }
+        }
       } else {
         textContour.attr("x", d => {
           const offset = props.flip(d) ? -10 : 10;
           return crispX(d) + offset;
-        }).attr("y", middleY).attr("dy", "0.35em") // vertically-center
-        .style("text-anchor", d => props.flip(d) ? "end" : "start");
+        }).attr("y", d => middleY(d)).attr("dy", "0.35em") // vertically-center
+        .style("text-anchor", d => {
+          return props.flip(d) ? "end" : "start";
+        });
       }
-      textContour.text(textNode.textContent);
+      if (textNode) {
+        textContour.text(textNode.textContent || "");
+      }
     });
     if (!props.removeStroke) {
       marks.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
@@ -82,19 +91,32 @@ function rangeRuler () {
     total.attr("x", d => {
       const offset = props.flip(d) ? -10 : 10;
       return crispX(d) + offset;
-    }).attr("y", props.top - 10).style("text-anchor", d => props.flip(d) ? "end" : "start").text("Total " + formatNumber(props.total));
+    }).attr("y", props.top - 10).style("text-anchor", d => {
+      return props.flip(d) ? "end" : "start";
+    }).text("Total ".concat(formatNumber(props.total)));
     const totalNode = total.node();
     let totalContour = selection.select(".sszvis-rangeRuler__total-contour");
     if (totalContour.empty()) {
-      totalContour = select(totalNode.cloneNode()).classed("sszvis-rangeRuler__total-contour", true).classed("sszvis-rangeRuler__total", false);
-      this.insertBefore(totalContour.node(), totalNode);
+      if (totalNode) {
+        const clonedTotalNode = totalNode.cloneNode(true);
+        totalContour = select(clonedTotalNode);
+        totalContour.classed("sszvis-rangeRuler__total-contour", true).classed("sszvis-rangeRuler__total", false);
+        const contourNode = totalContour.node();
+        if (contourNode && this instanceof Element) {
+          this.insertBefore(contourNode, totalNode);
+        }
+      }
     } else {
       totalContour.attr("x", d => {
         const offset = props.flip(d) ? -10 : 10;
         return crispX(d) + offset;
-      }).attr("y", props.top - 10).style("text-anchor", d => props.flip(d) ? "end" : "start");
+      }).attr("y", props.top - 10).style("text-anchor", d => {
+        return props.flip(d) ? "end" : "start";
+      });
     }
-    totalContour.text(totalNode.textContent);
+    if (totalNode) {
+      totalContour.text(totalNode.textContent || "");
+    }
     if (!props.removeStroke) {
       total.attr("stroke", "white").attr("stroke-width", 0.5).attr("stroke-opacity", 0.75);
     }

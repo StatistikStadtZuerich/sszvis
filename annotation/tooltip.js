@@ -13,6 +13,7 @@ import { functor, defined, prop } from '../fn.js';
  *
  * @module sszvis/annotation/tooltip
  *
+ * @template T The type of the data objects used in the tooltip
  * @property {seletion} renderInto      Provide a selection container into which to render the tooltip.
  *                                      Unlike most other components, the tooltip isn't rendered directly into the selection
  *                                      on which it is called. Instead, it's rendered into whichever selection is
@@ -40,15 +41,12 @@ import { functor, defined, prop } from '../fn.js';
  * @return {sszvis.component}
  *
  */
-
-
 /* Configuration
 ----------------------------------------------- */
 const SMALL_CORNER_RADIUS = 3;
 const LARGE_CORNER_RADIUS = 4;
 const TIP_SIZE = 6;
 const BLUR_PADDING = 5;
-
 /* Exported module
 ----------------------------------------------- */
 function tooltip () {
@@ -71,25 +69,20 @@ function tooltip () {
     props.renderInto.datum(tooltipData).call(renderer);
   });
 }
-
 /**
  * Tooltip renderer
  * @private
  */
-const tooltipRenderer = function () {
+const tooltipRenderer = () => {
   return component().prop("header").prop("body").prop("orientation", functor).orientation("bottom").prop("dx", functor).dx(1).prop("dy", functor).dy(1).prop("opacity", functor).opacity(1).renderSelection(selection => {
     const tooltipData = selection.datum();
     const props = selection.props();
     const isDef = defined;
     const isSmall = isDef(props.header) && !isDef(props.body) || !isDef(props.header) && isDef(props.body);
-
     // Select tooltip elements
-
     const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
-    tooltip.style("pointer-events", "none").style("opacity", props.opacity).style("padding-top", d => props.orientation(d) === "top" ? TIP_SIZE + "px" : null).style("padding-right", d => props.orientation(d) === "right" ? TIP_SIZE + "px" : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? TIP_SIZE + "px" : null).style("padding-left", d => props.orientation(d) === "left" ? TIP_SIZE + "px" : null).classed("sszvis-tooltip", true);
-
+    tooltip.style("pointer-events", "none").style("opacity", d => String(props.opacity(d))).style("padding-top", d => props.orientation(d) === "top" ? "".concat(TIP_SIZE, "px") : null).style("padding-right", d => props.orientation(d) === "right" ? "".concat(TIP_SIZE, "px") : null).style("padding-bottom", d => props.orientation(d) === "bottom" ? "".concat(TIP_SIZE, "px") : null).style("padding-left", d => props.orientation(d) === "left" ? "".concat(TIP_SIZE, "px") : null).classed("sszvis-tooltip", true);
     // Enter: tooltip background
-
     const enterBackground = tooltip.selectAll(".sszvis-tooltip__background").data([0]).join("svg").attr("class", "sszvis-tooltip__background").attr("height", 0).attr("width", 0);
     const enterBackgroundPath = enterBackground.selectAll("path").data([0]).join("path");
     if (supportsSVGFilters()) {
@@ -104,66 +97,60 @@ const tooltipRenderer = function () {
     } else {
       enterBackground.classed("sszvis-tooltip__background--fallback", true);
     }
-
     // Enter: tooltip content
-
     const enterContent = tooltip.selectAll(".sszvis-tooltip__content").data([0]).join("div").classed("sszvis-tooltip__content", true);
     enterContent.selectAll(".sszvis-tooltip__header").data([0]).join("div").classed("sszvis-tooltip__header", true);
     enterContent.selectAll(".sszvis-tooltip__body").data([0]).join("div").classed("sszvis-tooltip__body", true);
-
     // Update: content
-
     tooltip.select(".sszvis-tooltip__header").datum(prop("datum")).html(props.header || functor(""));
     tooltip.select(".sszvis-tooltip__body").datum(prop("datum")).html(d => {
-      const body = props.body ? functor(props.body)(d) : "";
+      if (!props.body) return "";
+      const body = typeof props.body === "function" ? props.body(d) : props.body;
       return Array.isArray(body) ? formatTable(body) : body;
     });
     selection.selectAll(".sszvis-tooltip").classed("sszvis-tooltip--small", isSmall).each(function (d) {
       const tip = select(this);
       // only using dimensions.width and dimensions.height here. Not affected by scroll position
-      const dimensions = tip.node().getBoundingClientRect();
-      const orientation = Reflect.apply(props.orientation, this, arguments);
-
+      const node = tip.node();
+      if (!node) return;
+      const dimensions = node.getBoundingClientRect();
+      const orientation = props.orientation(d);
       // Position tooltip element
-
       switch (orientation) {
         case "top":
           {
-            tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y + props.dy(d) + "px");
+            tip.style("left", "".concat(d.x - dimensions.width / 2, "px")).style("top", "".concat(d.y + Number(props.dy(d)), "px"));
             break;
           }
         case "bottom":
           {
-            tip.style("left", d.x - dimensions.width / 2 + "px").style("top", d.y - props.dy(d) - dimensions.height + "px");
+            tip.style("left", "".concat(d.x - dimensions.width / 2, "px")).style("top", "".concat(d.y - Number(props.dy(d)) - dimensions.height, "px"));
             break;
           }
         case "left":
           {
-            tip.style("left", d.x + props.dx(d) + "px").style("top", d.y - dimensions.height / 2 + "px");
+            tip.style("left", "".concat(d.x + Number(props.dx(d)), "px")).style("top", "".concat(d.y - dimensions.height / 2, "px"));
             break;
           }
         case "right":
           {
-            tip.style("left", d.x - props.dx(d) - dimensions.width + "px").style("top", d.y - dimensions.height / 2 + "px");
+            tip.style("left", "".concat(d.x - Number(props.dx(d)) - dimensions.width, "px")).style("top", "".concat(d.y - dimensions.height / 2, "px"));
             break;
           }
       }
-
       // Position background element
-
       const bgHeight = dimensions.height + 2 * BLUR_PADDING;
       const bgWidth = dimensions.width + 2 * BLUR_PADDING;
-      tip.select(".sszvis-tooltip__background").attr("height", bgHeight).attr("width", bgWidth).style("left", -BLUR_PADDING + "px").style("top", -BLUR_PADDING + "px").select("path").attr("d", tooltipBackgroundGenerator([BLUR_PADDING, BLUR_PADDING], [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING], orientation, isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS));
+      tip.select(".sszvis-tooltip__background").attr("height", bgHeight).attr("width", bgWidth).style("left", "".concat(-BLUR_PADDING, "px")).style("top", "".concat(-BLUR_PADDING, "px")).select("path").attr("d", tooltipBackgroundGenerator([BLUR_PADDING, BLUR_PADDING], [bgWidth - BLUR_PADDING, bgHeight - BLUR_PADDING], orientation, isSmall ? SMALL_CORNER_RADIUS : LARGE_CORNER_RADIUS));
     });
   });
 };
-
 /**
  * formatTable
  */
 function formatTable(rows) {
-  const tableBody = rows.map(row => "<tr>" + row.map(cell => "<td>" + cell + "</td>").join("") + "</tr>").join("");
-  return '<table class="sszvis-tooltip__body__table">' + tableBody + "</table>";
+  const tableBody = rows.map(row => "<tr>".concat(row.map(cell => "<td>".concat(cell, "</td>")).join(""), "</tr>")).join("");
+  return "<table class=\"sszvis-tooltip__body__table\">".concat(tableBody, "</table>");
 }
 function x(d) {
   return d[0];
@@ -192,7 +179,6 @@ function side(cx, cy, x0, y0, x1, y1, showTip) {
   const end = ["L", x1, y1];
   return [...corner, ...tip, ...end];
 }
-
 /**
  * Tooltip background generator
  *
@@ -246,12 +232,11 @@ function tooltipBackgroundGenerator(a, b, orientation, radius) {
   // Left side
   side(x(a), y(b), x(a), y(b) - radius, x(a), y(a) + radius, orientation === "left")].map(d => d.join(" ")).join(" ");
 }
-
 /**
  * Detect whether the current browser supports SVG filters
  */
 function supportsSVGFilters() {
-  return window["SVGFEColorMatrixElement"] !== undefined && SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE == 2;
+  return window["SVGFEColorMatrixElement"] !== undefined && SVGFEColorMatrixElement.SVG_FECOLORMATRIX_TYPE_SATURATE === 2;
 }
 
 export { tooltip as default };

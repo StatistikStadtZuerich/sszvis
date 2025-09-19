@@ -1,8 +1,8 @@
 import { select } from 'd3';
-import tooltipAnchor from './tooltipAnchor.js';
 import { component } from '../d3-component.js';
 import { functor, compose } from '../fn.js';
 import { halfPixel } from '../svgUtils/crisp.js';
+import tooltipAnchor from './tooltipAnchor.js';
 
 /**
  * Range Flag annotation
@@ -21,7 +21,6 @@ import { halfPixel } from '../svgUtils/crisp.js';
  *
  * @returns {sszvis.component}
  */
-
 function rangeFlag () {
   return component().prop("x", functor).prop("y0", functor).prop("y1", functor).render(function (data) {
     const selection = select(this);
@@ -31,12 +30,12 @@ function rangeFlag () {
     const crispY1 = compose(halfPixel, props.y1);
     selection.selectAll(".sszvis-rangeFlag__mark.bottom").data(data).call(makeFlagDot("bottom", crispX, crispY0));
     selection.selectAll(".sszvis-rangeFlag__mark.top").data(data).call(makeFlagDot("top", crispX, crispY1));
-    const ta = tooltipAnchor().position(d => [crispX(d), halfPixel((props.y0(d) + props.y1(d)) / 2)]);
+    const ta = tooltipAnchor().position(d => [crispX(d), halfPixel((Number(props.y0(d)) + Number(props.y1(d))) / 2)]);
     selection.call(ta);
   });
 }
 function makeFlagDot(classed, cx, cy) {
-  return function (dot) {
+  return dot => {
     dot.join("circle").classed("sszvis-rangeFlag__mark", true).classed(classed, true).attr("r", 3.5).attr("cx", cx).attr("cy", cy);
   };
 }

@@ -1,6 +1,6 @@
 import { select, area } from 'd3';
 import { component } from '../d3-component.js';
-import { identity, compose } from '../fn.js';
+import { functor, identity } from '../fn.js';
 import { dataAreaPattern } from '../patterns.js';
 import ensureDefsElement from '../svgUtils/ensureDefsElement.js';
 import { defaultTransition } from '../transition.js';
@@ -28,23 +28,29 @@ import { defaultTransition } from '../transition.js';
  *
  * @returns {sszvis.component} a confidence area component
  */
-
 function confidenceArea () {
-  return component().prop("x").prop("y0").prop("y1").prop("stroke").prop("strokeWidth").prop("fill").prop("key").key((_, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
+  return component().prop("x", functor).prop("y0", functor).prop("y1", functor).prop("stroke").prop("strokeWidth").prop("fill").prop("key").key((_, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-    ensureDefsElement(selection, "pattern", "data-area-pattern").call(dataAreaPattern);
-
+    const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
+    dataAreaPattern(patternSelection);
     // Layouts
-    const area$1 = area().x(props.x).y0(props.y0).y1(props.y1);
-
+    const area$1 = area().x(d => Number(props.x(d))).y0(d => Number(props.y0(d))).y1(d => Number(props.y1(d)));
     // Rendering
-
-    let path = selection.selectAll(".sszvis-area").data(data, props.key).join("path").classed("sszvis-area", true).style("stroke", props.stroke).attr("fill", "url(#data-area-pattern)").order();
-    if (props.transition) {
-      path = path.transition().call(defaultTransition);
+    const path = selection.selectAll(".sszvis-area").data(data).join("path").classed("sszvis-area", true);
+    if (props.stroke) {
+      path.style("stroke", props.stroke);
     }
-    path.attr("d", compose(area$1, props.valuesAccessor)).style("stroke", props.stroke).style("stroke-width", props.strokeWidth).attr("fill", "url(#data-area-pattern)");
+    path.attr("fill", "url(#data-area-pattern)").order();
+    const finalPath = props.transition ? path.transition().call(defaultTransition) : path;
+    finalPath.attr("d", d => area$1(props.valuesAccessor(d)));
+    if (props.stroke) {
+      finalPath.style("stroke", props.stroke);
+    }
+    if (props.strokeWidth) {
+      finalPath.style("stroke-width", props.strokeWidth);
+    }
+    finalPath.attr("fill", "url(#data-area-pattern)");
   });
 }
 

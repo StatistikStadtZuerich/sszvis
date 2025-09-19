@@ -15,6 +15,7 @@ import translateString from '../svgUtils/translateString.js';
  * Tooltips can be bound to by selecting for the tooltip data attribute.
  *
  * @module sszvis/annotation/tooltipAnchor
+ * @template T The type of the data objects used with the tooltip anchor
  *
  * @example
  * var tooltip = sszvis.tooltip();
@@ -44,8 +45,6 @@ import translateString from '../svgUtils/translateString.js';
  *
  * @return {sszvis.component}
  */
-
-
 /* Helper functions
   ----------------------------------------------- */
 function vectorToTranslateString(vec) {
@@ -56,11 +55,8 @@ function tooltipAnchor () {
     const selection = select(this);
     const props = selection.props();
     const anchor = selection.selectAll("[data-tooltip-anchor]").data(data).join("rect").attr("height", 1).attr("width", 1).attr("fill", "none").attr("stroke", "none").attr("visibility", "none").attr("data-tooltip-anchor", "");
-
     // Update
-
     anchor.attr("transform", compose(vectorToTranslateString, props.position));
-
     // Visible anchor if debug is true
     if (props.debug) {
       const referencePoint = selection.selectAll("[data-tooltip-anchor-debug]").data(data).join("circle").attr("data-tooltip-anchor-debug", "");

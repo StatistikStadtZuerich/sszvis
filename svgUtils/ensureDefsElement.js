@@ -11,14 +11,11 @@
  * @param {string}       type       Element to create
  * @param {string}       elementId  The ID to assign to the created element
  */
-
-function ensureDefsElement (selection, type, elementId) {
-  return ensureDefsSelection(selection).selectAll(type + "#" + elementId).data([0]).join(type).attr("id", elementId);
+function ensureDefsElement(selection, type, elementId) {
+  return ensureDefsSelection(selection).selectAll("".concat(type, "#").concat(elementId)).data([0]).join(type).attr("id", elementId);
 }
-
 /* Helper functions
 ----------------------------------------------- */
-
 /**
  * This method ensures that the provided selection contains a 'defs' object,
  * which is required for rendering patterns. SVG elements rendered into a defs
