@@ -14,7 +14,7 @@ export type SVGElementSelection<T extends SVGElement> = Selection<T, unknown, nu
 /**
  * Generic selection type with default parameters
  */
-export type AnySelection = Selection<any, any, any, any>;
+export type AnySelection<T = any> = Selection<any, T, any, any>;
 
 /**
  * Type for elements that can be selected - CSS selector string or d3 selection

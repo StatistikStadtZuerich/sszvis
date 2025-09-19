@@ -57,10 +57,14 @@ export default function <T = unknown>(): CircleComponent<T> {
     .prop("caption", fn.functor)
     .render(function (data: Datum<T>[]) {
       const selection = select(this);
-      const props = selection.props() as CircleProps<T>;
+      const props = selection.props<CircleProps<T>>();
 
-      const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
-      dataAreaPattern(patternSelection as PatternSelection);
+      const patternSelection: PatternSelection = ensureDefsElement(
+        selection,
+        "pattern",
+        "data-area-pattern"
+      );
+      dataAreaPattern(patternSelection);
 
       const dataArea = selection
         .selectAll(".sszvis-dataareacircle")
@@ -69,9 +73,9 @@ export default function <T = unknown>(): CircleComponent<T> {
         .classed("sszvis-dataareacircle", true);
 
       dataArea
-        .attr("cx", (d: Datum<T>): number => Number(props.x(d)))
-        .attr("cy", (d: Datum<T>): number => Number(props.y(d)))
-        .attr("r", (d: Datum<T>): number => Number(props.r(d)))
+        .attr("cx", (d) => Number(props.x(d)))
+        .attr("cy", (d) => Number(props.y(d)))
+        .attr("r", (d) => Number(props.r(d)))
         .attr("fill", "url(#data-area-pattern)");
 
       if (props.caption) {
@@ -82,11 +86,11 @@ export default function <T = unknown>(): CircleComponent<T> {
           .classed("sszvis-dataareacircle__caption", true);
 
         dataCaptions
-          .attr("x", (d: Datum<T>): number => Number(props.x(d)))
-          .attr("y", (d: Datum<T>): number => Number(props.y(d)))
-          .attr("dx", props.dx ? (d: Datum<T>): number => Number(props.dx?.(d)) : null)
-          .attr("dy", props.dy ? (d: Datum<T>): number => Number(props.dy?.(d)) : null)
-          .text(props.caption ? (d: Datum<T>): string => props.caption?.(d) || "" : null);
+          .attr("x", (d) => Number(props.x(d)))
+          .attr("y", (d) => Number(props.y(d)))
+          .attr("dx", props.dx ? (d) => Number(props.dx?.(d)) : null)
+          .attr("dy", props.dy ? (d) => Number(props.dy?.(d)) : null)
+          .text(props.caption ? (d) => props.caption?.(d) || "" : null);
       }
     }) as CircleComponent<T>;
 }

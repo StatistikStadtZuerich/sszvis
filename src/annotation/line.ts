@@ -73,8 +73,8 @@ export default function <T = unknown>(): LineComponent<T> {
     .dy(0)
     .prop("caption", fn.functor)
     .render(function (this: Element, data: Datum<T>[]) {
-      const selection = select(this);
-      const props = selection.props() as LineProps<T>;
+      const selection = select<Element, Datum<T>>(this);
+      const props = selection.props<LineProps<T>>();
 
       const x1 = props.xScale(props.x1) || 0;
       const y1 = props.yScale(props.y1) || 0;
@@ -107,5 +107,5 @@ export default function <T = unknown>(): LineComponent<T> {
           .attr("dy", props.dy ? Number(props.dy(data[0])) : null)
           .text(props.caption ? props.caption(data[0]) : null);
       }
-    }) as LineComponent<T>;
+    });
 }

@@ -11,13 +11,6 @@ type TestDatum = {
   label: string;
 };
 
-// type ComplexTestDatum = {
-//   position: { x: number };
-//   range: { lower: number; upper: number };
-//   category: string;
-//   value: number;
-// };
-
 describe("annotation/rangeRuler", () => {
   let container: HTMLDivElement;
 

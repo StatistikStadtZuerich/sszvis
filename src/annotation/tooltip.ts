@@ -99,7 +99,7 @@ export default function <T = unknown>(): TooltipComponent<T> {
     .prop("visible", fn.functor)
     .visible(false)
     .renderSelection((selection: AnySelection) => {
-      const props = selection.props() as TooltipProps<T>;
+      const props = selection.props<TooltipProps<T>>();
       const intoBCR = props.renderInto.node().getBoundingClientRect();
 
       const tooltipData: TooltipData<T>[] = [];
@@ -116,7 +116,7 @@ export default function <T = unknown>(): TooltipComponent<T> {
       });
 
       props.renderInto.datum(tooltipData).call(renderer);
-    }) as TooltipComponent<T>;
+    });
 }
 
 /**
@@ -135,9 +135,9 @@ const tooltipRenderer = <T = unknown>(): Component => {
     .dy(1)
     .prop("opacity", fn.functor)
     .opacity(1)
-    .renderSelection((selection: AnySelection) => {
+    .renderSelection((selection: AnySelection<Datum<T>>) => {
       const tooltipData = selection.datum() as TooltipData<T>[];
-      const props = selection.props() as TooltipProps<T>;
+      const props = selection.props<TooltipProps<T>>();
 
       const isDef = fn.defined;
       const isSmall =
@@ -145,23 +145,20 @@ const tooltipRenderer = <T = unknown>(): Component => {
 
       // Select tooltip elements
 
-      const tooltip = selection.selectAll(".sszvis-tooltip").data(tooltipData).join("div");
+      const tooltip = selection
+        .selectAll<Element, TooltipData<T>>(".sszvis-tooltip")
+        .data(tooltipData)
+        .join("div");
 
       tooltip
         .style("pointer-events", "none")
-        .style("opacity", (d: TooltipData<T>) => String(props.opacity(d)))
-        .style("padding-top", (d: TooltipData<T>) =>
-          props.orientation(d) === "top" ? `${TIP_SIZE}px` : null
-        )
-        .style("padding-right", (d: TooltipData<T>) =>
-          props.orientation(d) === "right" ? `${TIP_SIZE}px` : null
-        )
-        .style("padding-bottom", (d: TooltipData<T>) =>
+        .style("opacity", (d) => String(props.opacity(d)))
+        .style("padding-top", (d) => (props.orientation(d) === "top" ? `${TIP_SIZE}px` : null))
+        .style("padding-right", (d) => (props.orientation(d) === "right" ? `${TIP_SIZE}px` : null))
+        .style("padding-bottom", (d) =>
           props.orientation(d) === "bottom" ? `${TIP_SIZE}px` : null
         )
-        .style("padding-left", (d: TooltipData<T>) =>
-          props.orientation(d) === "left" ? `${TIP_SIZE}px` : null
-        )
+        .style("padding-left", (d) => (props.orientation(d) === "left" ? `${TIP_SIZE}px` : null))
         .classed("sszvis-tooltip", true);
 
       // Enter: tooltip background
@@ -244,55 +241,48 @@ const tooltipRenderer = <T = unknown>(): Component => {
       tooltip
         .select(".sszvis-tooltip__body")
         .datum(fn.prop("datum"))
-        .html((d: Datum<T>) => {
+        .html((d) => {
           if (!props.body) return "";
           const body = typeof props.body === "function" ? props.body(d) : props.body;
           return Array.isArray(body) ? formatTable(body) : body;
         });
 
       selection
-        .selectAll(".sszvis-tooltip")
+        .selectAll<Element, TooltipData<T>>(".sszvis-tooltip")
         .classed("sszvis-tooltip--small", isSmall)
         .each(function (d) {
-          const tooltipData = d as TooltipData<T>;
           const tip = select(this);
           // only using dimensions.width and dimensions.height here. Not affected by scroll position
           const node = tip.node();
           if (!node) return;
-          const dimensions = (node as HTMLElement).getBoundingClientRect();
-          const orientation = props.orientation(tooltipData);
+          const dimensions = node.getBoundingClientRect();
+          const orientation = props.orientation(d);
 
           // Position tooltip element
 
           switch (orientation) {
             case "top": {
               tip
-                .style("left", `${tooltipData.x - dimensions.width / 2}px`)
-                .style("top", `${tooltipData.y + Number(props.dy(tooltipData))}px`);
+                .style("left", `${d.x - dimensions.width / 2}px`)
+                .style("top", `${d.y + Number(props.dy(d))}px`);
               break;
             }
             case "bottom": {
               tip
-                .style("left", `${tooltipData.x - dimensions.width / 2}px`)
-                .style(
-                  "top",
-                  `${tooltipData.y - Number(props.dy(tooltipData)) - dimensions.height}px`
-                );
+                .style("left", `${d.x - dimensions.width / 2}px`)
+                .style("top", `${d.y - Number(props.dy(d)) - dimensions.height}px`);
               break;
             }
             case "left": {
               tip
-                .style("left", `${tooltipData.x + Number(props.dx(tooltipData))}px`)
-                .style("top", `${tooltipData.y - dimensions.height / 2}px`);
+                .style("left", `${d.x + Number(props.dx(d))}px`)
+                .style("top", `${d.y - dimensions.height / 2}px`);
               break;
             }
             case "right": {
               tip
-                .style(
-                  "left",
-                  `${tooltipData.x - Number(props.dx(tooltipData)) - dimensions.width}px`
-                )
-                .style("top", `${tooltipData.y - dimensions.height / 2}px`);
+                .style("left", `${d.x - Number(props.dx(d)) - dimensions.width}px`)
+                .style("top", `${d.y - dimensions.height / 2}px`);
               break;
             }
           }

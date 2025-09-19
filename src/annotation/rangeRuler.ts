@@ -40,7 +40,7 @@ interface RangeRulerProps<T = unknown> {
   label: (d: Datum<T>) => string | number;
   removeStroke?: boolean;
   total?: number;
-  flip: (d: Datum<T>) => boolean;
+  flip: (d?: Datum<T>) => boolean;
 }
 
 interface RangeRulerComponent<T = unknown> extends Component {
@@ -69,8 +69,8 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
     .prop("flip", fn.functor)
     .flip(false)
     .render(function (this: Element, data: Datum<T>[]) {
-      const selection = select(this);
-      const props = selection.props() as RangeRulerProps<T>;
+      const selection = select<Element, Datum<T>>(this);
+      const props = selection.props<RangeRulerProps<T>>();
 
       const crispX = fn.compose(halfPixel, props.x);
       const crispY0 = fn.compose(halfPixel, props.y0);
@@ -140,13 +140,13 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
         .text(fn.compose(formatNumber, props.label));
 
       selection.selectAll("g.sszvis-rangeRuler--mark").each(function () {
-        const g = select(this);
+        const g = select<Element, Datum<T>>(this as Element);
         const textNode = g.select("text").node() as SVGTextElement | null;
-        let textContour = g.select(".sszvis-rangeRuler__label-contour");
+        let textContour = g.select<SVGTextElement>(".sszvis-rangeRuler__label-contour");
         if (textContour.empty()) {
           if (textNode) {
             const clonedNode = textNode.cloneNode(true) as SVGTextElement;
-            textContour = select(clonedNode) as unknown as typeof textContour;
+            textContour = select(clonedNode);
             textContour
               .classed("sszvis-rangeRuler__label-contour", true)
               .classed("sszvis-rangeRuler__label", false);
@@ -158,15 +158,13 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
         } else {
           textContour
             .attr("x", (d) => {
-              const datum = d as Datum<T>;
-              const offset = props.flip(datum) ? -10 : 10;
-              return crispX(datum) + offset;
+              const offset = props.flip(d) ? -10 : 10;
+              return crispX(d) + offset;
             })
             .attr("y", (d) => middleY(d as Datum<T>))
             .attr("dy", "0.35em") // vertically-center
             .style("text-anchor", (d) => {
-              const datum = d as Datum<T>;
-              return props.flip(datum) ? "end" : "start";
+              return props.flip(d) ? "end" : "start";
             });
         }
         if (textNode) {
@@ -186,23 +184,21 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
 
       total
         .attr("x", (d) => {
-          const datum = d as Datum<T>;
-          const offset = props.flip(datum) ? -10 : 10;
-          return crispX(datum) + offset;
+          const offset = props.flip(d) ? -10 : 10;
+          return crispX(d) + offset;
         })
         .attr("y", props.top - 10)
         .style("text-anchor", (d) => {
-          const datum = d as Datum<T>;
-          return props.flip(datum) ? "end" : "start";
+          return props.flip(d) ? "end" : "start";
         })
         .text(`Total ${formatNumber(props.total)}`);
 
       const totalNode = total.node() as SVGTextElement | null;
-      let totalContour = selection.select(".sszvis-rangeRuler__total-contour");
+      let totalContour = selection.select<SVGTextElement>(".sszvis-rangeRuler__total-contour");
       if (totalContour.empty()) {
         if (totalNode) {
           const clonedTotalNode = totalNode.cloneNode(true) as SVGTextElement;
-          totalContour = select(clonedTotalNode) as unknown as typeof totalContour;
+          totalContour = select(clonedTotalNode);
           totalContour
             .classed("sszvis-rangeRuler__total-contour", true)
             .classed("sszvis-rangeRuler__total", false);
@@ -214,14 +210,12 @@ export default function <T = unknown>(): RangeRulerComponent<T> {
       } else {
         totalContour
           .attr("x", (d) => {
-            const datum = d as Datum<T>;
-            const offset = props.flip(datum) ? -10 : 10;
-            return crispX(datum) + offset;
+            const offset = props.flip(d) ? -10 : 10;
+            return crispX(d) + offset;
           })
           .attr("y", props.top - 10)
           .style("text-anchor", (d) => {
-            const datum = d as Datum<T>;
-            return props.flip(datum) ? "end" : "start";
+            return props.flip(d) ? "end" : "start";
           });
       }
       if (totalNode) {

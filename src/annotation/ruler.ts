@@ -30,12 +30,12 @@
  * @return {sszvis.component}
  */
 
-import { ascending, type BaseType, type NumberValue, type Selection, select } from "d3";
+import { ascending, type NumberValue, select } from "d3";
 import { type Component, component } from "../d3-component";
 import * as fn from "../fn";
 import { halfPixel } from "../svgUtils/crisp";
 import translateString from "../svgUtils/translateString";
-import type { BooleanAccessor, NumberAccessor, StringAccessor } from "../types";
+import type { AnySelection, BooleanAccessor, NumberAccessor, StringAccessor } from "../types";
 
 // Type definitions for ruler component
 type Datum<T = unknown> = T;
@@ -79,8 +79,8 @@ export const annotationRuler = <T = unknown>(): RulerComponent<T> =>
     .prop("reduceOverlap")
     .reduceOverlap(true)
     .render(function (this: Element, data: Datum<T>[]) {
-      const selection = select(this);
-      const props = selection.props() as RulerProps<T>;
+      const selection = select<Element, Datum<T>>(this);
+      const props = selection.props<RulerProps<T>>();
 
       const labelId = props.labelId || ((d: Datum<T>) => `${props.x(d)}_${props.y(d)}`);
 
@@ -202,7 +202,7 @@ export const annotationRuler = <T = unknown>(): RulerComponent<T> =>
           return textLabel.dy;
         });
       }
-    }) as RulerComponent<T>;
+    });
 
 interface LabelBoundsSeparate {
   category: string | number;
@@ -213,21 +213,20 @@ interface LabelBoundsSeparate {
 
 export const rulerLabelVerticalSeparate =
   <T = unknown>(cAcc: (d: T) => string | number) =>
-  (g: Selection<BaseType, unknown, null, undefined>) => {
+  (g: AnySelection) => {
     const THRESHOLD = 2;
     const labelBounds: LabelBoundsSeparate[] = [];
 
     // Reset vertical shift
-    g.selectAll("text").each(function () {
+    g.selectAll<SVGTextElement, Datum<T>>("text").each(function () {
       select(this).attr("y", "");
     });
 
     // Calculate bounds
-    g.selectAll(".sszvis-ruler__label").each(function (d: unknown) {
-      const element = this as SVGTextElement;
-      const bounds = element.getBoundingClientRect();
+    g.selectAll<SVGTextElement, Datum<T>>(".sszvis-ruler__label").each(function (d) {
+      const bounds = this.getBoundingClientRect();
       labelBounds.push({
-        category: cAcc(d as T),
+        category: cAcc(d),
         top: bounds.top,
         bottom: bounds.bottom,
         dy: 0,
@@ -258,8 +257,8 @@ export const rulerLabelVerticalSeparate =
     }
 
     // Shift vertically to remove overlap
-    g.selectAll("text").each(function (d: unknown) {
-      const label = fn.find((l: LabelBoundsSeparate) => l.category === cAcc(d as T), labelBounds);
+    g.selectAll<SVGTextElement, Datum<T>>("text").each(function (d) {
+      const label = fn.find((l: LabelBoundsSeparate) => l.category === cAcc(d), labelBounds);
       if (label) {
         select(this).attr("y", label.dy);
       }

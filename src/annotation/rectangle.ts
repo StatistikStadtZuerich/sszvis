@@ -60,11 +60,15 @@ export default function <T = unknown>(): RectangleComponent<T> {
     .prop("dy", fn.functor)
     .prop("caption", fn.functor)
     .render(function (this: Element, data: Datum<T>[]) {
-      const selection = select(this);
-      const props = selection.props() as RectangleProps<T>;
+      const selection = select<Element, Datum<T>>(this);
+      const props = selection.props<RectangleProps<T>>();
 
-      const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
-      dataAreaPattern(patternSelection as PatternSelection);
+      const patternSelection: PatternSelection = ensureDefsElement(
+        selection,
+        "pattern",
+        "data-area-pattern"
+      );
+      dataAreaPattern(patternSelection);
 
       const dataArea = selection
         .selectAll(".sszvis-dataarearectangle")
@@ -73,10 +77,10 @@ export default function <T = unknown>(): RectangleComponent<T> {
         .classed("sszvis-dataarearectangle", true);
 
       dataArea
-        .attr("x", (d: Datum<T>): number => Number(props.x(d)))
-        .attr("y", (d: Datum<T>): number => Number(props.y(d)))
-        .attr("width", (d: Datum<T>): number => Number(props.width(d)))
-        .attr("height", (d: Datum<T>): number => Number(props.height(d)))
+        .attr("x", (d) => Number(props.x(d)))
+        .attr("y", (d) => Number(props.y(d)))
+        .attr("width", (d) => Number(props.width(d)))
+        .attr("height", (d) => Number(props.height(d)))
         .attr("fill", "url(#data-area-pattern)");
 
       if (props.caption) {
@@ -87,11 +91,11 @@ export default function <T = unknown>(): RectangleComponent<T> {
           .classed("sszvis-dataarearectangle__caption", true);
 
         dataCaptions
-          .attr("x", (d: Datum<T>): number => Number(props.x(d)) + Number(props.width(d)) / 2)
-          .attr("y", (d: Datum<T>): number => Number(props.y(d)) + Number(props.height(d)) / 2)
-          .attr("dx", props.dx ? (d: Datum<T>): number => Number(props.dx?.(d)) : null)
-          .attr("dy", props.dy ? (d: Datum<T>): number => Number(props.dy?.(d)) : null)
-          .text((d: Datum<T>): string => props.caption?.(d) || "");
+          .attr("x", (d) => Number(props.x(d)) + Number(props.width(d)) / 2)
+          .attr("y", (d) => Number(props.y(d)) + Number(props.height(d)) / 2)
+          .attr("dx", props.dx ? (d) => Number(props.dx?.(d)) : null)
+          .attr("dy", props.dy ? (d) => Number(props.dy?.(d)) : null)
+          .text((d) => props.caption?.(d) || "");
       }
     }) as RectangleComponent<T>;
 }

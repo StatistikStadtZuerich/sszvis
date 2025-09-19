@@ -28,7 +28,7 @@ import * as fn from "../fn";
 import { dataAreaPattern } from "../patterns";
 import ensureDefsElement from "../svgUtils/ensureDefsElement";
 import { defaultTransition } from "../transition";
-import type { NumberAccessor, PatternSelection } from "../types";
+import type { NumberAccessor, PatternSelection, StringAccessor } from "../types";
 
 // Type definitions for confidence area component
 type Datum<T = unknown> = T;
@@ -52,7 +52,7 @@ interface ConfidenceAreaComponent<T = unknown> extends Component {
   stroke(stroke?: string): ConfidenceAreaComponent<T>;
   strokeWidth(width?: number): ConfidenceAreaComponent<T>;
   fill(fill?: string): ConfidenceAreaComponent<T>;
-  key(accessor?: (d: Datum<T>, i: number) => string | number): ConfidenceAreaComponent<T>;
+  key(accessor?: StringAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
   valuesAccessor(accessor?: (d: Datum<T>[]) => Datum<T>[]): ConfidenceAreaComponent<T>;
   transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
@@ -73,16 +73,20 @@ export default function <T = unknown>(): ConfidenceAreaComponent<T> {
     .transition(true)
     .render(function (this: Element, data: Datum<T>[][]) {
       const selection = select(this);
-      const props = selection.props() as ConfidenceAreaProps<T>;
+      const props = selection.props<ConfidenceAreaProps<T>>();
 
-      const patternSelection = ensureDefsElement(selection, "pattern", "data-area-pattern");
-      dataAreaPattern(patternSelection as PatternSelection);
+      const patternSelection: PatternSelection = ensureDefsElement(
+        selection,
+        "pattern",
+        "data-area-pattern"
+      );
+      dataAreaPattern(patternSelection);
 
       // Layouts
       const area = d3Area<Datum<T>>()
-        .x((d: Datum<T>) => Number(props.x(d)))
-        .y0((d: Datum<T>) => Number(props.y0(d)))
-        .y1((d: Datum<T>) => Number(props.y1(d)));
+        .x((d) => Number(props.x(d)))
+        .y0((d) => Number(props.y0(d)))
+        .y1((d) => Number(props.y1(d)));
 
       // Rendering
 
@@ -100,7 +104,7 @@ export default function <T = unknown>(): ConfidenceAreaComponent<T> {
 
       const finalPath = props.transition ? path.transition().call(defaultTransition) : path;
 
-      finalPath.attr("d", (d: Datum<T>[]) => area(props.valuesAccessor(d)));
+      finalPath.attr("d", (d) => area(props.valuesAccessor(d)));
 
       if (props.stroke) {
         finalPath.style("stroke", props.stroke);

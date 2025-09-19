@@ -71,8 +71,8 @@ export default function <T = unknown>(): TooltipAnchorComponent<T> {
     .position(fn.functor([0, 0]))
     .prop("debug")
     .render(function (this: Element, data: Datum<T>[]) {
-      const selection = select(this);
-      const props = selection.props() as TooltipAnchorProps<T>;
+      const selection = select<Element, Datum<T>>(this);
+      const props = selection.props<TooltipAnchorProps<T>>();
 
       const anchor = selection
         .selectAll("[data-tooltip-anchor]")
@@ -104,5 +104,5 @@ export default function <T = unknown>(): TooltipAnchorComponent<T> {
           .attr("stroke-width", 1.5)
           .attr("transform", fn.compose(vectorToTranslateString, props.position));
       }
-    }) as TooltipAnchorComponent<T>;
+    });
 }

@@ -44,8 +44,8 @@ export default function <T = unknown>(): RangeFlagComponent<T> {
     .prop("y0", fn.functor)
     .prop("y1", fn.functor)
     .render(function (this: Element, data: Datum<T>[]) {
-      const selection = select(this);
-      const props = selection.props() as RangeFlagProps<T>;
+      const selection = select<Element, Datum<T>>(this);
+      const props = selection.props<RangeFlagProps<T>>();
 
       const crispX = fn.compose(halfPixel, props.x);
       const crispY0 = fn.compose(halfPixel, props.y0);
@@ -61,9 +61,9 @@ export default function <T = unknown>(): RangeFlagComponent<T> {
         .data(data)
         .call(makeFlagDot("top", crispX, crispY1));
 
-      const ta = tooltipAnchor().position((d: unknown) => [
-        crispX(d as Datum<T>),
-        halfPixel((Number(props.y0(d as Datum<T>)) + Number(props.y1(d as Datum<T>))) / 2),
+      const ta = tooltipAnchor<Datum<T>>().position((d) => [
+        crispX(d),
+        halfPixel((Number(props.y0(d)) + Number(props.y1(d))) / 2),
       ]);
 
       selection.call(ta);
