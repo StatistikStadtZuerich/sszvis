@@ -349,3 +349,67 @@ A string for the fill color of the confidence area.
     "sourceView": ["index.html", "data.csv"]
 }
 ```
+
+## Confidence Bar
+
+Confidence bars are used to display confidence intervals or error ranges on data points. They consist of a vertical line connecting the confidence bounds and horizontal caps at the top and bottom.
+
+### sszvis.annotationConfidenceBar
+
+All properties of the confidence bar can be specified as either a constant or a function of data.
+
+#### `annotationConfidenceBar.x`
+
+The x-position accessor for the confidence bars.
+
+#### `annotationConfidenceBar.y`
+
+The y-position accessor for the confidence bars.
+
+#### `annotationConfidenceBar.confidenceLow`
+
+Accessor function for the lower confidence bound.
+
+#### `annotationConfidenceBar.confidenceHigh`
+
+Accessor function for the upper confidence bound.
+
+#### `annotationConfidenceBar.width`
+
+The width of the horizontal confidence bar caps.
+
+#### `annotationConfidenceBar.groupSize`
+
+The number of items in each group.
+
+#### `annotationConfidenceBar.groupWidth`
+
+The width allocated for each group.
+
+#### `annotationConfidenceBar.groupSpace`
+
+The spacing between items within a group (default: 0.05).
+
+#### `annotationConfidenceBar.groupScale`
+
+Scale function for positioning groups horizontally.
+
+### Example
+
+```project
+{
+    "name": "bar-chart-vertical-nested-confidence",
+    "files": {
+        "index.html": {
+            "source": "bar-chart-vertical-nested/confidence.html",
+            "template": "template.html"
+        },
+        "data.csv": "bar-chart-vertical-nested/data/nested.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "fallback.png",
+
+    },
+    "sourceView": ["index.html", "data.csv"]
+}
+```

@@ -1,0 +1,11 @@
+---
+title: Vertical Bar Chart with Confidence Bars
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/nested.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+
+{% printFileContents "confidence.js" %}

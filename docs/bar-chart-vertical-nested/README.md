@@ -77,7 +77,7 @@ A function which returns the x-axis label for each data element. This value is u
 
 Specifies the slant of the x-axis labels. The default is no slant.
 
-### Chart
+### Chart (Basic)
 
 ```project
 {
@@ -85,6 +85,26 @@ Specifies the slant of the x-axis labels. The default is no slant.
     "files": {
         "index.html": {
             "source": "bar-chart-vertical-nested/basic.html",
+            "template": "template.html"
+        },
+        "data.csv": "bar-chart-vertical-nested/data/nested.csv",
+        "sszvis.js": "sszvis.js",
+        "sszvis.css": "sszvis.css",
+        "fallback.png": "fallback.png",
+
+    },
+    "sourceView": ["index.html", "data.csv"]
+}
+```
+
+### With Confidence Bars
+
+```project
+{
+    "name": "bar-chart-vertical-nested-confidence",
+    "files": {
+        "index.html": {
+            "source": "bar-chart-vertical-nested/confidence.html",
             "template": "template.html"
         },
         "data.csv": "bar-chart-vertical-nested/data/nested.csv",
