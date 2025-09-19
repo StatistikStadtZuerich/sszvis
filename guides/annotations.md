@@ -1,8 +1,4 @@
-> Annotations are used to highlight certain sections of a chart. They are added
-> as an additional layer above or below the chart contents themselves.
-> Annotations in sszvis are themselves examples of the reusable chart pattern,
-> so as with chart components and tooltips, data must be bound to the annotation
-> layer before rendering the annotation into it.
+> Annotations are used to highlight certain sections of a chart. They are added as an additional layer above or below the chart contents themselves. Annotations in sszvis are themselves examples of the reusable chart pattern, so as with chart components and tooltips, data must be bound to the annotation layer before rendering the annotation into it.
 
 ## Data Circle
 
@@ -260,8 +256,7 @@ A number to display as the total of the range ruler (at the top)
 
 #### `annotationRangeRuler.[flip]`
 
-Determines whether the rangeRuler labels should be flipped (they default to the
-right side)
+Determines whether the rangeRuler labels should be flipped (they default to the right side)
 
 #### `annotationRangeRuler.[reduceOverlap]`
 
