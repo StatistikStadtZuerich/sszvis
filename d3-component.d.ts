@@ -45,7 +45,7 @@ export interface Component {
 export declare function component(): Component;
 declare module "d3" {
     interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
-        props(): ComponentProps;
+        props<A>(): A extends ComponentProps ? A : ComponentProps;
     }
 }
 //# sourceMappingURL=d3-component.d.ts.map
