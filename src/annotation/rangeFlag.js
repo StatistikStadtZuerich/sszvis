@@ -17,7 +17,7 @@
  */
 
 import { select } from "d3";
-import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import tooltipAnchor from "./tooltipAnchor.js";
 import { component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";

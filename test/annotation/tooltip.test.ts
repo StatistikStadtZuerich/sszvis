@@ -71,11 +71,11 @@ describe("annotation/tooltip", () => {
   test("should create tooltip component with proper configuration", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name)
-      .body((d: TestDatum) => `Value: ${d.value}`)
+      .header((d) => d.name)
+      .body((d) => `Value: ${d.value}`)
       .orientation("bottom");
 
     expect(typeof tooltipComponent).toBe("function");
@@ -91,16 +91,22 @@ describe("annotation/tooltip", () => {
     const svgLayer = createSvgLayer("#svg-container");
 
     // Create tooltip anchors
-    const anchor = tooltipAnchor().position((d: TestDatum, i: number) => [i * 100 + 50, 150]);
+    const testData = [
+      { id: "1", name: "Item 1", value: 100, category: "A" },
+      { id: "2", name: "Item 2", value: 200, category: "B" },
+      { id: "3", name: "Item 3", value: 150, category: "A" },
+    ];
+
+    const anchor = tooltipAnchor<TestDatum>().position((d) => [d.value + 50, 150]);
 
     svgLayer.selectGroup("anchors").datum(testData).call(anchor);
 
     // Create tooltip
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name)
-      .body((d: TestDatum) => `Value: ${d.value}`)
+      .header((d) => d.name)
+      .body((d) => `Value: ${d.value}`)
       .orientation("bottom");
 
     // Apply tooltip to anchors
@@ -135,15 +141,15 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [100, 150]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [100, 150]);
 
     svgLayer.selectGroup("anchors").datum(testData).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => false)
-      .header((d: TestDatum) => d.name)
-      .body((d: TestDatum) => `Value: ${d.value}`);
+      .header((d) => d.name)
+      .body((d) => `Value: ${d.value}`);
 
     svgLayer.selectAll("[data-tooltip-anchor]").call(tooltipComponent);
 
@@ -155,15 +161,15 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position((d: TestDatum, i: number) => [i * 100 + 50, 150]);
+    const anchor = tooltipAnchor<TestDatum>().position((d) => [d.value + 50, 150]);
 
     svgLayer.selectGroup("anchors").datum(testData).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
-      .visible((d: TestDatum) => d.value > 100) // Only show for high values
-      .header((d: TestDatum) => d.name)
-      .body((d: TestDatum) => `High value: ${d.value}`);
+      .visible((d) => d.value > 100) // Only show for high values
+      .header((d) => d.name)
+      .body((d) => `High value: ${d.value}`);
 
     svgLayer.selectAll("[data-tooltip-anchor]").call(tooltipComponent);
 
@@ -180,15 +186,15 @@ describe("annotation/tooltip", () => {
     const orientations = ["top", "bottom", "left", "right"] as const;
 
     orientations.forEach((orient) => {
-      const anchor = tooltipAnchor().position(() => [200, 200]);
+      const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
       svgLayer.selectGroup(`anchors-${orient}`).datum(singleData).call(anchor);
 
-      const tooltipComponent = tooltip()
+      const tooltipComponent = tooltip<TestDatum>()
         .renderInto(tooltipLayer)
         .visible(() => true)
-        .header((d: TestDatum) => d.name)
-        .body((d: TestDatum) => `Orientation: ${orient}`)
+        .header((d) => d.name)
+        .body((_d) => `Orientation: ${orient}`)
         .orientation(orient);
 
       svgLayer.selectAll(`[data-tooltip-anchor]`).call(tooltipComponent);
@@ -207,15 +213,15 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [200, 200]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
     svgLayer.selectGroup("anchors").datum([testData[0]]).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name)
-      .body((d: TestDatum) => [
+      .header((d) => d.name)
+      .body((d) => [
         ["Property", "Value"],
         ["ID", d.id],
         ["Category", d.category],
@@ -239,15 +245,15 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [200, 200]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
     svgLayer.selectGroup("anchors").datum([testData[0]]).call(anchor);
 
     // Test with only header (should be small)
-    const headerOnlyTooltip = tooltip()
+    const headerOnlyTooltip = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name);
+      .header((d) => d.name);
 
     svgLayer.selectAll("[data-tooltip-anchor]").call(headerOnlyTooltip);
 
@@ -259,15 +265,15 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [200, 200]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
     svgLayer.selectGroup("anchors").datum([testData[0]]).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name)
-      .body((d: TestDatum) => `Value: ${d.value}`)
+      .header((d) => d.name)
+      .body((d) => `Value: ${d.value}`)
       .dx(20)
       .dy(30)
       .orientation("bottom");
@@ -284,14 +290,14 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [200, 200]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
     svgLayer.selectGroup("anchors").datum([testData[0]]).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name)
+      .header((d) => d.name)
       .opacity(0.5);
 
     svgLayer.selectAll("[data-tooltip-anchor]").call(tooltipComponent);
@@ -318,15 +324,15 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [200, 200]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
     svgLayer.selectGroup("anchors").datum(complexData).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<ComplexTestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: ComplexTestDatum) => d.measurement.label)
-      .body((d: ComplexTestDatum) => [
+      .header((d) => d.measurement.label)
+      .body((d) => [
         ["Result", String(d.measurement.result)],
         ["Source", d.metadata.source],
         ["Date", d.metadata.timestamp.toLocaleDateString()],
@@ -348,16 +354,16 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position((d: TestDatum, i: number) => [i * 200 + 100, 150]);
+    const anchor = tooltipAnchor<TestDatum>().position((d) => [d.value * 2 + 100, 150]);
 
     svgLayer.selectGroup("anchors").datum(testData).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name)
-      .body((d: TestDatum) => d.category)
-      .orientation((d: any) => {
+      .header((d) => d.name)
+      .body((d) => d.category)
+      .orientation((d) => {
         // Dynamic orientation based on position
         return d.x > 300 ? "left" : "right";
       });
@@ -378,14 +384,14 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [200, 200]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
     svgLayer.selectGroup("anchors").datum([]).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name);
+      .header((d) => d.name);
 
     svgLayer.selectAll("[data-tooltip-anchor]").call(tooltipComponent);
 
@@ -397,11 +403,11 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [200, 200]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
     svgLayer.selectGroup("anchors").datum([testData[0]]).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(true) // Constant value
       .header("Fixed Header") // Constant value
@@ -421,15 +427,15 @@ describe("annotation/tooltip", () => {
     const tooltipLayer = createHtmlLayer("#tooltip-container");
     const svgLayer = createSvgLayer("#svg-container");
 
-    const anchor = tooltipAnchor().position(() => [200, 200]);
+    const anchor = tooltipAnchor<TestDatum>().position(() => [200, 200]);
 
     svgLayer.selectGroup("anchors").datum([testData[0]]).call(anchor);
 
-    const tooltipComponent = tooltip()
+    const tooltipComponent = tooltip<TestDatum>()
       .renderInto(tooltipLayer)
       .visible(() => true)
-      .header((d: TestDatum) => d.name)
-      .body((d: TestDatum) => `Value: ${d.value}`);
+      .header((d) => d.name)
+      .body((d) => `Value: ${d.value}`);
 
     svgLayer.selectAll("[data-tooltip-anchor]").call(tooltipComponent);
 
@@ -451,7 +457,7 @@ describe("annotation/tooltip", () => {
       const fitted = fitTooltip(defaultOrientation, bounds);
 
       // Test position in middle range (between 100 and 300)
-      const middlePosition = { x: 200 };
+      const middlePosition = { datum: {}, x: 200, y: 100 };
       expect(fitted(middlePosition)).toBe(defaultOrientation);
     });
 
@@ -461,7 +467,7 @@ describe("annotation/tooltip", () => {
       const fitted = fitTooltip(defaultOrientation, bounds);
 
       // Test position beyond hi threshold (300+)
-      const rightPosition = { x: 350 };
+      const rightPosition = { datum: {}, x: 350, y: 100 };
       expect(fitted(rightPosition)).toBe("right");
     });
 
@@ -471,7 +477,7 @@ describe("annotation/tooltip", () => {
       const fitted = fitTooltip(defaultOrientation, bounds);
 
       // Test position below lo threshold (100-)
-      const leftPosition = { x: 50 };
+      const leftPosition = { datum: {}, x: 50, y: 100 };
       expect(fitted(leftPosition)).toBe("left");
     });
 
@@ -481,9 +487,9 @@ describe("annotation/tooltip", () => {
       const fitted = fitTooltip(defaultOrientation, bounds);
 
       // With width 150: lo = min(37.5, 100) = 37.5, hi = max(112.5, 50) = 112.5
-      const leftEdgePosition = { x: 30 };
-      const middlePosition = { x: 75 };
-      const rightEdgePosition = { x: 120 };
+      const leftEdgePosition = { datum: {}, x: 30, y: 100 };
+      const middlePosition = { datum: {}, x: 75, y: 100 };
+      const rightEdgePosition = { datum: {}, x: 120, y: 100 };
 
       expect(fitted(leftEdgePosition)).toBe("left");
       expect(fitted(middlePosition)).toBe(defaultOrientation);
@@ -496,9 +502,9 @@ describe("annotation/tooltip", () => {
       const fitted = fitTooltip(defaultOrientation, bounds);
 
       // With width 800: lo = min(200, 100) = 100, hi = max(600, 700) = 700
-      const leftEdgePosition = { x: 80 };
-      const middlePosition = { x: 400 };
-      const rightEdgePosition = { x: 720 };
+      const leftEdgePosition = { datum: {}, x: 80, y: 100 };
+      const middlePosition = { datum: {}, x: 400, y: 100 };
+      const rightEdgePosition = { datum: {}, x: 720, y: 100 };
 
       expect(fitted(leftEdgePosition)).toBe("left");
       expect(fitted(middlePosition)).toBe(defaultOrientation);
