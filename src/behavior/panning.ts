@@ -38,55 +38,72 @@
  */
 
 import { dispatch, select } from "d3";
-import { component } from "../d3-component.js";
-import * as fn from "../fn.js";
-import { datumFromPanEvent } from "./util.js";
+import { type Component, component } from "../d3-component";
+import * as fn from "../fn";
+import { datumFromPanEvent } from "./util";
 
-export default function () {
+// Type definitions for panning behavior component
+type PanningProps = {
+  elementSelector: string;
+};
+
+type PanEventHandler = (event: Event, ...args: unknown[]) => void;
+
+interface PanningComponent extends Component {
+  elementSelector(): string;
+  elementSelector(selector: string): PanningComponent;
+
+  on(eventName: "start", handler: PanEventHandler): PanningComponent;
+  on(eventName: "pan", handler: PanEventHandler): PanningComponent;
+  on(eventName: "end", handler: PanEventHandler): PanningComponent;
+  on(eventName: string): PanEventHandler | undefined;
+}
+
+export default function (): PanningComponent {
   const event = dispatch("start", "pan", "end");
 
   const panningComponent = component()
     .prop("elementSelector")
-    .render(function () {
+    .render(function (this: SVGElement) {
       const selection = select(this);
-      const props = selection.props();
+      const props = selection.props<PanningProps>();
 
       const elements = selection.selectAll(props.elementSelector);
 
       elements
         .attr("data-sszvis-behavior-pannable", "")
         .classed("sszvis-interactive", true)
-        .on("mouseenter", function () {
-          event.apply("start", this, arguments);
+        .on("mouseenter", function (e: MouseEvent) {
+          if (this) event.apply("start", this, [e]);
         })
-        .on("mousemove", function () {
-          event.apply("pan", this, arguments);
+        .on("mousemove", function (e: MouseEvent) {
+          if (this) event.apply("pan", this, [e]);
         })
-        .on("mouseleave", function () {
-          event.apply("end", this, arguments);
+        .on("mouseleave", function (e: MouseEvent) {
+          if (this) event.apply("end", this, [e]);
         })
-        .on("touchstart", function (e) {
+        .on("touchstart", function (e: TouchEvent) {
           e.preventDefault();
-          event.apply("start", this, arguments);
+          if (this) event.apply("start", this, [e]);
         })
-        .on("touchmove", function (e) {
+        .on("touchmove", function (e: TouchEvent) {
           e.preventDefault();
           const datum = datumFromPanEvent(fn.firstTouch(e));
           if (datum === null) {
-            event.apply("end", this, arguments);
+            if (this) event.apply("end", this, [e]);
           } else {
-            event.apply("pan", this, arguments);
+            if (this) event.apply("pan", this, [e]);
           }
         })
-        .on("touchend", function () {
-          event.apply("end", this, arguments);
+        .on("touchend", function (e: TouchEvent) {
+          if (this) event.apply("end", this, [e]);
         });
     });
 
-  panningComponent.on = function () {
-    const value = event.on.apply(event, arguments);
+  panningComponent.on = function (this: PanningComponent, ...args: [string, never]) {
+    const value = event.on.apply(event, args);
     return value === event ? panningComponent : value;
   };
 
-  return panningComponent;
+  return panningComponent as PanningComponent;
 }
