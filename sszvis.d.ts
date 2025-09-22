@@ -1,4 +1,4 @@
-import { Selection, NumberValue, BaseType, AxisScale, AxisDomain, ScaleOrdinal, LabColor, ScaleLinear, HSLColor, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
+import { Selection, NumberValue, BaseType, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
 import * as d3_shape from 'd3-shape';
 import * as d3_transition from 'd3-transition';
 import * as d3_selection from 'd3-selection';
@@ -62,13 +62,13 @@ interface DimensionMeasurement {
  * Common accessor type for annotation components
  * Supports both constant values and accessor functions
  */
-type Accessor<T, R> = R | ((d: T) => R);
+type Accessor$1<T, R> = R | ((d: T) => R);
 /**
  * Specific accessor types for common use cases in annotations
  */
-type NumberAccessor<T = unknown> = Accessor<T, NumberValue>;
-type StringAccessor<T = unknown> = Accessor<T, string>;
-type BooleanAccessor<T = unknown> = Accessor<T, boolean>;
+type NumberAccessor$1<T = unknown> = Accessor$1<T, NumberValue>;
+type StringAccessor<T = unknown> = Accessor$1<T, string>;
+type BooleanAccessor<T = unknown> = Accessor$1<T, boolean>;
 
 /**
  * d3.selection plugin to simplify creating idempotent divs that are not
@@ -148,14 +148,14 @@ declare module "d3" {
 
 type Datum$9<T = unknown> = T;
 interface CircleComponent<T = unknown> extends Component {
-    x(accessor?: NumberAccessor<Datum$9<T>>): CircleComponent<T>;
-    y(accessor?: NumberAccessor<Datum$9<T>>): CircleComponent<T>;
-    r(accessor?: NumberAccessor<Datum$9<T>>): CircleComponent<T>;
-    dx(accessor?: NumberAccessor<Datum$9<T>>): CircleComponent<T>;
-    dy(accessor?: NumberAccessor<Datum$9<T>>): CircleComponent<T>;
+    x(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
+    y(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
+    r(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
+    dx(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
+    dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$9<T = unknown>(): CircleComponent<T>;
+declare function export_default$c<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -183,9 +183,9 @@ declare function export_default$9<T = unknown>(): CircleComponent<T>;
 
 type Datum$8<T = unknown> = T;
 interface ConfidenceAreaComponent<T = unknown> extends Component {
-    x(accessor?: NumberAccessor<Datum$8<T>>): ConfidenceAreaComponent<T>;
-    y0(accessor?: NumberAccessor<Datum$8<T>>): ConfidenceAreaComponent<T>;
-    y1(accessor?: NumberAccessor<Datum$8<T>>): ConfidenceAreaComponent<T>;
+    x(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
+    y0(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
+    y1(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
     stroke(stroke?: string): ConfidenceAreaComponent<T>;
     strokeWidth(width?: number): ConfidenceAreaComponent<T>;
     fill(fill?: string): ConfidenceAreaComponent<T>;
@@ -193,7 +193,7 @@ interface ConfidenceAreaComponent<T = unknown> extends Component {
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$8<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$b<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -233,7 +233,7 @@ interface ConfidenceBarComponent<T = unknown> extends Component {
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$7<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$a<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -259,7 +259,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$6<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$9<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -288,17 +288,17 @@ declare function export_default$6<T = unknown>(defaultVal: TooltipOrientation, b
 
 type Datum$6<T = unknown> = T;
 interface LineComponent<T = unknown> extends Component {
-    x1(accessor?: NumberAccessor<Datum$6<T>>): LineComponent<T>;
-    x2(accessor?: NumberAccessor<Datum$6<T>>): LineComponent<T>;
-    y1(accessor?: NumberAccessor<Datum$6<T>>): LineComponent<T>;
-    y2(accessor?: NumberAccessor<Datum$6<T>>): LineComponent<T>;
+    x1(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent<T>;
+    x2(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent<T>;
+    y1(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent<T>;
+    y2(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent<T>;
     xScale(scale?: AxisScale<NumberValue>): LineComponent<T>;
     yScale(scale?: AxisScale<NumberValue>): LineComponent<T>;
-    dx(accessor?: NumberAccessor<Datum$6<T>>): LineComponent<T>;
-    dy(accessor?: NumberAccessor<Datum$6<T>>): LineComponent<T>;
+    dx(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent<T>;
+    dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent<T>;
 }
-declare function export_default$5<T = unknown>(): LineComponent<T>;
+declare function export_default$8<T = unknown>(): LineComponent<T>;
 
 /**
  * Range Flag annotation
@@ -320,11 +320,11 @@ declare function export_default$5<T = unknown>(): LineComponent<T>;
 
 type Datum$5<T = unknown> = T;
 interface RangeFlagComponent<T = unknown> extends Component {
-    x(accessor?: NumberAccessor<Datum$5<T>>): RangeFlagComponent<T>;
-    y0(accessor?: NumberAccessor<Datum$5<T>>): RangeFlagComponent<T>;
-    y1(accessor?: NumberAccessor<Datum$5<T>>): RangeFlagComponent<T>;
+    x(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
+    y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
+    y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$4<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$7<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -351,9 +351,9 @@ declare function export_default$4<T = unknown>(): RangeFlagComponent<T>;
 
 type Datum$4<T = unknown> = T;
 interface RangeRulerComponent<T = unknown> extends Component {
-    x(accessor?: NumberAccessor<Datum$4<T>>): RangeRulerComponent<T>;
-    y0(accessor?: NumberAccessor<Datum$4<T>>): RangeRulerComponent<T>;
-    y1(accessor?: NumberAccessor<Datum$4<T>>): RangeRulerComponent<T>;
+    x(accessor?: NumberAccessor$1<Datum$4<T>>): RangeRulerComponent<T>;
+    y0(accessor?: NumberAccessor$1<Datum$4<T>>): RangeRulerComponent<T>;
+    y1(accessor?: NumberAccessor$1<Datum$4<T>>): RangeRulerComponent<T>;
     top(value?: number): RangeRulerComponent<T>;
     bottom(value?: number): RangeRulerComponent<T>;
     label(accessor?: StringAccessor<Datum$4<T>>): RangeRulerComponent<T>;
@@ -361,7 +361,7 @@ interface RangeRulerComponent<T = unknown> extends Component {
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$3<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$6<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -387,15 +387,15 @@ declare function export_default$3<T = unknown>(): RangeRulerComponent<T>;
 
 type Datum$3<T = unknown> = T;
 interface RectangleComponent<T = unknown> extends Component {
-    x(accessor?: NumberAccessor<Datum$3<T>>): RectangleComponent<T>;
-    y(accessor?: NumberAccessor<Datum$3<T>>): RectangleComponent<T>;
-    width(accessor?: NumberAccessor<Datum$3<T>>): RectangleComponent<T>;
-    height(accessor?: NumberAccessor<Datum$3<T>>): RectangleComponent<T>;
-    dx(accessor?: NumberAccessor<Datum$3<T>>): RectangleComponent<T>;
-    dy(accessor?: NumberAccessor<Datum$3<T>>): RectangleComponent<T>;
+    x(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
+    y(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
+    width(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
+    height(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
+    dx(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
+    dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$2<T = unknown>(): RectangleComponent<T>;
+declare function export_default$5<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -433,8 +433,8 @@ type Datum$2<T = unknown> = T;
 interface RulerComponent<T = unknown> extends Component {
     top(value?: number): RulerComponent<T>;
     bottom(value?: number): RulerComponent<T>;
-    x(accessor?: NumberAccessor<Datum$2<T>>): RulerComponent<T>;
-    y(accessor?: NumberAccessor<Datum$2<T>>): RulerComponent<T>;
+    x(accessor?: NumberAccessor$1<Datum$2<T>>): RulerComponent<T>;
+    y(accessor?: NumberAccessor$1<Datum$2<T>>): RulerComponent<T>;
     label(accessor?: StringAccessor<Datum$2<T>>): RulerComponent<T>;
     color(accessor?: StringAccessor<Datum$2<T>>): RulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$2<T>>): RulerComponent<T>;
@@ -492,15 +492,15 @@ interface TooltipData<T = unknown> {
 }
 interface TooltipComponent<T = unknown> extends Component {
     renderInto(selection?: AnySelection): TooltipComponent<T>;
-    visible(accessor?: Accessor<Datum$1<T>, boolean>): TooltipComponent<T>;
+    visible(accessor?: Accessor$1<Datum$1<T>, boolean>): TooltipComponent<T>;
     header(accessor?: StringAccessor<Datum$1<T>>): TooltipComponent<T>;
     body(accessor?: StringAccessor<Datum$1<T>> | ((d: Datum$1<T>) => string[][])): TooltipComponent<T>;
     orientation(accessor?: StringAccessor<TooltipData<T>>): TooltipComponent<T>;
-    dx(accessor?: NumberAccessor<TooltipData<T>>): TooltipComponent<T>;
-    dy(accessor?: NumberAccessor<TooltipData<T>>): TooltipComponent<T>;
-    opacity(accessor?: NumberAccessor<TooltipData<T>>): TooltipComponent<T>;
+    dx(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
+    dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
+    opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$1<T = unknown>(): TooltipComponent<T>;
+declare function export_default$4<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -550,7 +550,7 @@ interface TooltipAnchorComponent<T = unknown> extends Component {
     position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }
-declare function export_default<T = unknown>(): TooltipAnchorComponent<T>;
+declare function export_default$3<T = unknown>(): TooltipAnchorComponent<T>;
 
 declare function app({ init, render, actions, fallback }: {
     init: any;
@@ -742,11 +742,196 @@ declare const axisY: {
     ordinal(): any;
 };
 
-declare function _default$A(): any;
+/**
+ * Move behavior
+ *
+ * The move behavior is used to add a mouseover and touchmove-based interface to a chart.
+ *
+ * Like other behavior components, this behavior adds an invisible layer over the chart,
+ * which the users interact with using touch or mouse actions. The behavior component then interprets
+ * these interactions, and calls the relevant event handler callback functions. These callback functions are
+ * passed values which represent data-space information about the nature of the interaction.
+ * That last sentence was intentionally vague, because different behaviors operate in slightly different ways.
+ *
+ * The move behavior requires scales to be passed to it as configuration, and when a user interacts with the behavior layer,
+ * it inverts the pixel location of the interaction using these scales and passes the resulting data-space values to the callback
+ * functions. This component extends a d3.dispatch instance.
+ *
+ * @module sszvis/behavior/move
+ *
+ * @property {boolean} debug                      Whether or not to render the component in debug mode, which reveals its position in the chart.
+ * @property {function} xScale                    The x-scale for the component. The extent of this scale, plus component padding, is the width of the
+ *                                                component's active area.
+ * @property {function} yScale                    The y-scale for the component. The extent of this scale, plus component padding, is the height of the
+ *                                                component's active area.
+ * @property {boolean} draggable                  Whether or not this component is draggable. This changes certain display properties of the component.
+ * @property {object} padding                     An object which specifies padding, in addition to the scale values, for the component. Defaults are all 0.
+ *                                                The options are { top, right, bottom, left }
+ * @property {boolean|function} cancelScrolling   A predicate function, or a constant boolean, that determines whether the browser's default scrolling
+ *                                                behavior in response to a touch event should be canceled. In area charts and line charts, for example,
+ *                                                you generally don't want to cancel scrolling, as this creates a scroll trap. However, in bar charts
+ *                                                which use this behavior, you want to pass a predicate function here which will determine whether the touch
+ *                                                event falls within the "profile" of the bar chart, and should therefore cancel scrolling and trigger an event.
+ * @property {boolean} fireOnPanOnly              In response to touch events, whether to fire events only while "panning", that is only while performing
+ *                                                a touch move where the default scrolling behavior is canceled, and not otherwise. In area and line charts, this
+ *                                                should be false, since you want to fire events all the time, even while scrolling. In bar charts, we want to
+ *                                                limit the firing of events (and therefore, the showing of tooltips) to only cases where the touch event has its
+ *                                                default scrolling prevented, and the user is therefore "panning" across bars. So this should be true for bar charts.
+ * @property {string and function} on             The .on() method of this component should specify an event name and an event handler function.
+ *                                                Possible event names are:
+ *                                                'start' - when the move action starts - mouseover or touchstart
+ *                                                'move' - called when a 'moving' action happens - mouseover on the element
+ *                                                'drag' - called when a 'dragging' action happens - mouseover with the mouse click down, or touchmove
+ *                                                'end' - called when the event ends - mouseout or touchend
+ *                                                Event handler functions, excepting end, are passed an x-value and a y-value, which are the data values,
+ *                                                computed by inverting the provided xScale and yScale, which correspond to the screen pixel location of the event.
+ *
+ * @return {sszvis.component}
+ */
 
-declare function _default$z(): Component;
+type MoveScale<T = number | string> = ScaleLinear<number, number> | ScaleBand<T extends string ? T : string> | ScalePoint<T extends string ? T : string>;
+type Padding$1 = {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+};
+type Domain = number | string;
+type EventHandler = (event: Event, x: number | string | null, y: number | string | null) => void;
+interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Component {
+    debug(): boolean;
+    debug(value: boolean): MoveComponent<XDomain, YDomain>;
+    xScale(): MoveScale<XDomain>;
+    xScale(scale: MoveScale<XDomain>): MoveComponent<XDomain, YDomain>;
+    yScale(): MoveScale<YDomain>;
+    yScale(scale: MoveScale<YDomain>): MoveComponent<XDomain, YDomain>;
+    draggable(): boolean;
+    draggable(value: boolean): MoveComponent<XDomain, YDomain>;
+    padding(): Padding$1;
+    padding(value: Partial<Padding$1>): MoveComponent<XDomain, YDomain>;
+    cancelScrolling(): (x?: XDomain | null, y?: YDomain | null) => boolean;
+    cancelScrolling(predicate: boolean | ((x: XDomain | null, y: YDomain | null) => boolean)): MoveComponent<XDomain, YDomain>;
+    fireOnPanOnly(): () => boolean;
+    fireOnPanOnly(predicate: boolean | (() => boolean)): MoveComponent<XDomain, YDomain>;
+    on(eventName: "start", handler: EventHandler): MoveComponent<XDomain, YDomain>;
+    on(eventName: "move", handler: EventHandler): MoveComponent<XDomain, YDomain>;
+    on(eventName: "drag", handler: EventHandler): MoveComponent<XDomain, YDomain>;
+    on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
+    on(eventName: string): EventHandler | undefined;
+}
+declare function export_default$2<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
-declare function _default$y(): Component;
+/**
+ * Panning behavior
+ *
+ * This behavior is used for adding "panning" functionality to a set of chart elements.
+ * The "panning" functionality refers to a combination of mouseover and touch responsiveness,
+ * where on a mouse interaction an event is fired on hover, but the touch interaction is more
+ * complex. The idea is to sort of imitate the way a hover interaction works, but with only a
+ * finger. When a user starts a touch on an element which has this behavior enabled, the
+ * default scrolling behavior of the browser will be canceled. The user can then move
+ * their finger across the surface of the screen, onto other elements, and the scroll
+ * will be canceled. When the finger moves onto other elements with this behavior attached,
+ * the event will be fired. Meanwhile, if the user starts the interaction somewhere outside
+ * an element, the scroll will happen as usual, and if they move onto an activated element,
+ * no event will be fired and the scrolling will continue.
+ *
+ * This behavior is applied to all the children of a selection which match the elementSelector
+ * property. Event listeners are attached to each of the child elements. The elementSelector
+ * property is necessary to know which elements to attach to (and therefore to also avoid
+ * attaching event listeners to elements which shouldn't be interaction-active).
+ *
+ * @module sszvis/behavior/panning
+ *
+ * @property {String} elementSelector    This should be a string selector that matches child
+ *                                       elements of the selection on which this component
+ *                                       is rendered using the .call(component) pattern. All
+ *                                       child elements will have the panning event listeners
+ *                                       attached to them.
+ * @property {String, Function} on       The .on() method should specify an event name and a handler
+ *                                       function for that event. The supported events are:
+ *                                       'start' - when the interaction starts on an element.
+ *                                       'pan' - when the user pans on the same element or onto another
+ *                                       element (note, no 'start' event will be fired when the user
+ *                                       pans with a touch from one element onto another, since this
+ *                                       behavior is too difficult to test for and emulate).
+ *                                       'end' - when the interaction with an element ends.
+ *
+ * @return {d3.component}
+ */
+
+type PanEventHandler = (event: Event, ...args: unknown[]) => void;
+interface PanningComponent extends Component {
+    elementSelector(): string;
+    elementSelector(selector: string): PanningComponent;
+    on(eventName: "start", handler: PanEventHandler): PanningComponent;
+    on(eventName: "pan", handler: PanEventHandler): PanningComponent;
+    on(eventName: "end", handler: PanEventHandler): PanningComponent;
+    on(eventName: string): PanEventHandler | undefined;
+}
+declare function export_default$1(): PanningComponent;
+
+/**
+ * Voronoi behavior
+ *
+ * The voronoi behavior adds an invisible layer of voronoi cells to a chart. The voronoi cells are calculated
+ * based on the positions of the data objects which should be bound to the interaction layer before this behavior
+ * is called on it. Each voronoi cell is associated with one data object, and this data object is passed to the event
+ * callback functions.
+ *
+ * Like other behavior components, this behavior adds an invisible layer over the chart,
+ * which the users interact with using touch or mouse actions. The behavior component then interprets
+ * these interactions, and calls the relevant event handler callback functions. These callback functions are
+ * passed values which represent data-space information about the nature of the interaction.
+ * That last sentence was intentionally vague, because different behaviors operate in slightly different ways.
+ *
+ * The voronoi behavior expects to find an array of data already bound to the interaction layer. Each datum should
+ * represent a point, and these points are used as the focal points of the construction of voronoi cells. These data
+ * are also associated with the voronoi cells, so that when a user interacts with them, the datum and its index within the
+ * bound data are passed to the callback functions. This component extends a d3.dispatch instance.
+ *
+ * The event handler functions are only called when the event happens within a certain distance
+ * (see MAX_INTERACTION_RADIUS_SQUARED in this file) from the voronoi area's center.
+ *
+ * @module sszvis/behavior/voronoi
+ *
+ * @property {function} x                         Specify an accessor function for the x-position of the voronoi point
+ * @property {function} y                         Specify an accessor function for the y-position of the voronoi point
+ * @property {array[array, array]} bounds         Specify the bounds of the voronoi area. This is essential to the construction of voronoi cells
+ *                                                using the d3.vornoi geom object. The bounds should determine the chart area over which you would like
+ *                                                voronoi cells to be active. Note that if not specified, the voronoi cells will be very large.
+ * @property {boolean} debug                      Whether the component is in debug mode. Being in debug mode renders the voroni cells obviously
+ * @property {string and function} on             The .on() method should specify an event name and an event handler function.
+ *                                                Possible event names are:
+ *                                                'over' - when the user interacts with a voronoi area, either with a mouseover or touchstart
+ *                                                'out' - when the user ceases to interact with a voronoi area, either with a mouseout or touchend
+ *                                                All event handler functions are passed the datum which is the center of the voronoi area.
+ *                                                Note: previously, event handlers were also passed the index of the datum within the dataset.
+ *                                                However, this is no longer the case, due to the difficulty of inferring that information when hit
+ *                                                testing a touch interaction on arbitrary rendered elements in the scene. In addition, the 'out' event
+ *                                                used to be passed the datum itself, but this is no longer the case, also having to do with the impossibility
+ *                                                of guaranteeing that there is a datum at the position of a touch, while "panning".
+ *
+ */
+
+type VoronoiBounds = [number, number, number, number];
+type Accessor<T, R> = (datum: T) => R;
+type NumberAccessor<T = unknown> = Accessor<T, number>;
+type VoronoiEventHandler<T = unknown> = (event: Event, datum?: T) => void;
+interface VoronoiComponent<T = unknown> extends Component {
+    x(): NumberAccessor<T>;
+    x(accessor: NumberAccessor<T>): VoronoiComponent<T>;
+    y(): NumberAccessor<T>;
+    y(accessor: NumberAccessor<T>): VoronoiComponent<T>;
+    bounds(): VoronoiBounds;
+    bounds(bounds: VoronoiBounds): VoronoiComponent<T>;
+    debug(): boolean;
+    debug(value: boolean): VoronoiComponent<T>;
+    on(eventName: "over", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
+    on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
+    on(eventName: string): VoronoiEventHandler<T> | undefined;
+}
+declare function export_default<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -2157,5 +2342,5 @@ declare function on(name: any, cb: any): any;
 declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$9 as annotationCircle, export_default$8 as annotationConfidenceArea, export_default$7 as annotationConfidenceBar, export_default$5 as annotationLine, export_default$4 as annotationRangeFlag, export_default$3 as annotationRangeRuler, export_default$2 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$x as bar, bounds, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$w as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$6 as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getGeoJsonCenter, _default$v as groupedBars, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, _default$A as move, muchDarker, nestedStackedBarsVertical, not, _default$z as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData$1 as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, prepareData as sunburstPrepareData, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$1 as tooltip, export_default as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, viewport, _default$y as voronoi, widthAdaptiveMapPathStroke, withAlpha };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$c as annotationCircle, export_default$b as annotationConfidenceArea, export_default$a as annotationConfidenceBar, export_default$8 as annotationLine, export_default$7 as annotationRangeFlag, export_default$6 as annotationRangeRuler, export_default$5 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$x as bar, bounds, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$w as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$9 as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getGeoJsonCenter, _default$v as groupedBars, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$2 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData$1 as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, prepareData as sunburstPrepareData, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$4 as tooltip, export_default$3 as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, viewport, export_default as voronoi, widthAdaptiveMapPathStroke, withAlpha };
 export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BoundsConfig, BoundsResult, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, MeasurableElement, Padding, PartialBreakpoint, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SvgLayerMetadata, ValueSorter };

@@ -59,14 +59,13 @@ import { isNull, defined } from '../fn.js';
  *                                                                                      number in the data's domain, and will be compared against both
  *                                                                                      cursorValue and the value accessed from the datum.
  */
-
-const elementFromEvent = function (evt) {
+const elementFromEvent = evt => {
   if (!isNull(evt) && defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
   return null;
 };
-const datumFromPannableElement = function (element) {
+const datumFromPannableElement = element => {
   if (!isNull(element)) {
     const selection = select(element);
     if (!isNull(selection.attr("data-sszvis-behavior-pannable"))) {
@@ -78,10 +77,11 @@ const datumFromPannableElement = function (element) {
   }
   return null;
 };
-const datumFromPanEvent = function (evt) {
-  return datumFromPannableElement(elementFromEvent(evt));
+const datumFromPanEvent = panEvent => {
+  const element = elementFromEvent(panEvent);
+  return datumFromPannableElement(element);
 };
-const testBarThreshold = function (cursorValue, datum, accessor, threshold) {
+const testBarThreshold = (cursorValue, datum, accessor, threshold) => {
   if (!defined(datum)) {
     return false;
   }
@@ -90,7 +90,7 @@ const testBarThreshold = function (cursorValue, datum, accessor, threshold) {
   // when the touch is close enough to the 0-axis, we prevent scrolling
   // and show the tooltip. The proximity which the touch must have to the 0-axis
   // is determined by threshold, which must be a value in the axis' domain (NOT range).
-  return cursorValue < threshold && isNaN(dataValue) || cursorValue < threshold && dataValue < threshold || cursorValue < dataValue;
+  return cursorValue < threshold && Number.isNaN(dataValue) || cursorValue < threshold && dataValue < threshold || cursorValue < dataValue;
 };
 
 export { datumFromPanEvent, datumFromPannableElement, elementFromEvent, testBarThreshold };

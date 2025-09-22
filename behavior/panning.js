@@ -41,36 +41,38 @@ import { datumFromPanEvent } from './util.js';
  *
  * @return {d3.component}
  */
-
 function panning () {
   const event = dispatch("start", "pan", "end");
   const panningComponent = component().prop("elementSelector").render(function () {
     const selection = select(this);
     const props = selection.props();
     const elements = selection.selectAll(props.elementSelector);
-    elements.attr("data-sszvis-behavior-pannable", "").classed("sszvis-interactive", true).on("mouseenter", function () {
-      event.apply("start", this, arguments);
-    }).on("mousemove", function () {
-      event.apply("pan", this, arguments);
-    }).on("mouseleave", function () {
-      event.apply("end", this, arguments);
+    elements.attr("data-sszvis-behavior-pannable", "").classed("sszvis-interactive", true).on("mouseenter", function (e) {
+      if (this) event.apply("start", this, [e]);
+    }).on("mousemove", function (e) {
+      if (this) event.apply("pan", this, [e]);
+    }).on("mouseleave", function (e) {
+      if (this) event.apply("end", this, [e]);
     }).on("touchstart", function (e) {
       e.preventDefault();
-      event.apply("start", this, arguments);
+      if (this) event.apply("start", this, [e]);
     }).on("touchmove", function (e) {
       e.preventDefault();
       const datum = datumFromPanEvent(firstTouch(e));
       if (datum === null) {
-        event.apply("end", this, arguments);
+        if (this) event.apply("end", this, [e]);
       } else {
-        event.apply("pan", this, arguments);
+        if (this) event.apply("pan", this, [e]);
       }
-    }).on("touchend", function () {
-      event.apply("end", this, arguments);
+    }).on("touchend", function (e) {
+      if (this) event.apply("end", this, [e]);
     });
   });
   panningComponent.on = function () {
-    const value = event.on.apply(event, arguments);
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+    const value = event.on.apply(event, args);
     return value === event ? panningComponent : value;
   };
   return panningComponent;
