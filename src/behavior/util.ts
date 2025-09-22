@@ -73,9 +73,7 @@ interface DatumContainer<T = unknown> {
 
 type AccessorFunction<T, R> = (datum: T) => R;
 
-export const elementFromEvent = function (
-  evt: EventWithCoordinates | null | undefined
-): Element | null {
+export const elementFromEvent = function (evt: EventWithCoordinates | null): Element | null {
   if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
@@ -83,7 +81,7 @@ export const elementFromEvent = function (
 };
 
 export const datumFromPannableElement = function <T = unknown>(
-  element: Element | null | undefined
+  element: Element | null
 ): DatumContainer<T> | null {
   if (!fn.isNull(element)) {
     const selection = select(element as Element);
@@ -98,7 +96,7 @@ export const datumFromPannableElement = function <T = unknown>(
 };
 
 export const datumFromPanEvent = function <T = unknown>(
-  panEvent: Touch | null | undefined
+  panEvent: Touch | null
 ): DatumContainer<T> | null {
   const element = elementFromEvent(panEvent);
   return datumFromPannableElement<T>(element);

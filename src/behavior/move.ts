@@ -49,17 +49,20 @@ import {
   ascending,
   dispatch,
   pointer,
-  select,
   type ScaleBand,
   type ScaleLinear,
   type ScalePoint,
+  select,
 } from "d3";
-import { component, type Component } from "../d3-component";
+import { type Component, component } from "../d3-component";
 import * as fn from "../fn";
 import { range } from "../scale";
 
 // Type definitions for move behavior component
-type MoveScale = ScaleLinear<number, number> | ScaleBand<string> | ScalePoint<string>;
+type MoveScale<T = number | string> =
+  | ScaleLinear<number, number>
+  | ScaleBand<T extends string ? T : string>
+  | ScalePoint<T extends string ? T : string>;
 
 type Padding = {
   top: number;
@@ -68,48 +71,53 @@ type Padding = {
   left: number;
 };
 
-type MoveProps = {
+type MoveProps<XDomain, YDomain> = {
   debug?: boolean;
-  xScale: MoveScale;
-  yScale: MoveScale;
+  xScale: MoveScale<XDomain>;
+  yScale: MoveScale<YDomain>;
   draggable?: boolean;
   padding: Padding;
-  cancelScrolling: (x: unknown, y: unknown) => boolean;
+  cancelScrolling: (x: XDomain | null, y: YDomain | null) => boolean;
   fireOnPanOnly: () => boolean;
 };
+type Domain = number | string;
+type EventHandler = (event: Event, x: number | string | null, y: number | string | null) => void;
 
-type EventHandler = (event: Event, x?: unknown, y?: unknown) => void;
-
-interface MoveComponent extends Component {
+export interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Component {
   debug(): boolean;
-  debug(value: boolean): MoveComponent;
+  debug(value: boolean): MoveComponent<XDomain, YDomain>;
 
-  xScale(): MoveScale;
-  xScale(scale: MoveScale): MoveComponent;
+  xScale(): MoveScale<XDomain>;
+  xScale(scale: MoveScale<XDomain>): MoveComponent<XDomain, YDomain>;
 
-  yScale(): MoveScale;
-  yScale(scale: MoveScale): MoveComponent;
+  yScale(): MoveScale<YDomain>;
+  yScale(scale: MoveScale<YDomain>): MoveComponent<XDomain, YDomain>;
 
   draggable(): boolean;
-  draggable(value: boolean): MoveComponent;
+  draggable(value: boolean): MoveComponent<XDomain, YDomain>;
 
   padding(): Padding;
-  padding(value: Partial<Padding>): MoveComponent;
+  padding(value: Partial<Padding>): MoveComponent<XDomain, YDomain>;
 
-  cancelScrolling(): (x?: unknown, y?: unknown) => boolean;
-  cancelScrolling(predicate: boolean | ((x: unknown, y: unknown) => boolean)): MoveComponent;
+  cancelScrolling(): (x?: XDomain | null, y?: YDomain | null) => boolean;
+  cancelScrolling(
+    predicate: boolean | ((x: XDomain | null, y: YDomain | null) => boolean)
+  ): MoveComponent<XDomain, YDomain>;
 
   fireOnPanOnly(): () => boolean;
-  fireOnPanOnly(predicate: boolean | (() => boolean)): MoveComponent;
+  fireOnPanOnly(predicate: boolean | (() => boolean)): MoveComponent<XDomain, YDomain>;
 
-  on(eventName: "start", handler: EventHandler): MoveComponent;
-  on(eventName: "move", handler: EventHandler): MoveComponent;
-  on(eventName: "drag", handler: EventHandler): MoveComponent;
-  on(eventName: "end", handler: EventHandler): MoveComponent;
+  on(eventName: "start", handler: EventHandler): MoveComponent<XDomain, YDomain>;
+  on(eventName: "move", handler: EventHandler): MoveComponent<XDomain, YDomain>;
+  on(eventName: "drag", handler: EventHandler): MoveComponent<XDomain, YDomain>;
+  on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
   on(eventName: string): EventHandler | undefined;
 }
 
-export default function (): MoveComponent {
+export default function <XDomain = number | string, YDomain = number | string>(): MoveComponent<
+  XDomain,
+  YDomain
+> {
   const event = dispatch("start", "move", "drag", "end");
 
   const moveComponent = component()
@@ -134,7 +142,7 @@ export default function (): MoveComponent {
     .padding({})
     .render(function (this: SVGElement) {
       const selection = select(this);
-      const props = selection.props() as MoveProps;
+      const props = selection.props<MoveProps<XDomain, YDomain>>();
 
       const xExtent = range(props.xScale).sort(ascending);
       const yExtent = range(props.yScale).sort(ascending);
@@ -169,11 +177,11 @@ export default function (): MoveComponent {
           const doc = select(document);
           const win = select(window);
 
-          const startDragging = function () {
+          const startDragging = () => {
             target.__dragging__ = true;
           };
 
-          const stopDragging = function () {
+          const stopDragging = () => {
             target.__dragging__ = false;
             win.on("mousemove.sszvis-behavior-move", null);
             doc.on("mouseout.sszvis-behavior-move", null);
@@ -197,8 +205,8 @@ export default function (): MoveComponent {
           const xy = pointer(e);
           if (!xy) return;
 
-          const x = scaleInvert(props.xScale, xy[0] as number);
-          const y = scaleInvert(props.yScale, xy[1] as number);
+          const x = scaleInvert(props.xScale, xy[0]);
+          const y = scaleInvert(props.yScale, xy[1]);
 
           if (target.__dragging__) {
             if (this) event.apply("drag", this, [e, x, y]);
@@ -210,7 +218,7 @@ export default function (): MoveComponent {
           if (this) event.apply("end", this, [e]);
         })
         .on("touchstart", function (e: TouchEvent) {
-          const pointerCoords = pointer(e) as [number, number];
+          const pointerCoords = pointer(e);
           const xy = fn.first([pointerCoords]);
           if (!xy) return;
 
@@ -243,8 +251,8 @@ export default function (): MoveComponent {
             }
 
             const elementContext = this;
-            const pan = function () {
-              const panPointerCoords = pointer(e) as [number, number];
+            const pan = () => {
+              const panPointerCoords = pointer(e);
               const panXY = fn.first([panPointerCoords]);
               if (!panXY) return;
 
@@ -268,7 +276,7 @@ export default function (): MoveComponent {
               }
             };
 
-            const end = function () {
+            const end = () => {
               if (elementContext) event.apply("end", elementContext, [e]);
               select(elementContext).on("touchmove", null).on("touchend", null);
             };
@@ -282,25 +290,25 @@ export default function (): MoveComponent {
       }
     });
 
-  moveComponent.on = function () {
-    const value = (event.on as (...args: unknown[]) => unknown).apply(event, Array.from(arguments));
+  moveComponent.on = (...args: [string, never]) => {
+    const value = event.on.apply(event, args);
     return value === event ? moveComponent : value;
   };
 
-  return moveComponent as MoveComponent;
+  return moveComponent;
 }
 
-function scaleInvert(scale: MoveScale, px: number): unknown {
+function scaleInvert<T>(scale: MoveScale<T>, px: number): T | null {
   if ("invert" in scale) {
-    return (scale as ScaleLinear<number, number>).invert(px);
+    return scale.invert(px) as T;
   } else if ("paddingInner" in scale) {
-    return invertBandScale(scale as ScaleBand<string>, px);
+    return invertBandScale(scale, px) as T | null;
   } else {
-    return invertPointScale(scale as ScalePoint<string>, px);
+    return invertPointScale(scale, px) as T | null;
   }
 }
 
-function invertBandScale(scale: ScaleBand<string>, px: number): string | null {
+function invertBandScale<T extends string>(scale: ScaleBand<T>, px: number): T | null {
   const step = scale.step();
   const paddingOuter = scale.paddingOuter() * step;
   const paddingInner = scale.paddingInner() * step;
@@ -335,7 +343,7 @@ function invertBandScale(scale: ScaleBand<string>, px: number): string | null {
   return null;
 }
 
-function invertPointScale(scale: ScalePoint<string>, px: number): string | null {
+function invertPointScale<T extends string>(scale: ScalePoint<T>, px: number): T | null {
   const step = scale.step();
   const paddingOuter = scale.padding() * step;
   const scaleRange = scale.range();

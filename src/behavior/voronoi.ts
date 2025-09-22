@@ -87,9 +87,9 @@ export default function <T = unknown>(): VoronoiComponent<T> {
     .prop("y")
     .prop("bounds")
     .prop("debug")
-    .render(function (this: SVGElement, data: T[]) {
-      const selection = select(this);
-      const props = selection.props() as VoronoiProps<T>;
+    .render(function (this: SVGPathElement, data: T[]) {
+      const selection = select<SVGPathElement, T>(this);
+      const props = selection.props<VoronoiProps<T>>();
 
       if (!props.bounds) {
         logger.error("behavior.voronoi - requires bounds");
@@ -103,7 +103,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
       const voronoi = delaunay.voronoi(props.bounds);
 
       const polys = selection
-        .selectAll("[data-sszvis-behavior-voronoi]")
+        .selectAll<SVGPathElement, T>("[data-sszvis-behavior-voronoi]")
         .data(voronoi.cellPolygons())
         .join("path")
         .attr("data-sszvis-behavior-voronoi", "")
@@ -114,7 +114,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
         .attr("d", (d) => `M${d.join("L")}Z`)
         .attr("fill", "transparent")
         .on("mouseover", function (e: MouseEvent) {
-          const parent = (this as SVGPathElement).parentNode as SVGElement;
+          const parent = this.parentNode as Element | null;
           if (!parent) return;
 
           const cbox = parent.getBoundingClientRect();
@@ -129,7 +129,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
           }
         })
         .on("mousemove", function (e: MouseEvent) {
-          const parent = (this as SVGPathElement).parentNode as SVGElement;
+          const parent = this.parentNode as SVGElement;
           if (!parent) return;
 
           const cbox = parent.getBoundingClientRect();
@@ -149,7 +149,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
           if (this) event.apply("out", this, [e]);
         })
         .on("touchstart", function (e: TouchEvent) {
-          const parent = (this as SVGPathElement).parentNode as SVGElement;
+          const parent = this.parentNode as SVGElement;
           if (!parent) return;
 
           const cbox = parent.getBoundingClientRect();

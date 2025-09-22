@@ -1,4 +1,4 @@
-import { scaleLinear } from "d3";
+import { scaleBand, scaleLinear, scalePoint } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import move from "../../src/behavior/move";
 import { bounds } from "../../src/bounds";
@@ -37,7 +37,11 @@ describe("behavior/move", () => {
   });
 
   test("should create move component with proper API", () => {
-    const moveComponent = move().xScale(xScale).yScale(yScale).debug(true).draggable(true);
+    const moveComponent = move<number, number>()
+      .xScale(xScale)
+      .yScale(yScale)
+      .debug(true)
+      .draggable(true);
     expect(moveComponent.xScale()).toBe(xScale);
     expect(moveComponent.yScale()).toBe(yScale);
     expect(moveComponent.debug()).toBe(true);
@@ -53,7 +57,7 @@ describe("behavior/move", () => {
   });
 
   test("should attach interactive rectangle when rendered", () => {
-    svg.call(move().xScale(xScale).yScale(yScale));
+    svg.call(move<number, number>().xScale(xScale).yScale(yScale));
     const interactiveRect = svg.select("[data-sszvis-behavior-move]");
     expect(interactiveRect.empty()).toBe(false);
     expect(interactiveRect.attr("class")).toBe("sszvis-interactive");
@@ -61,14 +65,17 @@ describe("behavior/move", () => {
   });
 
   test("should apply draggable class when draggable is true", () => {
-    svg.call(move().xScale(xScale).yScale(yScale).draggable(true));
+    svg.call(move<number, number>().xScale(xScale).yScale(yScale).draggable(true));
     const interactiveRect = svg.select("[data-sszvis-behavior-move]");
     expect(interactiveRect.classed("sszvis-interactive--draggable")).toBe(true);
   });
 
   test("should apply padding to rect dimensions", () => {
     svg.call(
-      move().xScale(xScale).yScale(yScale).padding({ top: 10, right: 15, bottom: 20, left: 25 })
+      move<number, number>()
+        .xScale(xScale)
+        .yScale(yScale)
+        .padding({ top: 10, right: 15, bottom: 20, left: 25 })
     );
     const interactiveRect = svg.select("[data-sszvis-behavior-move]");
     expect(interactiveRect.attr("x")).toBe("-25"); // 0 - 25 = -25
@@ -79,16 +86,16 @@ describe("behavior/move", () => {
 
   test("should dispatch move event on mousemove when not dragging", () => {
     const moveHandler = vi.fn();
-    svg.call(move().xScale(xScale).yScale(yScale).on("move", moveHandler));
-    const rectNode = svg.select("[data-sszvis-behavior-move]").node() as SVGRectElement;
-    rectNode.dispatchEvent(
+    svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("move", moveHandler));
+    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+    rectNode?.dispatchEvent(
       new MouseEvent("mouseover", {
         clientX: 150,
         clientY: 100,
         bubbles: true,
       })
     );
-    rectNode.dispatchEvent(
+    rectNode?.dispatchEvent(
       new MouseEvent("mousemove", {
         clientX: 150,
         clientY: 100,
@@ -100,16 +107,16 @@ describe("behavior/move", () => {
 
   test("should dispatch drag event on mousemove when dragging", () => {
     const dragHandler = vi.fn();
-    svg.call(move().xScale(xScale).yScale(yScale).on("drag", dragHandler));
-    const rectNode = svg.select("[data-sszvis-behavior-move]").node() as SVGRectElement;
-    rectNode.dispatchEvent(
+    svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("drag", dragHandler));
+    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+    rectNode?.dispatchEvent(
       new MouseEvent("mousedown", {
         clientX: 150,
         clientY: 100,
         bubbles: true,
       })
     );
-    rectNode.dispatchEvent(
+    rectNode?.dispatchEvent(
       new MouseEvent("mousemove", {
         clientX: 150,
         clientY: 100,
@@ -121,9 +128,9 @@ describe("behavior/move", () => {
 
   test("should dispatch start event on mouseover", () => {
     const startHandler = vi.fn();
-    svg.call(move().xScale(xScale).yScale(yScale).on("start", startHandler));
-    const rectNode = svg.select("[data-sszvis-behavior-move]").node() as SVGRectElement;
-    rectNode.dispatchEvent(
+    svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("start", startHandler));
+    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+    rectNode?.dispatchEvent(
       new MouseEvent("mouseover", {
         clientX: 150,
         clientY: 100,
@@ -135,9 +142,9 @@ describe("behavior/move", () => {
 
   test("should dispatch end event on mouseout", () => {
     const endHandler = vi.fn();
-    svg.call(move().xScale(xScale).yScale(yScale).on("end", endHandler));
-    const rectNode = svg.select("[data-sszvis-behavior-move]").node() as SVGRectElement;
-    rectNode.dispatchEvent(
+    svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("end", endHandler));
+    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+    rectNode?.dispatchEvent(
       new MouseEvent("mouseout", {
         clientX: 150,
         clientY: 100,
@@ -152,28 +159,121 @@ describe("behavior/move", () => {
     const moveHandler = vi.fn();
     const endHandler = vi.fn();
     svg.call(
-      move()
+      move<number, number>()
         .xScale(xScale)
         .yScale(yScale)
         .on("drag", dragHandler)
         .on("move", moveHandler)
         .on("end", endHandler)
     );
-    const rectNode = svg.select("[data-sszvis-behavior-move]").node() as SVGRectElement;
+    const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
     expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).toBeUndefined();
     const touchstartEvent = new Event("touchstart", { bubbles: true });
     Object.defineProperty(touchstartEvent, "touches", {
       value: [{ clientX: 150, clientY: 100, identifier: 0 }],
       writable: false,
     });
-    rectNode.dispatchEvent(touchstartEvent);
+    rectNode?.dispatchEvent(touchstartEvent);
     expect(dragHandler).toHaveBeenCalled();
     expect(moveHandler).toHaveBeenCalled();
     expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).not.toBeNull();
     expect(svg.select("[data-sszvis-behavior-move]").on("touchend")).not.toBeNull();
-    rectNode.dispatchEvent(new Event("touchend", { bubbles: true }));
+    rectNode?.dispatchEvent(new Event("touchend", { bubbles: true }));
     expect(endHandler).toHaveBeenCalled();
     expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).toBeUndefined();
     expect(svg.select("[data-sszvis-behavior-move]").on("touchend")).toBeUndefined();
+  });
+
+  describe("using band scale", () => {
+    let xBandScale: d3.ScaleBand<string>;
+    let yBandScale: d3.ScaleBand<string>;
+
+    beforeEach(() => {
+      xBandScale = scaleBand().domain(["A", "B", "C", "D"]).range([0, 300]).padding(0.1);
+      yBandScale = scaleBand().domain(["1", "2", "3"]).range([200, 0]).padding(0.2);
+    });
+
+    test("should create move component with band scales", () => {
+      const moveComponent = move<string, string>().xScale(xBandScale).yScale(yBandScale);
+      expect(moveComponent.xScale()).toBe(xBandScale);
+      expect(moveComponent.yScale()).toBe(yBandScale);
+    });
+
+    test("should dispatch move event with band scales", () => {
+      const moveHandler = vi.fn();
+      svg.call(
+        move<string, string>().xScale(xBandScale).yScale(yBandScale).on("move", moveHandler)
+      );
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      rectNode?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+      expect(moveHandler).toHaveBeenCalled();
+    });
+
+    test("should handle band scale drag events", () => {
+      const dragHandler = vi.fn();
+      svg.call(
+        move<string, string>().xScale(xBandScale).yScale(yBandScale).on("drag", dragHandler)
+      );
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      rectNode?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      rectNode?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+      expect(dragHandler).toHaveBeenCalled();
+    });
+  });
+
+  describe("using point scale", () => {
+    let xPointScale: d3.ScalePoint<string>;
+    let yPointScale: d3.ScalePoint<string>;
+
+    beforeEach(() => {
+      xPointScale = scalePoint().domain(["A", "B", "C", "D"]).range([0, 300]).padding(0.1);
+      yPointScale = scalePoint().domain(["1", "2", "3"]).range([200, 0]).padding(0.2);
+    });
+
+    test("should create move component with point scales", () => {
+      const moveComponent = move<string, string>().xScale(xPointScale).yScale(yPointScale);
+      expect(moveComponent.xScale()).toBe(xPointScale);
+      expect(moveComponent.yScale()).toBe(yPointScale);
+    });
+
+    test("should dispatch move event with point scales", () => {
+      const moveHandler = vi.fn();
+      svg.call(
+        move<string, string>().xScale(xPointScale).yScale(yPointScale).on("move", moveHandler)
+      );
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      rectNode?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+      expect(moveHandler).toHaveBeenCalled();
+    });
+
+    test("should handle point scale drag events", () => {
+      const dragHandler = vi.fn();
+      svg.call(
+        move<string, string>().xScale(xPointScale).yScale(yPointScale).on("drag", dragHandler)
+      );
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      rectNode?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+      rectNode?.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+      expect(dragHandler).toHaveBeenCalled();
+    });
+
+    test("should handle point scale start and end events", () => {
+      const startHandler = vi.fn();
+      const endHandler = vi.fn();
+      svg.call(
+        move<string, string>()
+          .xScale(xPointScale)
+          .yScale(yPointScale)
+          .on("start", startHandler)
+          .on("end", endHandler)
+      );
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      rectNode?.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      expect(startHandler).toHaveBeenCalled();
+      rectNode?.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
+      expect(endHandler).toHaveBeenCalled();
+    });
   });
 });

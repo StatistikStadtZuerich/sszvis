@@ -43,9 +43,9 @@ import * as fn from "../fn";
 import { datumFromPanEvent } from "./util";
 
 // Type definitions for panning behavior component
-interface PanningProps {
+type PanningProps = {
   elementSelector: string;
-}
+};
 
 type PanEventHandler = (event: Event, ...args: unknown[]) => void;
 
@@ -66,7 +66,7 @@ export default function (): PanningComponent {
     .prop("elementSelector")
     .render(function (this: SVGElement) {
       const selection = select(this);
-      const props = selection.props() as PanningProps;
+      const props = selection.props<PanningProps>();
 
       const elements = selection.selectAll(props.elementSelector);
 
