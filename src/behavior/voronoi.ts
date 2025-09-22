@@ -42,7 +42,7 @@
  */
 
 import { Delaunay, dispatch, select } from "d3";
-import { component, type Component } from "../d3-component";
+import { type Component, component } from "../d3-component";
 import * as fn from "../fn";
 import * as logger from "../logger";
 import { datumFromPannableElement, elementFromEvent } from "./util";
@@ -175,7 +175,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
             // user moves their finger over the center of the voronoi area, and it fires an event anyway. Generally,
             // when users are performing touches that cause scrolling, we want to avoid firing the events.
             const elementContext = this;
-            const pan = function () {
+            const pan = () => {
               const touchEvent = fn.firstTouch(e);
               if (!touchEvent) return;
 
@@ -208,7 +208,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
               }
             };
 
-            const end = function () {
+            const end = () => {
               if (elementContext) event.apply("out", elementContext, [e]);
               select(elementContext).on("touchmove", null).on("touchend", null);
             };
@@ -222,9 +222,8 @@ export default function <T = unknown>(): VoronoiComponent<T> {
       }
     });
 
-  voronoiComponent.on = function () {
-    // eslint-disable-next-line prefer-rest-params
-    const value = (event.on as (...args: unknown[]) => unknown).apply(event, Array.from(arguments));
+  voronoiComponent.on = function (this: VoronoiComponent<T>, ...args: [string, never]) {
+    const value = (event.on as (...args: unknown[]) => unknown).apply(event, args);
     return value === event ? voronoiComponent : value;
   };
 
@@ -232,7 +231,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
 }
 
 // Perform distance calculations in units squared to avoid a costly Math.sqrt
-const MAX_INTERACTION_RADIUS_SQUARED = Math.pow(15, 2);
+const MAX_INTERACTION_RADIUS_SQUARED = 15 ** 2;
 
 function eventNearPoint(
   event: { clientX: number; clientY: number },

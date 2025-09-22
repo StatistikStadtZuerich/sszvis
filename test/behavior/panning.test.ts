@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import * as d3 from "d3";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import panning from "../../src/behavior/panning";
 import { bounds } from "../../src/bounds";
 import { createSvgLayer } from "../../src/createSvgLayer";

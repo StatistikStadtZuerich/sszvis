@@ -38,7 +38,7 @@
  */
 
 import { dispatch, select } from "d3";
-import { component, type Component } from "../d3-component";
+import { type Component, component } from "../d3-component";
 import * as fn from "../fn";
 import { datumFromPanEvent } from "./util";
 
@@ -100,8 +100,8 @@ export default function (): PanningComponent {
         });
     });
 
-  panningComponent.on = function () {
-    const value = (event.on as (...args: unknown[]) => unknown).apply(event, Array.from(arguments));
+  panningComponent.on = function (this: PanningComponent, ...args: [string, never]) {
+    const value = event.on.apply(event, args);
     return value === event ? panningComponent : value;
   };
 

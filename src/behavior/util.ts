@@ -73,16 +73,16 @@ interface DatumContainer<T = unknown> {
 
 type AccessorFunction<T, R> = (datum: T) => R;
 
-export const elementFromEvent = function (evt: EventWithCoordinates | null): Element | null {
+export const elementFromEvent = (evt: EventWithCoordinates | null): Element | null => {
   if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
   return null;
 };
 
-export const datumFromPannableElement = function <T = unknown>(
+export const datumFromPannableElement = <T = unknown>(
   element: Element | null
-): DatumContainer<T> | null {
+): DatumContainer<T> | null => {
   if (!fn.isNull(element)) {
     const selection = select(element as Element);
     if (!fn.isNull(selection.attr("data-sszvis-behavior-pannable"))) {
@@ -95,19 +95,19 @@ export const datumFromPannableElement = function <T = unknown>(
   return null;
 };
 
-export const datumFromPanEvent = function <T = unknown>(
+export const datumFromPanEvent = <T = unknown>(
   panEvent: Touch | null
-): DatumContainer<T> | null {
+): DatumContainer<T> | null => {
   const element = elementFromEvent(panEvent);
   return datumFromPannableElement<T>(element);
 };
 
-export const testBarThreshold = function <T>(
+export const testBarThreshold = <T>(
   cursorValue: number,
   datum: T,
   accessor: AccessorFunction<T, number>,
   threshold: number
-): boolean {
+): boolean => {
   if (!fn.defined(datum)) {
     return false;
   }
