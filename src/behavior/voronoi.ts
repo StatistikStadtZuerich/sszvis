@@ -52,12 +52,12 @@ export type VoronoiBounds = [number, number, number, number]; // [minX, minY, ma
 type Accessor<T, R> = (datum: T) => R;
 type NumberAccessor<T = unknown> = Accessor<T, number>;
 
-interface VoronoiProps<T = unknown> {
+type VoronoiProps<T = unknown> = {
   x: NumberAccessor<T>;
   y: NumberAccessor<T>;
   bounds: VoronoiBounds;
   debug?: boolean;
-}
+};
 
 type VoronoiEventHandler<T = unknown> = (event: Event, datum?: T) => void;
 

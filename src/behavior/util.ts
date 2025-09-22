@@ -61,19 +61,16 @@ import { select } from "d3";
 
 import * as fn from "../fn";
 
-// Type definitions for behavior utility functions
-interface EventWithCoordinates {
-  clientX: number;
-  clientY: number;
-}
-
 interface DatumContainer<T = unknown> {
   data: T;
 }
 
-type AccessorFunction<T, R> = (datum: T) => R;
-
-export const elementFromEvent = (evt: EventWithCoordinates | null): Element | null => {
+export const elementFromEvent = (
+  evt: {
+    clientX: number;
+    clientY: number;
+  } | null
+): Element | null => {
   if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
@@ -105,7 +102,7 @@ export const datumFromPanEvent = <T = unknown>(
 export const testBarThreshold = <T>(
   cursorValue: number,
   datum: T,
-  accessor: AccessorFunction<T, number>,
+  accessor: (d: T) => number,
   threshold: number
 ): boolean => {
   if (!fn.defined(datum)) {
