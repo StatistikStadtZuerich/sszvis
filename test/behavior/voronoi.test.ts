@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import voronoi from "../../src/behavior/voronoi";
+import voronoi, { VoronoiBounds } from "../../src/behavior/voronoi";
 import { bounds } from "../../src/bounds";
 import { createSvgLayer } from "../../src/createSvgLayer";
 import "../../src/d3-selectgroup";
@@ -59,8 +59,12 @@ describe("behavior/voronoi", () => {
   test("should create component with proper API and require bounds", () => {
     const xAccessor = (d: TestDataPoint) => d.x;
     const yAccessor = (d: TestDataPoint) => d.y;
-    const testBounds = [0, 0, 400, 300];
-    const chainedComponent = voronoi().x(xAccessor).y(yAccessor).bounds(testBounds).debug(true);
+    const testBounds: VoronoiBounds = [0, 0, 400, 300];
+    const chainedComponent = voronoi<TestDataPoint>()
+      .x(xAccessor)
+      .y(yAccessor)
+      .bounds(testBounds)
+      .debug(true);
     expect(chainedComponent.x()).toBe(xAccessor);
     expect(chainedComponent.y()).toBe(yAccessor);
     expect(chainedComponent.bounds()).toBe(testBounds);
@@ -72,9 +76,9 @@ describe("behavior/voronoi", () => {
       .join("g")
       .attr("class", "voronoi-layer");
     selection.call(
-      voronoi()
-        .x((d: TestDataPoint) => d.x)
-        .y((d: TestDataPoint) => d.y)
+      voronoi<TestDataPoint>()
+        .x((d) => d.x)
+        .y((d) => d.y)
     );
     expect(consoleErrorSpy).toHaveBeenCalledWith("behavior.voronoi - requires bounds");
     consoleErrorSpy.mockRestore();
@@ -87,9 +91,9 @@ describe("behavior/voronoi", () => {
       .join("g")
       .attr("class", "voronoi-normal");
     normalSelection.call(
-      voronoi()
-        .x((d: TestDataPoint) => d.x)
-        .y((d: TestDataPoint) => d.y)
+      voronoi<TestDataPoint>()
+        .x((d) => d.x)
+        .y((d) => d.y)
         .bounds([0, 0, 400, 300])
     );
     const voronoiPaths = svg.selectAll("[data-sszvis-behavior-voronoi]");
@@ -110,9 +114,9 @@ describe("behavior/voronoi", () => {
       .join("g")
       .attr("class", "voronoi-debug")
       .call(
-        voronoi()
-          .x((d: TestDataPoint) => d.x)
-          .y((d: TestDataPoint) => d.y)
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
           .bounds([0, 0, 400, 300])
           .debug(true)
       );
@@ -131,9 +135,9 @@ describe("behavior/voronoi", () => {
       .join("g")
       .attr("class", "voronoi-layer")
       .call(
-        voronoi()
-          .x((d: TestDataPoint) => d.x)
-          .y((d: TestDataPoint) => d.y)
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
           .bounds([0, 0, 400, 300])
           .on("over", overHandler)
           .on("out", outHandler)
@@ -178,9 +182,9 @@ describe("behavior/voronoi", () => {
       .join("g")
       .attr("class", "voronoi-layer")
       .call(
-        voronoi()
-          .x((d: TestDataPoint) => d.x)
-          .y((d: TestDataPoint) => d.y)
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
           .bounds([0, 0, 400, 300])
           .on("over", overHandler)
           .on("out", outHandler)
@@ -247,9 +251,9 @@ describe("behavior/voronoi", () => {
       .join("g")
       .attr("class", "voronoi-layer")
       .call(
-        voronoi()
-          .x((d: TestDataPoint) => d.x)
-          .y((d: TestDataPoint) => d.y)
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
           .bounds([0, 0, 400, 300])
           .on("over", overHandler)
       );
@@ -291,9 +295,9 @@ describe("behavior/voronoi", () => {
       .join("g")
       .attr("class", "voronoi-standard")
       .call(
-        voronoi()
-          .x((d: TestDataPoint) => d.x)
-          .y((d: TestDataPoint) => d.y)
+        voronoi<TestDataPoint>()
+          .x((d) => d.x)
+          .y((d) => d.y)
           .bounds([0, 0, 400, 300])
           .on("over", overHandler)
       );
@@ -325,9 +329,9 @@ describe("behavior/voronoi", () => {
       .join("g")
       .attr("class", "voronoi-nested")
       .call(
-        voronoi()
-          .x((d: NestedDataPoint) => d.position.horizontal)
-          .y((d: NestedDataPoint) => d.position.vertical)
+        voronoi<NestedDataPoint>()
+          .x((d) => d.position.horizontal)
+          .y((d) => d.position.vertical)
           .bounds([0, 0, 400, 300])
           .on("over", overHandler)
       );

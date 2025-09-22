@@ -59,20 +59,36 @@
 
 import { select } from "d3";
 
-import * as fn from "../fn.js";
+import * as fn from "../fn";
 
-export const elementFromEvent = function (evt) {
+// Type definitions for behavior utility functions
+interface EventWithCoordinates {
+  clientX: number;
+  clientY: number;
+}
+
+interface DatumContainer<T = unknown> {
+  data: T;
+}
+
+type AccessorFunction<T, R> = (datum: T) => R;
+
+export const elementFromEvent = function (
+  evt: EventWithCoordinates | null | undefined
+): Element | null {
   if (!fn.isNull(evt) && fn.defined(evt)) {
     return document.elementFromPoint(evt.clientX, evt.clientY);
   }
   return null;
 };
 
-export const datumFromPannableElement = function (element) {
+export const datumFromPannableElement = function <T = unknown>(
+  element: Element | null | undefined
+): DatumContainer<T> | null {
   if (!fn.isNull(element)) {
-    const selection = select(element);
+    const selection = select(element as Element);
     if (!fn.isNull(selection.attr("data-sszvis-behavior-pannable"))) {
-      const datum = selection.datum();
+      const datum = selection.datum() as DatumContainer<T> | undefined;
       if (fn.defined(datum)) {
         return datum;
       }
@@ -81,11 +97,19 @@ export const datumFromPannableElement = function (element) {
   return null;
 };
 
-export const datumFromPanEvent = function (evt) {
-  return datumFromPannableElement(elementFromEvent(evt));
+export const datumFromPanEvent = function <T = unknown>(
+  panEvent: Touch | null | undefined
+): DatumContainer<T> | null {
+  const element = elementFromEvent(panEvent);
+  return datumFromPannableElement<T>(element);
 };
 
-export const testBarThreshold = function (cursorValue, datum, accessor, threshold) {
+export const testBarThreshold = function <T>(
+  cursorValue: number,
+  datum: T,
+  accessor: AccessorFunction<T, number>,
+  threshold: number
+): boolean {
   if (!fn.defined(datum)) {
     return false;
   }
@@ -95,7 +119,7 @@ export const testBarThreshold = function (cursorValue, datum, accessor, threshol
   // and show the tooltip. The proximity which the touch must have to the 0-axis
   // is determined by threshold, which must be a value in the axis' domain (NOT range).
   return (
-    (cursorValue < threshold && isNaN(dataValue)) ||
+    (cursorValue < threshold && Number.isNaN(dataValue)) ||
     (cursorValue < threshold && dataValue < threshold) ||
     cursorValue < dataValue
   );
