@@ -73,30 +73,30 @@ export default function (): PanningComponent {
       elements
         .attr("data-sszvis-behavior-pannable", "")
         .classed("sszvis-interactive", true)
-        .on("mouseenter", function (e: MouseEvent) {
-          if (this) event.apply("start", this, [e]);
+        .on("mouseenter", function (this, ...args) {
+          if (this) event.apply("start", this, args);
         })
-        .on("mousemove", function (e: MouseEvent) {
-          if (this) event.apply("pan", this, [e]);
+        .on("mousemove", function (...args) {
+          if (this) event.apply("pan", this, args);
         })
-        .on("mouseleave", function (e: MouseEvent) {
-          if (this) event.apply("end", this, [e]);
+        .on("mouseleave", function (...args) {
+          if (this) event.apply("end", this, args);
         })
-        .on("touchstart", function (e: TouchEvent) {
-          e.preventDefault();
-          if (this) event.apply("start", this, [e]);
+        .on("touchstart", function (...args) {
+          args[0].preventDefault();
+          if (this) event.apply("start", this, args);
         })
-        .on("touchmove", function (e: TouchEvent) {
-          e.preventDefault();
-          const datum = datumFromPanEvent(fn.firstTouch(e));
+        .on("touchmove", function (...args) {
+          args[0].preventDefault();
+          const datum = datumFromPanEvent(fn.firstTouch(args[0]));
           if (datum === null) {
-            if (this) event.apply("end", this, [e]);
+            if (this) event.apply("end", this, args);
           } else {
-            if (this) event.apply("pan", this, [e]);
+            if (this) event.apply("pan", this, args);
           }
         })
-        .on("touchend", function (e: TouchEvent) {
-          if (this) event.apply("end", this, [e]);
+        .on("touchend", function (...args) {
+          if (this) event.apply("end", this, args);
         });
     });
 

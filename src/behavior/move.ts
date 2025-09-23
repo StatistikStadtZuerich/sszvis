@@ -169,10 +169,10 @@ export default function <XDomain = number | string, YDomain = number | string>()
         .attr("width", xExtent[1] - xExtent[0])
         .attr("height", yExtent[1] - yExtent[0])
         .attr("fill", "transparent")
-        .on("mouseover", function (e: MouseEvent) {
-          if (this) event.apply("start", this, [e]);
+        .on("mouseover", function (...args) {
+          if (this) event.apply("start", this, args);
         })
-        .on("mousedown", function (e: MouseEvent) {
+        .on("mousedown", function (...args) {
           const target = this as SVGRectElement & { __dragging__?: boolean };
           const doc = select(document);
           const win = select(window);
@@ -185,14 +185,14 @@ export default function <XDomain = number | string, YDomain = number | string>()
             target.__dragging__ = false;
             win.on("mousemove.sszvis-behavior-move", null);
             doc.on("mouseout.sszvis-behavior-move", null);
-            if (target) event.apply("end", target, [e]);
+            if (target) event.apply("end", target, args);
           };
 
           win.on("mouseup.sszvis-behavior-move", stopDragging);
           doc.on("mouseout.sszvis-behavior-move", () => {
             const from =
-              (e.relatedTarget as Element | null) ||
-              (e as unknown as { toElement?: Element }).toElement;
+              (args[0].relatedTarget as Element | null) ||
+              (args[0] as unknown as { toElement?: Element }).toElement;
             if (!from || from.nodeName === "HTML") {
               stopDragging();
             }
@@ -200,11 +200,10 @@ export default function <XDomain = number | string, YDomain = number | string>()
 
           startDragging();
         })
-        .on("mousemove", function (e: MouseEvent) {
+        .on("mousemove", function (e) {
           const target = this as SVGRectElement & { __dragging__?: boolean };
           const xy = pointer(e);
           if (!xy) return;
-
           const x = scaleInvert(props.xScale, xy[0]);
           const y = scaleInvert(props.yScale, xy[1]);
 
@@ -214,10 +213,10 @@ export default function <XDomain = number | string, YDomain = number | string>()
             if (this) event.apply("move", this, [e, x, y]);
           }
         })
-        .on("mouseout", function (e: MouseEvent) {
-          if (this) event.apply("end", this, [e]);
+        .on("mouseout", function (...args) {
+          if (this) event.apply("end", this, args);
         })
-        .on("touchstart", function (e: TouchEvent) {
+        .on("touchstart", function (e) {
           const pointerCoords = pointer(e);
           const xy = fn.first([pointerCoords]);
           if (!xy) return;
