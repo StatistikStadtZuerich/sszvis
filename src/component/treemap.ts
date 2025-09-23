@@ -31,7 +31,7 @@
 
 import {
   type HierarchyNode,
-  NumberValue,
+  type NumberValue,
   treemap as d3Treemap,
   hierarchy,
   rollup,
@@ -49,21 +49,21 @@ import type { NumberAccessor, StringAccessor } from "../types.js";
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
 
 // Type definitions for hierarchical data structure
-interface NestedData {
+interface NestedData<T> {
   key: string;
-  values?: NestedData[];
-  value?: unknown;
+  values?: NestedData<T>[];
+  value?: T;
 }
 
-interface TreemapRootData {
+interface TreemapRootData<T> {
   isRoot: true;
-  values: NestedData[];
+  values: NestedData<T>[];
 }
 
-type HierarchicalData = NestedData | TreemapRootData;
+type HierarchicalData<T> = NestedData<T> | TreemapRootData<T>;
 
 // TreemapNode represents a node in the treemap after D3 layout computation
-export type TreemapNode<T = unknown> = HierarchyNode<HierarchicalData> & {
+export type TreemapNode<T = unknown> = HierarchyNode<HierarchicalData<T>> & {
   x0: number;
   y0: number;
   x1: number;
@@ -109,11 +109,12 @@ interface TreemapComponent<T = unknown> extends Component {
 }
 
 // Helper function to safely unwrap nested rollup data
-function unwrapNested(roll: any): NestedData[] {
-  return Array.from(roll, ([key, values]: [string, any]) => ({
+function unwrapNested<T>(roll: Map<string, unknown> | unknown): NestedData<T>[] {
+  const rollupMap = roll as Map<string, unknown>;
+  return Array.from(rollupMap, ([key, values]: [string, unknown]) => ({
     key,
-    values: values && values.size > 0 ? unwrapNested(values) : undefined,
-    value: values && values.size > 0 ? undefined : values,
+    values: values instanceof Map && values.size > 0 ? unwrapNested<T>(values) : undefined,
+    value: values instanceof Map && values.size > 0 ? undefined : (values as T),
   }));
 }
 
@@ -151,45 +152,38 @@ function handleMissingVal(v: NumberValue): number {
  * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
  */
 
-// Raw hierarchical data type that doesn't have layout coordinates yet
-export type TreemapRawData<T = unknown> = HierarchyNode<HierarchicalData> & {
-  value: number;
-  originalData?: T;
-  depth: number;
-  height: number;
-};
+// Interface for the chained prepareData constructor
+export interface HierarchyComponent<T = unknown> {
+  calculate: (data: T[]) => HierarchyNode<HierarchicalData<T>>;
+  layer: (accessor: (d: T) => string) => HierarchyComponent<T>;
+  value: (accessor: (d: T) => number) => HierarchyComponent<T>;
+  sort: (
+    sortFunc: (
+      a: HierarchyNode<HierarchicalData<T>>,
+      b: HierarchyNode<HierarchicalData<T>>
+    ) => number
+  ) => HierarchyComponent<T>;
+}
 
 // Function overloads for better TypeScript support
-export function prepareData<T = unknown>(): {
-  calculate: (data: T[]) => TreemapRawData<T> | TreemapNode<T>[];
-  layer: (keyFunc: (d: T) => string) => any;
-  value: (accfn: (d: T) => number) => any;
-  sort: (
-    sortFunc: (a: HierarchyNode<HierarchicalData>, b: HierarchyNode<HierarchicalData>) => number
-  ) => any;
-};
-
+export function prepareData<T = unknown>(): HierarchyComponent<T>;
 export function prepareData<T = unknown>(
   data: T[],
   options: {
     layers: Array<(d: T) => string>;
     valueAccessor: (d: T) => number;
-    size?: [number, number];
   }
-): TreemapNode<T>[];
+): HierarchyNode<HierarchicalData<T>>;
 
-// Implementation
 export function prepareData<T = unknown>(
   data?: T[],
   options?: {
     layers: Array<(d: T) => string>;
     valueAccessor: (d: T) => number;
-    size?: [number, number]; // Size is now optional since layout is handled by component
   }
-): any {
-  // If called with data and options, use the old API
+) {
   if (data !== undefined && options !== undefined) {
-    const layout = createTreemapLayout<T>();
+    const layout = createHierarchyLayout<T>();
 
     options.layers.forEach((layer) => {
       layout.layer(layer);
@@ -200,57 +194,52 @@ export function prepareData<T = unknown>(
   }
 
   // Otherwise, return the chained API
-  return createTreemapLayout<T>();
+  return createHierarchyLayout<T>();
 }
 
-function createTreemapLayout<T = unknown>() {
+function createHierarchyLayout<T = unknown>(): HierarchyComponent<T> {
   const layers: Array<(d: T) => string> = [];
-  let valueAcc: (d: T) => number = fn.identity as any;
-  let sortFn: (a: HierarchyNode<HierarchicalData>, b: HierarchyNode<HierarchicalData>) => number = (
-    _a,
-    _b
-  ) => 0;
-  function main(data: T[]): TreemapRawData<T> | TreemapNode<T>[] {
-    if (layers.length === 0) {
-      throw new Error("At least one layer must be specified before calculating treemap data");
-    }
+  let valueAcc: (d: T) => number = fn.identity as (d: T) => number;
+  let sortFn: (
+    a: HierarchyNode<HierarchicalData<T>>,
+    b: HierarchyNode<HierarchicalData<T>>
+  ) => number = (_a, _b) => 0;
 
-    const nested = unwrapNested(rollup(data, fn.first, ...layers));
+  const api: HierarchyComponent<T> = {
+    calculate: (data) => {
+      if (layers.length === 0) {
+        throw new Error("At least one layer must be specified before calculating treemap data");
+      }
 
-    const root = hierarchy<HierarchicalData>(
-      { isRoot: true, values: nested },
-      (d: HierarchicalData) => d.values
-    )
-      .sort(sortFn)
-      .sum((x: HierarchicalData) => {
-        if ("value" in x && x.value !== undefined) {
-          return valueAcc(x.value as T);
-        }
-        return 0;
-      });
+      const nested = unwrapNested<T>(rollup(data, fn.first, ...layers));
 
-    // Return the root hierarchy without layout coordinates for the new API
-    return root as TreemapRawData<T>;
-  }
+      return hierarchy<HierarchicalData<T>>({ isRoot: true, values: nested }, (d) => d.values)
+        .sort(sortFn)
+        .sum((x: HierarchicalData<T>) => {
+          if ("value" in x && x.value !== undefined) {
+            return valueAcc(x.value);
+          }
+          return 0;
+        });
+    },
 
-  main.calculate = (data: T[]) => main(data);
+    layer: (keyFunc) => {
+      layers.push(keyFunc);
+      return api;
+    },
 
-  main.layer = (keyFunc: (d: T) => string) => {
-    layers.push(keyFunc);
-    return main;
+    value: (accfn) => {
+      valueAcc = accfn;
+      return api;
+    },
+
+    sort: (sortFunc) => {
+      sortFn = sortFunc;
+      return api;
+    },
   };
 
-  main.value = (accfn: (d: T) => number) => {
-    valueAcc = accfn;
-    return main;
-  };
-
-  main.sort = (sortFunc: (a: any, b: any) => number) => {
-    sortFn = sortFunc;
-    return main;
-  };
-
-  return main;
+  return api;
 }
 
 /**
@@ -275,12 +264,15 @@ export default function <T = unknown>(): TreemapComponent<T> {
     .prop("showLabels")
     .showLabels(false) // Default disabled
     .prop("label", fn.functor)
-    .label((d: TreemapNode<T>) => (d.data && "key" in d.data ? (d.data as NestedData).key : ""))
+    .label((d: TreemapNode<T>) => (d.data && "key" in d.data ? d.data.key : ""))
     .prop("labelPosition")
     .labelPosition("top-left")
     .prop("labelFontSize", fn.functor)
     .labelFontSize(11)
-    .render(function (this: Element, inputData: TreemapRawData<T> | TreemapNode<T>[]) {
+    .render(function (
+      this: Element,
+      inputData: HierarchyNode<HierarchicalData<T>> | TreemapNode<T>[]
+    ) {
       const selection = select<Element, TreemapNode<T>>(this);
       const props = selection.props<TreemapProps<T>>();
 
@@ -292,7 +284,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
         treemapData = inputData;
       } else {
         // Raw hierarchical data - apply treemap layout here
-        const layout = d3Treemap<HierarchicalData>()
+        const layout = d3Treemap<HierarchicalData<T>>()
           .size([props.containerWidth, props.containerHeight])
           .tile(treemapSquarify)
           .padding(1)
@@ -301,7 +293,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
         layout(inputData);
 
         // Flatten the hierarchy and filter out root
-        function flatten(node: HierarchyNode<HierarchicalData>): TreemapNode<T>[] {
+        function flatten(node: HierarchyNode<HierarchicalData<T>>): TreemapNode<T>[] {
           const result: TreemapNode<T>[] = [];
           if (node.children) {
             for (const child of node.children) {
@@ -340,9 +332,9 @@ export default function <T = unknown>(): TreemapComponent<T> {
             let categoryKey = "default";
 
             if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-              categoryKey = (d.parent.data as NestedData).key;
+              categoryKey = d.parent.data.key;
             } else if ("key" in d.data) {
-              categoryKey = (d.data as NestedData).key;
+              categoryKey = d.data.key;
             }
 
             return props.colorScale(categoryKey);
@@ -430,9 +422,9 @@ export default function <T = unknown>(): TreemapComponent<T> {
           const bgColor = () => {
             let categoryKey = "default";
             if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-              categoryKey = (d.parent.data as NestedData).key;
+              categoryKey = d.parent.data.key;
             } else if ("key" in d.data) {
-              categoryKey = (d.data as NestedData).key;
+              categoryKey = d.data.key;
             }
             return props.colorScale(categoryKey);
           };
