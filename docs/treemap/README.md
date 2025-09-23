@@ -1,73 +1,61 @@
+> Treemaps are suited to visualizing hierarchical data with quantitative values, where the size of each rectangle represents the magnitude of a metric and nested rectangles show the hierarchical structure.
+
 ## sszvis.treemap
 
 ### Data Structure
 
-Expects an array of flat data that will be organized into a hierarchical
-structure for the treemap. Each datum should have properties identifying its
-position within the hierarchy. The accessor functions for these properties
-should be passed to the `layers` array in the options object.
+The treemap component expects data in a hierarchical structure, where each node has the following properties:
 
-The treemap preparation function converts flat data into a hierarchical
-structure suitable for D3's treemap layout. Each resulting node contains
-position and dimension information (x0, y0, x1, y1) that can be used to render
-rectangular areas.
+- `data` - the associated data as passed to hierarchy
+- `depth` - zero for the root, increasing by one for each descendant generation
+- `height` - the greatest distance from any descendant leaf, or zero for leaves
+- `parent` - the parent node, or null for the root node
+- `children` - an array of child nodes, if any, or undefined for leaves
+- `value` - the optional summed value of the node and its descendants
+
+Using the `sszvis.prepareHierarchyData()` function can help structure your data appropriately for the treemap component. For more details, see the D3 [hierarchy documentation](https://d3js.org/d3-hierarchy/hierarchy).
+
+The component automatically creates tooltip anchors at the center of each rectangle for easy tooltip integration.
 
 ### Configuration
 
-#### `treemap.x`
-
-Function that returns the x-position of the left edge of each rectangle.
-Typically uses `d.x0` from the treemap layout.
-
-#### `treemap.y`
-
-Function that returns the y-position of the top edge of each rectangle.
-Typically uses `d.y0` from the treemap layout.
-
-#### `treemap.width`
-
-Function that returns the width of each rectangle. Typically calculated as
-`d.x1 - d.x0`.
-
-#### `treemap.height`
-
-Function that returns the height of each rectangle. Typically calculated as
-`d.y1 - d.y0`.
-
-#### `treemap.fill`
-
-Function that returns the fill color for each rectangle. Can access the node's
-data and ancestors to determine coloring.
-
 #### `treemap.colorScale`
 
-Function that returns colors based on category keys. This is the preferred way
-to apply colors, as the component will automatically use the top-level category
-for coloring.
+Function that returns colors based on category keys. This is the preferred way to apply colors, as the component will automatically use the top-level category for coloring.
+
+#### `treemap.transition`
+
+Boolean flag indicating whether to enable transitions for the treemap layout. Defaults to true.
+
+#### `treemap.containerWidth`
+
+The width of the container for the treemap. Defaults to 800.
+
+#### `treemap.containerHeight`
+
+The height of the container for the treemap. Defaults to 600.
+
+#### `treemap.showLabels`
+
+Boolean flag indicating whether to display labels for each rectangle. Defaults to false.
+
+#### `treemap.label`
+
+Accessor function for the label text. Defaults to `d.data.key`.
+
+#### `treemap.labelPosition`
+
+Position of the labels within each rectangle. Options include "top-left", "center", "top-right", "bottom-left", "bottom-right".
+
+Defaults to "top-left".
 
 #### `treemap.stroke`
 
-The stroke color of the rectangle borders. Defaults to white.
+The stroke color for rectangle borders. Defaults to white.
 
 #### `treemap.strokeWidth`
 
-The width of the stroke around each rectangle. Defaults to 1.
-
-### Data Preparation
-
-#### `sszvis.treemapPrepareData(data, options)`
-
-A data preparation function that converts flat data into hierarchical treemap
-data.
-
-**Parameters:**
-
-- `data`: Array of flat data objects
-- `options.layers`: Array of accessor functions defining the hierarchy levels
-- `options.valueAccessor`: Function to extract numeric values for sizing
-- `options.size`: `[width, height]` dimensions for the treemap layout
-
-**Returns:** Array of `TreemapNode` objects ready for rendering
+The stroke width for rectangle borders. Defaults to 1.
 
 ## Chart
 

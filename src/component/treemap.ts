@@ -12,19 +12,13 @@
  * @module sszvis/component/treemap
  * @template T The type of the original flat data objects
  *
- * @property {number, function} x           The x-position accessor for rectangles (typically d => d.x0)
- * @property {number, function} y           The y-position accessor for rectangles (typically d => d.y0)
- * @property {number, function} width       The width accessor for rectangles (typically d => d.x1 - d.x0)
- * @property {number, function} height      The height accessor for rectangles (typically d => d.y1 - d.y0)
- * @property {string, function} fill        The fill color accessor for rectangles
- * @property {string, function} stroke      The stroke color for rectangles (default white)
- * @property {number} strokeWidth           The stroke width for rectangles (default 1)
- * @property {boolean} transition           Whether to animate changes (default true)
- * @property {boolean} showLabels           Whether to display labels on leaf nodes (default false)
- * @property {string, function} label       The label text accessor (default d.data.key)
- * @property {string} labelPosition         Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
- * @property {string, function} labelFill   Label text color accessor (default: accessible color based on background)
- * @property {number, function} labelFontSize Label font size accessor (default 11)
+ * @property {string, function} colorScale        The fill color accessor for rectangles
+ * @property {boolean} transition                 Whether to animate changes (default true)
+ * @property {number, function} containerWidth    The container width (default 800)
+ * @property {number, function} containerHeight   The container height (default 600)
+ * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
+ * @property {string, function} label             The label text accessor (default d.data.key)
+ * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
  *
  * @return {sszvis.component}
  */
@@ -232,7 +226,10 @@ export default function <T = unknown>(): TreemapComponent<T> {
             case "top-left":
               return { x: d.x0 + padding, y: d.y0 + fontSize + padding };
             case "center":
-              return { x: d.x0 + (d.x1 - d.x0) / 2, y: d.y0 + (d.y1 - d.y0) / 2 + fontSize / 3 };
+              return {
+                x: d.x0 + (d.x1 - d.x0) / 2,
+                y: d.y0 + (d.y1 - d.y0) / 2 + fontSize / 3,
+              };
             case "top-right":
               return { x: d.x1 - padding, y: d.y0 + fontSize + padding };
             case "bottom-left":
@@ -252,7 +249,6 @@ export default function <T = unknown>(): TreemapComponent<T> {
         const labelYAcc = (d: TreemapNode<T>) =>
           calculateLabelPosition(d, props.labelPosition || "top-left").y;
         const labelFillAcc = (d: TreemapNode<T>) => {
-          console.log(d);
           const bgColor = () => {
             if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
               return props.colorScale(d.parent.data.key);

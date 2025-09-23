@@ -72,7 +72,7 @@ export default function () {
         } else if (!node.parent) {
           // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
           logger.warn(
-            "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData"
+            "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData"
           );
           return hsl(props.fill(node.data.key));
         } else if (node.parent.data.isRoot) {
