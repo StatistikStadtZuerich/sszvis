@@ -1,16 +1,16 @@
-import { hierarchy, rollup, type HierarchyNode } from "d3";
+import { type HierarchyNode, hierarchy, rollup } from "d3";
 import * as fn from "../fn";
 
 // Type definitions for hierarchical data structure
-export interface NestedData<T> {
+export type NestedData<T> = {
   key: string;
   values?: NestedData<T>[];
   value?: T;
-}
-interface TreemapRootData<T> {
+};
+type TreemapRootData<T> = {
   isRoot: true;
   values: NestedData<T>[];
-}
+};
 export type HierarchicalData<T> = NestedData<T> | TreemapRootData<T>; // TreemapNode represents a node in the treemap after D3 layout computation
 
 export type TreemapNode<T = unknown> = HierarchyNode<HierarchicalData<T>> & {
@@ -22,8 +22,10 @@ export type TreemapNode<T = unknown> = HierarchyNode<HierarchicalData<T>> & {
   data?: T;
   depth: number;
   height: number;
-}; /**
- * sszvis.layout.treemap.prepareData
+};
+
+/**
+ * sszvis.prepareHierarchyData
  *
  * Creates a data preparation layout, with an API that works similarly to d3's configurable layouts.
  * Can be used in two ways:

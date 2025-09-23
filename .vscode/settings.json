@@ -4,5 +4,9 @@
   "bun.test.enable": false,
   "vitest.enable": true,
   "vitest.commandLine": "npx vitest",
-  "testing.defaultGutterClickAction": "run"
+  "testing.defaultGutterClickAction": "run",
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "prettier.proseWrap": "never"
+  }
 }

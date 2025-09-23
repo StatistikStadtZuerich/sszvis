@@ -2,8 +2,8 @@ import { scaleOrdinal } from "d3";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { bounds } from "../../src/bounds";
-import { createSvgLayer } from "../../src/createSvgLayer";
 import treemap from "../../src/component/treemap.js";
+import { createSvgLayer } from "../../src/createSvgLayer";
 import "../../src/d3-selectgroup";
 import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
 
