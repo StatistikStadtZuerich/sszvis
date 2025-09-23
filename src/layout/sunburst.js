@@ -4,93 +4,39 @@
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
 
-import { hierarchy, max, min, partition, rollup } from "d3";
-
-import * as fn from "../fn.js";
-
-function unwrapNested(roll) {
-  return Array.from(roll, ([key, values]) => ({
-    key,
-    values: values.size > 0 ? unwrapNested(values) : undefined,
-    value: values.size > 0 ? undefined : values,
-  }));
-}
-
-let sortFn = function () {
-  return 0;
-};
+import { max, min, partition } from "d3";
+import { prepareHierarchyData } from "./hierarchy.js";
 
 /**
  * sszvis.layout.sunburst.prepareData
  *
- * Creates a data preparation layout, with an API that works similarly to d3's configurable layouts.
- *
- * @property {Array} calculate      Accepts an array of data, and applies this layout to that data. Returns the formatted dataset,
- *                                  ready to be used as data for the sunburst component.
- * @property {Function} layer       Accepts a function, which should be a key function, used to create a layer for the data.
- *                                  The key function is applied to each datum, and the return value groups that datum within a
- *                                  layer of the sunburst chart. The exact behavior depends on the order in which layers are specified.
- *                                  The first specified layer will be the innermost one of the sunburst, with subsequent layers adding
- *                                  around the sunburst. Data are grouped according to the first layer, then the second layer, then the third, etc.
- *                                  This uses d3.nest under the hood, and applys the key function as a d3.nest().key, so it works like that.
- * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of
- *                                  the ring segment for each datum.
- * @property {Function} sort        Provide a sorting function for sibling nodes of the sunburst. The d3.partition layout probably uses a
- *                                  javascript object internally for some bookkeeping. At the moment, not all browsers handle key ordering in
- *                                  objects similarly. This sorting function is used to sort the output values of the d3.partition layout, according
- *                                  to user wishes. It receives two node values (which are created by d3), which should have at least a "key" property
- *                                  (corresponding to the layer key), and a "value" property (corresponding to the value amount of the slice).
- *                                  Otherwise, it behaves like a normal javascript array sorting function. The default value attempts to preserve the
- *                                  existing sort order of the data.
- *
- * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
+ * @deprecated since v3.4.0 - use sszvis.layout.hierarchy.prepareHierarchyData instead
  */
-export const prepareData = function () {
-  const layers = [];
-  let valueAcc = fn.identity;
-  // Sibling nodes of the partition layout are sorted according to this sort function.
-  // The default value for this component tries to preserve the order of the input data.
-  // However, input data order preservation is not guaranteed, because of an implementation
-  // detail of d3.partition, probably having to do with the way that each browser can
-  // implement its own key ordering for javascript objects.
-
-  function main(data) {
-    const nested = unwrapNested(rollup(data, fn.first, ...layers));
-
-    const root = hierarchy({ isSunburstRoot: true, values: nested }, fn.prop("values"))
-      .sort(sortFn)
-      .sum((x) => (x.value ? valueAcc(x.value) : 0));
-
-    partition()(root);
-
-    function flatten(node) {
-      return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
-    }
-
-    // Remove the root element from the data (but it still exists in memory so long as the data is alive)
-    return flatten(root).filter((d) => !d.data.isSunburstRoot);
-  }
-
-  main.calculate = function (data) {
-    return main(data);
+export const prepareData = () => {
+  const hierarchyBuilder = prepareHierarchyData();
+  const api = {
+    calculate: (data) => {
+      const root = hierarchyBuilder.calculate(data);
+      partition()(root);
+      function flatten(node) {
+        return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
+      }
+      return flatten(root).filter((d) => !d.data.isRoot);
+    },
+    layer: (keyFunc) => {
+      hierarchyBuilder.layer(keyFunc);
+      return api;
+    },
+    value: (accfn) => {
+      hierarchyBuilder.value(accfn);
+      return api;
+    },
+    sort: (sortFunc) => {
+      hierarchyBuilder.sort(sortFunc);
+      return api;
+    },
   };
-
-  main.layer = function (keyFunc) {
-    layers.push(keyFunc);
-    return main;
-  };
-
-  main.value = function (accfn) {
-    valueAcc = accfn;
-    return main;
-  };
-
-  main.sort = function (sortFunc) {
-    sortFn = sortFunc;
-    return main;
-  };
-
-  return main;
+  return api;
 };
 
 export const MAX_SUNBURST_RING_WIDTH = 60;
@@ -111,7 +57,7 @@ const MIN_RW = MIN_SUNBURST_RING_WIDTH;
  *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
  *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
  */
-export const computeLayout = function (numLayers, chartWidth) {
+export const computeLayout = (numLayers, chartWidth) => {
   // Diameter of the center circle is one-third the width
   const halfWidth = chartWidth / 2;
   const centerRadius = halfWidth / 3;
@@ -133,6 +79,6 @@ export const computeLayout = function (numLayers, chartWidth) {
  *                                    function which abstracts away the way d3 stores positions within the partition layout used
  *                                    by the sunburst chart.
  */
-export const getRadiusExtent = function (formattedData) {
+export const getRadiusExtent = (formattedData) => {
   return [min(formattedData, (d) => d.y0), max(formattedData, (d) => d.y1)];
 };

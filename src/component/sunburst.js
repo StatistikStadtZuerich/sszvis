@@ -8,15 +8,15 @@
  * is a hierarchical display with the level of aggregation getting finer and finer as you get further
  * from the center of the chart.
  *
- * This component uses the data structure returned by the sszvis.layout.sunbust.prepareData function, and
- * can be configured using the sszvis.layout.sunburst.computeLayout function. Under the hood, the prepareData
- * function uses d3's nest data transformer (d3.nest) to construct a nested data structure from the input
- * array, and d3's partition layout (d3.layout.partition), and the resulting data structure will be
- * familiar to those familiar with the partition layout.
+ * This component can accept either:
+ * 1. Pre-processed flat sunburst data (backwards compatibility)
+ * 2. Raw hierarchical data from prepareHierarchyData() (recommended)
  *
- * @property {Function} angleScale              Scale function for the angle of the segments of the sunburst chart. If using the
- *                                              sszvis.layout.sunburst.prepareData function, the domain will be [0, 1]. The range
- *                                              should usually be [0, 2 * PI]. That domain and range are used as default for this property.
+ * When using raw hierarchical data, the component will automatically apply the partition layout
+ * and flatten the data internally.
+ *
+ * @property {Function} angleScale              Scale function for the angle of the segments of the sunburst chart. The domain
+ *                                              should usually be [0, 1] and the range [0, 2 * PI]. These are used as defaults.
  * @property {Function} radiusScale             Scale function for the radius of segments. Can be configured using values returned from
  *                                              sszvis.layout.sunburst.computeLayout. See the examples for how the scale setup works.
  * @property {Number} centerRadius              The radius of the center of the chart. Can be configured with sszvis.layout.sunburst.computeLayout.
@@ -28,7 +28,7 @@
  * @return {sszvis.component}
  */
 
-import { arc, hsl, interpolate, scaleLinear, select } from "d3";
+import { arc, hsl, interpolate, partition, scaleLinear, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { component } from "../d3-component.js";
 import * as logger from "../logger.js";
@@ -45,14 +45,29 @@ export default function () {
     .prop("fill")
     .prop("stroke")
     .stroke("white")
-    .render(function (data) {
+    .render(function (inputData) {
       const selection = select(this);
       const props = selection.props();
+
+      // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
+      // @deprecated in v3.4.0
+      let data;
+
+      if (Array.isArray(inputData)) {
+        // Already computed sunburst data (backwards compatibility)
+        data = inputData;
+      } else {
+        partition()(inputData);
+        function flatten(node) {
+          return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
+        }
+        data = flatten(inputData).filter((d) => !d.data.isRoot);
+      }
 
       // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
       function getColorRecursive(node) {
         // Center node (if the data were prepared using sszvis.layout.sunburst.prepareData)
-        if (node.data.isSunburstRoot) {
+        if (node.data.isRoot) {
           return "transparent";
         } else if (!node.parent) {
           // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
@@ -60,7 +75,7 @@ export default function () {
             "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData"
           );
           return hsl(props.fill(node.data.key));
-        } else if (node.parent.data.isSunburstRoot) {
+        } else if (node.parent.data.isRoot) {
           // Use the color scale
           return hsl(props.fill(node.data.key));
         } else {

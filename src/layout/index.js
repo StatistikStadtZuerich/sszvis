@@ -1,5 +1,6 @@
 export * from "./colorLegendLayout.js";
 export { default as dimensionsHeatTable } from "./heatTableDimensions.js";
+export { prepareHierarchyData } from "./hierarchy.js";
 export { default as dimensionsHorizontalBarChart } from "./horizontalBarChartDimensions.js";
 export { default as layoutPopulationPyramid } from "./populationPyramidLayout.js";
 export { computeLayout as sankeyLayout, prepareData as sankeyPrepareData } from "./sankey.js";
@@ -8,6 +9,5 @@ export { default as layoutStackedAreaMultiples } from "./stackedAreaMultiplesLay
 export {
   computeLayout as sunburstLayout,
   getRadiusExtent as sunburstGetRadiusExtent,
-  prepareData as sunburstPrepareData,
 } from "./sunburst.js";
 export { default as dimensionsVerticalBarChart } from "./verticalBarChartDimensions.js";
