@@ -70,7 +70,7 @@ describe("sunburst component", () => {
       return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
     }
 
-    const flatData = flatten(hierarchicalData).filter((d) => !d.data.isRoot);
+    const flatData = flatten(hierarchicalData).filter((d) => d.data._tag !== "root");
 
     // Create sunburst component
     const sunburstComponent = sunburst()

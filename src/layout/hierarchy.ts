@@ -1,28 +1,22 @@
 import { type HierarchyNode, hierarchy, rollup } from "d3";
 import * as fn from "../fn";
 
-// Type definitions for hierarchical data structure
-export type NestedData<T> = {
-  key: string;
-  values?: NestedData<T>[];
-  value?: T;
-};
-type TreemapRootData<T> = {
-  isRoot: true;
-  values: NestedData<T>[];
-};
-export type HierarchicalData<T> = NestedData<T> | TreemapRootData<T>; // TreemapNode represents a node in the treemap after D3 layout computation
-
-export type TreemapNode<T = unknown> = HierarchyNode<HierarchicalData<T>> & {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-  value: number;
-  data?: T;
-  depth: number;
-  height: number;
-};
+// Type definitions for hierarchical data structure using discriminated union
+export type NodeDatum<T> =
+  | {
+      _tag: "root";
+      children: NodeDatum<T>[];
+    }
+  | {
+      _tag: "branch";
+      key: string;
+      children: NodeDatum<T>[];
+    }
+  | {
+      _tag: "leaf";
+      key: string;
+      data: T;
+    };
 
 /**
  * sszvis.prepareHierarchyData
@@ -53,17 +47,14 @@ export type TreemapNode<T = unknown> = HierarchyNode<HierarchicalData<T>> & {
  */
 // Interface for the chained prepareData constructor
 
-export interface HierarchyComponent<T = unknown> {
-  calculate: (data: T[]) => HierarchyNode<HierarchicalData<T>>;
+export type HierarchyComponent<T = unknown> = {
+  calculate: (data: T[]) => HierarchyNode<NodeDatum<T>>;
   layer: (accessor: (d: T) => string) => HierarchyComponent<T>;
   value: (accessor: (d: T) => number) => HierarchyComponent<T>;
   sort: (
-    sortFunc: (
-      a: HierarchyNode<HierarchicalData<T>>,
-      b: HierarchyNode<HierarchicalData<T>>
-    ) => number
+    sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number
   ) => HierarchyComponent<T>;
-}
+};
 // Function overloads for better TypeScript support
 
 export function prepareHierarchyData<T = unknown>(): HierarchyComponent<T>;
@@ -73,7 +64,7 @@ export function prepareHierarchyData<T = unknown>(
     layers: Array<(d: T) => string>;
     valueAccessor: (d: T) => number;
   }
-): HierarchyNode<HierarchicalData<T>>;
+): HierarchyNode<NodeDatum<T>>;
 
 export function prepareHierarchyData<T = unknown>(
   data?: T[],
@@ -99,26 +90,27 @@ export function prepareHierarchyData<T = unknown>(
 function createHierarchyLayout<T = unknown>(): HierarchyComponent<T> {
   const layers: Array<(d: T) => string> = [];
   let valueAcc: (d: T) => number = fn.identity as (d: T) => number;
-  let sortFn: (
-    a: HierarchyNode<HierarchicalData<T>>,
-    b: HierarchyNode<HierarchicalData<T>>
-  ) => number = (_a, _b) => 0;
+  let sortFn: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number = (
+    _a,
+    _b
+  ) => 0;
 
   const api: HierarchyComponent<T> = {
     calculate: (data) => {
       if (layers.length === 0) {
-        throw new Error("At least one layer must be specified before calculating treemap data");
+        throw new Error("At least one layer must be specified before calculating hierarchy data");
       }
 
       const nested = unwrapNested<T>(rollup(data, fn.first, ...layers));
 
-      return hierarchy<HierarchicalData<T>>({ isRoot: true, values: nested }, (d) => d.values)
+      const rootData: NodeDatum<T> = { _tag: "root", children: nested };
+
+      return hierarchy<NodeDatum<T>>(rootData, (d) => {
+        return d._tag === "leaf" ? undefined : d.children;
+      })
         .sort(sortFn)
-        .sum((x: HierarchicalData<T>) => {
-          if ("value" in x && x.value !== undefined) {
-            return valueAcc(x.value);
-          }
-          return 0;
+        .sum((node: NodeDatum<T>) => {
+          return node._tag === "leaf" ? valueAcc(node.data) : 0;
         });
     },
 
@@ -141,11 +133,23 @@ function createHierarchyLayout<T = unknown>(): HierarchyComponent<T> {
   return api;
 } // Helper function to safely unwrap nested rollup data
 
-export function unwrapNested<T>(roll: Map<string, unknown> | unknown): NestedData<T>[] {
+export function unwrapNested<T>(roll: Map<string, unknown> | unknown): NodeDatum<T>[] {
   const rollupMap = roll as Map<string, unknown>;
-  return Array.from(rollupMap, ([key, values]: [string, unknown]) => ({
-    key,
-    values: values instanceof Map && values.size > 0 ? unwrapNested<T>(values) : undefined,
-    value: values instanceof Map && values.size > 0 ? undefined : (values as T),
-  }));
+  return Array.from(rollupMap, ([key, values]: [string, unknown]) => {
+    if (values instanceof Map && values.size > 0) {
+      // Branch node - has children
+      return {
+        _tag: "branch" as const,
+        key,
+        children: unwrapNested<T>(values),
+      };
+    } else {
+      // Leaf node - has data
+      return {
+        _tag: "leaf" as const,
+        key,
+        data: values as T,
+      };
+    }
+  });
 }

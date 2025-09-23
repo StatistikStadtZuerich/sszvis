@@ -61,21 +61,21 @@ export default function () {
         function flatten(node) {
           return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
         }
-        data = flatten(inputData).filter((d) => !d.data.isRoot);
+        data = flatten(inputData).filter((d) => d.data._tag !== "root");
       }
 
       // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
       function getColorRecursive(node) {
-        // Center node (if the data were prepared using sszvis.layout.sunburst.prepareData)
-        if (node.data.isRoot) {
+        // Center node (if the data were prepared using sszvis.prepareHierarchyData)
+        if (node.data._tag === "root") {
           return "transparent";
         } else if (!node.parent) {
-          // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
+          // Accounts for incorrectly formatted data which hasn't gone through sszvis.prepareHierarchyData
           logger.warn(
             "Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData"
           );
           return hsl(props.fill(node.data.key));
-        } else if (node.parent.data.isRoot) {
+        } else if (node.parent.data._tag === "root") {
           // Use the color scale
           return hsl(props.fill(node.data.key));
         } else {
