@@ -3,8 +3,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import { bounds } from "../../src/bounds";
 import { createSvgLayer } from "../../src/createSvgLayer";
-import treemap, { prepareData } from "../../src/component/treemap.js";
+import treemap from "../../src/component/treemap.js";
 import "../../src/d3-selectgroup";
+import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
 
 // Test data structures
 type TestDataItem = {
@@ -61,7 +62,7 @@ describe("component/treemap", () => {
 
   describe("prepareData", () => {
     test("should create hierarchical structure with chained API", () => {
-      const layoutData = prepareData<TestDataItem>()
+      const layoutData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .layer((d) => d.subcategory)
         .value((d) => d.value)
@@ -74,7 +75,7 @@ describe("component/treemap", () => {
     });
 
     test("should create hierarchical structure with options API", () => {
-      const layoutData = prepareData(testData, {
+      const layoutData = prepareHierarchyData(testData, {
         layers: [(d) => d.category, (d) => d.subcategory],
         valueAccessor: (d) => d.value,
       }) as unknown as { children?: unknown[]; value: number; depth: number }; // Type assertion needed due to overload mismatch
@@ -87,7 +88,7 @@ describe("component/treemap", () => {
     });
 
     test("should handle single layer hierarchy", () => {
-      const layoutData = prepareData<TestDataItem>()
+      const layoutData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .value((d) => d.value)
         .calculate(testData);
@@ -98,7 +99,7 @@ describe("component/treemap", () => {
 
     test("should throw error if no layers specified", () => {
       expect(() => {
-        prepareData<TestDataItem>()
+        prepareHierarchyData<TestDataItem>()
           .value((d) => d.value)
           .calculate(testData);
       }).toThrow("At least one layer must be specified");
@@ -110,7 +111,7 @@ describe("component/treemap", () => {
         { category: "Empty", subcategory: "None", value: 0, name: "Empty A" },
       ];
 
-      const layoutData = prepareData<TestDataItem>()
+      const layoutData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .value((d) => d.value)
         .calculate(dataWithZeros);
@@ -134,7 +135,7 @@ describe("component/treemap", () => {
     });
 
     test("should render rectangles for treemap data", () => {
-      const hierarchicalData = prepareData<TestDataItem>()
+      const hierarchicalData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .layer((d) => d.subcategory)
         .value((d) => d.value)
@@ -154,7 +155,7 @@ describe("component/treemap", () => {
     });
 
     test("should apply color scale correctly", () => {
-      const hierarchicalData = prepareData<TestDataItem>()
+      const hierarchicalData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .value((d) => d.value)
         .calculate(testData);
@@ -181,7 +182,7 @@ describe("component/treemap", () => {
     });
 
     test("should handle labels when showLabels is enabled", () => {
-      const hierarchicalData = prepareData<TestDataItem>()
+      const hierarchicalData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .layer((d) => d.subcategory)
         .value((d) => d.value)
@@ -203,7 +204,7 @@ describe("component/treemap", () => {
     });
 
     test("should not show labels when showLabels is disabled", () => {
-      const hierarchicalData = prepareData<TestDataItem>()
+      const hierarchicalData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .value((d) => d.value)
         .calculate(testData);
@@ -224,7 +225,7 @@ describe("component/treemap", () => {
     });
 
     test("should support different label positions", () => {
-      const hierarchicalData = prepareData<TestDataItem>()
+      const hierarchicalData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .value((d) => d.value)
         .calculate(testData);
@@ -254,7 +255,7 @@ describe("component/treemap", () => {
         { category: "B", subcategory: "B1", value: 100, name: "Normal" },
       ];
 
-      const hierarchicalData = prepareData<TestDataItem>()
+      const hierarchicalData = prepareHierarchyData<TestDataItem>()
         .layer((d) => d.category)
         .layer((d) => d.subcategory)
         .value((d) => d.value)
@@ -286,7 +287,7 @@ describe("component/treemap", () => {
       const emptyData: TestDataItem[] = [];
 
       expect(() => {
-        prepareData<TestDataItem>()
+        prepareHierarchyData<TestDataItem>()
           .layer((d) => d.category)
           .value((d) => d.value)
           .calculate(emptyData);

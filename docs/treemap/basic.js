@@ -57,7 +57,7 @@ const actions = {
   prepareState(data) {
     // Prepare data for treemap (using new API without hardcoded size)
     state.data = sszvis
-      .treemapPrepareData()
+      .prepareHierarchyData()
       .layer(categoryAcc)
       .layer(subcategoryAcc)
       .value(valueAcc)

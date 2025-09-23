@@ -43,15 +43,20 @@ const actions = {
 
     state.continents = continentsList;
 
-    state.data = sszvis
-      .sunburstPrepareData()
+    // Prepare data using the unified prepareHierarchyData function
+    const hierarchicalData = sszvis
+      .prepareHierarchyData()
       .layer(continentAcc)
       .layer(regionAcc)
       .layer(countryAcc)
       .value(numAcc)
       .calculate(data);
 
-    state.radiusExtent = sszvis.sunburstGetRadiusExtent(state.data);
+    state.data = hierarchicalData;
+
+    const { y1, x1 } = d3.partition()(hierarchicalData.copy());
+
+    state.radiusExtent = [y1, x1];
 
     render(state);
   },

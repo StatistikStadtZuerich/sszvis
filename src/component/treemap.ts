@@ -30,63 +30,34 @@
  */
 
 import {
+  treemap as d3Treemap,
   type HierarchyNode,
   type NumberValue,
-  treemap as d3Treemap,
-  hierarchy,
-  rollup,
+  rgb,
   select,
   treemapSquarify,
-  rgb,
 } from "d3";
+import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
+import type { HierarchicalData, TreemapNode } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
-import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import type { NumberAccessor, StringAccessor } from "../types.js";
 
 // Type definitions for label positioning
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
 
-// Type definitions for hierarchical data structure
-interface NestedData<T> {
-  key: string;
-  values?: NestedData<T>[];
-  value?: T;
-}
-
-interface TreemapRootData<T> {
-  isRoot: true;
-  values: NestedData<T>[];
-}
-
-type HierarchicalData<T> = NestedData<T> | TreemapRootData<T>;
-
-// TreemapNode represents a node in the treemap after D3 layout computation
-export type TreemapNode<T = unknown> = HierarchyNode<HierarchicalData<T>> & {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-  value: number;
-  data?: T;
-  depth: number;
-  height: number;
-};
-
-// Properties interface for the treemap component
-interface TreemapProps<T = unknown> {
+type TreemapProps<T = unknown> = {
   colorScale: (key: string) => string;
   transition?: boolean;
-  // New properties for container dimensions
   containerWidth: number;
   containerHeight: number;
-  // Label properties
+
   showLabels?: boolean;
   label?: StringAccessor<TreemapNode<T>>;
   labelPosition?: LabelPosition;
   labelFontSize?: NumberAccessor<TreemapNode<T>>;
-}
+};
 
 // Component interface with proper method overloads
 interface TreemapComponent<T = unknown> extends Component {
@@ -94,12 +65,10 @@ interface TreemapComponent<T = unknown> extends Component {
   colorScale(scale: (key: string) => string): TreemapComponent<T>;
   transition(): boolean;
   transition(enabled: boolean): TreemapComponent<T>;
-  // New container dimension properties
   containerWidth(): number;
   containerWidth(width: number): TreemapComponent<T>;
   containerHeight(): number;
   containerHeight(height: number): TreemapComponent<T>;
-  // Label properties
   showLabels(): boolean;
   showLabels(show: boolean): TreemapComponent<T>;
   label(): StringAccessor<TreemapNode<T>>;
@@ -108,138 +77,10 @@ interface TreemapComponent<T = unknown> extends Component {
   labelPosition(position: LabelPosition): TreemapComponent<T>;
 }
 
-// Helper function to safely unwrap nested rollup data
-function unwrapNested<T>(roll: Map<string, unknown> | unknown): NestedData<T>[] {
-  const rollupMap = roll as Map<string, unknown>;
-  return Array.from(rollupMap, ([key, values]: [string, unknown]) => ({
-    key,
-    values: values instanceof Map && values.size > 0 ? unwrapNested<T>(values) : undefined,
-    value: values instanceof Map && values.size > 0 ? undefined : (values as T),
-  }));
-}
-
 // Helper function to handle missing/invalid numeric values
 function handleMissingVal(v: NumberValue): number {
   const num = Number(v);
   return Number.isNaN(num) ? 0 : num;
-}
-
-/**
- * sszvis.layout.treemap.prepareData
- *
- * Creates a data preparation layout, with an API that works similarly to d3's configurable layouts.
- * Can be used in two ways:
- * 1. Chained API (like sunburst): prepareData().layer().value().size().calculate(data)
- * 2. Options API (backward compatibility): prepareData(data, options)
- *
- * @property {Array} calculate      Accepts an array of data, and applies this layout to that data. Returns the formatted dataset,
- *                                  ready to be used as data for the treemap component.
- * @property {Function} layer       Accepts a function, which should be a key function, used to create a layer for the data.
- *                                  The key function is applied to each datum, and the return value groups that datum within a
- *                                  layer of the treemap chart. The exact behavior depends on the order in which layers are specified.
- *                                  The first specified layer will be the outermost one of the treemap, with subsequent layers adding
- *                                  further subdivision. Data are grouped according to the first layer, then the second layer, then the third, etc.
- *                                  This uses d3.rollup under the hood, and applies the key function to group the data hierarchically.
- * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of
- *                                  the rectangle for each datum.
- * @property {Array} size           Set the size [width, height] of the treemap layout.
- * @property {Function} sort        Provide a sorting function for sibling nodes of the treemap.
- *                                  It receives two node values (which are created by d3), which should have at least a "key" property
- *                                  (corresponding to the layer key), and a "value" property (corresponding to the value amount of the rectangle).
- *                                  Otherwise, it behaves like a normal javascript array sorting function. The default value attempts to preserve the
- *                                  existing sort order of the data.
- *
- * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
- */
-
-// Interface for the chained prepareData constructor
-export interface HierarchyComponent<T = unknown> {
-  calculate: (data: T[]) => HierarchyNode<HierarchicalData<T>>;
-  layer: (accessor: (d: T) => string) => HierarchyComponent<T>;
-  value: (accessor: (d: T) => number) => HierarchyComponent<T>;
-  sort: (
-    sortFunc: (
-      a: HierarchyNode<HierarchicalData<T>>,
-      b: HierarchyNode<HierarchicalData<T>>
-    ) => number
-  ) => HierarchyComponent<T>;
-}
-
-// Function overloads for better TypeScript support
-export function prepareData<T = unknown>(): HierarchyComponent<T>;
-export function prepareData<T = unknown>(
-  data: T[],
-  options: {
-    layers: Array<(d: T) => string>;
-    valueAccessor: (d: T) => number;
-  }
-): HierarchyNode<HierarchicalData<T>>;
-
-export function prepareData<T = unknown>(
-  data?: T[],
-  options?: {
-    layers: Array<(d: T) => string>;
-    valueAccessor: (d: T) => number;
-  }
-) {
-  if (data !== undefined && options !== undefined) {
-    const layout = createHierarchyLayout<T>();
-
-    options.layers.forEach((layer) => {
-      layout.layer(layer);
-    });
-    layout.value(options.valueAccessor);
-
-    return layout.calculate(data);
-  }
-
-  // Otherwise, return the chained API
-  return createHierarchyLayout<T>();
-}
-
-function createHierarchyLayout<T = unknown>(): HierarchyComponent<T> {
-  const layers: Array<(d: T) => string> = [];
-  let valueAcc: (d: T) => number = fn.identity as (d: T) => number;
-  let sortFn: (
-    a: HierarchyNode<HierarchicalData<T>>,
-    b: HierarchyNode<HierarchicalData<T>>
-  ) => number = (_a, _b) => 0;
-
-  const api: HierarchyComponent<T> = {
-    calculate: (data) => {
-      if (layers.length === 0) {
-        throw new Error("At least one layer must be specified before calculating treemap data");
-      }
-
-      const nested = unwrapNested<T>(rollup(data, fn.first, ...layers));
-
-      return hierarchy<HierarchicalData<T>>({ isRoot: true, values: nested }, (d) => d.values)
-        .sort(sortFn)
-        .sum((x: HierarchicalData<T>) => {
-          if ("value" in x && x.value !== undefined) {
-            return valueAcc(x.value);
-          }
-          return 0;
-        });
-    },
-
-    layer: (keyFunc) => {
-      layers.push(keyFunc);
-      return api;
-    },
-
-    value: (accfn) => {
-      valueAcc = accfn;
-      return api;
-    },
-
-    sort: (sortFunc) => {
-      sortFn = sortFunc;
-      return api;
-    },
-  };
-
-  return api;
 }
 
 /**
@@ -285,10 +126,17 @@ export default function <T = unknown>(): TreemapComponent<T> {
       } else {
         // Raw hierarchical data - apply treemap layout here
         const layout = d3Treemap<HierarchicalData<T>>()
-          .size([props.containerWidth, props.containerHeight])
           .tile(treemapSquarify)
-          .padding(1)
-          .round(true);
+          .size([props.containerWidth, props.containerHeight])
+          .round(true)
+          // TODO: design decision: padding props?
+          .padding(2);
+        //   .paddingInner(1)
+        //   .paddingOuter(1);
+        //   .paddingTop(0)
+        //   .paddingRight(0)
+        //   .paddingBottom(0)
+        //   .paddingLeft(0);
 
         layout(inputData);
 
@@ -312,9 +160,10 @@ export default function <T = unknown>(): TreemapComponent<T> {
       }
 
       // Filter out very small rectangles
-      const visibleData = treemapData.filter(
-        (d: TreemapNode<T>) => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5
-      );
+      const visibleData = treemapData
+        .filter((d: TreemapNode<T>) => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5)
+        // TODO: design decision - only show leaf nodes by default?
+        .filter((d) => !d.children);
 
       const rectangles = selection
         .selectAll<SVGRectElement, TreemapNode<T>>(".sszvis-treemap-rect")
@@ -326,23 +175,14 @@ export default function <T = unknown>(): TreemapComponent<T> {
         .attr("width", (d) => d.x1 - d.x0)
         .attr("height", (d) => d.y1 - d.y0)
         .attr("fill", (d: TreemapNode<T>) => {
-          // If a color scale is provided, use it to color by top-level category
-          if (props.colorScale) {
-            // Get the top-level category key - safely access the key property
-            let categoryKey = "default";
-
-            if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-              categoryKey = d.parent.data.key;
-            } else if ("key" in d.data) {
-              categoryKey = d.data.key;
-            }
-
-            return props.colorScale(categoryKey);
+          if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
+            return props.colorScale(d.parent.data.key);
+          } else if ("key" in d.data) {
+            return props.colorScale(d.data.key);
           }
-
-          // Default color
-          return "#steelblue";
+          return null;
         })
+        // TODO: design decision - border on rect?
         .attr("stroke", "#ffffff")
         .attr("stroke-width", 1);
 
@@ -358,19 +198,16 @@ export default function <T = unknown>(): TreemapComponent<T> {
 
       // Render labels if enabled
       if (props.showLabels) {
-        // Helper function to determine accessible text color based on background
-        const getAccessibleTextColor = (backgroundColor?: string): string => {
+        const getAccessibleTextColor = (backgroundColor: string | null): string => {
           if (!backgroundColor) {
             return "#545454"; // Default to SSZVIS gray if no background color
           }
           const bgColor = rgb(backgroundColor);
-          console.log({ bgColor });
-          // Calculate relative luminance using WCAG 2.1 formula with gamma correction
           const gammaCorrect = (c: number): number => {
             const normalized = c / 255;
             return normalized <= 0.03928
               ? normalized / 12.92
-              : Math.pow((normalized + 0.055) / 1.055, 2.4);
+              : ((normalized + 0.055) / 1.055) ** 2.4;
           };
 
           const rLum = gammaCorrect(bgColor.r);
@@ -380,12 +217,9 @@ export default function <T = unknown>(): TreemapComponent<T> {
           // WCAG relative luminance formula
           const luminance = 0.2126 * rLum + 0.7152 * gLum + 0.0722 * bLum;
 
-          // Return dark color for light backgrounds, light color for dark backgrounds
-          // Using 0.179 as threshold provides better contrast (roughly equivalent to #777)
           return luminance > 0.179 ? "#545454" : "#ffffff"; // Use SSZVIS gray or white
         };
 
-        // Function to calculate label position based on labelPosition prop
         const calculateLabelPosition = (d: TreemapNode<T>, position: LabelPosition) => {
           const padding = 8;
           const fontSize = handleMissingVal(
@@ -420,13 +254,12 @@ export default function <T = unknown>(): TreemapComponent<T> {
         const labelFillAcc = (d: TreemapNode<T>) => {
           console.log(d);
           const bgColor = () => {
-            let categoryKey = "default";
             if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-              categoryKey = d.parent.data.key;
+              return props.colorScale(d.parent.data.key);
             } else if ("key" in d.data) {
-              categoryKey = d.data.key;
+              return props.colorScale(d.data.key);
             }
-            return props.colorScale(categoryKey);
+            return null;
           };
           return getAccessibleTextColor(bgColor());
         };
@@ -446,8 +279,11 @@ export default function <T = unknown>(): TreemapComponent<T> {
           .classed("sszvis-treemap-label", true)
           .attr("x", labelXAcc)
           .attr("y", labelYAcc)
+          // TODO: design decision - accessible label color based on background?
           .attr("fill", labelFillAcc)
+          // TODO: design decision - font size prop?
           .attr("font-size", 11)
+          // TODO: design decision - font family?
           .attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif')
           .attr("text-anchor", () => {
             const position = props.labelPosition || "top-left";

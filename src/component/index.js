@@ -11,7 +11,4 @@ export { default as stackedAreaMultiples } from "./stackedAreaMultiples.js";
 export * from "./stackedBar.js";
 export * from "./stackedPyramid.js";
 export { default as sunburst } from "./sunburst.js";
-export {
-  default as treemap,
-  prepareData as treemapPrepareData,
-} from "./treemap.js";
+export { default as treemap } from "./treemap.js";
