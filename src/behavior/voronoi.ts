@@ -113,7 +113,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
       polys
         .attr("d", (d) => `M${d.join("L")}Z`)
         .attr("fill", "transparent")
-        .on("mouseover", function (e: MouseEvent) {
+        .on("mouseover", function (e) {
           const parent = this.parentNode as Element | null;
           if (!parent) return;
 
@@ -128,7 +128,7 @@ export default function <T = unknown>(): VoronoiComponent<T> {
             if (this) event.apply("over", this, [e, data[datumIdx]]);
           }
         })
-        .on("mousemove", function (e: MouseEvent) {
+        .on("mousemove", function (e) {
           const parent = this.parentNode as SVGElement;
           if (!parent) return;
 
@@ -145,8 +145,8 @@ export default function <T = unknown>(): VoronoiComponent<T> {
             if (this) event.apply("out", this, [e]);
           }
         })
-        .on("mouseout", function (e: MouseEvent) {
-          if (this) event.apply("out", this, [e]);
+        .on("mouseout", function (...args) {
+          if (this) event.apply("out", this, args);
         })
         .on("touchstart", function (e: TouchEvent) {
           const parent = this.parentNode as SVGElement;
