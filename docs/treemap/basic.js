@@ -117,21 +117,12 @@ function render(state) {
     .containerWidth(bounds.innerWidth)
     .containerHeight(bounds.innerHeight - legendLayout.bottomPadding) // Leave space for legend
     .colorScale(colorScale)
-    .stroke("#ffffff")
-    .strokeWidth(2)
     .showLabels(true)
-    .label(function (d) {
-      return d.data.key;
-    })
+    .label((d) => d.data.key)
     .labelPosition("bottom-right");
 
-  const tooltipHeaderText = sszvis.modularTextHTML().bold(function (d) {
-    return d.data.key;
-  });
-
-  const tooltipBodyText = sszvis.modularTextHTML().plain(function (d) {
-    return "Value: " + sszvis.formatNumber(d.value);
-  });
+  const tooltipHeaderText = sszvis.modularTextHTML().bold((d) => d.data.key);
+  const tooltipBodyText = sszvis.modularTextHTML().plain((d) => "Value: " + sszvis.formatNumber(d.value));
 
   const tooltip = sszvis
     .tooltip()

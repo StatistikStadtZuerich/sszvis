@@ -21,7 +21,7 @@ export const prepareData = () => {
       function flatten(node) {
         return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
       }
-      return flatten(root).filter((d) => !d.data.isRoot);
+      return flatten(root).filter((d) => d.data._tag !== "root");
     },
     layer: (keyFunc) => {
       hierarchyBuilder.layer(keyFunc);

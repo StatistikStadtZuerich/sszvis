@@ -34,9 +34,21 @@ import {
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
 import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
-import type { HierarchicalData, TreemapNode } from "../layout/hierarchy.js";
+import type { NodeDatum } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
 import type { NumberAccessor, StringAccessor } from "../types.js";
+
+// TreemapNode represents a node in the treemap after D3 layout computation
+export type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  value: number;
+  data?: T;
+  depth: number;
+  height: number;
+};
 
 // Type definitions for label positioning
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
@@ -48,9 +60,9 @@ type TreemapProps<T = unknown> = {
   containerHeight: number;
 
   showLabels?: boolean;
-  label?: StringAccessor<TreemapNode<T>>;
+  label?: StringAccessor<TreemapLayout<T>>;
   labelPosition?: LabelPosition;
-  labelFontSize?: NumberAccessor<TreemapNode<T>>;
+  labelFontSize?: NumberAccessor<TreemapLayout<T>>;
 };
 
 // Component interface with proper method overloads
@@ -65,8 +77,8 @@ interface TreemapComponent<T = unknown> extends Component {
   containerHeight(height: number): TreemapComponent<T>;
   showLabels(): boolean;
   showLabels(show: boolean): TreemapComponent<T>;
-  label(): StringAccessor<TreemapNode<T>>;
-  label(accessor: StringAccessor<TreemapNode<T>>): TreemapComponent<T>;
+  label(): StringAccessor<TreemapLayout<T>>;
+  label(accessor: StringAccessor<TreemapLayout<T>>): TreemapComponent<T>;
   labelPosition(): LabelPosition;
   labelPosition(position: LabelPosition): TreemapComponent<T>;
 }
@@ -84,12 +96,7 @@ function handleMissingVal(v: NumberValue): number {
  */
 export default function <T = unknown>(): TreemapComponent<T> {
   return component()
-    .prop("fill", fn.functor)
     .prop("colorScale")
-    .prop("stroke", fn.functor)
-    .stroke("#ffffff")
-    .prop("strokeWidth", fn.functor)
-    .strokeWidth(1)
     .prop("transition")
     .transition(true)
     .prop("containerWidth")
@@ -99,68 +106,55 @@ export default function <T = unknown>(): TreemapComponent<T> {
     .prop("showLabels")
     .showLabels(false) // Default disabled
     .prop("label", fn.functor)
-    .label((d: TreemapNode<T>) => (d.data && "key" in d.data ? d.data.key : ""))
+    .label((d: TreemapLayout<T>) => (d.data && "key" in d.data ? d.data.key : ""))
     .prop("labelPosition")
     .labelPosition("top-left")
-    .prop("labelFontSize", fn.functor)
-    .labelFontSize(11)
-    .render(function (
-      this: Element,
-      inputData: HierarchyNode<HierarchicalData<T>> | TreemapNode<T>[]
-    ) {
-      const selection = select<Element, TreemapNode<T>>(this);
+    .render(function (this: Element, inputData: HierarchyNode<NodeDatum<T>>) {
+      const selection = select<Element, TreemapLayout<T>>(this);
       const props = selection.props<TreemapProps<T>>();
 
-      // Determine if we have raw hierarchical data or pre-computed treemap data
-      let treemapData: TreemapNode<T>[];
+      // Apply treemap layout to hierarchical data
+      const layout = d3Treemap<NodeDatum<T>>()
+        .tile(treemapSquarify)
+        .size([props.containerWidth, props.containerHeight])
+        .round(true)
+        // TODO: design decision: padding props?
+        .padding(2);
+      //   .paddingInner(1)
+      //   .paddingOuter(1);
+      //   .paddingTop(0)
+      //   .paddingRight(0)
+      //   .paddingBottom(0)
+      //   .paddingLeft(0);
 
-      if (Array.isArray(inputData)) {
-        // Already computed treemap data (backwards compatibility)
-        treemapData = inputData;
-      } else {
-        // Raw hierarchical data - apply treemap layout here
-        const layout = d3Treemap<HierarchicalData<T>>()
-          .tile(treemapSquarify)
-          .size([props.containerWidth, props.containerHeight])
-          .round(true)
-          // TODO: design decision: padding props?
-          .padding(2);
-        //   .paddingInner(1)
-        //   .paddingOuter(1);
-        //   .paddingTop(0)
-        //   .paddingRight(0)
-        //   .paddingBottom(0)
-        //   .paddingLeft(0);
+      layout(inputData);
 
-        layout(inputData);
-
-        // Flatten the hierarchy and filter out root
-        function flatten(node: HierarchyNode<HierarchicalData<T>>): TreemapNode<T>[] {
-          const result: TreemapNode<T>[] = [];
-          if (node.children) {
-            for (const child of node.children) {
-              if (!("isRoot" in child.data)) {
-                result.push(child as TreemapNode<T>);
-              }
-              result.push(...flatten(child));
+      // Flatten the hierarchy and filter out root
+      function flatten(node: HierarchyNode<NodeDatum<T>>): TreemapLayout<T>[] {
+        const result: TreemapLayout<T>[] = [];
+        if (node.children) {
+          for (const child of node.children) {
+            if (child.data._tag !== "root") {
+              result.push(child as TreemapLayout<T>);
             }
-          } else if (!("isRoot" in node.data)) {
-            result.push(node as TreemapNode<T>);
+            result.push(...flatten(child));
           }
-          return result;
+        } else if (node.data._tag !== "root") {
+          result.push(node as TreemapLayout<T>);
         }
-
-        treemapData = flatten(inputData);
+        return result;
       }
+
+      const treemapData = flatten(inputData);
 
       // Filter out very small rectangles
       const visibleData = treemapData
-        .filter((d: TreemapNode<T>) => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5)
+        .filter((d: TreemapLayout<T>) => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5)
         // TODO: design decision - only show leaf nodes by default?
         .filter((d) => !d.children);
 
       const rectangles = selection
-        .selectAll<SVGRectElement, TreemapNode<T>>(".sszvis-treemap-rect")
+        .selectAll<SVGRectElement, TreemapLayout<T>>(".sszvis-treemap-rect")
         .data(visibleData)
         .join("rect")
         .classed("sszvis-treemap-rect", true)
@@ -168,13 +162,13 @@ export default function <T = unknown>(): TreemapComponent<T> {
         .attr("y", (d) => d.y0)
         .attr("width", (d) => d.x1 - d.x0)
         .attr("height", (d) => d.y1 - d.y0)
-        .attr("fill", (d: TreemapNode<T>) => {
+        .attr("fill", (d: TreemapLayout<T>) => {
           if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
             return props.colorScale(d.parent.data.key);
           } else if ("key" in d.data) {
             return props.colorScale(d.data.key);
           }
-          return null;
+          return "#cccccc"; // Default fill if no key found
         })
         // TODO: design decision - border on rect?
         .attr("stroke", "#ffffff")
@@ -214,7 +208,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
           return luminance > 0.179 ? "#545454" : "#ffffff"; // Use SSZVIS gray or white
         };
 
-        const calculateLabelPosition = (d: TreemapNode<T>, position: LabelPosition) => {
+        const calculateLabelPosition = (d: TreemapLayout<T>, position: LabelPosition) => {
           const padding = 8;
           const fontSize = handleMissingVal(
             (typeof props.labelFontSize === "function"
@@ -242,26 +236,26 @@ export default function <T = unknown>(): TreemapComponent<T> {
         };
 
         // Create type-safe label accessor functions
-        const labelAcc = (d: TreemapNode<T>) =>
+        const labelAcc = (d: TreemapLayout<T>) =>
           typeof props.label === "function" ? props.label(d) : props.label || "";
-        const labelXAcc = (d: TreemapNode<T>) =>
+        const labelXAcc = (d: TreemapLayout<T>) =>
           calculateLabelPosition(d, props.labelPosition || "top-left").x;
-        const labelYAcc = (d: TreemapNode<T>) =>
+        const labelYAcc = (d: TreemapLayout<T>) =>
           calculateLabelPosition(d, props.labelPosition || "top-left").y;
-        const labelFillAcc = (d: TreemapNode<T>) => {
+        const labelFillAcc = (d: TreemapLayout<T>) => {
           const bgColor = () => {
             if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
               return props.colorScale(d.parent.data.key);
             } else if ("key" in d.data) {
               return props.colorScale(d.data.key);
             }
-            return null;
+            return "#cccccc"; // Default fill if no key found
           };
           return getAccessibleTextColor(bgColor());
         };
 
         // Filter data for labels - only show labels on leaf nodes (smallest layer) that are large enough
-        const labelData = visibleData.filter((d: TreemapNode<T>) => {
+        const labelData = visibleData.filter((d: TreemapLayout<T>) => {
           const w = d.x1 - d.x0;
           const h = d.y1 - d.y0;
           // Only show labels on leaf nodes (no children) and rectangles larger than 50x20 pixels
@@ -269,7 +263,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
         });
 
         const labels = selection
-          .selectAll<SVGTextElement, TreemapNode<T>>(".sszvis-treemap-label")
+          .selectAll<SVGTextElement, TreemapLayout<T>>(".sszvis-treemap-label")
           .data(labelData)
           .join("text")
           .classed("sszvis-treemap-label", true)
@@ -322,12 +316,12 @@ export default function <T = unknown>(): TreemapComponent<T> {
       }
 
       // Add tooltip anchors at the center of each rectangle
-      const tooltipPosition = (d: TreemapNode<T>): [number, number] => [
+      const tooltipPosition = (d: TreemapLayout<T>): [number, number] => [
         (d.x0 + d.x1) / 2,
         (d.y0 + d.y1) / 2,
       ];
 
-      const ta = tooltipAnchor<TreemapNode<T>>().position(tooltipPosition);
+      const ta = tooltipAnchor<TreemapLayout<T>>().position(tooltipPosition);
       selection.call(ta);
     }) as TreemapComponent<T>;
 }

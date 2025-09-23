@@ -8,7 +8,7 @@ import "../../src/d3-selectgroup";
 import { prepareHierarchyData } from "../../src/layout/hierarchy.js";
 
 // Test data structures
-type TestDataItem = {
+type TestDatum = {
   category: string;
   subcategory: string;
   value: number;
@@ -18,9 +18,8 @@ type TestDataItem = {
 describe("component/treemap", () => {
   let container: HTMLDivElement;
   let svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
-  let chartBounds: ReturnType<typeof bounds>;
-  let testData: TestDataItem[];
-  let colorScale: (key: string) => string;
+  let data: TestDatum[];
+  let cScale: (key: string) => string;
 
   beforeEach(() => {
     container = document.createElement("div");
@@ -29,19 +28,20 @@ describe("component/treemap", () => {
     container.style.height = "300px";
     document.body.appendChild(container);
 
-    chartBounds = bounds({
-      width: 400,
-      height: 300,
-      top: 20,
-      right: 20,
-      bottom: 30,
-      left: 40,
-    });
-
-    svg = createSvgLayer(container, chartBounds);
+    svg = createSvgLayer(
+      container,
+      bounds({
+        width: 400,
+        height: 300,
+        top: 20,
+        right: 20,
+        bottom: 30,
+        left: 40,
+      })
+    );
 
     // Sample hierarchical data
-    testData = [
+    data = [
       { category: "Technology", subcategory: "Software", value: 100, name: "App A" },
       { category: "Technology", subcategory: "Software", value: 80, name: "App B" },
       { category: "Technology", subcategory: "Hardware", value: 150, name: "Device A" },
@@ -50,9 +50,9 @@ describe("component/treemap", () => {
       { category: "Healthcare", subcategory: "Pharma", value: 120, name: "Drug A" },
     ];
 
-    colorScale = scaleOrdinal<string, string>()
+    cScale = scaleOrdinal<string, string>()
       .domain(["Technology", "Finance", "Healthcare"])
-      .range(["#1f77b4", "#ff7f0e", "#2ca02c"]) as (key: string) => string;
+      .range(["#1f77b4", "#ff7f0e", "#2ca02c"]);
   });
 
   afterEach(() => {
@@ -62,11 +62,11 @@ describe("component/treemap", () => {
 
   describe("prepareData", () => {
     test("should create hierarchical structure with chained API", () => {
-      const layoutData = prepareHierarchyData<TestDataItem>()
+      const layoutData = prepareHierarchyData<TestDatum>()
         .layer((d) => d.category)
         .layer((d) => d.subcategory)
         .value((d) => d.value)
-        .calculate(testData);
+        .calculate(data);
 
       expect(layoutData.children).toBeDefined();
       expect(layoutData.children?.length).toBe(3); // Technology, Finance, Healthcare
@@ -75,12 +75,10 @@ describe("component/treemap", () => {
     });
 
     test("should create hierarchical structure with options API", () => {
-      const layoutData = prepareHierarchyData(testData, {
+      const layoutData = prepareHierarchyData(data, {
         layers: [(d) => d.category, (d) => d.subcategory],
         valueAccessor: (d) => d.value,
-      }) as unknown as { children?: unknown[]; value: number; depth: number }; // Type assertion needed due to overload mismatch
-
-      // The options API returns a hierarchy node (raw data), not an array
+      });
       expect(layoutData.children).toBeDefined();
       expect(layoutData.children?.length).toBe(3); // Technology, Finance, Healthcare
       expect(layoutData.value).toBeGreaterThan(0);
@@ -88,90 +86,84 @@ describe("component/treemap", () => {
     });
 
     test("should handle single layer hierarchy", () => {
-      const layoutData = prepareHierarchyData<TestDataItem>()
+      const layoutData = prepareHierarchyData<TestDatum>()
         .layer((d) => d.category)
         .value((d) => d.value)
-        .calculate(testData);
-
+        .calculate(data);
       expect(layoutData.children).toBeDefined();
       expect(layoutData.children?.length).toBe(3);
     });
 
     test("should throw error if no layers specified", () => {
       expect(() => {
-        prepareHierarchyData<TestDataItem>()
+        prepareHierarchyData<TestDatum>()
           .value((d) => d.value)
-          .calculate(testData);
+          .calculate(data);
       }).toThrow("At least one layer must be specified");
     });
 
     test("should handle zero values gracefully", () => {
-      const dataWithZeros = [
-        ...testData,
-        { category: "Empty", subcategory: "None", value: 0, name: "Empty A" },
-      ];
-
-      const layoutData = prepareHierarchyData<TestDataItem>()
+      const layoutData = prepareHierarchyData<TestDatum>()
         .layer((d) => d.category)
         .value((d) => d.value)
-        .calculate(dataWithZeros);
-
+        .calculate([
+          ...data,
+          { category: "Empty", subcategory: "None", value: 0, name: "Empty A" },
+        ]);
       expect(layoutData.children?.length).toBe(4); // Including Empty category
     });
   });
 
   describe("treemap component", () => {
     test("should create treemap component with proper API", () => {
-      const treemapComponent = treemap<TestDataItem>()
-        .colorScale(colorScale)
+      const treemapComponent = treemap<TestDatum>()
+        .colorScale(cScale)
         .containerWidth(400)
         .containerHeight(300)
         .transition(false);
-
-      expect(treemapComponent.colorScale()).toBe(colorScale);
+      expect(treemapComponent.colorScale()).toBe(cScale);
       expect(treemapComponent.containerWidth()).toBe(400);
       expect(treemapComponent.containerHeight()).toBe(300);
       expect(treemapComponent.transition()).toBe(false);
     });
 
     test("should render rectangles for treemap data", () => {
-      const hierarchicalData = prepareHierarchyData<TestDataItem>()
-        .layer((d) => d.category)
-        .layer((d) => d.subcategory)
-        .value((d) => d.value)
-        .calculate(testData);
-
-      svg.datum(hierarchicalData).call(
-        treemap<TestDataItem>()
-          .colorScale(colorScale)
-          .containerWidth(360) // Chart area width
-          .containerHeight(250) // Chart area height
-          .transition(false)
-      );
-
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360) // Chart area width
+            .containerHeight(250) // Chart area height
+            .transition(false)
+        );
       const rectangles = svg.selectAll(".sszvis-treemap-rect");
       expect(rectangles.empty()).toBe(false);
       expect(rectangles.size()).toBeGreaterThan(0);
     });
 
     test("should apply color scale correctly", () => {
-      const hierarchicalData = prepareHierarchyData<TestDataItem>()
-        .layer((d) => d.category)
-        .value((d) => d.value)
-        .calculate(testData);
-
       svg
-        .datum(hierarchicalData)
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .value((d) => d.value)
+            .calculate(data)
+        )
         .call(
-          treemap<TestDataItem>()
-            .colorScale(colorScale)
+          treemap<TestDatum>()
+            .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
             .transition(false)
         );
-
       const rectangles = svg.selectAll(".sszvis-treemap-rect");
-      // Verify that rectangles are colored using the color scale
       expect(rectangles.size()).toBeGreaterThan(0);
       const firstRect = rectangles.node() as SVGRectElement;
       if (firstRect) {
@@ -182,125 +174,110 @@ describe("component/treemap", () => {
     });
 
     test("should handle labels when showLabels is enabled", () => {
-      const hierarchicalData = prepareHierarchyData<TestDataItem>()
-        .layer((d) => d.category)
-        .layer((d) => d.subcategory)
-        .value((d) => d.value)
-        .calculate(testData);
-
       svg
-        .datum(hierarchicalData)
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
         .call(
-          treemap<TestDataItem>()
-            .colorScale(colorScale)
+          treemap<TestDatum>()
+            .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
             .showLabels(true)
             .transition(false)
         );
-
-      const labels = svg.selectAll(".sszvis-treemap-label");
-      expect(labels.empty()).toBe(false);
+      expect(svg.selectAll(".sszvis-treetop-label").empty()).toBe(false);
     });
 
     test("should not show labels when showLabels is disabled", () => {
-      const hierarchicalData = prepareHierarchyData<TestDataItem>()
-        .layer((d) => d.category)
-        .value((d) => d.value)
-        .calculate(testData);
-
       svg
-        .datum(hierarchicalData)
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .value((d) => d.value)
+            .calculate(data)
+        )
         .call(
-          treemap<TestDataItem>()
-            .colorScale(colorScale)
+          treemap<TestDatum>()
+            .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
             .showLabels(false)
             .transition(false)
         );
-
-      const labels = svg.selectAll(".sszvis-treemap-label");
-      expect(labels.empty()).toBe(true);
+      expect(svg.selectAll(".sszvis-treetop-label").empty()).toBe(true);
     });
 
     test("should support different label positions", () => {
-      const hierarchicalData = prepareHierarchyData<TestDataItem>()
-        .layer((d) => d.category)
-        .value((d) => d.value)
-        .calculate(testData);
-
       svg
-        .datum(hierarchicalData)
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .value((d) => d.value)
+            .calculate(data)
+        )
         .call(
-          treemap<TestDataItem>()
-            .colorScale(colorScale)
+          treemap<TestDatum>()
+            .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
             .showLabels(true)
             .labelPosition("center")
             .transition(false)
         );
-
-      const labels = svg.selectAll(".sszvis-treemap-label");
-      const firstLabel = labels.node() as SVGTextElement;
+      const firstLabel = svg.selectAll<SVGTextElement, TestDatum>(".sszvis-treemap-label").node();
       if (firstLabel) {
         expect(firstLabel.getAttribute("text-anchor")).toBe("middle");
       }
     });
 
     test("should filter out very small rectangles", () => {
-      const smallValueData = [
-        { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
-        { category: "B", subcategory: "B1", value: 100, name: "Normal" },
-      ];
-
-      const hierarchicalData = prepareHierarchyData<TestDataItem>()
-        .layer((d) => d.category)
-        .layer((d) => d.subcategory)
-        .value((d) => d.value)
-        .calculate(smallValueData);
-
       svg
-        .datum(hierarchicalData)
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate([
+              { category: "A", subcategory: "A1", value: 0.1, name: "Tiny" },
+              { category: "B", subcategory: "B1", value: 100, name: "Normal" },
+            ])
+        )
         .call(
-          treemap<TestDataItem>()
-            .colorScale(colorScale)
+          treemap<TestDatum>()
+            .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
             .transition(false)
         );
-
-      const rectangles = svg.selectAll(".sszvis-treemap-rect");
-
-      // Should only render rectangles with sufficient size
-      const rectNodes = rectangles.nodes() as SVGRectElement[];
-      rectNodes.forEach((rect) => {
-        const width = parseFloat(rect.getAttribute("width") || "0");
-        const height = parseFloat(rect.getAttribute("height") || "0");
-        expect(width).toBeGreaterThan(0.5);
-        expect(height).toBeGreaterThan(0.5);
-      });
+      svg
+        .selectAll<SVGRectElement, TestDatum>(".sszvis-treemap-rect")
+        .nodes()
+        .forEach((rect) => {
+          expect(parseFloat(rect.getAttribute("width") || "0")).toBeGreaterThan(0.5);
+          expect(parseFloat(rect.getAttribute("height") || "0")).toBeGreaterThan(0.5);
+        });
     });
 
     test("should handle empty or invalid data gracefully", () => {
-      const emptyData: TestDataItem[] = [];
-
       expect(() => {
-        prepareHierarchyData<TestDataItem>()
+        prepareHierarchyData<TestDatum>()
           .layer((d) => d.category)
           .value((d) => d.value)
-          .calculate(emptyData);
+          .calculate([]);
       }).not.toThrow();
     });
 
     test("should support transitions when enabled", () => {
-      const treemapComponent = treemap<TestDataItem>()
-        .colorScale(colorScale)
+      const treemapComponent = treemap<TestDatum>()
+        .colorScale(cScale)
         .containerWidth(360)
         .containerHeight(250)
         .transition(true);
-
       expect(treemapComponent.transition()).toBe(true);
     });
   });
