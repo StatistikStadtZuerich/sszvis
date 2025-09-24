@@ -59,7 +59,7 @@ type PackProps<T = unknown> = {
   circleStroke: string;
   circleStrokeWidth: number;
   // Radius scale function for custom circle sizing
-  radiusScale?: (d: HierarchyCircularNode<NodeDatum<T>>) => number;
+  rScale?: (d: HierarchyCircularNode<NodeDatum<T>>) => number;
 };
 
 // Component interface with proper method overloads
@@ -126,7 +126,7 @@ export default function <T = unknown>(): PackComponent<T> {
           .size([props.containerWidth, props.containerHeight])
           // TODO: design decision: padding between circles
           .padding(5)
-          .radius(props.radiusScale || null);
+          .radius(props.rScale || null);
 
         layout(inputData);
 
