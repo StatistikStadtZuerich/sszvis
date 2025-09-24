@@ -190,7 +190,7 @@ describe("component/treemap", () => {
             .showLabels(true)
             .transition(false)
         );
-      expect(svg.selectAll(".sszvis-treetop-label").empty()).toBe(false);
+      expect(svg.selectAll(".sszvis-treemap-label").empty()).toBe(false);
     });
 
     test("should not show labels when showLabels is disabled", () => {
@@ -209,7 +209,7 @@ describe("component/treemap", () => {
             .showLabels(false)
             .transition(false)
         );
-      expect(svg.selectAll(".sszvis-treetop-label").empty()).toBe(true);
+      expect(svg.selectAll(".sszvis-treemap-label").empty()).toBe(true);
     });
 
     test("should support different label positions", () => {
