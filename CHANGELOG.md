@@ -1,3 +1,7 @@
+## 3.3.1 (2025-09-25)
+
+- fix `sszvis.panning` behavior with correct data arguments in event handlers
+
 ## 3.3.0 (2025-09-19)
 
 - add `sszvis.annotationConfidenceBar` annotation component for displaying confidence intervals and error ranges
