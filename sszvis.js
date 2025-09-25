@@ -3845,9 +3845,15 @@
         if (props.draggable) {
           layer.classed("sszvis-interactive--draggable", true);
         }
-        layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function (e) {
-          if (this) event.apply("start", this, [e]);
-        }).on("mousedown", function (e) {
+        layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function () {
+          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+          }
+          if (this) event.apply("start", this, args);
+        }).on("mousedown", function () {
+          for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+            args[_key2] = arguments[_key2];
+          }
           const target = this;
           const doc = d3.select(document);
           const win = d3.select(window);
@@ -3858,11 +3864,11 @@
             target.__dragging__ = false;
             win.on("mousemove.sszvis-behavior-move", null);
             doc.on("mouseout.sszvis-behavior-move", null);
-            if (target) event.apply("end", target, [e]);
+            if (target) event.apply("end", target, args);
           };
           win.on("mouseup.sszvis-behavior-move", stopDragging);
           doc.on("mouseout.sszvis-behavior-move", () => {
-            const from = e.relatedTarget || e.toElement;
+            const from = args[0].relatedTarget || args[0].toElement;
             if (!from || from.nodeName === "HTML") {
               stopDragging();
             }
@@ -3879,8 +3885,11 @@
           } else {
             if (this) event.apply("move", this, [e, x, y]);
           }
-        }).on("mouseout", function (e) {
-          if (this) event.apply("end", this, [e]);
+        }).on("mouseout", function () {
+          for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+            args[_key3] = arguments[_key3];
+          }
+          if (this) event.apply("end", this, args);
         }).on("touchstart", function (e) {
           const pointerCoords = d3.pointer(e);
           const xy = first([pointerCoords]);
@@ -3942,8 +3951,8 @@
         }
       });
       moveComponent.on = function () {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
+        for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+          args[_key4] = arguments[_key4];
         }
         const value = event.on.apply(event, args);
         return value === event ? moveComponent : value;
@@ -4141,30 +4150,48 @@
         const selection = d3.select(this);
         const props = selection.props();
         const elements = selection.selectAll(props.elementSelector);
-        elements.attr("data-sszvis-behavior-pannable", "").classed("sszvis-interactive", true).on("mouseenter", function (e) {
-          if (this) event.apply("start", this, [e]);
-        }).on("mousemove", function (e) {
-          if (this) event.apply("pan", this, [e]);
-        }).on("mouseleave", function (e) {
-          if (this) event.apply("end", this, [e]);
-        }).on("touchstart", function (e) {
-          e.preventDefault();
-          if (this) event.apply("start", this, [e]);
-        }).on("touchmove", function (e) {
-          e.preventDefault();
-          const datum = datumFromPanEvent(firstTouch(e));
-          if (datum === null) {
-            if (this) event.apply("end", this, [e]);
-          } else {
-            if (this) event.apply("pan", this, [e]);
+        elements.attr("data-sszvis-behavior-pannable", "").classed("sszvis-interactive", true).on("mouseenter", function () {
+          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
           }
-        }).on("touchend", function (e) {
-          if (this) event.apply("end", this, [e]);
+          if (this) event.apply("start", this, args);
+        }).on("mousemove", function () {
+          for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+            args[_key2] = arguments[_key2];
+          }
+          if (this) event.apply("pan", this, args);
+        }).on("mouseleave", function () {
+          for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+            args[_key3] = arguments[_key3];
+          }
+          if (this) event.apply("end", this, args);
+        }).on("touchstart", function () {
+          for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+            args[_key4] = arguments[_key4];
+          }
+          args[0].preventDefault();
+          if (this) event.apply("start", this, args);
+        }).on("touchmove", function () {
+          for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+            args[_key5] = arguments[_key5];
+          }
+          args[0].preventDefault();
+          const datum = datumFromPanEvent(firstTouch(args[0]));
+          if (datum === null) {
+            if (this) event.apply("end", this, args);
+          } else {
+            if (this) event.apply("pan", this, args);
+          }
+        }).on("touchend", function () {
+          for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+            args[_key6] = arguments[_key6];
+          }
+          if (this) event.apply("end", this, args);
         });
       });
       panningComponent.on = function () {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
+        for (var _len7 = arguments.length, args = new Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+          args[_key7] = arguments[_key7];
         }
         const value = event.on.apply(event, args);
         return value === event ? panningComponent : value;
@@ -4244,8 +4271,11 @@
           } else {
             if (this) event.apply("out", this, [e]);
           }
-        }).on("mouseout", function (e) {
-          if (this) event.apply("out", this, [e]);
+        }).on("mouseout", function () {
+          for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+            args[_key] = arguments[_key];
+          }
+          if (this) event.apply("out", this, args);
         }).on("touchstart", function (e) {
           const parent = this.parentNode;
           if (!parent) return;
@@ -4298,8 +4328,8 @@
         }
       });
       voronoiComponent.on = function () {
-        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
+        for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          args[_key2] = arguments[_key2];
         }
         const value = event.on.apply(event, args);
         return value === event ? voronoiComponent : value;

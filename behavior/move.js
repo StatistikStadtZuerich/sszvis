@@ -78,9 +78,15 @@ function move () {
     if (props.draggable) {
       layer.classed("sszvis-interactive--draggable", true);
     }
-    layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function (e) {
-      if (this) event.apply("start", this, [e]);
-    }).on("mousedown", function (e) {
+    layer.attr("x", xExtent[0]).attr("y", yExtent[0]).attr("width", xExtent[1] - xExtent[0]).attr("height", yExtent[1] - yExtent[0]).attr("fill", "transparent").on("mouseover", function () {
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+      if (this) event.apply("start", this, args);
+    }).on("mousedown", function () {
+      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
       const target = this;
       const doc = select(document);
       const win = select(window);
@@ -91,11 +97,11 @@ function move () {
         target.__dragging__ = false;
         win.on("mousemove.sszvis-behavior-move", null);
         doc.on("mouseout.sszvis-behavior-move", null);
-        if (target) event.apply("end", target, [e]);
+        if (target) event.apply("end", target, args);
       };
       win.on("mouseup.sszvis-behavior-move", stopDragging);
       doc.on("mouseout.sszvis-behavior-move", () => {
-        const from = e.relatedTarget || e.toElement;
+        const from = args[0].relatedTarget || args[0].toElement;
         if (!from || from.nodeName === "HTML") {
           stopDragging();
         }
@@ -112,8 +118,11 @@ function move () {
       } else {
         if (this) event.apply("move", this, [e, x, y]);
       }
-    }).on("mouseout", function (e) {
-      if (this) event.apply("end", this, [e]);
+    }).on("mouseout", function () {
+      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
+      }
+      if (this) event.apply("end", this, args);
     }).on("touchstart", function (e) {
       const pointerCoords = pointer(e);
       const xy = first([pointerCoords]);
@@ -175,8 +184,8 @@ function move () {
     }
   });
   moveComponent.on = function () {
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
+    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      args[_key4] = arguments[_key4];
     }
     const value = event.on.apply(event, args);
     return value === event ? moveComponent : value;
