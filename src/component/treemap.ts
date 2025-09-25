@@ -27,16 +27,16 @@ import {
   treemap as d3Treemap,
   type HierarchyNode,
   type NumberValue,
-  rgb,
   select,
   treemapSquarify,
 } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
+import { getAccessibleTextColor } from "../color.js";
 import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import { defaultTransition } from "../transition.js";
-import type { NumberAccessor, StringAccessor } from "../types.js";
+import type { StringAccessor } from "../types.js";
 
 // TreemapNode represents a node in the treemap after D3 layout computation
 export type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
@@ -58,11 +58,9 @@ type TreemapProps<T = unknown> = {
   transition?: boolean;
   containerWidth: number;
   containerHeight: number;
-
   showLabels?: boolean;
   label?: StringAccessor<TreemapLayout<T>>;
   labelPosition?: LabelPosition;
-  labelFontSize?: NumberAccessor<TreemapLayout<T>>;
 };
 
 // Component interface with proper method overloads
@@ -108,7 +106,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
     .prop("label", fn.functor)
     .label((d: TreemapLayout<T>) => (d.data && "key" in d.data ? d.data.key : ""))
     .prop("labelPosition")
-    .labelPosition("top-left")
+    .labelPosition("center")
     .render(function (this: Element, inputData: HierarchyNode<NodeDatum<T>>) {
       const selection = select<Element, TreemapLayout<T>>(this);
       const props = selection.props<TreemapProps<T>>();
@@ -118,14 +116,8 @@ export default function <T = unknown>(): TreemapComponent<T> {
         .tile(treemapSquarify)
         .size([props.containerWidth, props.containerHeight])
         .round(true)
-        // TODO: design decision: padding props?
-        .padding(2);
-      //   .paddingInner(1)
-      //   .paddingOuter(1);
-      //   .paddingTop(0)
-      //   .paddingRight(0)
-      //   .paddingBottom(0)
-      //   .paddingLeft(0);
+        .paddingInner(1)
+        .paddingOuter(2);
 
       layout(inputData);
 
@@ -150,7 +142,6 @@ export default function <T = unknown>(): TreemapComponent<T> {
       // Filter out very small rectangles
       const visibleData = treemapData
         .filter((d: TreemapLayout<T>) => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5)
-        // TODO: design decision - only show leaf nodes by default?
         .filter((d) => !d.children);
 
       const rectangles = selection
@@ -170,7 +161,6 @@ export default function <T = unknown>(): TreemapComponent<T> {
           }
           return "#cccccc"; // Default fill if no key found
         })
-        // TODO: design decision - border on rect?
         .attr("stroke", "#ffffff")
         .attr("stroke-width", 1);
 
@@ -186,36 +176,9 @@ export default function <T = unknown>(): TreemapComponent<T> {
 
       // Render labels if enabled
       if (props.showLabels) {
-        const getAccessibleTextColor = (backgroundColor: string | null): string => {
-          if (!backgroundColor) {
-            return "#545454"; // Default to SSZVIS gray if no background color
-          }
-          const bgColor = rgb(backgroundColor);
-          const gammaCorrect = (c: number): number => {
-            const normalized = c / 255;
-            return normalized <= 0.03928
-              ? normalized / 12.92
-              : ((normalized + 0.055) / 1.055) ** 2.4;
-          };
-
-          const rLum = gammaCorrect(bgColor.r);
-          const gLum = gammaCorrect(bgColor.g);
-          const bLum = gammaCorrect(bgColor.b);
-
-          // WCAG relative luminance formula
-          const luminance = 0.2126 * rLum + 0.7152 * gLum + 0.0722 * bLum;
-
-          return luminance > 0.179 ? "#545454" : "#ffffff"; // Use SSZVIS gray or white
-        };
-
+        const fontSize = 12;
         const calculateLabelPosition = (d: TreemapLayout<T>, position: LabelPosition) => {
           const padding = 8;
-          const fontSize = handleMissingVal(
-            (typeof props.labelFontSize === "function"
-              ? props.labelFontSize(d)
-              : props.labelFontSize) ?? 11
-          );
-
           switch (position) {
             case "top-left":
               return { x: d.x0 + padding, y: d.y0 + fontSize + padding };
@@ -255,12 +218,9 @@ export default function <T = unknown>(): TreemapComponent<T> {
         };
 
         // Filter data for labels - only show labels on leaf nodes (smallest layer) that are large enough
-        const labelData = visibleData.filter((d: TreemapLayout<T>) => {
-          const w = d.x1 - d.x0;
-          const h = d.y1 - d.y0;
-          // Only show labels on leaf nodes (no children) and rectangles larger than 50x20 pixels
-          return !d.children && w >= 50 && h >= 20;
-        });
+        const labelData = visibleData
+          .filter((d) => !d.children)
+          .filter((d) => labelAcc(d).length < (d.x1 - d.x0) / 7); // Rough estimate of fitting text
 
         const labels = selection
           .selectAll<SVGTextElement, TreemapLayout<T>>(".sszvis-treemap-label")
@@ -269,12 +229,10 @@ export default function <T = unknown>(): TreemapComponent<T> {
           .classed("sszvis-treemap-label", true)
           .attr("x", labelXAcc)
           .attr("y", labelYAcc)
-          // TODO: design decision - accessible label color based on background?
           .attr("fill", labelFillAcc)
-          // TODO: design decision - font size prop?
-          .attr("font-size", 11)
-          // TODO: design decision - font family?
+          .attr("font-size", fontSize)
           .attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif')
+          .style("pointer-events", "none")
           .attr("text-anchor", () => {
             const position = props.labelPosition || "top-left";
             switch (position) {
@@ -307,7 +265,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
             .transition(defaultTransition())
             .attr("x", labelXAcc)
             .attr("y", labelYAcc)
-            .attr("font-size", 11)
+            .attr("font-size", fontSize)
             .text(labelAcc);
         }
       } else {
