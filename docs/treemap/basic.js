@@ -119,7 +119,6 @@ function render(state) {
     .colorScale(colorScale)
     .showLabels(true)
     .label((d) => d.data.key)
-    .labelPosition("bottom-right");
 
   const tooltipHeaderText = sszvis.modularTextHTML().bold((d) => d.data.key);
   const tooltipBodyText = sszvis.modularTextHTML().plain((d) => "Value: " + sszvis.formatNumber(d.value));
