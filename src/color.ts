@@ -113,6 +113,9 @@ function qualColorScale(colors: string[]): ColorScaleFactory<ExtendedOrdinalScal
   };
 }
 
+const black = "#000000";
+const white = "#FFFFFF";
+
 const darkBlue = "#3431DE";
 const mediumBlue = "#0A8DF6";
 const lightBlue = "#23C3F1";
@@ -384,3 +387,23 @@ function interpolatedColorScale(
 function convertLab(d: string): LabColor {
   return lab(d);
 }
+
+export const getAccessibleTextColor = (backgroundColor: string | null): string => {
+  if (!backgroundColor) {
+    return black;
+  }
+  const bgColor = rgb(backgroundColor);
+  const gammaCorrect = (c: number): number => {
+    const normalized = c / 255;
+    return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+
+  const rLum = gammaCorrect(bgColor.r);
+  const gLum = gammaCorrect(bgColor.g);
+  const bLum = gammaCorrect(bgColor.b);
+
+  // WCAG relative luminance formula
+  const luminance = 0.2126 * rLum + 0.7152 * gLum + 0.0722 * bLum;
+
+  return luminance > 0.179 ? black : white; // Use SSZVIS gray or white
+};
