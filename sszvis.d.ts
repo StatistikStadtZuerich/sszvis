@@ -1,4 +1,4 @@
-import { Selection, NumberValue, BaseType, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
+import { Selection, NumberValue, BaseType, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, HierarchyNode, HierarchyCircularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
 import * as d3_shape from 'd3-shape';
 import * as d3_transition from 'd3-transition';
 import * as d3_selection from 'd3-selection';
@@ -155,7 +155,7 @@ interface CircleComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$c<T = unknown>(): CircleComponent<T>;
+declare function export_default$e<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -193,7 +193,7 @@ interface ConfidenceAreaComponent<T = unknown> extends Component {
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$b<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$d<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -233,7 +233,7 @@ interface ConfidenceBarComponent<T = unknown> extends Component {
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$a<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$c<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -259,7 +259,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$9<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$b<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -298,7 +298,7 @@ interface LineComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent<T>;
 }
-declare function export_default$8<T = unknown>(): LineComponent<T>;
+declare function export_default$a<T = unknown>(): LineComponent<T>;
 
 /**
  * Range Flag annotation
@@ -324,7 +324,7 @@ interface RangeFlagComponent<T = unknown> extends Component {
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$7<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$9<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -361,7 +361,7 @@ interface RangeRulerComponent<T = unknown> extends Component {
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$6<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$8<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -395,7 +395,7 @@ interface RectangleComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$5<T = unknown>(): RectangleComponent<T>;
+declare function export_default$7<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -500,7 +500,7 @@ interface TooltipComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$4<T = unknown>(): TooltipComponent<T>;
+declare function export_default$6<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -550,7 +550,7 @@ interface TooltipAnchorComponent<T = unknown> extends Component {
     position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }
-declare function export_default$3<T = unknown>(): TooltipAnchorComponent<T>;
+declare function export_default$5<T = unknown>(): TooltipAnchorComponent<T>;
 
 declare function app({ init, render, actions, fallback }: {
     init: any;
@@ -819,7 +819,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Component {
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$2<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$4<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -869,7 +869,7 @@ interface PanningComponent extends Component {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$1(): PanningComponent;
+declare function export_default$3(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -931,7 +931,7 @@ interface VoronoiComponent<T = unknown> extends Component {
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$2<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -1316,6 +1316,7 @@ declare const scaleDeepGry: ColorScaleFactory<ExtendedLinearScale>;
 declare const slightlyDarker: (c: string) => HSLColor;
 declare const muchDarker: (c: string) => HSLColor;
 declare const withAlpha: (c: string, a: number) => string;
+declare const getAccessibleTextColor: (backgroundColor: string | null) => string;
 
 declare function _default$x(): any;
 
@@ -1326,6 +1327,123 @@ declare function _default$v(): any;
 declare function _default$u(): any;
 
 declare function nestedStackedBarsVertical(): Component;
+
+type NodeDatum<T> = {
+    _tag: "root";
+    children: NodeDatum<T>[];
+} | {
+    _tag: "branch";
+    key: string;
+    children: NodeDatum<T>[];
+} | {
+    _tag: "leaf";
+    key: string;
+    data: T;
+};
+/**
+ * sszvis.prepareHierarchyData
+ *
+ * Creates a data preparation layout, with an API that works similarly to d3's configurable layouts.
+ * Can be used in two ways:
+ * 1. Chained API (like sunburst): prepareData().layer().value().size().calculate(data)
+ * 2. Options API (backward compatibility): prepareData(data, options)
+ *
+ * @property {Array} calculate      Accepts an array of data, and applies this layout to that data. Returns the formatted dataset,
+ *                                  ready to be used as data for the treemap component.
+ * @property {Function} layer       Accepts a function, which should be a key function, used to create a layer for the data.
+ *                                  The key function is applied to each datum, and the return value groups that datum within a
+ *                                  layer of the treemap chart. The exact behavior depends on the order in which layers are specified.
+ *                                  The first specified layer will be the outermost one of the treemap, with subsequent layers adding
+ *                                  further subdivision. Data are grouped according to the first layer, then the second layer, then the third, etc.
+ *                                  This uses d3.rollup under the hood, and applies the key function to group the data hierarchically.
+ * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of
+ *                                  the rectangle for each datum.
+ * @property {Array} size           Set the size [width, height] of the treemap layout.
+ * @property {Function} sort        Provide a sorting function for sibling nodes of the treemap.
+ *                                  It receives two node values (which are created by d3), which should have at least a "key" property
+ *                                  (corresponding to the layer key), and a "value" property (corresponding to the value amount of the rectangle).
+ *                                  Otherwise, it behaves like a normal javascript array sorting function. The default value attempts to preserve the
+ *                                  existing sort order of the data.
+ *
+ * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
+ */
+type HierarchyComponent<T = unknown> = {
+    calculate: (data: T[]) => HierarchyNode<NodeDatum<T>>;
+    layer: (accessor: (d: T) => string) => HierarchyComponent<T>;
+    value: (accessor: (d: T) => number) => HierarchyComponent<T>;
+    sort: (sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number) => HierarchyComponent<T>;
+};
+declare function prepareHierarchyData<T = unknown>(): HierarchyComponent<T>;
+declare function prepareHierarchyData<T = unknown>(data: T[], options: {
+    layers: Array<(d: T) => string>;
+    valueAccessor: (d: T) => number;
+}): HierarchyNode<NodeDatum<T>>;
+
+/**
+ * Pack component
+ *
+ * This component renders a Pack (also known as a circle pack diagram), which displays
+ * hierarchical data as a collection of nested circles. The size of each circle corresponds to
+ * a quantitative value, and circles are positioned using D3's pack layout algorithm to
+ * efficiently fill the available space with minimal overlap.
+ *
+ * The component expects data prepared using the prepareHierarchyData function, which converts
+ * flat data into a hierarchical structure suitable for the pack layout.
+ *
+ * @module sszvis/component/pack
+ * @template T The type of the original flat data objects
+ *
+ * @property {string, function} colorScale        The fill color accessor for circles
+ * @property {boolean} transition                 Whether to animate changes (default true)
+ * @property {number, function} containerWidth    The container width (default 800)
+ * @property {number, function} containerHeight   The container height (default 600)
+ * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
+ * @property {string, function} label             The label text accessor (default d.data.key)
+ * @property {number} minRadius                   Minimum circle radius for visibility (default 1)
+ * @property {string} circleStroke                Circle stroke color (default "#ffffff")
+ * @property {number} circleStrokeWidth           Circle stroke width (default 1)
+ * @property {function} radiusScale               Custom radius scale function for circle sizing (optional)
+ *
+ * @return {sszvis.component}
+ */
+
+type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
+    x: number;
+    y: number;
+    r: number;
+    value: number;
+    data?: T;
+    depth: number;
+    height: number;
+};
+interface PackComponent<T = unknown> extends Component {
+    colorScale(): (key: string) => string;
+    colorScale(scale: (key: string) => string): PackComponent<T>;
+    transition(): boolean;
+    transition(enabled: boolean): PackComponent<T>;
+    containerWidth(): number;
+    containerWidth(width: number): PackComponent<T>;
+    containerHeight(): number;
+    containerHeight(height: number): PackComponent<T>;
+    showLabels(): boolean;
+    showLabels(show: boolean): PackComponent<T>;
+    label(): StringAccessor<PackLayout<T>>;
+    label(accessor: StringAccessor<PackLayout<T>>): PackComponent<T>;
+    minRadius(): number;
+    minRadius(radius: number): PackComponent<T>;
+    circleStroke(): string;
+    circleStroke(stroke: string): PackComponent<T>;
+    circleStrokeWidth(): number;
+    circleStrokeWidth(width: number): PackComponent<T>;
+    radiusScale(): (d: HierarchyCircularNode<NodeDatum<T>>) => number;
+    radiusScale(scale: (d: HierarchyCircularNode<NodeDatum<T>>) => number): PackComponent<T>;
+}
+/**
+ * Main Pack component
+ *
+ * @template T The type of the original flat data objects
+ */
+declare function export_default$1<T = unknown>(): PackComponent<T>;
 
 declare function _default$t(): Component;
 
@@ -1363,6 +1481,65 @@ declare function stackedPyramidData(sideAcc: any, _rowAcc: any, seriesAcc: any, 
 declare function stackedPyramid(): any;
 
 declare function _default$o(): any;
+
+/**
+ * Treemap component
+ *
+ * This component renders a treemap diagram, which displays hierarchical data as nested rectangles.
+ * The size of each rectangle corresponds to a quantitative value, and rectangles are tiled to fill
+ * the available space efficiently. This component uses D3's treemap layout with the squarified
+ * tiling method for optimal aspect ratios.
+ *
+ * The component expects data prepared using the prepareData function, which converts flat data
+ * into a hierarchical structure and applies the treemap layout.
+ *
+ * @module sszvis/component/treemap
+ * @template T The type of the original flat data objects
+ *
+ * @property {string, function} colorScale        The fill color accessor for rectangles
+ * @property {boolean} transition                 Whether to animate changes (default true)
+ * @property {number, function} containerWidth    The container width (default 800)
+ * @property {number, function} containerHeight   The container height (default 600)
+ * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
+ * @property {string, function} label             The label text accessor (default d.data.key)
+ * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
+ *
+ * @return {sszvis.component}
+ */
+
+type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+    value: number;
+    data?: T;
+    depth: number;
+    height: number;
+};
+type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
+interface TreemapComponent<T = unknown> extends Component {
+    colorScale(): (key: string) => string;
+    colorScale(scale: (key: string) => string): TreemapComponent<T>;
+    transition(): boolean;
+    transition(enabled: boolean): TreemapComponent<T>;
+    containerWidth(): number;
+    containerWidth(width: number): TreemapComponent<T>;
+    containerHeight(): number;
+    containerHeight(height: number): TreemapComponent<T>;
+    showLabels(): boolean;
+    showLabels(show: boolean): TreemapComponent<T>;
+    label(): StringAccessor<TreemapLayout<T>>;
+    label(accessor: StringAccessor<TreemapLayout<T>>): TreemapComponent<T>;
+    labelPosition(): LabelPosition;
+    labelPosition(position: LabelPosition): TreemapComponent<T>;
+}
+/**
+ * Main treemap component
+ *
+ * @template T The type of the original flat data objects
+ */
+declare function export_default<T = unknown>(): TreemapComponent<T>;
 
 declare function _default$n(): any;
 
@@ -1932,10 +2109,9 @@ declare function _default$f(height: number, num: number, pct: number): object;
  */
 declare function _default$e(width: number, numBars: number): object;
 
-declare function prepareData$1(): Function;
+declare function prepareData(): Function;
 declare function computeLayout$1(columnLengths: any[], columnTotals: any[], columnHeight: number, columnWidth: number): Object;
 
-declare function prepareData(): Function;
 declare function computeLayout(numLayers: number, chartWidth: number): Object;
 declare function getRadiusExtent(formattedData: any[]): any[];
 
@@ -2342,5 +2518,5 @@ declare function on(name: any, cb: any): any;
 declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$c as annotationCircle, export_default$b as annotationConfidenceArea, export_default$a as annotationConfidenceBar, export_default$8 as annotationLine, export_default$7 as annotationRangeFlag, export_default$6 as annotationRangeRuler, export_default$5 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$x as bar, bounds, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$w as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$9 as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getGeoJsonCenter, _default$v as groupedBars, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$2 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData$1 as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, prepareData as sunburstPrepareData, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$4 as tooltip, export_default$3 as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, viewport, export_default as voronoi, widthAdaptiveMapPathStroke, withAlpha };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, export_default$d as annotationConfidenceArea, export_default$c as annotationConfidenceBar, export_default$a as annotationLine, export_default$9 as annotationRangeFlag, export_default$8 as annotationRangeRuler, export_default$7 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$x as bar, bounds, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$w as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$b as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, _default$v as groupedBars, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$4 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as pack, export_default$3 as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$6 as tooltip, export_default$5 as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, export_default as treemap, viewport, export_default$2 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
 export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BoundsConfig, BoundsResult, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, MeasurableElement, Padding, PartialBreakpoint, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SvgLayerMetadata, ValueSorter };

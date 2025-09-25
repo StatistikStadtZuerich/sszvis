@@ -104,4 +104,5 @@ export declare const scaleDeepGry: ColorScaleFactory<ExtendedLinearScale>;
 export declare const slightlyDarker: (c: string) => HSLColor;
 export declare const muchDarker: (c: string) => HSLColor;
 export declare const withAlpha: (c: string, a: number) => string;
+export declare const getAccessibleTextColor: (backgroundColor: string | null) => string;
 //# sourceMappingURL=color.d.ts.map

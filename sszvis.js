@@ -4739,6 +4739,8 @@
         return decorateOrdinalScale(scale);
       };
     }
+    const black = "#000000";
+    const white = "#FFFFFF";
     const darkBlue = "#3431DE";
     const mediumBlue = "#0A8DF6";
     const lightBlue = "#23C3F1";
@@ -4866,6 +4868,22 @@
     function convertLab(d) {
       return d3.lab(d);
     }
+    const getAccessibleTextColor = backgroundColor => {
+      if (!backgroundColor) {
+        return black;
+      }
+      const bgColor = d3.rgb(backgroundColor);
+      const gammaCorrect = c => {
+        const normalized = c / 255;
+        return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+      };
+      const rLum = gammaCorrect(bgColor.r);
+      const gLum = gammaCorrect(bgColor.g);
+      const bLum = gammaCorrect(bgColor.b);
+      // WCAG relative luminance formula
+      const luminance = 0.2126 * rLum + 0.7152 * gLum + 0.0722 * bLum;
+      return luminance > 0.179 ? black : white; // Use SSZVIS gray or white
+    };
 
     /**
      * Bar component
@@ -5285,6 +5303,132 @@
       const bars = nestedGroups.selectGroup("barchart").call(stackedBars);
       bars.selectAll("[data-tooltip-anchor]").call(tooltip);
     });
+
+    /**
+     * Pack component
+     *
+     * This component renders a Pack (also known as a circle pack diagram), which displays
+     * hierarchical data as a collection of nested circles. The size of each circle corresponds to
+     * a quantitative value, and circles are positioned using D3's pack layout algorithm to
+     * efficiently fill the available space with minimal overlap.
+     *
+     * The component expects data prepared using the prepareHierarchyData function, which converts
+     * flat data into a hierarchical structure suitable for the pack layout.
+     *
+     * @module sszvis/component/pack
+     * @template T The type of the original flat data objects
+     *
+     * @property {string, function} colorScale        The fill color accessor for circles
+     * @property {boolean} transition                 Whether to animate changes (default true)
+     * @property {number, function} containerWidth    The container width (default 800)
+     * @property {number, function} containerHeight   The container height (default 600)
+     * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
+     * @property {string, function} label             The label text accessor (default d.data.key)
+     * @property {number} minRadius                   Minimum circle radius for visibility (default 1)
+     * @property {string} circleStroke                Circle stroke color (default "#ffffff")
+     * @property {number} circleStrokeWidth           Circle stroke width (default 1)
+     * @property {function} radiusScale               Custom radius scale function for circle sizing (optional)
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Main Pack component
+     *
+     * @template T The type of the original flat data objects
+     */
+    function pack () {
+      return component().prop("colorScale").prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
+      .prop("containerHeight").containerHeight(600) // Default height
+      .prop("showLabels").showLabels(false) // Default disabled
+      .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("minRadius").minRadius(20).prop("circleStroke").circleStroke("#ffffff").prop("circleStrokeWidth").circleStrokeWidth(1).prop("radiusScale", functor).render(function (inputData) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Apply pack layout to hierarchical data
+        const layout = d3.pack().size([props.containerWidth, props.containerHeight]).padding(4).radius(props.radiusScale || null);
+        layout(inputData);
+        // Flatten the hierarchy and filter out root
+        function flatten(node) {
+          const result = [];
+          if (node.children) {
+            for (const child of node.children) {
+              if (child.data._tag !== "root") {
+                result.push(child);
+              }
+              result.push(...flatten(child));
+            }
+          } else if (node.data._tag !== "root") {
+            result.push(node);
+          }
+          return result;
+        }
+        const packData = flatten(inputData);
+        // Filter out very small circles - include both branches (categories) and leaves
+        const visibleData = packData.filter(d => d.r > (props.minRadius || 1));
+        const circles = selection.selectAll(".sszvis-pack-circle").data(visibleData).join("circle").classed("sszvis-pack-circle", true).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r).attr("fill", d => {
+          if (d.children) {
+            // Branch nodes (categories) should have no fill, only stroke
+            return "none";
+          }
+          // Leaf nodes should be filled with color
+          if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
+            return props.colorScale(d.parent.data.key);
+          } else if ("key" in d.data) {
+            return props.colorScale(d.data.key);
+          }
+          return "#cccccc"; // Default fill if no key found
+        }).attr("stroke", d => {
+          // Branch nodes (categories) get color stroke, leaf nodes get white stroke
+          if (d.children) {
+            if ("key" in d.data) {
+              return props.colorScale(d.data.key);
+            }
+            return "#cccccc"; // Default stroke color for branches
+          } else {
+            return props.circleStroke;
+          }
+        }).attr("stroke-width", d => {
+          // Branch nodes get thicker stroke to make them more visible
+          return d.children ? 2 : props.circleStrokeWidth;
+        });
+        // Apply transitions if enabled
+        if (props.transition) {
+          circles.transition(defaultTransition()).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r);
+        }
+        // Render labels if enabled
+        if (props.showLabels) {
+          const fontSize = 12;
+          // Create type-safe label accessor functions
+          const labelAcc = d => typeof props.label === "function" ? props.label(d) : props.label || "";
+          const labelXAcc = d => d.x;
+          const labelYAcc = d => d.y + fontSize / 3;
+          const labelFillAcc = d => {
+            const bgColor = () => {
+              if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
+                return props.colorScale(d.parent.data.key);
+              } else if ("key" in d.data) {
+                return props.colorScale(d.data.key);
+              }
+              return "#cccccc"; // Default fill if no key found
+            };
+            return getAccessibleTextColor(bgColor());
+          };
+          // Filter data for labels - only show labels on leaf nodes that are large enough
+          const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < d.r / 3);
+          const labels = selection.selectAll(".sszvis-pack-label").data(labelData).join("text").classed("sszvis-pack-label", true).attr("x", labelXAcc).attr("y", labelYAcc).attr("fill", labelFillAcc).attr("font-size", fontSize).attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').attr("text-anchor", "middle").attr("dominant-baseline", "middle").style("pointer-events", "none").text(labelAcc);
+          // Apply transitions to labels if enabled
+          if (props.transition) {
+            labels.transition(defaultTransition()).attr("x", labelXAcc).attr("y", labelYAcc).attr("font-size", fontSize).text(labelAcc);
+          }
+        } else {
+          // Remove labels if showLabels is false
+          selection.selectAll(".sszvis-pack-label").remove();
+        }
+        // Add tooltip anchors at the center of each circle
+        const tooltipPosition = d => [d.x, d.y];
+        const ta = tooltipAnchor().position(tooltipPosition);
+        selection.call(ta);
+      });
+    }
 
     /**
      * Pie component
@@ -5823,15 +5967,15 @@
      * is a hierarchical display with the level of aggregation getting finer and finer as you get further
      * from the center of the chart.
      *
-     * This component uses the data structure returned by the sszvis.layout.sunbust.prepareData function, and
-     * can be configured using the sszvis.layout.sunburst.computeLayout function. Under the hood, the prepareData
-     * function uses d3's nest data transformer (d3.nest) to construct a nested data structure from the input
-     * array, and d3's partition layout (d3.layout.partition), and the resulting data structure will be
-     * familiar to those familiar with the partition layout.
+     * This component can accept either:
+     * 1. Pre-processed flat sunburst data (backwards compatibility)
+     * 2. Raw hierarchical data from prepareHierarchyData() (recommended)
      *
-     * @property {Function} angleScale              Scale function for the angle of the segments of the sunburst chart. If using the
-     *                                              sszvis.layout.sunburst.prepareData function, the domain will be [0, 1]. The range
-     *                                              should usually be [0, 2 * PI]. That domain and range are used as default for this property.
+     * When using raw hierarchical data, the component will automatically apply the partition layout
+     * and flatten the data internally.
+     *
+     * @property {Function} angleScale              Scale function for the angle of the segments of the sunburst chart. The domain
+     *                                              should usually be [0, 1] and the range [0, 2 * PI]. These are used as defaults.
      * @property {Function} radiusScale             Scale function for the radius of segments. Can be configured using values returned from
      *                                              sszvis.layout.sunburst.computeLayout. See the examples for how the scale setup works.
      * @property {Number} centerRadius              The radius of the center of the chart. Can be configured with sszvis.layout.sunburst.computeLayout.
@@ -5845,20 +5989,34 @@
 
     const TWO_PI = 2 * Math.PI;
     function sunburst () {
-      return component().prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (data) {
+      return component().prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (inputData) {
         const selection = d3.select(this);
         const props = selection.props();
 
+        // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
+        // @deprecated in v3.4.0
+        let data;
+        if (Array.isArray(inputData)) {
+          // Already computed sunburst data (backwards compatibility)
+          data = inputData;
+        } else {
+          d3.partition()(inputData);
+          function flatten(node) {
+            return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
+          }
+          data = flatten(inputData).filter(d => d.data._tag !== "root");
+        }
+
         // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
         function getColorRecursive(node) {
-          // Center node (if the data were prepared using sszvis.layout.sunburst.prepareData)
-          if (node.data.isSunburstRoot) {
+          // Center node (if the data were prepared using sszvis.prepareHierarchyData)
+          if (node.data._tag === "root") {
             return "transparent";
           } else if (!node.parent) {
-            // Accounts for incorrectly formatted data which hasn't gone through sszvis.layout.sunburst.prepareData
-            warn("Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.format.sunburst.prepareData");
+            // Accounts for incorrectly formatted data which hasn't gone through sszvis.prepareHierarchyData
+            warn("Data passed to sszvis.component.sunburst does not have the expected tree structure. You should prepare it using sszvis.prepareHierarchyData");
             return d3.hsl(props.fill(node.data.key));
-          } else if (node.parent.data.isSunburstRoot) {
+          } else if (node.parent.data._tag === "root") {
             // Use the color scale
             return d3.hsl(props.fill(node.data.key));
           } else {
@@ -5916,6 +6074,168 @@
           return [Math.cos(a) * r, Math.sin(a) * r];
         });
         selection.call(arcTooltipAnchor);
+      });
+    }
+
+    /**
+     * Treemap component
+     *
+     * This component renders a treemap diagram, which displays hierarchical data as nested rectangles.
+     * The size of each rectangle corresponds to a quantitative value, and rectangles are tiled to fill
+     * the available space efficiently. This component uses D3's treemap layout with the squarified
+     * tiling method for optimal aspect ratios.
+     *
+     * The component expects data prepared using the prepareData function, which converts flat data
+     * into a hierarchical structure and applies the treemap layout.
+     *
+     * @module sszvis/component/treemap
+     * @template T The type of the original flat data objects
+     *
+     * @property {string, function} colorScale        The fill color accessor for rectangles
+     * @property {boolean} transition                 Whether to animate changes (default true)
+     * @property {number, function} containerWidth    The container width (default 800)
+     * @property {number, function} containerHeight   The container height (default 600)
+     * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
+     * @property {string, function} label             The label text accessor (default d.data.key)
+     * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
+     *
+     * @return {sszvis.component}
+     */
+    /**
+     * Main treemap component
+     *
+     * @template T The type of the original flat data objects
+     */
+    function treemap () {
+      return component().prop("colorScale").prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
+      .prop("containerHeight").containerHeight(600) // Default height
+      .prop("showLabels").showLabels(false) // Default disabled
+      .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("labelPosition").labelPosition("center").render(function (inputData) {
+        const selection = d3.select(this);
+        const props = selection.props();
+        // Apply treemap layout to hierarchical data
+        const layout = d3.treemap().tile(d3.treemapSquarify).size([props.containerWidth, props.containerHeight]).round(true).paddingInner(1).paddingOuter(2);
+        layout(inputData);
+        // Flatten the hierarchy and filter out root
+        function flatten(node) {
+          const result = [];
+          if (node.children) {
+            for (const child of node.children) {
+              if (child.data._tag !== "root") {
+                result.push(child);
+              }
+              result.push(...flatten(child));
+            }
+          } else if (node.data._tag !== "root") {
+            result.push(node);
+          }
+          return result;
+        }
+        const treemapData = flatten(inputData);
+        // Filter out very small rectangles
+        const visibleData = treemapData.filter(d => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5).filter(d => !d.children);
+        const rectangles = selection.selectAll(".sszvis-treemap-rect").data(visibleData).join("rect").classed("sszvis-treemap-rect", true).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => {
+          if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
+            return props.colorScale(d.parent.data.key);
+          } else if ("key" in d.data) {
+            return props.colorScale(d.data.key);
+          }
+          return "#cccccc"; // Default fill if no key found
+        }).attr("stroke", "#ffffff").attr("stroke-width", 1);
+        // Apply transitions if enabled
+        if (props.transition) {
+          rectangles.transition(defaultTransition()).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0);
+        }
+        // Render labels if enabled
+        if (props.showLabels) {
+          const fontSize = 12;
+          const calculateLabelPosition = (d, position) => {
+            const padding = 8;
+            switch (position) {
+              case "top-left":
+                return {
+                  x: d.x0 + padding,
+                  y: d.y0 + fontSize + padding
+                };
+              case "center":
+                return {
+                  x: d.x0 + (d.x1 - d.x0) / 2,
+                  y: d.y0 + (d.y1 - d.y0) / 2 + fontSize / 3
+                };
+              case "top-right":
+                return {
+                  x: d.x1 - padding,
+                  y: d.y0 + fontSize + padding
+                };
+              case "bottom-left":
+                return {
+                  x: d.x0 + padding,
+                  y: d.y1 - padding
+                };
+              case "bottom-right":
+                return {
+                  x: d.x1 - padding,
+                  y: d.y1 - padding
+                };
+              default:
+                return {
+                  x: d.x0 + padding,
+                  y: d.y0 + fontSize + padding
+                };
+            }
+          };
+          // Create type-safe label accessor functions
+          const labelAcc = d => typeof props.label === "function" ? props.label(d) : props.label || "";
+          const labelXAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").x;
+          const labelYAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").y;
+          const labelFillAcc = d => {
+            const bgColor = () => {
+              if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
+                return props.colorScale(d.parent.data.key);
+              } else if ("key" in d.data) {
+                return props.colorScale(d.data.key);
+              }
+              return "#cccccc"; // Default fill if no key found
+            };
+            return getAccessibleTextColor(bgColor());
+          };
+          // Filter data for labels - only show labels on leaf nodes (smallest layer) that are large enough
+          const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < (d.x1 - d.x0) / 7); // Rough estimate of fitting text
+          const labels = selection.selectAll(".sszvis-treemap-label").data(labelData).join("text").classed("sszvis-treemap-label", true).attr("x", labelXAcc).attr("y", labelYAcc).attr("fill", labelFillAcc).attr("font-size", fontSize).attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').style("pointer-events", "none").attr("text-anchor", () => {
+            const position = props.labelPosition || "top-left";
+            switch (position) {
+              case "top-right":
+              case "bottom-right":
+                return "end";
+              case "center":
+                return "middle";
+              default:
+                return "start";
+            }
+          }).attr("dominant-baseline", () => {
+            const position = props.labelPosition || "top-left";
+            switch (position) {
+              case "center":
+                return "middle";
+              case "bottom-left":
+              case "bottom-right":
+                return "alphabetic";
+              default:
+                return "hanging";
+            }
+          }).text(labelAcc);
+          // Apply transitions to labels if enabled
+          if (props.transition) {
+            labels.transition(defaultTransition()).attr("x", labelXAcc).attr("y", labelYAcc).attr("font-size", fontSize).text(labelAcc);
+          }
+        } else {
+          // Remove labels if showLabels is false
+          selection.selectAll(".sszvis-treemap-label").remove();
+        }
+        // Add tooltip anchors at the center of each rectangle
+        const tooltipPosition = d => [(d.x0 + d.x1) / 2, (d.y0 + d.y1) / 2];
+        const ta = tooltipAnchor().position(tooltipPosition);
+        selection.call(ta);
       });
     }
 
@@ -6526,6 +6846,75 @@
       };
     }
 
+    function prepareHierarchyData(data, options) {
+      if (data !== undefined && options !== undefined) {
+        const layout = createHierarchyLayout();
+        options.layers.forEach(layer => {
+          layout.layer(layer);
+        });
+        layout.value(options.valueAccessor);
+        return layout.calculate(data);
+      }
+      // Otherwise, return the chained API
+      return createHierarchyLayout();
+    }
+    function createHierarchyLayout() {
+      const layers = [];
+      let valueAcc = identity;
+      let sortFn = (_a, _b) => 0;
+      const api = {
+        calculate: data => {
+          if (layers.length === 0) {
+            throw new Error("At least one layer must be specified before calculating hierarchy data");
+          }
+          const nested = unwrapNested(d3.rollup(data, first, ...layers));
+          const rootData = {
+            _tag: "root",
+            children: nested
+          };
+          return d3.hierarchy(rootData, d => {
+            return d._tag === "leaf" ? undefined : d.children;
+          }).sort(sortFn).sum(node => {
+            return node._tag === "leaf" ? valueAcc(node.data) : 0;
+          });
+        },
+        layer: keyFunc => {
+          layers.push(keyFunc);
+          return api;
+        },
+        value: accfn => {
+          valueAcc = accfn;
+          return api;
+        },
+        sort: sortFunc => {
+          sortFn = sortFunc;
+          return api;
+        }
+      };
+      return api;
+    } // Helper function to safely unwrap nested rollup data
+    function unwrapNested(roll) {
+      const rollupMap = roll;
+      return Array.from(rollupMap, _ref => {
+        let [key, values] = _ref;
+        if (values instanceof Map && values.size > 0) {
+          // Branch node - has children
+          return {
+            _tag: "branch",
+            key,
+            children: unwrapNested(values)
+          };
+        } else {
+          // Leaf node - has data
+          return {
+            _tag: "leaf",
+            key,
+            data: values
+          };
+        }
+      });
+    }
+
     /**
      * Horizontal Bar Chart Dimensions
      *
@@ -6679,7 +7068,7 @@
      *               @property {Array} columnTotals      An array of column totals. Needed by the computeLayout function (and internally by the sankey component)
      *               @property {Array} columnLengths     An array of column lengths (number of nodes). Needed by the computeLayout function.
      */
-    const prepareData$1 = function () {
+    const prepareData = function () {
       let mGetSource = identity;
       let mGetTarget = identity;
       let mGetValue = identity;
@@ -7043,85 +7432,6 @@
      * Helper functions for transforming your data to match the format required by the sunburst chart.
      */
 
-    function unwrapNested(roll) {
-      return Array.from(roll, _ref => {
-        let [key, values] = _ref;
-        return {
-          key,
-          values: values.size > 0 ? unwrapNested(values) : undefined,
-          value: values.size > 0 ? undefined : values
-        };
-      });
-    }
-    let sortFn = function () {
-      return 0;
-    };
-
-    /**
-     * sszvis.layout.sunburst.prepareData
-     *
-     * Creates a data preparation layout, with an API that works similarly to d3's configurable layouts.
-     *
-     * @property {Array} calculate      Accepts an array of data, and applies this layout to that data. Returns the formatted dataset,
-     *                                  ready to be used as data for the sunburst component.
-     * @property {Function} layer       Accepts a function, which should be a key function, used to create a layer for the data.
-     *                                  The key function is applied to each datum, and the return value groups that datum within a
-     *                                  layer of the sunburst chart. The exact behavior depends on the order in which layers are specified.
-     *                                  The first specified layer will be the innermost one of the sunburst, with subsequent layers adding
-     *                                  around the sunburst. Data are grouped according to the first layer, then the second layer, then the third, etc.
-     *                                  This uses d3.nest under the hood, and applys the key function as a d3.nest().key, so it works like that.
-     * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of
-     *                                  the ring segment for each datum.
-     * @property {Function} sort        Provide a sorting function for sibling nodes of the sunburst. The d3.partition layout probably uses a
-     *                                  javascript object internally for some bookkeeping. At the moment, not all browsers handle key ordering in
-     *                                  objects similarly. This sorting function is used to sort the output values of the d3.partition layout, according
-     *                                  to user wishes. It receives two node values (which are created by d3), which should have at least a "key" property
-     *                                  (corresponding to the layer key), and a "value" property (corresponding to the value amount of the slice).
-     *                                  Otherwise, it behaves like a normal javascript array sorting function. The default value attempts to preserve the
-     *                                  existing sort order of the data.
-     *
-     * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
-     */
-    const prepareData = function () {
-      const layers = [];
-      let valueAcc = identity;
-      // Sibling nodes of the partition layout are sorted according to this sort function.
-      // The default value for this component tries to preserve the order of the input data.
-      // However, input data order preservation is not guaranteed, because of an implementation
-      // detail of d3.partition, probably having to do with the way that each browser can
-      // implement its own key ordering for javascript objects.
-
-      function main(data) {
-        const nested = unwrapNested(d3.rollup(data, first, ...layers));
-        const root = d3.hierarchy({
-          isSunburstRoot: true,
-          values: nested
-        }, prop("values")).sort(sortFn).sum(x => x.value ? valueAcc(x.value) : 0);
-        d3.partition()(root);
-        function flatten(node) {
-          return Array.prototype.concat.apply([node], (node.children || []).map(flatten));
-        }
-
-        // Remove the root element from the data (but it still exists in memory so long as the data is alive)
-        return flatten(root).filter(d => !d.data.isSunburstRoot);
-      }
-      main.calculate = function (data) {
-        return main(data);
-      };
-      main.layer = function (keyFunc) {
-        layers.push(keyFunc);
-        return main;
-      };
-      main.value = function (accfn) {
-        valueAcc = accfn;
-        return main;
-      };
-      main.sort = function (sortFunc) {
-        sortFn = sortFunc;
-        return main;
-      };
-      return main;
-    };
     const MAX_SUNBURST_RING_WIDTH = 60;
     const MAX_RW = MAX_SUNBURST_RING_WIDTH;
     const MIN_SUNBURST_RING_WIDTH = 10;
@@ -7139,7 +7449,7 @@
      *       @property {Number} numLayers         The number of layers in the chart (used by the sunburst component)
      *       @property {Number} ringWidth         The width of a single ring in the chart (used by the sunburst component)
      */
-    const computeLayout = function (numLayers, chartWidth) {
+    const computeLayout = (numLayers, chartWidth) => {
       // Diameter of the center circle is one-third the width
       const halfWidth = chartWidth / 2;
       const centerRadius = halfWidth / 3;
@@ -7160,7 +7470,7 @@
      *                                    function which abstracts away the way d3 stores positions within the partition layout used
      *                                    by the sunburst chart.
      */
-    const getRadiusExtent = function (formattedData) {
+    const getRadiusExtent = formattedData => {
       return [d3.min(formattedData, d => d.y0), d3.max(formattedData, d => d.y1)];
     };
 
@@ -8491,6 +8801,7 @@
     exports.formatText = formatText;
     exports.formatYear = formatYear;
     exports.functor = functor;
+    exports.getAccessibleTextColor = getAccessibleTextColor;
     exports.getGeoJsonCenter = getGeoJsonCenter;
     exports.groupedBars = groupedBars;
     exports.halfPixel = halfPixel;
@@ -8537,12 +8848,14 @@
     exports.muchDarker = muchDarker;
     exports.nestedStackedBarsVertical = nestedStackedBarsVertical;
     exports.not = not;
+    exports.pack = pack;
     exports.panning = panning;
     exports.parseDate = parseDate;
     exports.parseNumber = parseNumber;
     exports.parseYear = parseYear;
     exports.pie = pie;
     exports.pixelsFromGeoDistance = pixelsFromGeoDistance;
+    exports.prepareHierarchyData = prepareHierarchyData;
     exports.prepareMergedGeoData = prepareMergedGeoData;
     exports.prop = prop;
     exports.propOr = propOr;
@@ -8553,7 +8866,7 @@
     exports.rulerLabelVerticalSeparate = rulerLabelVerticalSeparate;
     exports.sankey = sankey;
     exports.sankeyLayout = computeLayout$1;
-    exports.sankeyPrepareData = prepareData$1;
+    exports.sankeyPrepareData = prepareData;
     exports.scaleDeepGry = scaleDeepGry;
     exports.scaleDimGry = scaleDimGry;
     exports.scaleDivNtr = scaleDivNtr;
@@ -8593,7 +8906,6 @@
     exports.sunburst = sunburst;
     exports.sunburstGetRadiusExtent = getRadiusExtent;
     exports.sunburstLayout = computeLayout;
-    exports.sunburstPrepareData = prepareData;
     exports.swissMapPath = swissMapPath;
     exports.swissMapProjection = swissMapProjection;
     exports.textWrap = textWrap;
@@ -8602,6 +8914,7 @@
     exports.tooltipAnchor = tooltipAnchor;
     exports.transformTranslateSubpixelShift = transformTranslateSubpixelShift;
     exports.translateString = translateString;
+    exports.treemap = treemap;
     exports.viewport = viewport;
     exports.voronoi = voronoi;
     exports.widthAdaptiveMapPathStroke = widthAdaptiveMapPathStroke;

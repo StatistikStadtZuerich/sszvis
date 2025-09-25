@@ -55,6 +55,8 @@ function qualColorScale(colors) {
     return decorateOrdinalScale(scale);
   };
 }
+const black = "#000000";
+const white = "#FFFFFF";
 const darkBlue = "#3431DE";
 const mediumBlue = "#0A8DF6";
 const lightBlue = "#23C3F1";
@@ -182,6 +184,22 @@ function interpolatedColorScale(scale) {
 function convertLab(d) {
   return lab(d);
 }
+const getAccessibleTextColor = backgroundColor => {
+  if (!backgroundColor) {
+    return black;
+  }
+  const bgColor = rgb(backgroundColor);
+  const gammaCorrect = c => {
+    const normalized = c / 255;
+    return normalized <= 0.03928 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+  };
+  const rLum = gammaCorrect(bgColor.r);
+  const gLum = gammaCorrect(bgColor.g);
+  const bLum = gammaCorrect(bgColor.b);
+  // WCAG relative luminance formula
+  const luminance = 0.2126 * rLum + 0.7152 * gLum + 0.0722 * bLum;
+  return luminance > 0.179 ? black : white; // Use SSZVIS gray or white
+};
 
-export { muchDarker, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, slightlyDarker, withAlpha };
+export { getAccessibleTextColor, muchDarker, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, slightlyDarker, withAlpha };
 //# sourceMappingURL=color.js.map

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Treemap</title>
+  </head>
+  <body style="margin: 0; padding: 0">
+    <link href="../sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="../sszvis.js"></script>
+
+    <div id="sszvis-chart"></div>
+
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/company_departments.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png",
+      };
+    </script>
+
+    <script data-catalog-project-expose="script.js">
+      (function (d3, sszvis, config) {
+        "use strict";
+
+        // Configuration
+        // -----------------------------------------------
+
+        const MIN_CHART_HEIGHT = 650;
+        const queryProps = sszvis
+          .responsiveProps()
+          .prop("bounds", {
+            palm: (w) => ({
+              top: 10,
+              left: 0,
+              bottom: 10,
+              right: 0,
+              height: Math.max(
+                sszvis.aspectRatio4to3(w),
+                MIN_CHART_HEIGHT + 40 + 20,
+              ),
+            }),
+            _: (w) => ({
+              top: 10,
+              left: 20,
+              bottom: 10,
+              right: 20,
+              height: Math.max(
+                sszvis.aspectRatio4to3(w),
+                MIN_CHART_HEIGHT + 40 + 20,
+              ),
+            }),
+          })
+          .prop("labelSide", {
+            palm: "inside",
+            _: "outside",
+          })
+          .prop("hitboxSize", {
+            palm: 60,
+            _: 120,
+          });
+
+        function parseRow(d) {
+          return {
+            category: d["category"],
+            subcategory: d["subcategory"],
+            value: sszvis.parseNumber(d["value"]),
+          };
+        }
+
+        const categoryAcc = sszvis.prop("category");
+        const subcategoryAcc = sszvis.prop("subcategory");
+        const valueAcc = sszvis.prop("value");
+
+        // Application state
+        // -----------------------------------------------
+        const state = {
+          data: [],
+          categories: [],
+          selection: [],
+        };
+
+        // State transitions
+        // -----------------------------------------------
+        const actions = {
+          prepareState(data) {
+            // Prepare data for treemap (using new API without hardcoded size)
+            state.data = sszvis
+              .prepareHierarchyData()
+              .layer(categoryAcc)
+              .layer(subcategoryAcc)
+              .value(valueAcc)
+              .calculate(data);
+
+            state.categories = Array.from(new Set(data.map(categoryAcc)));
+            render(state);
+          },
+
+          onRectangleOver(_, d) {
+            state.selection = [d];
+            render(state);
+          },
+
+          onRectangleOut() {
+            state.selection = [];
+            render(state);
+          },
+
+          resize() {
+            render(state);
+          },
+        };
+
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
+
+        // Render
+        // -----------------------------------------------
+        function render(state) {
+          if (!state.data) return;
+
+          const props = queryProps(sszvis.measureDimensions(config.id));
+          const bounds = sszvis.bounds(props.bounds, config.id);
+
+          const legendLayout = sszvis.colorLegendLayout(
+            {
+              axisLabels: state.categories,
+              legendLabels: state.categories,
+            },
+            config.id,
+          );
+
+          const colorScale = legendLayout.scale;
+          const colorLegend = legendLayout.legend;
+
+          // Layers
+          const chartLayer = sszvis.createSvgLayer(config.id, bounds);
+          const htmlLayer = sszvis.createHtmlLayer(config.id, bounds);
+
+          // Components
+          const treemap = sszvis
+            .treemap()
+            .containerWidth(bounds.innerWidth)
+            .containerHeight(bounds.innerHeight - legendLayout.bottomPadding) // Leave space for legend
+            .colorScale(colorScale)
+            .showLabels(true)
+            .label((d) => d.data.key);
+
+          const tooltipHeaderText = sszvis
+            .modularTextHTML()
+            .bold((d) => d.data.key);
+          const tooltipBodyText = sszvis
+            .modularTextHTML()
+            .plain((d) => "Value: " + sszvis.formatNumber(d.value));
+
+          const tooltip = sszvis
+            .tooltip()
+            .renderInto(htmlLayer)
+            .header(tooltipHeaderText)
+            .body(tooltipBodyText)
+            .orientation(sszvis.fitTooltip("bottom", bounds))
+            .visible(isSelected);
+
+          // Rendering
+          chartLayer.selectGroup("treemap").datum(state.data).call(treemap);
+
+          chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr(
+              "transform",
+              sszvis.translateString(
+                0,
+                bounds.innerHeight - legendLayout.bottomPadding,
+              ),
+            )
+            .call(colorLegend);
+
+          // Interaction
+          const interactionLayer = sszvis
+            .panning()
+            .elementSelector(".sszvis-treemap-rect")
+            .on("start", actions.onRectangleOver)
+            .on("pan", actions.onRectangleOver)
+            .on("end", actions.onRectangleOut);
+
+          chartLayer.call(interactionLayer);
+
+          sszvis.viewport.on("resize", actions.resize);
+        }
+
+        function isSelected(d) {
+          return state.selection.includes(d);
+        }
+      })(d3, sszvis, EXTERNAL_CONFIG);
+    </script>
+  </body>
+</html>

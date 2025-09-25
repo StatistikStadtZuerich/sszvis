@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <title>Scatterplot</title>
+    <title>Sunburst</title>
   </head>
   <body style="margin: 0; padding: 0">
     <link href="../sszvis.css" rel="stylesheet" />
@@ -76,15 +76,20 @@
 
             state.continents = continentsList;
 
-            state.data = sszvis
-              .sunburstPrepareData()
+            // Prepare data using the unified prepareHierarchyData function
+            const hierarchicalData = sszvis
+              .prepareHierarchyData()
               .layer(continentAcc)
               .layer(regionAcc)
               .layer(countryAcc)
               .value(numAcc)
               .calculate(data);
 
-            state.radiusExtent = sszvis.sunburstGetRadiusExtent(state.data);
+            state.data = hierarchicalData;
+
+            const { y1, x1 } = d3.partition()(hierarchicalData.copy());
+
+            state.radiusExtent = [y1, x1];
 
             render(state);
           },
