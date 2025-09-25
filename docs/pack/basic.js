@@ -22,6 +22,10 @@ const queryProps = sszvis
       height: Math.max(sszvis.aspectRatioSquare(w), MIN_CHART_HEIGHT + 40 + 20),
     }),
   })
+  .prop("minRadius", {
+    palm: 5,
+    _: 20,
+  })
   .prop("labelSide", {
     palm: "inside",
     _: "outside",
@@ -119,7 +123,7 @@ function render(state) {
     .colorScale(colorScale)
     .showLabels(true)
     .label((d) => d.data.key)
-    .labelPosition("bottom-right");
+    .minRadius(props.minRadius);
 
   const tooltipHeaderText = sszvis.modularTextHTML().bold((d) => d.data.key);
   const tooltipBodyText = sszvis.modularTextHTML().plain((d) => "Value: " + sszvis.formatNumber(d.value));

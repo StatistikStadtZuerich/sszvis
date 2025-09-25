@@ -97,7 +97,7 @@ describe("component/pack", () => {
       expect(packComponent.containerHeight()).toBe(600);
       expect(packComponent.transition()).toBe(true);
       expect(packComponent.showLabels()).toBe(false);
-      expect(packComponent.minRadius()).toBe(1);
+      expect(packComponent.minRadius()).toBe(20);
       expect(packComponent.circleStroke()).toBe("#ffffff");
       expect(packComponent.circleStrokeWidth()).toBe(1);
     });
@@ -286,7 +286,7 @@ describe("component/pack", () => {
             .colorScale(cScale)
             .containerWidth(360)
             .containerHeight(250)
-            .rScale(customRScale)
+            .radiusScale(customRScale)
             .transition(false)
         );
       expect(customRScale).toHaveBeenCalled();
