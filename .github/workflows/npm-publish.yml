@@ -21,4 +21,4 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Publish Package
-        run: npm publish --provenance --access public
+        run: npm publish --access public
