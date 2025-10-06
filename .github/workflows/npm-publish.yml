@@ -3,9 +3,14 @@ on:
   push:
     tags:
       - v[0-9].*
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     env:
       NODE_OPTIONS: --openssl-legacy-provider
     steps:
@@ -16,6 +21,4 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Publish Package
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+        run: npm publish --provenance --access public
