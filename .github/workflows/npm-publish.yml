@@ -6,6 +6,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     env:
       NODE_OPTIONS: --openssl-legacy-provider
     steps:
@@ -17,5 +20,3 @@ jobs:
 
       - name: Publish Package
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
