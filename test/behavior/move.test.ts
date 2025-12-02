@@ -1,5 +1,5 @@
 import { scaleBand, scaleLinear, scalePoint } from "d3";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from "vitest";
 import move from "../../src/behavior/move";
 import { bounds } from "../../src/bounds";
 import { createSvgLayer } from "../../src/createSvgLayer";
@@ -274,6 +274,201 @@ describe("behavior/move", () => {
       expect(startHandler).toHaveBeenCalled();
       rectNode?.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
       expect(endHandler).toHaveBeenCalled();
+    });
+  });
+
+  describe("Safari mobile touch event handling", () => {
+    // Helper to create a TouchEvent-like object that mimics Safari mobile behavior
+    // where clientX/clientY are NOT on the event itself, only in the touches array
+    const createSafariTouchEvent = (
+      type: string,
+      touches: Array<{ clientX: number; clientY: number; identifier?: number }>
+    ): Event => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "touches", {
+        value: touches.map((t, i) => ({
+          clientX: t.clientX,
+          clientY: t.clientY,
+          identifier: t.identifier ?? i,
+        })),
+        writable: false,
+      });
+      Object.defineProperty(event, "changedTouches", {
+        value: touches.map((t, i) => ({
+          clientX: t.clientX,
+          clientY: t.clientY,
+          identifier: t.identifier ?? i,
+        })),
+        writable: false,
+      });
+      return event;
+    };
+
+    test("should handle touchstart with coordinates only in touches array (Safari mobile)", () => {
+      const startHandler = vi.fn();
+      const moveHandler = vi.fn();
+      const dragHandler = vi.fn();
+
+      svg.call(
+        move<number, number>()
+          .xScale(xScale)
+          .yScale(yScale)
+          .on("start", startHandler)
+          .on("move", moveHandler)
+          .on("drag", dragHandler)
+      );
+
+      const touchEvent = createSafariTouchEvent("touchstart", [{ clientX: 150, clientY: 100 }]);
+
+      expect((touchEvent as unknown as { clientX?: number }).clientX).toBeUndefined();
+      expect((touchEvent as unknown as { clientY?: number }).clientY).toBeUndefined();
+
+      svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node()?.dispatchEvent(touchEvent);
+      expect(startHandler).toHaveBeenCalled();
+      expect(moveHandler).toHaveBeenCalled();
+      expect(dragHandler).toHaveBeenCalled();
+    });
+
+    test("should pass correct data values from touch coordinates", () => {
+      const moveHandler = vi.fn();
+
+      svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("move", moveHandler));
+
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      assert(rectNode);
+      const rect = rectNode.getBoundingClientRect();
+
+      rectNode.dispatchEvent(
+        createSafariTouchEvent("touchstart", [
+          { clientX: rect.left + 150, clientY: rect.top + 100 },
+        ])
+      );
+      expect(moveHandler).toHaveBeenCalled();
+      const [, x, y] = moveHandler.mock.calls[0];
+      expect(x).toBeCloseTo(50, 0);
+      expect(y).toBeCloseTo(25, 0);
+    });
+
+    test("should handle touchmove with updated coordinates (Safari mobile)", () => {
+      const moveHandler = vi.fn();
+
+      svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("move", moveHandler));
+
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      assert(rectNode);
+
+      const rect = rectNode.getBoundingClientRect();
+
+      rectNode.dispatchEvent(
+        createSafariTouchEvent("touchstart", [
+          { clientX: rect.left + 150, clientY: rect.top + 100 },
+        ])
+      );
+
+      expect(moveHandler).toHaveBeenCalledTimes(1);
+
+      rectNode.dispatchEvent(
+        createSafariTouchEvent("touchmove", [{ clientX: rect.left + 200, clientY: rect.top + 50 }])
+      );
+
+      expect(moveHandler).toHaveBeenCalledTimes(2);
+      const [, x, y] = moveHandler.mock.calls[1];
+      expect(x).toBeCloseTo(66.67, 0);
+      expect(y).toBeCloseTo(37.5, 0);
+    });
+
+    test("should handle touchend and clean up listeners", () => {
+      const endHandler = vi.fn();
+
+      svg.call(move<number, number>().xScale(xScale).yScale(yScale).on("end", endHandler));
+
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+      if (!rectNode) throw new Error("rectNode not found");
+
+      const rect = rectNode.getBoundingClientRect();
+
+      rectNode.dispatchEvent(
+        createSafariTouchEvent("touchstart", [
+          { clientX: rect.left + 150, clientY: rect.top + 100 },
+        ])
+      );
+
+      expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).not.toBeNull();
+      expect(svg.select("[data-sszvis-behavior-move]").on("touchend")).not.toBeNull();
+
+      const touchEndEvent = new Event("touchend", { bubbles: true });
+      Object.defineProperty(touchEndEvent, "touches", {
+        value: [],
+        writable: false,
+      });
+      Object.defineProperty(touchEndEvent, "changedTouches", {
+        value: [{ clientX: rect.left + 150, clientY: rect.top + 100, identifier: 0 }],
+        writable: false,
+      });
+      rectNode.dispatchEvent(touchEndEvent);
+
+      expect(endHandler).toHaveBeenCalled();
+      expect(svg.select("[data-sszvis-behavior-move]").on("touchmove")).toBeUndefined();
+      expect(svg.select("[data-sszvis-behavior-move]").on("touchend")).toBeUndefined();
+    });
+
+    test("should not fire events when touch has no coordinates", () => {
+      const moveHandler = vi.fn();
+      const startHandler = vi.fn();
+
+      svg.call(
+        move<number, number>()
+          .xScale(xScale)
+          .yScale(yScale)
+          .on("start", startHandler)
+          .on("move", moveHandler)
+      );
+
+      const emptyTouchEvent = new Event("touchstart", { bubbles: true });
+      Object.defineProperty(emptyTouchEvent, "touches", {
+        value: [],
+        writable: false,
+      });
+      Object.defineProperty(emptyTouchEvent, "changedTouches", {
+        value: [],
+        writable: false,
+      });
+
+      svg
+        .select<SVGRectElement>("[data-sszvis-behavior-move]")
+        .node()
+        ?.dispatchEvent(emptyTouchEvent);
+
+      expect(startHandler).not.toHaveBeenCalled();
+      expect(moveHandler).not.toHaveBeenCalled();
+    });
+
+    test("should not fire events when touch coordinates are invalid (NaN)", () => {
+      const moveHandler = vi.fn();
+      const startHandler = vi.fn();
+
+      svg.call(
+        move<number, number>()
+          .xScale(xScale)
+          .yScale(yScale)
+          .on("start", startHandler)
+          .on("move", moveHandler)
+      );
+
+      const rectNode = svg.select<SVGRectElement>("[data-sszvis-behavior-move]").node();
+
+      // Create event with NaN coordinates
+      const invalidTouchEvent = new Event("touchstart", { bubbles: true });
+      Object.defineProperty(invalidTouchEvent, "touches", {
+        value: [{ clientX: NaN, clientY: NaN, identifier: 0 }],
+        writable: false,
+      });
+
+      rectNode?.dispatchEvent(invalidTouchEvent);
+
+      // Handlers should not be called when coordinates are invalid
+      expect(startHandler).not.toHaveBeenCalled();
+      expect(moveHandler).not.toHaveBeenCalled();
     });
   });
 });
