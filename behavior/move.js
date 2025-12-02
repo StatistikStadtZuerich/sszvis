@@ -1,6 +1,6 @@
 import { dispatch, select, ascending, pointer } from 'd3';
 import { component } from '../d3-component.js';
-import { functor, first } from '../fn.js';
+import { functor, firstTouch } from '../fn.js';
 import { range } from '../scale.js';
 
 /**
@@ -109,14 +109,26 @@ function move () {
       startDragging();
     }).on("mousemove", function (e) {
       const target = this;
-      const xy = pointer(e);
-      if (!xy) return;
+      if (!target) return;
+      // Skip touch-originated mouse events on devices that support both
+      // This check helps avoid duplicate event handling on touch devices
+      const sourceCapabilities = e.sourceCapabilities;
+      if (sourceCapabilities !== null && sourceCapabilities !== void 0 && sourceCapabilities.firesTouchEvents) return;
+      let xy;
+      try {
+        xy = pointer(e);
+      } catch (_unused) {
+        // Silently fail on invalid events (e.g., when pointer() throws due to invalid coordinates)
+        return;
+      }
+      // Validate coordinates are finite numbers
+      if (!Number.isFinite(xy[0]) || !Number.isFinite(xy[1])) return;
       const x = scaleInvert(props.xScale, xy[0]);
       const y = scaleInvert(props.yScale, xy[1]);
       if (target.__dragging__) {
-        if (this) event.apply("drag", this, [e, x, y]);
+        event.apply("drag", target, [e, x, y]);
       } else {
-        if (this) event.apply("move", this, [e, x, y]);
+        event.apply("move", target, [e, x, y]);
       }
     }).on("mouseout", function () {
       for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
@@ -124,9 +136,22 @@ function move () {
       }
       if (this) event.apply("end", this, args);
     }).on("touchstart", function (e) {
-      const pointerCoords = pointer(e);
-      const xy = first([pointerCoords]);
-      if (!xy) return;
+      const target = this;
+      if (!target) return;
+      // Extract touch coordinates manually for Safari mobile compatibility.
+      // On Safari mobile, TouchEvent objects don't have clientX/clientY properties -
+      // those are on the Touch object inside event.touches[0]. D3's pointer() function
+      // expects clientX/clientY on the event itself, causing it to return NaN on Safari.
+      const touch = firstTouch(e);
+      if (!touch) return;
+      // Validate coordinates exist and are finite
+      if (typeof touch.clientX !== "number" || !Number.isFinite(touch.clientX) || typeof touch.clientY !== "number" || !Number.isFinite(touch.clientY)) {
+        return;
+      }
+      // Calculate coordinates relative to element manually using getBoundingClientRect
+      // instead of relying on d3.pointer() which fails on Safari mobile TouchEvents
+      const rect = target.getBoundingClientRect();
+      const xy = [touch.clientX - rect.left, touch.clientY - rect.top];
       const x = scaleInvert(props.xScale, xy[0]);
       const y = scaleInvert(props.yScale, xy[1]);
       const cancelScrolling = props.cancelScrolling(x, y);
@@ -146,37 +171,39 @@ function move () {
       // pass fireOnPanOnly = true, which flips this switch and relies on
       // cancelScrolling to determine whether to fire the events.
       if (!props.fireOnPanOnly() || cancelScrolling) {
-        if (this) {
-          event.apply("start", this, [e, x, y]);
-          event.apply("drag", this, [e, x, y]);
-          event.apply("move", this, [e, x, y]);
-        }
-        const elementContext = this;
-        const pan = () => {
-          const panPointerCoords = pointer(e);
-          const panXY = first([panPointerCoords]);
-          if (!panXY) return;
+        event.apply("start", target, [e, x, y]);
+        event.apply("drag", target, [e, x, y]);
+        event.apply("move", target, [e, x, y]);
+        const pan = panEvent => {
+          // Extract touch from the new touchmove event, not the original touchstart event
+          const panTouch = firstTouch(panEvent);
+          if (!panTouch) return;
+          // Validate coordinates
+          if (typeof panTouch.clientX !== "number" || !Number.isFinite(panTouch.clientX) || typeof panTouch.clientY !== "number" || !Number.isFinite(panTouch.clientY)) {
+            return;
+          }
+          // Calculate coordinates relative to element manually
+          const panRect = target.getBoundingClientRect();
+          const panXY = [panTouch.clientX - panRect.left, panTouch.clientY - panRect.top];
           const panX = scaleInvert(props.xScale, panXY[0]);
           const panY = scaleInvert(props.yScale, panXY[1]);
           const panCancelScrolling = props.cancelScrolling(panX, panY);
           if (panCancelScrolling) {
-            e.preventDefault();
+            panEvent.preventDefault();
           }
           // See comment above about the same if condition.
           if (!props.fireOnPanOnly() || panCancelScrolling) {
-            if (elementContext) {
-              event.apply("drag", elementContext, [e, panX, panY]);
-              event.apply("move", elementContext, [e, panX, panY]);
-            }
+            event.apply("drag", target, [panEvent, panX, panY]);
+            event.apply("move", target, [panEvent, panX, panY]);
           } else {
-            if (elementContext) event.apply("end", elementContext, [e]);
+            event.apply("end", target, [panEvent]);
           }
         };
-        const end = () => {
-          if (elementContext) event.apply("end", elementContext, [e]);
-          select(elementContext).on("touchmove", null).on("touchend", null);
+        const end = endEvent => {
+          event.apply("end", target, [endEvent]);
+          select(target).on("touchmove", null).on("touchend", null);
         };
-        select(this).on("touchmove", pan).on("touchend", end);
+        select(target).on("touchmove", pan).on("touchend", end);
       }
     });
     if (props.debug) {
