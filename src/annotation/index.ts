@@ -1,3 +1,9 @@
+export {
+  type BreadcrumbComponent,
+  type BreadcrumbItem,
+  createBreadcrumbItems,
+  default as breadcrumb,
+} from "./breadcrumb";
 export { default as annotationCircle } from "./circle";
 export { default as annotationConfidenceArea } from "./confidenceArea";
 export { default as annotationConfidenceBar } from "./confidenceBar";
