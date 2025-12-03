@@ -52,18 +52,10 @@ export type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
 };
 
 // Click handler type definition
-export type TreemapClickHandler<T = unknown> = (
-  event: MouseEvent,
-  node: TreemapLayout<T>
-) => void;
+export type TreemapClickHandler<T = unknown> = (event: MouseEvent, node: TreemapLayout<T>) => void;
 
 // Type definitions for label positioning
-type LabelPosition =
-  | "top-left"
-  | "center"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-right";
+type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
 
 type TreemapProps<T = unknown> = {
   colorScale: (key: string) => string;
@@ -119,9 +111,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
     .prop("showLabels")
     .showLabels(false) // Default disabled
     .prop("label", fn.functor)
-    .label((d: TreemapLayout<T>) =>
-      d.data && "key" in d.data ? d.data.key : ""
-    )
+    .label((d: TreemapLayout<T>) => (d.data && "key" in d.data ? d.data.key : ""))
     .prop("labelPosition")
     .labelPosition("center")
     .prop("onClick")
@@ -177,8 +167,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
           }
           const ancestors = d.ancestors();
           const topLevelCategory = ancestors.find(
-            (_, i) =>
-              i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
+            (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
           );
           if (topLevelCategory && "key" in topLevelCategory.data) {
             return props.colorScale(topLevelCategory.data.key);
@@ -205,10 +194,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
       // Render labels if enabled
       if (props.showLabels) {
         const fontSize = 12;
-        const calculateLabelPosition = (
-          d: TreemapLayout<T>,
-          position: LabelPosition
-        ) => {
+        const calculateLabelPosition = (d: TreemapLayout<T>, position: LabelPosition) => {
           const padding = 8;
           switch (position) {
             case "top-left":
@@ -231,9 +217,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
 
         // Create type-safe label accessor functions
         const labelAcc = (d: TreemapLayout<T>) =>
-          typeof props.label === "function"
-            ? props.label(d)
-            : props.label || "";
+          typeof props.label === "function" ? props.label(d) : props.label || "";
         const labelXAcc = (d: TreemapLayout<T>) =>
           calculateLabelPosition(d, props.labelPosition || "top-left").x;
         const labelYAcc = (d: TreemapLayout<T>) =>
@@ -245,9 +229,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
             }
             const ancestors = d.ancestors();
             const topLevelCategory = ancestors.find(
-              (_, i) =>
-                i < ancestors.length - 1 &&
-                ancestors[i + 1]?.data._tag === "root"
+              (_, i) => i < ancestors.length - 1 && ancestors[i + 1]?.data._tag === "root"
             );
             if (topLevelCategory && "key" in topLevelCategory.data) {
               return props.colorScale(topLevelCategory.data.key);

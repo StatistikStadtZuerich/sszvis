@@ -386,4 +386,462 @@ describe("component/pack", () => {
         });
     });
   });
+
+  describe("onClick functionality", () => {
+    test("should call onClick handler when circle is clicked", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      expect(circle).toBeDefined();
+
+      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test("should pass correct node data to onClick handler", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledWith(
+        expect.any(MouseEvent),
+        expect.objectContaining({
+          data: expect.any(Object),
+          x: expect.any(Number),
+          y: expect.any(Number),
+          r: expect.any(Number),
+          value: expect.any(Number),
+        })
+      );
+    });
+
+    test("should pass MouseEvent to onClick handler", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      const mouseEvent = new MouseEvent("click", {
+        bubbles: true,
+        clientX: 100,
+        clientY: 50,
+      });
+      circle.dispatchEvent(mouseEvent);
+
+      const [eventArg] = clickHandler.mock.calls[0];
+      expect(eventArg).toBeInstanceOf(MouseEvent);
+      expect(eventArg.type).toBe("click");
+    });
+
+    test("should show pointer cursor when onClick is provided", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
+      circles.each(function () {
+        const cursor = this.style.cursor || this.getAttribute("cursor");
+        expect(cursor).toBe("pointer");
+      });
+    });
+
+    test("should show default cursor when onClick is not provided", () => {
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .transition(false)
+        );
+
+      const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
+      circles.each(function () {
+        const cursor = this.style.cursor || this.getAttribute("cursor");
+        expect(cursor).not.toBe("pointer");
+      });
+    });
+
+    test("should handle clicks on leaf nodes", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      // Find a leaf node (circle with fill color, not "none")
+      const leafCircle = svg
+        .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
+        .nodes()
+        .find((circle) => circle.getAttribute("fill") !== "none");
+
+      expect(leafCircle).toBeDefined();
+      if (leafCircle) {
+        leafCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        expect(clickHandler).toHaveBeenCalledTimes(1);
+
+        const [, nodeArg] = clickHandler.mock.calls[0];
+        // Leaf nodes should not have children
+        expect(nodeArg.children).toBeUndefined();
+      }
+    });
+
+    test("should handle clicks on branch nodes (category circles)", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      // Find a branch node (circle with fill="none")
+      const branchCircle = svg
+        .selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle")
+        .nodes()
+        .find((circle) => circle.getAttribute("fill") === "none");
+
+      expect(branchCircle).toBeDefined();
+      if (branchCircle) {
+        branchCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        expect(clickHandler).toHaveBeenCalledTimes(1);
+
+        const [, nodeArg] = clickHandler.mock.calls[0];
+        // Branch nodes should have children
+        expect(nodeArg.children).toBeDefined();
+        expect(Array.isArray(nodeArg.children)).toBe(true);
+      }
+    });
+
+    test("should not interfere with existing hover behavior", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+
+      // Simulate hover
+      circle.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+      circle.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+
+      // Click should still work after hover
+      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test("onClick should receive node with hierarchy structure", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      const [, nodeArg] = clickHandler.mock.calls[0];
+      // Node should have hierarchy data structure with traversal methods
+      expect(nodeArg).toBeDefined();
+      expect(nodeArg.data).toBeDefined();
+      expect(typeof nodeArg.ancestors).toBe("function");
+      expect(typeof nodeArg.descendants).toBe("function");
+      // Ancestors should include at least the node itself
+      expect(nodeArg.ancestors().length).toBeGreaterThanOrEqual(1);
+    });
+
+    test("should handle multiple clicks correctly", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          pack<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circles = svg.selectAll<SVGCircleElement, TestDatum>(".sszvis-pack-circle");
+      const firstCircle = circles.nodes()[0];
+      const secondCircle = circles.nodes()[1];
+
+      firstCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      secondCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      firstCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledTimes(3);
+    });
+
+    test("should support onClick getter/setter API", () => {
+      const clickHandler = vi.fn();
+      const packComponent = pack<TestDatum>()
+        .colorScale(cScale)
+        .containerWidth(360)
+        .containerHeight(250)
+        .onClick(clickHandler);
+
+      expect(packComponent.onClick()).toBe(clickHandler);
+    });
+
+    test("should work with 4-level hierarchy data", () => {
+      type DeepDatum = {
+        category: string;
+        subcategory: string;
+        division: string;
+        team: string;
+        value: number;
+      };
+
+      const deepData: DeepDatum[] = [
+        {
+          category: "Technology",
+          subcategory: "Software",
+          division: "Frontend",
+          team: "Team A",
+          value: 100,
+        },
+        {
+          category: "Technology",
+          subcategory: "Software",
+          division: "Backend",
+          team: "Team B",
+          value: 80,
+        },
+        {
+          category: "Finance",
+          subcategory: "Banking",
+          division: "Retail",
+          team: "Team C",
+          value: 150,
+        },
+      ];
+
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<DeepDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .layer((d) => d.division)
+            .layer((d) => d.team)
+            .value((d) => d.value)
+            .calculate(deepData)
+        )
+        .call(
+          pack<DeepDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circle = svg.select(".sszvis-pack-circle").node() as SVGCircleElement;
+      expect(circle).toBeDefined();
+
+      circle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledTimes(1);
+      const [, nodeArg] = clickHandler.mock.calls[0];
+      expect(nodeArg).toBeDefined();
+      expect(nodeArg.data).toBeDefined();
+    });
+
+    test("should work with uneven tree structures", () => {
+      type UnevenDatum = {
+        category: string;
+        subcategory: string;
+        division: string | null;
+        value: number;
+      };
+
+      const unevenData: UnevenDatum[] = [
+        {
+          category: "Technology",
+          subcategory: "Software",
+          division: "Frontend",
+          value: 100,
+        },
+        {
+          category: "Technology",
+          subcategory: "Hardware",
+          division: null, // Missing division
+          value: 80,
+        },
+        {
+          category: "Finance",
+          subcategory: "Banking",
+          division: "Retail",
+          value: 150,
+        },
+      ];
+
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<UnevenDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .layer((d) => d.division)
+            .value((d) => d.value)
+            .calculate(unevenData)
+        )
+        .call(
+          pack<UnevenDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const circles = svg.selectAll<SVGCircleElement, UnevenDatum>(".sszvis-pack-circle");
+      expect(circles.size()).toBeGreaterThan(0);
+
+      // Click on multiple circles to ensure all work with uneven structure
+      const firstCircle = circles.nodes()[0];
+      const lastCircle = circles.nodes()[circles.size() - 1];
+
+      firstCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      lastCircle.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledTimes(2);
+    });
+  });
 });

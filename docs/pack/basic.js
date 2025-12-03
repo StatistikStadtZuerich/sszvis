@@ -8,14 +8,14 @@ const queryProps = sszvis
   .responsiveProps()
   .prop("bounds", {
     palm: (w) => ({
-      top: 10,
+      top: 50,
       left: 0,
       bottom: 20,
       right: 0,
-      height: sszvis.aspectRatioSquare(w),
+      height: Math.max(sszvis.aspectRatioSquare(w), MIN_CHART_HEIGHT),
     }),
     _: (w) => ({
-      top: 10,
+      top: 50,
       left: 20,
       bottom: 20,
       right: 20,
@@ -23,8 +23,7 @@ const queryProps = sszvis
     }),
   })
   .prop("minRadius", {
-    palm: 5,
-    _: 20,
+    _: 5,
   })
   .prop("labelSide", {
     palm: "inside",
@@ -39,12 +38,16 @@ function parseRow(d) {
   return {
     category: d["category"],
     subcategory: d["subcategory"],
+    division: d["division"] || null,
+    team: d["team"] || null,
     value: sszvis.parseNumber(d["value"]),
   };
 }
 
 const categoryAcc = sszvis.prop("category");
 const subcategoryAcc = sszvis.prop("subcategory");
+const divisionAcc = sszvis.prop("division");
+const teamAcc = sszvis.prop("team");
 const valueAcc = sszvis.prop("value");
 
 // Application state
@@ -53,6 +56,8 @@ const state = {
   data: [],
   categories: [],
   selection: [],
+  focusedNode: null,
+  originalData: null,
 };
 
 // State transitions
@@ -60,14 +65,18 @@ const state = {
 const actions = {
   prepareState(data) {
     // Prepare data for pack (using new API without hardcoded size)
-    state.data = sszvis
+    state.originalData = sszvis
       .prepareHierarchyData()
       .layer(categoryAcc)
       .layer(subcategoryAcc)
+      .layer(divisionAcc)
+      .layer(teamAcc)
       .value(valueAcc)
       .calculate(data);
 
+    state.data = state.originalData;
     state.categories = Array.from(new Set(data.map(categoryAcc)));
+    state.focusedNode = null;
     render(state);
   },
 
@@ -77,6 +86,45 @@ const actions = {
   },
 
   onRectangleOut() {
+    state.selection = [];
+    render(state);
+  },
+
+  onNodeClick(_, node) {
+    // Helper to find a node in the original hierarchy by matching data
+    const findOriginalNode = (targetData) => {
+      let found = null;
+      state.originalData.each((n) => {
+        if (n.data === targetData || n.data.key === targetData.key) {
+          found = n;
+        }
+      });
+      return found;
+    };
+
+    const originalNode = findOriginalNode(node.data);
+    if (!originalNode) {
+      return;
+    }
+
+    let zoomTarget;
+    if (originalNode.children && originalNode.children.length > 0) {
+      zoomTarget = originalNode;
+    } else {
+      const parent = originalNode.parent;
+      if (parent?.data._tag === "root" && state.focusedNode === parent) {
+        return;
+      }
+      zoomTarget = parent;
+    }
+
+    state.focusedNode = zoomTarget;
+    state.selection = []; // Clear tooltip on zoom
+    render(state);
+  },
+
+  onBreadcrumbClick(node) {
+    state.focusedNode = node;
     state.selection = [];
     render(state);
   },
@@ -105,11 +153,37 @@ function render(state) {
       axisLabels: state.categories,
       legendLabels: state.categories,
     },
-    config.id
+    config.id,
   );
 
   const colorScale = legendLayout.scale;
   const colorLegend = legendLayout.legend;
+
+  const displayData = state.focusedNode
+    ? d3
+        .hierarchy(state.focusedNode.data, (d) => {
+          if (d._tag !== "root" && d._tag !== "branch") {
+            return null;
+          }
+          const findNode = (root, targetData) => {
+            if (root.data === targetData) return root;
+            if (!root.children) {
+              return null;
+            }
+            for (const child of root.children) {
+              const found = findNode(child, targetData);
+              if (found) return found;
+            }
+          };
+          return findNode(state.originalData, d)?.children?.map((c) => c.data);
+        })
+        .sum((d) => (d._tag === "leaf" ? valueAcc(d.data) : 0))
+    : state.originalData;
+
+  // Build breadcrumb trail
+  const breadcrumbs = state.focusedNode
+    ? state.focusedNode.ancestors().reverse().slice(1) // Remove root, reverse to get path from root
+    : [];
 
   // Layers
   const chartLayer = sszvis.createSvgLayer(config.id, bounds);
@@ -123,10 +197,13 @@ function render(state) {
     .colorScale(colorScale)
     .showLabels(true)
     .label((d) => d.data.key)
-    .minRadius(props.minRadius);
+    .minRadius(props.minRadius)
+    .onClick(actions.onNodeClick);
 
   const tooltipHeaderText = sszvis.modularTextHTML().bold((d) => d.data.key);
-  const tooltipBodyText = sszvis.modularTextHTML().plain((d) => "Value: " + sszvis.formatNumber(d.value));
+  const tooltipBodyText = sszvis
+    .modularTextHTML()
+    .plain((d) => "Value: " + sszvis.formatNumber(d.value));
 
   const tooltip = sszvis
     .tooltip()
@@ -137,24 +214,24 @@ function render(state) {
     .visible(isSelected);
 
   // Rendering
-  chartLayer
-    .selectGroup("pack")
-    .datum(state.data)
-    .call(pack);
+  chartLayer.selectGroup("pack").datum(displayData).call(pack);
 
   chartLayer.selectAll("[data-tooltip-anchor]").call(tooltip);
 
-    chartLayer
+  chartLayer
     .selectGroup("colorLegend")
     .attr(
       "transform",
       sszvis.translateString(
-       (bounds.innerWidth - legendLayout.legendWidth) / 2,
-        bounds.innerHeight - legendLayout.bottomPadding
-      )
+        (bounds.innerWidth - legendLayout.legendWidth) / 2,
+        bounds.innerHeight - legendLayout.bottomPadding,
+      ),
     )
     .call(colorLegend);
-    
+
+  // Render breadcrumbs
+  renderBreadcrumbs(htmlLayer, breadcrumbs, bounds);
+
   // Interaction
   const interactionLayer = sszvis
     .panning()
@@ -170,4 +247,83 @@ function render(state) {
 
 function isSelected(d) {
   return state.selection.includes(d);
+}
+
+// Breadcrumb rendering
+// -----------------------------------------------
+function renderBreadcrumbs(htmlLayer, breadcrumbs, bounds) {
+  const breadcrumbContainer = htmlLayer
+    .selectDiv("breadcrumbs")
+    .style("position", "absolute")
+    .style("top", "-40px")
+    .style("left", "0px")
+    .style("width", bounds.innerWidth + "px")
+    .style("height", "30px")
+    .style("display", "flex")
+    .style("align-items", "center")
+    .style("gap", "8px")
+    .style("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif')
+    .style("font-size", "14px");
+
+  // Always show "Root" link
+  const items = [
+    { label: "Root", node: null },
+    ...breadcrumbs.map((b) => ({ label: b.data.key, node: b })),
+  ];
+
+  const crumbs = breadcrumbContainer
+    .selectAll("span.breadcrumb-item")
+    .data(items, (d) => d.label);
+
+  const crumbsEnter = crumbs
+    .enter()
+    .append("span")
+    .classed("breadcrumb-item", true);
+
+  crumbsEnter
+    .append("a")
+    .style("color", "#0073B3")
+    .style("cursor", "pointer")
+    .style("text-decoration", "none")
+    .on("mouseover", function () {
+      d3.select(this).style("text-decoration", "underline");
+    })
+    .on("mouseout", function () {
+      d3.select(this).style("text-decoration", "none");
+    })
+    .on("click", function (event, d) {
+      event.preventDefault();
+      actions.onBreadcrumbClick(d.node);
+    });
+
+  crumbsEnter
+    .append("span")
+    .classed("separator", true)
+    .style("color", "#666")
+    .text(" › ");
+
+  // Update
+  const crumbsMerged = crumbsEnter.merge(crumbs);
+
+  crumbsMerged
+    .select("a")
+    .text((d) => d.label)
+    .style("font-weight", (d, i) =>
+      i === items.length - 1 ? "bold" : "normal",
+    )
+    .style("color", (d, i) => (i === items.length - 1 ? "#333" : "#0073B3"))
+    .style("cursor", (d, i) => (i === items.length - 1 ? "default" : "pointer"))
+    .on("click", function (event, d, i) {
+      // Don't allow clicking on the current (last) breadcrumb
+      if (i === items.length - 1) return;
+      event.preventDefault();
+      actions.onBreadcrumbClick(d.node);
+    });
+
+  // Hide separator on last item
+  crumbsMerged
+    .select(".separator")
+    .style("display", (d, i) => (i === items.length - 1 ? "none" : "inline"));
+
+  crumbs.exit().remove();
 }
