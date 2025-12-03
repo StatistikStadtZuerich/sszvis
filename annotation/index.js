@@ -1,3 +1,4 @@
+export { default as breadcrumb, createBreadcrumbItems } from './breadcrumb.js';
 export { default as annotationCircle } from './circle.js';
 export { default as annotationConfidenceArea } from './confidenceArea.js';
 export { default as annotationConfidenceBar } from './confidenceBar.js';

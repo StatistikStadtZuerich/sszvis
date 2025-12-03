@@ -5,10 +5,12 @@ export type NodeDatum<T> = {
 } | {
     _tag: "branch";
     key: string;
+    rootKey: string;
     children: NodeDatum<T>[];
 } | {
     _tag: "leaf";
     key: string;
+    rootKey: string;
     data: T;
 };
 /**
@@ -40,14 +42,25 @@ export type NodeDatum<T> = {
  */
 export type HierarchyComponent<T = unknown> = {
     calculate: (data: T[]) => HierarchyNode<NodeDatum<T>>;
-    layer: (accessor: (d: T) => string) => HierarchyComponent<T>;
+    layer: (accessor: (d: T) => string | null | undefined) => HierarchyComponent<T>;
     value: (accessor: (d: T) => number) => HierarchyComponent<T>;
     sort: (sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number) => HierarchyComponent<T>;
 };
 export declare function prepareHierarchyData<T = unknown>(): HierarchyComponent<T>;
 export declare function prepareHierarchyData<T = unknown>(data: T[], options: {
-    layers: Array<(d: T) => string>;
+    layers: Array<(d: T) => string | null | undefined>;
     valueAccessor: (d: T) => number;
 }): HierarchyNode<NodeDatum<T>>;
-export declare function unwrapNested<T>(roll: Map<string, unknown> | unknown): NodeDatum<T>[];
+/**
+ * Helper function to safely unwrap nested rollup data.
+ * Handles uneven tree structures where some branches terminate earlier than others.
+ * When a layer accessor returns null, the node will use its parent's key as a fallback
+ * to ensure labels remain functional.
+ *
+ * @param roll - The nested Map structure from d3.rollup()
+ * @param parentKey - The key of the parent node (used as fallback for null keys)
+ * @param rootKey - The top-level category key (used for color mapping)
+ * @returns Array of NodeDatum objects representing the hierarchy
+ */
+export declare function unwrapNested<T>(roll: Map<string, unknown> | unknown, parentKey?: string | null, rootKey?: string | null): NodeDatum<T>[];
 //# sourceMappingURL=hierarchy.d.ts.map

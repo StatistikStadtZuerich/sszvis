@@ -19,6 +19,7 @@
  * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
  * @property {string, function} label             The label text accessor (default d.data.key)
  * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
+ * @property {function} onClick                   Click handler for rectangles (receives node and event)
  *
  * @return {sszvis.component}
  */
@@ -36,6 +37,7 @@ export type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
     depth: number;
     height: number;
 };
+export type TreemapClickHandler<T = unknown> = (event: MouseEvent, node: TreemapLayout<T>) => void;
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
 interface TreemapComponent<T = unknown> extends Component {
     colorScale(): (key: string) => string;
@@ -52,6 +54,8 @@ interface TreemapComponent<T = unknown> extends Component {
     label(accessor: StringAccessor<TreemapLayout<T>>): TreemapComponent<T>;
     labelPosition(): LabelPosition;
     labelPosition(position: LabelPosition): TreemapComponent<T>;
+    onClick(): TreemapClickHandler<T> | undefined;
+    onClick(handler: TreemapClickHandler<T>): TreemapComponent<T>;
 }
 /**
  * Main treemap component

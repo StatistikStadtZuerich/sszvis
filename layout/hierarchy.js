@@ -48,22 +48,42 @@ function createHierarchyLayout() {
   };
   return api;
 } // Helper function to safely unwrap nested rollup data
+/**
+ * Helper function to safely unwrap nested rollup data.
+ * Handles uneven tree structures where some branches terminate earlier than others.
+ * When a layer accessor returns null, the node will use its parent's key as a fallback
+ * to ensure labels remain functional.
+ *
+ * @param roll - The nested Map structure from d3.rollup()
+ * @param parentKey - The key of the parent node (used as fallback for null keys)
+ * @param rootKey - The top-level category key (used for color mapping)
+ * @returns Array of NodeDatum objects representing the hierarchy
+ */
 function unwrapNested(roll) {
+  let parentKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+  let rootKey = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
   const rollupMap = roll;
   return Array.from(rollupMap, _ref => {
+    var _ref2;
     let [key, values] = _ref;
+    // Use parent key as fallback when current key is null/undefined
+    const effectiveKey = (_ref2 = key !== null && key !== void 0 ? key : parentKey) !== null && _ref2 !== void 0 ? _ref2 : "";
+    // For root category, use the current key if we're at the first level (rootKey is null)
+    const effectiveRootKey = rootKey !== null && rootKey !== void 0 ? rootKey : effectiveKey;
     if (values instanceof Map && values.size > 0) {
       // Branch node - has children
       return {
         _tag: "branch",
-        key,
-        children: unwrapNested(values)
+        key: effectiveKey,
+        rootKey: effectiveRootKey,
+        children: unwrapNested(values, effectiveKey, effectiveRootKey)
       };
     } else {
       // Leaf node - has data
       return {
         _tag: "leaf",
-        key,
+        key: effectiveKey,
+        rootKey: effectiveRootKey,
         data: values
       };
     }

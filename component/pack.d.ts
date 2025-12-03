@@ -22,6 +22,7 @@
  * @property {string} circleStroke                Circle stroke color (default "#ffffff")
  * @property {number} circleStrokeWidth           Circle stroke width (default 1)
  * @property {function} radiusScale               Custom radius scale function for circle sizing (optional)
+ * @property {function} onClick                   Click handler for circles (receives node and event)
  *
  * @return {sszvis.component}
  */
@@ -38,6 +39,7 @@ export type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
     depth: number;
     height: number;
 };
+export type PackClickHandler<T = unknown> = (event: MouseEvent, node: PackLayout<T>) => void;
 interface PackComponent<T = unknown> extends Component {
     colorScale(): (key: string) => string;
     colorScale(scale: (key: string) => string): PackComponent<T>;
@@ -59,6 +61,8 @@ interface PackComponent<T = unknown> extends Component {
     circleStrokeWidth(width: number): PackComponent<T>;
     radiusScale(): (d: HierarchyCircularNode<NodeDatum<T>>) => number;
     radiusScale(scale: (d: HierarchyCircularNode<NodeDatum<T>>) => number): PackComponent<T>;
+    onClick(): PackClickHandler<T> | undefined;
+    onClick(handler: PackClickHandler<T>): PackComponent<T>;
 }
 /**
  * Main Pack component

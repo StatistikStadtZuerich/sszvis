@@ -603,6 +603,89 @@
     };
 
     /**
+     * Breadcrumb navigation component
+     *
+     * Use this component to add a breadcrumb navigation trail for hierarchical visualizations
+     * like treemaps and pack charts. The breadcrumb shows the current path through the hierarchy
+     * and allows users to navigate back to parent nodes by clicking on previous items.
+     *
+     * @module sszvis/annotation/breadcrumb
+     *
+     * @template T The type of the underlying data in hierarchy nodes
+     *
+     * @property {selection} renderInto   Container selection to render breadcrumbs into (required)
+     * @property {Array} items            Array of BreadcrumbItem objects representing the trail
+     * @property {function} label         Accessor to get label text from an item (default: d => d.label)
+     * @property {function} onClick       Callback when a breadcrumb is clicked (receives item and index)
+     * @property {string} rootLabel       Label for the root breadcrumb (default: "Root")
+     * @property {string} separator       Separator text between breadcrumbs (default: " > ")
+     * @property {number} width           Width of the breadcrumb container in pixels
+     *
+     * @return {sszvis.component}
+     */
+    // ============================================================================
+    // Utility Functions
+    // ============================================================================
+    /**
+     * Helper to create breadcrumb items from a hierarchy node.
+     * Extracts the ancestor path and converts to breadcrumb items.
+     *
+     * @example
+     * const items = createBreadcrumbItems(focusedNode);
+     * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
+     */
+    function createBreadcrumbItems(node) {
+      if (!node) return [];
+      // Get ancestors from root to current node, excluding the synthetic root
+      return node.ancestors().reverse().slice(1) // Remove synthetic root node
+      .map(n => ({
+        label: n.data._tag === "leaf" || n.data._tag === "branch" ? n.data.key : "",
+        node: n
+      }));
+    }
+    // ============================================================================
+    // Component Implementation
+    // ============================================================================
+    function breadcrumb () {
+      return component().prop("renderInto").prop("items").items([]).prop("label", functor).label(d => d.label).prop("onClick").onClick(() => {}).prop("rootLabel").rootLabel("Root").prop("separator").separator(" \u203A ").prop("width").width(800).renderSelection(selection => {
+        const props = selection.props();
+        // Prepend root item to the breadcrumb trail
+        const allItems = [{
+          label: props.rootLabel,
+          node: null
+        }, ...props.items];
+        // Create or select breadcrumb container
+        const breadcrumbContainer = props.renderInto.selectDiv("breadcrumbs").style("position", "absolute").style("top", "-40px").style("left", "0px").style("width", "".concat(props.width, "px")).style("height", "30px").style("display", "flex").style("align-items", "center").style("gap", "8px").style("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').style("font-size", "14px");
+        // Data join for breadcrumb items
+        const crumbs = breadcrumbContainer.selectAll("span.sszvis-breadcrumb-item").data(allItems, d => props.label(d));
+        // Enter: create new breadcrumb elements
+        const crumbsEnter = crumbs.enter().append("span").classed("sszvis-breadcrumb-item", true);
+        // Add link element
+        crumbsEnter.append("a").style("color", "#0073B3").style("cursor", "pointer").style("text-decoration", "none").on("mouseover", function () {
+          d3.select(this).style("text-decoration", "underline");
+        }).on("mouseout", function () {
+          d3.select(this).style("text-decoration", "none");
+        });
+        // Add separator
+        crumbsEnter.append("span").classed("sszvis-breadcrumb-separator", true).style("color", "#666").text(props.separator);
+        // Update: merge enter + update selections
+        const crumbsMerged = crumbsEnter.merge(crumbs);
+        // Update link text and styling
+        crumbsMerged.select("a").text(d => props.label(d)).style("font-weight", (_d, i) => i === allItems.length - 1 ? "bold" : "normal").style("color", (_d, i) => i === allItems.length - 1 ? "#333" : "#0073B3").style("cursor", (_d, i) => i === allItems.length - 1 ? "default" : "pointer").on("click", (event, d) => {
+          const index = allItems.indexOf(d);
+          // Don't allow clicking on the current (last) breadcrumb
+          if (index === allItems.length - 1) return;
+          event.preventDefault();
+          props.onClick(d, index);
+        });
+        // Hide separator on last item
+        crumbsMerged.select(".sszvis-breadcrumb-separator").style("display", (_d, i) => i === allItems.length - 1 ? "none" : "inline");
+        // Exit: remove old breadcrumbs
+        crumbs.exit().remove();
+      });
+    }
+
+    /**
      * Patterns module
      *
      * @module sszvis/patterns
@@ -5355,6 +5438,7 @@
      * @property {string} circleStroke                Circle stroke color (default "#ffffff")
      * @property {number} circleStrokeWidth           Circle stroke width (default 1)
      * @property {function} radiusScale               Custom radius scale function for circle sizing (optional)
+     * @property {function} onClick                   Click handler for circles (receives node and event)
      *
      * @return {sszvis.component}
      */
@@ -5367,7 +5451,7 @@
       return component().prop("colorScale").prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
       .prop("containerHeight").containerHeight(600) // Default height
       .prop("showLabels").showLabels(false) // Default disabled
-      .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("minRadius").minRadius(20).prop("circleStroke").circleStroke("#ffffff").prop("circleStrokeWidth").circleStrokeWidth(1).prop("radiusScale", functor).render(function (inputData) {
+      .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("minRadius").minRadius(20).prop("circleStroke").circleStroke("#ffffff").prop("circleStrokeWidth").circleStrokeWidth(1).prop("radiusScale", functor).prop("onClick").render(function (inputData) {
         const selection = d3.select(this);
         const props = selection.props();
         // Apply pack layout to hierarchical data
@@ -5393,19 +5477,40 @@
         const visibleData = packData.filter(d => d.r > (props.minRadius || 1));
         const circles = selection.selectAll(".sszvis-pack-circle").data(visibleData).join("circle").classed("sszvis-pack-circle", true).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r).attr("fill", d => {
           if (d.children) {
-            // Branch nodes (categories) should have no fill, only stroke
-            return "none";
+            // Branch nodes should have a light fill to be able to click them
+            return "white";
           }
-          // Leaf nodes should be filled with color
-          if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-            return props.colorScale(d.parent.data.key);
+          // Leaf nodes - use rootKey for consistent color mapping
+          if ("rootKey" in d.data && d.data.rootKey) {
+            return props.colorScale(d.data.rootKey);
+          }
+          // Fallback: find top-level category by traversing ancestors
+          const ancestors = d.ancestors();
+          const topLevelCategory = ancestors.find((_, i) => {
+            var _ancestors;
+            return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
+          });
+          if (topLevelCategory && "key" in topLevelCategory.data) {
+            return props.colorScale(topLevelCategory.data.key);
           } else if ("key" in d.data) {
             return props.colorScale(d.data.key);
           }
           return "#cccccc"; // Default fill if no key found
         }).attr("stroke", d => {
           // Branch nodes (categories) get color stroke, leaf nodes get white stroke
-          if (d.children) {
+          // Leaf nodes - use rootKey for consistent color mapping
+          if ("rootKey" in d.data && d.data.rootKey) {
+            return props.colorScale(d.data.rootKey);
+          }
+          // Fallback: find top-level category by traversing ancestors
+          const ancestors = d.ancestors();
+          const topLevelCategory = ancestors.find((_, i) => {
+            var _ancestors2;
+            return i < ancestors.length - 1 && ((_ancestors2 = ancestors[i + 1]) === null || _ancestors2 === void 0 ? void 0 : _ancestors2.data._tag) === "root";
+          });
+          if (topLevelCategory && "key" in topLevelCategory.data) {
+            return props.colorScale(topLevelCategory.data.key);
+          } else if (d.children) {
             if ("key" in d.data) {
               return props.colorScale(d.data.key);
             }
@@ -5416,6 +5521,9 @@
         }).attr("stroke-width", d => {
           // Branch nodes get thicker stroke to make them more visible
           return d.children ? 2 : props.circleStrokeWidth;
+        }).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => {
+          var _props$onClick;
+          return (_props$onClick = props.onClick) === null || _props$onClick === void 0 ? void 0 : _props$onClick.call(props, event, d);
         });
         // Apply transitions if enabled
         if (props.transition) {
@@ -5430,8 +5538,18 @@
           const labelYAcc = d => d.y + fontSize / 3;
           const labelFillAcc = d => {
             const bgColor = () => {
-              if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-                return props.colorScale(d.parent.data.key);
+              // Use rootKey for consistent color mapping (same as fill logic)
+              if ("rootKey" in d.data && d.data.rootKey) {
+                return props.colorScale(d.data.rootKey);
+              }
+              // Fallback: find top-level category
+              const ancestors = d.ancestors();
+              const topLevelCategory = ancestors.find((_, i) => {
+                var _ancestors3;
+                return i < ancestors.length - 1 && ((_ancestors3 = ancestors[i + 1]) === null || _ancestors3 === void 0 ? void 0 : _ancestors3.data._tag) === "root";
+              });
+              if (topLevelCategory && "key" in topLevelCategory.data) {
+                return props.colorScale(topLevelCategory.data.key);
               } else if ("key" in d.data) {
                 return props.colorScale(d.data.key);
               }
@@ -6125,6 +6243,7 @@
      * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
      * @property {string, function} label             The label text accessor (default d.data.key)
      * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
+     * @property {function} onClick                   Click handler for rectangles (receives node and event)
      *
      * @return {sszvis.component}
      */
@@ -6137,7 +6256,7 @@
       return component().prop("colorScale").prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
       .prop("containerHeight").containerHeight(600) // Default height
       .prop("showLabels").showLabels(false) // Default disabled
-      .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("labelPosition").labelPosition("center").render(function (inputData) {
+      .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("labelPosition").labelPosition("center").prop("onClick").render(function (inputData) {
         const selection = d3.select(this);
         const props = selection.props();
         // Apply treemap layout to hierarchical data
@@ -6159,16 +6278,27 @@
           return result;
         }
         const treemapData = flatten(inputData);
-        // Filter out very small rectangles
+        // Filter out very small rectangles and show only leaf nodes
         const visibleData = treemapData.filter(d => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5).filter(d => !d.children);
         const rectangles = selection.selectAll(".sszvis-treemap-rect").data(visibleData).join("rect").classed("sszvis-treemap-rect", true).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => {
-          if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-            return props.colorScale(d.parent.data.key);
+          if ("rootKey" in d.data && d.data.rootKey) {
+            return props.colorScale(d.data.rootKey);
+          }
+          const ancestors = d.ancestors();
+          const topLevelCategory = ancestors.find((_, i) => {
+            var _ancestors;
+            return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
+          });
+          if (topLevelCategory && "key" in topLevelCategory.data) {
+            return props.colorScale(topLevelCategory.data.key);
           } else if ("key" in d.data) {
             return props.colorScale(d.data.key);
           }
           return "#cccccc"; // Default fill if no key found
-        }).attr("stroke", "#ffffff").attr("stroke-width", 1);
+        }).attr("stroke", "#ffffff").attr("stroke-width", 1).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => {
+          var _props$onClick;
+          return (_props$onClick = props.onClick) === null || _props$onClick === void 0 ? void 0 : _props$onClick.call(props, event, d);
+        });
         // Apply transitions if enabled
         if (props.transition) {
           rectangles.transition(defaultTransition()).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0);
@@ -6217,8 +6347,16 @@
           const labelYAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").y;
           const labelFillAcc = d => {
             const bgColor = () => {
-              if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-                return props.colorScale(d.parent.data.key);
+              if ("rootKey" in d.data && d.data.rootKey) {
+                return props.colorScale(d.data.rootKey);
+              }
+              const ancestors = d.ancestors();
+              const topLevelCategory = ancestors.find((_, i) => {
+                var _ancestors2;
+                return i < ancestors.length - 1 && ((_ancestors2 = ancestors[i + 1]) === null || _ancestors2 === void 0 ? void 0 : _ancestors2.data._tag) === "root";
+              });
+              if (topLevelCategory && "key" in topLevelCategory.data) {
+                return props.colorScale(topLevelCategory.data.key);
               } else if ("key" in d.data) {
                 return props.colorScale(d.data.key);
               }
@@ -6226,7 +6364,7 @@
             };
             return getAccessibleTextColor(bgColor());
           };
-          // Filter data for labels - only show labels on leaf nodes (smallest layer) that are large enough
+          // Filter data for labels - only show labels on leaf nodes that are large enough
           const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < (d.x1 - d.x0) / 7); // Rough estimate of fitting text
           const labels = selection.selectAll(".sszvis-treemap-label").data(labelData).join("text").classed("sszvis-treemap-label", true).attr("x", labelXAcc).attr("y", labelYAcc).attr("fill", labelFillAcc).attr("font-size", fontSize).attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').style("pointer-events", "none").attr("text-anchor", () => {
             const position = props.labelPosition || "top-left";
@@ -6920,22 +7058,42 @@
       };
       return api;
     } // Helper function to safely unwrap nested rollup data
+    /**
+     * Helper function to safely unwrap nested rollup data.
+     * Handles uneven tree structures where some branches terminate earlier than others.
+     * When a layer accessor returns null, the node will use its parent's key as a fallback
+     * to ensure labels remain functional.
+     *
+     * @param roll - The nested Map structure from d3.rollup()
+     * @param parentKey - The key of the parent node (used as fallback for null keys)
+     * @param rootKey - The top-level category key (used for color mapping)
+     * @returns Array of NodeDatum objects representing the hierarchy
+     */
     function unwrapNested(roll) {
+      let parentKey = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      let rootKey = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
       const rollupMap = roll;
       return Array.from(rollupMap, _ref => {
+        var _ref2;
         let [key, values] = _ref;
+        // Use parent key as fallback when current key is null/undefined
+        const effectiveKey = (_ref2 = key !== null && key !== void 0 ? key : parentKey) !== null && _ref2 !== void 0 ? _ref2 : "";
+        // For root category, use the current key if we're at the first level (rootKey is null)
+        const effectiveRootKey = rootKey !== null && rootKey !== void 0 ? rootKey : effectiveKey;
         if (values instanceof Map && values.size > 0) {
           // Branch node - has children
           return {
             _tag: "branch",
-            key,
-            children: unwrapNested(values)
+            key: effectiveKey,
+            rootKey: effectiveRootKey,
+            children: unwrapNested(values, effectiveKey, effectiveRootKey)
           };
         } else {
           // Leaf node - has data
           return {
             _tag: "leaf",
-            key,
+            key: effectiveKey,
+            rootKey: effectiveRootKey,
             data: values
           };
         }
@@ -8778,6 +8936,7 @@
     exports.axisY = axisY;
     exports.bar = bar;
     exports.bounds = bounds;
+    exports.breadcrumb = breadcrumb;
     exports.breakpointCreateSpec = breakpointCreateSpec;
     exports.breakpointDefaultSpec = breakpointDefaultSpec;
     exports.breakpointFind = breakpointFind;
@@ -8793,6 +8952,7 @@
     exports.colorLegendLayout = colorLegendLayout;
     exports.compose = compose;
     exports.contains = contains$1;
+    exports.createBreadcrumbItems = createBreadcrumbItems;
     exports.createHtmlLayer = createHtmlLayer;
     exports.createSvgLayer = createSvgLayer;
     exports.dataAreaPattern = dataAreaPattern;

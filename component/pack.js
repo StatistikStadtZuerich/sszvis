@@ -29,6 +29,7 @@ import { defaultTransition } from '../transition.js';
  * @property {string} circleStroke                Circle stroke color (default "#ffffff")
  * @property {number} circleStrokeWidth           Circle stroke width (default 1)
  * @property {function} radiusScale               Custom radius scale function for circle sizing (optional)
+ * @property {function} onClick                   Click handler for circles (receives node and event)
  *
  * @return {sszvis.component}
  */
@@ -41,7 +42,7 @@ function pack () {
   return component().prop("colorScale").prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
   .prop("containerHeight").containerHeight(600) // Default height
   .prop("showLabels").showLabels(false) // Default disabled
-  .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("minRadius").minRadius(20).prop("circleStroke").circleStroke("#ffffff").prop("circleStrokeWidth").circleStrokeWidth(1).prop("radiusScale", functor).render(function (inputData) {
+  .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("minRadius").minRadius(20).prop("circleStroke").circleStroke("#ffffff").prop("circleStrokeWidth").circleStrokeWidth(1).prop("radiusScale", functor).prop("onClick").render(function (inputData) {
     const selection = select(this);
     const props = selection.props();
     // Apply pack layout to hierarchical data
@@ -67,19 +68,40 @@ function pack () {
     const visibleData = packData.filter(d => d.r > (props.minRadius || 1));
     const circles = selection.selectAll(".sszvis-pack-circle").data(visibleData).join("circle").classed("sszvis-pack-circle", true).attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r).attr("fill", d => {
       if (d.children) {
-        // Branch nodes (categories) should have no fill, only stroke
-        return "none";
+        // Branch nodes should have a light fill to be able to click them
+        return "white";
       }
-      // Leaf nodes should be filled with color
-      if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-        return props.colorScale(d.parent.data.key);
+      // Leaf nodes - use rootKey for consistent color mapping
+      if ("rootKey" in d.data && d.data.rootKey) {
+        return props.colorScale(d.data.rootKey);
+      }
+      // Fallback: find top-level category by traversing ancestors
+      const ancestors = d.ancestors();
+      const topLevelCategory = ancestors.find((_, i) => {
+        var _ancestors;
+        return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
+      });
+      if (topLevelCategory && "key" in topLevelCategory.data) {
+        return props.colorScale(topLevelCategory.data.key);
       } else if ("key" in d.data) {
         return props.colorScale(d.data.key);
       }
       return "#cccccc"; // Default fill if no key found
     }).attr("stroke", d => {
       // Branch nodes (categories) get color stroke, leaf nodes get white stroke
-      if (d.children) {
+      // Leaf nodes - use rootKey for consistent color mapping
+      if ("rootKey" in d.data && d.data.rootKey) {
+        return props.colorScale(d.data.rootKey);
+      }
+      // Fallback: find top-level category by traversing ancestors
+      const ancestors = d.ancestors();
+      const topLevelCategory = ancestors.find((_, i) => {
+        var _ancestors2;
+        return i < ancestors.length - 1 && ((_ancestors2 = ancestors[i + 1]) === null || _ancestors2 === void 0 ? void 0 : _ancestors2.data._tag) === "root";
+      });
+      if (topLevelCategory && "key" in topLevelCategory.data) {
+        return props.colorScale(topLevelCategory.data.key);
+      } else if (d.children) {
         if ("key" in d.data) {
           return props.colorScale(d.data.key);
         }
@@ -90,6 +112,9 @@ function pack () {
     }).attr("stroke-width", d => {
       // Branch nodes get thicker stroke to make them more visible
       return d.children ? 2 : props.circleStrokeWidth;
+    }).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => {
+      var _props$onClick;
+      return (_props$onClick = props.onClick) === null || _props$onClick === void 0 ? void 0 : _props$onClick.call(props, event, d);
     });
     // Apply transitions if enabled
     if (props.transition) {
@@ -104,8 +129,18 @@ function pack () {
       const labelYAcc = d => d.y + fontSize / 3;
       const labelFillAcc = d => {
         const bgColor = () => {
-          if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-            return props.colorScale(d.parent.data.key);
+          // Use rootKey for consistent color mapping (same as fill logic)
+          if ("rootKey" in d.data && d.data.rootKey) {
+            return props.colorScale(d.data.rootKey);
+          }
+          // Fallback: find top-level category
+          const ancestors = d.ancestors();
+          const topLevelCategory = ancestors.find((_, i) => {
+            var _ancestors3;
+            return i < ancestors.length - 1 && ((_ancestors3 = ancestors[i + 1]) === null || _ancestors3 === void 0 ? void 0 : _ancestors3.data._tag) === "root";
+          });
+          if (topLevelCategory && "key" in topLevelCategory.data) {
+            return props.colorScale(topLevelCategory.data.key);
           } else if ("key" in d.data) {
             return props.colorScale(d.data.key);
           }

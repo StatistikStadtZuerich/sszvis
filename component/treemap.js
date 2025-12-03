@@ -26,6 +26,7 @@ import { defaultTransition } from '../transition.js';
  * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
  * @property {string, function} label             The label text accessor (default d.data.key)
  * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
+ * @property {function} onClick                   Click handler for rectangles (receives node and event)
  *
  * @return {sszvis.component}
  */
@@ -38,7 +39,7 @@ function treemap () {
   return component().prop("colorScale").prop("transition").transition(true).prop("containerWidth").containerWidth(800) // Default width
   .prop("containerHeight").containerHeight(600) // Default height
   .prop("showLabels").showLabels(false) // Default disabled
-  .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("labelPosition").labelPosition("center").render(function (inputData) {
+  .prop("label", functor).label(d => d.data && "key" in d.data ? d.data.key : "").prop("labelPosition").labelPosition("center").prop("onClick").render(function (inputData) {
     const selection = select(this);
     const props = selection.props();
     // Apply treemap layout to hierarchical data
@@ -60,16 +61,27 @@ function treemap () {
       return result;
     }
     const treemapData = flatten(inputData);
-    // Filter out very small rectangles
+    // Filter out very small rectangles and show only leaf nodes
     const visibleData = treemapData.filter(d => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5).filter(d => !d.children);
     const rectangles = selection.selectAll(".sszvis-treemap-rect").data(visibleData).join("rect").classed("sszvis-treemap-rect", true).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => {
-      if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-        return props.colorScale(d.parent.data.key);
+      if ("rootKey" in d.data && d.data.rootKey) {
+        return props.colorScale(d.data.rootKey);
+      }
+      const ancestors = d.ancestors();
+      const topLevelCategory = ancestors.find((_, i) => {
+        var _ancestors;
+        return i < ancestors.length - 1 && ((_ancestors = ancestors[i + 1]) === null || _ancestors === void 0 ? void 0 : _ancestors.data._tag) === "root";
+      });
+      if (topLevelCategory && "key" in topLevelCategory.data) {
+        return props.colorScale(topLevelCategory.data.key);
       } else if ("key" in d.data) {
         return props.colorScale(d.data.key);
       }
       return "#cccccc"; // Default fill if no key found
-    }).attr("stroke", "#ffffff").attr("stroke-width", 1);
+    }).attr("stroke", "#ffffff").attr("stroke-width", 1).style("cursor", props.onClick ? "pointer" : "default").on("click", (event, d) => {
+      var _props$onClick;
+      return (_props$onClick = props.onClick) === null || _props$onClick === void 0 ? void 0 : _props$onClick.call(props, event, d);
+    });
     // Apply transitions if enabled
     if (props.transition) {
       rectangles.transition(defaultTransition()).attr("x", d => d.x0).attr("y", d => d.y0).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0);
@@ -118,8 +130,16 @@ function treemap () {
       const labelYAcc = d => calculateLabelPosition(d, props.labelPosition || "top-left").y;
       const labelFillAcc = d => {
         const bgColor = () => {
-          if (d.ancestors().length > 1 && d.parent && "key" in d.parent.data) {
-            return props.colorScale(d.parent.data.key);
+          if ("rootKey" in d.data && d.data.rootKey) {
+            return props.colorScale(d.data.rootKey);
+          }
+          const ancestors = d.ancestors();
+          const topLevelCategory = ancestors.find((_, i) => {
+            var _ancestors2;
+            return i < ancestors.length - 1 && ((_ancestors2 = ancestors[i + 1]) === null || _ancestors2 === void 0 ? void 0 : _ancestors2.data._tag) === "root";
+          });
+          if (topLevelCategory && "key" in topLevelCategory.data) {
+            return props.colorScale(topLevelCategory.data.key);
           } else if ("key" in d.data) {
             return props.colorScale(d.data.key);
           }
@@ -127,7 +147,7 @@ function treemap () {
         };
         return getAccessibleTextColor(bgColor());
       };
-      // Filter data for labels - only show labels on leaf nodes (smallest layer) that are large enough
+      // Filter data for labels - only show labels on leaf nodes that are large enough
       const labelData = visibleData.filter(d => !d.children).filter(d => labelAcc(d).length < (d.x1 - d.x0) / 7); // Rough estimate of fitting text
       const labels = selection.selectAll(".sszvis-treemap-label").data(labelData).join("text").classed("sszvis-treemap-label", true).attr("x", labelXAcc).attr("y", labelYAcc).attr("fill", labelFillAcc).attr("font-size", fontSize).attr("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif').style("pointer-events", "none").attr("text-anchor", () => {
         const position = props.labelPosition || "top-left";

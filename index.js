@@ -1,5 +1,6 @@
 import './d3-selectdiv.js';
 import './d3-selectgroup.js';
+export { default as breadcrumb, createBreadcrumbItems } from './annotation/breadcrumb.js';
 export { default as annotationCircle } from './annotation/circle.js';
 export { default as annotationConfidenceArea } from './annotation/confidenceArea.js';
 export { default as annotationConfidenceBar } from './annotation/confidenceBar.js';

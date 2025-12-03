@@ -1,4 +1,4 @@
-import { Selection, NumberValue, BaseType, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, HierarchyNode, HierarchyCircularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
+import { Selection, NumberValue, BaseType, HierarchyNode, AxisScale, AxisDomain, ScaleLinear, ScaleBand, ScalePoint, ScaleOrdinal, LabColor, HSLColor, HierarchyCircularNode, FormatLocaleDefinition, TimeLocaleDefinition, geoPath } from 'd3';
 import * as d3_shape from 'd3-shape';
 import * as d3_transition from 'd3-transition';
 import * as d3_selection from 'd3-selection';
@@ -124,6 +124,129 @@ declare module "d3" {
         props<A>(): A extends ComponentProps ? A : ComponentProps;
     }
 }
+
+type NodeDatum<T> = {
+    _tag: "root";
+    children: NodeDatum<T>[];
+} | {
+    _tag: "branch";
+    key: string;
+    rootKey: string;
+    children: NodeDatum<T>[];
+} | {
+    _tag: "leaf";
+    key: string;
+    rootKey: string;
+    data: T;
+};
+/**
+ * sszvis.prepareHierarchyData
+ *
+ * Creates a data preparation layout, with an API that works similarly to d3's configurable layouts.
+ * Can be used in two ways:
+ * 1. Chained API (like sunburst): prepareData().layer().value().size().calculate(data)
+ * 2. Options API (backward compatibility): prepareData(data, options)
+ *
+ * @property {Array} calculate      Accepts an array of data, and applies this layout to that data. Returns the formatted dataset,
+ *                                  ready to be used as data for the treemap component.
+ * @property {Function} layer       Accepts a function, which should be a key function, used to create a layer for the data.
+ *                                  The key function is applied to each datum, and the return value groups that datum within a
+ *                                  layer of the treemap chart. The exact behavior depends on the order in which layers are specified.
+ *                                  The first specified layer will be the outermost one of the treemap, with subsequent layers adding
+ *                                  further subdivision. Data are grouped according to the first layer, then the second layer, then the third, etc.
+ *                                  This uses d3.rollup under the hood, and applies the key function to group the data hierarchically.
+ * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of
+ *                                  the rectangle for each datum.
+ * @property {Array} size           Set the size [width, height] of the treemap layout.
+ * @property {Function} sort        Provide a sorting function for sibling nodes of the treemap.
+ *                                  It receives two node values (which are created by d3), which should have at least a "key" property
+ *                                  (corresponding to the layer key), and a "value" property (corresponding to the value amount of the rectangle).
+ *                                  Otherwise, it behaves like a normal javascript array sorting function. The default value attempts to preserve the
+ *                                  existing sort order of the data.
+ *
+ * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
+ */
+type HierarchyComponent<T = unknown> = {
+    calculate: (data: T[]) => HierarchyNode<NodeDatum<T>>;
+    layer: (accessor: (d: T) => string | null | undefined) => HierarchyComponent<T>;
+    value: (accessor: (d: T) => number) => HierarchyComponent<T>;
+    sort: (sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number) => HierarchyComponent<T>;
+};
+declare function prepareHierarchyData<T = unknown>(): HierarchyComponent<T>;
+declare function prepareHierarchyData<T = unknown>(data: T[], options: {
+    layers: Array<(d: T) => string | null | undefined>;
+    valueAccessor: (d: T) => number;
+}): HierarchyNode<NodeDatum<T>>;
+
+/**
+ * Breadcrumb navigation component
+ *
+ * Use this component to add a breadcrumb navigation trail for hierarchical visualizations
+ * like treemaps and pack charts. The breadcrumb shows the current path through the hierarchy
+ * and allows users to navigate back to parent nodes by clicking on previous items.
+ *
+ * @module sszvis/annotation/breadcrumb
+ *
+ * @template T The type of the underlying data in hierarchy nodes
+ *
+ * @property {selection} renderInto   Container selection to render breadcrumbs into (required)
+ * @property {Array} items            Array of BreadcrumbItem objects representing the trail
+ * @property {function} label         Accessor to get label text from an item (default: d => d.label)
+ * @property {function} onClick       Callback when a breadcrumb is clicked (receives item and index)
+ * @property {string} rootLabel       Label for the root breadcrumb (default: "Root")
+ * @property {string} separator       Separator text between breadcrumbs (default: " > ")
+ * @property {number} width           Width of the breadcrumb container in pixels
+ *
+ * @return {sszvis.component}
+ */
+
+/**
+ * Represents a single breadcrumb item in the navigation trail.
+ * Generic over T to support different underlying data types.
+ */
+interface BreadcrumbItem<T = unknown> {
+    /** Display label for this breadcrumb */
+    label: string;
+    /** The hierarchy node this breadcrumb represents (null for root) */
+    node: HierarchyNode<NodeDatum<T>> | null;
+}
+/**
+ * Component interface with method chaining support.
+ * Each method returns the component for chaining (setter) or the value (getter).
+ */
+interface BreadcrumbComponent<T = unknown> extends Component {
+    /** Set the container to render breadcrumbs into */
+    renderInto(): AnySelection;
+    renderInto(selection: AnySelection): BreadcrumbComponent<T>;
+    /** Set the array of breadcrumb items */
+    items(): BreadcrumbItem<T>[];
+    items(items: BreadcrumbItem<T>[]): BreadcrumbComponent<T>;
+    /** Set the label accessor function */
+    label(): (item: BreadcrumbItem<T>) => string;
+    label(accessor: StringAccessor<BreadcrumbItem<T>>): BreadcrumbComponent<T>;
+    /** Set the click handler (receives item and index) */
+    onClick(): (item: BreadcrumbItem<T>, index: number) => void;
+    onClick(handler: (item: BreadcrumbItem<T>, index: number) => void): BreadcrumbComponent<T>;
+    /** Set the root label text */
+    rootLabel(): string;
+    rootLabel(label: string): BreadcrumbComponent<T>;
+    /** Set the separator text */
+    separator(): string;
+    separator(sep: string): BreadcrumbComponent<T>;
+    /** Set the width of the breadcrumb container */
+    width(): number;
+    width(w: number): BreadcrumbComponent<T>;
+}
+/**
+ * Helper to create breadcrumb items from a hierarchy node.
+ * Extracts the ancestor path and converts to breadcrumb items.
+ *
+ * @example
+ * const items = createBreadcrumbItems(focusedNode);
+ * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
+ */
+declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
+declare function export_default$f<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -1328,57 +1451,6 @@ declare function _default$u(): any;
 
 declare function nestedStackedBarsVertical(): Component;
 
-type NodeDatum<T> = {
-    _tag: "root";
-    children: NodeDatum<T>[];
-} | {
-    _tag: "branch";
-    key: string;
-    children: NodeDatum<T>[];
-} | {
-    _tag: "leaf";
-    key: string;
-    data: T;
-};
-/**
- * sszvis.prepareHierarchyData
- *
- * Creates a data preparation layout, with an API that works similarly to d3's configurable layouts.
- * Can be used in two ways:
- * 1. Chained API (like sunburst): prepareData().layer().value().size().calculate(data)
- * 2. Options API (backward compatibility): prepareData(data, options)
- *
- * @property {Array} calculate      Accepts an array of data, and applies this layout to that data. Returns the formatted dataset,
- *                                  ready to be used as data for the treemap component.
- * @property {Function} layer       Accepts a function, which should be a key function, used to create a layer for the data.
- *                                  The key function is applied to each datum, and the return value groups that datum within a
- *                                  layer of the treemap chart. The exact behavior depends on the order in which layers are specified.
- *                                  The first specified layer will be the outermost one of the treemap, with subsequent layers adding
- *                                  further subdivision. Data are grouped according to the first layer, then the second layer, then the third, etc.
- *                                  This uses d3.rollup under the hood, and applies the key function to group the data hierarchically.
- * @property {Function} value       The function which retrieves the value of each datum. This is required in order to calculate the size of
- *                                  the rectangle for each datum.
- * @property {Array} size           Set the size [width, height] of the treemap layout.
- * @property {Function} sort        Provide a sorting function for sibling nodes of the treemap.
- *                                  It receives two node values (which are created by d3), which should have at least a "key" property
- *                                  (corresponding to the layer key), and a "value" property (corresponding to the value amount of the rectangle).
- *                                  Otherwise, it behaves like a normal javascript array sorting function. The default value attempts to preserve the
- *                                  existing sort order of the data.
- *
- * @return {Function}               The layout function. Can be called directly or you can use '.calculate(dataset)'.
- */
-type HierarchyComponent<T = unknown> = {
-    calculate: (data: T[]) => HierarchyNode<NodeDatum<T>>;
-    layer: (accessor: (d: T) => string) => HierarchyComponent<T>;
-    value: (accessor: (d: T) => number) => HierarchyComponent<T>;
-    sort: (sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number) => HierarchyComponent<T>;
-};
-declare function prepareHierarchyData<T = unknown>(): HierarchyComponent<T>;
-declare function prepareHierarchyData<T = unknown>(data: T[], options: {
-    layers: Array<(d: T) => string>;
-    valueAccessor: (d: T) => number;
-}): HierarchyNode<NodeDatum<T>>;
-
 /**
  * Pack component
  *
@@ -1403,6 +1475,7 @@ declare function prepareHierarchyData<T = unknown>(data: T[], options: {
  * @property {string} circleStroke                Circle stroke color (default "#ffffff")
  * @property {number} circleStrokeWidth           Circle stroke width (default 1)
  * @property {function} radiusScale               Custom radius scale function for circle sizing (optional)
+ * @property {function} onClick                   Click handler for circles (receives node and event)
  *
  * @return {sszvis.component}
  */
@@ -1416,6 +1489,7 @@ type PackLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
     depth: number;
     height: number;
 };
+type PackClickHandler<T = unknown> = (event: MouseEvent, node: PackLayout<T>) => void;
 interface PackComponent<T = unknown> extends Component {
     colorScale(): (key: string) => string;
     colorScale(scale: (key: string) => string): PackComponent<T>;
@@ -1437,6 +1511,8 @@ interface PackComponent<T = unknown> extends Component {
     circleStrokeWidth(width: number): PackComponent<T>;
     radiusScale(): (d: HierarchyCircularNode<NodeDatum<T>>) => number;
     radiusScale(scale: (d: HierarchyCircularNode<NodeDatum<T>>) => number): PackComponent<T>;
+    onClick(): PackClickHandler<T> | undefined;
+    onClick(handler: PackClickHandler<T>): PackComponent<T>;
 }
 /**
  * Main Pack component
@@ -1503,6 +1579,7 @@ declare function _default$o(): any;
  * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
  * @property {string, function} label             The label text accessor (default d.data.key)
  * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
+ * @property {function} onClick                   Click handler for rectangles (receives node and event)
  *
  * @return {sszvis.component}
  */
@@ -1517,6 +1594,7 @@ type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
     depth: number;
     height: number;
 };
+type TreemapClickHandler<T = unknown> = (event: MouseEvent, node: TreemapLayout<T>) => void;
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
 interface TreemapComponent<T = unknown> extends Component {
     colorScale(): (key: string) => string;
@@ -1533,6 +1611,8 @@ interface TreemapComponent<T = unknown> extends Component {
     label(accessor: StringAccessor<TreemapLayout<T>>): TreemapComponent<T>;
     labelPosition(): LabelPosition;
     labelPosition(position: LabelPosition): TreemapComponent<T>;
+    onClick(): TreemapClickHandler<T> | undefined;
+    onClick(handler: TreemapClickHandler<T>): TreemapComponent<T>;
 }
 /**
  * Main treemap component
@@ -2518,5 +2598,5 @@ declare function on(name: any, cb: any): any;
 declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, export_default$d as annotationConfidenceArea, export_default$c as annotationConfidenceBar, export_default$a as annotationLine, export_default$9 as annotationRangeFlag, export_default$8 as annotationRangeRuler, export_default$7 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$x as bar, bounds, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$w as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$b as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, _default$v as groupedBars, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$4 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as pack, export_default$3 as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$6 as tooltip, export_default$5 as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, export_default as treemap, viewport, export_default$2 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
-export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BoundsConfig, BoundsResult, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, MeasurableElement, Padding, PartialBreakpoint, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SvgLayerMetadata, ValueSorter };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, export_default$d as annotationConfidenceArea, export_default$c as annotationConfidenceBar, export_default$a as annotationLine, export_default$9 as annotationRangeFlag, export_default$8 as annotationRangeRuler, export_default$7 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$x as bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$w as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$b as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, _default$v as groupedBars, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$4 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as pack, export_default$3 as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$6 as tooltip, export_default$5 as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, export_default as treemap, viewport, export_default$2 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
+export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, MeasurableElement, Padding, PartialBreakpoint, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SvgLayerMetadata, ValueSorter };

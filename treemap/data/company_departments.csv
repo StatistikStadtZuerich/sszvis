@@ -1,14 +1,36 @@
-category,subcategory,value
-Technology,Software,120
-Technology,Hardware,80
-Technology,AI/ML,95
-Finance,Banking,150
-Finance,Insurance,110
-Finance,Investment,75
-Healthcare,Pharma,140
-Healthcare,Medical Devices,90
-Healthcare,Digital Health,65
-Retail,E-commerce,100
-Retail,Physical Stores,85
-Energy,Renewable,70
-Energy,Traditional,60
+category,subcategory,division,team,value
+Technology,Software,Frontend,React,45
+Technology,Software,Frontend,Vue,30
+Technology,Software,Backend,Node,35
+Technology,Software,Backend,Python,40
+Technology,Software,Backend,Go,25
+Technology,Hardware,Servers,,85
+Technology,AI/ML,NLP,Research,30
+Technology,AI/ML,NLP,Engineering,25
+Technology,AI/ML,Computer Vision,,40
+Finance,Banking,Retail Banking,,150
+Finance,Insurance,Life,,60
+Finance,Insurance,Property,,50
+Finance,Investment,Hedge Funds,Trading,45
+Finance,Investment,Hedge Funds,Analytics,30
+Finance,Investment,Private Equity,,40
+Healthcare,Pharma,R&D,Drug Discovery,90
+Healthcare,Pharma,R&D,Clinical Trials,50
+Healthcare,Pharma,Manufacturing,,45
+Healthcare,Medical Devices,Diagnostics,Imaging,40
+Healthcare,Medical Devices,Diagnostics,Lab Equipment,30
+Healthcare,Medical Devices,Therapeutics,,20
+Healthcare,Digital Health,Telemedicine,,35
+Healthcare,Digital Health,Wearables,,30
+Retail,E-commerce,Marketplace,B2C,60
+Retail,E-commerce,Marketplace,B2B,40
+Retail,E-commerce,Logistics,Warehousing,25
+Retail,E-commerce,Logistics,Delivery,20
+Retail,Physical Stores,Department,,85
+Energy,Renewable,Solar,Residential,25
+Energy,Renewable,Solar,Commercial,30
+Energy,Renewable,Wind,Onshore,20
+Energy,Renewable,Wind,Offshore,15
+Energy,Traditional,Oil,Upstream,35
+Energy,Traditional,Oil,Downstream,25
+Energy,Traditional,Gas,,30
