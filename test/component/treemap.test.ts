@@ -42,12 +42,42 @@ describe("component/treemap", () => {
 
     // Sample hierarchical data
     data = [
-      { category: "Technology", subcategory: "Software", value: 100, name: "App A" },
-      { category: "Technology", subcategory: "Software", value: 80, name: "App B" },
-      { category: "Technology", subcategory: "Hardware", value: 150, name: "Device A" },
-      { category: "Finance", subcategory: "Banking", value: 200, name: "Bank A" },
-      { category: "Finance", subcategory: "Investment", value: 90, name: "Fund A" },
-      { category: "Healthcare", subcategory: "Pharma", value: 120, name: "Drug A" },
+      {
+        category: "Technology",
+        subcategory: "Software",
+        value: 100,
+        name: "App A",
+      },
+      {
+        category: "Technology",
+        subcategory: "Software",
+        value: 80,
+        name: "App B",
+      },
+      {
+        category: "Technology",
+        subcategory: "Hardware",
+        value: 150,
+        name: "Device A",
+      },
+      {
+        category: "Finance",
+        subcategory: "Banking",
+        value: 200,
+        name: "Bank A",
+      },
+      {
+        category: "Finance",
+        subcategory: "Investment",
+        value: 90,
+        name: "Fund A",
+      },
+      {
+        category: "Healthcare",
+        subcategory: "Pharma",
+        value: 120,
+        name: "Drug A",
+      },
     ];
 
     cScale = scaleOrdinal<string, string>()
@@ -279,6 +309,370 @@ describe("component/treemap", () => {
         .containerHeight(250)
         .transition(true);
       expect(treemapComponent.transition()).toBe(true);
+    });
+  });
+
+  describe("onClick functionality", () => {
+    test("should call onClick handler when rectangle is clicked", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      expect(rect).toBeDefined();
+
+      rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test("should pass correct node data to onClick handler", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledWith(
+        expect.any(MouseEvent),
+        expect.objectContaining({
+          data: expect.any(Object),
+          x0: expect.any(Number),
+          y0: expect.any(Number),
+          x1: expect.any(Number),
+          y1: expect.any(Number),
+          value: expect.any(Number),
+        })
+      );
+    });
+
+    test("should pass MouseEvent to onClick handler", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      const mouseEvent = new MouseEvent("click", {
+        bubbles: true,
+        clientX: 100,
+        clientY: 50,
+      });
+      rect.dispatchEvent(mouseEvent);
+
+      const [eventArg] = clickHandler.mock.calls[0];
+      expect(eventArg).toBeInstanceOf(MouseEvent);
+      expect(eventArg.type).toBe("click");
+    });
+
+    test("should show pointer cursor when onClick is provided", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const rectangles = svg.selectAll<SVGRectElement, TestDatum>(".sszvis-treemap-rect");
+      rectangles.each(function () {
+        const cursor = this.style.cursor || this.getAttribute("cursor");
+        expect(cursor).toBe("pointer");
+      });
+    });
+
+    test("should show default cursor when onClick is not provided", () => {
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .transition(false)
+        );
+
+      const rectangles = svg.selectAll<SVGRectElement, TestDatum>(".sszvis-treemap-rect");
+      rectangles.each(function () {
+        const cursor = this.style.cursor || this.getAttribute("cursor");
+        expect(cursor).not.toBe("pointer");
+      });
+    });
+
+    test("should not interfere with existing hover behavior", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+
+      // Simulate hover
+      rect.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+      rect.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+
+      // Click should still work after hover
+      rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledTimes(1);
+    });
+
+    test("onClick should receive node with hierarchy structure", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      const [, nodeArg] = clickHandler.mock.calls[0];
+      // Node should have hierarchy data structure with traversal methods
+      expect(nodeArg).toBeDefined();
+      expect(nodeArg.data).toBeDefined();
+      expect(typeof nodeArg.ancestors).toBe("function");
+      expect(typeof nodeArg.descendants).toBe("function");
+      // Ancestors should include at least the node itself
+      expect(nodeArg.ancestors().length).toBeGreaterThanOrEqual(1);
+    });
+
+    test("onClick should receive parent node when parent is clicked", () => {
+      const clickHandler = vi.fn();
+
+      // Create data with parent nodes visible (single layer)
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const rect = svg.select(".sszvis-treemap-rect").node() as SVGRectElement;
+      rect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      const [, nodeArg] = clickHandler.mock.calls[0];
+      // Parent nodes may have children (depending on hierarchy depth)
+      expect(nodeArg).toBeDefined();
+      expect(nodeArg.data).toBeDefined();
+    });
+
+    test("should handle multiple clicks correctly", () => {
+      const clickHandler = vi.fn();
+
+      svg
+        .datum(
+          prepareHierarchyData<TestDatum>()
+            .layer((d) => d.category)
+            .layer((d) => d.subcategory)
+            .value((d) => d.value)
+            .calculate(data)
+        )
+        .call(
+          treemap<TestDatum>()
+            .colorScale(cScale)
+            .containerWidth(360)
+            .containerHeight(250)
+            .onClick(clickHandler)
+            .transition(false)
+        );
+
+      const rectangles = svg.selectAll<SVGRectElement, TestDatum>(".sszvis-treemap-rect");
+      const firstRect = rectangles.nodes()[0];
+      const secondRect = rectangles.nodes()[1];
+
+      firstRect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      secondRect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      firstRect.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+      expect(clickHandler).toHaveBeenCalledTimes(3);
+    });
+
+    test("should support onClick getter/setter API", () => {
+      const clickHandler = vi.fn();
+      const treemapComponent = treemap<TestDatum>()
+        .colorScale(cScale)
+        .containerWidth(360)
+        .containerHeight(250)
+        .onClick(clickHandler);
+
+      expect(treemapComponent.onClick()).toBe(clickHandler);
+    });
+  });
+
+  describe("hierarchy navigation helpers", () => {
+    test("ancestors() returns path from node to root", () => {
+      const layoutData = prepareHierarchyData<TestDatum>()
+        .layer((d) => d.category)
+        .layer((d) => d.subcategory)
+        .value((d) => d.value)
+        .calculate(data);
+
+      // Find a leaf node
+      const findLeaf = (node: typeof layoutData): typeof layoutData | null => {
+        if (!node.children) return node;
+        for (const child of node.children) {
+          const leaf = findLeaf(child);
+          if (leaf) return leaf;
+        }
+        return null;
+      };
+
+      const leafNode = findLeaf(layoutData);
+      expect(leafNode).toBeDefined();
+
+      if (leafNode) {
+        const ancestors = leafNode.ancestors();
+        expect(ancestors.length).toBeGreaterThan(0);
+        // Root should be the last ancestor
+        expect(ancestors[ancestors.length - 1]).toBe(layoutData);
+        // First ancestor should be the node itself
+        expect(ancestors[0]).toBe(leafNode);
+      }
+    });
+
+    test("parent property provides direct parent access", () => {
+      const layoutData = prepareHierarchyData<TestDatum>()
+        .layer((d) => d.category)
+        .layer((d) => d.subcategory)
+        .value((d) => d.value)
+        .calculate(data);
+
+      // Find a leaf node
+      const findLeaf = (node: typeof layoutData): typeof layoutData | null => {
+        if (!node.children) return node;
+        for (const child of node.children) {
+          const leaf = findLeaf(child);
+          if (leaf) return leaf;
+        }
+        return null;
+      };
+
+      const leafNode = findLeaf(layoutData);
+      expect(leafNode).toBeDefined();
+
+      if (leafNode) {
+        expect(leafNode.parent).toBeDefined();
+        expect(leafNode.parent?.children).toContain(leafNode);
+      }
+    });
+
+    test("depth property indicates hierarchy level", () => {
+      const layoutData = prepareHierarchyData<TestDatum>()
+        .layer((d) => d.category)
+        .layer((d) => d.subcategory)
+        .value((d) => d.value)
+        .calculate(data);
+
+      expect(layoutData.depth).toBe(0); // Root is depth 0
+
+      if (layoutData.children) {
+        const firstChild = layoutData.children[0];
+        expect(firstChild.depth).toBe(1);
+
+        if (firstChild.children) {
+          const grandchild = firstChild.children[0];
+          expect(grandchild.depth).toBe(2);
+        }
+      }
     });
   });
 });

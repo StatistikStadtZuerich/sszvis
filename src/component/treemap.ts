@@ -19,6 +19,7 @@
  * @property {boolean} showLabels                 Whether to display labels on leaf nodes (default false)
  * @property {string, function} label             The label text accessor (default d.data.key)
  * @property {string} labelPosition               Label position: "top-left", "center", "top-right", "bottom-left", "bottom-right" (default "top-left")
+ * @property {function} onClick                   Click handler for rectangles (receives node and event)
  *
  * @return {sszvis.component}
  */
@@ -50,6 +51,9 @@ export type TreemapLayout<T = unknown> = HierarchyNode<NodeDatum<T>> & {
   height: number;
 };
 
+// Click handler type definition
+export type TreemapClickHandler<T = unknown> = (event: MouseEvent, node: TreemapLayout<T>) => void;
+
 // Type definitions for label positioning
 type LabelPosition = "top-left" | "center" | "top-right" | "bottom-left" | "bottom-right";
 
@@ -61,6 +65,7 @@ type TreemapProps<T = unknown> = {
   showLabels?: boolean;
   label?: StringAccessor<TreemapLayout<T>>;
   labelPosition?: LabelPosition;
+  onClick?: TreemapClickHandler<T>;
 };
 
 // Component interface with proper method overloads
@@ -79,6 +84,8 @@ interface TreemapComponent<T = unknown> extends Component {
   label(accessor: StringAccessor<TreemapLayout<T>>): TreemapComponent<T>;
   labelPosition(): LabelPosition;
   labelPosition(position: LabelPosition): TreemapComponent<T>;
+  onClick(): TreemapClickHandler<T> | undefined;
+  onClick(handler: TreemapClickHandler<T>): TreemapComponent<T>;
 }
 
 // Helper function to handle missing/invalid numeric values
@@ -107,6 +114,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
     .label((d: TreemapLayout<T>) => (d.data && "key" in d.data ? d.data.key : ""))
     .prop("labelPosition")
     .labelPosition("center")
+    .prop("onClick")
     .render(function (this: Element, inputData: HierarchyNode<NodeDatum<T>>) {
       const selection = select<Element, TreemapLayout<T>>(this);
       const props = selection.props<TreemapProps<T>>();
@@ -139,7 +147,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
 
       const treemapData = flatten(inputData);
 
-      // Filter out very small rectangles
+      // Filter out very small rectangles and show only leaf nodes
       const visibleData = treemapData
         .filter((d: TreemapLayout<T>) => d.x1 - d.x0 > 0.5 && d.y1 - d.y0 > 0.5)
         .filter((d) => !d.children);
@@ -162,7 +170,9 @@ export default function <T = unknown>(): TreemapComponent<T> {
           return "#cccccc"; // Default fill if no key found
         })
         .attr("stroke", "#ffffff")
-        .attr("stroke-width", 1);
+        .attr("stroke-width", 1)
+        .style("cursor", props.onClick ? "pointer" : "default")
+        .on("click", (event: MouseEvent, d: TreemapLayout<T>) => props.onClick?.(event, d));
 
       // Apply transitions if enabled
       if (props.transition) {
@@ -217,7 +227,7 @@ export default function <T = unknown>(): TreemapComponent<T> {
           return getAccessibleTextColor(bgColor());
         };
 
-        // Filter data for labels - only show labels on leaf nodes (smallest layer) that are large enough
+        // Filter data for labels - only show labels on leaf nodes that are large enough
         const labelData = visibleData
           .filter((d) => !d.children)
           .filter((d) => labelAcc(d).length < (d.x1 - d.x0) / 7); // Rough estimate of fitting text
