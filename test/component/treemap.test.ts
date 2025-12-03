@@ -104,6 +104,84 @@ describe("component/treemap", () => {
       expect(layoutData.depth).toBe(0); // Root node
     });
 
+    test("should handle uneven tree depth with null keys by using parent key as fallback", () => {
+      type UnevenDatum = {
+        category: string;
+        subcategory: string;
+        division: string | null;
+        team: string | null;
+        value: number;
+      };
+
+      const unevenData: UnevenDatum[] = [
+        // Full depth path
+        {
+          category: "Technology",
+          subcategory: "Hardware",
+          division: "Servers",
+          team: "Team Alpha",
+          value: 100,
+        },
+        // Missing team (null at deepest level)
+        {
+          category: "Technology",
+          subcategory: "Hardware",
+          division: "Servers",
+          team: null,
+          value: 85,
+        },
+        // Missing both division and team
+        {
+          category: "Finance",
+          subcategory: "Banking",
+          division: null,
+          team: null,
+          value: 200,
+        },
+      ];
+
+      const layoutData = prepareHierarchyData<UnevenDatum>()
+        .layer((d) => d.category)
+        .layer((d) => d.subcategory)
+        .layer((d) => d.division)
+        .layer((d) => d.team)
+        .value((d) => d.value)
+        .calculate(unevenData);
+
+      // Collect all leaf nodes and their keys
+      const leafNodes: Array<{ key: string; data: UnevenDatum }> = [];
+      layoutData.each((node) => {
+        if (node.data._tag === "leaf") {
+          leafNodes.push({
+            key: node.data.key,
+            data: node.data.data,
+          });
+        }
+      });
+
+      // All leaf nodes should have non-null keys
+      for (const leaf of leafNodes) {
+        expect(leaf.key).not.toBeNull();
+        expect(leaf.key).toBeDefined();
+        expect(typeof leaf.key).toBe("string");
+        expect(leaf.key.length).toBeGreaterThan(0);
+      }
+
+      // The node with team=null should have key="Servers" (parent's key)
+      const serverNullTeamNode = leafNodes.find(
+        (n) => n.data.team === null && n.data.division === "Servers"
+      );
+      expect(serverNullTeamNode).toBeDefined();
+      expect(serverNullTeamNode?.key).toBe("Servers");
+
+      // The node with both division=null and team=null should have key="Banking" (grandparent's key)
+      const bankingNullDivisionNode = leafNodes.find(
+        (n) => n.data.division === null && n.data.subcategory === "Banking"
+      );
+      expect(bankingNullDivisionNode).toBeDefined();
+      expect(bankingNullDivisionNode?.key).toBe("Banking");
+    });
+
     test("should create hierarchical structure with options API", () => {
       const layoutData = prepareHierarchyData(data, {
         layers: [(d) => d.category, (d) => d.subcategory],

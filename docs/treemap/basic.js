@@ -35,12 +35,16 @@ function parseRow(d) {
   return {
     category: d["category"],
     subcategory: d["subcategory"],
+    division: d["division"] || null,
+    team: d["team"] || null,
     value: sszvis.parseNumber(d["value"]),
   };
 }
 
 const categoryAcc = sszvis.prop("category");
 const subcategoryAcc = sszvis.prop("subcategory");
+const divisionAcc = sszvis.prop("division");
+const teamAcc = sszvis.prop("team");
 const valueAcc = sszvis.prop("value");
 
 // Application state
@@ -62,6 +66,8 @@ const actions = {
       .prepareHierarchyData()
       .layer(categoryAcc)
       .layer(subcategoryAcc)
+      .layer(divisionAcc)
+      .layer(teamAcc)
       .value(valueAcc)
       .calculate(data);
 

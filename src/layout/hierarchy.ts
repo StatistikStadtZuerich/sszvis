@@ -10,11 +10,13 @@ export type NodeDatum<T> =
   | {
       _tag: "branch";
       key: string;
+      rootKey: string; // The top-level category key for color mapping
       children: NodeDatum<T>[];
     }
   | {
       _tag: "leaf";
       key: string;
+      rootKey: string; // The top-level category key for color mapping
       data: T;
     };
 
@@ -49,7 +51,7 @@ export type NodeDatum<T> =
 
 export type HierarchyComponent<T = unknown> = {
   calculate: (data: T[]) => HierarchyNode<NodeDatum<T>>;
-  layer: (accessor: (d: T) => string) => HierarchyComponent<T>;
+  layer: (accessor: (d: T) => string | null | undefined) => HierarchyComponent<T>;
   value: (accessor: (d: T) => number) => HierarchyComponent<T>;
   sort: (
     sortFunc: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number
@@ -61,7 +63,7 @@ export function prepareHierarchyData<T = unknown>(): HierarchyComponent<T>;
 export function prepareHierarchyData<T = unknown>(
   data: T[],
   options: {
-    layers: Array<(d: T) => string>;
+    layers: Array<(d: T) => string | null | undefined>;
     valueAccessor: (d: T) => number;
   }
 ): HierarchyNode<NodeDatum<T>>;
@@ -69,7 +71,7 @@ export function prepareHierarchyData<T = unknown>(
 export function prepareHierarchyData<T = unknown>(
   data?: T[],
   options?: {
-    layers: Array<(d: T) => string>;
+    layers: Array<(d: T) => string | null | undefined>;
     valueAccessor: (d: T) => number;
   }
 ) {
@@ -88,7 +90,7 @@ export function prepareHierarchyData<T = unknown>(
   return createHierarchyLayout<T>();
 }
 function createHierarchyLayout<T = unknown>(): HierarchyComponent<T> {
-  const layers: Array<(d: T) => string> = [];
+  const layers: Array<(d: T) => string | null | undefined> = [];
   let valueAcc: (d: T) => number = fn.identity as (d: T) => number;
   let sortFn: (a: HierarchyNode<NodeDatum<T>>, b: HierarchyNode<NodeDatum<T>>) => number = (
     _a,
@@ -133,21 +135,43 @@ function createHierarchyLayout<T = unknown>(): HierarchyComponent<T> {
   return api;
 } // Helper function to safely unwrap nested rollup data
 
-export function unwrapNested<T>(roll: Map<string, unknown> | unknown): NodeDatum<T>[] {
+/**
+ * Helper function to safely unwrap nested rollup data.
+ * Handles uneven tree structures where some branches terminate earlier than others.
+ * When a layer accessor returns null, the node will use its parent's key as a fallback
+ * to ensure labels remain functional.
+ *
+ * @param roll - The nested Map structure from d3.rollup()
+ * @param parentKey - The key of the parent node (used as fallback for null keys)
+ * @param rootKey - The top-level category key (used for color mapping)
+ * @returns Array of NodeDatum objects representing the hierarchy
+ */
+export function unwrapNested<T>(
+  roll: Map<string, unknown> | unknown,
+  parentKey: string | null = null,
+  rootKey: string | null = null
+): NodeDatum<T>[] {
   const rollupMap = roll as Map<string, unknown>;
   return Array.from(rollupMap, ([key, values]: [string, unknown]) => {
+    // Use parent key as fallback when current key is null/undefined
+    const effectiveKey = key ?? parentKey ?? "";
+    // For root category, use the current key if we're at the first level (rootKey is null)
+    const effectiveRootKey = rootKey ?? effectiveKey;
+
     if (values instanceof Map && values.size > 0) {
       // Branch node - has children
       return {
         _tag: "branch" as const,
-        key,
-        children: unwrapNested<T>(values),
+        key: effectiveKey,
+        rootKey: effectiveRootKey,
+        children: unwrapNested<T>(values, effectiveKey, effectiveRootKey),
       };
     } else {
       // Leaf node - has data
       return {
         _tag: "leaf" as const,
-        key,
+        key: effectiveKey,
+        rootKey: effectiveRootKey,
         data: values as T,
       };
     }
