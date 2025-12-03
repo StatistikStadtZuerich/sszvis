@@ -159,7 +159,7 @@ export default function <T = unknown>(): PackComponent<T> {
         .attr("r", (d) => d.r)
         .attr("fill", (d: PackLayout<T>) => {
           if (d.children) {
-            // Branch nodes should have no fill, only stroke
+            // Branch nodes should have a light fill to be able to click them
             return "white";
           }
 

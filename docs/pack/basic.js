@@ -180,10 +180,8 @@ function render(state) {
         .sum((d) => (d._tag === "leaf" ? valueAcc(d.data) : 0))
     : state.originalData;
 
-  // Build breadcrumb trail
-  const breadcrumbs = state.focusedNode
-    ? state.focusedNode.ancestors().reverse().slice(1) // Remove root, reverse to get path from root
-    : [];
+  // Build breadcrumb trail using the helper function
+  const breadcrumbItems = sszvis.createBreadcrumbItems(state.focusedNode);
 
   // Layers
   const chartLayer = sszvis.createSvgLayer(config.id, bounds);
@@ -229,8 +227,15 @@ function render(state) {
     )
     .call(colorLegend);
 
-  // Render breadcrumbs
-  renderBreadcrumbs(htmlLayer, breadcrumbs, bounds);
+  // Render breadcrumbs using the new component
+  const breadcrumbNav = sszvis
+    .breadcrumb()
+    .renderInto(htmlLayer)
+    .items(breadcrumbItems)
+    .width(bounds.innerWidth)
+    .onClick((item) => actions.onBreadcrumbClick(item.node));
+
+  htmlLayer.call(breadcrumbNav);
 
   // Interaction
   const interactionLayer = sszvis
@@ -247,83 +252,4 @@ function render(state) {
 
 function isSelected(d) {
   return state.selection.includes(d);
-}
-
-// Breadcrumb rendering
-// -----------------------------------------------
-function renderBreadcrumbs(htmlLayer, breadcrumbs, bounds) {
-  const breadcrumbContainer = htmlLayer
-    .selectDiv("breadcrumbs")
-    .style("position", "absolute")
-    .style("top", "-40px")
-    .style("left", "0px")
-    .style("width", bounds.innerWidth + "px")
-    .style("height", "30px")
-    .style("display", "flex")
-    .style("align-items", "center")
-    .style("gap", "8px")
-    .style("font-family", '"Helvetica Neue", Helvetica, Arial, sans-serif')
-    .style("font-size", "14px");
-
-  // Always show "Root" link
-  const items = [
-    { label: "Root", node: null },
-    ...breadcrumbs.map((b) => ({ label: b.data.key, node: b })),
-  ];
-
-  const crumbs = breadcrumbContainer
-    .selectAll("span.breadcrumb-item")
-    .data(items, (d) => d.label);
-
-  const crumbsEnter = crumbs
-    .enter()
-    .append("span")
-    .classed("breadcrumb-item", true);
-
-  crumbsEnter
-    .append("a")
-    .style("color", "#0073B3")
-    .style("cursor", "pointer")
-    .style("text-decoration", "none")
-    .on("mouseover", function () {
-      d3.select(this).style("text-decoration", "underline");
-    })
-    .on("mouseout", function () {
-      d3.select(this).style("text-decoration", "none");
-    })
-    .on("click", function (event, d) {
-      event.preventDefault();
-      actions.onBreadcrumbClick(d.node);
-    });
-
-  crumbsEnter
-    .append("span")
-    .classed("separator", true)
-    .style("color", "#666")
-    .text(" › ");
-
-  // Update
-  const crumbsMerged = crumbsEnter.merge(crumbs);
-
-  crumbsMerged
-    .select("a")
-    .text((d) => d.label)
-    .style("font-weight", (d, i) =>
-      i === items.length - 1 ? "bold" : "normal",
-    )
-    .style("color", (d, i) => (i === items.length - 1 ? "#333" : "#0073B3"))
-    .style("cursor", (d, i) => (i === items.length - 1 ? "default" : "pointer"))
-    .on("click", function (event, d, i) {
-      // Don't allow clicking on the current (last) breadcrumb
-      if (i === items.length - 1) return;
-      event.preventDefault();
-      actions.onBreadcrumbClick(d.node);
-    });
-
-  // Hide separator on last item
-  crumbsMerged
-    .select(".separator")
-    .style("display", (d, i) => (i === items.length - 1 ? "none" : "inline"));
-
-  crumbs.exit().remove();
 }
