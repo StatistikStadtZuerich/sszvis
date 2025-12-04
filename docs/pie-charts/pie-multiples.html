@@ -1,0 +1,11 @@
+---
+title: Small Multiples | Pie Chart
+permalink: "{{ page.filePathStem }}.html"
+layout: layouts/external-config
+config:
+  data: "data/P_multiples.csv"
+  id: "#sszvis-chart"
+  fallback: "fallback.png"
+---
+
+{% printFileContents "pie-multiples.js" %}

@@ -120,7 +120,10 @@ const actions = {
     // groups the data into arrays by their 'group' value
     const grouped = sszvis
       .cascade()
-      .arrayBy(gAcc, (g1, g2) => state.groups.indexOf(g1) - state.groups.indexOf(g2))
+      .arrayBy(
+        gAcc,
+        (g1, g2) => state.groups.indexOf(g1) - state.groups.indexOf(g2),
+      )
       .apply(data);
 
     state.data = data;
@@ -163,7 +166,9 @@ const actions = {
 
 // Data initialization
 // -----------------------------------------------
-d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+d3.csv(config.data, parseRow)
+  .then(actions.prepareState)
+  .catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------
@@ -224,7 +229,10 @@ function render(state) {
     .selectGroup("piecharts")
     .attr(
       "transform",
-      sszvis.translateString(bounds.innerWidth / 2 - multiplesMaker.width() / 2, 0)
+      sszvis.translateString(
+        bounds.innerWidth / 2 - multiplesMaker.width() / 2,
+        0,
+      ),
     )
     .call(multiplesMaker);
 
@@ -239,8 +247,23 @@ function render(state) {
     // configure the pieMaker component for this particular group
     pieMaker.radius(pieR).angle(sszvis.compose(groupScale, vAcc));
 
+    const groupSelection = d3.select(this);
+
+    // Add title label above each pie chart
+    groupSelection
+      .selectAll(".sszvis-multiple-title")
+      .data([d.group])
+      .join("text")
+      .classed("sszvis-multiple-title", true)
+      .attr("x", d.cx)
+      .attr("y", 0)
+      .attr("text-anchor", "middle")
+      .style("font-weight", "bold")
+      .style("font-size", "14px")
+      .text((group) => "Group " + group.replace("G", ""));
+
     // render the pie chart inside this group
-    d3.select(this)
+    groupSelection
       .selectAll(".sszvis-multiple-chart")
       .attr("transform", sszvis.translateString(d.cx - pieR, d.cy - pieR))
       .call(pieMaker);
@@ -254,7 +277,10 @@ function render(state) {
     .selectGroup("colorLegend")
     .attr(
       "transform",
-      sszvis.translateString(legendPosition.left, bounds.innerHeight + legendPosition.top)
+      sszvis.translateString(
+        legendPosition.left,
+        bounds.innerHeight + legendPosition.top,
+      ),
     )
     .call(colorLegend);
 
