@@ -233,7 +233,10 @@
             .paddingX(30)
             .paddingY(30)
             .rows(props.rowsCols[0])
-            .cols(props.rowsCols[1]);
+            .cols(props.rowsCols[1])
+            .showTitle(true)
+            .titleY(-10)
+            .titleLabel((d) => "Group " + d.group.replace("G", ""));
 
           const colorLegend = sszvis
             .legendColorOrdinal()
@@ -281,19 +284,6 @@
             pieMaker.radius(pieR).angle(sszvis.compose(groupScale, vAcc));
 
             const groupSelection = d3.select(this);
-
-            // Add title label above each pie chart
-            groupSelection
-              .selectAll(".sszvis-multiple-title")
-              .data([d.group])
-              .join("text")
-              .classed("sszvis-multiple-title", true)
-              .attr("x", d.cx)
-              .attr("y", 0)
-              .attr("text-anchor", "middle")
-              .style("font-weight", "bold")
-              .style("font-size", "14px")
-              .text((group) => "Group " + group.replace("G", ""));
 
             // render the pie chart inside this group
             groupSelection

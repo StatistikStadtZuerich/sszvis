@@ -207,7 +207,11 @@
             .paddingX(PANEL_PADDING)
             .paddingY(PANEL_PADDING)
             .rows(props.rowsCols[0])
-            .cols(props.rowsCols[1]);
+            .cols(props.rowsCols[1])
+            .showTitle(true)
+            .titleLabel((d) => d.category)
+            .titleAnchor("start")
+            .titleY(-10);
 
           const colorLegend = sszvis
             .legendColorOrdinal()
@@ -249,18 +253,6 @@
               .ticks(3)
               .tickFormat((d) => d + "%")
               .contour(true);
-
-            // Category label
-            panelSelection
-              .selectAll(".sszvis-multiple-category-label")
-              .data([d.category])
-              .join("text")
-              .classed("sszvis-multiple-category-label", true)
-              .attr("x", 0)
-              .attr("y", -10)
-              .style("font-weight", "bold")
-              .style("font-size", "14px")
-              .text((cat) => cat);
 
             // Render line - pass data as array of arrays to sszvis.line()
             panelSelection

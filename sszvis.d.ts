@@ -2220,7 +2220,7 @@ declare function _default$h(spaceWidth: any, numBars: any): {
     chartPadding: number;
 };
 
-declare function _default$g(): Component;
+declare function _default$g(): any;
 
 /**
  * Stacked Area Multiples Layout

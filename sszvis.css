@@ -49,7 +49,13 @@
 }
 
 :root {
-  --stzh-font: var(--stzh-font-family-regular, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  --stzh-font: var(
+    --stzh-font-family-regular,
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif
+  );
 }
 
 /**
@@ -719,4 +725,18 @@
   stroke: #cccccc;
   stroke-dasharray: 2 3;
   stroke-width: 1;
+}
+
+/**
+ * Small multiples title
+ *
+ * @module sszvis/layout/smallMultiples
+ */
+.sszvis-multiple-title {
+  fill: #545454;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: var(--stzh-font);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: bold;
 }
