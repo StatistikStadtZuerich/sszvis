@@ -151,13 +151,13 @@ By default, sszvis y-axes don't show a label at 0. Since values go negative in t
 
 ```project
 {
-    "name": "bar-chart-grouped_basic",
+    "name": "bar-chart-vertical-grouped_basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-grouped/basic.html",
+            "source": "bar-chart-vertical-grouped/basic.html",
             "template": "template.html"
         },
-        "data.csv": "bar-chart-grouped/data/GB_2Categories_smallVals.csv",
+        "data.csv": "bar-chart-vertical-grouped/data/GB_2Categories_smallVals.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
@@ -243,13 +243,13 @@ This x-axis has a diagonal slant. Here are the guidelines for changing the slant
 
 ```project
 {
-    "name": "bar-chart-grouped_basic",
+    "name": "bar-chart-vertical-grouped_basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-grouped/basic.html",
+            "source": "bar-chart-vertical-grouped/basic.html",
             "template": "template.html"
         },
-        "data.csv": "bar-chart-grouped/data/GB_3Categories_yearly_negatives.csv",
+        "data.csv": "bar-chart-vertical-grouped/data/GB_2Categories_smallVals.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
