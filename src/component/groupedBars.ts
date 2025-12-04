@@ -20,6 +20,7 @@
  *
  * @module sszvis/component/groupedBars/vertical
  * @module sszvis/component/groupedBars/horizontal
+ * @template T The type of the data objects in the bar groups
  *
  * @property {scale} groupScale         This should be a scale function for determining the correct group offset of a member of a group.
  *                                      This function is passed the group member, and should return a value for the group offset which
@@ -81,9 +82,10 @@ type GroupedBarsProps<T = unknown> = {
 };
 
 // Component interface with proper method overloads
+// Setters use `any` to allow passing more specific datum types without requiring explicit generic parameter
 interface GroupedBarsComponent<T = unknown> extends Component {
   groupScale(): (datum: T) => number;
-  groupScale(scale: (datum: T) => number): GroupedBarsComponent<T>;
+  groupScale<U = T>(scale: (datum: U) => number | undefined): GroupedBarsComponent<T>;
   groupSize(): number;
   groupSize(size: number): GroupedBarsComponent<T>;
   groupWidth(): number;
@@ -93,19 +95,19 @@ interface GroupedBarsComponent<T = unknown> extends Component {
   groupSpace(): number;
   groupSpace(space: number): GroupedBarsComponent<T>;
   x(): (datum: T, index: number) => number;
-  x(accessor: (datum: T, index: number) => number): GroupedBarsComponent<T>;
+  x<U = T>(accessor: (datum: U, index: number) => number): GroupedBarsComponent<T>;
   y(): (datum: T, index: number) => number;
-  y(accessor: (datum: T, index: number) => number): GroupedBarsComponent<T>;
+  y<U = T>(accessor: (datum: U, index: number) => number): GroupedBarsComponent<T>;
   width(): number | ((datum: T) => number);
-  width(value: number | ((datum: T) => number)): GroupedBarsComponent<T>;
+  width<U = T>(value: number | ((datum: U) => number)): GroupedBarsComponent<T>;
   height(): number | ((datum: T) => number);
-  height(value: number | ((datum: T) => number)): GroupedBarsComponent<T>;
+  height<U = T>(value: number | ((datum: U) => number)): GroupedBarsComponent<T>;
   fill(): string | ((datum: T) => string);
-  fill(value: string | ((datum: T) => string)): GroupedBarsComponent<T>;
+  fill<U = T>(value: string | ((datum: U) => string)): GroupedBarsComponent<T>;
   stroke(): string | ((datum: T) => string) | undefined;
-  stroke(value: string | ((datum: T) => string)): GroupedBarsComponent<T>;
+  stroke<U = T>(value: string | ((datum: U) => string) | undefined): GroupedBarsComponent<T>;
   defined(): (datum: T) => boolean;
-  defined(predicate: boolean | ((datum: T) => boolean)): GroupedBarsComponent<T>;
+  defined<U = T>(predicate: boolean | ((datum: U) => boolean)): GroupedBarsComponent<T>;
 }
 
 // Config type for vertical and horizontal configurations
@@ -226,68 +228,90 @@ function groupedBars<T = unknown>(config: GroupedBarsConfig<T>): GroupedBarsComp
 }
 
 const createVerticalConfig = <T>(): GroupedBarsConfig<T> => ({
-  inGroupRange: (props) => [0, props.groupWidth],
-  x: (props, inGroupScale) => (d) =>
-    props.groupScale(d) + (inGroupScale(d.__sszvisGroupedBarIndex__!) ?? 0),
-  y: (props) => props.y,
-  width: (_props, inGroupScale) => inGroupScale.bandwidth(),
-  height: (props) => props.height,
-  missingTransform: (props, inGroupScale) => (d, i) =>
-    translateString(
-      props.groupScale(d) +
-        (inGroupScale(d.__sszvisGroupedBarIndex__!) ?? 0) +
-        inGroupScale.bandwidth() / 2,
-      props.y(d, i)
-    ),
-  tooltipPosition: (props, inGroupScale) => (group) => {
-    let xTotal = 0;
-    let tallest = Infinity;
-    for (const [i, d] of group.entries()) {
-      const datum = d as DatumWithIndex<T>;
-      xTotal +=
-        props.groupScale(datum) +
-        (inGroupScale(datum.__sszvisGroupedBarIndex__!) ?? 0) +
-        inGroupScale.bandwidth() / 2;
-      // smaller y is higher
-      tallest = Math.min(tallest, props.y(datum, i));
-    }
-    const xAverage = xTotal / group.length;
-    return [xAverage, tallest];
-  },
+  inGroupRange: ({ groupWidth }) => [0, groupWidth],
+  x:
+    ({ groupScale }, inGroupScale) =>
+    (d, _i) =>
+      groupScale(d) +
+      (d.__sszvisGroupedBarIndex__ !== undefined
+        ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
+        : 0),
+  y: ({ y }) => y,
+  width: (_, inGroupScale) => inGroupScale.bandwidth(),
+  height: ({ height }) => height,
+  missingTransform:
+    ({ groupScale, y }, inGroupScale) =>
+    (d, i) =>
+      translateString(
+        groupScale(d) +
+          (d.__sszvisGroupedBarIndex__ !== undefined
+            ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
+            : 0) +
+          inGroupScale.bandwidth() / 2,
+        y(d, i)
+      ),
+  tooltipPosition:
+    ({ groupScale, y }, inGroupScale) =>
+    (group) => {
+      let xTotal = 0;
+      let tallest = Infinity;
+      for (const [i, d] of group.entries()) {
+        const datum = d as DatumWithIndex<T>;
+        xTotal +=
+          groupScale(datum) +
+          (datum.__sszvisGroupedBarIndex__ !== undefined
+            ? (inGroupScale(datum.__sszvisGroupedBarIndex__) ?? 0)
+            : 0) +
+          inGroupScale.bandwidth() / 2;
+        // smaller y is higher
+        tallest = Math.min(tallest, y(datum, i));
+      }
+      return [xTotal / group.length, tallest];
+    },
 });
 
-const createHorizontalConfig = <T>(): GroupedBarsConfig<T> => {
-  return {
-    inGroupRange: (props) => [0, props.groupHeight],
-    x: (props) => props.x,
-    y: (props, inGroupScale) => (d) =>
-      props.groupScale(d) + (inGroupScale(d.__sszvisGroupedBarIndex__!) ?? 0),
-    width: (props) => props.width,
-    height: (_props, inGroupScale) => inGroupScale.bandwidth(),
-    missingTransform: (props, inGroupScale) => (d, i) =>
+const createHorizontalConfig = <T>(): GroupedBarsConfig<T> => ({
+  inGroupRange: (props) => [0, props.groupHeight],
+  x: ({ x }) => x,
+  y:
+    ({ groupScale }, inGroupScale) =>
+    (d) =>
+      groupScale(d) +
+      (d.__sszvisGroupedBarIndex__ !== undefined
+        ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
+        : 0),
+  width: ({ width }) => width,
+  height: (_, inGroupScale) => inGroupScale.bandwidth(),
+  missingTransform:
+    ({ groupScale, x }, inGroupScale) =>
+    (d, i) =>
       translateString(
-        props.x(d, i),
-        props.groupScale(d) +
-          (inGroupScale(d.__sszvisGroupedBarIndex__!) ?? 0) +
+        x(d, i),
+        groupScale(d) +
+          (d.__sszvisGroupedBarIndex__ !== undefined
+            ? (inGroupScale(d.__sszvisGroupedBarIndex__) ?? 0)
+            : 0) +
           inGroupScale.bandwidth() / 2
       ),
-    tooltipPosition: (props, inGroupScale) => (group) => {
+  tooltipPosition:
+    ({ groupScale, x }, inGroupScale) =>
+    (group) => {
       let yTotal = 0;
       let rightmost = -Infinity;
       for (const [i, d] of group.entries()) {
         const datum = d as DatumWithIndex<T>;
         yTotal +=
-          props.groupScale(datum) +
-          (inGroupScale(datum.__sszvisGroupedBarIndex__!) ?? 0) +
+          groupScale(datum) +
+          (datum.__sszvisGroupedBarIndex__ !== undefined
+            ? (inGroupScale(datum.__sszvisGroupedBarIndex__) ?? 0)
+            : 0) +
           inGroupScale.bandwidth() / 2;
         // larger x is more to the right
-        rightmost = Math.max(rightmost, props.x(datum, i));
+        rightmost = Math.max(rightmost, x(datum, i));
       }
-      const yAverage = yTotal / group.length;
-      return [rightmost, yAverage];
+      return [rightmost, yTotal / group.length];
     },
-  };
-};
+});
 
 export const groupedBarsVertical = <T = unknown>() => groupedBars<T>(createVerticalConfig<T>());
 

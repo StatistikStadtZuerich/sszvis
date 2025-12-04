@@ -53,7 +53,7 @@ describe("component/groupedBars", () => {
     });
 
     test("should have all expected props", () => {
-      const component = groupedBarsVertical();
+      const component = groupedBarsVertical<TestDatum>();
       expect(typeof component.groupScale).toBe("function");
       expect(typeof component.groupSize).toBe("function");
       expect(typeof component.groupWidth).toBe("function");
@@ -69,15 +69,15 @@ describe("component/groupedBars", () => {
     });
 
     test("props should be chainable", () => {
-      const component = groupedBarsVertical();
+      const component = groupedBarsVertical<TestDatum>();
 
       const result = component
         .groupScale(groupScale)
         .groupSize(2)
         .groupWidth(50)
-        .x((d: TestDatum) => d.value)
-        .y((d: TestDatum) => valueScale(d.value))
-        .height((d: TestDatum) => 200 - valueScale(d.value))
+        .x((d) => d.value)
+        .y((d) => valueScale(d.value))
+        .height((d) => 200 - valueScale(d.value))
         .fill("steelblue");
 
       expect(result).toBe(component);
@@ -88,12 +88,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
         );
       expect(svg.selectAll(".sszvis-bargroup").size()).toBe(3); // 3 groups
@@ -104,12 +104,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
         );
       expect(svg.selectAll(".sszvis-barunit").size()).toBe(6); // 3 groups × 2 bars
@@ -120,12 +120,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
         );
       expect(svg.selectAll("rect.sszvis-bar").size()).toBe(6); // All values are defined
@@ -146,14 +146,14 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(dataWithMissing)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
-            .defined((d: TestDatum) => !Number.isNaN(d.value))
+            .defined((d) => !Number.isNaN(d.value))
         );
       expect(svg.selectAll("rect.sszvis-bar").size()).toBe(3); // 3 defined values
       expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2); // 2 lines for the missing value (X shape)
@@ -164,12 +164,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
         );
       svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar").each(function (datum) {
@@ -185,12 +185,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
         );
       svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar").each(function (datum) {
@@ -205,13 +205,13 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
-            .fill((d: TestDatum) => (d.category === "A" ? "red" : "blue"))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
+            .fill((d) => (d.category === "A" ? "red" : "blue"))
         );
       svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar").each(function (datum) {
         const fill = select(this).attr("fill");
@@ -221,12 +221,12 @@ describe("component/groupedBars", () => {
     });
 
     test("should handle empty data", () => {
-      const component = groupedBarsVertical()
-        .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+      const component = groupedBarsVertical<TestDatum>()
+        .groupScale((d) => groupScale(d.group) || 0)
         .groupSize(2)
         .groupWidth(groupScale.bandwidth())
-        .y((d: TestDatum) => valueScale(d.value))
-        .height((d: TestDatum) => 200 - valueScale(d.value))
+        .y((d) => valueScale(d.value))
+        .height((d) => 200 - valueScale(d.value))
         .fill("steelblue");
       expect(() => {
         svg.selectGroup("bars").datum([]).call(component);
@@ -236,12 +236,12 @@ describe("component/groupedBars", () => {
     });
 
     test("should handle data updates correctly", () => {
-      const component = groupedBarsVertical()
-        .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+      const component = groupedBarsVertical<TestDatum>()
+        .groupScale((d) => groupScale(d.group) || 0)
         .groupSize(2)
         .groupWidth(groupScale.bandwidth())
-        .y((d: TestDatum) => valueScale(d.value))
-        .height((d: TestDatum) => 200 - valueScale(d.value))
+        .y((d) => valueScale(d.value))
+        .height((d) => 200 - valueScale(d.value))
         .fill("steelblue");
       const chartLayer = svg.selectGroup("bars");
       // Initial render with 2 groups
@@ -263,13 +263,13 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
             .groupSpace(0.2) // Larger space between bars
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
         );
       const bars = svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar");
@@ -293,7 +293,7 @@ describe("component/groupedBars", () => {
     });
 
     test("should have all expected props", () => {
-      const component = groupedBarsHorizontal();
+      const component = groupedBarsHorizontal<TestDatum>();
       expect(typeof component.groupScale).toBe("function");
       expect(typeof component.groupSize).toBe("function");
       expect(typeof component.groupWidth).toBe("function");
@@ -309,14 +309,14 @@ describe("component/groupedBars", () => {
     });
 
     test("props should be chainable", () => {
-      const component = groupedBarsHorizontal();
+      const component = groupedBarsHorizontal<TestDatum>();
       const result = component
         .groupScale(groupScale)
         .groupSize(2)
         .groupHeight(50)
         .x(() => 0)
-        .y((d: TestDatum) => d.value)
-        .width((d: TestDatum) => valueScale(d.value))
+        .y((d) => d.value)
+        .width((d) => valueScale(d.value))
         .fill("steelblue");
       expect(result).toBe(component);
     });
@@ -326,12 +326,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsHorizontal()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupHeight(groupScale.bandwidth())
             .x(() => 0)
-            .width((d: TestDatum) => valueScale(d.value))
+            .width((d) => valueScale(d.value))
             .fill("steelblue")
         );
       expect(svg.selectAll(".sszvis-bargroup").size()).toBe(3);
@@ -342,12 +342,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsHorizontal()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupHeight(groupScale.bandwidth())
             .x(() => 0)
-            .width((d: TestDatum) => valueScale(d.value))
+            .width((d) => valueScale(d.value))
             .fill("steelblue")
         );
       expect(svg.selectAll(".sszvis-barunit").size()).toBe(6);
@@ -358,12 +358,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsHorizontal()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupHeight(groupScale.bandwidth())
             .x(() => 0)
-            .width((d: TestDatum) => valueScale(d.value))
+            .width((d) => valueScale(d.value))
             .fill("steelblue")
         );
       expect(svg.selectAll("rect.sszvis-bar").size()).toBe(6);
@@ -384,14 +384,14 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(dataWithMissing)
         .call(
-          groupedBarsHorizontal()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupHeight(groupScale.bandwidth())
             .x(() => 0)
-            .width((d: TestDatum) => valueScale(d.value))
+            .width((d) => valueScale(d.value))
             .fill("steelblue")
-            .defined((d: TestDatum) => !Number.isNaN(d.value))
+            .defined((d) => !Number.isNaN(d.value))
         );
       expect(svg.selectAll("rect.sszvis-bar").size()).toBe(3);
       expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2);
@@ -402,12 +402,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsHorizontal()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupHeight(groupScale.bandwidth())
             .x(() => 0)
-            .width((d: TestDatum) => valueScale(d.value))
+            .width((d) => valueScale(d.value))
             .fill("steelblue")
         );
       svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar").each(function (datum) {
@@ -423,12 +423,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsHorizontal()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupHeight(groupScale.bandwidth())
             .x(() => 0)
-            .width((d: TestDatum) => valueScale(d.value))
+            .width((d) => valueScale(d.value))
             .fill("steelblue")
         );
       svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar").each(function (datum) {
@@ -443,13 +443,13 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsHorizontal()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupHeight(groupScale.bandwidth())
             .x(() => 0)
-            .width((d: TestDatum) => valueScale(d.value))
-            .fill((d: TestDatum) => (d.category === "A" ? "green" : "orange"))
+            .width((d) => valueScale(d.value))
+            .fill((d) => (d.category === "A" ? "green" : "orange"))
         );
       svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar").each(function (datum) {
         const fill = select(this).attr("fill");
@@ -459,12 +459,12 @@ describe("component/groupedBars", () => {
     });
 
     test("should handle empty data", () => {
-      const component = groupedBarsHorizontal()
-        .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+      const component = groupedBarsHorizontal<TestDatum>()
+        .groupScale((d) => groupScale(d.group) || 0)
         .groupSize(2)
         .groupHeight(groupScale.bandwidth())
         .x(() => 0)
-        .width((d: TestDatum) => valueScale(d.value))
+        .width((d) => valueScale(d.value))
         .fill("steelblue");
       expect(() => {
         svg.selectGroup("bars").datum([]).call(component);
@@ -473,12 +473,12 @@ describe("component/groupedBars", () => {
     });
 
     test("should handle data updates correctly", () => {
-      const component = groupedBarsHorizontal()
-        .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+      const component = groupedBarsHorizontal<TestDatum>()
+        .groupScale((d) => groupScale(d.group) || 0)
         .groupSize(2)
         .groupHeight(groupScale.bandwidth())
         .x(() => 0)
-        .width((d: TestDatum) => valueScale(d.value))
+        .width((d) => valueScale(d.value))
         .fill("steelblue");
       const chartLayer = svg.selectGroup("bars");
       // Initial render
@@ -496,13 +496,13 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData)
         .call(
-          groupedBarsHorizontal()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsHorizontal<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupHeight(groupScale.bandwidth())
             .groupSpace(0.15)
             .x(() => 0)
-            .width((d: TestDatum) => valueScale(d.value))
+            .width((d) => valueScale(d.value))
             .fill("steelblue")
         );
       const bars = svg.selectAll<SVGRectElement, TestDatum>("rect.sszvis-bar");
@@ -535,14 +535,14 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(dataWithMissing)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
-            .defined((d: TestDatum) => !Number.isNaN(d.value))
+            .defined((d) => !Number.isNaN(d.value))
         );
       expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2); // Two lines form the X
       expect(svg.select("line.sszvis-bar--missing.line1").empty()).toBe(false);
@@ -562,14 +562,14 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(mixedData)
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(3)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
-            .defined((d: TestDatum) => !Number.isNaN(d.value))
+            .defined((d) => !Number.isNaN(d.value))
         );
       expect(svg.selectAll("rect.sszvis-bar").size()).toBe(2); // 2 defined values
       expect(svg.selectAll("line.sszvis-bar--missing").size()).toBe(2); // 1 missing value = 2 lines
@@ -590,12 +590,12 @@ describe("component/groupedBars", () => {
         .selectGroup("bars")
         .datum(testData.slice(0, 1))
         .call(
-          groupedBarsVertical()
-            .groupScale((d: TestDatum) => groupScale(d.group) || 0)
+          groupedBarsVertical<TestDatum>()
+            .groupScale((d) => groupScale(d.group) || 0)
             .groupSize(2)
             .groupWidth(groupScale.bandwidth())
-            .y((d: TestDatum) => valueScale(d.value))
-            .height((d: TestDatum) => 200 - valueScale(d.value))
+            .y((d) => valueScale(d.value))
+            .height((d) => 200 - valueScale(d.value))
             .fill("steelblue")
             .stroke("red")
         );
