@@ -19,7 +19,7 @@
  *
  * @return {sszvis.component}
  */
-import { type HierarchyNode } from "d3";
+import type { HierarchyNode } from "d3";
 import { type Component } from "../d3-component.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
 import type { AnySelection, StringAccessor } from "../types.js";

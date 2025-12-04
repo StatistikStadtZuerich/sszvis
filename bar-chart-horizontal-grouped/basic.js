@@ -110,7 +110,7 @@ function render(state) {
     .scaleBand()
     .domain(state.regions)
     .range([0, totalHeight])
-    .paddingInner(0.2)
+    .paddingInner(0.3)
     .paddingOuter(0.1);
 
   const cScale = sszvis.scaleQual6().domain(state.categories);

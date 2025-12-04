@@ -661,11 +661,7 @@
         // Enter: create new breadcrumb elements
         const crumbsEnter = crumbs.enter().append("span").classed("sszvis-breadcrumb-item", true);
         // Add link element
-        crumbsEnter.append("a").style("color", "#0073B3").style("cursor", "pointer").style("text-decoration", "none").on("mouseover", function () {
-          d3.select(this).style("text-decoration", "underline");
-        }).on("mouseout", function () {
-          d3.select(this).style("text-decoration", "none");
-        });
+        crumbsEnter.append("a").style("color", "#0073B3").style("cursor", "pointer").style("text-decoration", "none");
         // Add separator
         crumbsEnter.append("span").classed("sszvis-breadcrumb-separator", true).style("color", "#666").text(props.separator);
         // Update: merge enter + update selections
