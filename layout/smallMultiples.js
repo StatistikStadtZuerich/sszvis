@@ -27,6 +27,8 @@ import { component } from '../d3-component.js';
  * gy - the y-position of the group
  * gw - the width of the group (without padding)
  * gh - the height of the group (without padding)
+ * cx - the horizontal center point of the group
+ * cy - the vertical center point of the group
  *
  * Generally, you should not use source data objects as group objects, but should instead
  * create new objects which are used to store group information. This creates a data hierarchy

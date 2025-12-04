@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Small Multiples | Line Chart</title>
+  </head>
+  <body style="margin: 0; padding: 0">
+    <link href="/sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="/sszvis.js"></script>
+
+    <div id="sszvis-chart"></div>
+
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/L_multiples.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png",
+      };
+    </script>
+
+    <script data-catalog-project-expose="script.js">
+      (function (d3, sszvis, config) {
+        "use strict";
+
+        // Configuration
+        // -----------------------------------------------
+
+        const PANEL_PADDING = 30;
+
+        const queryProps = sszvis
+          .responsiveProps()
+          .prop("rowsCols", {
+            palm: [6, 2], // 6 rows x 2 cols on mobile
+            lap: [4, 3], // 4 rows x 3 cols on tablet
+            _: [3, 4], // 3 rows x 4 cols on desktop
+          })
+          .prop("bounds", {
+            palm() {
+              const panelHeight = 140;
+              const legendHeight = 80;
+              const bottomPadding = 40 + legendHeight;
+              return {
+                top: 20,
+                right: 10,
+                bottom: bottomPadding,
+                left: 10,
+                height:
+                  20 + 6 * panelHeight + 5 * PANEL_PADDING + bottomPadding,
+              };
+            },
+            lap() {
+              const panelHeight = 160;
+              const legendHeight = 80;
+              const bottomPadding = 40 + legendHeight;
+              return {
+                top: 20,
+                right: 20,
+                bottom: bottomPadding,
+                left: 20,
+                height:
+                  20 + 4 * panelHeight + 3 * PANEL_PADDING + bottomPadding,
+              };
+            },
+            _() {
+              const panelHeight = 180;
+              const legendHeight = 80;
+              const bottomPadding = 40 + legendHeight;
+              return {
+                top: 20,
+                right: 20,
+                bottom: bottomPadding,
+                left: 20,
+                height:
+                  20 + 3 * panelHeight + 2 * PANEL_PADDING + bottomPadding,
+              };
+            },
+          });
+
+        function parseRow(d) {
+          // Filter for Stadtkreis data only (not Quartier)
+          if (d["Raum"] !== "Stadtkreis") return null;
+
+          return {
+            xValue: sszvis.parseNumber(d["Jahr"]),
+            yValue: sszvis.parseNumber(d["Wert"]),
+            category: d["Kreis"],
+            kreisNum: sszvis.parseNumber(d["KreisNum"]),
+          };
+        }
+
+        const xAcc = sszvis.prop("xValue");
+        const yAcc = sszvis.prop("yValue");
+        const cAcc = sszvis.prop("category");
+        const kreisNumAcc = sszvis.prop("kreisNum");
+
+        // Application state
+        // -----------------------------------------------
+        const state = {
+          data: [],
+          categories: [],
+          lineGroups: [],
+          xValues: [],
+          maxY: 0,
+          selection: [],
+          hoveredCategory: null,
+        };
+
+        // State transitions
+        // -----------------------------------------------
+        const actions = {
+          prepareState(data) {
+            // Filter out null values (non-Stadtkreis data)
+            const filteredData = data.filter((d) => d !== null);
+
+            // Group data by category
+            const grouped = sszvis
+              .cascade()
+              .arrayBy(cAcc, d3.ascending)
+              .apply(filteredData);
+
+            state.data = filteredData;
+            state.categories = sszvis.set(state.data, cAcc);
+
+            // Create line groups with category name and values, sorted by Kreis number
+            state.lineGroups = grouped
+              .map((g) => ({
+                category: cAcc(g[0]), // Get category from first item in group
+                values: g.sort((a, b) => xAcc(a) - xAcc(b)), // Sort by year
+                kreisNum: kreisNumAcc(g[0]),
+              }))
+              .sort((a, b) => a.kreisNum - b.kreisNum); // Sort groups by Kreis number
+
+            // Update categories order to match sorted groups
+            state.categories = state.lineGroups.map((g) => g.category);
+
+            // Get x-axis domain (all years)
+            state.xValues = d3.extent(state.data, xAcc);
+
+            // Get y-axis domain (0-100 for percentages)
+            state.maxY = 100;
+
+            render(state);
+          },
+
+          showTooltip(_e, inputDate) {
+            // Find the closest date to the mouse position
+            const closestDate = xAcc(closestDatum(state.data, xAcc, inputDate));
+
+            // Find all data points at that date
+            const closestData = state.lineGroups.map((lineGroup) =>
+              sszvis.find(
+                (d) => xAcc(d).toString() === closestDate.toString(),
+                lineGroup.values,
+              ),
+            );
+
+            state.selection = closestData.filter(
+              sszvis.compose(sszvis.not(isNaN), yAcc),
+            );
+            render(state);
+          },
+
+          hideTooltip() {
+            state.selection = [];
+            render(state);
+          },
+
+          resize() {
+            render(state);
+          },
+        };
+
+        // Data initialization
+        // -----------------------------------------------
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
+
+        // Render
+        // -----------------------------------------------
+        function render(state) {
+          const props = queryProps(sszvis.measureDimensions(config.id));
+          const bounds = sszvis.bounds(props.bounds, config.id);
+
+          // Scales
+          const xScale = d3.scaleLinear().domain(state.xValues).range([0, 100]); // Will be scaled per panel
+          const yScale = d3
+            .scaleLinear()
+            .domain([0, state.maxY])
+            .range([100, 0]); // Will be scaled per panel
+          const cScale = sszvis.scaleQual12().domain(state.categories);
+
+          // Layers
+          const chart = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.lineGroups);
+
+          // Components
+          const multiplesMaker = sszvis
+            .layoutSmallMultiples()
+            .width(bounds.innerWidth)
+            .height(bounds.innerHeight - 60) // Leave space for legend
+            .paddingX(PANEL_PADDING)
+            .paddingY(PANEL_PADDING)
+            .rows(props.rowsCols[0])
+            .cols(props.rowsCols[1]);
+
+          const colorLegend = sszvis
+            .legendColorOrdinal()
+            .scale(cScale)
+            .columnWidth(bounds.innerWidth / 6)
+            .columns(6)
+            .orientation("horizontal");
+
+          // Rendering
+          const panels = chart.selectGroup("panels").call(multiplesMaker);
+
+          // Render a line chart in each panel
+          panels.selectAll(".sszvis-multiple").each(function (d) {
+            const panelSelection = d3.select(this);
+
+            // Scale the x and y scales to the panel dimensions
+            const panelXScale = xScale.copy().range([0, d.gw]);
+            const panelYScale = yScale.copy().range([d.gh, 0]);
+
+            // Line component - sszvis.line expects array of arrays
+            const line = sszvis
+              .line()
+              .x(sszvis.compose(panelXScale, xAcc))
+              .y(sszvis.compose(panelYScale, yAcc))
+              .stroke(cScale(d.category));
+
+            // Axes
+            const xAxis = sszvis
+              .axisX()
+              .scale(panelXScale)
+              .orient("bottom")
+              .tickFormat(d3.format("d"))
+              .ticks(4);
+
+            const yAxis = sszvis
+              .axisY()
+              .scale(panelYScale)
+              .orient("right")
+              .ticks(3)
+              .tickFormat((d) => d + "%")
+              .contour(true);
+
+            // Category label
+            panelSelection
+              .selectAll(".sszvis-multiple-category-label")
+              .data([d.category])
+              .join("text")
+              .classed("sszvis-multiple-category-label", true)
+              .attr("x", 0)
+              .attr("y", -10)
+              .style("font-weight", "bold")
+              .style("font-size", "14px")
+              .text((cat) => cat);
+
+            // Render line - pass data as array of arrays to sszvis.line()
+            panelSelection
+              .selectAll(".sszvis-multiple-chart")
+              .datum([d.values])
+              .call(line);
+
+            // Render axes (only on bottom row and left column)
+            const panelIndex = state.lineGroups.indexOf(d);
+            const row = Math.floor(panelIndex / props.rowsCols[1]);
+            const col = panelIndex % props.rowsCols[1];
+            const isBottomRow = row === props.rowsCols[0] - 1;
+            const isLeftCol = col === 0;
+
+            if (isBottomRow) {
+              panelSelection
+                .selectAll(".sszvis-multiple-chart")
+                .selectAll(".sszvis-axis--x")
+                .data([null])
+                .join("g")
+                .classed("sszvis-axis sszvis-axis--x", true)
+                .attr("transform", sszvis.translateString(0, d.gh))
+                .call(xAxis);
+            }
+
+            if (isLeftCol) {
+              panelSelection
+                .selectAll(".sszvis-multiple-chart")
+                .selectAll(".sszvis-axis--y")
+                .data([null])
+                .join("g")
+                .classed("sszvis-axis sszvis-axis--y", true)
+                .call(yAxis);
+            }
+
+            // Ruler annotation for hover
+            if (state.selection.length > 0) {
+              const categorySelection = state.selection.find(
+                (s) => cAcc(s) === d.category,
+              );
+
+              if (categorySelection) {
+                const rulerAnnotation = sszvis
+                  .annotationRuler()
+                  .top(0)
+                  .bottom(d.gh)
+                  .x(sszvis.compose(panelXScale, xAcc))
+                  .y(sszvis.compose(panelYScale, yAcc))
+                  .label(
+                    sszvis
+                      .modularTextSVG()
+                      .bold((d) => sszvis.formatPercent(yAcc(d) / 100)),
+                  )
+                  .flip((datum) => panelXScale(xAcc(datum)) >= d.gw / 2)
+                  .color(cScale(d.category));
+
+                panelSelection
+                  .selectAll(".sszvis-multiple-chart")
+                  .selectAll(".sszvis-ruler")
+                  .data([categorySelection])
+                  .join("g")
+                  .classed("sszvis-ruler", true)
+                  .call(rulerAnnotation);
+              }
+            } else {
+              panelSelection
+                .selectAll(".sszvis-multiple-chart")
+                .selectAll(".sszvis-ruler")
+                .remove();
+            }
+          });
+
+          // Legend
+          chart
+            .selectGroup("colorLegend")
+            .attr(
+              "transform",
+              sszvis.translateString(0, bounds.innerHeight - 40),
+            )
+            .call(colorLegend);
+
+          // Interaction
+          const interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yScale)
+            .on("move", actions.showTooltip)
+            .on("end", actions.hideTooltip);
+
+          panels.call(interactionLayer);
+
+          sszvis.viewport.on("resize", actions.resize);
+        }
+
+        // Helper functions
+        // -----------------------------------------------
+        function closestDatum(data, accessor, datum) {
+          const i = d3.bisector(accessor).left(data, datum, 1);
+          const d0 = data[i - 1];
+          const d1 = data[i] || d0;
+          return datum - accessor(d0) > accessor(d1) - datum ? d1 : d0;
+        }
+      })(d3, sszvis, EXTERNAL_CONFIG);
+    </script>
+  </body>
+</html>
