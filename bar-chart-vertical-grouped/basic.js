@@ -61,7 +61,9 @@ const actions = {
   },
 
   showTooltip(e, x) {
-    state.selection = state.groupedData.filter((d) => sszvis.contains(d.map(xAcc), x));
+    state.selection = state.groupedData.filter((d) =>
+      sszvis.contains(d.map(xAcc), x),
+    );
     render(state);
   },
 
@@ -78,7 +80,9 @@ const actions = {
 // Data initialization
 // -----------------------------------------------
 
-d3.csv(config.data, parseRow).then(actions.prepareState).catch(sszvis.loadError);
+d3.csv(config.data, parseRow)
+  .then(actions.prepareState)
+  .catch(sszvis.loadError);
 
 // Render
 // -----------------------------------------------
@@ -92,7 +96,7 @@ function render(state) {
       legendLabels: state.categories,
       slant: props.textDirection,
     },
-    config.id
+    config.id,
   );
 
   const cScale = legendLayout.scale;
@@ -103,7 +107,7 @@ function render(state) {
       top: 25,
       bottom: legendLayout.bottomPadding,
     },
-    config.id
+    config.id,
   );
 
   const chartWidth = Math.min(800, bounds.innerWidth);
@@ -116,7 +120,10 @@ function render(state) {
     .paddingOuter(0.8)
     .rangeRound([0, chartWidth]);
 
-  const yScale = d3.scaleLinear().domain(state.valueExtent).range([bounds.innerHeight, 0]);
+  const yScale = d3
+    .scaleLinear()
+    .domain(state.valueExtent)
+    .range([bounds.innerHeight, 0]);
 
   const yPosScale = (v) => (isNaN(v) ? yScale(0) : yScale(Math.max(v, 0)));
 
@@ -126,14 +133,18 @@ function render(state) {
 
   // Layers
 
-  const chartLayer = sszvis.createSvgLayer(config.id, bounds).datum(state.groupedData);
+  const chartLayer = sszvis
+    .createSvgLayer(config.id, bounds)
+    .datum(state.groupedData);
 
-  const tooltipLayer = sszvis.createHtmlLayer(config.id, bounds).datum(state.selection);
+  const tooltipLayer = sszvis
+    .createHtmlLayer(config.id, bounds)
+    .datum(state.selection);
 
   // Components
 
   const barLayout = sszvis
-    .groupedBars()
+    .groupedBarsVertical()
     .groupScale(sszvis.compose(xScale, xAcc))
     .groupWidth(xScale.bandwidth())
     .groupSize(state.longestGroup)
@@ -149,7 +160,10 @@ function render(state) {
     .slant(props.textDirection)
     .tickFormat(props.xLabelFormat)
     .highlightTick((d) =>
-      sszvis.contains(state.selection.map(sszvis.compose(xAcc, sszvis.first)), d)
+      sszvis.contains(
+        state.selection.map(sszvis.compose(xAcc, sszvis.first)),
+        d,
+      ),
     );
   if (!props.textDirection) {
     xAxis.textWrap(labelWrapWidth(xScale.range()));
@@ -173,7 +187,7 @@ function render(state) {
       d.map((item) => {
         const v = yAcc(item);
         return [cAcc(item), isNaN(v) ? "–" : v];
-      })
+      }),
     )
     .visible((d) => state.selection.includes(d));
 
@@ -181,7 +195,10 @@ function render(state) {
 
   chartLayer.attr(
     "transform",
-    sszvis.translateString(bounds.innerWidth / 2 - chartWidth / 2, bounds.padding.top)
+    sszvis.translateString(
+      bounds.innerWidth / 2 - chartWidth / 2,
+      bounds.padding.top,
+    ),
   );
 
   chartLayer
@@ -199,7 +216,10 @@ function render(state) {
     .selectGroup("colorLegend")
     .attr(
       "transform",
-      sszvis.translateString(0, bounds.innerHeight + legendLayout.axisLabelPadding)
+      sszvis.translateString(
+        0,
+        bounds.innerHeight + legendLayout.axisLabelPadding,
+      ),
     )
     .call(colorLegend);
 

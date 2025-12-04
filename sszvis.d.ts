@@ -1441,8 +1441,6 @@ declare const muchDarker: (c: string) => HSLColor;
 declare const withAlpha: (c: string, a: number) => string;
 declare const getAccessibleTextColor: (backgroundColor: string | null) => string;
 
-declare function _default$x(): any;
-
 declare function _default$w(): any;
 
 declare function _default$v(): any;
@@ -1620,6 +1618,92 @@ interface TreemapComponent<T = unknown> extends Component {
  * @template T The type of the original flat data objects
  */
 declare function export_default<T = unknown>(): TreemapComponent<T>;
+
+/**
+ * Grouped Bars component
+ *
+ * This component includes both the vertical and horizontal grouped bar chart components.
+ * Both are variations on the same concept, using the same grouping logic but rendered
+ * using different dimensions.
+ *
+ * The input to the grouped bar component should be an array of arrays, where each inner
+ * array contains the bars for a single group. Each of the inner arrays becomes a group, and
+ * each element in those inner arrays becomes a bar.
+ *
+ * In addition to the raw data, the user must provide other information necessary for calculating
+ * the layout of the groups of bars, namely the number of bars in each group (this component requires that
+ * all groups have the same number of bars), a scale for finding the offset of each group (usually an
+ * instance of d3.scaleBand), a width/height for groups, and position/dimension scales for the bars in the group.
+ * Note that the number of bars in each group and the group width/height determines how wide/tall each bar will be,
+ * and this is calculated internally to the groupedBars component.
+ *
+ * The groups are calculated and laid out entirely by the groupedBars component.
+ *
+ * @module sszvis/component/groupedBars/vertical
+ * @module sszvis/component/groupedBars/horizontal
+ * @template T The type of the data objects in the bar groups
+ *
+ * @property {scale} groupScale         This should be a scale function for determining the correct group offset of a member of a group.
+ *                                      This function is passed the group member, and should return a value for the group offset which
+ *                                      is the same for all members of the group. The within-group offset (which is different for each member)
+ *                                      is then added to this group offset in order to position the bars individually within the group.
+ *                                      So, for instance, if the groups are based on the "city" property, the groupScale should return
+ *                                      the same value for all data objects with "city = Zurich".
+ * @property {number} groupSize         This property tells groupedBars how many bars to expect for each group. It is used to assist in
+ *                                      calculating the within-group layout and size of the bars. This number is treated as the same for all
+ *                                      groups. Groups with less members than this number will have visible gaps. (Note that having less members
+ *                                      in a group is not the same as having a member with a missing value, which will be discussed later)
+ * @property {number} groupWidth        The width of the groups (vertical orientation). This value is treated as the same for all groups.
+ *                                      The width available to the groups is divided up among the bars.
+ * @property {number} groupHeight       The height of the groups (horizontal orientation). This value is treated as the same for all groups.
+ *                                      The height available to the groups is divided up among the bars.
+ * @property {number} groupSpace        The percentage of space between each bar within a group. (default: 0.05). Usually the default is fine here.
+ * @property {function} x               The x-position of the bars (horizontal orientation). This function is given a data value and should return
+ *                                      an x-value. Used for horizontal grouped bars.
+ * @property {function} y               The y-position of the bars (vertical orientation). This function is given a data value and should return
+ *                                      a y-value. Used for vertical grouped bars.
+ * @property {function} width           The width of the bars (horizontal orientation). This function is given a data value and should return
+ *                                      a width value. Used for horizontal grouped bars.
+ * @property {function} height          The height of the bars (vertical orientation). This function is given a data value and should return
+ *                                      a height value. Used for vertical grouped bars.
+ * @property {string, function} fill    A functor which gives the color for each bar (often based on the bar's group). This can be a string or a function.
+ * @property {string, function} stroke  The stroke color for each bar (default: none)
+ * @property {function} defined         A predicate function which can be used to determine whether a bar has a defined value. (default: true).
+ *                                      Any bar for which this function returns false, meaning that it has an undefined (missing) value,
+ *                                      will be displayed as a faint "x" in the grouped bar chart. This is in order to distinguish bars with
+ *                                      missing values from bars with very small values, which would display as a very thin rectangle.
+ *
+ * @return {sszvis.component}
+ */
+
+interface GroupedBarsComponent<T = unknown> extends Component {
+    groupScale(): (datum: T) => number;
+    groupScale<U = T>(scale: (datum: U) => number | undefined): GroupedBarsComponent<T>;
+    groupSize(): number;
+    groupSize(size: number): GroupedBarsComponent<T>;
+    groupWidth(): number;
+    groupWidth(width: number): GroupedBarsComponent<T>;
+    groupHeight(): number;
+    groupHeight(height: number): GroupedBarsComponent<T>;
+    groupSpace(): number;
+    groupSpace(space: number): GroupedBarsComponent<T>;
+    x(): (datum: T, index: number) => number;
+    x<U = T>(accessor: (datum: U, index: number) => number): GroupedBarsComponent<T>;
+    y(): (datum: T, index: number) => number;
+    y<U = T>(accessor: (datum: U, index: number) => number): GroupedBarsComponent<T>;
+    width(): number | ((datum: T) => number);
+    width<U = T>(value: number | ((datum: U) => number)): GroupedBarsComponent<T>;
+    height(): number | ((datum: T) => number);
+    height<U = T>(value: number | ((datum: U) => number)): GroupedBarsComponent<T>;
+    fill(): string | ((datum: T) => string);
+    fill<U = T>(value: string | ((datum: U) => string)): GroupedBarsComponent<T>;
+    stroke(): string | ((datum: T) => string) | undefined;
+    stroke<U = T>(value: string | ((datum: U) => string) | undefined): GroupedBarsComponent<T>;
+    defined(): (datum: T) => boolean;
+    defined<U = T>(predicate: boolean | ((datum: U) => boolean)): GroupedBarsComponent<T>;
+}
+declare const groupedBarsVertical: <T = unknown>() => GroupedBarsComponent<T>;
+declare const groupedBarsHorizontal: <T = unknown>() => GroupedBarsComponent<T>;
 
 declare function _default$n(): any;
 
@@ -2598,5 +2682,5 @@ declare function on(name: any, cb: any): any;
 declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, export_default$d as annotationConfidenceArea, export_default$c as annotationConfidenceBar, export_default$a as annotationLine, export_default$9 as annotationRangeFlag, export_default$8 as annotationRangeRuler, export_default$7 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$x as bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$w as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$b as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, _default$v as groupedBars, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$4 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as pack, export_default$3 as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$6 as tooltip, export_default$5 as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, export_default as treemap, viewport, export_default$2 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, export_default$d as annotationConfidenceArea, export_default$c as annotationConfidenceBar, export_default$a as annotationLine, export_default$9 as annotationRangeFlag, export_default$8 as annotationRangeRuler, export_default$7 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$w as bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$v as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$b as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBarsVertical as groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$4 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as pack, export_default$3 as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$6 as tooltip, export_default$5 as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, export_default as treemap, viewport, export_default$2 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
 export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, MeasurableElement, Padding, PartialBreakpoint, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SvgLayerMetadata, ValueSorter };

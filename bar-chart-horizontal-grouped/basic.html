@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>Horizontal Grouped Bar Chart</title>
+  </head>
+  <body style="margin: 0; padding: 0">
+    <link href="../sszvis.css" rel="stylesheet" />
+    <script src="https://unpkg.com/d3@7/dist/d3.min.js"></script>
+    <script src="../sszvis.js"></script>
+
+    <div id="sszvis-chart"></div>
+
+    <script>
+      var EXTERNAL_CONFIG = {
+        data: "data/HGB_3Categories.csv",
+        id: "#sszvis-chart",
+        fallback: "fallback.png",
+      };
+    </script>
+
+    <script data-catalog-project-expose="script.js">
+      (function (d3, sszvis, config) {
+        "use strict";
+
+        // Configuration
+        // -----------------------------------------------
+
+        const queryProps = sszvis
+          .responsiveProps()
+          .prop("xLabel", {
+            _: "Anzahl",
+          })
+          .prop("ticks", {
+            _: 5,
+          });
+
+        function parseRow(d) {
+          return {
+            region: d["Region"],
+            category: d["Kategorie"],
+            value: sszvis.parseNumber(d["Wert"]),
+          };
+        }
+
+        const regionAcc = sszvis.prop("region");
+        const categoryAcc = sszvis.prop("category");
+        const valueAcc = sszvis.prop("value");
+
+        // Application state
+        // -----------------------------------------------
+
+        const state = {
+          data: [],
+          regions: [],
+          categories: [],
+          valueExtent: [0, 0],
+          groups: [],
+          groupedData: [],
+          longestGroup: 0,
+          selection: [],
+        };
+
+        // State transitions
+        // -----------------------------------------------
+
+        const actions = {
+          prepareState(data) {
+            state.data = data;
+            state.regions = sszvis.set(state.data, regionAcc);
+            state.categories = sszvis.set(state.data, categoryAcc);
+            state.valueExtent = [0, d3.max(state.data, valueAcc)];
+            state.groupedData = sszvis
+              .cascade()
+              .arrayBy(regionAcc)
+              .apply(state.data);
+            state.longestGroup = d3.max(
+              state.groupedData,
+              sszvis.prop("length"),
+            );
+
+            render(state);
+          },
+
+          showTooltip(_, y) {
+            state.selection = state.groupedData.filter((d) =>
+              sszvis.contains(d.map(regionAcc), y),
+            );
+            render(state);
+          },
+
+          hideTooltip() {
+            state.selection = [];
+            render(state);
+          },
+
+          resize() {
+            render(state);
+          },
+        };
+
+        // Data initialization
+        // -----------------------------------------------
+
+        d3.csv(config.data, parseRow)
+          .then(actions.prepareState)
+          .catch(sszvis.loadError);
+
+        // Render
+        // -----------------------------------------------
+
+        function render(state) {
+          const props = queryProps(sszvis.measureDimensions(config.id));
+
+          // Calculate dimensions for horizontal grouped bars
+          const numGroups = state.regions.length;
+          const groupHeight = 80; // Height allocated per group
+          const totalHeight = numGroups * groupHeight;
+
+          const bounds = sszvis.bounds(
+            {
+              height: 30 + totalHeight + 60,
+              top: 30,
+              bottom: 60,
+            },
+            config.id,
+          );
+
+          const chartWidth = Math.min(bounds.innerWidth, 800);
+
+          // Scales
+          const xScale = d3
+            .scaleLinear()
+            .range([0, chartWidth])
+            .domain(state.valueExtent)
+            .nice();
+
+          const yScale = d3
+            .scaleBand()
+            .domain(state.regions)
+            .range([0, totalHeight])
+            .paddingInner(0.2)
+            .paddingOuter(0.1);
+
+          const cScale = sszvis.scaleQual6().domain(state.categories);
+
+          // Layers
+          const chartLayer = sszvis
+            .createSvgLayer(config.id, bounds)
+            .datum(state.groupedData);
+
+          const tooltipLayer = sszvis
+            .createHtmlLayer(config.id, bounds)
+            .datum(state.selection);
+
+          // Components
+          const barLayout = sszvis
+            .groupedBarsHorizontal()
+            .groupScale(sszvis.compose(yScale, regionAcc))
+            .groupHeight(yScale.bandwidth())
+            .groupSize(state.longestGroup)
+            .x(0)
+            .width(sszvis.compose(xScale, valueAcc))
+            .fill(sszvis.compose(cScale, categoryAcc))
+            .defined(sszvis.compose(sszvis.not(isNaN), valueAcc));
+
+          const xAxis = sszvis
+            .axisX()
+            .scale(xScale)
+            .orient("bottom")
+            .alignOuterLabels(true)
+            .title(props.xLabel);
+
+          if (props.ticks) {
+            xAxis.ticks(props.ticks);
+          }
+
+          const yAxis = sszvis.axisY.ordinal().scale(yScale).orient("right");
+
+          const colorLegend = sszvis
+            .legendColorOrdinal()
+            .scale(cScale)
+            .horizontalFloat(true)
+            .orientation("horizontal");
+
+          const tooltip = sszvis
+            .tooltip()
+            .renderInto(tooltipLayer)
+            .orientation(sszvis.fitTooltip("bottom", bounds))
+            .header(
+              sszvis.modularTextHTML().plain((d) => regionAcc(sszvis.first(d))),
+            )
+            .body((d) =>
+              d.map((item) => {
+                const v = valueAcc(item);
+                return [
+                  categoryAcc(item),
+                  isNaN(v) ? "k. A." : sszvis.formatNumber(v),
+                ];
+              }),
+            )
+            .visible((d) => state.selection.includes(d));
+
+          // Rendering
+
+          chartLayer.attr(
+            "transform",
+            sszvis.translateString(
+              bounds.innerWidth / 2 - chartWidth / 2,
+              bounds.padding.top,
+            ),
+          );
+
+          chartLayer
+            .selectGroup("xAxis")
+            .attr("transform", sszvis.translateString(0, totalHeight))
+            .call(xAxis);
+
+          chartLayer
+            .selectGroup("yAxis")
+            .attr(
+              "transform",
+              sszvis.translateString(0, -yScale.bandwidth() / 2 - 10),
+            )
+            .call(yAxis);
+
+          const bars = chartLayer.selectGroup("bars").call(barLayout);
+
+          bars.selectAll("[data-tooltip-anchor]").call(tooltip);
+
+          chartLayer
+            .selectGroup("colorLegend")
+            .attr("transform", sszvis.translateString(0, totalHeight + 40))
+            .call(colorLegend);
+
+          // Interaction
+          const interactionLayer = sszvis
+            .move()
+            .xScale(xScale)
+            .yScale(yScale)
+            .on("move", actions.showTooltip)
+            .on("end", actions.hideTooltip);
+
+          chartLayer.selectGroup("interactionLayer").call(interactionLayer);
+
+          sszvis.viewport.on("resize", actions.resize);
+        }
+      })(d3, sszvis, EXTERNAL_CONFIG);
+    </script>
+  </body>
+</html>
