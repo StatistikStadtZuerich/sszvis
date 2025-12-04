@@ -25,6 +25,16 @@ const queryProps = sszvis
   })
   .prop("ticks", {
     _: 5,
+  })
+  .prop("colorLegendColumns", {
+    palm: 2,
+    lap: 3,
+    _: 6,
+  })
+  .prop("colorLegendColumnWidth", {
+    palm: (width) => width / 2,
+    lap:(width) => width / 3,
+    _ :(width) =>width / 4,
   });
 
 function parseRow(d) {
@@ -214,8 +224,8 @@ function render(state) {
   const colorLegend = sszvis
     .legendColorOrdinal()
     .scale(cScale)
-    .columnWidth(bounds.innerWidth / 6)
-    .columns(6)
+    .columnWidth(props.colorLegendColumnWidth)
+    .columns(props.colorLegendColumns)
     .orientation("horizontal");
 
   // Rendering

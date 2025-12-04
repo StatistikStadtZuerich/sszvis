@@ -12,6 +12,16 @@ const queryProps = sszvis
     lap: [4, 3], // 4 rows x 3 cols on tablet
     _: [3, 4], // 3 rows x 4 cols on desktop
   })
+  .prop("colorLegendColumns", {
+    palm: 2,
+    lap: 3,
+    _: 4,
+  })
+  .prop("colorLegendColumnWidth", {
+    palm: (width) => width / 2,
+    lap:(width) => width / 3,
+    _ :(width) =>width / 4,
+  })
   .prop("bounds", {
     palm() {
       const panelHeight = 140;
@@ -184,8 +194,8 @@ function render(state) {
   const colorLegend = sszvis
     .legendColorOrdinal()
     .scale(cScale)
-    .columnWidth(bounds.innerWidth / 6)
-    .columns(6)
+    .columnWidth(props.colorLegendColumnWidth)
+    .columns(props.colorLegendColumns)
     .orientation("horizontal");
 
   // Rendering
