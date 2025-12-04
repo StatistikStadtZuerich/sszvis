@@ -20,7 +20,7 @@
  * @return {sszvis.component}
  */
 
-import { type HierarchyNode, select } from "d3";
+import type { HierarchyNode } from "d3";
 import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import type { NodeDatum } from "../layout/hierarchy.js";
@@ -171,13 +171,7 @@ export default function <T = unknown>(): BreadcrumbComponent<T> {
         .append("a")
         .style("color", "#0073B3")
         .style("cursor", "pointer")
-        .style("text-decoration", "none")
-        .on("mouseover", function () {
-          select(this).style("text-decoration", "underline");
-        })
-        .on("mouseout", function () {
-          select(this).style("text-decoration", "none");
-        });
+        .style("text-decoration", "none");
 
       // Add separator
       crumbsEnter
