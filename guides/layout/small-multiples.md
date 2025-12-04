@@ -19,10 +19,10 @@ Ie. if a line chart has too many overlapping lines, small multiples where each c
     "name": "line-chart-overlapping",
     "files": {
         "index.html": {
-            "source": "guides/layout/line-overlapping.html",
+            "source": "line-chart/line-overlapping.html",
             "template": "template.html"
         },
-        "data.csv": "guides/layout/data/L_multiples.csv",
+        "data.csv": "line-chart/data/L_multiples.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png"
@@ -38,10 +38,10 @@ Ie. if a line chart has too many overlapping lines, small multiples where each c
     "name": "line-chart-small-multiples",
     "files": {
         "index.html": {
-            "source": "guides/layout/line-multiples.html",
+            "source": "line-chart/line-multiples.html",
             "template": "template.html"
         },
-        "data.csv": "guides/layout/data/L_multiples.csv",
+        "data.csv": "line-chart/data/L_multiples.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png"
@@ -182,10 +182,10 @@ Shows the use of the multiples component to render several pie charts, each show
     "name": "pie-chart-multiples",
     "files": {
         "index.html": {
-            "source": "guides/layout/pie-multiples.html",
+            "source": "pie-charts/pie-multiples.html",
             "template": "template.html"
         },
-        "data.csv": "guides/layout/data/P_multiples.csv",
+        "data.csv": "pie-charts/data/P_multiples.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png"
