@@ -92,13 +92,13 @@ The maximum width of the horizontal float layout. Default 600px
 
 ```project
 {
-    "name": "bar-chart-grouped_basic",
+    "name": "bar-chart-vertical-grouped_basic",
     "files": {
         "index.html": {
-            "source": "bar-chart-grouped/basic.html",
+            "source": "bar-chart-vertical-grouped/basic.html",
             "template": "template.html"
         },
-        "data.csv": "bar-chart-grouped/data/GB_3Categories_yearly_negatives.csv",
+        "data.csv": "bar-chart-vertical-grouped/data/GB_2Categories_smallVals.csv",
         "sszvis.js": "sszvis.js",
         "sszvis.css": "sszvis.css",
         "fallback.png": "fallback.png",
