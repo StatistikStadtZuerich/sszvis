@@ -49,6 +49,10 @@
  * @property {number} paddingY        y-padding to put between rows
  * @property {number} rows            the number of rows to generate
  * @property {number} cols            the number of columns to generate
+ * @property {boolean} showTitle      whether to show a title above each multiple (default: false)
+ * @property {function} titleLabel    accessor function to get the title text from the data
+ * @property {string} titleAnchor     text-anchor for the title: "start", "middle", or "end" (default: "middle")
+ * @property {number} titleY          y-position offset for the title (default: 0)
  *
  * @return {sszvis.component}
  */
@@ -64,6 +68,14 @@ export default function () {
     .prop("paddingY")
     .prop("rows")
     .prop("cols")
+    .prop("showTitle")
+    .showTitle(false)
+    .prop("titleLabel")
+    .titleLabel(() => "")
+    .prop("titleAnchor")
+    .titleAnchor("middle")
+    .prop("titleY")
+    .titleY(0)
     .render(function (data) {
       const selection = select(this);
       const props = selection.props();
@@ -97,5 +109,27 @@ export default function () {
           return d;
         })
         .attr("transform", (d) => "translate(" + d.gx + "," + d.gy + ")");
+
+      // Render titles if showTitle is enabled
+      if (props.showTitle) {
+        const titleX =
+          props.titleAnchor === "start"
+            ? 0
+            : props.titleAnchor === "end"
+              ? unitWidth
+              : horizontalCenter;
+
+        multiples
+          .selectAll(".sszvis-multiple-title")
+          .data((d) => [d])
+          .join("text")
+          .classed("sszvis-multiple-title", true)
+          .attr("x", titleX)
+          .attr("y", props.titleY)
+          .attr("text-anchor", props.titleAnchor)
+          .text(props.titleLabel);
+      } else {
+        multiples.selectAll(".sszvis-multiple-title").remove();
+      }
     });
 }
