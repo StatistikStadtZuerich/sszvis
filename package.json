@@ -10,7 +10,7 @@
   "homepage": "https://statistikstadtzuerich.github.io/sszvis/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/statistikstadtzuerich/sszvis.git"
+    "url": "https://github.com/StatistikStadtZuerich/sszvis.git"
   },
   "license": "BSD-3-Clause",
   "peerDependencies": {
@@ -40,7 +40,7 @@
     "d3": "^7.9.0",
     "d3-dsv": "^3.0.1",
     "glob": "^11.0.3",
-    "happy-dom": "^18.0.1",
+    "happy-dom": "^20.0.11",
     "ndjson-cli": "^0.3.1",
     "playwright": "^1.55.0",
     "prettier": "^3.6.2",
