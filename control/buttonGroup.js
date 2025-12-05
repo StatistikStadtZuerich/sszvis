@@ -21,7 +21,6 @@ import { identity } from '../fn.js';
  *
  * @return {sszvis.component}
  */
-
 function buttonGroup () {
   return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
     const selection = select(this);

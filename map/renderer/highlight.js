@@ -20,7 +20,6 @@ import { GEO_KEY_DEFAULT } from '../mapUtils.js';
  *
  * @return {sszvis.component}
  */
-
 function mapRendererHighlight () {
   return component().prop("keyName").keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
   .prop("geoJson").prop("mapPath").prop("highlight").highlight([]) // an array of data values to highlight
@@ -37,7 +36,6 @@ function mapRendererHighlight () {
       m[feature.id] = feature;
       return m;
     }, {});
-
     // merge the highlight data
     const mergedHighlight = props.highlight.reduce((m, v) => {
       if (v) {

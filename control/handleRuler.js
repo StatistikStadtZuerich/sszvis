@@ -24,12 +24,10 @@ import translateString from '../svgUtils/translateString.js';
  *
  * @returns {sszvis.component}
  */
-
 function handleRuler () {
   return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-
     // Elements need to be placed on half-pixels in order to be rendered
     // crisply across browsers. That's why we create this position accessor
     // here that takes a datum as input, reads out its value (props.x) and
@@ -51,9 +49,7 @@ function handleRuler () {
     dots.attr("cx", crispX).attr("cy", crispY).attr("r", 3.5).attr("fill", props.color);
     selection.selectAll(".sszvis-ruler__label-outline").data(data).join("text").classed("sszvis-ruler__label-outline", true);
     selection.selectAll(".sszvis-ruler__label").data(data).join("text").classed("sszvis-ruler__label", true);
-
     // Update both labelOutline and labelOutline selections
-
     selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
       const x = compose(halfPixel, props.x)(d);
       const y = compose(halfPixel, props.y)(d);

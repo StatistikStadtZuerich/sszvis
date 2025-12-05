@@ -29,16 +29,13 @@ import { GEO_KEY_DEFAULT } from '../mapUtils.js';
  *
  * @return {sszvis.component}
  */
-
 function geojson () {
   const event = dispatch("over", "out", "click");
   const geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-
     // render the missing value pattern
     ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
-
     // getDataKeyName will be called on data values. It should return a map entity id.
     // getMapKeyName will be called on the 'properties' of each map feature. It should
     // return a map entity id. Data values are matched with corresponding map features using
@@ -75,7 +72,6 @@ function geojson () {
     }).on("click", d => {
       event.click(d.datum);
     });
-
     // the tooltip anchor generator
     const ta = tooltipAnchor().position(d => {
       d.geoJson.properties || (d.geoJson.properties = {});
@@ -86,7 +82,6 @@ function geojson () {
       return props.mapPath.projection()(sphericalCentroid);
     });
     const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
-
     // attach tooltip anchors
     tooltipGroup.call(ta);
   });

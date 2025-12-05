@@ -30,7 +30,6 @@ import { stackedBarVertical } from './stackedBar.js';
  *
  * @return {sszvis.component}
  */
-
 const nestedStackedBarsVertical = () => component().prop("offset", functor).prop("xScale", functor).prop("yScale", functor).prop("fill", functor).prop("tooltip", functor).prop("xAcc", functor).prop("xLabel", functor).prop("xLabel", functor).prop("slant").render(function (data) {
   const selection = select(this);
   const props = selection.props();

@@ -24,7 +24,6 @@
  *                                               to translate scales below the bars.
  *                                 }
  */
-
 function horizontalBarChartDimensions (numBars) {
   const DEFAULT_HEIGHT = 24,
     // the default bar height
@@ -38,7 +37,6 @@ function horizontalBarChartDimensions (numBars) {
     padRatio = 1 - barHeight / (barHeight + padding),
     computedBarSpace = barHeight * numBars + padding * numPads,
     outerRatio = 0; // no outer padding
-
   return {
     barHeight,
     padHeight: padding,

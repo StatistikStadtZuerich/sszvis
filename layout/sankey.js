@@ -8,14 +8,12 @@ import { warn } from '../logger.js';
  * A module of helper functions for computing the data structure
  * and layout required by the sankey component.
  */
-
 const newLinkId = function () {
   let id = 0;
   return function () {
     return ++id;
   };
 }();
-
 /**
  * sszvis.layout.sankey.prepareData
  *
@@ -50,7 +48,6 @@ const prepareData = function () {
   let mGetTarget = identity;
   let mGetValue = identity;
   let mColumnIds = [];
-
   // Helper functions
   const valueAcc = prop("value");
   const byAscendingValue = function (a, b) {
@@ -85,7 +82,6 @@ const prepareData = function () {
       const srcId = mGetSource(datum);
       const tgtId = mGetTarget(datum);
       const value = +mGetValue(datum) || 0; // Cast this to number
-
       const srcNode = columnIndex.get(srcId);
       const tgtNode = columnIndex.get(tgtId);
       if (!srcNode) {
@@ -108,33 +104,26 @@ const prepareData = function () {
       tgtNode.linksTo.push(item);
       return item;
     });
-
     // Extract the column nodes from the index
     const listOfNodes = [...columnIndex.values()];
-
     // Calculate an array of total values for each column
     const columnTotals = listOfNodes.reduce((totals, node) => {
       const fromTotal = sum(node.linksFrom, valueAcc);
       const toTotal = sum(node.linksTo, valueAcc);
-
       // For correct visual display, the node's value is the max of the from and to links
       node.value = Math.max(0, fromTotal, toTotal);
       totals[node.columnIndex] += node.value;
       return totals;
     }, filledArray(mColumnIds.length, 0));
-
     // An array with the number of nodes in each column
     const columnLengths = mColumnIds.map(colIds => colIds.length);
-
     // Sort the column nodes
     // (note, this sorts all nodes for all columns in the same array)
     listOfNodes.sort(valueSortFunc);
-
     // Sort the links in descending order of value. This means smaller links will render
     // on top of larger links.
     // (note, this sorts all links for all columns in the same array)
     listOfLinks.sort(byDescendingValue);
-
     // Assign the valueOffset and nodeIndex properties
     // Here, columnData[0] is an array adding up value totals
     // and columnData[1] is an array adding up the number of nodes in each column
@@ -147,7 +136,6 @@ const prepareData = function () {
       columnData[1][node.columnIndex] += 1;
       return columnData;
     }, [filledArray(mColumnIds.length, 0), filledArray(mColumnIds.length, 0)]);
-
     // Once the order of nodes is calculated, we need to sort the links going into the
     // nodes and the links coming out of the nodes according to the ordering of the nodes
     // they come from or go to. This creates a visually appealing layout which minimizes
@@ -155,7 +143,6 @@ const prepareData = function () {
     for (const node of listOfNodes) {
       node.linksFrom.sort((linkA, linkB) => linkA.tgt.nodeIndex - linkB.tgt.nodeIndex);
       node.linksTo.sort((linkA, linkB) => linkA.src.nodeIndex - linkB.src.nodeIndex);
-
       // Stack the links vertically within the node according to their order
       node.linksFrom.reduce((sumValue, link) => {
         link.srcOffset = sumValue;
@@ -202,7 +189,6 @@ const prepareData = function () {
   };
   return main;
 };
-
 /**
  * sszvis.layout.sankey.computeLayout
  *
@@ -231,7 +217,6 @@ const computeLayout = function (columnLengths, columnTotals, columnHeight, colum
   const padMin = 12;
   const padMax = 50;
   const minDisplayPixels = 1; // Minimum number of pixels used for display area
-
   // Compute the padding value (in pixels) for each column, then take the minimum value
   const computedPixPadding = min(columnLengths.map(colLength => {
     // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
@@ -239,7 +224,6 @@ const computeLayout = function (columnLengths, columnTotals, columnHeight, colum
     // Limit by minimum and maximum pixel padding values
     return Math.max(padMin, Math.min(padMax, colPadding));
   }));
-
   // Given the computed padding value, compute each column's resulting "pixels per unit"
   // This is the number of remaining pixels available to display the column's total units,
   // after padding pixels have been subtracted. Then take the minimum value of that.
@@ -248,25 +232,20 @@ const computeLayout = function (columnLengths, columnTotals, columnHeight, colum
     const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
     return nonPaddingPixels / columnTotals[colIndex];
   }));
-
   // The padding between bars, in bar value units
   const valuePadding = computedPixPadding / pixPerUnit;
   // The padding between bars, in pixels
   const nodePadding = computedPixPadding;
-
   // The maximum total value of any column
   const maxTotal = max(columnTotals);
-
   // Compute y-padding required to vertically center each column (in pixels)
   const paddedHeights = columnLengths.map((colLength, colIndex) => columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding);
   const maxPaddedHeight = max(paddedHeights);
   const columnPaddings = columnLengths.map((colLength, colIndex) => (maxPaddedHeight - paddedHeights[colIndex]) / 2);
-
   // The domain of the size scale
   const valueDomain = [0, maxTotal];
   // The range of the size scale
   const valueRange = [0, maxTotal * pixPerUnit];
-
   // Calculate column (or row, as the case may be) positioning values
   const nodeThickness = 20;
   const numColumns = columnLengths.length;

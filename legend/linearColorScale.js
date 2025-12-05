@@ -19,7 +19,6 @@ import { error } from '../logger.js';
  *                                              defaults to using the first and last tick values.
  * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
  */
-
 function linearColorScale () {
   return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat").labelFormat(identity).render(function () {
     const selection = select(this);
@@ -34,7 +33,6 @@ function linearColorScale () {
       values = props.scale.ticks(props.segments - 1);
     }
     values.push(last(domain));
-
     // Avoid division by zero
     const segWidth = values.length > 0 ? props.width / values.length : 0;
     const segHeight = 10;
@@ -44,7 +42,6 @@ function linearColorScale () {
     .attr("height", segHeight).attr("fill", d => props.scale(d));
     const startEnd = [first(domain), last(domain)];
     const labelText = props.labelText || startEnd;
-
     // rounded end caps for the segments
     const endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd).join("circle").attr("class", "ssvis-legend--mark");
     endCaps.attr("cx", (d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));

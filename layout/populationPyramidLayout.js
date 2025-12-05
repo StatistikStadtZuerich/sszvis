@@ -28,7 +28,6 @@ import { aspectRatioPortrait } from '../aspectRatio.js';
  *                                      the value is 0 and no padding is needed.
  *                                    }
  */
-
 function populationPyramidLayout (spaceWidth, numBars) {
   const MAX_HEIGHT = 480; // Chart no taller than this
   const MIN_BAR_HEIGHT = 2; // Bars no shorter than this

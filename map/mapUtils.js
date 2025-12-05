@@ -6,14 +6,12 @@ import { memoize } from '../fn.js';
  *
  * @module sszvis/map/utils
  */
-
 const STADT_KREISE_KEY = "zurichStadtKreise";
 const STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
 const STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
 const WAHL_KREISE_KEY = "zurichWahlKreise";
 const AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
 const SWITZERLAND_KEY = "switzerland";
-
 /**
  * swissMapProjection
  *
@@ -31,7 +29,6 @@ const SWITZERLAND_KEY = "switzerland";
 const swissMapProjection = memoize((width, height, featureCollection) => geoMercator().fitSize([width, height], featureCollection),
 // Memoize resolver
 (width, height, _, featureBoundsCacheKey) => "" + width + "," + height + "," + featureBoundsCacheKey);
-
 /**
  * This is a special d3.geoPath generator function tailored for rendering maps of
  * Switzerland. The values are chosen specifically to optimize path generation for
@@ -51,7 +48,6 @@ const swissMapProjection = memoize((width, height, featureCollection) => geoMerc
 const swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
   return geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
 };
-
 /**
  * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
  * The earth's radius is not constant, so this function uses an approximation for calculating the degree angle of
@@ -75,7 +71,6 @@ const pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) 
   // Construct a square, centered at centerPoint, with sides that span that number of degrees
   const halfDegrees = degrees / 2;
   const bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
-
   // Project those bounds to pixel coordinates using the provided map projection
   const projBounds = bounds.map(projection);
   // Depending on the rotation of the map, the sides of the box are not always positive quantities
@@ -86,7 +81,6 @@ const pixelsFromGeoDistance = function (projection, centerPoint, meterDistance) 
   return (projXDist + projYDist) / 2;
 };
 const GEO_KEY_DEFAULT = "geoId";
-
 /**
  * prepareMergedData
  *
@@ -103,20 +97,17 @@ const GEO_KEY_DEFAULT = "geoId";
  */
 const prepareMergedGeoData = function (dataset, geoJson, keyName) {
   keyName || (keyName = GEO_KEY_DEFAULT);
-
   // group the input data by map entity id
   const groupedInputData = Array.isArray(dataset) ? dataset.reduce((m, v) => {
     m[v[keyName]] = v;
     return m;
   }, {}) : {};
-
   // merge the map features and the input data into new objects that include both
   return geoJson.features.map(feature => ({
     geoJson: feature,
     datum: groupedInputData[feature.id]
   }));
 };
-
 /**
  * getGeoJsonCenter
  *
@@ -139,7 +130,6 @@ const getGeoJsonCenter = function (geoJson) {
   }
   return geoJson.properties.cachedCenter;
 };
-
 /**
  * widthAdaptiveMapPathStroke
  *

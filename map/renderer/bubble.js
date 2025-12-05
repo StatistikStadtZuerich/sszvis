@@ -21,7 +21,6 @@ import { getGeoJsonCenter } from '../mapUtils.js';
  *
  * @return {sszvis.component}
  */
-
 const datumAcc = prop("datum");
 function bubble () {
   const event = dispatch("over", "out", "click");
@@ -39,7 +38,6 @@ function bubble () {
       const position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
       return translateString(position[0], position[1]);
     }).style("fill", d => props.fill(d.datum)).style("stroke", d => props.strokeColor(d.datum)).style("stroke-width", d => props.strokeWidth(d.datum)).sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
-
     // Remove the --entering modifier from the updating circles
     anchoredCircles.classed("sszvis-anchored-circle--entering", false);
     if (props.transition) {

@@ -24,14 +24,12 @@
  *                              centeredOffset: the left offset required to center the table horizontally within its container
  *                          }
  */
-
 function heatTableDimensions (spaceWidth, squarePadding, numX, numY, chartPadding) {
   chartPadding || (chartPadding = {});
   chartPadding.top || (chartPadding.top = 0);
   chartPadding.right || (chartPadding.right = 0);
   chartPadding.bottom || (chartPadding.bottom = 0);
   chartPadding.left || (chartPadding.left = 0);
-
   // this includes the default side length for the heat table
   const DEFAULT_SIDE = 30,
     availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,

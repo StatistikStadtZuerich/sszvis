@@ -67,7 +67,6 @@ import bar from './bar.js';
  *
  * @return {sszvis.component}
  */
-
 const linkPathString = function (x0, x1, x2, x3, y0, y1) {
   return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
 };
@@ -96,14 +95,12 @@ function sankey () {
       return Math.ceil(Math.max(props.sizeScale(node.value), 1));
     };
     const linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
-
     // Draw the nodes
     const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor);
     const barGroup = selection.selectGroup("nodes").datum(data.nodes);
     barGroup.call(barGen);
     const barTooltipAnchor = tooltipAnchor().position(node => [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2]);
     barGroup.call(barTooltipAnchor);
-
     // Draw the column labels
     const columnLabelX = function (colIndex) {
       return props.columnPosition(colIndex) + props.nodeThickness / 2;
@@ -115,7 +112,6 @@ function sankey () {
     columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY)).text((d, i) => props.columnLabel(i));
     const columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths).join("line").attr("class", "sszvis-sankey-column-label-tick");
     columnLabelTicks.attr("x1", (d, i) => halfPixel(columnLabelX(i))).attr("x2", (d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
-
     // Draw the links
     const linkPoints = function (link) {
       const curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
@@ -138,7 +134,6 @@ function sankey () {
     const linkThickness = function (link) {
       return Math.max(props.sizeScale(link.value), 1);
     };
-
     // Render the links
     const linksGroup = selection.selectGroup("links");
     const linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc).join("path").attr("class", "sszvis-link");
@@ -149,24 +144,20 @@ function sankey () {
       return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
     });
     linksGroup.call(linkTooltipAnchor);
-
     // Render the link labels
     const linkLabelsGroup = selection.selectGroup("linklabels");
-
     // If no props.linkSourceLabels are provided, most of this rendering is no-op
     const linkSourceLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-source-label").data(props.linkSourceLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label");
     linkSourceLabels.attr("transform", link => {
       const bbox = linkBoundingBox(link);
       return translateString(bbox[0] + 6, bbox[2]);
     }).text(props.linkLabel);
-
     // If no props.linkTargetLabels are provided, most of this rendering is no-op
     const linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
     linkTargetLabels.attr("transform", link => {
       const bbox = linkBoundingBox(link);
       return translateString(bbox[1] - 6, bbox[3]);
     }).text(props.linkLabel);
-
     // Render the node labels and their hit boxes
     const getLabelSide = function (colIndex) {
       let side = props.labelSide(colIndex);

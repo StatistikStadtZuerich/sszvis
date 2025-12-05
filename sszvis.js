@@ -1101,8 +1101,6 @@
      *
      * @module sszvis/svgUtils/crisp
      */
-
-
     /**
      * crisp.halfPixel
      *
@@ -1115,7 +1113,6 @@
     const halfPixel = function (pos) {
       return Math.floor(pos) + 0.5;
     };
-
     /**
      * crisp.roundTransformString
      *
@@ -1136,7 +1133,6 @@
         return left + roundVec + right;
       });
     };
-
     /**
      * crisp.transformTranslateSubpixelShift
      *
@@ -1168,7 +1164,6 @@
      * @param  {number} y     The y-component of the transform
      * @return {string}       The translate string
      */
-
     function translateString (x, y) {
       return "translate(" + x + "," + y + ")";
     }
@@ -1993,21 +1988,29 @@
       return isPlainObject(value) || Array.isArray(value) || !!value[DRAFTABLE] || !!value.constructor?.[DRAFTABLE] || isMap(value) || isSet(value);
     }
     var objectCtorString = Object.prototype.constructor.toString();
+    var cachedCtorStrings = /* @__PURE__ */ new WeakMap();
     function isPlainObject(value) {
       if (!value || typeof value !== "object")
         return false;
-      const proto = getPrototypeOf(value);
-      if (proto === null) {
+      const proto = Object.getPrototypeOf(value);
+      if (proto === null || proto === Object.prototype)
         return true;
-      }
       const Ctor = Object.hasOwnProperty.call(proto, "constructor") && proto.constructor;
       if (Ctor === Object)
         return true;
-      return typeof Ctor == "function" && Function.toString.call(Ctor) === objectCtorString;
+      if (typeof Ctor !== "function")
+        return false;
+      let ctorString = cachedCtorStrings.get(Ctor);
+      if (ctorString === void 0) {
+        ctorString = Function.toString.call(Ctor);
+        cachedCtorStrings.set(Ctor, ctorString);
+      }
+      return ctorString === objectCtorString;
     }
-    function each(obj, iter) {
+    function each(obj, iter, strict = true) {
       if (getArchtype(obj) === 0 /* Object */) {
-        Reflect.ownKeys(obj).forEach((key) => {
+        const keys = strict ? Reflect.ownKeys(obj) : Object.keys(obj);
+        keys.forEach((key) => {
           iter(key, obj[key], obj);
         });
       } else {
@@ -2091,10 +2094,10 @@
         return obj;
       if (getArchtype(obj) > 1) {
         Object.defineProperties(obj, {
-          set: { value: dontMutateFrozenCollections },
-          add: { value: dontMutateFrozenCollections },
-          clear: { value: dontMutateFrozenCollections },
-          delete: { value: dontMutateFrozenCollections }
+          set: dontMutateMethodOverride,
+          add: dontMutateMethodOverride,
+          clear: dontMutateMethodOverride,
+          delete: dontMutateMethodOverride
         });
       }
       Object.freeze(obj);
@@ -2105,7 +2108,12 @@
     function dontMutateFrozenCollections() {
       die(2);
     }
+    var dontMutateMethodOverride = {
+      value: dontMutateFrozenCollections
+    };
     function isFrozen(obj) {
+      if (obj === null || typeof obj !== "object")
+        return true;
       return Object.isFrozen(obj);
     }
 
@@ -2199,11 +2207,13 @@
     function finalize(rootScope, value, path) {
       if (isFrozen(value))
         return value;
+      const useStrictIteration = rootScope.immer_.shouldUseStrictIteration();
       const state = value[DRAFT_STATE];
       if (!state) {
         each(
           value,
-          (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path)
+          (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path),
+          useStrictIteration
         );
         return value;
       }
@@ -2226,7 +2236,16 @@
         }
         each(
           resultEach,
-          (key, childValue) => finalizeProperty(rootScope, state, result, key, childValue, path, isSet2)
+          (key, childValue) => finalizeProperty(
+            rootScope,
+            state,
+            result,
+            key,
+            childValue,
+            path,
+            isSet2
+          ),
+          useStrictIteration
         );
         maybeFreeze(rootScope, result, false);
         if (path && rootScope.patches_) {
@@ -2241,6 +2260,16 @@
       return state.copy_;
     }
     function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath, targetIsSet) {
+      if (childValue == null) {
+        return;
+      }
+      if (typeof childValue !== "object" && !targetIsSet) {
+        return;
+      }
+      const childIsFrozen = isFrozen(childValue);
+      if (childIsFrozen && !targetIsSet) {
+        return;
+      }
       if (isDraft(childValue)) {
         const path = rootPath && parentState && parentState.type_ !== 3 /* Set */ && // Set objects are atomic since they have no keys.
         !has(parentState.assigned_, prop) ? rootPath.concat(prop) : void 0;
@@ -2253,8 +2282,11 @@
       } else if (targetIsSet) {
         targetObject.add(childValue);
       }
-      if (isDraftable(childValue) && !isFrozen(childValue)) {
+      if (isDraftable(childValue) && !childIsFrozen) {
         if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
+          return;
+        }
+        if (parentState && parentState.base_ && parentState.base_[prop] === childValue && childIsFrozen) {
           return;
         }
         finalize(rootScope, childValue);
@@ -2453,6 +2485,7 @@
       constructor(config) {
         this.autoFreeze_ = true;
         this.useStrictShallowCopy_ = false;
+        this.useStrictIteration_ = true;
         /**
          * The `produce` function takes a value and a "recipe function" (whose
          * return value often depends on the base state). The recipe function is
@@ -2534,6 +2567,8 @@
           this.setAutoFreeze(config.autoFreeze);
         if (typeof config?.useStrictShallowCopy === "boolean")
           this.setUseStrictShallowCopy(config.useStrictShallowCopy);
+        if (typeof config?.useStrictIteration === "boolean")
+          this.setUseStrictIteration(config.useStrictIteration);
       }
       createDraft(base) {
         if (!isDraftable(base))
@@ -2569,6 +2604,18 @@
        */
       setUseStrictShallowCopy(value) {
         this.useStrictShallowCopy_ = value;
+      }
+      /**
+       * Pass false to use faster iteration that skips non-enumerable properties
+       * but still handles symbols for compatibility.
+       *
+       * By default, strict iteration is enabled (includes all own properties).
+       */
+      setUseStrictIteration(value) {
+        this.useStrictIteration_ = value;
+      }
+      shouldUseStrictIteration() {
+        return this.useStrictIteration_;
       }
       applyPatches(base, patches) {
         let i;
@@ -2610,17 +2657,23 @@
         return value;
       const state = value[DRAFT_STATE];
       let copy;
+      let strict = true;
       if (state) {
         if (!state.modified_)
           return state.base_;
         state.finalized_ = true;
         copy = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
+        strict = state.scope_.immer_.shouldUseStrictIteration();
       } else {
         copy = shallowCopy(value, true);
       }
-      each(copy, (key, childValue) => {
-        set(copy, key, currentImpl(childValue));
-      });
+      each(
+        copy,
+        (key, childValue) => {
+          set(copy, key, currentImpl(childValue));
+        },
+        strict
+      );
       if (state) {
         state.finalized_ = false;
       }
@@ -2725,8 +2778,6 @@
      *
      * @return {Object}
      */
-
-
     // This rather strange set of functions is designed to support the API:
     // sszvis.viewport.on('resize', callback);
     // While still enabling the user to register multiple callbacks for the 'resize'
@@ -2771,7 +2822,6 @@
 
     // d3 mutates state in many places, which is why we have to turn this off.
     setAutoFreeze(false);
-
     /**
      * Application loop
      *
@@ -2866,10 +2916,8 @@
         });
       });
     };
-
     // -----------------------------------------------------------------------------
     // Helper functions
-
     function invariant(condition, message) {
       if (!condition) {
         throw new Error("[sszvis.app] ".concat(message));
@@ -3311,13 +3359,11 @@
      * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
      * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
      */
-
     function textWrap (selection, width, paddingRightLeft, paddingTopBottom) {
       paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
       paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
       const maxWidth = width; //I store the tooltip max width
       width = width - paddingRightLeft * 2; //Take the padding into account
-
       const arrLineCreatedCount = [];
       selection.each(function () {
         const text = d3.select(this);
@@ -3331,10 +3377,8 @@
         let dy = Number.parseFloat(text.attr("dy"));
         let createdLineCount = 1; //Total line created count
         const textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
-
         //Clean the data in case <text> does not define those values
         if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
-
         //Offset the text position based on the text-anchor
         const wrapTickLabels = d3.select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
         if (wrapTickLabels) {
@@ -5033,8 +5077,6 @@
      *
      * @return {sszvis.component}
      */
-
-
     // replaces NaN values with 0
     function handleMissingVal(v) {
       return isNaN(v) ? 0 : v;
@@ -5052,7 +5094,6 @@
           bars.transition(defaultTransition());
         }
         bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
-
         // Tooltip anchors
         let tooltipPosition;
         if (props.centerTooltip) {
@@ -5090,7 +5131,6 @@
      *
      * @return {sszvis.component}
      */
-
     function dot () {
       return component().prop("x", functor).prop("y", functor).prop("radius").prop("stroke").prop("fill").prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
@@ -5100,9 +5140,7 @@
           dots = dots.transition(defaultTransition());
         }
         dots.attr("cx", props.x).attr("cy", props.y).attr("r", props.radius);
-
         // Tooltip anchors
-
         const ta = tooltipAnchor().position(d => [props.x(d), props.y(d)]);
         selection.call(ta);
       });
@@ -5346,18 +5384,13 @@
      *
      * @return {sszvis.component}
      */
-
     function line () {
       return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-
         // Layouts
-
         const line = d3.line().defined(props.defined === undefined ? compose(not(isNaN), props.y) : props.defined).x(props.x).y(props.y);
-
         // Rendering
-
         let path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", props.stroke);
         path.order();
         if (props.transition) {
@@ -5397,9 +5430,7 @@
      *
      * @return {sszvis.component}
      */
-
     const stackAcc = prop("stack");
-
     // Accessors for the first and second element of a tuple (2-element array).
     const fst = prop("0");
     const snd = prop("1");
@@ -5407,11 +5438,9 @@
       return function (_stackAcc, seriesAcc, valueAcc) {
         return function (data) {
           const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
-
           // Collect all keys ()
           const keys = rows.reduce((a, row) => set$1([...a, ...Object.keys(row)]), []);
           const stacks = d3.stack().keys(keys).value((x, key) => valueAcc(x[key][0])).order(order)(rows);
-
           // Simplify the 'data' property.
           for (const stack of stacks) {
             for (const d of stack) {
@@ -5501,7 +5530,6 @@
      *
      * @return {sszvis.component}
      */
-
     const nestedStackedBarsVertical = () => component().prop("offset", functor).prop("xScale", functor).prop("yScale", functor).prop("fill", functor).prop("tooltip", functor).prop("xAcc", functor).prop("xLabel", functor).prop("xLabel", functor).prop("slant").render(function (data) {
       const selection = d3.select(this);
       const props = selection.props();
@@ -5705,7 +5733,6 @@
      *
      * @return {sszvis.component}
      */
-
     function pie () {
       return component().prop("radius").prop("fill").prop("stroke").prop("angle", functor).render(function (data) {
         const selection = d3.select(this);
@@ -5786,28 +5813,21 @@
      *
      * @return {sszvis.component}
      */
-
-
     /* Constants
     ----------------------------------------------- */
     const SPINE_PADDING$1 = 0.5;
-
     /* Module
     ----------------------------------------------- */
     function pyramid () {
       return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-
         // Components
-
         const leftBar = bar().x(d => -SPINE_PADDING$1 - props.barWidth(d)).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
         const rightBar = bar().x(SPINE_PADDING$1).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
         const leftLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
         const rightLine = lineComponent$1().barPosition(props.barPosition).barWidth(props.barWidth);
-
         // Rendering
-
         selection.selectGroup("left").datum(props.leftAccessor(data)).call(leftBar);
         selection.selectGroup("right").datum(props.rightAccessor(data)).call(rightBar);
         selection.selectGroup("leftReference").datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : []).call(leftLine);
@@ -5885,7 +5905,6 @@
      *
      * @return {sszvis.component}
      */
-
     const linkPathString = function (x0, x1, x2, x3, y0, y1) {
       return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
     };
@@ -5914,14 +5933,12 @@
           return Math.ceil(Math.max(props.sizeScale(node.value), 1));
         };
         const linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
-
         // Draw the nodes
         const barGen = bar().x(xPosition).y(yPosition).width(xExtent).height(yExtent).fill(props.nodeColor);
         const barGroup = selection.selectGroup("nodes").datum(data.nodes);
         barGroup.call(barGen);
         const barTooltipAnchor = tooltipAnchor().position(node => [xPosition(node) + xExtent() / 2, yPosition(node) + yExtent(node) / 2]);
         barGroup.call(barTooltipAnchor);
-
         // Draw the column labels
         const columnLabelX = function (colIndex) {
           return props.columnPosition(colIndex) + props.nodeThickness / 2;
@@ -5933,7 +5950,6 @@
         columnLabels.attr("transform", (d, i) => translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY)).text((d, i) => props.columnLabel(i));
         const columnLabelTicks = barGroup.selectAll(".sszvis-sankey-column-label-tick").data(data.columnLengths).join("line").attr("class", "sszvis-sankey-column-label-tick");
         columnLabelTicks.attr("x1", (d, i) => halfPixel(columnLabelX(i))).attr("x2", (d, i) => halfPixel(columnLabelX(i))).attr("y1", halfPixel(columnLabelY + 8)).attr("y2", halfPixel(columnLabelY + 12));
-
         // Draw the links
         const linkPoints = function (link) {
           const curveStart = props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
@@ -5956,7 +5972,6 @@
         const linkThickness = function (link) {
           return Math.max(props.sizeScale(link.value), 1);
         };
-
         // Render the links
         const linksGroup = selection.selectGroup("links");
         const linksElems = linksGroup.selectAll(".sszvis-link").data(data.links, idAcc).join("path").attr("class", "sszvis-link");
@@ -5967,24 +5982,20 @@
           return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
         });
         linksGroup.call(linkTooltipAnchor);
-
         // Render the link labels
         const linkLabelsGroup = selection.selectGroup("linklabels");
-
         // If no props.linkSourceLabels are provided, most of this rendering is no-op
         const linkSourceLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-source-label").data(props.linkSourceLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-source-label");
         linkSourceLabels.attr("transform", link => {
           const bbox = linkBoundingBox(link);
           return translateString(bbox[0] + 6, bbox[2]);
         }).text(props.linkLabel);
-
         // If no props.linkTargetLabels are provided, most of this rendering is no-op
         const linkTargetLabels = linkLabelsGroup.selectAll(".sszvis-sankey-link-target-label").data(props.linkTargetLabels).join("text").attr("class", "sszvis-sankey-label sszvis-sankey-strong-label sszvis-sankey-link-target-label");
         linkTargetLabels.attr("transform", link => {
           const bbox = linkBoundingBox(link);
           return translateString(bbox[1] - 6, bbox[3]);
         }).text(props.linkLabel);
-
         // Render the node labels and their hit boxes
         const getLabelSide = function (colIndex) {
           let side = props.labelSide(colIndex);
@@ -6030,7 +6041,6 @@
      *
      * @return {sszvis.component}
      */
-
     function stackedArea () {
       return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
@@ -6073,12 +6083,10 @@
      *
      * @return {sszvis.component}
      */
-
     function stackedAreaMultiples () {
       return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-
         //sszsch why reverse?
         data = [...data].reverse();
         const defaultDefined = function () {
@@ -6122,14 +6130,11 @@
      *
      * @return {sszvis.component}
      */
-
-
     /* Constants
     ----------------------------------------------- */
     const SPINE_PADDING = 0.5;
     const dataAcc = prop("data");
     const rowAcc = prop("row");
-
     /**
      * This function prepares the data for the stackedPyramid component
      *
@@ -6160,32 +6165,26 @@
           }
           return stacks;
         });
-
         // Compute the max value, for convenience. This value is needed to construct
         // the horizontal scale.
         sides.maxValue = d3.max(sides, side => d3.max(side, rows => d3.max(rows, row => row[1])));
         return sides;
       };
     }
-
     /* Module
     ----------------------------------------------- */
     function stackedPyramid() {
       return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-
         // Components
-
         const leftBar = bar().x(d => -SPINE_PADDING - props.barWidth(d[1])).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(d => props.barWidth(d[1]) - props.barWidth(d[0])).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
         const rightBar = bar().x(d => SPINE_PADDING + props.barWidth(d[0])).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(d => props.barWidth(d[1]) - props.barWidth(d[0])).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
         const leftStack = stackComponent().stackElement(leftBar);
         const rightStack = stackComponent().stackElement(rightBar);
         const leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
         const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
-
         // Rendering
-
         selection.selectGroup("leftStack").datum(props.leftAccessor(data)).call(leftStack);
         selection.selectGroup("rightStack").datum(props.rightAccessor(data)).call(rightStack);
         selection.selectGroup("leftReference").datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : []).call(leftLine);
@@ -6241,13 +6240,11 @@
      *
      * @return {sszvis.component}
      */
-
     const TWO_PI = 2 * Math.PI;
     function sunburst () {
       return component().prop("angleScale").angleScale(d3.scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (inputData) {
         const selection = d3.select(this);
         const props = selection.props();
-
         // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
         // @deprecated in v3.4.0
         let data;
@@ -6261,7 +6258,6 @@
           }
           data = flatten(inputData).filter(d => d.data._tag !== "root");
         }
-
         // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
         function getColorRecursive(node) {
           // Center node (if the data were prepared using sszvis.prepareHierarchyData)
@@ -6319,7 +6315,6 @@
             return arcGen(d);
           };
         });
-
         // Add tooltip anchors
         const arcTooltipAnchor = tooltipAnchor().position(d => {
           const startA = startAngle(d);
@@ -6533,7 +6528,6 @@
      *
      * @return {sszvis.component}
      */
-
     function buttonGroup () {
       return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
         const selection = d3.select(this);
@@ -6566,12 +6560,10 @@
      *
      * @returns {sszvis.component}
      */
-
     function handleRuler () {
       return component().prop("x", functor).prop("y", functor).prop("top").prop("bottom").prop("label").label(functor("")).prop("color").prop("flip", functor).flip(false).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-
         // Elements need to be placed on half-pixels in order to be rendered
         // crisply across browsers. That's why we create this position accessor
         // here that takes a datum as input, reads out its value (props.x) and
@@ -6593,9 +6585,7 @@
         dots.attr("cx", crispX).attr("cy", crispY).attr("r", 3.5).attr("fill", props.color);
         selection.selectAll(".sszvis-ruler__label-outline").data(data).join("text").classed("sszvis-ruler__label-outline", true);
         selection.selectAll(".sszvis-ruler__label").data(data).join("text").classed("sszvis-ruler__label", true);
-
         // Update both labelOutline and labelOutline selections
-
         selection.selectAll(".sszvis-ruler__label, .sszvis-ruler__label-outline").attr("transform", d => {
           const x = compose(halfPixel, props.x)(d);
           const y = compose(halfPixel, props.y)(d);
@@ -6625,7 +6615,6 @@
      *
      * @return {sszvis.component}
      */
-
     function select () {
       return component().prop("values").prop("current").prop("width").width(300).prop("change").change(identity).render(function () {
         const selection = d3.select(this);
@@ -6684,7 +6673,6 @@
      *
      * @returns {sszvis.component}
      */
-
     function contains(x, a) {
       return a.includes(x);
     }
@@ -6700,19 +6688,15 @@
         const bgWidth = 6; // the width of the background
         const lineEndOffset = bgWidth / 2; // the amount by which to offset the ends of the background line
         const handleSideOffset = handleWidth / 2 + 0.5; // the amount by which to offset the position of the handle
-
         const scaleDomain = props.scale.domain();
         const scaleRange = range(props.scale);
         const alteredScale = props.scale.copy().range([scaleRange[0] + handleSideOffset, scaleRange[1] - handleSideOffset]);
-
         // the mostly unchanging bits
         const bg = selection.selectAll("g.sszvis-control-slider__backgroundgroup").data([1]).join("g").classed("sszvis-control-slider__backgroundgroup", true);
-
         // create the axis
         const axis = axisX().scale(alteredScale).orient("bottom").slant(props.slant).hideBorderTickThreshold(0).tickSize(majorTickSize).tickPadding(6).tickValues(set$1([...props.majorTicks, ...props.minorTicks])).tickFormat(d => contains(d, props.majorTicks) ? props.tickLabels(d) : "");
         const axisSelection = bg.selectAll("g.sszvis-axisGroup").data([1]).join("g").classed("sszvis-axisGroup sszvis-axis sszvis-axis--bottom sszvis-axis--slider", true);
         axisSelection.attr("transform", translateString(0, axisOffset)).call(axis);
-
         // adjust visual aspects of the axis to fit the design
         axisSelection.selectAll(".tick line").filter(d => !contains(d, props.majorTicks)).attr("y2", 4);
         const majorAxisText = axisSelection.selectAll(".tick text").filter(d => contains(d, props.majorTicks));
@@ -6728,20 +6712,17 @@
           majorAxisText.attr("dx", "-1.6em");
           majorAxisText.attr("dy", "0.2em");
         }
-
         // create the slider background
         const backgroundSelection = bg.selectAll("g.sszvis-slider__background").data([1]).join("g").classed("sszvis-slider__background", true).attr("transform", translateString(0, backgroundOffset));
         backgroundSelection.selectAll(".sszvis-slider__background__bg1").data([1]).join("line").classed("sszvis-slider__background__bg1", true).style("stroke-width", bgWidth).style("stroke", "#888").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
         backgroundSelection.selectAll(".sszvis-slider__background__bg2").data([1]).join("line").classed("sszvis-slider__background__bg2", true).style("stroke-width", bgWidth - 1).style("stroke", "#fff").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", Math.floor(scaleRange[1] - lineEndOffset));
         backgroundSelection.selectAll(".sszvis-slider__backgroundshadow").data([props.value]).join("line").attr("class", "sszvis-slider__backgroundshadow").attr("stroke-width", bgWidth - 1).style("stroke", "#E0E0E0").style("stroke-linecap", "round").attr("x1", Math.ceil(scaleRange[0] + lineEndOffset)).attr("x2", compose(Math.floor, alteredScale));
-
         // draw the handle and the label
         const handle = selection.selectAll("g.sszvis-control-slider__handle").data([props.value]).join("g").classed("sszvis-control-slider__handle", true).attr("transform", d => translateString(halfPixel(alteredScale(d)), 0.5));
         handle.append("text").classed("sszvis-control-slider--label", true);
         handle.selectAll(".sszvis-control-slider--label").data(d => [d]).text(props.label).style("text-anchor", d => stringEqual(d, scaleDomain[0]) ? "start" : stringEqual(d, scaleDomain[1]) ? "end" : "middle").attr("dx", d => stringEqual(d, scaleDomain[0]) ? -5 : stringEqual(d, scaleDomain[1]) ? handleWidth / 2 : 0);
         handle.selectAll(".sszvis-control-slider__handlebox").data([1]).join("rect").classed("sszvis-control-slider__handlebox", true).attr("x", -5).attr("y", backgroundOffset - handleHeight / 2).attr("width", handleWidth).attr("height", handleHeight).attr("rx", 2).attr("ry", 2);
         const handleLineDimension = handleHeight / 2 - 4; // the amount by which to offset the small handle line within the handle
-
         handle.selectAll(".sszvis-control-slider__handleline").data([1]).join("line").classed("sszvis-control-slider__handleline", true).attr("y1", backgroundOffset - handleLineDimension).attr("y2", backgroundOffset + handleLineDimension);
         const sliderInteraction = move().xScale(props.scale)
         // range goes from the text top (text is 11px tall) to the bottom of the axis
@@ -6929,7 +6910,6 @@
      * |fooBarBaz        |      <--- not enough space for padding + fooBaz
      * |fooBaz    barFoo |
      */
-
     const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
     function legendColorOrdinal() {
       return component().prop("scale").prop("rowHeight").rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).prop("columnWidth").columnWidth(200).prop("rows").rows(3).prop("columns").columns(3).prop("verticallyCentered").verticallyCentered(false).prop("orientation").prop("reverse").reverse(false).prop("rightAlign").rightAlign(false).prop("horizontalFloat").horizontalFloat(false).prop("floatPadding").floatPadding(20).prop("floatWidth").floatWidth(600).render(function () {
@@ -6987,7 +6967,6 @@
 
     const DEFAULT_COLUMN_COUNT = 2;
     const LABEL_PADDING = 40;
-
     /**
      * colorLegendLayout
      *
@@ -7015,7 +6994,6 @@
         scale
       };
     }
-
     /**
      * colorLegendDimensions
      *
@@ -7025,10 +7003,8 @@
       const labelCount = labels.length;
       const maxLabelWidth = d3.max(labels, labelWidth);
       const totalLabelsWidth = d3.sum(labels, labelWidth);
-
       // Use a single column for four or fewer items
       const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
-
       // Use a horizontal layout if all labels fit on one line
       const isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;
       return {
@@ -7040,10 +7016,8 @@
         orientation: isHorizontal ? null : "vertical"
       };
     }
-
     // -----------------------------------------------------------------------------
     // Helpers
-
     function axisLabelHeight(slant, labels) {
       switch (slant) {
         case "vertical":
@@ -7094,14 +7068,12 @@
      *                              centeredOffset: the left offset required to center the table horizontally within its container
      *                          }
      */
-
     function heatTableDimensions (spaceWidth, squarePadding, numX, numY, chartPadding) {
       chartPadding || (chartPadding = {});
       chartPadding.top || (chartPadding.top = 0);
       chartPadding.right || (chartPadding.right = 0);
       chartPadding.bottom || (chartPadding.bottom = 0);
       chartPadding.left || (chartPadding.left = 0);
-
       // this includes the default side length for the heat table
       const DEFAULT_SIDE = 30,
         availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
@@ -7236,7 +7208,6 @@
      *                                               to translate scales below the bars.
      *                                 }
      */
-
     function horizontalBarChartDimensions (numBars) {
       const DEFAULT_HEIGHT = 24,
         // the default bar height
@@ -7250,7 +7221,6 @@
         padRatio = 1 - barHeight / (barHeight + padding),
         computedBarSpace = barHeight * numBars + padding * numPads,
         outerRatio = 0; // no outer padding
-
       return {
         barHeight,
         padHeight: padding,
@@ -7290,7 +7260,6 @@
      *                                      the value is 0 and no padding is needed.
      *                                    }
      */
-
     function populationPyramidLayout (spaceWidth, numBars) {
       const MAX_HEIGHT = 480; // Chart no taller than this
       const MIN_BAR_HEIGHT = 2; // Bars no shorter than this
@@ -7326,14 +7295,12 @@
      * A module of helper functions for computing the data structure
      * and layout required by the sankey component.
      */
-
     const newLinkId = function () {
       let id = 0;
       return function () {
         return ++id;
       };
     }();
-
     /**
      * sszvis.layout.sankey.prepareData
      *
@@ -7368,7 +7335,6 @@
       let mGetTarget = identity;
       let mGetValue = identity;
       let mColumnIds = [];
-
       // Helper functions
       const valueAcc = prop("value");
       const byAscendingValue = function (a, b) {
@@ -7403,7 +7369,6 @@
           const srcId = mGetSource(datum);
           const tgtId = mGetTarget(datum);
           const value = +mGetValue(datum) || 0; // Cast this to number
-
           const srcNode = columnIndex.get(srcId);
           const tgtNode = columnIndex.get(tgtId);
           if (!srcNode) {
@@ -7426,33 +7391,26 @@
           tgtNode.linksTo.push(item);
           return item;
         });
-
         // Extract the column nodes from the index
         const listOfNodes = [...columnIndex.values()];
-
         // Calculate an array of total values for each column
         const columnTotals = listOfNodes.reduce((totals, node) => {
           const fromTotal = d3.sum(node.linksFrom, valueAcc);
           const toTotal = d3.sum(node.linksTo, valueAcc);
-
           // For correct visual display, the node's value is the max of the from and to links
           node.value = Math.max(0, fromTotal, toTotal);
           totals[node.columnIndex] += node.value;
           return totals;
         }, filledArray(mColumnIds.length, 0));
-
         // An array with the number of nodes in each column
         const columnLengths = mColumnIds.map(colIds => colIds.length);
-
         // Sort the column nodes
         // (note, this sorts all nodes for all columns in the same array)
         listOfNodes.sort(valueSortFunc);
-
         // Sort the links in descending order of value. This means smaller links will render
         // on top of larger links.
         // (note, this sorts all links for all columns in the same array)
         listOfLinks.sort(byDescendingValue);
-
         // Assign the valueOffset and nodeIndex properties
         // Here, columnData[0] is an array adding up value totals
         // and columnData[1] is an array adding up the number of nodes in each column
@@ -7465,7 +7423,6 @@
           columnData[1][node.columnIndex] += 1;
           return columnData;
         }, [filledArray(mColumnIds.length, 0), filledArray(mColumnIds.length, 0)]);
-
         // Once the order of nodes is calculated, we need to sort the links going into the
         // nodes and the links coming out of the nodes according to the ordering of the nodes
         // they come from or go to. This creates a visually appealing layout which minimizes
@@ -7473,7 +7430,6 @@
         for (const node of listOfNodes) {
           node.linksFrom.sort((linkA, linkB) => linkA.tgt.nodeIndex - linkB.tgt.nodeIndex);
           node.linksTo.sort((linkA, linkB) => linkA.src.nodeIndex - linkB.src.nodeIndex);
-
           // Stack the links vertically within the node according to their order
           node.linksFrom.reduce((sumValue, link) => {
             link.srcOffset = sumValue;
@@ -7520,7 +7476,6 @@
       };
       return main;
     };
-
     /**
      * sszvis.layout.sankey.computeLayout
      *
@@ -7549,7 +7504,6 @@
       const padMin = 12;
       const padMax = 50;
       const minDisplayPixels = 1; // Minimum number of pixels used for display area
-
       // Compute the padding value (in pixels) for each column, then take the minimum value
       const computedPixPadding = d3.min(columnLengths.map(colLength => {
         // Any given column's padding is := (1 / 4 of total extent) / (number of padding spaces)
@@ -7557,7 +7511,6 @@
         // Limit by minimum and maximum pixel padding values
         return Math.max(padMin, Math.min(padMax, colPadding));
       }));
-
       // Given the computed padding value, compute each column's resulting "pixels per unit"
       // This is the number of remaining pixels available to display the column's total units,
       // after padding pixels have been subtracted. Then take the minimum value of that.
@@ -7566,25 +7519,20 @@
         const nonPaddingPixels = Math.max(minDisplayPixels, columnHeight - (colLength - 1) * computedPixPadding);
         return nonPaddingPixels / columnTotals[colIndex];
       }));
-
       // The padding between bars, in bar value units
       const valuePadding = computedPixPadding / pixPerUnit;
       // The padding between bars, in pixels
       const nodePadding = computedPixPadding;
-
       // The maximum total value of any column
       const maxTotal = d3.max(columnTotals);
-
       // Compute y-padding required to vertically center each column (in pixels)
       const paddedHeights = columnLengths.map((colLength, colIndex) => columnTotals[colIndex] * pixPerUnit + (colLength - 1) * nodePadding);
       const maxPaddedHeight = d3.max(paddedHeights);
       const columnPaddings = columnLengths.map((colLength, colIndex) => (maxPaddedHeight - paddedHeights[colIndex]) / 2);
-
       // The domain of the size scale
       const valueDomain = [0, maxTotal];
       // The range of the size scale
       const valueRange = [0, maxTotal * pixPerUnit];
-
       // Calculate column (or row, as the case may be) positioning values
       const nodeThickness = 20;
       const numColumns = columnLengths.length;
@@ -7661,7 +7609,6 @@
      *
      * @return {sszvis.component}
      */
-
     function smallMultiples () {
       return component().prop("width").prop("height").prop("paddingX").prop("paddingY").prop("rows").prop("cols").prop("showTitle").showTitle(false).prop("titleLabel").titleLabel(() => "").prop("titleAnchor").titleAnchor("middle").prop("titleY").titleY(0).render(function (data) {
         const selection = d3.select(this);
@@ -7681,7 +7628,6 @@
           d.cy = verticalCenter;
           return d;
         }).attr("transform", d => "translate(" + d.gx + "," + d.gy + ")");
-
         // Render titles if showTitle is enabled
         if (props.showTitle) {
           const titleX = props.titleAnchor === "start" ? 0 : props.titleAnchor === "end" ? unitWidth : horizontalCenter;
@@ -7717,7 +7663,6 @@
      *                                padHeight:      This is the amount of vertical padding between each area multiple.
      *                              }
      */
-
     function stackedAreaMultiplesLayout (height, num, pct) {
       pct || (pct = 0.1);
       const step = height / (num - pct),
@@ -7740,12 +7685,10 @@
      *
      * Helper functions for transforming your data to match the format required by the sunburst chart.
      */
-
     const MAX_SUNBURST_RING_WIDTH = 60;
     const MAX_RW = MAX_SUNBURST_RING_WIDTH;
     const MIN_SUNBURST_RING_WIDTH = 10;
     const MIN_RW = MIN_SUNBURST_RING_WIDTH;
-
     /**
      * sszvis.layout.sunburst.computeLayout
      *
@@ -7769,7 +7712,6 @@
         ringWidth
       };
     };
-
     /**
      * sszvis.layout.sunburst.getRadiusExtent
      * @param  {Array} formattedData      An array of data to inspect for the extent of the radius scale
@@ -7805,7 +7747,6 @@
      *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
      *                                }
      */
-
     function verticalBarChartDimensions (width, numBars) {
       const MAX_BAR_WIDTH = 48,
         // the maximum width of a bar
@@ -7822,9 +7763,7 @@
       // the derivation of this equation is available upon request
       let padding = width * TARGET_PADDING_RATIO / (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars);
       // based on the computed padding, calculate the bar width
-
       let barWidth = (width - padding * numPads) / numBars;
-
       // adjust for min and max bounds
       if (barWidth > MAX_BAR_WIDTH) {
         barWidth = MAX_BAR_WIDTH;
@@ -7833,7 +7772,6 @@
       }
       if (padding < MIN_PADDING) padding = MIN_PADDING;
       if (padding > MAX_PADDING) padding = MAX_PADDING;
-
       // compute other information
       const padRatio = 1 - barWidth / (barWidth + padding),
         computedBarSpace = barWidth * numBars + padding * numPads,
@@ -7864,7 +7802,6 @@
      *
      * @return {sszvis.component}
      */
-
     function binnedColorScale () {
       return component().prop("scale").prop("displayValues").prop("endpoints").prop("width").width(200).prop("labelFormat").labelFormat(identity).render(function () {
         const selection = d3.select(this);
@@ -7891,7 +7828,6 @@
           sum += w;
           pPrev = p;
         }
-
         // add the final box (last display value - > endpoint)
         rectData.push({
           x: Math.floor(circleRad + sum),
@@ -7926,7 +7862,6 @@
      *                                              defaults to using the first and last tick values.
      * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
      */
-
     function linearColorScale () {
       return component().prop("scale").prop("displayValues").displayValues([]).prop("width").width(200).prop("segments").segments(8).prop("labelText").prop("labelFormat").labelFormat(identity).render(function () {
         const selection = d3.select(this);
@@ -7941,7 +7876,6 @@
           values = props.scale.ticks(props.segments - 1);
         }
         values.push(last(domain));
-
         // Avoid division by zero
         const segWidth = values.length > 0 ? props.width / values.length : 0;
         const segHeight = 10;
@@ -7951,7 +7885,6 @@
         .attr("height", segHeight).attr("fill", d => props.scale(d));
         const startEnd = [first(domain), last(domain)];
         const labelText = props.labelText || startEnd;
-
         // rounded end caps for the segments
         const endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd).join("circle").attr("class", "ssvis-legend--mark");
         endCaps.attr("cx", (d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));
@@ -7975,7 +7908,6 @@
      *
      * @returns {sszvis.component}
      */
-
     function radius () {
       return component().prop("scale").prop("tickFormat").tickFormat(identity).prop("tickValues").render(function () {
         const selection = d3.select(this);
@@ -8026,14 +7958,12 @@
      *
      * @module sszvis/map/utils
      */
-
     const STADT_KREISE_KEY = "zurichStadtKreise";
     const STATISTISCHE_QUARTIERE_KEY = "zurichStatistischeQuartiere";
     const STATISTISCHE_ZONEN_KEY = "zurichStatistischeZonen";
     const WAHL_KREISE_KEY = "zurichWahlKreise";
     const AGGLOMERATION_2012_KEY = "zurichAgglomeration2012";
     const SWITZERLAND_KEY = "switzerland";
-
     /**
      * swissMapProjection
      *
@@ -8051,7 +7981,6 @@
     const swissMapProjection = memoize((width, height, featureCollection) => d3.geoMercator().fitSize([width, height], featureCollection),
     // Memoize resolver
     (width, height, _, featureBoundsCacheKey) => "" + width + "," + height + "," + featureBoundsCacheKey);
-
     /**
      * This is a special d3.geoPath generator function tailored for rendering maps of
      * Switzerland. The values are chosen specifically to optimize path generation for
@@ -8071,7 +8000,6 @@
     const swissMapPath = function (width, height, featureCollection, featureBoundsCacheKey) {
       return d3.geoPath().projection(swissMapProjection(width, height, featureCollection, featureBoundsCacheKey));
     };
-
     /**
      * Use this function to calcualate the length in pixels of a distance in meters across the surface of the earth
      * The earth's radius is not constant, so this function uses an approximation for calculating the degree angle of
@@ -8095,7 +8023,6 @@
       // Construct a square, centered at centerPoint, with sides that span that number of degrees
       const halfDegrees = degrees / 2;
       const bounds = [[centerPoint[0] - halfDegrees, centerPoint[1] - halfDegrees], [centerPoint[0] + halfDegrees, centerPoint[1] + halfDegrees]];
-
       // Project those bounds to pixel coordinates using the provided map projection
       const projBounds = bounds.map(projection);
       // Depending on the rotation of the map, the sides of the box are not always positive quantities
@@ -8106,7 +8033,6 @@
       return (projXDist + projYDist) / 2;
     };
     const GEO_KEY_DEFAULT = "geoId";
-
     /**
      * prepareMergedData
      *
@@ -8123,20 +8049,17 @@
      */
     const prepareMergedGeoData = function (dataset, geoJson, keyName) {
       keyName || (keyName = GEO_KEY_DEFAULT);
-
       // group the input data by map entity id
       const groupedInputData = Array.isArray(dataset) ? dataset.reduce((m, v) => {
         m[v[keyName]] = v;
         return m;
       }, {}) : {};
-
       // merge the map features and the input data into new objects that include both
       return geoJson.features.map(feature => ({
         geoJson: feature,
         datum: groupedInputData[feature.id]
       }));
     };
-
     /**
      * getGeoJsonCenter
      *
@@ -8159,7 +8082,6 @@
       }
       return geoJson.properties.cachedCenter;
     };
-
     /**
      * widthAdaptiveMapPathStroke
      *
@@ -8195,24 +8117,20 @@
      *
      * @return {sszvis.component}
      */
-
     function mapRendererBase () {
       return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true) // a predicate function to determine whether a datum has a defined value
       .prop("fill", functor).fill(() => "black") // a function for the entity fill color. default is black
       .prop("transitionColor").transitionColor(true).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
-
         // render the missing value pattern
         ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
-
         // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
         function getMapFill(d) {
           return props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
         }
         const mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData).join("path").classed("sszvis-map__area", true).classed("sszvis-map__area--entering", true).attr("data-event-target", "").attr("fill", getMapFill).classed("sszvis-map__area--entering", false);
         selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill);
-
         // change the fill if necessary
         mapAreas.classed("sszvis-map__area--undefined", d => !defined(d.datum) || !props.defined(d.datum)).attr("d", d => props.mapPath(d.geoJson));
         if (props.transitionColor) {
@@ -8220,11 +8138,9 @@
         } else {
           mapAreas.attr("fill", getMapFill);
         }
-
         // the tooltip anchor generator
         const ta = tooltipAnchor().position(d => props.mapPath.projection()(getGeoJsonCenter(d.geoJson)));
         const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
-
         // attach tooltip anchors
         tooltipGroup.call(ta);
       });
@@ -8246,7 +8162,6 @@
      *
      * @return {sszvis.component}
      */
-
     const datumAcc = prop("datum");
     function bubble () {
       const event = d3.dispatch("over", "out", "click");
@@ -8264,7 +8179,6 @@
           const position = props.mapPath.projection()(getGeoJsonCenter(d.geoJson));
           return translateString(position[0], position[1]);
         }).style("fill", d => props.fill(d.datum)).style("stroke", d => props.strokeColor(d.datum)).style("stroke-width", d => props.strokeWidth(d.datum)).sort((a, b) => props.radius(b.datum) - props.radius(a.datum));
-
         // Remove the --entering modifier from the updating circles
         anchoredCircles.classed("sszvis-anchored-circle--entering", false);
         if (props.transition) {
@@ -8305,16 +8219,13 @@
      *
      * @return {sszvis.component}
      */
-
     function geojson () {
       const event = d3.dispatch("over", "out", "click");
       const geojsonComponent = component().prop("dataKeyName").dataKeyName(GEO_KEY_DEFAULT).prop("geoJsonKeyName").geoJsonKeyName("id").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true).prop("fill", functor).fill("black").prop("stroke", functor).stroke("black").prop("strokeWidth", functor).strokeWidth(1.25).prop("transitionColor").transitionColor(true).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-
         // render the missing value pattern
         ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
-
         // getDataKeyName will be called on data values. It should return a map entity id.
         // getMapKeyName will be called on the 'properties' of each map feature. It should
         // return a map entity id. Data values are matched with corresponding map features using
@@ -8351,7 +8262,6 @@
         }).on("click", d => {
           event.click(d.datum);
         });
-
         // the tooltip anchor generator
         const ta = tooltipAnchor().position(d => {
           d.geoJson.properties || (d.geoJson.properties = {});
@@ -8362,7 +8272,6 @@
           return props.mapPath.projection()(sphericalCentroid);
         });
         const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(mergedData);
-
         // attach tooltip anchors
         tooltipGroup.call(ta);
       });
@@ -8390,7 +8299,6 @@
      *
      * @return {sszvis.component}
      */
-
     function mapRendererHighlight () {
       return component().prop("keyName").keyName(GEO_KEY_DEFAULT) // the name of the data key that identifies which map entity it belongs to
       .prop("geoJson").prop("mapPath").prop("highlight").highlight([]) // an array of data values to highlight
@@ -8407,7 +8315,6 @@
           m[feature.id] = feature;
           return m;
         }, {});
-
         // merge the highlight data
         const mergedHighlight = props.highlight.reduce((m, v) => {
           if (v) {
@@ -8449,7 +8356,6 @@
      *
      * @return {sszvis.component}
      */
-
     function image () {
       return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").opacity(1).render(function () {
         const selection = d3.select(this);
@@ -8479,13 +8385,11 @@
      *
      * @return {sszvis.component}
      */
-
     function mapRendererMesh () {
       return component().prop("geoJson").prop("mapPath").prop("borderColor").borderColor("white") // A function or string for the color of all borders. Note: all borders have the same color
       .prop("strokeWidth").strokeWidth(1.25).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
-
         // add the map borders. These are rendered as one single path element
         const meshLine = selection.selectAll(".sszvis-map__border").data([props.geoJson]).join("path").classed("sszvis-map__border", true);
         meshLine.attr("d", props.mapPath).style("stroke", props.borderColor).style("stroke-width", props.strokeWidth);
@@ -8508,29 +8412,24 @@
      *
      * @return {sszvis.component}
      */
-
     function mapRendererPatternedLakeOverlay () {
       return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").fadeOut(true).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
-
         // the lake texture
         ensureDefsElement(selection, "pattern", "lake-pattern").call(mapLakePattern);
         if (props.fadeOut) {
           // the fade gradient
           ensureDefsElement(selection, "linearGradient", "lake-fade-gradient").call(mapLakeFadeGradient);
-
           // the mask, which uses the fade gradient
           ensureDefsElement(selection, "mask", "lake-fade-mask").call(mapLakeGradientMask);
         }
-
         // generate the Lake Zurich path
         const zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr("d", props.mapPath).attr("fill", "url(#lake-pattern)");
         if (props.fadeOut) {
           // this mask applies the fade effect
           zurichSee.attr("mask", "url(#lake-fade-mask)");
         }
-
         // add a path for the boundaries of map entities which extend over the lake.
         // This path is rendered as a dotted line over the lake shape
         const lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr("d", props.mapPath);
@@ -8561,7 +8460,6 @@
      *
      * @return {sszvis.component}
      */
-
     function raster () {
       return component().prop("debug").debug(false).prop("width").prop("height").prop("position").prop("cellSide").cellSide(2).prop("fill", functor).prop("opacity").opacity(1).render(function (data) {
         const selection = d3.select(this);
@@ -8612,7 +8510,6 @@
      *
      * @return {d3.component}
      */
-
     function choropleth () {
       const event = d3.dispatch("over", "out", "click");
       const baseRenderer = mapRendererBase();
@@ -8622,25 +8519,18 @@
       const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
         const selection = d3.select(this);
         const props = selection.props();
-
         // create a map path generator function
         const mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
         const mergedData = prepareMergedGeoData(data, props.features, props.keyName);
-
         // Base shape
         baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath);
-
         // Border mesh
         meshRenderer.geoJson(props.borders).mapPath(mapPath);
-
         // Lake Zurich shape
         lakeRenderer.lakeFeature(props.lakeFeatures).lakeBounds(props.lakeBorders).mapPath(mapPath).fadeOut(props.lakeFadeOut);
-
         // Highlight mesh
         highlightRenderer.geoJson(props.features).keyName(props.keyName).mapPath(mapPath);
-
         // Rendering
-
         selection.call(baseRenderer).call(meshRenderer);
         if (props.withLake) {
           selection.call(lakeRenderer);
@@ -8650,9 +8540,7 @@
           props.anchoredShape.mergedData(mergedData).mapPath(mapPath);
           selection.call(props.anchoredShape);
         }
-
         // Event Binding
-
         selection.selectAll("[data-event-target]").on("mouseover", function (d) {
           event.call("over", this, d.datum);
         }).on("mouseout", function (d) {
@@ -8953,7 +8841,6 @@
      *
      * @return {function} Formatting function that accepts a datum
      */
-
     function formatHTML() {
       const styles = {
         plain(d) {

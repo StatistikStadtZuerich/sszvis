@@ -19,29 +19,24 @@ import ensureDefsElement from '../../svgUtils/ensureDefsElement.js';
  *
  * @return {sszvis.component}
  */
-
 function mapRendererPatternedLakeOverlay () {
   return component().prop("mapPath").prop("lakeFeature").prop("lakeBounds").prop("lakePathColor").prop("fadeOut").fadeOut(true).render(function () {
     const selection = select(this);
     const props = selection.props();
-
     // the lake texture
     ensureDefsElement(selection, "pattern", "lake-pattern").call(mapLakePattern);
     if (props.fadeOut) {
       // the fade gradient
       ensureDefsElement(selection, "linearGradient", "lake-fade-gradient").call(mapLakeFadeGradient);
-
       // the mask, which uses the fade gradient
       ensureDefsElement(selection, "mask", "lake-fade-mask").call(mapLakeGradientMask);
     }
-
     // generate the Lake Zurich path
     const zurichSee = selection.selectAll(".sszvis-map__lakezurich").data([props.lakeFeature]).join("path").classed("sszvis-map__lakezurich", true).attr("d", props.mapPath).attr("fill", "url(#lake-pattern)");
     if (props.fadeOut) {
       // this mask applies the fade effect
       zurichSee.attr("mask", "url(#lake-fade-mask)");
     }
-
     // add a path for the boundaries of map entities which extend over the lake.
     // This path is rendered as a dotted line over the lake shape
     const lakePath = selection.selectAll(".sszvis-map__lakepath").data([props.lakeBounds]).join("path").classed("sszvis-map__lakepath", true).attr("d", props.mapPath);

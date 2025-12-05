@@ -34,14 +34,11 @@ import bar from './bar.js';
  *
  * @return {sszvis.component}
  */
-
-
 /* Constants
 ----------------------------------------------- */
 const SPINE_PADDING = 0.5;
 const dataAcc = prop("data");
 const rowAcc = prop("row");
-
 /**
  * This function prepares the data for the stackedPyramid component
  *
@@ -72,32 +69,26 @@ function stackedPyramidData(sideAcc, _rowAcc, seriesAcc, valueAcc) {
       }
       return stacks;
     });
-
     // Compute the max value, for convenience. This value is needed to construct
     // the horizontal scale.
     sides.maxValue = max(sides, side => max(side, rows => max(rows, row => row[1])));
     return sides;
   };
 }
-
 /* Module
 ----------------------------------------------- */
 function stackedPyramid() {
   return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
     const selection = select(this);
     const props = selection.props();
-
     // Components
-
     const leftBar = bar().x(d => -SPINE_PADDING - props.barWidth(d[1])).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(d => props.barWidth(d[1]) - props.barWidth(d[0])).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
     const rightBar = bar().x(d => SPINE_PADDING + props.barWidth(d[0])).y(compose(props.barPosition, rowAcc)).height(props.barHeight).width(d => props.barWidth(d[1]) - props.barWidth(d[0])).fill(compose(props.barFill, dataAcc)).tooltipAnchor(props.tooltipAnchor);
     const leftStack = stackComponent().stackElement(leftBar);
     const rightStack = stackComponent().stackElement(rightBar);
     const leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
     const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
-
     // Rendering
-
     selection.selectGroup("leftStack").datum(props.leftAccessor(data)).call(leftStack);
     selection.selectGroup("rightStack").datum(props.rightAccessor(data)).call(rightStack);
     selection.selectGroup("leftReference").datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : []).call(leftLine);

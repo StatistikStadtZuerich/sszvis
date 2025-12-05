@@ -59,7 +59,6 @@ import { component } from '../d3-component.js';
  *
  * @return {sszvis.component}
  */
-
 function smallMultiples () {
   return component().prop("width").prop("height").prop("paddingX").prop("paddingY").prop("rows").prop("cols").prop("showTitle").showTitle(false).prop("titleLabel").titleLabel(() => "").prop("titleAnchor").titleAnchor("middle").prop("titleY").titleY(0).render(function (data) {
     const selection = select(this);
@@ -79,7 +78,6 @@ function smallMultiples () {
       d.cy = verticalCenter;
       return d;
     }).attr("transform", d => "translate(" + d.gx + "," + d.gy + ")");
-
     // Render titles if showTitle is enabled
     if (props.showTitle) {
       const titleX = props.titleAnchor === "start" ? 0 : props.titleAnchor === "end" ? unitWidth : horizontalCenter;

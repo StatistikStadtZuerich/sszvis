@@ -39,18 +39,13 @@ import { defaultTransition } from '../transition.js';
  *
  * @return {sszvis.component}
  */
-
 function line () {
   return component().prop("x").prop("y").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-
     // Layouts
-
     const line = line$1().defined(props.defined === undefined ? compose(not(isNaN), props.y) : props.defined).x(props.x).y(props.y);
-
     // Rendering
-
     let path = selection.selectAll(".sszvis-line").data(data, props.key).join("path").classed("sszvis-line", true).style("stroke", props.stroke);
     path.order();
     if (props.transition) {

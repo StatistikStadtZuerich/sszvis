@@ -6,8 +6,6 @@ import { prepareHierarchyData } from './hierarchy.js';
  *
  * Helper functions for transforming your data to match the format required by the sunburst chart.
  */
-
-
 /**
  * sszvis.layout.sunburst.prepareData
  *
@@ -43,7 +41,6 @@ const MAX_SUNBURST_RING_WIDTH = 60;
 const MAX_RW = MAX_SUNBURST_RING_WIDTH;
 const MIN_SUNBURST_RING_WIDTH = 10;
 const MIN_RW = MIN_SUNBURST_RING_WIDTH;
-
 /**
  * sszvis.layout.sunburst.computeLayout
  *
@@ -67,7 +64,6 @@ const computeLayout = (numLayers, chartWidth) => {
     ringWidth
   };
 };
-
 /**
  * sszvis.layout.sunburst.getRadiusExtent
  * @param  {Array} formattedData      An array of data to inspect for the extent of the radius scale

@@ -23,7 +23,6 @@
  *                                padHeight:      This is the amount of vertical padding between each area multiple.
  *                              }
  */
-
 function stackedAreaMultiplesLayout (height, num, pct) {
   pct || (pct = 0.1);
   const step = height / (num - pct),

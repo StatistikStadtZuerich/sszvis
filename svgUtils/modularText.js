@@ -33,7 +33,6 @@ import { last, functor } from '../fn.js';
  *
  * @return {function} Formatting function that accepts a datum
  */
-
 function formatHTML() {
   const styles = {
     plain(d) {

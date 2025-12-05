@@ -46,8 +46,6 @@ import { defaultTransition } from '../transition.js';
  *
  * @return {sszvis.component}
  */
-
-
 // replaces NaN values with 0
 function handleMissingVal(v) {
   return isNaN(v) ? 0 : v;
@@ -65,7 +63,6 @@ function bar () {
       bars.transition(defaultTransition());
     }
     bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
-
     // Tooltip anchors
     let tooltipPosition;
     if (props.centerTooltip) {

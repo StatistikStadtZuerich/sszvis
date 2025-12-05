@@ -91,7 +91,6 @@ import translateString from '../svgUtils/translateString.js';
  * |fooBarBaz        |      <--- not enough space for padding + fooBaz
  * |fooBaz    barFoo |
  */
-
 const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
 function legendColorOrdinal() {
   return component().prop("scale").prop("rowHeight").rowHeight(DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT).prop("columnWidth").columnWidth(200).prop("rows").rows(3).prop("columns").columns(3).prop("verticallyCentered").verticallyCentered(false).prop("orientation").prop("reverse").reverse(false).prop("rightAlign").rightAlign(false).prop("horizontalFloat").horizontalFloat(false).prop("floatPadding").floatPadding(20).prop("floatWidth").floatWidth(600).render(function () {

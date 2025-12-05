@@ -33,28 +33,21 @@ import bar from './bar.js';
  *
  * @return {sszvis.component}
  */
-
-
 /* Constants
 ----------------------------------------------- */
 const SPINE_PADDING = 0.5;
-
 /* Module
 ----------------------------------------------- */
 function pyramid () {
   return component().prop("barHeight", functor).prop("barWidth", functor).prop("barPosition", functor).prop("barFill", functor).barFill("#000").prop("tooltipAnchor").tooltipAnchor([0.5, 0.5]).prop("leftAccessor").prop("rightAccessor").prop("leftRefAccessor").prop("rightRefAccessor").render(function (data) {
     const selection = select(this);
     const props = selection.props();
-
     // Components
-
     const leftBar = bar().x(d => -SPINE_PADDING - props.barWidth(d)).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
     const rightBar = bar().x(SPINE_PADDING).y(props.barPosition).height(props.barHeight).width(props.barWidth).fill(props.barFill).tooltipAnchor(props.tooltipAnchor);
     const leftLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth).mirror(true);
     const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
-
     // Rendering
-
     selection.selectGroup("left").datum(props.leftAccessor(data)).call(leftBar);
     selection.selectGroup("right").datum(props.rightAccessor(data)).call(rightBar);
     selection.selectGroup("leftReference").datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : []).call(leftLine);

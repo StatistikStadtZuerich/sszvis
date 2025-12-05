@@ -18,7 +18,6 @@ import translateString from '../svgUtils/translateString.js';
  *
  * @returns {sszvis.component}
  */
-
 function radius () {
   return component().prop("scale").prop("tickFormat").tickFormat(identity).prop("tickValues").render(function () {
     const selection = select(this);

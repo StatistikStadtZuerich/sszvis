@@ -20,7 +20,6 @@ import { halfPixel } from '../svgUtils/crisp.js';
  *
  * @return {sszvis.component}
  */
-
 function binnedColorScale () {
   return component().prop("scale").prop("displayValues").prop("endpoints").prop("width").width(200).prop("labelFormat").labelFormat(identity).render(function () {
     const selection = select(this);
@@ -47,7 +46,6 @@ function binnedColorScale () {
       sum += w;
       pPrev = p;
     }
-
     // add the final box (last display value - > endpoint)
     rectData.push({
       x: Math.floor(circleRad + sum),

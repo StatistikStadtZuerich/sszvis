@@ -20,7 +20,6 @@ import { defaultTransition } from '../transition.js';
  *
  * @return {sszvis.component}
  */
-
 function dot () {
   return component().prop("x", functor).prop("y", functor).prop("radius").prop("stroke").prop("fill").prop("transition").transition(true).render(function (data) {
     const selection = select(this);
@@ -30,9 +29,7 @@ function dot () {
       dots = dots.transition(defaultTransition());
     }
     dots.attr("cx", props.x).attr("cy", props.y).attr("r", props.radius);
-
     // Tooltip anchors
-
     const ta = tooltipAnchor().position(d => [props.x(d), props.y(d)]);
     selection.call(ta);
   });

@@ -19,8 +19,6 @@ import { compose } from '../fn.js';
  *
  * @module sszvis/svgUtils/crisp
  */
-
-
 /**
  * crisp.halfPixel
  *
@@ -33,7 +31,6 @@ import { compose } from '../fn.js';
 const halfPixel = function (pos) {
   return Math.floor(pos) + 0.5;
 };
-
 /**
  * crisp.roundTransformString
  *
@@ -54,7 +51,6 @@ const roundTransformString = function (transformStr) {
     return left + roundVec + right;
   });
 };
-
 /**
  * crisp.transformTranslateSubpixelShift
  *

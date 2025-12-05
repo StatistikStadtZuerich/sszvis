@@ -24,7 +24,6 @@ import { defaultTransition } from '../transition.js';
  *
  * @return {sszvis.component}
  */
-
 function pie () {
   return component().prop("radius").prop("fill").prop("stroke").prop("angle", functor).render(function (data) {
     const selection = select(this);

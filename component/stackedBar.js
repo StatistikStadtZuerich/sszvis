@@ -34,9 +34,7 @@ import bar from './bar.js';
  *
  * @return {sszvis.component}
  */
-
 const stackAcc = prop("stack");
-
 // Accessors for the first and second element of a tuple (2-element array).
 const fst = prop("0");
 const snd = prop("1");
@@ -44,11 +42,9 @@ function stackedBarData(order) {
   return function (_stackAcc, seriesAcc, valueAcc) {
     return function (data) {
       const rows = cascade().arrayBy(_stackAcc).objectBy(seriesAcc).apply(data);
-
       // Collect all keys ()
       const keys = rows.reduce((a, row) => set([...a, ...Object.keys(row)]), []);
       const stacks = stack().keys(keys).value((x, key) => valueAcc(x[key][0])).order(order)(rows);
-
       // Simplify the 'data' property.
       for (const stack of stacks) {
         for (const d of stack) {

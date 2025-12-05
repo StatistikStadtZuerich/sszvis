@@ -5,7 +5,6 @@ import { measureDimensions, measureAxisLabel, measureLegendLabel } from '../meas
 
 const DEFAULT_COLUMN_COUNT = 2;
 const LABEL_PADDING = 40;
-
 /**
  * colorLegendLayout
  *
@@ -33,7 +32,6 @@ function colorLegendLayout(_ref, container) {
     scale
   };
 }
-
 /**
  * colorLegendDimensions
  *
@@ -43,10 +41,8 @@ function colorLegendDimensions(labels, containerWidth) {
   const labelCount = labels.length;
   const maxLabelWidth = max(labels, labelWidth);
   const totalLabelsWidth = sum(labels, labelWidth);
-
   // Use a single column for four or fewer items
   const columns = labelCount <= 4 ? 1 : numCols(containerWidth, maxLabelWidth, DEFAULT_COLUMN_COUNT);
-
   // Use a horizontal layout if all labels fit on one line
   const isHorizontal = columns === 1 && totalLabelsWidth <= containerWidth;
   return {
@@ -58,10 +54,8 @@ function colorLegendDimensions(labels, containerWidth) {
     orientation: isHorizontal ? null : "vertical"
   };
 }
-
 // -----------------------------------------------------------------------------
 // Helpers
-
 function axisLabelHeight(slant, labels) {
   switch (slant) {
     case "vertical":

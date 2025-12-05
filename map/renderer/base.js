@@ -29,24 +29,20 @@ import { getGeoJsonCenter } from '../mapUtils.js';
  *
  * @return {sszvis.component}
  */
-
 function mapRendererBase () {
   return component().prop("mergedData").prop("geoJson").prop("mapPath").prop("defined", functor).defined(true) // a predicate function to determine whether a datum has a defined value
   .prop("fill", functor).fill(() => "black") // a function for the entity fill color. default is black
   .prop("transitionColor").transitionColor(true).render(function () {
     const selection = select(this);
     const props = selection.props();
-
     // render the missing value pattern
     ensureDefsElement(selection, "pattern", "missing-pattern").call(mapMissingValuePattern);
-
     // map fill function - returns the missing value pattern if the datum doesn't exist or fails the props.defined test
     function getMapFill(d) {
       return props.defined(d.datum) ? props.fill(d.datum) : "url(#missing-pattern)";
     }
     const mapAreas = selection.selectAll(".sszvis-map__area").data(props.mergedData).join("path").classed("sszvis-map__area", true).classed("sszvis-map__area--entering", true).attr("data-event-target", "").attr("fill", getMapFill).classed("sszvis-map__area--entering", false);
     selection.selectAll(".sszvis-map__area--undefined").attr("fill", getMapFill);
-
     // change the fill if necessary
     mapAreas.classed("sszvis-map__area--undefined", d => !defined(d.datum) || !props.defined(d.datum)).attr("d", d => props.mapPath(d.geoJson));
     if (props.transitionColor) {
@@ -54,11 +50,9 @@ function mapRendererBase () {
     } else {
       mapAreas.attr("fill", getMapFill);
     }
-
     // the tooltip anchor generator
     const ta = tooltipAnchor().position(d => props.mapPath.projection()(getGeoJsonCenter(d.geoJson)));
     const tooltipGroup = selection.selectGroup("tooltipAnchors").datum(props.mergedData);
-
     // attach tooltip anchors
     tooltipGroup.call(ta);
   });

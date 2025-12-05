@@ -32,7 +32,6 @@ import { defaultTransition } from '../transition.js';
  *
  * @return {sszvis.component}
  */
-
 function stackedArea () {
   return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("transition").transition(true).render(function (data) {
     const selection = select(this);

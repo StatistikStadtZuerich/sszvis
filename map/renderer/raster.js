@@ -23,7 +23,6 @@ import { functor } from '../../fn.js';
  *
  * @return {sszvis.component}
  */
-
 function raster () {
   return component().prop("debug").debug(false).prop("width").prop("height").prop("position").prop("cellSide").cellSide(2).prop("fill", functor).prop("opacity").opacity(1).render(function (data) {
     const selection = select(this);

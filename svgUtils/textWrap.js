@@ -21,13 +21,11 @@ import { select } from 'd3';
  * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
  * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
  */
-
 function textWrap (selection, width, paddingRightLeft, paddingTopBottom) {
   paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
   paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
   const maxWidth = width; //I store the tooltip max width
   width = width - paddingRightLeft * 2; //Take the padding into account
-
   const arrLineCreatedCount = [];
   selection.each(function () {
     const text = select(this);
@@ -41,10 +39,8 @@ function textWrap (selection, width, paddingRightLeft, paddingTopBottom) {
     let dy = Number.parseFloat(text.attr("dy"));
     let createdLineCount = 1; //Total line created count
     const textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
-
     //Clean the data in case <text> does not define those values
     if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
-
     //Offset the text position based on the text-anchor
     const wrapTickLabels = select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
     if (wrapTickLabels) {

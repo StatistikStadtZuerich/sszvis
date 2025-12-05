@@ -30,8 +30,6 @@ import throttle from '../_virtual/index.js';
  *
  * @return {Object}
  */
-
-
 // This rather strange set of functions is designed to support the API:
 // sszvis.viewport.on('resize', callback);
 // While still enabling the user to register multiple callbacks for the 'resize'

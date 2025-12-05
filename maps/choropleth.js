@@ -33,7 +33,6 @@ import mapRendererPatternedLakeOverlay from '../map/renderer/patternedlakeoverla
  *
  * @return {d3.component}
  */
-
 function choropleth () {
   const event = dispatch("over", "out", "click");
   const baseRenderer = mapRendererBase();
@@ -43,25 +42,18 @@ function choropleth () {
   const mapComponent = component().prop("width").prop("height").prop("keyName").keyName(GEO_KEY_DEFAULT).prop("withLake").withLake(true).prop("anchoredShape").prop("features").prop("borders").prop("lakeFeatures").prop("lakeBorders").prop("lakeFadeOut").lakeFadeOut(false).delegate("defined", baseRenderer).delegate("fill", baseRenderer).delegate("transitionColor", baseRenderer).delegate("borderColor", meshRenderer).delegate("strokeWidth", meshRenderer).delegate("highlight", highlightRenderer).delegate("highlightStroke", highlightRenderer).delegate("highlightStrokeWidth", highlightRenderer).delegate("lakePathColor", lakeRenderer).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-
     // create a map path generator function
     const mapPath = swissMapPath(props.width, props.height, props.features, "zurichStadtfeatures");
     const mergedData = prepareMergedGeoData(data, props.features, props.keyName);
-
     // Base shape
     baseRenderer.geoJson(props.features).mergedData(mergedData).mapPath(mapPath);
-
     // Border mesh
     meshRenderer.geoJson(props.borders).mapPath(mapPath);
-
     // Lake Zurich shape
     lakeRenderer.lakeFeature(props.lakeFeatures).lakeBounds(props.lakeBorders).mapPath(mapPath).fadeOut(props.lakeFadeOut);
-
     // Highlight mesh
     highlightRenderer.geoJson(props.features).keyName(props.keyName).mapPath(mapPath);
-
     // Rendering
-
     selection.call(baseRenderer).call(meshRenderer);
     if (props.withLake) {
       selection.call(lakeRenderer);
@@ -71,9 +63,7 @@ function choropleth () {
       props.anchoredShape.mergedData(mergedData).mapPath(mapPath);
       selection.call(props.anchoredShape);
     }
-
     // Event Binding
-
     selection.selectAll("[data-event-target]").on("mouseover", function (d) {
       event.call("over", this, d.datum);
     }).on("mouseout", function (d) {

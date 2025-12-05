@@ -20,7 +20,6 @@
  *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
  *                                }
  */
-
 function verticalBarChartDimensions (width, numBars) {
   const MAX_BAR_WIDTH = 48,
     // the maximum width of a bar
@@ -37,9 +36,7 @@ function verticalBarChartDimensions (width, numBars) {
   // the derivation of this equation is available upon request
   let padding = width * TARGET_PADDING_RATIO / (TARGET_PADDING_RATIO * numPads + TARGET_BAR_RATIO * numBars);
   // based on the computed padding, calculate the bar width
-
   let barWidth = (width - padding * numPads) / numBars;
-
   // adjust for min and max bounds
   if (barWidth > MAX_BAR_WIDTH) {
     barWidth = MAX_BAR_WIDTH;
@@ -48,7 +45,6 @@ function verticalBarChartDimensions (width, numBars) {
   }
   if (padding < MIN_PADDING) padding = MIN_PADDING;
   if (padding > MAX_PADDING) padding = MAX_PADDING;
-
   // compute other information
   const padRatio = 1 - barWidth / (barWidth + padding),
     computedBarSpace = barWidth * numBars + padding * numPads,

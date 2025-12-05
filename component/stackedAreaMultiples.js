@@ -29,12 +29,10 @@ import { defaultTransition } from '../transition.js';
  *
  * @return {sszvis.component}
  */
-
 function stackedAreaMultiples () {
   return component().prop("x").prop("y0").prop("y1").prop("fill").prop("stroke").prop("strokeWidth").prop("defined").prop("key").key((d, i) => i).prop("valuesAccessor").valuesAccessor(identity).prop("transition").transition(true).render(function (data) {
     const selection = select(this);
     const props = selection.props();
-
     //sszsch why reverse?
     data = [...data].reverse();
     const defaultDefined = function () {

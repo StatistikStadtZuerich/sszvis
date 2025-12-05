@@ -4,7 +4,6 @@ import { viewport } from './viewport/resize.js';
 
 // d3 mutates state in many places, which is why we have to turn this off.
 setAutoFreeze(false);
-
 /**
  * Application loop
  *
@@ -99,10 +98,8 @@ const app = _ref => {
     });
   });
 };
-
 // -----------------------------------------------------------------------------
 // Helper functions
-
 function invariant(condition, message) {
   if (!condition) {
     throw new Error("[sszvis.app] ".concat(message));

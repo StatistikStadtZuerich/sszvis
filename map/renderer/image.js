@@ -28,7 +28,6 @@ import { component } from '../../d3-component.js';
  *
  * @return {sszvis.component}
  */
-
 function image () {
   return component().prop("projection").prop("src").prop("geoBounds").prop("opacity").opacity(1).render(function () {
     const selection = select(this);

@@ -33,13 +33,11 @@ import { defaultTransition } from '../transition.js';
  *
  * @return {sszvis.component}
  */
-
 const TWO_PI = 2 * Math.PI;
 function sunburst () {
   return component().prop("angleScale").angleScale(scaleLinear().range([0, 2 * Math.PI])).prop("radiusScale").prop("centerRadius").prop("fill").prop("stroke").stroke("white").render(function (inputData) {
     const selection = select(this);
     const props = selection.props();
-
     // NOTE: Determine if we have raw hierarchical data or pre-computed sunburst data
     // @deprecated in v3.4.0
     let data;
@@ -53,7 +51,6 @@ function sunburst () {
       }
       data = flatten(inputData).filter(d => d.data._tag !== "root");
     }
-
     // Accepts a sunburst node and returns a d3.hsl color for that node (sometimes operates recursively)
     function getColorRecursive(node) {
       // Center node (if the data were prepared using sszvis.prepareHierarchyData)
@@ -111,7 +108,6 @@ function sunburst () {
         return arcGen(d);
       };
     });
-
     // Add tooltip anchors
     const arcTooltipAnchor = tooltipAnchor().position(d => {
       const startA = startAngle(d);
