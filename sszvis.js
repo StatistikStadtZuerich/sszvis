@@ -1,4 +1,4 @@
-/*! sszvis v3.3.1, Copyright 2014-present Statistik Stadt Zürich */
+/*! sszvis v3.4.0, Copyright 2014-present Statistik Stadt Zürich */
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3')) :
     typeof define === 'function' && define.amd ? define(['exports', 'd3'], factory) :
@@ -5164,7 +5164,7 @@
      *
      * @return {sszvis.component}
      */
-    function groupedBars(config) {
+    function createGroupedBarsComponent(config) {
       return component().prop("groupScale").prop("groupSize").prop("groupWidth").prop("groupHeight").prop("groupSpace").groupSpace(0.05).prop("x", functor).prop("y", functor).prop("width").prop("height").prop("fill").prop("stroke").prop("defined", functor).defined(true).render(function (data) {
         var _props$stroke;
         const selection = d3.select(this);
@@ -5301,8 +5301,14 @@
         };
       }
     });
-    const groupedBarsVertical = () => groupedBars(createVerticalConfig());
-    const groupedBarsHorizontal = () => groupedBars(createHorizontalConfig());
+    const groupedBarsVertical = () => createGroupedBarsComponent(createVerticalConfig());
+    const groupedBarsHorizontal = () => createGroupedBarsComponent(createHorizontalConfig());
+    /**
+     * The default grouped bars component is the vertical version.
+     *
+     * @deprecated Use `groupedBarsVertical` instead.
+     */
+    const groupedBars = groupedBarsVertical;
 
     /**
      * Line component
@@ -9108,7 +9114,7 @@
     exports.functor = functor;
     exports.getAccessibleTextColor = getAccessibleTextColor;
     exports.getGeoJsonCenter = getGeoJsonCenter;
-    exports.groupedBars = groupedBarsVertical;
+    exports.groupedBars = groupedBars;
     exports.groupedBarsHorizontal = groupedBarsHorizontal;
     exports.groupedBarsVertical = groupedBarsVertical;
     exports.halfPixel = halfPixel;

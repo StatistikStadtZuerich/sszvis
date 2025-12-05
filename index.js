@@ -24,7 +24,7 @@ export { cascade } from './cascade.js';
 export { getAccessibleTextColor, muchDarker, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, slightlyDarker, withAlpha } from './color.js';
 export { default as bar } from './component/bar.js';
 export { default as dot } from './component/dot.js';
-export { groupedBarsVertical as groupedBars, groupedBarsHorizontal, groupedBarsVertical } from './component/groupedBars.js';
+export { groupedBars, groupedBarsHorizontal, groupedBarsVertical } from './component/groupedBars.js';
 export { default as line } from './component/line.js';
 export { nestedStackedBarsVertical } from './component/nestedStackedBar.js';
 export { default as pack } from './component/pack.js';

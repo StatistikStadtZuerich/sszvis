@@ -83,5 +83,11 @@ interface GroupedBarsComponent<T = unknown> extends Component {
 }
 export declare const groupedBarsVertical: <T = unknown>() => GroupedBarsComponent<T>;
 export declare const groupedBarsHorizontal: <T = unknown>() => GroupedBarsComponent<T>;
-export default groupedBarsVertical;
+/**
+ * The default grouped bars component is the vertical version.
+ *
+ * @deprecated Use `groupedBarsVertical` instead.
+ */
+export declare const groupedBars: <T = unknown>() => GroupedBarsComponent<T>;
+export {};
 //# sourceMappingURL=groupedBars.d.ts.map

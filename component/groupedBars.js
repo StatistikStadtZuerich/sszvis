@@ -60,7 +60,7 @@ import translateString from '../svgUtils/translateString.js';
  *
  * @return {sszvis.component}
  */
-function groupedBars(config) {
+function createGroupedBarsComponent(config) {
   return component().prop("groupScale").prop("groupSize").prop("groupWidth").prop("groupHeight").prop("groupSpace").groupSpace(0.05).prop("x", functor).prop("y", functor).prop("width").prop("height").prop("fill").prop("stroke").prop("defined", functor).defined(true).render(function (data) {
     var _props$stroke;
     const selection = select(this);
@@ -197,8 +197,14 @@ const createHorizontalConfig = () => ({
     };
   }
 });
-const groupedBarsVertical = () => groupedBars(createVerticalConfig());
-const groupedBarsHorizontal = () => groupedBars(createHorizontalConfig());
+const groupedBarsVertical = () => createGroupedBarsComponent(createVerticalConfig());
+const groupedBarsHorizontal = () => createGroupedBarsComponent(createHorizontalConfig());
+/**
+ * The default grouped bars component is the vertical version.
+ *
+ * @deprecated Use `groupedBarsVertical` instead.
+ */
+const groupedBars = groupedBarsVertical;
 
-export { groupedBarsVertical as default, groupedBarsHorizontal, groupedBarsVertical };
+export { groupedBars, groupedBarsHorizontal, groupedBarsVertical };
 //# sourceMappingURL=groupedBars.js.map
