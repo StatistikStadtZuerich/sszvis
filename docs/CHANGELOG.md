@@ -1,3 +1,30 @@
+## 3.4.0 (2025-12-05)
+
+- add `sszvis.treemap` component for hierarchical data visualization
+- add `sszvis.pack` component for circle packing visualizations
+- add `sszvis.groupedBarsHorizontal` component for horizontal grouped bar charts
+- renamed `sszvis.groupedBars` to `sszvis.groupedBarsVertical` for clarity (backwards compatible for now)
+- fix pointer events in `sszvis.move` behavior for better touch support
+
+We've added a new hierarchy section to the documentation that includes examples and guides for using the new `sszvis.treemap` and `sszvis.pack` components as well as the existing `sszvis.sunburst`. These components all follow a similar data structure which has been consolidated into the `sszvis.prepareHierarchyData` utility.
+
+```code
+ const hierarchicalData = sszvis
+      .prepareHierarchyData()
+      .layer(continentAcc)
+      .layer(regionAcc)
+      .layer(countryAcc)
+      .value(numAcc)
+      .calculate(data);
+
+```
+
+Existing examples have been updated to use this new utility for preparing hierarchical data more easily.
+
+### Deprecated
+
+The `sszvis.groupedBars` component has been renamed to `sszvis.groupedBarsVertical` to make it clearer that it renders vertical grouped bar charts. The old name is still available for backwards compatibility but will be removed in a future release.
+
 ## 3.3.1 (2025-09-25)
 
 - fix `sszvis.panning` behavior with correct data arguments in event handlers

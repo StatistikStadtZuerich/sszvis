@@ -139,7 +139,9 @@ type GroupedBarsConfig<T> = {
   ): (group: T[]) => [number, number];
 };
 
-function groupedBars<T = unknown>(config: GroupedBarsConfig<T>): GroupedBarsComponent<T> {
+function createGroupedBarsComponent<T = unknown>(
+  config: GroupedBarsConfig<T>
+): GroupedBarsComponent<T> {
   return component()
     .prop("groupScale")
     .prop("groupSize")
@@ -313,9 +315,15 @@ const createHorizontalConfig = <T>(): GroupedBarsConfig<T> => ({
     },
 });
 
-export const groupedBarsVertical = <T = unknown>() => groupedBars<T>(createVerticalConfig<T>());
+export const groupedBarsVertical = <T = unknown>() =>
+  createGroupedBarsComponent<T>(createVerticalConfig<T>());
 
-export const groupedBarsHorizontal = <T = unknown>() => groupedBars<T>(createHorizontalConfig<T>());
+export const groupedBarsHorizontal = <T = unknown>() =>
+  createGroupedBarsComponent<T>(createHorizontalConfig<T>());
 
-// Backward compatibility - default export is vertical
-export default groupedBarsVertical;
+/**
+ * The default grouped bars component is the vertical version.
+ *
+ * @deprecated Use `groupedBarsVertical` instead.
+ */
+export const groupedBars = groupedBarsVertical;
