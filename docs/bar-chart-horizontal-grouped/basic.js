@@ -53,7 +53,7 @@ const actions = {
     render(state);
   },
 
-  showTooltip(_, y) {
+  showTooltip(_e, _x, y) {
     state.selection = state.groupedData.filter((d) =>
       sszvis.contains(d.map(regionAcc), y),
     );
