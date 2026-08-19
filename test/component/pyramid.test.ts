@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-// @ts-expect-error - pyramid.js has no type declarations until it is ported
 import pyramid from "../../src/component/pyramid.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
@@ -280,11 +279,13 @@ describe("component/pyramid", () => {
   });
 
   describe("reference lines", () => {
+    /** Both reference series present, which is what the reference accessors require. */
+    type WithRefs = Required<Population>;
     const withRefs = () =>
       pyramidOf()
-        .leftRefAccessor((d: Population) => d.leftRef)
-        .rightRefAccessor((d: Population) => d.rightRef);
-    const refData: Population = { left, right, leftRef: left, rightRef: right };
+        .leftRefAccessor((d: WithRefs) => d.leftRef)
+        .rightRefAccessor((d: WithRefs) => d.rightRef);
+    const refData: WithRefs = { left, right, leftRef: left, rightRef: right };
 
     test("should render no path when no reference accessor is set", () => {
       const node = render(pyramidOf(), testData);
@@ -407,6 +408,7 @@ describe("component/pyramid", () => {
         // nor the component: "undefined is not iterable".
         expect(() =>
           render(
+            // @ts-expect-error - deliberately violating the accessor's return contract
             pyramidOf().leftAccessor(() => undefined),
             testData
           )
@@ -462,6 +464,7 @@ describe("component/pyramid", () => {
       // current: TypeError "undefined is not iterable". expected: no line.
       expect(() =>
         render(
+          // @ts-expect-error - deliberately violating the accessor's return contract
           pyramidOf().rightRefAccessor(() => undefined),
           testData
         )
@@ -470,6 +473,7 @@ describe("component/pyramid", () => {
       // "Cannot use 'in' operator to search for 'length' in null".
       expect(() =>
         render(
+          // @ts-expect-error - deliberately violating the accessor's return contract
           pyramidOf().rightRefAccessor(() => null),
           testData
         )

@@ -1,0 +1,210 @@
+/**
+ * Pyramid component
+ *
+ * The pyramid component is primarily used to show a distribution of age groups
+ * in a population (population pyramid). The chart is mirrored vertically,
+ * meaning that it has a horizontal axis that extends in a positive and negative
+ * direction having the same domain.
+ *
+ * This chart's horizontal point of origin is at it's spine, i.e. the center of
+ * the chart.
+ *
+ * @module sszvis/component/pyramid
+ *
+ * @requires sszvis.component.bar
+ *
+ * @property {number, d3.scale} [barFill]          The color of a bar
+ * @property {number, d3.scale} barHeight          The height of a bar
+ * @property {number, d3.scale} barWidth           The width of a bar
+ * @property {number, d3.scale} barPosition        The vertical position of a bar
+ * @property {Array<number, number>} tooltipAnchor The anchor position for the tooltips. Uses sszvis.component.bar.tooltipAnchor
+ *                                                 under the hood to optionally reposition the tooltip anchors in the pyramid chart.
+ *                                                 Default value is [0.5, 0.5], which centers tooltips on the bars
+ * @property {function}         leftAccessor       Data for the left side
+ * @property {function}         rightAccessor      Data for the right side
+ * @property {function}         [leftRefAccessor]  Reference data for the left side
+ * @property {function}         [rightRefAccessor] Reference data for the right side
+ *
+ * @return {sszvis.component}
+ */
+
+import { line as d3Line, select } from "d3";
+import { type Component, component } from "../d3-component.js";
+import * as fn from "../fn.js";
+import { defaultTransition } from "../transition.js";
+import bar from "./bar.js";
+
+/* Constants
+----------------------------------------------- */
+const SPINE_PADDING = 0.5;
+
+/* Types
+----------------------------------------------- */
+
+/**
+ * The bar dimensions are wrapped by fn.functor on set, so they are always stored as
+ * functions by the time the renderer reads them. The parameters are variadic because d3
+ * calls them with the datum, the index and the group - except on the left side, where the
+ * component calls barWidth itself with the datum alone.
+ */
+type ValueAccessor<T> = (...args: unknown[]) => T;
+
+/**
+ * Pulls one side's series out of the chart's datum. Unlike the bar dimensions these are
+ * stored exactly as they were set, so they are always functions, and the datum they read
+ * is whatever the caller bound to the chart layer.
+ */
+type SideAccessor = (data: unknown) => unknown[];
+
+type PyramidProps = {
+  barHeight: ValueAccessor<number>;
+  barWidth: ValueAccessor<number>;
+  barPosition: ValueAccessor<number>;
+  barFill: ValueAccessor<string>;
+  tooltipAnchor: (number | string)[];
+  leftAccessor: SideAccessor;
+  rightAccessor: SideAccessor;
+  leftRefAccessor?: SideAccessor;
+  rightRefAccessor?: SideAccessor;
+};
+
+/**
+ * A constant or an accessor; either is accepted for the bar dimensions, since fn.functor
+ * normalises both. The parameters are `never[]` so that an accessor with any signature is
+ * assignable - `unknown[]` would reject a typed accessor like (d: Datum) => number.
+ */
+type PyramidValue<R> = R | ((...args: never[]) => R);
+
+/**
+ * The setter counterpart of SideAccessor, with the same `never` parameter trick, so that
+ * callers can hand in an accessor typed to their own datum shape.
+ */
+type SideValue = (data: never) => unknown[];
+
+export interface PyramidComponent extends Component {
+  barHeight(): ValueAccessor<number>;
+  barHeight(value: PyramidValue<number>): PyramidComponent;
+  barWidth(): ValueAccessor<number>;
+  barWidth(value: PyramidValue<number>): PyramidComponent;
+  barPosition(): ValueAccessor<number>;
+  barPosition(value: PyramidValue<number>): PyramidComponent;
+  barFill(): ValueAccessor<string>;
+  barFill(value: PyramidValue<string | undefined>): PyramidComponent;
+  tooltipAnchor(): (number | string)[];
+  tooltipAnchor(anchor: (number | string)[]): PyramidComponent;
+  leftAccessor(): SideAccessor;
+  leftAccessor(accessor: SideValue): PyramidComponent;
+  rightAccessor(): SideAccessor;
+  rightAccessor(accessor: SideValue): PyramidComponent;
+  leftRefAccessor(): SideAccessor | undefined;
+  leftRefAccessor(accessor: SideValue): PyramidComponent;
+  rightRefAccessor(): SideAccessor | undefined;
+  rightRefAccessor(accessor: SideValue): PyramidComponent;
+}
+
+/* Module
+----------------------------------------------- */
+export default function (): PyramidComponent {
+  return component()
+    .prop("barHeight", fn.functor)
+    .prop("barWidth", fn.functor)
+    .prop("barPosition", fn.functor)
+    .prop("barFill", fn.functor)
+    .barFill("#000")
+    .prop("tooltipAnchor")
+    .tooltipAnchor([0.5, 0.5])
+    .prop("leftAccessor")
+    .prop("rightAccessor")
+    .prop("leftRefAccessor")
+    .prop("rightRefAccessor")
+    .render(function (this: Element, data: unknown) {
+      const selection = select(this);
+      const props = selection.props<PyramidProps>();
+
+      // Components
+
+      const leftBar = bar()
+        .x((d: unknown) => -SPINE_PADDING - props.barWidth(d))
+        .y(props.barPosition)
+        .height(props.barHeight)
+        .width(props.barWidth)
+        .fill(props.barFill)
+        .tooltipAnchor(props.tooltipAnchor);
+
+      const rightBar = bar()
+        .x(SPINE_PADDING)
+        .y(props.barPosition)
+        .height(props.barHeight)
+        .width(props.barWidth)
+        .fill(props.barFill)
+        .tooltipAnchor(props.tooltipAnchor);
+
+      const leftLine = lineComponent()
+        .barPosition(props.barPosition)
+        .barWidth(props.barWidth)
+        .mirror(true);
+
+      const rightLine = lineComponent().barPosition(props.barPosition).barWidth(props.barWidth);
+
+      // Rendering
+
+      selection.selectGroup("left").datum(props.leftAccessor(data)).call(leftBar);
+
+      selection.selectGroup("right").datum(props.rightAccessor(data)).call(rightBar);
+
+      selection
+        .selectGroup("leftReference")
+        .datum(props.leftRefAccessor ? [props.leftRefAccessor(data)] : [])
+        .call(leftLine);
+
+      selection
+        .selectGroup("rightReference")
+        .datum(props.rightRefAccessor ? [props.rightRefAccessor(data)] : [])
+        .call(rightLine);
+    });
+}
+
+type ReferenceLineProps = {
+  barPosition: ValueAccessor<number>;
+  barWidth: ValueAccessor<number>;
+  mirror: boolean;
+};
+
+interface ReferenceLineComponent extends Component {
+  barPosition(): ValueAccessor<number>;
+  barPosition(value: ValueAccessor<number>): ReferenceLineComponent;
+  barWidth(): ValueAccessor<number>;
+  barWidth(value: ValueAccessor<number>): ReferenceLineComponent;
+  mirror(): boolean;
+  mirror(value: boolean): ReferenceLineComponent;
+}
+
+/**
+ * Draws one side's reference outline as a single path. The data is one array of points per
+ * path, so the datum handed to this component is an array of arrays - in practice always
+ * of length one, since each side has at most one reference line.
+ */
+function lineComponent(): ReferenceLineComponent {
+  return component()
+    .prop("barPosition")
+    .prop("barWidth")
+    .prop("mirror")
+    .mirror(false)
+    .render(function (this: Element, data: unknown[][]) {
+      const selection = select(this);
+      const props = selection.props<ReferenceLineProps>();
+
+      const lineGen = d3Line<unknown>().x(props.barWidth).y(props.barPosition);
+
+      const line = selection
+        .selectAll<SVGPathElement, unknown[]>(".sszvis-pyramid__referenceline")
+        .data(data)
+        .join("path")
+        .attr("class", "sszvis-pyramid__referenceline");
+
+      line
+        .attr("transform", props.mirror ? "scale(-1, 1)" : "")
+        .transition(defaultTransition())
+        .attr("d", lineGen);
+    });
+}
