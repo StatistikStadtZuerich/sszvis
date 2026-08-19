@@ -3,6 +3,14 @@
  *
  * Use for showing how different radius sizes correspond to data values.
  *
+ * The legend draws one nested circle per tick, all resting on a common baseline, with a
+ * dashed leader line and a label at the top edge of each circle.
+ *
+ * When tickValues are not supplied, the ticks default to the domain maximum, the value at
+ * the midpoint of the scale's range, and the domain minimum. Deriving that middle tick
+ * calls scale.invert(), so the default only works for a continuous scale; pass tickValues
+ * explicitly to use any other kind.
+ *
  * @module sszvis/legend/radius
  *
  * @property {function} scale         A scale to use to generate the radius sizes
@@ -13,28 +21,60 @@
  */
 
 import { mean, select } from "d3";
-import { component } from "../d3-component.js";
+import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { range } from "../scale.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 
-export default function () {
+/** The subset of a d3 scale this legend relies on. */
+interface RadiusScale {
+  (value: unknown): number;
+  domain(): unknown[];
+  range(): unknown[];
+  /** Required only when tickValues are not supplied. */
+  invert?(value: number): unknown;
+}
+
+/** Formats a tick label. The default is fn.identity, which passes the value through. */
+type TickFormatter = (value: unknown, index: number) => string | number;
+
+type RadiusLegendProps = {
+  scale: RadiusScale;
+  tickFormat: TickFormatter;
+  tickValues?: unknown[];
+};
+
+export interface RadiusLegendComponent extends Component {
+  scale(): RadiusScale;
+  scale(scale: RadiusScale): RadiusLegendComponent;
+  tickFormat(): TickFormatter;
+  tickFormat(format: TickFormatter): RadiusLegendComponent;
+  tickValues(): unknown[] | undefined;
+  tickValues(values: unknown[]): RadiusLegendComponent;
+}
+
+export default function (): RadiusLegendComponent {
   return component()
     .prop("scale")
     .prop("tickFormat")
     .tickFormat(fn.identity)
     .prop("tickValues")
-    .render(function () {
+    .render(function (this: Element) {
       const selection = select(this);
-      const props = selection.props();
+      const props = selection.props<RadiusLegendProps>();
 
       const domain = props.scale.domain();
-      const tickValues = props.tickValues || [
-        domain[1],
-        props.scale.invert(mean(props.scale.range())),
-        domain[0],
-      ];
+      const tickValues =
+        props.tickValues ||
+        [
+          domain[1],
+          // Throws when the scale has no invert; see test/svgUtils - documented above.
+          (props.scale.invert as (value: number) => unknown)(
+            mean(props.scale.range() as number[]) as number
+          ),
+          domain[0],
+        ];
       const maxRadius = range(props.scale)[1];
 
       const group = selection
@@ -51,13 +91,8 @@ export default function () {
         .join("circle")
         .classed("sszvis-legend__greyline", true);
 
-      function getCircleCenter(d) {
-        return maxRadius - props.scale(d);
-      }
-
-      function getCircleEdge(d) {
-        return maxRadius - 2 * props.scale(d);
-      }
+      const getCircleCenter = (d: unknown): number => maxRadius - props.scale(d);
+      const getCircleEdge = (d: unknown): number => maxRadius - 2 * props.scale(d);
 
       circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
 
@@ -84,5 +119,5 @@ export default function () {
         .attr("y", getCircleEdge)
         .attr("dy", "0.35em") // vertically-center
         .text(props.tickFormat);
-    });
+    }) as RadiusLegendComponent;
 }
