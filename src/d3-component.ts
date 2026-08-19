@@ -47,7 +47,7 @@ export interface Component {
  *
  * @return {sszvis.component} A d3 reusable chart
  */
-export function component(): Component {
+export function component<C extends Component = Component>(): C {
   const props: ComponentProps = {};
   let selectionRenderer: SelectionRenderCallback | null = null;
   let renderer: RenderCallback = identity;
@@ -126,7 +126,9 @@ export function component(): Component {
     return sszvisComponent as Component;
   };
 
-  return sszvisComponent as Component;
+  // The accessors declared by `.prop()` only exist once the component is built, so a
+  // component interface which declares them can only be produced here, by naming it as C.
+  return sszvisComponent as C;
 }
 
 declare module "d3" {
