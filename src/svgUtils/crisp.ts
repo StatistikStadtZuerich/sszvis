@@ -29,34 +29,39 @@ import * as fn from "../fn.js";
  * @param  {number} pos A pixel position
  * @return {number}     A pixel position snapped to the pixel grid
  */
-export const halfPixel = function (pos) {
-  return Math.floor(pos) + 0.5;
-};
+export const halfPixel = (pos: number): number => Math.floor(pos) + 0.5;
 
 /**
  * crisp.roundTransformString
  *
  * Takes an SVG transform string 'translate(12.3,4.56789) rotate(3.5)' and
- * rounds all translate coordinates to integers: 'translate(12,5) rotate(3.5)'.
+ * rounds all translate coordinates to integers: 'translate(12,4) rotate(3.5)'.
  *
  * A valid translate instruction has the form 'translate(<x> [<y>])' where
  * x and y can be separated by a space or comma. We normalize this to use
  * spaces because that's what Internet Explorer uses.
  *
+ * Note: coordinates are floored rather than rounded, only the first translate
+ * instruction of a string is processed, and negative coordinates are left
+ * untouched. See test/svgUtils/crisp.test.ts for the pinned behaviour.
+ *
  * @param  {string} transformStr A valid SVG transform string
  * @return {string}              An SVG transform string with rounded values
  */
-export const roundTransformString = function (transformStr) {
+export const roundTransformString = (transformStr: string): string => {
   const roundNumber = fn.compose(Math.floor, Number);
-  return transformStr.replace(/(translate\()\s*([\d ,.]+)\s*(\))/i, (_, left, vecStr, right) => {
-    const roundVec = vecStr
-      .replace(",", " ")
-      .replace(/\s+/, " ")
-      .split(" ")
-      .map(roundNumber)
-      .join(",");
-    return left + roundVec + right;
-  });
+  return transformStr.replace(
+    /(translate\()\s*([\d ,.]+)\s*(\))/i,
+    (_: string, left: string, vecStr: string, right: string) => {
+      const roundVec = vecStr
+        .replace(",", " ")
+        .replace(/\s+/, " ")
+        .split(" ")
+        .map(roundNumber)
+        .join(",");
+      return `${left}${roundVec}${right}`;
+    }
+  );
 };
 
 /**
@@ -67,14 +72,20 @@ export const roundTransformString = function (transformStr) {
  * grid.
  *
  * @param  {string} transformStr A valid SVG transform string
- * @return {vecor}               Two-element array ([dx, dy])
+ * @return {vector}              Two-element array ([dx, dy])
  */
-export const transformTranslateSubpixelShift = function (transformStr) {
+export const transformTranslateSubpixelShift = (transformStr: string): [number, number] => {
   const roundNumber = fn.compose(Math.floor, Number);
   const m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
-  const vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
+  // A transform string without a translate instruction throws a TypeError here. This
+  // is preserved from the original implementation; see test/svgUtils/crisp.test.ts.
+  const vec = (m as RegExpMatchArray)[2]
+    .replace(",", " ")
+    .replace(/\s+/, " ")
+    .split(" ")
+    .map(Number);
 
-  if (vec.length === 1) vec.push([0]);
+  if (vec.length === 1) vec.push(0);
 
   const vecRound = vec.map(roundNumber);
   return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
