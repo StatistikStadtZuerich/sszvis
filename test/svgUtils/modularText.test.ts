@@ -59,10 +59,9 @@ describe("svgUtils/modularText", () => {
     });
 
     test("should return an empty string for a builder without words", () => {
-      // NOTE: the HTML and SVG variants disagree on the empty case. HTML collapses to "",
-      // while SVG still emits a wrapper tspan (see the modularTextSVG suite). Both are
-      // harmless in practice, so this is recorded as context rather than as a defect —
-      // worth a deliberate decision during the port rather than an accidental change.
+      // NOTE: the HTML and SVG variants disagree on the empty case — SVG still emits a
+      // wrapper tspan (see the modularTextSVG suite). Documented in the modularText.ts
+      // JSDoc; pinned here so the asymmetry cannot change by accident.
       expect(modularTextHTML()({})).toBe("");
     });
 

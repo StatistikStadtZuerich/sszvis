@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { globSync } from "glob";
 
-const RENDER_DELAY = 200;
+// Must exceed the library's longest transition
+const RENDER_DELAY = 700;
 
 const files = globSync("../../build/[^_]*/*.html", { cwd: __dirname });
 

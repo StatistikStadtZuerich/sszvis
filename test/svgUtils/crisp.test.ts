@@ -66,9 +66,9 @@ describe("svgUtils/crisp", () => {
     // cause and the behaviour that would be correct instead.
     describe("known quirks", () => {
       test("floors rather than rounds coordinates", () => {
-        // BUG: the JSDoc in crisp.js claims translate(12.3,4.56789) => translate(12,5),
-        // but the implementation uses Math.floor. Either the doc or the rounding is wrong.
-        // current: floors both components. expected (per the doc): rounds them.
+        // NOTE: not a defect. Flooring is deliberate and consistent with halfPixel — both
+        // move a coordinate to the origin of its enclosing pixel. The JSDoc used to claim
+        // rounding (translate(12,5)); that error is corrected in crisp.ts.
         expect(roundTransformString("translate(0.9,0.9)")).toBe("translate(0,0)");
         expect(roundTransformString("translate(4.99,4.99)")).toBe("translate(4,4)");
       });
@@ -83,8 +83,9 @@ describe("svgUtils/crisp", () => {
       });
 
       test("rounds only the first translate instruction of a transform string", () => {
-        // BUG: the match regex has no /g flag, so later translate instructions are skipped.
-        // current: "translate(1,2) translate(3.5,4.5)". expected: both rounded.
+        // NOTE: documented scope, not a defect. The match regex has no /g flag, so only the
+        // first translate instruction is processed. Crisping a single translate is all this
+        // is used for; see the scope paragraph in the crisp.ts JSDoc.
         expect(roundTransformString("translate(1.5,2.5) translate(3.5,4.5)")).toBe(
           "translate(1,2) translate(3.5,4.5)"
         );
@@ -99,9 +100,10 @@ describe("svgUtils/crisp", () => {
       });
 
       test("emits NaN for a translate with more than two components", () => {
-        // BUG: same non-global replace. After the first comma is collapsed, "2.5,3.5"
-        // survives as one token and Number("2.5,3.5") is NaN, producing invalid SVG.
-        // current: "translate(1,NaN)". expected: reject or round all three components.
+        // NOTE: a three-component translate is not valid SVG, so this is undefined-input
+        // behaviour rather than a defect in its own right. It shares a root cause with the
+        // padded-spaces defect above (non-global replace) and will resolve when that is
+        // fixed; pinned so the change is visible when it happens.
         expect(roundTransformString("translate(1.5,2.5,3.5)")).toBe("translate(1,NaN)");
       });
     });
@@ -125,9 +127,9 @@ describe("svgUtils/crisp", () => {
     });
 
     test("should return a zero y shift for a translate with only an x component", () => {
-      // BUG: the zero here is accidental. crisp.js pads the vector with `vec.push([0])`,
-      // pushing an *array* rather than the number 0; it only yields 0 because [0] - 0
-      // coerces to 0. The result is correct, but a typed port will reject the push.
+      // NOTE: resolved by the TypeScript port. The original padded the vector with
+      // `vec.push([0])` — an *array*, not the number 0 — which only yielded 0 because
+      // [0] - 0 coerces to 0. The port pushes 0 directly; the output is unchanged.
       const [dx, dy] = transformTranslateSubpixelShift("translate(12.3)");
       expect(dx).toBeCloseTo(0.3, 10);
       expect(dy).toBe(0);
@@ -149,7 +151,9 @@ describe("svgUtils/crisp", () => {
 
     test("throws when the transform string contains no translate instruction", () => {
       // BUG: the regex match result is dereferenced as m[2] without a null check, so any
-      // transform lacking a translate throws instead of reporting "no shift".
+      // transform lacking a translate throws instead of reporting "no shift". The sole
+      // caller, axis.ts, passes `this.getAttribute("transform") || ""` — that fallback
+      // leads straight into this throw whenever a tick group has no transform.
       // current: TypeError. expected: [0, 0].
       expect(() => transformTranslateSubpixelShift("rotate(45)")).toThrow(TypeError);
       expect(() => transformTranslateSubpixelShift("")).toThrow(TypeError);
