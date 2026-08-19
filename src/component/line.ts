@@ -22,17 +22,20 @@
  *
  * @module sszvis/component/line
  *
+ * @template P The type of one point along a line
+ * @template L The type of the datum for a whole line
+ *
  * @property {number, function} x       An accessor function for getting the x-value of the line, or a
- *                                       constant. Required: omitting it yields a path full of NaN, with no
- *                                       warning, because d3.line coerces the missing accessor to NaN.
+ *                                       constant. Required: omitting it draws nothing at all, with no
+ *                                       warning, because every point then reads as missing.
  * @property {function} y                An accessor function for getting the y-value of the line. Required,
  *                                       and unlike x it must be a function, because the default defined
  *                                       predicate calls it. Omitting it throws a TypeError rather than a
  *                                       named missing-property error.
  * @property {function} [defined]        A per-point predicate handed to d3.line, deciding whether a point is
- *                                       drawn. Defaults to skipping points whose y is missing. It replaces
- *                                       that default rather than composing with it, so setting it gives up
- *                                       the missing-value guard.
+ *                                       drawn. Defaults to skipping points whose x or y is missing. It
+ *                                       replaces that default rather than composing with it, so setting it
+ *                                       gives up the missing-value guard.
  * @property {function} [key]            The key function to be used for the data join. Defaults to the index,
  *                                       which matches lines by position.
  * @property {function} [valuesAccessor] An accessor function for getting the data points array of the line
@@ -58,11 +61,10 @@
  * sees nothing. Entering lines also snap rather than animate, because d3 has no previous d value to
  * interpolate from; only updates animate. See test/component/line.test.ts.
  *
- * Note: the default missing-value guard only inspects y, and only catches values that fail to coerce
- * to a number. A NaN or Infinity x, which a scale over a zero-width or mismatched domain will
- * produce, reaches the d attribute verbatim; the browser then renders up to the bad segment and
- * silently drops the rest of the series. A null y coerces to 0 and is plotted as data rather than
- * breaking the line.
+ * Note: the default missing-value guard inspects both dimensions, but only catches values that fail
+ * to coerce to a number. Infinity, which a scale over a zero-width domain produces, still reaches the
+ * d attribute verbatim; the browser then renders up to that segment and silently drops the rest of
+ * the series. A null likewise coerces to 0 and is plotted as data rather than breaking the line.
  *
  * @return {sszvis.component}
  */
@@ -76,52 +78,48 @@ import { defaultTransition } from "../transition.js";
  * Dimension accessors are handed to d3.line, which calls them with a single point, that
  * point's index within the line, and the array of points the line is drawn from.
  */
-type PointAccessor<R> = (datum: unknown, index: number, points: unknown[]) => R;
+type PointAccessor<P, R> = (datum: P, index: number, points: P[]) => R;
 
 /**
  * Style accessors are handed to the d3 selection, which calls them with the datum for a
  * whole line and that line's index within the outer array - not with a single point.
  */
-type LineAccessor<R> = (datum: unknown, index: number) => R;
+type LineAccessor<L, R> = (datum: L, index: number) => R;
 
 /** Either a constant or an accessor; only stroke and strokeWidth accept both. */
-type StyleValue<R> = R | LineAccessor<R>;
+type StyleValue<L, R> = R | LineAccessor<L, R>;
 
-type LineProps = {
-  x: number | PointAccessor<number>;
-  y: PointAccessor<number>;
-  defined?: PointAccessor<boolean>;
-  key: LineAccessor<string | number>;
-  valuesAccessor: (datum: unknown, index: number) => unknown[];
-  stroke?: StyleValue<string>;
-  strokeWidth?: StyleValue<number>;
+/** Pulls the array of points to draw out of one line's datum. */
+type ValuesAccessor<L, P> = (datum: L, index: number) => P[];
+
+type LineProps<P, L> = {
+  x: number | PointAccessor<P, number>;
+  y: PointAccessor<P, number>;
+  defined?: PointAccessor<P, boolean>;
+  key: LineAccessor<L, string | number>;
+  valuesAccessor: ValuesAccessor<L, P>;
+  stroke?: StyleValue<L, string>;
+  strokeWidth?: StyleValue<L, number>;
   transition: boolean;
 };
 
-/**
- * A value passed to a setter. The parameters are `never[]` so that an accessor with any
- * signature is assignable - `unknown[]` would reject a typed accessor like
- * (d: Datum) => number.
- */
-type LineValue<R> = (...args: never[]) => R;
-
-export interface LineComponent extends Component {
-  x(): number | PointAccessor<number> | undefined;
-  x(value: number | LineValue<number>): LineComponent;
-  y(): PointAccessor<number> | undefined;
-  y(accessor: LineValue<number>): LineComponent;
-  defined(): PointAccessor<boolean> | undefined;
-  defined(predicate: LineValue<boolean>): LineComponent;
-  key(): LineAccessor<string | number>;
-  key(accessor: LineValue<string | number>): LineComponent;
-  valuesAccessor(): (datum: unknown, index: number) => unknown[];
-  valuesAccessor(accessor: LineValue<unknown[]>): LineComponent;
-  stroke(): StyleValue<string> | undefined;
-  stroke(value: string | LineValue<string>): LineComponent;
-  strokeWidth(): StyleValue<number> | undefined;
-  strokeWidth(value: number | LineValue<number>): LineComponent;
+export interface LineComponent<P = unknown, L = unknown> extends Component {
+  x(): number | PointAccessor<P, number> | undefined;
+  x<Q = P>(value: number | PointAccessor<Q, number>): LineComponent<P, L>;
+  y(): PointAccessor<P, number> | undefined;
+  y<Q = P>(accessor: PointAccessor<Q, number>): LineComponent<P, L>;
+  defined(): PointAccessor<P, boolean> | undefined;
+  defined<Q = P>(predicate: PointAccessor<Q, boolean>): LineComponent<P, L>;
+  key(): LineAccessor<L, string | number>;
+  key<M = L>(accessor: LineAccessor<M, string | number>): LineComponent<P, L>;
+  valuesAccessor(): ValuesAccessor<L, P>;
+  valuesAccessor<M = L, Q = P>(accessor: ValuesAccessor<M, Q>): LineComponent<P, L>;
+  stroke(): StyleValue<L, string> | undefined;
+  stroke<M = L>(value: StyleValue<M, string>): LineComponent<P, L>;
+  strokeWidth(): StyleValue<L, number> | undefined;
+  strokeWidth<M = L>(value: StyleValue<M, number>): LineComponent<P, L>;
   transition(): boolean;
-  transition(enabled: boolean): LineComponent;
+  transition(enabled: boolean): LineComponent<P, L>;
 }
 
 /**
@@ -130,9 +128,9 @@ export interface LineComponent extends Component {
  * function returning null, which d3 removes the style for - the same thing it does when
  * handed undefined directly.
  */
-const styleValue = <R extends string | number>(
-  value: StyleValue<R> | undefined
-): ValueFn<SVGPathElement, unknown, R | null> =>
+const styleValue = <L, R extends string | number>(
+  value: StyleValue<L, R> | undefined
+): ValueFn<SVGPathElement, L, R | null> =>
   typeof value === "function" ? value : () => value ?? null;
 
 /**
@@ -150,7 +148,7 @@ const styleValue = <R extends string | number>(
  */
 const isMissingVal = (value: unknown): boolean => Number.isNaN(Number(value));
 
-export default function (): LineComponent {
+export default function <P = unknown, L = unknown>(): LineComponent<P, L> {
   return component()
     .prop("x")
     .prop("y")
@@ -163,36 +161,40 @@ export default function (): LineComponent {
     .valuesAccessor(fn.identity)
     .prop("transition")
     .transition(true)
-    .render(function (this: Element, data: unknown[]) {
+    .render(function (this: Element, data: L[]) {
       const selection = select(this);
-      const props = selection.props<LineProps>();
+      const props = selection.props<LineProps<P, L>>();
 
       // Layouts
-
-      const defined: PointAccessor<boolean> =
-        props.defined === undefined
-          ? (datum, index, points) => !isMissingVal(props.y(datum, index, points))
-          : props.defined;
 
       // d3 has separate overloads for a constant and an accessor, so a constant x is
       // normalised here. d3 would wrap it in exactly the same way.
       const xProp = props.x;
-      const x: PointAccessor<number> = typeof xProp === "function" ? xProp : () => xProp;
+      const x: PointAccessor<P, number> = typeof xProp === "function" ? xProp : () => xProp;
 
-      const line = d3Line<unknown>().defined(defined).x(x).y(props.y);
+      // Both dimensions are guarded. Checking only y would let a missing x reach the d
+      // attribute verbatim, and the browser then drops that segment along with every
+      // segment after it, silently truncating the series.
+      const defined: PointAccessor<P, boolean> =
+        props.defined === undefined
+          ? (datum, index, points) =>
+              !isMissingVal(x(datum, index, points)) && !isMissingVal(props.y(datum, index, points))
+          : props.defined;
+
+      const line = d3Line<P>().defined(defined).x(x).y(props.y);
 
       // Rendering
 
       // Declared with `function` so that `this` is still forwarded to valuesAccessor, as
       // it was when this was built with fn.compose.
-      const pathData: ValueFn<SVGPathElement, unknown, string | null> = function (datum, index) {
+      const pathData: ValueFn<SVGPathElement, L, string | null> = function (datum, index) {
         return line(props.valuesAccessor.call(this, datum, index));
       };
       const stroke = styleValue(props.stroke);
       const strokeWidth = styleValue(props.strokeWidth);
 
       const path = selection
-        .selectAll<SVGPathElement, unknown>(".sszvis-line")
+        .selectAll<SVGPathElement, L>(".sszvis-line")
         .data(data, props.key)
         .join("path")
         .classed("sszvis-line", true)
