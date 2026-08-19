@@ -180,29 +180,25 @@ describe("component/bar", () => {
 
     describe("known quirks", () => {
       test("lets null through, which drops the attribute entirely", () => {
-        // NOTE: handleMissingVal tests with the global isNaN, and isNaN(null) is false
-        // because Number(null) is 0. So null passes through to d3, which removes the
-        // attribute for a null value. The rect then falls back to the SVG default of 0
-        // rather than being reported as missing.
+        // NOTE: the guard's coercion is documented on handleMissingVal in bar.ts.
+        // Number(null) is 0, so null passes through and d3 removes the attribute - the rect
+        // silently falls back to the SVG default instead of the intended 0.
         expect(xOf(null)).toBeNull();
       });
 
       test("lets a numeric string through unconverted", () => {
-        // NOTE: isNaN("50") is false, so the string is written to the attribute as-is.
-        // Harmless, since SVG parses it, but the guard does not normalise the type.
+        // NOTE: harmless, since SVG parses it, but the guard does not normalise the type.
         expect(xOf("50")).toBe("50");
       });
 
       test("lets Infinity through, producing an invalid attribute value", () => {
-        // NOTE: isNaN(Infinity) is false, so Infinity reaches the attribute. "Infinity"
-        // is not a valid SVG coordinate, so the browser ignores it. A scale dividing by
-        // a zero-width domain can produce this, and it fails silently.
+        // NOTE: "Infinity" is not a valid SVG coordinate, so the browser ignores it. A
+        // scale over a zero-width domain can produce this, and it fails silently.
         expect(xOf(Number.POSITIVE_INFINITY)).toBe("Infinity");
       });
 
       test("lets the empty string and booleans through", () => {
-        // NOTE: Number("") and Number(true) are both numeric, so isNaN is false for each
-        // and neither is caught by the guard.
+        // NOTE: Number("") and Number(true) are both numeric, so neither is caught.
         expect(xOf("")).toBe("");
         expect(xOf(true)).toBe("true");
       });
@@ -285,9 +281,9 @@ describe("component/bar", () => {
 
     describe("known quirks", () => {
       test("a tooltipAnchor with fewer than two entries yields NaN in the transform", () => {
-        // NOTE: the JSDoc requires a two-element array. A shorter one leaves uv[1]
-        // undefined, so the y coordinate becomes NaN and the transform is invalid. It
-        // fails silently rather than warning, unlike other misconfigurations elsewhere.
+        // NOTE: documented on the tooltipAnchor property in bar.ts. A shorter array
+        // leaves uv[1] undefined, so y becomes NaN and the transform is invalid - silently,
+        // unlike the missing-prop errors the legends log.
         expect(anchors(render(barOf().tooltipAnchor([0.5]), [testData[0]]))).toEqual([
           "translate(25,NaN)",
         ]);
@@ -297,7 +293,7 @@ describe("component/bar", () => {
       });
 
       test("ignores tooltipAnchor entries beyond the first two", () => {
-        // NOTE: extra entries are simply unused.
+        // NOTE: documented on the tooltipAnchor property in bar.ts.
         expect(anchors(render(barOf().tooltipAnchor([0, 0, 9]), [testData[0]]))).toEqual([
           "translate(10,20)",
         ]);
@@ -355,8 +351,8 @@ describe("component/bar", () => {
       });
 
       test("still schedules an empty transition on every bar when enabled", () => {
-        // NOTE: the discarded transition is not free - it puts d3 transition state on each
-        // node, which also interrupts any transition already running on those bars.
+        // NOTE: documented alongside the transition property in bar.ts - the discarded
+        // transition still attaches d3 state to each node.
         const node = render(barOf().transition(true), [testData[0]]);
         const withState = bars(node)[0] as SVGRectElement & { __transition?: unknown };
         expect(withState.__transition).not.toBeUndefined();
