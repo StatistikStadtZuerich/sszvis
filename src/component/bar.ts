@@ -38,21 +38,80 @@
  * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
  *                                            are changed.
  *
+ * Note: the transition property does not currently animate anything - the geometry is
+ * re-applied to the plain selection immediately after the transition is created, so the
+ * values always jump. See test/component/bar.test.ts.
+ *
  * @return {sszvis.component}
  */
 
 import { select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { component } from "../d3-component.js";
+import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { defaultTransition } from "../transition.js";
 
-// replaces NaN values with 0
-function handleMissingVal(v) {
-  return isNaN(v) ? 0 : v;
+/**
+ * Every visual property is wrapped by fn.functor on set, so it is always stored as a
+ * function by the time the renderer reads it.
+ */
+type ValueAccessor = (...args: unknown[]) => unknown;
+
+/**
+ * fill and stroke resolve to a colour, or to nothing when the property was never set -
+ * fn.functor then yields undefined, which d3 treats exactly like null and removes the
+ * attribute for.
+ */
+type ColorAccessor = (...args: unknown[]) => string | null;
+
+type BarProps = {
+  x: ValueAccessor;
+  y: ValueAccessor;
+  width: ValueAccessor;
+  height: ValueAccessor;
+  fill: ColorAccessor;
+  stroke: ColorAccessor;
+  centerTooltip?: boolean;
+  tooltipAnchor?: (number | string)[];
+  transition: boolean;
+};
+
+/** A constant or an accessor; either is accepted, since fn.functor normalises both. */
+type BarValue<R> = R | ((...args: never[]) => R);
+
+export interface BarComponent extends Component {
+  x(): ValueAccessor;
+  x(value: BarValue<number>): BarComponent;
+  y(): ValueAccessor;
+  y(value: BarValue<number>): BarComponent;
+  width(): ValueAccessor;
+  width(value: BarValue<number>): BarComponent;
+  height(): ValueAccessor;
+  height(value: BarValue<number>): BarComponent;
+  fill(): ColorAccessor;
+  fill(value: BarValue<string | undefined>): BarComponent;
+  stroke(): ColorAccessor;
+  stroke(value: BarValue<string | undefined>): BarComponent;
+  centerTooltip(): boolean | undefined;
+  centerTooltip(center: boolean): BarComponent;
+  tooltipAnchor(): (number | string)[] | undefined;
+  tooltipAnchor(anchor: (number | string)[]): BarComponent;
+  transition(): boolean;
+  transition(enabled: boolean): BarComponent;
 }
 
-export default function () {
+/**
+ * Replaces NaN values with 0.
+ *
+ * Equivalent to the global isNaN, which coerces its argument first. Note that this only
+ * catches NaN and undefined: null, Infinity, booleans and numeric strings all coerce to a
+ * number and pass through untouched. See test/component/bar.test.ts.
+ */
+function handleMissingVal(v: unknown): unknown {
+  return Number.isNaN(Number(v)) ? 0 : v;
+}
+
+export default function (): BarComponent {
   return component()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
@@ -64,9 +123,9 @@ export default function () {
     .prop("tooltipAnchor")
     .prop("transition")
     .transition(true)
-    .render(function (data) {
+    .render(function (this: Element, data: unknown[]) {
       const selection = select(this);
-      const props = selection.props();
+      const props = selection.props<BarProps>();
 
       const xAcc = fn.compose(handleMissingVal, props.x);
       const yAcc = fn.compose(handleMissingVal, props.y);
@@ -92,20 +151,14 @@ export default function () {
       bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
 
       // Tooltip anchors
-      let tooltipPosition;
+      let tooltipPosition: (d: unknown) => [number, number];
       if (props.centerTooltip) {
-        tooltipPosition = function (d) {
-          return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
-        };
+        tooltipPosition = (d) => [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
       } else if (props.tooltipAnchor) {
-        const uv = props.tooltipAnchor.map(Number.parseFloat);
-        tooltipPosition = function (d) {
-          return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
-        };
+        const uv = props.tooltipAnchor.map((value) => Number.parseFloat(String(value)));
+        tooltipPosition = (d) => [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
       } else {
-        tooltipPosition = function (d) {
-          return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
-        };
+        tooltipPosition = (d) => [xAcc(d) + wAcc(d) / 2, yAcc(d)];
       }
 
       const ta = tooltipAnchor().position(tooltipPosition);
