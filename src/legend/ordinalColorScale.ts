@@ -22,6 +22,10 @@
  * corresponding color. When props.rightAlign is false (the default), the circle comes before the name. When rightAlign
  * is true, the circle comes afterwards. The layout of these labels is governed by the other parameters.
  *
+ * Note: orientation has no default. With neither orientation nor horizontalFloat set, no
+ * transform is applied and every entry is drawn at the origin, stacked on top of one
+ * another. See test/legend/ordinalColorScale.test.ts.
+ *
  * Default Layout:
  *
  * Because the labels are svg elements positioned with translate (and do not use the html box model layout algorithm),
@@ -88,13 +92,63 @@
  */
 
 import { select } from "d3";
-import { component } from "../d3-component.js";
+import { type Component, component } from "../d3-component.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 
 export const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
 
-export function legendColorOrdinal() {
+/** The subset of a d3 scale this legend relies on. */
+interface OrdinalColorScale {
+  (value: never): string;
+  domain(): unknown[];
+}
+
+type LegendOrientation = "horizontal" | "vertical";
+
+type OrdinalColorScaleProps = {
+  scale: OrdinalColorScale;
+  rowHeight: number;
+  columnWidth: number;
+  rows: number;
+  columns: number;
+  verticallyCentered: boolean;
+  orientation?: LegendOrientation;
+  reverse: boolean;
+  rightAlign: boolean;
+  horizontalFloat: boolean;
+  floatPadding: number;
+  floatWidth: number;
+};
+
+export interface OrdinalColorScaleComponent extends Component {
+  scale(): OrdinalColorScale;
+  scale(scale: OrdinalColorScale): OrdinalColorScaleComponent;
+  rowHeight(): number;
+  rowHeight(height: number): OrdinalColorScaleComponent;
+  columnWidth(): number;
+  columnWidth(width: number): OrdinalColorScaleComponent;
+  rows(): number;
+  rows(rows: number): OrdinalColorScaleComponent;
+  columns(): number;
+  columns(columns: number): OrdinalColorScaleComponent;
+  verticallyCentered(): boolean;
+  verticallyCentered(centered: boolean): OrdinalColorScaleComponent;
+  orientation(): LegendOrientation | undefined;
+  orientation(orientation: LegendOrientation): OrdinalColorScaleComponent;
+  reverse(): boolean;
+  reverse(reverse: boolean): OrdinalColorScaleComponent;
+  rightAlign(): boolean;
+  rightAlign(rightAlign: boolean): OrdinalColorScaleComponent;
+  horizontalFloat(): boolean;
+  horizontalFloat(float: boolean): OrdinalColorScaleComponent;
+  floatPadding(): number;
+  floatPadding(padding: number): OrdinalColorScaleComponent;
+  floatWidth(): number;
+  floatWidth(width: number): OrdinalColorScaleComponent;
+}
+
+export function legendColorOrdinal(): OrdinalColorScaleComponent {
   return component()
     .prop("scale")
     .prop("rowHeight")
@@ -118,9 +172,9 @@ export function legendColorOrdinal() {
     .floatPadding(20)
     .prop("floatWidth")
     .floatWidth(600)
-    .render(function () {
+    .render(function (this: Element) {
       const selection = select(this);
-      const props = selection.props();
+      const props = selection.props<OrdinalColorScaleProps>();
 
       let domain = props.scale.domain();
 
@@ -128,7 +182,9 @@ export function legendColorOrdinal() {
         domain = [...domain].reverse();
       }
 
-      let rows, cols;
+      // Only read within the matching orientation branch below.
+      let rows = 0;
+      let cols = 0;
       if (props.orientation === "horizontal") {
         cols = Math.ceil(props.columns);
         rows = Math.ceil(domain.length / cols);
@@ -138,7 +194,7 @@ export function legendColorOrdinal() {
       }
 
       const groups = selection
-        .selectAll(".sszvis-legend--entry")
+        .selectAll<SVGGElement, unknown>(".sszvis-legend--entry")
         .data(domain)
         .join("g")
         .classed("sszvis-legend--entry", true);
@@ -151,8 +207,8 @@ export function legendColorOrdinal() {
         .attr("cx", props.rightAlign ? -6 : 6)
         .attr("cy", halfPixel(props.rowHeight / 2))
         .attr("r", 5)
-        .attr("fill", (d) => props.scale(d))
-        .attr("stroke", (d) => props.scale(d))
+        .attr("fill", (d) => props.scale(d as never))
+        .attr("stroke", (d) => props.scale(d as never))
         .attr("stroke-width", 1);
 
       groups
@@ -160,7 +216,7 @@ export function legendColorOrdinal() {
         .data((d) => [d])
         .join("text")
         .classed("sszvis-legend__label", true)
-        .text((d) => d)
+        .text((d) => String(d))
         .attr("dy", "0.35em") // vertically-center
         .style("text-anchor", () => (props.rightAlign ? "end" : "start"))
         .attr("transform", () => {
@@ -171,13 +227,13 @@ export function legendColorOrdinal() {
 
       let verticalOffset = "";
       if (props.verticallyCentered) {
-        verticalOffset = "translate(0," + String(-((domain.length * props.rowHeight) / 2)) + ") ";
+        verticalOffset = `translate(0,${String(-((domain.length * props.rowHeight) / 2))}) `;
       }
 
       if (props.horizontalFloat) {
-        let rowPosition = 0,
-          horizontalPosition = 0;
-        groups.attr("transform", function () {
+        let rowPosition = 0;
+        let horizontalPosition = 0;
+        groups.attr("transform", function (this: SVGGElement) {
           // not affected by scroll position
           const width = this.getBoundingClientRect().width;
           if (horizontalPosition + width > props.floatWidth) {
@@ -189,27 +245,21 @@ export function legendColorOrdinal() {
           return verticalOffset + translate;
         });
       } else {
-        groups.attr("transform", (d, i) => {
+        groups.attr("transform", (_d, i) => {
           if (props.orientation === "horizontal") {
-            return (
-              verticalOffset +
-              "translate(" +
-              (i % cols) * props.columnWidth +
-              "," +
-              Math.floor(i / cols) * props.rowHeight +
-              ")"
-            );
-          } else if (props.orientation === "vertical") {
-            return (
-              verticalOffset +
-              "translate(" +
-              Math.floor(i / rows) * props.columnWidth +
-              "," +
-              (i % rows) * props.rowHeight +
-              ")"
-            );
+            return `${verticalOffset}translate(${(i % cols) * props.columnWidth},${
+              Math.floor(i / cols) * props.rowHeight
+            })`;
           }
+          if (props.orientation === "vertical") {
+            return `${verticalOffset}translate(${Math.floor(i / rows) * props.columnWidth},${
+              (i % rows) * props.rowHeight
+            })`;
+          }
+          // No orientation: d3 removes the attribute for a null value, matching the
+          // original implementation's implicit undefined return.
+          return null;
         });
       }
-    });
+    }) as OrdinalColorScaleComponent;
 }

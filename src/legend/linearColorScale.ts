@@ -3,6 +3,10 @@
  *
  * Use for displaying the values of a continuous linear color scale.
  *
+ * The ramp is drawn as a row of abutting segments, one per displayed value, with a rounded
+ * cap at each end and a label outside each cap. Segments are stretched by a pixel in each
+ * direction so that no antialiasing seam shows between them.
+ *
  * @module sszvis/legend/linearColorScale
  *
  * @property {function} scale                   The scale to use to generate the legend
@@ -16,11 +20,44 @@
  */
 
 import { select } from "d3";
-import { component } from "../d3-component.js";
+import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 
-export default function () {
+/** The subset of a d3 scale this legend relies on. */
+interface LinearColorScale {
+  (value: number): string;
+  domain(): number[];
+  ticks?(count?: number): number[];
+}
+
+type LabelFormatter = (value: unknown, index: number) => string | number;
+
+type LinearColorScaleProps = {
+  scale: LinearColorScale;
+  displayValues: number[];
+  width: number;
+  segments: number;
+  labelText?: unknown[];
+  labelFormat: LabelFormatter;
+};
+
+export interface LinearColorScaleComponent extends Component {
+  scale(): LinearColorScale;
+  scale(scale: LinearColorScale): LinearColorScaleComponent;
+  displayValues(): number[];
+  displayValues(values: number[]): LinearColorScaleComponent;
+  width(): number;
+  width(width: number): LinearColorScaleComponent;
+  segments(): number;
+  segments(segments: number): LinearColorScaleComponent;
+  labelText(): unknown[] | undefined;
+  labelText(text: unknown[]): LinearColorScaleComponent;
+  labelFormat(): LabelFormatter;
+  labelFormat(format: LabelFormatter): LinearColorScaleComponent;
+}
+
+export default function (): LinearColorScaleComponent {
   return component()
     .prop("scale")
     .prop("displayValues")
@@ -32,13 +69,13 @@ export default function () {
     .prop("labelText")
     .prop("labelFormat")
     .labelFormat(fn.identity)
-    .render(function () {
+    .render(function (this: Element) {
       const selection = select(this);
-      const props = selection.props();
+      const props = selection.props<LinearColorScaleProps>();
 
       if (!props.scale) {
         logger.error("legend.linearColorScale - a scale must be specified.");
-        return false;
+        return;
       }
 
       const domain = props.scale.domain();
@@ -47,7 +84,7 @@ export default function () {
       if (values.length === 0 && props.scale.ticks) {
         values = props.scale.ticks(props.segments - 1);
       }
-      values.push(fn.last(domain));
+      values.push(fn.last(domain) as number);
 
       // Avoid division by zero
       const segWidth = values.length > 0 ? props.width / values.length : 0;
@@ -60,13 +97,13 @@ export default function () {
         .classed("sszvis-legend__mark", true);
 
       segments
-        .attr("x", (d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
+        .attr("x", (_d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("y", 0)
         .attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("height", segHeight)
         .attr("fill", (d) => props.scale(d));
 
-      const startEnd = [fn.first(domain), fn.last(domain)];
+      const startEnd = [fn.first(domain) as number, fn.last(domain) as number];
       const labelText = props.labelText || startEnd;
 
       // rounded end caps for the segments
@@ -77,7 +114,7 @@ export default function () {
         .attr("class", "ssvis-legend--mark");
 
       endCaps
-        .attr("cx", (d, i) => i * props.width)
+        .attr("cx", (_d, i) => i * props.width)
         .attr("cy", segHeight / 2)
         .attr("r", segHeight / 2)
         .attr("fill", (d) => props.scale(d));
@@ -91,17 +128,13 @@ export default function () {
       const labelPadding = 16;
 
       labels
-        .style("text-anchor", (d, i) => (i === 0 ? "end" : "start"))
+        .style("text-anchor", (_d, i) => (i === 0 ? "end" : "start"))
         .attr("dy", "0.35em") // vertically-center
         .attr(
           "transform",
-          (d, i) =>
-            "translate(" +
-            (i * props.width + (i === 0 ? -1 : 1) * labelPadding) +
-            ", " +
-            segHeight / 2 +
-            ")"
+          (_d, i) =>
+            `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`
         )
         .text((d, i) => props.labelFormat(d, i));
-    });
+    }) as LinearColorScaleComponent;
 }

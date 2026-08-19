@@ -3,6 +3,11 @@
  *
  * Use for displaying the values of discontinuous (binned) color scale's bins
  *
+ * Each display value becomes the upper edge of a bin, and a final bin runs from the last
+ * display value to the upper endpoint. Bins are floored onto whole pixels and widened by
+ * their subpixel remainder so that no gap shows between them, which means adjacent bins
+ * overlap very slightly.
+ *
  * @module sszvis/legend/binnedColorScale
  *
  * @param {function} scale              A scale to use to generate the color values
@@ -16,12 +21,46 @@
  */
 
 import { scaleLinear, select } from "d3";
-import { component } from "../d3-component.js";
+import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import * as logger from "../logger.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 
-export default function () {
+/** The subset of a d3 scale this legend relies on. */
+type BinnedColorScale = (value: number) => string;
+
+type LabelFormatter = (value: number) => string | number;
+
+type BinnedColorScaleProps = {
+  scale: BinnedColorScale;
+  displayValues: number[];
+  endpoints: [number, number];
+  width: number;
+  labelFormat: LabelFormatter;
+};
+
+/** One rendered bin. The final bin has no upper display value, so `p` is absent. */
+interface BinRect {
+  x: number;
+  w: number;
+  c: string;
+  p?: number;
+}
+
+export interface BinnedColorScaleComponent extends Component {
+  scale(): BinnedColorScale;
+  scale(scale: BinnedColorScale): BinnedColorScaleComponent;
+  displayValues(): number[];
+  displayValues(values: number[]): BinnedColorScaleComponent;
+  endpoints(): [number, number];
+  endpoints(endpoints: [number, number]): BinnedColorScaleComponent;
+  width(): number;
+  width(width: number): BinnedColorScaleComponent;
+  labelFormat(): LabelFormatter;
+  labelFormat(format: LabelFormatter): BinnedColorScaleComponent;
+}
+
+export default function (): BinnedColorScaleComponent {
   return component()
     .prop("scale")
     .prop("displayValues")
@@ -30,23 +69,30 @@ export default function () {
     .width(200)
     .prop("labelFormat")
     .labelFormat(fn.identity)
-    .render(function () {
+    .render(function (this: Element) {
       const selection = select(this);
-      const props = selection.props();
+      const props = selection.props<BinnedColorScaleProps>();
 
-      if (!props.scale) return logger.error("legend.binnedColorScale - a scale must be specified.");
-      if (!props.displayValues)
-        return logger.error("legend.binnedColorScale - display values must be specified.");
-      if (!props.endpoints)
-        return logger.error("legend.binnedColorScale - endpoints must be specified");
+      if (!props.scale) {
+        logger.error("legend.binnedColorScale - a scale must be specified.");
+        return;
+      }
+      if (!props.displayValues) {
+        logger.error("legend.binnedColorScale - display values must be specified.");
+        return;
+      }
+      if (!props.endpoints) {
+        logger.error("legend.binnedColorScale - endpoints must be specified");
+        return;
+      }
 
       const segHeight = 10;
       const circleRad = segHeight / 2;
-      const innerRange = [0, props.width - 2 * circleRad];
+      const innerRange: [number, number] = [0, props.width - 2 * circleRad];
 
       const barWidth = scaleLinear().domain(props.endpoints).range(innerRange);
       let sum = 0;
-      const rectData = [];
+      const rectData: BinRect[] = [];
       let pPrev = props.endpoints[0];
       for (const p of props.displayValues) {
         const w = barWidth(p) - sum;
@@ -77,7 +123,7 @@ export default function () {
       circles
         .attr("r", circleRad)
         .attr("cy", circleRad)
-        .attr("cx", (d, i) => (i === 0 ? circleRad : props.width - circleRad))
+        .attr("cx", (_d, i) => (i === 0 ? circleRad : props.width - circleRad))
         .attr("fill", props.scale);
 
       const segments = selection
@@ -116,7 +162,7 @@ export default function () {
 
       labels
         .style("text-anchor", "middle")
-        .attr("transform", (d) => "translate(" + (d.x + d.w) + "," + (segHeight + 20) + ")")
-        .text((d) => props.labelFormat(d.p));
-    });
+        .attr("transform", (d) => `translate(${d.x + d.w},${segHeight + 20})`)
+        .text((d) => props.labelFormat(d.p as number));
+    }) as BinnedColorScaleComponent;
 }
