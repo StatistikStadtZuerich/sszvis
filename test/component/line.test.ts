@@ -209,6 +209,24 @@ describe("component/line", () => {
       expect(ds(node)).toEqual(["M0,0L5,5M15,15L20,20"]);
     });
 
+    test("should break the line where x is NaN", () => {
+      // The predicate guards both dimensions. A NaN x is what a scale returns for an
+      // out-of-domain value or a missing category, and before both were guarded it went
+      // into the d attribute verbatim - which made the browser drop that segment and
+      // every segment after it, silently truncating the series.
+      const node = render(lineOf(), [
+        [
+          { x: 0, y: 0 },
+          { x: 30, y: 40 },
+          { x: Number.NaN, y: 10 },
+          { x: 60, y: 80 },
+        ],
+      ]);
+      expect(ds(node)).toEqual(["M0,0L30,40M60,80Z"]);
+      // The healthy tail after the bad point survives, rather than being amputated.
+      expect((paths(node)[0] as SVGPathElement).getTotalLength()).toBe(50);
+    });
+
     test("should use an explicit defined predicate in place of the default", () => {
       const node = render(
         lineOf().defined((d: Point) => d.x < 20),
@@ -238,27 +256,6 @@ describe("component/line", () => {
     });
 
     describe("known quirks", () => {
-      test("the default predicate only guards y, so a NaN x truncates the line", () => {
-        // BUG: the default is compose(not(isNaN), props.y), so x is never checked. A NaN
-        // x - which any scale returns for an out-of-domain or missing category - is
-        // written into the d attribute verbatim. Per the SVG error rules the browser
-        // renders up to but not including the bad segment, so the series is silently
-        // amputated from that point on rather than breaking around it.
-        // current: "M0,0LNaN,10L20,20". expected: the NaN point is skipped.
-        const node = render(lineOf(), [
-          [
-            { x: 0, y: 0 },
-            { x: 30, y: 40 },
-            { x: Number.NaN, y: 10 },
-            { x: 60, y: 80 },
-          ],
-        ]);
-        expect(ds(node)).toEqual(["M0,0L30,40LNaN,10L60,80"]);
-        // Only the first segment is drawn; the healthy tail after the NaN is lost too.
-        const drawn = paths(node)[0] as SVGPathElement;
-        expect(drawn.getTotalLength()).toBe(50);
-      });
-
       test("a null y is plotted as zero instead of breaking the line", () => {
         // NOTE: the default predicate uses the global isNaN, which coerces first, and
         // Number(null) is 0. So a null - the usual shape of a gap in a CSV - passes the
@@ -522,10 +519,12 @@ describe("component/line", () => {
         expect(() => render(line().transition(false).x(0), oneLine)).toThrow(TypeError);
       });
 
-      test("omitting x produces a NaN path instead of throwing", () => {
-        // BUG: the two required properties fail in two different ways. d3.line coerces a
-        // missing x accessor to a constant NaN, so the path is written as "MNaN,..." and
-        // the line silently vanishes.
+      test("omitting x draws nothing instead of throwing", () => {
+        // BUG: the two required properties still fail in two different ways. A missing x
+        // resolves to undefined for every point, which the guard treats as missing, so no
+        // point is drawn and the path element is left empty. Better than the NaN path this
+        // produced before both dimensions were guarded, but it is still silent - compare
+        // the TypeError a missing y throws.
         const node = render(
           line()
             .transition(false)
@@ -537,7 +536,7 @@ describe("component/line", () => {
             ],
           ]
         );
-        expect(ds(node)).toEqual(["MNaN,0LNaN,20"]);
+        expect(ds(node)).toEqual([null]);
       });
 
       test("y must be a function, though x may be a constant", () => {
