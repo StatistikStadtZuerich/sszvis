@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-// @ts-expect-error - dot.js has no type declarations until it is ported
 import dot from "../../src/component/dot.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
