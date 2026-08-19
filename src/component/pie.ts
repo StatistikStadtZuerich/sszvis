@@ -4,17 +4,43 @@
  * The pie component is used to draw pie charts. It uses the d3.arc() generator
  * to create pie wedges.
  *
- * THe input data should be an array of data values, where each data value represents one wedge in the pie.
+ * The input data should be an array of data values, where each data value represents one wedge in the pie.
  *
  * @module sszvis/component/pie
  *
- * @property {number} radius                  The radius of the pie chart (no default)
- * @property {string, function} fill          a fill color for wedges in the pie (default black). Ideally a function
- *                                            which takes a data value.
- * @property {string, function} stroke        the stroke color for wedges in the pie (default none)
- * @property {string, function} angle         specifys the angle of the wedges in radians. Theoretically this could be
- *                                            a constant, but that would make for a very strange pie. Ideally, this
- *                                            is a function which takes a data value and returns the angle in radians.
+ * @property {number} radius                  Required. The outer radius of the pie, in px (no default). It is also
+ *                                            used to translate every wedge to (radius, radius); since the arc
+ *                                            then extends another radius in every direction, the pie occupies a
+ *                                            box of 2 * radius by 2 * radius.
+ *                                            The inner radius is hardcoded to 4px and cannot be configured. If the
+ *                                            property is left unset the wedges receive an unparseable transform and
+ *                                            the tooltip anchors are positioned at NaN, with no warning.
+ * @property {string, function} fill          a fill color for wedges in the pie. Ideally a function which takes a
+ *                                            data value. If unset, the attribute is omitted and the wedges fall back
+ *                                            to the SVG default, black.
+ * @property {string, function} stroke        the stroke color for wedges in the pie (default "#FFFFFF", which
+ *                                            separates touching wedges). A falsy value passed as the property, such
+ *                                            as "" or null, is replaced by that default; a falsy value returned from
+ *                                            an accessor is not.
+ * @property {number, function} angle         Required. Specifies the angle of the wedges in radians. Theoretically
+ *                                            this could be a constant, but that would make for a very strange pie.
+ *                                            Ideally, this is a function which takes a data value and returns the
+ *                                            angle in radians. Angles are summed as given and never clamped, and if
+ *                                            the property is left unset the render throws a TypeError.
+ *
+ * Note: the wedge geometry is written only by the arc tween, so no `d` attribute exists until
+ * the first animation frame, and there is no transition property to opt out of - a chart
+ * serialised on the render tick comes out empty. Nothing else animates: transform, fill and
+ * stroke are applied to the transition from the values already on the DOM. The tooltip anchors
+ * are positioned from the pre-transition angles and are never repositioned when the transition
+ * ends, so after an update they describe the previous layout.
+ *
+ * Note: the component keeps no state of its own. It writes a0/a1 (the angles currently on
+ * screen) and _a0/_a1 (the destination angles of the running transition) onto every datum it
+ * renders, which is what lets a transition continue from the current geometry. Consequently
+ * the data must be mutable - frozen data throws - two entries sharing one object collapse into
+ * a single wedge, and a single NaN angle poisons the running total and every wedge after it.
+ * See test/component/pie.test.ts.
  *
  * @return {sszvis.component}
  */
