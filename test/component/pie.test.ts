@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-// @ts-expect-error - pie.js has no type declarations until it is ported
 import pie from "../../src/component/pie.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
@@ -634,6 +633,20 @@ describe("component/pie", () => {
       expect(anchors(g.node() as SVGGElement)).toEqual(["translate(NaN,NaN)"]);
       await nextFrame();
       expect(attrs(g.node() as SVGGElement, "d")[0]).toContain("NaN");
+    });
+
+    test("treats a null angle handed over from a foreign path as zero rather than NaN", async () => {
+      // NOTE: pins a coercion the JS original got for free from its arithmetic, and which
+      // the TypeScript port has to spell out: an angle of null becomes 0, while undefined
+      // becomes NaN. Only reachable through the handover above, but it is the difference
+      // between a wedge that draws and one that does not.
+      const g = group("null-handover");
+      g.append("path").attr("class", "sszvis-path").datum({ a0: null, a1: null });
+      g.datum([{ value: 1 }]).call(pieOf(50) as never);
+      const node = g.node() as SVGGElement;
+      expect(anchors(node)[0]).not.toContain("NaN");
+      await nextFrame();
+      expect(attrs(node, "d")[0]).not.toContain("NaN");
     });
 
     test("throws outright when a foreign .sszvis-path has no datum bound", () => {
