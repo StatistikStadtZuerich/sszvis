@@ -17,6 +17,8 @@
  *
  * @module sszvis/component/bar
  *
+ * @template T The type of the data values bound to the bars
+ *
  * @property {number, function} x             the x-value of the rectangles. Becomes a functor.
  * @property {number, function} y             the y-value of the rectangles. Becomes a functor.
  * @property {number, function} width         the width-value of the rectangles. Becomes a functor.
@@ -34,13 +36,16 @@
  *                                            in the height dimension. For example, the upper left corner would be [0, 0],
  *                                            the center of the bar would be [0.5, 0.5], the middle of the right side
  *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
- *                                            the pyramid chart.
+ *                                            the pyramid chart. Entries beyond the first two are ignored, and an array
+ *                                            with fewer than two entries produces a NaN coordinate rather than a warning.
  * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
  *                                            are changed.
  *
  * Note: the transition property does not currently animate anything - the geometry is
  * re-applied to the plain selection immediately after the transition is created, so the
- * values always jump. See test/component/bar.test.ts.
+ * values always jump. It is not free either: the discarded transition still attaches d3
+ * transition state to every bar, which interrupts any transition already running on them.
+ * See test/component/bar.test.ts.
  *
  * @return {sszvis.component}
  */
@@ -53,51 +58,57 @@ import { defaultTransition } from "../transition.js";
 
 /**
  * Every visual property is wrapped by fn.functor on set, so it is always stored as a
- * function by the time the renderer reads it.
+ * function by the time the renderer reads it. The result stays `unknown` because the
+ * missing-value guard passes anything that coerces to a number straight through, a numeric
+ * string or a boolean included.
  */
-type ValueAccessor = (...args: unknown[]) => unknown;
+type ValueAccessor<T> = (datum?: T, index?: number) => unknown;
 
 /**
  * fill and stroke resolve to a colour, or to nothing when the property was never set -
  * fn.functor then yields undefined, which d3 treats exactly like null and removes the
  * attribute for.
  */
-type ColorAccessor = (...args: unknown[]) => string | null;
+type ColorAccessor<T> = (datum?: T, index?: number) => string | null;
 
-type BarProps = {
-  x: ValueAccessor;
-  y: ValueAccessor;
-  width: ValueAccessor;
-  height: ValueAccessor;
-  fill: ColorAccessor;
-  stroke: ColorAccessor;
+type BarProps<T> = {
+  x: ValueAccessor<T>;
+  y: ValueAccessor<T>;
+  width: ValueAccessor<T>;
+  height: ValueAccessor<T>;
+  fill: ColorAccessor<T>;
+  stroke: ColorAccessor<T>;
   centerTooltip?: boolean;
   tooltipAnchor?: (number | string)[];
   transition: boolean;
 };
 
-/** A constant or an accessor; either is accepted, since fn.functor normalises both. */
-type BarValue<R> = R | ((...args: never[]) => R);
+/**
+ * A constant or an accessor over the component's datum type; either is accepted, since
+ * fn.functor normalises both. d3 hands an accessor the datum and its index, and declaring
+ * fewer parameters is fine.
+ */
+type BarValue<T, R> = R | ((datum: T, index: number) => R);
 
-export interface BarComponent extends Component {
-  x(): ValueAccessor;
-  x(value: BarValue<number>): BarComponent;
-  y(): ValueAccessor;
-  y(value: BarValue<number>): BarComponent;
-  width(): ValueAccessor;
-  width(value: BarValue<number>): BarComponent;
-  height(): ValueAccessor;
-  height(value: BarValue<number>): BarComponent;
-  fill(): ColorAccessor;
-  fill(value: BarValue<string | undefined>): BarComponent;
-  stroke(): ColorAccessor;
-  stroke(value: BarValue<string | undefined>): BarComponent;
+export interface BarComponent<T = unknown> extends Component {
+  x(): ValueAccessor<T>;
+  x<U = T>(value: BarValue<U, number>): BarComponent<T>;
+  y(): ValueAccessor<T>;
+  y<U = T>(value: BarValue<U, number>): BarComponent<T>;
+  width(): ValueAccessor<T>;
+  width<U = T>(value: BarValue<U, number>): BarComponent<T>;
+  height(): ValueAccessor<T>;
+  height<U = T>(value: BarValue<U, number>): BarComponent<T>;
+  fill(): ColorAccessor<T>;
+  fill<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
+  stroke(): ColorAccessor<T>;
+  stroke<U = T>(value: BarValue<U, string | undefined>): BarComponent<T>;
   centerTooltip(): boolean | undefined;
-  centerTooltip(center: boolean): BarComponent;
+  centerTooltip(center: boolean): BarComponent<T>;
   tooltipAnchor(): (number | string)[] | undefined;
-  tooltipAnchor(anchor: (number | string)[]): BarComponent;
+  tooltipAnchor(anchor: (number | string)[]): BarComponent<T>;
   transition(): boolean;
-  transition(enabled: boolean): BarComponent;
+  transition(enabled: boolean): BarComponent<T>;
 }
 
 /**
@@ -111,7 +122,7 @@ function handleMissingVal(v: unknown): unknown {
   return Number.isNaN(Number(v)) ? 0 : v;
 }
 
-export default function (): BarComponent {
+export default function <T = unknown>(): BarComponent<T> {
   return component()
     .prop("x", fn.functor)
     .prop("y", fn.functor)
@@ -123,9 +134,9 @@ export default function (): BarComponent {
     .prop("tooltipAnchor")
     .prop("transition")
     .transition(true)
-    .render(function (this: Element, data: unknown[]) {
+    .render(function (this: Element, data: T[]) {
       const selection = select(this);
-      const props = selection.props<BarProps>();
+      const props = selection.props<BarProps<T>>();
 
       const xAcc = fn.compose(handleMissingVal, props.x);
       const yAcc = fn.compose(handleMissingVal, props.y);
@@ -151,7 +162,7 @@ export default function (): BarComponent {
       bars.attr("x", xAcc).attr("y", yAcc).attr("width", wAcc).attr("height", hAcc);
 
       // Tooltip anchors
-      let tooltipPosition: (d: unknown) => [number, number];
+      let tooltipPosition: (d: T) => [number, number];
       if (props.centerTooltip) {
         tooltipPosition = (d) => [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
       } else if (props.tooltipAnchor) {
@@ -161,7 +172,7 @@ export default function (): BarComponent {
         tooltipPosition = (d) => [xAcc(d) + wAcc(d) / 2, yAcc(d)];
       }
 
-      const ta = tooltipAnchor().position(tooltipPosition);
+      const ta = tooltipAnchor<T>().position(tooltipPosition);
 
       selection.call(ta);
     });
