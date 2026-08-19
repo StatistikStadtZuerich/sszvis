@@ -81,7 +81,7 @@ const LABEL_PROXIMITY_THRESHOLD = 10;
 
 // Type definitions for axis component
 type AxisOrientation = "top" | "bottom" | "left" | "right";
-type SlantDirection = "horizontal" | "vertical" | "diagonal";
+export type SlantDirection = "horizontal" | "vertical" | "diagonal";
 type TextAnchor = "start" | "middle" | "end";
 
 interface AxisProps {

@@ -1,7 +1,6 @@
 import { type ScaleBand, type ScaleLinear, scaleBand, scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { cascade } from "../../src/cascade.js";
-// @ts-expect-error - nestedStackedBar.js has no type declarations until it is ported
 import { nestedStackedBarsVertical } from "../../src/component/nestedStackedBar.js";
 import { stackedBarVerticalData } from "../../src/component/stackedBar.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
@@ -409,6 +408,7 @@ describe("component/nestedStackedBar", () => {
     test("throws when the x-scale is not a band scale", () => {
       // NOTE: `xScale.bandwidth()` is called directly, so a continuous scale fails hard. The
       // axis renders first, so the failure leaves a partially drawn chart behind.
+      // @ts-expect-error - the port types xScale as a band scale, which catches this statically
       const component = nestedOf().xScale(scaleLinear().domain([0, 1]).range([0, 100]));
       expect(() => render(component)).toThrow();
     });
@@ -416,6 +416,7 @@ describe("component/nestedStackedBar", () => {
     test("renders zero-height bars when the y-scale is a constant", () => {
       // NOTE: `yScale` goes through `fn.functor`, so a non-function is silently boxed into a
       // constant. Unlike the x-scale, this fails silently: every bar collapses to height 0.
+      // @ts-expect-error - the port types yScale as a function, which catches this statically
       const node = render(nestedOf().yScale(5));
       expect(new Set(attrs(rects(node), "height"))).toEqual(new Set(["0"]));
     });
