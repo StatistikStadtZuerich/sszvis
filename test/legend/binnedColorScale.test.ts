@@ -179,10 +179,10 @@ describe("legend/binnedColorScale", () => {
 
   describe("known quirks", () => {
     test("a bin edge line and its label can sit half a pixel apart", () => {
-      // NOTE: the tick line is snapped with halfPixel(d.x + d.w) but the label is
-      // translated to the raw d.x + d.w. When the edge lands on a whole pixel the two
-      // disagree by 0.5px - visible here at the middle edge (line 100.5, label 100).
-      // Cosmetic, but it means the rule is not centred under its label.
+      // NOTE: documented in the binnedColorScale.ts JSDoc. The line is snapped with
+      // halfPixel() while the label sits on the raw edge, so when the edge lands on a
+      // whole pixel they disagree by 0.5px - here the middle edge (line 100.5, label 100).
+      // Cosmetic, but the rule is not centred under its label.
       const node = render(standard());
       const lineX = node.querySelectorAll("line.sszvis-legend__crispmark")[1].getAttribute("x1");
       const labelT = node
@@ -193,9 +193,9 @@ describe("legend/binnedColorScale", () => {
     });
 
     test("widens a bin by its subpixel remainder, so adjacent bins overlap slightly", () => {
-      // NOTE: deliberate. `offset = sum % 1` is added to the width so that flooring x
-      // never leaves a visible gap between bins. The cost is a sub-pixel overlap: the
-      // second bin spans 52 to 100 while the third starts at 100.
+      // NOTE: deliberate, documented in the binnedColorScale.ts JSDoc. `offset = sum % 1`
+      // is added to the width so flooring x never leaves a visible gap. The cost is a
+      // sub-pixel overlap: the second bin spans 52 to 100 while the third starts at 100.
       const node = render(standard());
       const xs = attrs(node, "rect.sszvis-legend__crispmark", "x").map(Number);
       const ws = attrs(node, "rect.sszvis-legend__crispmark", "width").map(Number);

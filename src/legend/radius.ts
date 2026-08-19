@@ -11,6 +11,10 @@
  * calls scale.invert(), so the default only works for a continuous scale; pass tickValues
  * explicitly to use any other kind.
  *
+ * Every tick produces a circle, a leader line and a label, including a tick whose value
+ * maps to a zero radius - the circle is then invisible but the line and label still mark
+ * that value. Pass tickValues to leave it out.
+ *
  * @module sszvis/legend/radius
  *
  * @property {function} scale         A scale to use to generate the radius sizes
@@ -20,7 +24,7 @@
  * @returns {sszvis.component}
  */
 
-import { mean, select } from "d3";
+import { mean, type NumberValue, select } from "d3";
 import { type Component, component } from "../d3-component.js";
 import * as fn from "../fn.js";
 import { range } from "../scale.js";
@@ -29,20 +33,20 @@ import translateString from "../svgUtils/translateString.js";
 
 /** The subset of a d3 scale this legend relies on. */
 interface RadiusScale {
-  (value: unknown): number;
-  domain(): unknown[];
-  range(): unknown[];
+  (value: NumberValue): number;
+  domain(): NumberValue[];
+  range(): number[];
   /** Required only when tickValues are not supplied. */
-  invert?(value: number): unknown;
+  invert?(value: number): NumberValue;
 }
 
 /** Formats a tick label. The default is fn.identity, which passes the value through. */
-type TickFormatter = (value: unknown, index: number) => string | number;
+type TickFormatter = (value: NumberValue, index: number) => string | number;
 
 type RadiusLegendProps = {
   scale: RadiusScale;
   tickFormat: TickFormatter;
-  tickValues?: unknown[];
+  tickValues?: NumberValue[];
 };
 
 export interface RadiusLegendComponent extends Component {
@@ -50,8 +54,8 @@ export interface RadiusLegendComponent extends Component {
   scale(scale: RadiusScale): RadiusLegendComponent;
   tickFormat(): TickFormatter;
   tickFormat(format: TickFormatter): RadiusLegendComponent;
-  tickValues(): unknown[] | undefined;
-  tickValues(values: unknown[]): RadiusLegendComponent;
+  tickValues(): NumberValue[] | undefined;
+  tickValues(values: NumberValue[]): RadiusLegendComponent;
 }
 
 export default function (): RadiusLegendComponent {
@@ -64,17 +68,7 @@ export default function (): RadiusLegendComponent {
       const selection = select(this);
       const props = selection.props<RadiusLegendProps>();
 
-      const domain = props.scale.domain();
-      const tickValues =
-        props.tickValues ||
-        [
-          domain[1],
-          // Throws when the scale has no invert; see test/svgUtils - documented above.
-          (props.scale.invert as (value: number) => unknown)(
-            mean(props.scale.range() as number[]) as number
-          ),
-          domain[0],
-        ];
+      const tickValues = props.tickValues || defaultTickValues(props.scale);
       const maxRadius = range(props.scale)[1];
 
       const group = selection
@@ -91,8 +85,8 @@ export default function (): RadiusLegendComponent {
         .join("circle")
         .classed("sszvis-legend__greyline", true);
 
-      const getCircleCenter = (d: unknown): number => maxRadius - props.scale(d);
-      const getCircleEdge = (d: unknown): number => maxRadius - 2 * props.scale(d);
+      const getCircleCenter = (d: NumberValue): number => maxRadius - props.scale(d);
+      const getCircleEdge = (d: NumberValue): number => maxRadius - 2 * props.scale(d);
 
       circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
 
@@ -119,5 +113,22 @@ export default function (): RadiusLegendComponent {
         .attr("y", getCircleEdge)
         .attr("dy", "0.35em") // vertically-center
         .text(props.tickFormat);
-    }) as RadiusLegendComponent;
+    });
+}
+
+/**
+ * The default ticks: the domain maximum, the value at the midpoint of the scale's range,
+ * and the domain minimum. Deriving the middle value calls scale.invert(), so this only
+ * works for a continuous scale - supply tickValues to use any other kind.
+ */
+function defaultTickValues(scale: RadiusScale): NumberValue[] {
+  const { invert } = scale;
+  if (!invert) {
+    throw new TypeError(
+      "legend.radius - scale.invert is required to derive the default ticks; supply tickValues instead."
+    );
+  }
+  const domain = scale.domain();
+  // mean() only returns undefined for an empty range, which a d3 scale never has.
+  return [domain[1], invert(mean(scale.range()) ?? Number.NaN), domain[0]];
 }

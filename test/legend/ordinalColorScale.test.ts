@@ -68,13 +68,13 @@ describe("legend/ordinalColorScale", () => {
   test("should place the swatch before the label and centre both on the row", () => {
     const node = render(legendColorOrdinal().scale(scale()).orientation("horizontal"));
     const mark = node.querySelector("circle.sszvis-legend__mark");
-    const label = node.querySelector("text.sszvis-legend__label");
+    const label = node.querySelector<SVGTextElement>("text.sszvis-legend__label");
     // rowHeight 21 -> halfPixel(10.5) === 10.5
     expect(mark?.getAttribute("cx")).toBe("6");
     expect(mark?.getAttribute("cy")).toBe("10.5");
     expect(label?.getAttribute("transform")).toBe("translate(18,10.5)");
     expect(label?.getAttribute("dy")).toBe("0.35em");
-    expect((label as SVGTextElement).style.textAnchor).toBe("start");
+    expect(label?.style.textAnchor).toBe("start");
   });
 
   test("should mirror the swatch and label when rightAlign is set", () => {
@@ -82,10 +82,10 @@ describe("legend/ordinalColorScale", () => {
       legendColorOrdinal().scale(scale()).orientation("horizontal").rightAlign(true)
     );
     const mark = node.querySelector("circle.sszvis-legend__mark");
-    const label = node.querySelector("text.sszvis-legend__label");
+    const label = node.querySelector<SVGTextElement>("text.sszvis-legend__label");
     expect(mark?.getAttribute("cx")).toBe("-6");
     expect(label?.getAttribute("transform")).toBe("translate(-18,10.5)");
-    expect((label as SVGTextElement).style.textAnchor).toBe("end");
+    expect(label?.style.textAnchor).toBe("end");
   });
 
   describe("horizontal orientation", () => {
@@ -292,9 +292,9 @@ describe("legend/ordinalColorScale", () => {
     });
 
     test("does not clamp the layout to the number of entries", () => {
-      // NOTE: `columns` is a target, not a maximum bound on content - asking for more
-      // columns than there are entries simply spreads them along one row. Documented
-      // behaviour, pinned because the property names suggest a grid rather than a target.
+      // NOTE: intended - the JSDoc calls these "the target number of columns", not a
+      // bound on content, so asking for more columns than entries spreads them along one
+      // row. Pinned because the property name suggests a grid rather than a target.
       const node = render(
         legendColorOrdinal().scale(scale()).orientation("horizontal").columns(10)
       );

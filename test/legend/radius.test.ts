@@ -134,18 +134,18 @@ describe("legend/radius", () => {
 
   describe("known quirks", () => {
     test("renders an invisible zero-radius circle for a zero domain value", () => {
-      // NOTE: the default ticks include domain[0]. When that is 0 the circle has r=0,
-      // so it contributes an empty <circle> plus a visible leader line and label.
-      // Harmless, and the line and label are the point of that row.
+      // NOTE: intended - documented in the radius.ts JSDoc. The default ticks include
+      // domain[0]; when that maps to a zero radius the circle is invisible, but its
+      // leader line and label still mark the value.
       const node = render(legendRadius().scale(linear()));
       const last = [...node.querySelectorAll("circle.sszvis-legend__greyline")].at(-1);
       expect(last?.getAttribute("r")).toBe("0");
     });
 
     test("requires a scale with .invert unless tickValues are supplied", () => {
-      // NOTE: the default ticks call scale.invert(), so only continuous scales work
-      // out of the box. An ordinal scale throws unless tickValues are given. The
-      // JSDoc says "A scale to use to generate the radius sizes" without stating this.
+      // NOTE: intended - documented in the radius.ts JSDoc. Deriving the default middle
+      // tick needs scale.invert(), so a scale without it throws a TypeError explaining
+      // that tickValues should be supplied instead.
       const ordinal = scaleOrdinal<string, number>().domain(["a", "b"]).range([5, 10]);
       expect(() => render(legendRadius().scale(ordinal as never))).toThrow(TypeError);
       // supplying tickValues avoids invert entirely

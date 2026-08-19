@@ -84,7 +84,8 @@ export default function (): LinearColorScaleComponent {
       if (values.length === 0 && props.scale.ticks) {
         values = props.scale.ticks(props.segments - 1);
       }
-      values.push(fn.last(domain) as number);
+      // Equivalent to fn.last(domain), without widening the element type to undefined.
+      values.push(domain[domain.length - 1]);
 
       // Avoid division by zero
       const segWidth = values.length > 0 ? props.width / values.length : 0;
@@ -103,7 +104,7 @@ export default function (): LinearColorScaleComponent {
         .attr("height", segHeight)
         .attr("fill", (d) => props.scale(d));
 
-      const startEnd = [fn.first(domain) as number, fn.last(domain) as number];
+      const startEnd = [domain[0], domain[domain.length - 1]];
       const labelText = props.labelText || startEnd;
 
       // rounded end caps for the segments
@@ -136,5 +137,5 @@ export default function (): LinearColorScaleComponent {
             `translate(${i * props.width + (i === 0 ? -1 : 1) * labelPadding}, ${segHeight / 2})`
         )
         .text((d, i) => props.labelFormat(d, i));
-    }) as LinearColorScaleComponent;
+    });
 }

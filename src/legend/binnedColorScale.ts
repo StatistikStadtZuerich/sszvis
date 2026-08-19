@@ -8,14 +8,18 @@
  * their subpixel remainder so that no gap shows between them, which means adjacent bins
  * overlap very slightly.
  *
+ * Every bin except the trailing one carries a tick line and a label beneath its upper
+ * edge. The line is snapped to the half-pixel grid to stay crisp while the label is
+ * placed on the raw edge, so the two can sit half a pixel apart.
+ *
  * @module sszvis/legend/binnedColorScale
  *
- * @param {function} scale              A scale to use to generate the color values
- * @param {array} displayValues         An array of values which should be displayed. Usually these should be the bin edges
- * @param {array} endpoints             The endpoints of the scale (note that these are not necessarily the first and last
+ * @property {function} scale           A scale to use to generate the color values
+ * @property {array} displayValues      An array of values which should be displayed. Usually these should be the bin edges
+ * @property {array} endpoints          The endpoints of the scale (note that these are not necessarily the first and last
  *                                      bin edges). These will become labels at either end of the legend.
- * @param {number} width                The pixel width of the legend. Default 200
- * @param {function} labelFormat        A formatter function for the labels of the displayValues.
+ * @property {number} width             The pixel width of the legend. Default 200
+ * @property {function} labelFormat     A formatter function for the labels of the displayValues.
  *
  * @return {sszvis.component}
  */
@@ -29,22 +33,26 @@ import { halfPixel } from "../svgUtils/crisp.js";
 /** The subset of a d3 scale this legend relies on. */
 type BinnedColorScale = (value: number) => string;
 
-type LabelFormatter = (value: number) => string | number;
+type BinLabelFormatter = (value: number) => string | number;
 
 type BinnedColorScaleProps = {
   scale: BinnedColorScale;
   displayValues: number[];
   endpoints: [number, number];
   width: number;
-  labelFormat: LabelFormatter;
+  labelFormat: BinLabelFormatter;
 };
 
-/** One rendered bin. The final bin has no upper display value, so `p` is absent. */
-interface BinRect {
+/** A rendered bin: a position, a width and a fill. */
+interface Bin {
   x: number;
   w: number;
   c: string;
-  p?: number;
+}
+
+/** A bin whose upper edge is a display value, so it carries a tick line and a label. */
+interface LabelledBin extends Bin {
+  p: number;
 }
 
 export interface BinnedColorScaleComponent extends Component {
@@ -56,8 +64,8 @@ export interface BinnedColorScaleComponent extends Component {
   endpoints(endpoints: [number, number]): BinnedColorScaleComponent;
   width(): number;
   width(width: number): BinnedColorScaleComponent;
-  labelFormat(): LabelFormatter;
-  labelFormat(format: LabelFormatter): BinnedColorScaleComponent;
+  labelFormat(): BinLabelFormatter;
+  labelFormat(format: BinLabelFormatter): BinnedColorScaleComponent;
 }
 
 export default function (): BinnedColorScaleComponent {
@@ -92,12 +100,12 @@ export default function (): BinnedColorScaleComponent {
 
       const barWidth = scaleLinear().domain(props.endpoints).range(innerRange);
       let sum = 0;
-      const rectData: BinRect[] = [];
+      const labelledBins: LabelledBin[] = [];
       let pPrev = props.endpoints[0];
       for (const p of props.displayValues) {
         const w = barWidth(p) - sum;
         const offset = sum % 1;
-        rectData.push({
+        labelledBins.push({
           x: Math.floor(circleRad + sum),
           w: w + offset,
           c: props.scale(pPrev),
@@ -108,11 +116,12 @@ export default function (): BinnedColorScaleComponent {
       }
 
       // add the final box (last display value - > endpoint)
-      rectData.push({
+      const finalBin: Bin = {
         x: Math.floor(circleRad + sum),
         w: innerRange[1] - sum,
         c: props.scale(pPrev),
-      });
+      };
+      const rectData: Bin[] = [...labelledBins, finalBin];
 
       const circles = selection
         .selectAll("circle.sszvis-legend__circle")
@@ -139,7 +148,8 @@ export default function (): BinnedColorScaleComponent {
         .attr("height", segHeight)
         .attr("fill", (d) => d.c);
 
-      const lineData = rectData.slice(0, -1);
+      // Every bin except the trailing one gets a tick line and a label.
+      const lineData = labelledBins;
 
       const lines = selection
         .selectAll("line.sszvis-legend__crispmark")
@@ -163,6 +173,6 @@ export default function (): BinnedColorScaleComponent {
       labels
         .style("text-anchor", "middle")
         .attr("transform", (d) => `translate(${d.x + d.w},${segHeight + 20})`)
-        .text((d) => props.labelFormat(d.p as number));
-    }) as BinnedColorScaleComponent;
+        .text((d) => props.labelFormat(d.p));
+    });
 }

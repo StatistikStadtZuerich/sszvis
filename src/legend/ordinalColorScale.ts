@@ -98,16 +98,16 @@ import translateString from "../svgUtils/translateString.js";
 
 export const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
 
-/** The subset of a d3 scale this legend relies on. */
-interface OrdinalColorScale {
-  (value: never): string;
-  domain(): unknown[];
+/** The subset of a d3 scale this legend relies on, over its domain type T. */
+interface OrdinalColorScale<T> {
+  (value: T): string;
+  domain(): T[];
 }
 
 type LegendOrientation = "horizontal" | "vertical";
 
-type OrdinalColorScaleProps = {
-  scale: OrdinalColorScale;
+type OrdinalColorScaleProps<T> = {
+  scale: OrdinalColorScale<T>;
   rowHeight: number;
   columnWidth: number;
   rows: number;
@@ -121,34 +121,34 @@ type OrdinalColorScaleProps = {
   floatWidth: number;
 };
 
-export interface OrdinalColorScaleComponent extends Component {
-  scale(): OrdinalColorScale;
-  scale(scale: OrdinalColorScale): OrdinalColorScaleComponent;
+export interface OrdinalColorScaleComponent<T = string> extends Component {
+  scale(): OrdinalColorScale<T>;
+  scale(scale: OrdinalColorScale<T>): OrdinalColorScaleComponent<T>;
   rowHeight(): number;
-  rowHeight(height: number): OrdinalColorScaleComponent;
+  rowHeight(height: number): OrdinalColorScaleComponent<T>;
   columnWidth(): number;
-  columnWidth(width: number): OrdinalColorScaleComponent;
+  columnWidth(width: number): OrdinalColorScaleComponent<T>;
   rows(): number;
-  rows(rows: number): OrdinalColorScaleComponent;
+  rows(rows: number): OrdinalColorScaleComponent<T>;
   columns(): number;
-  columns(columns: number): OrdinalColorScaleComponent;
+  columns(columns: number): OrdinalColorScaleComponent<T>;
   verticallyCentered(): boolean;
-  verticallyCentered(centered: boolean): OrdinalColorScaleComponent;
+  verticallyCentered(centered: boolean): OrdinalColorScaleComponent<T>;
   orientation(): LegendOrientation | undefined;
-  orientation(orientation: LegendOrientation): OrdinalColorScaleComponent;
+  orientation(orientation: LegendOrientation): OrdinalColorScaleComponent<T>;
   reverse(): boolean;
-  reverse(reverse: boolean): OrdinalColorScaleComponent;
+  reverse(reverse: boolean): OrdinalColorScaleComponent<T>;
   rightAlign(): boolean;
-  rightAlign(rightAlign: boolean): OrdinalColorScaleComponent;
+  rightAlign(rightAlign: boolean): OrdinalColorScaleComponent<T>;
   horizontalFloat(): boolean;
-  horizontalFloat(float: boolean): OrdinalColorScaleComponent;
+  horizontalFloat(float: boolean): OrdinalColorScaleComponent<T>;
   floatPadding(): number;
-  floatPadding(padding: number): OrdinalColorScaleComponent;
+  floatPadding(padding: number): OrdinalColorScaleComponent<T>;
   floatWidth(): number;
-  floatWidth(width: number): OrdinalColorScaleComponent;
+  floatWidth(width: number): OrdinalColorScaleComponent<T>;
 }
 
-export function legendColorOrdinal(): OrdinalColorScaleComponent {
+export function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T> {
   return component()
     .prop("scale")
     .prop("rowHeight")
@@ -174,7 +174,7 @@ export function legendColorOrdinal(): OrdinalColorScaleComponent {
     .floatWidth(600)
     .render(function (this: Element) {
       const selection = select(this);
-      const props = selection.props<OrdinalColorScaleProps>();
+      const props = selection.props<OrdinalColorScaleProps<T>>();
 
       let domain = props.scale.domain();
 
@@ -207,8 +207,8 @@ export function legendColorOrdinal(): OrdinalColorScaleComponent {
         .attr("cx", props.rightAlign ? -6 : 6)
         .attr("cy", halfPixel(props.rowHeight / 2))
         .attr("r", 5)
-        .attr("fill", (d) => props.scale(d as never))
-        .attr("stroke", (d) => props.scale(d as never))
+        .attr("fill", (d) => props.scale(d))
+        .attr("stroke", (d) => props.scale(d))
         .attr("stroke-width", 1);
 
       groups
@@ -261,5 +261,5 @@ export function legendColorOrdinal(): OrdinalColorScaleComponent {
           return null;
         });
       }
-    }) as OrdinalColorScaleComponent;
+    });
 }
