@@ -381,7 +381,8 @@ describe("component/nestedStackedBar", () => {
     test("drops all but the first and last tick label", () => {
       // BUG: `ticks(1)` is hardcoded, and `axisX.ordinal` reinterprets it as "keep the first
       // and last domain value plus 1 in between", so with three or more x-categories the
-      // middle labels silently disappear. The library's own example uses two categories.
+      // middle labels silently disappear. The shipped example hits this: its data covers
+      // 2019, 2021 and 2023, so the published chart is missing its 2021 label.
       const threeYears: Row[] = [
         { year: "2019", category: "A", nested: "F", value: 10 },
         { year: "2020", category: "A", nested: "F", value: 20 },
