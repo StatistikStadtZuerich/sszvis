@@ -1,6 +1,8 @@
 import { type ScaleBand, type ScaleLinear, scaleBand, scaleLinear } from "d3";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
+  type StackedBarLayout,
+  type StackedBarSlice,
   stackedBarHorizontal,
   stackedBarHorizontalData,
   stackedBarVertical,
@@ -12,11 +14,9 @@ import "../../src/d3-selectgroup.js";
 type Row = { region: string; category: string; value: number };
 
 /** One slice of a stack: the [y0, y1] pair plus the properties the layout attaches to it. */
-type Slice = [number, number] & { data: Row; series: string; stack: string };
-/** All slices sharing a series key, i.e. one layer of the stack. */
-type Series = Slice[];
+type Slice = StackedBarSlice<Row>;
 /** The whole layout: an array of series, tagged with the series keys and the stack maximum. */
-type Layout = Series[] & { keys: string[]; maxValue: number };
+type Layout = StackedBarLayout<Row>;
 
 describe("component/stackedBar", () => {
   let container: HTMLDivElement;
@@ -34,9 +34,9 @@ describe("component/stackedBar", () => {
   ];
 
   const verticalData = (data: Row[] = rows): Layout =>
-    stackedBarVerticalData(regionAcc, categoryAcc, valueAcc)(data) as unknown as Layout;
+    stackedBarVerticalData(regionAcc, categoryAcc, valueAcc)(data);
   const horizontalData = (data: Row[] = rows): Layout =>
-    stackedBarHorizontalData(regionAcc, categoryAcc, valueAcc)(data) as unknown as Layout;
+    stackedBarHorizontalData(regionAcc, categoryAcc, valueAcc)(data);
 
   /** The [y0, y1] pairs of a layout, series by series, without the attached properties. */
   const pairs = (layout: Layout) => layout.map((series) => series.map((d) => [d[0], d[1]]));
@@ -599,6 +599,7 @@ describe("component/stackedBar", () => {
       // NOTE: the scales go through fn.functor, so a value passed where a scale belongs is
       // boxed into a function returning it instead of being rejected. On the vertical
       // orientation that puts every bar at the same x with height 0.
+      // @ts-expect-error - the port types both scales as functions, catching this statically
       const node = render(verticalOf().xScale(7).yScale(5));
       expect(new Set(attrs(rects(node), "x"))).toEqual(new Set(["7"]));
       expect(new Set(attrs(rects(node), "height"))).toEqual(new Set(["0"]));
