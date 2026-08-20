@@ -498,6 +498,7 @@ describe("component/sankey", () => {
       // number is turned into a function returning that number, so d3 is handed a
       // "comparator" that claims every pair is already in order. Nothing warns, and the
       // paths simply end up in whatever order the sort algorithm settles on.
+      // @ts-expect-error - deliberately passing a constant where a comparator is declared
       const node = render(sankeyOf().linkSort(1), testData);
       expect(all(node, "links", "path.sszvis-link").length).toBe(4);
     });
@@ -632,6 +633,7 @@ describe("component/sankey", () => {
     test("should treat any side other than 'left' as 'right'", () => {
       // NOTE: the check is `=== "left"`, so a typo or an unexpected value silently lands the
       // label on the right rather than raising anything.
+      // @ts-expect-error - deliberately passing a side the component does not declare
       const node = render(sankeyOf().labelSide("outside"), testData);
       expect(labels(node).map((l) => l.getAttribute("x"))).toEqual(["26", "26", "126", "126"]);
     });
@@ -639,6 +641,7 @@ describe("component/sankey", () => {
     test("should invert an unrecognised side too, turning it into 'left'", () => {
       // NOTE: labelSideSwitch maps anything that is not "left" to "left", so the switch
       // makes an unrecognised value behave like the left side.
+      // @ts-expect-error - deliberately passing a side the component does not declare
       const node = render(sankeyOf().labelSide("outside").labelSideSwitch(true), testData);
       expect(labels(node).map((l) => l.getAttribute("x"))).toEqual(["-6", "-6", "94", "94"]);
     });
@@ -1011,6 +1014,7 @@ describe("component/sankey", () => {
         // Its JSDoc does document it as {Function} where columnLabel and linkLabel are
         // {String, Function}, so the code matches its own documentation; it is the odd one
         // out against the library's idiom rather than a defect.
+        // @ts-expect-error - deliberately passing a constant where a function is declared
         expect(() => render(sankeyOf().nameLabel("Total"), testData)).toThrow(TypeError);
       });
 
@@ -1023,12 +1027,14 @@ describe("component/sankey", () => {
         // current: bars width="0" and no warning. expected: either support the accessor or
         // report the type.
         const node = render(
+          // @ts-expect-error - deliberately passing an accessor where a number is declared
           sankeyOf().nodeThickness(() => 20),
           testData
         );
         expect(attrs(node, "nodes", "rect.sszvis-bar", "width")).toEqual(["0", "0", "0", "0"]);
 
         const curved = render(
+          // @ts-expect-error - deliberately passing an accessor where a number is declared
           sankeyOf().linkCurvature(() => 0.5),
           testData
         );
