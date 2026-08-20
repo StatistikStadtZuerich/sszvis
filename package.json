@@ -92,7 +92,7 @@
     "test:snapshot": "rm -rf test/snapshot/__results__ && npx playwright test",
     "test:watch": "vitest",
     "prepublishOnly": "npm run test:ci && npm run build",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc --noEmit && tsc -p tsconfig.test.json",
     "format": "npx biome format --write .",
     "lint": "npx biome lint .",
     "lint:fix": "npx biome lint --write .",

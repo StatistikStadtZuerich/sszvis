@@ -28,10 +28,13 @@ import * as fn from "../fn";
 import { dataAreaPattern } from "../patterns";
 import ensureDefsElement from "../svgUtils/ensureDefsElement";
 import { defaultTransition } from "../transition";
-import type { NumberAccessor, PatternSelection, StringAccessor } from "../types";
+import type { NumberAccessor, PatternSelection } from "../types";
 
 // Type definitions for confidence area component
 type Datum<T = unknown> = T;
+
+/** The data-join key. d3 hands it the datum and its index. */
+type KeyAccessor<T> = (d: Datum<T>, i: number) => string | number;
 
 interface ConfidenceAreaProps<T = unknown> {
   x: (d: Datum<T>) => NumberValue;
@@ -40,7 +43,7 @@ interface ConfidenceAreaProps<T = unknown> {
   stroke?: string;
   strokeWidth?: number;
   fill?: string;
-  key: (d: Datum<T>, i: number) => string | number;
+  key: KeyAccessor<T>;
   valuesAccessor: (d: Datum<T>[]) => Datum<T>[];
   transition: boolean;
 }
@@ -52,7 +55,7 @@ interface ConfidenceAreaComponent<T = unknown> extends Component {
   stroke(stroke?: string): ConfidenceAreaComponent<T>;
   strokeWidth(width?: number): ConfidenceAreaComponent<T>;
   fill(fill?: string): ConfidenceAreaComponent<T>;
-  key(accessor?: StringAccessor<Datum<T>>): ConfidenceAreaComponent<T>;
+  key(accessor?: KeyAccessor<T>): ConfidenceAreaComponent<T>;
   valuesAccessor(accessor?: (d: Datum<T>[]) => Datum<T>[]): ConfidenceAreaComponent<T>;
   transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
