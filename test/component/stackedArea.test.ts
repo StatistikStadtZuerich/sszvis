@@ -199,7 +199,15 @@ describe("component/stackedArea", () => {
     });
 
     test("should accept a numeric string, which d3 coerces", () => {
-      const node = render(stackedArea().transition(false).x("7").y0(2).y1(1), oneLayer);
+      const node = render(
+        stackedArea()
+          .transition(false)
+          // @ts-expect-error - a numeric string is deliberately not in the interface
+          .x("7")
+          .y0(2)
+          .y1(1),
+        oneLayer
+      );
       expect(ds(node)).toEqual(["M7,1L7,1L7,2L7,2Z"]);
     });
 
@@ -246,6 +254,7 @@ describe("component/stackedArea", () => {
         // configured with .unknown(undefined) silently produces a black area instead of an
         // error.
         const node = render(
+          // @ts-expect-error - a fill accessor is typed as returning a colour
           areaOf().fill(() => undefined),
           oneLayer
         );
