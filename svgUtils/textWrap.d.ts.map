@@ -1,1 +1,1 @@
-{"version":3,"file":"textWrap.d.ts","sourceRoot":"","sources":["../../src/svgUtils/textWrap.js"],"names":[],"mappings":"AAwBA,kHA4FC"}
+{"version":3,"file":"textWrap.d.ts","sourceRoot":"","sources":["../../src/svgUtils/textWrap.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;;;;;;;GAoBG;AAGH,OAAO,KAAK,EAAE,YAAY,EAAE,MAAM,aAAa,CAAC;AAEhD,MAAM,CAAC,OAAO,UAAU,QAAQ,CAC9B,SAAS,EAAE,YAAY,EACvB,KAAK,EAAE,MAAM,EACb,gBAAgB,CAAC,EAAE,MAAM,EACzB,gBAAgB,CAAC,EAAE,MAAM,GACxB,MAAM,EAAE,CAqEV"}

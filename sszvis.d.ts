@@ -1443,9 +1443,9 @@ declare const muchDarker: (c: string) => HSLColor;
 declare const withAlpha: (c: string, a: number) => string;
 declare const getAccessibleTextColor: (backgroundColor: string | null) => string;
 
-declare function _default$w(): any;
+declare function _default$u(): any;
 
-declare function _default$v(): any;
+declare function _default$t(): any;
 
 /**
  * Grouped Bars component
@@ -1564,7 +1564,7 @@ declare function stackedBarVertical(): Component;
 declare function stackedPyramidData(sideAcc: any, _rowAcc: any, seriesAcc: any, valueAcc: any): (data: any) => any;
 declare function stackedPyramid(): any;
 
-declare function _default$u(): any;
+declare function _default$s(): any;
 
 declare function nestedStackedBarsVertical(): Component;
 
@@ -1638,17 +1638,17 @@ interface PackComponent<T = unknown> extends Component {
  */
 declare function export_default$1<T = unknown>(): PackComponent<T>;
 
-declare function _default$t(): Component;
-
-declare function _default$s(): any;
-
-declare function _default$r(): any;
+declare function _default$r(): Component;
 
 declare function _default$q(): any;
 
 declare function _default$p(): any;
 
 declare function _default$o(): any;
+
+declare function _default$n(): any;
+
+declare function _default$m(): any;
 
 /**
  * Treemap component
@@ -1713,13 +1713,13 @@ interface TreemapComponent<T = unknown> extends Component {
  */
 declare function export_default<T = unknown>(): TreemapComponent<T>;
 
-declare function _default$n(): any;
-
-declare function _default$m(): any;
-
 declare function _default$l(): any;
 
 declare function _default$k(): any;
+
+declare function _default$j(): any;
+
+declare function _default$i(): any;
 
 /**
  * Factory that returns an HTML element appended to the given target selector,
@@ -2189,7 +2189,7 @@ declare function colorLegendDimensions(labels: any, containerWidth: any): {
  *                              centeredOffset: the left offset required to center the table horizontally within its container
  *                          }
  */
-declare function _default$j(spaceWidth: number, squarePadding: number, numX: number, numY: number, chartPadding?: Object): object;
+declare function _default$h(spaceWidth: number, squarePadding: number, numX: number, numY: number, chartPadding?: Object): object;
 
 /**
  * Horizontal Bar Chart Dimensions
@@ -2217,9 +2217,9 @@ declare function _default$j(spaceWidth: number, squarePadding: number, numX: num
  *                                               to translate scales below the bars.
  *                                 }
  */
-declare function _default$i(numBars: number): object;
+declare function _default$g(numBars: number): object;
 
-declare function _default$h(spaceWidth: any, numBars: any): {
+declare function _default$f(spaceWidth: any, numBars: any): {
     barHeight: number;
     padding: number;
     totalHeight: number;
@@ -2228,7 +2228,7 @@ declare function _default$h(spaceWidth: any, numBars: any): {
     chartPadding: number;
 };
 
-declare function _default$g(): any;
+declare function _default$e(): any;
 
 /**
  * Stacked Area Multiples Layout
@@ -2255,7 +2255,7 @@ declare function _default$g(): any;
  *                                padHeight:      This is the amount of vertical padding between each area multiple.
  *                              }
  */
-declare function _default$f(height: number, num: number, pct: number): object;
+declare function _default$d(height: number, num: number, pct: number): object;
 
 /**
  * Vertical Bar Chart Dimensions
@@ -2279,7 +2279,7 @@ declare function _default$f(height: number, num: number, pct: number): object;
  *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
  *                                }
  */
-declare function _default$e(width: number, numBars: number): object;
+declare function _default$c(width: number, numBars: number): object;
 
 declare function prepareData(): Function;
 declare function computeLayout$1(columnLengths: any[], columnTotals: any[], columnHeight: number, columnWidth: number): Object;
@@ -2287,14 +2287,14 @@ declare function computeLayout$1(columnLengths: any[], columnTotals: any[], colu
 declare function computeLayout(numLayers: number, chartWidth: number): Object;
 declare function getRadiusExtent(formattedData: any[]): any[];
 
-declare function _default$d(): any;
+declare function _default$b(): any;
 
-declare function _default$c(): any;
+declare function _default$a(): any;
 
 declare function legendColorOrdinal(): any;
 declare const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT: 21;
 
-declare function _default$b(): any;
+declare function _default$9(): any;
 
 /**
  * Handle data load errors in a standardized way
@@ -2346,10 +2346,6 @@ declare function prepareMergedGeoData(dataset: any[], geoJson: Object, keyName: 
 declare function getGeoJsonCenter(geoJson: Object): any;
 declare function widthAdaptiveMapPathStroke(width: number): number;
 
-declare function _default$a(): any;
-
-declare function _default$9(): any;
-
 declare function _default$8(): any;
 
 declare function _default$7(): any;
@@ -2361,6 +2357,10 @@ declare function _default$5(): any;
 declare function _default$4(): any;
 
 declare function _default$3(): any;
+
+declare function _default$2(): any;
+
+declare function _default$1(): any;
 
 /**
  * zurichStadtKreise Map Component
@@ -2389,7 +2389,7 @@ declare function _default$3(): any;
  *
  * @return {d3.component}
  */
-declare function _default$2(): d3.component;
+declare function _default(): d3.component;
 
 /**
  * A collection of utilities to measure elements
@@ -2610,6 +2610,83 @@ interface Scale {
 declare const range: (scale: Scale) => [number, number];
 
 /**
+ * Crisp
+ *
+ * Utilities to render SVG elements crisply by placing them precisely on the
+ * pixel grid. Rectangles should be placed on round pixels, lines and circles
+ * on half-pixels.
+ *
+ * Example of rectangle placement (four • create one pixel)
+ * •    •----•----•    •
+ *      |         |
+ * •    •----•----•    •
+ *
+ * Example of line placement (four • create one pixel)
+ * •    •    •    •    •
+ *    ---------------
+ * •    •    •    •    •
+ *
+ * @module sszvis/svgUtils/crisp
+ */
+/**
+ * crisp.halfPixel
+ *
+ * To ensure SVG elements are rendered crisply and without anti-aliasing
+ * artefacts, they must be placed on a half-pixel grid.
+ *
+ * @param  {number} pos A pixel position
+ * @return {number}     A pixel position snapped to the pixel grid
+ */
+declare const halfPixel: (pos: number) => number;
+/**
+ * crisp.roundTransformString
+ *
+ * Takes an SVG transform string 'translate(12.3,4.56789) rotate(3.5)' and
+ * rounds the coordinates of its translate instruction down to integers:
+ * 'translate(12,4) rotate(3.5)'.
+ *
+ * A valid translate instruction has the form 'translate(<x> [<y>])' where
+ * x and y can be separated by a space or comma. Both forms are accepted and
+ * the result is always comma-separated.
+ *
+ * Coordinates are floored rather than rounded to the nearest integer, which
+ * keeps this consistent with halfPixel: both place an element on the pixel
+ * grid by moving it towards the origin of its enclosing pixel.
+ *
+ * Scope: only the first translate instruction of a string is processed, and a
+ * translate is expected to carry one or two components. Other instructions
+ * (rotate, scale, …) are passed through untouched.
+ *
+ * Known defects are pinned in test/svgUtils/crisp.test.ts.
+ *
+ * @param  {string} transformStr A valid SVG transform string
+ * @return {string}              An SVG transform string with rounded values
+ */
+declare const roundTransformString: (transformStr: string) => string;
+/**
+ * crisp.transformTranslateSubpixelShift
+ *
+ * This helper function takes a transform string and returns a vector that
+ * tells us how much to shift an element in order to place it on a half-pixel
+ * grid.
+ *
+ * Each component is the distance from the coordinate down to the origin of its
+ * enclosing pixel, so the shift is always in [0, 1). Because it is measured
+ * from Math.floor — consistent with halfPixel and roundTransformString — a
+ * negative coordinate yields the distance above the enclosing pixel rather
+ * than a negative offset: -12.3 shifts by 0.7, not -0.3.
+ *
+ * A translate carrying only an x component yields a y shift of 0.
+ *
+ * Known defects are pinned in test/svgUtils/crisp.test.ts.
+ *
+ * @param  {string} transformStr A valid SVG transform string containing a
+ *                               translate instruction
+ * @return {vector}              Two-element array ([dx, dy])
+ */
+declare const transformTranslateSubpixelShift: (transformStr: string) => [number, number];
+
+/**
  * Ensure Defs Element
  *
  * This method ensures that the provided selection contains a 'defs' object,
@@ -2625,7 +2702,88 @@ declare const range: (scale: Scale) => [number, number];
 
 declare function ensureDefsElement(selection: AnySelection, type: string, elementId: string): AnySelection;
 
-declare function _default$1(selection: any, width: any, paddingRightLeft: any, paddingTopBottom: any): any[];
+/**
+ * ModularText component
+ *
+ * Create structured text with formatting and newlines. Use either the HTML or
+ * SVG variant, depending on the output you expect.
+ *
+ * @module sszvis/svgUtils/modularText/html
+ * @module sszvis/svgUtils/modularText/svg
+ *
+ * @example HTML
+ * var fmtHtml = sszvis.modularTextHTML()
+ *   .plain('Artist:')
+ *   .plain(function(d) { return d.name; })
+ *   .newline()
+ *   .bold(function(d) { return d.age; })
+ *   .italic('years old');
+ * fmtHtml({name: 'Patti', age: 67});
+ * //=> "Artist: Patti<br/><strong>67</strong> <em>years old</em>"
+ *
+ * @example SVG
+ * var fmtSvg = sszvis.modularTextSVG()
+ *   .bold(function(d) { return d.items; })
+ *   .plain('items');
+ * fmtSvg({items: 30});
+ * //=> "<tspan x="0" dy="0"><tspan style="font-weight:bold">30</tspan> <tspan>items</tspan></tspan>"
+ *
+ * Words on a line are joined with a single space. The HTML variant separates
+ * lines with <br/>; the SVG variant wraps each line in a <tspan> that resets x
+ * to 0 and advances dy by 1.2em after the first line.
+ *
+ * The two variants differ on the empty case: a builder with no words formats to
+ * "" as HTML, but to a single empty wrapper <tspan> as SVG. Both are harmless
+ * in practice, since a builder is always given at least one word.
+ *
+ * A builder is reusable: it holds the structure, not the data, so the same
+ * builder can be applied to many datums.
+ *
+ * @property {string, function} plain  String without formatting
+ * @property {string, function} italic String with italic style
+ * @property {string, function} bold   String with bold style
+ * @property newline                   Insert a line break
+ *
+ * @return {function} Formatting function that accepts a datum
+ */
+/**
+ * A chainable text builder. Calling it with a datum returns the formatted string.
+ * The `plain`, `italic` and `bold` methods each accept either a constant value or
+ * an accessor function which is called with the datum.
+ */
+interface ModularTextBuilder {
+    (datum?: unknown): string;
+    newline(): ModularTextBuilder;
+    plain(text: unknown): ModularTextBuilder;
+    italic(text: unknown): ModularTextBuilder;
+    bold(text: unknown): ModularTextBuilder;
+}
+declare const modularTextHTML: () => ModularTextBuilder;
+declare const modularTextSVG: () => ModularTextBuilder;
+
+/**
+ * Text wrap
+ *
+ * Function allowing to 'wrap' the text from an SVG <text> element with <tspan>.
+ *
+ * @module sszvis/svgUtils/textWrap
+ *
+ * Based on https://github.com/mbostock/d3/issues/1642
+ * @example svg.append("g")
+ *      .attr("class", "x axis")
+ *      .attr("transform", "translate(0," + height + ")")
+ *      .call(xAxis)
+ *      .selectAll(".tick text")
+ *          .call(d3TextWrap, x.rangeBand());
+ *
+ * @param selection d3 selection for one or more <text> object
+ * @param width number - global width in which the text will be word-wrapped.
+ * @param paddingRightLeft integer - Padding right and left between the wrapped text and the 'invisible bax' of 'width' width
+ * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
+ * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
+ */
+
+declare function textWrap(selection: AnySelection, width: number, paddingRightLeft?: number, paddingTopBottom?: number): number[];
 
 /**
  * translateString
@@ -2639,20 +2797,7 @@ declare function _default$1(selection: any, width: any, paddingRightLeft: any, p
  * @param  {number} y     The y-component of the transform
  * @return {string}       The translate string
  */
-declare function _default(x: number, y: number): string;
-
-declare function halfPixel(pos: number): number;
-declare function roundTransformString(transformStr: string): string;
-declare function transformTranslateSubpixelShift(transformStr: string): vecor;
-
-declare function modularTextHTML(): {
-    (d: any): any;
-    newline(): /*elided*/ any;
-};
-declare function modularTextSVG(): {
-    (d: any): any;
-    newline(): /*elided*/ any;
-};
+declare function translateString(x: number, y: number): string;
 
 /**
  * Default transition attributes for sszvis
@@ -2690,5 +2835,5 @@ declare function on(name: any, cb: any): any;
 declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, export_default$d as annotationConfidenceArea, export_default$c as annotationConfidenceBar, export_default$a as annotationLine, export_default$9 as annotationRangeFlag, export_default$8 as annotationRangeRuler, export_default$7 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$w as bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$n as buttonGroup, cascade, _default$2 as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$j as dimensionsHeatTable, _default$i as dimensionsHorizontalBarChart, _default$e as dimensionsVerticalBarChart, _default$v as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$b as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$m as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$h as layoutPopulationPyramid, _default$g as layoutSmallMultiples, _default$f as layoutStackedAreaMultiples, _default$d as legendColorBinned, _default$c as legendColorLinear, legendColorOrdinal, _default$b as legendRadius, _default$u as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$a as mapRendererBase, _default$9 as mapRendererBubble, _default$8 as mapRendererGeoJson, _default$7 as mapRendererHighlight, _default$6 as mapRendererImage, _default$5 as mapRendererMesh, _default$4 as mapRendererPatternedLakeOverlay, _default$3 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$4 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as pack, export_default$3 as panning, parseDate, parseNumber, parseYear, _default$t as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$s as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$r as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$l as selectMenu, set, _default$k as slider, slightlyDarker, slowTransition, some, _default$q as stackedArea, _default$p as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$o as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, _default$1 as textWrap, timeLocale, export_default$6 as tooltip, export_default$5 as tooltipAnchor, transformTranslateSubpixelShift, _default as translateString, export_default as treemap, viewport, export_default$2 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, export_default$d as annotationConfidenceArea, export_default$c as annotationConfidenceBar, export_default$a as annotationLine, export_default$9 as annotationRangeFlag, export_default$8 as annotationRangeRuler, export_default$7 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$u as bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$l as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$h as dimensionsHeatTable, _default$g as dimensionsHorizontalBarChart, _default$c as dimensionsVerticalBarChart, _default$t as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$b as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$k as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$f as layoutPopulationPyramid, _default$e as layoutSmallMultiples, _default$d as layoutStackedAreaMultiples, _default$b as legendColorBinned, _default$a as legendColorLinear, legendColorOrdinal, _default$9 as legendRadius, _default$s as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$4 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as pack, export_default$3 as panning, parseDate, parseNumber, parseYear, _default$r as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$q as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$p as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$j as selectMenu, set, _default$i as slider, slightlyDarker, slowTransition, some, _default$o as stackedArea, _default$n as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$m as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$6 as tooltip, export_default$5 as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default as treemap, viewport, export_default$2 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
 export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, MeasurableElement, Padding, PartialBreakpoint, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SvgLayerMetadata, ValueSorter };

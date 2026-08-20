@@ -10,5 +10,5 @@
  * @param  {number} y     The y-component of the transform
  * @return {string}       The translate string
  */
-export default function _default(x: number, y: number): string;
+export default function translateString(x: number, y: number): string;
 //# sourceMappingURL=translateString.d.ts.map

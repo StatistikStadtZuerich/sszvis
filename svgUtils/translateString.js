@@ -10,8 +10,8 @@
  * @param  {number} y     The y-component of the transform
  * @return {string}       The translate string
  */
-function translateString (x, y) {
-  return "translate(" + x + "," + y + ")";
+function translateString(x, y) {
+  return "translate(".concat(x, ",").concat(y, ")");
 }
 
 export { translateString as default };

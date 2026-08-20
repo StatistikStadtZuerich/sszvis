@@ -1110,27 +1110,36 @@
      * @param  {number} pos A pixel position
      * @return {number}     A pixel position snapped to the pixel grid
      */
-    const halfPixel = function (pos) {
-      return Math.floor(pos) + 0.5;
-    };
+    const halfPixel = pos => Math.floor(pos) + 0.5;
     /**
      * crisp.roundTransformString
      *
      * Takes an SVG transform string 'translate(12.3,4.56789) rotate(3.5)' and
-     * rounds all translate coordinates to integers: 'translate(12,5) rotate(3.5)'.
+     * rounds the coordinates of its translate instruction down to integers:
+     * 'translate(12,4) rotate(3.5)'.
      *
      * A valid translate instruction has the form 'translate(<x> [<y>])' where
-     * x and y can be separated by a space or comma. We normalize this to use
-     * spaces because that's what Internet Explorer uses.
+     * x and y can be separated by a space or comma. Both forms are accepted and
+     * the result is always comma-separated.
+     *
+     * Coordinates are floored rather than rounded to the nearest integer, which
+     * keeps this consistent with halfPixel: both place an element on the pixel
+     * grid by moving it towards the origin of its enclosing pixel.
+     *
+     * Scope: only the first translate instruction of a string is processed, and a
+     * translate is expected to carry one or two components. Other instructions
+     * (rotate, scale, …) are passed through untouched.
+     *
+     * Known defects are pinned in test/svgUtils/crisp.test.ts.
      *
      * @param  {string} transformStr A valid SVG transform string
      * @return {string}              An SVG transform string with rounded values
      */
-    const roundTransformString = function (transformStr) {
+    const roundTransformString = transformStr => {
       const roundNumber = compose(Math.floor, Number);
       return transformStr.replace(/(translate\()\s*([\d ,.]+)\s*(\))/i, (_, left, vecStr, right) => {
         const roundVec = vecStr.replace(",", " ").replace(/\s+/, " ").split(" ").map(roundNumber).join(",");
-        return left + roundVec + right;
+        return "".concat(left).concat(roundVec).concat(right);
       });
     };
     /**
@@ -1140,14 +1149,27 @@
      * tells us how much to shift an element in order to place it on a half-pixel
      * grid.
      *
-     * @param  {string} transformStr A valid SVG transform string
-     * @return {vecor}               Two-element array ([dx, dy])
+     * Each component is the distance from the coordinate down to the origin of its
+     * enclosing pixel, so the shift is always in [0, 1). Because it is measured
+     * from Math.floor — consistent with halfPixel and roundTransformString — a
+     * negative coordinate yields the distance above the enclosing pixel rather
+     * than a negative offset: -12.3 shifts by 0.7, not -0.3.
+     *
+     * A translate carrying only an x component yields a y shift of 0.
+     *
+     * Known defects are pinned in test/svgUtils/crisp.test.ts.
+     *
+     * @param  {string} transformStr A valid SVG transform string containing a
+     *                               translate instruction
+     * @return {vector}              Two-element array ([dx, dy])
      */
-    const transformTranslateSubpixelShift = function (transformStr) {
+    const transformTranslateSubpixelShift = transformStr => {
       const roundNumber = compose(Math.floor, Number);
       const m = transformStr.match(/(translate\()\s*([\d ,.-]+)\s*(\))/i);
+      // A transform string without a translate instruction throws a TypeError here. This
+      // is preserved from the original implementation; see test/svgUtils/crisp.test.ts.
       const vec = m[2].replace(",", " ").replace(/\s+/, " ").split(" ").map(Number);
-      if (vec.length === 1) vec.push([0]);
+      if (vec.length === 1) vec.push(0);
       const vecRound = vec.map(roundNumber);
       return [vec[0] - vecRound[0], vec[1] - vecRound[1]];
     };
@@ -1164,8 +1186,8 @@
      * @param  {number} y     The y-component of the transform
      * @return {string}       The translate string
      */
-    function translateString (x, y) {
-      return "translate(" + x + "," + y + ")";
+    function translateString(x, y) {
+      return "translate(".concat(x, ",").concat(y, ")");
     }
 
     /**
@@ -3353,83 +3375,59 @@
      *      .selectAll(".tick text")
      *          .call(d3TextWrap, x.rangeBand());
      *
-     * @param text d3 selection for one or more <text> object
+     * @param selection d3 selection for one or more <text> object
      * @param width number - global width in which the text will be word-wrapped.
      * @param paddingRightLeft integer - Padding right and left between the wrapped text and the 'invisible bax' of 'width' width
      * @param paddingTopBottom integer - Padding top and bottom between the wrapped text and the 'invisible bax' of 'width' width
      * @returns Array[number] - Number of lines created by the function, stored in a Array in case multiple <text> element are passed to the function
      */
-    function textWrap (selection, width, paddingRightLeft, paddingTopBottom) {
-      paddingRightLeft = paddingRightLeft || 5; //Default padding (5px)
-      paddingTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
+    function textWrap(selection, width, paddingRightLeft, paddingTopBottom) {
+      const padRightLeft = paddingRightLeft || 5; //Default padding (5px)
+      const padTopBottom = (paddingTopBottom || 5) - 2; //Default padding (5px), remove 2 pixels because of the borders
       const maxWidth = width; //I store the tooltip max width
-      width = width - paddingRightLeft * 2; //Take the padding into account
+      const innerWidth = width - padRightLeft * 2; //Take the padding into account
       const arrLineCreatedCount = [];
       selection.each(function () {
+        var _text$attr;
         const text = d3.select(this);
         const words = text.text().split(/[\t\n\v\f\r ]+/).reverse(); //Don't cut non-breaking space (\xA0), as well as the Unicode characters \u00A0 \u2028 \u2029)
-        let word;
         let line = [];
         let lineNumber = 0;
         const lineHeight = 1.1; //Em
-        let x;
-        let y = text.attr("y");
-        let dy = Number.parseFloat(text.attr("dy"));
         let createdLineCount = 1; //Total line created count
         const textAlign = text.style("text-anchor") || "start"; //'start' by default (start, middle, end, inherit)
         //Clean the data in case <text> does not define those values
-        if (isNaN(dy)) dy = 0; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
+        const parsedDy = Number.parseFloat((_text$attr = text.attr("dy")) !== null && _text$attr !== void 0 ? _text$attr : "");
+        const dy = Number.isNaN(parsedDy) ? 0 : parsedDy; //Default padding (0em) : the 'dy' attribute on the first <tspan> _must_ be identical to the 'dy' specified on the <text> element, or start at '0em' if undefined
         //Offset the text position based on the text-anchor
-        const wrapTickLabels = d3.select(text.node().parentNode).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
-        if (wrapTickLabels) {
-          switch (textAlign) {
-            case "start":
-              {
-                x = -width / 2;
-                break;
-              }
-            case "middle":
-              {
-                x = 0;
-                break;
-              }
-            case "end":
-              {
-                x = width / 2;
-                break;
-              }
-          }
-        } else {
+        const wrapTickLabels = d3.select(this.parentElement).classed("tick"); //Don't wrap the 'normal untranslated' <text> element and the translated <g class='tick'><text></text></g> elements the same way..
+        // An unrecognised text-anchor yields undefined, which d3 treats as "remove the
+        // attribute" - the same outcome as the original switch statements' empty default case.
+        const xByAnchor = wrapTickLabels ? {
+          start: -innerWidth / 2,
+          middle: 0,
+          end: innerWidth / 2
+        } : {
           //untranslated <text> elements
-          switch (textAlign) {
-            case "start":
-              {
-                x = paddingRightLeft;
-                break;
-              }
-            case "middle":
-              {
-                x = maxWidth / 2;
-                break;
-              }
-            case "end":
-              {
-                x = maxWidth - paddingRightLeft;
-                break;
-              }
-          }
-        }
-        y = +(null === y ? paddingTopBottom : y);
-        let tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+          start: padRightLeft,
+          middle: maxWidth / 2,
+          end: maxWidth - padRightLeft
+        };
+        const x = xByAnchor[textAlign];
+        const yAttr = text.attr("y");
+        const y = +(yAttr === null ? padTopBottom : yAttr);
+        let tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", "".concat(dy, "em"));
         while (words.length > 0) {
-          word = words.pop();
+          var _words$pop;
+          const word = (_words$pop = words.pop()) !== null && _words$pop !== void 0 ? _words$pop : ""; // the loop guard guarantees a value
           line.push(word);
           tspan.text(line.join(" "));
-          if (tspan.node().getComputedTextLength() > width && line.length > 1) {
+          const tspanNode = tspan.node();
+          if (tspanNode && tspanNode.getComputedTextLength() > innerWidth && line.length > 1) {
             line.pop();
             tspan.text(line.join(" "));
             line = [word];
-            tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+            tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", "".concat(++lineNumber * lineHeight + dy, "em")).text(word);
             ++createdLineCount;
           }
         }
@@ -8818,7 +8816,7 @@
      * @module sszvis/svgUtils/modularText/svg
      *
      * @example HTML
-     * var fmtHtml = sszvis.svgUtils.modularText.html()
+     * var fmtHtml = sszvis.modularTextHTML()
      *   .plain('Artist:')
      *   .plain(function(d) { return d.name; })
      *   .newline()
@@ -8828,11 +8826,22 @@
      * //=> "Artist: Patti<br/><strong>67</strong> <em>years old</em>"
      *
      * @example SVG
-     * var fmtSvg = sszvis.svgUtils.modularText.svg()
+     * var fmtSvg = sszvis.modularTextSVG()
      *   .bold(function(d) { return d.items; })
      *   .plain('items');
      * fmtSvg({items: 30});
      * //=> "<tspan x="0" dy="0"><tspan style="font-weight:bold">30</tspan> <tspan>items</tspan></tspan>"
+     *
+     * Words on a line are joined with a single space. The HTML variant separates
+     * lines with <br/>; the SVG variant wraps each line in a <tspan> that resets x
+     * to 0 and advances dy by 1.2em after the first line.
+     *
+     * The two variants differ on the empty case: a builder with no words formats to
+     * "" as HTML, but to a single empty wrapper <tspan> as SVG. Both are harmless
+     * in practice, since a builder is always given at least one word.
+     *
+     * A builder is reusable: it holds the structure, not the data, so the same
+     * builder can be applied to many datums.
      *
      * @property {string, function} plain  String without formatting
      * @property {string, function} italic String with italic style
@@ -8841,50 +8850,40 @@
      *
      * @return {function} Formatting function that accepts a datum
      */
+    const TEXT_STYLES = ["bold", "italic", "plain"];
     function formatHTML() {
       const styles = {
-        plain(d) {
-          return d;
-        },
-        italic(d) {
-          return "<em>" + d + "</em>";
-        },
-        bold(d) {
-          return "<strong>" + d + "</strong>";
-        }
+        plain: d => d,
+        italic: d => "<em>".concat(d, "</em>"),
+        bold: d => "<strong>".concat(d, "</strong>")
       };
-      return function (textBody, datum) {
-        return textBody.lines().map(line => line.map(word => styles[word.style].call(null, word.text(datum))).join(" ")).join("<br/>");
-      };
+      return (textBody, datum) => textBody.lines().map(line => line.map(word => styles[word.style](word.text(datum))).join(" ")).join("<br/>");
     }
     function formatSVG() {
       const styles = {
-        plain(d) {
-          return "<tspan>" + d + "</tspan>";
-        },
-        italic(d) {
-          return '<tspan style="font-style:italic">' + d + "</tspan>";
-        },
-        bold(d) {
-          return '<tspan style="font-weight:bold">' + d + "</tspan>";
-        }
+        plain: d => "<tspan>".concat(d, "</tspan>"),
+        italic: d => "<tspan style=\"font-style:italic\">".concat(d, "</tspan>"),
+        bold: d => "<tspan style=\"font-weight:bold\">".concat(d, "</tspan>")
       };
-      return function (textBody, datum) {
-        return textBody.lines().reduce((svg, line, i) => {
-          const lineSvg = line.map(word => styles[word.style].call(null, word.text(datum))).join(" ");
-          const dy = i === 0 ? 0 : "1.2em";
-          return svg + '<tspan x="0" dy="' + dy + '">' + lineSvg + "</tspan>";
-        }, "");
-      };
+      return (textBody, datum) => textBody.lines().reduce((svg, line, i) => {
+        const lineSvg = line.map(word => styles[word.style](word.text(datum))).join(" ");
+        const dy = i === 0 ? 0 : "1.2em";
+        return "".concat(svg, "<tspan x=\"0\" dy=\"").concat(dy, "\">").concat(lineSvg, "</tspan>");
+      }, "");
     }
     function structuredText() {
+      // Always holds at least one line, so the index in addWord is always in range.
       const lines = [[]];
       return {
         addLine() {
           lines.push([]);
         },
         addWord(style, text) {
-          last(lines).push({
+          // Equivalent to fn.last(lines); `lines` always holds at least one line.
+          lines[lines.length - 1].push({
+            // fn.functor is typed for nullary thunks, so it cannot express an accessor that
+            // receives the datum. The public methods accept `unknown` so that a consumer's
+            // (d: Artist) => string still type-checks, which leaves this narrowing to us.
             text: functor(text),
             style
           });
@@ -8895,17 +8894,17 @@
       };
     }
     function makeTextWithFormat(format) {
-      return function () {
+      return () => {
         const textBody = structuredText();
-        function makeText(d) {
-          return format(textBody, d);
-        }
-        makeText.newline = function () {
+        // A callable object: the chaining methods are attached below, so the function has to
+        // be narrowed to the builder interface up front.
+        const makeText = d => format(textBody, d);
+        makeText.newline = () => {
           textBody.addLine();
           return makeText;
         };
-        for (const style of ["bold", "italic", "plain"]) {
-          makeText[style] = function (text) {
+        for (const style of TEXT_STYLES) {
+          makeText[style] = text => {
             textBody.addWord(style, text);
             return makeText;
           };
