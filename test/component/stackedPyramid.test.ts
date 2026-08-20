@@ -1,32 +1,21 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { stackedPyramid, stackedPyramidData } from "../../src/component/stackedPyramid.js";
+import {
+  type StackedPyramidLayout,
+  type StackedPyramidSide,
+  stackedPyramid,
+  stackedPyramidData,
+} from "../../src/component/stackedPyramid.js";
 import { createSvgLayer } from "../../src/createSvgLayer.js";
 import "../../src/d3-selectgroup.js";
 
 /** One row of the flat input the layout function expects. */
 type Row = { side: string; row: number; series: string; value: number };
 
-/**
- * One slice of a stack: the [y0, y1] pair d3.stack produced, rewritten in place so that
- * `data` is the single source row rather than the whole cascade row, and tagged with the
- * series, the side and the row it belongs to.
- */
-type Slice = [number, number] & {
-  data: Row;
-  series: string;
-  side: string;
-  row: number;
-  value: number;
-};
-
-/** All slices sharing a series key, i.e. one layer of one side's stack. */
-type Series = Slice[] & { key: string; index: number };
-
 /** One side of the pyramid: the series d3.stack produced for it. */
-type Side = Series[];
+type Side = StackedPyramidSide<Row>;
 
 /** What stackedPyramidData returns: the sides, with the overall maximum hung off the array. */
-type Layout = Side[] & { maxValue: number | undefined };
+type Layout = StackedPyramidLayout<Row>;
 
 describe("component/stackedPyramid", () => {
   let container: HTMLDivElement;
@@ -814,7 +803,12 @@ describe("component/stackedPyramid", () => {
       test("throws when a side accessor returns undefined", () => {
         // NOTE: the error comes from d3's data join, so the message names neither the prop
         // nor the component: "undefined is not iterable".
-        expect(() => render(pyramidOf().leftAccessor(() => undefined))).toThrow(TypeError);
+        expect(() =>
+          render(
+            // @ts-expect-error - deliberately violating the accessor's return contract
+            pyramidOf().leftAccessor(() => undefined)
+          )
+        ).toThrow(TypeError);
       });
     });
   });
@@ -944,8 +938,18 @@ describe("component/stackedPyramid", () => {
       // data - `props.rightRefAccessor ? [props.rightRefAccessor(data)] : []`. An accessor
       // that returns undefined for some states throws instead of hiding the line.
       // current: TypeError. expected: no line. Shared with pyramid.
-      expect(() => render(pyramidOf().rightRefAccessor(() => undefined))).toThrow(TypeError);
-      expect(() => render(pyramidOf().rightRefAccessor(() => null))).toThrow(TypeError);
+      expect(() =>
+        render(
+          // @ts-expect-error - deliberately violating the accessor's return contract
+          pyramidOf().rightRefAccessor(() => undefined)
+        )
+      ).toThrow(TypeError);
+      expect(() =>
+        render(
+          // @ts-expect-error - deliberately violating the accessor's return contract
+          pyramidOf().rightRefAccessor(() => null)
+        )
+      ).toThrow(TypeError);
     });
 
     test("leaves an empty path element behind for empty reference data", async () => {
