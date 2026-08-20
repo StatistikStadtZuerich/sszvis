@@ -13,7 +13,7 @@ export function colorLegendLayout({ legendLabels, axisLabels, slant }: {
     legendPadding: number;
     bottomPadding: number;
     legendWidth: number;
-    legend: any;
+    legend: (("horizontal" | "vertical") | undefined) & import("../legend/ordinalColorScale").OrdinalColorScaleComponent<string>;
     scale: import("../color").ExtendedOrdinalScale;
 };
 /**

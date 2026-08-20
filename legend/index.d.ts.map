@@ -1,1 +1,1 @@
-{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../src/legend/index.js"],"names":[],"mappings":""}
+{"version":3,"file":"index.d.ts","sourceRoot":"","sources":["../../src/legend/index.ts"],"names":[],"mappings":"AAAA,OAAO,EACL,KAAK,yBAAyB,EAC9B,OAAO,IAAI,iBAAiB,GAC7B,MAAM,uBAAuB,CAAC;AAC/B,OAAO,EACL,OAAO,IAAI,iBAAiB,EAC5B,KAAK,yBAAyB,GAC/B,MAAM,uBAAuB,CAAC;AAC/B,cAAc,wBAAwB,CAAC;AACvC,OAAO,EAAE,OAAO,IAAI,YAAY,EAAE,KAAK,qBAAqB,EAAE,MAAM,aAAa,CAAC"}

@@ -246,7 +246,7 @@ interface BreadcrumbComponent<T = unknown> extends Component {
  * // Returns: [{ label: "Category", node: ... }, { label: "Subcategory", node: ... }]
  */
 declare function createBreadcrumbItems<T>(node: HierarchyNode<NodeDatum<T>> | null): BreadcrumbItem<T>[];
-declare function export_default$f<T = unknown>(): BreadcrumbComponent<T>;
+declare function export_default$i<T = unknown>(): BreadcrumbComponent<T>;
 
 /**
  * Circle annotation
@@ -278,7 +278,7 @@ interface CircleComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$9<T>>): CircleComponent<T>;
     caption(accessor?: StringAccessor<Datum$9<T>>): CircleComponent<T>;
 }
-declare function export_default$e<T = unknown>(): CircleComponent<T>;
+declare function export_default$h<T = unknown>(): CircleComponent<T>;
 
 /**
  * @function sszvis.annotationConfidenceArea
@@ -318,7 +318,7 @@ interface ConfidenceAreaComponent<T = unknown> extends Component {
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
-declare function export_default$d<T = unknown>(): ConfidenceAreaComponent<T>;
+declare function export_default$g<T = unknown>(): ConfidenceAreaComponent<T>;
 
 /**
  * Confidence Bar annotation
@@ -358,7 +358,7 @@ interface ConfidenceBarComponent<T = unknown> extends Component {
     groupSpace(space?: number): ConfidenceBarComponent<T>;
     groupScale(scale?: (d: Datum$7<T>) => number): ConfidenceBarComponent<T>;
 }
-declare function export_default$c<T = unknown>(): ConfidenceBarComponent<T>;
+declare function export_default$f<T = unknown>(): ConfidenceBarComponent<T>;
 
 /**
  * @function sszvis.tooltipFit
@@ -384,7 +384,7 @@ interface TooltipData$1<T = unknown> {
 interface Bounds {
     innerWidth: number;
 }
-declare function export_default$b<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
+declare function export_default$e<T = unknown>(defaultVal: TooltipOrientation, bounds: Bounds): (d: TooltipData$1<T>) => TooltipOrientation;
 
 /**
  * Line annotation
@@ -423,7 +423,7 @@ interface LineComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$6<T>>): LineComponent<T>;
     caption(accessor?: StringAccessor<Datum$6<T>>): LineComponent<T>;
 }
-declare function export_default$a<T = unknown>(): LineComponent<T>;
+declare function export_default$d<T = unknown>(): LineComponent<T>;
 
 /**
  * Range Flag annotation
@@ -449,7 +449,7 @@ interface RangeFlagComponent<T = unknown> extends Component {
     y0(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
     y1(accessor?: NumberAccessor$1<Datum$5<T>>): RangeFlagComponent<T>;
 }
-declare function export_default$9<T = unknown>(): RangeFlagComponent<T>;
+declare function export_default$c<T = unknown>(): RangeFlagComponent<T>;
 
 /**
  * RangeRuler annotation
@@ -486,7 +486,7 @@ interface RangeRulerComponent<T = unknown> extends Component {
     total(value?: number): RangeRulerComponent<T>;
     flip(accessor?: BooleanAccessor<Datum$4<T>>): RangeRulerComponent<T>;
 }
-declare function export_default$8<T = unknown>(): RangeRulerComponent<T>;
+declare function export_default$b<T = unknown>(): RangeRulerComponent<T>;
 
 /**
  * Rectangle annotation
@@ -520,7 +520,7 @@ interface RectangleComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<Datum$3<T>>): RectangleComponent<T>;
     caption(accessor?: StringAccessor<Datum$3<T>>): RectangleComponent<T>;
 }
-declare function export_default$7<T = unknown>(): RectangleComponent<T>;
+declare function export_default$a<T = unknown>(): RectangleComponent<T>;
 
 /**
  * Ruler annotation
@@ -625,7 +625,7 @@ interface TooltipComponent<T = unknown> extends Component {
     dy(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
     opacity(accessor?: NumberAccessor$1<TooltipData<T>>): TooltipComponent<T>;
 }
-declare function export_default$6<T = unknown>(): TooltipComponent<T>;
+declare function export_default$9<T = unknown>(): TooltipComponent<T>;
 
 /**
  * Tooltip anchor annotation
@@ -675,7 +675,7 @@ interface TooltipAnchorComponent<T = unknown> extends Component {
     position(accessor?: (d: Datum<T>) => [number, number]): TooltipAnchorComponent<T>;
     debug(value?: boolean): TooltipAnchorComponent<T>;
 }
-declare function export_default$5<T = unknown>(): TooltipAnchorComponent<T>;
+declare function export_default$8<T = unknown>(): TooltipAnchorComponent<T>;
 
 declare function app({ init, render, actions, fallback }: {
     init: any;
@@ -944,7 +944,7 @@ interface MoveComponent<XDomain = Domain, YDomain = Domain> extends Component {
     on(eventName: "end", handler: EventHandler): MoveComponent<XDomain, YDomain>;
     on(eventName: string): EventHandler | undefined;
 }
-declare function export_default$4<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
+declare function export_default$7<XDomain = number | string, YDomain = number | string>(): MoveComponent<XDomain, YDomain>;
 
 /**
  * Panning behavior
@@ -994,7 +994,7 @@ interface PanningComponent extends Component {
     on(eventName: "end", handler: PanEventHandler): PanningComponent;
     on(eventName: string): PanEventHandler | undefined;
 }
-declare function export_default$3(): PanningComponent;
+declare function export_default$6(): PanningComponent;
 
 /**
  * Voronoi behavior
@@ -1056,7 +1056,7 @@ interface VoronoiComponent<T = unknown> extends Component {
     on(eventName: "out", handler: VoronoiEventHandler<T>): VoronoiComponent<T>;
     on(eventName: string): VoronoiEventHandler<T> | undefined;
 }
-declare function export_default$2<T = unknown>(): VoronoiComponent<T>;
+declare function export_default$5<T = unknown>(): VoronoiComponent<T>;
 
 /**
  * Bounds
@@ -1443,9 +1443,9 @@ declare const muchDarker: (c: string) => HSLColor;
 declare const withAlpha: (c: string, a: number) => string;
 declare const getAccessibleTextColor: (backgroundColor: string | null) => string;
 
-declare function _default$u(): any;
+declare function _default$r(): any;
 
-declare function _default$t(): any;
+declare function _default$q(): any;
 
 /**
  * Grouped Bars component
@@ -1564,7 +1564,7 @@ declare function stackedBarVertical(): Component;
 declare function stackedPyramidData(sideAcc: any, _rowAcc: any, seriesAcc: any, valueAcc: any): (data: any) => any;
 declare function stackedPyramid(): any;
 
-declare function _default$s(): any;
+declare function _default$p(): any;
 
 declare function nestedStackedBarsVertical(): Component;
 
@@ -1636,19 +1636,19 @@ interface PackComponent<T = unknown> extends Component {
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default$1<T = unknown>(): PackComponent<T>;
+declare function export_default$4<T = unknown>(): PackComponent<T>;
 
-declare function _default$r(): Component;
-
-declare function _default$q(): any;
-
-declare function _default$p(): any;
-
-declare function _default$o(): any;
+declare function _default$o(): Component;
 
 declare function _default$n(): any;
 
 declare function _default$m(): any;
+
+declare function _default$l(): any;
+
+declare function _default$k(): any;
+
+declare function _default$j(): any;
 
 /**
  * Treemap component
@@ -1711,15 +1711,15 @@ interface TreemapComponent<T = unknown> extends Component {
  *
  * @template T The type of the original flat data objects
  */
-declare function export_default<T = unknown>(): TreemapComponent<T>;
-
-declare function _default$l(): any;
-
-declare function _default$k(): any;
-
-declare function _default$j(): any;
+declare function export_default$3<T = unknown>(): TreemapComponent<T>;
 
 declare function _default$i(): any;
+
+declare function _default$h(): any;
+
+declare function _default$g(): any;
+
+declare function _default$f(): any;
 
 /**
  * Factory that returns an HTML element appended to the given target selector,
@@ -2132,6 +2132,134 @@ declare const formatFractionPercent: (d: number) => string;
 declare const formatText: StringConstructor;
 
 /**
+ * Ordinal Color Scale Legend
+ *
+ * This component is used for creating a legend for a categorical color scale.
+ *
+ * @module sszvis/legend/ordinalColorScale
+ *
+ * @property {d3.scaleOrdinal()} scale         An ordinal scale which will be transformed into the legend.
+ * @property {Number} rowHeight                 The height of the rows of the legend.
+ * @property {Number} columnWidth               The width of the columns of the legend.
+ * @property {Number} rows                      The target number of rows for the legend.
+ * @property {Number} columns                    The target number of columns for the legend.
+ * @property {String} orientation               The orientation (layout order) of the legend. should be either "horizontal" or "vertical". No default.
+ * @property {Boolean} reverse                  Whether to reverse the order that categories appear in the legend. Default false
+ * @property {Boolean} rightAlign               Whether to right-align the legend. Default false.
+ * @property {Boolean} horizontalFloat          A true value changes the legend layout to the horizontal float version. Default false.
+ * @property {Number} floatPadding              The amount of padding between elements in the horizontal float layout. Default 10px
+ * @property {Number} floatWidth                The maximum width of the horizontal float layout. Default 600px
+ *
+ * The color legend works by iterating over the domain of the provided scale, and generating a legend entry for each
+ * element in the domain. The entry consists of a label giving the category, and a circle colored with the category's
+ * corresponding color. When props.rightAlign is false (the default), the circle comes before the name. When rightAlign
+ * is true, the circle comes afterwards. The layout of these labels is governed by the other parameters.
+ *
+ * Note: orientation has no default. With neither orientation nor horizontalFloat set, no
+ * transform is applied and every entry is drawn at the origin, stacked on top of one
+ * another. See test/legend/ordinalColorScale.test.ts.
+ *
+ * Default Layout:
+ *
+ * Because the labels are svg elements positioned with translate (and do not use the html box model layout algorithm),
+ * rowHeight is necessary to provide the vertical height of each row. Generally speaking, 20px is fine for the default text size.
+ * In the default layout, labels are organized into rows and columns in a gridded fashion. columnWidth is the total width of
+ * any resulting columns. Note that if there is only one column, columnWidth is irrelevant.
+ *
+ * There are two orientation options for the row/column layout. The 'horizontal' orientation lays out elements from the input
+ * domain into rows, creating new rows as necessary. For example, with three columns, the first three elements will form
+ * the top row, then the next three in the second row, and so on. With 'vertical' orientation, labels are stacked into a column,
+ * and new columns are added as necessary to hold all of the elements. Therefore, in the 'horizontal' orientation, the number of columns
+ * is key, as this determines when a row ends and a new row begins. In the 'vertical' layout, the number of rows determines when to start
+ * a new column.
+ *
+ * For the input set { A, B, C, D, E, F, G }
+ *
+ * Horizontal Orientation (3 columns):
+ *
+ *      A    B    C
+ *      D    E    F
+ *      G
+ *
+ * Horizontal Orientation (2 columns):
+ *
+ *     A    B
+ *     C    D
+ *     E    F
+ *     G
+ *
+ * Vertical Orientation (3 rows):
+ *
+ *      A    D    G
+ *      B    E
+ *      C    F
+ *
+ * Vertical Orientation (2 rows):
+ *
+ *      A    C    E    G
+ *      B    D    F
+ *
+ * If reverse is true, items from the input domain will be added to the layout in reversed order.
+ *
+ * For example, Horizontal Orientation (4 columns, reverse = true):
+ *
+ *    G    F    E    D
+ *    C    B    A
+ *
+ * Horizontal Float Layout:
+ *
+ * If horizontalFloat is true, a different layout entirely is used, which relies on the width of each element
+ * to compute the position of the next one. This layout always proceeds left-to-right first, then top-to-bottom
+ * if the floatWidth would be exceeded by a new element. Between each element is an amount of padding configurable
+ * using the floatPadding property.
+ *
+ * For the input set { foo, bar, qux, fooBar, baz, fooBarBaz, fooBaz, barFoo }
+ *
+ * Horizontal Float Layout (within a floatWidth identified by vertical pipes,
+ * with 4 spaces of floatPadding).
+ *
+ * |foo    bar    qux|
+ * |fooBar    baz    |      <--- not enough space for fooBarBaz
+ * |fooBarBaz        |      <--- not enough space for padding + fooBaz
+ * |fooBaz    barFoo |
+ */
+
+declare const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT = 21;
+/** The subset of a d3 scale this legend relies on, over its domain type T. */
+interface OrdinalColorScale<T> {
+    (value: T): string;
+    domain(): T[];
+}
+type LegendOrientation = "horizontal" | "vertical";
+interface OrdinalColorScaleComponent<T = string> extends Component {
+    scale(): OrdinalColorScale<T>;
+    scale(scale: OrdinalColorScale<T>): OrdinalColorScaleComponent<T>;
+    rowHeight(): number;
+    rowHeight(height: number): OrdinalColorScaleComponent<T>;
+    columnWidth(): number;
+    columnWidth(width: number): OrdinalColorScaleComponent<T>;
+    rows(): number;
+    rows(rows: number): OrdinalColorScaleComponent<T>;
+    columns(): number;
+    columns(columns: number): OrdinalColorScaleComponent<T>;
+    verticallyCentered(): boolean;
+    verticallyCentered(centered: boolean): OrdinalColorScaleComponent<T>;
+    orientation(): LegendOrientation | undefined;
+    orientation(orientation: LegendOrientation): OrdinalColorScaleComponent<T>;
+    reverse(): boolean;
+    reverse(reverse: boolean): OrdinalColorScaleComponent<T>;
+    rightAlign(): boolean;
+    rightAlign(rightAlign: boolean): OrdinalColorScaleComponent<T>;
+    horizontalFloat(): boolean;
+    horizontalFloat(float: boolean): OrdinalColorScaleComponent<T>;
+    floatPadding(): number;
+    floatPadding(padding: number): OrdinalColorScaleComponent<T>;
+    floatWidth(): number;
+    floatWidth(width: number): OrdinalColorScaleComponent<T>;
+}
+declare function legendColorOrdinal<T = string>(): OrdinalColorScaleComponent<T>;
+
+/**
  * colorLegendLayout
  *
  * Generate a color scale and a legend for the given labels. Compute how much
@@ -2146,7 +2274,7 @@ declare function colorLegendLayout({ legendLabels, axisLabels, slant }: {
     legendPadding: number;
     bottomPadding: number;
     legendWidth: number;
-    legend: any;
+    legend: (("horizontal" | "vertical") | undefined) & OrdinalColorScaleComponent<string>;
     scale: ExtendedOrdinalScale;
 };
 /**
@@ -2189,7 +2317,7 @@ declare function colorLegendDimensions(labels: any, containerWidth: any): {
  *                              centeredOffset: the left offset required to center the table horizontally within its container
  *                          }
  */
-declare function _default$h(spaceWidth: number, squarePadding: number, numX: number, numY: number, chartPadding?: Object): object;
+declare function _default$e(spaceWidth: number, squarePadding: number, numX: number, numY: number, chartPadding?: Object): object;
 
 /**
  * Horizontal Bar Chart Dimensions
@@ -2217,9 +2345,9 @@ declare function _default$h(spaceWidth: number, squarePadding: number, numX: num
  *                                               to translate scales below the bars.
  *                                 }
  */
-declare function _default$g(numBars: number): object;
+declare function _default$d(numBars: number): object;
 
-declare function _default$f(spaceWidth: any, numBars: any): {
+declare function _default$c(spaceWidth: any, numBars: any): {
     barHeight: number;
     padding: number;
     totalHeight: number;
@@ -2228,7 +2356,7 @@ declare function _default$f(spaceWidth: any, numBars: any): {
     chartPadding: number;
 };
 
-declare function _default$e(): any;
+declare function _default$b(): any;
 
 /**
  * Stacked Area Multiples Layout
@@ -2255,7 +2383,7 @@ declare function _default$e(): any;
  *                                padHeight:      This is the amount of vertical padding between each area multiple.
  *                              }
  */
-declare function _default$d(height: number, num: number, pct: number): object;
+declare function _default$a(height: number, num: number, pct: number): object;
 
 /**
  * Vertical Bar Chart Dimensions
@@ -2279,7 +2407,7 @@ declare function _default$d(height: number, num: number, pct: number): object;
  *                                  totalWidth:           The total width of all bars, plus all inner and outer padding.
  *                                }
  */
-declare function _default$c(width: number, numBars: number): object;
+declare function _default$9(width: number, numBars: number): object;
 
 declare function prepareData(): Function;
 declare function computeLayout$1(columnLengths: any[], columnTotals: any[], columnHeight: number, columnWidth: number): Object;
@@ -2287,14 +2415,138 @@ declare function computeLayout$1(columnLengths: any[], columnTotals: any[], colu
 declare function computeLayout(numLayers: number, chartWidth: number): Object;
 declare function getRadiusExtent(formattedData: any[]): any[];
 
-declare function _default$b(): any;
+/**
+ * Binned Color Scale Legend
+ *
+ * Use for displaying the values of discontinuous (binned) color scale's bins
+ *
+ * Each display value becomes the upper edge of a bin, and a final bin runs from the last
+ * display value to the upper endpoint. Bins are floored onto whole pixels and widened by
+ * their subpixel remainder so that no gap shows between them, which means adjacent bins
+ * overlap very slightly.
+ *
+ * Every bin except the trailing one carries a tick line and a label beneath its upper
+ * edge. The line is snapped to the half-pixel grid to stay crisp while the label is
+ * placed on the raw edge, so the two can sit half a pixel apart.
+ *
+ * @module sszvis/legend/binnedColorScale
+ *
+ * @property {function} scale           A scale to use to generate the color values
+ * @property {array} displayValues      An array of values which should be displayed. Usually these should be the bin edges
+ * @property {array} endpoints          The endpoints of the scale (note that these are not necessarily the first and last
+ *                                      bin edges). These will become labels at either end of the legend.
+ * @property {number} width             The pixel width of the legend. Default 200
+ * @property {function} labelFormat     A formatter function for the labels of the displayValues.
+ *
+ * @return {sszvis.component}
+ */
 
-declare function _default$a(): any;
+/** The subset of a d3 scale this legend relies on. */
+type BinnedColorScale = (value: number) => string;
+type BinLabelFormatter = (value: number) => string | number;
+interface BinnedColorScaleComponent extends Component {
+    scale(): BinnedColorScale;
+    scale(scale: BinnedColorScale): BinnedColorScaleComponent;
+    displayValues(): number[];
+    displayValues(values: number[]): BinnedColorScaleComponent;
+    endpoints(): [number, number];
+    endpoints(endpoints: [number, number]): BinnedColorScaleComponent;
+    width(): number;
+    width(width: number): BinnedColorScaleComponent;
+    labelFormat(): BinLabelFormatter;
+    labelFormat(format: BinLabelFormatter): BinnedColorScaleComponent;
+}
+declare function export_default$2(): BinnedColorScaleComponent;
 
-declare function legendColorOrdinal(): any;
-declare const DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT: 21;
+/**
+ * Linear Color Scale Legend
+ *
+ * Use for displaying the values of a continuous linear color scale.
+ *
+ * The ramp is drawn as a row of abutting segments, one per displayed value, with a rounded
+ * cap at each end and a label outside each cap. Segments are stretched by a pixel in each
+ * direction so that no antialiasing seam shows between them.
+ *
+ * @module sszvis/legend/linearColorScale
+ *
+ * @property {function} scale                   The scale to use to generate the legend
+ * @property {array} displayValues              A list of specific values to display. If not specified, defaults to using scale.ticks
+ * @property {number} width                     The pixel width of the legend (default 200).
+ * @property {number} segments                  The number of segments to aim for. Note, this is only used if displayValues isn't specified,
+ *                                              and then it is passed as the argument to scale.ticks for finding the ticks. (default)
+ * @property {array} labelText                  Text or a text-returning function to use as the titles for the legend endpoints. If not supplied,
+ *                                              defaults to using the first and last tick values.
+ * @property {function} labelFormat             An optional formatter function for the end labels. Usually should be sszvis.formatNumber.
+ */
 
-declare function _default$9(): any;
+/** The subset of a d3 scale this legend relies on. */
+interface LinearColorScale {
+    (value: number): string;
+    domain(): number[];
+    ticks?(count?: number): number[];
+}
+type LabelFormatter = (value: unknown, index: number) => string | number;
+interface LinearColorScaleComponent extends Component {
+    scale(): LinearColorScale;
+    scale(scale: LinearColorScale): LinearColorScaleComponent;
+    displayValues(): number[];
+    displayValues(values: number[]): LinearColorScaleComponent;
+    width(): number;
+    width(width: number): LinearColorScaleComponent;
+    segments(): number;
+    segments(segments: number): LinearColorScaleComponent;
+    labelText(): unknown[] | undefined;
+    labelText(text: unknown[]): LinearColorScaleComponent;
+    labelFormat(): LabelFormatter;
+    labelFormat(format: LabelFormatter): LinearColorScaleComponent;
+}
+declare function export_default$1(): LinearColorScaleComponent;
+
+/**
+ * Radius size legend
+ *
+ * Use for showing how different radius sizes correspond to data values.
+ *
+ * The legend draws one nested circle per tick, all resting on a common baseline, with a
+ * dashed leader line and a label at the top edge of each circle.
+ *
+ * When tickValues are not supplied, the ticks default to the domain maximum, the value at
+ * the midpoint of the scale's range, and the domain minimum. Deriving that middle tick
+ * calls scale.invert(), so the default only works for a continuous scale; pass tickValues
+ * explicitly to use any other kind.
+ *
+ * Every tick produces a circle, a leader line and a label, including a tick whose value
+ * maps to a zero radius - the circle is then invisible but the line and label still mark
+ * that value. Pass tickValues to leave it out.
+ *
+ * @module sszvis/legend/radius
+ *
+ * @property {function} scale         A scale to use to generate the radius sizes
+ * @property {function} [tickFormat]  Formatter function for the labels (default identity)
+ * @property {array} [tickValues]     An array of domain values to be used as radii that the legend shows
+ *
+ * @returns {sszvis.component}
+ */
+
+/** The subset of a d3 scale this legend relies on. */
+interface RadiusScale {
+    (value: NumberValue): number;
+    domain(): NumberValue[];
+    range(): number[];
+    /** Required only when tickValues are not supplied. */
+    invert?(value: number): NumberValue;
+}
+/** Formats a tick label. The default is fn.identity, which passes the value through. */
+type TickFormatter = (value: NumberValue, index: number) => string | number;
+interface RadiusLegendComponent extends Component {
+    scale(): RadiusScale;
+    scale(scale: RadiusScale): RadiusLegendComponent;
+    tickFormat(): TickFormatter;
+    tickFormat(format: TickFormatter): RadiusLegendComponent;
+    tickValues(): NumberValue[] | undefined;
+    tickValues(values: NumberValue[]): RadiusLegendComponent;
+}
+declare function export_default(): RadiusLegendComponent;
 
 /**
  * Handle data load errors in a standardized way
@@ -2835,5 +3087,5 @@ declare function on(name: any, cb: any): any;
 declare function off(name: any, cb: any): any;
 declare function trigger(name: any, ...args: any[]): any;
 
-export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$e as annotationCircle, export_default$d as annotationConfidenceArea, export_default$c as annotationConfidenceBar, export_default$a as annotationLine, export_default$9 as annotationRangeFlag, export_default$8 as annotationRangeRuler, export_default$7 as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$u as bar, bounds, export_default$f as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$l as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$h as dimensionsHeatTable, _default$g as dimensionsHorizontalBarChart, _default$c as dimensionsVerticalBarChart, _default$t as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$b as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$k as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$f as layoutPopulationPyramid, _default$e as layoutSmallMultiples, _default$d as layoutStackedAreaMultiples, _default$b as legendColorBinned, _default$a as legendColorLinear, legendColorOrdinal, _default$9 as legendRadius, _default$s as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$4 as move, muchDarker, nestedStackedBarsVertical, not, export_default$1 as pack, export_default$3 as panning, parseDate, parseNumber, parseYear, _default$r as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$q as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$p as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$j as selectMenu, set, _default$i as slider, slightlyDarker, slowTransition, some, _default$o as stackedArea, _default$n as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$m as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$6 as tooltip, export_default$5 as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default as treemap, viewport, export_default$2 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
-export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, MeasurableElement, Padding, PartialBreakpoint, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SvgLayerMetadata, ValueSorter };
+export { AGGLOMERATION_2012_KEY, DEFAULT_LEGEND_COLOR_ORDINAL_ROW_HEIGHT, DEFAULT_WIDTH, GEO_KEY_DEFAULT, RATIO, STADT_KREISE_KEY, STATISTISCHE_QUARTIERE_KEY, STATISTISCHE_ZONEN_KEY, SWITZERLAND_KEY, WAHL_KREISE_KEY, export_default$h as annotationCircle, export_default$g as annotationConfidenceArea, export_default$f as annotationConfidenceBar, export_default$d as annotationLine, export_default$c as annotationRangeFlag, export_default$b as annotationRangeRuler, export_default$a as annotationRectangle, annotationRuler, app, arity, aspectRatio, aspectRatio12to5, aspectRatio16to10, aspectRatio4to3, aspectRatioAuto, aspectRatioPortrait, aspectRatioSquare, axisX, axisY, _default$r as bar, bounds, export_default$i as breadcrumb, breakpointCreateSpec, breakpointDefaultSpec, breakpointFind, breakpointFindByName, breakpointLap, breakpointMatch, breakpointPalm, breakpointTest, _default$i as buttonGroup, cascade, _default as choropleth, colorLegendDimensions, colorLegendLayout, compose, contains, createBreadcrumbItems, createHtmlLayer, createSvgLayer, dataAreaPattern, defaultTransition, defined, derivedSet, _default$e as dimensionsHeatTable, _default$d as dimensionsHorizontalBarChart, _default$9 as dimensionsVerticalBarChart, _default$q as dot, ensureDefsElement, every, fallbackCanvasUnsupported, fallbackRender, fallbackUnsupported, fastTransition, filledArray, find, first, firstTouch, export_default$e as fitTooltip, flatten, foldPattern, formatAge, formatAxisTimeFormat, formatFractionPercent, formatLocale, formatMonth, formatNone, formatNumber, formatPercent, formatPreciseNumber, formatText, formatYear, functor, getAccessibleTextColor, getGeoJsonCenter, groupedBars, groupedBarsHorizontal, groupedBarsVertical, halfPixel, _default$h as handleRuler, hashableSet, heatTableMissingValuePattern, identity, isFunction, isNull, isNumber, isObject, isSelection, isString, last, _default$c as layoutPopulationPyramid, _default$b as layoutSmallMultiples, _default$a as layoutStackedAreaMultiples, export_default$2 as legendColorBinned, export_default$1 as legendColorLinear, legendColorOrdinal, export_default as legendRadius, _default$p as line, loadError, mapLakeFadeGradient, mapLakeGradientMask, mapLakePattern, mapMissingValuePattern, _default$8 as mapRendererBase, _default$7 as mapRendererBubble, _default$6 as mapRendererGeoJson, _default$5 as mapRendererHighlight, _default$4 as mapRendererImage, _default$3 as mapRendererMesh, _default$2 as mapRendererPatternedLakeOverlay, _default$1 as mapRendererRaster, measureAxisLabel, measureDimensions, measureLegendLabel, measureText, memoize, modularTextHTML, modularTextSVG, export_default$7 as move, muchDarker, nestedStackedBarsVertical, not, export_default$4 as pack, export_default$6 as panning, parseDate, parseNumber, parseYear, _default$o as pie, pixelsFromGeoDistance, prepareHierarchyData, prepareMergedGeoData, prop, propOr, _default$n as pyramid, range, responsiveProps, roundTransformString, rulerLabelVerticalSeparate, _default$m as sankey, computeLayout$1 as sankeyLayout, prepareData as sankeyPrepareData, scaleDeepGry, scaleDimGry, scaleDivNtr, scaleDivNtrGry, scaleDivVal, scaleDivValGry, scaleGender3, scaleGender5Wedding, scaleGender6Origin, scaleGry, scaleLightGry, scaleMedGry, scalePaleGry, scaleQual12, scaleQual6, scaleQual6a, scaleQual6b, scaleSeqBlu, scaleSeqBrn, scaleSeqGrn, scaleSeqRed, _default$g as selectMenu, set, _default$f as slider, slightlyDarker, slowTransition, some, _default$l as stackedArea, _default$k as stackedAreaMultiples, stackedBarHorizontal, stackedBarHorizontalData, stackedBarVertical, stackedBarVerticalData, stackedPyramid, stackedPyramidData, stringEqual, _default$j as sunburst, getRadiusExtent as sunburstGetRadiusExtent, computeLayout as sunburstLayout, swissMapPath, swissMapProjection, textWrap, timeLocale, export_default$9 as tooltip, export_default$8 as tooltipAnchor, transformTranslateSubpixelShift, translateString, export_default$3 as treemap, viewport, export_default$5 as voronoi, widthAdaptiveMapPathStroke, withAlpha };
+export type { Action, AspectRatioFunction, AspectRatioFunctionWithMaxHeight, BinnedColorScaleComponent, BoundsConfig, BoundsResult, BreadcrumbComponent, BreadcrumbItem, CascadeInstance, ColorScaleFactory, Dispatch, Effect, ExtendedDivergingScale, ExtendedLinearScale, ExtendedOrdinalScale, FallbackOptions, KeyAccessor, KeySorter, LayerMetadata, LinearColorScaleComponent, MeasurableElement, OrdinalColorScaleComponent, Padding, PartialBreakpoint, RadiusLegendComponent, ResponsivePropValue, ResponsivePropsConfig, ResponsivePropsInstance, SvgLayerMetadata, ValueSorter };

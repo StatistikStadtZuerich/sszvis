@@ -1,5 +1,5 @@
-export { default as legendColorBinned } from "./binnedColorScale.js";
-export { default as legendColorLinear } from "./linearColorScale.js";
+export { type BinnedColorScaleComponent, default as legendColorBinned, } from "./binnedColorScale.js";
+export { default as legendColorLinear, type LinearColorScaleComponent, } from "./linearColorScale.js";
 export * from "./ordinalColorScale.js";
-export { default as legendRadius } from "./radius.js";
+export { default as legendRadius, type RadiusLegendComponent } from "./radius.js";
 //# sourceMappingURL=index.d.ts.map

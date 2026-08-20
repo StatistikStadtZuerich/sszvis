@@ -6844,6 +6844,10 @@
      * corresponding color. When props.rightAlign is false (the default), the circle comes before the name. When rightAlign
      * is true, the circle comes afterwards. The layout of these labels is governed by the other parameters.
      *
+     * Note: orientation has no default. With neither orientation nor horizontalFloat set, no
+     * transform is applied and every entry is drawn at the origin, stacked on top of one
+     * another. See test/legend/ordinalColorScale.test.ts.
+     *
      * Default Layout:
      *
      * Because the labels are svg elements positioned with translate (and do not use the html box model layout algorithm),
@@ -6917,7 +6921,9 @@
         if (props.reverse) {
           domain = [...domain].reverse();
         }
-        let rows, cols;
+        // Only read within the matching orientation branch below.
+        let rows = 0;
+        let cols = 0;
         if (props.orientation === "horizontal") {
           cols = Math.ceil(props.columns);
           rows = Math.ceil(domain.length / cols);
@@ -6927,7 +6933,7 @@
         }
         const groups = selection.selectAll(".sszvis-legend--entry").data(domain).join("g").classed("sszvis-legend--entry", true);
         groups.selectAll(".sszvis-legend__mark").data(d => [d]).join("circle").classed("sszvis-legend__mark", true).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => props.scale(d)).attr("stroke", d => props.scale(d)).attr("stroke-width", 1);
-        groups.selectAll(".sszvis-legend__label").data(d => [d]).join("text").classed("sszvis-legend__label", true).text(d => d).attr("dy", "0.35em") // vertically-center
+        groups.selectAll(".sszvis-legend__label").data(d => [d]).join("text").classed("sszvis-legend__label", true).text(d => String(d)).attr("dy", "0.35em") // vertically-center
         .style("text-anchor", () => props.rightAlign ? "end" : "start").attr("transform", () => {
           const x = props.rightAlign ? -18 : 18;
           const y = halfPixel(props.rowHeight / 2);
@@ -6935,11 +6941,11 @@
         });
         let verticalOffset = "";
         if (props.verticallyCentered) {
-          verticalOffset = "translate(0," + String(-(domain.length * props.rowHeight / 2)) + ") ";
+          verticalOffset = "translate(0,".concat(String(-(domain.length * props.rowHeight / 2)), ") ");
         }
         if (props.horizontalFloat) {
-          let rowPosition = 0,
-            horizontalPosition = 0;
+          let rowPosition = 0;
+          let horizontalPosition = 0;
           groups.attr("transform", function () {
             // not affected by scroll position
             const width = this.getBoundingClientRect().width;
@@ -6952,12 +6958,16 @@
             return verticalOffset + translate;
           });
         } else {
-          groups.attr("transform", (d, i) => {
+          groups.attr("transform", (_d, i) => {
             if (props.orientation === "horizontal") {
-              return verticalOffset + "translate(" + i % cols * props.columnWidth + "," + Math.floor(i / cols) * props.rowHeight + ")";
-            } else if (props.orientation === "vertical") {
-              return verticalOffset + "translate(" + Math.floor(i / rows) * props.columnWidth + "," + i % rows * props.rowHeight + ")";
+              return "".concat(verticalOffset, "translate(").concat(i % cols * props.columnWidth, ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
             }
+            if (props.orientation === "vertical") {
+              return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * props.columnWidth, ",").concat(i % rows * props.rowHeight, ")");
+            }
+            // No orientation: d3 removes the attribute for a null value, matching the
+            // original implementation's implicit undefined return.
+            return null;
           });
         }
       });
@@ -7789,14 +7799,23 @@
      *
      * Use for displaying the values of discontinuous (binned) color scale's bins
      *
+     * Each display value becomes the upper edge of a bin, and a final bin runs from the last
+     * display value to the upper endpoint. Bins are floored onto whole pixels and widened by
+     * their subpixel remainder so that no gap shows between them, which means adjacent bins
+     * overlap very slightly.
+     *
+     * Every bin except the trailing one carries a tick line and a label beneath its upper
+     * edge. The line is snapped to the half-pixel grid to stay crisp while the label is
+     * placed on the raw edge, so the two can sit half a pixel apart.
+     *
      * @module sszvis/legend/binnedColorScale
      *
-     * @param {function} scale              A scale to use to generate the color values
-     * @param {array} displayValues         An array of values which should be displayed. Usually these should be the bin edges
-     * @param {array} endpoints             The endpoints of the scale (note that these are not necessarily the first and last
+     * @property {function} scale           A scale to use to generate the color values
+     * @property {array} displayValues      An array of values which should be displayed. Usually these should be the bin edges
+     * @property {array} endpoints          The endpoints of the scale (note that these are not necessarily the first and last
      *                                      bin edges). These will become labels at either end of the legend.
-     * @param {number} width                The pixel width of the legend. Default 200
-     * @param {function} labelFormat        A formatter function for the labels of the displayValues.
+     * @property {number} width             The pixel width of the legend. Default 200
+     * @property {function} labelFormat     A formatter function for the labels of the displayValues.
      *
      * @return {sszvis.component}
      */
@@ -7804,20 +7823,29 @@
       return component().prop("scale").prop("displayValues").prop("endpoints").prop("width").width(200).prop("labelFormat").labelFormat(identity).render(function () {
         const selection = d3.select(this);
         const props = selection.props();
-        if (!props.scale) return error("legend.binnedColorScale - a scale must be specified.");
-        if (!props.displayValues) return error("legend.binnedColorScale - display values must be specified.");
-        if (!props.endpoints) return error("legend.binnedColorScale - endpoints must be specified");
+        if (!props.scale) {
+          error("legend.binnedColorScale - a scale must be specified.");
+          return;
+        }
+        if (!props.displayValues) {
+          error("legend.binnedColorScale - display values must be specified.");
+          return;
+        }
+        if (!props.endpoints) {
+          error("legend.binnedColorScale - endpoints must be specified");
+          return;
+        }
         const segHeight = 10;
         const circleRad = segHeight / 2;
         const innerRange = [0, props.width - 2 * circleRad];
         const barWidth = d3.scaleLinear().domain(props.endpoints).range(innerRange);
         let sum = 0;
-        const rectData = [];
+        const labelledBins = [];
         let pPrev = props.endpoints[0];
         for (const p of props.displayValues) {
           const w = barWidth(p) - sum;
           const offset = sum % 1;
-          rectData.push({
+          labelledBins.push({
             x: Math.floor(circleRad + sum),
             w: w + offset,
             c: props.scale(pPrev),
@@ -7827,20 +7855,22 @@
           pPrev = p;
         }
         // add the final box (last display value - > endpoint)
-        rectData.push({
+        const finalBin = {
           x: Math.floor(circleRad + sum),
           w: innerRange[1] - sum,
           c: props.scale(pPrev)
-        });
+        };
+        const rectData = [...labelledBins, finalBin];
         const circles = selection.selectAll("circle.sszvis-legend__circle").data(props.endpoints).join("circle").classed("sszvis-legend__circle", true);
-        circles.attr("r", circleRad).attr("cy", circleRad).attr("cx", (d, i) => i === 0 ? circleRad : props.width - circleRad).attr("fill", props.scale);
+        circles.attr("r", circleRad).attr("cy", circleRad).attr("cx", (_d, i) => i === 0 ? circleRad : props.width - circleRad).attr("fill", props.scale);
         const segments = selection.selectAll("rect.sszvis-legend__crispmark").data(rectData).join("rect").classed("sszvis-legend__crispmark", true);
         segments.attr("x", d => d.x).attr("y", 0).attr("width", d => d.w).attr("height", segHeight).attr("fill", d => d.c);
-        const lineData = rectData.slice(0, -1);
+        // Every bin except the trailing one gets a tick line and a label.
+        const lineData = labelledBins;
         const lines = selection.selectAll("line.sszvis-legend__crispmark").data(lineData).join("line").classed("sszvis-legend__crispmark", true);
         lines.attr("x1", d => halfPixel(d.x + d.w)).attr("x2", d => halfPixel(d.x + d.w)).attr("y1", segHeight + 1).attr("y2", segHeight + 6).attr("stroke", "#B8B8B8");
         const labels = selection.selectAll(".sszvis-legend__axislabel").data(lineData).join("text").classed("sszvis-legend__axislabel", true);
-        labels.style("text-anchor", "middle").attr("transform", d => "translate(" + (d.x + d.w) + "," + (segHeight + 20) + ")").text(d => props.labelFormat(d.p));
+        labels.style("text-anchor", "middle").attr("transform", d => "translate(".concat(d.x + d.w, ",").concat(segHeight + 20, ")")).text(d => props.labelFormat(d.p));
       });
     }
 
@@ -7848,6 +7878,10 @@
      * Linear Color Scale Legend
      *
      * Use for displaying the values of a continuous linear color scale.
+     *
+     * The ramp is drawn as a row of abutting segments, one per displayed value, with a rounded
+     * cap at each end and a label outside each cap. Segments are stretched by a pixel in each
+     * direction so that no antialiasing seam shows between them.
      *
      * @module sszvis/legend/linearColorScale
      *
@@ -7866,30 +7900,31 @@
         const props = selection.props();
         if (!props.scale) {
           error("legend.linearColorScale - a scale must be specified.");
-          return false;
+          return;
         }
         const domain = props.scale.domain();
         let values = props.displayValues;
         if (values.length === 0 && props.scale.ticks) {
           values = props.scale.ticks(props.segments - 1);
         }
-        values.push(last(domain));
+        // Equivalent to fn.last(domain), without widening the element type to undefined.
+        values.push(domain[domain.length - 1]);
         // Avoid division by zero
         const segWidth = values.length > 0 ? props.width / values.length : 0;
         const segHeight = 10;
         const segments = selection.selectAll("rect.sszvis-legend__mark").data(values).join("rect").classed("sszvis-legend__mark", true);
-        segments.attr("x", (d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
+        segments.attr("x", (_d, i) => i * segWidth - 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("y", 0).attr("width", segWidth + 1) // The offsets here cover up half-pixel antialiasing artifacts
         .attr("height", segHeight).attr("fill", d => props.scale(d));
-        const startEnd = [first(domain), last(domain)];
+        const startEnd = [domain[0], domain[domain.length - 1]];
         const labelText = props.labelText || startEnd;
         // rounded end caps for the segments
         const endCaps = selection.selectAll("circle.ssvis-legend--mark").data(startEnd).join("circle").attr("class", "ssvis-legend--mark");
-        endCaps.attr("cx", (d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));
+        endCaps.attr("cx", (_d, i) => i * props.width).attr("cy", segHeight / 2).attr("r", segHeight / 2).attr("fill", d => props.scale(d));
         const labels = selection.selectAll(".sszvis-legend__label").data(labelText).join("text").classed("sszvis-legend__label", true);
         const labelPadding = 16;
-        labels.style("text-anchor", (d, i) => i === 0 ? "end" : "start").attr("dy", "0.35em") // vertically-center
-        .attr("transform", (d, i) => "translate(" + (i * props.width + (i === 0 ? -1 : 1) * labelPadding) + ", " + segHeight / 2 + ")").text((d, i) => props.labelFormat(d, i));
+        labels.style("text-anchor", (_d, i) => i === 0 ? "end" : "start").attr("dy", "0.35em") // vertically-center
+        .attr("transform", (_d, i) => "translate(".concat(i * props.width + (i === 0 ? -1 : 1) * labelPadding, ", ").concat(segHeight / 2, ")")).text((d, i) => props.labelFormat(d, i));
       });
     }
 
@@ -7897,6 +7932,18 @@
      * Radius size legend
      *
      * Use for showing how different radius sizes correspond to data values.
+     *
+     * The legend draws one nested circle per tick, all resting on a common baseline, with a
+     * dashed leader line and a label at the top edge of each circle.
+     *
+     * When tickValues are not supplied, the ticks default to the domain maximum, the value at
+     * the midpoint of the scale's range, and the domain minimum. Deriving that middle tick
+     * calls scale.invert(), so the default only works for a continuous scale; pass tickValues
+     * explicitly to use any other kind.
+     *
+     * Every tick produces a circle, a leader line and a label, including a tick whose value
+     * maps to a zero radius - the circle is then invisible but the line and label still mark
+     * that value. Pass tickValues to leave it out.
      *
      * @module sszvis/legend/radius
      *
@@ -7910,18 +7957,13 @@
       return component().prop("scale").prop("tickFormat").tickFormat(identity).prop("tickValues").render(function () {
         const selection = d3.select(this);
         const props = selection.props();
-        const domain = props.scale.domain();
-        const tickValues = props.tickValues || [domain[1], props.scale.invert(d3.mean(props.scale.range())), domain[0]];
+        const tickValues = props.tickValues || defaultTickValues(props.scale);
         const maxRadius = range(props.scale)[1];
         const group = selection.selectAll("g.sszvis-legend__elementgroup").data([0]).join("g").attr("class", "sszvis-legend__elementgroup");
         group.attr("transform", translateString(halfPixel(maxRadius), halfPixel(maxRadius)));
         const circles = group.selectAll("circle.sszvis-legend__greyline").data(tickValues).join("circle").classed("sszvis-legend__greyline", true);
-        function getCircleCenter(d) {
-          return maxRadius - props.scale(d);
-        }
-        function getCircleEdge(d) {
-          return maxRadius - 2 * props.scale(d);
-        }
+        const getCircleCenter = d => maxRadius - props.scale(d);
+        const getCircleEdge = d => maxRadius - 2 * props.scale(d);
         circles.attr("r", props.scale).attr("stroke-width", 1).attr("cy", getCircleCenter);
         const lines = group.selectAll("line.sszvis-legend__dashedline").data(tickValues).join("line").classed("sszvis-legend__dashedline", true);
         lines.attr("x1", 0).attr("y1", getCircleEdge).attr("x2", maxRadius + 15).attr("y2", getCircleEdge);
@@ -7929,6 +7971,23 @@
         labels.attr("dx", maxRadius + 18).attr("y", getCircleEdge).attr("dy", "0.35em") // vertically-center
         .text(props.tickFormat);
       });
+    }
+    /**
+     * The default ticks: the domain maximum, the value at the midpoint of the scale's range,
+     * and the domain minimum. Deriving the middle value calls scale.invert(), so this only
+     * works for a continuous scale - supply tickValues to use any other kind.
+     */
+    function defaultTickValues(scale) {
+      var _mean;
+      const {
+        invert
+      } = scale;
+      if (!invert) {
+        throw new TypeError("legend.radius - scale.invert is required to derive the default ticks; supply tickValues instead.");
+      }
+      const domain = scale.domain();
+      // mean() only returns undefined for an empty range, which a d3 scale never has.
+      return [domain[1], invert((_mean = d3.mean(scale.range())) !== null && _mean !== void 0 ? _mean : Number.NaN), domain[0]];
     }
 
     /**

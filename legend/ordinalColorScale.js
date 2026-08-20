@@ -27,6 +27,10 @@ import translateString from '../svgUtils/translateString.js';
  * corresponding color. When props.rightAlign is false (the default), the circle comes before the name. When rightAlign
  * is true, the circle comes afterwards. The layout of these labels is governed by the other parameters.
  *
+ * Note: orientation has no default. With neither orientation nor horizontalFloat set, no
+ * transform is applied and every entry is drawn at the origin, stacked on top of one
+ * another. See test/legend/ordinalColorScale.test.ts.
+ *
  * Default Layout:
  *
  * Because the labels are svg elements positioned with translate (and do not use the html box model layout algorithm),
@@ -100,7 +104,9 @@ function legendColorOrdinal() {
     if (props.reverse) {
       domain = [...domain].reverse();
     }
-    let rows, cols;
+    // Only read within the matching orientation branch below.
+    let rows = 0;
+    let cols = 0;
     if (props.orientation === "horizontal") {
       cols = Math.ceil(props.columns);
       rows = Math.ceil(domain.length / cols);
@@ -110,7 +116,7 @@ function legendColorOrdinal() {
     }
     const groups = selection.selectAll(".sszvis-legend--entry").data(domain).join("g").classed("sszvis-legend--entry", true);
     groups.selectAll(".sszvis-legend__mark").data(d => [d]).join("circle").classed("sszvis-legend__mark", true).attr("cx", props.rightAlign ? -6 : 6).attr("cy", halfPixel(props.rowHeight / 2)).attr("r", 5).attr("fill", d => props.scale(d)).attr("stroke", d => props.scale(d)).attr("stroke-width", 1);
-    groups.selectAll(".sszvis-legend__label").data(d => [d]).join("text").classed("sszvis-legend__label", true).text(d => d).attr("dy", "0.35em") // vertically-center
+    groups.selectAll(".sszvis-legend__label").data(d => [d]).join("text").classed("sszvis-legend__label", true).text(d => String(d)).attr("dy", "0.35em") // vertically-center
     .style("text-anchor", () => props.rightAlign ? "end" : "start").attr("transform", () => {
       const x = props.rightAlign ? -18 : 18;
       const y = halfPixel(props.rowHeight / 2);
@@ -118,11 +124,11 @@ function legendColorOrdinal() {
     });
     let verticalOffset = "";
     if (props.verticallyCentered) {
-      verticalOffset = "translate(0," + String(-(domain.length * props.rowHeight / 2)) + ") ";
+      verticalOffset = "translate(0,".concat(String(-(domain.length * props.rowHeight / 2)), ") ");
     }
     if (props.horizontalFloat) {
-      let rowPosition = 0,
-        horizontalPosition = 0;
+      let rowPosition = 0;
+      let horizontalPosition = 0;
       groups.attr("transform", function () {
         // not affected by scroll position
         const width = this.getBoundingClientRect().width;
@@ -135,12 +141,16 @@ function legendColorOrdinal() {
         return verticalOffset + translate;
       });
     } else {
-      groups.attr("transform", (d, i) => {
+      groups.attr("transform", (_d, i) => {
         if (props.orientation === "horizontal") {
-          return verticalOffset + "translate(" + i % cols * props.columnWidth + "," + Math.floor(i / cols) * props.rowHeight + ")";
-        } else if (props.orientation === "vertical") {
-          return verticalOffset + "translate(" + Math.floor(i / rows) * props.columnWidth + "," + i % rows * props.rowHeight + ")";
+          return "".concat(verticalOffset, "translate(").concat(i % cols * props.columnWidth, ",").concat(Math.floor(i / cols) * props.rowHeight, ")");
         }
+        if (props.orientation === "vertical") {
+          return "".concat(verticalOffset, "translate(").concat(Math.floor(i / rows) * props.columnWidth, ",").concat(i % rows * props.rowHeight, ")");
+        }
+        // No orientation: d3 removes the attribute for a null value, matching the
+        // original implementation's implicit undefined return.
+        return null;
       });
     }
   });
