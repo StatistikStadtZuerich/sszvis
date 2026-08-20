@@ -101,6 +101,8 @@ function component() {
     renderer = callback;
     return sszvisComponent;
   };
+  // The accessors declared by `.prop()` only exist once the component is built, so a
+  // component interface which declares them can only be produced here, by naming it as C.
   return sszvisComponent;
 }
 /**

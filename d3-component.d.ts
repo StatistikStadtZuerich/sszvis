@@ -42,7 +42,7 @@ export interface Component {
  *
  * @return {sszvis.component} A d3 reusable chart
  */
-export declare function component(): Component;
+export declare function component<C extends Component = Component>(): C;
 declare module "d3" {
     interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
         props<A>(): A extends ComponentProps ? A : ComponentProps;
