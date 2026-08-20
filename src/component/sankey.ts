@@ -62,21 +62,266 @@
 
 import { interpolateNumber, select } from "d3";
 import tooltipAnchor from "../annotation/tooltipAnchor.js";
-import { component } from "../d3-component.js";
+import {
+  type Component,
+  component,
+  type PropertySetter,
+  type RenderCallback,
+} from "../d3-component.js";
 import * as fn from "../fn.js";
 import { halfPixel } from "../svgUtils/crisp.js";
 import translateString from "../svgUtils/translateString.js";
 import bar from "./bar.js";
 
-const linkPathString = function (x0, x1, x2, x3, y0, y1) {
-  return "M" + x0 + "," + y0 + "C" + x1 + "," + y0 + " " + x2 + "," + y1 + " " + x3 + "," + y1;
-};
-const linkBounds = function (x0, x1, y0, y1) {
-  return [x0, x1, y0, y1];
+/* Types
+----------------------------------------------- */
+
+/**
+ * One entity in the diagram, drawn as a bar, as sszvis.layout.sankey.prepareData produces
+ * it. Everything up to valueOffset is what the component reads.
+ */
+export type SankeyNode = {
+  /** The node's unique id, also its default label. */
+  id: string;
+  /** Which column the node belongs to. Indexes both columnPosition and columnPadding. */
+  columnIndex: number;
+  /** The node's position within its column, counted in nodes. */
+  nodeIndex: number;
+  /** The node's total flow, which becomes its height once passed through sizeScale. */
+  value: number;
+  /** The total flow of all the nodes above this one in its column. */
+  valueOffset: number;
+  /**
+   * The links leaving this node. Filled in by the layout and never read by the component,
+   * but the usual handle for hover and highlight code - see the linkSourceLabels examples.
+   */
+  linksFrom?: SankeyLink[];
+  /** The links arriving at this node. As linksFrom, the component never reads it. */
+  linksTo?: SankeyLink[];
 };
 
-export default function () {
-  return component()
+/**
+ * One flow between two nodes, drawn as a curve. The source and target are the node objects
+ * themselves rather than ids, so a link carries its own geometry.
+ */
+export type SankeyLink = {
+  /** Identifies the link across renders; the data join is keyed on it. */
+  id: number;
+  /** The size of the flow, which becomes the curve's thickness once passed through sizeScale. */
+  value: number;
+  /** The node the link leaves. */
+  src: SankeyNode;
+  /** The total flow of all the links leaving the same node above this one. */
+  srcOffset: number;
+  /** The node the link arrives at. */
+  tgt: SankeyNode;
+  /** The total flow of all the links arriving at the same node above this one. */
+  tgtOffset: number;
+};
+
+/**
+ * The datum the component expects, i.e. the part of sszvis.layout.sankey.prepareData's
+ * output that it reads. columnLengths is used for the column labels only, so it determines
+ * how many labels are drawn rather than how many columns hold nodes.
+ */
+export type SankeyData = {
+  nodes: SankeyNode[];
+  /**
+   * Every link is expected to be present and to point at real nodes; the layout drops the
+   * invalid ones by mapping them to null, and then throws on its own sort before it can hand
+   * such an array over.
+   */
+  links: SankeyLink[];
+  columnLengths: number[];
+  /**
+   * The total value of each column. The component never reads it, but the layout returns it
+   * alongside the rest and computeLayout needs it, so it is declared here to keep the
+   * layout's output assignable to this type.
+   */
+  columnTotals?: number[];
+};
+
+/** Which side of its node a label is drawn on. */
+export type LabelSide = "left" | "right";
+
+/** Maps a node's or a link's value to a number of pixels. A d3 linear scale in practice. */
+type SizeScale = (value: number) => number;
+
+/** Maps a column index to that column's horizontal position. A d3 linear scale in practice. */
+type ColumnScale = (columnIndex: number) => number;
+
+/**
+ * A constant or an accessor over a datum; either is accepted wherever fn.functor normalises
+ * the value on set. d3 hands an accessor the datum and its index, and declaring fewer
+ * parameters is fine.
+ */
+type SankeyValue<D, R> = R | ((datum: D, index: number) => R);
+
+/**
+ * How a functor-wrapped property reads back once it is stored. Both parameters are optional,
+ * because a constant becomes a functor that ignores its arguments, and because the renderer
+ * calls several of these itself with only some of the arguments d3 would pass.
+ */
+type StoredAccessor<D, R> = (datum?: D, index?: number) => R;
+
+/**
+ * A colour, or nothing when the property was never set - fn.functor then yields undefined,
+ * which d3 treats exactly like null and removes the attribute for. The null is for d3's
+ * benefit: its attr overloads accept null but not undefined. Same convention as bar's fill
+ * and stroke.
+ */
+type ColorAccessor<D> = (datum?: D, index?: number) => string | null;
+
+/** A label's text, or nothing when the property was never set. As ColorAccessor. */
+type LabelAccessor<D> = (datum?: D, index?: number) => string | null;
+
+/**
+ * How the three column-driven properties read back. The renderer calls each of them itself,
+ * with a column index and nothing else, so unlike the datum accessors above they never see
+ * an index in the second position.
+ */
+type ColumnAccessor<R> = (columnIndex?: number) => R;
+
+/** A constant, or that same single-argument accessor. */
+type ColumnValue<R> = R | ((columnIndex: number) => R);
+
+/**
+ * Orders the links against each other, deciding which one is painted on top. Unlike the
+ * accessors above, both parameters are required: the renderer never calls the comparator
+ * itself, it only hands it to d3's own sort, which always passes two links. A constant is
+ * still accepted on set, because fn.functor wraps it into a function that ignores its
+ * arguments and declaring fewer parameters is fine.
+ */
+type LinkComparator = (a: SankeyLink, b: SankeyLink) => number;
+
+/**
+ * The column label offset is the one column property that is applied by d3 rather than by
+ * the renderer, so it is handed the datum bound to the label - the column's node count -
+ * followed by the column index. Note that columnLabel, which decorates the same element,
+ * takes the index in the first position instead. The parameter names are the point of this
+ * type; structurally it is the same shape as the datum accessors.
+ */
+type ColumnLabelOffset = (columnLength?: number, index?: number) => number;
+
+/** What may be passed for the column label offset: a constant, or that same accessor. */
+type ColumnLabelOffsetValue = number | ((columnLength: number, index: number) => number);
+
+type SankeyProps = {
+  sizeScale: SizeScale;
+  columnPosition: ColumnScale;
+  nodeThickness: number;
+  nodePadding: number;
+  columnPadding: ColumnAccessor<number>;
+  columnLabel: ColumnAccessor<string>;
+  columnLabelOffset: ColumnLabelOffset;
+  linkCurvature: number;
+  /**
+   * Handed to bar, whose fill accepts an accessor returning undefined, so this one keeps the
+   * undefined that fn.functor actually yields where linkColor has to claim null.
+   */
+  nodeColor?: StoredAccessor<SankeyNode, string | undefined>;
+  linkColor?: ColorAccessor<SankeyLink>;
+  linkSort: LinkComparator;
+  labelSide: ColumnAccessor<LabelSide>;
+  labelSideSwitch?: boolean;
+  labelOpacity: StoredAccessor<SankeyNode, number>;
+  labelHitBoxSize: number;
+  nameLabel: (id: string) => string;
+  linkSourceLabels: SankeyLink[];
+  linkTargetLabels: SankeyLink[];
+  linkLabel?: LabelAccessor<SankeyLink>;
+};
+
+/**
+ * `component()` hands back whatever interface it is asked for, but the two builder methods it
+ * inherits are declared as returning the plain Component, so a component interface has to
+ * re-declare them to survive its own construction chain. Without this the chain widens to
+ * `any` at the first default and nothing in it is checked.
+ */
+interface SankeyBuilder extends Component {
+  prop<V>(prop: string, setter?: PropertySetter<V>): SankeyComponent;
+  render(callback: RenderCallback): SankeyComponent;
+}
+
+/**
+ * Setters take `<U = ...>` so that an accessor over a narrower datum type can be passed
+ * without naming it at the call site.
+ */
+export interface SankeyComponent extends SankeyBuilder {
+  sizeScale(): SizeScale;
+  sizeScale(scale: SizeScale): SankeyComponent;
+  columnPosition(): ColumnScale;
+  columnPosition(scale: ColumnScale): SankeyComponent;
+  nodeThickness(): number;
+  nodeThickness(thickness: number): SankeyComponent;
+  nodePadding(): number;
+  nodePadding(padding: number): SankeyComponent;
+  columnPadding(): ColumnAccessor<number>;
+  columnPadding(value: ColumnValue<number>): SankeyComponent;
+  columnLabel(): ColumnAccessor<string>;
+  columnLabel(value: ColumnValue<string>): SankeyComponent;
+  columnLabelOffset(): ColumnLabelOffset;
+  columnLabelOffset(value: ColumnLabelOffsetValue): SankeyComponent;
+  linkCurvature(): number;
+  linkCurvature(curvature: number): SankeyComponent;
+  nodeColor(): StoredAccessor<SankeyNode, string | undefined> | undefined;
+  nodeColor<U = SankeyNode>(value: SankeyValue<U, string | undefined>): SankeyComponent;
+  linkColor(): ColorAccessor<SankeyLink> | undefined;
+  linkColor<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
+  linkSort(): LinkComparator;
+  linkSort<L = SankeyLink>(comparator: (a: L, b: L) => number): SankeyComponent;
+  labelSide(): ColumnAccessor<LabelSide>;
+  labelSide(value: ColumnValue<LabelSide>): SankeyComponent;
+  labelSideSwitch(): boolean | undefined;
+  labelSideSwitch(value: boolean): SankeyComponent;
+  labelOpacity(): StoredAccessor<SankeyNode, number>;
+  labelOpacity<U = SankeyNode>(value: SankeyValue<U, number>): SankeyComponent;
+  labelHitBoxSize(): number;
+  labelHitBoxSize(size: number): SankeyComponent;
+  nameLabel(): (id: string) => string;
+  nameLabel(accessor: (id: string) => string): SankeyComponent;
+  linkSourceLabels(): SankeyLink[];
+  linkSourceLabels(links: SankeyLink[]): SankeyComponent;
+  linkTargetLabels(): SankeyLink[];
+  linkTargetLabels(links: SankeyLink[]): SankeyComponent;
+  linkLabel(): LabelAccessor<SankeyLink> | undefined;
+  linkLabel<L = SankeyLink>(value: SankeyValue<L, string | undefined>): SankeyComponent;
+}
+
+/* Constants
+----------------------------------------------- */
+
+/** Padding between the nodes and the links attached to them. Deliberately not a property. */
+const LINK_PADDING = 1;
+
+/** How far above the columns the column labels and their ticks are drawn. */
+const COLUMN_LABEL_Y = -24;
+
+/* Helper functions
+----------------------------------------------- */
+
+const linkPathString = (
+  x0: number,
+  x1: number,
+  x2: number,
+  x3: number,
+  y0: number,
+  y1: number
+): string => `M${x0},${y0}C${x1},${y0} ${x2},${y1} ${x3},${y1}`;
+const linkBounds = (
+  x0: number,
+  x1: number,
+  y0: number,
+  y1: number
+): [number, number, number, number] => [x0, x1, y0, y1];
+
+/** The links are keyed on their id, so a redrawn link keeps its path element. */
+const idAcc = (link: SankeyLink) => link.id;
+
+/* Module
+----------------------------------------------- */
+export default function (): SankeyComponent {
+  return component<SankeyComponent>()
     .prop("sizeScale")
     .prop("columnPosition")
     .prop("nodeThickness")
@@ -91,7 +336,7 @@ export default function () {
     .prop("nodeColor", fn.functor)
     .prop("linkColor", fn.functor)
     .prop("linkSort", fn.functor)
-    .linkSort((a, b) => a.value - b.value) // Default sorts in descending order of value
+    .linkSort((a: SankeyLink, b: SankeyLink) => a.value - b.value) // Default sorts in descending order of value
     .prop("labelSide", fn.functor)
     .labelSide("left")
     .prop("labelSideSwitch")
@@ -106,36 +351,24 @@ export default function () {
     .prop("linkTargetLabels")
     .linkTargetLabels([])
     .prop("linkLabel", fn.functor)
-    .render(function (data) {
+    .render(function (this: Element, data: SankeyData) {
       const selection = select(this);
-      const props = selection.props();
+      const props = selection.props<SankeyProps>();
 
-      const idAcc = fn.prop("id");
-
-      const getNodePosition = function (node) {
-        return Math.floor(
+      const getNodePosition = (node: SankeyNode): number =>
+        Math.floor(
           props.columnPadding(node.columnIndex) +
             props.sizeScale(node.valueOffset) +
             props.nodePadding * node.nodeIndex
         );
-      };
-      const xPosition = function (node) {
-        return props.columnPosition(node.columnIndex);
-      };
-      const yPosition = function (node) {
-        return getNodePosition(node);
-      };
-      const xExtent = function () {
-        return Math.max(props.nodeThickness, 1);
-      };
-      const yExtent = function (node) {
-        return Math.ceil(Math.max(props.sizeScale(node.value), 1));
-      };
-
-      const linkPadding = 1; // Default value for padding between nodes and links - cannot be changed
+      const xPosition = (node: SankeyNode): number => props.columnPosition(node.columnIndex);
+      const yPosition = (node: SankeyNode): number => getNodePosition(node);
+      const xExtent = (): number => Math.max(props.nodeThickness, 1);
+      const yExtent = (node: SankeyNode): number =>
+        Math.ceil(Math.max(props.sizeScale(node.value), 1));
 
       // Draw the nodes
-      const barGen = bar()
+      const barGen = bar<SankeyNode>()
         .x(xPosition)
         .y(yPosition)
         .width(xExtent)
@@ -146,7 +379,7 @@ export default function () {
 
       barGroup.call(barGen);
 
-      const barTooltipAnchor = tooltipAnchor().position((node) => [
+      const barTooltipAnchor = tooltipAnchor<SankeyNode>().position((node): [number, number] => [
         xPosition(node) + xExtent() / 2,
         yPosition(node) + yExtent(node) / 2,
       ]);
@@ -154,13 +387,10 @@ export default function () {
       barGroup.call(barTooltipAnchor);
 
       // Draw the column labels
-      const columnLabelX = function (colIndex) {
-        return props.columnPosition(colIndex) + props.nodeThickness / 2;
-      };
-      const columnLabelY = -24;
-
+      const columnLabelX = (colIndex: number): number =>
+        props.columnPosition(colIndex) + props.nodeThickness / 2;
       const columnLabels = barGroup
-        .selectAll(".sszvis-sankey-column-label")
+        .selectAll<SVGTextElement, number>(".sszvis-sankey-column-label")
         // One number for each column
         .data(data.columnLengths)
         .join("text")
@@ -168,27 +398,27 @@ export default function () {
 
       columnLabels
         .attr("transform", (d, i) =>
-          translateString(columnLabelX(i) + props.columnLabelOffset(d, i), columnLabelY)
+          translateString(columnLabelX(i) + props.columnLabelOffset(d, i), COLUMN_LABEL_Y)
         )
-        .text((d, i) => props.columnLabel(i));
+        .text((_d, i) => props.columnLabel(i));
 
       const columnLabelTicks = barGroup
-        .selectAll(".sszvis-sankey-column-label-tick")
+        .selectAll<SVGLineElement, number>(".sszvis-sankey-column-label-tick")
         .data(data.columnLengths)
         .join("line")
         .attr("class", "sszvis-sankey-column-label-tick");
 
       columnLabelTicks
-        .attr("x1", (d, i) => halfPixel(columnLabelX(i)))
-        .attr("x2", (d, i) => halfPixel(columnLabelX(i)))
-        .attr("y1", halfPixel(columnLabelY + 8))
-        .attr("y2", halfPixel(columnLabelY + 12));
+        .attr("x1", (_d, i) => halfPixel(columnLabelX(i)))
+        .attr("x2", (_d, i) => halfPixel(columnLabelX(i)))
+        .attr("y1", halfPixel(COLUMN_LABEL_Y + 8))
+        .attr("y2", halfPixel(COLUMN_LABEL_Y + 12));
 
       // Draw the links
-      const linkPoints = function (link) {
+      const linkPoints = (link: SankeyLink): [number, number, number, number] => {
         const curveStart =
-            props.columnPosition(link.src.columnIndex) + props.nodeThickness + linkPadding,
-          curveEnd = props.columnPosition(link.tgt.columnIndex) - linkPadding,
+            props.columnPosition(link.src.columnIndex) + props.nodeThickness + LINK_PADDING,
+          curveEnd = props.columnPosition(link.tgt.columnIndex) - LINK_PADDING,
           startLevel =
             getNodePosition(link.src) +
             props.sizeScale(link.srcOffset) +
@@ -201,7 +431,7 @@ export default function () {
         return [curveStart, curveEnd, startLevel, endLevel];
       };
 
-      const linkPath = function (link) {
+      const linkPath = (link: SankeyLink): string => {
         const points = linkPoints(link),
           curveInterp = interpolateNumber(points[0], points[1]),
           curveControlPtA = curveInterp(props.linkCurvature),
@@ -217,21 +447,19 @@ export default function () {
         );
       };
 
-      const linkBoundingBox = function (link) {
+      const linkBoundingBox = (link: SankeyLink): [number, number, number, number] => {
         const points = linkPoints(link);
 
         return linkBounds(points[0], points[1], points[2], points[3]);
       };
 
-      const linkThickness = function (link) {
-        return Math.max(props.sizeScale(link.value), 1);
-      };
+      const linkThickness = (link: SankeyLink): number => Math.max(props.sizeScale(link.value), 1);
 
       // Render the links
       const linksGroup = selection.selectGroup("links");
 
       const linksElems = linksGroup
-        .selectAll(".sszvis-link")
+        .selectAll<SVGPathElement, SankeyLink>(".sszvis-link")
         .data(data.links, idAcc)
         .join("path")
         .attr("class", "sszvis-link");
@@ -240,12 +468,12 @@ export default function () {
         .attr("fill", "none")
         .attr("d", linkPath)
         .attr("stroke-width", linkThickness)
-        .attr("stroke", props.linkColor)
+        .attr("stroke", props.linkColor ?? null)
         .sort(props.linkSort);
 
       linksGroup.datum(data.links);
 
-      const linkTooltipAnchor = tooltipAnchor().position((link) => {
+      const linkTooltipAnchor = tooltipAnchor<SankeyLink>().position((link): [number, number] => {
         const bbox = linkBoundingBox(link);
         return [(bbox[0] + bbox[1]) / 2, (bbox[2] + bbox[3]) / 2];
       });
@@ -257,7 +485,7 @@ export default function () {
 
       // If no props.linkSourceLabels are provided, most of this rendering is no-op
       const linkSourceLabels = linkLabelsGroup
-        .selectAll(".sszvis-sankey-link-source-label")
+        .selectAll<SVGTextElement, SankeyLink>(".sszvis-sankey-link-source-label")
         .data(props.linkSourceLabels)
         .join("text")
         .attr(
@@ -270,11 +498,11 @@ export default function () {
           const bbox = linkBoundingBox(link);
           return translateString(bbox[0] + 6, bbox[2]);
         })
-        .text(props.linkLabel);
+        .text(props.linkLabel ?? null);
 
       // If no props.linkTargetLabels are provided, most of this rendering is no-op
       const linkTargetLabels = linkLabelsGroup
-        .selectAll(".sszvis-sankey-link-target-label")
+        .selectAll<SVGTextElement, SankeyLink>(".sszvis-sankey-link-target-label")
         .data(props.linkTargetLabels)
         .join("text")
         .attr(
@@ -287,10 +515,10 @@ export default function () {
           const bbox = linkBoundingBox(link);
           return translateString(bbox[1] - 6, bbox[3]);
         })
-        .text(props.linkLabel);
+        .text(props.linkLabel ?? null);
 
       // Render the node labels and their hit boxes
-      const getLabelSide = function (colIndex) {
+      const getLabelSide = (colIndex: number): LabelSide => {
         let side = props.labelSide(colIndex);
         if (props.labelSideSwitch) {
           side = side === "left" ? "right" : "left";
@@ -301,7 +529,7 @@ export default function () {
       const nodeLabelsGroup = selection.selectGroup("nodelabels");
 
       const barLabels = nodeLabelsGroup
-        .selectAll(".sszvis-sankey-node-label")
+        .selectAll<SVGTextElement, SankeyNode>(".sszvis-sankey-node-label")
         .data(data.nodes)
         .join("text")
         .attr("class", "sszvis-sankey-label sszvis-sankey-weak-label sszvis-sankey-node-label");
@@ -321,7 +549,7 @@ export default function () {
         .style("opacity", props.labelOpacity);
 
       const barLabelHitBoxes = nodeLabelsGroup
-        .selectAll(".sszvis-sankey-hitbox")
+        .selectAll<SVGRectElement, SankeyNode>(".sszvis-sankey-hitbox")
         .data(data.nodes)
         .join("rect")
         .attr("class", "sszvis-sankey-hitbox");
