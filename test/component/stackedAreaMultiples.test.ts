@@ -364,7 +364,14 @@ describe("component/stackedAreaMultiples", () => {
     });
 
     test("should accept a numeric string, which d3 coerces", () => {
-      const node = render(stackedAreaMultiples().x("7").y0(2).y1(1), oneLayer);
+      const node = render(
+        stackedAreaMultiples()
+          // @ts-expect-error - a numeric string is deliberately not in the interface
+          .x("7")
+          .y0(2)
+          .y1(1),
+        oneLayer
+      );
       expect(ds(node)).toEqual(["M7,1L7,1L7,2L7,2Z"]);
     });
 
@@ -418,10 +425,15 @@ describe("component/stackedAreaMultiples", () => {
       const seen: unknown[][] = [];
       const thises: unknown[] = [];
       const node = render(
-        areaOf().valuesAccessor(function (this: Element, ...args: unknown[]) {
-          seen.push(args);
+        areaOf().valuesAccessor(function (
+          this: Element,
+          layer: Layer,
+          index: number,
+          nodes: ArrayLike<Element>
+        ) {
+          seen.push([layer, index, nodes]);
           thises.push(this);
-          return args[0];
+          return layer;
         }),
         twoLayers
       );
@@ -469,6 +481,7 @@ describe("component/stackedAreaMultiples", () => {
         // d3.area rather than naming the property that produced it.
         expect(() =>
           render(
+            // @ts-expect-error - the accessor is typed as returning the layer's points
             areaOf().valuesAccessor(() => undefined),
             oneLayer
           )
@@ -506,6 +519,7 @@ describe("component/stackedAreaMultiples", () => {
         // configured with .unknown(undefined) silently produces a black area instead of an
         // error.
         const node = render(
+          // @ts-expect-error - a fill accessor is typed as returning a colour
           areaOf().fill(() => undefined),
           oneLayer
         );
