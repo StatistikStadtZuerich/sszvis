@@ -55,7 +55,7 @@
 import { type AxisDomain, type AxisScale, type NumberValue } from "d3";
 import { type Component } from "./d3-component.js";
 type AxisOrientation = "top" | "bottom" | "left" | "right";
-type SlantDirection = "horizontal" | "vertical" | "diagonal";
+export type SlantDirection = "horizontal" | "vertical" | "diagonal";
 type TextAnchor = "start" | "middle" | "end";
 interface AxisComponent extends Component {
     scale(scale?: AxisScale<NumberValue>): AxisComponent;
