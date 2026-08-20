@@ -276,10 +276,12 @@ describe("component/sunburst", () => {
 
   describe("angles", () => {
     test("should default to a scale turning the partition's [0, 1] into a full circle", () => {
-      const component = sunburst();
-      const angleScale = component.angleScale();
-      expect(angleScale.domain()).toEqual([0, 1]);
-      expect(angleScale.range()).toEqual([0, TWO_PI]);
+      // Exercised through the scale rather than its domain and range, since the property
+      // accepts any number-to-number function and not only a d3 scale.
+      const angleScale = sunburst().angleScale();
+      expect(angleScale(0)).toBe(0);
+      expect(angleScale(0.5)).toBeCloseTo(Math.PI, 12);
+      expect(angleScale(1)).toBeCloseTo(TWO_PI, 12);
     });
 
     test("should read the angles off x0 and x1", () => {
@@ -426,6 +428,14 @@ describe("component/sunburst", () => {
         hierarchyOf()
       );
       expect(attrs(node, "stroke")).toEqual(["#f00", "#00f", "#00f", "#f00", "#00f"]);
+    });
+
+    test("should hand d3's index to the stroke accessor, as any d3 attr callback does", () => {
+      const node = render(
+        sunburstOf().stroke((_d, i) => (i === 0 ? "#f00" : "#00f")),
+        hierarchyOf()
+      );
+      expect(attrs(node, "stroke")).toEqual(["#f00", "#00f", "#00f", "#00f", "#00f"]);
     });
 
     test("should draw no stroke when it is set to none", () => {
@@ -736,7 +746,9 @@ describe("component/sunburst", () => {
       expect(() =>
         constant.datum(hierarchyOf()).call(
           sunburst()
-            .fill("#f00")
+            // The port's types reject a constant outright, which is the whole protection a
+            // TypeScript caller gets; the cast is what a JavaScript caller does at runtime.
+            .fill("#f00" as unknown as (key: string) => string)
             .radiusScale((v: number) => v)
             .centerRadius(0) as never
         )
