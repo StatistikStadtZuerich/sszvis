@@ -305,6 +305,8 @@ declare function export_default$e<T = unknown>(): CircleComponent<T>;
  */
 
 type Datum$8<T = unknown> = T;
+/** The data-join key. d3 hands it the datum and its index. */
+type KeyAccessor$1<T> = (d: Datum$8<T>, i: number) => string | number;
 interface ConfidenceAreaComponent<T = unknown> extends Component {
     x(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
     y0(accessor?: NumberAccessor$1<Datum$8<T>>): ConfidenceAreaComponent<T>;
@@ -312,7 +314,7 @@ interface ConfidenceAreaComponent<T = unknown> extends Component {
     stroke(stroke?: string): ConfidenceAreaComponent<T>;
     strokeWidth(width?: number): ConfidenceAreaComponent<T>;
     fill(fill?: string): ConfidenceAreaComponent<T>;
-    key(accessor?: StringAccessor<Datum$8<T>>): ConfidenceAreaComponent<T>;
+    key(accessor?: KeyAccessor$1<T>): ConfidenceAreaComponent<T>;
     valuesAccessor(accessor?: (d: Datum$8<T>[]) => Datum$8<T>[]): ConfidenceAreaComponent<T>;
     transition(enabled?: boolean): ConfidenceAreaComponent<T>;
 }
