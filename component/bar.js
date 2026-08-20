@@ -23,6 +23,8 @@ import { defaultTransition } from '../transition.js';
  *
  * @module sszvis/component/bar
  *
+ * @template T The type of the data values bound to the bars
+ *
  * @property {number, function} x             the x-value of the rectangles. Becomes a functor.
  * @property {number, function} y             the y-value of the rectangles. Becomes a functor.
  * @property {number, function} width         the width-value of the rectangles. Becomes a functor.
@@ -40,15 +42,28 @@ import { defaultTransition } from '../transition.js';
  *                                            in the height dimension. For example, the upper left corner would be [0, 0],
  *                                            the center of the bar would be [0.5, 0.5], the middle of the right side
  *                                            would be [1, 0.5], and the lower right corner [1, 1]. Used by, for example,
- *                                            the pyramid chart.
+ *                                            the pyramid chart. Entries beyond the first two are ignored, and an array
+ *                                            with fewer than two entries produces a NaN coordinate rather than a warning.
  * @property {boolean} transition             Whether or not to transition the visual values of the bar component, when they
  *                                            are changed.
  *
+ * Note: the transition property does not currently animate anything - the geometry is
+ * re-applied to the plain selection immediately after the transition is created, so the
+ * values always jump. It is not free either: the discarded transition still attaches d3
+ * transition state to every bar, which interrupts any transition already running on them.
+ * See test/component/bar.test.ts.
+ *
  * @return {sszvis.component}
  */
-// replaces NaN values with 0
+/**
+ * Replaces NaN values with 0.
+ *
+ * Equivalent to the global isNaN, which coerces its argument first. Note that this only
+ * catches NaN and undefined: null, Infinity, booleans and numeric strings all coerce to a
+ * number and pass through untouched. See test/component/bar.test.ts.
+ */
 function handleMissingVal(v) {
-  return isNaN(v) ? 0 : v;
+  return Number.isNaN(Number(v)) ? 0 : v;
 }
 function bar () {
   return component().prop("x", functor).prop("y", functor).prop("width", functor).prop("height", functor).prop("fill", functor).prop("stroke", functor).prop("centerTooltip").prop("tooltipAnchor").prop("transition").transition(true).render(function (data) {
@@ -66,18 +81,12 @@ function bar () {
     // Tooltip anchors
     let tooltipPosition;
     if (props.centerTooltip) {
-      tooltipPosition = function (d) {
-        return [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
-      };
+      tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d) + hAcc(d) / 2];
     } else if (props.tooltipAnchor) {
-      const uv = props.tooltipAnchor.map(Number.parseFloat);
-      tooltipPosition = function (d) {
-        return [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
-      };
+      const uv = props.tooltipAnchor.map(value => Number.parseFloat(String(value)));
+      tooltipPosition = d => [xAcc(d) + uv[0] * wAcc(d), yAcc(d) + uv[1] * hAcc(d)];
     } else {
-      tooltipPosition = function (d) {
-        return [xAcc(d) + wAcc(d) / 2, yAcc(d)];
-      };
+      tooltipPosition = d => [xAcc(d) + wAcc(d) / 2, yAcc(d)];
     }
     const ta = tooltipAnchor().position(tooltipPosition);
     selection.call(ta);
