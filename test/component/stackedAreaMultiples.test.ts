@@ -910,9 +910,9 @@ describe("component/stackedAreaMultiples", () => {
         // bound to a layer and repainted as an area rather than being left alone. Harmless
         // while each component owns its own selectGroup, which is how every example is
         // written, and benign here because every attribute this component touches is written
-        // unconditionally - an unset fill or stroke is written as undefined, which d3 reads
-        // as a removal, so the foreign path loses the colours it came with rather than
-        // keeping them. See the same collision documented from the other side in
+        // unconditionally - an unset fill or stroke is written as a null, which d3 reads as a
+        // removal, so the foreign path loses the colours it came with rather than keeping
+        // them. See the same collision documented from the other side in
         // test/component/pie.test.ts, where it corrupts pie's own geometry and is labelled a
         // bug for that reason.
         const g = group("foreign");
