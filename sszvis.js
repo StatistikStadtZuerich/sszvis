@@ -8267,16 +8267,36 @@
      *                              height: the total height of all table boxes plus padding in between
      *                              centeredOffset: the left offset required to center the table horizontally within its container
      *                          }
+     *
+     * Behaviour notes:
+     * - The box side is fitted to the available width only; numY/rows never affect it.
+     * - The side is capped at 30px but never floored, so too many columns, a large
+     *   squarePadding, or a large horizontal chartPadding can drive it negative, which also
+     *   pushes padRatio outside the [0, 1) range a band scale expects.
+     * - The chartPadding argument is mutated in place (missing sides are defaulted onto the
+     *   object itself), so passing a frozen object throws a TypeError.
+     * - Defaults for chartPadding are applied with `||`, so an explicit 0 is indistinguishable
+     *   from a missing value.
+     * - Only left/right padding affect the layout; top/bottom are accepted but unused.
+     * - numX === 0 divides by zero, and Math.min silently falls back to the 30px default side,
+     *   which then yields a negative width.
+     * - numX and numY are not validated: fractional and negative values pass straight through
+     *   into the geometry.
+     * - A negative squarePadding makes paddedSide smaller than side (boxes overlap) and drives
+     *   padRatio negative.
+     * - centeredOffset is clamped at 0 but never validated otherwise.
      */
     function heatTableDimensions (spaceWidth, squarePadding, numX, numY, chartPadding) {
-      chartPadding || (chartPadding = {});
-      chartPadding.top || (chartPadding.top = 0);
-      chartPadding.right || (chartPadding.right = 0);
-      chartPadding.bottom || (chartPadding.bottom = 0);
-      chartPadding.left || (chartPadding.left = 0);
+      var _padding$left, _padding$right;
+      // the defaults are written back onto the caller's object, as the original did
+      const padding = chartPadding || {};
+      padding.top || (padding.top = 0);
+      padding.right || (padding.right = 0);
+      padding.bottom || (padding.bottom = 0);
+      padding.left || (padding.left = 0);
       // this includes the default side length for the heat table
       const DEFAULT_SIDE = 30,
-        availableChartWidth = spaceWidth - chartPadding.left - chartPadding.right,
+        availableChartWidth = spaceWidth - ((_padding$left = padding.left) !== null && _padding$left !== void 0 ? _padding$left : 0) - ((_padding$right = padding.right) !== null && _padding$right !== void 0 ? _padding$right : 0),
         side = Math.min((availableChartWidth - squarePadding * (numX - 1)) / numX, DEFAULT_SIDE),
         paddedSide = side + squarePadding,
         padRatio = 1 - side / paddedSide,

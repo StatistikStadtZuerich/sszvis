@@ -23,6 +23,38 @@
  *                              height: the total height of all table boxes plus padding in between
  *                              centeredOffset: the left offset required to center the table horizontally within its container
  *                          }
+ *
+ * Behaviour notes:
+ * - The box side is fitted to the available width only; numY/rows never affect it.
+ * - The side is capped at 30px but never floored, so too many columns, a large
+ *   squarePadding, or a large horizontal chartPadding can drive it negative, which also
+ *   pushes padRatio outside the [0, 1) range a band scale expects.
+ * - The chartPadding argument is mutated in place (missing sides are defaulted onto the
+ *   object itself), so passing a frozen object throws a TypeError.
+ * - Defaults for chartPadding are applied with `||`, so an explicit 0 is indistinguishable
+ *   from a missing value.
+ * - Only left/right padding affect the layout; top/bottom are accepted but unused.
+ * - numX === 0 divides by zero, and Math.min silently falls back to the 30px default side,
+ *   which then yields a negative width.
+ * - numX and numY are not validated: fractional and negative values pass straight through
+ *   into the geometry.
+ * - A negative squarePadding makes paddedSide smaller than side (boxes overlap) and drives
+ *   padRatio negative.
+ * - centeredOffset is clamped at 0 but never validated otherwise.
  */
-export default function _default(spaceWidth: number, squarePadding: number, numX: number, numY: number, chartPadding?: Object): object;
+export type HeatTableChartPadding = {
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
+};
+export type HeatTableDimensions = {
+    side: number;
+    paddedSide: number;
+    padRatio: number;
+    width: number;
+    height: number;
+    centeredOffset: number;
+};
+export default function (spaceWidth: number, squarePadding: number, numX: number, numY: number, chartPadding?: HeatTableChartPadding): HeatTableDimensions;
 //# sourceMappingURL=heatTableDimensions.d.ts.map
